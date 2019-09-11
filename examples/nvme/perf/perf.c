@@ -728,6 +728,15 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		entry->io_flags = g_metacfg_pract_flag | g_metacfg_prchk_flags;
 	}
 
+	/* If metadata size = 8 bytes, PI is stripped (read) or inserted (write),
+	 *  and so reduce metadata size from block size.  (If metadata size > 8 bytes,
+	 *  PI is passed (read) or replaced (write).  So block size is not necessary
+	 *  to change.)
+	 */
+	if ((entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT) && (entry->md_size == 8)) {
+		entry->block_size = spdk_nvme_ns_get_sector_size(ns);
+	}
+
 	if (g_max_io_md_size < entry->md_size) {
 		g_max_io_md_size = entry->md_size;
 	}
