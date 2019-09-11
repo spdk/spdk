@@ -604,17 +604,18 @@ if __name__ == "__main__":
     p.add_argument('name', help='bdev name')
     p.set_defaults(func=get_bdev_histogram)
 
-    def set_bdev_qd_sampling_period(args):
-        rpc.bdev.set_bdev_qd_sampling_period(args.client,
+    def bdev_set_qd_sampling_period(args):
+        rpc.bdev.bdev_set_qd_sampling_period(args.client,
                                              name=args.name,
                                              period=args.period)
 
-    p = subparsers.add_parser('set_bdev_qd_sampling_period', help="Enable or disable tracking of a bdev's queue depth.")
+    p = subparsers.add_parser('bdev_set_qd_sampling_period', aliases=['set_bdev_qd_sampling_period'],
+                              help="Enable or disable tracking of a bdev's queue depth.")
     p.add_argument('name', help='Blockdev name. Example: Malloc0')
     p.add_argument('period', help='Period with which to poll the block device queue depth in microseconds.'
                    ' If set to 0, polling will be disabled.',
                    type=int)
-    p.set_defaults(func=set_bdev_qd_sampling_period)
+    p.set_defaults(func=bdev_set_qd_sampling_period)
 
     def set_bdev_qos_limit(args):
         rpc.bdev.set_bdev_qos_limit(args.client,

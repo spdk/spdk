@@ -778,7 +778,8 @@ def bdev_error_inject_error(client, name, io_type, error_type, num=1):
     return client.call('bdev_error_inject_error', params)
 
 
-def set_bdev_qd_sampling_period(client, name, period):
+@deprecated_alias('set_bdev_qd_sampling_period')
+def bdev_set_qd_sampling_period(client, name, period):
     """Enable queue depth tracking on a specified bdev.
 
     Args:
@@ -789,7 +790,7 @@ def set_bdev_qd_sampling_period(client, name, period):
     params = {}
     params['name'] = name
     params['period'] = period
-    return client.call('set_bdev_qd_sampling_period', params)
+    return client.call('bdev_set_qd_sampling_period', params)
 
 
 def set_bdev_qos_limit(
