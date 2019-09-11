@@ -107,11 +107,11 @@ The command will disable histogram on Nvme0n1 device.
 The SPDK RBD bdev driver provides SPDK block layer access to Ceph RADOS block
 devices (RBD). Ceph RBD devices are accessed via librbd and librados libraries
 to access the RADOS block device exported by Ceph. To create Ceph bdev RPC
-command `construct_rbd_bdev` should be used.
+command `bdev_rbd_create` should be used.
 
 Example command
 
-`rpc.py construct_rbd_bdev rbd foo 512`
+`rpc.py bdev_rbd_create rbd foo 512`
 
 This command will create a bdev that represents the 'foo' image from a pool called 'rbd'.
 
