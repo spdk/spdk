@@ -38,7 +38,7 @@ def get_bdev_destroy_method(bdev):
                           'bdev_aio_create': "bdev_aio_delete",
                           'bdev_error_create': "bdev_error_delete",
                           'bdev_split_create': "bdev_split_delete",
-                          'construct_virtio_dev': "bdev_virtio_detach_controller",
+                          'bdev_virtio_attach_controller': "bdev_virtio_detach_controller",
                           'bdev_crypto_create': "bdev_crypto_delete",
                           'bdev_delay_create': "bdev_delay_delete",
                           'construct_passthru_bdev': "delete_passthru_bdev",
