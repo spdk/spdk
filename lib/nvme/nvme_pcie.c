@@ -1231,6 +1231,12 @@ nvme_pcie_qpair_update_mmio_required(struct spdk_nvme_qpair *qpair, uint16_t val
 	old = *shadow_db;
 	*shadow_db = value;
 
+	/*
+	 * Ensure that the doorbell is updated before reading the EventIdx from
+	 * memory
+	 */
+	spdk_mb();
+
 	if (!nvme_pcie_qpair_need_event(*eventidx, value, old)) {
 		return false;
 	}
