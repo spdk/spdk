@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc3ba584_b051345b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1482,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T22:19:27Z",
+      "side": 1,
+      "message": "How about refactoring this function as same as https://review.gerrithub.io/c/spdk/spdk/+/467445 by passing spdk_nvmf_request and spdk_dif_ctx instead of spdk_nvmf_rdma_request? But of course we can do it separately at the end of the patch series.",
+      "revId": "c7ac873b43044c6305376710415f0369fd387258",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c43215f_5eba9e8f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1810,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T22:19:27Z",
+      "side": 1,
+      "message": "We will be able to use length directly without copying it to remaining_len.",
+      "range": {
+        "startLine": 1810,
+        "startChar": 1,
+        "endLine": 1810,
+        "endChar": 33
+      },
+      "revId": "c7ac873b43044c6305376710415f0369fd387258",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dac38019_6ba46ca0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1899,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T22:19:27Z",
+      "side": 1,
+      "message": "I think we should change this condition to spdk_unlikely(num_wrs \u003e 1).\nIf rdma_req-\u003edif_insert_strip is false, num_wrs \u003e 1 is not possible.\nThis may mislead reader.\nIf rdma_req-\u003edif_insert_or_strip \u003d\u003d false and num_wrs \u003e 1, the line 1927 is not correct.",
+      "range": {
+        "startLine": 1899,
+        "startChar": 6,
+        "endLine": 1899,
+        "endChar": 65
+      },
+      "revId": "c7ac873b43044c6305376710415f0369fd387258",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a647e3be_8b7bdb26",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1904,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T22:19:27Z",
+      "side": 1,
+      "message": "If we move this to outside if block, we can use current_data_wr in the following else block.",
+      "range": {
+        "startLine": 1904,
+        "startChar": 3,
+        "endLine": 1904,
+        "endChar": 60
+      },
+      "revId": "c7ac873b43044c6305376710415f0369fd387258",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac35c816_b75a2bff",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1914,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T22:19:27Z",
+      "side": 1,
+      "message": "If we apply the change at the line 1899, we can unify rdma_req-\u003enum_outstanding_data_wr \u003d num_wrs of if block and else block and place it into the line 1929 or 1930.",
+      "range": {
+        "startLine": 1914,
+        "startChar": 3,
+        "endLine": 1914,
+        "endChar": 47
+      },
+      "revId": "c7ac873b43044c6305376710415f0369fd387258",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c458ded_afd072c0",
+        "filename": "test/unit/lib/nvmf/rdma.c/rdma_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T22:19:27Z",
+      "side": 1,
+      "message": "This may be unintentional.",
+      "revId": "c7ac873b43044c6305376710415f0369fd387258",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
