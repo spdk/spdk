@@ -168,6 +168,9 @@ struct raid_bdev {
 	/* Raid Level of this raid bdev */
 	uint8_t				raid_level;
 
+	/* Number of data copies for this raid bdev */
+	uint8_t				num_copies;
+
 	/* Set to true if destruct is called for this raid bdev */
 	bool				destruct_called;
 
@@ -208,6 +211,9 @@ struct raid_bdev_config {
 
 	/* raid level */
 	uint8_t				raid_level;
+
+	/* Number of data copies for this raid bdev */
+	uint8_t				num_copies;
 
 	TAILQ_ENTRY(raid_bdev_config)	link;
 };
