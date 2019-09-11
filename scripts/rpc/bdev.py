@@ -718,7 +718,8 @@ def get_bdevs(client, name=None):
     return client.call('get_bdevs', params)
 
 
-def get_bdevs_iostat(client, name=None):
+@deprecated_alias('get_bdevs_iostat')
+def bdev_get_iostat(client, name=None):
     """Get I/O statistics for block devices.
 
     Args:
@@ -730,7 +731,7 @@ def get_bdevs_iostat(client, name=None):
     params = {}
     if name:
         params['name'] = name
-    return client.call('get_bdevs_iostat', params)
+    return client.call('bdev_get_iostat', params)
 
 
 def enable_bdev_histogram(client, name, enable):
