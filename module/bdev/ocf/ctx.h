@@ -47,7 +47,6 @@ extern ocf_ctx_t vbdev_ocf_ctx;
 struct vbdev_ocf_cache_ctx {
 	ocf_queue_t                  mngt_queue;
 	ocf_queue_t                  cleaner_queue;
-	struct spdk_io_channel      *management_channel;
 	pthread_mutex_t              lock;
 	env_atomic                   refcnt;
 };
