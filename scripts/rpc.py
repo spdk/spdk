@@ -1905,14 +1905,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('get_virtio_scsi_devs', help='List all Virtio-SCSI devices.')
     p.set_defaults(func=get_virtio_scsi_devs)
 
-    def remove_virtio_bdev(args):
-        rpc.vhost.remove_virtio_bdev(args.client,
-                                     name=args.name)
+    def bdev_virtio_detach_controller(args):
+        rpc.vhost.bdev_virtio_detach_controller(args.client,
+                                                name=args.name)
 
-    p = subparsers.add_parser('remove_virtio_bdev', help="""Remove a Virtio device
+    p = subparsers.add_parser('bdev_virtio_detach_controller', aliases=['remove_virtio_bdev'],
+                              help="""Remove a Virtio device
     This will delete all bdevs exposed by this device""")
     p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
-    p.set_defaults(func=remove_virtio_bdev)
+    p.set_defaults(func=bdev_virtio_detach_controller)
 
     # ioat
     def scan_ioat_copy_engine(args):

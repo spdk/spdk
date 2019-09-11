@@ -282,7 +282,7 @@ Example response:
     "scan_ioat_copy_engine",
     "construct_virtio_dev",
     "get_virtio_scsi_devs",
-    "remove_virtio_bdev",
+    "bdev_virtio_detach_controller",
     "bdev_aio_delete",
     "bdev_aio_create",
     "bdev_split_delete",
@@ -2492,7 +2492,7 @@ Example response:
 }
 ~~~
 
-## remove_virtio_bdev {#rpc_remove_virtio_bdev}
+## bdev_virtio_detach_controller {#rpc_bdev_virtio_detach_controller}
 
 Remove a Virtio device. This command can be used to remove any type of virtio device.
 
@@ -2512,7 +2512,7 @@ Example request:
     "name": "VirtioUser0"
   },
   "jsonrpc": "2.0",
-  "method": "remove_virtio_bdev",
+  "method": "bdev_virtio_detach_controller",
   "id": 1
 }
 
