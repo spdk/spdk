@@ -466,14 +466,15 @@ def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=Non
     return client.call('bdev_rbd_create', params)
 
 
-def delete_rbd_bdev(client, name):
+@deprecated_alias('delete_rbd_bdev')
+def bdev_rbd_delete(client, name):
     """Remove rbd bdev from the system.
 
     Args:
         name: name of rbd bdev to delete
     """
     params = {'name': name}
-    return client.call('delete_rbd_bdev', params)
+    return client.call('bdev_rbd_delete', params)
 
 
 @deprecated_alias('construct_error_bdev')
