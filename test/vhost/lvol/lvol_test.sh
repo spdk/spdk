@@ -169,7 +169,7 @@ for (( i=0; i<$max_disks; i++ ));do
     done
 done
 
-bdev_info=$($rpc_py get_bdevs)
+bdev_info=$($rpc_py bdev_get_bdevs)
 notice "Configuration after initial set-up:"
 $rpc_py bdev_lvol_get_lvstores
 echo "$bdev_info"
@@ -278,7 +278,7 @@ fi
 clean_lvol_cfg
 
 $rpc_py bdev_lvol_get_lvstores
-$rpc_py get_bdevs
+$rpc_py bdev_get_bdevs
 $rpc_py get_vhost_controllers
 
 notice "Shutting down SPDK vhost app..."

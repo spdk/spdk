@@ -54,7 +54,7 @@ def get_bdev_destroy_method(bdev):
 
 
 def clear_bdev_subsystem(args, bdev_config):
-    rpc_bdevs = args.client.call("get_bdevs")
+    rpc_bdevs = args.client.call("bdev_get_bdevs")
     for bdev in bdev_config:
         bdev_name_key = get_bdev_name_key(bdev)
         bdev_name = get_bdev_name(bdev)

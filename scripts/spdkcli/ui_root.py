@@ -101,9 +101,9 @@ class UIRoot(UINode):
     def check_init(self):
         return "start_subsystem_init" not in self.rpc_get_methods(current=True)
 
-    def get_bdevs(self, bdev_type):
+    def bdev_get_bdevs(self, bdev_type):
         if self.is_init:
-            self.current_bdevs = rpc.bdev.get_bdevs(self.client)
+            self.current_bdevs = rpc.bdev.bdev_get_bdevs(self.client)
             # Following replace needs to be done in order for some of the bdev
             # listings to work: logical volumes, split disk.
             # For example logical volumes: listing in menu is "Logical_Volume"
@@ -492,7 +492,7 @@ class Bdev(object):
     def __init__(self, bdev_info):
         """
         All class attributes are set based on what information is received
-        from get_bdevs RPC call.
+        from bdev_get_bdevs RPC call.
         # TODO: Document in docstring parameters which describe bdevs.
         # TODO: Possible improvement: JSON schema might be used here in future
         """
@@ -504,7 +504,7 @@ class LvolStore(object):
     def __init__(self, lvs_info):
         """
         All class attributes are set based on what information is received
-        from get_bdevs RPC call.
+        from bdev_get_bdevs RPC call.
         # TODO: Document in docstring parameters which describe bdevs.
         # TODO: Possible improvement: JSON schema might be used here in future
         """

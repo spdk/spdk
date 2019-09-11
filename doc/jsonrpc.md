@@ -273,7 +273,7 @@ Example response:
     "set_iscsi_options",
     "set_bdev_options",
     "set_bdev_qos_limit",
-    "get_bdevs",
+    "bdev_get_bdevs",
     "bdev_get_iostat",
     "get_subsystem_config",
     "get_subsystems",
@@ -565,7 +565,7 @@ Example response:
 }
 ~~~
 
-## get_bdevs {#rpc_get_bdevs}
+## bdev_get_bdevs {#rpc_bdev_get_bdevs}
 
 Get information about block devices (bdevs).
 
@@ -590,7 +590,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "get_bdevs",
+  "method": "bdev_get_bdevs",
   "params": {
     "name": "Malloc0"
   }

@@ -59,7 +59,7 @@ function create_bdev_config()
 {
 	local vbdevs
 
-	if [ -z "$($RPC_PY get_bdevs | jq '.[] | select(.name=="Nvme0n1")')" ]; then
+	if [ -z "$($RPC_PY bdev_get_bdevs | jq '.[] | select(.name=="Nvme0n1")')" ]; then
 		error "Nvme0n1 bdev not found!"
 	fi
 

@@ -249,15 +249,15 @@ static const struct spdk_json_object_decoder rpc_bdev_ocf_get_bdevs_decoders[] =
 	{"name", offsetof(struct rpc_bdev_ocf_get_bdevs, name), spdk_json_decode_string, true},
 };
 
-struct get_bdevs_ctx {
+struct bdev_get_bdevs_ctx {
 	char *name;
 	struct spdk_json_write_ctx *w;
 };
 
 static void
-get_bdevs_fn(struct vbdev_ocf *vbdev, void *ctx)
+bdev_get_bdevs_fn(struct vbdev_ocf *vbdev, void *ctx)
 {
-	struct get_bdevs_ctx *cctx = ctx;
+	struct bdev_get_bdevs_ctx *cctx = ctx;
 	struct spdk_json_write_ctx *w = cctx->w;
 
 	if (cctx->name != NULL &&
@@ -290,7 +290,7 @@ spdk_rpc_bdev_ocf_get_bdevs(struct spdk_jsonrpc_request *request,
 {
 	struct spdk_json_write_ctx *w;
 	struct rpc_bdev_ocf_get_bdevs req = {NULL};
-	struct get_bdevs_ctx cctx;
+	struct bdev_get_bdevs_ctx cctx;
 
 	if (params && spdk_json_decode_object(params, rpc_bdev_ocf_get_bdevs_decoders,
 					      SPDK_COUNTOF(rpc_bdev_ocf_get_bdevs_decoders),
@@ -315,7 +315,7 @@ spdk_rpc_bdev_ocf_get_bdevs(struct spdk_jsonrpc_request *request,
 	cctx.w       = w;
 
 	spdk_json_write_array_begin(w);
-	vbdev_ocf_foreach(get_bdevs_fn, &cctx);
+	vbdev_ocf_foreach(bdev_get_bdevs_fn, &cctx);
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 
