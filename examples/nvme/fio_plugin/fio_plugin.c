@@ -788,6 +788,14 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	fio_req->fio_qpair = fio_qpair;
 
 	block_size = spdk_nvme_ns_get_extended_sector_size(ns);
+	if ((fio_qpair->io_flags & g_spdk_pract_flag) && (spdk_nvme_ns_get_md_size(ns) == 8)) {
+		/* If metadata size = 8 bytes, PI is stripped (read) or inserted (write), and
+		 *  so reduce metadata size from block size.  (If metadata size > 8 bytes, PI
+		 *  is passed (read) or replaced (write).  So block size is not necessary to
+		 *  change.)
+		 */
+		block_size = spdk_nvme_ns_get_sector_size(ns);
+	}
 
 	lba = io_u->offset / block_size;
 	lba_count = io_u->xfer_buflen / block_size;
