@@ -593,6 +593,10 @@ fio_extended_lba_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 		return rc;
 	}
 
+	if (io_u->ddir != DDIR_WRITE) {
+		return 0;
+	}
+
 	iov.iov_base = io_u->buf;
 	iov.iov_len = io_u->xfer_buflen;
 	rc = spdk_dif_generate(&iov, 1, lba_count, &fio_req->dif_ctx);
@@ -625,6 +629,10 @@ fio_separate_md_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	if (rc != 0) {
 		fprintf(stderr, "Initialization of DIF context failed\n");
 		return rc;
+	}
+
+	if (io_u->ddir != DDIR_WRITE) {
+		return 0;
 	}
 
 	iov.iov_base = io_u->buf;
@@ -785,7 +793,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	lba_count = io_u->xfer_buflen / block_size;
 
 	/* TODO: considering situations that fio will randomize and verify io_u */
-	if (fio_qpair->do_nvme_pi && io_u->ddir == DDIR_WRITE) {
+	if (fio_qpair->do_nvme_pi) {
 		if (fio_qpair->extended_lba) {
 			rc = fio_extended_lba_setup_pi(fio_qpair, io_u);
 		} else {
