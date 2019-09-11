@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "18faf7ae_6294b33a",
+        "filename": "lib/blobfs/blobfs_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-11T00:23:52Z",
+      "side": 1,
+      "message": "Removed",
+      "parentUuid": "2891004c_7d7a4d81",
+      "range": {
+        "startLine": 148,
+        "startChar": 0,
+        "endLine": 151,
+        "endChar": 0
+      },
+      "revId": "a0ea53d71263158cb60a6d104d11bb0cfa56d43e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2c843753_527cc162",
         "filename": "scripts/rpc.py",
         "patchSetId": 6
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "7c002414_9985e9cc",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1937,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-11T00:23:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2c843753_527cc162",
+      "range": {
+        "startLine": 1937,
+        "startChar": 80,
+        "endLine": 1937,
+        "endChar": 90
+      },
+      "revId": "a0ea53d71263158cb60a6d104d11bb0cfa56d43e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "827ac0e0_2ead92bd",
         "filename": "scripts/rpc/blobfs.py",
         "patchSetId": 6
@@ -59,6 +107,30 @@
       "writtenOn": "2019-08-30T02:44:10Z",
       "side": 1,
       "message": "Other files may insert a line between line 2 and 3.",
+      "range": {
+        "startLine": 2,
+        "startChar": 1,
+        "endLine": 4,
+        "endChar": 0
+      },
+      "revId": "a0ea53d71263158cb60a6d104d11bb0cfa56d43e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ef14a68_2d261d4a",
+        "filename": "scripts/rpc/blobfs.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-11T00:23:52Z",
+      "side": 1,
+      "message": "Good catch, Shuhei\nInserting a line is better",
+      "parentUuid": "827ac0e0_2ead92bd",
       "range": {
         "startLine": 2,
         "startChar": 1,
