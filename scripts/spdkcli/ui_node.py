@@ -45,7 +45,7 @@ class UINode(ConfigNode):
         finally:
             if self.shell.interactive and\
                 command in ["create", "delete", "delete_all", "add_initiator",
-                            "allow_any_host", "split_bdev", "add_lun",
+                            "allow_any_host", "bdev_split_create", "add_lun",
                             "iscsi_target_node_add_pg_ig_maps", "remove_target", "add_secret",
                             "destruct_split_bdev", "bdev_pmem_delete_pool",
                             "bdev_pmem_create_pool", "delete_secret_all",
@@ -390,9 +390,9 @@ class UISplitBdev(UIBdev):
     def delete(self, name):
         pass
 
-    def ui_command_split_bdev(self, base_bdev, split_count, split_size_mb=None):
+    def ui_command_bdev_split_create(self, base_bdev, split_count, split_size_mb=None):
         """
-        Construct split block devices from a base bdev.
+        Create split block devices from a base bdev.
 
         Arguments:
         base_bdev - Name of bdev to split
@@ -403,9 +403,9 @@ class UISplitBdev(UIBdev):
         split_count = self.ui_eval_param(split_count, "number", None)
         split_size_mb = self.ui_eval_param(split_size_mb, "number", None)
 
-        ret_name = self.get_root().split_bdev(base_bdev=base_bdev,
-                                              split_count=split_count,
-                                              split_size_mb=split_size_mb)
+        ret_name = self.get_root().bdev_split_create(base_bdev=base_bdev,
+                                                     split_count=split_count,
+                                                     split_size_mb=split_size_mb)
         self.shell.log.info(ret_name)
 
     def ui_command_destruct_split_bdev(self, base_bdev):
