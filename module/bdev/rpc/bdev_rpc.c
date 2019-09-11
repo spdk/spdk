@@ -509,20 +509,20 @@ SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_set_qos_limit, set_bdev_qos_limit)
 
 /* SPDK_RPC_ENABLE_BDEV_HISTOGRAM */
 
-struct rpc_enable_bdev_histogram_request {
+struct rpc_bdev_enable_histogram_request {
 	char *name;
 	bool enable;
 };
 
 static void
-free_rpc_enable_bdev_histogram_request(struct rpc_enable_bdev_histogram_request *r)
+free_rpc_bdev_enable_histogram_request(struct rpc_bdev_enable_histogram_request *r)
 {
 	free(r->name);
 }
 
-static const struct spdk_json_object_decoder rpc_enable_bdev_histogram_request_decoders[] = {
-	{"name", offsetof(struct rpc_enable_bdev_histogram_request, name), spdk_json_decode_string},
-	{"enable", offsetof(struct rpc_enable_bdev_histogram_request, enable), spdk_json_decode_bool},
+static const struct spdk_json_object_decoder rpc_bdev_enable_histogram_request_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_enable_histogram_request, name), spdk_json_decode_string},
+	{"enable", offsetof(struct rpc_bdev_enable_histogram_request, enable), spdk_json_decode_bool},
 };
 
 static void
@@ -536,14 +536,14 @@ _spdk_bdev_histogram_status_cb(void *cb_arg, int status)
 }
 
 static void
-spdk_rpc_enable_bdev_histogram(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_enable_histogram(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
-	struct rpc_enable_bdev_histogram_request req = {NULL};
+	struct rpc_bdev_enable_histogram_request req = {NULL};
 	struct spdk_bdev *bdev;
 
-	if (spdk_json_decode_object(params, rpc_enable_bdev_histogram_request_decoders,
-				    SPDK_COUNTOF(rpc_enable_bdev_histogram_request_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_enable_histogram_request_decoders,
+				    SPDK_COUNTOF(rpc_bdev_enable_histogram_request_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -560,10 +560,11 @@ spdk_rpc_enable_bdev_histogram(struct spdk_jsonrpc_request *request,
 	spdk_bdev_histogram_enable(bdev, _spdk_bdev_histogram_status_cb, request, req.enable);
 
 cleanup:
-	free_rpc_enable_bdev_histogram_request(&req);
+	free_rpc_bdev_enable_histogram_request(&req);
 }
 
-SPDK_RPC_REGISTER("enable_bdev_histogram", spdk_rpc_enable_bdev_histogram, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_enable_histogram", spdk_rpc_bdev_enable_histogram, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_enable_histogram, enable_bdev_histogram)
 
 /* SPDK_RPC_GET_BDEV_HISTOGRAM */
 

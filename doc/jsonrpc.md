@@ -688,7 +688,7 @@ Example response:
 }
 ~~~
 
-## enable_bdev_histogram {#rpc_enable_bdev_histogram}
+## bdev_enable_histogram {#rpc_bdev_enable_histogram}
 
 Control whether collecting data for histogram is enabled for specified bdev.
 
@@ -707,7 +707,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "enable_bdev_histogram",
+  "method": "bdev_enable_histogram",
   "params": {
     "name": "Nvme0n1"
     "enable": true

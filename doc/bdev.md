@@ -83,13 +83,13 @@ limit. Users can run this command with `-h` or `--help` for more information.
 
 ## Histograms {#rpc_bdev_histogram}
 
-The `enable_bdev_histogram` RPC command allows to enable or disable gathering
+The `bdev_enable_histogram` RPC command allows to enable or disable gathering
 latency data for specified bdev. Histogram can be downloaded by the user by
 calling `get_bdev_histogram` and parsed using scripts/histogram.py script.
 
 Example command
 
-`rpc.py enable_bdev_histogram Nvme0n1 --enable`
+`rpc.py bdev_enable_histogram Nvme0n1 --enable`
 
 The command will enable gathering data for histogram on Nvme0n1 device.
 
@@ -98,7 +98,7 @@ The command will enable gathering data for histogram on Nvme0n1 device.
 The command will download gathered histogram data. The script will parse
 the data and show table containing IO count for latency ranges.
 
-`rpc.py enable_bdev_histogram Nvme0n1 --disable`
+`rpc.py bdev_enable_histogram Nvme0n1 --disable`
 
 The command will disable histogram on Nvme0n1 device.
 
