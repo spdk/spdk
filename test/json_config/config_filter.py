@@ -71,9 +71,9 @@ if __name__ == "__main__":
 check_empty
     check if provided configuration is logically empty
 delete_global_parameters
-    remove pre-init configuration (pre start_subsystem_init RPC methods)
+    remove pre-init configuration (pre framework_start_init RPC methods)
 delete_configs
-    remove post-init configuration (post start_subsystem_init RPC methods)
+    remove post-init configuration (post framework_start_init RPC methods)
 sort
     remove nothing - just sort JSON objects (and subobjects but not arrays)
     in lexicographical order. This can be used to do plain text diff.""")
