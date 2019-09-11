@@ -281,7 +281,7 @@ Example response:
     "kill_instance",
     "scan_ioat_copy_engine",
     "construct_virtio_dev",
-    "get_virtio_scsi_devs",
+    "bdev_virtio_scsi_get_devices",
     "bdev_virtio_detach_controller",
     "bdev_aio_delete",
     "bdev_aio_create",
@@ -2447,7 +2447,7 @@ Example response:
 }
 ~~~
 
-## get_virtio_scsi_devs {#rpc_get_virtio_scsi_devs}
+## bdev_virtio_scsi_get_devices {#rpc_bdev_virtio_scsi_get_devices}
 
 Show information about all available Virtio SCSI devices.
 
@@ -2466,7 +2466,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "get_virtio_scsi_devs",
+  "method": "bdev_virtio_scsi_get_devices",
   "id": 1
 }
 ~~~
