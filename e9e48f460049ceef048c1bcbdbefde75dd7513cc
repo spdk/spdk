@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d1e10bd_3b111490",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T01:27:21Z",
+      "side": 1,
+      "message": "how are lines 624-630 part of the zcopy implementation?",
+      "revId": "e9e48f460049ceef048c1bcbdbefde75dd7513cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ac7ec95_c2fa1709",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T01:27:21Z",
+      "side": 1,
+      "message": "I think inside this if you want an if (rc \u003d\u003d -ENOMEM) then queue else return instead of the assert",
+      "revId": "e9e48f460049ceef048c1bcbdbefde75dd7513cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
