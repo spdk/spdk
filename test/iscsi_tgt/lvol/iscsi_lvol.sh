@@ -34,7 +34,7 @@ trap 'iscsicleanup; killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTER
 
 waitforlisten $pid
 $rpc_py iscsi_set_options -o 30 -a 16
-$rpc_py start_subsystem_init
+$rpc_py framework_start_init
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt

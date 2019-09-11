@@ -29,7 +29,7 @@ for any kind of error.
 
 Code   | Description
 ------ | -----------
--1     | Invalid state - given method exists but it is not callable in [current runtime state](@ref rpc_start_subsystem_init)
+-1     | Invalid state - given method exists but it is not callable in [current runtime state](@ref rpc_framework_start_init)
 -32600 | Invalid request - not compliant with JSON-RPC 2.0 Specification
 -32601 | Method not found
 -32602 | @ref jsonrpc_invalid_params
@@ -134,7 +134,7 @@ Example response:
 }
 ~~~
 
-## start_subsystem_init {#rpc_start_subsystem_init}
+## framework_start_init {#rpc_framework_start_init}
 
 Start initialization of SPDK subsystems when it is deferred by starting SPDK application with option -w.
 During its deferral some RPCs can be used to set global parameters for SPDK subsystems.
@@ -156,7 +156,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "start_subsystem_init"
+  "method": "framework_start_init"
 }
 ~~~
 
@@ -238,7 +238,7 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": [
-    "start_subsystem_init",
+    "framework_start_init",
     "rpc_get_methods",
     "get_scsi_devices",
     "net_get_interfaces",

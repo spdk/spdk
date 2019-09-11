@@ -39,11 +39,12 @@ if __name__ == "__main__":
     parser.set_defaults(dry_run=False)
     subparsers = parser.add_subparsers(help='RPC methods', dest='called_rpc_name')
 
-    def start_subsystem_init(args):
-        rpc.start_subsystem_init(args.client)
+    def framework_start_init(args):
+        rpc.framework_start_init(args.client)
 
-    p = subparsers.add_parser('start_subsystem_init', help='Start initialization of subsystems')
-    p.set_defaults(func=start_subsystem_init)
+    p = subparsers.add_parser('framework_start_init', aliases=['start_subsystem_init'],
+                              help='Start initialization of subsystems')
+    p.set_defaults(func=framework_start_init)
 
     def wait_subsystem_init(args):
         rpc.wait_subsystem_init(args.client)

@@ -344,7 +344,7 @@ function json_config_test_init()
 
 	#TODO: global subsystem params
 
-	# Load nvme configuration. The load_config will issue start_subsystem_init automatically
+	# Load nvme configuration. The load_config will issue framework_start_init automatically
 	(
 		echo '{"subsystems": [';
 		$rootdir/scripts/gen_nvme.sh --json | jq -r "del(.config[] | select(.params.name!=\"Nvme0\"))"
