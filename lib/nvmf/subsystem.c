@@ -962,6 +962,27 @@ spdk_nvmf_ns_hot_remove(void *remove_ctx)
 }
 
 static void
+_spdk_nvmf_ns_change(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
+{
+	struct spdk_nvmf_ns *ns = cb_arg;
+
+	spdk_nvmf_subsystem_ns_changed(subsystem, ns->opts.nsid);
+	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
+}
+
+static void
+spdk_nvmf_ns_change(void *change_ctx)
+{
+	struct spdk_nvmf_ns *ns = change_ctx;
+	int rc;
+
+	rc = spdk_nvmf_subsystem_pause(ns->subsystem, _spdk_nvmf_ns_change, ns);
+	if (rc) {
+		SPDK_ERRLOG("Unable to pause subsystem to process namespace change!\n");
+	}
+}
+
+static void
 spdk_nvmf_ns_event(enum spdk_bdev_event_type type,
 		   struct spdk_bdev *bdev,
 		   void *event_ctx)
@@ -975,6 +996,9 @@ spdk_nvmf_ns_event(enum spdk_bdev_event_type type,
 	switch (type) {
 	case SPDK_BDEV_EVENT_REMOVE:
 		spdk_nvmf_ns_hot_remove(event_ctx);
+		break;
+	case SPDK_BDEV_EVENT_CHANGE:
+		spdk_nvmf_ns_change(event_ctx);
 		break;
 	default:
 		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);

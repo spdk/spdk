@@ -81,7 +81,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.req_complete = NULL,
 
 	.qpair_fini = NULL,
-	.qpair_is_idle = NULL,
 	.qpair_get_peer_trid = NULL,
 	.qpair_get_local_trid = NULL,
 	.qpair_get_listen_trid = NULL,
@@ -122,6 +121,8 @@ DEFINE_STUB(spdk_bdev_module_claim_bdev, int,
 	     struct spdk_bdev_module *module), 0);
 DEFINE_STUB_V(spdk_bdev_module_release_bdev, (struct spdk_bdev *bdev));
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 512);
+DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 1024);
+
 DEFINE_STUB(spdk_nvmf_ctrlr_async_event_ns_notice, int, (struct spdk_nvmf_ctrlr *ctrlr), 0);
 
 const char *

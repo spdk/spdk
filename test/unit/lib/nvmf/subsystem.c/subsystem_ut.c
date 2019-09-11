@@ -1268,6 +1268,18 @@ test_spdk_nvmf_ns_event(void)
 	TAILQ_INIT(&subsystem.ctrlrs);
 	TAILQ_INSERT_TAIL(&subsystem.ctrlrs, &ctrlr, link);
 
+	/* Namespace change event */
+	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+	g_ns_changed_nsid = 0xFFFFFFFF;
+	g_ns_changed_ctrlr = NULL;
+	spdk_nvmf_ns_event(SPDK_BDEV_EVENT_CHANGE, &bdev1, subsystem.ns[0]);
+	CU_ASSERT(SPDK_NVMF_SUBSYSTEM_PAUSING == subsystem.state);
+
+	poll_threads();
+	CU_ASSERT(1 == g_ns_changed_nsid);
+	CU_ASSERT(&ctrlr == g_ns_changed_ctrlr);
+	CU_ASSERT(SPDK_NVMF_SUBSYSTEM_ACTIVE == subsystem.state);
+
 	/* Namespace remove event */
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	g_ns_changed_nsid = 0xFFFFFFFF;
