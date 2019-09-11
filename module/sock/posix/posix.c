@@ -819,6 +819,16 @@ spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, stru
 	int rc;
 #if defined(__linux__)
 	struct epoll_event event;
+	struct spdk_posix_sock_iocb *sock_cb;
+
+	STAILQ_FOREACH(sock_cb, &group->iocb_list, link) {
+		if (sock_cb->sock == sock) {
+			STAILQ_REMOVE(&group->iocb_list, sock_cb, spdk_posix_sock_iocb, link);
+			sock_cb->type = SPDK_SOCK_IO_UNUSED;
+			sock_cb->cb_fn(sock_cb->cb_arg, 0);
+			STAILQ_INSERT_TAIL(&sock_cb->sock->iocb_list, sock_cb, link);
+		}
+	}
 
 	sock->group = NULL;
 	/* Event parameter is ignored but some old kernel version still require it. */
@@ -960,6 +970,24 @@ spdk_posix_group_impl_io_poll(struct spdk_posix_sock_group_impl *group)
 		status = events[i].res;
 		assert(iocb != NULL);
 		assert(iocb->sock != NULL);
+
+		if (spdk_unlikely(status < 0)) {
+			if ((iocb->type == SPDK_SOCK_IO_WRITE) && (status == -EAGAIN || status == -EWOULDBLOCK)) {
+				continue;
+			}
+		} else if (status > 0) {
+			iocb->completed_len += status;
+			if ((status != (int)iocb->len) && iocb->type == SPDK_SOCK_IO_WRITE) {
+				SPDK_ERRLOG("real length completed=%d, expected =%d\n", status, (int)iocb->len);
+				spdk_posix_init_iov(iocb, iocb->iov, iocb->iov_cnt, status);
+				continue;
+			}
+			status = iocb->completed_len;
+			if (iocb->type == SPDK_SOCK_IO_WRITE) {
+				assert(iocb->completed_len == iocb->orig_len);
+			}
+		}
+
 		iocb->type = SPDK_SOCK_IO_UNUSED;
 		STAILQ_INSERT_TAIL(&iocb->sock->iocb_list, iocb, link);
 		iocb->cb_fn(iocb->cb_arg, status);
