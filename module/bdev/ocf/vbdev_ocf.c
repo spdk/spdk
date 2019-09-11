@@ -289,24 +289,6 @@ stop_vbdev(struct vbdev_ocf *vbdev)
 	vbdev_ocf_mngt_poll(vbdev, stop_vbdev_poll);
 }
 
-/* Wait for all OCF requests to finish */
-static void
-wait_for_requests_poll(struct vbdev_ocf *vbdev)
-{
-	if (ocf_cache_has_pending_requests(vbdev->ocf_cache)) {
-		return;
-	}
-
-	vbdev_ocf_mngt_continue(vbdev, 0);
-}
-
-/* Start waiting for OCF requests to finish */
-static void
-wait_for_requests(struct vbdev_ocf *vbdev)
-{
-	vbdev_ocf_mngt_poll(vbdev, wait_for_requests_poll);
-}
-
 static void
 flush_vbdev_cmpl(ocf_cache_t cache, void *priv, int error)
 {
@@ -329,7 +311,7 @@ flush_vbdev_poll(struct vbdev_ocf *vbdev)
 	}
 
 	vbdev_ocf_mngt_poll(vbdev, NULL);
-	ocf_mngt_cache_flush(vbdev->ocf_cache, false, flush_vbdev_cmpl, vbdev);
+	ocf_mngt_cache_flush(vbdev->ocf_cache, flush_vbdev_cmpl, vbdev);
 }
 
 static void
@@ -341,7 +323,6 @@ flush_vbdev(struct vbdev_ocf *vbdev)
 /* Procedures called during unregister */
 vbdev_ocf_mngt_fn unregister_path[] = {
 	flush_vbdev,
-	wait_for_requests,
 	stop_vbdev,
 	detach_cache,
 	close_cache_bdev,
@@ -1044,7 +1025,6 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 	/* TODO [cache line size] */
 	cfg->device.cache_line_size = ocf_cache_line_size_4;
 	cfg->device.force = true;
-	cfg->device.min_free_ram = 0;
 	cfg->device.perform_test = false;
 	cfg->device.discard_on_start = false;
 
@@ -1522,7 +1502,7 @@ metadata_probe_cb(void *priv, int rc,
 
 	if (rc) {
 		/* -ENODATA means device does not have cache metadata on it */
-		if (rc != -ENODATA) {
+		if (rc != -OCF_ERR_NO_METADATA) {
 			ctx->result = rc;
 		}
 		examine_ctx_put(ctx);
