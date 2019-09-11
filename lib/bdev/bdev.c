@@ -2664,9 +2664,30 @@ spdk_bdev_set_qd_sampling_period(struct spdk_bdev *bdev, uint64_t period)
 	}
 }
 
+static void
+_resize_notify(void *arg)
+{
+	struct spdk_bdev_desc *desc = arg;
+
+	pthread_mutex_lock(&desc->mutex);
+	desc->refs--;
+	if (!desc->closed) {
+		pthread_mutex_unlock(&desc->mutex);
+		desc->callback.event_fn(SPDK_BDEV_EVENT_RESIZE,
+					desc->bdev,
+					desc->callback.ctx);
+		return;
+	} else if (0 == desc->refs) {
+		spdk_bdev_desc_fini(desc);
+		return;
+	}
+	pthread_mutex_unlock(&desc->mutex);
+}
+
 int
 spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 {
+	struct spdk_bdev_desc *desc;
 	int ret;
 
 	pthread_mutex_lock(&bdev->internal.mutex);
@@ -2677,6 +2698,14 @@ spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 		ret = -EBUSY;
 	} else {
 		bdev->blockcnt = size;
+		TAILQ_FOREACH(desc, &bdev->internal.open_descs, link) {
+			pthread_mutex_lock(&desc->mutex);
+			if (desc->callback.open_with_ext && !desc->closed) {
+				desc->refs++;
+				spdk_thread_send_msg(desc->thread, _resize_notify, desc);
+			}
+			pthread_mutex_unlock(&desc->mutex);
+		}
 		ret = 0;
 	}
 
