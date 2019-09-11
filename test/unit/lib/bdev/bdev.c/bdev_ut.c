@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -417,6 +417,29 @@ get_device_stat_cb(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat, void 
 }
 
 static void
+bdev_open_cb1(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
+
+	g_event_type1 = type;
+	if (SPDK_BDEV_EVENT_REMOVE == type) {
+		spdk_bdev_close(desc);
+	}
+}
+
+static void
+bdev_open_cb2(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
+
+	g_event_type2 = type;
+	if (SPDK_BDEV_EVENT_REMOVE == type) {
+		spdk_bdev_close(desc);
+	}
+}
+
+
+static void
 get_device_stat_test(void)
 {
 	struct spdk_bdev *bdev;
@@ -608,6 +631,7 @@ num_blocks_test(void)
 {
 	struct spdk_bdev bdev;
 	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_bdev_desc *desc_ext = NULL;
 	int rc;
 
 	memset(&bdev, 0, sizeof(bdev));
@@ -632,10 +656,30 @@ num_blocks_test(void)
 	/* Shrinking block number */
 	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 20) != 0);
 
+	/* In case bdev opened with ext API */
+	rc = spdk_bdev_open_ext("num_blocks", false, bdev_open_cb1, &desc_ext, &desc_ext);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc_ext != NULL);
+
+	g_event_type1 = 0xFF;
+	/* Growing block number */
+	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 90) == 0);
+
+	poll_threads();
+	CU_ASSERT_EQUAL(g_event_type1, SPDK_BDEV_EVENT_RESIZE);
+
+	g_event_type1 = 0xFF;
+	/* Growing block number and closing */
+	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 100) == 0);
+
 	spdk_bdev_close(desc);
+	spdk_bdev_close(desc_ext);
 	spdk_bdev_unregister(&bdev, NULL, NULL);
 
 	poll_threads();
+
+	/* Callback is not called for closed device */
+	CU_ASSERT_EQUAL(g_event_type1, 0xFF);
 }
 
 static void
@@ -1998,24 +2042,6 @@ bdev_open_while_hotremove(void)
 
 	spdk_bdev_close(desc[0]);
 	free_bdev(bdev);
-}
-
-static void
-bdev_open_cb1(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
-{
-	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
-
-	g_event_type1 = type;
-	spdk_bdev_close(desc);
-}
-
-static void
-bdev_open_cb2(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
-{
-	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
-
-	g_event_type2 = type;
-	spdk_bdev_close(desc);
 }
 
 static void

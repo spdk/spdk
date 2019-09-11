@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -63,6 +63,7 @@ extern "C" {
 /** Asynchronous event type */
 enum spdk_bdev_event_type {
 	SPDK_BDEV_EVENT_REMOVE,
+	SPDK_BDEV_EVENT_RESIZE
 };
 
 /**
