@@ -759,7 +759,7 @@ spdk_bdev_qos_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 	spdk_bdev_get_qos_rate_limits(bdev, limits);
 
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "method", "set_bdev_qos_limit");
+	spdk_json_write_named_string(w, "method", "bdev_set_qos_limit");
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", bdev->name);

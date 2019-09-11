@@ -70,9 +70,9 @@ Example response
 }
 ~~~
 
-## set_bdev_qos_limit {#set_bdev_qos_limit}
+## bdev_set_qos_limit {#bdev_set_qos_limit}
 
-Users can use the `set_bdev_qos_limit` RPC command to enable, adjust, and disable
+Users can use the `bdev_set_qos_limit` RPC command to enable, adjust, and disable
 rate limits on an existing bdev.  Two types of rate limits are supported:
 IOPS and bandwidth.  The rate limits can be enabled, adjusted, and disabled at any
 time for the specified bdev.  The bdev name is a required parameter for this

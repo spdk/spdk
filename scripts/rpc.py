@@ -617,15 +617,16 @@ if __name__ == "__main__":
                    type=int)
     p.set_defaults(func=bdev_set_qd_sampling_period)
 
-    def set_bdev_qos_limit(args):
-        rpc.bdev.set_bdev_qos_limit(args.client,
+    def bdev_set_qos_limit(args):
+        rpc.bdev.bdev_set_qos_limit(args.client,
                                     name=args.name,
                                     rw_ios_per_sec=args.rw_ios_per_sec,
                                     rw_mbytes_per_sec=args.rw_mbytes_per_sec,
                                     r_mbytes_per_sec=args.r_mbytes_per_sec,
                                     w_mbytes_per_sec=args.w_mbytes_per_sec)
 
-    p = subparsers.add_parser('set_bdev_qos_limit', help='Set QoS rate limit on a blockdev')
+    p = subparsers.add_parser('bdev_set_qos_limit', aliases=['set_bdev_qos_limit'],
+                              help='Set QoS rate limit on a blockdev')
     p.add_argument('name', help='Blockdev name to set QoS. Example: Malloc0')
     p.add_argument('--rw_ios_per_sec',
                    help='R/W IOs per second limit (>=10000, example: 20000). 0 means unlimited.',
@@ -639,7 +640,7 @@ if __name__ == "__main__":
     p.add_argument('--w_mbytes_per_sec',
                    help="Write megabytes per second limit (>=10, example: 100). 0 means unlimited.",
                    type=int, required=False)
-    p.set_defaults(func=set_bdev_qos_limit)
+    p.set_defaults(func=bdev_set_qos_limit)
 
     def bdev_error_inject_error(args):
         rpc.bdev.bdev_error_inject_error(args.client,

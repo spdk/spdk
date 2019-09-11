@@ -99,34 +99,34 @@ READ_BANDWIDTH_LIMIT_MB=$(($READ_BANDWIDTH_LIMIT/1024/1024))
 READ_BANDWIDTH_LIMIT=$(($READ_BANDWIDTH_LIMIT_MB*1024*1024))
 
 # Limit the I/O rate by RPC, then confirm the observed rate matches.
-$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec $IOPS_LIMIT
+$rpc_py bdev_set_qos_limit Malloc0 --rw_ios_per_sec $IOPS_LIMIT
 run_fio Malloc0
 verify_qos_limits $IOPS_RESULT $IOPS_LIMIT
 
 # Now disable the rate limiting, and confirm the observed rate is not limited anymore.
-$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec 0
+$rpc_py bdev_set_qos_limit Malloc0 --rw_ios_per_sec 0
 run_fio Malloc0
 [ "$IOPS_RESULT" -gt "$IOPS_LIMIT" ]
 
 # Limit the I/O rate again.
-$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec $IOPS_LIMIT
+$rpc_py bdev_set_qos_limit Malloc0 --rw_ios_per_sec $IOPS_LIMIT
 run_fio Malloc0
 verify_qos_limits $IOPS_RESULT $IOPS_LIMIT
 
 echo "I/O rate limiting tests successful"
 
 # Limit the I/O bandwidth rate by RPC, then confirm the observed rate matches.
-$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec 0 --rw_mbytes_per_sec $BANDWIDTH_LIMIT_MB
+$rpc_py bdev_set_qos_limit Malloc0 --rw_ios_per_sec 0 --rw_mbytes_per_sec $BANDWIDTH_LIMIT_MB
 run_fio Malloc0
 verify_qos_limits $BANDWIDTH_RESULT $BANDWIDTH_LIMIT
 
 # Now disable the bandwidth rate limiting, and confirm the observed rate is not limited anymore.
-$rpc_py set_bdev_qos_limit Malloc0 --rw_mbytes_per_sec 0
+$rpc_py bdev_set_qos_limit Malloc0 --rw_mbytes_per_sec 0
 run_fio Malloc0
 [ "$BANDWIDTH_RESULT" -gt "$BANDWIDTH_LIMIT" ]
 
 # Limit the I/O bandwidth rate again with both read/write and read/only.
-$rpc_py set_bdev_qos_limit Malloc0 --rw_mbytes_per_sec $BANDWIDTH_LIMIT_MB --r_mbytes_per_sec $READ_BANDWIDTH_LIMIT_MB
+$rpc_py bdev_set_qos_limit Malloc0 --rw_mbytes_per_sec $BANDWIDTH_LIMIT_MB --r_mbytes_per_sec $READ_BANDWIDTH_LIMIT_MB
 run_fio Malloc0
 verify_qos_limits $BANDWIDTH_RESULT $READ_BANDWIDTH_LIMIT
 
