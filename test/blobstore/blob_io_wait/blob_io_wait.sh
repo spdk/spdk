@@ -38,19 +38,19 @@ echo "AIO $testdir/aio.bdev aio0 4096" >> $testdir/bdevperf.conf
 $rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w write -t 5 -r /var/tmp/spdk.sock &
 bdev_perf_pid=$!
 waitforlisten $bdev_perf_pid
-$rpc_py enable_bdev_histogram aio0 -e
+$rpc_py bdev_enable_histogram aio0 -e
 sleep 2
 $rpc_py get_bdev_histogram aio0 | $rootdir/scripts/histogram.py
-$rpc_py enable_bdev_histogram aio0 -d
+$rpc_py bdev_enable_histogram aio0 -d
 wait $bdev_perf_pid
 
 $rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w read -t 5 -r /var/tmp/spdk.sock &
 bdev_perf_pid=$!
 waitforlisten $bdev_perf_pid
-$rpc_py enable_bdev_histogram aio0 -e
+$rpc_py bdev_enable_histogram aio0 -e
 sleep 2
 $rpc_py get_bdev_histogram aio0 | $rootdir/scripts/histogram.py
-$rpc_py enable_bdev_histogram aio0 -d
+$rpc_py bdev_enable_histogram aio0 -d
 wait $bdev_perf_pid
 
 $rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w unmap -t 1
