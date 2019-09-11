@@ -52,7 +52,7 @@ static const struct spdk_json_object_decoder rpc_remove_virtio_dev[] = {
 };
 
 static void
-spdk_rpc_remove_virtio_bdev_cb(void *ctx, int errnum)
+spdk_rpc_bdev_virtio_detach_controller_cb(void *ctx, int errnum)
 {
 	struct spdk_jsonrpc_request *request = ctx;
 	struct spdk_json_write_ctx *w;
@@ -69,8 +69,8 @@ spdk_rpc_remove_virtio_bdev_cb(void *ctx, int errnum)
 }
 
 static void
-spdk_rpc_remove_virtio_bdev(struct spdk_jsonrpc_request *request,
-			    const struct spdk_json_val *params)
+spdk_rpc_bdev_virtio_detach_controller(struct spdk_jsonrpc_request *request,
+				       const struct spdk_json_val *params)
 {
 	struct rpc_remove_virtio_dev req = {NULL};
 	int rc = 0;
@@ -83,9 +83,9 @@ spdk_rpc_remove_virtio_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = bdev_virtio_blk_dev_remove(req.name, spdk_rpc_remove_virtio_bdev_cb, request);
+	rc = bdev_virtio_blk_dev_remove(req.name, spdk_rpc_bdev_virtio_detach_controller_cb, request);
 	if (rc == -ENODEV) {
-		rc = bdev_virtio_scsi_dev_remove(req.name, spdk_rpc_remove_virtio_bdev_cb, request);
+		rc = bdev_virtio_scsi_dev_remove(req.name, spdk_rpc_bdev_virtio_detach_controller_cb, request);
 	}
 
 	if (rc != 0) {
@@ -95,7 +95,9 @@ spdk_rpc_remove_virtio_bdev(struct spdk_jsonrpc_request *request,
 cleanup:
 	free(req.name);
 }
-SPDK_RPC_REGISTER("remove_virtio_bdev", spdk_rpc_remove_virtio_bdev, SPDK_RPC_RUNTIME);
+SPDK_RPC_REGISTER("bdev_virtio_detach_controller",
+		  spdk_rpc_bdev_virtio_detach_controller, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_virtio_detach_controller, remove_virtio_bdev)
 
 static void
 spdk_rpc_get_virtio_scsi_devs(struct spdk_jsonrpc_request *request,

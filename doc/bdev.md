@@ -557,7 +557,7 @@ reflect all parameters passed to QEMU's vhost-user-scsi-pci device.
 
 Virtio-Block devices can be removed with the following command
 
-`rpc.py remove_virtio_bdev VirtioBlk0`
+`rpc.py bdev_virtio_detach_controller VirtioBlk0`
 
 # Virtio SCSI {#bdev_config_virtio_scsi}
 
@@ -574,6 +574,6 @@ one LUN (LUN0) per SCSI device. The above 2 commands will output names of all ex
 
 Virtio-SCSI devices can be removed with the following command
 
-`rpc.py remove_virtio_bdev VirtioScsi0`
+`rpc.py bdev_virtio_detach_controller VirtioScsi0`
 
 Removing a Virtio-SCSI device will destroy all its bdevs.
