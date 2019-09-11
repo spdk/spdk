@@ -272,7 +272,7 @@ Example response:
     "iscsi_get_initiator_groups",
     "set_iscsi_options",
     "set_bdev_options",
-    "set_bdev_qos_limit",
+    "bdev_set_qos_limit",
     "bdev_get_bdevs",
     "bdev_get_iostat",
     "get_subsystem_config",
@@ -773,7 +773,7 @@ Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
 }
 ~~~
 
-## set_bdev_qos_limit {#rpc_set_bdev_qos_limit}
+## bdev_set_qos_limit {#rpc_bdev_set_qos_limit}
 
 Set the quality of service rate limit on a bdev.
 
@@ -795,7 +795,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "set_bdev_qos_limit",
+  "method": "bdev_set_qos_limit",
   "params": {
     "name": "Malloc0"
     "rw_ios_per_sec": 20000
