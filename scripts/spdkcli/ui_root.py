@@ -245,8 +245,8 @@ class UIRoot(UINode):
         return self.print_array(response)
 
     @verbose
-    def remove_virtio_bdev(self, **kwargs):
-        response = rpc.vhost.remove_virtio_bdev(self.client, **kwargs)
+    def bdev_virtio_detach_controller(self, **kwargs):
+        response = rpc.vhost.bdev_virtio_detach_controller(self.client, **kwargs)
         return response
 
     @verbose
