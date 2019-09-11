@@ -1899,11 +1899,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('--vq-size', help='Size of each queue', type=int)
     p.set_defaults(func=construct_virtio_dev)
 
-    def get_virtio_scsi_devs(args):
-        print_dict(rpc.vhost.get_virtio_scsi_devs(args.client))
+    def bdev_virtio_scsi_get_devices(args):
+        print_dict(rpc.vhost.bdev_virtio_scsi_get_devices(args.client))
 
-    p = subparsers.add_parser('get_virtio_scsi_devs', help='List all Virtio-SCSI devices.')
-    p.set_defaults(func=get_virtio_scsi_devs)
+    p = subparsers.add_parser('bdev_virtio_scsi_get_devices', aliases=['get_virtio_scsi_devs'],
+                              help='List all Virtio-SCSI devices.')
+    p.set_defaults(func=bdev_virtio_scsi_get_devices)
 
     def bdev_virtio_detach_controller(args):
         rpc.vhost.bdev_virtio_detach_controller(args.client,
