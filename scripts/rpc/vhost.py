@@ -168,6 +168,6 @@ def bdev_virtio_detach_controller(client, name):
     return client.call('bdev_virtio_detach_controller', params)
 
 
-def get_virtio_scsi_devs(client):
+def bdev_virtio_scsi_get_devices(client):
     """Get list of virtio scsi devices."""
-    return client.call('get_virtio_scsi_devs')
+    return client.call('bdev_virtio_scsi_get_devices')
