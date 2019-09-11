@@ -173,7 +173,7 @@ _pt_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	/* Complete the original IO and then free the one that we created here
-	 * as a result of issuing an IO via submit_reqeust.
+	 * as a result of issuing an IO via submit_request.
 	 */
 	spdk_bdev_io_complete(orig_io, status);
 	spdk_bdev_free_io(bdev_io);
@@ -252,7 +252,7 @@ pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, boo
 
 /* Called when someone above submits IO to this pt vbdev. We're simply passing it on here
  * via SPDK IO calls which in turn allocate another bdev IO and call our cpl callback provided
- * below along with the original bdiv_io so that we can complete it once this IO completes.
+ * below along with the original bdev_io so that we can complete it once this IO completes.
  */
 static void
 vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -414,7 +414,7 @@ pt_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 
 /* We provide this callback for the SPDK channel code to destroy a channel
  * created with our create callback. We just need to undo anything we did
- * when we created. If this bdev used its own poller, we'd unregsiter it here.
+ * when we created. If this bdev used its own poller, we'd unregister it here.
  */
 static void
 pt_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
