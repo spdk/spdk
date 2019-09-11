@@ -640,7 +640,8 @@ def delete_passthru_bdev(client, name):
     return client.call('delete_passthru_bdev', params)
 
 
-def construct_split_vbdev(client, base_bdev, split_count, split_size_mb=None):
+@deprecated_alias('construct_split_vbdev')
+def bdev_split_create(client, base_bdev, split_count, split_size_mb=None):
     """Construct split block devices from a base bdev.
 
     Args:
@@ -658,7 +659,7 @@ def construct_split_vbdev(client, base_bdev, split_count, split_size_mb=None):
     if split_size_mb:
         params['split_size_mb'] = split_size_mb
 
-    return client.call('construct_split_vbdev', params)
+    return client.call('bdev_split_create', params)
 
 
 def destruct_split_vbdev(client, base_bdev):
