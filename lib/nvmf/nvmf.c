@@ -1015,12 +1015,25 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				return -ENOMEM;
 			}
 			ns_info->channel = ch;
+		} else {
+			/* Namespace is still there but attributes may have changed */
+			if (ns_info->num_blocks != spdk_bdev_get_num_blocks(ns->bdev)) {
+				SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Namespace resized: subsystem_id %d,"
+					      " nsid %u, pg %p, old %lu, new %lu\n",
+					      subsystem->id,
+					      ns->nsid,
+					      group,
+					      ns_info->num_blocks,
+					      spdk_bdev_get_num_blocks(ns->bdev));
+				ns_changed = true;
+			}
 		}
 
 		if (ns == NULL) {
 			memset(ns_info, 0, sizeof(*ns_info));
 		} else {
 			ns_info->uuid = *spdk_bdev_get_uuid(ns->bdev);
+			ns_info->num_blocks = spdk_bdev_get_num_blocks(ns->bdev);
 			ns_info->crkey = ns->crkey;
 			ns_info->rtype = ns->rtype;
 			if (ns->holder) {
