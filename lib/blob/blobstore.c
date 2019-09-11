@@ -675,7 +675,7 @@ _spdk_blob_serialize_xattr(const struct spdk_xattr *xattr,
 static void
 _spdk_blob_serialize_extent_rle(const struct spdk_blob *blob,
 				uint64_t start_cluster, uint64_t *next_cluster,
-				uint8_t *buf, size_t buf_sz)
+				uint8_t **buf, size_t *buf_sz)
 {
 	struct spdk_blob_md_descriptor_extent_rle *desc_extent_rle;
 	size_t cur_sz;
@@ -684,12 +684,12 @@ _spdk_blob_serialize_extent_rle(const struct spdk_blob *blob,
 
 	/* The buffer must have room for at least one extent */
 	cur_sz = sizeof(struct spdk_blob_md_descriptor) + sizeof(desc_extent_rle->extents[0]);
-	if (buf_sz < cur_sz) {
+	if (*buf_sz < cur_sz) {
 		*next_cluster = start_cluster;
 		return;
 	}
 
-	desc_extent_rle = (struct spdk_blob_md_descriptor_extent_rle *)buf;
+	desc_extent_rle = (struct spdk_blob_md_descriptor_extent_rle *)*buf;
 	desc_extent_rle->type = SPDK_MD_DESCRIPTOR_TYPE_EXTENT_RLE;
 
 	lba_per_cluster = _spdk_bs_cluster_to_lba(blob->bs, 1);
@@ -711,7 +711,7 @@ _spdk_blob_serialize_extent_rle(const struct spdk_blob *blob,
 
 		cur_sz += sizeof(desc_extent_rle->extents[extent_idx]);
 
-		if (buf_sz < cur_sz) {
+		if (*buf_sz < cur_sz) {
 			/* If we ran out of buffer space, return */
 			*next_cluster = i;
 			goto finish;
@@ -729,6 +729,8 @@ _spdk_blob_serialize_extent_rle(const struct spdk_blob *blob,
 
 finish:
 	desc_extent_rle->length = sizeof(desc_extent_rle->extents[0]) * extent_idx;
+	*buf_sz -= sizeof(struct spdk_blob_md_descriptor) + desc_extent_rle->length;
+	*buf += sizeof(struct spdk_blob_md_descriptor) + desc_extent_rle->length;
 
 	return;
 }
@@ -745,7 +747,7 @@ _spdk_blob_serialize_extents_rle(const struct spdk_blob *blob,
 
 	last_cluster = 0;
 	while (last_cluster < blob->active.num_clusters) {
-		_spdk_blob_serialize_extent_rle(blob, last_cluster, &last_cluster, *buf, *remaining_sz);
+		_spdk_blob_serialize_extent_rle(blob, last_cluster, &last_cluster, buf, remaining_sz);
 
 		if (last_cluster == blob->active.num_clusters) {
 			break;
