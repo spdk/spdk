@@ -790,7 +790,8 @@ def bdev_set_qd_sampling_period(client, name, period):
     return client.call('bdev_set_qd_sampling_period', params)
 
 
-def set_bdev_qos_limit(
+@deprecated_alias('set_bdev_qos_limit')
+def bdev_set_qos_limit(
         client,
         name,
         rw_ios_per_sec=None,
@@ -816,7 +817,7 @@ def set_bdev_qos_limit(
         params['r_mbytes_per_sec'] = r_mbytes_per_sec
     if w_mbytes_per_sec is not None:
         params['w_mbytes_per_sec'] = w_mbytes_per_sec
-    return client.call('set_bdev_qos_limit', params)
+    return client.call('bdev_set_qos_limit', params)
 
 
 @deprecated_alias('apply_firmware')
