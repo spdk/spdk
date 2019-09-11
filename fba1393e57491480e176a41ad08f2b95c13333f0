@@ -1,0 +1,152 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "492c40f8_647618fc",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T09:06:12Z",
+      "side": 1,
+      "message": "struct spdk_bdev_channel is defined in lib/bdev.c locally. I think we can create and use stub like:\nstruct spdk_bdev_channel {\n  struct spdk_io_channel *channel;\n};",
+      "revId": "fba1393e57491480e176a41ad08f2b95c13333f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d466d2da_248b8c0a",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T09:06:12Z",
+      "side": 1,
+      "message": "By the above definition, we can remove the case and then do\n  cb(bdev_io-\u003einternal.ch-\u003echannel, bdev_io, true);",
+      "revId": "fba1393e57491480e176a41ad08f2b95c13333f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b9a91ad_fb5b9846",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T09:06:12Z",
+      "side": 1,
+      "message": "Add\n struct spdk_bdev_channel *channel \u003d spdk_io_channel_get_ctx(ch).",
+      "revId": "fba1393e57491480e176a41ad08f2b95c13333f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8daf3e77_f5fdaaf2",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 643,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T09:06:12Z",
+      "side": 1,
+      "message": "Then we can set channel without cast.",
+      "revId": "fba1393e57491480e176a41ad08f2b95c13333f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd3d38df_5d91169b",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1387,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T09:06:12Z",
+      "side": 1,
+      "message": "We should allocate another channel and use it, e.g.,\n  \nstruct spdk_io_channel *ch_b; (you may have better name).\nstruct spdk_bdev_channel *ch_b_ctx;\n\nch_b \u003d calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct spdk_bdev_channel));\nch_b_ctx \u003d spdk_io_channel_get_ctx(ch_b);\nch_b_ctx-\u003echannel \u003d ch;",
+      "revId": "fba1393e57491480e176a41ad08f2b95c13333f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98261018_2c64733e",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1430,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T09:06:12Z",
+      "side": 1,
+      "message": "Then we can pass ch_b instead of ch.",
+      "range": {
+        "startLine": 1430,
+        "startChar": 30,
+        "endLine": 1430,
+        "endChar": 32
+      },
+      "revId": "fba1393e57491480e176a41ad08f2b95c13333f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4744526a_c6f9b274",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1443,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T09:06:12Z",
+      "side": 1,
+      "message": "free(ch_b) here.",
+      "revId": "fba1393e57491480e176a41ad08f2b95c13333f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0003d66a_732f3fce",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1986,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T09:06:12Z",
+      "side": 1,
+      "message": "I saw warning such that ch_ctx is accessed without initialization.\n\nThis should be updated by before verify_io in the loop, ch_ctx \u003d spdk_io_channel_get_ctx(\u0026ch[i]);\n\nYou can do this fix separately.",
+      "range": {
+        "startLine": 1986,
+        "startChar": 40,
+        "endLine": 1986,
+        "endChar": 46
+      },
+      "revId": "fba1393e57491480e176a41ad08f2b95c13333f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
