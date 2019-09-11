@@ -34,7 +34,7 @@ $spdkcli_job "'/bdevs/aio create sample0 /tmp/sample_aio 512' 'sample0' True
 trtype=$($rootdir/scripts/gen_nvme.sh --json | jq -r '.config[].params | select(.name=="Nvme0").trtype')
 traddr=$($rootdir/scripts/gen_nvme.sh --json | jq -r '.config[].params | select(.name=="Nvme0").traddr')
 $spdkcli_job "'/bdevs/nvme create Nvme0 $trtype $traddr' 'Nvme0' True
-'/bdevs/split_disk split_bdev Nvme0n1 4' 'Nvme0n1p0' True
+'/bdevs/split_disk bdev_split_create Nvme0n1 4' 'Nvme0n1p0' True
 "
 timing_exit spdkcli_create_bdevs_config
 

@@ -28,7 +28,7 @@
             "split_size_mb": 0,
             "split_count": 8
           },
-          "method": "construct_split_vbdev"
+          "method": "bdev_split_create"
         },
         {
           "params": {

@@ -31,5 +31,5 @@ function create_nv_cache_bdev() {
 
 	# Create NVMe bdev on specified device and split it so that it has the desired size
 	local nvc_bdev=$($rootdir/scripts/rpc.py bdev_nvme_attach_controller -b $name -t PCIe -a $cache_bdf)
-	$rootdir/scripts/rpc.py construct_split_vbdev $nvc_bdev -s $size 1
+	$rootdir/scripts/rpc.py bdev_split_create $nvc_bdev -s $size 1
 }

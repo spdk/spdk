@@ -1360,20 +1360,21 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=destroy_raid_bdev)
 
     # split
-    def construct_split_vbdev(args):
-        print_array(rpc.bdev.construct_split_vbdev(args.client,
-                                                   base_bdev=args.base_bdev,
-                                                   split_count=args.split_count,
-                                                   split_size_mb=args.split_size_mb))
+    def bdev_split_create(args):
+        print_array(rpc.bdev.bdev_split_create(args.client,
+                                               base_bdev=args.base_bdev,
+                                               split_count=args.split_count,
+                                               split_size_mb=args.split_size_mb))
 
-    p = subparsers.add_parser('construct_split_vbdev', help="""Add given disk name to split config. If bdev with base_name
+    p = subparsers.add_parser('bdev_split_create', aliases=['construct_split_vbdev'],
+                              help="""Add given disk name to split config. If bdev with base_name
     name exist the split bdevs will be created right away, if not split bdevs will be created when base bdev became
     available (during examination process).""")
     p.add_argument('base_bdev', help='base bdev name')
     p.add_argument('-s', '--split-size-mb', help='size in MiB for each bdev', type=int, default=0)
     p.add_argument('split_count', help="""Optional - number of split bdevs to create. Total size * split_count must not
     exceed the base bdev size.""", type=int)
-    p.set_defaults(func=construct_split_vbdev)
+    p.set_defaults(func=bdev_split_create)
 
     def destruct_split_vbdev(args):
         rpc.bdev.destruct_split_vbdev(args.client,

@@ -286,7 +286,7 @@ Example response:
     "bdev_aio_delete",
     "bdev_aio_create",
     "destruct_split_vbdev",
-    "construct_split_vbdev",
+    "bdev_split_create",
     "bdev_error_inject_error",
     "bdev_error_delete",
     "bdev_error_create",
@@ -445,7 +445,7 @@ Example response:
         "split_size_mb": 0,
         "split_count": 2
       },
-      "method": "construct_split_vbdev"
+      "method": "bdev_split_create"
     },
     {
       "params": {

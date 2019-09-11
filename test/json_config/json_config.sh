@@ -166,8 +166,8 @@ function create_bdev_subsystem_config() {
 			fi
 		fi
 
-		tgt_rpc construct_split_vbdev $lvol_store_base_bdev 2
-		tgt_rpc construct_split_vbdev Malloc0 3
+		tgt_rpc bdev_split_create $lvol_store_base_bdev 2
+		tgt_rpc bdev_split_create Malloc0 3
 		tgt_rpc bdev_malloc_create 8 4096 --name Malloc3
 		tgt_rpc bdev_passthru_create -b Malloc3 -p PTBdevFromMalloc3
 
@@ -279,7 +279,7 @@ function create_vhost_subsystem_config() {
 	timing_enter $FUNCNAME
 
 	tgt_rpc bdev_malloc_create 64 1024 --name MallocForVhost0
-	tgt_rpc construct_split_vbdev MallocForVhost0 8
+	tgt_rpc bdev_split_create MallocForVhost0 8
 
 	tgt_rpc construct_vhost_scsi_controller   VhostScsiCtrlr0
 	tgt_rpc add_vhost_scsi_lun                VhostScsiCtrlr0 0 MallocForVhost0p3
