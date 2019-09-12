@@ -108,5 +108,6 @@ void nvme_bdev_dump_trid_json(struct spdk_nvme_transport_id *trid,
 			      struct spdk_json_write_ctx *w);
 
 void nvme_bdev_attach_done(struct nvme_async_probe_ctx *ctx, int rc);
+void nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */

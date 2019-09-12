@@ -121,3 +121,15 @@ nvme_bdev_attach_done(struct nvme_async_probe_ctx *ctx, int rc)
 		free(ctx);
 	}
 }
+
+void
+nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+{
+	assert(nvme_bdev_ctrlr->destruct);
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	free(nvme_bdev_ctrlr->name);
+	free(nvme_bdev_ctrlr->bdevs);
+	free(nvme_bdev_ctrlr);
+}
