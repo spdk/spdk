@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f43fc455_800e052a",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-12T13:31:51Z",
+      "side": 1,
+      "message": "spdk_bdev_zone_reset assumes only one zone is sent and num_zones isn\u0027t filled now",
+      "revId": "eeb37ec4640544389e8bc1085d373736383401fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
