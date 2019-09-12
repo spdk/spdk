@@ -209,28 +209,6 @@ bdev_nvme_poll_adminq(void *arg)
 	return spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 }
 
-static void
-bdev_nvme_unregister_cb(void *io_device)
-{
-	struct spdk_nvme_ctrlr *ctrlr = io_device;
-
-	spdk_nvme_detach(ctrlr);
-}
-
-static void
-bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
-{
-	assert(nvme_bdev_ctrlr->destruct);
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
-	spdk_io_device_unregister(nvme_bdev_ctrlr->ctrlr, bdev_nvme_unregister_cb);
-	spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
-	free(nvme_bdev_ctrlr->name);
-	free(nvme_bdev_ctrlr->bdevs);
-	free(nvme_bdev_ctrlr);
-}
-
 static int
 bdev_nvme_destruct(void *ctx)
 {
@@ -243,7 +221,7 @@ bdev_nvme_destruct(void *ctx)
 	nvme_disk->active = false;
 	if (nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct) {
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		bdev_nvme_ctrlr_destruct(nvme_bdev_ctrlr);
+		nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 		return 0;
 	}
 
@@ -1054,7 +1032,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 			nvme_bdev_ctrlr->destruct = true;
 			if (nvme_bdev_ctrlr->ref == 0) {
 				pthread_mutex_unlock(&g_bdev_nvme_mutex);
-				bdev_nvme_ctrlr_destruct(nvme_bdev_ctrlr);
+				nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 			} else {
 				pthread_mutex_unlock(&g_bdev_nvme_mutex);
 			}
@@ -1588,7 +1566,7 @@ bdev_nvme_library_fini(void)
 
 		nvme_bdev_ctrlr->destruct = true;
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		bdev_nvme_ctrlr_destruct(nvme_bdev_ctrlr);
+		nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 		pthread_mutex_lock(&g_bdev_nvme_mutex);
 	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
