@@ -62,12 +62,14 @@ void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);
 
+int spdk_bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx);
 int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			  struct spdk_nvme_host_id *hostid,
 			  const char *base_name,
 			  const char **names, size_t *count,
 			  const char *hostnqn,
 			  uint32_t prchk_flags,
+			  spdk_nvme_create_bdevs_fn create_bdevs_fn,
 			  spdk_bdev_create_nvme_fn cb_fn,
 			  void *cb_ctx);
 struct spdk_nvme_ctrlr *spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
