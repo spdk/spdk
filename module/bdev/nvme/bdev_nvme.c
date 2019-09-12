@@ -1160,15 +1160,14 @@ spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, voi
 }
 
 static int
-bdev_nvme_create_bdevs(const char **names, size_t *count,
-		       const struct spdk_nvme_transport_id *trid)
+bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx)
 {
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	struct nvme_bdev	*nvme_bdev;
 	uint32_t		i, nsid;
 	size_t			j;
 
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
 	if (!nvme_bdev_ctrlr) {
 		SPDK_ERRLOG("Failed to find new NVMe controller\n");
 		return -1;
@@ -1188,17 +1187,17 @@ bdev_nvme_create_bdevs(const char **names, size_t *count,
 			continue;
 		}
 		assert(nvme_bdev->id == nsid);
-		if (j < *count) {
-			names[j] = nvme_bdev->disk.name;
+		if (j < *ctx->count) {
+			ctx->names[j] = nvme_bdev->disk.name;
 			j++;
 		} else {
 			SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %zu. Unable to return all names of created bdevs\n",
-				    *count);
+				    *ctx->count);
 			return -1;
 		}
 	}
 
-	*count = j;
+	*ctx->count = j;
 
 	return 0;
 }
@@ -1230,10 +1229,12 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		goto end;
 	}
 
-	rc = bdev_nvme_create_bdevs(ctx->names, ctx->count, &ctx->trid);
-	if (rc) {
-		SPDK_ERRLOG("Failed to create bdevs\n");
-		free_controller(trid);
+	if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
+		rc = bdev_nvme_create_bdevs(ctx);
+		if (rc) {
+			SPDK_ERRLOG("Failed to create bdevs\n");
+			free_controller(trid);
+		}
 	}
 
 end:
