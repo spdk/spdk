@@ -195,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "b23004da_4a62f563",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-12T21:28:13Z",
+      "side": 1,
+      "message": "Ah, yes I was thinking about just one on the controller, but had sick brain and was thinking that one thread would be adding to it and another thread would be removing from it.",
+      "parentUuid": "6f7398ff_8cb41951",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d4761226_92bf6fbf",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 5
