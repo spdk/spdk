@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "36ef33b8_333ae29f",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 645,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-12T01:26:06Z",
+      "side": 1,
+      "message": "Construct --\u003e Create",
+      "revId": "a3f39e563bec21e7d32931df0228b29ef94ba642",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "56631ac0_99316e66",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 1
