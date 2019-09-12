@@ -16,6 +16,24 @@
       "revId": "ee72e10a97491fca9a01435dd19da972f9be83bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b40552d_479a55fc",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-12T03:02:39Z",
+      "side": 1,
+      "message": "Hi Paul, thanks for your review. This function is called only during create_ctrlr and for each ctrlr, it will only init once. And it might expand in the future if we want to do more init work for opal maybe get some configuration info. Thank you.",
+      "parentUuid": "0a23984b_7eff21a3",
+      "revId": "ee72e10a97491fca9a01435dd19da972f9be83bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
