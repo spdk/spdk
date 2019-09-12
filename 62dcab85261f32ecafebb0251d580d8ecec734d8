@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8dcb20e5_6d6bc1fa",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-12T14:23:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eb4bb819_fbdcb5dd",
+      "revId": "62dcab85261f32ecafebb0251d580d8ecec734d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be3f6223_32aa4289",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 9
@@ -33,6 +51,24 @@
       "revId": "62dcab85261f32ecafebb0251d580d8ecec734d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9949a077_13bc15b5",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-12T14:23:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be3f6223_32aa4289",
+      "revId": "62dcab85261f32ecafebb0251d580d8ecec734d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "d228180f_d4094fb9",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-12T14:23:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a096b348_65cb9fb0",
+      "revId": "62dcab85261f32ecafebb0251d580d8ecec734d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "729c15b7_3bddf078",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 9
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "91243789_71b19b22",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-12T14:23:57Z",
+      "side": 1,
+      "message": "bdev-\u003ename is freed by bdev_ocssd_free_bdev.",
+      "parentUuid": "729c15b7_3bddf078",
+      "revId": "62dcab85261f32ecafebb0251d580d8ecec734d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "59a8d07b_f392af5e",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 9
@@ -84,6 +156,24 @@
       "revId": "62dcab85261f32ecafebb0251d580d8ecec734d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a05c11aa_dfbbc878",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-12T14:23:57Z",
+      "side": 1,
+      "message": "It doesn\u0027t get freed. The controller stays on the controller list and you have to detach it manually (it\u0027s listed by bdev_nvme_get_controllers RPC).",
+      "parentUuid": "59a8d07b_f392af5e",
+      "revId": "62dcab85261f32ecafebb0251d580d8ecec734d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
