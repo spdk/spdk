@@ -2013,6 +2013,35 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     domain:bus:device.function format or domain.bus.device.function format""")
     p.set_defaults(func=ioat_scan_copy_engine)
 
+    # opal
+    def bdev_opal_create(args):
+        print_json(rpc.bdev.bdev_opal_create(args.client,
+                                             nvme_ctrlr_name=args.nvme_ctrlr_name,
+                                             nsid=args.nsid,
+                                             locking_range_id=args.locking_range_id,
+                                             range_start=args.range_start,
+                                             range_length=args.range_length,
+                                             password=args.password))
+
+    p = subparsers.add_parser('bdev_opal_create', help="""Create opal bdev on specified NVMe controller""")
+    p.add_argument('-b', '--nvme-ctrlr-name', help='nvme ctrlr name', required=True)
+    p.add_argument('-n', '--nsid', help='namespace ID (only support nsid=1 for now)', type=int, required=True)
+    p.add_argument('-i', '--locking-range-id', help='locking range id', type=int, required=True)
+    p.add_argument('-s', '--range-start', help='locking range start LBA', type=int, required=True)
+    p.add_argument('-l', '--range-length', help='locking range length (in blocks)', type=int, required=True)
+    p.add_argument('-p', '--password', help='admin password', required=True)
+    p.set_defaults(func=bdev_opal_create)
+
+    def bdev_opal_delete(args):
+        rpc.bdev.bdev_opal_delete(args.client,
+                                  bdev_name=args.bdev_name,
+                                  password=args.password)
+
+    p = subparsers.add_parser('bdev_opal_delete', help="""delete a virtual opal bdev""")
+    p.add_argument('-b', '--bdev-name', help='opal virtual bdev', required=True)
+    p.add_argument('-p', '--password', help='admin password', required=True)
+    p.set_defaults(func=bdev_opal_delete)
+
     # bdev_nvme_send_cmd
     def bdev_nvme_send_cmd(args):
         print_dict(rpc.nvme.bdev_nvme_send_cmd(args.client,
