@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "95698ebc_bf146593",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-12T00:55:45Z",
+      "side": 1,
+      "message": "raid_bdev_delete",
+      "range": {
+        "startLine": 325,
+        "startChar": 26,
+        "endLine": 325,
+        "endChar": 38
+      },
+      "revId": "0612b307316b6941ce3be038c6876ebf79059576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5c220886_b03a94b0",
         "filename": "module/bdev/raid/bdev_raid_rpc.c",
         "patchSetId": 4
@@ -47,6 +70,29 @@
       "writtenOn": "2019-09-11T18:39:16Z",
       "side": 1,
       "message": "destroy --\u003e delete",
+      "revId": "0612b307316b6941ce3be038c6876ebf79059576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cab7dc4_7321f76f",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-12T00:55:45Z",
+      "side": 1,
+      "message": "deleting a raid bdev.",
+      "range": {
+        "startLine": 376,
+        "startChar": 53,
+        "endLine": 376,
+        "endChar": 65
+      },
       "revId": "0612b307316b6941ce3be038c6876ebf79059576",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
