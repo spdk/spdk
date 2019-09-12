@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e056122_02ecf22d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-12T12:01:02Z",
+      "side": 1,
+      "message": "The RPC is called create, so I guess it\u0027d make sense to call it create here too.",
+      "range": {
+        "startLine": 7,
+        "startChar": 13,
+        "endLine": 7,
+        "endChar": 22
+      },
+      "revId": "8dd6fa692a62bfc290d1c686430b8686895b8a8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf2f5c28_1a5b820f",
+        "filename": "module/bdev/zone/vbdev_zone_block_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-12T12:01:02Z",
+      "side": 1,
+      "message": "Wouldn\u0027t 0 make more sense (ie. all zones can be opened at a time)?",
+      "range": {
+        "startLine": 42,
+        "startChar": 26,
+        "endLine": 42,
+        "endChar": 28
+      },
+      "revId": "8dd6fa692a62bfc290d1c686430b8686895b8a8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73aeb4f5_3d4b6c8c",
+        "filename": "module/bdev/zone/vbdev_zone_block_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-12T12:01:02Z",
+      "side": 1,
+      "message": "What\u0027s the point of the default value for this? Shouldn\u0027t we always rely on the argument passed by the user?",
+      "range": {
+        "startLine": 43,
+        "startChar": 8,
+        "endLine": 43,
+        "endChar": 26
+      },
+      "revId": "8dd6fa692a62bfc290d1c686430b8686895b8a8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
