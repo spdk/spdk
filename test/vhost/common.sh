@@ -124,7 +124,7 @@ function vhost_run()
 	local vhost_pid_file="$vhost_dir/vhost.pid"
 	local vhost_socket="$vhost_dir/usvhost"
 	notice "starting vhost app in background"
-	[[ -r "$vhost_pid_file" ]] && vhost_kill 0 $vhost_name
+	[[ -r "$vhost_pid_file" ]] && vhost_kill $vhost_name
 	[[ -d $vhost_dir ]] && rm -f $vhost_dir/*
 	mkdir -p $vhost_dir
 
