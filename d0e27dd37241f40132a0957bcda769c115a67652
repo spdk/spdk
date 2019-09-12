@@ -91,6 +91,30 @@
       "revId": "d0e27dd37241f40132a0957bcda769c115a67652",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc56b078_01a473e2",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-12T00:50:09Z",
+      "side": 1,
+      "message": "I saw the Paul\u0027s comment in the next patch. \"the RPC for getting RAID bdevs\" may be better.",
+      "parentUuid": "1ea6abf1_32b5e9e5",
+      "range": {
+        "startLine": 77,
+        "startChar": 34,
+        "endLine": 77,
+        "endChar": 55
+      },
+      "revId": "d0e27dd37241f40132a0957bcda769c115a67652",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
