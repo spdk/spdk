@@ -30,8 +30,6 @@ function create_json_config()
 	echo '"method": "construct_ftl_bdev",'
 	echo '"params": {'
 	echo "\"name\": \"$2\","
-	echo '"trtype": "PCIe",'
-	echo "\"traddr\": \"$1\","
 	echo "\"zoned_bdev\": \"$3\","
 	if [ -n "$6" ]; then
 		echo "\"uuid\": \"$4\","
