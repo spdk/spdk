@@ -62,9 +62,6 @@ struct ftl_zone {
 	/* First logical block of a zone */
 	struct ftl_addr				start_addr;
 
-	/* Pointer to parallel unit */
-	struct ftl_punit			*punit;
-
 	/* Position in band's zone_buf */
 	uint32_t				pos;
 
