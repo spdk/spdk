@@ -54,12 +54,15 @@
 static void bdev_nvme_get_spdk_running_config(FILE *fp);
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
+typedef void (*nvme_bdev_remove_fn)(struct nvme_bdev *nvme_bdev);
+
 struct nvme_bdev {
 	struct spdk_bdev	disk;
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	uint32_t		id;
 	bool			active;
 	struct spdk_nvme_ns	*ns;
+	nvme_bdev_remove_fn remove_fn;
 };
 
 struct nvme_io_channel {
@@ -248,6 +251,12 @@ bdev_nvme_destruct(void *ctx)
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	nvme_bdev_ctrlr->ref--;
+
+	/* Perform NVMe mode specific cleanup */
+	if (nvme_disk->remove_fn != NULL) {
+		nvme_disk->remove_fn(nvme_disk);
+	}
+
 	free(nvme_disk->disk.name);
 	nvme_disk->active = false;
 	if (nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct) {
