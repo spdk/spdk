@@ -201,12 +201,12 @@ ftl_retrieve_chunk_info(struct spdk_ftl_dev *dev, struct ftl_addr addr,
 }
 
 static int
-ftl_retrieve_punit_chunk_info(struct spdk_ftl_dev *dev, const struct ftl_punit *punit,
+ftl_retrieve_punit_chunk_info(struct spdk_ftl_dev *dev, unsigned int punit,
 			      struct spdk_ocssd_chunk_information_entry *info)
 {
 	uint32_t i = 0;
 	unsigned int num_entries = FTL_BLOCK_SIZE / sizeof(*info);
-	struct ftl_addr chunk_addr = punit->start_addr;
+	struct ftl_addr chunk_addr = { .pu = punit };
 	char addr_buf[128];
 
 	for (i = 0; i < dev->geo.num_chk; i += num_entries, chunk_addr.zone_id += num_entries) {
@@ -267,10 +267,8 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 {
 	struct spdk_ocssd_chunk_information_entry	*info;
 	struct ftl_band					*band, *pband;
-	struct ftl_punit				*punit;
 	struct ftl_zone					*zone;
 	unsigned int					i, j;
-	char						buf[128];
 	int						rc = 0;
 
 	LIST_INIT(&dev->free_bands);
@@ -323,13 +321,8 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 	}
 
 	for (i = 0; i < ftl_dev_num_punits(dev); ++i) {
-		punit = &dev->punits[i];
-
-		rc = ftl_retrieve_punit_chunk_info(dev, punit, info);
+		rc = ftl_retrieve_punit_chunk_info(dev, i, info);
 		if (rc) {
-			SPDK_ERRLOG("Failed to retrieve bbt for @addr: %s [%lu]\n",
-				    ftl_addr2str(punit->start_addr, buf, sizeof(buf)),
-				    ftl_addr_addr_pack(dev, punit->start_addr));
 			goto out;
 		}
 
@@ -358,25 +351,6 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 out:
 	free(info);
 	return rc;
-}
-
-static int
-ftl_dev_init_punits(struct spdk_ftl_dev *dev)
-{
-	size_t i;
-
-	dev->punits = calloc(ftl_dev_num_punits(dev), sizeof(*dev->punits));
-	if (!dev->punits) {
-		return -1;
-	}
-
-	for (i = 0; i < ftl_dev_num_punits(dev); ++i) {
-		dev->punits[i].dev = dev;
-		dev->punits[i].start_addr.addr = 0;
-		dev->punits[i].start_addr.pu = i;
-	}
-
-	return 0;
 }
 
 static int
@@ -1091,11 +1065,6 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		goto fail_sync;
 	}
 
-	if (ftl_dev_init_punits(dev)) {
-		SPDK_ERRLOG("Unable to initialize LUNs\n");
-		goto fail_sync;
-	}
-
 	if (ftl_init_lba_map_pools(dev)) {
 		SPDK_ERRLOG("Unable to init LBA map pools\n");
 		goto fail_sync;
@@ -1226,7 +1195,6 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	ftl_reloc_free(dev->reloc);
 
 	free(dev->name);
-	free(dev->punits);
 	free(dev->bands);
 	free(dev->l2p);
 	free(dev);
