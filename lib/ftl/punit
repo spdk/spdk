@@ -1,0 +1,33 @@
+ftl_band.h:	assert(zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE);
+ftl_band.h:	return (zone->state == SPDK_BDEV_ZONE_STATE_OPEN ||
+ftl_band.h:		zone->state == SPDK_BDEV_ZONE_STATE_EMPTY) &&
+ftl_band.h:	       !zone->busy;
+ftl_anm.c:		if (zone->state == SPDK_BDEV_ZONE_STATE_OFFLINE) {
+ftl_band.c:			zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
+ftl_band.c:	addr.pu = zone->punit->start_addr.pu;
+ftl_band.c:		if (spdk_likely(_zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE)) {
+ftl_band.c:		addr.pu = zone->start_addr.pu;
+ftl_band.c:	zone->state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+ftl_band.c:	zone->state = SPDK_BDEV_ZONE_STATE_EMPTY;
+ftl_band.c:	zone->write_offset = 0;
+ftl_band.c:		if (zone->state == SPDK_BDEV_ZONE_STATE_EMPTY) {
+ftl_band.c:		io->addr = zone->start_addr;
+ftl_band.c:	if (spdk_likely(zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE)) {
+ftl_band.c:			if (entry->pos > zone->pos) {
+ftl_init.c:			zone->pos = i;
+ftl_init.c:			zone->state = ftl_get_zone_state(&info[j]);
+ftl_init.c:			zone->punit = punit;
+ftl_init.c:			zone->start_addr = punit->start_addr;
+ftl_init.c:			zone->start_addr.zone_id = band->id;
+ftl_init.c:			zone->write_offset = ftl_dev_lbks_in_zone(dev);
+ftl_init.c:			if (zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE) {
+ftl_restore.c:		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
+ftl_core.c:			assert(zone->state == SPDK_BDEV_ZONE_STATE_CLOSED);
+ftl_core.c:			addr = zone->start_addr;
+ftl_core.c:	wptr->addr = wptr->zone->start_addr;
+ftl_core.c:	wptr->zone->busy = true;
+ftl_core.c:		if (spdk_unlikely(wptr->zone->state == SPDK_BDEV_ZONE_STATE_OFFLINE)) {
+ftl_core.c:	zone->busy = false;
+ftl_core.c:	zone->write_offset += io->lbk_cnt;
+ftl_core.c:		if (wptr->zone->busy) {
+ftl_core.c:	return addr.offset < zone->write_offset;
