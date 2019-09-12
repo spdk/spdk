@@ -661,6 +661,44 @@ def bdev_passthru_delete(client, name):
     return client.call('bdev_passthru_delete', params)
 
 
+def bdev_opal_create(client, base_bdev_name, locking_range_id, range_start, range_length, password):
+    """Create opal virtual block devices from a base nvme bdev.
+
+    Args:
+        base_bdev_name: name of the base nvme bdev
+        locking_range_id: locking range ID corresponding to this virtual bdev
+        range_start: start address of this locking range
+        range_length: length of this locking range
+        password: admin password of base nvme bdev
+    Returns:
+        List of created block devices.
+    """
+    params = {
+        'base_bdev_name': base_bdev_name,
+        'locking_range_id': locking_range_id,
+        'range_start': range_start,
+        'range_length': range_length,
+        'password': password,
+    }
+
+    return client.call('bdev_opal_create', params)
+
+
+def bdev_opal_delete(client, bdev_name, password):
+    """Delete opal virtual bdev from the system.
+
+    Args:
+        name: name of opal vbdev to delete
+        password: admin password of base nvme bdev
+    """
+    params = {
+        'bdev_name': bdev_name,
+        'password': password,
+    }
+
+    return client.call('bdev_opal_delete', params)
+
+
 @deprecated_alias('construct_split_vbdev')
 def bdev_split_create(client, base_bdev, split_count, split_size_mb=None):
     """Create split block devices from a base bdev.

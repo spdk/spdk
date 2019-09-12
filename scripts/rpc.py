@@ -1959,6 +1959,33 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     domain:bus:device.function format or domain.bus.device.function format""")
     p.set_defaults(func=ioat_scan_copy_engine)
 
+    # opal
+    def bdev_opal_create(args):
+        print_array(rpc.bdev.bdev_opal_create(args.client,
+                                              base_bdev_name=args.base_bdev_name,
+                                              locking_range_id=args.locking_range_id,
+                                              range_start=args.range_start,
+                                              range_length=args.range_length,
+                                              password=args.password))
+
+    p = subparsers.add_parser('bdev_opal_create', help="""using locking range to create a virtual opal bdev""")
+    p.add_argument('-b', '--base_bdev_name', help='base bdev name, have to be an NVMe bdev')
+    p.add_argument('-i', '--locking_range_id', help='locking range id', type=int)
+    p.add_argument('-s', '--range_start', help='locking range start LBA', type=int)
+    p.add_argument('-l', '--range_length', help='locking range length', type=int)
+    p.add_argument('-p', '--password', help='password for admin')
+    p.set_defaults(func=bdev_opal_create)
+
+    def bdev_opal_delete(args):
+        rpc.bdev.bdev_opal_delete(args.client,
+                                  bdev_name=args.bdev_name,
+                                  password=args.password)
+
+    p = subparsers.add_parser('bdev_opal_delete', help="""delete a virtual opal bdev""")
+    p.add_argument('-b', '--bdev_name', help='opal virtual bdev')
+    p.add_argument('-p', '--password', help='password for admin')
+    p.set_defaults(func=bdev_opal_delete)
+
     # bdev_nvme_send_cmd
     def bdev_nvme_send_cmd(args):
         print_dict(rpc.nvme.bdev_nvme_send_cmd(args.client,
