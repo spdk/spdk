@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eaac30b4_4efb1fc0",
+        "filename": "module/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-12T01:11:22Z",
+      "side": 1,
+      "message": "rpc_bdev_rbd_delete?",
+      "range": {
+        "startLine": 147,
+        "startChar": 7,
+        "endLine": 147,
+        "endChar": 22
+      },
+      "revId": "5e5bd9ff4bf48c59ff4314a7dbae2f8fb50f42c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26935934_4b135c0c",
+        "filename": "module/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-12T01:11:22Z",
+      "side": 1,
+      "message": "free_rpc_bdev_rbd_delete?",
+      "range": {
+        "startLine": 152,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 19
+      },
+      "revId": "5e5bd9ff4bf48c59ff4314a7dbae2f8fb50f42c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4161a029_0e92bae4",
+        "filename": "module/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-12T01:11:22Z",
+      "side": 1,
+      "message": "rpc_bdev_rbd_delete_decoders?",
+      "range": {
+        "startLine": 157,
+        "startChar": 45,
+        "endLine": 157,
+        "endChar": 68
+      },
+      "revId": "5e5bd9ff4bf48c59ff4314a7dbae2f8fb50f42c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99d0f1f5_486f2905",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-12T01:11:22Z",
+      "side": 1,
+      "message": "get_bdev_delete_method ? (I\u0027m not sure if it\u0027s nice to do in this patch though.)",
+      "range": {
+        "startLine": 33,
+        "startChar": 4,
+        "endLine": 33,
+        "endChar": 27
+      },
+      "revId": "5e5bd9ff4bf48c59ff4314a7dbae2f8fb50f42c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2761a5ca_ae9b4988",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-12T01:11:22Z",
+      "side": 1,
+      "message": "delete_method_map ?",
+      "range": {
+        "startLine": 34,
+        "startChar": 4,
+        "endLine": 34,
+        "endChar": 23
+      },
+      "revId": "5e5bd9ff4bf48c59ff4314a7dbae2f8fb50f42c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
