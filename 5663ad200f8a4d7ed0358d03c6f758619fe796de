@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a5138e1_98907dd4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1496,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-12T21:58:47Z",
+      "side": 1,
+      "message": "This line is really strangely indented and hard to follow. To avoid some of these really long lines, maybe declare a struct iovec *iov; and then at the top of the loop do iov \u003d \u0026rdma_req-\u003ereq.iov[iov_count]. I think that cleans up a bunch of the long lines below.",
+      "revId": "5663ad200f8a4d7ed0358d03c6f758619fe796de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f9f07fc4_eaa3f61f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1502,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-12T21:58:47Z",
+      "side": 1,
+      "message": "Put the ++ on the end. For a one line statement like this, it\u0027s obviously the same thing. Except the rdma_req-\u003e lines now all start the same way and it\u0027s easier to read.",
+      "revId": "5663ad200f8a4d7ed0358d03c6f758619fe796de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee39586d_1da05c3e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1506,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-12T21:58:47Z",
+      "side": 1,
+      "message": "Similar to the other comments, consider capturing wr-\u003esg_list[sge_count] at the start of each iteration of this loop.",
+      "revId": "5663ad200f8a4d7ed0358d03c6f758619fe796de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
