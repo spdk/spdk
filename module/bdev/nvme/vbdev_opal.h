@@ -40,6 +40,8 @@
 int spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint8_t locking_range_id,
 			   uint64_t range_start, uint64_t range_length, const char *password);
 
+struct spdk_bdev *spdk_vbdev_opal_get_latest_bdev(void);
+
 int spdk_vbdev_opal_destruct(const char *bdev_name, const char *password);
 
 #endif
