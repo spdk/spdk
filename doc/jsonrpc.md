@@ -5466,6 +5466,94 @@ Example response:
 }
 ~~~
 
+# OPAL
+
+## bdev_opal_create {#rpc_bdev_opal_create}
+
+This is used to create an OPAL virtual bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nvme_ctrlr_name         | Required | string      | name of nvme ctrlr that supports OPAL
+nsid                    | Required | number      | namespace ID
+locking_range_id        | Required | number      | OPAL locking range ID
+range_start             | Required | number      | locking range start LBA
+range_length            | Required | number      | locking range length
+password                | Required | string      | admin password of OPAL
+
+### Response
+
+The response is the name of created OPAL virtual bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_opal_create",
+  "id": 1,
+  "params": {
+    "nvme_ctrlr_name": "nvme0",
+    "nsid": 1,
+    "locking_range_id": 1,
+    "range_start": 0,
+    "range_length": 4096,
+    "password": "*****"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "nvme0n1r1"
+}
+~~~
+
+## bdev_opal_delete {#rpc_bdev_opal_delete}
+
+This is used to delete OPAL vbdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev_name               | Required | string      | name of OPAL vbdev
+password                | Required | string      | admin password
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_opal_delete",
+  "id": 1,
+  "params": {
+    "bdev_name": "nvme0n1r1",
+    "password": "*****"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 # Notifications
 
 ## notify_get_types {#rpc_notify_get_types}
