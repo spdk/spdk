@@ -97,7 +97,6 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 
 	for (size_t i = 0; i < ftl_dev_num_punits(dev); ++i) {
 		zone = &band->zone_buf[i];
-		zone->pos = i;
 		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
 		zone->start_addr.pu = i;
 		zone->start_addr.zone_id = band->id;
