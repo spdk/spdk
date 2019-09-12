@@ -1215,9 +1215,9 @@ struct nvme_async_probe_ctx {
 	void *cb_ctx;
 };
 
-static void
-connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
-		  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
+void
+spdk_bdev_nvme_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+			 struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct spdk_nvme_ctrlr_opts *user_opts = cb_ctx;
 	struct nvme_async_probe_ctx *ctx;
@@ -1258,6 +1258,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char **names, size_t *count,
 		      const char *hostnqn,
 		      uint32_t prchk_flags,
+		      spdk_nvme_attach_cb attach_cb,
 		      spdk_bdev_create_nvme_fn cb_fn,
 		      void *cb_ctx)
 {
@@ -1311,7 +1312,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		snprintf(ctx->opts.src_svcid, sizeof(ctx->opts.src_svcid), "%s", hostid->hostsvcid);
 	}
 
-	ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->opts, connect_attach_cb);
+	ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->opts, attach_cb);
 	if (ctx->probe_ctx == NULL) {
 		SPDK_ERRLOG("No controller was found with provided trid (traddr: %s)\n", trid->traddr);
 		free(ctx);
