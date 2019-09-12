@@ -1259,10 +1259,12 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		goto end;
 	}
 
-	rc = bdev_nvme_create_bdevs(ctx);
-	if (rc) {
-		SPDK_ERRLOG("Failed to create bdevs\n");
-		free_controller(trid);
+	if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
+		rc = bdev_nvme_create_bdevs(ctx);
+		if (rc) {
+			SPDK_ERRLOG("Failed to create bdevs\n");
+			free_controller(trid);
+		}
 	}
 
 end:
