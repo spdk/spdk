@@ -121,3 +121,25 @@ nvme_bdev_attach_done(struct nvme_async_probe_ctx *ctx, int rc)
 		free(ctx);
 	}
 }
+
+static void
+nvme_bdev_unregister_cb(void *io_device)
+{
+	struct spdk_nvme_ctrlr *ctrlr = io_device;
+
+	spdk_nvme_detach(ctrlr);
+}
+
+void
+nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+{
+	assert(nvme_bdev_ctrlr->destruct);
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	spdk_io_device_unregister(nvme_bdev_ctrlr->ctrlr, nvme_bdev_unregister_cb);
+	spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
+	free(nvme_bdev_ctrlr->name);
+	free(nvme_bdev_ctrlr->bdevs);
+	free(nvme_bdev_ctrlr);
+}
