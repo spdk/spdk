@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "98aab5d3_4ce669c7",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-12T12:20:31Z",
+      "side": 1,
+      "message": "I know that Shuhei suggested using \"add\" here.  But I think \"create\" would be better - or even just leave this word out entirely.\n\nBut please don\u0027t update this patch just for that - it would require running the rest of the patches through the test pool again and a lot of patches after this one look ready to merge.  We can adjust this later.",
+      "revId": "0ffe12ad411241d394ae6829e7cda473ea8e138a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
