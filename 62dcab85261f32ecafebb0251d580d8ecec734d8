@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb4bb819_fbdcb5dd",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-12T12:52:44Z",
+      "side": 1,
+      "message": "Leaking ctrlr-\u003ebdevs (maybe add a goto errors to not miss resource dealocation?)",
+      "revId": "62dcab85261f32ecafebb0251d580d8ecec734d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be3f6223_32aa4289",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-12T12:52:44Z",
+      "side": 1,
+      "message": "Don\u0027t you need to call bdev_ocssd_free_bdev here?",
+      "revId": "62dcab85261f32ecafebb0251d580d8ecec734d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a096b348_65cb9fb0",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-12T12:52:44Z",
+      "side": 1,
+      "message": "Don\u0027t you need to call bdev_ocssd_free_bdev here?",
+      "revId": "62dcab85261f32ecafebb0251d580d8ecec734d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "729c15b7_3bddf078",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-12T12:52:44Z",
+      "side": 1,
+      "message": "bdev-\u003ename leaking?",
+      "revId": "62dcab85261f32ecafebb0251d580d8ecec734d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59a8d07b_f392af5e",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-12T12:52:44Z",
+      "side": 1,
+      "message": "If there\u0027s only one nsid and it failed here, how will the controller be freed?",
+      "revId": "62dcab85261f32ecafebb0251d580d8ecec734d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
