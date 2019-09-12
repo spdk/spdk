@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be4bf55e_f15832e4",
+        "filename": "test/lvol/clear_method.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-12T06:34:48Z",
+      "side": 1,
+      "message": "Pawel we already have an aggregate script for lvols which runs all the tests - test/lvol/test_cases.py.\nWhy not add this there?",
+      "revId": "2249f411aca149a6dad75b2299f4baa117d5c9dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
