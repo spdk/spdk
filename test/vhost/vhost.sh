@@ -116,9 +116,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test case $WORKDIR/readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1 -x
 	report_test_completion "vhost_readonly"
 	timing_exit readonly
-fi
 
-if [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
 	timing_enter vhost_migration
 	echo 'Running migration suite...'
 	run_test case $WORKDIR/migration/migration.sh -x \
