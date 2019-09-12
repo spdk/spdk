@@ -70,12 +70,15 @@ struct nvme_bdev_ctrlr {
 	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;
 };
 
+typedef void (*nvme_bdev_remove_fn)(struct nvme_bdev *nvme_bdev);
+
 struct nvme_bdev {
 	struct spdk_bdev	disk;
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	uint32_t		id;
 	bool			active;
 	struct spdk_nvme_ns	*ns;
+	nvme_bdev_remove_fn	remove_fn;
 };
 
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);

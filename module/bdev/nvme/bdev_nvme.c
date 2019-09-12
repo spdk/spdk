@@ -240,6 +240,12 @@ bdev_nvme_destruct(void *ctx)
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	nvme_bdev_ctrlr->ref--;
+
+	/* Perform NVMe mode specific cleanup */
+	if (nvme_disk->remove_fn != NULL) {
+		nvme_disk->remove_fn(nvme_disk);
+	}
+
 	free(nvme_disk->disk.name);
 	nvme_disk->active = false;
 	if (nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct) {
