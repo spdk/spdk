@@ -329,7 +329,6 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 		for (j = 0; j < ftl_dev_num_bands(dev); ++j) {
 			band = &dev->bands[j];
 			zone = &band->zone_buf[i];
-			zone->pos = i;
 			zone->state = ftl_get_zone_state(&info[j]);
 			zone->start_addr.pu = i;
 			zone->start_addr.zone_id = band->id;
