@@ -57,9 +57,17 @@ struct bdev_ocssd_io_channel {
 };
 
 struct bdev_ocssd_io {
-	size_t		iov_pos;
-	size_t		iov_off;
-	uint64_t	lba[SPDK_NVME_OCSSD_MAX_LBAL_ENTRIES];
+	union {
+		struct {
+			size_t		iov_pos;
+			size_t		iov_off;
+			uint64_t	lba[SPDK_NVME_OCSSD_MAX_LBAL_ENTRIES];
+		};
+		struct {
+			size_t						chunk_offset;
+			struct spdk_ocssd_chunk_information_entry	chunk_info;
+		};
+	};
 };
 
 struct ocssd_bdev {
@@ -204,12 +212,12 @@ bdev_ocssd_destruct(void *ctx)
 	return 1;
 }
 
-static uint64_t
-bdev_ocssd_to_disk_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
+static void
+bdev_ocssd_translate_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba, uint64_t *grp,
+			 uint64_t *pu, uint64_t *chk, uint64_t *lbk)
 {
 	const struct spdk_ocssd_geometry_data *geo = &ocssd_bdev->geometry;
-	const struct bdev_ocssd_lba_offsets *offsets = &ocssd_bdev->lba_offsets;
-	uint64_t addr_shift, lbk, chk, pu, grp;
+	uint64_t addr_shift;
 
 	/* To achieve best performance, we need to make sure that adjacent zones can be accessed
 	 * in parallel.  We accomplish this by having the following addressing scheme:
@@ -219,16 +227,41 @@ bdev_ocssd_to_disk_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
 	 *
 	 * which means that neighbouring zones are placed in a different group and parallel unit.
 	 */
-	lbk = lba % geo->clba;
+	*lbk = lba % geo->clba;
 	addr_shift = geo->clba;
 
-	grp = (lba / addr_shift) % geo->num_grp;
+	*grp = (lba / addr_shift) % geo->num_grp;
 	addr_shift *= geo->num_grp;
 
-	pu = (lba / addr_shift) % geo->num_pu;
+	*pu = (lba / addr_shift) % geo->num_pu;
 	addr_shift *= geo->num_pu;
 
-	chk = (lba / addr_shift) % geo->num_chk;
+	*chk = (lba / addr_shift) % geo->num_chk;
+}
+
+static uint64_t
+bdev_ocssd_from_disk_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
+{
+	const struct bdev_ocssd_lba_offsets *offsets = &ocssd_bdev->lba_offsets;
+	const struct spdk_ocssd_geometry_data *geometry = &ocssd_bdev->geometry;
+	uint64_t lbk, chk, pu, grp;
+
+	lbk = (lba >> offsets->lbk) & ((1 << geometry->lbaf.lbk_len) - 1);
+	chk = (lba >> offsets->chk) & ((1 << geometry->lbaf.chk_len) - 1);
+	pu  = (lba >> offsets->pu)  & ((1 << geometry->lbaf.pu_len)  - 1);
+	grp = (lba >> offsets->grp) & ((1 << geometry->lbaf.grp_len) - 1);
+
+	return lbk + grp * geometry->clba + pu * geometry->num_grp * geometry->clba +
+	       chk * geometry->num_pu * geometry->num_grp * geometry->clba;
+}
+
+static uint64_t
+bdev_ocssd_to_disk_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
+{
+	const struct bdev_ocssd_lba_offsets *offsets = &ocssd_bdev->lba_offsets;
+	uint64_t lbk, chk, pu, grp;
+
+	bdev_ocssd_translate_lba(ocssd_bdev, lba, &grp, &pu, &chk, &lbk);
 
 	return (lbk << offsets->lbk) |
 	       (chk << offsets->chk) |
@@ -428,6 +461,109 @@ bdev_ocssd_unmap(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 	return bdev_ocssd_reset_zone(ioch, bdev_io, bdev_io->u.bdev.offset_blocks, num_zones);
 }
 
+static int _bdev_ocssd_get_zone_info(struct spdk_bdev_io *bdev_io);
+
+static void
+bdev_ocssd_fill_zone_info(struct ocssd_bdev *ocssd_bdev, struct spdk_bdev_zone_info *zone_info,
+			  const struct spdk_ocssd_chunk_information_entry *chunk_info)
+{
+	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+
+	zone_info->zone_id = bdev_ocssd_from_disk_lba(ocssd_bdev, chunk_info->slba);
+	zone_info->write_pointer = zone_info->zone_id;
+
+	if (chunk_info->cs.free) {
+		zone_info->state = SPDK_BDEV_ZONE_STATE_EMPTY;
+	} else if (chunk_info->cs.closed) {
+		zone_info->state = SPDK_BDEV_ZONE_STATE_FULL;
+	} else if (chunk_info->cs.open) {
+		zone_info->state = SPDK_BDEV_ZONE_STATE_OPEN;
+		zone_info->write_pointer += chunk_info->wp % nvme_bdev->disk.zone_size;
+	} else if (chunk_info->cs.offline) {
+		zone_info->state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+	} else {
+		SPDK_ERRLOG("Unknown chunk state, assuming offline\n");
+		zone_info->state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+	}
+
+	if (chunk_info->ct.size_deviate) {
+		zone_info->capacity = chunk_info->cnlb;
+	} else {
+		zone_info->capacity = nvme_bdev->disk.zone_size;
+	}
+}
+
+static void
+bdev_ocssd_zone_info_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
+	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	struct spdk_ocssd_chunk_information_entry *chunk_info = &ocdev_io->chunk_info;
+	struct spdk_bdev_zone_info *zone_info;
+	int rc;
+
+	if (spdk_unlikely(spdk_nvme_cpl_is_error(cpl))) {
+		spdk_bdev_io_complete_nvme_status(bdev_io, cpl->status.sct, cpl->status.sc);
+		return;
+	}
+
+	zone_info = ((struct spdk_bdev_zone_info *)bdev_io->u.zdev.buf) + ocdev_io->chunk_offset;
+	bdev_ocssd_fill_zone_info(ocssd_bdev, zone_info, chunk_info);
+
+	if (++ocdev_io->chunk_offset == bdev_io->u.zdev.num_zones) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	} else {
+		rc = _bdev_ocssd_get_zone_info(bdev_io);
+		if (spdk_unlikely(rc != 0)) {
+			if (rc == -ENOMEM) {
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+			} else {
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			}
+		}
+	}
+}
+
+static int
+_bdev_ocssd_get_zone_info(struct spdk_bdev_io *bdev_io)
+{
+	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
+	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	const struct spdk_ocssd_geometry_data *geo = &ocssd_bdev->geometry;
+	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	uint64_t lba, grp, pu, chk, lbk, offset;
+
+	lba = bdev_io->u.zdev.zone_id + ocdev_io->chunk_offset * nvme_bdev->disk.zone_size;
+	bdev_ocssd_translate_lba(ocssd_bdev, lba, &grp, &pu, &chk, &lbk);
+	offset = grp * geo->num_pu * geo->num_chk + pu * geo->num_chk + chk;
+
+	return spdk_nvme_ctrlr_cmd_get_log_page(nvme_bdev->nvme_bdev_ctrlr->ctrlr,
+						SPDK_OCSSD_LOG_CHUNK_INFO,
+						spdk_nvme_ns_get_id(nvme_bdev->ns),
+						&ocdev_io->chunk_info, sizeof(ocdev_io->chunk_info),
+						offset * sizeof(ocdev_io->chunk_info),
+						bdev_ocssd_zone_info_cb, (void *)bdev_io);
+}
+
+static int
+bdev_ocssd_get_zone_info(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
+{
+	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+
+	if (bdev_io->u.zdev.num_zones < 1) {
+		return -EINVAL;
+	}
+
+	if (bdev_io->u.zdev.zone_id % bdev_io->bdev->zone_size != 0) {
+		return -EINVAL;
+	}
+
+	ocdev_io->chunk_offset = 0;
+
+	return _bdev_ocssd_get_zone_info(bdev_io);
+}
+
 static int
 bdev_ocssd_zone_management(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
@@ -435,6 +571,9 @@ bdev_ocssd_zone_management(struct spdk_io_channel *ioch, struct spdk_bdev_io *bd
 	case SPDK_BDEV_ZONE_RESET:
 		return bdev_ocssd_reset_zone(ioch, bdev_io, bdev_io->u.zdev.zone_id,
 					     bdev_io->u.zdev.num_zones);
+	case SPDK_BDEV_ZONE_INFO:
+		return bdev_ocssd_get_zone_info(ioch, bdev_io);
+
 	default:
 		return -EINVAL;
 	}
