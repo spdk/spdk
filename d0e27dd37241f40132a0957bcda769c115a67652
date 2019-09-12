@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c8f6355_22fd4d43",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-12T00:41:43Z",
+      "side": 1,
+      "message": "bdev_raid_get_bdevs?",
+      "range": {
+        "startLine": 56,
+        "startChar": 41,
+        "endLine": 56,
+        "endChar": 51
+      },
+      "revId": "d0e27dd37241f40132a0957bcda769c115a67652",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3c7ebe7_d7d3d98b",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-12T00:41:43Z",
+      "side": 1,
+      "message": "free_rpc_bdev_raid_get_bdevs? (I think we may be able to remove header comments for private functions eventually though.)",
+      "range": {
+        "startLine": 56,
+        "startChar": 3,
+        "endLine": 56,
+        "endChar": 22
+      },
+      "revId": "d0e27dd37241f40132a0957bcda769c115a67652",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ea6abf1_32b5e9e5",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-12T00:41:43Z",
+      "side": 1,
+      "message": "Maybe \"for the RPC bdev_raid_get_bdevs\"",
+      "range": {
+        "startLine": 77,
+        "startChar": 34,
+        "endLine": 77,
+        "endChar": 55
+      },
+      "revId": "d0e27dd37241f40132a0957bcda769c115a67652",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c4c8da9_58db0299",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-12T00:41:43Z",
+      "side": 1,
+      "message": "spdk_rpc_bdev_raid_get_bdevs",
+      "range": {
+        "startLine": 77,
+        "startChar": 3,
+        "endLine": 77,
+        "endChar": 22
+      },
+      "revId": "d0e27dd37241f40132a0957bcda769c115a67652",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
