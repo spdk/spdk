@@ -486,24 +486,6 @@ ftl_io_alloc_child(struct ftl_io *parent)
 	return io;
 }
 
-void
-ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status)
-{
-	char addr_buf[128];
-
-	/* TODO: add error handling for specifc cases */
-	if (status->status.sct == SPDK_NVME_SCT_MEDIA_ERROR &&
-	    status->status.sc == SPDK_OCSSD_SC_READ_HIGH_ECC) {
-		return;
-	}
-
-	SPDK_ERRLOG("Status code type 0x%x, status code 0x%x for IO type %u @addr: %s, lba 0x%lx, cnt %lu\n",
-		    status->status.sct, status->status.sc, io->type, ftl_addr2str(io->addr, addr_buf, sizeof(addr_buf)),
-		    ftl_io_get_lba(io, 0), io->lbk_cnt);
-
-	io->status = -EIO;
-}
-
 void ftl_io_fail(struct ftl_io *io, int status)
 {
 	io->status = status;

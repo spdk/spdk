@@ -1164,7 +1164,7 @@ ftl_pad_zone_cb(struct ftl_io *io, void *arg, int status)
 		goto end;
 	}
 
-	if (io->addr.offset + io->lbk_cnt == band->dev->geo.clba) {
+	if (io->addr.offset + io->lbk_cnt == ftl_dev_lbks_in_zone(restore->dev)) {
 		zone = ftl_band_zone_from_addr(band, io->addr);
 		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
 	} else {
@@ -1188,7 +1188,6 @@ end:
 static void
 ftl_restore_pad_band(struct ftl_restore_band *rband)
 {
-	struct spdk_ocssd_chunk_information_entry info;
 	struct ftl_restore *restore = rband->parent;
 	struct ftl_band *band = rband->band;
 	struct spdk_ftl_dev *dev = band->dev;
@@ -1219,12 +1218,8 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 			continue;
 		}
 
-		rc = ftl_retrieve_chunk_info(dev, band->zone_buf[i].start_addr, &info, 1);
-		if (spdk_unlikely(rc)) {
-			goto error;
-		}
 		addr = band->zone_buf[i].start_addr;
-		addr.offset = info.wp;
+		addr.offset = band->zone_buf[i].write_offset;
 
 		buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * dev->xfer_size, 0, NULL);
 		if (spdk_unlikely(!buffer)) {

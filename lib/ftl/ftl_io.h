@@ -130,6 +130,8 @@ struct ftl_io_channel {
 	size_t					elem_size;
 	/* IO pool */
 	struct spdk_mempool			*io_pool;
+	/* Underlying devcie IO channel */
+	struct spdk_io_channel			*zoned_bdev_ioch;
 	/* Persistent cache IO channel */
 	struct spdk_io_channel			*cache_ioch;
 };
