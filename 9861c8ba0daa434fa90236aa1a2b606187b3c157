@@ -22,6 +22,30 @@
       "revId": "9861c8ba0daa434fa90236aa1a2b606187b3c157",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9aef5f77_92b76070",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-09-12T15:29:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "81677981_336016d1",
+      "range": {
+        "startLine": 48,
+        "startChar": 47,
+        "endLine": 48,
+        "endChar": 64
+      },
+      "revId": "9861c8ba0daa434fa90236aa1a2b606187b3c157",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
