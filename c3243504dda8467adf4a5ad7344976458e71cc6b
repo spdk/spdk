@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82b97075_830473f2",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-12T15:24:48Z",
+      "side": 1,
+      "message": "Shouldn\u0027t be bdev_split_delete",
+      "range": {
+        "startLine": 50,
+        "startChar": 29,
+        "endLine": 50,
+        "endChar": 46
+      },
+      "revId": "c3243504dda8467adf4a5ad7344976458e71cc6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
