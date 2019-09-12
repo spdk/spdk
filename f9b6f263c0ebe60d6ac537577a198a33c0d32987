@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2cd8385_f7cd61c2",
+        "filename": "scripts/rpc/vhost.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-12T16:44:45Z",
+      "side": 1,
+      "message": "Construct --\u003e Create (or something that doesn\u0027t use a word that is in the deprecated API)",
+      "revId": "f9b6f263c0ebe60d6ac537577a198a33c0d32987",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
