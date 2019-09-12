@@ -406,7 +406,7 @@ ftl_band_tail_md_addr(struct ftl_band *band)
 
 	addr.offset = (num_req / band->num_zones) * xfer_size;
 	addr.zone_id = band->id;
-	addr.pu = zone->punit->start_addr.pu;
+	addr.pu = zone->start_addr.pu;
 
 	return addr;
 }
@@ -414,13 +414,13 @@ ftl_band_tail_md_addr(struct ftl_band *band)
 struct ftl_addr
 ftl_band_head_md_addr(struct ftl_band *band)
 {
-	struct ftl_addr addr;
+	struct ftl_addr addr = {};
 
 	if (spdk_unlikely(!band->num_zones)) {
 		return ftl_to_addr(FTL_ADDR_INVALID);
 	}
 
-	addr = CIRCLEQ_FIRST(&band->zones)->punit->start_addr;
+	addr.pu = CIRCLEQ_FIRST(&band->zones)->start_addr.pu;
 	addr.zone_id = band->id;
 
 	return addr;
