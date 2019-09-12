@@ -366,7 +366,8 @@ if __name__ == "__main__":
                                                  hostaddr=args.hostaddr,
                                                  hostsvcid=args.hostsvcid,
                                                  prchk_reftag=args.prchk_reftag,
-                                                 prchk_guard=args.prchk_guard))
+                                                 prchk_guard=args.prchk_guard,
+                                                 mode=args.mode))
 
     p = subparsers.add_parser('construct_nvme_bdev',
                               help='Add bdevs with nvme backend')
@@ -389,6 +390,7 @@ if __name__ == "__main__":
                    help='Enable checking of PI reference tag for I/O processing.', action='store_true')
     p.add_argument('-g', '--prchk-guard',
                    help='Enable checking of PI guard for I/O processing.', action='store_true')
+    p.add_argument('-m', '--mode', help="NVMe working mode: e.g. standard. Default: standard")
     p.set_defaults(func=construct_nvme_bdev)
 
     def bdev_nvme_get_controllers(args):
