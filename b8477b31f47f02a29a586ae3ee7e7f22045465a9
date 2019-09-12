@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4877521a_f9cb593d",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-12T19:19:12Z",
+      "side": 1,
+      "message": "I have a comment elsewhere that says \"is_scheduling\" is blocking changes to this list, but that\u0027s not true just yet. This needs to handle the case where a thread is created during a scheduling pass.",
+      "revId": "b8477b31f47f02a29a586ae3ee7e7f22045465a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
