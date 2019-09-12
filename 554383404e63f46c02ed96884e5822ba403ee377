@@ -16,6 +16,24 @@
       "revId": "554383404e63f46c02ed96884e5822ba403ee377",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cafea665_9ccc71de",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-12T21:27:35Z",
+      "side": 1,
+      "message": "Thanks for pointing this out. Actually, it looks like in the regular connect path, this function relies on disconnect cleaning everything up, but from what I can tell, there isn\u0027t that guarantee in the reset path.\nSo I will remove the rdma_destroy_event_channel here, and then try to fix the reset path for RDMA.",
+      "parentUuid": "f607cc50_e1b30b7c",
+      "revId": "554383404e63f46c02ed96884e5822ba403ee377",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
