@@ -62,9 +62,6 @@ struct ftl_zone {
 	/* First logical block of a zone */
 	struct ftl_addr				start_addr;
 
-	/* Position in band's zone_buf */
-	uint32_t				pos;
-
 	CIRCLEQ_ENTRY(ftl_zone)			circleq;
 };
 
