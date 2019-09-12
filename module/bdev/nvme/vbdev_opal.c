@@ -59,7 +59,7 @@ struct opal_vbdev {
 	TAILQ_ENTRY(opal_vbdev) tailq;
 };
 
-static TAILQ_HEAD(, opal_vbdev) g_opal_vbdev =
+static TAILQ_HEAD(opal_vbdev_list, opal_vbdev) g_opal_vbdev =
 	TAILQ_HEAD_INITIALIZER(g_opal_vbdev);
 
 struct vbdev_opal_bdev_io {
@@ -289,6 +289,15 @@ vbdev_opal_free_bdev(struct opal_vbdev *opal_bdev)
 {
 	free(opal_bdev->cfg.nvme_ctrlr_name);
 	free(opal_bdev);
+}
+
+struct spdk_bdev *
+spdk_vbdev_opal_get_latest_bdev(void)
+{
+	struct opal_vbdev *last;
+
+	last = TAILQ_LAST(&g_opal_vbdev, opal_vbdev_list);
+	return spdk_bdev_get_by_name(last->name);
 }
 
 int
