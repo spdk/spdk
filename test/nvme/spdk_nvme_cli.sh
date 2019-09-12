@@ -13,8 +13,9 @@ fi
 spdk_nvme_cli="${DEPENDENCY_DIR}/nvme-cli"
 
 if [ ! -d $spdk_nvme_cli ]; then
-	echo "nvme-cli repository not found at $spdk_nvme_cli; skipping tests."
-	exit 0
+	echo "nvme-cli repository not found at $spdk_nvme_cli"
+	echo "Please run test/common/config/vm_setup.sh -t nvmecli"
+	exit 1
 fi
 
 timing_enter nvme_cli
