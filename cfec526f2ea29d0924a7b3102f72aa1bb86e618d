@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3256a0d_424fc940",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-12T13:55:14Z",
+      "side": 1,
+      "message": "Check for bdev_io-\u003eu.zdev.zone_id % bdev-\u003edisk.zone_size",
+      "revId": "cfec526f2ea29d0924a7b3102f72aa1bb86e618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f756f479_faabd97b",
+        "filename": "test/unit/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-12T13:55:14Z",
+      "side": 1,
+      "message": "Test ideas: misaligned zone_id, too many zones, 0 zones, out of range zone_id",
+      "revId": "cfec526f2ea29d0924a7b3102f72aa1bb86e618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
