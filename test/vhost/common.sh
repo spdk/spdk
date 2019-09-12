@@ -111,8 +111,6 @@ function vhost_run()
 {
 	local vhost_name="$1"
 
-	shift
-
 	if [[ -z "$vhost_name" ]]; then
 		error "vhost name must be provided to vhost_run"
 		return 1
@@ -147,7 +145,7 @@ function vhost_run()
 	notice "waiting for app to run..."
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
 	#do not generate nvmes if pci access is disabled
-	if [[ -z "$no_pci" ]]; then
+	if [[ "$cmd" != *"--no-pci"* ]] && [[ "$cmd" != *"-u"* ]]; then
 		$rootdir/scripts/gen_nvme.sh "--json" | $rootdir/scripts/rpc.py\
 		 -s $vhost_dir/rpc.sock load_subsystem_config
 	fi
