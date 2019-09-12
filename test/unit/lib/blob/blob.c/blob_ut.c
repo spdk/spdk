@@ -4415,7 +4415,7 @@ blob_thin_prov_alloc(void)
 	/* Since clusters are not allocated,
 	 * number of metadata pages is expected to be minimal.
 	 */
-	CU_ASSERT(blob->active.num_pages == 1);
+	CU_ASSERT(blob->active.num_pages == 26);
 
 	/* Shrink the blob to 3 clusters - still unallocated */
 	spdk_blob_resize(blob, 3, blob_op_complete, NULL);
