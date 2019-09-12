@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "38f5fa53_eb26db00",
+        "filename": "module/bdev/split/vbdev_split_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-12T01:28:02Z",
+      "side": 1,
+      "message": "change name of struct just to be consistent",
+      "revId": "84978ebbe7bf2d39630d8d25a2665e20ec457f49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76bcaa7a_dc316646",
+        "filename": "module/bdev/split/vbdev_split_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-12T01:28:02Z",
+      "side": 1,
+      "message": "change name of decoders also",
+      "revId": "84978ebbe7bf2d39630d8d25a2665e20ec457f49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fa0ee53d_f20c213e",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 1
