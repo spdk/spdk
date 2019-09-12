@@ -4520,7 +4520,7 @@ blob_insert_cluster_msg(void)
 	CU_ASSERT(blob->active.clusters[1] == 0);
 
 	_spdk_bs_claim_cluster(bs, 0xF);
-	_spdk_blob_insert_cluster_on_md_thread(blob, 1, 0xF, blob_op_complete, NULL);
+	_spdk_blob_insert_cluster_on_md_thread(blob, 1, 0xF, 0x0, blob_op_complete, NULL);
 	poll_threads();
 
 	CU_ASSERT(blob->active.clusters[1] != 0);
