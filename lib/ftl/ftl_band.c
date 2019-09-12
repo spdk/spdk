@@ -1122,7 +1122,7 @@ ftl_band_next_operational_zone(struct ftl_band *band, struct ftl_zone *zone)
 		result = ftl_band_next_zone(band, zone);
 	} else {
 		CIRCLEQ_FOREACH_REVERSE(entry, &band->zones, circleq) {
-			if (entry->pos > zone->pos) {
+			if (entry->start_addr.pu > zone->start_addr.pu) {
 				result = entry;
 			} else {
 				if (!result) {
