@@ -58,18 +58,10 @@ test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo)
 	dev->bands = calloc(geo->num_chk, sizeof(*dev->bands));
 	SPDK_CU_ASSERT_FATAL(dev->bands != NULL);
 
-	dev->punits = calloc(ftl_dev_num_punits(dev), sizeof(*dev->punits));
-	SPDK_CU_ASSERT_FATAL(dev->punits != NULL);
-
 	dev->lba_pool = spdk_mempool_create("ftl_ut", 2, 0x18000,
 					    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 					    SPDK_ENV_SOCKET_ID_ANY);
 	SPDK_CU_ASSERT_FATAL(dev->lba_pool != NULL);
-
-	for (size_t i = 0; i < ftl_dev_num_punits(dev); ++i) {
-		dev->punits[i].dev = dev;
-		dev->punits[i].start_addr.pu = i;
-	}
 
 	LIST_INIT(&dev->free_bands);
 	LIST_INIT(&dev->shut_bands);
@@ -107,7 +99,7 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 		zone = &band->zone_buf[i];
 		zone->pos = i;
 		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
-		zone->start_addr = dev->punits[i].start_addr;
+		zone->start_addr.pu = i;
 		zone->start_addr.zone_id = band->id;
 		CIRCLEQ_INSERT_TAIL(&band->zones, zone, circleq);
 		band->num_zones++;
@@ -125,7 +117,6 @@ test_free_ftl_dev(struct spdk_ftl_dev *dev)
 	spdk_thread_exit(dev->core_thread.thread);
 	spdk_thread_destroy(dev->core_thread.thread);
 	spdk_mempool_free(dev->lba_pool);
-	free(dev->punits);
 	free(dev->bands);
 	free(dev);
 }

@@ -75,12 +75,6 @@ struct ftl_stats {
 	uint64_t				limits[SPDK_FTL_LIMIT_MAX];
 };
 
-struct ftl_punit {
-	struct spdk_ftl_dev			*dev;
-
-	struct ftl_addr				start_addr;
-};
-
 struct ftl_thread {
 	/* Owner */
 	struct spdk_ftl_dev			*dev;
@@ -182,9 +176,6 @@ struct spdk_ftl_dev {
 
 	/* Statistics */
 	struct ftl_stats			stats;
-
-	/* Array of parallel units */
-	struct ftl_punit			*punits;
 
 	/* Current sequence number */
 	uint64_t				seq;
