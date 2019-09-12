@@ -107,7 +107,6 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 		zone = &band->zone_buf[i];
 		zone->pos = i;
 		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
-		zone->punit = &dev->punits[i];
 		zone->start_addr = dev->punits[i].start_addr;
 		zone->start_addr.zone_id = band->id;
 		CIRCLEQ_INSERT_TAIL(&band->zones, zone, circleq);
