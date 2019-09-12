@@ -70,6 +70,29 @@
     },
     {
       "key": {
+        "uuid": "9e37b871_90e72e3d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-12T00:58:47Z",
+      "side": 1,
+      "message": "Create may be better.",
+      "range": {
+        "startLine": 432,
+        "startChar": 36,
+        "endLine": 432,
+        "endChar": 40
+      },
+      "revId": "3b5056d6f7ca459b5b7b0d303ecdbf463ed5751a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c943ab49_8ddf2d8d",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 2
