@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6304f66_c302f566",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-13T22:48:55Z",
+      "side": 1,
+      "message": "I think that this is the part we should be fixing. I didn\u0027t see my changes failing on FreeBSD before, so I didn\u0027t think it was a problem. But if you are seeing those failures when building against DPDK master, it\u0027s because this mock compile check is failing.",
+      "revId": "1bed73896e5c8438290cfd5b3dd6e8762201a509",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
