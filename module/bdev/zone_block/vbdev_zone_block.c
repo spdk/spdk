@@ -46,6 +46,7 @@ static int zone_block_get_ctx_size(void);
 static void zone_block_finish(void);
 static int zone_block_config_json(struct spdk_json_write_ctx *w);
 static void zone_block_examine(struct spdk_bdev *bdev);
+static void zone_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 static struct spdk_bdev_module bdev_zoned_if = {
 	.name = "bdev_zoned_block",
@@ -93,6 +94,8 @@ struct zone_block_io_channel {
 struct zone_block_io {
 	/* bdev related */
 	struct spdk_io_channel *ch;
+	/* for bdev_io_wait */
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
 };
 
 static int
@@ -185,15 +188,135 @@ zone_block_destruct(void *ctx)
 }
 
 static void
+zone_block_resubmit_io(void *arg)
+{
+	struct spdk_bdev_io *bdev_io = (struct spdk_bdev_io *)arg;
+	struct zone_block_io *io_ctx = (struct zone_block_io *)bdev_io->driver_ctx;
+
+	zone_block_submit_request(io_ctx->ch, bdev_io);
+}
+
+static void
+zone_block_queue_io(struct spdk_bdev_io *bdev_io)
+{
+	struct zone_block_io *io_ctx = (struct zone_block_io *)bdev_io->driver_ctx;
+	int rc;
+
+	io_ctx->bdev_io_wait.bdev = bdev_io->bdev;
+	io_ctx->bdev_io_wait.cb_fn = zone_block_resubmit_io;
+	io_ctx->bdev_io_wait.cb_arg = bdev_io;
+
+	rc = spdk_bdev_queue_io_wait(bdev_io->bdev, io_ctx->ch, &io_ctx->bdev_io_wait);
+	if (rc != 0) {
+		SPDK_ERRLOG("Queue io failed in zone_block_resubmit_io, rc=%d.\n", rc);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+static struct block_zone *
+zone_block_get_zone(struct bdev_zone_block *bdev_node, uint64_t start_lba)
+{
+	struct block_zone *zone = NULL;
+	size_t index = start_lba / bdev_node->bdev.zone_size;
+
+	if (index >= bdev_node->num_zones) {
+		return NULL;
+	}
+
+	if (bdev_node->zones[index].zone_info.zone_id == start_lba) {
+		zone = &bdev_node->zones[index];
+	}
+
+	return zone;
+}
+
+static int
+zone_block_get_zone_info(struct bdev_zone_block *bdev_node, struct block_zone *zone,
+			 struct spdk_bdev_io *bdev_io)
+{
+	void *buffer = bdev_io->u.zdev.buf;
+	size_t i, zone_id;
+
+	zone = zone_block_get_zone(bdev_node, bdev_io->u.zdev.zone_id);
+	if (!zone) {
+		return -EINVAL;
+	}
+
+	/* User can request info for more zones than exist, need to check both internal and user boundaries
+	 */
+	for (i = 0, zone_id = bdev_io->u.zdev.zone_id; i < bdev_io->u.zdev.num_zones;
+	     i++, zone_id += bdev_node->bdev.zone_size) {
+		zone = zone_block_get_zone(bdev_node, zone_id);
+		if (!zone) {
+			break;
+		}
+		memcpy(((struct spdk_bdev_zone_info *)buffer) + i, &zone->zone_info,
+		       sizeof(struct spdk_bdev_zone_info));
+	}
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	return 0;
+}
+
+static int
+zone_block_zone_management(struct bdev_zone_block *bdev_node, struct zone_block_io_channel *ch,
+			   struct spdk_bdev_io *bdev_io)
+{
+	struct block_zone *zone;
+
+	zone = zone_block_get_zone(bdev_node, bdev_io->u.zdev.zone_id);
+	if (!zone) {
+		return -EINVAL;
+	}
+
+	switch (bdev_io->u.zdev.zone_action) {
+	case SPDK_BDEV_ZONE_INFO:
+		return zone_block_get_zone_info(bdev_node, zone, bdev_io);
+	case SPDK_BDEV_ZONE_RESET:
+	case SPDK_BDEV_ZONE_OPEN:
+	case SPDK_BDEV_ZONE_CLOSE:
+	case SPDK_BDEV_ZONE_FINISH:
+	default:
+		return -EINVAL;
+	}
+}
+
+static void
 zone_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	struct bdev_zone_block *bdev_node = SPDK_CONTAINEROF(bdev_io->bdev, struct bdev_zone_block, bdev);
+	struct zone_block_io *io_ctx = (struct zone_block_io *)bdev_io->driver_ctx;
+	struct zone_block_io_channel *dev_ch = spdk_io_channel_get_ctx(ch);
+	int rc = 0;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+		rc = zone_block_zone_management(bdev_node, dev_ch, bdev_io);
+		break;
+	default:
+		SPDK_ERRLOG("vbdev_block: unknown I/O type %d\n", bdev_io->type);
+		rc = -ENOTSUP;
+		break;
+	}
+
+	if (rc != 0) {
+		if (rc == -EAGAIN) {
+			SPDK_ERRLOG("-EEGAIN, start to queue io for vbdev.\n");
+			io_ctx->ch = ch;
+			zone_block_queue_io(bdev_io);
+		} else {
+			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
 }
 
 static bool
 zone_block_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+		return true;
 	default:
 		return false;
 	}
