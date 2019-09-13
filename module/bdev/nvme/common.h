@@ -78,6 +78,21 @@ struct nvme_bdev {
 	struct spdk_nvme_ns	*ns;
 };
 
+typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, int rc);
+
+struct nvme_async_probe_ctx {
+	struct spdk_nvme_probe_ctx *probe_ctx;
+	const char *base_name;
+	const char **names;
+	size_t *count;
+	uint32_t prchk_flags;
+	struct spdk_poller *poller;
+	struct spdk_nvme_transport_id trid;
+	struct spdk_nvme_ctrlr_opts opts;
+	spdk_bdev_create_nvme_fn cb_fn;
+	void *cb_ctx;
+};
+
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get_by_name(const char *name);
 struct nvme_bdev_ctrlr *nvme_bdev_first_ctrlr(void);

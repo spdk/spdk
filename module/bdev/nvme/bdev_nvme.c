@@ -34,7 +34,6 @@
 #include "spdk/stdinc.h"
 
 #include "bdev_nvme.h"
-#include "common.h"
 
 #include "spdk/config.h"
 #include "spdk/conf.h"
@@ -1203,19 +1202,6 @@ bdev_nvme_create_bdevs(const char **names, size_t *count,
 
 	return 0;
 }
-
-struct nvme_async_probe_ctx {
-	struct spdk_nvme_probe_ctx *probe_ctx;
-	const char *base_name;
-	const char **names;
-	size_t *count;
-	uint32_t prchk_flags;
-	struct spdk_poller *poller;
-	struct spdk_nvme_transport_id trid;
-	struct spdk_nvme_ctrlr_opts opts;
-	spdk_bdev_create_nvme_fn cb_fn;
-	void *cb_ctx;
-};
 
 static void
 free_controller(const struct spdk_nvme_transport_id *trid)

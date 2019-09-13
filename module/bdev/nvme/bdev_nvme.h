@@ -40,6 +40,8 @@
 #include "spdk/nvme.h"
 #include "spdk/bdev_module.h"
 
+#include "common.h"
+
 enum spdk_bdev_timeout_action {
 	SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE = 0,
 	SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET,
@@ -55,7 +57,6 @@ struct spdk_bdev_nvme_opts {
 	uint32_t io_queue_requests;
 };
 
-typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, int rc);
 struct spdk_nvme_qpair *spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
 void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
