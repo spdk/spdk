@@ -1980,8 +1980,9 @@ spdk_nvmf_rdma_request_parse_icd(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_device *device,
 				 struct spdk_nvmf_rdma_request *rdma_req)
 {
-	struct spdk_nvme_cmd		*cmd = &rdma_req->req.cmd->nvme_cmd;
-	struct spdk_nvme_cpl		*rsp = &rdma_req->req.rsp->nvme_cpl;
+	struct spdk_nvmf_request	*req = &rdma_req->req;
+	struct spdk_nvme_cmd		*cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl		*rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvme_sgl_descriptor	*sgl = &cmd->dptr.sgl1;
 	uint64_t			offset = sgl->address;
 	uint32_t			max_len = rtransport->transport.opts.in_capsule_data_size;
@@ -2006,14 +2007,14 @@ spdk_nvmf_rdma_request_parse_icd(struct spdk_nvmf_rdma_transport *rtransport,
 	}
 
 	rdma_req->num_outstanding_data_wr = 0;
-	rdma_req->req.data_from_pool = false;
-	rdma_req->req.length = length;
+	req->data_from_pool = false;
+	req->length = length;
 
 	if (spdk_likely(!rdma_req->dif_insert_or_strip)) {
-		rdma_req->req.data = rdma_req->recv->buf + offset;
-		rdma_req->req.iov[0].iov_base = rdma_req->req.data;
-		rdma_req->req.iov[0].iov_len = length;
-		rdma_req->req.iovcnt = 1;
+		req->data = rdma_req->recv->buf + offset;
+		req->iov[0].iov_base = req->data;
+		req->iov[0].iov_len = length;
+		req->iovcnt = 1;
 	} else {
 		uint32_t data_block_size = rdma_req->dif_ctx.block_size - rdma_req->dif_ctx.md_size;
 		uint32_t num_blocks, i, iovcnt = 0;
@@ -2040,27 +2041,27 @@ spdk_nvmf_rdma_request_parse_icd(struct spdk_nvmf_rdma_transport *rtransport,
 			/* No available metadata buffers. Queue this request up */
 			return 0;
 		}
-		rdma_req->req.data = rdma_req->recv->buf + offset;
+		req->data = rdma_req->recv->buf + offset;
 		/* update length wrt metadata */
 		length = 0;
 
 		/* interleave data with metadata, the even iov item points to data block,
 			the odd iov item points to metadata */
-		for (i = 0; i < num_blocks; i++) {
-			rdma_req->req.iov[iovcnt].iov_base = ((char *)rdma_req->req.data) + data_block_size * i;
-			rdma_req->req.iov[iovcnt].iov_len = data_block_size;
-			length += rdma_req->req.iov[iovcnt].iov_len;
-			++iovcnt;
+		for (i = 0; i < num_blocks; i++, iovcnt += 2) {
+			struct iovec *data_iov = &req->iov[iovcnt];
+			struct iovec *md_iov = &req->iov[iovcnt + 1];
 
-			rdma_req->req.iov[iovcnt].iov_base = ((char *)rdma_req->md_buf) + i *
-							     rdma_req->dif_ctx.md_size;
-			rdma_req->req.iov[iovcnt].iov_len = rdma_req->dif_ctx.md_size;
-			length += rdma_req->req.iov[iovcnt].iov_len;
-			++iovcnt;
+			data_iov->iov_base = ((char *)req->data) + i * data_block_size;
+			data_iov->iov_len = data_block_size;
+
+			md_iov->iov_base = ((char *)rdma_req->md_buf) + i * rdma_req->dif_ctx.md_size;
+			md_iov->iov_len = rdma_req->dif_ctx.md_size;
+
+			length += data_iov->iov_len + md_iov->iov_len;
 		}
 
-		rdma_req->req.iovcnt = iovcnt;
-		rdma_req->orig_length = rdma_req->req.length;
+		req->iovcnt = iovcnt;
+		rdma_req->orig_length = req->length;
 		rdma_req->elba_length = length;
 	}
 
