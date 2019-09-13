@@ -352,6 +352,29 @@ zone_block_close_zone(struct block_zone *zone, struct spdk_bdev_io *bdev_io)
 }
 
 static int
+zone_block_finish_zone(struct block_zone *zone, struct spdk_bdev_io *bdev_io)
+{
+	switch (zone->zone_info.state) {
+	case SPDK_BDEV_ZONE_STATE_OFFLINE:
+	case SPDK_BDEV_ZONE_STATE_READ_ONLY:
+		return -EINVAL;
+	default:
+		break;
+	}
+
+	if (__atomic_exchange_n(&zone->busy, true, __ATOMIC_SEQ_CST)) {
+		return -ENOMEM;
+	}
+
+	zone->zone_info.write_pointer = zone->zone_info.zone_id + zone->zone_info.capacity;
+	zone->zone_info.state = SPDK_BDEV_ZONE_STATE_FULL;
+
+	__atomic_store_n(&zone->busy, false, __ATOMIC_SEQ_CST);
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	return 0;
+}
+
+static int
 zone_block_zone_management(struct bdev_zone_block *bdev_node, struct zone_block_io_channel *ch,
 			   struct spdk_bdev_io *bdev_io)
 {
@@ -371,6 +394,8 @@ zone_block_zone_management(struct bdev_zone_block *bdev_node, struct zone_block_
 		return zone_block_management_open_zone(zone, bdev_io);
 	case SPDK_BDEV_ZONE_CLOSE:
 		return zone_block_close_zone(zone, bdev_io);
+	case SPDK_BDEV_ZONE_FINISH:
+		return zone_block_finish_zone(zone, bdev_io);
 	default:
 		return -EINVAL;
 	}
