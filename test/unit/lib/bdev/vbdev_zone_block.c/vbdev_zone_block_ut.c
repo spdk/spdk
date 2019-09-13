@@ -951,6 +951,13 @@ send_close_zone(struct bdev_zone_block *bdev, struct spdk_io_channel *ch, uint64
 }
 
 static void
+send_finish_zone(struct bdev_zone_block *bdev, struct spdk_io_channel *ch, uint64_t zone_id,
+		 uint32_t output_index, bool success)
+{
+	send_zone_management(bdev, ch, zone_id, output_index, SPDK_BDEV_ZONE_FINISH, success);
+}
+
+static void
 test_reset_zone(void)
 {
 	struct spdk_io_channel *ch;
@@ -1405,6 +1412,70 @@ test_close_zone(void)
 	free_test_globals();
 }
 
+static void
+test_finish_zone(void)
+{
+	struct spdk_io_channel *ch;
+	struct bdev_zone_block *bdev;
+	char *name = "Nvme0n1";
+	uint32_t num_zones = 20;
+	uint64_t zone_id, wp;
+	uint32_t output_index = 0;
+
+	init_test_globals(20 * 1024ul);
+	CU_ASSERT(zone_block_init() == 0);
+
+	/* Create zone dev */
+	bdev = create_and_get_vbdev("zone_dev1", name, num_zones, 1, true);
+	CU_ASSERT(bdev != NULL);
+
+	ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct zone_block_io_channel));
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	/* Reset an unused zone */
+	send_reset_zone(bdev, ch, bdev->bdev.zone_size, output_index, true);
+
+	/* Finish a full zone */
+	zone_id = 0;
+	wp = bdev->bdev.zone_size;
+	send_finish_zone(bdev, ch, zone_id, output_index, true);
+	send_zone_info(bdev, ch, zone_id, wp, SPDK_BDEV_ZONE_STATE_FULL, output_index, true);
+
+	/* Finish an empty zone */
+	send_reset_zone(bdev, ch, zone_id, output_index, true);
+	send_finish_zone(bdev, ch, zone_id, output_index, true);
+	send_zone_info(bdev, ch, zone_id, wp, SPDK_BDEV_ZONE_STATE_FULL, output_index, true);
+
+	/* Finish an open zone */
+	send_reset_zone(bdev, ch, zone_id, output_index, true);
+	send_write_zone(bdev, ch, zone_id, 1, output_index, true);
+	send_finish_zone(bdev, ch, zone_id, output_index, true);
+	send_zone_info(bdev, ch, zone_id, wp, SPDK_BDEV_ZONE_STATE_FULL, output_index, true);
+
+	/* Send finish with misaligned LBA */
+	zone_id = 1;
+	send_finish_zone(bdev, ch, zone_id, output_index, false);
+
+	/* Send finish to non-existing zone */
+	zone_id = num_zones * bdev->bdev.zone_size;
+	send_finish_zone(bdev, ch, zone_id, output_index, false);
+
+	/* Make sure unused zone wasn't written to */
+	zone_id = bdev->bdev.zone_size;
+	send_zone_info(bdev, ch, zone_id, zone_id, SPDK_BDEV_ZONE_STATE_EMPTY, output_index, true);
+
+	/* Delete zone dev */
+	send_delete_vbdev("zone_dev1", true);
+
+	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
+	free(ch);
+
+	zone_block_finish();
+	base_bdevs_cleanup();
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_list));
+	free_test_globals();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite       suite = NULL;
@@ -1430,7 +1501,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "test_unmap_zone", test_unmap_zone) == NULL ||
 		CU_add_test(suite, "test_zone_write", test_zone_write) == NULL ||
 		CU_add_test(suite, "test_zone_read", test_zone_read) == NULL ||
-		CU_add_test(suite, "test_close_zone", test_close_zone) == NULL
+		CU_add_test(suite, "test_close_zone", test_close_zone) == NULL ||
+		CU_add_test(suite, "test_finish_zone", test_finish_zone) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
