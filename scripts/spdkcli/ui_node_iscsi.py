@@ -44,7 +44,7 @@ class UIISCSIGlobalParams(UINode):
         disable_chap = self.ui_eval_param(d, "bool", None)
         require_chap = self.ui_eval_param(r, "bool", None)
         mutual_chap = self.ui_eval_param(m, "bool", None)
-        self.get_root().set_iscsi_discovery_auth(
+        self.get_root().iscsi_set_discovery_auth(
             chap_group=chap_group, disable_chap=disable_chap,
             require_chap=require_chap, mutual_chap=mutual_chap)
 
