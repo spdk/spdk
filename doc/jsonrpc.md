@@ -3726,6 +3726,40 @@ Example response:
 }
 ~~~
 
+## nvmf_get_targets method {#rpc_nvmf_get_targets}
+
+Get the list of NVMe-oF targets.
+
+### Parameters
+
+This RPC takes no parameters
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "nvmf_get_targets",
+  "id": 1,
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result":
+  [
+    "nvmf_tgt_1",
+    "nvmf_tgt_2",
+  ]
+}
+~~~
+
 ## nvmf_create_transport method {#rpc_nvmf_create_transport}
 
 Initialize an NVMe-oF transport with the given options.

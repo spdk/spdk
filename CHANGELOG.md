@@ -21,6 +21,17 @@ a null name parameter and will return the only available target.
 The majority of the NVMe-oF RPCs now accept an optional tgt_name parameter. This will
 allow those RPCs to work with applications that create more than one target.
 
+Three new NVMe-oF RPCs have been added `nvmf_create_target`, `nvmf_delete_target`, and
+`nvmf_get_targets`. These new RPCs provide a basic interface for managing multiple target
+objects. In SPDK the target object defines a unique discovery service. As of this release,
+these RPCs are not intended to be used with the example SPDK application which has a
+single, global target.
+
+Three new header functions have also been added to help deal with multiple targets.
+`spdk_nvmf_tgt_get_name` takes a target pointer as an argument and returns its human readable name.
+`spdk_nvmf_get_first_target` takes no arguments and returns the first target in the global list.
+`spdk_nvmf_get_next_tgt` takes a target pointer as an argument and returns the next one in the global list.
+
 ### bdev
 
 A new spdk_bdev_open_ext function has been added and spdk_bdev_open function has been deprecated.
