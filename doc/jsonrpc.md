@@ -2749,7 +2749,7 @@ Example response:
 }
 ~~~
 
-## delete_iscsi_auth_group method {#rpc_delete_iscsi_auth_group}
+## iscsi_delete_auth_group method {#rpc_iscsi_delete_auth_group}
 
 Delete an existing authentication group for CHAP authentication.
 
@@ -2769,7 +2769,7 @@ Example request:
     "tag": 2
   },
   "jsonrpc": "2.0",
-  "method": "delete_iscsi_auth_group",
+  "method": "iscsi_delete_auth_group",
   "id": 1
 }
 ~~~

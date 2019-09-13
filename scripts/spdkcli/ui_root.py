@@ -461,8 +461,8 @@ class UIRoot(UINode):
         rpc.iscsi.iscsi_create_auth_group(self.client, **kwargs)
 
     @verbose
-    def delete_iscsi_auth_group(self, **kwargs):
-        rpc.iscsi.delete_iscsi_auth_group(self.client, **kwargs)
+    def iscsi_delete_auth_group(self, **kwargs):
+        rpc.iscsi.iscsi_delete_auth_group(self.client, **kwargs)
 
     @verbose
     def iscsi_target_node_set_auth(self, **kwargs):

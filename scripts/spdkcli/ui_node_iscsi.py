@@ -523,7 +523,7 @@ class UIISCSIAuthGroups(UINode):
             UIISCSIAuthGroup(ag, self)
 
     def delete(self, tag):
-        self.get_root().delete_iscsi_auth_group(tag=tag)
+        self.get_root().iscsi_delete_auth_group(tag=tag)
 
     def delete_secret(self, tag, user):
         self.get_root().delete_secret_from_iscsi_auth_group(
