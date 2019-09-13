@@ -44,6 +44,9 @@
 #define BLOCK_SIZE 4096
 
 /* Globals */
+struct io_output *g_io_output = NULL;
+uint32_t g_max_io_size;
+uint32_t g_io_output_index;
 uint32_t g_io_comp_status;
 uint8_t g_rpc_err;
 uint8_t g_json_decode_obj_construct;
@@ -51,6 +54,16 @@ static TAILQ_HEAD(, spdk_bdev) g_bdev_list = TAILQ_HEAD_INITIALIZER(g_bdev_list)
 void *g_rpc_req = NULL;
 uint32_t g_rpc_req_size = 0;
 static struct spdk_thread *g_thread;
+
+struct io_output {
+	struct spdk_bdev_desc       *desc;
+	struct spdk_io_channel      *ch;
+	uint64_t                    offset_blocks;
+	uint64_t                    num_blocks;
+	spdk_bdev_io_completion_cb  cb;
+	void                        *cb_arg;
+	enum spdk_bdev_io_type      iotype;
+};
 
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
@@ -73,6 +86,23 @@ DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
 					struct spdk_json_write_ctx *w));
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc),
 	    (void *)1);
+
+static void
+init_test_globals(void)
+{
+	g_io_output = calloc(g_max_io_size, sizeof(struct io_output));
+	SPDK_CU_ASSERT_FATAL(g_io_output != NULL);
+	g_io_output_index = 0;
+}
+
+static void
+free_test_globals(void)
+{
+	if (g_io_output) {
+		free(g_io_output);
+		g_io_output = NULL;
+	}
+}
 
 int
 spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
@@ -480,6 +510,7 @@ test_zone_block_create(void)
 	zone_block_finish();
 	base_bdevs_cleanup();
 	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_list));
+	free_test_globals();
 }
 
 static void
@@ -517,6 +548,197 @@ test_zone_block_create_invalid(void)
 	zone_block_finish();
 	base_bdevs_cleanup();
 	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_list));
+	free_test_globals();
+}
+
+static void
+bdev_io_zone_info_initialize(struct spdk_bdev_io *bdev_io, struct spdk_bdev *bdev,
+			     uint64_t zone_id, uint32_t num_zones)
+{
+	bdev_io->bdev = bdev;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_GET_ZONE_INFO;
+
+	bdev_io->u.zone_mgmt.zone_id = zone_id;
+
+	bdev_io->u.zone_mgmt.num_zones = num_zones;
+	if (num_zones) {
+		bdev_io->u.zone_mgmt.buf = calloc(num_zones, sizeof(struct spdk_bdev_zone_info));
+	}
+}
+
+static void
+bdev_io_zone_cleanup(struct spdk_bdev_io *bdev_io)
+{
+	if (bdev_io->u.zone_mgmt.buf) {
+		free(bdev_io->u.zone_mgmt.buf);
+	}
+	free(bdev_io);
+}
+
+static struct bdev_zone_block *
+create_and_get_vbdev(char *vdev_name, char *name, uint64_t num_zones, uint64_t optimal_open_zones,
+		     bool create_bdev)
+{
+	size_t zone_size = BLOCK_CNT / num_zones;
+	struct bdev_zone_block *bdev = NULL;
+	send_create_vbdev(vdev_name, name, zone_size, optimal_open_zones, vdev_name, true);
+
+	TAILQ_FOREACH(bdev, &g_bdev_nodes, link) {
+		if (strcmp(bdev->bdev.name, vdev_name) == 0) {
+			break;
+		}
+	}
+
+	return bdev;
+}
+
+static void
+test_supported_io_types(void)
+{
+	struct bdev_zone_block *bdev;
+	char *name = "Nvme0n1";
+	uint32_t num_zones = 10;
+
+	init_test_globals();
+	CU_ASSERT(zone_block_init() == 0);
+
+	/* Create zone dev */
+	bdev = create_and_get_vbdev("zone_dev1", name, num_zones, 1, true);
+	CU_ASSERT(bdev != NULL);
+
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT) == true);
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZONE_APPEND) == false);
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ) == false);
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE) == false);
+
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN) == false);
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_IO) == false);
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_IO_MD) == false);
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP) == false);
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH) == false);
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_RESET) == false);
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES) == false);
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZCOPY) == false);
+
+	send_delete_vbdev("zone_dev1", true);
+	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
+
+	zone_block_finish();
+	base_bdevs_cleanup();
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_list));
+	free_test_globals();
+}
+
+static void
+send_zone_info(struct bdev_zone_block *bdev, struct spdk_io_channel *ch, uint64_t zone_id,
+	       uint64_t wp,
+	       enum spdk_bdev_zone_state state, uint32_t output_index, bool success)
+{
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_zone_info *info;
+
+	bdev_io = calloc(1, sizeof(struct spdk_bdev_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	bdev_io_zone_info_initialize(bdev_io, &bdev->bdev, zone_id, 1);
+	memset(g_io_output, 0, (g_max_io_size * sizeof(struct io_output)));
+	g_io_output_index = output_index;
+
+	g_io_comp_status = !success;
+	zone_block_submit_request(ch, bdev_io);
+	CU_ASSERT(g_io_comp_status == success);
+
+	if (success) {
+		info = (struct spdk_bdev_zone_info *)bdev_io->u.zone_mgmt.buf;
+		CU_ASSERT(info->zone_id == zone_id);
+		CU_ASSERT(info->capacity == bdev->bdev.zone_size);
+		CU_ASSERT(info->write_pointer == wp);
+		CU_ASSERT(info->state == state);
+	}
+
+	bdev_io_zone_cleanup(bdev_io);
+}
+
+static void
+test_get_zone_info(void)
+{
+	struct spdk_io_channel *ch;
+	struct bdev_zone_block *bdev;
+	struct spdk_bdev_io *bdev_io;
+	char *name = "Nvme0n1";
+	uint32_t num_zones = 10, i;
+	struct spdk_bdev_zone_info *info;
+
+	init_test_globals();
+	CU_ASSERT(zone_block_init() == 0);
+
+	/* Create zone dev */
+	bdev = create_and_get_vbdev("zone_dev1", name, num_zones, 1, true);
+	CU_ASSERT(bdev != NULL);
+
+	ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct zone_block_io_channel));
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	/* Get info about each zone */
+	for (i = 0; i < num_zones; i++) {
+		send_zone_info(bdev, ch, i * bdev->bdev.zone_size,
+			       i * bdev->bdev.zone_size + bdev->bdev.zone_size, SPDK_BDEV_ZONE_STATE_FULL, 0, true);
+	}
+
+	/* Send info asking for 0 zones */
+	bdev_io = calloc(1, sizeof(struct spdk_bdev_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	bdev_io_zone_info_initialize(bdev_io, &bdev->bdev, 0, 0);
+	memset(g_io_output, 0, (g_max_io_size * sizeof(struct io_output)));
+	g_io_output_index = 0;
+	zone_block_submit_request(ch, bdev_io);
+	CU_ASSERT(g_io_comp_status);
+	bdev_io_zone_cleanup(bdev_io);
+
+	/* Send info asking for all zones */
+	bdev_io = calloc(1, sizeof(struct spdk_bdev_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	bdev_io_zone_info_initialize(bdev_io, &bdev->bdev, 0, num_zones);
+	memset(g_io_output, 0, (g_max_io_size * sizeof(struct io_output)));
+	g_io_output_index = 0;
+	zone_block_submit_request(ch, bdev_io);
+	CU_ASSERT(g_io_comp_status);
+
+	for (i = 0; i < num_zones; i++) {
+		info = &(((struct spdk_bdev_zone_info *)bdev_io->u.zone_mgmt.buf)[i]);
+		CU_ASSERT(info->zone_id == i * bdev->bdev.zone_size);
+		CU_ASSERT(info->capacity == bdev->bdev.zone_size);
+		CU_ASSERT(info->write_pointer == i * bdev->bdev.zone_size + bdev->bdev.zone_size);
+		CU_ASSERT(info->state == SPDK_BDEV_ZONE_STATE_FULL);
+	}
+	bdev_io_zone_cleanup(bdev_io);
+
+	/* Send info asking for too many zones */
+	bdev_io = calloc(1, sizeof(struct spdk_bdev_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	bdev_io_zone_info_initialize(bdev_io, &bdev->bdev, 0, num_zones + 1);
+	memset(g_io_output, 0, (g_max_io_size * sizeof(struct io_output)));
+	g_io_output_index = 0;
+	zone_block_submit_request(ch, bdev_io);
+	CU_ASSERT(!g_io_comp_status);
+	bdev_io_zone_cleanup(bdev_io);
+
+	/* Send info with misaligned start LBA */
+	send_zone_info(bdev, ch, 1, 0, SPDK_BDEV_ZONE_STATE_FULL, 0, false);
+
+	/* Send info with too high LBA */
+	send_zone_info(bdev, ch, num_zones * bdev->bdev.zone_size, 0, SPDK_BDEV_ZONE_STATE_FULL, 0,
+		       false);
+
+	/* Delete zone dev */
+	send_delete_vbdev("zone_dev1", true);
+
+	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
+	free(ch);
+
+	zone_block_finish();
+	base_bdevs_cleanup();
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_list));
+	free_test_globals();
 }
 
 int main(int argc, char **argv)
@@ -536,7 +758,9 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "test_zone_block_create", test_zone_block_create) == NULL ||
-		CU_add_test(suite, "test_zone_block_create_invalid", test_zone_block_create_invalid) == NULL
+		CU_add_test(suite, "test_zone_block_create_invalid", test_zone_block_create_invalid) == NULL ||
+		CU_add_test(suite, "test_get_zone_info", test_get_zone_info) == NULL ||
+		CU_add_test(suite, "test_supported_io_types", test_supported_io_types) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
