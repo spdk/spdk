@@ -453,8 +453,8 @@ class UIRoot(UINode):
 
     @verbose
     @is_method_available
-    def get_iscsi_auth_groups(self, **kwargs):
-        return rpc.iscsi.get_iscsi_auth_groups(self.client, **kwargs)
+    def iscsi_get_auth_groups(self, **kwargs):
+        return rpc.iscsi.iscsi_get_auth_groups(self.client, **kwargs)
 
     @verbose
     def iscsi_create_auth_group(self, **kwargs):
