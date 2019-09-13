@@ -150,8 +150,7 @@ function nvmfcleanup()
 	set +e
 	for i in {1..20}; do
 		modprobe -v -r nvme-$TEST_TRANSPORT
-		modprobe -v -r nvme-fabrics
-		if [ $? -eq 0 ]; then
+		if ! modprobe -v -r nvme-fabrics; then
 			set -e
 			return
 		fi
@@ -260,8 +259,7 @@ function nvme_connect()
 {
 	local init_count=$(nvme list | wc -l)
 
-	nvme connect $@
-	if [ $? != 0 ]; then return $?; fi
+	if nvme connect $@; then return $?; fi
 
 	for i in $(seq 1 10); do
 		if [ $(nvme list | wc -l) -gt $init_count ]; then
