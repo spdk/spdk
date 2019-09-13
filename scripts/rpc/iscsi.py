@@ -267,8 +267,9 @@ def iscsi_target_node_set_auth(
     return client.call('iscsi_target_node_set_auth', params)
 
 
-def add_iscsi_auth_group(client, tag, secrets=None):
-    """Add authentication group for CHAP authentication.
+@deprecated_alias('add_iscsi_auth_group')
+def iscsi_create_auth_group(client, tag, secrets=None):
+    """Create authentication group for CHAP authentication.
 
     Args:
         tag: Authentication group tag (unique, integer > 0).
@@ -281,7 +282,7 @@ def add_iscsi_auth_group(client, tag, secrets=None):
 
     if secrets:
         params['secrets'] = secrets
-    return client.call('add_iscsi_auth_group', params)
+    return client.call('iscsi_create_auth_group', params)
 
 
 def delete_iscsi_auth_group(client, tag):

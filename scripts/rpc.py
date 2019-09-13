@@ -749,19 +749,20 @@ if __name__ == "__main__":
     *** Authentication group must be precreated ***""", type=int)
     p.set_defaults(func=iscsi_set_discovery_auth)
 
-    def add_iscsi_auth_group(args):
+    def iscsi_create_auth_group(args):
         secrets = None
         if args.secrets:
             secrets = [dict(u.split(":") for u in a.split(" ")) for a in args.secrets.split(",")]
 
-        rpc.iscsi.add_iscsi_auth_group(args.client, tag=args.tag, secrets=secrets)
+        rpc.iscsi.iscsi_create_auth_group(args.client, tag=args.tag, secrets=secrets)
 
-    p = subparsers.add_parser('add_iscsi_auth_group', help='Add authentication group for CHAP authentication.')
+    p = subparsers.add_parser('iscsi_create_auth_group', aliases=['add_iscsi_auth_group'],
+                              help='Create authentication group for CHAP authentication.')
     p.add_argument('tag', help='Authentication group tag (unique, integer > 0).', type=int)
     p.add_argument('-c', '--secrets', help="""Comma-separated list of CHAP secrets
 <user:user_name secret:chap_secret muser:mutual_user_name msecret:mutual_chap_secret> enclosed in quotes.
 Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 msecret:ms2'""", required=False)
-    p.set_defaults(func=add_iscsi_auth_group)
+    p.set_defaults(func=iscsi_create_auth_group)
 
     def delete_iscsi_auth_group(args):
         rpc.iscsi.delete_iscsi_auth_group(args.client, tag=args.tag)
