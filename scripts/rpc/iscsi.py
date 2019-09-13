@@ -85,7 +85,8 @@ def iscsi_set_options(
     return client.call('iscsi_set_options', params)
 
 
-def set_iscsi_discovery_auth(
+@deprecated_alias('set_iscsi_discovery_auth')
+def iscsi_set_discovery_auth(
         client,
         disable_chap=None,
         require_chap=None,
@@ -113,7 +114,7 @@ def set_iscsi_discovery_auth(
     if chap_group:
         params['chap_group'] = chap_group
 
-    return client.call('set_iscsi_discovery_auth', params)
+    return client.call('iscsi_set_discovery_auth', params)
 
 
 def get_iscsi_auth_groups(client):

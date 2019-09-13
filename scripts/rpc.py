@@ -730,15 +730,16 @@ if __name__ == "__main__":
     p.add_argument('-p', '--allow-duplicated-isid', help='Allow duplicated initiator session ID.', action='store_true')
     p.set_defaults(func=iscsi_set_options)
 
-    def set_iscsi_discovery_auth(args):
-        rpc.iscsi.set_iscsi_discovery_auth(
+    def iscsi_set_discovery_auth(args):
+        rpc.iscsi.iscsi_set_discovery_auth(
             args.client,
             disable_chap=args.disable_chap,
             require_chap=args.require_chap,
             mutual_chap=args.mutual_chap,
             chap_group=args.chap_group)
 
-    p = subparsers.add_parser('set_iscsi_discovery_auth', help="""Set CHAP authentication for discovery session.""")
+    p = subparsers.add_parser('iscsi_set_discovery_auth', aliases=['set_iscsi_discovery_auth'],
+                              help="""Set CHAP authentication for discovery session.""")
     p.add_argument('-d', '--disable-chap', help="""CHAP for discovery session should be disabled.
     *** Mutually exclusive with --require-chap""", action='store_true')
     p.add_argument('-r', '--require-chap', help="""CHAP for discovery session should be required.
@@ -746,7 +747,7 @@ if __name__ == "__main__":
     p.add_argument('-m', '--mutual-chap', help='CHAP for discovery session should be mutual', action='store_true')
     p.add_argument('-g', '--chap-group', help="""Authentication group ID for discovery session.
     *** Authentication group must be precreated ***""", type=int)
-    p.set_defaults(func=set_iscsi_discovery_auth)
+    p.set_defaults(func=iscsi_set_discovery_auth)
 
     def add_iscsi_auth_group(args):
         secrets = None

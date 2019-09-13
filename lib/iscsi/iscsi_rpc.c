@@ -1121,7 +1121,7 @@ static const struct spdk_json_object_decoder rpc_discovery_auth_decoders[] = {
 };
 
 static void
-spdk_rpc_set_iscsi_discovery_auth(struct spdk_jsonrpc_request *request,
+spdk_rpc_iscsi_set_discovery_auth(struct spdk_jsonrpc_request *request,
 				  const struct spdk_json_val *params)
 {
 	struct rpc_discovery_auth req = {};
@@ -1148,8 +1148,8 @@ spdk_rpc_set_iscsi_discovery_auth(struct spdk_jsonrpc_request *request,
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("set_iscsi_discovery_auth", spdk_rpc_set_iscsi_discovery_auth, SPDK_RPC_RUNTIME)
-
+SPDK_RPC_REGISTER("iscsi_set_discovery_auth", spdk_rpc_iscsi_set_discovery_auth, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_set_discovery_auth, set_iscsi_discovery_auth)
 
 #define MAX_AUTH_SECRETS	64
 
