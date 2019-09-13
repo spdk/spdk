@@ -70,7 +70,8 @@ function blk_ro_tc1()
 
 	if [[ $disk =~ .*malloc.* ]]; then
 		disk_name=$($rpc_py bdev_malloc_create 512 4096)
-		if [ $? != 0 ]; then
+		rpc_py_status=$?
+		if [ $rpc_py_status != 0 ]; then
 			fail "Failed to create malloc bdev"
 		fi
 
