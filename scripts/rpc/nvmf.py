@@ -70,6 +70,16 @@ def nvmf_delete_target(client,
     return client.call("nvmf_delete_target", params)
 
 
+def nvmf_get_targets(client):
+    """Get a list of all the NVMe-oF targets in this application
+
+    Returns:
+        An array of target names.
+    """
+
+    return client.call("nvmf_get_targets")
+
+
 def nvmf_create_transport(client,
                           trtype,
                           tgt_name=None,

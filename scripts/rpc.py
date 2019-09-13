@@ -1544,6 +1544,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-n', '--name', help='Target name (unique to application)', type=str, required=True)
     p.set_defaults(func=nvmf_delete_target)
 
+    def nvmf_get_targets(args):
+        print_dict(rpc.nvmf.nvmf_get_targets(args.client))
+
+    p = subparsers.add_parser('nvmf_get_targets', help='Get the list of NVMe-oF Targets')
+    p.set_defaults(func=nvmf_get_targets)
+
     def nvmf_create_transport(args):
         rpc.nvmf.nvmf_create_transport(args.client,
                                        trtype=args.trtype,
