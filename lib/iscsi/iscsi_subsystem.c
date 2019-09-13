@@ -1483,7 +1483,7 @@ iscsi_auth_group_config_json(struct spdk_iscsi_auth_group *group,
 {
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_string(w, "method", "add_iscsi_auth_group");
+	spdk_json_write_named_string(w, "method", "iscsi_create_auth_group");
 
 	spdk_json_write_name(w, "params");
 	iscsi_auth_group_info_json(group, w);

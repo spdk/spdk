@@ -2696,18 +2696,18 @@ Example response:
 }
 ~~~
 
-## add_iscsi_auth_group method {#rpc_add_iscsi_auth_group}
+## iscsi_create_auth_group method {#rpc_iscsi_create_auth_group}
 
-Add an authentication group for CHAP authentication.
+Create an authentication group for CHAP authentication.
 
 ### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
 tag                         | Required | number  | Authentication group tag (unique, integer > 0)
-secrets                     | Optional | array   | Array of @ref rpc_add_iscsi_auth_group_secret objects
+secrets                     | Optional | array   | Array of @ref rpc_iscsi_create_auth_group_secret objects
 
-### secret {#rpc_add_iscsi_auth_group_secret}
+### secret {#rpc_iscsi_create_auth_group_secret}
 
 Name                        | Optional | Type    | Description
 --------------------------- | ---------| --------| -----------
@@ -2734,7 +2734,7 @@ Example request:
     "tag": 2
   },
   "jsonrpc": "2.0",
-  "method": "add_iscsi_auth_group",
+  "method": "iscsi_create_auth_group",
   "id": 1
 }
 ~~~
@@ -2799,7 +2799,7 @@ Array of objects describing authentication group.
 Name                        | Type    | Description
 --------------------------- | --------| -----------
 tag                         | number  | Authentication group tag
-secrets                     | array   | Array of @ref rpc_add_iscsi_auth_group_secret objects
+secrets                     | array   | Array of @ref rpc_iscsi_create_auth_group_secret objects
 
 ### Example
 
