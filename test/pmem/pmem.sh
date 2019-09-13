@@ -292,8 +292,7 @@ function bdev_pmem_create_pool_tc6()
 			error "Failed to create pmem pool!"
 		fi
 
-		created_pmem_block_size=$($rpc_py bdev_pmem_get_pool_info $default_pool_file | jq -r '.[] .block_size')
-		if [ $? != 0 ]; then
+		if ! created_pmem_block_size=$($rpc_py bdev_pmem_get_pool_info $default_pool_file | jq -r '.[] .block_size'); then
 			error "Failed to get pmem info!"
 		fi
 
@@ -524,8 +523,7 @@ function bdev_pmem_create_tc5()
 		error "Failed to get pmem info!"
 	fi
 
-	pmem_bdev_name=$($rpc_py bdev_pmem_create -n $bdev_name $default_pool_file)
-	if [ $? != 0 ]; then
+	if ! pmem_bdev_name=$($rpc_py bdev_pmem_create -n $bdev_name $default_pool_file); then
 		error "Failed to create pmem bdev"
 	fi
 
@@ -556,8 +554,7 @@ function bdev_pmem_create_tc6()
 		error "Failed to get info on pmem pool file!"
 	fi
 
-	pmem_bdev_name=$($rpc_py bdev_pmem_create -n $bdev_name $default_pool_file)
-	if [ $? != 0 ]; then
+	if ! pmem_bdev_name=$($rpc_py bdev_pmem_create -n $bdev_name $default_pool_file); then
 		error "Failed to create pmem bdev!"
 	fi
 
@@ -596,8 +593,7 @@ function delete_bdev_tc1()
 		error "Failed to get pmem info!"
 	fi
 
-	pmem_bdev_name=$($rpc_py bdev_pmem_create -n $bdev_name $default_pool_file)
-	if [ $? != 0 ]; then
+	if ! pmem_bdev_name=$($rpc_py bdev_pmem_create -n $bdev_name $default_pool_file); then
 		error "Failed to create pmem bdev!"
 	fi
 
@@ -629,8 +625,7 @@ function delete_bdev_tc2()
 		error "Failed to get pmem info!"
 	fi
 
-	pmem_bdev_name=$($rpc_py bdev_pmem_create -n $bdev_name $default_pool_file)
-	if [ $? != 0 ]; then
+	if ! pmem_bdev_name=$($rpc_py bdev_pmem_create -n $bdev_name $default_pool_file); then
 		error "Failed to create pmem bdev"
 	fi
 

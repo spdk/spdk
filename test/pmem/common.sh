@@ -70,10 +70,6 @@ function vhost_start()
 	local vhost_pid
 
 	$rootdir/app/vhost/vhost &
-	if [ $? != 0 ]; then
-		echo -e "ERROR: Failed to launch vhost!"
-		return 1
-	fi
 
 	vhost_pid=$!
 	echo $vhost_pid > $testdir/vhost.pid
