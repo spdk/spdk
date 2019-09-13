@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e58c57f_2865d98d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 17
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-13T08:23:03Z",
+      "side": 1,
+      "message": "spdk_bdev_zone_info",
+      "range": {
+        "startLine": 32,
+        "startChar": 38,
+        "endLine": 32,
+        "endChar": 57
+      },
+      "revId": "46bc3326b0d9d5deb7d61125ea3477bc02d038dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
