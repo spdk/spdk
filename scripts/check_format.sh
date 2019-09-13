@@ -244,7 +244,7 @@ if hash shellcheck 2>/dev/null; then
 SC2010,SC2012,SC2013,SC2016,SC2034,SC2045,SC2046,SC2068,SC2086,SC2089,SC2090,\
 SC2097,SC2098,SC2103,SC2115,SC2116,SC2119,SC2120,SC2121,SC2124,SC2126,SC2128,\
 SC2129,SC2140,SC2142,SC2143,SC2148,SC2152,SC2153,SC2154,SC2155,\
-SC2162,SC2164,SC2165,SC2166,SC2167,SC2174,\
+SC2162,SC2164,SC2165,SC2166,SC2167,\
 SC2230"
 	# SPDK fails some error checks which have been deprecated in later versions of shellcheck.
 	# We will not try to fix these error checks, but instead just leave the error types here
@@ -254,12 +254,13 @@ SC2230"
 	# We are aware about below exclude list and we want this errors to be excluded.
 	# SC1090: Can't follow non-constant source. Use a directive to specify location.
 	# SC1091: Not following: (error message here)
-        # SC2001: See if you can use ${variable//search/replace} instead.
+	# SC2001: See if you can use ${variable//search/replace} instead.
+	# SC2174: When used with -p, -m only applies to the deepest directory.
 	# SC2206: Quote to prevent word splitting/globbing,
 	#         or split robustly with mapfile or read -a.
 	# SC2207: Prefer mapfile or read -a to split command output (or quote to avoid splitting).
 	# SC2223: This default assignment may cause DoS due to globbing. Quote it.
-	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1090,SC1091,SC2001,SC2206,SC2207,SC2223"
+	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1090,SC1091,SC2174,SC2001,SC2206,SC2207,SC2223"
 
 	SHCK_FORMAT="diff"
 	SHCK_APPLY=true
