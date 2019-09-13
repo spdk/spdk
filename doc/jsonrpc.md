@@ -3691,6 +3691,41 @@ Example response:
 }
 ~~~
 
+## nvmf_delete_target method {#rpc_nvmf_delete_target}
+
+Destroy the given NVMe-oF target.
+
+### Parameters
+
+Name                        | Optional | Type        | Description
+--------------------------- | -------- | ------------| -----------
+name                        | Required | string      | Target name (must be unique to application)
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "nvmf_delete_target",
+  "id": 1,
+  "params": {
+    "name": "old_tgt",
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## nvmf_create_transport method {#rpc_nvmf_create_transport}
 
 Initialize an NVMe-oF transport with the given options.
