@@ -70,6 +70,7 @@ function vhost_start()
 	local vhost_pid
 
 	$rootdir/app/vhost/vhost &
+	# shellcheck disable=SC2181
 	if [ $? != 0 ]; then
 		echo -e "ERROR: Failed to launch vhost!"
 		return 1
