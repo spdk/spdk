@@ -22,6 +22,29 @@
       "revId": "8be847da644a2d1481e9fc62a025eb6951033894",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8db910f1_c783d166",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-13T08:42:49Z",
+      "side": 1,
+      "message": "If there is a easy way please describe shortly what kind of data buffer is this.",
+      "range": {
+        "startLine": 525,
+        "startChar": 3,
+        "endLine": 525,
+        "endChar": 24
+      },
+      "revId": "8be847da644a2d1481e9fc62a025eb6951033894",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
