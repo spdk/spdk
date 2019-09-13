@@ -2644,7 +2644,7 @@ Example response:
   }
 }
 ~~~
-## set_iscsi_discovery_auth method {#rpc_set_iscsi_discovery_auth}
+## iscsi_set_discovery_auth method {#rpc_iscsi_set_discovery_auth}
 
 Set CHAP authentication for sessions dynamically.
 
@@ -2672,7 +2672,7 @@ request:
     "mutual_chap": true
   },
   "jsonrpc": "2.0",
-  "method": "set_iscsi_discovery_auth",
+  "method": "iscsi_set_discovery_auth",
   "id": 1
 }
 ~~~
