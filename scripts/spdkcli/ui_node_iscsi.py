@@ -542,7 +542,7 @@ class UIISCSIAuthGroups(UINode):
         if secrets:
             secrets = [dict(u.split(":") for u in a.split(" "))
                        for a in secrets.split(",")]
-        self.get_root().add_iscsi_auth_group(tag=tag, secrets=secrets)
+        self.get_root().iscsi_create_auth_group(tag=tag, secrets=secrets)
 
     def ui_command_delete(self, tag):
         """Delete an authentication group.
