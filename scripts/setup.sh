@@ -257,7 +257,7 @@ function configure_linux_pci {
 				pci_dev_echo "$bdf" "Skipping un-whitelisted Virtio device at $bdf"
 				continue
 			fi
-			blknames=''
+			blknames=()
 			get_virtio_names_from_bdf "$bdf" blknames
 			for blkname in $blknames; do
 				if [ "$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)" != "0" ]; then
@@ -601,7 +601,7 @@ function status_linux {
 			fi
 			device=$(cat /sys/bus/pci/devices/$bdf/device)
 			vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
-			blknames=''
+			blknames=()
 			get_virtio_names_from_bdf "$bdf" blknames
 			echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t\t${driver:--}\t\t$blknames"
 		done
