@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7df96e7d_069d53a9",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:49:19Z",
+      "side": 1,
+      "message": "Let\u0027s add a newline between the declarations and rest of the function.",
+      "revId": "af1b1d8d640b2a644924fead00efad60eee76408",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f98a6891_761f003a",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:49:19Z",
+      "side": 1,
+      "message": "I don\u0027t think this is correct, iovs always points at bdev_io-\u003eu.bdev.iovs[0]. I think you meant \"iov\" instead.",
+      "range": {
+        "startLine": 422,
+        "startChar": 10,
+        "endLine": 422,
+        "endChar": 60
+      },
+      "revId": "af1b1d8d640b2a644924fead00efad60eee76408",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82c24e6e_2b0b76b5",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:49:19Z",
+      "side": 1,
+      "message": "I think it\u0027d make more sense (and perhaps be a bit more efficient too) to iterate over the iovec array instead.",
+      "range": {
+        "startLine": 425,
+        "startChar": 0,
+        "endLine": 431,
+        "endChar": 18
+      },
+      "revId": "af1b1d8d640b2a644924fead00efad60eee76408",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b3e0755_6a915f7a",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:49:19Z",
+      "side": 1,
+      "message": "Same here, add a newline after the declarations.",
+      "revId": "af1b1d8d640b2a644924fead00efad60eee76408",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f20dcf4e_c7a649d7",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:49:19Z",
+      "side": 1,
+      "message": "Can\u0027t we just check this with an \"if\" instead?",
+      "range": {
+        "startLine": 469,
+        "startChar": 0,
+        "endLine": 475,
+        "endChar": 2
+      },
+      "revId": "af1b1d8d640b2a644924fead00efad60eee76408",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c41dfc23_bed52fba",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:49:19Z",
+      "side": 1,
+      "message": "Do we actually need to zero out the buffer? Couldn\u0027t we just send the reads as they come and rely on the underlying bdev\u0027s unmap behavior?",
+      "range": {
+        "startLine": 488,
+        "startChar": 0,
+        "endLine": 488,
+        "endChar": 31
+      },
+      "revId": "af1b1d8d640b2a644924fead00efad60eee76408",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
