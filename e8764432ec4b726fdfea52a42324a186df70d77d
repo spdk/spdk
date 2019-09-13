@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a11dd05_d7950f3d",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1627,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-13T11:26:34Z",
+      "side": 1,
+      "message": "Could you remove extra empty lines?",
+      "revId": "e8764432ec4b726fdfea52a42324a186df70d77d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db7d2fed_d9084656",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1679,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-13T11:26:34Z",
+      "side": 1,
+      "message": "It seems that there is no need to remove entries from lists since the memory occupied by entries is freed on line 1681",
+      "range": {
+        "startLine": 1674,
+        "startChar": 0,
+        "endLine": 1679,
+        "endChar": 2
+      },
+      "revId": "e8764432ec4b726fdfea52a42324a186df70d77d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
