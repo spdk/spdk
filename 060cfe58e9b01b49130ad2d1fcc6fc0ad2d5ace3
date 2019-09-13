@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7cfe05c7_6cdd00ba",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 19
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-13T08:47:02Z",
+      "side": 1,
+      "message": "This one and the one in line 27 should be add in one of the previous patches.",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 22,
+        "endChar": 67
+      },
+      "revId": "060cfe58e9b01b49130ad2d1fcc6fc0ad2d5ace3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
