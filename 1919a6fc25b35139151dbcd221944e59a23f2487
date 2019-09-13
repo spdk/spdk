@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbb75400_cebfd478",
+        "filename": "include/spdk/bdev_zone.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-13T09:11:10Z",
+      "side": 1,
+      "message": "Parameters are here in different order than in function declaration below.",
+      "range": {
+        "startLine": 205,
+        "startChar": 0,
+        "endLine": 206,
+        "endChar": 42
+      },
+      "revId": "1919a6fc25b35139151dbcd221944e59a23f2487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c268b78a_98ecedc1",
+        "filename": "include/spdk/bdev_zone.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-13T09:11:10Z",
+      "side": 1,
+      "message": "Wrong order.",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 29
+      },
+      "revId": "1919a6fc25b35139151dbcd221944e59a23f2487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
