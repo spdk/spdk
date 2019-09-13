@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eec6cd9e_54763395",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:14:29Z",
+      "side": 1,
+      "message": "We\u0027ll probably want to set this in case of resets as well. Perhaps \"busy\" would be a better name?",
+      "range": {
+        "startLine": 78,
+        "startChar": 6,
+        "endLine": 78,
+        "endChar": 20
+      },
+      "revId": "c7deb3b3834dfc8bca7b21a8da1eb29901d2700e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be8b4524_d80413dc",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:14:29Z",
+      "side": 1,
+      "message": "Let\u0027s rename this to num_open_zones.",
+      "range": {
+        "startLine": 88,
+        "startChar": 11,
+        "endLine": 88,
+        "endChar": 21
+      },
+      "revId": "c7deb3b3834dfc8bca7b21a8da1eb29901d2700e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0af7903_9664f498",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:14:29Z",
+      "side": 1,
+      "message": "Do we really need to support that? What\u0027s the point of tracking the number of open zones? Why couldn\u0027t zoned_block bdev just assume we can open all zones?",
+      "range": {
+        "startLine": 290,
+        "startChar": 0,
+        "endLine": 298,
+        "endChar": 10
+      },
+      "revId": "c7deb3b3834dfc8bca7b21a8da1eb29901d2700e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67fd2f82_a14d5ac0",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:14:29Z",
+      "side": 1,
+      "message": "Let\u0027s move it down, where we actually need it (before the spdk_bdev_writev_blocks).",
+      "range": {
+        "startLine": 344,
+        "startChar": 0,
+        "endLine": 344,
+        "endChar": 21
+      },
+      "revId": "c7deb3b3834dfc8bca7b21a8da1eb29901d2700e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "caea0cd4_cd4cece2",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:14:29Z",
+      "side": 1,
+      "message": "Are we allowed to write to a closed zone? If not, I think we should change this to\nif (!(state \u003d\u003d SPDK_BDEV_ZONE_STATE_EMPTY || state \u003d\u003d SPDK_BDEV_ZONE_STATE_OPEN))",
+      "range": {
+        "startLine": 347,
+        "startChar": 0,
+        "endLine": 349,
+        "endChar": 35
+      },
+      "revId": "c7deb3b3834dfc8bca7b21a8da1eb29901d2700e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
