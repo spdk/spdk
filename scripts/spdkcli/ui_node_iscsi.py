@@ -516,7 +516,7 @@ class UIISCSIAuthGroups(UINode):
 
     def refresh(self):
         self._children = set([])
-        self.iscsi_auth_groups = list(self.get_root().get_iscsi_auth_groups())
+        self.iscsi_auth_groups = list(self.get_root().iscsi_get_auth_groups())
         if self.iscsi_auth_groups is None:
             self.iscsi_auth_groups = []
         for ag in self.iscsi_auth_groups:
