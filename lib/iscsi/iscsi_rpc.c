@@ -1295,7 +1295,7 @@ static const struct spdk_json_object_decoder rpc_delete_auth_group_decoders[] = 
 };
 
 static void
-spdk_rpc_delete_iscsi_auth_group(struct spdk_jsonrpc_request *request,
+spdk_rpc_iscsi_delete_auth_group(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params)
 {
 	struct rpc_delete_auth_group req = {};
@@ -1329,7 +1329,8 @@ spdk_rpc_delete_iscsi_auth_group(struct spdk_jsonrpc_request *request,
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("delete_iscsi_auth_group", spdk_rpc_delete_iscsi_auth_group, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_delete_auth_group", spdk_rpc_iscsi_delete_auth_group, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_delete_auth_group, delete_iscsi_auth_group)
 
 struct rpc_add_auth_secret {
 	int32_t tag;

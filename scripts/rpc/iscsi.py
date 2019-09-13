@@ -285,7 +285,8 @@ def iscsi_create_auth_group(client, tag, secrets=None):
     return client.call('iscsi_create_auth_group', params)
 
 
-def delete_iscsi_auth_group(client, tag):
+@deprecated_alias('delete_iscsi_auth_group')
+def iscsi_delete_auth_group(client, tag):
     """Delete an authentication group.
 
     Args:
@@ -295,7 +296,7 @@ def delete_iscsi_auth_group(client, tag):
         True or False
     """
     params = {'tag': tag}
-    return client.call('delete_iscsi_auth_group', params)
+    return client.call('iscsi_delete_auth_group', params)
 
 
 @deprecated_alias('add_secret_to_iscsi_auth_group')

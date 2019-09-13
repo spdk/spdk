@@ -764,12 +764,13 @@ if __name__ == "__main__":
 Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 msecret:ms2'""", required=False)
     p.set_defaults(func=iscsi_create_auth_group)
 
-    def delete_iscsi_auth_group(args):
-        rpc.iscsi.delete_iscsi_auth_group(args.client, tag=args.tag)
+    def iscsi_delete_auth_group(args):
+        rpc.iscsi.iscsi_delete_auth_group(args.client, tag=args.tag)
 
-    p = subparsers.add_parser('delete_iscsi_auth_group', help='Delete an authentication group.')
+    p = subparsers.add_parser('iscsi_delete_auth_group', aliases=['delete_iscsi_auth_group'],
+                              help='Delete an authentication group.')
     p.add_argument('tag', help='Authentication group tag', type=int)
-    p.set_defaults(func=delete_iscsi_auth_group)
+    p.set_defaults(func=iscsi_delete_auth_group)
 
     def iscsi_auth_group_add_secret(args):
         rpc.iscsi.iscsi_auth_group_add_secret(
