@@ -1498,6 +1498,36 @@ spdk_rpc_nvmf_delete_target(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_delete_target", spdk_rpc_nvmf_delete_target, SPDK_RPC_RUNTIME);
 
+static void
+spdk_rpc_nvmf_get_targets(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx	*w;
+	struct spdk_nvmf_tgt		*tgt;
+	const char			*name;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "nvmf_get_targets has no parameters.");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_array_begin(w);
+
+	tgt = spdk_nvmf_get_first_tgt();
+
+	while (tgt != NULL) {
+		name = spdk_nvmf_tgt_get_name(tgt);
+		spdk_json_write_string(w, name);
+		tgt = spdk_nvmf_get_next_tgt(tgt);
+	}
+
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("nvmf_get_targets", spdk_rpc_nvmf_get_targets, SPDK_RPC_RUNTIME);
+
 struct nvmf_rpc_create_transport_ctx {
 	char				*trtype;
 	char				*tgt_name;
