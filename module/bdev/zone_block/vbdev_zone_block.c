@@ -82,6 +82,7 @@ struct bdev_zone_block {
 	struct block_zone		*zones; /* array of zones */
 	uint64_t			num_zones; /* number of zones */
 	uint64_t			zone_capacity; /* zone capacity */
+	uint64_t                        zone_shift; /* log2 of zone_size */
 	TAILQ_ENTRY(bdev_zone_block)	link;
 };
 static TAILQ_HEAD(, bdev_zone_block) g_bdev_nodes = TAILQ_HEAD_INITIALIZER(g_bdev_nodes);
@@ -178,16 +179,83 @@ zone_block_destruct(void *ctx)
 	return 0;
 }
 
+static struct block_zone *
+zone_block_get_zone_by_slba(struct bdev_zone_block *bdev_node, uint64_t start_lba)
+{
+	struct block_zone *zone = NULL;
+	size_t index = start_lba >> bdev_node->zone_shift;
+
+	if (index >= bdev_node->num_zones) {
+		return NULL;
+	}
+
+	zone = &bdev_node->zones[index];
+	if (zone->zone_info.zone_id == start_lba) {
+		return zone;
+	} else {
+		return NULL;
+	}
+}
+
+static int
+zone_block_get_zone_info(struct bdev_zone_block *bdev_node, struct spdk_bdev_io *bdev_io)
+{
+	struct block_zone *zone;
+	struct spdk_bdev_zone_info *zone_info = bdev_io->u.zone_mgmt.buf;
+	uint64_t zone_id = bdev_io->u.zone_mgmt.zone_id;
+	size_t i;
+
+	/* User can request info for more zones than exist, need to check both internal and user
+	 * boundaries
+	 */
+	for (i = 0; i < bdev_io->u.zone_mgmt.num_zones; i++, zone_id += bdev_node->bdev.zone_size) {
+		zone = zone_block_get_zone_by_slba(bdev_node, zone_id);
+		if (!zone) {
+			return -EINVAL;
+		}
+		memcpy(&zone_info[i], &zone->zone_info, sizeof(*zone_info));
+	}
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	return 0;
+}
+
 static void
 zone_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	struct bdev_zone_block *bdev_node = SPDK_CONTAINEROF(bdev_io->bdev, struct bdev_zone_block, bdev);
+	int rc = 0;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_GET_ZONE_INFO:
+		rc = zone_block_get_zone_info(bdev_node, bdev_io);
+		break;
+	default:
+		SPDK_ERRLOG("vbdev_block: unknown I/O type %u\n", bdev_io->type);
+		rc = -ENOTSUP;
+		break;
+	}
+
+	if (rc != 0) {
+		if (rc == -ENOMEM) {
+			SPDK_WARNLOG("ENOMEM, start to queue io for vbdev.\n");
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		} else {
+			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
 }
 
 static bool
 zone_block_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
-	return false;
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+		return true;
+	default:
+		return false;
+	}
 }
 
 static struct spdk_io_channel *
@@ -363,6 +431,8 @@ zone_block_register(struct spdk_bdev *base_bdev)
 			SPDK_ERRLOG("invalid zone size\n");
 			goto roundup_failed;
 		}
+
+		bdev_node->zone_shift = spdk_u64log2(zone_size);
 		bdev_node->num_zones = base_bdev->blockcnt / zone_size;
 
 		/* Align num_zones to optimal_open_zones */
