@@ -62,6 +62,24 @@
       "revId": "ec68530d1aacfe94d6d4a72bb3494c7eda1f0eb8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83b4e61d_5ed6e86c",
+        "filename": "lib/bdev/bdev_zone.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T13:08:20Z",
+      "side": 1,
+      "message": "I agree, we should either support passing num_zones or set it to 1 here.",
+      "parentUuid": "c5cd33fe_3589f6a6",
+      "revId": "ec68530d1aacfe94d6d4a72bb3494c7eda1f0eb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
