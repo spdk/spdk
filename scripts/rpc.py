@@ -1529,6 +1529,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    type=int, required=False)
     p.set_defaults(func=nvmf_create_target)
 
+    def nvmf_destroy_target(args):
+        print_dict(rpc.nvmf.nvmf_destroy_target(args.client,
+                                                name=args.name))
+
+    p = subparsers.add_parser('nvmf_destroy_target', help='Destroy the given NVMe-oF Target')
+    p.add_argument('-n', '--name', help='Target name (unique to application)', type=str, required=True)
+    p.set_defaults(func=nvmf_destroy_target)
+
     def nvmf_create_transport(args):
         rpc.nvmf.nvmf_create_transport(args.client,
                                        trtype=args.trtype,

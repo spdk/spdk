@@ -1469,6 +1469,62 @@ spdk_rpc_nvmf_create_target(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_create_target", spdk_rpc_nvmf_create_target, SPDK_RPC_RUNTIME);
 
+static const struct spdk_json_object_decoder nvmf_rpc_destroy_target_decoder[] = {
+	{"name", offsetof(struct nvmf_rpc_target_ctx, name), spdk_json_decode_string},
+};
+
+static void
+nvmf_rpc_destroy_target_done(void *ctx, int status)
+{
+	struct spdk_jsonrpc_request	*request = ctx;
+	struct spdk_json_write_ctx	*w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+spdk_rpc_nvmf_destroy_target(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
+{
+	struct nvmf_rpc_target_ctx	*ctx;
+	struct spdk_nvmf_tgt		*tgt;
+
+	/**
+	 * TODO: The context structure is awkward but needed since we don't have
+	 * a decoder for pre-allocated strings. Possibly find a way to make that easier.
+	 */
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+		return;
+	}
+
+	/* Decode parameters the first time to get the transport type */
+	if (spdk_json_decode_object(params, nvmf_rpc_destroy_target_decoder,
+				    SPDK_COUNTOF(nvmf_rpc_destroy_target_decoder),
+				    ctx)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		nvmf_rpc_target_ctx_free(ctx);
+		return;
+	}
+
+	tgt = spdk_nvmf_get_tgt(ctx->name);
+
+	if (tgt == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "The specified target doesn't exist, cannot delete it.");
+		nvmf_rpc_target_ctx_free(ctx);
+		return;
+	}
+
+	spdk_nvmf_tgt_destroy(tgt, nvmf_rpc_destroy_target_done, request);
+	nvmf_rpc_target_ctx_free(ctx);
+}
+SPDK_RPC_REGISTER("nvmf_destroy_target", spdk_rpc_nvmf_destroy_target, SPDK_RPC_RUNTIME);
+
 struct nvmf_rpc_create_transport_ctx {
 	char				*trtype;
 	char				*tgt_name;
