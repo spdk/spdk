@@ -35,6 +35,25 @@ def set_nvmf_target_config(client,
     return client.call('set_nvmf_target_config', params)
 
 
+def nvmf_create_target(client,
+                       name,
+                       max_subsystems=0):
+    """Create a new NVMe-oF Target.
+
+    Args:
+        name: Must be unique within the application
+        max_subsystems: Maximum number of NVMe-oF subsystems (e.g. 1024). default: 0 (Uses SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS).
+
+    Returns:
+        The name of the new target.
+    """
+    params = {}
+
+    params['name'] = name
+    params['max_subsystems'] = max_subsystems
+    return client.call("nvmf_create_target", params)
+
+
 def nvmf_create_transport(client,
                           trtype,
                           tgt_name=None,

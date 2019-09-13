@@ -3645,6 +3645,43 @@ Example response:
 
 # NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
+## nvmf_create_target method {#rpc_nvmf_create_target}
+
+Initialize an NVMe-oF target with the given attributes.
+
+### Parameters
+
+Name                        | Optional | Type        | Description
+--------------------------- | -------- | ------------| -----------
+name                        | Required | string      | Target name (must be unique to application)
+max_subsystems              | Optional | number      | The maximum number of subsystems. default: 0 (Uses SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS).
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "nvmf_create_target",
+  "id": 1,
+  "params": {
+    "name": "new_tgt",
+    "max_subsystems": 1024
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "new_tgt"
+}
+~~~
+
 ## nvmf_create_transport method {#rpc_nvmf_create_transport}
 
 Initialize an NVMe-oF transport with the given options.
