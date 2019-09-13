@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "669af2e6_108b5130",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-13T11:51:45Z",
+      "side": 1,
+      "message": "1) Could we avoid using ifdefs and in place register a callback from cuse to the nvme library to call ?\n2) Can this be moved bit higher when we still hold the driver lock ?",
+      "range": {
+        "startLine": 481,
+        "startChar": 0,
+        "endLine": 487,
+        "endChar": 2
+      },
+      "revId": "fba3f9ddb86b515b5667c41a2cec783439dc498e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8775aaec_620348e4",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-13T11:51:45Z",
+      "side": 1,
+      "message": "Are those used/required for the ctrlr ?",
+      "range": {
+        "startLine": 475,
+        "startChar": 0,
+        "endLine": 477,
+        "endChar": 28
+      },
+      "revId": "fba3f9ddb86b515b5667c41a2cec783439dc498e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7aa4cf2b_b66ea475",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-13T11:51:45Z",
+      "side": 1,
+      "message": "No qpair allocation or polling should be done on cuse thread, only the spdk threads.\nThere needs to be mechanism for nvme lib to process IO from cuse in context of spdk threads.",
+      "range": {
+        "startLine": 496,
+        "startChar": 0,
+        "endLine": 496,
+        "endChar": 12
+      },
+      "revId": "fba3f9ddb86b515b5667c41a2cec783439dc498e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76e2d460_1e16f4c9",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 698,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-13T11:51:45Z",
+      "side": 1,
+      "message": "Currently cleanup for session is missing. Have you explored using cuse_lowlevel_main(), it does creation/loop/cleanup by itself.",
+      "range": {
+        "startLine": 696,
+        "startChar": 0,
+        "endLine": 698,
+        "endChar": 47
+      },
+      "revId": "fba3f9ddb86b515b5667c41a2cec783439dc498e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ed6ee9c_13c37d56",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-13T11:51:45Z",
+      "side": 1,
+      "message": "Same as above missing cleanup.",
+      "range": {
+        "startLine": 722,
+        "startChar": 0,
+        "endLine": 724,
+        "endChar": 44
+      },
+      "revId": "fba3f9ddb86b515b5667c41a2cec783439dc498e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e92ce66e_3feaea3a",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 816,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-13T11:51:45Z",
+      "side": 1,
+      "message": "Can we do it in reverse order to start, first stop all ns then ctrlr ?",
+      "range": {
+        "startLine": 816,
+        "startChar": 0,
+        "endLine": 816,
+        "endChar": 49
+      },
+      "revId": "fba3f9ddb86b515b5667c41a2cec783439dc498e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
