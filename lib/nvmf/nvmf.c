@@ -314,6 +314,12 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
 	spdk_io_device_unregister(tgt, spdk_nvmf_tgt_destroy_cb);
 }
 
+const char *
+spdk_nvmf_tgt_get_name(struct spdk_nvmf_tgt *tgt)
+{
+	return tgt->name;
+}
+
 struct spdk_nvmf_tgt *
 spdk_nvmf_get_tgt(const char *name)
 {
@@ -340,6 +346,18 @@ spdk_nvmf_get_tgt(const char *name)
 	}
 
 	return NULL;
+}
+
+struct spdk_nvmf_tgt *
+spdk_nvmf_get_first_tgt(void)
+{
+	return TAILQ_FIRST(&g_nvmf_tgts);
+}
+
+struct spdk_nvmf_tgt *
+spdk_nvmf_get_next_tgt(struct spdk_nvmf_tgt *prev)
+{
+	return TAILQ_NEXT(prev, link);
 }
 
 static void

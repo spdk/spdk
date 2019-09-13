@@ -137,6 +137,15 @@ void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
 			   void *cb_arg);
 
 /**
+ * Get the name of an NVMe-oF target.
+ *
+ * \param tgt The target from which to get the name.
+ *
+ * \return The name of the target as a null terminated string.
+ */
+const char *spdk_nvmf_tgt_get_name(struct spdk_nvmf_tgt *tgt);
+
+/**
  * Get a pointer to an NVMe-oF target.
  *
  * In order to support some legacy applications and RPC methods that may rely on the
@@ -149,6 +158,26 @@ void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
  * \return The target with the given name, or NULL if no match was found.
  */
 struct spdk_nvmf_tgt *spdk_nvmf_get_tgt(const char *name);
+
+/**
+ * Get the pointer to the first NVMe-oF target.
+ *
+ * Combined with spdk_nvmf_get_next_tgt to iterate over all available targets.
+ *
+ * \return The first NVMe-oF target.
+ */
+struct spdk_nvmf_tgt *spdk_nvmf_get_first_tgt(void);
+
+/**
+ * Get the pointer to the first NVMe-oF target.
+ *
+ * Combined with spdk_nvmf_get_first_tgt to iterate over all available targets.
+ *
+ * \param prev A pointer to the last NVMe-oF target.
+ *
+ * \return The first NVMe-oF target.
+ */
+struct spdk_nvmf_tgt *spdk_nvmf_get_next_tgt(struct spdk_nvmf_tgt *prev);
 
 /**
  * Write NVMe-oF target configuration into provided JSON context.
