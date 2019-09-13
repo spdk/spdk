@@ -117,13 +117,14 @@ def iscsi_set_discovery_auth(
     return client.call('iscsi_set_discovery_auth', params)
 
 
-def get_iscsi_auth_groups(client):
+@deprecated_alias('get_iscsi_auth_groups')
+def iscsi_get_auth_groups(client):
     """Display current authentication group configuration.
 
     Returns:
         List of current authentication group configuration.
     """
-    return client.call('get_iscsi_auth_groups')
+    return client.call('iscsi_get_auth_groups')
 
 
 @deprecated_alias('get_portal_groups')
