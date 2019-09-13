@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "621d5769_e7dda666",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:59:02Z",
+      "side": 1,
+      "message": "Let\u0027s rename it to \u0027bdev_zone_block\u0027.",
+      "range": {
+        "startLine": 105,
+        "startChar": 21,
+        "endLine": 105,
+        "endChar": 30
+      },
+      "revId": "b1ceda34eac34757e385b8bbc7e6c9a9a7379d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "593819b3_0d28982c",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:59:02Z",
+      "side": 1,
+      "message": "Missing newline.",
+      "revId": "b1ceda34eac34757e385b8bbc7e6c9a9a7379d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db19b869_45d3e33d",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:59:02Z",
+      "side": 1,
+      "message": "Can we actually have a zone in this state?",
+      "range": {
+        "startLine": 336,
+        "startChar": 6,
+        "endLine": 336,
+        "endChar": 34
+      },
+      "revId": "b1ceda34eac34757e385b8bbc7e6c9a9a7379d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6db96b4b_47c7aba8",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:59:02Z",
+      "side": 1,
+      "message": "What\u0027s the point of this?",
+      "range": {
+        "startLine": 381,
+        "startChar": 0,
+        "endLine": 382,
+        "endChar": 28
+      },
+      "revId": "b1ceda34eac34757e385b8bbc7e6c9a9a7379d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1cf6dba7_a86b549d",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:59:02Z",
+      "side": 1,
+      "message": "What is going on here? You\u0027re passing this down, but overwriting it on the very next line.",
+      "range": {
+        "startLine": 619,
+        "startChar": 63,
+        "endLine": 619,
+        "endChar": 78
+      },
+      "revId": "b1ceda34eac34757e385b8bbc7e6c9a9a7379d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b25ea1a_5b28eddb",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T08:59:02Z",
+      "side": 1,
+      "message": "Could you also support SPDK_BDEV_IO_TYPE_UNMAP, so that it works similar to zone reset?",
+      "revId": "b1ceda34eac34757e385b8bbc7e6c9a9a7379d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
