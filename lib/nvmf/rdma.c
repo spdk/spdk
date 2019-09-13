@@ -1885,194 +1885,212 @@ spdk_nvmf_rdma_calc_num_wrs(uint32_t length, uint32_t io_unit_size, uint32_t blo
 }
 
 static int
+spdk_nvmf_rdma_request_parse_regular_sgl(struct spdk_nvmf_rdma_transport *rtransport,
+		struct spdk_nvmf_rdma_device *device,
+		struct spdk_nvmf_rdma_request *rdma_req)
+{
+	struct spdk_nvme_cmd			*cmd = &rdma_req->req.cmd->nvme_cmd;
+	struct spdk_nvme_cpl			*rsp = &rdma_req->req.rsp->nvme_cpl;
+	struct spdk_nvme_sgl_descriptor		*sgl = &cmd->dptr.sgl1;
+	uint32_t				length = sgl->keyed.length;
+	uint32_t				num_wrs = 1;
+	struct ibv_send_wr			*data_wr;
+	int					rc;
+
+	if (length > rtransport->transport.opts.max_io_size) {
+		SPDK_ERRLOG("SGL length 0x%x exceeds max io size 0x%x\n",
+			    length, rtransport->transport.opts.max_io_size);
+		rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+		return -1;
+	}
+#ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
+	if ((device->attr.device_cap_flags & IBV_DEVICE_MEM_MGT_EXTENSIONS) != 0) {
+		if (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY) {
+			rdma_req->rsp.wr.opcode = IBV_WR_SEND_WITH_INV;
+			rdma_req->rsp.wr.imm_data = sgl->keyed.key;
+		}
+	}
+#endif
+
+	/* fill request length and populate iovs */
+	rdma_req->req.length = length;
+
+	if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
+		rdma_req->orig_length = length;
+		length = spdk_dif_get_length_with_md(length, &rdma_req->dif_ctx);
+		rdma_req->elba_length = length;
+		num_wrs = spdk_nvmf_rdma_calc_num_wrs(length, rtransport->transport.opts.io_unit_size,
+						      rdma_req->dif_ctx.block_size);
+		assert(num_wrs > 0);
+	}
+
+	rc = spdk_nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req, length, num_wrs - 1);
+	if (rc == -ENOMEM) {
+		/* No available buffers. Queue this request up. */
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
+		return 0;
+	} else if (rc == -EINVAL) {
+		SPDK_ERRLOG("SGL length exceeds the max I/O size\n");
+		return -1;
+	}
+
+	/* backward compatible */
+	rdma_req->req.data = rdma_req->req.iov[0].iov_base;
+	/* rdma wr specifics */
+	data_wr = &rdma_req->data.wr;
+	data_wr->wr.rdma.rkey = sgl->keyed.key;
+	data_wr->wr.rdma.remote_addr = sgl->address;
+
+	if (spdk_unlikely(num_wrs > 1)) {
+		/* additional WRs have been allocated, flags, opcodes & links to the next WR already filled */
+		uint32_t i;
+		int j;
+		uint64_t remote_addr_offset = 0;
+
+		for (i = 0; i < num_wrs; ++i) {
+			data_wr->wr.rdma.rkey = sgl->keyed.key;
+			data_wr->wr.rdma.remote_addr = sgl->address + remote_addr_offset;
+			for (j = 0; j < data_wr->num_sge; ++j) {
+				remote_addr_offset += data_wr->sg_list[j].length;
+			}
+			data_wr = data_wr->next;
+		}
+	} else {
+		if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+			data_wr->opcode = IBV_WR_RDMA_WRITE;
+			data_wr->next = &rdma_req->rsp.wr;
+			data_wr->send_flags &= ~IBV_SEND_SIGNALED;
+		} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+			data_wr->opcode = IBV_WR_RDMA_READ;
+			data_wr->next = NULL;
+			data_wr->send_flags |= IBV_SEND_SIGNALED;
+		}
+	}
+	/* set the number of outstanding data WRs for this request. */
+	rdma_req->num_outstanding_data_wr = num_wrs;
+
+	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Request %p took %d buffer/s from central pool\n", rdma_req,
+		      rdma_req->req.iovcnt);
+
+	return 0;
+}
+
+static int
+spdk_nvmf_rdma_request_parse_icd(struct spdk_nvmf_rdma_transport *rtransport,
+				 struct spdk_nvmf_rdma_device *device,
+				 struct spdk_nvmf_rdma_request *rdma_req)
+{
+	struct spdk_nvme_cmd		*cmd = &rdma_req->req.cmd->nvme_cmd;
+	struct spdk_nvme_cpl		*rsp = &rdma_req->req.rsp->nvme_cpl;
+	struct spdk_nvme_sgl_descriptor	*sgl = &cmd->dptr.sgl1;
+	uint64_t			offset = sgl->address;
+	uint32_t			max_len = rtransport->transport.opts.in_capsule_data_size;
+	uint32_t			length = sgl->unkeyed.length;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
+		      offset, length);
+
+	if (offset > max_len) {
+		SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " exceeds capsule length 0x%x\n",
+			    offset, max_len);
+		rsp->status.sc = SPDK_NVME_SC_INVALID_SGL_OFFSET;
+		return -1;
+	}
+	max_len -= (uint32_t)offset;
+
+	if (length > max_len) {
+		SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
+			    length, max_len);
+		rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+		return -1;
+	}
+
+	rdma_req->num_outstanding_data_wr = 0;
+	rdma_req->req.data_from_pool = false;
+	rdma_req->req.length = length;
+
+	if (spdk_likely(!rdma_req->dif_insert_or_strip)) {
+		rdma_req->req.data = rdma_req->recv->buf + offset;
+		rdma_req->req.iov[0].iov_base = rdma_req->req.data;
+		rdma_req->req.iov[0].iov_len = length;
+		rdma_req->req.iovcnt = 1;
+	} else {
+		uint32_t data_block_size = rdma_req->dif_ctx.block_size - rdma_req->dif_ctx.md_size;
+		uint32_t num_blocks, i, iovcnt = 0;
+
+		if (spdk_likely(spdk_u32_is_pow2(length))) {
+			num_blocks = length >> spdk_u32log2(data_block_size);
+		} else {
+			num_blocks = length / data_block_size;
+			if (length % data_block_size != 0) {
+				SPDK_ERRLOG("In-capsule data length %u is not aligned to data block size %u\n",
+					    length, data_block_size);
+				return -1;
+			}
+		}
+
+		if (spdk_unlikely(num_blocks > SPDK_NVMF_MAX_SGL_ENTRIES)) {
+			SPDK_ERRLOG("Not enough iov entries to interleave data with metadata, "
+				    "use a smaller In-capsule data length\n");
+			assert(0);
+		}
+
+		rdma_req->md_buf = spdk_mempool_get(rtransport->md_buf_pool);
+		if (!rdma_req->md_buf) {
+			/* No available metadata buffers. Queue this request up */
+			return 0;
+		}
+		rdma_req->req.data = rdma_req->recv->buf + offset;
+		/* update length wrt metadata */
+		length = 0;
+
+		/* interleave data with metadata, the even iov item points to data block,
+			the odd iov item points to metadata */
+		for (i = 0; i < num_blocks; i++) {
+			rdma_req->req.iov[iovcnt].iov_base = ((char *)rdma_req->req.data) + data_block_size * i;
+			rdma_req->req.iov[iovcnt].iov_len = data_block_size;
+			length += rdma_req->req.iov[iovcnt].iov_len;
+			++iovcnt;
+
+			rdma_req->req.iov[iovcnt].iov_base = ((char *)rdma_req->md_buf) + i *
+							     rdma_req->dif_ctx.md_size;
+			rdma_req->req.iov[iovcnt].iov_len = rdma_req->dif_ctx.md_size;
+			length += rdma_req->req.iov[iovcnt].iov_len;
+			++iovcnt;
+		}
+
+		rdma_req->req.iovcnt = iovcnt;
+		rdma_req->orig_length = rdma_req->req.length;
+		rdma_req->elba_length = length;
+	}
+
+	return 0;
+}
+
+static int
 spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_device *device,
 				 struct spdk_nvmf_rdma_request *rdma_req)
 {
-	struct spdk_nvme_cmd			*cmd;
-	struct spdk_nvme_cpl			*rsp;
-	struct spdk_nvme_sgl_descriptor		*sgl;
-	int					rc;
-	uint32_t				length;
-
-	cmd = &rdma_req->req.cmd->nvme_cmd;
-	rsp = &rdma_req->req.rsp->nvme_cpl;
-	sgl = &cmd->dptr.sgl1;
+	struct spdk_nvme_cmd			*cmd = &rdma_req->req.cmd->nvme_cmd;
+	struct spdk_nvme_cpl			*rsp = &rdma_req->req.rsp->nvme_cpl;
+	struct spdk_nvme_sgl_descriptor		*sgl = &cmd->dptr.sgl1;
 
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
 	    (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
 	     sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
 
-		uint32_t num_wrs = 1;
-		struct ibv_send_wr *data_wr;
+		return spdk_nvmf_rdma_request_parse_regular_sgl(rtransport, device, rdma_req);
 
-		length = sgl->keyed.length;
-		if (length > rtransport->transport.opts.max_io_size) {
-			SPDK_ERRLOG("SGL length 0x%x exceeds max io size 0x%x\n",
-				    length, rtransport->transport.opts.max_io_size);
-			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-			return -1;
-		}
-#ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
-		if ((device->attr.device_cap_flags & IBV_DEVICE_MEM_MGT_EXTENSIONS) != 0) {
-			if (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY) {
-				rdma_req->rsp.wr.opcode = IBV_WR_SEND_WITH_INV;
-				rdma_req->rsp.wr.imm_data = sgl->keyed.key;
-			}
-		}
-#endif
-
-		/* fill request length and populate iovs */
-		rdma_req->req.length = length;
-
-		if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
-			rdma_req->orig_length = length;
-			length = spdk_dif_get_length_with_md(length, &rdma_req->dif_ctx);
-			rdma_req->elba_length = length;
-			num_wrs = spdk_nvmf_rdma_calc_num_wrs(length, rtransport->transport.opts.io_unit_size,
-							      rdma_req->dif_ctx.block_size);
-			assert(num_wrs > 0);
-		}
-
-		rc = spdk_nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req, length, num_wrs - 1);
-		if (rc == -ENOMEM) {
-			/* No available buffers. Queue this request up. */
-			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
-			return 0;
-		} else if (rc == -EINVAL) {
-			SPDK_ERRLOG("SGL length exceeds the max I/O size\n");
-			return -1;
-		}
-
-		/* backward compatible */
-		rdma_req->req.data = rdma_req->req.iov[0].iov_base;
-
-		/* rdma wr specifics */
-		data_wr = &rdma_req->data.wr;
-		data_wr->wr.rdma.rkey = sgl->keyed.key;
-		data_wr->wr.rdma.remote_addr = sgl->address;
-
-		if (spdk_unlikely(num_wrs > 1)) {
-			/* additional WRs have been allocated, flags, opcodes & links to the next WR already filled */
-			uint32_t i;
-			int j;
-			uint64_t remote_addr_offset = 0;
-
-			for (i = 0; i < num_wrs; ++i) {
-				data_wr->wr.rdma.rkey = sgl->keyed.key;
-				data_wr->wr.rdma.remote_addr = sgl->address + remote_addr_offset;
-				for (j = 0; j < data_wr->num_sge; ++j) {
-					remote_addr_offset += data_wr->sg_list[j].length;
-				}
-				data_wr = data_wr->next;
-			}
-		} else {
-			if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-				data_wr->opcode = IBV_WR_RDMA_WRITE;
-				data_wr->next = &rdma_req->rsp.wr;
-				data_wr->send_flags &= ~IBV_SEND_SIGNALED;
-			} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-				data_wr->opcode = IBV_WR_RDMA_READ;
-				data_wr->next = NULL;
-				data_wr->send_flags |= IBV_SEND_SIGNALED;
-			}
-		}
-		/* set the number of outstanding data WRs for this request. */
-		rdma_req->num_outstanding_data_wr = num_wrs;
-
-		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Request %p took %d buffer/s from central pool\n", rdma_req,
-			      rdma_req->req.iovcnt);
-
-		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
-		uint64_t offset = sgl->address;
-		uint32_t max_len = rtransport->transport.opts.in_capsule_data_size;
 
-		length = sgl->unkeyed.length;
+		return spdk_nvmf_rdma_request_parse_icd(rtransport, device, rdma_req);
 
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
-			      offset, length);
-
-		if (offset > max_len) {
-			SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " exceeds capsule length 0x%x\n",
-				    offset, max_len);
-			rsp->status.sc = SPDK_NVME_SC_INVALID_SGL_OFFSET;
-			return -1;
-		}
-		max_len -= (uint32_t)offset;
-
-		if (length > max_len) {
-			SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
-				    length, max_len);
-			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-			return -1;
-		}
-
-		rdma_req->num_outstanding_data_wr = 0;
-		rdma_req->req.data_from_pool = false;
-		rdma_req->req.length = length;
-
-		if (spdk_likely(!rdma_req->dif_insert_or_strip)) {
-			rdma_req->req.data = rdma_req->recv->buf + offset;
-			rdma_req->req.iov[0].iov_base = rdma_req->req.data;
-			rdma_req->req.iov[0].iov_len = length;
-			rdma_req->req.iovcnt = 1;
-		} else {
-			uint32_t data_block_size = rdma_req->dif_ctx.block_size - rdma_req->dif_ctx.md_size;
-			uint32_t num_blocks, i, iovcnt = 0;
-
-			if (spdk_likely(spdk_u32_is_pow2(length))) {
-				num_blocks = length >> spdk_u32log2(data_block_size);
-			} else {
-				num_blocks = length / data_block_size;
-				if (length % data_block_size != 0) {
-					SPDK_ERRLOG("In-capsule data length %u is not aligned to data block size %u\n",
-						    length, data_block_size);
-					return -1;
-				}
-			}
-
-			if (spdk_unlikely(num_blocks > SPDK_NVMF_MAX_SGL_ENTRIES)) {
-				SPDK_ERRLOG("Not enough iov entries to interleave data with metadata, "
-					    "use a smaller In-capsule data length\n");
-				assert(0);
-			}
-
-			rdma_req->md_buf = spdk_mempool_get(rtransport->md_buf_pool);
-			if (!rdma_req->md_buf) {
-				/* No available metadata buffers. Queue this request up */
-				return 0;
-			}
-			rdma_req->req.data = rdma_req->recv->buf + offset;
-			/* update length wrt metadata */
-			length = 0;
-
-			/* interleave data with metadata, the even iov item points to data block,
-			   the odd iov item points to metadata */
-			for (i = 0; i < num_blocks; i++) {
-				rdma_req->req.iov[iovcnt].iov_base = ((char *)rdma_req->req.data) + data_block_size * i;
-				rdma_req->req.iov[iovcnt].iov_len = data_block_size;
-				length += rdma_req->req.iov[iovcnt].iov_len;
-				++iovcnt;
-
-				rdma_req->req.iov[iovcnt].iov_base = ((char *)rdma_req->md_buf) + i *
-								     rdma_req->dif_ctx.md_size;
-				rdma_req->req.iov[iovcnt].iov_len = rdma_req->dif_ctx.md_size;
-				length += rdma_req->req.iov[iovcnt].iov_len;
-				++iovcnt;
-			}
-
-			rdma_req->req.iovcnt = iovcnt;
-			rdma_req->orig_length = rdma_req->req.length;
-			rdma_req->elba_length = length;
-		}
-
-		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT &&
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
 
-		rc = nvmf_rdma_request_fill_iovs_multi_sgl(rtransport, device, rdma_req);
+		int rc = nvmf_rdma_request_fill_iovs_multi_sgl(rtransport, device, rdma_req);
 		if (rc == -ENOMEM) {
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
 			return 0;
