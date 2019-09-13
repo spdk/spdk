@@ -1,0 +1,291 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab9d1d8a_dd1a99d8",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T06:27:41Z",
+      "side": 1,
+      "message": "Let\u0027s stick to either bdev_zoned_block, vbdev_zone_block or just zone_block as the prefix.",
+      "range": {
+        "startLine": 51,
+        "startChar": 16,
+        "endLine": 51,
+        "endChar": 32
+      },
+      "revId": "e5f0e91dd3d343cf7217e81409b71e841c96d3fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75f70112_2c2e677e",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T06:27:41Z",
+      "side": 1,
+      "message": "The name doesn\u0027t suggest that this describes a zoned bdev. Perhaps you should rename it to bdev_zone_block or vbdev_zone_block?",
+      "range": {
+        "startLine": 72,
+        "startChar": 7,
+        "endLine": 72,
+        "endChar": 19
+      },
+      "revId": "e5f0e91dd3d343cf7217e81409b71e841c96d3fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01a8f8fc_fec6ace8",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T06:27:41Z",
+      "side": 1,
+      "message": "Let\u0027s move this to the top of the structure, so that you can just cast vbdev_block to spdk_bdev.",
+      "range": {
+        "startLine": 75,
+        "startChar": 1,
+        "endLine": 75,
+        "endChar": 54
+      },
+      "revId": "e5f0e91dd3d343cf7217e81409b71e841c96d3fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31500177_049e8af5",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T06:27:41Z",
+      "side": 1,
+      "message": "What\u0027s the point of this? You\u0027re not using it anywhere. Actually there aren\u0027t any references to this whole structure in this file.",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 45
+      },
+      "revId": "e5f0e91dd3d343cf7217e81409b71e841c96d3fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba5527c2_5bb333a5",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T06:27:41Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be more descriptive - e.g. zoned_block or something like that? vbdev is very generic term.",
+      "range": {
+        "startLine": 205,
+        "startChar": 26,
+        "endLine": 205,
+        "endChar": 31
+      },
+      "revId": "e5f0e91dd3d343cf7217e81409b71e841c96d3fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7061b334_eb9e4e87",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T06:27:41Z",
+      "side": 1,
+      "message": "Check the result of this.",
+      "range": {
+        "startLine": 243,
+        "startChar": 1,
+        "endLine": 243,
+        "endChar": 67
+      },
+      "revId": "e5f0e91dd3d343cf7217e81409b71e841c96d3fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0bd171d3_73dee6c9",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T06:27:41Z",
+      "side": 1,
+      "message": "Raplace with sizeof(*name).",
+      "range": {
+        "startLine": 272,
+        "startChar": 25,
+        "endLine": 272,
+        "endChar": 42
+      },
+      "revId": "e5f0e91dd3d343cf7217e81409b71e841c96d3fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ebda8f3_ae73b1ae",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T06:27:41Z",
+      "side": 1,
+      "message": "pt_node?",
+      "range": {
+        "startLine": 306,
+        "startChar": 32,
+        "endLine": 306,
+        "endChar": 40
+      },
+      "revId": "e5f0e91dd3d343cf7217e81409b71e841c96d3fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bae2155d_b0e12dc2",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T06:27:41Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you set all the zone stuff somewhere here? (zone_size, optimal_number_zones, max_open_zones)",
+      "revId": "e5f0e91dd3d343cf7217e81409b71e841c96d3fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fbbc2d01_73bacf0c",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T06:27:41Z",
+      "side": 1,
+      "message": "Since they\u0027re globals, can\u0027t they be initialized directly?",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 86,
+        "endChar": 20
+      },
+      "revId": "e5f0e91dd3d343cf7217e81409b71e841c96d3fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d0061dc_03c7adfd",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T06:27:41Z",
+      "side": 1,
+      "message": "You\u0027re using all constants here, what\u0027s the point of the sprintf? Just use char *name \u003d \"nvme0n1\".",
+      "range": {
+        "startLine": 202,
+        "startChar": 1,
+        "endLine": 202,
+        "endChar": 47
+      },
+      "revId": "e5f0e91dd3d343cf7217e81409b71e841c96d3fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8aa4d7b3_44e1965b",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T06:27:41Z",
+      "side": 1,
+      "message": "pbdev?",
+      "range": {
+        "startLine": 286,
+        "startChar": 8,
+        "endLine": 286,
+        "endChar": 19
+      },
+      "revId": "e5f0e91dd3d343cf7217e81409b71e841c96d3fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2bb55cd_dc1bf96c",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T06:27:41Z",
+      "side": 1,
+      "message": "Can we also test the path in which the zone_block device is created before the underlying block device?",
+      "revId": "e5f0e91dd3d343cf7217e81409b71e841c96d3fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
