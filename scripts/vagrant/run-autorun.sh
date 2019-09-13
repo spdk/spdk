@@ -181,7 +181,8 @@ if [[ -z $conf ]]; then
 	exit 1
 fi
 
-mkdir -pv --mode=775 "${AUTOTEST_OUTPUT_PATH}"
+mkdir -pv "${AUTOTEST_OUTPUT_PATH}"
+chmod 0775 "${AUTOTEST_OUTPUT_PATH}"
 rm -f latest
 ln -sv ${GIT_REPO_PATH} latest
 
