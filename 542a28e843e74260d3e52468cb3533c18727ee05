@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65b92b53_d4cbeae2",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-13T07:09:59Z",
+      "side": 1,
+      "message": "Please move this and lines 391-409 to new spdk_nvme_attach_cb type function which will be provided as a parameter to spdk_bdev_nvme_create function in spdk_rpc_construct_nve_bdev function.",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 164,
+        "endChar": 10
+      },
+      "revId": "542a28e843e74260d3e52468cb3533c18727ee05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfb4e37c_4602cf21",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-13T07:09:59Z",
+      "side": 1,
+      "message": "Please move ocssd_bdev remove specific operations to new nvme_bdev_remove_fn type function and assign it to nvme_bdev-\u003eremove_fn on bdev creation.",
+      "range": {
+        "startLine": 188,
+        "startChar": 1,
+        "endLine": 188,
+        "endChar": 24
+      },
+      "revId": "542a28e843e74260d3e52468cb3533c18727ee05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
