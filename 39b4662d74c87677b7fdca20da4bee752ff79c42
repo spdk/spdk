@@ -22,6 +22,30 @@
       "revId": "39b4662d74c87677b7fdca20da4bee752ff79c42",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "177d978a_b289a38c",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1219,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-13T11:14:39Z",
+      "side": 1,
+      "message": "This is because we use generic \"typedef void (*spdk_nvme_attach_cb)\" function which is also used for other functions. If we would like to change this argument we would need to define new function pointer type. I don\u0027t have anything against defining new one actually. Let me know what do you think about it.",
+      "parentUuid": "4818ee92_c71236f9",
+      "range": {
+        "startLine": 1219,
+        "startChar": 25,
+        "endLine": 1219,
+        "endChar": 37
+      },
+      "revId": "39b4662d74c87677b7fdca20da4bee752ff79c42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
