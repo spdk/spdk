@@ -54,6 +54,22 @@ def nvmf_create_target(client,
     return client.call("nvmf_create_target", params)
 
 
+def nvmf_delete_target(client,
+                       name):
+    """Destroy an NVMe-oF Target.
+
+    Args:
+        name: The name of the target you wish to destroy
+
+    Returns:
+        True on success or False
+    """
+    params = {}
+
+    params['name'] = name
+    return client.call("nvmf_delete_target", params)
+
+
 def nvmf_create_transport(client,
                           trtype,
                           tgt_name=None,
