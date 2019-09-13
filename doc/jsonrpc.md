@@ -2784,7 +2784,7 @@ Example response:
 }
 ~~~
 
-## get_iscsi_auth_groups {#rpc_get_iscsi_auth_groups}
+## iscsi_get_auth_groups {#rpc_iscsi_get_auth_groups}
 
 Show information about all existing authentication group for CHAP authentication.
 
@@ -2808,7 +2808,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "get_iscsi_auth_groups",
+  "method": "iscsi_get_auth_groups",
   "id": 1
 }
 ~~~
