@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4818ee92_c71236f9",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1219,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T11:07:32Z",
+      "side": 1,
+      "message": "Since we actually need struct nvme_async_probe_ctx here, why not pass it directly instead of the void pointer?",
+      "range": {
+        "startLine": 1219,
+        "startChar": 25,
+        "endLine": 1219,
+        "endChar": 37
+      },
+      "revId": "39b4662d74c87677b7fdca20da4bee752ff79c42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
