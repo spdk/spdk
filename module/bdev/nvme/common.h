@@ -70,6 +70,7 @@ struct nvme_bdev_ctrlr {
 	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;
 };
 
+typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, int rc);
 typedef void (*nvme_bdev_remove_fn)(struct nvme_bdev *nvme_bdev);
 
 struct nvme_bdev {
@@ -79,6 +80,19 @@ struct nvme_bdev {
 	bool			active;
 	struct spdk_nvme_ns	*ns;
 	nvme_bdev_remove_fn	remove_fn;
+};
+
+struct nvme_async_probe_ctx {
+	struct spdk_nvme_probe_ctx *probe_ctx;
+	const char *base_name;
+	const char **names;
+	size_t *count;
+	uint32_t prchk_flags;
+	struct spdk_poller *poller;
+	struct spdk_nvme_transport_id trid;
+	struct spdk_nvme_ctrlr_opts opts;
+	spdk_bdev_create_nvme_fn cb_fn;
+	void *cb_ctx;
 };
 
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);
