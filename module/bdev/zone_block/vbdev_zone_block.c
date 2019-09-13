@@ -193,9 +193,10 @@ zone_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 static bool
 zone_block_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
-	struct bdev_zone_block *bdev_node = (struct bdev_zone_block *)ctx;
-
-	return spdk_bdev_io_type_supported(bdev_node->base_bdev, io_type);
+	switch (io_type) {
+	default:
+		return false;
+	}
 }
 
 static struct spdk_io_channel *
