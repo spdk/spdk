@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "589e33d4_281a1be5",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T07:42:43Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be an uint64_t? Also what\u0027s the difference between this and spdk_bdev_zone_info.zone_id? You can get one from the other, right? If so, I don\u0027t think we need it.",
+      "range": {
+        "startLine": 77,
+        "startChar": 1,
+        "endLine": 77,
+        "endChar": 8
+      },
+      "revId": "b46e9136e37f205d8a663c7dc510fb752a161e1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "abfd4c84_5b50a650",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T07:42:43Z",
+      "side": 1,
+      "message": "Why aren\u0027t you using vbdev_get_zone here and iterate through the LBAs?",
+      "range": {
+        "startLine": 251,
+        "startChar": 2,
+        "endLine": 251,
+        "endChar": 39
+      },
+      "revId": "b46e9136e37f205d8a663c7dc510fb752a161e1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d71125af_5a2f5b0f",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T07:42:43Z",
+      "side": 1,
+      "message": "Can we just set rc here and let the following condition catch it?",
+      "range": {
+        "startLine": 284,
+        "startChar": 0,
+        "endLine": 286,
+        "endChar": 9
+      },
+      "revId": "b46e9136e37f205d8a663c7dc510fb752a161e1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0172382_e23c4970",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T07:42:43Z",
+      "side": 1,
+      "message": "Why can\u0027t we just call spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM) here?",
+      "range": {
+        "startLine": 290,
+        "startChar": 0,
+        "endLine": 293,
+        "endChar": 33
+      },
+      "revId": "b46e9136e37f205d8a663c7dc510fb752a161e1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "907e9873_2d725e90",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-13T07:42:43Z",
+      "side": 1,
+      "message": "I think it\u0027d be a lot cleaner to assume that rc \u003d\u003d 0 means that the request has been queued and require that the IO function called will take care of spdk_bdev_io_complete.",
+      "range": {
+        "startLine": 298,
+        "startChar": 2,
+        "endLine": 300,
+        "endChar": 2
+      },
+      "revId": "b46e9136e37f205d8a663c7dc510fb752a161e1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
