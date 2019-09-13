@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0da578be_e54dd9a8",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-13T14:27:12Z",
+      "side": 1,
+      "message": "Maybe we should set num_zones to one in management commands (reset/open etc) or extend API to allow for multiple zone reset/open/.. ?",
+      "parentUuid": "18f9fcd1_abbb1089",
+      "range": {
+        "startLine": 519,
+        "startChar": 6,
+        "endLine": 519,
+        "endChar": 12
+      },
+      "revId": "8be847da644a2d1481e9fc62a025eb6951033894",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8db910f1_c783d166",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 18
@@ -36,6 +60,30 @@
       "writtenOn": "2019-09-13T08:42:49Z",
       "side": 1,
       "message": "If there is a easy way please describe shortly what kind of data buffer is this.",
+      "range": {
+        "startLine": 525,
+        "startChar": 3,
+        "endLine": 525,
+        "endChar": 24
+      },
+      "revId": "8be847da644a2d1481e9fc62a025eb6951033894",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6878dfb_31e986a3",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-13T14:27:12Z",
+      "side": 1,
+      "message": "For now it is used for zone_info command, but I just want to keep in generic if we would like to use it for another calls.",
+      "parentUuid": "8db910f1_c783d166",
       "range": {
         "startLine": 525,
         "startChar": 3,
