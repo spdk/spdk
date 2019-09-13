@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "acdf54dd_6d4a3ac8",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-13T14:14:02Z",
+      "side": 1,
+      "message": "This value is to big - it is used to retrieve zone info.",
+      "revId": "d53ebb440ae0ddf7d59eac318cd9daf78f6c6223",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
