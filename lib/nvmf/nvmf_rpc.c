@@ -1397,6 +1397,76 @@ spdk_rpc_nvmf_subsystem_allow_any_host(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_subsystem_allow_any_host", spdk_rpc_nvmf_subsystem_allow_any_host,
 		  SPDK_RPC_RUNTIME)
 
+struct nvmf_rpc_create_target_ctx {
+	char *name;
+	uint32_t max_subsystems;
+};
+
+static void
+nvmf_rpc_create_target_ctx_free(struct nvmf_rpc_create_target_ctx *ctx)
+{
+	free(ctx->name);
+	free(ctx);
+}
+
+static const struct spdk_json_object_decoder nvmf_rpc_create_target_decoder[] = {
+	{"name", offsetof(struct nvmf_rpc_create_target_ctx, name), spdk_json_decode_string},
+	{"max_subsystems", offsetof(struct nvmf_rpc_create_target_ctx, max_subsystems), spdk_json_decode_uint32},
+};
+
+static void spdk_rpc_nvmf_create_target(struct spdk_jsonrpc_request *request,
+					const struct spdk_json_val *params)
+{
+	struct spdk_nvmf_target_opts	opts;
+	struct nvmf_rpc_create_target_ctx	*ctx;
+	struct spdk_nvmf_tgt		*tgt;
+	struct spdk_json_write_ctx	*w;
+
+	/**
+	 * TODO: The context structure is awkward but needed since we don't have
+	 * a decoder for pre-allocated strings. Possibly find a way to make that easier.
+	 */
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+		return;
+	}
+
+	/* Decode parameters the first time to get the transport type */
+	if (spdk_json_decode_object(params, nvmf_rpc_create_target_decoder,
+				    SPDK_COUNTOF(nvmf_rpc_create_target_decoder),
+				    ctx)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		nvmf_rpc_create_target_ctx_free(ctx);
+		return;
+	}
+
+	snprintf(opts.name, NVMF_TGT_NAME_MAX_LENGTH, "%s", ctx->name);
+	opts.max_subsystems = ctx->max_subsystems;
+
+	if (spdk_nvmf_get_tgt(opts.name) != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Target already exists.");
+		nvmf_rpc_create_target_ctx_free(ctx);
+		return;
+	}
+
+	tgt = spdk_nvmf_tgt_create(&opts);
+
+	if (tgt == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Unable to create the requested target.");
+		nvmf_rpc_create_target_ctx_free(ctx);
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_string(w, spdk_nvmf_tgt_get_name(tgt));
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("nvmf_create_target", spdk_rpc_nvmf_create_target, SPDK_RPC_RUNTIME);
+
 struct nvmf_rpc_create_transport_ctx {
 	char				*trtype;
 	char				*tgt_name;
@@ -1582,7 +1652,6 @@ spdk_rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	spdk_nvmf_tgt_add_transport(tgt, transport, nvmf_rpc_tgt_add_transport_done, ctx);
 }
-
 SPDK_RPC_REGISTER("nvmf_create_transport", spdk_rpc_nvmf_create_transport, SPDK_RPC_RUNTIME)
 
 static void

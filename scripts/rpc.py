@@ -1513,6 +1513,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     robin manner. 'transport' - Schedule the connection according to the transport characteristics.""")
     p.set_defaults(func=set_nvmf_target_config)
 
+    def nvmf_create_target(args):
+        print_dict(rpc.nvmf.nvmf_create_target(args.client,
+                                               name=args.name,
+                                               max_subsystems=args.max_subsystems))
+
+    p = subparsers.add_parser('nvmf_create_target', help='Set the maximum number of NVMf target subsystems')
+    p.add_argument('-n', '--name', help='Target name (unique to application)', type=str, required=True)
+    p.add_argument('-s', '--max-subsystems', help='Max number of NVMf subsystems', type=int, required=False)
+    p.set_defaults(func=nvmf_create_target)
+
     def nvmf_create_transport(args):
         rpc.nvmf.nvmf_create_transport(args.client,
                                        trtype=args.trtype,
