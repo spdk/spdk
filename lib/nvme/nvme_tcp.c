@@ -51,6 +51,10 @@
 
 #include "spdk_internal/nvme_tcp.h"
 
+#ifndef MSG_ZEROCOPY
+#define MSG_ZEROCOPY     0x4000000       /* Use user data in kernel path */
+#endif
+
 #define NVME_TCP_RW_BUFFER_SIZE 131072
 
 #define NVME_TCP_HPDA_DEFAULT			0
@@ -60,6 +64,7 @@
 
 enum {
 	NVME_TCP_DMA_PDUS = 0x1,
+	NVME_TCP_ZEROCOPY = 0x2,
 };
 
 
@@ -99,6 +104,7 @@ struct nvme_tcp_qpair {
 	struct nvme_tcp_pdu			*send_pdus_buf;
 
 	enum nvme_tcp_qpair_state		state;
+	struct msghdr				msg; /* FIXME - check pahole */
 };
 
 enum nvme_tcp_req_state {
@@ -440,7 +446,12 @@ nvme_tcp_qpair_process_send_queue(struct nvme_tcp_qpair *tqpair)
 		pdu = TAILQ_NEXT(pdu, tailq);
 	}
 
-	bytes = spdk_sock_writev(tqpair->sock, iovs, iovcnt);
+	tqpair->msg.msg_iov = iovs;
+	tqpair->msg.msg_iovlen = iovcnt;
+	if (tqpair->flags & NVME_TCP_ZEROCOPY)
+		bytes = spdk_sock_sendmsg(tqpair->sock, &tqpair->msg, MSG_ZEROCOPY);
+	else
+		bytes = spdk_sock_sendmsg(tqpair->sock, &tqpair->msg, 0);
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "bytes=%d are out\n", bytes);
 	if (bytes == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
@@ -1744,6 +1755,17 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
 		return -1;
+	}
+
+	if (getenv("SPDK_ZC") && atoi(getenv("SPDK_ZC"))) {
+		if (!tqpair->flags & NVME_TCP_DMA_PDUS)
+			SPDK_ERRLOG("zero copy requires pdus on dma memory, set SPDK_DPDU=1\n");
+		else if (!spdk_sock_get_flags(tqpair->sock) & ZERO_COPY_TX_ENABLED)
+			SPDK_ERRLOG("socket provider doesn't support tx zero copy\n");
+		else {
+			tqpair->flags |= NVME_TCP_ZEROCOPY;
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "using TX zero-copy\n");
+		}
 	}
 
 	return 0;
