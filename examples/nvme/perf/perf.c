@@ -218,6 +218,7 @@ static bool g_no_pci;
 static bool g_warn;
 static bool g_header_digest;
 static bool g_data_digest;
+static bool g_zerocopy_tx = 1;
 static bool g_no_shn_notification = false;
 static uint32_t g_keep_alive_timeout_in_ms = 0;
 
@@ -1545,7 +1546,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:NT:U:V")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:NT:U:VZ:")) != -1) {
 		switch (op) {
 		case 'i':
 		case 'm':
@@ -1660,6 +1661,14 @@ parse_args(int argc, char **argv)
 			break;
 		case 'V':
 			g_vmd = true;
+			break;
+		case 'Z':
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Converting a string to integer failed\n");
+				return val;
+			}
+			g_zerocopy_tx = val;
 			break;
 		default:
 			usage(argv[0]);
@@ -1829,6 +1838,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	/* Set the header and data_digest */
 	opts->header_digest = g_header_digest;
 	opts->data_digest = g_data_digest;
+	opts->zerocopy_tx = g_zerocopy_tx;
 	opts->keep_alive_timeout_ms = spdk_max(opts->keep_alive_timeout_ms,
 					       g_keep_alive_timeout_in_ms);
 

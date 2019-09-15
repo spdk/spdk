@@ -210,6 +210,13 @@ struct spdk_nvme_ctrlr_opts {
 	bool data_digest;
 
 	/**
+	 * For the TCP transport.
+	 * If set to true, zero-copy TX ala MSG_ZEROCOPY is appied if the socket
+	 * provider supports that.
+	 */
+	bool zerocopy_tx;
+
+	/**
 	 * Disable logging of requests that are completed with error status.
 	 *
 	 * Defaults to 'false' (errors are logged).
