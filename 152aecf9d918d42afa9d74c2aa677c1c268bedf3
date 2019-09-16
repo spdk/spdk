@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b1dfbf3_5d7a313f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-16T07:17:46Z",
+      "side": 1,
+      "message": "Please give SC2181 description so that reviewing folks don\u0027t need to search for its definition",
+      "revId": "152aecf9d918d42afa9d74c2aa677c1c268bedf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
