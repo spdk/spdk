@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "1d757d4c_d44eccbb",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-16T20:16:18Z",
+      "side": 1,
+      "message": "Does rdma_get_cm_event guarantee that you won\u0027t get two events for the same qpair without an ack in the middle? If it doesn\u0027t, here\u0027s a crazy scenario. Say you have 3 events for the same queue pair. The first one comes in and gets assigned to event_qpair-\u003eevt. The second one is then processed and gets queued on the controller. While the second one is processing, the other thread handles the first event and sets evt back to NULL. Then the third one ends up skipping in line ahead of the second one.\n\nIs this something we need to worry about or handle?",
+      "revId": "e8764432ec4b726fdfea52a42324a186df70d77d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2a11dd05_d7950f3d",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 12
