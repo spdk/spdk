@@ -16,7 +16,7 @@ a null name parameter and will return the only available target.
 The majority of the NVMe-oF RPCs now accept an optional tgt_name parameter. This will
 allow those RPCs to work with applications that create more than one target.
 
-Three new NVMe-oF RPCs have been added `nvmf_create_target`, `nvmf_destroy_target`, and
+Three new NVMe-oF RPCs have been added `nvmf_create_target`, `nvmf_delete_target`, and
 `nvmf_get_targets`. These new RPCs provide a basic interface for managing multiple target
 objects. at the time of writing this post, these RPCs are not intended to be used with the
 example SPDK application which uses a global target option.
