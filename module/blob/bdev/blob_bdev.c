@@ -355,3 +355,36 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 
 	return &b->bs_dev;
 }
+
+struct spdk_bs_dev *
+spdk_bdev_create_bs_dev_from_desc(struct spdk_bdev_desc *desc)
+{
+	struct blob_bdev *b;
+	struct spdk_bdev *bdev;
+
+	b = calloc(1, sizeof(*b));
+
+	if (b == NULL) {
+		SPDK_ERRLOG("could not allocate blob_bdev\n");
+		return NULL;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(desc);
+	assert(bdev != NULL);
+
+	b->bdev = bdev;
+	b->desc = desc;
+	b->bs_dev.blockcnt = spdk_bdev_get_num_blocks(bdev);
+	b->bs_dev.blocklen = spdk_bdev_get_block_size(bdev);
+	b->bs_dev.create_channel = bdev_blob_create_channel;
+	b->bs_dev.destroy_channel = bdev_blob_destroy_channel;
+	b->bs_dev.destroy = bdev_blob_destroy;
+	b->bs_dev.read = bdev_blob_read;
+	b->bs_dev.write = bdev_blob_write;
+	b->bs_dev.readv = bdev_blob_readv;
+	b->bs_dev.writev = bdev_blob_writev;
+	b->bs_dev.write_zeroes = bdev_blob_write_zeroes;
+	b->bs_dev.unmap = bdev_blob_unmap;
+
+	return &b->bs_dev;
+}
