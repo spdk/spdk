@@ -1202,10 +1202,11 @@ spdk_bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx)
 
 	ctx->count = j;
 
+	ctx->bdevs_done = true;
+
 end:
-	if (ctx->cb_fn) {
-		ctx->cb_fn(ctx->cb_ctx, ctx->count, rc);
-	}
+	nvme_bdev_attach_done(ctx, rc);
+	return;
 }
 
 static void
@@ -1221,9 +1222,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	rc = create_ctrlr(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags);
 	if (rc) {
 		SPDK_ERRLOG("Failed to create new device\n");
-		if (ctx->cb_fn) {
-			ctx->cb_fn(ctx->cb_ctx, ctx->count, rc);
-		}
+		nvme_bdev_attach_done(ctx, rc);
 		return;
 	}
 
@@ -1242,7 +1241,10 @@ bdev_nvme_async_poll(void *arg)
 		return 1;
 	}
 	spdk_poller_unregister(&ctx->poller);
-	free(ctx);
+
+	ctx->ctrlr_done = true;
+	nvme_bdev_attach_done(ctx, 0);
+
 	return 1;
 }
 
