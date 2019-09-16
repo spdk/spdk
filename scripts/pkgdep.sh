@@ -38,6 +38,7 @@ scriptsdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $scriptsdir/..)
 
 if [ -s /etc/redhat-release ]; then
+	# shellcheck disable=SC1091
 	. /etc/os-release
 
 	# Includes Fedora, CentOS 7, RHEL 7

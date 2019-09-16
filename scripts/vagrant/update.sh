@@ -60,6 +60,7 @@ else
 
 	# Figure out what system we are running on
 	if [ -f /etc/lsb-release ];then
+		# shellcheck disable=SC1091
 		. /etc/lsb-release
 	elif [ -f /etc/redhat-release ];then
 		yum update -y
