@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d68237fa_8b6c006c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1480,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-16T14:24:44Z",
+      "side": 1,
+      "message": "Could you move this assertion before if block? It is actual for both branches",
+      "range": {
+        "startLine": 1480,
+        "startChar": 2,
+        "endLine": 1480,
+        "endChar": 23
+      },
+      "revId": "28e8373205ee3ca0a1427bde6b10f539ca7b4fb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fbceab6_3a2a762f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1485,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-16T14:24:44Z",
+      "side": 1,
+      "message": "It seems here should be (new_buf \u003d\u003d NULL) since spdk_mempool_get can return NULL",
+      "range": {
+        "startLine": 1485,
+        "startChar": 5,
+        "endLine": 1485,
+        "endChar": 15
+      },
+      "revId": "28e8373205ee3ca0a1427bde6b10f539ca7b4fb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
