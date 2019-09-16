@@ -229,7 +229,7 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 	}
 
 	TAILQ_FOREACH(tmp_tgt, &g_nvmf_tgts, link) {
-		if (!strncmp(opts->name, tmp_tgt->name, strlen(tmp_tgt->name))) {
+		if (!strncmp(opts->name, tmp_tgt->name, NVMF_TGT_NAME_MAX_LENGTH)) {
 			SPDK_ERRLOG("Provided target name must be unique.\n");
 			return NULL;
 		}
@@ -328,7 +328,7 @@ spdk_nvmf_get_tgt(const char *name)
 
 	TAILQ_FOREACH(tgt, &g_nvmf_tgts, link) {
 		if (name) {
-			if (!strncmp(tgt->name, name, strlen(tgt->name))) {
+			if (!strncmp(tgt->name, name, NVMF_TGT_NAME_MAX_LENGTH)) {
 				return tgt;
 			}
 		}
