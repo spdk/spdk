@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "23a69ec1_08681173",
+        "filename": "test/bdev/bdevio/bdevio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-16T22:21:35Z",
+      "side": 1,
+      "message": "Not trying to be a PITA but how is the removal of arg2 related to this patch? Same for all the other places where its been removed.",
+      "revId": "96a31bc9dd3c56f2332e6368a066cc382a65fbea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
