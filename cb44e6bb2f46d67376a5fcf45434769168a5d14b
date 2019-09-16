@@ -92,6 +92,167 @@
       "revId": "cb44e6bb2f46d67376a5fcf45434769168a5d14b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0fccf427_22105f45",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-16T23:46:32Z",
+      "side": 1,
+      "message": "g_json_decode_obj_create",
+      "range": {
+        "startLine": 89,
+        "startChar": 8,
+        "endLine": 89,
+        "endChar": 35
+      },
+      "revId": "cb44e6bb2f46d67376a5fcf45434769168a5d14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd5c2616_4d3e264e",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1085,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-16T23:46:32Z",
+      "side": 1,
+      "message": "create_raid_bdev_create_req? (create_create_req is not understandable :-))",
+      "range": {
+        "startLine": 1085,
+        "startChar": 0,
+        "endLine": 1085,
+        "endChar": 20
+      },
+      "revId": "cb44e6bb2f46d67376a5fcf45434769168a5d14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ce25896_fc4931f8",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1099,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-16T23:46:32Z",
+      "side": 1,
+      "message": "create_raid_bdev_create_config?",
+      "range": {
+        "startLine": 1099,
+        "startChar": 0,
+        "endLine": 1099,
+        "endChar": 23
+      },
+      "revId": "cb44e6bb2f46d67376a5fcf45434769168a5d14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ebe5a79_cf939e88",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1153,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-16T23:46:32Z",
+      "side": 1,
+      "message": "test_create_raid?",
+      "range": {
+        "startLine": 1153,
+        "startChar": 0,
+        "endLine": 1153,
+        "endChar": 19
+      },
+      "revId": "cb44e6bb2f46d67376a5fcf45434769168a5d14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d1ff2c4_81a426fc",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1208,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-16T23:46:32Z",
+      "side": 1,
+      "message": "test_create_raid_invalid_args?",
+      "range": {
+        "startLine": 1208,
+        "startChar": 0,
+        "endLine": 1208,
+        "endChar": 32
+      },
+      "revId": "cb44e6bb2f46d67376a5fcf45434769168a5d14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4af90afe_7dd0ec8d",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2226,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-16T23:46:32Z",
+      "side": 1,
+      "message": "test_create_raid?",
+      "range": {
+        "startLine": 2226,
+        "startChar": 22,
+        "endLine": 2226,
+        "endChar": 41
+      },
+      "revId": "cb44e6bb2f46d67376a5fcf45434769168a5d14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9c13026_51325aad",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2228,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-16T23:46:32Z",
+      "side": 1,
+      "message": "test_create_raid_invalid_args?",
+      "range": {
+        "startLine": 2228,
+        "startChar": 22,
+        "endLine": 2228,
+        "endChar": 54
+      },
+      "revId": "cb44e6bb2f46d67376a5fcf45434769168a5d14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
