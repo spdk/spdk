@@ -109,3 +109,15 @@ nvme_bdev_dump_trid_json(struct spdk_nvme_transport_id *trid, struct spdk_json_w
 		spdk_json_write_named_string(w, "subnqn", trid->subnqn);
 	}
 }
+
+void
+nvme_bdev_attach_done(struct nvme_async_probe_ctx *ctx, int rc)
+{
+	if (ctx->ctrlr_done == true && ctx->bdevs_done == true) {
+		if (ctx->cb_fn) {
+			ctx->cb_fn(ctx->cb_ctx, ctx->count, errno);
+		}
+
+		free(ctx);
+	}
+}
