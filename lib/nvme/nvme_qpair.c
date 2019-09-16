@@ -34,6 +34,9 @@
 #include "nvme_internal.h"
 #include "spdk/nvme_ocssd.h"
 
+/* FIXIT: This include is for testing purposes */
+#include "nvme_cuse.h"
+
 static void nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
 
 struct nvme_string {
@@ -453,7 +456,12 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		SPDK_ERRLOG("CQ error, abort requests after transport retry counter exceeded\n");
 		qpair->ctrlr->is_failed = true;
 	}
+
 	qpair->in_completion_context = 0;
+
+	/* FIXIT: this is for testing purposes */
+	spdk_nvme_io_msg_process(qpair);
+
 	if (qpair->delete_after_completion_context) {
 		/*
 		 * A request to delete this qpair was made in the context of this completion
