@@ -22,6 +22,30 @@
       "revId": "06016d5534e11399e9a98b232d91f635a62e8c83",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fdb24bfe_39857f9d",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 965,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-09-16T11:07:37Z",
+      "side": 0,
+      "message": "I think we should.",
+      "parentUuid": "f81effa5_4573a9b2",
+      "range": {
+        "startLine": 962,
+        "startChar": 1,
+        "endLine": 965,
+        "endChar": 2
+      },
+      "revId": "06016d5534e11399e9a98b232d91f635a62e8c83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
