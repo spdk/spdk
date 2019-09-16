@@ -1218,12 +1218,12 @@ spdk_bdev_nvme_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid
 	ctx = SPDK_CONTAINEROF(user_opts, struct nvme_async_probe_ctx, opts);
 	rc = bdev_nvme_create_and_get_bdev_names(ctrlr,
 			ctx->base_name,
-			ctx->names, ctx->count,
+			ctx->names, &ctx->count,
 			&ctx->trid,
 			ctx->prchk_flags);
 
 	if (ctx->cb_fn) {
-		ctx->cb_fn(ctx->cb_ctx, rc);
+		ctx->cb_fn(ctx->cb_ctx, ctx->count, rc);
 	}
 }
 
@@ -1247,7 +1247,7 @@ int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      struct spdk_nvme_host_id *hostid,
 		      const char *base_name,
-		      const char **names, size_t *count,
+		      const char **names, size_t count,
 		      const char *hostnqn,
 		      uint32_t prchk_flags,
 		      spdk_nvme_attach_cb attach_cb,
