@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7a8a610b_f47e21ef",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-16T21:19:18Z",
+      "side": 1,
+      "message": "I\u0027m thinking that\u0027s something we don\u0027t have to worry about.\n\nNot because it can\u0027t happen - I actually think it\u0027s possible that we could get three events in a row like that. But right now, the only events we do anything in response to are connect/disconnect events (which are processed synchronously under the lock so no racing there) and the disconnected and device removal events. Since there are really only 2 events (at the moment) that we are responding to on a separate thread, we won\u0027t really hit the three events in a row problem.\n\nWhen we get to the point where we are processing some of the other events in a more sophisticated way, there will be a couple things that we need to address:\n1. Disconnecting / reconnecting an rdma qpair - make sure that we properly ack all events before destroying the rqpair, even those still in the controller list.\n2. Getting bursts of events - I think this will only happen in really bad error cases, and we will only want to respond to the first event rather than initializing two or three recovery mechanisms in a row. I don\u0027t think that we will have very much recourse when we get an error than disconnecting and reconnecting the qpair so we can just keep a flag indicating that that\u0027s what we\u0027re doing. That will pretty much solve the problem of getting three or more events in a row and racing between the two threads to respond in the proper order to all of them.",
+      "parentUuid": "1d757d4c_d44eccbb",
+      "revId": "e8764432ec4b726fdfea52a42324a186df70d77d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2a11dd05_d7950f3d",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 12
