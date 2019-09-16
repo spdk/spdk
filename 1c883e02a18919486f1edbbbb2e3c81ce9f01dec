@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "383c8041_90029dc4",
+        "filename": "test/bdev/bdevio/bdevio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-16T19:14:13Z",
+      "side": 1,
+      "message": "unintended move?",
+      "revId": "1c883e02a18919486f1edbbbb2e3c81ce9f01dec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
