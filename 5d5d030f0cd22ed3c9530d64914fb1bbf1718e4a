@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea1f3b2f_c6d4984a",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-16T08:53:45Z",
+      "side": 1,
+      "message": "I think we have an misunderstanding for task here.\nI think almost all (or maybe even all) of our test cases need just 1 NVMe to run. I case we need more bdevs in test then mallocs and lvols are used. So currently we do not care that much for number of emulated NVMes as much for their TYPE.\nAdditional emulated NVMes which are in CI and are needed to run all tests are:\n- no-namespace NVMe\n- multi-namespace NVMe\n- OCSSD NVMe\nI think this should be our priority here - to enable other types of emulated NVMes. Number of disks is good as well, but we can do it later, and it\u0027d be nice as a bonus.",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 100
+      },
+      "revId": "5d5d030f0cd22ed3c9530d64914fb1bbf1718e4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
