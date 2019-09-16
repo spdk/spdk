@@ -1222,8 +1222,14 @@ spdk_bdev_nvme_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid
 			&ctx->trid,
 			ctx->prchk_flags);
 
+	ctx->num_done = ctx->count;
+
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctx->cb_ctx, ctx->count, rc);
+	}
+
+	if (ctx->ctrlr_done == true) {
+		free(ctx);
 	}
 }
 
@@ -1239,7 +1245,13 @@ bdev_nvme_async_poll(void *arg)
 		return 1;
 	}
 	spdk_poller_unregister(&ctx->poller);
-	free(ctx);
+
+	ctx->ctrlr_done = true;
+
+	if (ctx->num_done == ctx->count) {
+		free(ctx);
+	}
+
 	return 1;
 }
 

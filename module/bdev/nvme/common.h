@@ -87,10 +87,12 @@ struct nvme_async_probe_ctx {
 	const char *base_name;
 	const char **names;
 	size_t count;
+	size_t num_done;
 	uint32_t prchk_flags;
 	struct spdk_poller *poller;
 	struct spdk_nvme_transport_id trid;
 	struct spdk_nvme_ctrlr_opts opts;
+	bool ctrlr_done;
 	spdk_bdev_create_nvme_fn cb_fn;
 	void *cb_ctx;
 };
