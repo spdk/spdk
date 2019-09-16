@@ -51,7 +51,7 @@ struct nvme_driver _g_nvme_driver = {
 #ifdef SPDK_CONFIG_CUSE
 /* FIXIT: */
 int
-spdk_nvme_io_msg_process(struct spdk_nvme_qpair *qpair)
+spdk_nvme_io_msg_process(void)
 {
 	return 0;
 }
