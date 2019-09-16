@@ -191,9 +191,13 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 }
 
+static struct spdk_nvmf_ctrlr *g_ns_changed_ctrlr = NULL;
+static uint32_t g_ns_changed_nsid = 0;
 void
 spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 {
+	g_ns_changed_ctrlr = ctrlr;
+	g_ns_changed_nsid = nsid;
 }
 
 int
@@ -1234,6 +1238,56 @@ test_reservation_preempt_notification(void)
 	ut_reservation_deinit();
 }
 
+static void
+test_spdk_nvmf_ns_event(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsystem = {
+		.max_nsid = 0,
+		.ns = NULL,
+		.tgt = &tgt
+	};
+	struct spdk_nvmf_ctrlr ctrlr = {
+		.subsys = &subsystem
+	};
+	struct spdk_bdev bdev1 = {};
+	struct spdk_nvmf_ns_opts ns_opts;
+	uint32_t nsid;
+
+	tgt.max_subsystems = 1024;
+	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
+	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+
+	/* Add one namespace */
+	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
+	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev1, &ns_opts, sizeof(ns_opts), NULL);
+	CU_ASSERT(nsid == 1);
+	CU_ASSERT(NULL != subsystem.ns[0]);
+
+	/* Add one controller */
+	TAILQ_INIT(&subsystem.ctrlrs);
+	TAILQ_INSERT_TAIL(&subsystem.ctrlrs, &ctrlr, link);
+
+	/* Namespace remove event */
+	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+	g_ns_changed_nsid = 0xFFFFFFFF;
+	g_ns_changed_ctrlr = NULL;
+	spdk_nvmf_ns_event(SPDK_BDEV_EVENT_REMOVE, &bdev1, subsystem.ns[0]);
+	CU_ASSERT(SPDK_NVMF_SUBSYSTEM_PAUSING == subsystem.state);
+	CU_ASSERT(0xFFFFFFFF == g_ns_changed_nsid);
+	CU_ASSERT(NULL == g_ns_changed_ctrlr);
+
+	poll_threads();
+	CU_ASSERT(1 == g_ns_changed_nsid);
+	CU_ASSERT(&ctrlr == g_ns_changed_ctrlr);
+	CU_ASSERT(NULL == subsystem.ns[0]);
+	CU_ASSERT(SPDK_NVMF_SUBSYSTEM_ACTIVE == subsystem.state);
+
+	free(subsystem.ns);
+	free(tgt.subsystems);
+}
+
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1267,7 +1321,8 @@ int main(int argc, char **argv)
 			    test_reservation_release_notification_write_exclusive) == NULL ||
 		CU_add_test(suite, "reservation_clear_notification", test_reservation_clear_notification) == NULL ||
 		CU_add_test(suite, "reservation_preempt_notification",
-			    test_reservation_preempt_notification) == NULL
+			    test_reservation_preempt_notification) == NULL ||
+		CU_add_test(suite, "spdk_nvmf_ns_event", test_spdk_nvmf_ns_event) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
