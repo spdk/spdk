@@ -77,8 +77,8 @@ timing_enter start_iscsi_tgt
 
 run_nvme_remote "local"
 
-trap 'iscsicleanup; killprocess $iscsipid; \
-	rm -f ./local-job0-0-verify.state; iscsitestfini $1 $2; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+trap 'iscsicleanup; killprocess $iscsipid;
+rm -f ./local-job0-0-verify.state; iscsitestfini $1 $2; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 
 echo "Running FIO"
 $fio_py -p iscsi -i 4096 -d 1 -t randrw -r 1 -v
