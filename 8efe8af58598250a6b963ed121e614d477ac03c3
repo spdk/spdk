@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8e972ba_20dd27b7",
+        "filename": "lib/ftl/punit",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:40:33Z",
+      "side": 1,
+      "message": "What is this?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 0
+      },
+      "revId": "8efe8af58598250a6b963ed121e614d477ac03c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
