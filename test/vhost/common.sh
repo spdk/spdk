@@ -980,13 +980,13 @@ function vm_start_fio_server()
 function vm_check_scsi_location()
 {
 	# Script to find wanted disc
-	local script='shopt -s nullglob; \
-	for entry in /sys/block/sd*; do \
-		disk_type="$(cat $entry/device/vendor)"; \
-		if [[ $disk_type == INTEL* ]] || [[ $disk_type == RAWSCSI* ]] || [[ $disk_type == LIO-ORG* ]]; then \
-			fname=$(basename $entry); \
-			echo -n " $fname"; \
-		fi; \
+	local script='shopt -s nullglob;
+	for entry in /sys/block/sd*; do
+		disk_type="$(cat $entry/device/vendor)";
+		if [[ $disk_type == INTEL* ]] || [[ $disk_type == RAWSCSI* ]] || [[ $disk_type == LIO-ORG* ]]; then
+			fname=$(basename $entry);
+			echo -n " $fname";
+		fi;
 	done'
 
 	SCSI_DISK="$(echo "$script" | vm_exec $1 bash -s)"

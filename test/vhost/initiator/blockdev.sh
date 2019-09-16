@@ -48,8 +48,8 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
-trap 'rm -f *.state $rootdir/spdk.tar.gz $rootdir/fio.tar.gz $(get_vhost_dir)/Virtio0;\
- error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
+trap 'rm -f *.state $rootdir/spdk.tar.gz $rootdir/fio.tar.gz $(get_vhost_dir)/Virtio0;
+	error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 
 function run_spdk_fio() {
 	fio_bdev --ioengine=spdk_bdev "$@" --spdk_mem=1024 --spdk_single_seg=1
