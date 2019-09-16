@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3792f844_63c70219",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 5643,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-16T22:01:56Z",
+      "side": 1,
+      "message": "may sound like a nit but the name \"check\" I think implies some action like checking consistency or something.  Maybe \"bdev_blobfs_exists\" or something?",
+      "revId": "8f2f62d1eb1eea81ee674bd95dfe935299994f01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e43d05f_02480e30",
+        "filename": "scripts/rpc/blobfs.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-16T22:01:56Z",
+      "side": 1,
+      "message": "update this comment (the whole inexistence thing)",
+      "revId": "8f2f62d1eb1eea81ee674bd95dfe935299994f01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
