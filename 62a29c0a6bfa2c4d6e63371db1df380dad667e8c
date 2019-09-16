@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bce080b7_a9334d09",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-16T18:59:51Z",
+      "side": 1,
+      "message": "Destroy -\u003e Delete",
+      "revId": "62a29c0a6bfa2c4d6e63371db1df380dad667e8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f82f08a6_3746db64",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-16T18:59:51Z",
+      "side": 1,
+      "message": "Destroy -\u003e Delete",
+      "revId": "62a29c0a6bfa2c4d6e63371db1df380dad667e8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
