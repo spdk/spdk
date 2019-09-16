@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8531397c_b1e41025",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-16T07:33:59Z",
+      "side": 1,
+      "message": "Commit message needs clarifying, I still had to look up what SC2174 is about.\n\n\"-p and -m\"... but of which command?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 60
+      },
+      "revId": "5acf0c67bf1a5500cf1e745697ab81c403f34007",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5531c78e_245284c5",
+        "filename": "scripts/vagrant/run-autorun.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-16T07:33:59Z",
+      "side": 1,
+      "message": "I don\u0027t think that\u0027s really an issue to fix.\nIn the original version we change permissions for ${AUTOTEST_OUTPUT_PATH} and here you do the same, but it adds an extra line.\n\nI think this SC number should stay excluded. Currently in scripts/check_format.sh we only have SHCK_EXCLUDE variable which holds all excluded errors.\nWe should probably somehow spit this into two lists - one which holds temporarily excluded checks and one with ones we decide should stay excluded all the time (like this one here)",
+      "range": {
+        "startLine": 184,
+        "startChar": 0,
+        "endLine": 185,
+        "endChar": 36
+      },
+      "revId": "5acf0c67bf1a5500cf1e745697ab81c403f34007",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
