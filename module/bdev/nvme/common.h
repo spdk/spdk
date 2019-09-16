@@ -81,13 +81,13 @@ struct nvme_bdev {
 struct nvme_async_probe_ctx;
 
 typedef int (*spdk_nvme_create_bdevs_fn)(struct nvme_async_probe_ctx *ctx);
-typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, int rc);
+typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
 
 struct nvme_async_probe_ctx {
 	struct spdk_nvme_probe_ctx *probe_ctx;
 	const char *base_name;
 	const char **names;
-	size_t *count;
+	size_t count;
 	uint32_t prchk_flags;
 	struct spdk_poller *poller;
 	struct spdk_nvme_transport_id trid;
