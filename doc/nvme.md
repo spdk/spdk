@@ -9,6 +9,7 @@
 * @ref nvme_fabrics_host
 * @ref nvme_multi_process
 * @ref nvme_hotplug
+* @ref nvme_cuse
 
 # Introduction {#nvme_intro}
 
@@ -266,3 +267,8 @@ This means I/O in flight during a hot remove will complete with an appropriate e
 code and will not crash the application.
 
 @sa spdk_nvme_probe
+
+
+# NVMe Character Devices {#nvme_cuse}
+
+TODO!
