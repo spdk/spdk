@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a49eeb5a_8ebbfb8a",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:30:11Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you remove this?",
+      "range": {
+        "startLine": 145,
+        "startChar": 1,
+        "endLine": 145,
+        "endChar": 36
+      },
+      "revId": "048f0883ad908064c14480d163d49f3a1fc7d768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d9cfa0a_8a81f5ca",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:30:11Z",
+      "side": 1,
+      "message": "Let\u0027s assert here that addr.pu \u003c ftl_dev_num_punits.",
+      "range": {
+        "startLine": 528,
+        "startChar": 8,
+        "endLine": 528,
+        "endChar": 15
+      },
+      "revId": "048f0883ad908064c14480d163d49f3a1fc7d768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7e2032d_d858cea0",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:30:11Z",
+      "side": 1,
+      "message": "Use ftl_band_zone_from_addr instead.",
+      "range": {
+        "startLine": 540,
+        "startChar": 8,
+        "endLine": 540,
+        "endChar": 32
+      },
+      "revId": "048f0883ad908064c14480d163d49f3a1fc7d768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d78fb643_8e5a72b1",
+        "filename": "module/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:30:11Z",
+      "side": 1,
+      "message": "Let\u0027s just get rid of this altogether.",
+      "range": {
+        "startLine": 494,
+        "startChar": 0,
+        "endLine": 501,
+        "endChar": 1
+      },
+      "revId": "048f0883ad908064c14480d163d49f3a1fc7d768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
