@@ -239,7 +239,7 @@ Example response:
   "id": 1,
   "result": [
     "start_subsystem_init",
-    "get_rpc_methods",
+    "rpc_get_methods",
     "get_scsi_devices",
     "net_get_interfaces",
     "delete_ip_address",
