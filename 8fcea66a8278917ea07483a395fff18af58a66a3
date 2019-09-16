@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b702c8db_dfd7703b",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-16T12:04:17Z",
+      "side": 1,
+      "message": "In the description of this patch you mention that it should be possible to create vbdev on top of non-OCSSD device, but here you fail if bdev in not zoned.",
+      "range": {
+        "startLine": 57,
+        "startChar": 4,
+        "endLine": 57,
+        "endChar": 30
+      },
+      "revId": "8fcea66a8278917ea07483a395fff18af58a66a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
