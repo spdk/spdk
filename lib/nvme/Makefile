@@ -37,6 +37,8 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = nvme_ctrlr_cmd.c nvme_ctrlr.c nvme_fabric.c nvme_ns_cmd.c nvme_ns.c nvme_pcie.c nvme_qpair.c nvme.c nvme_quirks.c nvme_transport.c nvme_uevent.c nvme_ctrlr_ocssd_cmd.c \
 	nvme_ns_ocssd_cmd.c nvme_tcp.c nvme_opal.c
 C_SRCS-$(CONFIG_RDMA) += nvme_rdma.c
+C_SRCS-$(CONFIG_CUSE) += nvme_cuse.c
+
 LIBNAME = nvme
 LOCAL_SYS_LIBS = -luuid
 ifeq ($(CONFIG_RDMA),y)
@@ -56,6 +58,10 @@ ifneq ("$(wildcard /usr/lib/libcxgb4.*)","")
 LOCAL_SYS_LIBS += -lcxgb4
 endif
 endif
+endif
+
+ifeq ($(CONFIG_CUSE),y)
+CFLAGS += -D_FILE_OFFSET_BITS=64
 endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
