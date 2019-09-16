@@ -57,7 +57,11 @@ void vbdev_ocf_mngt_poll(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn fn);
  * If next function is NULL, finish management operation and invoke callback */
 void vbdev_ocf_mngt_continue(struct vbdev_ocf *vbdev, int status);
 
-/* Stop the execution and invoke callback with last status returned */
-void vbdev_ocf_mngt_stop(struct vbdev_ocf *vbdev);
+/* Stop the execution, if status is non zero set it,
+ * if rollback function is not null invoke rollback
+ * else invoke callback with last status returned */
+void vbdev_ocf_mngt_stop(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *rollback_path, int status);
 
+/* Get status */
+int vbdev_ocf_mngt_get_status(struct vbdev_ocf *vbdev);
 #endif
