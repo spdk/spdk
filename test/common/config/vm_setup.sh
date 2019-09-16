@@ -27,7 +27,9 @@ INSTALL=false
 CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,ocf"
 LIBRXE_INSTALL=true
 
+# shellcheck disable=SC1091
 OSID=$(source /etc/os-release && echo $ID)
+# shellcheck disable=SC1091
 OSVERSION=$(source /etc/os-release && echo $VERSION_ID)
 PACKAGEMNG='undefined'
 
