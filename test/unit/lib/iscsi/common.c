@@ -97,9 +97,6 @@ spdk_scsi_dev_get_name(const struct spdk_scsi_dev *dev)
 	return NULL;
 }
 
-DEFINE_STUB(spdk_event_allocate, struct spdk_event *,
-	    (uint32_t core, spdk_event_fn fn, void *arg1, void *arg2), NULL);
-
 DEFINE_STUB(spdk_scsi_dev_construct, struct spdk_scsi_dev *,
 	    (const char *name, const char **bdev_name_list,
 	     int *lun_id_list, int num_luns, uint8_t protocol_id,
