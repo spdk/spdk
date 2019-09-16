@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27fd2171_ad220c5a",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1251,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T11:11:46Z",
+      "side": 1,
+      "message": "This should probably check ctx-\u003enum_done against the number of namespaces.",
+      "range": {
+        "startLine": 1251,
+        "startChar": 5,
+        "endLine": 1251,
+        "endChar": 32
+      },
+      "revId": "5f94047160e186425693e8a5bdfc8156619db54a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
