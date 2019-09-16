@@ -1,0 +1,343 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a926f354_b211ef30",
+        "filename": "lib/ftl/ftl_addr.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "on-disk address?",
+      "range": {
+        "startLine": 46,
+        "startChar": 29,
+        "endLine": 46,
+        "endChar": 36
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "084e6140_c18e9add",
+        "filename": "lib/ftl/ftl_addr.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "No need for capitalization",
+      "range": {
+        "startLine": 48,
+        "startChar": 12,
+        "endLine": 48,
+        "endChar": 17
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a710e01_17c595e8",
+        "filename": "lib/ftl/ftl_addr.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "Perhaps \u0027zone\u0027 would suffice?",
+      "range": {
+        "startLine": 57,
+        "startChar": 12,
+        "endLine": 57,
+        "endChar": 19
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b76e00d3_bc16d660",
+        "filename": "lib/ftl/ftl_addr.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "I\u0027m a bit worried if 16 bits is enough... Especially since some of the devices underneath will say they only have one parallel unit. Perhaps a 21/10 split would make more sense? Or maybe we should just go ahead and just merge these and just divide it when necessary?",
+      "range": {
+        "startLine": 57,
+        "startChar": 22,
+        "endLine": 57,
+        "endChar": 24
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e77efa00_3d5a94e3",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "Disk address / physical address?",
+      "range": {
+        "startLine": 88,
+        "startChar": 8,
+        "endLine": 88,
+        "endChar": 26
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6756253e_5ad7e52f",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "This doesn\u0027t make much sense now. Let\u0027s rename it to ftl_read_next_physical_addr or ftl_read_next_disk_addr.",
+      "range": {
+        "startLine": 282,
+        "startChar": 0,
+        "endLine": 282,
+        "endChar": 23
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07169715_2aef8ee1",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "Same here, we can\u0027t rename \"ppa mode\" to \"addr mode\", it doesn\u0027t make sense. Let\u0027s call it disk or physical (and stick with it for all the places PPA was used to indicate physical address).",
+      "range": {
+        "startLine": 287,
+        "startChar": 8,
+        "endLine": 287,
+        "endChar": 24
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35b010a4_4407c8c1",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 711,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "Replace with on-disk address.",
+      "range": {
+        "startLine": 711,
+        "startChar": 4,
+        "endLine": 711,
+        "endChar": 22
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7527e272_7c3b2aae",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 905,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "Can we drop the addr from the name?",
+      "range": {
+        "startLine": 905,
+        "startChar": 0,
+        "endLine": 905,
+        "endChar": 19
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecb47ddb_aa451628",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 929,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "Since we\u0027re renaming the physical version of this, let\u0027s rename this as well - ftl_read_next_logical_addr?",
+      "range": {
+        "startLine": 929,
+        "startChar": 0,
+        "endLine": 929,
+        "endChar": 22
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66417759_a7d71808",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "This just does addr.pu - dev-\u003erange.begin + dev-\u003erange.begin, just use addr.pu.",
+      "range": {
+        "startLine": 428,
+        "startChar": 22,
+        "endLine": 428,
+        "endChar": 75
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81900da9_8aa404ba",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "I think we should this patch should add checks that ftl_addr is capable of representing the physical address (i.e. sizeof(ftl_addr.zone_id) \u003c\u003d geo.num_chk and sizeof(ftl_addr.pu) \u003c\u003d geo.num_pu + geo.num_grp).",
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef0c28a9_bece7bfa",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "As stated before, let\u0027s rename this to ftl_io_mode_physical.",
+      "range": {
+        "startLine": 238,
+        "startChar": 0,
+        "endLine": 238,
+        "endChar": 16
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e1a95fa_c911efba",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "Let\u0027s rename this as well, I propose ftl_io_mode_logical.",
+      "range": {
+        "startLine": 244,
+        "startChar": 0,
+        "endLine": 244,
+        "endChar": 15
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "188e8efb_58c7c6fb",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1167,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T09:13:58Z",
+      "side": 1,
+      "message": "I think you should get rid of all references to this in one of the later patches, replacing it with zoned geometry (zone_size, optimal_open_zones).",
+      "range": {
+        "startLine": 1167,
+        "startChar": 38,
+        "endLine": 1167,
+        "endChar": 57
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
