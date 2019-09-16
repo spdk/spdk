@@ -1,0 +1,147 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74c2ac3d_8ddd7ae8",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T07:44:21Z",
+      "side": 1,
+      "message": "Why was this before checking the state?",
+      "range": {
+        "startLine": 561,
+        "startChar": 0,
+        "endLine": 561,
+        "endChar": 30
+      },
+      "revId": "cc7a087740380624c915f5ba31d15c4a23bb1e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54f816b2_c562251d",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T07:44:21Z",
+      "side": 1,
+      "message": "Why are we returning here? We didn\u0027t do that previously.",
+      "range": {
+        "startLine": 564,
+        "startChar": 0,
+        "endLine": 566,
+        "endChar": 3
+      },
+      "revId": "cc7a087740380624c915f5ba31d15c4a23bb1e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e978369_151e12d9",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T07:44:21Z",
+      "side": 1,
+      "message": "Let\u0027s add an assertion here that breloc-\u003estate \u003d\u003d FTL_BAND_RELOC_STATE_ACTIVE.",
+      "revId": "cc7a087740380624c915f5ba31d15c4a23bb1e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50999ce3_600d469b",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T07:44:21Z",
+      "side": 1,
+      "message": "Why is this needed, but wasn\u0027t needed before? Doesn\u0027t ftl_band_empty(band) imply that breloc-\u003enum_lbks \u003d\u003d 0?",
+      "range": {
+        "startLine": 585,
+        "startChar": 5,
+        "endLine": 585,
+        "endChar": 26
+      },
+      "revId": "cc7a087740380624c915f5ba31d15c4a23bb1e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b44ecde_abe8aefe",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T07:44:21Z",
+      "side": 1,
+      "message": "Let\u0027s assert here that breloc-\u003estate \u003d\u003d FTL_BAND_RELOC_STATE_PENDING.",
+      "revId": "cc7a087740380624c915f5ba31d15c4a23bb1e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1feb50a_11002824",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 788,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T07:44:21Z",
+      "side": 1,
+      "message": "Unnecessary newline.",
+      "revId": "cc7a087740380624c915f5ba31d15c4a23bb1e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "388db728_6d358121",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 855,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-16T07:44:21Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to do that if the band was already being processed. Also, please make sure to add a comment explaining that the bands on the prio_queue are already prepped and why we need to do that.",
+      "range": {
+        "startLine": 854,
+        "startChar": 41,
+        "endLine": 855,
+        "endChar": 25
+      },
+      "revId": "cc7a087740380624c915f5ba31d15c4a23bb1e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
