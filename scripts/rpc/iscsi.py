@@ -296,7 +296,8 @@ def delete_iscsi_auth_group(client, tag):
     return client.call('delete_iscsi_auth_group', params)
 
 
-def add_secret_to_iscsi_auth_group(client, tag, user, secret, muser=None, msecret=None):
+@deprecated_alias('add_secret_to_iscsi_auth_group')
+def iscsi_auth_group_add_secret(client, tag, user, secret, muser=None, msecret=None):
     """Add a secret to an authentication group.
 
     Args:
@@ -315,7 +316,7 @@ def add_secret_to_iscsi_auth_group(client, tag, user, secret, muser=None, msecre
         params['muser'] = muser
     if msecret:
         params['msecret'] = msecret
-    return client.call('add_secret_to_iscsi_auth_group', params)
+    return client.call('iscsi_auth_group_add_secret', params)
 
 
 def delete_secret_from_iscsi_auth_group(client, tag, user):

@@ -577,7 +577,7 @@ class UIISCSIAuthGroups(UINode):
            msecret: Secret for mutual CHAP authentication
         """
         tag = self.ui_eval_param(tag, "number", None)
-        self.get_root().add_secret_to_iscsi_auth_group(
+        self.get_root().iscsi_auth_group_add_secret(
             tag=tag, user=user, secret=secret,
             muser=muser, msecret=msecret)
 

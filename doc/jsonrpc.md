@@ -2835,7 +2835,7 @@ Example response:
 }
 ~~~
 
-## add_secret_to_iscsi_auth_group {#rpc_add_secret_to_iscsi_auth_group}
+## iscsi_auth_group_add_secret {#rpc_iscsi_auth_group_add_secret}
 
 Add a secret to an existing authentication group for CHAP authentication.
 
@@ -2863,7 +2863,7 @@ Example request:
     "msecret": "ms3"
   },
   "jsonrpc": "2.0",
-  "method": "add_secret_to_iscsi_auth_group",
+  "method": "iscsi_auth_group_add_secret",
   "id": 1
 }
 ~~~

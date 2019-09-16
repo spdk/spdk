@@ -444,8 +444,8 @@ class UIRoot(UINode):
         rpc.iscsi.iscsi_target_node_remove_pg_ig_maps(self.client, **kwargs)
 
     @verbose
-    def add_secret_to_iscsi_auth_group(self, **kwargs):
-        rpc.iscsi.add_secret_to_iscsi_auth_group(self.client, **kwargs)
+    def iscsi_auth_group_add_secret(self, **kwargs):
+        rpc.iscsi.iscsi_auth_group_add_secret(self.client, **kwargs)
 
     @verbose
     def delete_secret_from_iscsi_auth_group(self, **kwargs):
