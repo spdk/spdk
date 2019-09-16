@@ -51,8 +51,6 @@ DEFINE_STUB_V(vhost_session_install_rte_compat_hooks,
 DEFINE_STUB_V(vhost_dev_install_rte_compat_hooks,
 	      (struct spdk_vhost_dev *vdev));
 DEFINE_STUB(rte_vhost_driver_unregister, int, (const char *path), 0);
-DEFINE_STUB(spdk_event_allocate, struct spdk_event *,
-	    (uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2), NULL);
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(rte_vhost_vring_call, int, (int vid, uint16_t vring_idx), 0);
@@ -84,7 +82,6 @@ spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 	return 0;
 }
 
-DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
 DEFINE_STUB(rte_vhost_get_mem_table, int, (int vid, struct rte_vhost_memory **mem), 0);
 DEFINE_STUB(rte_vhost_get_negotiated_features, int, (int vid, uint64_t *features), 0);
 DEFINE_STUB(rte_vhost_get_vhost_vring, int,
