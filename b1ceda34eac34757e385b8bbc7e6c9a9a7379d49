@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8423b9f5_d4269b95",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-16T10:12:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "621d5769_e7dda666",
+      "range": {
+        "startLine": 105,
+        "startChar": 21,
+        "endLine": 105,
+        "endChar": 30
+      },
+      "revId": "b1ceda34eac34757e385b8bbc7e6c9a9a7379d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "593819b3_0d28982c",
         "filename": "module/bdev/zone/vbdev_zone_block.c",
         "patchSetId": 1
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "88fbd2de_68e36f9f",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-16T10:12:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "593819b3_0d28982c",
+      "revId": "b1ceda34eac34757e385b8bbc7e6c9a9a7379d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db19b869_45d3e33d",
         "filename": "module/bdev/zone/vbdev_zone_block.c",
         "patchSetId": 1
@@ -53,6 +95,30 @@
       "writtenOn": "2019-09-13T08:59:02Z",
       "side": 1,
       "message": "Can we actually have a zone in this state?",
+      "range": {
+        "startLine": 336,
+        "startChar": 6,
+        "endLine": 336,
+        "endChar": 34
+      },
+      "revId": "b1ceda34eac34757e385b8bbc7e6c9a9a7379d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed095865_5be319da",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-16T10:12:11Z",
+      "side": 1,
+      "message": "Not at the moment, but I wanted to adapt the whole state machine",
+      "parentUuid": "db19b869_45d3e33d",
       "range": {
         "startLine": 336,
         "startChar": 6,
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "e3798b5d_0e390f4f",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-16T10:12:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6db96b4b_47c7aba8",
+      "range": {
+        "startLine": 381,
+        "startChar": 0,
+        "endLine": 382,
+        "endChar": 28
+      },
+      "revId": "b1ceda34eac34757e385b8bbc7e6c9a9a7379d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1cf6dba7_a86b549d",
         "filename": "module/bdev/zone/vbdev_zone_block.c",
         "patchSetId": 1
@@ -111,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "1d1f0ae6_a8faac62",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-16T10:12:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1cf6dba7_a86b549d",
+      "range": {
+        "startLine": 619,
+        "startChar": 63,
+        "endLine": 619,
+        "endChar": 78
+      },
+      "revId": "b1ceda34eac34757e385b8bbc7e6c9a9a7379d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8b25ea1a_5b28eddb",
         "filename": "module/bdev/zone/vbdev_zone_block.c",
         "patchSetId": 1
@@ -125,6 +239,24 @@
       "revId": "b1ceda34eac34757e385b8bbc7e6c9a9a7379d49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08be36ae_3a73e470",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-16T10:12:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8b25ea1a_5b28eddb",
+      "revId": "b1ceda34eac34757e385b8bbc7e6c9a9a7379d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
