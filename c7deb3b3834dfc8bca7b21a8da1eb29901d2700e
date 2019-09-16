@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ea7ca372_bc8f0776",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-16T10:12:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eec6cd9e_54763395",
+      "range": {
+        "startLine": 78,
+        "startChar": 6,
+        "endLine": 78,
+        "endChar": 20
+      },
+      "revId": "c7deb3b3834dfc8bca7b21a8da1eb29901d2700e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be8b4524_d80413dc",
         "filename": "module/bdev/zone/vbdev_zone_block.c",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "73488d8d_50bb65b0",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-16T10:12:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be8b4524_d80413dc",
+      "range": {
+        "startLine": 88,
+        "startChar": 11,
+        "endLine": 88,
+        "endChar": 21
+      },
+      "revId": "c7deb3b3834dfc8bca7b21a8da1eb29901d2700e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f0af7903_9664f498",
         "filename": "module/bdev/zone/vbdev_zone_block.c",
         "patchSetId": 1
@@ -68,6 +116,30 @@
       "revId": "c7deb3b3834dfc8bca7b21a8da1eb29901d2700e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5be7ecf_6ac9a9f6",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-16T10:12:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f0af7903_9664f498",
+      "range": {
+        "startLine": 290,
+        "startChar": 0,
+        "endLine": 298,
+        "endChar": 10
+      },
+      "revId": "c7deb3b3834dfc8bca7b21a8da1eb29901d2700e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -105,6 +177,30 @@
       "writtenOn": "2019-09-13T08:14:29Z",
       "side": 1,
       "message": "Are we allowed to write to a closed zone? If not, I think we should change this to\nif (!(state \u003d\u003d SPDK_BDEV_ZONE_STATE_EMPTY || state \u003d\u003d SPDK_BDEV_ZONE_STATE_OPEN))",
+      "range": {
+        "startLine": 347,
+        "startChar": 0,
+        "endLine": 349,
+        "endChar": 35
+      },
+      "revId": "c7deb3b3834dfc8bca7b21a8da1eb29901d2700e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "437bbe80_a46ea759",
+        "filename": "module/bdev/zone/vbdev_zone_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-16T10:12:20Z",
+      "side": 1,
+      "message": "Yes, the zone would be in the implicitly opened state in that case.",
+      "parentUuid": "caea0cd4_cd4cece2",
       "range": {
         "startLine": 347,
         "startChar": 0,
