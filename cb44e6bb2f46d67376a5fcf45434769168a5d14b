@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f300038_751aff04",
+        "filename": "doc/bdev.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-16T23:35:36Z",
+      "side": 1,
+      "message": "create",
+      "range": {
+        "startLine": 476,
+        "startChar": 57,
+        "endLine": 476,
+        "endChar": 68
+      },
+      "revId": "cb44e6bb2f46d67376a5fcf45434769168a5d14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fc3c8f5_9716f3c3",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 5334,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-16T23:35:36Z",
+      "side": 1,
+      "message": "Create",
+      "range": {
+        "startLine": 5334,
+        "startChar": 0,
+        "endLine": 5334,
+        "endChar": 10
+      },
+      "revId": "cb44e6bb2f46d67376a5fcf45434769168a5d14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d18b3634_8024f689",
+        "filename": "test/nvmf/target/nvmf_lvol.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-16T23:35:36Z",
+      "side": 1,
+      "message": "Create",
+      "range": {
+        "startLine": 29,
+        "startChar": 2,
+        "endLine": 29,
+        "endChar": 11
+      },
+      "revId": "cb44e6bb2f46d67376a5fcf45434769168a5d14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
