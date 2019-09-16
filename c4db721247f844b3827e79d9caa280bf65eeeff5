@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f520f3a3_60b94b60",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-16T08:44:37Z",
+      "side": 1,
+      "message": "this is wrong. ctx is spdk_bdev_part struct.",
+      "range": {
+        "startLine": 250,
+        "startChar": 1,
+        "endLine": 250,
+        "endChar": 53
+      },
+      "revId": "c4db721247f844b3827e79d9caa280bf65eeeff5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
