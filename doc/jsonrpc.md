@@ -2886,9 +2886,9 @@ Example response:
 }
 ~~~
 
-## delete_secret_from_iscsi_auth_group {#rpc_delete_secret_from_iscsi_auth_group}
+## iscsi_auth_group_remove_secret {#rpc_iscsi_auth_group_remove_secret}
 
-Delete a secret from an existing authentication group for CHAP authentication.
+Remove a secret from an existing authentication group for CHAP authentication.
 
 ### Parameters
 
@@ -2908,7 +2908,7 @@ Example request:
     "user": "u3"
   },
   "jsonrpc": "2.0",
-  "method": "delete_secret_from_iscsi_auth_group",
+  "method": "iscsi_auth_group_remove_secret",
   "id": 1
 }
 ~~~

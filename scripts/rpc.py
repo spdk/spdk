@@ -790,13 +790,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-r', '--msecret', help='Secret for mutual CHAP authentication')
     p.set_defaults(func=iscsi_auth_group_add_secret)
 
-    def delete_secret_from_iscsi_auth_group(args):
-        rpc.iscsi.delete_secret_from_iscsi_auth_group(args.client, tag=args.tag, user=args.user)
+    def iscsi_auth_group_remove_secret(args):
+        rpc.iscsi.iscsi_auth_group_remove_secret(args.client, tag=args.tag, user=args.user)
 
-    p = subparsers.add_parser('delete_secret_from_iscsi_auth_group', help='Delete a secret from an authentication group.')
+    p = subparsers.add_parser('iscsi_auth_group_remove_secret', aliases=['delete_secret_from_iscsi_auth_group'],
+                              help='Remove a secret from an authentication group.')
     p.add_argument('tag', help='Authentication group tag', type=int)
     p.add_argument('-u', '--user', help='User name for one-way CHAP authentication', required=True)
-    p.set_defaults(func=delete_secret_from_iscsi_auth_group)
+    p.set_defaults(func=iscsi_auth_group_remove_secret)
 
     def iscsi_get_auth_groups(args):
         print_dict(rpc.iscsi.iscsi_get_auth_groups(args.client))

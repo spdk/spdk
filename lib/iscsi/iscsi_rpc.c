@@ -1416,37 +1416,37 @@ SPDK_RPC_REGISTER("iscsi_auth_group_add_secret", spdk_rpc_iscsi_auth_group_add_s
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_auth_group_add_secret, add_secret_to_iscsi_auth_group)
 
 
-struct rpc_delete_auth_secret {
+struct rpc_remove_auth_secret {
 	int32_t tag;
 	char *user;
 };
 
 static void
-free_rpc_delete_auth_secret(struct rpc_delete_auth_secret *_secret)
+free_rpc_remove_auth_secret(struct rpc_remove_auth_secret *_secret)
 {
 	free(_secret->user);
 }
 
-static const struct spdk_json_object_decoder rpc_delete_auth_secret_decoders[] = {
-	{"tag", offsetof(struct rpc_delete_auth_secret, tag), spdk_json_decode_int32},
-	{"user", offsetof(struct rpc_delete_auth_secret, user), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_remove_auth_secret_decoders[] = {
+	{"tag", offsetof(struct rpc_remove_auth_secret, tag), spdk_json_decode_int32},
+	{"user", offsetof(struct rpc_remove_auth_secret, user), spdk_json_decode_string},
 };
 
 static void
-spdk_rpc_delete_secret_from_iscsi_auth_group(struct spdk_jsonrpc_request *request,
-		const struct spdk_json_val *params)
+spdk_rpc_iscsi_auth_group_remove_secret(struct spdk_jsonrpc_request *request,
+					const struct spdk_json_val *params)
 {
-	struct rpc_delete_auth_secret req = {};
+	struct rpc_remove_auth_secret req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_auth_group *group;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_delete_auth_secret_decoders,
-				    SPDK_COUNTOF(rpc_delete_auth_secret_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_remove_auth_secret_decoders,
+				    SPDK_COUNTOF(rpc_remove_auth_secret_decoders), &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		free_rpc_delete_auth_secret(&req);
+		free_rpc_remove_auth_secret(&req);
 		return;
 	}
 
@@ -1458,7 +1458,7 @@ spdk_rpc_delete_secret_from_iscsi_auth_group(struct spdk_jsonrpc_request *reques
 
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "Could not find auth group (%d)", req.tag);
-		free_rpc_delete_auth_secret(&req);
+		free_rpc_remove_auth_secret(&req);
 		return;
 	}
 
@@ -1469,20 +1469,22 @@ spdk_rpc_delete_secret_from_iscsi_auth_group(struct spdk_jsonrpc_request *reques
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "Could not delete secret from CHAP group (%d), %s",
 						     req.tag, spdk_strerror(-rc));
-		free_rpc_delete_auth_secret(&req);
+		free_rpc_remove_auth_secret(&req);
 		return;
 	}
 
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
-	free_rpc_delete_auth_secret(&req);
+	free_rpc_remove_auth_secret(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("delete_secret_from_iscsi_auth_group",
-		  spdk_rpc_delete_secret_from_iscsi_auth_group, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_auth_group_remove_secret",
+		  spdk_rpc_iscsi_auth_group_remove_secret, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_auth_group_remove_secret,
+				   delete_secret_from_iscsi_auth_group)
 
 static void
 spdk_rpc_iscsi_get_auth_groups(struct spdk_jsonrpc_request *request,

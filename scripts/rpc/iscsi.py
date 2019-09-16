@@ -323,8 +323,9 @@ def iscsi_auth_group_add_secret(client, tag, user, secret, muser=None, msecret=N
     return client.call('iscsi_auth_group_add_secret', params)
 
 
-def delete_secret_from_iscsi_auth_group(client, tag, user):
-    """Delete a secret from an authentication group.
+@deprecated_alias('delete_secret_from_iscsi_auth_group')
+def iscsi_auth_group_remove_secret(client, tag, user):
+    """Remove a secret from an authentication group.
 
     Args:
         tag: Authentication group tag (unique, integer > 0)
@@ -334,7 +335,7 @@ def delete_secret_from_iscsi_auth_group(client, tag, user):
         True or False
     """
     params = {'tag': tag, 'user': user}
-    return client.call('delete_secret_from_iscsi_auth_group', params)
+    return client.call('iscsi_auth_group_remove_secret', params)
 
 
 @deprecated_alias('delete_pg_ig_maps')
