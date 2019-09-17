@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "6fb1c328_66d80fea",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1520,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-17T11:34:23Z",
+      "side": 1,
+      "message": "I used the same variable name as in the original function nvmf_rdma_fill_buffers",
+      "parentUuid": "0d9623d5_7ed70233",
+      "revId": "bb5e3aa83d847a7f20589b40c71e8ee48b5a20f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "91c937ec_c0fd05df",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 12
