@@ -450,9 +450,11 @@ out:
 	return rc;
 }
 
-void
-ftl_anm_unregister_device(struct spdk_ftl_dev *dev)
+static void
+ftl_anm_unregister_device_cb(void *ctx)
 {
+	struct ftl_anm_init_ctx *init_ctx = ctx;
+	struct spdk_ftl_dev *dev = init_ctx->cb_arg;
 	struct ftl_anm_ctrlr *ctrlr;
 	struct ftl_anm_poller *poller, *temp_poller;
 
@@ -472,11 +474,37 @@ ftl_anm_unregister_device(struct spdk_ftl_dev *dev)
 
 	/* Release the controller if there are no more pollers */
 	if (LIST_EMPTY(&ctrlr->pollers)) {
-		LIST_REMOVE(ctrlr, list_entry);
-		ftl_anm_ctrlr_free(ctrlr);
+		if (!ctrlr->processing) {
+			LIST_REMOVE(ctrlr, list_entry);
+			ftl_anm_ctrlr_free(ctrlr);
+		} else {
+			pthread_mutex_unlock(&g_anm.lock);
+			spdk_thread_send_msg(g_anm.thread, ftl_anm_unregister_device_cb, ctx);
+			return;
+		}
 	}
 
 	pthread_mutex_unlock(&g_anm.lock);
+
+	init_ctx->cb(init_ctx->cb_arg, 0);
+	free(init_ctx);
+}
+
+int
+ftl_anm_unregister_device(struct spdk_ftl_dev *dev, spdk_ftl_fn cb)
+{
+	struct ftl_anm_init_ctx *ctx;
+
+	ctx = malloc(sizeof(*ctx));
+	if (!ctx) {
+		return -ENOMEM;
+	}
+
+	ctx->cb = cb;
+	ctx->cb_arg = dev;
+
+	spdk_thread_send_msg(g_anm.thread, ftl_anm_unregister_device_cb, ctx);
+	return 0;
 }
 
 static void
