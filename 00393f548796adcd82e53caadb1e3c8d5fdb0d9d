@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9d20e4d_02bdd8f0",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 2882,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-17T22:18:04Z",
+      "side": 1,
+      "message": "Delete --\u003e Remove to avoid using terminology that was in the old name",
+      "revId": "00393f548796adcd82e53caadb1e3c8d5fdb0d9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a4cd2b5b_6e8aed55",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1422,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-17T22:18:04Z",
+      "side": 1,
+      "message": "var names with delete please change to remove, again only because \u0027delete was in the old API name",
+      "revId": "00393f548796adcd82e53caadb1e3c8d5fdb0d9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c1ab343_7b7c32a8",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 779,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-17T22:18:04Z",
+      "side": 1,
+      "message": "Delete -\u003e Remove",
+      "revId": "00393f548796adcd82e53caadb1e3c8d5fdb0d9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09c7bed4_f3a1ac03",
+        "filename": "scripts/rpc/iscsi.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-17T22:18:04Z",
+      "side": 1,
+      "message": "Delete -\u003e Remove",
+      "revId": "00393f548796adcd82e53caadb1e3c8d5fdb0d9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
