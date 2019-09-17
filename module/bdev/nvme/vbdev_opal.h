@@ -55,6 +55,12 @@ spdk_vbdev_opal_config_init(const char *base_bdev_name, uint8_t locking_range_id
 			    uint64_t range_start,
 			    uint64_t range_length, const char *password, struct spdk_vbdev_opal_config **cfg);
 
+struct nvme_bdev_ctrlr *
+spdk_vbdev_opal_get_nvme_ctrlr_by_bdev_name(const char *bdev_name);
+
+struct spdk_opal_locking_range_info *
+spdk_vbdev_opal_get_info_from_bdev(struct spdk_bdev *opal_bdev, const char *password);
+
 int
 spdk_vbdev_opal_create(struct spdk_vbdev_opal_config *cfg);
 

@@ -124,6 +124,12 @@ enum spdk_opal_lock_state {
 	OPAL_READWRITE	= 0x04,
 };
 
+enum spdk_opal_dev_state {
+	OPAL_DEFAULT,       /* default factory setting */
+	OPAL_ENABLED,       /* after taking ownership and activate, opal is enabled */
+	OPAL_BUSY,          /* wait for opal response from ctrlr */
+};
+
 enum spdk_opal_user {
 	OPAL_ADMIN1 = 0x0,
 	OPAL_USER1 = 0x01,
@@ -164,16 +170,20 @@ struct spdk_opal_locking_range_info {
 
 struct spdk_opal_dev;
 
+typedef int (*spdk_opal_cb)(struct spdk_opal_dev *dev, void *data);
+
 struct spdk_opal_dev *spdk_opal_init_dev(void *dev_handler);
 
-void spdk_opal_close(struct spdk_opal_dev *dev);
+int spdk_opal_close(struct spdk_opal_dev *dev);
 struct spdk_opal_info *spdk_opal_get_info(struct spdk_opal_dev *dev);
 
 bool spdk_opal_supported(struct spdk_opal_dev *dev);
 
 int spdk_opal_cmd_scan(struct spdk_opal_dev *dev);
 int spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd);
-int spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd);
+int spdk_opal_cmd_revert_tper_async(struct spdk_opal_dev *dev, const char *passwd,
+				    spdk_opal_cb cb_fn, void *cb_ctx);
+int spdk_opal_cmd_revert_tper_sync(struct spdk_opal_dev *dev, const char *passwd);
 int spdk_opal_cmd_activate_locking_sp(struct spdk_opal_dev *dev, const char *passwd);
 int spdk_opal_cmd_lock_unlock(struct spdk_opal_dev *dev, enum spdk_opal_user user,
 			      enum spdk_opal_lock_state flag, enum spdk_opal_locking_range locking_range,
@@ -198,6 +208,9 @@ int spdk_opal_cmd_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_
 
 struct spdk_opal_locking_range_info *spdk_opal_get_locking_range_info(struct spdk_opal_dev *dev,
 		enum spdk_opal_locking_range id);
+void spdk_opal_free_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_locking_range id);
+
 uint8_t spdk_opal_get_max_locking_ranges(struct spdk_opal_dev *dev);
+enum spdk_opal_dev_state spdk_opal_get_dev_state(struct spdk_opal_dev *dev);
 
 #endif

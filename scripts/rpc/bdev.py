@@ -684,6 +684,23 @@ def construct_opal_vbdev(client, base_bdev_name, locking_range_id, range_start, 
     return client.call('construct_opal_vbdev', params)
 
 
+def opal_get_info(client, bdev_name, password):
+    """Get opal locking range info.
+
+    Args:
+        name: name of opal vbdev to get info
+        password: admin password
+    Returns:
+        Locking range info.
+    """
+    params = {
+        'bdev_name': bdev_name,
+        'password': password,
+    }
+
+    return client.call('opal_get_info', params)
+
+
 def destruct_opal_vbdev(client, bdev_name, password):
     """Destruct opal virtual bdev from the system.
 

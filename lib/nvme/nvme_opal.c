@@ -37,6 +37,9 @@
 
 #include "nvme_opal_internal.h"
 
+static int
+opal_parse_and_check_status(struct spdk_opal_dev *dev, void *data);
+
 static const char *
 opal_error_to_human(int error)
 {
@@ -59,7 +62,51 @@ opal_send_cmd(struct spdk_opal_dev *dev)
 }
 
 static int
-opal_recv_cmd(struct spdk_opal_dev *dev)
+opal_recv(void *arg)
+{
+	struct spdk_opal_dev *dev = arg;
+	void *response = dev->resp;
+	struct spdk_opal_header *header = response;
+	int ret;
+
+	ret = spdk_nvme_ctrlr_security_receive(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
+					       0, dev->resp, IO_BUFFER_LENGTH);
+	if (ret) {
+		SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
+		return ret;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_OPAL, "outstanding_data=%d, minTransfer=%d\n",
+		      header->com_packet.outstanding_data,
+		      header->com_packet.min_transfer);
+
+	if (header->com_packet.outstanding_data == 0 &&
+	    header->com_packet.min_transfer == 0) {
+		dev->state = OPAL_DEFAULT;
+		/* unregister poller if all the response data are ready by tper and received by host */
+		spdk_poller_unregister(&dev->poller);
+		opal_parse_and_check_status(dev, NULL);
+		return dev->cb_fn(dev, dev->ctx);
+	} else {
+		memset(response, 0, IO_BUFFER_LENGTH);
+	}
+
+	return -1;
+}
+
+static int
+opal_recv_cmd_async(struct spdk_opal_dev *dev)
+{
+	dev->poller = spdk_poller_register(opal_recv, dev, 50);
+	if (dev->poller == NULL) {
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+static int
+opal_recv_cmd_sync(struct spdk_opal_dev *dev)
 {
 	void *response = dev->resp;
 	struct spdk_opal_header *header = response;
@@ -96,7 +143,7 @@ opal_recv_cmd(struct spdk_opal_dev *dev)
 }
 
 static int
-opal_send_recv(struct spdk_opal_dev *dev, spdk_opal_cb *cb, void *data)
+opal_send_recv(struct spdk_opal_dev *dev, spdk_opal_cb cb, void *data)
 {
 	int ret;
 
@@ -104,10 +151,11 @@ opal_send_recv(struct spdk_opal_dev *dev, spdk_opal_cb *cb, void *data)
 	if (ret) {
 		return ret;
 	}
-	ret = opal_recv_cmd(dev);
+	ret = opal_recv_cmd_sync(dev);
 	if (ret) {
 		return ret;
 	}
+
 	return cb(dev, data);
 }
 
@@ -289,6 +337,33 @@ opal_finalize_and_send(struct spdk_opal_dev *dev, bool eod, spdk_opal_cb cb, voi
 
 	return opal_send_recv(dev, cb, data);
 }
+
+static int
+opal_finalize_and_send_async(struct spdk_opal_dev *dev, bool eod, spdk_opal_cb cb, void *data)
+{
+	int ret;
+
+	ret = opal_cmd_finalize(dev, dev->hsn, dev->tsn, eod);
+	if (ret) {
+		SPDK_ERRLOG("Error finalizing command buffer: %d\n", ret);
+		return ret;
+	}
+
+	dev->cb_fn = cb;
+	dev->ctx = data;
+
+	ret = opal_send_cmd(dev);
+	if (ret) {
+		return ret;
+	}
+	ret = opal_recv_cmd_async(dev);
+	if (ret) {
+		return ret;
+	}
+
+	return 0;
+}
+
 
 static size_t
 opal_response_parse_tiny(struct spdk_opal_resp_token *token,
@@ -765,6 +840,10 @@ opal_check_lock(struct spdk_opal_dev *dev, const void *data)
 	opal_info->locking_mbr_done = lock->mbr_done;
 	opal_info->locking_mbr_enabled = lock->mbr_enabled;
 	opal_info->locking_media_encrypt = lock->media_encryption;
+
+	if (opal_info->locking_locking_enabled) {
+		dev->state = OPAL_ENABLED;
+	}
 }
 
 static void
@@ -882,7 +961,7 @@ opal_discovery0_end(struct spdk_opal_dev *dev)
 			supported = true;
 			break;
 		default:
-			SPDK_NOTICELOG("Unknow feature code: %d\n", feature_code);
+			SPDK_INFOLOG(SPDK_LOG_OPAL, "Unknow feature code: %d\n", feature_code);
 		}
 		cpos += body->tper.length + 4;
 	}
@@ -893,7 +972,7 @@ opal_discovery0_end(struct spdk_opal_dev *dev)
 	}
 
 	if (single_user == false) {
-		SPDK_NOTICELOG("Single User Mode Not Supported\n");
+		SPDK_INFOLOG(SPDK_LOG_OPAL, "Single User Mode Not Supported\n");
 	}
 
 	if (found_com_id == false) {
@@ -912,13 +991,14 @@ opal_discovery0(struct spdk_opal_dev *dev)
 
 	memset(dev->resp, 0, IO_BUFFER_LENGTH);
 	dev->comid = LV0_DISCOVERY_COMID;
-	ret = opal_recv_cmd(dev);
+	ret = opal_recv_cmd_sync(dev);
 	if (ret) {
 		return ret;
 	}
 
 	return opal_discovery0_end(dev);
 }
+
 
 static inline void
 opal_setup_dev(struct spdk_opal_dev *dev)
@@ -966,17 +1046,19 @@ opal_check_support(struct spdk_opal_dev *dev)
 	return ret;
 }
 
-void
+int
 spdk_opal_close(struct spdk_opal_dev *dev)
 {
 	pthread_mutex_destroy(&dev->mutex_lock);
 	if (dev->max_ranges > 0) {
 		for (int i = 0; i < dev->max_ranges; i++) {
-			free(dev->locking_range_info[i]);
+			spdk_opal_free_locking_range_info(dev, i);
 		}
 	}
 	free(dev->opal_info);
 	free(dev);
+
+	return 0;
 }
 
 static int
@@ -1801,6 +1883,16 @@ spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 		return -ENODEV;
 	}
 
+	if (dev->state == OPAL_BUSY) {
+		SPDK_ERRLOG("SP Busy\n");
+		return -1;
+	}
+
+	if (dev->state == OPAL_ENABLED) {
+		SPDK_ERRLOG("This drive has been owned\n");
+		return -2;
+	}
+
 	pthread_mutex_lock(&dev->mutex_lock);
 	opal_setup_dev(dev);
 	ret = opal_start_anybody_adminsp_session(dev);
@@ -1848,6 +1940,7 @@ spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 			    opal_error_to_human(ret));
 		goto end;
 	}
+	dev->state = OPAL_ENABLED;
 
 end:
 	pthread_mutex_unlock(&dev->mutex_lock);
@@ -1867,6 +1960,7 @@ spdk_opal_init_dev(void *dev_handler)
 	}
 
 	dev->dev_handler = dev_handler;
+	dev->state = OPAL_DEFAULT;
 
 	info = calloc(1, sizeof(struct spdk_opal_info));
 	if (info == NULL) {
@@ -1909,6 +2003,7 @@ opal_revert_tper(struct spdk_opal_dev *dev)
 {
 	int err = 0;
 
+	dev->state = OPAL_BUSY;     /* revert TPer will take some time for specific drives */
 	opal_clear_cmd(dev);
 	opal_set_comid(dev, dev->comid);
 
@@ -1924,7 +2019,7 @@ opal_revert_tper(struct spdk_opal_dev *dev)
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_parse_and_check_status, NULL);
+	return err;
 }
 
 static int
@@ -2035,7 +2130,7 @@ opal_get_active_key(struct spdk_opal_dev *dev, struct opal_common_session *sessi
 }
 
 int
-spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
+spdk_opal_cmd_revert_tper_sync(struct spdk_opal_dev *dev, const char *passwd)
 {
 	int ret;
 	struct spdk_opal_key opal_key;
@@ -2067,6 +2162,59 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 			    opal_error_to_human(ret));
 		goto end;
 	}
+
+	ret = opal_finalize_and_send(dev, 1, opal_parse_and_check_status, NULL);
+	if (ret) {
+		opal_end_session(dev);
+		SPDK_ERRLOG("Error on reverting TPer with error %d: %s\n", ret,
+			    opal_error_to_human(ret));
+		goto end;
+	}
+
+	dev->state = OPAL_DEFAULT;
+	/* Controller will terminate session. No "end session" here needed. */
+
+end:
+	pthread_mutex_unlock(&dev->mutex_lock);
+	return ret;
+}
+
+int
+spdk_opal_cmd_revert_tper_async(struct spdk_opal_dev *dev, const char *passwd, spdk_opal_cb cb_fn,
+				void *cb_ctx)
+{
+	int ret;
+	struct spdk_opal_key opal_key;
+
+	if (!dev || dev->supported == false) {
+		return -ENODEV;
+	}
+
+	ret = opal_init_key(&opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	if (ret != 0) {
+		return ret;
+	}
+
+	pthread_mutex_lock(&dev->mutex_lock);
+	opal_setup_dev(dev);
+
+	ret = opal_start_adminsp_session(dev, &opal_key);
+	if (ret) {
+		opal_end_session(dev);
+		SPDK_ERRLOG("Error on starting admin SP session with error %d: %s\n", ret,
+			    opal_error_to_human(ret));
+		goto end;
+	}
+
+	ret = opal_revert_tper(dev);
+	if (ret) {
+		opal_end_session(dev);
+		SPDK_ERRLOG("Error on reverting TPer with error %d: %s\n", ret,
+			    opal_error_to_human(ret));
+		goto end;
+	}
+
+	ret = opal_finalize_and_send_async(dev, 1, cb_fn, cb_ctx);
 
 	/* Controller will terminate session. No "end session" here needed. */
 
@@ -2522,10 +2670,24 @@ spdk_opal_get_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_locki
 	return dev->locking_range_info[id];
 }
 
+void
+spdk_opal_free_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_locking_range id)
+{
+	struct spdk_opal_locking_range_info *info = dev->locking_range_info[id];
+
+	free(info);
+	dev->locking_range_info[id] = NULL;
+}
+
 uint8_t
 spdk_opal_get_max_locking_ranges(struct spdk_opal_dev *dev)
 {
 	return dev->max_ranges;
+}
+
+enum
+spdk_opal_dev_state spdk_opal_get_dev_state(struct spdk_opal_dev *dev) {
+	return dev->state;
 }
 
 /* Log component for opal submodule */

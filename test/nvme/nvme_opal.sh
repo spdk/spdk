@@ -8,19 +8,31 @@ rpc_py="$rootdir/scripts/rpc.py"
 source "$rootdir/scripts/common.sh"
 source "$rootdir/test/common/autotest_common.sh"
 
+function opal_init() {
+	bdf1=$(iter_pci_class_code 01 08 02 | head -1)
+	$rpc_py construct_nvme_bdev -b "nvme0" -t "pcie" -a $bdf1
+	$rpc_py nvme_opal_init -b nvme0n1 -p test
+
+	bdf2=$(iter_pci_class_code 01 08 02 | tail -1)
+	$rpc_py construct_nvme_bdev -b "nvme1" -t "pcie" -a $bdf2
+	$rpc_py nvme_opal_init -b nvme1n1 -p test
+}
 
 function opal_test_environment() {
 	bdf1=$(iter_pci_class_code 01 08 02 | head -1)
 	$rpc_py construct_nvme_bdev -b "nvme0" -t "pcie" -a $bdf1
 	$rpc_py construct_opal_vbdev -b nvme0n1 -i 1 -s 0 -l 1024 -p test
 	$rpc_py construct_opal_vbdev -b nvme0n1 -i 2 -s 1024 -l 512 -p test
+	$rpc_py opal_get_info -b nvme0n1l1 -p test
+	$rpc_py opal_get_info -b nvme0n1l2 -p test
 
 	bdf2=$(iter_pci_class_code 01 08 02 | tail -1)
 	$rpc_py construct_nvme_bdev -b "nvme1" -t "pcie" -a $bdf2
 	$rpc_py construct_opal_vbdev -b nvme1n1 -i 1 -s 0 -l 1024 -p test
 	$rpc_py construct_opal_vbdev -b nvme1n1 -i 2 -s 1024 -l 512 -p test
+	$rpc_py opal_get_info -b nvme1n1l1 -p test
+	$rpc_py opal_get_info -b nvme1n1l2 -p test
 
-	$rpc_py bdev_get_bdevs
 	$rpc_py destruct_opal_vbdev -b nvme0n1l1 -p test
 	$rpc_py destruct_opal_vbdev -b nvme1n1l2 -p test
 
@@ -53,6 +65,9 @@ function opal_clean() {
 
 	$rpc_py destruct_opal_vbdev -b nvme0n1l3 -p test
 	$rpc_py destruct_opal_vbdev -b nvme1n1l3 -p test
+
+	$rpc_py opal_revert_tper -b nvme0n1 -p test
+	$rpc_py opal_revert_tper -b nvme1n1 -p test
 }
 
 $rootdir/app/spdk_tgt/spdk_tgt &
@@ -60,8 +75,7 @@ spdk_tgt_pid=$!
 trap 'killprocess $spdk_tgt_pid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_tgt_pid
 
-opal_test_environment
-opal_clean
+opal_init
 
 killprocess $spdk_tgt_pid
 
