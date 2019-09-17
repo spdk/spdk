@@ -54,7 +54,7 @@ $rpc_py $ftl_construct_args
 
 # Load the nbd driver
 modprobe nbd
-$rpc_py start_nbd_disk nvme0 /dev/nbd0
+$rpc_py nbd_start_disk nvme0 /dev/nbd0
 waitfornbd nbd0
 
 $rpc_py save_config > $testdir/config/ftl.json

@@ -169,9 +169,9 @@ class Commands_Rpc(object):
         output, rc = self.rpc.bdev_lvol_set_read_only(uuid)
         return rc
 
-    def start_nbd_disk(self, bdev_name, nbd_name):
-        print("INFO: RPC COMMAND start_nbd_disk")
-        output, rc = self.rpc.start_nbd_disk(bdev_name, nbd_name)
+    def nbd_start_disk(self, bdev_name, nbd_name):
+        print("INFO: RPC COMMAND nbd_start_disk")
+        output, rc = self.rpc.nbd_start_disk(bdev_name, nbd_name)
         return rc
 
     def stop_nbd_disk(self, nbd_name):

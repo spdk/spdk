@@ -246,7 +246,7 @@ Example response:
     "add_ip_address",
     "get_nbd_disks",
     "stop_nbd_disk",
-    "start_nbd_disk",
+    "nbd_start_disk",
     "get_log_flags",
     "clear_log_flag",
     "set_log_flag",
@@ -5518,7 +5518,7 @@ SPDK supports exporting bdevs through Linux nbd. These devices then appear as st
 
 In order to export a device over nbd, first make sure the Linux kernel nbd driver is loaded by running 'modprobe nbd'.
 
-## start_nbd_disk {#rpc_start_nbd_disk}
+## nbd_start_disk {#rpc_nbd_start_disk}
 
 Start to export one SPDK bdev as NBD disk
 
@@ -5544,7 +5544,7 @@ Example request:
     "bdev_name": "Malloc1"
   },
   "jsonrpc": "2.0",
-  "method": "start_nbd_disk",
+  "method": "nbd_start_disk",
   "id": 1
 }
 ~~~

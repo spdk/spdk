@@ -1461,15 +1461,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=enable_vmd)
 
     # nbd
-    def start_nbd_disk(args):
-        print(rpc.nbd.start_nbd_disk(args.client,
+    def nbd_start_disk(args):
+        print(rpc.nbd.nbd_start_disk(args.client,
                                      bdev_name=args.bdev_name,
                                      nbd_device=args.nbd_device))
 
-    p = subparsers.add_parser('start_nbd_disk', help='Export a bdev as a nbd disk')
+    p = subparsers.add_parser('nbd_start_disk', aliases=['start_nbd_disk'],
+                              help='Export a bdev as a nbd disk')
     p.add_argument('bdev_name', help='Blockdev name to be exported. Example: Malloc0.')
     p.add_argument('nbd_device', help='Nbd device name to be assigned. Example: /dev/nbd0.', nargs='?')
-    p.set_defaults(func=start_nbd_disk)
+    p.set_defaults(func=nbd_start_disk)
 
     def stop_nbd_disk(args):
         rpc.nbd.stop_nbd_disk(args.client,
