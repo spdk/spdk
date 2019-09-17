@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a230c7dd_257f849e",
+        "filename": "test/spdkcli/spdkcli_tcp.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-17T19:50:09Z",
+      "side": 1,
+      "message": "Maybe name this test just \"tcp.sh\"? The spdkcli part is inferred from the path.",
+      "revId": "ff3bf46daee36308a28701dd7bd06f43f998d68d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b4ea94f_8d5ba9eb",
+        "filename": "test/spdkcli/spdkcli_tcp.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-17T19:50:09Z",
+      "side": 1,
+      "message": "This test isn\u0027t executed currently. Add it into the tests by calling it from autotest.sh somewhere.",
+      "revId": "ff3bf46daee36308a28701dd7bd06f43f998d68d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f53a3542_0f49fa56",
+        "filename": "test/spdkcli/spdkcli_tcp.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-17T19:50:09Z",
+      "side": 1,
+      "message": "TCP/IP socket",
+      "revId": "ff3bf46daee36308a28701dd7bd06f43f998d68d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
