@@ -815,6 +815,13 @@ finish_register(struct vbdev_ocf *vbdev)
 {
 	int result;
 
+	if (vbdev_ocf_mngt_get_status(vbdev)) {
+		SPDK_ERRLOG("Error %d during creating %s, starting rollback\n",
+			    vbdev_ocf_mngt_get_status(vbdev), vbdev->name);
+		vbdev_ocf_mngt_stop(vbdev, unregister_path, 0);
+		return;
+	}
+
 	/* Copy properties of the base bdev */
 	vbdev->exp_bdev.blocklen = vbdev->core.bdev->blocklen;
 	vbdev->exp_bdev.write_cache = vbdev->core.bdev->write_cache;
@@ -834,6 +841,8 @@ finish_register(struct vbdev_ocf *vbdev)
 	result = spdk_bdev_register(&vbdev->exp_bdev);
 	if (result) {
 		SPDK_ERRLOG("Could not register exposed bdev\n");
+		vbdev_ocf_mngt_stop(vbdev, unregister_path, result);
+		return;
 	} else {
 		vbdev->state.started = true;
 	}
@@ -874,6 +883,13 @@ add_core_poll(struct vbdev_ocf *vbdev)
 static void
 add_core(struct vbdev_ocf *vbdev)
 {
+	if (vbdev_ocf_mngt_get_status(vbdev)) {
+		SPDK_ERRLOG("Error %d during creating %s, starting rollback\n",
+			    vbdev_ocf_mngt_get_status(vbdev), vbdev->name);
+		vbdev_ocf_mngt_stop(vbdev, unregister_path, 0);
+		return;
+	}
+
 	vbdev_ocf_mngt_poll(vbdev, add_core_poll);
 }
 
