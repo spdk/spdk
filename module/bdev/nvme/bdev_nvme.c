@@ -221,10 +221,19 @@ bdev_nvme_unregister_cb(void *io_device)
 static void
 bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
+	struct spdk_thread *thread;
+
 	assert(nvme_bdev_ctrlr->destruct);
 	if (nvme_bdev_ctrlr->opal_dev) {
+		thread = spdk_get_thread();
+		if (thread != NULL) {
+			while (spdk_opal_get_dev_state(nvme_bdev_ctrlr->opal_dev) == OPAL_BUSY) {
+				spdk_thread_poll(thread, 0, 0);
+			}    /* wait until opal dev->state is not busy */
+		}
 		spdk_opal_close(nvme_bdev_ctrlr->opal_dev);
 	}
+
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);

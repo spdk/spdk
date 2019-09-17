@@ -1476,7 +1476,7 @@ opal_revert_tper(struct dev *iter)
 			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
 			printf("\n...\n");
 			if (passwd_p) {
-				ret = spdk_opal_cmd_revert_tper(iter->opal_dev, passwd_p);
+				ret = spdk_opal_cmd_revert_tper_sync(iter->opal_dev, passwd_p);
 				if (ret) {
 					printf("Revert TPer failure: %d\n", ret);
 					spdk_opal_close(iter->opal_dev);
