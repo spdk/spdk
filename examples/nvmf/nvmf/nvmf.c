@@ -44,16 +44,21 @@
 #include "spdk_internal/event.h"
 
 #define NVMF_DEFAULT_SUBSYSTEMS		32
+#define ACCEPT_TIMEOUT_US		10000 /* 10ms */
 
 static const char *g_rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+static uint32_t g_acceptor_poll_rate = ACCEPT_TIMEOUT_US;
 
 enum nvmf_target_state {
 	NVMF_INIT_SUBSYSTEM = 0,
 	NVMF_INIT_TARGET,
 	NVMF_INIT_POLL_GROUPS,
 	NVMF_INIT_START_SUBSYSTEMS,
+	NVMF_INIT_START_ACCEPTOR,
+	NVMF_RUNNING,
 	NVMF_FINI_STOP_SUBSYSTEMS,
 	NVMF_FINI_POLL_GROUPS,
+	NVMF_FINI_STOP_ACCEPTOR,
 	NVMF_FINI_TARGET,
 	NVMF_FINI_SUBSYSTEM,
 };
@@ -73,6 +78,7 @@ struct nvmf_reactor {
 struct nvmf_target_poll_group {
 	struct spdk_nvmf_poll_group		*group;
 	struct spdk_thread			*thread;
+
 	TAILQ_ENTRY(nvmf_target_poll_group)	link;
 };
 
@@ -91,6 +97,8 @@ static struct spdk_thread *g_init_thread = NULL;
 static struct nvmf_target g_nvmf_tgt = {
 	.max_subsystems = NVMF_DEFAULT_SUBSYSTEMS,
 };
+static struct spdk_poller *g_acceptor_poller = NULL;
+static struct nvmf_target_poll_group *g_next_pg = NULL;
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool g_reactors_exit = false;
 static enum nvmf_target_state g_target_state;
@@ -107,6 +115,7 @@ usage(char *program_name)
 	printf("\t[-i shared memory ID (optional)]\n");
 	printf("\t[-m core mask for DPDK]\n");
 	printf("\t[-n max subsystems for target(default: 32)]\n");
+	printf("\t[-p acceptor poller rate in us for target(default: 10000us)]\n");
 	printf("\t[-r RPC listen address (default /var/tmp/spdk.sock)]\n");
 	printf("\t[-s memory size in MB for DPDK (default: 0MB)]\n");
 	printf("\t[-u disable PCI access]\n");
@@ -118,7 +127,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 	int op;
 	long int value;
 
-	while ((op = getopt(argc, argv, "i:m:n:r:s:u:h")) != -1) {
+	while ((op = getopt(argc, argv, "i:m:n:p:r:s:u:h")) != -1) {
 		switch (op) {
 		case 'i':
 			value = spdk_strtol(optarg, 10);
@@ -137,6 +146,14 @@ parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 				fprintf(stderr, "converting a string to integer failed\n");
 				return -EINVAL;
 			}
+			break;
+		case 'p':
+			value = spdk_strtol(optarg, 10);
+			if (value < 0) {
+				fprintf(stderr, "converting a string to integer failed\n");
+				return -EINVAL;
+			}
+			g_acceptor_poll_rate = value;
 			break;
 		case 'r':
 			g_rpc_addr = optarg;
@@ -432,6 +449,102 @@ nvmf_tgt_stop_subsystems(struct nvmf_target *nvmf_tgt)
 	}
 }
 
+struct nvmf_target_pg_ctx {
+	struct spdk_nvmf_qpair *qpair;
+	struct nvmf_target_poll_group *pg;
+};
+
+static void
+nvmf_tgt_pg_add_qpair(void *_ctx)
+{
+	struct nvmf_target_pg_ctx *ctx = _ctx;
+	struct spdk_nvmf_qpair *qpair = ctx->qpair;
+	struct nvmf_target_poll_group *pg = ctx->pg;
+
+	free(_ctx);
+
+	if (spdk_nvmf_poll_group_add(pg->group, qpair) != 0) {
+		fprintf(stderr, "unable to add the qpair to a poll group.\n");
+		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+	}
+}
+
+static struct nvmf_target_poll_group *
+nvmf_tgt_get_next_pg(struct nvmf_target *nvmf_tgt)
+{
+	struct nvmf_target_poll_group *pg;
+
+	pg = g_next_pg;
+	g_next_pg = TAILQ_NEXT(pg, link);
+	if (g_next_pg == NULL) {
+		g_next_pg = TAILQ_FIRST(&g_poll_groups);
+	}
+
+	return pg;
+}
+
+static struct nvmf_target_poll_group *
+nvmf_get_optimal_pg(struct nvmf_target *nvmf_tgt, struct spdk_nvmf_qpair *qpair)
+{
+	struct nvmf_target_poll_group *pg, *_pg = NULL;
+	struct spdk_nvmf_poll_group *group = spdk_nvmf_get_optimal_poll_group(qpair);
+
+	if (group == NULL) {
+		_pg = nvmf_tgt_get_next_pg(nvmf_tgt);
+		goto end;
+	}
+
+	TAILQ_FOREACH(pg, &g_poll_groups, link) {
+		if (pg->group == group) {
+			_pg = pg;
+			break;
+		}
+	}
+
+end:
+	assert(_pg != NULL);
+	return _pg;
+}
+
+static void
+new_qpair(struct spdk_nvmf_qpair *qpair, void *cb_arg)
+{
+	struct nvmf_target_poll_group *pg;
+	struct nvmf_target_pg_ctx *ctx;
+	struct nvmf_target *nvmf_tgt = &g_nvmf_tgt;
+
+	/* In SPDK we support three methods to get poll group: RoundRobin, Host and Transport.
+	 * In this example we only support the "Transport" which gets the optimal poll group.
+	 */
+	pg = nvmf_get_optimal_pg(nvmf_tgt, qpair);
+	if (!pg) {
+		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		fprintf(stderr, "failed to allocate poll group context.\n");
+		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+		return;
+	}
+
+	ctx->qpair = qpair;
+	ctx->pg = pg;
+
+	spdk_thread_send_msg(pg->thread, nvmf_tgt_pg_add_qpair, ctx);
+}
+
+static int
+nvmf_tgt_acceptor_poll(void *arg)
+{
+	struct nvmf_target *nvmf_tgt = arg;
+
+	spdk_nvmf_tgt_accept(nvmf_tgt->tgt, new_qpair, NULL);
+
+	return -1;
+}
+
 static void
 nvmf_tgt_subsystem_start_next(struct spdk_nvmf_subsystem *subsystem,
 			      void *cb_arg, int status)
@@ -444,6 +557,9 @@ nvmf_tgt_subsystem_start_next(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	fprintf(stdout, "all subsystems of target started\n");
+
+	g_target_state = NVMF_INIT_START_ACCEPTOR;
+	nvmf_target_advance_state();
 }
 
 static void
@@ -466,7 +582,7 @@ nvmf_tgt_start_subsystems(struct nvmf_target *nvmf_tgt)
 					  nvmf_tgt_subsystem_start_next,
 					  NULL);
 	} else {
-		g_target_state = NVMF_FINI_STOP_SUBSYSTEMS;
+		g_target_state = NVMF_INIT_START_ACCEPTOR;
 	}
 }
 
@@ -498,6 +614,10 @@ nvmf_tgt_create_poll_group(void *ctx)
 		return;
 	}
 
+	if (!g_next_pg) {
+		g_next_pg = pg;
+	}
+
 	/* spdk_for_each_channel is asynchronous, but runs on each thread in serial.
 	 * Since this is the only operation occurring on the g_poll_groups list,
 	 * we don't need to take a lock.
@@ -525,7 +645,7 @@ nvmf_tgt_destroy_poll_groups_done(struct spdk_io_channel_iter *i, int status)
 {
 	fprintf(stdout, "destroy targets's poll groups done\n");
 
-	g_target_state = NVMF_FINI_TARGET;
+	g_target_state = NVMF_FINI_STOP_ACCEPTOR;
 	nvmf_target_advance_state();
 }
 
@@ -606,11 +726,24 @@ nvmf_target_advance_state(void)
 		case NVMF_INIT_START_SUBSYSTEMS:
 			nvmf_tgt_start_subsystems(&g_nvmf_tgt);
 			break;
+		case NVMF_INIT_START_ACCEPTOR:
+			g_acceptor_poller = spdk_poller_register(nvmf_tgt_acceptor_poll, &g_nvmf_tgt,
+					    g_acceptor_poll_rate);
+			fprintf(stdout, "Acceptor running\n");
+			g_target_state = NVMF_RUNNING;
+			break;
+		case NVMF_RUNNING:
+			fprintf(stdout, "nvmf target is running\n");
+			break;
 		case NVMF_FINI_STOP_SUBSYSTEMS:
 			nvmf_tgt_stop_subsystems(&g_nvmf_tgt);
 			break;
 		case NVMF_FINI_POLL_GROUPS:
 			nvmf_poll_groups_destroy();
+			break;
+		case NVMF_FINI_STOP_ACCEPTOR:
+			spdk_poller_unregister(&g_acceptor_poller);
+			g_target_state = NVMF_FINI_TARGET;
 			break;
 		case NVMF_FINI_TARGET:
 			nvmf_destroy_nvmf_tgt();
@@ -633,10 +766,10 @@ static void
 _nvmf_shutdown_cb(void *ctx)
 {
 	/* Still in initialization state, defer shutdown operation */
-	if (g_target_state < NVMF_INIT_START_SUBSYSTEMS) {
+	if (g_target_state < NVMF_RUNNING) {
 		spdk_thread_send_msg(spdk_get_thread(), _nvmf_shutdown_cb, NULL);
 		return;
-	} else if (g_target_state >= NVMF_FINI_STOP_SUBSYSTEMS) {
+	} else if (g_target_state > NVMF_RUNNING) {
 		/* Already in Shutdown status, ignore the signal */
 		return;
 	}
