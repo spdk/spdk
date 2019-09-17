@@ -297,6 +297,21 @@ ftl_anm_get_log_page(struct ftl_anm_ctrlr *ctrlr)
 	return 0;
 }
 
+static void
+ftl_anm_ctrlr_free(struct ftl_anm_ctrlr *ctrlr)
+{
+	if (!ctrlr) {
+		return;
+	}
+
+	/* Unregister ctrlr from aer events */
+	spdk_nvme_ctrlr_register_aer_callback(ctrlr->ctrlr, NULL, NULL);
+
+	pthread_mutex_destroy(&ctrlr->lock);
+	spdk_dma_free(ctrlr->log);
+	free(ctrlr);
+}
+
 static int
 ftl_anm_poller_cb(void *ctx)
 {
@@ -315,15 +330,27 @@ ftl_anm_poller_cb(void *ctx)
 		num_processed += rc;
 
 		pthread_mutex_lock(&ctrlr->lock);
-		if (ctrlr->anm_outstanding && !ctrlr->processing) {
-			if (ftl_anm_get_log_page(ctrlr)) {
-				SPDK_ERRLOG("Failed to get log page from controller %p",
-					    ctrlr->ctrlr);
+		if (!ctrlr->processing) {
+
+			/* Release the controller if there are no more pollers */
+			if (LIST_EMPTY(&ctrlr->pollers)) {
+				LIST_REMOVE(ctrlr, list_entry);
+				pthread_mutex_unlock(&ctrlr->lock);
+				ftl_anm_ctrlr_free(ctrlr);
+				goto out;
+			}
+
+			if (ctrlr->anm_outstanding) {
+				if (ftl_anm_get_log_page(ctrlr)) {
+					SPDK_ERRLOG("Failed to get log page from controller %p",
+						    ctrlr->ctrlr);
+				}
 			}
 		}
 		pthread_mutex_unlock(&ctrlr->lock);
 	}
 
+out:
 	pthread_mutex_unlock(&anm->lock);
 	return num_processed;
 }
@@ -342,21 +369,6 @@ ftl_anm_alloc_poller(struct spdk_ftl_dev *dev, ftl_anm_fn fn)
 	poller->dev = dev;
 
 	return poller;
-}
-
-static void
-ftl_anm_ctrlr_free(struct ftl_anm_ctrlr *ctrlr)
-{
-	if (!ctrlr) {
-		return;
-	}
-
-	/* Unregister ctrlr from aer events */
-	spdk_nvme_ctrlr_register_aer_callback(ctrlr->ctrlr, NULL, NULL);
-
-	pthread_mutex_destroy(&ctrlr->lock);
-	spdk_dma_free(ctrlr->log);
-	free(ctrlr);
 }
 
 static struct ftl_anm_ctrlr *
@@ -469,13 +481,6 @@ ftl_anm_unregister_device(struct spdk_ftl_dev *dev)
 	}
 
 	pthread_mutex_unlock(&ctrlr->lock);
-
-	/* Release the controller if there are no more pollers */
-	if (LIST_EMPTY(&ctrlr->pollers)) {
-		LIST_REMOVE(ctrlr, list_entry);
-		ftl_anm_ctrlr_free(ctrlr);
-	}
-
 	pthread_mutex_unlock(&g_anm.lock);
 }
 
@@ -518,8 +523,15 @@ static void
 ftl_anm_unregister_poller_cb(void *ctx)
 {
 	struct ftl_anm_init_ctx *init_ctx = ctx;
+	struct ftl_anm_ctrlr *ctrlr, *tctrlr;
 
 	spdk_poller_unregister(&g_anm.poller);
+
+	LIST_FOREACH_SAFE(ctrlr, &g_anm.ctrlrs, list_entry, tctrlr) {
+		assert(LIST_EMPTY(&ctrlr->pollers));
+		LIST_REMOVE(ctrlr, list_entry);
+		ftl_anm_ctrlr_free(ctrlr);
+	}
 
 	init_ctx->cb(init_ctx->cb_arg, 0);
 	free(init_ctx);
