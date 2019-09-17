@@ -31,37 +31,22 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_BLOBFS_BDEV_H
-#define SPDK_BLOBFS_BDEV_H
+#ifndef SPDK_BLOBFS_FUSE_H
+#define SPDK_BLOBFS_FUSE_H
 
 #include "spdk/stdinc.h"
-#include "spdk/bdev.h"
+#include "spdk/blobfs.h"
 
-/**
- * blobfs on bdev operation completion callback with bool.
- *
- * \param cb_arg Callback argument.
- * \param is_true Bool value indicates the result.
- * \param fserrno 0 if it completed successfully, or negative errno if it failed.
- */
-typedef void (*spdk_blobfs_bdev_op_with_bool_complete)(void *cb_arg, bool is_true,
-		int fserrno);
+struct spdk_blobfs_fuse;
 
-/**
- * blobfs on bdev operation completion callback.
- *
- * \param cb_arg Callback argument.
- * \param fserrno 0 if it completed successfully, or negative errno if it failed.
- */
-typedef void (*spdk_blobfs_bdev_op_complete)(void *cb_arg, int fserrno);
+void spdk_blobfs_fuse_send_request(fs_request_fn fn, void *arg);
 
-int spdk_blobfs_bdev_detect(const char *bdev_name,
-			    spdk_blobfs_bdev_op_with_bool_complete cb_fn, void *cb_arg);
+typedef void (*blobfs_fuse_umount_cb)(void *arg1, void *arg2);
 
-int spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
-			    spdk_blobfs_bdev_op_complete cb_fn, void *cb_arg);
+int spdk_blobfs_fuse_start(const char *bdev_name, const char *mountpoint,
+			   struct spdk_filesystem *fs, blobfs_fuse_umount_cb cb_fn,
+			   void *cb_arg1, void *cb_arg2, struct spdk_blobfs_fuse **bfuse);
 
-int spdk_blobfs_bdev_mount(const char *bdev_name, const char *mountpoint,
-			   spdk_blobfs_bdev_op_complete cb_fn, void *cb_arg);
+void spdk_blobfs_fuse_stop(struct spdk_blobfs_fuse *bfuse);
 
-#endif /* SPDK_BLOBFS_BDEV_H */
+#endif /* SPDK_BLOBFS_FUSE_H */
