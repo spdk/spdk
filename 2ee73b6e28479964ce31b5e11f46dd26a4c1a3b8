@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d15c5849_83071096",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-09-17T12:21:16Z",
+      "side": 1,
+      "message": "we might want to check if it\u0027s set and fail with a nice error message, but we can do it in a separate patch",
+      "range": {
+        "startLine": 145,
+        "startChar": 7,
+        "endLine": 145,
+        "endChar": 17
+      },
+      "revId": "2ee73b6e28479964ce31b5e11f46dd26a4c1a3b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
