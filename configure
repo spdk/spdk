@@ -418,7 +418,7 @@ if [ -z "${CONFIG[ENV]}" ]; then
 			# program, just compile it
 			if ! echo -e '#include <rte_vhost.h>\n' \
 				'int main(void) { return rte_vhost_extern_callback_register(0, NULL, NULL); }\n' \
-				| ${BUILD_CMD[@]} -c -Wno-deprecated-declarations -Werror \
+				| ${BUILD_CMD[@]} -march=native -c -Wno-deprecated-declarations -Werror \
 				-I"${CONFIG[DPDK_DIR]}/include" - &>/dev/null; then
 				echo "Notice: DPDK's rte_vhost not found or version < 19.05, using internal," \
 				     "legacy rte_vhost library."
