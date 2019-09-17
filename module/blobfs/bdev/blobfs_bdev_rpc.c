@@ -195,3 +195,85 @@ spdk_rpc_blobfs_create(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("blobfs_create", spdk_rpc_blobfs_create, SPDK_RPC_RUNTIME)
+
+struct rpc_blobfs_mount {
+	char *bdev_name;
+	char *mountpoint;
+
+	struct spdk_jsonrpc_request *request;
+};
+
+static void
+free_rpc_blobfs_mount(struct rpc_blobfs_mount *req)
+{
+	free(req->bdev_name);
+	free(req->mountpoint);
+	free(req);
+}
+
+static const struct spdk_json_object_decoder rpc_blobfs_mount_decoders[] = {
+	{"bdev_name", offsetof(struct rpc_blobfs_mount, bdev_name), spdk_json_decode_string},
+	{"mountpoint", offsetof(struct rpc_blobfs_mount, mountpoint), spdk_json_decode_string},
+};
+
+static void
+_rpc_blobfs_mount_done(void *cb_arg, int fserrno)
+{
+	struct rpc_blobfs_mount *req = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	if (fserrno == -EILSEQ) {
+		/* There is no blobfs existing on bdev */
+		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "No blobfs detected on given bdev");
+
+		return;
+	} else if (fserrno != 0) {
+		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 spdk_strerror(-fserrno));
+
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(req->request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(req->request, w);
+
+	free_rpc_blobfs_mount(req);
+}
+
+static void
+spdk_rpc_blobfs_mount(struct spdk_jsonrpc_request *request,
+		      const struct spdk_json_val *params)
+{
+	struct rpc_blobfs_mount *req;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("could not allocate rpc_blobfs_mount request.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+		return;
+	}
+
+	if (spdk_json_decode_object(params, rpc_blobfs_mount_decoders,
+				    SPDK_COUNTOF(rpc_blobfs_mount_decoders),
+				    req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "spdk_json_decode_object failed");
+
+		rc = -EINVAL;
+		_rpc_blobfs_mount_done(req, rc);
+
+		return;
+	}
+
+	req->request = request;
+	rc = spdk_blobfs_bdev_mount(req->bdev_name, req->mountpoint, _rpc_blobfs_mount_done, req);
+	if (rc != 0) {
+		_rpc_blobfs_mount_done(req, rc);
+	}
+}
+
+SPDK_RPC_REGISTER("blobfs_mount", spdk_rpc_blobfs_mount, SPDK_RPC_RUNTIME)
