@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b703bff6_877e174d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 2121,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-17T18:06:45Z",
+      "side": 1,
+      "message": "I don\u0027t think the right behavior is to disconnect on a DIF error. This should simply be failing the read command with a status code of APPLICATION_TAG_CHECK_ERROR, GUARD_CHECK_ERROR, or REFERENCE_TAG_CHECK_ERROR and a status code type of SCT_MEDIA_ERROR.",
+      "revId": "96301f0dcc39f3fa044bc4b7285c469ecd06ca34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
