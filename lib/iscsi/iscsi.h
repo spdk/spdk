@@ -157,7 +157,8 @@ struct spdk_mobj {
 };
 
 struct spdk_iscsi_pdu {
-	struct iscsi_bhs bhs;
+	struct iscsi_bhs *bhs;
+	struct iscsi_bhs bhs_mem;
 	struct spdk_mobj *mobj;
 	uint8_t *data_buf;
 	uint8_t *data;
