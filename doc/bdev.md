@@ -258,11 +258,11 @@ The SPDK partition type GUID is `7c5222bd-8f5d-4087-9c00-bf9843c7b58c`. Existing
 can be exposed as Linux block devices via NBD and then ca be partitioned with
 standard partitioning tools. After partitioning, the bdevs will need to be deleted and
 attached again for the GPT bdev module to see any changes. NBD kernel module must be
-loaded first. To create NBD bdev user should use `start_nbd_disk` RPC command.
+loaded first. To create NBD bdev user should use `nbd_start_disk` RPC command.
 
 Example command
 
-`rpc.py start_nbd_disk Malloc0 /dev/nbd0`
+`rpc.py nbd_start_disk Malloc0 /dev/nbd0`
 
 This will expose an SPDK bdev `Malloc0` under the `/dev/nbd0` block device.
 
@@ -282,7 +282,7 @@ Example command
 
 ~~~
 # Expose bdev Nvme0n1 as kernel block device /dev/nbd0 by JSON-RPC
-rpc.py start_nbd_disk Nvme0n1 /dev/nbd0
+rpc.py nbd_start_disk Nvme0n1 /dev/nbd0
 
 # Create GPT partition table.
 parted -s /dev/nbd0 mklabel gpt

@@ -116,7 +116,7 @@ def clear_iscsi_subsystem(args, iscsi_config):
 
 
 def get_nbd_destroy_method(nbd):
-    delete_method_map = {'start_nbd_disk': "stop_nbd_disk"
+    delete_method_map = {'nbd_start_disk': "stop_nbd_disk"
                          }
     return delete_method_map[nbd['method']]
 
