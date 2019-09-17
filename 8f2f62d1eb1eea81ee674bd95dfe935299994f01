@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a2a678cf_6c2bb75a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 5643,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-17T00:42:31Z",
+      "side": 1,
+      "message": "You are right, Paul.\nhow about using detect? bdev_blobfs_detect",
+      "parentUuid": "3792f844_63c70219",
+      "revId": "8f2f62d1eb1eea81ee674bd95dfe935299994f01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1e43d05f_02480e30",
         "filename": "scripts/rpc/blobfs.py",
         "patchSetId": 8
@@ -33,6 +51,24 @@
       "revId": "8f2f62d1eb1eea81ee674bd95dfe935299994f01",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ce9646f_f7c906aa",
+        "filename": "scripts/rpc/blobfs.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-17T00:42:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1e43d05f_02480e30",
+      "revId": "8f2f62d1eb1eea81ee674bd95dfe935299994f01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
