@@ -34,7 +34,15 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = blobfs_bdev.c blobfs_bdev_rpc.c
+C_SRCS = blobfs_bdev.c blobfs_bdev_rpc.c blobfs_fuse.c
 LIBNAME = blobfs_bdev
+
+# libfuse3 is required by blobfs_fuse.c
+FUSE3_HEADER_DIR = /usr/include/fuse3 /usr/local/include/fuse3
+ifneq (,$(wildcard $(FUSE3_HEADER_DIR)))
+    CFLAGS += -DSPDK_CONFIG_FUSE
+else
+    $(warning "libfuse3 is not installed in $(FUSE3_HEADER_DIR)")
+endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
