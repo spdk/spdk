@@ -21,8 +21,10 @@ NVMF_EXAMPLE="$(build_nvmf_example_args)"
 function nvmfexamplestart()
 {
         timing_enter start_nvmf_example
-        $NVMF_EXAMPLE $1
+        $NVMF_EXAMPLE $1 &
         nvmfpid=$!
+	trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+	waitforfile /var/tmp/spdk.sock
         timing_exit start_nvmf_example
 }
 
@@ -30,5 +32,6 @@ timing_enter nvmf_example_test
 nvmftestinit
 nvmfexamplestart "-m 0xF"
 
+trap - SIGINT SIGTERM EXIT
 nvmftestfini
 timing_exit nvmf_example_test
