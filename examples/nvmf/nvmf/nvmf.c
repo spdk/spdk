@@ -1464,6 +1464,62 @@ nvmf_tgt_run(void)
 	nvmf_work_fn(g_master_thread);
 }
 
+static void
+nvmf_exit(void *ctx)
+{
+	struct nvmf_target *nvmf_tgt;
+	
+	nvmf_tgt_stop_subsystems();
+	nvmf_tgt_destroy_poll_groups();
+	TAILQ_FOREACH(nvmf_tgt, &g_nvmf_tgts, link) {
+		spdk_poller_unregister(&nvmf_tgt->acceptor_poller);
+	}
+	nvmf_destroy_nvmf_targets();
+	nvmf_bdev_fini();
+	spdk_for_each_thread(nvmf_cleanup_thread,
+			     &g_threads_done,
+			     nvmf_cleanup_threads_done);
+}
+
+static void
+signal_handler_func(int signo)
+{
+	spdk_thread_send_msg(g_master_thread->thread, nvmf_exit, NULL);
+}
+
+static int
+nvmf_setup_signal_handlers(void)
+{
+	struct sigaction	sigact;
+	sigset_t		sigmask;
+	int			rc;
+
+	sigemptyset(&sigmask);
+	memset(&sigact, 0, sizeof(sigact));
+	sigemptyset(&sigact.sa_mask);
+
+	/* Install the same handler for SIGINT and SIGTERM */
+	sigact.sa_handler = signal_handler_func;
+
+	rc = sigaction(SIGINT, &sigact, NULL);
+	if (rc < 0) {
+		fprintf(stderr, "sigaction(SIGINT) failed\n");
+		return rc;
+	}
+	sigaddset(&sigmask, SIGINT);
+
+	rc = sigaction(SIGTERM, &sigact, NULL);
+	if (rc < 0) {
+		fprintf(stderr, "sigaction(SIGTERM) failed\n");
+		return rc;
+	}
+	sigaddset(&sigmask, SIGTERM);
+
+	pthread_sigmask(SIG_UNBLOCK, &sigmask, NULL);
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
@@ -1530,13 +1586,20 @@ int main(int argc, char **argv)
 	/* start all the subsystems */
 	nvmf_tgt_start_subsystems();
 
+	rc = nvmf_setup_signal_handlers();
+	if (rc < 0) {
+		fprintf(stderr, "setup signal handler failed\n");
+		nvmf_tgt_stop_subsystems();
+		nvmf_tgt_destroy_poll_groups();
+		nvmf_destroy_nvmf_targets();
+		nvmf_bdev_fini();
+		nvmf_exit_threads();
+		goto cleanup;
+	}
+
 	nvmf_tgt_run();
 
-	nvmf_tgt_stop_subsystems();
-	nvmf_tgt_destroy_poll_groups();
-	nvmf_destroy_nvmf_targets();
-	nvmf_bdev_fini();
-	nvmf_exit_threads();
+	spdk_thread_lib_fini();
 cleanup:
 	spdk_env_thread_wait_all();
 	nvmf_destroy_threads();
