@@ -99,6 +99,11 @@ DEPDIRS-blob_bdev := log thread bdev
 
 # module/blobfs
 DEPDIRS-blobfs_bdev := $(BDEV_DEPS_THREAD) blob_bdev blobfs
+# blobfs_fuse requires spdk event lib
+FUSE3_HEADER_DIR = /usr/include/fuse3 /usr/local/include/fuse3
+ifneq (,$(wildcard $(FUSE3_HEADER_DIR)))
+    DEPDIRS-blobfs_bdev += event
+endif
 
 # module/copy
 DEPDIRS-copy_ioat := log ioat conf thread $(JSON_LIBS) copy
