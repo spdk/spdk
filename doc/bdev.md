@@ -266,17 +266,17 @@ Example command
 
 This will expose an SPDK bdev `Malloc0` under the `/dev/nbd0` block device.
 
-To remove NBD device user should use `stop_nbd_disk` RPC command.
+To remove NBD device user should use `nbd_stop_disk` RPC command.
 
 Example command
 
-`rpc.py stop_nbd_disk /dev/nbd0`
+`rpc.py nbd_stop_disk /dev/nbd0`
 
 To display full or specified nbd device list user should use `get_nbd_disks` RPC command.
 
 Example command
 
-`rpc.py stop_nbd_disk -n /dev/nbd0`
+`rpc.py nbd_stop_disk -n /dev/nbd0`
 
 ## Creating a GPT partition table using NBD {#bdev_ug_gpt_create_part}
 
@@ -295,7 +295,7 @@ parted -s /dev/nbd0 mkpart MyPartition '0%' '50%'
 sgdisk -t 1:7c5222bd-8f5d-4087-9c00-bf9843c7b58c /dev/nbd0
 
 # Stop the NBD device (stop exporting /dev/nbd0).
-rpc.py stop_nbd_disk /dev/nbd0
+rpc.py nbd_stop_disk /dev/nbd0
 
 # Now Nvme0n1 is configured with a GPT partition table, and
 # the first partition will be automatically exposed as

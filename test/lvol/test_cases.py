@@ -39,7 +39,7 @@ current_fio_pid = -1
 #
 # Tests with thin provisioned lvol bdevs, snapshots and clones are using nbd devices.
 # Before writing/reading to lvol bdev, bdev is installed with rpc nbd_start_disk.
-# After finishing writing/reading, rpc stop_nbd_disk is used.
+# After finishing writing/reading, rpc nbd_stop_disk is used.
 
 
 def is_process_alive(pid):
@@ -1525,7 +1525,7 @@ class TestCases(object):
         if free_clusters_third_fio != 0:
             fail_count += 1
 
-        fail_count += self.c.stop_nbd_disk(nbd_name)
+        fail_count += self.c.nbd_stop_disk(nbd_name)
         # destroy thin provisioned lvol bdev
         fail_count += self.c.bdev_lvol_delete(lvol_bdev['name'])
         lvs = self.c.bdev_lvol_get_lvstores(self.lvs_name)[0]
@@ -1586,8 +1586,8 @@ class TestCases(object):
         # and check if they return zeroes
         fail_count += self.run_fio_test(nbd_name1, 0, size, "read", "0x00")
 
-        fail_count += self.c.stop_nbd_disk(nbd_name0)
-        fail_count += self.c.stop_nbd_disk(nbd_name1)
+        fail_count += self.c.nbd_stop_disk(nbd_name0)
+        fail_count += self.c.nbd_stop_disk(nbd_name1)
         # destroy thin provisioned lvol bdev
         fail_count += self.c.bdev_lvol_delete(lvol_bdev0['name'])
         fail_count += self.c.bdev_lvol_delete(lvol_bdev1['name'])
@@ -1630,7 +1630,7 @@ class TestCases(object):
         # on the whole lvol bdev perform write operation with verification
         fail_count += self.run_fio_test(nbd_name, 0, size, "write", "0xcc")
 
-        fail_count += self.c.stop_nbd_disk(nbd_name)
+        fail_count += self.c.nbd_stop_disk(nbd_name)
         # destroy thin provisioned lvol bdev
         fail_count += self.c.bdev_lvol_delete(lvol_bdev['name'])
         # destroy lvol store
@@ -1667,7 +1667,7 @@ class TestCases(object):
         nbd_name = "/dev/nbd0"
         fail_count += self.c.nbd_start_disk(uuid_bdev, nbd_name)
         fail_count += self.run_fio_test(nbd_name, 0, size*MEGABYTE, "write", "0xcc", 0)
-        fail_count += self.c.stop_nbd_disk(nbd_name)
+        fail_count += self.c.nbd_stop_disk(nbd_name)
         # Save number of free clusters for lvs
         lvs = self.c.bdev_lvol_get_lvstores()[0]
         free_clusters_start = int(lvs['free_clusters'])
@@ -1691,7 +1691,7 @@ class TestCases(object):
         fail_count += self.c.nbd_start_disk(uuid_bdev, nbd_name)
         fail_count += self.run_fio_test(nbd_name, int(lbd_size * MEGABYTE / 2),
                                         int(lbd_size * MEGABYTE / 2), "write", "0xcc", 0)
-        fail_count += self.c.stop_nbd_disk(nbd_name)
+        fail_count += self.c.nbd_stop_disk(nbd_name)
         # Check if free clusters on lvs equals to zero
         lvs = self.c.bdev_lvol_get_lvstores()[0]
         if int(lvs['free_clusters']) != 0:
@@ -1773,8 +1773,8 @@ class TestCases(object):
         offset = "75%"
         fail_count += self.run_fio_test(nbd_name0, offset, size, "read", "0x00")
 
-        fail_count += self.c.stop_nbd_disk(nbd_name0)
-        fail_count += self.c.stop_nbd_disk(nbd_name1)
+        fail_count += self.c.nbd_stop_disk(nbd_name0)
+        fail_count += self.c.nbd_stop_disk(nbd_name1)
         # destroy thin provisioned lvol bdev
         fail_count += self.c.bdev_lvol_delete(lvol_bdev0['name'])
         fail_count += self.c.bdev_lvol_delete(lvol_bdev1['name'])
@@ -1831,8 +1831,8 @@ class TestCases(object):
         # check if operation didn't fail
         fail_count += self.run_fio_test(nbd_name1, 0, size, "write", "0xee")
 
-        fail_count += self.c.stop_nbd_disk(nbd_name0)
-        fail_count += self.c.stop_nbd_disk(nbd_name1)
+        fail_count += self.c.nbd_stop_disk(nbd_name0)
+        fail_count += self.c.nbd_stop_disk(nbd_name1)
         # destroy thin provisioned lvol bdevs
         fail_count += self.c.bdev_lvol_delete(lvol_bdev0['name'])
         fail_count += self.c.bdev_lvol_delete(lvol_bdev1['name'])
@@ -2157,7 +2157,7 @@ class TestCases(object):
         # Check if filling snapshot of lvol bdev fails
         fail_count += self.run_fio_test(nbd_name0, 0, size, "write", "0xcc", 1)
 
-        fail_count += self.c.stop_nbd_disk(nbd_name0)
+        fail_count += self.c.nbd_stop_disk(nbd_name0)
         # Destroy lvol bdev
         fail_count += self.c.bdev_lvol_delete(lvol_bdev['name'])
         # Destroy snapshot
@@ -2230,7 +2230,7 @@ class TestCases(object):
         # Compare thin provisioned lvol bdev with its snapshot and check if it fails
         fail_count += self.compare_two_disks(nbd_name[0], nbd_name[2], 1)
         for nbd in nbd_name:
-            fail_count += self.c.stop_nbd_disk(nbd)
+            fail_count += self.c.nbd_stop_disk(nbd)
         # Delete lvol bdevs
         fail_count += self.c.bdev_lvol_delete(lvol_bdev0['name'])
         fail_count += self.c.bdev_lvol_delete(lvol_bdev1['name'])
@@ -2290,7 +2290,7 @@ class TestCases(object):
         thread.join()
         # Check that write operation ended with success
         fail_count += thread.rv
-        fail_count += self.c.stop_nbd_disk(nbd_name)
+        fail_count += self.c.nbd_stop_disk(nbd_name)
         # Destroy lvol bdev
         fail_count += self.c.bdev_lvol_delete(lvol_bdev['name'])
         # Delete snapshot
@@ -2466,7 +2466,7 @@ class TestCases(object):
         fail_count += self.compare_two_disks(nbd_name[2], nbd_name[3], 0)
 
         for nbd in nbd_name:
-            fail_count += self.c.stop_nbd_disk(nbd)
+            fail_count += self.c.nbd_stop_disk(nbd)
         # Destroy lvol bdev
         fail_count += self.c.bdev_lvol_delete(lvol_bdev['name'])
         # Destroy two clones
@@ -2607,7 +2607,7 @@ class TestCases(object):
         fail_count += self.c.nbd_start_disk(lvol_bdev['name'], nbd_name)
         fill_size = size * MEGABYTE
         fail_count += self.run_fio_test(nbd_name, 0, fill_size, "write", "0xcc", 0)
-        self.c.stop_nbd_disk(nbd_name)
+        self.c.nbd_stop_disk(nbd_name)
 
         # Create snapshot of thick provisioned lvol bdev
         fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
@@ -2626,7 +2626,7 @@ class TestCases(object):
                                         MEGABYTE, "write", "0xdd", 0)
         fail_count += self.run_fio_test(nbd_name, second_fill * MEGABYTE,
                                         MEGABYTE, "write", "0xdd", 0)
-        self.c.stop_nbd_disk(nbd_name)
+        self.c.nbd_stop_disk(nbd_name)
 
         # Do inflate
         fail_count += self.c.bdev_lvol_inflate(lvol_clone['name'])
@@ -2649,7 +2649,7 @@ class TestCases(object):
         fail_count += self.run_fio_test(nbd_name, (second_fill + 1) * MEGABYTE,
                                         (size - second_fill - 1) * MEGABYTE,
                                         "read", "0xcc")
-        self.c.stop_nbd_disk(nbd_name)
+        self.c.nbd_stop_disk(nbd_name)
 
         # Destroy lvol bdev
         fail_count += self.c.bdev_lvol_delete(lvol_bdev['name'])
@@ -2886,8 +2886,8 @@ class TestCases(object):
         fail_count += self.run_fio_test(nbd_name1, 0, size, "write", "0xcc", 0)
 
         # Stop nbd disks
-        fail_count += self.c.stop_nbd_disk(nbd_name0)
-        fail_count += self.c.stop_nbd_disk(nbd_name1)
+        fail_count += self.c.nbd_stop_disk(nbd_name0)
+        fail_count += self.c.nbd_stop_disk(nbd_name1)
         # Destroy clone lvol bdev
         fail_count += self.c.bdev_lvol_delete(clone_bdev['name'])
         # Destroy lvol bdev
@@ -2956,7 +2956,7 @@ class TestCases(object):
             fail_count += 1
 
         # Delete snapshot - should succeed
-        fail_count += self.c.stop_nbd_disk(nbd_name1)
+        fail_count += self.c.nbd_stop_disk(nbd_name1)
         fail_count += self.c.bdev_lvol_delete(snapshot_bdev['name'])
 
         # Check data consistency
@@ -2967,7 +2967,7 @@ class TestCases(object):
         fail_count += self.run_fio_test(nbd_name0, half_size, size-1, "read", "0xcc")
 
         # Destroy lvol bdev
-        fail_count += self.c.stop_nbd_disk(nbd_name0)
+        fail_count += self.c.nbd_stop_disk(nbd_name0)
         fail_count += self.c.bdev_lvol_delete(lvol_bdev['name'])
 
         # Destroy lvol store
@@ -3066,9 +3066,9 @@ class TestCases(object):
 
         # Verify snapshots
         fail_count += self.run_fio_test(nbd_name1, 0, size-1, "read", "0xcc")
-        fail_count += self.c.stop_nbd_disk(nbd_name1)
+        fail_count += self.c.nbd_stop_disk(nbd_name1)
         fail_count += self.run_fio_test(nbd_name2, second_part, size-second_part, "read", "0xcc")
-        fail_count += self.c.stop_nbd_disk(nbd_name2)
+        fail_count += self.c.nbd_stop_disk(nbd_name2)
 
         # Delete snapshot - should succeed
         fail_count += self.c.bdev_lvol_delete(snapshot_bdev2['name'])
@@ -3084,7 +3084,7 @@ class TestCases(object):
             fail_count += 1
         fail_count += self.run_fio_test(nbd_name0, first_part, second_part-first_part, "read", "0xee")
         fail_count += self.run_fio_test(nbd_name0, second_part, size-second_part, "read", "0xdd")
-        fail_count += self.c.stop_nbd_disk(nbd_name0)
+        fail_count += self.c.nbd_stop_disk(nbd_name0)
 
         # Destroy snapshot
         fail_count += self.c.bdev_lvol_delete(snapshot_bdev['name'])

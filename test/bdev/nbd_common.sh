@@ -46,7 +46,7 @@ function nbd_stop_disks() {
 	local i
 
 	for i in ${nbd_list[@]}; do
-		$rootdir/scripts/rpc.py -s $rpc_server stop_nbd_disk $i
+		$rootdir/scripts/rpc.py -s $rpc_server nbd_stop_disk $i
 		waitfornbd_exit $(basename $i)
 	done
 }

@@ -62,7 +62,7 @@ $rpc_py save_config > $testdir/config/ftl.json
 dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$data_size oflag=dsync
 # Calculate checksum of the data written
 dd if=/dev/nbd0 bs=4K count=$data_size | md5sum > $testdir/testfile.md5
-$rpc_py stop_nbd_disk /dev/nbd0
+$rpc_py nbd_stop_disk /dev/nbd0
 
 # Force kill bdev service (dirty shutdown) and start it again
 kill -9 $svcpid

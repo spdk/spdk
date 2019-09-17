@@ -174,9 +174,9 @@ class Commands_Rpc(object):
         output, rc = self.rpc.nbd_start_disk(bdev_name, nbd_name)
         return rc
 
-    def stop_nbd_disk(self, nbd_name):
-        print("INFO: RPC COMMAND stop_nbd_disk")
-        output, rc = self.rpc.stop_nbd_disk(nbd_name)
+    def nbd_stop_disk(self, nbd_name):
+        print("INFO: RPC COMMAND nbd_stop_disk")
+        output, rc = self.rpc.nbd_stop_disk(nbd_name)
         return rc
 
     def bdev_lvol_get_lvstores(self, name=None):
