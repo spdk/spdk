@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91c937ec_c0fd05df",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1792,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-17T01:55:08Z",
+      "side": 1,
+      "message": "I have a question here, if the backend device is formatted with 512 + 8, the length here from initiator is multiple of 512 or (512 + 8) ?",
+      "revId": "bb5e3aa83d847a7f20589b40c71e8ee48b5a20f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
