@@ -122,7 +122,7 @@ static struct spdk_poller *acceptor_poller = NULL;
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool g_reactors_exit = false;
 static enum nvmf_target_state g_target_state;
-
+static bool g_intr_received = false;
 
 static void nvmf_target_advance_state(void);
 
@@ -870,6 +870,80 @@ nvmf_target_app_start(void *arg)
 	nvmf_target_advance_state();
 }
 
+static void
+_nvmf_shutdown_cb(void *ctx)
+{
+	/* Still in initialization state, defer shutdown operation */
+	if (g_target_state < NVMF_RUNNING) {
+		spdk_thread_send_msg(spdk_get_thread(), _nvmf_shutdown_cb, NULL);
+		return;
+	} else if (g_target_state > NVMF_RUNNING) {
+		/* Already in Shutdown status, ignore the signal */
+		return;
+	}
+
+	g_target_state = NVMF_FINI_STOP_SUBSYSTEMS;
+	nvmf_target_advance_state();
+}
+
+static void
+nvmf_shutdown_cb(int signo)
+{
+	if (!g_intr_received) {
+		g_intr_received = true;
+		spdk_thread_send_msg(init_thread, _nvmf_shutdown_cb, NULL);
+	}
+}
+
+static int
+nvmf_setup_signal_handlers(void)
+{
+	struct sigaction	sigact;
+	sigset_t		sigmask;
+	int			rc;
+
+	rc = sigemptyset(&sigmask);
+	if (rc) {
+		fprintf(stderr, "errno:%d--failed to empty signal set\n", errno);
+		return rc;
+	}
+	memset(&sigact, 0, sizeof(sigact));
+	rc = sigemptyset(&sigact.sa_mask);
+	if (rc) {
+		fprintf(stderr, "errno:%d--failed to empty signal set\n", errno);
+		return rc;
+	}
+
+	/* Install the same handler for SIGINT and SIGTERM */
+	sigact.sa_handler = nvmf_shutdown_cb;
+
+	rc = sigaction(SIGINT, &sigact, NULL);
+	if (rc < 0) {
+		fprintf(stderr, "errno:%d--sigaction(SIGINT) failed\n", errno);
+		return rc;
+	}
+	rc = sigaddset(&sigmask, SIGINT);
+	if (rc) {
+		fprintf(stderr, "errno:%d--failed to add set\n", errno);
+		return rc;
+	}
+
+	rc = sigaction(SIGTERM, &sigact, NULL);
+	if (rc < 0) {
+		fprintf(stderr, "errno:%d--sigaction(SIGTERM) failed\n", errno);
+		return rc;
+	}
+	sigaddset(&sigmask, SIGTERM);
+	if (rc) {
+		fprintf(stderr, "errno:%d--failed to add set\n", errno);
+		return rc;
+	}
+
+	pthread_sigmask(SIG_UNBLOCK, &sigmask, NULL);
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
@@ -901,6 +975,9 @@ int main(int argc, char **argv)
 	g_init_thread = spdk_thread_get_from_ctx(lw_thread);
 	assert(g_init_thread != NULL);
 	spdk_thread_send_msg(g_init_thread, nvmf_target_app_start, NULL);
+
+	rc = nvmf_setup_signal_handlers();
+	assert(rc == 0);
 
 	nvmf_reactor_run(g_master_reactor);
 
