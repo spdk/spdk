@@ -125,10 +125,11 @@ static void
 op_login_check_target_test(void)
 {
 	struct spdk_iscsi_conn conn;
-	struct spdk_iscsi_pdu rsp_pdu;
+	struct spdk_iscsi_pdu rsp_pdu = {};
 	struct spdk_iscsi_tgt_node *target;
 	int rc;
 
+	rsp_pdu.bhs = &rsp_pdu.bhs_mem;
 	/* expect success */
 	snprintf(conn.initiator_name, sizeof(conn.initiator_name),
 		 "%s", UT_INITIATOR_NAME1);
@@ -167,7 +168,8 @@ op_login_session_normal_test(void)
 	int rc;
 
 	/* setup related data structures */
-	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu.bhs;
+	rsp_pdu.bhs = &rsp_pdu.bhs_mem;
+	rsph = (struct iscsi_bhs_login_rsp *)rsp_pdu.bhs;
 	rsph->tsih = 0;
 	memset(rsph->isid, 0, sizeof(rsph->isid));
 	conn.portal = &portal;
@@ -284,10 +286,10 @@ maxburstlength_test(void)
 
 	TAILQ_INIT(&g_write_pdu_list);
 
-	req_pdu->bhs.opcode = ISCSI_OP_SCSI;
+	req_pdu->bhs->opcode = ISCSI_OP_SCSI;
 	req_pdu->data_segment_len = 0;
 
-	req = (struct iscsi_bhs_scsi_req *)&req_pdu->bhs;
+	req = (struct iscsi_bhs_scsi_req *)req_pdu->bhs;
 
 	to_be32(&req->cmd_sn, 0);
 	to_be32(&req->expected_data_xfer_len, 1028);
@@ -306,16 +308,16 @@ maxburstlength_test(void)
 	 *  SCSI request.
 	 */
 	TAILQ_REMOVE(&g_write_pdu_list, response_pdu, tailq);
-	CU_ASSERT(response_pdu->bhs.opcode == ISCSI_OP_R2T);
-	r2t = (struct iscsi_bhs_r2t *)&response_pdu->bhs;
+	CU_ASSERT(response_pdu->bhs->opcode == ISCSI_OP_R2T);
+	r2t = (struct iscsi_bhs_r2t *)response_pdu->bhs;
 	CU_ASSERT(from_be32(&r2t->desired_xfer_len) == 1024);
 	CU_ASSERT(from_be32(&r2t->buffer_offset) == 0);
 	CU_ASSERT(from_be32(&r2t->itt) == 0x1234);
 
-	data_out_pdu->bhs.opcode = ISCSI_OP_SCSI_DATAOUT;
-	data_out_pdu->bhs.flags = ISCSI_FLAG_FINAL;
+	data_out_pdu->bhs->opcode = ISCSI_OP_SCSI_DATAOUT;
+	data_out_pdu->bhs->flags = ISCSI_FLAG_FINAL;
 	data_out_pdu->data_segment_len = 1028;
-	data_out = (struct iscsi_bhs_data_out *)&data_out_pdu->bhs;
+	data_out = (struct iscsi_bhs_data_out *)data_out_pdu->bhs;
 	data_out->itt = r2t->itt;
 	data_out->ttt = r2t->ttt;
 	DSET24(data_out->data_segment_len, 1028);
@@ -362,7 +364,7 @@ underflow_for_read_transfer_test(void)
 	pdu = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(pdu != NULL);
 
-	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
+	scsi_req = (struct iscsi_bhs_scsi_req *)pdu->bhs;
 	scsi_req->read_bit = 1;
 
 	spdk_iscsi_task_set_pdu(&task, pdu);
@@ -388,9 +390,9 @@ underflow_for_read_transfer_test(void)
 	pdu = TAILQ_FIRST(&g_write_pdu_list);
 	SPDK_CU_ASSERT_FATAL(pdu != NULL);
 
-	CU_ASSERT(pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN);
+	CU_ASSERT(pdu->bhs->opcode == ISCSI_OP_SCSI_DATAIN);
 
-	datah = (struct iscsi_bhs_data_in *)&pdu->bhs;
+	datah = (struct iscsi_bhs_data_in *)pdu->bhs;
 
 	CU_ASSERT(datah->flags == (ISCSI_DATAIN_UNDERFLOW | ISCSI_FLAG_FINAL | ISCSI_DATAIN_STATUS));
 	CU_ASSERT(datah->res_cnt == residual_count);
@@ -426,7 +428,7 @@ underflow_for_zero_read_transfer_test(void)
 	pdu = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(pdu != NULL);
 
-	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
+	scsi_req = (struct iscsi_bhs_scsi_req *)pdu->bhs;
 	scsi_req->read_bit = 1;
 
 	spdk_iscsi_task_set_pdu(&task, pdu);
@@ -450,9 +452,9 @@ underflow_for_zero_read_transfer_test(void)
 	pdu = TAILQ_FIRST(&g_write_pdu_list);
 	SPDK_CU_ASSERT_FATAL(pdu != NULL);
 
-	CU_ASSERT(pdu->bhs.opcode == ISCSI_OP_SCSI_RSP);
+	CU_ASSERT(pdu->bhs->opcode == ISCSI_OP_SCSI_RSP);
 
-	resph = (struct iscsi_bhs_scsi_resp *)&pdu->bhs;
+	resph = (struct iscsi_bhs_scsi_resp *)pdu->bhs;
 
 	CU_ASSERT(resph->flags == (ISCSI_SCSI_UNDERFLOW | 0x80));
 
@@ -492,7 +494,7 @@ underflow_for_request_sense_test(void)
 	pdu1 = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(pdu1 != NULL);
 
-	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu1->bhs;
+	scsi_req = (struct iscsi_bhs_scsi_req *)pdu1->bhs;
 	scsi_req->read_bit = 1;
 
 	spdk_iscsi_task_set_pdu(&task, pdu1);
@@ -524,9 +526,9 @@ underflow_for_request_sense_test(void)
 	pdu1 = TAILQ_FIRST(&g_write_pdu_list);
 	SPDK_CU_ASSERT_FATAL(pdu1 != NULL);
 
-	CU_ASSERT(pdu1->bhs.opcode == ISCSI_OP_SCSI_DATAIN);
+	CU_ASSERT(pdu1->bhs->opcode == ISCSI_OP_SCSI_DATAIN);
 
-	datah = (struct iscsi_bhs_data_in *)&pdu1->bhs;
+	datah = (struct iscsi_bhs_data_in *)pdu1->bhs;
 
 	CU_ASSERT(datah->flags == ISCSI_FLAG_FINAL);
 
@@ -542,9 +544,9 @@ underflow_for_request_sense_test(void)
 	SPDK_CU_ASSERT_FATAL(pdu1 != pdu2);
 	SPDK_CU_ASSERT_FATAL(pdu2 != NULL);
 
-	CU_ASSERT(pdu2->bhs.opcode == ISCSI_OP_SCSI_RSP);
+	CU_ASSERT(pdu2->bhs->opcode == ISCSI_OP_SCSI_RSP);
 
-	resph = (struct iscsi_bhs_scsi_resp *)&pdu2->bhs;
+	resph = (struct iscsi_bhs_scsi_resp *)pdu2->bhs;
 
 	CU_ASSERT(resph->flags == (ISCSI_SCSI_UNDERFLOW | 0x80));
 
@@ -583,7 +585,7 @@ underflow_for_check_condition_test(void)
 	pdu = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(pdu != NULL);
 
-	scsi_req = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
+	scsi_req = (struct iscsi_bhs_scsi_req *)pdu->bhs;
 	scsi_req->read_bit = 1;
 
 	spdk_iscsi_task_set_pdu(&task, pdu);
@@ -610,9 +612,9 @@ underflow_for_check_condition_test(void)
 	pdu = TAILQ_FIRST(&g_write_pdu_list);
 	SPDK_CU_ASSERT_FATAL(pdu != NULL);
 
-	CU_ASSERT(pdu->bhs.opcode == ISCSI_OP_SCSI_RSP);
+	CU_ASSERT(pdu->bhs->opcode == ISCSI_OP_SCSI_RSP);
 
-	resph = (struct iscsi_bhs_scsi_resp *)&pdu->bhs;
+	resph = (struct iscsi_bhs_scsi_resp *)pdu->bhs;
 
 	CU_ASSERT(resph->flags == 0x80);
 
@@ -693,7 +695,7 @@ add_transfer_task_test(void)
 		tmp = TAILQ_FIRST(&g_write_pdu_list);
 		TAILQ_REMOVE(&g_write_pdu_list, tmp, tailq);
 
-		r2th = (struct iscsi_bhs_r2t *)&tmp->bhs;
+		r2th = (struct iscsi_bhs_r2t *)tmp->bhs;
 
 		buffer_offset = from_be32(&r2th->buffer_offset);
 		CU_ASSERT(buffer_offset == pdu->data_segment_len + sess.MaxBurstLength * count);
@@ -1315,18 +1317,19 @@ build_iovs_test(void)
 	conn.header_digest = true;
 	conn.data_digest = true;
 
-	DSET24(&pdu.bhs.data_segment_len, 512);
+	pdu.bhs = &pdu.bhs_mem;
+	DSET24(&pdu.bhs->data_segment_len, 512);
 	data = calloc(1, 512);
 	SPDK_CU_ASSERT_FATAL(data != NULL);
 	pdu.data = data;
 
-	pdu.bhs.total_ahs_len = 0;
-	pdu.bhs.opcode = ISCSI_OP_SCSI;
+	pdu.bhs->total_ahs_len = 0;
+	pdu.bhs->opcode = ISCSI_OP_SCSI;
 
 	pdu.writev_offset = 0;
 	rc = spdk_iscsi_build_iovs(&conn, iovs, 5, &pdu, &mapped_length);
 	CU_ASSERT(rc == 4);
-	CU_ASSERT(iovs[0].iov_base == (void *)&pdu.bhs);
+	CU_ASSERT(iovs[0].iov_base == (void *)pdu.bhs);
 	CU_ASSERT(iovs[0].iov_len == ISCSI_BHS_LEN);
 	CU_ASSERT(iovs[1].iov_base == (void *)pdu.header_digest);
 	CU_ASSERT(iovs[1].iov_len == ISCSI_DIGEST_LEN);
@@ -1339,7 +1342,7 @@ build_iovs_test(void)
 	pdu.writev_offset = ISCSI_BHS_LEN / 2;
 	rc = spdk_iscsi_build_iovs(&conn, iovs, 5, &pdu, &mapped_length);
 	CU_ASSERT(rc == 4);
-	CU_ASSERT(iovs[0].iov_base == (void *)((uint8_t *)&pdu.bhs + ISCSI_BHS_LEN / 2));
+	CU_ASSERT(iovs[0].iov_base == (void *)((uint8_t *)pdu.bhs + ISCSI_BHS_LEN / 2));
 	CU_ASSERT(iovs[0].iov_len == ISCSI_BHS_LEN / 2);
 	CU_ASSERT(iovs[1].iov_base == (void *)pdu.header_digest);
 	CU_ASSERT(iovs[1].iov_len == ISCSI_DIGEST_LEN);
@@ -1402,13 +1405,13 @@ build_iovs_test(void)
 	pdu.writev_offset = 0;
 	rc = spdk_iscsi_build_iovs(&conn, iovs, 1, &pdu, &mapped_length);
 	CU_ASSERT(rc == 1);
-	CU_ASSERT(iovs[0].iov_base == (void *)&pdu.bhs);
+	CU_ASSERT(iovs[0].iov_base == (void *)pdu.bhs);
 	CU_ASSERT(iovs[0].iov_len == ISCSI_BHS_LEN);
 	CU_ASSERT(mapped_length == ISCSI_BHS_LEN);
 
 	rc = spdk_iscsi_build_iovs(&conn, iovs, 2, &pdu, &mapped_length);
 	CU_ASSERT(rc == 2);
-	CU_ASSERT(iovs[0].iov_base == (void *)&pdu.bhs);
+	CU_ASSERT(iovs[0].iov_base == (void *)pdu.bhs);
 	CU_ASSERT(iovs[0].iov_len == ISCSI_BHS_LEN);
 	CU_ASSERT(iovs[1].iov_base == (void *)pdu.header_digest);
 	CU_ASSERT(iovs[1].iov_len == ISCSI_DIGEST_LEN);
@@ -1416,7 +1419,7 @@ build_iovs_test(void)
 
 	rc = spdk_iscsi_build_iovs(&conn, iovs, 3, &pdu, &mapped_length);
 	CU_ASSERT(rc == 3);
-	CU_ASSERT(iovs[0].iov_base == (void *)&pdu.bhs);
+	CU_ASSERT(iovs[0].iov_base == (void *)pdu.bhs);
 	CU_ASSERT(iovs[0].iov_len == ISCSI_BHS_LEN);
 	CU_ASSERT(iovs[1].iov_base == (void *)pdu.header_digest);
 	CU_ASSERT(iovs[1].iov_len == ISCSI_DIGEST_LEN);
@@ -1426,7 +1429,7 @@ build_iovs_test(void)
 
 	rc = spdk_iscsi_build_iovs(&conn, iovs, 4, &pdu, &mapped_length);
 	CU_ASSERT(rc == 4);
-	CU_ASSERT(iovs[0].iov_base == (void *)&pdu.bhs);
+	CU_ASSERT(iovs[0].iov_base == (void *)pdu.bhs);
 	CU_ASSERT(iovs[0].iov_len == ISCSI_BHS_LEN);
 	CU_ASSERT(iovs[1].iov_base == (void *)pdu.header_digest);
 	CU_ASSERT(iovs[1].iov_len == ISCSI_DIGEST_LEN);
@@ -1452,14 +1455,15 @@ build_iovs_with_md_test(void)
 	conn.header_digest = true;
 	conn.data_digest = true;
 
-	DSET24(&pdu.bhs.data_segment_len, 4096 * 2);
+	pdu.bhs = &pdu.bhs_mem;
+	DSET24(pdu.bhs->data_segment_len, 4096 * 2);
 	data = calloc(1, (4096 + 128) * 2);
 	SPDK_CU_ASSERT_FATAL(data != NULL);
 	pdu.data = data;
 	pdu.data_buf_len = (4096 + 128) * 2;
 
-	pdu.bhs.total_ahs_len = 0;
-	pdu.bhs.opcode = ISCSI_OP_SCSI;
+	pdu.bhs->total_ahs_len = 0;
+	pdu.bhs->opcode = ISCSI_OP_SCSI;
 
 	rc = spdk_dif_ctx_init(&pdu.dif_ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       0, 0, 0, 0, 0, 0);
@@ -1470,7 +1474,7 @@ build_iovs_with_md_test(void)
 	pdu.writev_offset = 0;
 	rc = spdk_iscsi_build_iovs(&conn, iovs, 6, &pdu, &mapped_length);
 	CU_ASSERT(rc == 5);
-	CU_ASSERT(iovs[0].iov_base == (void *)&pdu.bhs);
+	CU_ASSERT(iovs[0].iov_base == (void *)pdu.bhs);
 	CU_ASSERT(iovs[0].iov_len == ISCSI_BHS_LEN);
 	CU_ASSERT(iovs[1].iov_base == (void *)pdu.header_digest);
 	CU_ASSERT(iovs[1].iov_len == ISCSI_DIGEST_LEN);
@@ -1503,7 +1507,7 @@ build_iovs_with_md_test(void)
 	pdu.writev_offset = 0;
 	rc = spdk_iscsi_build_iovs(&conn, iovs, 3, &pdu, &mapped_length);
 	CU_ASSERT(rc == 3);
-	CU_ASSERT(iovs[0].iov_base == (void *)&pdu.bhs);
+	CU_ASSERT(iovs[0].iov_base == (void *)pdu.bhs);
 	CU_ASSERT(iovs[0].iov_len == ISCSI_BHS_LEN);
 	CU_ASSERT(iovs[1].iov_base == (void *)pdu.header_digest);
 	CU_ASSERT(iovs[1].iov_len == ISCSI_DIGEST_LEN);
