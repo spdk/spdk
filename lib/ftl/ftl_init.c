@@ -1306,25 +1306,39 @@ ftl_nv_cache_header_fini_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb
 	spdk_thread_send_msg(dev->fini_ctx.thread, ftl_halt_complete_cb, dev);
 }
 
+static void
+_ftl_anm_unregister_device_cb(void *ctx)
+{
+	struct spdk_ftl_dev *dev = ctx;
+
+	if (ftl_dev_has_nv_cache(dev)) {
+		ftl_nv_cache_write_header(&dev->nv_cache, true, ftl_nv_cache_header_fini_cb, dev);
+	} else {
+		dev->halt_complete_status = 0;
+		spdk_thread_send_msg(dev->fini_ctx.thread, ftl_halt_complete_cb, dev);
+	}
+}
+
+static void
+ftl_anm_unregister_device_cb(void *ctx, int status)
+{
+	struct spdk_ftl_dev *dev = ctx;
+
+	spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_anm_unregister_device_cb, dev);
+}
+
 static int
 ftl_halt_poller(void *ctx)
 {
 	struct spdk_ftl_dev *dev = ctx;
+	int rc = 0;
 
 	if (!dev->core_thread.poller && !dev->read_thread.poller) {
 		spdk_poller_unregister(&dev->fini_ctx.poller);
-
-		ftl_anm_unregister_device(dev);
-
-		if (ftl_dev_has_nv_cache(dev)) {
-			ftl_nv_cache_write_header(&dev->nv_cache, true, ftl_nv_cache_header_fini_cb, dev);
-		} else {
-			dev->halt_complete_status = 0;
-			spdk_thread_send_msg(dev->fini_ctx.thread, ftl_halt_complete_cb, dev);
-		}
+		rc = ftl_anm_unregister_device(ftl_anm_unregister_device_cb, dev);
 	}
 
-	return 0;
+	return rc;
 }
 
 static void
