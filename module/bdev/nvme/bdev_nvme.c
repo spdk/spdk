@@ -968,8 +968,6 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 				sizeof(struct nvme_io_channel),
 				name);
 
-	nvme_ctrlr_create_bdevs(nvme_bdev_ctrlr);
-
 	nvme_bdev_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, ctrlr,
 					       g_opts.nvme_adminq_poll_period_us);
 
@@ -989,6 +987,7 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_probe_ctx *ctx = cb_ctx;
 	char *name = NULL;
 	uint32_t prchk_flags = 0;
@@ -1013,6 +1012,15 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attached to %s (%s)\n", trid->traddr, name);
 
 	create_ctrlr(ctrlr, name, trid, prchk_flags);
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
+	if (!nvme_bdev_ctrlr) {
+		SPDK_ERRLOG("Failed to find new NVMe controller\n");
+		free(name);
+		return;
+	}
+
+	nvme_ctrlr_create_bdevs(nvme_bdev_ctrlr);
 
 	free(name);
 }
@@ -1174,6 +1182,8 @@ bdev_nvme_create_and_get_bdev_names(struct spdk_nvme_ctrlr *ctrlr,
 		SPDK_ERRLOG("Failed to find new NVMe controller\n");
 		return -1;
 	}
+
+	nvme_ctrlr_create_bdevs(nvme_bdev_ctrlr);
 
 	/*
 	 * Report the new bdevs that were created in this call.
@@ -1354,6 +1364,7 @@ spdk_bdev_nvme_delete(const char *name)
 static int
 bdev_nvme_library_init(void)
 {
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct spdk_conf_section *sp;
 	const char *val;
 	int rc = 0;
@@ -1514,6 +1525,15 @@ bdev_nvme_library_init(void)
 			if (rc) {
 				goto end;
 			}
+
+			nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&probe_ctx->trids[i]);
+			if (!nvme_bdev_ctrlr) {
+				SPDK_ERRLOG("Failed to find new NVMe controller\n");
+				rc = -ENODEV;
+				goto end;
+			}
+
+			nvme_ctrlr_create_bdevs(nvme_bdev_ctrlr);
 		} else {
 			local_nvme_num++;
 		}
