@@ -55,7 +55,7 @@ function nbd_get_count() {
 	# return = count of spdk nbd devices
 	local rpc_server=$1
 
-	nbd_disks_json=$($rootdir/scripts/rpc.py -s $rpc_server get_nbd_disks)
+	nbd_disks_json=$($rootdir/scripts/rpc.py -s $rpc_server nbd_get_disks)
 	nbd_disks_name=$(echo "${nbd_disks_json}" | jq -r '.[] | .nbd_device')
 	count=$(echo "${nbd_disks_name}" | grep -c /dev/nbd || true)
 	echo $count
@@ -110,7 +110,7 @@ function nbd_rpc_start_stop_verify() {
 
 	nbd_start_disks_without_nbd_idx $rpc_server "${bdev_list[*]}"
 
-	nbd_disks_json=$($rootdir/scripts/rpc.py -s $rpc_server get_nbd_disks)
+	nbd_disks_json=$($rootdir/scripts/rpc.py -s $rpc_server nbd_get_disks)
 	nbd_disks_name=($(echo "${nbd_disks_json}" | jq -r '.[] | .nbd_device'))
 	nbd_stop_disks $rpc_server "${nbd_disks_name[*]}"
 

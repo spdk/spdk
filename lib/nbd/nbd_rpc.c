@@ -354,31 +354,31 @@ spdk_rpc_dump_nbd_info(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 }
 
-struct rpc_get_nbd_disks {
+struct rpc_nbd_get_disks {
 	char *nbd_device;
 };
 
 static void
-free_rpc_get_nbd_disks(struct rpc_get_nbd_disks *r)
+free_rpc_nbd_get_disks(struct rpc_nbd_get_disks *r)
 {
 	free(r->nbd_device);
 }
 
-static const struct spdk_json_object_decoder rpc_get_nbd_disks_decoders[] = {
-	{"nbd_device", offsetof(struct rpc_get_nbd_disks, nbd_device), spdk_json_decode_string, true},
+static const struct spdk_json_object_decoder rpc_nbd_get_disks_decoders[] = {
+	{"nbd_device", offsetof(struct rpc_nbd_get_disks, nbd_device), spdk_json_decode_string, true},
 };
 
 static void
-spdk_rpc_get_nbd_disks(struct spdk_jsonrpc_request *request,
+spdk_rpc_nbd_get_disks(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_get_nbd_disks req = {};
+	struct rpc_nbd_get_disks req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_nbd_disk *nbd = NULL;
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_get_nbd_disks_decoders,
-					    SPDK_COUNTOF(rpc_get_nbd_disks_decoders),
+		if (spdk_json_decode_object(params, rpc_nbd_get_disks_decoders,
+					    SPDK_COUNTOF(rpc_nbd_get_disks_decoders),
 					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -394,7 +394,7 @@ spdk_rpc_get_nbd_disks(struct spdk_jsonrpc_request *request,
 				goto invalid;
 			}
 
-			free_rpc_get_nbd_disks(&req);
+			free_rpc_nbd_get_disks(&req);
 		}
 	}
 
@@ -416,6 +416,7 @@ spdk_rpc_get_nbd_disks(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	free_rpc_get_nbd_disks(&req);
+	free_rpc_nbd_get_disks(&req);
 }
-SPDK_RPC_REGISTER("get_nbd_disks", spdk_rpc_get_nbd_disks, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("nbd_get_disks", spdk_rpc_nbd_get_disks, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nbd_get_disks, get_nbd_disks)
