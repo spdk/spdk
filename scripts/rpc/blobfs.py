@@ -26,3 +26,17 @@ def bdev_blobfs_create(client, bdev_name, cluster_sz=None):
     if cluster_sz:
         params['cluster_sz'] = cluster_sz
     return client.call('bdev_blobfs_create', params)
+
+
+def bdev_blobfs_mount(client, bdev_name, mountpoint):
+    """Mount blobfs on bdev by FUSE.
+
+    Args:
+        bdev_name: block device name where the blobfs is
+        mountpoint: Mountpoint path in host to mount blobfs
+    """
+    params = {
+        'bdev_name': bdev_name,
+        'mountpoint': mountpoint
+    }
+    return client.call('bdev_blobfs_mount', params)
