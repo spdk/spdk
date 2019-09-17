@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b94a6365_f6f52a30",
+        "filename": "lib/ftl/ftl_addr.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T09:52:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a926f354_b211ef30",
+      "range": {
+        "startLine": 46,
+        "startChar": 29,
+        "endLine": 46,
+        "endChar": 36
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "084e6140_c18e9add",
         "filename": "lib/ftl/ftl_addr.h",
         "patchSetId": 3
@@ -45,6 +69,30 @@
       "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7827dbb3_015234b0",
+        "filename": "lib/ftl/ftl_addr.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T09:52:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "084e6140_c18e9add",
+      "range": {
+        "startLine": 48,
+        "startChar": 12,
+        "endLine": 48,
+        "endChar": 17
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -82,6 +130,54 @@
       "writtenOn": "2019-09-16T09:13:58Z",
       "side": 1,
       "message": "I\u0027m a bit worried if 16 bits is enough... Especially since some of the devices underneath will say they only have one parallel unit. Perhaps a 21/10 split would make more sense? Or maybe we should just go ahead and just merge these and just divide it when necessary?",
+      "range": {
+        "startLine": 57,
+        "startChar": 22,
+        "endLine": 57,
+        "endChar": 24
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30506630_90e923f7",
+        "filename": "lib/ftl/ftl_addr.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T09:52:37Z",
+      "side": 1,
+      "message": "zone_id is used in zdev API so I think it is fine to keep this convention.",
+      "parentUuid": "7a710e01_17c595e8",
+      "range": {
+        "startLine": 57,
+        "startChar": 12,
+        "endLine": 57,
+        "endChar": 19
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26dfec6e_2b2c3d8c",
+        "filename": "lib/ftl/ftl_addr.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T09:52:37Z",
+      "side": 1,
+      "message": "I will try to remove pu from it in future patches.",
+      "parentUuid": "b76e00d3_bc16d660",
       "range": {
         "startLine": 57,
         "startChar": 22,
@@ -163,6 +259,30 @@
     },
     {
       "key": {
+        "uuid": "5a577ace_ae7338a7",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T09:52:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "07169715_2aef8ee1",
+      "range": {
+        "startLine": 287,
+        "startChar": 8,
+        "endLine": 287,
+        "endChar": 24
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "35b010a4_4407c8c1",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 3
@@ -186,6 +306,30 @@
     },
     {
       "key": {
+        "uuid": "4298caed_c9e7b099",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 711,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T09:52:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "35b010a4_4407c8c1",
+      "range": {
+        "startLine": 711,
+        "startChar": 4,
+        "endLine": 711,
+        "endChar": 22
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7527e272_7c3b2aae",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 3
@@ -197,6 +341,30 @@
       "writtenOn": "2019-09-16T09:13:58Z",
       "side": 1,
       "message": "Can we drop the addr from the name?",
+      "range": {
+        "startLine": 905,
+        "startChar": 0,
+        "endLine": 905,
+        "endChar": 19
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b14db55a_fb5cd0c6",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 905,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T09:52:37Z",
+      "side": 1,
+      "message": "Yes, it is not needed.",
+      "parentUuid": "7527e272_7c3b2aae",
       "range": {
         "startLine": 905,
         "startChar": 0,
@@ -232,6 +400,30 @@
     },
     {
       "key": {
+        "uuid": "67c20629_5172ef18",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 929,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T09:52:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ecb47ddb_aa451628",
+      "range": {
+        "startLine": 929,
+        "startChar": 0,
+        "endLine": 929,
+        "endChar": 22
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "66417759_a7d71808",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 3
@@ -243,6 +435,30 @@
       "writtenOn": "2019-09-16T09:13:58Z",
       "side": 1,
       "message": "This just does addr.pu - dev-\u003erange.begin + dev-\u003erange.begin, just use addr.pu.",
+      "range": {
+        "startLine": 428,
+        "startChar": 22,
+        "endLine": 428,
+        "endChar": 75
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e4453ce_d5f9cc8c",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T09:52:37Z",
+      "side": 1,
+      "message": "Yep, I can do this. But this whole stuff will be removed in next patches so I think it easier to follow what is happening here if I will keep existing logic. This patch is touching dozens of files and it purpose is basically change the names.",
+      "parentUuid": "66417759_a7d71808",
       "range": {
         "startLine": 428,
         "startChar": 22,
@@ -272,6 +488,24 @@
     },
     {
       "key": {
+        "uuid": "6584a761_7881a2cf",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T09:52:37Z",
+      "side": 1,
+      "message": "This whole stuff will be removed in next patches and I make ftl_addr filed size the same as it was in ftl_ppa.",
+      "parentUuid": "81900da9_8aa404ba",
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ef0c28a9_bece7bfa",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 3
@@ -292,6 +526,30 @@
       "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbe9469c_5cde94bc",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T09:52:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef0c28a9_bece7bfa",
+      "range": {
+        "startLine": 238,
+        "startChar": 0,
+        "endLine": 238,
+        "endChar": 16
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -318,6 +576,30 @@
     },
     {
       "key": {
+        "uuid": "4af41de0_8880ac32",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T09:52:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8e1a95fa_c911efba",
+      "range": {
+        "startLine": 244,
+        "startChar": 0,
+        "endLine": 244,
+        "endChar": 15
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "188e8efb_58c7c6fb",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 3
@@ -329,6 +611,30 @@
       "writtenOn": "2019-09-16T09:13:58Z",
       "side": 1,
       "message": "I think you should get rid of all references to this in one of the later patches, replacing it with zoned geometry (zone_size, optimal_open_zones).",
+      "range": {
+        "startLine": 1167,
+        "startChar": 38,
+        "endLine": 1167,
+        "endChar": 57
+      },
+      "revId": "e43b21ddb53d566c6d2f3e0eaf222ec0bcff82da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a34386e_73400915",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1167,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T09:52:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "188e8efb_58c7c6fb",
       "range": {
         "startLine": 1167,
         "startChar": 38,
