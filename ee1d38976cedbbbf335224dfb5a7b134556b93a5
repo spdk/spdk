@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9830f49c_a1b36f4e",
+        "filename": "module/blobfs/bdev_rpc/blobfs_bdev_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-17T00:54:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8673dccc_89c333c4",
+      "revId": "ee1d38976cedbbbf335224dfb5a7b134556b93a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "390e2480_1669dcb5",
         "filename": "module/blobfs/bdev_rpc/blobfs_bdev_rpc.c",
         "patchSetId": 12
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "47669bc9_d50c6bd0",
+        "filename": "module/blobfs/bdev_rpc/blobfs_bdev_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-17T00:54:14Z",
+      "side": 1,
+      "message": "Good catch\nSPDK_JSONRPC_ERROR_INVALID_PARAMS is better.",
+      "parentUuid": "390e2480_1669dcb5",
+      "revId": "ee1d38976cedbbbf335224dfb5a7b134556b93a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5661c8e7_829f1c0c",
         "filename": "module/blobfs/bdev_rpc/blobfs_bdev_rpc.c",
         "patchSetId": 12
@@ -47,6 +83,24 @@
       "writtenOn": "2019-09-16T22:14:58Z",
       "side": 1,
       "message": "does this have to be RUNTIME only?",
+      "revId": "ee1d38976cedbbbf335224dfb5a7b134556b93a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af31eb05_1a35adc5",
+        "filename": "module/blobfs/bdev_rpc/blobfs_bdev_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-17T00:54:14Z",
+      "side": 1,
+      "message": "Yes, only RUNTIME.\nSince blobfs_create requires IO operations on backend bdev, so adding SPDK_RPC_STARTUP seems not reasonable.",
+      "parentUuid": "5661c8e7_829f1c0c",
       "revId": "ee1d38976cedbbbf335224dfb5a7b134556b93a5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
