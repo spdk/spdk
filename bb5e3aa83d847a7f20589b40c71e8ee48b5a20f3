@@ -16,6 +16,24 @@
       "revId": "bb5e3aa83d847a7f20589b40c71e8ee48b5a20f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "432ea096_10ba0374",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1792,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-17T08:21:54Z",
+      "side": 1,
+      "message": "With dif_insert_or_strip parameter the controller doesn\u0027t provide metadata related settings during namespace identification, so initiator issues IO requests multiple of 512 bytes",
+      "parentUuid": "91c937ec_c0fd05df",
+      "revId": "bb5e3aa83d847a7f20589b40c71e8ee48b5a20f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
