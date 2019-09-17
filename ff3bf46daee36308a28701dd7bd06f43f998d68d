@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f8255bde_67a06136",
+        "filename": "test/spdkcli/spdkcli_tcp.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016428
+      },
+      "writtenOn": "2019-09-17T20:10:18Z",
+      "side": 1,
+      "message": "Sounds good",
+      "parentUuid": "a230c7dd_257f849e",
+      "revId": "ff3bf46daee36308a28701dd7bd06f43f998d68d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b4ea94f_8d5ba9eb",
         "filename": "test/spdkcli/spdkcli_tcp.sh",
         "patchSetId": 6
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "431ee5c8_5ccd9e24",
+        "filename": "test/spdkcli/spdkcli_tcp.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1016428
+      },
+      "writtenOn": "2019-09-17T20:10:18Z",
+      "side": 1,
+      "message": "Fixed.",
+      "parentUuid": "3b4ea94f_8d5ba9eb",
+      "revId": "ff3bf46daee36308a28701dd7bd06f43f998d68d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f53a3542_0f49fa56",
         "filename": "test/spdkcli/spdkcli_tcp.sh",
         "patchSetId": 6
@@ -50,6 +86,24 @@
       "revId": "ff3bf46daee36308a28701dd7bd06f43f998d68d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1b1fbc1_70492ed2",
+        "filename": "test/spdkcli/spdkcli_tcp.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1016428
+      },
+      "writtenOn": "2019-09-17T20:10:18Z",
+      "side": 1,
+      "message": "Changed.",
+      "parentUuid": "f53a3542_0f49fa56",
+      "revId": "ff3bf46daee36308a28701dd7bd06f43f998d68d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
