@@ -244,7 +244,7 @@ Example response:
     "get_interfaces",
     "delete_ip_address",
     "add_ip_address",
-    "get_nbd_disks",
+    "nbd_get_disks",
     "nbd_stop_disk",
     "nbd_start_disk",
     "get_log_flags",
@@ -5594,7 +5594,7 @@ Example response:
 }
 ~~~
 
-## get_nbd_disks {#rpc_get_nbd_disks}
+## nbd_get_disks {#rpc_nbd_get_disks}
 
 Display all or specified NBD device list
 
@@ -5615,7 +5615,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "get_nbd_disks",
+  "method": "nbd_get_disks",
   "id": 1
 }
 ~~~

@@ -272,7 +272,7 @@ Example command
 
 `rpc.py nbd_stop_disk /dev/nbd0`
 
-To display full or specified nbd device list user should use `get_nbd_disks` RPC command.
+To display full or specified nbd device list user should use `nbd_get_disks` RPC command.
 
 Example command
 

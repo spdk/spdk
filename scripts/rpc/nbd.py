@@ -17,8 +17,9 @@ def nbd_stop_disk(client, nbd_device):
     return client.call('nbd_stop_disk', params)
 
 
-def get_nbd_disks(client, nbd_device=None):
+@deprecated_alias('get_nbd_disks')
+def nbd_get_disks(client, nbd_device=None):
     params = {}
     if nbd_device:
         params['nbd_device'] = nbd_device
-    return client.call('get_nbd_disks', params)
+    return client.call('nbd_get_disks', params)

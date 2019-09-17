@@ -1481,13 +1481,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('nbd_device', help='Nbd device name to be stopped. Example: /dev/nbd0.')
     p.set_defaults(func=nbd_stop_disk)
 
-    def get_nbd_disks(args):
-        print_dict(rpc.nbd.get_nbd_disks(args.client,
+    def nbd_get_disks(args):
+        print_dict(rpc.nbd.nbd_get_disks(args.client,
                                          nbd_device=args.nbd_device))
 
-    p = subparsers.add_parser('get_nbd_disks', help='Display full or specified nbd device list')
+    p = subparsers.add_parser('nbd_get_disks', aliases=['get_nbd_disks'],
+                              help='Display full or specified nbd device list')
     p.add_argument('-n', '--nbd-device', help="Path of the nbd device. Example: /dev/nbd0", required=False)
-    p.set_defaults(func=get_nbd_disks)
+    p.set_defaults(func=nbd_get_disks)
 
     # net
     def add_ip_address(args):
