@@ -309,17 +309,17 @@ void
 spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	if (pdu->task) {
-		if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
+		if (pdu->bhs->opcode == ISCSI_OP_SCSI_DATAIN) {
 			if (pdu->task->scsi.offset > 0) {
 				conn->data_in_cnt--;
-				if (pdu->bhs.flags & ISCSI_DATAIN_STATUS) {
+				if (pdu->bhs->flags & ISCSI_DATAIN_STATUS) {
 					/* Free the primary task after the last subtask done */
 					conn->data_in_cnt--;
 					spdk_iscsi_task_put(spdk_iscsi_task_get_primary(pdu->task));
 				}
 				spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 			}
-		} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_RSP &&
+		} else if (pdu->bhs->opcode == ISCSI_OP_SCSI_RSP &&
 			   pdu->task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
 			if (pdu->task->scsi.offset > 0) {
 				spdk_iscsi_task_put(spdk_iscsi_task_get_primary(pdu->task));
@@ -1087,19 +1087,19 @@ iscsi_get_pdu_length(struct spdk_iscsi_pdu *pdu, int header_digest,
 	int data_len, enable_digest, total;
 
 	enable_digest = 1;
-	if (pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) {
+	if (pdu->bhs->opcode == ISCSI_OP_LOGIN_RSP) {
 		enable_digest = 0;
 	}
 
 	total = ISCSI_BHS_LEN;
 
-	total += (4 * pdu->bhs.total_ahs_len);
+	total += (4 * pdu->bhs->total_ahs_len);
 
 	if (enable_digest && header_digest) {
 		total += ISCSI_DIGEST_LEN;
 	}
 
-	data_len = DGET24(pdu->bhs.data_segment_len);
+	data_len = DGET24(pdu->bhs->data_segment_len);
 	if (data_len > 0) {
 		total += ISCSI_ALIGN(data_len);
 		if (enable_digest && data_digest) {
@@ -1228,7 +1228,7 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 			    (conn->sess->ErrorRecoveryLevel >= 1) &&
 			    spdk_iscsi_is_deferred_free_pdu(pdu)) {
 				SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "stat_sn=%d\n",
-					      from_be32(&pdu->bhs.stat_sn));
+					      from_be32(&pdu->bhs->stat_sn));
 				TAILQ_INSERT_TAIL(&conn->snack_pdu_list, pdu,
 						  tailq);
 			} else {
@@ -1334,7 +1334,7 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 		pdu->dif_insert_or_strip = true;
 	}
 
-	if (pdu->bhs.opcode != ISCSI_OP_LOGIN_RSP) {
+	if (pdu->bhs->opcode != ISCSI_OP_LOGIN_RSP) {
 		/* Header Digest */
 		if (conn->header_digest) {
 			crc32c = spdk_iscsi_pdu_calc_header_digest(pdu);
@@ -1342,7 +1342,7 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 		}
 
 		/* Data Digest */
-		if (conn->data_digest && DGET24(pdu->bhs.data_segment_len) != 0) {
+		if (conn->data_digest && DGET24(pdu->bhs->data_segment_len) != 0) {
 			crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
 			MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
 		}
