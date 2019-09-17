@@ -44,4 +44,10 @@ SPDK_LIB_LIST += event_bdev event_copy event_vmd
 SPDK_LIB_LIST += bdev copy event thread util conf trace \
 		log jsonrpc json rpc sock notify blobfs_bdev
 
+# libfuse3 may be required internally by blobfs_bdev
+FUSE3_HEADER_DIR = /usr/include/fuse3 /usr/local/include/fuse3
+ifneq (,$(wildcard $(FUSE3_HEADER_DIR)))
+	LIBS+= -L/usr/local/lib -L/usr/lib -lfuse3
+endif
+
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
