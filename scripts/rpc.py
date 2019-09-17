@@ -1472,13 +1472,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('nbd_device', help='Nbd device name to be assigned. Example: /dev/nbd0.', nargs='?')
     p.set_defaults(func=nbd_start_disk)
 
-    def stop_nbd_disk(args):
-        rpc.nbd.stop_nbd_disk(args.client,
+    def nbd_stop_disk(args):
+        rpc.nbd.nbd_stop_disk(args.client,
                               nbd_device=args.nbd_device)
 
-    p = subparsers.add_parser('stop_nbd_disk', help='Stop a nbd disk')
+    p = subparsers.add_parser('nbd_stop_disk', aliases=['stop_nbd_disk'],
+                              help='Stop a nbd disk')
     p.add_argument('nbd_device', help='Nbd device name to be stopped. Example: /dev/nbd0.')
-    p.set_defaults(func=stop_nbd_disk)
+    p.set_defaults(func=nbd_stop_disk)
 
     def get_nbd_disks(args):
         print_dict(rpc.nbd.get_nbd_disks(args.client,

@@ -234,18 +234,18 @@ invalid:
 SPDK_RPC_REGISTER("nbd_start_disk", spdk_rpc_nbd_start_disk, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nbd_start_disk, start_nbd_disk)
 
-struct rpc_stop_nbd_disk {
+struct rpc_nbd_stop_disk {
 	char *nbd_device;
 };
 
 static void
-free_rpc_stop_nbd_disk(struct rpc_stop_nbd_disk *req)
+free_rpc_nbd_stop_disk(struct rpc_nbd_stop_disk *req)
 {
 	free(req->nbd_device);
 }
 
-static const struct spdk_json_object_decoder rpc_stop_nbd_disk_decoders[] = {
-	{"nbd_device", offsetof(struct rpc_stop_nbd_disk, nbd_device), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_nbd_stop_disk_decoders[] = {
+	{"nbd_device", offsetof(struct rpc_nbd_stop_disk, nbd_device), spdk_json_decode_string},
 };
 
 struct nbd_disconnect_arg {
@@ -272,17 +272,17 @@ nbd_disconnect_thread(void *arg)
 }
 
 static void
-spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
+spdk_rpc_nbd_stop_disk(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
-	struct rpc_stop_nbd_disk req = {};
+	struct rpc_nbd_stop_disk req = {};
 	struct spdk_nbd_disk *nbd;
 	pthread_t tid;
 	struct nbd_disconnect_arg *thd_arg = NULL;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_stop_nbd_disk_decoders,
-				    SPDK_COUNTOF(rpc_stop_nbd_disk_decoders),
+	if (spdk_json_decode_object(params, rpc_nbd_stop_disk_decoders,
+				    SPDK_COUNTOF(rpc_nbd_stop_disk_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -335,10 +335,11 @@ spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
 	}
 
 out:
-	free_rpc_stop_nbd_disk(&req);
+	free_rpc_nbd_stop_disk(&req);
 }
 
-SPDK_RPC_REGISTER("stop_nbd_disk", spdk_rpc_stop_nbd_disk, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("nbd_stop_disk", spdk_rpc_nbd_stop_disk, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nbd_stop_disk, stop_nbd_disk)
 
 static void
 spdk_rpc_dump_nbd_info(struct spdk_json_write_ctx *w,

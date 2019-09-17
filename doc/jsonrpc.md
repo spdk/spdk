@@ -245,7 +245,7 @@ Example response:
     "delete_ip_address",
     "add_ip_address",
     "get_nbd_disks",
-    "stop_nbd_disk",
+    "nbd_stop_disk",
     "nbd_start_disk",
     "get_log_flags",
     "clear_log_flag",
@@ -5559,7 +5559,7 @@ Example response:
 }
 ~~~
 
-## stop_nbd_disk {#rpc_stop_nbd_disk}
+## nbd_stop_disk {#rpc_nbd_stop_disk}
 
 Stop one NBD disk which is based on SPDK bdev.
 
@@ -5579,7 +5579,7 @@ Example request:
     "nbd_device": "/dev/nbd1",
   },
   "jsonrpc": "2.0",
-  "method": "stop_nbd_disk",
+  "method": "nbd_stop_disk",
   "id": 1
 }
 ~~~
