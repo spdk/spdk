@@ -811,6 +811,56 @@ nvmf_tgts_run(void)
 	spdk_rpc_finish();
 }
 
+static void
+nvmf_exit(void *ctx)
+{
+	spdk_poller_unregister(&acceptor_poller);
+	nvmf_tgt_stop_subsystems();
+	nvmf_tgt_destroy_poll_groups();
+	nvmf_destroy_nvmf_tgt(g_nvmf_tgt);
+	nvmf_bdev_fini_start();
+	g_threads_exit = true;
+}
+
+static void
+signal_handler_func(int signo)
+{
+	spdk_thread_send_msg(init_thread, nvmf_exit, NULL);
+}
+
+static int
+nvmf_setup_signal_handlers(void)
+{
+	struct sigaction	sigact;
+	sigset_t		sigmask;
+	int			rc;
+
+	sigemptyset(&sigmask);
+	memset(&sigact, 0, sizeof(sigact));
+	sigemptyset(&sigact.sa_mask);
+
+	/* Install the same handler for SIGINT and SIGTERM */
+	sigact.sa_handler = signal_handler_func;
+
+	rc = sigaction(SIGINT, &sigact, NULL);
+	if (rc < 0) {
+		fprintf(stderr, "sigaction(SIGINT) failed\n");
+		return rc;
+	}
+	sigaddset(&sigmask, SIGINT);
+
+	rc = sigaction(SIGTERM, &sigact, NULL);
+	if (rc < 0) {
+		fprintf(stderr, "sigaction(SIGTERM) failed\n");
+		return rc;
+	}
+	sigaddset(&sigmask, SIGTERM);
+
+	pthread_sigmask(SIG_UNBLOCK, &sigmask, NULL);
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
@@ -857,12 +907,19 @@ int main(int argc, char **argv)
 	/* Start all the subsystems */
 	nvmf_tgt_start_subsystems();
 
-	nvmf_tgts_run();
+	rc = nvmf_setup_signal_handlers();
+	if (rc < 0) {
+		fprintf(stderr, "setup signal handler failed\n");
+		nvmf_tgt_stop_subsystems();
+		nvmf_tgt_destroy_poll_groups();
+		nvmf_destroy_nvmf_tgt(g_nvmf_tgt);
+		nvmf_bdev_fini_start();
+		g_threads_exit = true;
+		nvmf_work_fn(g_master_thread);
+		goto exit;
+	}
 
-	nvmf_tgt_stop_subsystems();
-	nvmf_tgt_destroy_poll_groups();
-	nvmf_destroy_nvmf_tgt(g_nvmf_tgt);
-	nvmf_bdev_fini_start();
+	nvmf_tgts_run();
 exit:
 	spdk_env_thread_wait_all();
 	nvmf_destroy_threads();
