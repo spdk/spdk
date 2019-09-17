@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5f15d67_1ab2971d",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-09-17T12:15:46Z",
+      "side": 1,
+      "message": "FYI this could be shortened to:\n\ncase \"$SPDK_VAGRANT_DISTRO\" in\n\tcentos7|ubuntu16|ubuntu18|...)\n\t\texport SPDK_VAGRANT_DISTRO",
+      "revId": "0d6eb4dcaca686b9751c0e5ae46a7a608241faee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
