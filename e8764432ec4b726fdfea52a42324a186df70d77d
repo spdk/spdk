@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "e6d49767_e3637af9",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1627,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-17T18:30:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2a11dd05_d7950f3d",
+      "revId": "e8764432ec4b726fdfea52a42324a186df70d77d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db7d2fed_d9084656",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 12
@@ -65,6 +83,30 @@
       "writtenOn": "2019-09-13T11:26:34Z",
       "side": 1,
       "message": "It seems that there is no need to remove entries from lists since the memory occupied by entries is freed on line 1681",
+      "range": {
+        "startLine": 1674,
+        "startChar": 0,
+        "endLine": 1679,
+        "endChar": 2
+      },
+      "revId": "e8764432ec4b726fdfea52a42324a186df70d77d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "402973e7_06b5bd00",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1679,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-17T18:30:26Z",
+      "side": 1,
+      "message": "True, but I feel better removing the entries from any data structures they are in before freeing them just to keep anyone from accidentally using them later. For example in the implementation of nvme_ctrlr_destruct_finish, etc.\nI agree that in the current implementation, we are going to try to touch the stailqs before the rctrlr structure is freed, but I feel safer knowing that even if a future implementation messed that up, they wouldn\u0027t be able to try to access freed memory.\nPlus, it\u0027s not in the data path, so I\u0027m not worried about the small performance impact of emptying the queues.",
+      "parentUuid": "db7d2fed_d9084656",
       "range": {
         "startLine": 1674,
         "startChar": 0,
