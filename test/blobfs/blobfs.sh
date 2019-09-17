@@ -93,8 +93,22 @@ function blobfs_fuse_test() {
 	# check mount status
 	mount || grep $mount_dir
 
-	# basic file operations in mount dir
+	# create a rand file in mount dir
 	dd if=/dev/urandom of=${mount_dir}/rand_file bs=4k count=32
+
+	umount ${mount_dir}
+	killprocess $blobfs_pid
+
+	# Verify there is no file in mount dir now
+	if [ -f ${mount_dir}/rand_file ]; then
+		false
+	fi
+
+	# use blobfs mount RPC
+	blobfs_start_app
+	$rpc_py blobfs_mount ${bdevname} $mount_dir
+
+	# read and delete the rand file
 	md5sum ${mount_dir}/rand_file
 	rm ${mount_dir}/rand_file
 
