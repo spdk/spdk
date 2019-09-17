@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = blobfs_bdev.c blobfs_bdev_rpc.c
+C_SRCS = blobfs_bdev.c blobfs_bdev_rpc.c blobfs_fuse.c
 LIBNAME = blobfs_bdev
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
