@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5a179f60_af1eb73c",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T10:58:09Z",
+      "side": 1,
+      "message": "It is removed in next patch.",
+      "parentUuid": "a49eeb5a_8ebbfb8a",
+      "range": {
+        "startLine": 145,
+        "startChar": 1,
+        "endLine": 145,
+        "endChar": 36
+      },
+      "revId": "048f0883ad908064c14480d163d49f3a1fc7d768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5d9cfa0a_8a81f5ca",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "048f0883ad908064c14480d163d49f3a1fc7d768",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8b50dee_8de79475",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T10:58:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5d9cfa0a_8a81f5ca",
+      "range": {
+        "startLine": 528,
+        "startChar": 8,
+        "endLine": 528,
+        "endChar": 15
+      },
+      "revId": "048f0883ad908064c14480d163d49f3a1fc7d768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "67d8eaef_3e2dcf2d",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T10:58:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a7e2032d_d858cea0",
+      "range": {
+        "startLine": 540,
+        "startChar": 8,
+        "endLine": 540,
+        "endChar": 32
+      },
+      "revId": "048f0883ad908064c14480d163d49f3a1fc7d768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d78fb643_8e5a72b1",
         "filename": "module/bdev/nvme/bdev_ftl.c",
         "patchSetId": 1
@@ -82,6 +154,30 @@
       "writtenOn": "2019-09-16T09:30:11Z",
       "side": 1,
       "message": "Let\u0027s just get rid of this altogether.",
+      "range": {
+        "startLine": 494,
+        "startChar": 0,
+        "endLine": 501,
+        "endChar": 1
+      },
+      "revId": "048f0883ad908064c14480d163d49f3a1fc7d768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e3823df_eeec352f",
+        "filename": "module/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-17T10:58:09Z",
+      "side": 1,
+      "message": "I\u0027m removing it in next commit with spdk_ftl_punit_range.",
+      "parentUuid": "d78fb643_8e5a72b1",
       "range": {
         "startLine": 494,
         "startChar": 0,
