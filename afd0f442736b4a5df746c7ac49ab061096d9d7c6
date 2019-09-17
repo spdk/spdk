@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57900365_3829b3d9",
+        "filename": "mk/spdk.lib_deps.mk",
+        "patchSetId": 9
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-17T06:42:56Z",
+      "side": 1,
+      "message": "Can you use $BDEV_DEPS_THREAD blob_bdev blobfs instead ?",
+      "revId": "afd0f442736b4a5df746c7ac49ab061096d9d7c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
