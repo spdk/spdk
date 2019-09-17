@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "512b452b_9b851557",
+        "filename": "test/nvmf/target/multitarget.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-17T02:25:06Z",
+      "side": 1,
+      "message": "unnecessary blank lines",
+      "revId": "e3c8e86b5a2742f544769c24ba81f48638271c0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
