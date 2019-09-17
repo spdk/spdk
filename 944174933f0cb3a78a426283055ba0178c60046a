@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d82e0023_bda6d3ce",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 891,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-09-17T21:33:35Z",
+      "side": 1,
+      "message": "I don\u0027t think we should always handle errors in next step\nHere specifically we can do it in `start_cache_cmpl()`\nOnly the timeout must be handled in next step\n\nAlso, timeout can happen only after we use `vbdev_ocf_mngt_poll()` so we can improve this case by adding a \"handler\" argument to `vbdev_ocf_mngt_poll()`",
+      "range": {
+        "startLine": 886,
+        "startChar": 0,
+        "endLine": 891,
+        "endChar": 2
+      },
+      "revId": "944174933f0cb3a78a426283055ba0178c60046a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
