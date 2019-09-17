@@ -1161,21 +1161,13 @@ spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, voi
 }
 
 static int
-bdev_nvme_create_and_get_bdev_names(struct spdk_nvme_ctrlr *ctrlr,
-				    const char *base_name,
-				    const char **names, size_t *count,
-				    const struct spdk_nvme_transport_id *trid,
-				    uint32_t prchk_flags)
+bdev_nvme_create_bdevs(const char **names, size_t *count,
+		       const struct spdk_nvme_transport_id *trid)
 {
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	struct nvme_bdev	*nvme_bdev;
 	uint32_t		i, nsid;
 	size_t			j;
-
-	if (create_ctrlr(ctrlr, base_name, trid, prchk_flags)) {
-		SPDK_ERRLOG("Failed to create new device\n");
-		return -1;
-	}
 
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
 	if (!nvme_bdev_ctrlr) {
@@ -1226,6 +1218,17 @@ struct nvme_async_probe_ctx {
 };
 
 static void
+free_controller(const struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
+	free(nvme_bdev_ctrlr->bdevs);
+	free(nvme_bdev_ctrlr->name);
+	free(nvme_bdev_ctrlr);
+}
+
+static void
 connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
@@ -1234,12 +1237,20 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	int rc;
 
 	ctx = SPDK_CONTAINEROF(user_opts, struct nvme_async_probe_ctx, opts);
-	rc = bdev_nvme_create_and_get_bdev_names(ctrlr,
-			ctx->base_name,
-			ctx->names, ctx->count,
-			&ctx->trid,
-			ctx->prchk_flags);
 
+	rc = create_ctrlr(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags);
+	if (rc) {
+		SPDK_ERRLOG("Failed to create new device\n");
+		goto end;
+	}
+
+	rc = bdev_nvme_create_bdevs(ctx->names, ctx->count, &ctx->trid);
+	if (rc) {
+		SPDK_ERRLOG("Failed to create bdevs\n");
+		free_controller(trid);
+	}
+
+end:
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctx->cb_ctx, rc);
 	}
