@@ -2060,6 +2060,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    help="""Size of cluster in bytes. Must be multiple of 4KB page size (Optional). Example: 1048576""", type=int)
     p.set_defaults(func=blobfs_create)
 
+    def blobfs_mount(args):
+        print(rpc.blobfs.blobfs_mount(args.client,
+                                      bdev_name=args.bdev_name,
+                                      mountpoint=args.mountpoint))
+
+    p = subparsers.add_parser('blobfs_mount', help='Mount a blobfs on bdev to host path by FUSE')
+    p.add_argument('bdev_name', help='Blockdev name where the blobfs is. Example: Malloc0.')
+    p.add_argument('mountpoint', help='Mountpoint path in host to mount blobfs. Example: /mnt/.')
+    p.set_defaults(func=blobfs_mount)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
