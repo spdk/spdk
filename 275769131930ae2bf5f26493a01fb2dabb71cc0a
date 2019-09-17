@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b47a12d_576ed49a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-17T18:26:31Z",
+      "side": 1,
+      "message": "Call this \u0027md_buf\u0027 - we typically just use \u0027md\u0027 everywhere so for searching consistency it\u0027s nice to follow that.",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3062371_a23d3127",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-17T18:26:31Z",
+      "side": 1,
+      "message": "Same here - md",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6189c3e_1b388846",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1863,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-17T18:26:31Z",
+      "side": 1,
+      "message": "This line (1864) actually remains common between the two cases",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c73ee835_2403b7c1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1868,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-17T18:26:31Z",
+      "side": 1,
+      "message": "const doesn\u0027t mean anything to compilers in C typically (because in every scenario it can either automatically figure out if the value ever changes, or it can\u0027t and has to assume someone casts the const away somewhere). It\u0027s only useful as a communication tool between developers in an API. I\u0027d recommend just removing it here.",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf253c8b_e449133d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1869,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-17T18:26:31Z",
+      "side": 1,
+      "message": "This division and the mod below are not great for performance in the I/O path. Check out spdk_u32_is_pow2 and our use of that elsewhere - since we happen to know that length is usually a power of 2 we can often use bit shifts instead.",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d04e1283_994b27c0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1878,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-17T18:26:31Z",
+      "side": 1,
+      "message": "The length has already been checked against max_len, so presumably this can\u0027t ever happen here because the md_buf pool is allocated to handle a valid in capsule data size.",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68ab78f6_a8e61277",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1883,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-17T18:26:31Z",
+      "side": 1,
+      "message": "Same with this - the in capsule data side is negotiated (and is already confirmed less than or equal to the max allowed), so it must pass this check. You can maybe make this an assert instead.",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
