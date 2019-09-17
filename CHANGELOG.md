@@ -91,6 +91,10 @@ Added `blobfs_detect` RPC method to detect whether a blobfs exists on given bdev
 
 Added `blobfs_create` RPC method to build blobfs on given bdev.
 
+Added `blobfs_mount` RPC method to mount blobfs on given bdev to a host path by FUSE.
+Then on the host path, user can directly do some file operations which will be mapped
+to blobfs.
+
 ## v19.07:
 
 ### ftl
