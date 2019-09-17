@@ -44,6 +44,7 @@
 
 #include "spdk_internal/log.h"
 #include "blobfs_bdev.h"
+#include "blobfs_fuse.h"
 
 /* Dummy bdev module used to to claim bdevs. */
 static struct spdk_bdev_module blobfs_bdev_module = {
@@ -266,6 +267,158 @@ spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
 	} else {
 		spdk_fs_init(bs_dev, NULL, NULL, _blobfs_bdev_create_init_cb, ctx);
 	}
+
+	return 0;
+
+invalid:
+	free(ctx);
+
+	return rc;
+}
+
+struct blobfs_bdev_mount_ctx {
+	const char *bdev_name;
+	const char *mountpoint;
+	struct spdk_filesystem *fs;
+
+	spdk_blobfs_bdev_op_complete cb_fn;
+	void *cb_arg;
+
+	/* Used in bdev_event_cb to do some proper operations on blobfs_fuse for
+	 * asynchronous event of backend bdev.
+	 */
+	struct spdk_blobfs_fuse *bfuse;
+};
+
+static void
+_blobfs_bdev_mount_unload_cb(void *_ctx, int fserrno)
+{
+	struct blobfs_bdev_mount_ctx *ctx = _ctx;
+
+	if (fserrno) {
+		SPDK_ERRLOG("Failed to unload blobfs on bdev: errno %d\n", fserrno);
+	}
+
+	free(ctx);
+
+	return;
+}
+
+static void
+_blobfs_bdev_mount_unload(void *_ctx)
+{
+	struct blobfs_bdev_mount_ctx *ctx = _ctx;
+
+	spdk_fs_unload(ctx->fs, _blobfs_bdev_mount_unload_cb, ctx);
+}
+
+static void
+blobfs_bdev_umount(void *arg1, void *arg2)
+{
+	struct spdk_thread *fs_loading_thread = arg2;
+
+	spdk_thread_send_msg(fs_loading_thread, _blobfs_bdev_mount_unload, arg1);
+}
+
+static void
+_blobfs_bdev_mount_fuse_start(void *_ctx)
+{
+	struct blobfs_bdev_mount_ctx *ctx = _ctx;
+	int rc;
+
+	rc = spdk_blobfs_fuse_start(ctx->bdev_name, ctx->mountpoint, ctx->fs,
+				    blobfs_bdev_umount, ctx, spdk_get_thread(), &ctx->bfuse);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to mount blobfs on bdev %s to %s\n", ctx->bdev_name, ctx->mountpoint);
+		_blobfs_bdev_mount_unload(ctx);
+
+		/* Return failure state back */
+		ctx->cb_fn(ctx->cb_arg, -1);
+
+		return;
+	}
+
+	ctx->cb_fn(ctx->cb_arg, 0);
+
+	return;
+}
+
+static void
+_blobfs_bdev_mount_load_cb(void *_ctx, struct spdk_filesystem *fs, int fserrno)
+{
+	struct blobfs_bdev_mount_ctx *ctx = _ctx;
+
+	if (fserrno) {
+		SPDK_ERRLOG("Failed to load blobfs on bdev %s: errno %d\n", ctx->bdev_name, fserrno);
+
+		ctx->cb_fn(ctx->cb_arg, fserrno);
+		free(ctx);
+		return;
+	}
+
+	ctx->fs = fs;
+
+	spdk_thread_send_msg(spdk_get_thread(), _blobfs_bdev_mount_fuse_start, ctx);
+}
+
+static void
+blobfs_bdev_fuse_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+			  void *event_ctx)
+{
+	struct blobfs_bdev_mount_ctx *ctx = event_ctx;
+
+	SPDK_WARNLOG("Async evnet(%d) is triggered in bdev %s\n", type, spdk_bdev_get_name(bdev));
+
+	if (type == SPDK_BDEV_EVENT_REMOVE) {
+		spdk_blobfs_fuse_stop(ctx->bfuse);
+	}
+}
+
+int
+spdk_blobfs_bdev_mount(const char *bdev_name, const char *mountpoint,
+		       spdk_blobfs_bdev_op_complete cb_fn, void *cb_arg)
+{
+	struct blobfs_bdev_mount_ctx *ctx;
+	struct spdk_bs_dev *bs_dev;
+	struct spdk_bdev_desc *desc;
+	int rc;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate ctx.\n");
+		return -ENOMEM;
+	}
+
+	ctx->bdev_name = bdev_name;
+	ctx->mountpoint = mountpoint;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	rc = spdk_bdev_open_ext(bdev_name, true, blobfs_bdev_fuse_event_cb, ctx, &desc);
+	if (rc != 0) {
+		if (rc == -EINVAL) {
+			SPDK_INFOLOG(SPDK_LOG_BLOBFS, "Failed to open bdev(%s): not found\n", ctx->bdev_name);
+		} else {
+			SPDK_INFOLOG(SPDK_LOG_BLOBFS, "Failed to open bdev(%s): %s\n", ctx->bdev_name, spdk_strerror(rc));
+		}
+
+		goto invalid;
+	}
+
+	bs_dev = spdk_bdev_create_bs_dev_from_desc(desc);
+	if (bs_dev == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_BLOBFS,  "Failed to create a blobstore block device from bdev desc");
+		rc = -ENOMEM;
+
+		goto invalid;
+	}
+
+	rc = spdk_bs_bdev_claim(bs_dev, &blobfs_bdev_module);
+	if (rc != 0) {
+		goto invalid;
+	}
+
+	spdk_fs_load(bs_dev, spdk_blobfs_fuse_send_request, _blobfs_bdev_mount_load_cb, ctx);
 
 	return 0;
 
