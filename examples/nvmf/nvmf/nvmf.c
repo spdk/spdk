@@ -1267,6 +1267,59 @@ nvmf_tgts_run(void)
 	nvmf_work_fn(g_master_thread);
 }
 
+static void
+nvmf_exit(void *ctx)
+{
+	nvmf_tgt_stop_subsystems();
+	nvmf_tgt_destroy_poll_groups();
+	spdk_poller_unregister(&acceptor_poller);
+	nvmf_tgt_destroy(g_nvmf_tgt);;
+	spdk_rpc_finish();
+	nvmf_bdev_fini();
+	spdk_for_each_thread(nvmf_cleanup_thread,
+			     &g_threads_done,
+			     nvmf_cleanup_threads_done);
+}
+
+static void
+signal_handler_func(int signo)
+{
+	spdk_thread_send_msg(g_master_thread->thread, nvmf_exit, NULL);
+}
+
+static int
+nvmf_setup_signal_handlers(void)
+{
+	struct sigaction	sigact;
+	sigset_t		sigmask;
+	int			rc;
+
+	sigemptyset(&sigmask);
+	memset(&sigact, 0, sizeof(sigact));
+	sigemptyset(&sigact.sa_mask);
+
+	/* Install the same handler for SIGINT and SIGTERM */
+	sigact.sa_handler = signal_handler_func;
+
+	rc = sigaction(SIGINT, &sigact, NULL);
+	if (rc < 0) {
+		fprintf(stderr, "sigaction(SIGINT) failed\n");
+		return rc;
+	}
+	sigaddset(&sigmask, SIGINT);
+
+	rc = sigaction(SIGTERM, &sigact, NULL);
+	if (rc < 0) {
+		fprintf(stderr, "sigaction(SIGTERM) failed\n");
+		return rc;
+	}
+	sigaddset(&sigmask, SIGTERM);
+
+	pthread_sigmask(SIG_UNBLOCK, &sigmask, NULL);
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
@@ -1309,7 +1362,10 @@ int main(int argc, char **argv)
 	rc = nvmf_parse_and_create_nvmf_tgt();
 	if (rc != 0) {
 		fprintf(stderr, "failed to create nvmf target\n");
-		goto exit;
+		spdk_rpc_finish();
+		nvmf_bdev_fini();
+		nvmf_exit_threads();
+		goto cleanup;
 	}
 
 	/* Create poll groups */
@@ -1318,15 +1374,20 @@ int main(int argc, char **argv)
 	/* Start all the subsystems */
 	nvmf_tgt_start_subsystems();
 
-	nvmf_tgts_run();
+	rc = nvmf_setup_signal_handlers();
+	if (rc < 0) {
+		fprintf(stderr, "setup signal handler failed\n");
+		nvmf_tgt_stop_subsystems();
+		nvmf_tgt_destroy_poll_groups();
+		nvmf_tgt_destroy(g_nvmf_tgt);
+		spdk_rpc_finish();
+		nvmf_bdev_fini();
+		nvmf_exit_threads();
+		goto cleanup;
+	}
 
-	nvmf_tgt_stop_subsystems();
-	nvmf_tgt_destroy_poll_groups();
-	nvmf_tgt_destroy(g_nvmf_tgt);
-exit:
-	spdk_rpc_finish();
-	nvmf_bdev_fini();
-	nvmf_exit_threads();
+	nvmf_tgts_run();
+	
 cleanup:
 	spdk_env_thread_wait_all();
 	nvmf_destroy_threads();
