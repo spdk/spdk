@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "228c6228_bd63eeec",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-17T07:26:44Z",
+      "side": 1,
+      "message": "The non-OCSSD comment in the commit message is meant to differentiate it with Konrad\u0027s OCSSD-zone converter.\nAnd yes - I don\u0027t want to allow for creating on top of a zoned device here, since the only thing that would be used for is changing the zone geometry and it would make this bdev quite a bit more complicated.",
+      "parentUuid": "b2be061a_6c23006c",
+      "range": {
+        "startLine": 57,
+        "startChar": 4,
+        "endLine": 57,
+        "endChar": 30
+      },
+      "revId": "8fcea66a8278917ea07483a395fff18af58a66a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "aac78e4d_15910a41",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 4
@@ -72,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "3b23660a_6bb69b74",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-17T07:26:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aac78e4d_15910a41",
+      "range": {
+        "startLine": 58,
+        "startChar": 15,
+        "endLine": 58,
+        "endChar": 44
+      },
+      "revId": "8fcea66a8278917ea07483a395fff18af58a66a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a5be03fa_2dd50503",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 4
@@ -92,6 +140,30 @@
       "revId": "8fcea66a8278917ea07483a395fff18af58a66a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3e2543d_e221b1f7",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-17T07:26:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a5be03fa_2dd50503",
+      "range": {
+        "startLine": 68,
+        "startChar": 5,
+        "endLine": 68,
+        "endChar": 28
+      },
+      "revId": "8fcea66a8278917ea07483a395fff18af58a66a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
