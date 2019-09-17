@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac534e1e_cf7add89",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 3657,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-17T02:12:46Z",
+      "side": 1,
+      "message": "It\u0027s nice to say 0 means the target will use default SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS subsystems.",
+      "revId": "70f7f76db37b1762d4ef56b096c0e10a27d4983e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12760186_0f9fde1c",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-17T02:12:46Z",
+      "side": 1,
+      "message": "same here, 0 means the default subsystems in a target.",
+      "revId": "70f7f76db37b1762d4ef56b096c0e10a27d4983e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
