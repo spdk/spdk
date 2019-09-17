@@ -217,8 +217,8 @@ ifneq (, $(SPDK_GIT_COMMIT))
 COMMON_CFLAGS += -DSPDK_GIT_COMMIT=$(SPDK_GIT_COMMIT)
 endif
 
-COMMON_CFLAGS += -pthread
-LDFLAGS += -pthread
+COMMON_CFLAGS += -pthread $(EXTRA_CFLAGS)
+LDFLAGS += -pthread $(EXTRA_LDFLAGS)
 
 CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-definition -std=gnu99
 CXXFLAGS += $(COMMON_CFLAGS)
