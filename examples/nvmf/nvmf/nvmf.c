@@ -38,6 +38,7 @@
 #include "spdk/thread.h"
 #include "spdk/bdev.h"
 #include "spdk/nvmf.h"
+#include "spdk/rpc.h"
 
 #include "spdk_internal/event.h"
 
@@ -70,11 +71,21 @@ struct nvmf_thread {
 struct nvmf_target_poll_group {
 	struct spdk_nvmf_poll_group		*group;
 	struct spdk_thread			*thread;
+
 	TAILQ_ENTRY(nvmf_target_poll_group)	link;
 };
 
+struct nvmf_target_host_trid {
+	struct spdk_nvme_transport_id		host_trid;
+	struct nvmf_target_poll_group		*pg;
+	uint32_t				ref;
+
+	TAILQ_ENTRY(nvmf_target_host_trid)	link;
+};
+
 struct nvmf_target {
-	struct spdk_nvmf_tgt	*tgt;
+	struct spdk_nvmf_tgt		*tgt;
+	struct nvmf_target_poll_group	*next_pg;
 
 	struct target_opts {
 		int max_subsystems;
@@ -83,6 +94,7 @@ struct nvmf_target {
 	} tgt_params;
 
 	TAILQ_HEAD(, nvmf_target_poll_group) poll_groups;
+	TAILQ_HEAD(, nvmf_target_host_trid) host_trids;
 };
 
 TAILQ_HEAD(, nvmf_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
@@ -91,6 +103,7 @@ static struct nvmf_target *g_nvmf_tgt = NULL;
 static struct nvmf_thread *g_master_thread = NULL;
 static struct nvmf_thread *g_next_thread = NULL;
 static struct spdk_thread *init_thread = NULL;
+static struct spdk_poller *acceptor_poller = NULL;
 static bool g_threads_exit = false;
 
 static void
@@ -377,6 +390,7 @@ nvmf_tgt_init(void)
 	g_nvmf_tgt->tgt_params.conn_sched = DEFAULT_CONN_SCHED;
 
 	TAILQ_INIT(&g_nvmf_tgt->poll_groups);
+	TAILQ_INIT(&g_nvmf_tgt->host_trids);
 
 	return 0;
 }
@@ -461,6 +475,10 @@ nvmf_tgt_create_poll_group(void *ctx)
 	if (!pg) {
 		fprintf(stderr, "failed to allocate poll group\n");
 		return;
+	}
+
+	if (!g_nvmf_tgt->next_pg) {
+		g_nvmf_tgt->next_pg = pg;
 	}
 
 	pg->thread = spdk_get_thread();
@@ -595,6 +613,204 @@ nvmf_tgt_stop_subsystems(void)
 	}
 }
 
+struct nvmf_target_pg_ctx {
+	struct nvmf_target *nvmf_tgt;
+	struct spdk_nvmf_qpair *qpair;
+	struct nvmf_target_poll_group *pg;
+};
+
+static void
+nvmf_tgt_remove_host_trid(struct nvmf_target *nvmf_tgt, struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvme_transport_id trid_to_remove;
+	struct nvmf_target_host_trid *trid, *tmp_trid;
+
+	if (nvmf_tgt->tgt_params.conn_sched != CONNECT_SCHED_HOST_IP) {
+		return;
+	}
+
+	if (spdk_nvmf_qpair_get_peer_trid(qpair, &trid_to_remove) != 0) {
+		return;
+	}
+
+	TAILQ_FOREACH_SAFE(trid, &nvmf_tgt->host_trids, link, tmp_trid) {
+		if (!strncmp(trid->host_trid.traddr,
+			     trid_to_remove.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1)) {
+			trid->ref--;
+			if (trid->ref == 0) {
+				TAILQ_REMOVE(&nvmf_tgt->host_trids, trid, link);
+				free(trid);
+			}
+
+			break;
+		}
+	}
+
+	return;
+}
+
+static void
+nvmf_tgt_pg_add_qpair(void *_ctx)
+{
+	struct nvmf_target_pg_ctx *ctx = _ctx;
+	struct spdk_nvmf_qpair *qpair = ctx->qpair;
+	struct nvmf_target_poll_group *pg = ctx->pg;
+	struct nvmf_target *nvmf_tgt = ctx->nvmf_tgt;
+
+	free(_ctx);
+
+	if (spdk_nvmf_poll_group_add(pg->group, qpair) != 0) {
+		fprintf(stderr, "unable to add the qpair to a poll group.\n");
+		nvmf_tgt_remove_host_trid(nvmf_tgt, qpair);
+		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+	}
+}
+
+/* Round robin selection of poll groups */
+static struct nvmf_target_poll_group *
+nvmf_tgt_get_next_pg(struct nvmf_target *nvmf_tgt)
+{
+	struct nvmf_target_poll_group *pg;
+
+	pg = nvmf_tgt->next_pg;
+	nvmf_tgt->next_pg = TAILQ_NEXT(pg, link);
+	if (nvmf_tgt->next_pg == NULL) {
+		nvmf_tgt->next_pg = TAILQ_FIRST(&nvmf_tgt->poll_groups);
+	}
+
+	return pg;
+}
+
+static struct nvmf_target_poll_group *
+nvmf_get_optimal_pg(struct nvmf_target *nvmf_tgt, struct spdk_nvmf_qpair *qpair)
+{
+	struct nvmf_target_poll_group *pg, *_pg = NULL;
+	struct spdk_nvmf_poll_group *group = spdk_nvmf_get_optimal_poll_group(qpair);
+
+	if (group == NULL) {
+		_pg = nvmf_tgt_get_next_pg(nvmf_tgt);
+		goto end;
+	}
+
+	TAILQ_FOREACH(pg, &nvmf_tgt->poll_groups, link) {
+		if (pg->group == group) {
+			_pg = pg;
+			break;
+		}
+	}
+
+end:
+	assert(_pg != NULL);
+	return _pg;
+}
+
+static struct nvmf_target_poll_group *
+nvmf_qpair_get_pg(struct nvmf_target *nvmf_tgt, struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvme_transport_id trid;
+	struct nvmf_target_host_trid *tmp_trid, *new_trid;
+	struct nvmf_target_poll_group *pg;
+	int ret;
+
+	switch (nvmf_tgt->tgt_params.conn_sched) {
+	case CONNECT_SCHED_HOST_IP:
+		ret = spdk_nvmf_qpair_get_peer_trid(qpair, &trid);
+		if (ret) {
+			pg = nvmf_tgt->next_pg;
+			fprintf(stderr, "invalid host transport Id. Assigning to poll group %p\n", pg);
+			break;
+		}
+
+		TAILQ_FOREACH(tmp_trid, &nvmf_tgt->host_trids, link) {
+			if (!strncmp(tmp_trid->host_trid.traddr,
+				     trid.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1)) {
+				tmp_trid->ref++;
+				pg = tmp_trid->pg;
+				break;
+			}
+		}
+
+		if (!tmp_trid) {
+			new_trid = calloc(1, sizeof(*new_trid));
+			if (!new_trid) {
+				pg = nvmf_tgt->next_pg;
+				fprintf(stderr, "insufficient memory. Assigning to poll group %p\n", pg);
+				break;
+			}
+			/* Get the next available poll group for the new host */
+			pg = nvmf_tgt_get_next_pg(nvmf_tgt);
+			new_trid->pg = pg;
+			memcpy(new_trid->host_trid.traddr, trid.traddr,
+			       SPDK_NVMF_TRADDR_MAX_LEN + 1);
+			TAILQ_INSERT_TAIL(&nvmf_tgt->host_trids, new_trid, link);
+		}
+		break;
+	case CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP:
+		pg = nvmf_get_optimal_pg(nvmf_tgt, qpair);
+		break;
+	case CONNECT_SCHED_ROUND_ROBIN:
+	default:
+		pg = nvmf_tgt_get_next_pg(nvmf_tgt);
+		break;
+	}
+
+	return pg;
+}
+
+static void
+new_qpair(struct spdk_nvmf_qpair *qpair, void *cb_arg)
+{
+	struct nvmf_target_poll_group *pg;
+	struct nvmf_target_pg_ctx *ctx;
+	struct nvmf_target *nvmf_tgt = g_nvmf_tgt;
+
+	pg = nvmf_qpair_get_pg(nvmf_tgt, qpair);
+	if (!pg) {
+		nvmf_tgt_remove_host_trid(nvmf_tgt, qpair);
+		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		fprintf(stderr, "failed to allocate poll group context.\n");
+		nvmf_tgt_remove_host_trid(nvmf_tgt, qpair);
+		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+		return;
+	}
+
+	ctx->qpair = qpair;
+	ctx->pg = pg;
+	ctx->nvmf_tgt = nvmf_tgt;
+
+	spdk_thread_send_msg(pg->thread, nvmf_tgt_pg_add_qpair, ctx);
+}
+
+static int
+acceptor_poll(void *arg)
+{
+	struct nvmf_target *nvmf_tgt = arg;
+
+	spdk_nvmf_tgt_accept(nvmf_tgt->tgt, new_qpair, NULL);
+
+	return -1;
+}
+
+static void
+nvmf_tgts_run(void)
+{
+	spdk_set_thread(init_thread);
+	acceptor_poller = spdk_poller_register(acceptor_poll, g_nvmf_tgt,
+					       g_nvmf_tgt->tgt_params.acceptor_poll_rate);
+
+	fprintf(stdout, "start master work function\n");
+	spdk_rpc_initialize(g_rpc_addr);
+	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+
+	nvmf_work_fn(g_master_thread);
+	spdk_rpc_finish();
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
@@ -641,7 +857,7 @@ int main(int argc, char **argv)
 	/* Start all the subsystems */
 	nvmf_tgt_start_subsystems();
 
-	nvmf_work_fn(g_master_thread);
+	nvmf_tgts_run();
 
 	nvmf_tgt_stop_subsystems();
 	nvmf_tgt_destroy_poll_groups();
