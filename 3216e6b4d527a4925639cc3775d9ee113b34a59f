@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61a4c972_144a282e",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-17T19:34:57Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be put directly into BUILD_CMD? Is there ever a case where you wouldn\u0027t want it for these sort of tests?",
+      "revId": "3216e6b4d527a4925639cc3775d9ee113b34a59f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
