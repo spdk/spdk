@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffa50f8e_c7f8d507",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1438,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-17T00:24:17Z",
+      "side": 1,
+      "message": "too? :)",
+      "range": {
+        "startLine": 1438,
+        "startChar": 25,
+        "endLine": 1438,
+        "endChar": 27
+      },
+      "revId": "fb09be13933b8677b44b755945206052da72ee7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1340be92_ba5c4c2e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1484,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-17T00:24:17Z",
+      "side": 1,
+      "message": "this parameter change can be done before this patch? Maybe in the first patch?",
+      "range": {
+        "startLine": 1484,
+        "startChar": 2,
+        "endLine": 1484,
+        "endChar": 32
+      },
+      "revId": "fb09be13933b8677b44b755945206052da72ee7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b731bd7d_7e726d80",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1565,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-17T00:24:17Z",
+      "side": 1,
+      "message": "Unintentional change?",
+      "revId": "fb09be13933b8677b44b755945206052da72ee7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
