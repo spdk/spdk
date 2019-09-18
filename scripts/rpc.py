@@ -1508,13 +1508,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=nbd_get_disks)
 
     # net
-    def add_ip_address(args):
-        rpc.net.add_ip_address(args.client, ifc_index=args.ifc_index, ip_addr=args.ip_addr)
+    def net_interface_add_ip_address(args):
+        rpc.net.net_interface_add_ip_address(args.client, ifc_index=args.ifc_index, ip_addr=args.ip_addr)
 
-    p = subparsers.add_parser('add_ip_address', help='Add IP address')
+    p = subparsers.add_parser('net_interface_add_ip_address', aliases=['add_ip_address'],
+                              help='Add IP address')
     p.add_argument('ifc_index', help='ifc index of the nic device.', type=int)
     p.add_argument('ip_addr', help='ip address will be added.')
-    p.set_defaults(func=add_ip_address)
+    p.set_defaults(func=net_interface_add_ip_address)
 
     def delete_ip_address(args):
         rpc.net.delete_ip_address(args.client, ifc_index=args.ifc_index, ip_addr=args.ip_addr)

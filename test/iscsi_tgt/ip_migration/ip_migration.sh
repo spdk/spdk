@@ -13,7 +13,7 @@ rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio.py"
 
 # Namespaces are NOT used here on purpose. This test requires changes to detect
-# ifc_index for interface that was put into namespace. Needed for add_ip_address.
+# ifc_index for interface that was put into namespace. Needed for net_interface_add_ip_address.
 ISCSI_APP="$rootdir/app/iscsi_tgt/iscsi_tgt"
 NETMASK=127.0.0.0/24
 MIGRATION_ADDRESS=127.0.0.2
@@ -33,7 +33,7 @@ function rpc_config() {
 }
 
 function rpc_add_target_node() {
-	$rpc_py -s $1 add_ip_address 1 $MIGRATION_ADDRESS
+	$rpc_py -s $1 net_interface_add_ip_address 1 $MIGRATION_ADDRESS
 	$rpc_py -s $1 iscsi_create_portal_group $PORTAL_TAG $MIGRATION_ADDRESS:$ISCSI_PORT
 	$rpc_py -s $1 iscsi_create_target_node target1 target1_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
 }
