@@ -1,4 +1,8 @@
-def add_ip_address(client, ifc_index, ip_addr):
+from .helpers import deprecated_alias
+
+
+@deprecated_alias('add_ip_address')
+def net_interface_add_ip_address(client, ifc_index, ip_addr):
     """Add IP address.
 
     Args:
@@ -6,7 +10,7 @@ def add_ip_address(client, ifc_index, ip_addr):
         ip_addr: ip address will be added
     """
     params = {'ifc_index': ifc_index, 'ip_address': ip_addr}
-    return client.call('add_ip_address', params)
+    return client.call('net_interface_add_ip_address', params)
 
 
 def delete_ip_address(client, ifc_index, ip_addr):
