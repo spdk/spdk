@@ -80,7 +80,7 @@ struct nvme_bdev {
 
 struct nvme_async_probe_ctx;
 
-typedef int (*spdk_nvme_create_bdevs_fn)(struct nvme_async_probe_ctx *ctx);
+typedef int (*spdk_nvme_create_bdev_fn)(struct nvme_async_probe_ctx *ctx);
 typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
 
 struct nvme_async_probe_ctx {
@@ -94,7 +94,8 @@ struct nvme_async_probe_ctx {
 	struct spdk_nvme_ctrlr_opts opts;
 	bool bdevs_done;
 	bool ctrlr_done;
-	spdk_nvme_create_bdevs_fn create_bdevs_fn;
+	spdk_nvme_create_bdev_fn create_ctrlr_fn;
+	spdk_nvme_create_bdev_fn create_bdevs_fn;
 	spdk_bdev_create_nvme_fn cb_fn;
 	void *cb_ctx;
 };
