@@ -138,7 +138,7 @@ SPDK_RPC_REGISTER("log_set_print_level", spdk_rpc_log_set_print_level,
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_set_print_level, set_log_print_level)
 
 static void
-spdk_rpc_get_log_print_level(struct spdk_jsonrpc_request *request,
+spdk_rpc_log_get_print_level(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
@@ -147,7 +147,7 @@ spdk_rpc_get_log_print_level(struct spdk_jsonrpc_request *request,
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_log_print_level requires no parameters");
+						 "log_get_print_level requires no parameters");
 		return;
 	}
 
@@ -164,8 +164,9 @@ spdk_rpc_get_log_print_level(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_log_print_level", spdk_rpc_get_log_print_level,
+SPDK_RPC_REGISTER("log_get_print_level", spdk_rpc_log_get_print_level,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_get_print_level, get_log_print_level)
 
 static void
 spdk_rpc_set_log_level(struct spdk_jsonrpc_request *request,

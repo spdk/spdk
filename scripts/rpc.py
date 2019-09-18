@@ -1168,11 +1168,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('level', help='log print level we want to set. (for example "DEBUG").')
     p.set_defaults(func=log_set_print_level)
 
-    def get_log_print_level(args):
-        print_dict(rpc.log.get_log_print_level(args.client))
+    def log_get_print_level(args):
+        print_dict(rpc.log.log_get_print_level(args.client))
 
-    p = subparsers.add_parser('get_log_print_level', help='get log print level')
-    p.set_defaults(func=get_log_print_level)
+    p = subparsers.add_parser('log_get_print_level', aliases=['get_log_print_level'],
+                              help='get log print level')
+    p.set_defaults(func=log_get_print_level)
 
     # lvol
     def bdev_lvol_create_lvstore(args):
