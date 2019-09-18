@@ -104,12 +104,31 @@ free_controller(struct spdk_nvme_ctrlr *ctrlr)
 	free(ctrlr);
 }
 
+static uint64_t
+chunk_offset_to_lba(struct spdk_ocssd_geometry_data *geo, uint64_t offset)
+{
+	uint64_t chk, pu, grp;
+	uint64_t chk_off, pu_off, grp_off;
+
+	chk_off = geo->lbaf.lbk_len;
+	pu_off = geo->lbaf.chk_len + chk_off;
+	grp_off = geo->lbaf.pu_len + pu_off;
+
+	chk = offset % geo->num_chk;
+	pu = (offset / geo->num_chk) % geo->num_pu;
+	grp = (offset / (geo->num_chk * geo->num_pu)) % geo->num_grp;
+
+	return chk << chk_off |
+	       pu  << pu_off  |
+	       grp << grp_off;
+}
+
 static struct spdk_nvme_ctrlr *
 create_controller(const struct spdk_nvme_transport_id *trid, uint32_t ns_count,
 		  const struct spdk_ocssd_geometry_data *geo)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
-	uint32_t nsid;
+	uint32_t nsid, offset;
 
 	SPDK_CU_ASSERT_FATAL(!find_controller(trid));
 
@@ -131,6 +150,13 @@ create_controller(const struct spdk_nvme_transport_id *trid, uint32_t ns_count,
 	ctrlr->trid = *trid;
 	ctrlr->ns_count = ns_count;
 	ctrlr->admin_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+
+	for (offset = 0; offset < ctrlr->num_chunks; ++offset) {
+		ctrlr->chunk_info[offset].cs.free = 1;
+		ctrlr->chunk_info[offset].slba = chunk_offset_to_lba(&ctrlr->geometry, offset);
+		ctrlr->chunk_info[offset].wp = ctrlr->chunk_info[offset].slba;
+	}
+
 	SPDK_CU_ASSERT_FATAL(ctrlr->admin_qpair != NULL);
 
 	LIST_INSERT_HEAD(&g_ctrlr_list, ctrlr, list);
@@ -452,6 +478,22 @@ test_create_controller(void)
 	uint32_t nsid;
 	int rc;
 
+	geometry = (struct spdk_ocssd_geometry_data) {
+		.clba = 512,
+		.num_chk = 64,
+		.num_pu = 8,
+		.num_grp = 4,
+		.maxoc = 69,
+		.maxocpu = 68,
+		.ws_opt = 86,
+		.lbaf = {
+			.lbk_len = 9,
+			.chk_len = 6,
+			.pu_len = 3,
+			.grp_len = 2,
+		}
+	};
+
 	ctrlr = create_controller(&trid, ns_count, &geometry);
 	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
 	rc = spdk_bdev_ocssd_create_ctrlr(&trid);
@@ -537,6 +579,12 @@ test_device_geometry(void)
 		.maxoc = 69,
 		.maxocpu = 68,
 		.ws_opt = 86,
+		.lbaf = {
+			.lbk_len = 9,
+			.chk_len = 6,
+			.pu_len = 3,
+			.grp_len = 2,
+		}
 	};
 
 	ctrlr = create_controller(&trid, 1, &geometry);
@@ -887,6 +935,8 @@ test_get_zone_info(void)
 	bdev_io->u.zdev.zone_id = 0;
 	bdev_io->u.zdev.num_zones = MAX_ZONE_INFO_COUNT;
 	bdev_io->u.zdev.buf = &zone_info;
+	chunk_info.cs.free = 1;
+	set_chunk_info(ctrlr, 0, &chunk_info);
 
 	rc = bdev_ocssd_get_zone_info(NULL, bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
