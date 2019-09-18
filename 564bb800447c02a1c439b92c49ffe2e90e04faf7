@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8043cad5_24e122a3",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1557,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-18T22:17:06Z",
+      "side": 1,
+      "message": "FYI I didn\u0027t use the name bdev in the struct name as one of the required bdev func tables has a very similar name and this function table really has nothing to do with bdevs anyway, its just a raid func table",
+      "parentUuid": "7c685748_fea89a5c",
+      "revId": "564bb800447c02a1c439b92c49ffe2e90e04faf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "608af34f_79c23666",
         "filename": "module/bdev/raid/bdev_raid.c",
         "patchSetId": 12
@@ -30,6 +48,30 @@
       "writtenOn": "2019-09-16T22:58:40Z",
       "side": 1,
       "message": "This is not necessary.",
+      "range": {
+        "startLine": 1569,
+        "startChar": 2,
+        "endLine": 1569,
+        "endChar": 7
+      },
+      "revId": "564bb800447c02a1c439b92c49ffe2e90e04faf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb79fa29_6303a8f5",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1569,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-18T22:17:06Z",
+      "side": 1,
+      "message": "Oh duh :)",
+      "parentUuid": "608af34f_79c23666",
       "range": {
         "startLine": 1569,
         "startChar": 2,
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "46dda86d_39f7c19a",
+        "filename": "module/bdev/raid/bdev_raid.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-18T22:17:06Z",
+      "side": 1,
+      "message": "sure, that helps make it clear that we\u0027re invoking a function where used.  Thanks.  The spaces comment I don\u0027t totally understand - in the func table now its just like we declare them elsewhere (no tabs) but in this struct there\u0027s tabs, of coruse, between the new element fn_table and its type.  Guess that\u0027s what you mean?",
+      "parentUuid": "4eb7ed59_b5f41c5d",
+      "revId": "564bb800447c02a1c439b92c49ffe2e90e04faf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b5c8b718_8cc26893",
         "filename": "module/bdev/raid/bdev_raid.h",
         "patchSetId": 12
@@ -79,6 +139,30 @@
       "revId": "564bb800447c02a1c439b92c49ffe2e90e04faf7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dcc92faa_754315b1",
+        "filename": "module/bdev/raid/bdev_raid.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-18T22:17:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b5c8b718_8cc26893",
+      "range": {
+        "startLine": 165,
+        "startChar": 8,
+        "endLine": 165,
+        "endChar": 12
+      },
+      "revId": "564bb800447c02a1c439b92c49ffe2e90e04faf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -105,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "3a577379_6bfbfaa1",
+        "filename": "module/bdev/raid/bdev_raid.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-18T22:17:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3faebf84_b3e9fcf4",
+      "range": {
+        "startLine": 166,
+        "startChar": 8,
+        "endLine": 166,
+        "endChar": 13
+      },
+      "revId": "564bb800447c02a1c439b92c49ffe2e90e04faf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8fba7379_033701e0",
         "filename": "module/bdev/raid/bdev_raid.h",
         "patchSetId": 12
@@ -128,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "fba985ab_90dd19d4",
+        "filename": "module/bdev/raid/bdev_raid.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-18T22:17:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8fba7379_033701e0",
+      "range": {
+        "startLine": 167,
+        "startChar": 8,
+        "endLine": 167,
+        "endChar": 16
+      },
+      "revId": "564bb800447c02a1c439b92c49ffe2e90e04faf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc532383_5df7c70d",
         "filename": "module/bdev/raid/bdev_raid.h",
         "patchSetId": 12
@@ -148,6 +280,30 @@
       "revId": "564bb800447c02a1c439b92c49ffe2e90e04faf7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea39fce6_1ca1f522",
+        "filename": "module/bdev/raid/bdev_raid.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-18T22:17:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "bc532383_5df7c70d",
+      "range": {
+        "startLine": 168,
+        "startChar": 11,
+        "endLine": 168,
+        "endChar": 25
+      },
+      "revId": "564bb800447c02a1c439b92c49ffe2e90e04faf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
