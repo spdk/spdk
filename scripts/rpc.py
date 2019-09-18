@@ -1802,12 +1802,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     entry contain (unsorted) array of subsystems it depends on.""")
     p.set_defaults(func=framework_get_subsystems)
 
-    def get_subsystem_config(args):
-        print_dict(rpc.subsystem.get_subsystem_config(args.client, args.name))
+    def framework_get_config(args):
+        print_dict(rpc.subsystem.framework_get_config(args.client, args.name))
 
-    p = subparsers.add_parser('get_subsystem_config', help="""Print subsystem configuration""")
+    p = subparsers.add_parser('framework_get_config', aliases=['get_subsystem_config'],
+                              help="""Print subsystem configuration""")
     p.add_argument('name', help='Name of subsystem to query')
-    p.set_defaults(func=get_subsystem_config)
+    p.set_defaults(func=framework_get_config)
 
     # vhost
     def set_vhost_controller_coalescing(args):

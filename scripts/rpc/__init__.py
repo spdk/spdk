@@ -78,7 +78,7 @@ def save_config(client, fd, indent=2):
     for elem in client.call('framework_get_subsystems'):
         cfg = {
             'subsystem': elem['subsystem'],
-            'config': client.call('get_subsystem_config', {"name": elem['subsystem']})
+            'config': client.call('framework_get_config', {"name": elem['subsystem']})
         }
         config['subsystems'].append(cfg)
 
@@ -148,7 +148,7 @@ def save_subsystem_config(client, fd, indent=2, name=None):
     """
     cfg = {
         'subsystem': name,
-        'config': client.call('get_subsystem_config', {"name": name})
+        'config': client.call('framework_get_config', {"name": name})
     }
 
     _json_dump(cfg, fd, indent)
