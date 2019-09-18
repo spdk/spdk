@@ -252,7 +252,7 @@ Example response:
     "set_log_flag",
     "get_log_level",
     "set_log_level",
-    "get_log_print_level",
+    "log_get_print_level",
     "log_set_print_level",
     "get_iscsi_global_params",
     "iscsi_target_node_add_lun",
