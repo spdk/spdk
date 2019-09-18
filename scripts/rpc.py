@@ -1794,12 +1794,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=bdev_pmem_delete_pool)
 
     # subsystem
-    def get_subsystems(args):
-        print_dict(rpc.subsystem.get_subsystems(args.client))
+    def framework_get_subsystems(args):
+        print_dict(rpc.subsystem.framework_get_subsystems(args.client))
 
-    p = subparsers.add_parser('get_subsystems', help="""Print subsystems array in initialization order. Each subsystem
+    p = subparsers.add_parser('framework_get_subsystems', aliases=['get_subsystems'],
+                              help="""Print subsystems array in initialization order. Each subsystem
     entry contain (unsorted) array of subsystems it depends on.""")
-    p.set_defaults(func=get_subsystems)
+    p.set_defaults(func=framework_get_subsystems)
 
     def get_subsystem_config(args):
         print_dict(rpc.subsystem.get_subsystem_config(args.client, args.name))
