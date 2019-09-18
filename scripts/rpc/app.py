@@ -12,7 +12,8 @@ def spdk_kill_instance(client, sig_name):
     return client.call('spdk_kill_instance', params)
 
 
-def context_switch_monitor(client, enabled=None):
+@deprecated_alias('context_switch_monitor')
+def framework_monitor_context_switch(client, enabled=None):
     """Query or set state of context switch monitoring.
 
     Args:
@@ -24,7 +25,7 @@ def context_switch_monitor(client, enabled=None):
     params = {}
     if enabled is not None:
         params['enabled'] = enabled
-    return client.call('context_switch_monitor', params)
+    return client.call('framework_monitor_context_switch', params)
 
 
 def thread_get_stats(client):
