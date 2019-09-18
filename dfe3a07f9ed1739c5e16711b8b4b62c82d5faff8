@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b22419a6_d3cdc3c9",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-18T07:10:27Z",
+      "side": 0,
+      "message": "Why is SC2231 removed? This does not belong to this commit.",
+      "range": {
+        "startLine": 250,
+        "startChar": 49,
+        "endLine": 250,
+        "endChar": 55
+      },
+      "revId": "dfe3a07f9ed1739c5e16711b8b4b62c82d5faff8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
