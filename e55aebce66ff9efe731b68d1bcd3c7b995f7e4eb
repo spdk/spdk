@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69c36c0d_edd23459",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1016870
+      },
+      "writtenOn": "2019-09-18T01:16:27Z",
+      "side": 1,
+      "message": "Don\u0027t join this two lines, just leave the original code as is.\nTo make it easier to review what\u0027s actually changed.",
+      "range": {
+        "startLine": 412,
+        "startChar": 2,
+        "endLine": 412,
+        "endChar": 96
+      },
+      "revId": "e55aebce66ff9efe731b68d1bcd3c7b995f7e4eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "615dd6c8_a3440c36",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1016870
+      },
+      "writtenOn": "2019-09-18T01:16:27Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 416,
+        "startChar": 1,
+        "endLine": 416,
+        "endChar": 104
+      },
+      "revId": "e55aebce66ff9efe731b68d1bcd3c7b995f7e4eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
