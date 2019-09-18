@@ -76,20 +76,20 @@ def verify(expr, retcode, msg):
 
 def verify_log_flag_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
-    output = rpc.get_log_flags()
+    output = rpc.log_get_flags()
     jsonvalue = json.loads(output)
     verify(not jsonvalue[rpc_param['log_flag']], 1,
-           "get_log_flags returned {}, expected false".format(jsonvalue))
+           "log_get_flags returned {}, expected false".format(jsonvalue))
     rpc.log_set_flag(rpc_param['log_flag'])
-    output = rpc.get_log_flags()
+    output = rpc.log_get_flags()
     jsonvalue = json.loads(output)
     verify(jsonvalue[rpc_param['log_flag']], 1,
-           "get_log_flags returned {}, expected true".format(jsonvalue))
+           "log_get_flags returned {}, expected true".format(jsonvalue))
     rpc.log_clear_flag(rpc_param['log_flag'])
-    output = rpc.get_log_flags()
+    output = rpc.log_get_flags()
     jsonvalue = json.loads(output)
     verify(not jsonvalue[rpc_param['log_flag']], 1,
-           "get_log_flags returned {}, expected false".format(jsonvalue))
+           "log_get_flags returned {}, expected false".format(jsonvalue))
 
     print("verify_log_flag_rpc_methods passed")
 

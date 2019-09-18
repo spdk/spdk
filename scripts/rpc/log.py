@@ -23,14 +23,14 @@ def log_clear_flag(client, flag):
     return client.call('log_clear_flag', params)
 
 
-@deprecated_alias('get_trace_flags')
-def get_log_flags(client):
+@deprecated_alias('get_log_flags')
+def log_get_flags(client):
     """Get log flags
 
     Returns:
         List of log flags
     """
-    return client.call('get_log_flags')
+    return client.call('log_get_flags')
 
 
 @deprecated_alias('set_log_level')
