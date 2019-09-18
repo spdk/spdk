@@ -118,6 +118,23 @@
       "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3c19981_9cdb70f2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1901,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-18T05:42:12Z",
+      "side": 1,
+      "message": "Can you point to me how this works for in-capsule data, if there is a 4KiB data, the IOV should be like this:\n\n512 bytes data \niov.[0]\n16 bytes metadata\niov.[1]\n.\n.\n.\nafter calling spdk_dif_generate(), the backend NVMe driver can\u0027t accept such data buffers with extended LBA format.",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
