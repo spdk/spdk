@@ -70,6 +70,24 @@
       "revId": "96301f0dcc39f3fa044bc4b7285c469ecd06ca34",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9086f5b_429c0cd7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 2121,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-18T08:12:26Z",
+      "side": 1,
+      "message": "DIF generation failure is not caused by data corruption. so severe error processing like disconnect is OK to me, but let\u0027s get Ben, Changpeng, Jim\u0027s thought.",
+      "parentUuid": "5b2aa1f8_a2d5ad1d",
+      "revId": "96301f0dcc39f3fa044bc4b7285c469ecd06ca34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
