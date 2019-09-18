@@ -133,6 +133,8 @@ nvme_bdev_unregister_cb(void *io_device)
 void
 nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
+	struct nvme_bdev *bdev, *tmp;
+
 	assert(nvme_bdev_ctrlr->destruct);
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
@@ -140,6 +142,11 @@ nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	spdk_io_device_unregister(nvme_bdev_ctrlr->ctrlr, nvme_bdev_unregister_cb);
 	spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
 	free(nvme_bdev_ctrlr->name);
-	free(nvme_bdev_ctrlr->bdevs);
+
+	TAILQ_FOREACH_SAFE(bdev, &nvme_bdev_ctrlr->bdevs, tailq, tmp) {
+		TAILQ_REMOVE(&nvme_bdev_ctrlr->bdevs, bdev, tailq);
+		free(bdev);
+	}
+
 	free(nvme_bdev_ctrlr);
 }
