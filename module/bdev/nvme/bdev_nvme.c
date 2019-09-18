@@ -950,7 +950,7 @@ free_controller(const struct spdk_nvme_transport_id *trid)
 	free(nvme_bdev_ctrlr);
 }
 
-static int
+int
 spdk_bdev_nvme_create_ctrlr(const struct spdk_nvme_transport_id *trid)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
@@ -1227,7 +1227,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		goto end;
 	}
 
-	rc = spdk_bdev_nvme_create_ctrlr(trid);
+	rc = ctx->create_ctrlr_fn(trid);
 	if (rc) {
 		SPDK_ERRLOG("Failed to create controller\n");
 		free_controller(trid);
@@ -1270,6 +1270,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char **names, size_t count,
 		      const char *hostnqn,
 		      uint32_t prchk_flags,
+		      spdk_nvme_create_ctrlr_fn create_ctrlr_fn,
 		      spdk_nvme_create_bdevs_fn create_bdevs_fn,
 		      spdk_bdev_create_nvme_fn cb_fn,
 		      void *cb_ctx)
@@ -1309,6 +1310,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->prchk_flags = prchk_flags;
 	ctx->trid = *trid;
 	ctx->create_bdevs_fn = create_bdevs_fn;
+	ctx->create_ctrlr_fn = create_ctrlr_fn;
 
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->opts, sizeof(ctx->opts));
 	ctx->opts.transport_retry_count = g_opts.retry_count;
