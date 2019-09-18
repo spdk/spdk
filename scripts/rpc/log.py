@@ -44,13 +44,14 @@ def log_set_level(client, level):
     return client.call('log_set_level', params)
 
 
-def get_log_level(client):
+@deprecated_alias('get_log_level')
+def log_get_level(client):
     """Get log level
 
     Returns:
         Current log level
     """
-    return client.call('get_log_level')
+    return client.call('log_get_level')
 
 
 @deprecated_alias('set_log_print_level')

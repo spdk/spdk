@@ -82,7 +82,7 @@ _parse_log_level(char *level)
 }
 
 static const char *
-_get_log_level_name(int level)
+_log_get_level_name(int level)
 {
 	if (level == SPDK_LOG_ERROR) {
 		return "ERROR";
@@ -152,7 +152,7 @@ spdk_rpc_log_get_print_level(struct spdk_jsonrpc_request *request,
 	}
 
 	level = spdk_log_get_print_level();
-	name = _get_log_level_name(level);
+	name = _log_get_level_name(level);
 	if (name == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "invalid log level");
@@ -208,7 +208,7 @@ SPDK_RPC_REGISTER("log_set_level", spdk_rpc_log_set_level, SPDK_RPC_STARTUP | SP
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_set_level, set_log_level)
 
 static void
-spdk_rpc_get_log_level(struct spdk_jsonrpc_request *request,
+spdk_rpc_log_get_level(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
@@ -217,12 +217,12 @@ spdk_rpc_get_log_level(struct spdk_jsonrpc_request *request,
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_log_level requires no parameters");
+						 "log_get_level requires no parameters");
 		return;
 	}
 
 	level = spdk_log_get_level();
-	name = _get_log_level_name(level);
+	name = _log_get_level_name(level);
 	if (name == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "invalid log level");
@@ -234,7 +234,8 @@ spdk_rpc_get_log_level(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_log_level", spdk_rpc_get_log_level, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("log_get_level", spdk_rpc_log_get_level, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_get_level, get_log_level)
 
 static void
 spdk_rpc_set_log_flag(struct spdk_jsonrpc_request *request,
