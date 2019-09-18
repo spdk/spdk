@@ -1243,7 +1243,7 @@ spdk_nvmf_rdma_event_reject(struct rdma_cm_id *id, enum spdk_nvmf_rdma_transport
 
 static int
 nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *event,
-		  new_qpair_fn cb_fn)
+		  new_qpair_fn cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_qpair	*rqpair = NULL;
@@ -1336,7 +1336,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 
 	event->id->context = &rqpair->qpair;
 
-	cb_fn(&rqpair->qpair);
+	cb_fn(&rqpair->qpair, cb_arg);
 
 	return 0;
 }
@@ -2926,7 +2926,7 @@ nvmf_rdma_handle_last_wqe_reached(void *ctx)
 }
 
 static void
-spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
+spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct rdma_cm_event		*event;
@@ -2953,7 +2953,7 @@ spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn c
 				/* No action required. The target never attempts to resolve routes. */
 				break;
 			case RDMA_CM_EVENT_CONNECT_REQUEST:
-				rc = nvmf_rdma_connect(transport, event, cb_fn);
+				rc = nvmf_rdma_connect(transport, event, cb_fn, cb_arg);
 				if (rc < 0) {
 					SPDK_ERRLOG("Unable to process connect event. rc: %d\n", rc);
 					break;
@@ -3091,7 +3091,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 }
 
 static void
-spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
+spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg)
 {
 	int	nfds, i = 0;
 	struct spdk_nvmf_rdma_transport *rtransport;
@@ -3106,7 +3106,7 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
 
 	/* The first poll descriptor is RDMA CM event */
 	if (rtransport->poll_fds[i++].revents & POLLIN) {
-		spdk_nvmf_process_cm_event(transport, cb_fn);
+		spdk_nvmf_process_cm_event(transport, cb_fn, cb_arg);
 		nfds--;
 	}
 

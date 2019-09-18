@@ -1099,7 +1099,8 @@ spdk_nvmf_tcp_qpair_sock_init(struct spdk_nvmf_tcp_qpair *tqpair)
 static void
 _spdk_nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
 			      struct spdk_nvmf_tcp_port *port,
-			      struct spdk_sock *sock, new_qpair_fn cb_fn)
+			      struct spdk_sock *sock,
+			      new_qpair_fn cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair;
 	int rc;
@@ -1140,12 +1141,12 @@ _spdk_nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
 		return;
 	}
 
-	cb_fn(&tqpair->qpair);
+	cb_fn(&tqpair->qpair, cb_arg);
 }
 
 static void
 spdk_nvmf_tcp_port_accept(struct spdk_nvmf_transport *transport, struct spdk_nvmf_tcp_port *port,
-			  new_qpair_fn cb_fn)
+			  new_qpair_fn cb_fn, void *cb_arg)
 {
 	struct spdk_sock *sock;
 	int i;
@@ -1153,13 +1154,13 @@ spdk_nvmf_tcp_port_accept(struct spdk_nvmf_transport *transport, struct spdk_nvm
 	for (i = 0; i < NVMF_TCP_MAX_ACCEPT_SOCK_ONE_TIME; i++) {
 		sock = spdk_sock_accept(port->listen_sock);
 		if (sock) {
-			_spdk_nvmf_tcp_handle_connect(transport, port, sock, cb_fn);
+			_spdk_nvmf_tcp_handle_connect(transport, port, sock, cb_fn, cb_arg);
 		}
 	}
 }
 
 static void
-spdk_nvmf_tcp_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
+spdk_nvmf_tcp_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct spdk_nvmf_tcp_port *port;
@@ -1167,7 +1168,7 @@ spdk_nvmf_tcp_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
 	TAILQ_FOREACH(port, &ttransport->ports, link) {
-		spdk_nvmf_tcp_port_accept(transport, port, cb_fn);
+		spdk_nvmf_tcp_port_accept(transport, port, cb_fn, cb_arg);
 	}
 }
 

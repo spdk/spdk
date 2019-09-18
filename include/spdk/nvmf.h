@@ -190,7 +190,7 @@ void spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
  *
  * \param qpair The newly discovered qpair.
  */
-typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair);
+typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair, void *cb_arg);
 
 /**
  * Poll the target for incoming connections.
@@ -202,7 +202,7 @@ typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair);
  * \param tgt The target associated with the listen address.
  * \param cb_fn Called for each newly discovered qpair.
  */
-void spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn);
+void spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn, void *cb_arg);
 
 /**
  * Create a poll group.

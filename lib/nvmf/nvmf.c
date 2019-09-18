@@ -659,12 +659,12 @@ spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_
 }
 
 void
-spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn)
+spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_transport *transport, *tmp;
 
 	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, tmp) {
-		spdk_nvmf_transport_accept(transport, cb_fn);
+		spdk_nvmf_transport_accept(transport, cb_fn, cb_arg);
 	}
 }
 

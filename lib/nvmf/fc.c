@@ -1955,7 +1955,7 @@ nvmf_fc_stop_listen(struct spdk_nvmf_transport *transport,
 }
 
 static void
-nvmf_fc_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
+nvmf_fc_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_fc_port *fc_port = NULL;
 	static bool start_lld = false;

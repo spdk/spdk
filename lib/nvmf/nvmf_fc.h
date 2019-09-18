@@ -311,6 +311,7 @@ struct spdk_nvmf_fc_port {
 	uint16_t fcp_rq_id;
 	struct spdk_nvmf_fc_hwqp ls_queue;
 	new_qpair_fn new_qp_cb;
+	void *new_qp_arg;
 
 	uint32_t num_io_queues;
 	struct spdk_nvmf_fc_hwqp *io_queues;

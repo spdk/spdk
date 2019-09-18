@@ -87,7 +87,7 @@ struct spdk_nvmf_transport_ops {
 	/**
 	 * Check for new connections on the transport.
 	 */
-	void (*accept)(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn);
+	void (*accept)(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg);
 
 	/**
 	 * Fill out a discovery log entry for a specific listen address.
@@ -183,7 +183,8 @@ struct spdk_nvmf_transport_ops {
 int spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 				    const struct spdk_nvme_transport_id *trid);
 
-void spdk_nvmf_transport_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn);
+void spdk_nvmf_transport_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn,
+				void *cb_arg);
 
 void spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 		struct spdk_nvme_transport_id *trid,
