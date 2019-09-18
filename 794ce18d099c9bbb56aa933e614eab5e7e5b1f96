@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d5cb5dc_3deb084c",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-18T06:17:24Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you check the state of the zone? I think zone_block_unmap should just check that the request is correct (aligned to zone boundary) and just call zone_block_reset_zone.",
+      "range": {
+        "startLine": 347,
+        "startChar": 0,
+        "endLine": 360,
+        "endChar": 11
+      },
+      "revId": "794ce18d099c9bbb56aa933e614eab5e7e5b1f96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6af09a58_d0419445",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-18T06:17:24Z",
+      "side": 1,
+      "message": "Can this even happen? _zone_block_ch_create_cb returns -ENOMEM in case it cannot create bdev_ch-\u003ebase_ch, so I think it shouldn\u0027t be possible to get a destroy_cb with base_ch \u003d\u003d NULL.",
+      "range": {
+        "startLine": 471,
+        "startChar": 1,
+        "endLine": 471,
+        "endChar": 24
+      },
+      "revId": "794ce18d099c9bbb56aa933e614eab5e7e5b1f96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28c78dd2_aea254bd",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-18T06:17:24Z",
+      "side": 1,
+      "message": "No need to check for NULL, it\u0027s safe to call free(NULL).",
+      "range": {
+        "startLine": 120,
+        "startChar": 1,
+        "endLine": 120,
+        "endChar": 15
+      },
+      "revId": "794ce18d099c9bbb56aa933e614eab5e7e5b1f96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e17e539e_3607dfe8",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 661,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-18T06:17:24Z",
+      "side": 1,
+      "message": "Again, no need to check for NULL.",
+      "range": {
+        "startLine": 661,
+        "startChar": 2,
+        "endLine": 661,
+        "endChar": 39
+      },
+      "revId": "794ce18d099c9bbb56aa933e614eab5e7e5b1f96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51f92708_e46b6e38",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-18T06:17:24Z",
+      "side": 1,
+      "message": "Let\u0027s rename it to send_zone_management.",
+      "range": {
+        "startLine": 841,
+        "startChar": 0,
+        "endLine": 841,
+        "endChar": 20
+      },
+      "revId": "794ce18d099c9bbb56aa933e614eab5e7e5b1f96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1885246f_d50f0639",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 918,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-18T06:17:24Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you free this after polling the thread?",
+      "range": {
+        "startLine": 918,
+        "startChar": 1,
+        "endLine": 918,
+        "endChar": 10
+      },
+      "revId": "794ce18d099c9bbb56aa933e614eab5e7e5b1f96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
