@@ -74,24 +74,24 @@ spdk_rpc_framework_get_subsystems(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("framework_get_subsystems", spdk_rpc_framework_get_subsystems, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_get_subsystems, get_subsystems)
 
-struct rpc_get_subsystem_config {
+struct rpc_framework_get_config {
 	char *name;
 };
 
-static const struct spdk_json_object_decoder rpc_get_subsystem_config[] = {
-	{"name", offsetof(struct rpc_get_subsystem_config, name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_framework_get_config[] = {
+	{"name", offsetof(struct rpc_framework_get_config, name), spdk_json_decode_string},
 };
 
 static void
-spdk_rpc_get_subsystem_config(struct spdk_jsonrpc_request *request,
+spdk_rpc_framework_get_config(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
-	struct rpc_get_subsystem_config req = {};
+	struct rpc_framework_get_config req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_subsystem *subsystem;
 
-	if (spdk_json_decode_object(params, rpc_get_subsystem_config,
-				    SPDK_COUNTOF(rpc_get_subsystem_config), &req)) {
+	if (spdk_json_decode_object(params, rpc_framework_get_config,
+				    SPDK_COUNTOF(rpc_framework_get_config), &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid arguments");
 		return;
 	}
@@ -111,4 +111,5 @@ spdk_rpc_get_subsystem_config(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 
-SPDK_RPC_REGISTER("get_subsystem_config", spdk_rpc_get_subsystem_config, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("framework_get_config", spdk_rpc_framework_get_config, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_get_config, get_subsystem_config)
