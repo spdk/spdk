@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "fd537a38_e0d7dc67",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1414,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-18T16:36:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0a4d6fe3_df552f05",
+      "range": {
+        "startLine": 1414,
+        "startChar": 97,
+        "endLine": 1414,
+        "endChar": 98
+      },
+      "revId": "743b78f75497e6cc4c5f7f8576cd0b442ed2f566",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "84a4974e_b2ad1ce0",
         "filename": "lib/nvmf/nvmf_rpc.c",
         "patchSetId": 3
@@ -36,6 +60,24 @@
       "writtenOn": "2019-09-18T09:15:36Z",
       "side": 1,
       "message": "Hi Seth,\n\nWill you help me to understand this TODO?\nWhy we can\u0027t allocate ctx on stack by defining it simply in this function, then passing \u0026ctx to json_decode_object()?\n\n-Shuhei",
+      "revId": "743b78f75497e6cc4c5f7f8576cd0b442ed2f566",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85504e1e_cc4bb01b",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1429,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-18T16:36:22Z",
+      "side": 1,
+      "message": "Ah yeah, allocating it on the stack is much better.\nWhat I was talking about in the todo is I wanted to be able to pass spdk_nvmf_tgt_opts directly to the decoder, but I can\u0027t since it contains a character array instead of a character pointer.\nBut we can ignore that for now.",
+      "parentUuid": "84a4974e_b2ad1ce0",
       "revId": "743b78f75497e6cc4c5f7f8576cd0b442ed2f566",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
