@@ -236,7 +236,7 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
 
     for x in nics:
         if x["ifc_index"] == 'lo':
-            rpc.delete_ip_address(x["ifc_index"], lo_ip[1])
+            rpc.net_interface_delete_ip_address(x["ifc_index"], lo_ip[1])
 
     print("verify_portal_groups_rpc_methods passed")
 
@@ -421,7 +421,7 @@ def help_get_interface_ip_list(rpc_py, nic_name):
     return nic[0]["ip_addr"]
 
 
-def verify_add_delete_ip_address(rpc_py):
+def verify_net_interface_add_delete_ip_address(rpc_py):
     rpc = spdk_rpc(rpc_py)
     nics = json.loads(rpc.get_interfaces())
     # add ip on up to first 2 nics
@@ -437,7 +437,7 @@ def verify_add_delete_ip_address(rpc_py):
             verify(False, 1,
                    "ping ip {} for {} was failed(adding was successful)".format
                    (faked_ip, x["name"]))
-        rpc.delete_ip_address(x["ifc_index"], faked_ip)
+        rpc.net_interface_delete_ip_address(x["ifc_index"], faked_ip)
         verify(faked_ip not in help_get_interface_ip_list(rpc_py, x["name"]), 1,
                "delete ip {} from nic {} failed.(adding and ping were successful)".format
                (faked_ip, x["name"]))
@@ -454,7 +454,7 @@ def verify_add_delete_ip_address(rpc_py):
             verify(False, 1,
                    "ip {} for {} could be pinged after delete ip(adding/ping/delete were successful)".format
                    (faked_ip, x["name"]))
-    print("verify_add_delete_ip_address passed.")
+    print("verify_net_interface_add_delete_ip_address passed.")
 
 
 def verify_add_nvme_bdev_rpc_methods(rpc_py):
@@ -489,7 +489,7 @@ if __name__ == "__main__":
         # Add/delete IP will not be supported in VPP.
         # It has separate vppctl utility for that.
         if test_type == 'posix':
-            verify_add_delete_ip_address(rpc_py)
+            verify_net_interface_add_delete_ip_address(rpc_py)
         create_malloc_bdevs_rpc_methods(rpc_py, rpc_param)
         verify_portal_groups_rpc_methods(rpc_py, rpc_param)
         verify_initiator_groups_rpc_methods(rpc_py, rpc_param)
