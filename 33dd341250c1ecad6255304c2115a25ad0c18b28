@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9b14231f_7e8c7bc6",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 3657,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-18T23:40:50Z",
+      "side": 1,
+      "message": "It\u0027s a bit of an implementation thing. The value that this function passes to the c code is 0. But the c code uses a value of zero to fall back to the default max stored in the code. I guess I was just trying to over-explain a little bit so that people who don\u0027t know that providing zero to this argument defaults to SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS.",
+      "parentUuid": "89b03a09_1caa2dc7",
+      "revId": "33dd341250c1ecad6255304c2115a25ad0c18b28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ed4f5af5_e618dd89",
         "filename": "lib/nvmf/nvmf_rpc.c",
         "patchSetId": 4
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "35f81541_346b15ad",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1453,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-18T23:40:50Z",
+      "side": 1,
+      "message": "Truth be told, I am not sure yet. We don\u0027t really have a use for this RPC in our example application since it uses a global target struct. But the libraries make it possible so I am adding it now.\nI set it to SPDK_RPC_RUNTIME for the time being because then it matches in scope with the rest of the NVMe-oF RPCs.",
+      "parentUuid": "ed4f5af5_e618dd89",
+      "revId": "33dd341250c1ecad6255304c2115a25ad0c18b28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "80bb58cf_6e0b2fc9",
         "filename": "lib/nvmf/nvmf_rpc.c",
         "patchSetId": 4
@@ -47,6 +83,24 @@
       "writtenOn": "2019-09-18T16:50:56Z",
       "side": 1,
       "message": "unrelated line removal",
+      "revId": "33dd341250c1ecad6255304c2115a25ad0c18b28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83c19952_ed668bd5",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1639,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-18T23:40:50Z",
+      "side": 1,
+      "message": "Yeah, this was just really bugging me since none of the other RPCs have that gap. I didn\u0027t feel like it justified a change all on its own.",
+      "parentUuid": "80bb58cf_6e0b2fc9",
       "revId": "33dd341250c1ecad6255304c2115a25ad0c18b28",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
