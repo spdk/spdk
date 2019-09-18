@@ -1526,12 +1526,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('ip_addr', help='ip address will be deleted.')
     p.set_defaults(func=net_interface_delete_ip_address)
 
-    def get_interfaces(args):
-        print_dict(rpc.net.get_interfaces(args.client))
+    def net_get_interfaces(args):
+        print_dict(rpc.net.net_get_interfaces(args.client))
 
     p = subparsers.add_parser(
-        'get_interfaces', help='Display current interface list')
-    p.set_defaults(func=get_interfaces)
+        'net_get_interfaces', aliases=['get_interfaces'], help='Display current interface list')
+    p.set_defaults(func=net_get_interfaces)
 
     # NVMe-oF
     def set_nvmf_target_max_subsystems(args):

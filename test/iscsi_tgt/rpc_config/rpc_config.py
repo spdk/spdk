@@ -194,7 +194,7 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
            "iscsi_get_portal_groups returned {} groups, expected empty".format(jsonvalues))
 
     lo_ip = (target_ip, other_ip)
-    nics = json.loads(rpc.get_interfaces())
+    nics = json.loads(rpc.net_get_interfaces())
     for x in nics:
         if x["ifc_index"] == 'lo':
             rpc.net_interface_add_ip_address(x["ifc_index"], lo_ip[1])
@@ -401,20 +401,20 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     print("verify_target_nodes_rpc_methods passed.")
 
 
-def verify_get_interfaces(rpc_py):
+def verify_net_get_interfaces(rpc_py):
     rpc = spdk_rpc(rpc_py)
-    nics = json.loads(rpc.get_interfaces())
+    nics = json.loads(rpc.net_get_interfaces())
     nics_names = set(x["name"] for x in nics)
-    # parse ip link show to verify the get_interfaces result
+    # parse ip link show to verify the net_get_interfaces result
     ip_show = ns_cmd + " ip link show"
     ifcfg_nics = set(re.findall(r'\S+:\s(\S+?)(?:@\S+){0,1}:\s<.*', check_output(ip_show.split()).decode()))
-    verify(nics_names == ifcfg_nics, 1, "get_interfaces returned {}".format(nics))
-    print("verify_get_interfaces passed.")
+    verify(nics_names == ifcfg_nics, 1, "net_get_interfaces returned {}".format(nics))
+    print("verify_net_get_interfaces passed.")
 
 
 def help_get_interface_ip_list(rpc_py, nic_name):
     rpc = spdk_rpc(rpc_py)
-    nics = json.loads(rpc.get_interfaces())
+    nics = json.loads(rpc.net_get_interfaces())
     nic = list([x for x in nics if x["name"] == nic_name])
     verify(len(nic) != 0, 1,
            "Nic name: {} is not found in {}".format(nic_name, [x["name"] for x in nics]))
@@ -423,7 +423,7 @@ def help_get_interface_ip_list(rpc_py, nic_name):
 
 def verify_net_interface_add_delete_ip_address(rpc_py):
     rpc = spdk_rpc(rpc_py)
-    nics = json.loads(rpc.get_interfaces())
+    nics = json.loads(rpc.net_get_interfaces())
     # add ip on up to first 2 nics
     for x in nics[:2]:
         faked_ip = "123.123.{}.{}".format(random.randint(1, 254), random.randint(1, 254))
@@ -485,7 +485,7 @@ if __name__ == "__main__":
 
     try:
         verify_log_flag_rpc_methods(rpc_py, rpc_param)
-        verify_get_interfaces(rpc_py)
+        verify_net_get_interfaces(rpc_py)
         # Add/delete IP will not be supported in VPP.
         # It has separate vppctl utility for that.
         if test_type == 'posix':
