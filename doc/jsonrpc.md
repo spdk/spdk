@@ -250,7 +250,7 @@ Example response:
     "get_log_flags",
     "clear_log_flag",
     "set_log_flag",
-    "get_log_level",
+    "log_get_level",
     "log_set_level",
     "log_get_print_level",
     "log_set_print_level",
