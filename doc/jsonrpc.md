@@ -243,7 +243,7 @@ Example response:
     "get_scsi_devices",
     "get_interfaces",
     "delete_ip_address",
-    "add_ip_address",
+    "net_interface_add_ip_address",
     "get_nbd_disks",
     "stop_nbd_disk",
     "start_nbd_disk",

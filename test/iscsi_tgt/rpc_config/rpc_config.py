@@ -197,7 +197,7 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
     nics = json.loads(rpc.get_interfaces())
     for x in nics:
         if x["ifc_index"] == 'lo':
-            rpc.add_ip_address(x["ifc_index"], lo_ip[1])
+            rpc.net_interface_add_ip_address(x["ifc_index"], lo_ip[1])
     for idx, value in enumerate(lo_ip):
         # The portal group tag must start at 1
         tag = idx + 1
@@ -428,7 +428,7 @@ def verify_add_delete_ip_address(rpc_py):
     for x in nics[:2]:
         faked_ip = "123.123.{}.{}".format(random.randint(1, 254), random.randint(1, 254))
         ping_cmd = ns_cmd + " ping -c 1 -W 1 " + faked_ip
-        rpc.add_ip_address(x["ifc_index"], faked_ip)
+        rpc.net_interface_add_ip_address(x["ifc_index"], faked_ip)
         verify(faked_ip in help_get_interface_ip_list(rpc_py, x["name"]), 1,
                "add ip {} to nic {} failed.".format(faked_ip, x["name"]))
         try:

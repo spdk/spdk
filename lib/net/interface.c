@@ -448,7 +448,7 @@ spdk_interface_destroy(void)
 }
 
 int
-spdk_interface_add_ip_address(int ifc_index, char *ip_addr)
+spdk_interface_net_interface_add_ip_address(int ifc_index, char *ip_addr)
 {
 	uint32_t addr;
 
@@ -485,7 +485,7 @@ spdk_interface_destroy(void)
 }
 
 int
-spdk_interface_add_ip_address(int ifc_index, char *ip_addr)
+spdk_interface_net_interface_add_ip_address(int ifc_index, char *ip_addr)
 {
 	return -1;
 }
