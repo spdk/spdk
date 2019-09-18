@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74d7a4ea_4c887b1c",
+        "filename": "examples/seastar/Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-18T16:40:43Z",
+      "side": 1,
+      "message": "Licenses",
+      "revId": "60d0e63429f90e827479d267552427d0ceabc7fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c820fcfc_ac841cca",
+        "filename": "examples/seastar/spdk_tgt.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-18T16:40:43Z",
+      "side": 1,
+      "message": "Is astyle not fixing the brackets to our style here?",
+      "revId": "60d0e63429f90e827479d267552427d0ceabc7fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
