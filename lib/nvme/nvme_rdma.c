@@ -90,6 +90,11 @@ struct nvme_rdma_cm_event_entry {
 	STAILQ_ENTRY(nvme_rdma_cm_event_entry)	link;
 };
 
+struct nvme_rdma_device_context {
+	struct ibv_context	*ctx;
+	struct ibv_pd		*pd;
+};
+
 /* NVMe RDMA transport extensions for spdk_nvme_ctrlr */
 struct nvme_rdma_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
@@ -105,6 +110,10 @@ struct nvme_rdma_ctrlr {
 	STAILQ_HEAD(, nvme_rdma_cm_event_entry)	free_cm_events;
 
 	struct nvme_rdma_cm_event_entry		*cm_events;
+
+	struct nvme_rdma_device_context		*contexts;
+
+	int					num_contexts;
 };
 
 /* NVMe RDMA qpair extensions for spdk_nvme_qpair */
@@ -1571,7 +1580,8 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 	struct nvme_rdma_ctrlr *rctrlr;
 	union spdk_nvme_cap_register cap;
 	union spdk_nvme_vs_register vs;
-	struct ibv_context **contexts;
+	struct ibv_device **devices;
+	struct ibv_context *context;
 	struct ibv_device_attr dev_attr;
 	int i, flag, rc;
 
@@ -1585,9 +1595,19 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 	rctrlr->ctrlr.opts = *opts;
 	memcpy(&rctrlr->ctrlr.trid, trid, sizeof(rctrlr->ctrlr.trid));
 
-	contexts = rdma_get_devices(NULL);
-	if (contexts == NULL) {
+	devices = ibv_get_device_list(&rctrlr->num_contexts);
+
+	if (rctrlr->num_contexts == 0 || devices == NULL) {
 		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
+		free(rctrlr);
+		return NULL;
+	}
+
+	rctrlr->contexts = calloc(rctrlr->num_contexts, sizeof(struct nvme_rdma_device_context));
+
+	if (rctrlr->contexts == NULL) {
+		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
+		ibv_free_device_list(devices);
 		free(rctrlr);
 		return NULL;
 	}
@@ -1595,22 +1615,38 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 	i = 0;
 	rctrlr->max_sge = NVME_RDMA_MAX_SGL_DESCRIPTORS;
 
-	while (contexts[i] != NULL) {
-		rc = ibv_query_device(contexts[i], &dev_attr);
+	while (i < rctrlr->num_contexts) {
+		context = ibv_open_device(devices[i]);
+		if (context == NULL) {
+			SPDK_ERRLOG("Unable to get a device context for at least one device.\n");
+			continue;
+		}
+		rc = ibv_query_device(context, &dev_attr);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
-			rdma_free_devices(contexts);
+			ibv_free_device_list(devices);
+			free(rctrlr->contexts);
 			free(rctrlr);
 			return NULL;
+		}
+		rctrlr->contexts[i].ctx = context;
+		rctrlr->contexts[i].pd = ibv_alloc_pd(context);
+		if (rctrlr->contexts[i].pd == NULL) {
+			SPDK_ERRLOG("Unable to allocate a pd for at least one device.\n");
+			ibv_close_device(context);
+			continue;
 		}
 		rctrlr->max_sge = spdk_min(rctrlr->max_sge, (uint16_t)dev_attr.max_sge);
 		i++;
 	}
 
-	rdma_free_devices(contexts);
+	rctrlr->num_contexts = spdk_min(rctrlr->num_contexts, i);
+
+	ibv_free_device_list(devices);
 
 	rc = nvme_ctrlr_construct(&rctrlr->ctrlr);
 	if (rc != 0) {
+		free(rctrlr->contexts);
 		free(rctrlr);
 		return NULL;
 	}
@@ -1679,6 +1715,7 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_rdma_ctrlr *rctrlr = nvme_rdma_ctrlr(ctrlr);
 	struct nvme_rdma_cm_event_entry *entry, *tmp;
+	int i;
 
 	if (ctrlr->adminq) {
 		nvme_rdma_qpair_destroy(ctrlr->adminq);
@@ -1698,6 +1735,11 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	if (rctrlr->cm_channel) {
 		rdma_destroy_event_channel(rctrlr->cm_channel);
 		rctrlr->cm_channel = NULL;
+	}
+
+	for (i = 0; i < rctrlr->num_contexts; i++) {
+		ibv_dealloc_pd(rctrlr->contexts[i].pd);
+		ibv_close_device(rctrlr->contexts[i].ctx);
 	}
 
 	nvme_ctrlr_destruct_finish(ctrlr);
