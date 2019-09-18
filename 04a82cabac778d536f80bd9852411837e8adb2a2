@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1054c9c_cff7bbaf",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-18T20:54:02Z",
+      "side": 1,
+      "message": "Shuhei is right.  We should not have changed this from \"decoders\" to \"list\".  We use \"decoders\" in many other places, and this patch is focused on renaming the RPC anyways.",
+      "revId": "04a82cabac778d536f80bd9852411837e8adb2a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
