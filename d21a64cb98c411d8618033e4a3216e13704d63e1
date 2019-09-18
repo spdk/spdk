@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7add9404_3e97b92b",
+        "filename": "test/iscsi_tgt/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-18T07:18:55Z",
+      "side": 1,
+      "message": "I think this should be added just before the problematic line, so that we don\u0027t disable the warning for the entire file.\nhttps://github.com/koalaman/shellcheck/wiki/Ignore",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 27
+      },
+      "revId": "d21a64cb98c411d8618033e4a3216e13704d63e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
