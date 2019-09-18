@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f69552e7_4b295217",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-18T11:13:54Z",
+      "side": 1,
+      "message": "The 240-242 lines catch two cases: unaligned zone_id and out of range zone_id. Once you\u0027re in the loop the buffer will be filled with as many zone infos as we have.\nI could see a case for requiring the exact num_zones and failing in other cases.",
+      "parentUuid": "5269d377_df0878cc",
+      "range": {
+        "startLine": 251,
+        "startChar": 3,
+        "endLine": 251,
+        "endChar": 9
+      },
+      "revId": "03b6f2d4e62c9072a88af557926ad7ecb6aae056",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d52baffa_5afdee2d",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 6
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "ddf81610_df17f775",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-18T11:13:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d52baffa_5afdee2d",
+      "range": {
+        "startLine": 275,
+        "startChar": 0,
+        "endLine": 278,
+        "endChar": 28
+      },
+      "revId": "03b6f2d4e62c9072a88af557926ad7ecb6aae056",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8b8aa16f_8d58d591",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 6
@@ -68,6 +116,30 @@
       "revId": "03b6f2d4e62c9072a88af557926ad7ecb6aae056",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e99a9b8_aa5b3e80",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-18T11:13:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8b8aa16f_8d58d591",
+      "range": {
+        "startLine": 303,
+        "startChar": 0,
+        "endLine": 306,
+        "endChar": 32
+      },
+      "revId": "03b6f2d4e62c9072a88af557926ad7ecb6aae056",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
