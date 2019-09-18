@@ -57,7 +57,7 @@ struct spdk_interface {
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_interface_add_ip_address(int ifc_index, char *ip_addr);
+int spdk_interface_net_interface_add_ip_address(int ifc_index, char *ip_addr);
 
 /**
  * Delete an ip address from the network interface.
