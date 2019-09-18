@@ -33,6 +33,24 @@
       "revId": "60d0e63429f90e827479d267552427d0ceabc7fd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84acd240_68d7f528",
+        "filename": "examples/seastar/spdk_tgt.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-18T20:09:33Z",
+      "side": 1,
+      "message": "I haven\u0027t run astyle locally, and since I\u0027ve marked this patch RFC it\u0027s not running through the test pool either.  So astyle should find this.  I\u0027ll fix it.",
+      "parentUuid": "c820fcfc_ac841cca",
+      "revId": "60d0e63429f90e827479d267552427d0ceabc7fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
