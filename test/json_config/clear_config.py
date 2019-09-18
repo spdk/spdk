@@ -176,7 +176,7 @@ if __name__ == "__main__":
 
     @call_test_cmd
     def clear_config(args):
-        for subsystem_item in reversed(args.client.call('get_subsystems')):
+        for subsystem_item in reversed(args.client.call('framework_get_subsystems')):
             args.subsystem = subsystem_item['subsystem']
             clear_subsystem(args)
 
