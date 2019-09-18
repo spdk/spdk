@@ -99,8 +99,6 @@ struct nvme_rdma_device_context {
 struct nvme_rdma_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
 
-	struct ibv_pd				*pd;
-
 	uint16_t				max_sge;
 
 	struct rdma_event_channel		*cm_channel;
@@ -392,24 +390,40 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	struct ibv_qp_init_attr	attr;
 	struct ibv_device_attr	dev_attr;
 	struct nvme_rdma_ctrlr	*rctrlr;
+	struct ibv_pd		*pd = NULL;
+	struct ibv_context	*ctx = NULL;
+	int i;
 
-	rc = ibv_query_device(rqpair->cm_id->verbs, &dev_attr);
+	rctrlr = nvme_rdma_ctrlr(rqpair->qpair.ctrlr);
+	SPDK_NOTICELOG("Setting up a new device\n");
+	for (i = 0; i < rctrlr->num_contexts; i++) {
+		if (rctrlr->contexts[i].ctx->device == rqpair->cm_id->verbs->device) {
+			/* Is resetting this allowed? */
+			rqpair->cm_id->verbs = rctrlr->contexts[i].ctx;
+			ctx = rctrlr->contexts[i].ctx;
+			if (g_nvme_hooks.get_ibv_pd) {
+				pd = g_nvme_hooks.get_ibv_pd(&rctrlr->ctrlr.trid, rqpair->cm_id->verbs);
+			} else {
+				pd = rctrlr->contexts[i].pd;
+			}
+		}
+	}
+
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Unable to find a device context for the qpair.\n");
+		return -1;
+	}
+
+	rc = ibv_query_device(ctx, &dev_attr);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
 		return -1;
 	}
 
-	rqpair->cq = ibv_create_cq(rqpair->cm_id->verbs, rqpair->num_entries * 2, rqpair, NULL, 0);
+	rqpair->cq = ibv_create_cq(ctx, rqpair->num_entries * 2, rqpair, NULL, 0);
 	if (!rqpair->cq) {
 		SPDK_ERRLOG("Unable to create completion queue: errno %d: %s\n", errno, spdk_strerror(errno));
 		return -1;
-	}
-
-	rctrlr = nvme_rdma_ctrlr(rqpair->qpair.ctrlr);
-	if (g_nvme_hooks.get_ibv_pd) {
-		rctrlr->pd = g_nvme_hooks.get_ibv_pd(&rctrlr->ctrlr.trid, rqpair->cm_id->verbs);
-	} else {
-		rctrlr->pd = NULL;
 	}
 
 	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
@@ -421,18 +435,16 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	attr.cap.max_send_sge	= spdk_min(NVME_RDMA_DEFAULT_TX_SGE, dev_attr.max_sge);
 	attr.cap.max_recv_sge	= spdk_min(NVME_RDMA_DEFAULT_RX_SGE, dev_attr.max_sge);
 
-	rc = rdma_create_qp(rqpair->cm_id, rctrlr->pd, &attr);
+	rc = rdma_create_qp(rqpair->cm_id, pd, &attr);
 
 	if (rc) {
-		SPDK_ERRLOG("rdma_create_qp failed\n");
+		SPDK_ERRLOG("rdma_create_qp failed %d\n", errno);
 		return -1;
 	}
 
 	/* ibv_create_qp will change the values in attr.cap. Make sure we store the proper value. */
 	rqpair->max_send_sge = spdk_min(NVME_RDMA_DEFAULT_TX_SGE, attr.cap.max_send_sge);
 	rqpair->max_recv_sge = spdk_min(NVME_RDMA_DEFAULT_RX_SGE, attr.cap.max_recv_sge);
-
-	rctrlr->pd = rqpair->cm_id->qp->pd;
 
 	rqpair->cm_id->context = &rqpair->qpair;
 
