@@ -241,7 +241,7 @@ Example response:
     "start_subsystem_init",
     "get_rpc_methods",
     "get_scsi_devices",
-    "get_interfaces",
+    "net_get_interfaces",
     "delete_ip_address",
     "net_interface_add_ip_address",
     "nbd_get_disks",

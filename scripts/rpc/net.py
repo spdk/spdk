@@ -25,10 +25,11 @@ def net_interface_delete_ip_address(client, ifc_index, ip_addr):
     return client.call('net_interface_delete_ip_address', params)
 
 
-def get_interfaces(client):
+@deprecated_alias('get_interfaces')
+def net_get_interfaces(client):
     """Display current interface list
 
     Returns:
         List of current interface
     """
-    return client.call('get_interfaces')
+    return client.call('net_get_interfaces')
