@@ -143,7 +143,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 }
 
 static void
-new_qpair(struct spdk_nvmf_qpair *qpair)
+new_qpair(struct spdk_nvmf_qpair *qpair, void *cb_arg)
 {
 	uint32_t i;
 	struct spdk_nvmf_fc_conn *fc_conn;

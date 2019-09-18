@@ -595,7 +595,7 @@ nvmf_fc_ls_add_conn_to_poller(
 
 	/* Let the nvmf_tgt decide which pollgroup to use. */
 	fc_conn->create_opd = opd;
-	fc_port->new_qp_cb(&fc_conn->qpair);
+	fc_port->new_qp_cb(&fc_conn->qpair, fc_port->new_qp_arg);
 }
 
 /* Delete association functions */
