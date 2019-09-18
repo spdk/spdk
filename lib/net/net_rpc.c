@@ -101,8 +101,8 @@ SPDK_RPC_REGISTER("net_interface_add_ip_address", spdk_rpc_net_interface_add_ip_
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(net_interface_add_ip_address, add_ip_address)
 
 static void
-spdk_rpc_delete_ip_address(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+spdk_rpc_net_interface_delete_ip_address(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
 {
 	struct rpc_ip_address req = {};
 	struct spdk_json_write_ctx *w;
@@ -117,7 +117,7 @@ spdk_rpc_delete_ip_address(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	ret_val = spdk_interface_delete_ip_address(req.ifc_index, req.ip_address);
+	ret_val = spdk_interface_net_interface_delete_ip_address(req.ifc_index, req.ip_address);
 	if (ret_val) {
 		if (ret_val == -ENODEV) {
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_STATE,
@@ -139,7 +139,9 @@ spdk_rpc_delete_ip_address(struct spdk_jsonrpc_request *request,
 invalid:
 	free_rpc_ip_address(&req);
 }
-SPDK_RPC_REGISTER("delete_ip_address", spdk_rpc_delete_ip_address, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("net_interface_delete_ip_address", spdk_rpc_net_interface_delete_ip_address,
+		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(net_interface_delete_ip_address, delete_ip_address)
 
 static void
 spdk_rpc_get_interfaces(struct spdk_jsonrpc_request *request,

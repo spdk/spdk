@@ -13,7 +13,8 @@ def net_interface_add_ip_address(client, ifc_index, ip_addr):
     return client.call('net_interface_add_ip_address', params)
 
 
-def delete_ip_address(client, ifc_index, ip_addr):
+@deprecated_alias('delete_ip_address')
+def net_interface_delete_ip_address(client, ifc_index, ip_addr):
     """Delete IP address.
 
     Args:
@@ -21,7 +22,7 @@ def delete_ip_address(client, ifc_index, ip_addr):
         ip_addr: ip address will be deleted
     """
     params = {'ifc_index': ifc_index, 'ip_address': ip_addr}
-    return client.call('delete_ip_address', params)
+    return client.call('net_interface_delete_ip_address', params)
 
 
 def get_interfaces(client):
