@@ -104,6 +104,24 @@
       "revId": "ee1d38976cedbbbf335224dfb5a7b134556b93a5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9747f00e_b903f62e",
+        "filename": "module/blobfs/bdev_rpc/blobfs_bdev_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-18T16:41:30Z",
+      "side": 1,
+      "message": "ah yes, thanks",
+      "parentUuid": "af31eb05_1a35adc5",
+      "revId": "ee1d38976cedbbbf335224dfb5a7b134556b93a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
