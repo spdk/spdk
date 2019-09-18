@@ -118,19 +118,20 @@ if __name__ == "__main__":
     p.add_argument('sig_name', help='signal will be sent to server.')
     p.set_defaults(func=kill_instance)
 
-    def context_switch_monitor(args):
+    def framework_monitor_context_switch(args):
         enabled = None
         if args.enable:
             enabled = True
         if args.disable:
             enabled = False
-        print_dict(rpc.app.context_switch_monitor(args.client,
-                                                  enabled=enabled))
+        print_dict(rpc.app.framework_monitor_context_switch(args.client,
+                                                            enabled=enabled))
 
-    p = subparsers.add_parser('context_switch_monitor', help='Control whether the context switch monitor is enabled')
+    p = subparsers.add_parser('framework_monitor_context_switch', aliases=['context_switch_monitor'],
+                              help='Control whether the context switch monitor is enabled')
     p.add_argument('-e', '--enable', action='store_true', help='Enable context switch monitoring')
     p.add_argument('-d', '--disable', action='store_true', help='Disable context switch monitoring')
-    p.set_defaults(func=context_switch_monitor)
+    p.set_defaults(func=framework_monitor_context_switch)
 
     # bdev
     def bdev_set_options(args):
