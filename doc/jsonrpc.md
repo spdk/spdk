@@ -91,7 +91,7 @@ Example response:
 }
 ~~~
 
-## context_switch_monitor {#rpc_context_switch_monitor}
+## framework_monitor_context_switch {#rpc_framework_monitor_context_switch}
 
 Query, enable, or disable the context switch monitoring functionality.
 
@@ -115,7 +115,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "context_switch_monitor",
+  "method": "framework_monitor_context_switch",
   "params": {
     "enabled": false
   }
@@ -277,7 +277,7 @@ Example response:
     "bdev_get_iostat",
     "get_subsystem_config",
     "get_subsystems",
-    "context_switch_monitor",
+    "framework_monitor_context_switch",
     "kill_instance",
     "ioat_scan_copy_engine",
     "bdev_virtio_attach_controller",
