@@ -17,7 +17,7 @@ nvmfappstart "-m 0xF"
 
 $rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
 
-local_nvme_trid="trtype:PCIe traddr:"$($rpc_py get_subsystem_config bdev | jq -r '.[].params | select(.name=="Nvme0").traddr')
+local_nvme_trid="trtype:PCIe traddr:"$($rpc_py framework_get_config bdev | jq -r '.[].params | select(.name=="Nvme0").traddr')
 bdevs="$bdevs $($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
 if [ -n "$local_nvme_trid" ]; then
