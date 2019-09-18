@@ -482,7 +482,7 @@ class UIRoot(UINode):
         return rpc.iscsi.iscsi_get_options(self.client, **kwargs)
 
     def has_subsystem(self, subsystem):
-        for system in rpc.subsystem.get_subsystems(self.client):
+        for system in rpc.subsystem.framework_get_subsystems(self.client):
             if subsystem.lower() == system["subsystem"].lower():
                 return True
         return False
