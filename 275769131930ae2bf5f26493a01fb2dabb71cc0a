@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d0bae652_f85a2f6d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-18T13:27:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9b47a12d_576ed49a",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d3062371_a23d3127",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 15
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "ecbc2600_210b20c9",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-18T13:27:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d3062371_a23d3127",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6189c3e_1b388846",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 15
@@ -47,6 +83,24 @@
       "writtenOn": "2019-09-17T18:26:31Z",
       "side": 1,
       "message": "This line (1864) actually remains common between the two cases",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62a120ac_4e6095d4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1863,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-18T13:27:01Z",
+      "side": 1,
+      "message": "I noticed that, but I set the data field in both cases since its value is checked by the caller of spdk_nvmf_rdma_request_parse_sgl to determine if memory buffer has been allocated for that request. In the case of enabled dif_insert_or_strip we can assign value to this field once we get md_buf.\nIt is possible to move the assignment after if/else block, but we\u0027ll have to reference `rdma_req-\u003erecv-\u003ebuf + offset` on line 1902 instead of data pointer",
+      "parentUuid": "e6189c3e_1b388846",
       "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "5cb9bdbf_68df811d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1868,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-18T13:27:01Z",
+      "side": 1,
+      "message": "Ok, I just thought it would make it easier to read the code",
+      "parentUuid": "c73ee835_2403b7c1",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bf253c8b_e449133d",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 15
@@ -84,6 +156,24 @@
       "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ba280c4_fa5f0c37",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1869,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-18T13:27:01Z",
+      "side": 1,
+      "message": "Thanks, I added bit shift instead of division",
+      "parentUuid": "bf253c8b_e449133d",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "caf4b670_fa1b72a6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1878,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-18T13:27:01Z",
+      "side": 1,
+      "message": "I removed this condition",
+      "parentUuid": "d04e1283_994b27c0",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68ab78f6_a8e61277",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 15
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "8f8c2f33_62d380f4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1883,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-18T13:27:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "68ab78f6_a8e61277",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3c19981_9cdb70f2",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 15
@@ -132,6 +258,24 @@
       "writtenOn": "2019-09-18T05:42:12Z",
       "side": 1,
       "message": "Can you point to me how this works for in-capsule data, if there is a 4KiB data, the IOV should be like this:\n\n512 bytes data \niov.[0]\n16 bytes metadata\niov.[1]\n.\n.\n.\nafter calling spdk_dif_generate(), the backend NVMe driver can\u0027t accept such data buffers with extended LBA format.",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1e6c801_ee9797a5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1901,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-18T13:27:01Z",
+      "side": 1,
+      "message": "Do you mean that the controller expects a full extended LBA to be pointed by a single iov entry? I checked the spec and didn\u0027t find any statements that the SGL entry should be a multiple of the block size.\nIn the case of read/write operation with this feature enabled there may be a case when iov(SGL) entry points to a part of the data block and this works fine (at least with Intel and Samsung disks)\nPlease correct me if I misunderstood your comment",
+      "parentUuid": "c3c19981_9cdb70f2",
       "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
