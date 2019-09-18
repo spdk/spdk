@@ -276,7 +276,7 @@ Example response:
     "bdev_get_bdevs",
     "bdev_get_iostat",
     "get_subsystem_config",
-    "get_subsystems",
+    "framework_get_subsystems",
     "framework_monitor_context_switch",
     "kill_instance",
     "ioat_scan_copy_engine",
@@ -317,7 +317,7 @@ Example response:
 }
 ~~~
 
-## get_subsystems {#rpc_get_subsystems}
+## framework_get_subsystems {#rpc_framework_get_subsystems}
 
 Get an array of name and dependency relationship of SPDK subsystems in initialization order.
 
@@ -337,7 +337,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "get_subsystems"
+  "method": "framework_get_subsystems"
 }
 ~~~
 
