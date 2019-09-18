@@ -41,7 +41,6 @@
 #include "transport.h"
 
 #include "spdk/config.h"
-#include "spdk/assert.h"
 #include "spdk/thread.h"
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_spec.h"
@@ -49,6 +48,7 @@
 #include "spdk/trace.h"
 #include "spdk/util.h"
 
+#include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
 
 struct spdk_nvme_rdma_hooks g_nvmf_hooks = {};
@@ -1319,6 +1319,7 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 {
 	struct ibv_pd *pd = cb_ctx;
 	struct ibv_mr *mr;
+	int rc;
 
 	switch (action) {
 	case SPDK_MEM_MAP_NOTIFY_REGISTER:
@@ -1331,25 +1332,27 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 				SPDK_ERRLOG("ibv_reg_mr() failed\n");
 				return -1;
 			} else {
-				spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
+				rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
 			}
 		} else {
-			spdk_mem_map_set_translation(map, (uint64_t)vaddr, size,
-						     g_nvmf_hooks.get_rkey(pd, vaddr, size));
+			rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, size,
+							  g_nvmf_hooks.get_rkey(pd, vaddr, size));
 		}
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
 		if (!g_nvmf_hooks.get_rkey) {
 			mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, NULL);
-			spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
 			if (mr) {
 				ibv_dereg_mr(mr);
 			}
 		}
+		rc = spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
 		break;
+	default:
+		SPDK_UNREACHABLE();
 	}
 
-	return 0;
+	return rc;
 }
 
 static int
