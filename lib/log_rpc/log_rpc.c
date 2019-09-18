@@ -238,7 +238,7 @@ SPDK_RPC_REGISTER("log_get_level", spdk_rpc_log_get_level, SPDK_RPC_STARTUP | SP
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_get_level, get_log_level)
 
 static void
-spdk_rpc_set_log_flag(struct spdk_jsonrpc_request *request,
+spdk_rpc_log_set_flag(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
 {
 	struct rpc_log_flag req = {};
@@ -270,8 +270,8 @@ spdk_rpc_set_log_flag(struct spdk_jsonrpc_request *request,
 invalid:
 	free_rpc_log_flag(&req);
 }
-SPDK_RPC_REGISTER("set_log_flag", spdk_rpc_set_log_flag, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(set_log_flag, set_trace_flag)
+SPDK_RPC_REGISTER("log_set_flag", spdk_rpc_log_set_flag, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_set_flag, set_log_flag)
 
 static void
 spdk_rpc_clear_log_flag(struct spdk_jsonrpc_request *request,

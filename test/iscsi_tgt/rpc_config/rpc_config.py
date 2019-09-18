@@ -80,7 +80,7 @@ def verify_log_flag_rpc_methods(rpc_py, rpc_param):
     jsonvalue = json.loads(output)
     verify(not jsonvalue[rpc_param['log_flag']], 1,
            "get_log_flags returned {}, expected false".format(jsonvalue))
-    rpc.set_log_flag(rpc_param['log_flag'])
+    rpc.log_set_flag(rpc_param['log_flag'])
     output = rpc.get_log_flags()
     jsonvalue = json.loads(output)
     verify(jsonvalue[rpc_param['log_flag']], 1,

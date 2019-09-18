@@ -1,15 +1,15 @@
 from .helpers import deprecated_alias
 
 
-@deprecated_alias('set_trace_flag')
-def set_log_flag(client, flag):
+@deprecated_alias('set_log_flag')
+def log_set_flag(client, flag):
     """Set log flag.
 
     Args:
         flag: log flag we want to set. (for example "nvme")
     """
     params = {'flag': flag}
-    return client.call('set_log_flag', params)
+    return client.call('log_set_flag', params)
 
 
 @deprecated_alias('clear_trace_flag')

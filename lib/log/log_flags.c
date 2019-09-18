@@ -138,7 +138,7 @@ spdk_log_get_flag(const char *name)
 }
 
 static int
-set_log_flag(const char *name, bool value)
+log_set_flag(const char *name, bool value)
 {
 	struct spdk_log_flag *flag;
 
@@ -162,13 +162,13 @@ set_log_flag(const char *name, bool value)
 int
 spdk_log_set_flag(const char *name)
 {
-	return set_log_flag(name, true);
+	return log_set_flag(name, true);
 }
 
 int
 spdk_log_clear_flag(const char *name)
 {
-	return set_log_flag(name, false);
+	return log_set_flag(name, false);
 }
 
 struct spdk_log_flag *
