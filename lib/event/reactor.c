@@ -87,7 +87,7 @@ static struct spdk_reactor *g_reactors;
 static struct spdk_cpuset *g_reactor_core_mask;
 static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
 
-static bool g_context_switch_monitor_enabled = true;
+static bool g_framework_monitor_context_switch_enabled = true;
 
 static struct spdk_mempool *g_spdk_event_mempool = NULL;
 
@@ -301,19 +301,19 @@ get_rusage(struct spdk_reactor *reactor)
 }
 
 void
-spdk_reactor_enable_context_switch_monitor(bool enable)
+spdk_reactor_enable_framework_monitor_context_switch(bool enable)
 {
 	/* This global is being read by multiple threads, so this isn't
 	 * strictly thread safe. However, we're toggling between true and
 	 * false here, and if a thread sees the value update later than it
 	 * should, it's no big deal. */
-	g_context_switch_monitor_enabled = enable;
+	g_framework_monitor_context_switch_enabled = enable;
 }
 
 bool
-spdk_reactor_context_switch_monitor_enabled(void)
+spdk_reactor_framework_monitor_context_switch_enabled(void)
 {
-	return g_context_switch_monitor_enabled;
+	return g_framework_monitor_context_switch_enabled;
 }
 
 static void
@@ -369,7 +369,7 @@ _spdk_reactor_run(void *arg)
 			break;
 		}
 
-		if (g_context_switch_monitor_enabled) {
+		if (g_framework_monitor_context_switch_enabled) {
 			if ((last_rusage + CONTEXT_SWITCH_MONITOR_PERIOD) < now) {
 				get_rusage(reactor);
 				last_rusage = now;
