@@ -922,13 +922,6 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		return -ENOMEM;
 	}
 	nvme_bdev_ctrlr->num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
-	nvme_bdev_ctrlr->bdevs = calloc(nvme_bdev_ctrlr->num_ns, sizeof(struct nvme_bdev));
-	if (!nvme_bdev_ctrlr->bdevs) {
-		SPDK_ERRLOG("Failed to allocate block devices struct\n");
-		free(nvme_bdev_ctrlr);
-		return -ENOMEM;
-	}
-
 	nvme_bdev_ctrlr->adminq_timer_poller = NULL;
 	nvme_bdev_ctrlr->ctrlr = ctrlr;
 	nvme_bdev_ctrlr->ref = 0;
@@ -936,27 +929,56 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_bdev_ctrlr->name = strdup(name);
 	if (nvme_bdev_ctrlr->name == NULL) {
 		SPDK_ERRLOG("Failed to allocate controller name string\n");
-		free(nvme_bdev_ctrlr->bdevs);
 		free(nvme_bdev_ctrlr);
 		return -ENOMEM;
 	}
 	nvme_bdev_ctrlr->prchk_flags = prchk_flags;
 
-	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
-				sizeof(struct nvme_io_channel),
-				name);
-
-	nvme_bdev_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, ctrlr,
-					       g_opts.nvme_adminq_poll_period_us);
-
 	TAILQ_INSERT_TAIL(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
 
-	if (g_opts.timeout_us > 0) {
-		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_opts.timeout_us,
-				timeout_cb, NULL);
+	return 0;
+}
+
+static void
+free_controller(const struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
+	free(nvme_bdev_ctrlr->bdevs);
+	free(nvme_bdev_ctrlr->name);
+	free(nvme_bdev_ctrlr);
+}
+
+static int
+spdk_bdev_nvme_create_ctrlr(const struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
+	if (!nvme_bdev_ctrlr) {
+		SPDK_ERRLOG("Failed to find new NVMe controller\n");
+		return -1;
 	}
 
-	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, nvme_bdev_ctrlr);
+	nvme_bdev_ctrlr->bdevs = calloc(nvme_bdev_ctrlr->num_ns, sizeof(struct nvme_bdev));
+	if (!nvme_bdev_ctrlr->bdevs) {
+		SPDK_ERRLOG("Failed to allocate block devices struct\n");
+		return -ENOMEM;
+	}
+
+	spdk_io_device_register(nvme_bdev_ctrlr->ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
+				sizeof(struct nvme_io_channel), nvme_bdev_ctrlr->name);
+
+	nvme_bdev_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq,
+					       nvme_bdev_ctrlr->ctrlr, g_opts.nvme_adminq_poll_period_us);
+
+	if (g_opts.timeout_us > 0) {
+		spdk_nvme_ctrlr_register_timeout_callback(nvme_bdev_ctrlr->ctrlr, g_opts.timeout_us, timeout_cb,
+				NULL);
+	}
+
+	spdk_nvme_ctrlr_register_aer_callback(nvme_bdev_ctrlr->ctrlr, aer_cb, nvme_bdev_ctrlr);
 
 	return 0;
 }
@@ -995,6 +1017,12 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	if (!nvme_bdev_ctrlr) {
 		SPDK_ERRLOG("Failed to find new NVMe controller\n");
 		free(name);
+		return;
+	}
+
+	if (spdk_bdev_nvme_create_ctrlr(trid)) {
+		free_controller(trid);
+		SPDK_ERRLOG("Failed to create new NVMe controller\n");
 		return;
 	}
 
@@ -1184,17 +1212,6 @@ spdk_bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx)
 }
 
 static void
-free_controller(const struct spdk_nvme_transport_id *trid)
-{
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
-
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
-	free(nvme_bdev_ctrlr->bdevs);
-	free(nvme_bdev_ctrlr->name);
-	free(nvme_bdev_ctrlr);
-}
-
-static void
 connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
@@ -1207,6 +1224,13 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	rc = create_ctrlr(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags);
 	if (rc) {
 		SPDK_ERRLOG("Failed to create new device\n");
+		goto end;
+	}
+
+	rc = spdk_bdev_nvme_create_ctrlr(trid);
+	if (rc) {
+		SPDK_ERRLOG("Failed to create controller\n");
+		free_controller(trid);
 		goto end;
 	}
 
@@ -1510,6 +1534,13 @@ bdev_nvme_library_init(void)
 			if (!nvme_bdev_ctrlr) {
 				SPDK_ERRLOG("Failed to find new NVMe controller\n");
 				rc = -ENODEV;
+				goto end;
+			}
+
+			rc = spdk_bdev_nvme_create_ctrlr(&probe_ctx->trids[i]);
+			if (rc) {
+				free_controller(&probe_ctx->trids[i]);
+				SPDK_ERRLOG("Failed to create new NVMe controller\n");
 				goto end;
 			}
 
