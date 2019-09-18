@@ -112,6 +112,9 @@ struct nvme_rdma_ctrlr {
 	struct nvme_rdma_device_context		*contexts;
 
 	int					num_contexts;
+
+	nfds_t					npoll_fds;
+	struct pollfd				*poll_fds;
 };
 
 /* NVMe RDMA qpair extensions for spdk_nvme_qpair */
@@ -396,14 +399,12 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 
 	rctrlr = nvme_rdma_ctrlr(rqpair->qpair.ctrlr);
 	SPDK_NOTICELOG("Setting up a new device\n");
-	for (i = 0; i < rctrlr->num_contexts; i++)
-	{
+	for (i = 0; i < rctrlr->num_contexts; i++) {
 		if (rctrlr->contexts[i].ctx->device == rqpair->cm_id->verbs->device) {
 			/* Is resetting this allowed? */
 			rqpair->cm_id->verbs = rctrlr->contexts[i].ctx;
 			ctx = rctrlr->contexts[i].ctx;
-			if (g_nvme_hooks.get_ibv_pd)
-			{
+			if (g_nvme_hooks.get_ibv_pd) {
 				pd = g_nvme_hooks.get_ibv_pd(&rctrlr->ctrlr.trid, rqpair->cm_id->verbs);
 			} else {
 				pd = rctrlr->contexts[i].pd;
@@ -1626,6 +1627,16 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 		return NULL;
 	}
 
+	rctrlr->npoll_fds = rctrlr->num_contexts;
+	rctrlr->poll_fds = calloc(rctrlr->npoll_fds, sizeof(struct pollfd));
+	if (rctrlr->poll_fds == NULL) {
+		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
+		ibv_free_device_list(devices);
+		free(rctrlr->contexts);
+		free(rctrlr);
+		return NULL;
+	}
+
 	i = 0;
 	rctrlr->max_sge = NVME_RDMA_MAX_SGL_DESCRIPTORS;
 
@@ -1650,11 +1661,14 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 			ibv_close_device(context);
 			continue;
 		}
+		rctrlr->poll_fds[i].fd = context->async_fd;
+		rctrlr->poll_fds[i].events = POLLIN;
 		rctrlr->max_sge = spdk_min(rctrlr->max_sge, (uint16_t)dev_attr.max_sge);
 		i++;
 	}
 
 	rctrlr->num_contexts = spdk_min(rctrlr->num_contexts, i);
+	rctrlr->npoll_fds = rctrlr->num_contexts;
 
 	ibv_free_device_list(devices);
 
@@ -1758,6 +1772,7 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_ctrlr_destruct_finish(ctrlr);
 
+	free(rctrlr->poll_fds);
 	free(rctrlr);
 
 	return 0;
