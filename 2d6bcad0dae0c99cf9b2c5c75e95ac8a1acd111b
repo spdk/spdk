@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f05440c8_86e71463",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-18T07:25:44Z",
+      "side": 1,
+      "message": "As stated in one of the previous patches, I think we should be changing the state only after setting zone-\u003ebusy \u003d true to avoid race between write completion and zone management calls.",
+      "range": {
+        "startLine": 332,
+        "startChar": 0,
+        "endLine": 332,
+        "endChar": 21
+      },
+      "revId": "2d6bcad0dae0c99cf9b2c5c75e95ac8a1acd111b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
