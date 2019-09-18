@@ -37,6 +37,7 @@
 #include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
+#include "spdk/util.h"
 #include "spdk/nvme_ocssd.h"
 #include "spdk/nvme_ocssd_spec.h"
 #include "spdk_internal/log.h"
@@ -49,6 +50,13 @@ struct bdev_ocssd_lba_offsets {
 	uint32_t pu;
 	uint32_t chk;
 	uint32_t lbk;
+};
+
+struct bdev_ocssd_zone {
+	uint64_t	slba;
+	uint64_t	write_pointer;
+	uint64_t	capacity;
+	bool		busy;
 };
 
 struct bdev_ocssd_io {
@@ -66,7 +74,8 @@ struct bdev_ocssd_io {
 };
 
 struct ocssd_bdev {
-	struct nvme_bdev nvme_bdev;
+	struct nvme_bdev	nvme_bdev;
+	struct bdev_ocssd_zone	*zones;
 };
 
 struct bdev_ocssd_ns {
@@ -133,6 +142,7 @@ bdev_ocssd_free_bdev(struct ocssd_bdev *ocssd_bdev)
 		return;
 	}
 
+	free(ocssd_bdev->zones);
 	free(ocssd_bdev->nvme_bdev.disk.name);
 	free(ocssd_bdev);
 }
@@ -591,11 +601,177 @@ static struct spdk_bdev_fn_table ocssdlib_fn_table = {
 	.get_io_channel		= bdev_ocssd_get_io_channel,
 };
 
+struct bdev_ocssd_create_ctx {
+	struct ocssd_bdev				*ocssd_bdev;
+	bdev_ocssd_create_cb				cb_fn;
+	void						*cb_arg;
+	uint64_t					chunk_offset;
+	uint64_t					num_total_chunks;
+	uint64_t					num_chunks;
+#define OCSSD_BDEV_CHUNK_INFO_COUNT 128
+	struct spdk_ocssd_chunk_information_entry	chunk_info[OCSSD_BDEV_CHUNK_INFO_COUNT];
+};
+
+static void
+bdev_ocssd_create_complete(struct bdev_ocssd_create_ctx *create_ctx, int status)
+{
+	const char *bdev_name = create_ctx->ocssd_bdev->nvme_bdev.disk.name;
+
+	if (spdk_unlikely(status != 0)) {
+		bdev_ocssd_free_bdev(create_ctx->ocssd_bdev);
+		bdev_name = NULL;
+	}
+
+	create_ctx->cb_fn(bdev_name, status, create_ctx->cb_arg);
+	free(create_ctx);
+}
+
+static struct bdev_ocssd_zone *
+bdev_ocssd_get_zone_by_slba(struct ocssd_bdev *ocssd_bdev, uint64_t slba)
+{
+	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	size_t zone_size = nvme_bdev->disk.zone_size;
+
+	if (slba % zone_size != 0) {
+		return NULL;
+	}
+
+	if (slba >= nvme_bdev->disk.blockcnt) {
+		return NULL;
+	}
+
+	return &ocssd_bdev->zones[slba / zone_size];
+}
+
+static int bdev_ocssd_init_zone(struct bdev_ocssd_create_ctx *create_ctx);
+
+static void
+bdev_ocssd_register_bdev(void *ctx)
+{
+	struct bdev_ocssd_create_ctx *create_ctx = ctx;
+	struct ocssd_bdev *ocssd_bdev = create_ctx->ocssd_bdev;
+	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	int rc;
+
+	rc = spdk_bdev_register(&nvme_bdev->disk);
+	if (spdk_likely(rc == 0)) {
+		nvme_bdev_attach_bdev_to_ns(nvme_bdev->nvme_ns, nvme_bdev);
+	} else {
+		SPDK_ERRLOG("Failed to register bdev %s\n", nvme_bdev->disk.name);
+		spdk_io_device_unregister(ocssd_bdev, NULL);
+	}
+
+	bdev_ocssd_create_complete(create_ctx, rc);
+}
+
+static void
+bdev_occsd_init_zone_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct bdev_ocssd_create_ctx *create_ctx = ctx;
+	struct bdev_ocssd_zone *ocssd_zone;
+	struct ocssd_bdev *ocssd_bdev = create_ctx->ocssd_bdev;
+	struct spdk_bdev_zone_info zone_info = {};
+	uint64_t offset;
+	int rc = 0;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("Chunk information log page failed\n");
+		bdev_ocssd_create_complete(create_ctx, -EIO);
+		return;
+	}
+
+	for (offset = 0; offset < create_ctx->num_chunks; ++offset) {
+		bdev_ocssd_fill_zone_info(ocssd_bdev, &zone_info, &create_ctx->chunk_info[offset]);
+
+		ocssd_zone = bdev_ocssd_get_zone_by_slba(ocssd_bdev, zone_info.zone_id);
+		if (!ocssd_zone) {
+			SPDK_ERRLOG("Received invalid zone starting LBA: %"PRIu64"\n",
+				    zone_info.zone_id);
+			bdev_ocssd_create_complete(create_ctx, -EINVAL);
+			return;
+		}
+
+		/* Make sure we're not filling the same zone twice */
+		assert(ocssd_zone->busy);
+
+		ocssd_zone->busy = false;
+		ocssd_zone->slba = zone_info.zone_id;
+		ocssd_zone->capacity = zone_info.capacity;
+		ocssd_zone->write_pointer = zone_info.write_pointer;
+	}
+
+	create_ctx->chunk_offset += create_ctx->num_chunks;
+	if (create_ctx->chunk_offset < create_ctx->num_total_chunks) {
+		rc = bdev_ocssd_init_zone(create_ctx);
+		if (spdk_unlikely(rc != 0)) {
+			SPDK_ERRLOG("Failed to send chunk info log page\n");
+			bdev_ocssd_create_complete(create_ctx, rc);
+		}
+	} else {
+#if DEBUG
+		/* Make sure all zones have been processed */
+		uint64_t _offset;
+		for (_offset = 0; _offset < create_ctx->num_total_chunks; ++_offset) {
+			assert(!ocssd_bdev->zones[_offset].busy);
+		}
+#endif
+		/* Schedule the last bit of work (io_device, bdev registration) to be done in a
+		 * context that is not tied to admin command's completion callback.
+		 */
+		spdk_thread_send_msg(spdk_get_thread(), bdev_ocssd_register_bdev, create_ctx);
+	}
+}
+
+static int
+bdev_ocssd_init_zone(struct bdev_ocssd_create_ctx *create_ctx)
+{
+	struct ocssd_bdev *ocssd_bdev = create_ctx->ocssd_bdev;
+	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+
+	create_ctx->num_chunks = spdk_min(create_ctx->num_total_chunks - create_ctx->chunk_offset,
+					  OCSSD_BDEV_CHUNK_INFO_COUNT);
+	assert(create_ctx->num_chunks > 0);
+
+	return spdk_nvme_ctrlr_cmd_get_log_page(nvme_bdev->nvme_bdev_ctrlr->ctrlr,
+						SPDK_OCSSD_LOG_CHUNK_INFO,
+						spdk_nvme_ns_get_id(nvme_bdev->ns),
+						&create_ctx->chunk_info,
+						sizeof(create_ctx->chunk_info[0]) *
+						create_ctx->num_chunks,
+						sizeof(create_ctx->chunk_info[0]) *
+						create_ctx->chunk_offset,
+						bdev_occsd_init_zone_cb, create_ctx);
+}
+
+static int
+bdev_ocssd_init_zones(struct bdev_ocssd_create_ctx *create_ctx)
+{
+	struct ocssd_bdev *ocssd_bdev = create_ctx->ocssd_bdev;
+	struct spdk_bdev *bdev = &ocssd_bdev->nvme_bdev.disk;
+
+	ocssd_bdev->zones = calloc(bdev->blockcnt / bdev->zone_size, sizeof(*ocssd_bdev->zones));
+	if (!ocssd_bdev->zones) {
+		return -ENOMEM;
+	}
+
+	create_ctx->num_total_chunks = bdev->blockcnt / bdev->zone_size;
+	create_ctx->chunk_offset = 0;
+#if DEBUG
+	/* Mark all zones as busy and clear it as their info is filled */
+	uint64_t _offset = 0;
+	for (_offset = 0; _offset < create_ctx->num_total_chunks; ++_offset) {
+		ocssd_bdev->zones[_offset].busy = true;
+	}
+#endif
+	return bdev_ocssd_init_zone(create_ctx);
+}
+
 int
 bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
 		       bdev_ocssd_create_cb cb_fn, void *cb_arg)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct bdev_ocssd_create_ctx *create_ctx = NULL;
 	struct nvme_bdev *nvme_bdev = NULL;
 	struct ocssd_bdev *ocssd_bdev = NULL;
 	struct spdk_nvme_ns *ns;
@@ -651,6 +827,16 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 		goto error;
 	}
 
+	create_ctx = calloc(1, sizeof(*create_ctx));
+	if (!create_ctx) {
+		rc = -ENOMEM;
+		goto error;
+	}
+
+	create_ctx->ocssd_bdev = ocssd_bdev;
+	create_ctx->cb_fn = cb_fn;
+	create_ctx->cb_arg = cb_arg;
+
 	nvme_bdev = &ocssd_bdev->nvme_bdev;
 	nvme_bdev->ns = ns;
 	nvme_bdev->nvme_ns = nvme_ns;
@@ -685,19 +871,16 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 		nvme_bdev->disk.max_open_zones = geometry->maxocpu;
 	}
 
-	rc = spdk_bdev_register(&nvme_bdev->disk);
+	rc = bdev_ocssd_init_zones(create_ctx);
 	if (spdk_unlikely(rc != 0)) {
-		SPDK_ERRLOG("Failed to register bdev %s\n", nvme_bdev->disk.name);
+		SPDK_ERRLOG("Failed to initialize zones on bdev %s\n", nvme_bdev->disk.name);
 		goto error;
-	} else {
-		nvme_bdev_attach_bdev_to_ns(nvme_ns, nvme_bdev);
-		bdev_name = nvme_bdev->disk.name;
 	}
 
-	cb_fn(bdev_name, 0, cb_arg);
 	return 0;
 error:
 	bdev_ocssd_free_bdev(ocssd_bdev);
+	free(create_ctx);
 	return rc;
 }
 
