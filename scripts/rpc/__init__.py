@@ -75,7 +75,7 @@ def save_config(client, fd, indent=2):
         'subsystems': []
     }
 
-    for elem in client.call('get_subsystems'):
+    for elem in client.call('framework_get_subsystems'):
         cfg = {
             'subsystem': elem['subsystem'],
             'config': client.call('get_subsystem_config', {"name": elem['subsystem']})
