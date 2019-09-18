@@ -52,6 +52,24 @@
       "revId": "96301f0dcc39f3fa044bc4b7285c469ecd06ca34",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b2aa1f8_a2d5ad1d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 2121,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-18T06:33:42Z",
+      "side": 1,
+      "message": "Thanks, I\u0027ll fix it. Should I also update handling of the DIF generation failure for the write command - fail the command instead of disconnect?",
+      "parentUuid": "d3a04da0_542e2b4b",
+      "revId": "96301f0dcc39f3fa044bc4b7285c469ecd06ca34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
