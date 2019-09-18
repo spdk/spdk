@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d5fed20_0face1b7",
+        "filename": "doc/applications.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-18T15:48:10Z",
+      "side": 1,
+      "message": "subsystem \u003d\u003e framework",
+      "revId": "0844e1bce8dff40805774a1ab090bed0748571f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "303ceaca_61a20aaa",
+        "filename": "doc/applications.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-18T15:48:10Z",
+      "side": 1,
+      "message": "this should say \"a small subset of commands\" - can you fix that while you\u0027re here?",
+      "revId": "0844e1bce8dff40805774a1ab090bed0748571f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "792448f5_36014c01",
+        "filename": "lib/event/app.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1068,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-18T15:48:10Z",
+      "side": 1,
+      "message": "framwork_initialization",
+      "revId": "0844e1bce8dff40805774a1ab090bed0748571f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
