@@ -311,7 +311,7 @@ SPDK_RPC_REGISTER("log_clear_flag", spdk_rpc_log_clear_flag,
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_clear_flag, clear_log_flag)
 
 static void
-spdk_rpc_get_log_flags(struct spdk_jsonrpc_request *request,
+spdk_rpc_log_get_flags(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
@@ -319,7 +319,7 @@ spdk_rpc_get_log_flags(struct spdk_jsonrpc_request *request,
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_log_flags requires no parameters");
+						 "log_get_flags requires no parameters");
 		return;
 	}
 
@@ -334,5 +334,5 @@ spdk_rpc_get_log_flags(struct spdk_jsonrpc_request *request,
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_log_flags", spdk_rpc_get_log_flags, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(get_log_flags, get_trace_flags)
+SPDK_RPC_REGISTER("log_get_flags", spdk_rpc_log_get_flags, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_get_flags, get_log_flags)
