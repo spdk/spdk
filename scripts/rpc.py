@@ -1160,12 +1160,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('get_log_level', help='get log level')
     p.set_defaults(func=get_log_level)
 
-    def set_log_print_level(args):
-        rpc.log.set_log_print_level(args.client, level=args.level)
+    def log_set_print_level(args):
+        rpc.log.log_set_print_level(args.client, level=args.level)
 
-    p = subparsers.add_parser('set_log_print_level', help='set log print level')
+    p = subparsers.add_parser('log_set_print_level', aliases=['set_log_print_level'],
+                              help='set log print level')
     p.add_argument('level', help='log print level we want to set. (for example "DEBUG").')
-    p.set_defaults(func=set_log_print_level)
+    p.set_defaults(func=log_set_print_level)
 
     def get_log_print_level(args):
         print_dict(rpc.log.get_log_print_level(args.client))
