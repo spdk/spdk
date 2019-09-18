@@ -275,7 +275,7 @@ Example response:
     "bdev_set_qos_limit",
     "bdev_get_bdevs",
     "bdev_get_iostat",
-    "get_subsystem_config",
+    "framework_get_config",
     "framework_get_subsystems",
     "framework_monitor_context_switch",
     "kill_instance",
@@ -402,9 +402,9 @@ Example response:
 }
 ~~~
 
-## get_subsystem_config {#rpc_get_subsystem_config}
+## framework_get_config {#rpc_framework_get_config}
 
-Get current configuration of the specified SPDK subsystem
+Get current configuration of the specified SPDK framework
 
 ### Parameters
 
@@ -415,7 +415,7 @@ name                    | Required | string      | SPDK subsystem name
 ### Response
 
 The response is current configuration of the specified SPDK subsystem.
-Null is returned if it is not retrievable by the get_subsystem_config method and empty array is returned if it is empty.
+Null is returned if it is not retrievable by the framework_get_config method and empty array is returned if it is empty.
 
 ### Example
 
@@ -425,7 +425,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "get_subsystem_config",
+  "method": "framework_get_config",
   "params": {
     "name": "bdev"
   }
