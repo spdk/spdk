@@ -130,6 +130,8 @@ nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	free(nvme_bdev_ctrlr->name);
-	free(nvme_bdev_ctrlr->bdevs);
+
+	assert(TAILQ_EMPTY(&nvme_bdev_ctrlr->bdevs));
+
 	free(nvme_bdev_ctrlr);
 }
