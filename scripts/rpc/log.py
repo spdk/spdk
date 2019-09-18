@@ -33,14 +33,15 @@ def get_log_flags(client):
     return client.call('get_log_flags')
 
 
-def set_log_level(client, level):
+@deprecated_alias('set_log_level')
+def log_set_level(client, level):
     """Set log level.
 
     Args:
         level: log level we want to set. (for example "DEBUG")
     """
     params = {'level': level}
-    return client.call('set_log_level', params)
+    return client.call('log_set_level', params)
 
 
 def get_log_level(client):
