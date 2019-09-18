@@ -1125,13 +1125,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=get_tpoint_group_mask)
 
     # log
-    def set_log_flag(args):
-        rpc.log.set_log_flag(args.client, flag=args.flag)
+    def log_set_flag(args):
+        rpc.log.log_set_flag(args.client, flag=args.flag)
 
-    p = subparsers.add_parser('set_log_flag', help='set log flag', aliases=['set_trace_flag'])
+    p = subparsers.add_parser('log_set_flag', help='set log flag', aliases=['set_log_flag'])
     p.add_argument(
         'flag', help='log flag we want to set. (for example "nvme").')
-    p.set_defaults(func=set_log_flag)
+    p.set_defaults(func=log_set_flag)
 
     def clear_log_flag(args):
         rpc.log.clear_log_flag(args.client, flag=args.flag)
