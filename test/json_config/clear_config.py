@@ -185,7 +185,7 @@ if __name__ == "__main__":
 
     @call_test_cmd
     def clear_subsystem(args):
-        config = args.client.call('get_subsystem_config', {"name": args.subsystem})
+        config = args.client.call('framework_get_config', {"name": args.subsystem})
         if config is None:
             return
         if args.verbose:
