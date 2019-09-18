@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93385b4b_cd6e0a82",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 3685,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-18T16:53:24Z",
+      "side": 1,
+      "message": "should be nvmf_target_delete everywhere (and scrub for the use of the word destroy since we\u0027re not using the naming convention anymore)",
+      "revId": "c12ff72ebc431828de0d09bf0aaa8e1c127367f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
