@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5269d377_df0878cc",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-18T06:05:03Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this result in similar failure to the one on line 242?",
+      "range": {
+        "startLine": 251,
+        "startChar": 3,
+        "endLine": 251,
+        "endChar": 9
+      },
+      "revId": "03b6f2d4e62c9072a88af557926ad7ecb6aae056",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d52baffa_5afdee2d",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-18T06:05:03Z",
+      "side": 1,
+      "message": "The default case takes care of these.",
+      "range": {
+        "startLine": 275,
+        "startChar": 0,
+        "endLine": 278,
+        "endChar": 28
+      },
+      "revId": "03b6f2d4e62c9072a88af557926ad7ecb6aae056",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b8aa16f_8d58d591",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-18T06:05:03Z",
+      "side": 1,
+      "message": "Can\u0027t we just check for ENOMEM and complete the request with SPDK_BDEV_IO_STATUS_NOMEM and let the bdev layer take care of retrying the requests?",
+      "range": {
+        "startLine": 303,
+        "startChar": 0,
+        "endLine": 306,
+        "endChar": 32
+      },
+      "revId": "03b6f2d4e62c9072a88af557926ad7ecb6aae056",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
