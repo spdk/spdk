@@ -596,7 +596,7 @@ function part_dev_by_gpt () {
 		echo "Process nbd pid: $nbd_pid"
 		waitforlisten $nbd_pid $rpc_server
 
-		# Start bdev as a nbd device
+		# Start bdev as an nbd device
 		nbd_start_disks "$rpc_server" $devname $nbd_path
 
 		waitfornbd ${nbd_path:5}
