@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6a16032b_27dc906a",
+        "filename": "doc/bdev.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-18T00:29:56Z",
+      "side": 1,
+      "message": "same comment before wrt making \"extra\" changes however in this case besides being really minor the same LOC is being touched so my vote would be to fix it.  As I\u0027ve seen little stuff like this I don\u0027t comment on the rename review, just submit a patch to fix the unrelated grammar issues at the tail",
+      "parentUuid": "e4903a4c_bfd47a26",
+      "range": {
+        "startLine": 408,
+        "startChar": 10,
+        "endLine": 408,
+        "endChar": 11
+      },
+      "revId": "64f7eeff9b9301c73771ab5121b300888dca9fd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2d4246f7_13476449",
         "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
         "patchSetId": 5
@@ -72,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "c2009524_f3cc00a4",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-18T00:29:56Z",
+      "side": 1,
+      "message": "Plus this is a rename patch and we shouldn\u0027t be making other changes, amkes it harder to review, revert if necessary if one change is needed but not the other.",
+      "parentUuid": "53ec4b66_5730491b",
+      "range": {
+        "startLine": 422,
+        "startChar": 76,
+        "endLine": 422,
+        "endChar": 85
+      },
+      "revId": "64f7eeff9b9301c73771ab5121b300888dca9fd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dfd6b722_048ab35c",
         "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
         "patchSetId": 5
@@ -83,6 +131,30 @@
       "writtenOn": "2019-09-05T16:10:33Z",
       "side": 1,
       "message": "Looks like you have extra spaces.",
+      "range": {
+        "startLine": 428,
+        "startChar": 4,
+        "endLine": 428,
+        "endChar": 9
+      },
+      "revId": "64f7eeff9b9301c73771ab5121b300888dca9fd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5178a151_cb56154a",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-18T00:29:56Z",
+      "side": 1,
+      "message": "Don\u0027t think those are extra, they are for formatting, a tab would have not made things line up (too many spaces)",
+      "parentUuid": "dfd6b722_048ab35c",
       "range": {
         "startLine": 428,
         "startChar": 4,
