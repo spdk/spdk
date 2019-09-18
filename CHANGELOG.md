@@ -55,6 +55,10 @@ Three new header functions have also been added to help deal with multiple targe
 `spdk_nvmf_get_first_target` takes no arguments and returns the first target in the global list.
 `spdk_nvmf_get_next_tgt` takes a target pointer as an argument and returns the next one in the global list.
 
+The `spdk_nvmf_tgt_accept` takes additional argument allowing to pass arbitrary context
+information to the `new_qpair` callback. This will simplify the code when having multiple
+nvmf targets or when retrieving the context information from globals is not suitable.
+
 ### bdev
 
 A new spdk_bdev_open_ext function has been added and spdk_bdev_open function has been deprecated.

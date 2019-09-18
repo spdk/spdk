@@ -250,7 +250,7 @@ nvmf_tgt_poll_group_add(void *_ctx)
 }
 
 static void
-new_qpair(struct spdk_nvmf_qpair *qpair)
+new_qpair(struct spdk_nvmf_qpair *qpair, void *cb_arg)
 {
 	struct nvmf_tgt_pg_ctx *ctx;
 	struct nvmf_tgt_poll_group *pg;
@@ -294,7 +294,7 @@ acceptor_poll(void *arg)
 {
 	struct spdk_nvmf_tgt *tgt = arg;
 
-	spdk_nvmf_tgt_accept(tgt, new_qpair);
+	spdk_nvmf_tgt_accept(tgt, new_qpair, NULL);
 
 	return -1;
 }
