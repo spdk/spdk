@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1bc8fae6_a0df20f4",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-18T07:28:06Z",
+      "side": 1,
+      "message": "Keep these declarations on one line.",
+      "range": {
+        "startLine": 465,
+        "startChar": 0,
+        "endLine": 466,
+        "endChar": 15
+      },
+      "revId": "cb3419dc2d3151ec2f729577c60b664333c94ccb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
