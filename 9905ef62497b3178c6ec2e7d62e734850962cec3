@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0177195_5b93c46f",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-18T16:56:33Z",
+      "side": 1,
+      "message": "RPC name updates",
+      "revId": "9905ef62497b3178c6ec2e7d62e734850962cec3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
