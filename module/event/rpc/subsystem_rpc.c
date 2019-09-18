@@ -38,8 +38,8 @@
 #include "spdk/env.h"
 
 static void
-spdk_rpc_get_subsystems(struct spdk_jsonrpc_request *request,
-			const struct spdk_json_val *params)
+spdk_rpc_framework_get_subsystems(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_subsystem *subsystem;
@@ -47,7 +47,7 @@ spdk_rpc_get_subsystems(struct spdk_jsonrpc_request *request,
 
 	if (params) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "'get_subsystems' requires no arguments");
+						 "'framework_get_subsystems' requires no arguments");
 		return;
 	}
 
@@ -71,7 +71,8 @@ spdk_rpc_get_subsystems(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 
-SPDK_RPC_REGISTER("get_subsystems", spdk_rpc_get_subsystems, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("framework_get_subsystems", spdk_rpc_framework_get_subsystems, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_get_subsystems, get_subsystems)
 
 struct rpc_get_subsystem_config {
 	char *name;
