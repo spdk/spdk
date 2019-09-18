@@ -1153,11 +1153,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'flag', help='log flag we want to clear. (for example "nvme").')
     p.set_defaults(func=log_clear_flag)
 
-    def get_log_flags(args):
-        print_dict(rpc.log.get_log_flags(args.client))
+    def log_get_flags(args):
+        print_dict(rpc.log.log_get_flags(args.client))
 
-    p = subparsers.add_parser('get_log_flags', help='get log flags', aliases=['get_trace_flags'])
-    p.set_defaults(func=get_log_flags)
+    p = subparsers.add_parser('log_get_flags', help='get log flags', aliases=['get_log_flags'])
+    p.set_defaults(func=log_get_flags)
 
     def log_set_level(args):
         rpc.log.log_set_level(args.client, level=args.level)
