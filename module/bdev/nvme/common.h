@@ -61,8 +61,8 @@ struct nvme_bdev_ctrlr {
 	 */
 	uint32_t			prchk_flags;
 	uint32_t			num_ns;
-	/** Array of bdevs indexed by nsid - 1 */
-	struct nvme_bdev		*bdevs;
+	/** List of bdevs */
+	TAILQ_HEAD(, nvme_bdev)		bdevs;
 
 	struct spdk_poller		*adminq_timer_poller;
 
@@ -76,6 +76,7 @@ struct nvme_bdev {
 	uint32_t		id;
 	bool			active;
 	struct spdk_nvme_ns	*ns;
+	TAILQ_ENTRY(nvme_bdev)	tailq;
 };
 
 typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
