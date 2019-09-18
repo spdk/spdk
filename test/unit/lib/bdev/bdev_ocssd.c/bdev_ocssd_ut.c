@@ -104,12 +104,31 @@ free_controller(struct spdk_nvme_ctrlr *ctrlr)
 	free(ctrlr);
 }
 
+static uint64_t
+chunk_offset_to_lba(struct spdk_ocssd_geometry_data *geo, uint64_t offset)
+{
+	uint64_t chk, pu, grp;
+	uint64_t chk_off, pu_off, grp_off;
+
+	chk_off = geo->lbaf.lbk_len;
+	pu_off = geo->lbaf.chk_len + chk_off;
+	grp_off = geo->lbaf.pu_len + pu_off;
+
+	chk = offset % geo->num_chk;
+	pu = (offset / geo->num_chk) % geo->num_pu;
+	grp = (offset / (geo->num_chk * geo->num_pu)) % geo->num_grp;
+
+	return chk << chk_off |
+	       pu  << pu_off  |
+	       grp << grp_off;
+}
+
 static struct spdk_nvme_ctrlr *
 create_controller(const struct spdk_nvme_transport_id *trid, uint32_t ns_count,
 		  const struct spdk_ocssd_geometry_data *geo)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
-	uint32_t nsid;
+	uint32_t nsid, offset;
 
 	SPDK_CU_ASSERT_FATAL(!find_controller(trid));
 
@@ -131,6 +150,13 @@ create_controller(const struct spdk_nvme_transport_id *trid, uint32_t ns_count,
 	ctrlr->trid = *trid;
 	ctrlr->ns_count = ns_count;
 	ctrlr->admin_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+
+	for (offset = 0; offset < ctrlr->num_chunks; ++offset) {
+		ctrlr->chunk_info[offset].cs.free = 1;
+		ctrlr->chunk_info[offset].slba = chunk_offset_to_lba(&ctrlr->geometry, offset);
+		ctrlr->chunk_info[offset].wp = ctrlr->chunk_info[offset].slba;
+	}
+
 	SPDK_CU_ASSERT_FATAL(ctrlr->admin_qpair != NULL);
 
 	LIST_INSERT_HEAD(&g_ctrlr_list, ctrlr, list);
@@ -452,6 +478,22 @@ test_create_controller(void)
 	uint32_t nsid;
 	int rc;
 
+	geometry = (struct spdk_ocssd_geometry_data) {
+		.clba = 512,
+		.num_chk = 64,
+		.num_pu = 8,
+		.num_grp = 4,
+		.maxoc = 69,
+		.maxocpu = 68,
+		.ws_opt = 86,
+		.lbaf = {
+			.lbk_len = 9,
+			.chk_len = 6,
+			.pu_len = 3,
+			.grp_len = 2,
+		}
+	};
+
 	ctrlr = create_controller(&trid, ns_count, &geometry);
 	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
 	rc = spdk_bdev_ocssd_create_ctrlr(&trid);
@@ -461,6 +503,8 @@ test_create_controller(void)
 		snprintf(namebuf, sizeof(namebuf), "%sn%"PRIu32, controller_name, nsid);
 		rc = spdk_bdev_ocssd_create_bdev(controller_name, namebuf, nsid, create_bdev_cb, NULL);
 		CU_ASSERT_EQUAL(rc, 0);
+		rc = spdk_thread_poll(g_thread, 0, 0);
+		CU_ASSERT_EQUAL(rc, 1);
 
 		bdev = spdk_bdev_get_by_name(namebuf);
 		SPDK_CU_ASSERT_FATAL(bdev != NULL);
@@ -478,6 +522,8 @@ test_create_controller(void)
 		snprintf(namebuf, sizeof(namebuf), "%sn%"PRIu32, controller_name, nsid);
 		rc = spdk_bdev_ocssd_create_bdev(controller_name, namebuf, nsid, create_bdev_cb, NULL);
 		CU_ASSERT_EQUAL(rc, 0);
+		rc = spdk_thread_poll(g_thread, 0, 0);
+		CU_ASSERT_EQUAL(rc, 1);
 
 		bdev = spdk_bdev_get_by_name(namebuf);
 		SPDK_CU_ASSERT_FATAL(bdev != NULL);
@@ -537,6 +583,12 @@ test_device_geometry(void)
 		.maxoc = 69,
 		.maxocpu = 68,
 		.ws_opt = 86,
+		.lbaf = {
+			.lbk_len = 9,
+			.chk_len = 6,
+			.pu_len = 3,
+			.grp_len = 2,
+		}
 	};
 
 	ctrlr = create_controller(&trid, 1, &geometry);
@@ -547,6 +599,8 @@ test_device_geometry(void)
 
 	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, create_bdev_cb, NULL);
 	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_thread_poll(g_thread, 0, 0);
+	CU_ASSERT_EQUAL(rc, 1);
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	CU_ASSERT_EQUAL(bdev->blockcnt, geometry.clba *
@@ -620,6 +674,8 @@ test_lba_translation(void)
 	CU_ASSERT_EQUAL(rc, 0);
 	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, create_bdev_cb, NULL);
 	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_thread_poll(g_thread, 0, 0);
+	CU_ASSERT_EQUAL(rc, 1);
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
@@ -672,6 +728,8 @@ test_lba_translation(void)
 	CU_ASSERT_EQUAL(rc, 0);
 	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, create_bdev_cb, NULL);
 	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_thread_poll(g_thread, 0, 0);
+	CU_ASSERT_EQUAL(rc, 1);
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
@@ -733,19 +791,41 @@ alloc_ocssd_io(void)
 	return bdev_io;
 }
 
-static void
-set_chunk_info(struct spdk_nvme_ctrlr *ctrlr, uint64_t offset,
-	       const struct spdk_ocssd_chunk_information_entry *chunk_info)
+static struct spdk_ocssd_chunk_information_entry *
+get_chunk_info(struct spdk_nvme_ctrlr *ctrlr, uint64_t offset)
 {
 	assert(offset < ctrlr->num_chunks);
 	SPDK_CU_ASSERT_FATAL(offset < ctrlr->num_chunks);
-	ctrlr->chunk_info[offset] = *chunk_info;
+	return &ctrlr->chunk_info[offset];
 }
 
+enum chunk_state {
+	CHUNK_STATE_FREE,
+	CHUNK_STATE_CLOSED,
+	CHUNK_STATE_OPEN,
+	CHUNK_STATE_OFFLINE
+};
+
 static void
-clear_chunk_info(struct spdk_nvme_ctrlr *ctrlr)
+set_chunk_state(struct spdk_ocssd_chunk_information_entry *chunk, enum chunk_state state)
 {
-	memset(ctrlr->chunk_info, 0, sizeof(*ctrlr->chunk_info) * ctrlr->num_chunks);
+	memset(&chunk->cs, 0, sizeof(chunk->cs));
+	switch (state) {
+	case CHUNK_STATE_FREE:
+		chunk->cs.free = 1;
+		break;
+	case CHUNK_STATE_CLOSED:
+		chunk->cs.closed = 1;
+		break;
+	case CHUNK_STATE_OPEN:
+		chunk->cs.open = 1;
+		break;
+	case CHUNK_STATE_OFFLINE:
+		chunk->cs.offline = 1;
+		break;
+	default:
+		SPDK_CU_ASSERT_FATAL(0 && "Invalid state");
+	}
 }
 
 static void
@@ -754,14 +834,13 @@ test_get_zone_info(void)
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct spdk_nvme_transport_id trid = { .traddr = "00:00:00" };
-	struct ocssd_bdev *ocssd_bdev;
 	const char *controller_name = "nvme0";
 	const char *bdev_name = "nvme0n1";
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_io *bdev_io;
 #define MAX_ZONE_INFO_COUNT 64
 	struct spdk_bdev_zone_info zone_info[MAX_ZONE_INFO_COUNT];
-	struct spdk_ocssd_chunk_information_entry chunk_info = {};
+	struct spdk_ocssd_chunk_information_entry *chunk_info;
 	struct spdk_ocssd_geometry_data geometry;
 	uint64_t chunk_offset;
 	int rc, offset;
@@ -786,10 +865,11 @@ test_get_zone_info(void)
 	CU_ASSERT_EQUAL(rc, 0);
 	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, create_bdev_cb, NULL);
 	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_thread_poll(g_thread, 0, 0);
+	CU_ASSERT_EQUAL(rc, 1);
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
-	ocssd_bdev = SPDK_CONTAINEROF(bdev, struct ocssd_bdev, nvme_bdev.disk);
 
 	bdev_io = alloc_ocssd_io();
 	bdev_io->internal.cb = get_zone_info_cb;
@@ -799,13 +879,12 @@ test_get_zone_info(void)
 	bdev_io->u.zdev.zone_id = 0;
 	bdev_io->u.zdev.num_zones = 1;
 	bdev_io->u.zdev.buf = &zone_info;
-	chunk_info.cs.free = 1;
-	chunk_info.wp = 0;
-	set_chunk_info(ctrlr, 0, &chunk_info);
+	chunk_info = get_chunk_info(ctrlr, 0);
+	set_chunk_state(chunk_info, CHUNK_STATE_FREE);
+	chunk_info->wp = 0;
 
 	rc = bdev_ocssd_get_zone_info(NULL, bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
-	clear_chunk_info(ctrlr);
 
 	CU_ASSERT_EQUAL(zone_info[0].state, SPDK_BDEV_ZONE_STATE_EMPTY);
 	CU_ASSERT_EQUAL(zone_info[0].zone_id, 0);
@@ -816,36 +895,30 @@ test_get_zone_info(void)
 	bdev_io->u.zdev.zone_id = bdev->zone_size;
 	bdev_io->u.zdev.num_zones = 1;
 	bdev_io->u.zdev.buf = &zone_info;
-	memset(&chunk_info, 0, sizeof(chunk_info));
-	chunk_info.cs.open = 1;
-	chunk_info.wp = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev_io->u.zdev.zone_id + 68);
-	chunk_info.slba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev_io->u.zdev.zone_id);
-	chunk_info.cnlb = 511;
-	chunk_info.ct.size_deviate = 1;
-	set_chunk_info(ctrlr, generate_chunk_offset(&geometry, 0, 1, 0), &chunk_info);
+	chunk_info = get_chunk_info(ctrlr, generate_chunk_offset(&geometry, 0, 1, 0));
+	set_chunk_state(chunk_info, CHUNK_STATE_OPEN);
+	chunk_info->wp = chunk_info->slba + 68;
+	chunk_info->cnlb = 511;
+	chunk_info->ct.size_deviate = 1;
 
 	rc = bdev_ocssd_get_zone_info(NULL, bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
-	clear_chunk_info(ctrlr);
 
 	CU_ASSERT_EQUAL(zone_info[0].state, SPDK_BDEV_ZONE_STATE_OPEN);
 	CU_ASSERT_EQUAL(zone_info[0].zone_id, bdev->zone_size);
 	CU_ASSERT_EQUAL(zone_info[0].write_pointer, bdev->zone_size + 68);
-	CU_ASSERT_EQUAL(zone_info[0].capacity, chunk_info.cnlb);
+	CU_ASSERT_EQUAL(zone_info[0].capacity, chunk_info->cnlb);
 
 	/* Verify offline zone at 2nd chunk */
 	bdev_io->u.zdev.zone_id = bdev->zone_size * geometry.num_pu * geometry.num_grp;
 	bdev_io->u.zdev.num_zones = 1;
 	bdev_io->u.zdev.buf = &zone_info;
-	memset(&chunk_info, 0, sizeof(chunk_info));
-	chunk_info.cs.offline = 1;
-	chunk_info.wp = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev_io->u.zdev.zone_id);
-	chunk_info.slba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev_io->u.zdev.zone_id);
-	set_chunk_info(ctrlr, generate_chunk_offset(&geometry, 1, 0, 0), &chunk_info);
+	chunk_info = get_chunk_info(ctrlr, generate_chunk_offset(&geometry, 1, 0, 0));
+	set_chunk_state(chunk_info, CHUNK_STATE_OFFLINE);
+	chunk_info->wp = chunk_info->slba;
 
 	rc = bdev_ocssd_get_zone_info(NULL, bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
-	clear_chunk_info(ctrlr);
 
 	CU_ASSERT_EQUAL(zone_info[0].state, SPDK_BDEV_ZONE_STATE_OFFLINE);
 	CU_ASSERT_EQUAL(zone_info[0].zone_id, bdev_io->u.zdev.zone_id);
@@ -863,11 +936,10 @@ test_get_zone_info(void)
 						     (offset / geometry.num_pu) % geometry.num_grp);
 
 
-		memset(&chunk_info, 0, sizeof(chunk_info));
-		chunk_info.cs.open = 1;
-		chunk_info.wp = bdev_ocssd_to_disk_lba(ocssd_bdev, offset * bdev->zone_size + 68);
-		chunk_info.slba = bdev_ocssd_to_disk_lba(ocssd_bdev, offset * bdev->zone_size);
-		set_chunk_info(ctrlr, chunk_offset, &chunk_info);
+		chunk_info = get_chunk_info(ctrlr, chunk_offset);
+		set_chunk_state(chunk_info, CHUNK_STATE_OPEN);
+		chunk_info->wp = chunk_info->slba + 68;
+		chunk_info->ct.size_deviate = 0;
 	}
 
 	rc = bdev_ocssd_get_zone_info(NULL, bdev_io);
@@ -879,8 +951,6 @@ test_get_zone_info(void)
 		CU_ASSERT_EQUAL(zone_info[offset].write_pointer, bdev->zone_size * offset + 68);
 		CU_ASSERT_EQUAL(zone_info[offset].capacity, geometry.clba);
 	}
-
-	clear_chunk_info(ctrlr);
 
 	/* Verify misaligned start zone LBA */
 	bdev_io->u.zdev.zone_id = 1;
@@ -894,6 +964,8 @@ test_get_zone_info(void)
 	bdev_io->u.zdev.zone_id = 0;
 	bdev_io->u.zdev.num_zones = MAX_ZONE_INFO_COUNT;
 	bdev_io->u.zdev.buf = &zone_info;
+	chunk_info = get_chunk_info(ctrlr, 0);
+	set_chunk_state(chunk_info, CHUNK_STATE_FREE);
 
 	rc = bdev_ocssd_get_zone_info(NULL, bdev_io);
 	CU_ASSERT_EQUAL(rc, 0);
