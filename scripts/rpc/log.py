@@ -12,15 +12,15 @@ def log_set_flag(client, flag):
     return client.call('log_set_flag', params)
 
 
-@deprecated_alias('clear_trace_flag')
-def clear_log_flag(client, flag):
+@deprecated_alias('clear_log_flag')
+def log_clear_flag(client, flag):
     """Clear log flag.
 
     Args:
         flag: log flag we want to clear. (for example "nvme")
     """
     params = {'flag': flag}
-    return client.call('clear_log_flag', params)
+    return client.call('log_clear_flag', params)
 
 
 @deprecated_alias('get_trace_flags')

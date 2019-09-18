@@ -248,7 +248,7 @@ Example response:
     "stop_nbd_disk",
     "start_nbd_disk",
     "get_log_flags",
-    "clear_log_flag",
+    "log_clear_flag",
     "log_set_flag",
     "log_get_level",
     "log_set_level",
