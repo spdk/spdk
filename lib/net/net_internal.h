@@ -67,7 +67,7 @@ int spdk_interface_net_interface_add_ip_address(int ifc_index, char *ip_addr);
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_interface_delete_ip_address(int ifc_index, char *ip_addr);
+int spdk_interface_net_interface_delete_ip_address(int ifc_index, char *ip_addr);
 
 /**
  * Get the list of all the network interfaces.
