@@ -111,43 +111,45 @@ invalid:
 SPDK_RPC_REGISTER("kill_instance", spdk_rpc_kill_instance, SPDK_RPC_RUNTIME)
 
 
-struct rpc_context_switch_monitor {
+struct rpc_framework_monitor_context_switch {
 	bool enabled;
 };
 
-static const struct spdk_json_object_decoder rpc_context_switch_monitor_decoders[] = {
-	{"enabled", offsetof(struct rpc_context_switch_monitor, enabled), spdk_json_decode_bool},
+static const struct spdk_json_object_decoder rpc_framework_monitor_context_switch_decoders[] = {
+	{"enabled", offsetof(struct rpc_framework_monitor_context_switch, enabled), spdk_json_decode_bool},
 };
 
 static void
-spdk_rpc_context_switch_monitor(struct spdk_jsonrpc_request *request,
-				const struct spdk_json_val *params)
+spdk_rpc_framework_monitor_context_switch(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
 {
-	struct rpc_context_switch_monitor req = {};
+	struct rpc_framework_monitor_context_switch req = {};
 	struct spdk_json_write_ctx *w;
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_context_switch_monitor_decoders,
-					    SPDK_COUNTOF(rpc_context_switch_monitor_decoders),
+		if (spdk_json_decode_object(params, rpc_framework_monitor_context_switch_decoders,
+					    SPDK_COUNTOF(rpc_framework_monitor_context_switch_decoders),
 					    &req)) {
 			SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "spdk_json_decode_object failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 			return;
 		}
 
-		spdk_reactor_enable_context_switch_monitor(req.enabled);
+		spdk_reactor_enable_framework_monitor_context_switch(req.enabled);
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_bool(w, "enabled", spdk_reactor_context_switch_monitor_enabled());
+	spdk_json_write_named_bool(w, "enabled", spdk_reactor_framework_monitor_context_switch_enabled());
 
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }
 
-SPDK_RPC_REGISTER("context_switch_monitor", spdk_rpc_context_switch_monitor, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("framework_monitor_context_switch", spdk_rpc_framework_monitor_context_switch,
+		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_monitor_context_switch, context_switch_monitor)
 
 struct rpc_thread_get_stats_ctx {
 	struct spdk_jsonrpc_request *request;
