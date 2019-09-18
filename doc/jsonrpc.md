@@ -251,7 +251,7 @@ Example response:
     "clear_log_flag",
     "set_log_flag",
     "get_log_level",
-    "set_log_level",
+    "log_set_level",
     "log_get_print_level",
     "log_set_print_level",
     "get_iscsi_global_params",
