@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4a9d729_4812bc3b",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T04:48:36Z",
+      "side": 1,
+      "message": "I think the old name was best.  This function is trying to verify that we can add and delete ip addresses.  So either the old name, or verify_net_interface_add_delete_ip_address would be the better name for this function.\n\n(I\u0027d just keep the old name - it means fewer changes in this file.)",
+      "revId": "d04cfd738f9e2957763dac19e8dfbe2a0c24ce7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
