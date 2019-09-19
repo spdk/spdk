@@ -138,10 +138,10 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
 
 def verify_scsi_devices_rpc_methods(rpc_py):
     rpc = spdk_rpc(rpc_py)
-    output = rpc.get_scsi_devices()
+    output = rpc.scsi_get_devices()
     jsonvalue = json.loads(output)
     verify(not jsonvalue, 1,
-           "get_scsi_devices returned {}, expected empty".format(jsonvalue))
+           "scsi_get_devices returned {}, expected empty".format(jsonvalue))
 
     rpc.bdev_malloc_create(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.iscsi_create_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
@@ -157,7 +157,7 @@ def verify_scsi_devices_rpc_methods(rpc_py):
     output = rpc.get_iscsi_global_params()
     jsonvalues = json.loads(output)
     nodebase = jsonvalues['node_base']
-    output = rpc.get_scsi_devices()
+    output = rpc.scsi_get_devices()
     jsonvalues = json.loads(output)
     verify(jsonvalues[0]['device_name'] == nodebase + ":" + rpc_param['target_name'], 1,
            "device name vaule is {}, expected {}".format(jsonvalues[0]['device_name'], rpc_param['target_name']))
@@ -169,10 +169,10 @@ def verify_scsi_devices_rpc_methods(rpc_py):
     rpc.delete_initiator_group(initiator_tag)
     rpc.iscsi_delete_portal_group(portal_tag)
     rpc.delete_target_node(name)
-    output = rpc.get_scsi_devices()
+    output = rpc.scsi_get_devices()
     jsonvalues = json.loads(output)
     verify(not jsonvalues, 1,
-           "get_scsi_devices returned {}, expected empty".format(jsonvalues))
+           "scsi_get_devices returned {}, expected empty".format(jsonvalues))
 
     print("verify_scsi_devices_rpc_methods passed")
 

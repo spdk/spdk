@@ -1095,11 +1095,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('get_iscsi_global_params', help='Display iSCSI global parameters')
     p.set_defaults(func=get_iscsi_global_params)
 
-    def get_scsi_devices(args):
-        print_dict(rpc.iscsi.get_scsi_devices(args.client))
+    def scsi_get_devices(args):
+        print_dict(rpc.iscsi.scsi_get_devices(args.client))
 
-    p = subparsers.add_parser('get_scsi_devices', help='Display SCSI devices')
-    p.set_defaults(func=get_scsi_devices)
+    p = subparsers.add_parser('scsi_get_devices', aliases=['get_scsi_devices'],
+                              help='Display SCSI devices')
+    p.set_defaults(func=scsi_get_devices)
 
     # trace
     def enable_tpoint_group(args):
