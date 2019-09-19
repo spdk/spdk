@@ -1,11 +1,15 @@
-def kill_instance(client, sig_name):
+from .helpers import deprecated_alias
+
+
+@deprecated_alias('kill_instance')
+def spdk_kill_instance(client, sig_name):
     """Send a signal to the SPDK process.
 
     Args:
         sig_name: signal to send ("SIGINT", "SIGTERM", "SIGQUIT", "SIGHUP", or "SIGKILL")
     """
     params = {'sig_name': sig_name}
-    return client.call('kill_instance', params)
+    return client.call('spdk_kill_instance', params)
 
 
 def context_switch_monitor(client, enabled=None):

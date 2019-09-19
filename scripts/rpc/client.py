@@ -151,7 +151,7 @@ class JSONRPCClient(object):
             response = self.recv()
         except JSONRPCException as e:
             """ Don't expect response to kill """
-            if not self.sock and method == "kill_instance":
+            if not self.sock and method == "spdk_kill_instance":
                 self._logger.info("Connection terminated but ignoring since method is '%s'" % method)
                 return {}
             else:
