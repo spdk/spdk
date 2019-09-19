@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd0c1a31_40205e8f",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T21:16:10Z",
+      "side": 1,
+      "message": "I had to convince myself that this was actually true here (which it is).  But it\u0027s a bit indirect, since the controller\u0027s lock isn\u0027t accessed anywhere in this file.  I\u0027m just concerned that this comment as written will be more confusing down the road rather than helpful.  Maybe instead we should just say this can be only called from the  context of certain functions (i.e. nvme_rdma_qpair_connect)?",
+      "revId": "a95d09c895161d589c8e3e45138f4b347e00c5ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0144eeb0_568b94e6",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T21:16:10Z",
+      "side": 1,
+      "message": "is |\u003d correct here?  it would be doing a bitwise or of -EBADMSG with whatever was returned - which could make this a non-sensical return code",
+      "revId": "a95d09c895161d589c8e3e45138f4b347e00c5ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dfedf29f_cd1440f5",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1676,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T21:16:10Z",
+      "side": 1,
+      "message": "do we need to remove these?  there are 256 of them - this seems like unnecessary work - would it be easier to just reinitialize free_cm_events instead if we want to \"zero\" the list?",
+      "revId": "a95d09c895161d589c8e3e45138f4b347e00c5ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
