@@ -162,13 +162,13 @@ static void
 remove_base_bdev(struct vbdev_ocf_base *base)
 {
 	if (base->attached) {
+		if (base->management_channel) {
+			spdk_put_io_channel(base->management_channel);
+		}
+
 		spdk_bdev_module_release_bdev(base->bdev);
 		spdk_bdev_close(base->desc);
 		base->attached = false;
-
-		if (base->management_channel && !base->is_cache) {
-			spdk_put_io_channel(base->management_channel);
-		}
 	}
 }
 
@@ -252,7 +252,6 @@ stop_vbdev_cmpl(ocf_cache_t cache, void *priv, int error)
 
 	vbdev_ocf_queue_put(vbdev->cache_ctx->mngt_queue);
 	ocf_mngt_cache_unlock(cache);
-	spdk_put_io_channel(vbdev->cache.management_channel);
 
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
@@ -900,8 +899,6 @@ finish_register(struct vbdev_ocf *vbdev)
 {
 	int result;
 
-	vbdev->cache.management_channel = vbdev->cache_ctx->management_channel;
-
 	/* Copy properties of the base bdev */
 	vbdev->exp_bdev.blocklen = vbdev->core.bdev->blocklen;
 	vbdev->exp_bdev.write_cache = vbdev->core.bdev->write_cache;
@@ -942,7 +939,6 @@ add_core_cmpl(ocf_cache_t cache, ocf_core_t core, void *priv, int error)
 		vbdev->core.id  = ocf_core_get_id(core);
 	}
 
-	vbdev->core.management_channel = spdk_bdev_get_io_channel(vbdev->core.desc);
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
 
@@ -1053,9 +1049,6 @@ start_cache(struct vbdev_ocf *vbdev)
 		vbdev_ocf_mngt_stop(vbdev);
 		return;
 	}
-
-	vbdev->cache_ctx->management_channel = spdk_bdev_get_io_channel(vbdev->cache.desc);
-	vbdev->cache.management_channel = vbdev->cache_ctx->management_channel;
 
 	if (vbdev->cfg.loadq) {
 		ocf_mngt_cache_load(vbdev->ocf_cache, &vbdev->cfg.device, start_cache_cmpl, vbdev);
@@ -1344,6 +1337,7 @@ attach_base(struct vbdev_ocf_base *base)
 		struct vbdev_ocf_base *existing = get_other_cache_base(base);
 		if (existing) {
 			base->desc = existing->desc;
+			base->management_channel = existing->management_channel;
 			base->attached = true;
 			return 0;
 		}
@@ -1361,6 +1355,13 @@ attach_base(struct vbdev_ocf_base *base)
 		SPDK_ERRLOG("Unable to claim device '%s'\n", base->name);
 		spdk_bdev_close(base->desc);
 		return status;
+	}
+
+	base->management_channel = spdk_bdev_get_io_channel(base->desc);
+	if (!base->management_channel) {
+		SPDK_ERRLOG("Unable to get io channel '%s'\n", base->name);
+		spdk_bdev_close(base->desc);
+		return -ENOMEM;
 	}
 
 	base->attached = true;
