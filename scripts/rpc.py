@@ -61,11 +61,12 @@ if __name__ == "__main__":
     p.add_argument('-i', '--include-aliases', help='include RPC aliases', action='store_true')
     p.set_defaults(func=rpc_get_methods)
 
-    def get_spdk_version(args):
-        print_json(rpc.get_spdk_version(args.client))
+    def spdk_get_version(args):
+        print_json(rpc.spdk_get_version(args.client))
 
-    p = subparsers.add_parser('get_spdk_version', help='Get SPDK version')
-    p.set_defaults(func=get_spdk_version)
+    p = subparsers.add_parser('spdk_get_version', aliases=['get_spdk_version'],
+                              help='Get SPDK version')
+    p.set_defaults(func=spdk_get_version)
 
     def save_config(args):
         rpc.save_config(args.client,
