@@ -16,6 +16,24 @@
       "revId": "2dceeb24cca50150f6dabbf598a26302a7255b4b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80e4750a_2dd6fa75",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1517,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-19T14:44:48Z",
+      "side": 1,
+      "message": "Sure, I can do that but I\u0027d prefer not to. IMHO I thought this was clearer (one function per entry in the function table based on function) and allowed for more flexibility in the future. Let me know, thanks for reviewing!",
+      "parentUuid": "2feb462d_be8306eb",
+      "revId": "2dceeb24cca50150f6dabbf598a26302a7255b4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
