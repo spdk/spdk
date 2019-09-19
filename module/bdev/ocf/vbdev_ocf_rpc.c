@@ -190,45 +190,83 @@ static const struct spdk_json_object_decoder rpc_bdev_ocf_get_stats_decoders[] =
 	{"name", offsetof(struct rpc_bdev_ocf_get_stats, name), spdk_json_decode_string},
 };
 
+struct get_ocf_stats_ctx {
+	struct rpc_bdev_ocf_get_stats req;
+	struct spdk_jsonrpc_request *request;
+	int core_id;
+	int status;
+};
+
+static void
+spdk_rpc_bdev_ocf_get_stats_cmpl(ocf_cache_t cache, void *priv, int error)
+{
+	struct get_ocf_stats_ctx *ctx = (struct get_ocf_stats_ctx *) priv;
+	struct spdk_json_write_ctx *w;
+	struct vbdev_ocf_stats stats;
+	int status;
+
+	if (error) {
+		goto end;
+	}
+
+	status = vbdev_ocf_stats_get(cache, ctx->core_id, &stats);
+
+	ocf_mngt_cache_read_unlock(cache);
+
+	if (status) {
+		error = status;
+		goto end;
+	}
+
+	w = spdk_jsonrpc_begin_result(ctx->request);
+	vbdev_ocf_stats_write_json(w, &stats);
+	spdk_jsonrpc_end_result(ctx->request, w);
+
+end:
+	if (error) {
+		spdk_jsonrpc_send_error_response_fmt(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Could not get stats: %s",
+						     spdk_strerror(-error));
+	}
+	free_rpc_bdev_ocf_get_stats(&ctx->req);
+}
+
 static void
 spdk_rpc_bdev_ocf_get_stats(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_bdev_ocf_get_stats req = {NULL};
-	struct spdk_json_write_ctx *w;
 	struct vbdev_ocf *vbdev;
-	struct vbdev_ocf_stats stats;
-	int status;
+	struct get_ocf_stats_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Not enough memory to process request");
+		goto end;
+	}
 
 	if (spdk_json_decode_object(params, rpc_bdev_ocf_get_stats_decoders,
 				    SPDK_COUNTOF(rpc_bdev_ocf_get_stats_decoders),
-				    &req)) {
+				    &ctx->req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		goto end;
 	}
 
-	vbdev = vbdev_ocf_get_by_name(req.name);
+	vbdev = vbdev_ocf_get_by_name(ctx->req.name);
 	if (vbdev == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 spdk_strerror(ENODEV));
 		goto end;
 	}
 
-	status = vbdev_ocf_stats_get(vbdev->ocf_cache, vbdev->core.id, &stats);
-	if (status) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Could not get stats: %s",
-						     spdk_strerror(-status));
-		goto end;
-	}
-
-	w = spdk_jsonrpc_begin_result(request);
-	vbdev_ocf_stats_write_json(w, &stats);
-	spdk_jsonrpc_end_result(request, w);
+	ctx->core_id = vbdev->core.id;
+	ctx->request = request;
+	ocf_mngt_cache_read_lock(vbdev->ocf_cache, spdk_rpc_bdev_ocf_get_stats_cmpl, ctx);
+	return;
 
 end:
-	free_rpc_bdev_ocf_get_stats(&req);
+	free_rpc_bdev_ocf_get_stats(&ctx->req);
 }
 SPDK_RPC_REGISTER("bdev_ocf_get_stats", spdk_rpc_bdev_ocf_get_stats, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ocf_get_stats, get_ocf_stats)
