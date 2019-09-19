@@ -44,7 +44,6 @@
 #include "ftl_core.h"
 #include "ftl_band.h"
 #include "ftl_io.h"
-#include "ftl_anm.h"
 #include "ftl_rwb.h"
 #include "ftl_debug.h"
 #include "ftl_reloc.h"
@@ -2114,37 +2113,6 @@ spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg)
 	}
 
 	return ftl_flush_rwb(dev, cb_fn, cb_arg);
-}
-
-static void
-_ftl_process_anm_event(void *ctx)
-{
-	ftl_process_anm_event((struct ftl_anm_event *)ctx);
-}
-
-void
-ftl_process_anm_event(struct ftl_anm_event *event)
-{
-	struct spdk_ftl_dev *dev = event->dev;
-	struct ftl_band *band;
-	size_t lbkoff;
-
-	/* Drop any ANM requests until the device is initialized */
-	if (!dev->initialized) {
-		ftl_anm_event_complete(event);
-		return;
-	}
-
-	if (!ftl_check_core_thread(dev)) {
-		spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_process_anm_event, event);
-		return;
-	}
-
-	band = ftl_band_from_addr(dev, event->addr);
-	lbkoff = ftl_band_lbkoff_from_addr(band, event->addr);
-
-	ftl_reloc_add(dev->reloc, band, lbkoff, event->num_lbks, 0, false);
-	ftl_anm_event_complete(event);
 }
 
 bool
