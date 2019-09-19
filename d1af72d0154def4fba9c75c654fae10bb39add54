@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cf2c970_924e773f",
+        "filename": "test/unit/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 689,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-19T08:24:32Z",
+      "side": 1,
+      "message": "Any reason why there are two equivalent asserts here?",
+      "range": {
+        "startLine": 688,
+        "startChar": 0,
+        "endLine": 689,
+        "endChar": 64
+      },
+      "revId": "d1af72d0154def4fba9c75c654fae10bb39add54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
