@@ -240,7 +240,7 @@ Example response:
   "result": [
     "start_subsystem_init",
     "get_rpc_methods",
-    "get_scsi_devices",
+    "scsi_get_devices",
     "get_interfaces",
     "delete_ip_address",
     "add_ip_address",

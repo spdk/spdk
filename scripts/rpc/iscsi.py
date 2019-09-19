@@ -506,10 +506,11 @@ def get_iscsi_global_params(client):
     return client.call('get_iscsi_global_params')
 
 
-def get_scsi_devices(client):
+@deprecated_alias('get_iscsi_devices')
+def scsi_get_devices(client):
     """Display SCSI devices.
 
     Returns:
         List of SCSI device.
     """
-    return client.call('get_scsi_devices')
+    return client.call('scsi_get_devices')
