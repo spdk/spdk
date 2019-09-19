@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b1f2575_3e4b5945",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-19T03:14:00Z",
+      "side": 1,
+      "message": "const char * for return value.",
+      "revId": "651faa411055b8459ac883fc2e69561f2a5b39ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e83221d_4508f850",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-19T03:14:00Z",
+      "side": 1,
+      "message": "No need for the variable base_bdev_nvme.",
+      "revId": "651faa411055b8459ac883fc2e69561f2a5b39ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1ac0ddf_c00d3937",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-19T03:14:00Z",
+      "side": 1,
+      "message": "you can use the name vbdev_opal_config_init() and remove line 283-287, line 312-315, the two sections should belong to vbdev_construction.",
+      "revId": "651faa411055b8459ac883fc2e69561f2a5b39ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f678f9c_e6eb0277",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-19T03:14:00Z",
+      "side": 1,
+      "message": "free(cfg-\u003ebase_bdev_name)",
+      "revId": "651faa411055b8459ac883fc2e69561f2a5b39ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
