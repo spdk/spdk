@@ -44,7 +44,6 @@
 #include "spdk/bdev_zone.h"
 
 #include "ftl_core.h"
-#include "ftl_anm.h"
 #include "ftl_io.h"
 #include "ftl_reloc.h"
 #include "ftl_rwb.h"
@@ -663,10 +662,6 @@ _ftl_dev_init_thread(void *ctx)
 		assert(0);
 	}
 
-	if (spdk_get_thread() == ftl_get_core_thread(dev)) {
-		ftl_anm_register_device(dev, ftl_process_anm_event);
-	}
-
 	thread->ioch = spdk_get_io_channel(dev);
 }
 
@@ -1242,8 +1237,6 @@ ftl_halt_poller(void *ctx)
 	if (!dev->core_thread.poller && !dev->read_thread.poller) {
 		spdk_poller_unregister(&dev->fini_ctx.poller);
 
-		ftl_anm_unregister_device(dev);
-
 		if (ftl_dev_has_nv_cache(dev)) {
 			ftl_nv_cache_write_header(&dev->nv_cache, true, ftl_nv_cache_header_fini_cb, dev);
 		} else {
@@ -1294,13 +1287,13 @@ spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_arg
 int
 spdk_ftl_module_init(const struct ftl_module_init_opts *opts, spdk_ftl_fn cb, void *cb_arg)
 {
-	return ftl_anm_init(opts->anm_thread, cb, cb_arg);
+	return 0;
 }
 
 int
 spdk_ftl_module_fini(spdk_ftl_fn cb, void *cb_arg)
 {
-	return ftl_anm_free(cb, cb_arg);
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("ftl_init", SPDK_LOG_FTL_INIT)
