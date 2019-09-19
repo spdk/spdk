@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "87ae88bc_0ba4f5b5",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1400,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-19T15:16:16Z",
+      "side": 1,
+      "message": "Respectfully, I think that the names I currently have are more consistent with the rest of the RPCs.\nThe other RPCs have \"nvmf_rpc_host_ctx\", \"nvmf_rpc_remove_namespace_ctx\", \"nvmf_rpc_ns_ctx\", etc. and they all name them ctx inside of the functions.",
+      "parentUuid": "a77896ea_42e377dc",
+      "revId": "c34bbc00c28d415ecd84ef5fd9e8941c44aaf534",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "39eaab4d_0e4d5bf7",
         "filename": "lib/nvmf/nvmf_rpc.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-09-19T10:58:09Z",
       "side": 1,
       "message": "req will be better",
+      "revId": "c34bbc00c28d415ecd84ef5fd9e8941c44aaf534",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92bed6fa_16fdf413",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1415,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-19T15:16:16Z",
+      "side": 1,
+      "message": "But then we would have two variables, \"request\", and \"req\". Also, the similar variables in the other RPCs all use the name ctx.",
+      "parentUuid": "39eaab4d_0e4d5bf7",
       "revId": "c34bbc00c28d415ecd84ef5fd9e8941c44aaf534",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
