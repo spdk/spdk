@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a77896ea_42e377dc",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1400,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-19T10:58:09Z",
+      "side": 1,
+      "message": "Nitpick. Ctx may confuse reader. Simply rpc_create_target may be better",
+      "revId": "c34bbc00c28d415ecd84ef5fd9e8941c44aaf534",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39eaab4d_0e4d5bf7",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1415,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-19T10:58:09Z",
+      "side": 1,
+      "message": "req will be better",
+      "revId": "c34bbc00c28d415ecd84ef5fd9e8941c44aaf534",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
