@@ -69,7 +69,6 @@ spdk_get_pdu(void)
 	}
 
 	memset(pdu, 0, offsetof(struct spdk_iscsi_pdu, ahs));
-	pdu->bhs = &pdu->bhs_mem;
 	pdu->ref = 1;
 
 	return pdu;

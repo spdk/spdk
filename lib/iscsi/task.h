@@ -127,7 +127,7 @@ spdk_iscsi_task_set_pdu(struct spdk_iscsi_task *task, struct spdk_iscsi_pdu *pdu
 static inline struct iscsi_bhs *
 spdk_iscsi_task_get_bhs(struct spdk_iscsi_task *task)
 {
-	return spdk_iscsi_task_get_pdu(task)->bhs;
+	return &spdk_iscsi_task_get_pdu(task)->bhs;
 }
 
 static inline void
