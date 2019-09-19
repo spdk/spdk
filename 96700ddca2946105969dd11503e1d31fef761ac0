@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4212226_4144ff9c",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 950,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-19T02:51:15Z",
+      "side": 1,
+      "message": "If OPAL isn\u0027t supported, so just return NULL in spdk_opal_init_dev(), maybe you need another patch on top of this one.",
+      "revId": "96700ddca2946105969dd11503e1d31fef761ac0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f6993a4_303907cc",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-19T02:51:15Z",
+      "side": 1,
+      "message": "you don\u0027t need this function, putting the code here is OK.",
+      "revId": "96700ddca2946105969dd11503e1d31fef761ac0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c386367_928cd2a6",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-19T02:51:15Z",
+      "side": 1,
+      "message": "It\u0027s better to name it as opal_dev.",
+      "revId": "96700ddca2946105969dd11503e1d31fef761ac0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
