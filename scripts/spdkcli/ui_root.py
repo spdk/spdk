@@ -370,9 +370,9 @@ class UIRoot(UINode):
 
     @verbose
     @is_method_available
-    def get_scsi_devices(self):
+    def scsi_get_devices(self):
         if self.is_init:
-            for device in rpc.iscsi.get_scsi_devices(self.client):
+            for device in rpc.iscsi.scsi_get_devices(self.client):
                 yield ScsiObj(device)
 
     @verbose
