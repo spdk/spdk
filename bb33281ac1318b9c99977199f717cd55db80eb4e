@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6303b07_f86f9878",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T21:25:43Z",
+      "side": 1,
+      "message": "is this fatal if we get this for an I/O qpair?\n\nif we want to treat that as fatal for now, I guess that\u0027s OK, but might be good to call that out in a comment",
+      "revId": "bb33281ac1318b9c99977199f717cd55db80eb4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
