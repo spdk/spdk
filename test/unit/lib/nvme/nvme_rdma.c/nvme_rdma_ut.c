@@ -44,6 +44,8 @@ DEFINE_STUB(spdk_mem_map_set_translation, int, (struct spdk_mem_map *map, uint64
 DEFINE_STUB(spdk_mem_map_clear_translation, int, (struct spdk_mem_map *map, uint64_t vaddr,
 		uint64_t size), 0);
 
+DEFINE_STUB_V(spdk_mem_map_free, (struct spdk_mem_map **pmap));
+
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
