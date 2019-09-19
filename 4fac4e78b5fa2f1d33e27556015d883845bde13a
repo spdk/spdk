@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abfd7d55_180a6455",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T16:39:41Z",
+      "side": 1,
+      "message": "The code changes are fine, but I don\u0027t think the commit message really matches.  This patch doesn\u0027t actually change the RPC name - that was done in a previous patch.",
+      "revId": "4fac4e78b5fa2f1d33e27556015d883845bde13a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
