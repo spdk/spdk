@@ -67,7 +67,7 @@
 #define NVME_RDMA_MAX_SGL_DESCRIPTORS		16
 
 /* number of STAILQ entries for holding pending RDMA CM events. */
-#define NVME_RDMA_NUM_CM_EVENTS			256
+#define NVME_RDMA_NUM_ASYNC_EVENTS			256
 
 struct spdk_nvmf_cmd {
 	struct spdk_nvme_cmd cmd;
@@ -90,6 +90,11 @@ struct nvme_rdma_cm_event_entry {
 	STAILQ_ENTRY(nvme_rdma_cm_event_entry)	link;
 };
 
+struct nvme_rdma_ibv_entry {
+	struct ibv_async_event			evt;
+	STAILQ_ENTRY(nvme_rdma_ibv_entry)	link;
+};
+
 struct nvme_rdma_device_context {
 	struct ibv_context	*ctx;
 	struct ibv_pd		*pd;
@@ -107,7 +112,13 @@ struct nvme_rdma_ctrlr {
 
 	STAILQ_HEAD(, nvme_rdma_cm_event_entry)	free_cm_events;
 
+	STAILQ_HEAD(, nvme_rdma_ibv_entry)	pending_ibv_events;
+
+	STAILQ_HEAD(, nvme_rdma_ibv_entry)	free_ibv_events;
+
 	struct nvme_rdma_cm_event_entry		*cm_events;
+
+	struct nvme_rdma_ibv_entry		*ibv_events;
 
 	struct nvme_rdma_device_context		*contexts;
 
@@ -158,6 +169,8 @@ struct nvme_rdma_qpair {
 
 	/* Placed at the end of the struct since it is not used frequently */
 	struct rdma_cm_event			*evt;
+	bool					have_ibv_evt;
+	struct ibv_async_event			ibv_evt;
 };
 
 struct spdk_nvme_rdma_req {
@@ -312,9 +325,13 @@ static int
 nvme_rdma_poll_events(struct nvme_rdma_ctrlr *rctrlr)
 {
 	struct nvme_rdma_cm_event_entry	*entry, *tmp;
+	struct nvme_rdma_ibv_entry	*ibv_entry, *ibv_tmp;
 	struct nvme_rdma_qpair		*event_qpair;
 	struct rdma_cm_event		*event;
 	struct rdma_event_channel	*channel = rctrlr->cm_channel;
+	struct ibv_async_event		ibv_event;
+	nfds_t				i;
+	int				rc;
 
 	STAILQ_FOREACH_SAFE(entry, &rctrlr->pending_cm_events, link, tmp) {
 		event_qpair = nvme_rdma_qpair(entry->evt->id->context);
@@ -325,13 +342,24 @@ nvme_rdma_poll_events(struct nvme_rdma_ctrlr *rctrlr)
 		}
 	}
 
+	STAILQ_FOREACH_SAFE(ibv_entry, &rctrlr->pending_ibv_events, link, ibv_tmp) {
+		event_qpair = ibv_entry->evt.element.qp->qp_context;
+		if (event_qpair->have_ibv_evt == false) {
+			event_qpair->ibv_evt = ibv_entry->evt;
+			spdk_smp_wmb();
+			event_qpair->have_ibv_evt = true;
+			STAILQ_REMOVE(&rctrlr->pending_ibv_events, ibv_entry, nvme_rdma_ibv_entry, link);
+			STAILQ_INSERT_HEAD(&rctrlr->free_ibv_events, ibv_entry, link);
+		}
+	}
+
 	while (rdma_get_cm_event(channel, &event) == 0) {
 		event_qpair = nvme_rdma_qpair(event->id->context);
 		if (event_qpair->evt == NULL) {
 			event_qpair->evt = event;
 		} else {
 			rctrlr = nvme_rdma_ctrlr(event_qpair->qpair.ctrlr);
-			assert(rctrlr != NULL);
+			assert(rctrlr == nvme_rdma_ctrlr(event_qpair->qpair.ctrlr));
 			entry = STAILQ_FIRST(&rctrlr->free_cm_events);
 			if (entry == NULL) {
 				return -ENOMEM;
@@ -342,11 +370,59 @@ nvme_rdma_poll_events(struct nvme_rdma_ctrlr *rctrlr)
 		}
 	}
 
-	if (errno == EAGAIN || errno == EWOULDBLOCK) {
-		return 0;
-	} else {
+	/* Only return here if there is a real error on the cm_event channel. */
+	if (errno != EAGAIN && errno != EWOULDBLOCK) {
 		return errno;
 	}
+	rc = poll(rctrlr->poll_fds, rctrlr->npoll_fds, 0);
+
+	if (rc == 0) {
+		return 0;
+	}
+
+	if (rc < 0) {
+		SPDK_ERRLOG("Problem polling %d\n", errno);
+	}
+
+	for (i = 0; i < rctrlr->npoll_fds; i++) {
+		if (rctrlr->poll_fds[i].revents & POLLIN) {
+			rc = ibv_get_async_event(rctrlr->contexts[i].ctx, &ibv_event);
+			if (rc == 0) {
+				SPDK_NOTICELOG("Got an IBV event.\n");
+				switch (ibv_event.event_type) {
+				case IBV_EVENT_QP_FATAL:
+				case IBV_EVENT_QP_LAST_WQE_REACHED:
+				case IBV_EVENT_SQ_DRAINED:
+				case IBV_EVENT_QP_REQ_ERR:
+				case IBV_EVENT_QP_ACCESS_ERR:
+					event_qpair = ibv_event.element.qp->qp_context;
+					if (event_qpair->qpair.ctrlr != &rctrlr->ctrlr) {
+						SPDK_ERRLOG("Got an event for a different controller.\n");
+						return -EINVAL;
+					}
+					if (event_qpair->have_ibv_evt == false) {
+						event_qpair->ibv_evt = ibv_event;
+						spdk_smp_wmb();
+						event_qpair->have_ibv_evt = true;
+					} else {
+						ibv_entry = STAILQ_FIRST(&rctrlr->free_ibv_events);
+						if (ibv_entry == NULL) {
+							return -ENOMEM;
+						}
+						ibv_entry->evt = ibv_event;
+						STAILQ_REMOVE(&rctrlr->free_ibv_events, ibv_entry, nvme_rdma_ibv_entry, link);
+						STAILQ_INSERT_TAIL(&rctrlr->pending_ibv_events, ibv_entry, link);
+					}
+					break;
+				default:
+					SPDK_NOTICELOG("Got a non-qpair related ibv event.\n");
+					ibv_ack_async_event(&ibv_event);
+				}
+			}
+		}
+	}
+
+	return 0;
 }
 
 /*
@@ -1473,6 +1549,12 @@ nvme_rdma_qpair_disconnect(struct spdk_nvme_qpair *qpair)
 		rqpair->evt = NULL;
 	}
 
+	if (rqpair->have_ibv_evt) {
+		ibv_ack_async_event(&rqpair->ibv_evt);
+		spdk_smp_mb();
+		rqpair->have_ibv_evt = false;
+	}
+
 	if (rqpair->cm_id) {
 		if (rqpair->cm_id->qp) {
 			rdma_destroy_qp(rqpair->cm_id);
@@ -1681,15 +1763,25 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 
 	STAILQ_INIT(&rctrlr->pending_cm_events);
 	STAILQ_INIT(&rctrlr->free_cm_events);
-	rctrlr->cm_events = calloc(NVME_RDMA_NUM_CM_EVENTS, sizeof(*rctrlr->cm_events));
+	rctrlr->cm_events = calloc(NVME_RDMA_NUM_ASYNC_EVENTS, sizeof(*rctrlr->cm_events));
 	if (rctrlr->cm_events == NULL) {
 		SPDK_ERRLOG("unable to allocat buffers to hold CM events.\n");
 		nvme_rdma_ctrlr_destruct(&rctrlr->ctrlr);
 		return NULL;
 	}
 
-	for (i = 0; i < NVME_RDMA_NUM_CM_EVENTS; i++) {
+	STAILQ_INIT(&rctrlr->pending_ibv_events);
+	STAILQ_INIT(&rctrlr->free_ibv_events);
+	rctrlr->ibv_events = calloc(NVME_RDMA_NUM_ASYNC_EVENTS, sizeof(*rctrlr->ibv_events));
+	if (rctrlr->ibv_events == NULL) {
+		SPDK_ERRLOG("unable to allocat buffers to hold IBV events.\n");
+		nvme_rdma_ctrlr_destruct(&rctrlr->ctrlr);
+		return NULL;
+	}
+
+	for (i = 0; i < NVME_RDMA_NUM_ASYNC_EVENTS; i++) {
 		STAILQ_INSERT_TAIL(&rctrlr->free_cm_events, &rctrlr->cm_events[i], link);
+		STAILQ_INSERT_TAIL(&rctrlr->free_ibv_events, &rctrlr->ibv_events[i], link);
 	}
 
 	rctrlr->cm_channel = rdma_create_event_channel();
@@ -1743,6 +1835,7 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_rdma_ctrlr *rctrlr = nvme_rdma_ctrlr(ctrlr);
 	struct nvme_rdma_cm_event_entry *entry, *tmp;
+	struct nvme_rdma_ibv_entry *ibv_entry, *ibv_tmp;
 	int i;
 
 	if (ctrlr->adminq) {
@@ -1758,7 +1851,17 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 		STAILQ_REMOVE(&rctrlr->free_cm_events, entry, nvme_rdma_cm_event_entry, link);
 	}
 
+	STAILQ_FOREACH_SAFE(ibv_entry, &rctrlr->pending_ibv_events, link, ibv_tmp) {
+		ibv_ack_async_event(&ibv_entry->evt);
+		STAILQ_REMOVE(&rctrlr->pending_ibv_events, entry, nvme_rdma_ibv_entry, link);
+	}
+
+	STAILQ_FOREACH_SAFE(ibv_entry, &rctrlr->free_ibv_events, link, ibv_tmp) {
+		STAILQ_REMOVE(&rctrlr->free_ibv_events, ibv_entry, nvme_rdma_ibv_entry, link);
+	}
+
 	free(rctrlr->cm_events);
+	free(rctrlr->ibv_events);
 
 	if (rctrlr->cm_channel) {
 		rdma_destroy_event_channel(rctrlr->cm_channel);
