@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2feb462d_be8306eb",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1517,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T04:02:05Z",
+      "side": 1,
+      "message": "can we just have one function pointer called start_rw_request, rather than a separate one for read and write?  because raid_bdev_start_rw_request can already differentiate between a READ and WRITE IO\n\nI just think that simplifies the code here a bit, and reduces confusion on why we have two different function pointers that point to the same function (and why that function switches on the IO type)",
+      "revId": "2dceeb24cca50150f6dabbf598a26302a7255b4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
