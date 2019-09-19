@@ -22,6 +22,30 @@
       "revId": "d1af72d0154def4fba9c75c654fae10bb39add54",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a19c3e7_dd396bbb",
+        "filename": "test/unit/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 689,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-19T17:59:34Z",
+      "side": 1,
+      "message": "No reason, left from debugging. I\u0027ll remove it.",
+      "parentUuid": "5cf2c970_924e773f",
+      "range": {
+        "startLine": 688,
+        "startChar": 0,
+        "endLine": 689,
+        "endChar": 64
+      },
+      "revId": "d1af72d0154def4fba9c75c654fae10bb39add54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
