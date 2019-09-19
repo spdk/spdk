@@ -386,13 +386,13 @@ SPDK_RPC_REGISTER("rpc_get_methods", spdk_rpc_get_methods, SPDK_RPC_STARTUP | SP
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(rpc_get_methods, get_rpc_methods)
 
 static void
-spdk_rpc_get_spdk_version(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+spdk_rpc_spdk_get_version(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_spdk_version method requires no parameters");
+						 "spdk_get_version method requires no parameters");
 		return;
 	}
 
@@ -410,5 +410,6 @@ spdk_rpc_get_spdk_version(struct spdk_jsonrpc_request *request, const struct spd
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_spdk_version", spdk_rpc_get_spdk_version,
+SPDK_RPC_REGISTER("spdk_get_version", spdk_rpc_spdk_get_version,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(spdk_get_version, get_spdk_version)

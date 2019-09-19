@@ -48,9 +48,10 @@ def rpc_get_methods(client, current=None, include_aliases=None):
     return client.call('rpc_get_methods', params)
 
 
-def get_spdk_version(client):
+@deprecated_alias("get_spdk_version")
+def spdk_get_version(client):
     """Get SPDK version"""
-    return client.call('get_spdk_version')
+    return client.call('spdk_get_version')
 
 
 def _json_dump(config, fd, indent):

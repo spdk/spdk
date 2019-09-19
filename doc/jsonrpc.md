@@ -5782,7 +5782,7 @@ Example response:
 }
 ~~~
 
-## get_spdk_version {#rpc_get_spdk_version}
+## spdk_get_version {#rpc_spdk_get_version}
 
 Get the version info of the running SPDK application.
 
@@ -5801,7 +5801,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "get_spdk_version"
+  "method": "spdk_get_version"
 }
 ~~
 
