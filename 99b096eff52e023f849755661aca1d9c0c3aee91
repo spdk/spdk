@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94295c8d_d7ec3885",
+        "filename": "module/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T16:37:56Z",
+      "side": 1,
+      "message": "I\u0027m not sure the dash is needed - we use \"unregister\" without a dash all over the place in comments within SPDK.  I\u0027m fine changing it here but I wouldn\u0027t suggest changing this across all of the SPDK code base.\n\nBut there is still a typo here that didn\u0027t get fixed - it should be unregister instead of unregsiter.",
+      "revId": "99b096eff52e023f849755661aca1d9c0c3aee91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
