@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8bd6ad5_c7311ecd",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-19T20:51:06Z",
+      "side": 1,
+      "message": "I don\u0027t believe you can do this - the connection is on a certain port which is explicitly tied to an instance of verbs.",
+      "revId": "4d5dd2846352b39197f4de1cc9dc0f2020763ccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
