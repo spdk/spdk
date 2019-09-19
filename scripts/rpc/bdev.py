@@ -704,6 +704,33 @@ def delete_ftl_bdev(client, name):
     return client.call('delete_ftl_bdev', params)
 
 
+def bdev_ocssd_create(client, ctrlr_name, bdev_name, nsid=None):
+    """Creates Open Channel zoned bdevs on specified Open Channel controller
+
+    Args:
+        ctrlr_name: name of the OC NVMe controller
+        nsid: namespace ID
+    """
+    params = {'ctrlr_name': ctrlr_name,
+              'bdev_name': bdev_name}
+
+    if nsid is not None:
+        params['nsid'] = nsid
+
+    return client.call('bdev_ocssd_create', params)
+
+
+def bdev_ocssd_delete(client, name):
+    """Deletes Open Channel bdev
+
+    Args:
+        name: name of the bdev
+    """
+    params = {'name': name}
+
+    return client.call('bdev_ocssd_delete', params)
+
+
 def get_bdevs(client, name=None):
     """Get information about block devices.
 
