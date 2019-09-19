@@ -1570,7 +1570,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 	default:
 		SPDK_ERRLOG("invalid raid level %u\n", raid_bdev->raid_level);
 		free(raid_bdev);
-		return -ENOMEM;
+		return -EINVAL;
 	}
 
 	raid_bdev_gen = &raid_bdev->bdev;
