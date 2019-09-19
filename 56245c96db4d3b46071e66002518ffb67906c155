@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "715e8cae_e70f8544",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-09-19T11:41:41Z",
+      "side": 1,
+      "message": "There wasn\u0027t intention here, originally it wasn\u0027t my code, so I didn\u0027t want to move it, but I agree. If we want to have symmetric flow to attach_base it should be before relese_bdev,so I will move it.",
+      "parentUuid": "738f98c9_b207beb9",
+      "range": {
+        "startLine": 169,
+        "startChar": 2,
+        "endLine": 171,
+        "endChar": 3
+      },
+      "revId": "56245c96db4d3b46071e66002518ffb67906c155",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c72fd47d_0d2ff26c",
         "filename": "module/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 2
@@ -39,6 +63,24 @@
       "revId": "56245c96db4d3b46071e66002518ffb67906c155",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5c2c278_556019e9",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1298,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-09-19T11:41:41Z",
+      "side": 1,
+      "message": "Yup, my mistake, thanks.",
+      "parentUuid": "c72fd47d_0d2ff26c",
+      "revId": "56245c96db4d3b46071e66002518ffb67906c155",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
