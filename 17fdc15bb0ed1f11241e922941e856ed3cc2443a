@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ed081fb_5c3898f7",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 1884,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T05:17:27Z",
+      "side": 1,
+      "message": "Attach virtio controller using provided transport type and device type.  This will also create bdevs for any block devices connected to the controller (for example, SCSI devices for a virtio-scsi controller).\"  Result is array of added bdevs.",
+      "revId": "17fdc15bb0ed1f11241e922941e856ed3cc2443a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89db81ee_fe3e4dca",
+        "filename": "scripts/rpc/vhost.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T05:17:27Z",
+      "side": 1,
+      "message": "We should use \"attach\" here instead of \"create\" to better explain what this does.\n\nI\u0027d say something like \"Attaches virtio controller using provided transport type and device type.  This will also create bdevs for any block devices connected to that controller.\"",
+      "revId": "17fdc15bb0ed1f11241e922941e856ed3cc2443a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
