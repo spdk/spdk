@@ -107,13 +107,14 @@ if __name__ == "__main__":
     p.set_defaults(func=load_subsystem_config)
 
     # app
-    def kill_instance(args):
-        rpc.app.kill_instance(args.client,
+    def spdk_kill_instance(args):
+        rpc.app.spdk_kill_instance(args.client,
                               sig_name=args.sig_name)
 
-    p = subparsers.add_parser('kill_instance', help='Send signal to instance')
+    p = subparsers.add_parser('spdk_kill_instance', aliases=['kill_instance'],
+                              help='Send signal to instance')
     p.add_argument('sig_name', help='signal will be sent to server.')
-    p.set_defaults(func=kill_instance)
+    p.set_defaults(func=spdk_kill_instance)
 
     def context_switch_monitor(args):
         enabled = None

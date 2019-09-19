@@ -56,7 +56,7 @@ This type of error is most common one. It mean that there is an error while proc
 
 # App Framework {#jsonrpc_components_app}
 
-## kill_instance {#rpc_kill_instance}
+## spdk_kill_instance {#rpc_spdk_kill_instance}
 
 Send a signal to the application.
 
@@ -74,7 +74,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "kill_instance",
+  "method": "spdk_kill_instance",
   "params": {
     "sig_name": "SIGINT"
   }
@@ -278,7 +278,7 @@ Example response:
     "get_subsystem_config",
     "get_subsystems",
     "context_switch_monitor",
-    "kill_instance",
+    "spdk_kill_instance",
     "ioat_scan_copy_engine",
     "bdev_virtio_attach_controller",
     "bdev_virtio_scsi_get_devices",
