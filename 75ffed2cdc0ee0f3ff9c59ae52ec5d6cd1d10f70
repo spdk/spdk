@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07308819_75a16136",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T16:06:00Z",
+      "side": 1,
+      "message": "could we instead break this into two options?\n\n--nvme-disk-type. (types available: nvme, ocssd)\n--num_nvme_namespaces\n\nThen if we needed a test for 2 namespaces or 24 namespaces, this script would support that.\n\nI\u0027d also suggest just using all lower case for the available options.  NVMe is the official capitalization, but in this case just using nvme is fine (and avoids mistakes on miscapitalization).",
+      "revId": "75ffed2cdc0ee0f3ff9c59ae52ec5d6cd1d10f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
