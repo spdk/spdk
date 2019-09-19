@@ -308,7 +308,6 @@ struct spdk_iscsi_opts {
 	bool ImmediateData;
 	uint32_t ErrorRecoveryLevel;
 	bool AllowDuplicateIsid;
-	uint32_t min_connections_per_core; /* Deprecated */
 };
 
 struct spdk_iscsi_globals {

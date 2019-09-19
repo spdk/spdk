@@ -399,7 +399,6 @@ iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->chap_group = 0;
 	opts->authfile = NULL;
 	opts->nodebase = NULL;
-	opts->min_connections_per_core = 0;
 }
 
 struct spdk_iscsi_opts *
@@ -472,7 +471,6 @@ spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src)
 	dst->require_chap = src->require_chap;
 	dst->mutual_chap = src->mutual_chap;
 	dst->chap_group = src->chap_group;
-	dst->min_connections_per_core = 0;
 
 	return dst;
 }
@@ -491,7 +489,6 @@ iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	int ErrorRecoveryLevel;
 	int timeout;
 	int nopininterval;
-	int min_conn_per_core = 0;
 	const char *ag_tag;
 	int ag_tag_i;
 	int i;
@@ -618,10 +615,6 @@ iscsi_read_config_file_params(struct spdk_conf_section *sp,
 				opts->chap_group = ag_tag_i;
 			}
 		}
-	}
-	min_conn_per_core = spdk_conf_section_get_intval(sp, "MinConnectionsPerCore");
-	if (min_conn_per_core >= 0) {
-		SPDK_WARNLOG("MinConnectionsPerCore is deprecated and will be ignored.\n");
 	}
 
 	return 0;
@@ -775,10 +768,6 @@ iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	g_spdk_iscsi.require_chap = opts->require_chap;
 	g_spdk_iscsi.mutual_chap = opts->mutual_chap;
 	g_spdk_iscsi.chap_group = opts->chap_group;
-
-	if (opts->min_connections_per_core) {
-		SPDK_WARNLOG("iSCSI option 'min_connections_per_core' has been deprecated and will be ignored.\n");
-	}
 
 	iscsi_log_globals();
 
