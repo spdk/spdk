@@ -22,6 +22,30 @@
       "revId": "944174933f0cb3a78a426283055ba0178c60046a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "792f8cf7_43c46829",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 891,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-09-19T15:36:55Z",
+      "side": 1,
+      "message": "Handling errors in next step allow us to cover both cases in one place, I don\u0027t see that we need better granularity (distinguish of timeout or other type of error) of error handling for now.\n\nI really feel that we spending too much time on the interface we are the only users of, and we always call the same sequence to handle error. If we add handler for vbdev_ocf_mngt_poll we need to store it to mngt_ctx, and in consequence take care of proper clearing this handler etc.\n\nOf course, if you think, that it is absolutely necessary, I will rewrite this part.",
+      "parentUuid": "d82e0023_bda6d3ce",
+      "range": {
+        "startLine": 886,
+        "startChar": 0,
+        "endLine": 891,
+        "endChar": 2
+      },
+      "revId": "944174933f0cb3a78a426283055ba0178c60046a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
