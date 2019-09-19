@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3178be1a_4228489c",
+        "filename": "module/bdev/ocf/stats.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-19T02:19:29Z",
+      "side": 1,
+      "message": "Is it the intention to put ocf_mngt_cache_read_unlock() without calling ocf_mngt_cache_read_lock() ?",
+      "revId": "9401ae0fb59f997c39a6d4910f5849ca9499c247",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
