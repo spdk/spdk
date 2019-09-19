@@ -42,23 +42,23 @@
 
 #include "spdk_internal/log.h"
 
-struct rpc_kill_instance {
+struct rpc_spdk_kill_instance {
 	char *sig_name;
 };
 
 static void
-free_rpc_kill_instance(struct rpc_kill_instance *req)
+free_rpc_spdk_kill_instance(struct rpc_spdk_kill_instance *req)
 {
 	free(req->sig_name);
 }
 
-static const struct spdk_json_object_decoder rpc_kill_instance_decoders[] = {
-	{"sig_name", offsetof(struct rpc_kill_instance, sig_name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_spdk_kill_instance_decoders[] = {
+	{"sig_name", offsetof(struct rpc_spdk_kill_instance, sig_name), spdk_json_decode_string},
 };
 
 static void
-spdk_rpc_kill_instance(struct spdk_jsonrpc_request *request,
-		       const struct spdk_json_val *params)
+spdk_rpc_spdk_kill_instance(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
 {
 	static const struct {
 		const char	*signal_string;
@@ -72,11 +72,11 @@ spdk_rpc_kill_instance(struct spdk_jsonrpc_request *request,
 	};
 	size_t i, sig_count;
 	int signal;
-	struct rpc_kill_instance req = {};
+	struct rpc_spdk_kill_instance req = {};
 	struct spdk_json_write_ctx *w;
 
-	if (spdk_json_decode_object(params, rpc_kill_instance_decoders,
-				    SPDK_COUNTOF(rpc_kill_instance_decoders),
+	if (spdk_json_decode_object(params, rpc_spdk_kill_instance_decoders,
+				    SPDK_COUNTOF(rpc_spdk_kill_instance_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "spdk_json_decode_object failed\n");
 		goto invalid;
@@ -96,7 +96,7 @@ spdk_rpc_kill_instance(struct spdk_jsonrpc_request *request,
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "sending signal %d\n", signals[i].signal);
-	free_rpc_kill_instance(&req);
+	free_rpc_spdk_kill_instance(&req);
 	kill(getpid(), signals[i].signal);
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -106,9 +106,10 @@ spdk_rpc_kill_instance(struct spdk_jsonrpc_request *request,
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_kill_instance(&req);
+	free_rpc_spdk_kill_instance(&req);
 }
-SPDK_RPC_REGISTER("kill_instance", spdk_rpc_kill_instance, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("spdk_kill_instance", spdk_rpc_spdk_kill_instance, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(spdk_kill_instance, kill_instance)
 
 
 struct rpc_context_switch_monitor {

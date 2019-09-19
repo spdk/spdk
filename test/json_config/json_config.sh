@@ -129,7 +129,7 @@ function json_config_test_shutdown_app() {
 	[[ -n "${#app_socket[$app]}" ]]
 	[[ -n "${app_pid[$app]}" ]]
 
-	# kill_instance RPC will trigger ASAN
+	# spdk_kill_instance RPC will trigger ASAN
 	kill -SIGINT ${app_pid[$app]}
 
 	for (( i=0; i<30; i++ )); do

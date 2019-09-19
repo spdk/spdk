@@ -21,7 +21,7 @@ MIGRATION_ADDRESS=127.0.0.2
 function kill_all_iscsi_target() {
 	for ((i = 0; i < 2; i++)); do
 		rpc_addr="/var/tmp/spdk${i}.sock"
-		$rpc_py -s $rpc_addr kill_instance SIGTERM
+		$rpc_py -s $rpc_addr spdk_kill_instance SIGTERM
 	done
 }
 
@@ -78,7 +78,7 @@ $fio_py -p iscsi -i 4096 -d 32 -t randrw -r 10 &
 fiopid=$!
 sleep 5
 
-$rpc_py -s $rpc_first_addr kill_instance SIGTERM
+$rpc_py -s $rpc_first_addr spdk_kill_instance SIGTERM
 
 rpc_second_addr="/var/tmp/spdk1.sock"
 rpc_add_target_node $rpc_second_addr
@@ -89,7 +89,7 @@ trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
 
-$rpc_py -s $rpc_second_addr kill_instance SIGTERM
+$rpc_py -s $rpc_second_addr spdk_kill_instance SIGTERM
 iscsitestfini $1 $2
 report_test_completion "iscsi_ip_migration"
 timing_exit ip_migration
