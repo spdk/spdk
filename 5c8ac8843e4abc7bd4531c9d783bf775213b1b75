@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61178432_b39573d1",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-19T12:24:23Z",
+      "side": 1,
+      "message": "should be deletable",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 8
+      },
+      "revId": "5c8ac8843e4abc7bd4531c9d783bf775213b1b75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99a6856c_8fd1eb51",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-19T12:24:23Z",
+      "side": 1,
+      "message": "you can delete this too",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 8
+      },
+      "revId": "5c8ac8843e4abc7bd4531c9d783bf775213b1b75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "382078a0_4fb5611a",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-19T12:24:23Z",
+      "side": 1,
+      "message": "this should be calculated based on geometry at the moment (but zone_size in the last commit)",
+      "range": {
+        "startLine": 45,
+        "startChar": 56,
+        "endLine": 45,
+        "endChar": 84
+      },
+      "revId": "5c8ac8843e4abc7bd4531c9d783bf775213b1b75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
