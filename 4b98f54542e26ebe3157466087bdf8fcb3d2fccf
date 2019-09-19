@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a81a9949_7620440e",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T21:23:06Z",
+      "side": 1,
+      "message": "this seems like we add a bunch of code in the previous patch, and then move/modify it in this patch - is there a way to reduce the code churn between the two patches?",
+      "revId": "4b98f54542e26ebe3157466087bdf8fcb3d2fccf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0dee6dde_3ec4e6e4",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1882,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T21:23:06Z",
+      "side": 1,
+      "message": "should we call nvme_rdma_qpair_process_cm_event() after nvme_rdma_poll_events()?  then for the admin queue we process a found event immediately rather than waiting until next time the poller is called",
+      "revId": "4b98f54542e26ebe3157466087bdf8fcb3d2fccf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
