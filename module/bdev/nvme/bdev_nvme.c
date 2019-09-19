@@ -240,8 +240,7 @@ bdev_nvme_destruct(void *ctx)
 	free(nvme_disk);
 	if (nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct) {
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		spdk_io_device_unregister(nvme_bdev_ctrlr->ctrlr, bdev_nvme_unregister_cb);
-		spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
+		nvme_bdev_ctrlr->destruct_ctrlr_fn(nvme_bdev_ctrlr);
 		return 0;
 	}
 
@@ -979,6 +978,14 @@ free_controller(const struct spdk_nvme_transport_id *trid)
 	free(nvme_bdev_ctrlr);
 }
 
+static void
+destruct_ctrlr_fn(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+{
+	spdk_io_device_unregister(nvme_bdev_ctrlr->ctrlr, bdev_nvme_unregister_cb);
+	spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
+	nvme_bdev_ctrlr->detaching = true;
+}
+
 int
 spdk_bdev_nvme_create_ctrlr(const struct spdk_nvme_transport_id *trid)
 {
@@ -1002,6 +1009,8 @@ spdk_bdev_nvme_create_ctrlr(const struct spdk_nvme_transport_id *trid)
 	}
 
 	spdk_nvme_ctrlr_register_aer_callback(nvme_bdev_ctrlr->ctrlr, aer_cb, nvme_bdev_ctrlr);
+
+	nvme_bdev_ctrlr->destruct_ctrlr_fn = destruct_ctrlr_fn;
 
 	return 0;
 }
@@ -1080,8 +1089,13 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 			nvme_bdev_ctrlr->destruct = true;
 			if (nvme_bdev_ctrlr->ref == 0) {
 				pthread_mutex_unlock(&g_bdev_nvme_mutex);
-				spdk_io_device_unregister(nvme_bdev_ctrlr->ctrlr, bdev_nvme_unregister_cb);
-				spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
+				if (nvme_bdev_ctrlr->destruct_ctrlr_fn) {
+					nvme_bdev_ctrlr->destruct_ctrlr_fn(nvme_bdev_ctrlr);
+				}
+
+				if (!nvme_bdev_ctrlr->detaching) {
+					bdev_nvme_unregister_cb(nvme_bdev_ctrlr->ctrlr);
+				}
 			} else {
 				pthread_mutex_unlock(&g_bdev_nvme_mutex);
 			}
@@ -1629,8 +1643,7 @@ bdev_nvme_library_fini(void)
 
 		nvme_bdev_ctrlr->destruct = true;
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		spdk_io_device_unregister(nvme_bdev_ctrlr->ctrlr, bdev_nvme_unregister_cb);
-		spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
+		nvme_bdev_ctrlr->destruct_ctrlr_fn(nvme_bdev_ctrlr);
 		pthread_mutex_lock(&g_bdev_nvme_mutex);
 	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
