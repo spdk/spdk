@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "76aeaa5b_5abfda34",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 950,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-19T07:41:28Z",
+      "side": 1,
+      "message": "Hi Changpeng, thanks for your review. Based on my understanding, if I return NULL when not supported, next time if I want to check， I need to go init process again. Instead, keeping this structure is more convenient. So I will just leave this here. Thank you.",
+      "parentUuid": "e4212226_4144ff9c",
+      "revId": "96700ddca2946105969dd11503e1d31fef761ac0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2f6993a4_303907cc",
         "filename": "module/bdev/nvme/bdev_nvme.c",
         "patchSetId": 8
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "810052cb_0af2f972",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-19T07:41:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2f6993a4_303907cc",
+      "revId": "96700ddca2946105969dd11503e1d31fef761ac0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4c386367_928cd2a6",
         "filename": "module/bdev/nvme/common.h",
         "patchSetId": 8
@@ -50,6 +86,24 @@
       "revId": "96700ddca2946105969dd11503e1d31fef761ac0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80715d32_3e86b9f1",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-19T07:41:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4c386367_928cd2a6",
+      "revId": "96700ddca2946105969dd11503e1d31fef761ac0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
