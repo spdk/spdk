@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "738f98c9_b207beb9",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-19T02:13:48Z",
+      "side": 1,
+      "message": "It\u0027s better to call spdk_put_io_channel() before the spdk_bdev_module_release_bdev() or you have a special intention here?",
+      "range": {
+        "startLine": 169,
+        "startChar": 2,
+        "endLine": 171,
+        "endChar": 3
+      },
+      "revId": "56245c96db4d3b46071e66002518ffb67906c155",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c72fd47d_0d2ff26c",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1298,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-19T02:13:48Z",
+      "side": 1,
+      "message": "You should return an error code here.",
+      "revId": "56245c96db4d3b46071e66002518ffb67906c155",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
