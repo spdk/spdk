@@ -78,8 +78,8 @@ function devices_delete() {
 }
 
 password=$1
-base_img=${DEPENDENCY_DIR}/fedora24.img
-test_img=${DEPENDENCY_DIR}/fedora24_test.img
+base_img=${DEPENDENCY_DIR}/fedora-hotplug.qcow2
+test_img=${DEPENDENCY_DIR}/fedora-hotplug-test.qcow2
 qemu_pidfile=${DEPENDENCY_DIR}/qemupid
 
 if [ ! -e "$base_img" ]; then
