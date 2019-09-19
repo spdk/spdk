@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "bdev_nvme.h"
+#include "bdev_ocssd.h"
 #include "common.h"
 
 #include "spdk/string.h"
@@ -270,6 +271,9 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	if (ctx->req.mode == NULL || !strcasecmp(ctx->req.mode, "standard")) {
 		create_ctrlr_fn = spdk_bdev_nvme_create_ctrlr;
 		create_bdevs_fn = spdk_bdev_nvme_create_bdevs;
+	} else if (!strcasecmp(ctx->req.mode, "ocssd")) {
+		create_ctrlr_fn = spdk_bdev_ocssd_create_ctrlr;
+		create_bdevs_fn = spdk_bdev_ocssd_create_bdevs;
 	} else {
 		SPDK_ERRLOG("Unknown NVMe bdev type\n");
 		goto cleanup;
