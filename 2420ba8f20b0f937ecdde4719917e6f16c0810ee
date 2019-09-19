@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f78ba3c8_afa61047",
+        "filename": "module/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-19T11:49:03Z",
+      "side": 1,
+      "message": "Can\u0027t we delete this function?",
+      "revId": "2420ba8f20b0f937ecdde4719917e6f16c0810ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
