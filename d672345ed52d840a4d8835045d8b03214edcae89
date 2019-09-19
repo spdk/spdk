@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a16b1746_0afe43b1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1937,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-19T23:58:20Z",
+      "side": 1,
+      "message": "Should we set status code like rsp-\u003estatus.sc \u003d SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID here?",
+      "revId": "d672345ed52d840a4d8835045d8b03214edcae89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "458b9808_6b56fa4d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1962,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-19T23:58:20Z",
+      "side": 1,
+      "message": "data_block_size",
+      "range": {
+        "startLine": 1962,
+        "startChar": 14,
+        "endLine": 1962,
+        "endChar": 47
+      },
+      "revId": "d672345ed52d840a4d8835045d8b03214edcae89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef5447f4_dcbaf1ae",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1968,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-19T23:58:20Z",
+      "side": 1,
+      "message": "rdma_req-\u003edif_ctx.md_size",
+      "range": {
+        "startLine": 1968,
+        "startChar": 14,
+        "endLine": 1968,
+        "endChar": 47
+      },
+      "revId": "d672345ed52d840a4d8835045d8b03214edcae89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31d40961_2e13019e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1973,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-19T23:58:20Z",
+      "side": 1,
+      "message": "We can move this to the line between 1952 and 1953 and do rdma_req-\u003eorig_length \u003d length.",
+      "range": {
+        "startLine": 1973,
+        "startChar": 3,
+        "endLine": 1973,
+        "endChar": 48
+      },
+      "revId": "d672345ed52d840a4d8835045d8b03214edcae89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fcd42234_d063b90c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2461,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-19T23:58:20Z",
+      "side": 1,
+      "message": "Please insert \"and the corresponding max metadata size is 16\"",
+      "range": {
+        "startLine": 2461,
+        "startChar": 47,
+        "endLine": 2461,
+        "endChar": 48
+      },
+      "revId": "d672345ed52d840a4d8835045d8b03214edcae89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
