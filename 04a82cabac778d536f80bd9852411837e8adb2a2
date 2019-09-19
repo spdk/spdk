@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "1854175f_21920c1d",
+        "filename": "doc/bdev.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-09-19T18:16:00Z",
+      "side": 1,
+      "message": "should be \"bdev\" instead of \"controller\"",
+      "range": {
+        "startLine": 412,
+        "startChar": 30,
+        "endLine": 412,
+        "endChar": 40
+      },
+      "revId": "04a82cabac778d536f80bd9852411837e8adb2a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7600cf31_239b420f",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1587,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-09-19T18:16:00Z",
+      "side": 1,
+      "message": "We should this to \"Delete NVMe bdev and detach NVMe controller\"",
+      "range": {
+        "startLine": 1587,
+        "startChar": 0,
+        "endLine": 1587,
+        "endChar": 23
+      },
+      "revId": "04a82cabac778d536f80bd9852411837e8adb2a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d1054c9c_cff7bbaf",
         "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
         "patchSetId": 6
@@ -13,6 +59,93 @@
       "writtenOn": "2019-09-18T20:54:02Z",
       "side": 1,
       "message": "Shuhei is right.  We should not have changed this from \"decoders\" to \"list\".  We use \"decoders\" in many other places, and this patch is focused on renaming the RPC anyways.",
+      "revId": "04a82cabac778d536f80bd9852411837e8adb2a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e082c06b_dfe449fb",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-09-19T18:16:00Z",
+      "side": 1,
+      "message": "Jim/Shuhei\nThanks for providing more insights into the why we used the \"decoders\" naming.\n\nPawel, sorry for sending you on the wrong path.",
+      "parentUuid": "d1054c9c_cff7bbaf",
+      "revId": "04a82cabac778d536f80bd9852411837e8adb2a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89e472a2_c743ea5d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-09-19T18:16:00Z",
+      "side": 1,
+      "message": "should be \"NVMe bdev\" instead of controller.",
+      "range": {
+        "startLine": 410,
+        "startChar": 68,
+        "endLine": 410,
+        "endChar": 78
+      },
+      "revId": "04a82cabac778d536f80bd9852411837e8adb2a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab5fb695_2ed534c7",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-09-19T18:16:00Z",
+      "side": 1,
+      "message": "Should be \"NVMe bdev\"",
+      "range": {
+        "startLine": 411,
+        "startChar": 45,
+        "endLine": 411,
+        "endChar": 55
+      },
+      "revId": "04a82cabac778d536f80bd9852411837e8adb2a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91d38b25_ff879824",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-09-19T18:16:00Z",
+      "side": 1,
+      "message": "should be \"bdev\"",
+      "range": {
+        "startLine": 427,
+        "startChar": 19,
+        "endLine": 427,
+        "endChar": 29
+      },
       "revId": "04a82cabac778d536f80bd9852411837e8adb2a2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
