@@ -176,10 +176,9 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		# Only test hotplug without ASAN enabled. Since if it is
 		# enabled, it catches SEGV earlier than our handler which
 		# breaks the hotplug logic.
-		# Temporary workaround for issue #542, annotated for no VM image.
-		#if [ $SPDK_RUN_ASAN -eq 0 ]; then
-		#	run_test suite test/nvme/hotplug.sh intel
-		#fi
+		if [ $SPDK_RUN_ASAN -eq 0 ]; then
+			run_test suite test/nvme/hotplug.sh intel
+		fi
 	fi
 
 	if [ $SPDK_TEST_IOAT -eq 1 ]; then
