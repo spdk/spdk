@@ -34,6 +34,24 @@
       "revId": "2dceeb24cca50150f6dabbf598a26302a7255b4b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61f723e3_7cf5ca36",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1517,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-19T15:26:37Z",
+      "side": 1,
+      "message": "I think if we want it to be more flexible in the future, we can separate the single function pointer into two later.  As the code is currently written, we have one raid_bdev_start_rw_request function that handles both reads and writes.  I think we want to encourage implementing this as one function rather than separate read v. write, since there is so much common code.\n\nTo take this even further, if someone did decide to implement different start_request functions for both read and write, then you would also need separate waitq_io_process functions for read and write.",
+      "parentUuid": "80e4750a_2dd6fa75",
+      "revId": "2dceeb24cca50150f6dabbf598a26302a7255b4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
