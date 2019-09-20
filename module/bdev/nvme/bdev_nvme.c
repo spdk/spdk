@@ -982,7 +982,11 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		nvme_bdev_ctrlr->opal_dev = spdk_opal_init_dev(nvme_bdev_ctrlr->ctrlr);
 	}
 
-	nvme_bdev_ctrlr->mode = SPDK_NVME_STANDARD_CTRLR;
+	if (!spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		nvme_bdev_ctrlr->mode = SPDK_NVME_STANDARD_CTRLR;
+	} else {
+		nvme_bdev_ctrlr->mode = SPDK_NVME_OCSSD_CTRLR;
+	}
 
 	return 0;
 }
@@ -1233,7 +1237,10 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
+	if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
+		/* Open Channel bdevs are created with a separate call */
+		create_bdevs_cb(ctx, 0, 0);
+	} else {
 		bdev_nvme_create_bdevs(ctx, create_bdevs_cb, ctx);
 	}
 }
