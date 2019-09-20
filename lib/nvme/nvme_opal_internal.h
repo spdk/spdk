@@ -52,8 +52,6 @@
 
 #define SPDK_DTAERROR_NO_METHOD_STATUS	0x89
 
-typedef int (spdk_opal_cb)(struct spdk_opal_dev *dev, void *data);
-
 enum opal_token_type {
 	OPAL_DTA_TOKENID_BYTESTRING	= 0xE0,
 	OPAL_DTA_TOKENID_SINT		= 0xE1,
@@ -303,6 +301,8 @@ struct spdk_opal_dev {
 	struct spdk_opal_locking_range_info *locking_range_info[OPAL_MAX_LRS];
 
 	pthread_mutex_t mutex_lock; /* some structs are accessed by current thread only */
+	spdk_opal_revert_cb    revert_cb_fn;
+	void *ctx;  /* user context data */
 };
 
 #endif
