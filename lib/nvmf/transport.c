@@ -368,12 +368,11 @@ spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
 void
 spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 			       struct spdk_nvmf_transport_poll_group *group,
-			       struct spdk_nvmf_transport *transport,
-			       uint32_t num_buffers)
+			       struct spdk_nvmf_transport *transport)
 {
-	uint32_t i;
+	int i;
 
-	for (i = 0; i < num_buffers; i++) {
+	for (i = 0; i < req->num_buffers; i++) {
 		if (group->buf_cache_count < group->buf_cache_size) {
 			STAILQ_INSERT_HEAD(&group->buf_cache,
 					   (struct spdk_nvmf_transport_pg_cache_buf *)req->buffers[i],
@@ -386,6 +385,7 @@ spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 		req->buffers[i] = NULL;
 		req->iov[i].iov_len = 0;
 	}
+	req->num_buffers = 0;
 	req->data_from_pool = false;
 }
 
@@ -400,15 +400,18 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	while (i < num_buffers) {
 		if (!(STAILQ_EMPTY(&group->buf_cache))) {
 			group->buf_cache_count--;
-			req->buffers[i] = STAILQ_FIRST(&group->buf_cache);
+			req->buffers[req->num_buffers] = STAILQ_FIRST(&group->buf_cache);
 			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
-			assert(req->buffers[i] != NULL);
+			assert(req->buffers[req->num_buffers] != NULL);
+			req->num_buffers++;
 			i++;
 		} else {
-			if (spdk_mempool_get_bulk(transport->data_buf_pool, &req->buffers[i],
+			if (spdk_mempool_get_bulk(transport->data_buf_pool,
+						  &req->buffers[req->num_buffers],
 						  num_buffers - i)) {
 				goto err_exit;
 			}
+			req->num_buffers += num_buffers - i;
 			i += num_buffers - i;
 		}
 	}
@@ -416,6 +419,6 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	return 0;
 
 err_exit:
-	spdk_nvmf_request_free_buffers(req, group, transport, i);
+	spdk_nvmf_request_free_buffers(req, group, transport);
 	return -ENOMEM;
 }
