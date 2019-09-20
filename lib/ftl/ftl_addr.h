@@ -53,13 +53,6 @@
 struct ftl_addr {
 	union {
 		struct {
-			uint64_t offset	 : 32;
-			uint64_t zone_id : 16;
-			uint64_t pu	 : 15;
-			uint64_t rsvd	 : 1;
-		};
-
-		struct {
 			uint64_t cache_offset : 63;
 			uint64_t cached	      : 1;
 		};
@@ -71,12 +64,12 @@ struct ftl_addr {
 					uint32_t cached	      : 1;
 				};
 
-				uint32_t addr;
+				uint32_t offset;
 			};
 			uint32_t rsvd;
 		} pack;
 
-		uint64_t addr;
+		uint64_t offset;
 	};
 };
 
