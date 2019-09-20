@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "bdev_nvme.h"
+#include "bdev_ocssd.h"
 
 #include "spdk/config.h"
 #include "spdk/conf.h"
@@ -940,9 +941,10 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 
 	if (!spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
 		spdk_bdev_nvme_get_opts(&nvme_bdev_ctrlr->opts);
+		nvme_bdev_ctrlr->mode = SPDK_NVME_STANDARD_CTRLR;
 	} else {
-		/* TODO: add 'get opts' for ocssd controller with ocssd controller implementation */
-		assert(false);
+		spdk_bdev_ocssd_get_opts(&nvme_bdev_ctrlr->opts);
+		nvme_bdev_ctrlr->mode = SPDK_NVME_OCSSD_CTRLR;
 	}
 
 	nvme_bdev_ctrlr->name = strdup(name);
@@ -969,8 +971,6 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, nvme_bdev_ctrlr);
-
-	nvme_bdev_ctrlr->mode = SPDK_NVME_STANDARD_CTRLR;
 
 	return 0;
 }
@@ -1245,6 +1245,10 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
 		bdev_nvme_create_bdevs(ctx, create_bdevs_cb, ctx);
+	} else {
+		ctx->bdevs_done = true;
+		ctx->count = 0;
+		nvme_bdev_attach_done(ctx, 0);
 	}
 }
 
