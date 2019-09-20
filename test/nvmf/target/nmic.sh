@@ -20,12 +20,12 @@ $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 
 # Create subsystems
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
-$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK1
+$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK1
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
 
 echo "test case1: single bdev can't be used in multiple subsystems"
-$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode2 -a -s SPDK2
+$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode2 -a -s SPDK2
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode2 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
 nmic_status=0
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode2 Malloc0 || nmic_status=$?

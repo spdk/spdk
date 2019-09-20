@@ -370,7 +370,7 @@ spdk_rpc_nvmf_subsystem_started(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-spdk_rpc_nvmf_subsystem_create(struct spdk_jsonrpc_request *request,
+spdk_rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
 	struct rpc_subsystem_create *req;
@@ -396,7 +396,7 @@ spdk_rpc_nvmf_subsystem_create(struct spdk_jsonrpc_request *request,
 		goto invalid_custom_response;
 	}
 
-	subsystem = spdk_nvmf_subsystem_create(tgt, req->nqn, SPDK_NVMF_SUBTYPE_NVME,
+	subsystem = spdk_nvmf_create_subsystem(tgt, req->nqn, SPDK_NVMF_SUBTYPE_NVME,
 					       req->max_namespaces);
 	if (!subsystem) {
 		goto invalid;
@@ -441,7 +441,8 @@ invalid_custom_response:
 	}
 	free(req);
 }
-SPDK_RPC_REGISTER("nvmf_subsystem_create", spdk_rpc_nvmf_subsystem_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("nvmf_create_subsystem", spdk_rpc_nvmf_create_subsystem, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_create_subsystem, nvmf_subsystem_create)
 
 struct rpc_delete_subsystem {
 	char *nqn;

@@ -25,7 +25,7 @@ $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 timing_exit start_nvmf_tgt
 
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
-$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 # NOTE: This will assign the same NGUID and EUI64 to all bdevs,
 # but currently we only have one (see above), so this is OK.
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0 \

@@ -206,7 +206,7 @@ test_discovery_log(void)
 	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
 
 	/* Add one subsystem and verify that the discovery log contains it */
-	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
+	subsystem = spdk_nvmf_create_subsystem(&tgt, "nqn.2016-06.io.spdk:subsystem1",
 					       SPDK_NVMF_SUBTYPE_NVME, 0);
 	subsystem->allow_any_host = true;
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
