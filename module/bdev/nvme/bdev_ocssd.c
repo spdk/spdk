@@ -116,6 +116,36 @@ bdev_ocssd_library_fini(void)
 static int
 bdev_ocssd_config_json(struct spdk_json_write_ctx *w)
 {
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_namespace *nvme_namespace;
+	struct nvme_bdev *nvme_bdev;
+	uint32_t nsid;
+
+	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+		for (nsid = 1; nsid <= nvme_bdev_ctrlr->num_ns; ++nsid) {
+			if (!spdk_nvme_ctrlr_is_ocssd_ns(nvme_bdev_ctrlr->ctrlr, nsid)) {
+				continue;
+			}
+
+			nvme_namespace = nvme_bdev_ctrlr->namespaces[nsid - 1];
+			TAILQ_FOREACH(nvme_bdev, &nvme_namespace->bdevs, tailq) {
+				spdk_json_write_object_begin(w);
+				spdk_json_write_named_string(w, "method", "bdev_ocssd_create");
+
+				spdk_json_write_named_object_begin(w, "params");
+				spdk_json_write_named_string(w, "ctrlr_name",
+							     nvme_bdev_ctrlr->name);
+				spdk_json_write_named_string(w, "bdev_name",
+							     nvme_bdev->disk.name);
+				spdk_json_write_named_uint32(w, "nsid",
+							     spdk_nvme_ns_get_id(nvme_bdev->ns));
+				spdk_json_write_object_end(w);
+
+				spdk_json_write_object_end(w);
+			}
+		}
+	}
+
 	return 0;
 }
 
