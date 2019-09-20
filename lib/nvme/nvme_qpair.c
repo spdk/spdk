@@ -422,7 +422,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	int32_t ret;
 	struct nvme_request *req, *tmp;
 
-	if (qpair->ctrlr->is_failed) {
+	if (qpair->ctrlr->is_failed || qpair->transport_qp_is_failed) {
 		nvme_qpair_abort_reqs(qpair, 1 /* do not retry */);
 		return 0;
 	}
