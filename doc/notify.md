@@ -36,4 +36,4 @@ for example "Nvme0n1"
 
 # RPC Calls {#rpc_calls}
 
-See [JSON-RPC documentation](jsonrpc.md/#rpc_get_notification_types)
+See [JSON-RPC documentation](jsonrpc.md/#rpc_notify_get_types)

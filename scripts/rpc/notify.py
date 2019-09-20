@@ -1,5 +1,9 @@
-def get_notification_types(client):
-    return client.call("get_notification_types")
+from .helpers import deprecated_alias
+
+
+@deprecated_alias('get_notification_types')
+def notify_get_types(client):
+    return client.call("notify_get_types")
 
 
 def get_notifications(client,
