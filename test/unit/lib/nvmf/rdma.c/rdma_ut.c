@@ -787,6 +787,87 @@ test_spdk_nvmf_rdma_request_process(void)
 	spdk_mempool_free(rtransport.data_wr_pool);
 }
 
+#define TEST_GROUPS_COUNT 5
+static void
+test_spdk_nvmf_rdma_get_optimal_poll_group(void)
+{
+	struct spdk_nvmf_rdma_transport rtransport = {};
+	struct spdk_nvmf_transport *transport = &rtransport.transport;
+	struct spdk_nvmf_rdma_qpair rqpair = {};
+	struct spdk_nvmf_transport_poll_group *groups[TEST_GROUPS_COUNT];
+	struct spdk_nvmf_rdma_poll_group *rgroups[TEST_GROUPS_COUNT];
+	struct spdk_nvmf_transport_poll_group *result;
+	uint32_t i;
+
+	rqpair.qpair.transport = transport;
+	pthread_mutex_init(&rtransport.lock, NULL);
+	TAILQ_INIT(&rtransport.poll_groups);
+
+	for (i = 0; i < TEST_GROUPS_COUNT; i++) {
+		groups[i] = spdk_nvmf_rdma_poll_group_create(transport);
+		CU_ASSERT(groups[i] != NULL);
+		rgroups[i] = SPDK_CONTAINEROF(groups[i], struct spdk_nvmf_rdma_poll_group, group);
+		groups[i]->transport = transport;
+	}
+	CU_ASSERT(rtransport.conn_sched.next_admin_pg == rgroups[0]);
+	CU_ASSERT(rtransport.conn_sched.next_io_pg == rgroups[0]);
+
+	/* Emulate connection of %TEST_GROUPS_COUNT% initiators - each creates 1 admin and 1 io qp */
+	for (i = 0; i < TEST_GROUPS_COUNT; i++) {
+		rqpair.qpair.qid = 0;
+		result = spdk_nvmf_rdma_get_optimal_poll_group(&rqpair.qpair);
+		CU_ASSERT(result == groups[i]);
+		CU_ASSERT(rtransport.conn_sched.next_admin_pg == rgroups[(i + 1) % TEST_GROUPS_COUNT]);
+		CU_ASSERT(rtransport.conn_sched.next_io_pg == rgroups[i]);
+
+		rqpair.qpair.qid = 1;
+		result = spdk_nvmf_rdma_get_optimal_poll_group(&rqpair.qpair);
+		CU_ASSERT(result == groups[i]);
+		CU_ASSERT(rtransport.conn_sched.next_admin_pg == rgroups[(i + 1) % TEST_GROUPS_COUNT]);
+		CU_ASSERT(rtransport.conn_sched.next_io_pg == rgroups[(i + 1) % TEST_GROUPS_COUNT]);
+	}
+	/* wrap around, admin/io pg point to the first pg
+	   Destroy all poll groups except of the last one */
+	for (i = 0; i < TEST_GROUPS_COUNT - 1; i++) {
+		spdk_nvmf_rdma_poll_group_destroy(groups[i]);
+		CU_ASSERT(rtransport.conn_sched.next_admin_pg == rgroups[i + 1]);
+		CU_ASSERT(rtransport.conn_sched.next_io_pg == rgroups[i + 1]);
+	}
+
+	CU_ASSERT(rtransport.conn_sched.next_admin_pg == rgroups[TEST_GROUPS_COUNT - 1]);
+	CU_ASSERT(rtransport.conn_sched.next_io_pg == rgroups[TEST_GROUPS_COUNT - 1]);
+
+	/* Check that pointers to the next admin/io poll groups are not changed */
+	rqpair.qpair.qid = 0;
+	result = spdk_nvmf_rdma_get_optimal_poll_group(&rqpair.qpair);
+	CU_ASSERT(result == groups[TEST_GROUPS_COUNT - 1]);
+	CU_ASSERT(rtransport.conn_sched.next_admin_pg == rgroups[TEST_GROUPS_COUNT - 1]);
+	CU_ASSERT(rtransport.conn_sched.next_io_pg == rgroups[TEST_GROUPS_COUNT - 1]);
+
+	rqpair.qpair.qid = 1;
+	result = spdk_nvmf_rdma_get_optimal_poll_group(&rqpair.qpair);
+	CU_ASSERT(result == groups[TEST_GROUPS_COUNT - 1]);
+	CU_ASSERT(rtransport.conn_sched.next_admin_pg == rgroups[TEST_GROUPS_COUNT - 1]);
+	CU_ASSERT(rtransport.conn_sched.next_io_pg == rgroups[TEST_GROUPS_COUNT - 1]);
+
+	/* Remove the last poll group, check that pointers are NULL */
+	spdk_nvmf_rdma_poll_group_destroy(groups[TEST_GROUPS_COUNT - 1]);
+	CU_ASSERT(rtransport.conn_sched.next_admin_pg == NULL);
+	CU_ASSERT(rtransport.conn_sched.next_io_pg == NULL);
+
+	/* Request optimal poll group, result must be NULL */
+	rqpair.qpair.qid = 0;
+	result = spdk_nvmf_rdma_get_optimal_poll_group(&rqpair.qpair);
+	CU_ASSERT(result == NULL);
+
+	rqpair.qpair.qid = 1;
+	result = spdk_nvmf_rdma_get_optimal_poll_group(&rqpair.qpair);
+	CU_ASSERT(result == NULL);
+
+	pthread_mutex_destroy(&rtransport.lock);
+}
+#undef TEST_GROUPS_COUNT
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -803,7 +884,8 @@ int main(int argc, char **argv)
 	}
 
 	if (!CU_add_test(suite, "test_parse_sgl", test_spdk_nvmf_rdma_request_parse_sgl) ||
-	    !CU_add_test(suite, "test_request_process", test_spdk_nvmf_rdma_request_process)) {
+	    !CU_add_test(suite, "test_request_process", test_spdk_nvmf_rdma_request_process) ||
+	    !CU_add_test(suite, "test_optimal_pg", test_spdk_nvmf_rdma_get_optimal_poll_group)) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
