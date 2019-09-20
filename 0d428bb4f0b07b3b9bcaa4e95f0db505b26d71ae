@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec5c6db2_7ada2876",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 19
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:48:56Z",
+      "side": 1,
+      "message": "Defer CHANGELOG Updates for now.",
+      "revId": "0d428bb4f0b07b3b9bcaa4e95f0db505b26d71ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a5d5f01_0bebbf66",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:48:56Z",
+      "side": 1,
+      "message": "uint32_t instead of size_t?",
+      "revId": "0d428bb4f0b07b3b9bcaa4e95f0db505b26d71ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66354d09_a1f70673",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:48:56Z",
+      "side": 1,
+      "message": "should we use enum spdk_bdev_zone_action as the type here?\n\nuint8_t is probably fine, but I notice you declare a struct member in the next file with the enum type instead of uint8_t",
+      "revId": "0d428bb4f0b07b3b9bcaa4e95f0db505b26d71ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2bb3f79b_13781338",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:48:56Z",
+      "side": 1,
+      "message": "let\u0027s call this zone_management or zone_mgmt instead of zdev",
+      "revId": "0d428bb4f0b07b3b9bcaa4e95f0db505b26d71ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a9df3fd_bf63db94",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:48:56Z",
+      "side": 1,
+      "message": "a bit of a nit, but we should break these changes out into a separate patch (making the functions non-static so they can be called from the bdev_zone.c file",
+      "revId": "0d428bb4f0b07b3b9bcaa4e95f0db505b26d71ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
