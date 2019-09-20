@@ -18,7 +18,7 @@ $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK0000000000000
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-$rpc_py get_nvmf_subsystems
+$rpc_py nvmf_get_subsystems
 
 AER_TOUCH_FILE=/tmp/aer_touch_file
 rm -f $AER_TOUCH_FILE
@@ -38,7 +38,7 @@ waitforfile $AER_TOUCH_FILE
 # Add a new namespace
 $rpc_py bdev_malloc_create 64 4096 --name Malloc1
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1 -n 2
-$rpc_py get_nvmf_subsystems
+$rpc_py nvmf_get_subsystems
 
 wait $aerpid
 
