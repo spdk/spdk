@@ -1,0 +1,169 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b12b9c5_70b0f2d0",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:40:58Z",
+      "side": 1,
+      "message": "the callback here is from spdk_bdev_io_get_buff so really \"vbdev_opal_submit_request_cb\" should be spdk_bdev_io_get_buff_cb",
+      "revId": "cc1de8b974da21c78ef88c39a8929d4adf8978c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dde6f5ba_1dc6a495",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:40:58Z",
+      "side": 1,
+      "message": "\"not corresponding\" -\u003e \"not a corresponding\" and \", new opal_part_base\" -\u003e \", a new opal_part_base\"",
+      "range": {
+        "startLine": 389,
+        "startChar": 16,
+        "endLine": 389,
+        "endChar": 33
+      },
+      "revId": "cc1de8b974da21c78ef88c39a8929d4adf8978c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e362fc9_8c59ea2e",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:40:58Z",
+      "side": 1,
+      "message": "For -\u003e for",
+      "revId": "cc1de8b974da21c78ef88c39a8929d4adf8978c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e81f9429_9b07f102",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:40:58Z",
+      "side": 1,
+      "message": "part -\u003e parts",
+      "range": {
+        "startLine": 390,
+        "startChar": 69,
+        "endLine": 390,
+        "endChar": 73
+      },
+      "revId": "cc1de8b974da21c78ef88c39a8929d4adf8978c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89e6a858_84ee412d",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:40:58Z",
+      "side": 1,
+      "message": "space between the var name and --",
+      "revId": "cc1de8b974da21c78ef88c39a8929d4adf8978c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "534cd31a_3a2c7b8c",
+        "filename": "module/bdev/nvme/vbdev_opal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:40:58Z",
+      "side": 1,
+      "message": "extra tab",
+      "revId": "cc1de8b974da21c78ef88c39a8929d4adf8978c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b633ffc1_c4f5d2d1",
+        "filename": "module/bdev/nvme/vbdev_opal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:40:58Z",
+      "side": 1,
+      "message": "58/59 should be on the same line",
+      "revId": "cc1de8b974da21c78ef88c39a8929d4adf8978c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c5184db_75fd18b5",
+        "filename": "module/bdev/nvme/vbdev_opal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:40:58Z",
+      "side": 1,
+      "message": "61/62 should be on the same line",
+      "revId": "cc1de8b974da21c78ef88c39a8929d4adf8978c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6eb3bf32_7287ebc8",
+        "filename": "module/bdev/nvme/vbdev_opal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:40:58Z",
+      "side": 1,
+      "message": "64/65 should be on the same line",
+      "revId": "cc1de8b974da21c78ef88c39a8929d4adf8978c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
