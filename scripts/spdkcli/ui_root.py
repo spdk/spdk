@@ -330,7 +330,7 @@ class UIRoot(UINode):
 
     @verbose
     def create_nvmf_subsystem(self, **kwargs):
-        rpc.nvmf.nvmf_subsystem_create(self.client, **kwargs)
+        rpc.nvmf.nvmf_create_subsystem(self.client, **kwargs)
 
     @verbose
     def delete_nvmf_subsystem(self, **kwargs):

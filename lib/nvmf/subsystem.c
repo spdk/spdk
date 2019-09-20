@@ -234,7 +234,7 @@ spdk_nvmf_valid_nqn(const char *nqn)
 }
 
 struct spdk_nvmf_subsystem *
-spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
+spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 			   const char *nqn,
 			   enum spdk_nvmf_subtype type,
 			   uint32_t num_ns)
