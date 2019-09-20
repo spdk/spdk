@@ -571,6 +571,9 @@ struct spdk_bdev_io {
 		/** Entry to the list need_buf of struct spdk_bdev. */
 		STAILQ_ENTRY(spdk_bdev_io) buf_link;
 
+		/** Entry to the list io_submitted of struct spdk_bdev_channel */
+		TAILQ_ENTRY(spdk_bdev_io) ch_link;
+
 		/** Enables queuing parent I/O when no bdev_ios available for split children. */
 		struct spdk_bdev_io_wait_entry waitq_entry;
 	} internal;
