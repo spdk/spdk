@@ -279,6 +279,24 @@
       "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c294436_f9bcd3a5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1901,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-20T02:16:54Z",
+      "side": 1,
+      "message": "For the SGL entries like above, if the physical NVMe device can support SGL feature, it may work, I didn\u0027t test that before, but it can\u0027t work with PRP only NVMe drives. Can you point me which Intel SSDs you are using? I may do a test offline. Thanks.",
+      "parentUuid": "a1e6c801_ee9797a5",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
