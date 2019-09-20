@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6605022b_f5c3cd07",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 2692,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-20T20:25:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be3dfdb0_cda17f8f",
+      "range": {
+        "startLine": 2692,
+        "startChar": 0,
+        "endLine": 2692,
+        "endChar": 4
+      },
+      "revId": "7036bdf642414973f2a264f3b6db666f0a9c2b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dffdff94_9b8b4543",
         "filename": "scripts/rpc.py",
         "patchSetId": 4
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "c8e047e7_c14f10c8",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-20T20:25:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dffdff94_9b8b4543",
+      "range": {
+        "startLine": 740,
+        "startChar": 36,
+        "endLine": 740,
+        "endChar": 40
+      },
+      "revId": "7036bdf642414973f2a264f3b6db666f0a9c2b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ceeed553_a65e3b24",
         "filename": "scripts/rpc/iscsi.py",
         "patchSetId": 4
@@ -68,6 +116,30 @@
       "revId": "7036bdf642414973f2a264f3b6db666f0a9c2b2a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97111f2f_401eb692",
+        "filename": "scripts/rpc/iscsi.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-20T20:25:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ceeed553_a65e3b24",
+      "range": {
+        "startLine": 268,
+        "startChar": 7,
+        "endLine": 268,
+        "endChar": 11
+      },
+      "revId": "7036bdf642414973f2a264f3b6db666f0a9c2b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
