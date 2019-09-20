@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f45fba2e_cfaa6ee9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 18
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:41:08Z",
+      "side": 1,
+      "message": "since we\u0027re not adding a zdev library, let\u0027s just prefix this line with \"bdev\"",
+      "revId": "d959290c0720b1c5b8a512ba419a12270c114ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f289e83_4eed51e8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 18
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:41:08Z",
+      "side": 1,
+      "message": "Let\u0027s remove the specific TP reference since it\u0027s not broadly available.  You can say generic concept comes from ATA/SCSI and is also being worked as an NVMe TP.",
+      "revId": "d959290c0720b1c5b8a512ba419a12270c114ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b597b42_f945e71a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 18
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:41:08Z",
+      "side": 1,
+      "message": "This is overall a fantastic overview for SPDK zoned bdev functionality.  I wish everyone put so much time into writing their commit messages.  :)",
+      "revId": "d959290c0720b1c5b8a512ba419a12270c114ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "374357a3_a627dc59",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:41:08Z",
+      "side": 1,
+      "message": "Let\u0027s defer the CHANGELOG entries for now.",
+      "revId": "d959290c0720b1c5b8a512ba419a12270c114ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32296972_1295ecf5",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:41:08Z",
+      "side": 1,
+      "message": "Let\u0027s say what the size is represented in (block I assume?  I guess I\u0027ll figure that out as I review more of the code...)",
+      "revId": "d959290c0720b1c5b8a512ba419a12270c114ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3372261_11f58df9",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:41:08Z",
+      "side": 1,
+      "message": "let\u0027s use uint32_t (or uint64_t if needed) rather than size_t.  We try to use inttypes.h variables wherever possible, unless it\u0027s related to a POSIX API that uses something like size_t.\n\nSame for variables below.",
+      "revId": "d959290c0720b1c5b8a512ba419a12270c114ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fda2af3e_22028e3e",
+        "filename": "include/spdk/bdev_zone.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:41:08Z",
+      "side": 1,
+      "message": "Whew, I was right, it is in blocks.  :)",
+      "revId": "d959290c0720b1c5b8a512ba419a12270c114ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f54d5dd3_9bb05809",
+        "filename": "include/spdk/bdev_zone.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:41:08Z",
+      "side": 1,
+      "message": "change size_t (same for others below)",
+      "revId": "d959290c0720b1c5b8a512ba419a12270c114ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba160053_152ca9c1",
+        "filename": "lib/bdev/Makefile",
+        "patchSetId": 18
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T22:41:08Z",
+      "side": 1,
+      "message": "nit: put this before part.c to keep the file names in alphabetical order",
+      "revId": "d959290c0720b1c5b8a512ba419a12270c114ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
