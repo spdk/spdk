@@ -24,6 +24,7 @@
         },
         {
           "params": {
+            "mode": "standard",
             "retry_count": 4,
             "timeout_us": 0,
             "nvme_adminq_poll_period_us": 1000000,

@@ -5,6 +5,7 @@
       "config": [
         {
           "params": {
+            "mode": "standard",
             "retry_count": 4,
             "nvme_adminq_poll_period_us": 100000,
             "nvme_ioq_poll_period_us": 0,

@@ -69,7 +69,14 @@ rpc_decode_action_on_timeout(const struct spdk_json_val *val, void *out)
 	return 0;
 }
 
+static void
+free_rpc_bdev_nvme_set_options(struct spdk_bdev_nvme_opts *req)
+{
+	free(req->mode);
+}
+
 static const struct spdk_json_object_decoder rpc_bdev_nvme_options_decoders[] = {
+	{"mode", offsetof(struct spdk_bdev_nvme_opts, mode), spdk_json_decode_string, true},
 	{"action_on_timeout", offsetof(struct spdk_bdev_nvme_opts, action_on_timeout), rpc_decode_action_on_timeout, true},
 	{"timeout_us", offsetof(struct spdk_bdev_nvme_opts, timeout_us), spdk_json_decode_uint64, true},
 	{"retry_count", offsetof(struct spdk_bdev_nvme_opts, retry_count), spdk_json_decode_uint32, true},
@@ -83,30 +90,67 @@ spdk_rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
 	struct spdk_bdev_nvme_opts opts;
+	struct spdk_bdev_nvme_opts req = {NULL};
 	struct spdk_json_write_ctx *w;
 	int rc;
 
-	spdk_bdev_nvme_get_opts(&opts);
 	if (params && spdk_json_decode_object(params, rpc_bdev_nvme_options_decoders,
 					      SPDK_COUNTOF(rpc_bdev_nvme_options_decoders),
-					      &opts)) {
+					      &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		return;
+		goto cleanup;
 	}
 
-	rc = spdk_bdev_nvme_set_opts(&opts);
+	if (req.mode == NULL || !strcasecmp(req.mode, "standard")) {
+		spdk_bdev_nvme_get_opts(&opts);
+	} else {
+		SPDK_ERRLOG("Unknown NVMe mode\n");
+		spdk_jsonrpc_send_error_response(request, -EINVAL, "Unknown NVMe mode");
+	}
+
+	if (req.action_on_timeout != SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE) {
+		opts.action_on_timeout = req.action_on_timeout;
+	}
+
+	if (req.timeout_us != 0) {
+		opts.timeout_us = req.timeout_us;
+	}
+
+	if (req.retry_count != 0) {
+		opts.retry_count = req.retry_count;
+	}
+
+	if (req.nvme_adminq_poll_period_us != 0) {
+		opts.nvme_adminq_poll_period_us = req.nvme_adminq_poll_period_us;
+	}
+
+	if (req.nvme_ioq_poll_period_us != 0) {
+		opts.nvme_ioq_poll_period_us = req.nvme_ioq_poll_period_us;
+	}
+
+	if (req.io_queue_requests != 0) {
+		opts.io_queue_requests = req.io_queue_requests;
+	}
+
+	if (req.mode == NULL || !strcasecmp(req.mode, "standard")) {
+		rc = spdk_bdev_nvme_set_opts(&opts);
+	} else {
+		assert(false);
+	}
+
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		return;
+		goto cleanup;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 
-	return;
+cleanup:
+	free_rpc_bdev_nvme_set_options(&req);
 }
 SPDK_RPC_REGISTER("bdev_nvme_set_options", spdk_rpc_bdev_nvme_set_options, SPDK_RPC_STARTUP)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_set_options, set_bdev_nvme_options)
