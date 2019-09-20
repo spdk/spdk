@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ea22a24_339a9f58",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 880,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T00:16:33Z",
+      "side": 1,
+      "message": "I think this change can be made in a separate patch before this one.",
+      "revId": "13c5b60d9e352c809cbf7da929346cbbba8842a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "04be2ba1_122e5c27",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T00:16:33Z",
+      "side": 1,
+      "message": "we try to avoid forward declarations if possible, if you can\u0027t reorder things to get rid of these then they should each be on one line (no CR after static void\"",
+      "revId": "13c5b60d9e352c809cbf7da929346cbbba8842a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f97b7b5b_df989287",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T00:16:33Z",
+      "side": 1,
+      "message": "Does this \"Do Nothing\" really mean TODO?",
+      "revId": "13c5b60d9e352c809cbf7da929346cbbba8842a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0df6d90f_a2a75a4b",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T00:16:33Z",
+      "side": 1,
+      "message": "I think most modules are using tabs to align the function names",
+      "revId": "13c5b60d9e352c809cbf7da929346cbbba8842a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64d7bbe6_426f9da1",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T00:16:33Z",
+      "side": 1,
+      "message": "why can\u0027t use use the rc returned from spdk_bdev_part_construct()?",
+      "revId": "13c5b60d9e352c809cbf7da929346cbbba8842a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3b11e72_587bd3c8",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T00:16:33Z",
+      "side": 1,
+      "message": "same question as earlier, why can\u0027t use use rc from vbdev_opal_find_config()?",
+      "revId": "13c5b60d9e352c809cbf7da929346cbbba8842a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
