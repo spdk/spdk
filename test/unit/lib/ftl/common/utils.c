@@ -46,7 +46,7 @@ struct base_bdev_geometry {
 extern struct base_bdev_geometry g_geo;
 
 struct spdk_ftl_dev *test_init_ftl_dev(const struct base_bdev_geometry *geo);
-struct ftl_band *test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id);
+struct ftl_band *test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id, size_t zone_size);
 void test_free_ftl_dev(struct spdk_ftl_dev *dev);
 void test_free_ftl_band(struct ftl_band *band);
 uint64_t test_offset_from_addr(struct ftl_addr addr, struct ftl_band *band);
@@ -94,7 +94,7 @@ test_init_ftl_dev(const struct base_bdev_geometry *geo)
 }
 
 struct ftl_band *
-test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
+test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id, size_t zone_size)
 {
 	struct ftl_band *band;
 	struct ftl_zone *zone;
@@ -122,8 +122,7 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 	for (size_t i = 0; i < ftl_get_num_punits(dev); ++i) {
 		zone = &band->zone_buf[i];
 		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
-		zone->start_addr.pu = i;
-		zone->start_addr.zone_id = band->id;
+		zone->start_addr.offset = zone_size * (id * ftl_get_num_punits(dev) + i);
 		CIRCLEQ_INSERT_TAIL(&band->zones, zone, circleq);
 		band->num_zones++;
 	}
@@ -160,7 +159,7 @@ test_offset_from_addr(struct ftl_addr addr, struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 
-	CU_ASSERT_EQUAL(addr.zone_id, band->id);
+	CU_ASSERT_EQUAL(ftl_addr_get_band(dev, addr), band->id);
 
-	return addr.pu * ftl_get_num_blocks_in_zone(dev) + addr.offset;
+	return addr.offset - band->id * ftl_get_num_blocks_in_band(dev);
 }
