@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "63da3239_3c37947e",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 8
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-20T07:57:44Z",
+      "side": 1,
+      "message": "Did you check if it\u0027s possible to make it a function somehow? I think this bit is copy-pasted 4 times",
+      "range": {
+        "startLine": 136,
+        "startChar": 4,
+        "endLine": 144,
+        "endChar": 9
+      },
+      "revId": "75ffed2cdc0ee0f3ff9c59ae52ec5d6cd1d10f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba54cc9a_faff2e7e",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 8
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-20T07:57:44Z",
+      "side": 1,
+      "message": "Maciek, I think you have to add an option to create these files in create_nvme_img.sh as well.",
+      "range": {
+        "startLine": 154,
+        "startChar": 8,
+        "endLine": 154,
+        "endChar": 70
+      },
+      "revId": "75ffed2cdc0ee0f3ff9c59ae52ec5d6cd1d10f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "07308819_75a16136",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 8
@@ -13,6 +59,24 @@
       "writtenOn": "2019-09-19T16:06:00Z",
       "side": 1,
       "message": "could we instead break this into two options?\n\n--nvme-disk-type. (types available: nvme, ocssd)\n--num_nvme_namespaces\n\nThen if we needed a test for 2 namespaces or 24 namespaces, this script would support that.\n\nI\u0027d also suggest just using all lower case for the available options.  NVMe is the official capitalization, but in this case just using nvme is fine (and avoids mistakes on miscapitalization).",
+      "revId": "75ffed2cdc0ee0f3ff9c59ae52ec5d6cd1d10f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5421b731_5e94f9b9",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-20T07:57:44Z",
+      "side": 1,
+      "message": "\u003e I\u0027d also suggest just using all lower case for the available options.  NVMe is the official capitalization, but in this case just using nvme is fine (and avoids mistakes on miscapitalization).\n\nAgreed on that.\n\n\u003e could we instead break this into two options?\n\u003e --nvme-disk-type. (types available: nvme, ocssd)\n\u003e --num_nvme_namespaces\n\nAlso agreed - there should be a way to specify how many namespaces we\u0027d like to have for NVMe device (1 being default I think).\nI like the idea of splitting this into two options as well, but... Ideally we\u0027d want --nvme-disk-type to either take a list as an argument, or be able to specify thi option multiple times. Desired end result is to run a VM with a bunch different emulated devices at the same time (like we do now in the CI). Tying num-nvme-namespaces to a specific emulated nvme gets tricky if it\u0027s a separate option.\nHow about sticking to just one option --nvme-disk-type, but calling it smth like:\n--nvme-disk-type nvme (this defaults to 1 namespace)\n--nvme-disk-type nvme 0\n--nvme-disk-type nvme 2\n--nvme-disk-type ocssd\nThis would result in running a VM with 4 emulated devices.",
+      "parentUuid": "07308819_75a16136",
       "revId": "75ffed2cdc0ee0f3ff9c59ae52ec5d6cd1d10f70",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
