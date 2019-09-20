@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a0e116f_71635ee3",
+        "filename": "doc/applications.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-20T20:31:58Z",
+      "side": 1,
+      "message": "Unfortunately, this terminology isn\u0027t correct. There is a lot of stuff in the modules directory and SPDK subsystems are a small subset of those. As you originally had it is more accurate - \"When the client finishes configuring the SPDK subsystems it needs to issue...\"",
+      "revId": "99083e83ce5d69a20fabd699882aa7dd8895118e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
