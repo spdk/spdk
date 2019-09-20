@@ -435,6 +435,10 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		return 0;
 	}
 
+	if (spdk_unlikely(qpair->transport_qp_is_failed)) {
+		return -ENXIO;
+	}
+
 	/* error injection for those queued error requests */
 	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->err_req_head))) {
 		STAILQ_FOREACH_SAFE(req, &qpair->err_req_head, stailq, tmp) {

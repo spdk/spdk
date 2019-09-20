@@ -281,6 +281,7 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			break;
 		case RDMA_CM_EVENT_DISCONNECTED:
 		case RDMA_CM_EVENT_DEVICE_REMOVAL:
+			rqpair->qpair.transport_qp_is_failed = true;
 			break;
 		case RDMA_CM_EVENT_MULTICAST_JOIN:
 		case RDMA_CM_EVENT_MULTICAST_ERROR:
@@ -1027,6 +1028,7 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 
+	rqpair->qpair.transport_qp_is_failed = false;
 	return 0;
 }
 
