@@ -173,6 +173,8 @@ if [ -e $testdir/lib/nvmf/fc_ls.c/fc_ls_ut ]; then
 	$valgrind $testdir/lib/nvmf/fc_ls.c/fc_ls_ut
 fi
 
+$valgrind $testdir/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut
+
 # local unit test coverage
 if [ "$cov_avail" = "yes" ]; then
 	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
