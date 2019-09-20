@@ -318,11 +318,11 @@ class UIRoot(UINode):
 
     def list_nvmf_subsystems(self):
         if self.is_init:
-            self.current_nvmf_subsystems = rpc.nvmf.get_nvmf_subsystems(self.client)
+            self.current_nvmf_subsystems = rpc.nvmf.nvmf_get_subsystems(self.client)
 
     @verbose
     @is_method_available
-    def get_nvmf_subsystems(self):
+    def nvmf_get_subsystems(self):
         if self.is_init:
             self.list_nvmf_subsystems()
             for subsystem in self.current_nvmf_subsystems:

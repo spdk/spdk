@@ -3704,7 +3704,7 @@ Example response:
 }
 ~~~
 
-## get_nvmf_subsystems method {#rpc_get_nvmf_subsystems}
+## nvmf_get_subsystems method {#rpc_nvmf_get_subsystems}
 
 ### Parameters
 
@@ -3720,7 +3720,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "get_nvmf_subsystems"
+  "method": "nvmf_get_subsystems"
 }
 ~~~
 
