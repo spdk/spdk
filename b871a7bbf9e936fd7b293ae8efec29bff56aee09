@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0f32074_a83f124e",
+        "filename": "module/blobfs/bdev/blobfs_bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T21:02:58Z",
+      "side": 1,
+      "message": "\"is already initialized\" seems to indicate that maybe it was already created?  I think \"Blobfs is now initialized\" is a better comment.",
+      "revId": "b871a7bbf9e936fd7b293ae8efec29bff56aee09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ff49a4c_eafec1e2",
+        "filename": "module/blobfs/bdev/blobfs_bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T21:02:58Z",
+      "side": 1,
+      "message": "return not needed\n\nPlease don\u0027t add returns at the end of void functions.  We avoid these in SPDK.",
+      "revId": "b871a7bbf9e936fd7b293ae8efec29bff56aee09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfe4c238_d157a3c0",
+        "filename": "module/blobfs/bdev/blobfs_bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T21:02:58Z",
+      "side": 1,
+      "message": "I think just a single INFOLOG would be best here.  Just use strerror() for -EINVAL too.\n\n(Same for similar code in previous patch.)",
+      "revId": "b871a7bbf9e936fd7b293ae8efec29bff56aee09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dfc1520b_1254dfb3",
+        "filename": "module/blobfs/bdev/blobfs_bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T21:02:58Z",
+      "side": 1,
+      "message": "can we just always pass blobfs_opt?",
+      "revId": "b871a7bbf9e936fd7b293ae8efec29bff56aee09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1888b298_a516f055",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T21:02:58Z",
+      "side": 1,
+      "message": "let\u0027s just treat -EINVAL same as other errors",
+      "revId": "b871a7bbf9e936fd7b293ae8efec29bff56aee09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f61492d8_bd55bf67",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T21:02:58Z",
+      "side": 1,
+      "message": "blobfs_create",
+      "revId": "b871a7bbf9e936fd7b293ae8efec29bff56aee09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
