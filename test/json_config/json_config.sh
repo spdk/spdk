@@ -50,7 +50,7 @@ function tgt_check_notification_types() {
 		bdev_unregister
 	"
 
-	get_types=$(tgt_rpc get_notification_types | jq -r '.[]')
+	get_types=$(tgt_rpc notify_get_types | jq -r '.[]')
 	if [ "$(echo $enabled_types)" != "$(echo $get_types)" ]; then
 		echo "ERROR: expected types:" $enabled_types ", but got:" $get_types
 		ret=1
