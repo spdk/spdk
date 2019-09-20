@@ -81,6 +81,12 @@ spdk_bdev_part_base_get_ctx(struct spdk_bdev_part_base *part_base)
 	return part_base->ctx;
 }
 
+const char *
+spdk_bdev_part_base_get_bdev_name(struct spdk_bdev_part_base *part_base)
+{
+	return part_base->bdev->name;
+}
+
 void
 spdk_bdev_part_base_free(struct spdk_bdev_part_base *base)
 {
