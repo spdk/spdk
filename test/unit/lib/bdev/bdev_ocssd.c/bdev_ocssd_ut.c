@@ -42,6 +42,7 @@
 #include "bdev/nvme/bdev_ocssd.c"
 #include "bdev/nvme/common.c"
 #include "common/lib/test_env.c"
+#include "unit/lib/json_mock.c"
 
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 DEFINE_STUB(spdk_nvme_ctrlr_is_ocssd_ns, bool, (struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid),
