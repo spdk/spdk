@@ -5459,7 +5459,7 @@ Example response:
 }
 ~~~
 
-## get_notifications {#get_notifications}
+## notify_get_notifications {#notify_get_notifications}
 
 Request notifications. Returns array of notifications that happend since the specified id (or first that is available).
 
@@ -5490,7 +5490,7 @@ Example request:
 {
   "id": 1,
   "jsonrpc": "2.0",
-  "method": "get_notifications",
+  "method": "notify_get_notifications",
   "params": {
     "id": 1,
     "max": 10
