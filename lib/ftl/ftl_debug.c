@@ -79,7 +79,7 @@ ftl_band_validate_md(struct ftl_band *band)
 			continue;
 		}
 
-		if (addr_l2p.addr != addr_md.addr) {
+		if (addr_l2p.offset != addr_md.offset) {
 			valid = false;
 			break;
 		}
