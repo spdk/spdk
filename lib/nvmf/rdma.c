@@ -1752,15 +1752,11 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 		num_buffers += SPDK_CEIL_DIV(desc->keyed.length, rtransport->transport.opts.io_unit_size);
 		desc++;
 	}
-	/* If the number of buffers is too large, then we know the I/O is larger than allowed. Fail it. */
-	if (num_buffers > NVMF_REQ_MAX_BUFFERS) {
+	rc = spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport,
+					   num_buffers);
+	if (rc != 0) {
 		nvmf_rdma_request_free_data(rdma_req, rtransport);
-		return -EINVAL;
-	}
-	if (spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport,
-					  num_buffers) != 0) {
-		nvmf_rdma_request_free_data(rdma_req, rtransport);
-		return -ENOMEM;
+		return rc;
 	}
 
 	/* The first WR must always be the embedded data WR. This is how we unwind them later. */
