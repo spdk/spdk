@@ -46,6 +46,30 @@
       "revId": "944174933f0cb3a78a426283055ba0178c60046a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21278684_f05725d5",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 891,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-09-20T13:30:10Z",
+      "side": 1,
+      "message": "I suggest that not for granularity but for better readability because handling error in next step is much more confusing than right after we get the error. Again, timeout is problematic, we do need to handle it in next step.\n\nI think that separate handler for timeout is worth the code it would add to the interface\n\nAgree that figuring error handling took a lot of time, but moving this code will not take much",
+      "parentUuid": "792f8cf7_43c46829",
+      "range": {
+        "startLine": 886,
+        "startChar": 0,
+        "endLine": 891,
+        "endChar": 2
+      },
+      "revId": "944174933f0cb3a78a426283055ba0178c60046a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
