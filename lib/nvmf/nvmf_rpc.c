@@ -299,7 +299,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 }
 
 static void
-spdk_rpc_get_nvmf_subsystems(struct spdk_jsonrpc_request *request,
+spdk_rpc_nvmf_get_subsystems(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct rpc_get_subsystem req = { 0 };
@@ -336,7 +336,8 @@ spdk_rpc_get_nvmf_subsystems(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 	free(req.tgt_name);
 }
-SPDK_RPC_REGISTER("get_nvmf_subsystems", spdk_rpc_get_nvmf_subsystems, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("nvmf_get_subsystems", spdk_rpc_nvmf_get_subsystems, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_get_subsystems, get_nvmf_subsystems)
 
 struct rpc_subsystem_create {
 	char *nqn;

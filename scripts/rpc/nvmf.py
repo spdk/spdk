@@ -1,3 +1,6 @@
+from .helpers import deprecated_alias
+
+
 def set_nvmf_target_max_subsystems(client,
                                    max_subsystems=None):
     """Set NVMe-oF target options.
@@ -159,7 +162,8 @@ def get_nvmf_transports(client, tgt_name=None):
     return client.call('get_nvmf_transports', params)
 
 
-def get_nvmf_subsystems(client, tgt_name=None):
+@deprecated_alias('get_nvmf_subsystems')
+def nvmf_get_subsystems(client, tgt_name=None):
     """Get list of NVMe-oF subsystems.
     Args:
         tgt_name: name of the parent NVMe-oF target (optional).
@@ -175,7 +179,7 @@ def get_nvmf_subsystems(client, tgt_name=None):
             'tgt_name': tgt_name,
         }
 
-    return client.call('get_nvmf_subsystems', params)
+    return client.call('nvmf_get_subsystems', params)
 
 
 def nvmf_subsystem_create(client,

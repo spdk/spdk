@@ -32,7 +32,7 @@ done
 nvme discover -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 echo "Perform nvmf subsystem discovery via RPC"
-$rpc_py get_nvmf_subsystems
+$rpc_py nvmf_get_subsystems
 
 for i in $(seq 1 4); do
 	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode$i

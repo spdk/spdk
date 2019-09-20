@@ -528,7 +528,7 @@ class SPDKTarget(Target):
                                                      adrfam="ipv4")
 
         self.log_print("SPDK NVMeOF subsystem configuration:")
-        rpc.client.print_dict(rpc.nvmf.get_nvmf_subsystems(self.client))
+        rpc.client.print_dict(rpc.nvmf.nvmf_get_subsystems(self.client))
 
     def tgt_start(self):
         self.subsys_no = get_nvme_devices_count()
