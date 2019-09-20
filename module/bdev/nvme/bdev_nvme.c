@@ -163,13 +163,11 @@ static depopulate_namespace_fn g_depopulate_namespace_fn[] = {
 typedef void (*config_json_namespace_fn)(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *ns);
 static void nvme_ctrlr_config_json_standard_namespace(struct spdk_json_write_ctx *w,
 		struct nvme_bdev_ns *ns);
-static void nvme_ctrlr_config_json_ocssd_namespace(struct spdk_json_write_ctx *w,
-		struct nvme_bdev_ns *ns);
 
 static config_json_namespace_fn g_config_json_namespace_fn[] = {
 	NULL,
 	nvme_ctrlr_config_json_standard_namespace,
-	nvme_ctrlr_config_json_ocssd_namespace,
+	bdev_ocssd_namespace_config_json,
 };
 
 struct spdk_nvme_qpair *
@@ -2268,12 +2266,6 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 
 static void
 nvme_ctrlr_config_json_standard_namespace(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *ns)
-{
-	/* nop */
-}
-
-static void
-nvme_ctrlr_config_json_ocssd_namespace(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *ns)
 {
 	/* nop */
 }
