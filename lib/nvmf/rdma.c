@@ -1579,7 +1579,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	return rc;
 
 err_exit:
-	spdk_nvmf_request_free_buffers(req, &rgroup->group, &rtransport->transport, num_buffers);
+	spdk_nvmf_request_free_buffers(req, &rgroup->group, &rtransport->transport);
 	while (i) {
 		i--;
 		rdma_req->data.wr.sg_list[i].addr = 0;
@@ -1683,7 +1683,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	return 0;
 
 err_exit:
-	spdk_nvmf_request_free_buffers(req, &rgroup->group, &rtransport->transport, num_buffers);
+	spdk_nvmf_request_free_buffers(req, &rgroup->group, &rtransport->transport);
 	nvmf_rdma_request_free_data(rdma_req, rtransport);
 	return rc;
 }
@@ -1824,8 +1824,7 @@ nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	if (rdma_req->req.data_from_pool) {
 		rgroup = rqpair->poller->group;
 
-		spdk_nvmf_request_free_buffers(&rdma_req->req, &rgroup->group, &rtransport->transport,
-					       rdma_req->req.iovcnt);
+		spdk_nvmf_request_free_buffers(&rdma_req->req, &rgroup->group, &rtransport->transport);
 	}
 	nvmf_rdma_request_free_data(rdma_req, rtransport);
 	rdma_req->req.length = 0;
