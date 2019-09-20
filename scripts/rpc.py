@@ -1893,6 +1893,29 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
     p.set_defaults(func=remove_virtio_bdev)
 
+    # OCSSD
+    def bdev_ocssd_create(args):
+        print_json(rpc.bdev.bdev_ocssd_create(args.client,
+                                              ctrlr_name=args.ctrlr_name,
+                                              bdev_name=args.name,
+                                              nsid=int(args.nsid)))
+
+    p = subparsers.add_parser('bdev_ocssd_create',
+                              help='Creates zoned bdev on specified Open Channel controller')
+    p.add_argument('-c', '--ctrlr_name', help='Name of the OC NVMe controller', required=True)
+    p.add_argument('-b', '--name', help='Name of the bdev to create', required=True)
+    p.add_argument('-n', '--nsid', help='Namespace ID', required=False)
+    p.set_defaults(func=bdev_ocssd_create)
+
+    def bdev_ocssd_delete(args):
+        print_json(rpc.bdev.bdev_ocssd_delete(args.client,
+                                              name=args.name))
+
+    p = subparsers.add_parser('bdev_ocssd_delete',
+                              help='Deletes Open Channel bdev')
+    p.add_argument('name', help='Name of the Open Channel bdev')
+    p.set_defaults(func=bdev_ocssd_delete)
+
     # ioat
     def scan_ioat_copy_engine(args):
         pci_whitelist = []
