@@ -819,13 +819,12 @@ ftl_dev_get_zone_info_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 	num_zones = spdk_min(zones_left, FTL_ZONE_INFO_COUNT);
 
 	for (i = 0; i < num_zones; ++i) {
-		addr = ftl_addr_from_block_offset(dev, init_ctx->info[i].zone_id);
-		band = &dev->bands[addr.zone_id];
-		zone = &band->zone_buf[addr.pu];
+		addr.offset = init_ctx->info[i].zone_id;
+		band = &dev->bands[ftl_addr_get_band(dev, addr)];
+		zone = &band->zone_buf[ftl_addr_get_pu(dev, addr)];
 		zone->state = init_ctx->info[i].state;
 		zone->start_addr = addr;
-		addr = ftl_addr_from_block_offset(dev, init_ctx->info[i].write_pointer);
-		zone->write_offset = addr.offset;
+		zone->write_offset = init_ctx->info[i].write_pointer;
 
 		/* TODO: add support for zone capacity less than zone size */
 		if (init_ctx->info[i].capacity != ftl_get_num_blocks_in_zone(dev)) {

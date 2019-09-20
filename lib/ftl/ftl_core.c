@@ -356,11 +356,10 @@ ftl_submit_erase(struct ftl_io *io)
 			addr = zone->start_addr;
 		}
 
-		assert(addr.offset == 0);
+		assert(addr.offset % ftl_get_num_blocks_in_zone(dev) == 0);
 
 		ftl_trace_submission(dev, io, addr, 1);
-		rc = spdk_bdev_zone_management(dev->base_bdev_desc, ioch->base_ioch,
-					       ftl_block_offset_from_addr(dev, addr),
+		rc = spdk_bdev_zone_management(dev->base_bdev_desc, ioch->base_ioch, addr.offset,
 					       SPDK_BDEV_ZONE_RESET, ftl_io_cmpl_cb, io);
 		if (spdk_unlikely(rc)) {
 			ftl_io_fail(io, rc);
@@ -590,8 +589,10 @@ ftl_wptr_advance(struct ftl_wptr *wptr, size_t xfer_size)
 
 	assert(!ftl_addr_invalid(wptr->addr));
 
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "wptr: pu:%d zone:%d, lbk:%u\n",
-		      wptr->addr.pu, wptr->addr.zone_id, wptr->addr.offset);
+	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "wptr: pu:%lu band:%lu, offset:%lu\n",
+		      ftl_addr_get_pu(dev, wptr->addr),
+		      ftl_addr_get_band(dev, wptr->addr),
+		      wptr->addr.offset);
 
 	if (wptr->offset >= next_thld && !dev->next_band) {
 		dev->next_band = ftl_next_write_band(dev);
@@ -917,7 +918,7 @@ ftl_cache_read(struct ftl_io *io, uint64_t lba,
 	pthread_spin_lock(&entry->lock);
 
 	naddr = ftl_l2p_get(io->dev, lba);
-	if (addr.addr != naddr.addr) {
+	if (addr.offset != naddr.offset) {
 		rc = -1;
 		goto out;
 	}
@@ -938,7 +939,7 @@ ftl_read_next_logical_addr(struct ftl_io *io, struct ftl_addr *addr)
 	*addr = ftl_l2p_get(dev, ftl_io_current_lba(io));
 
 	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Read addr:%lx, lba:%lu\n",
-		      addr->addr, ftl_io_current_lba(io));
+		      addr->offset, ftl_io_current_lba(io));
 
 	/* If the address is invalid, skip it (the buffer should already be zero'ed) */
 	if (ftl_addr_invalid(*addr)) {
@@ -961,8 +962,7 @@ ftl_read_next_logical_addr(struct ftl_io *io, struct ftl_addr *addr)
 			break;
 		}
 
-		if (ftl_block_offset_from_addr(dev, *addr) + i !=
-		    ftl_block_offset_from_addr(dev, next_addr)) {
+		if (addr->offset + i != next_addr.offset) {
 			break;
 		}
 	}
@@ -1010,7 +1010,7 @@ ftl_submit_read(struct ftl_io *io)
 		ftl_trace_submission(dev, io, addr, lbk_cnt);
 		rc = spdk_bdev_read_blocks(dev->base_bdev_desc, ioch->base_ioch,
 					   ftl_io_iovec_addr(io),
-					   ftl_block_offset_from_addr(dev, addr),
+					   addr.offset,
 					   lbk_cnt, ftl_io_cmpl_cb, io);
 		if (spdk_unlikely(rc)) {
 			if (rc == -ENOMEM) {
@@ -1157,7 +1157,7 @@ ftl_nv_cache_submit_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct ftl_nv_cache *nv_cache = &io->dev->nv_cache;
 
 	if (spdk_unlikely(!success)) {
-		SPDK_ERRLOG("Non-volatile cache write failed at %"PRIx64"\n", io->addr.addr);
+		SPDK_ERRLOG("Non-volatile cache write failed at %"PRIx64"\n", io->addr.offset);
 		io->status = -EIO;
 	}
 
@@ -1184,14 +1184,14 @@ ftl_submit_nv_cache(void *ctx)
 	thread = spdk_io_channel_get_thread(io->ioch);
 
 	rc = spdk_bdev_write_blocks_with_md(nv_cache->bdev_desc, ioch->cache_ioch,
-					    ftl_io_iovec_addr(io), io->md, io->addr.addr,
+					    ftl_io_iovec_addr(io), io->md, io->addr.offset,
 					    io->lbk_cnt, ftl_nv_cache_submit_cb, io);
 	if (rc == -ENOMEM) {
 		spdk_thread_send_msg(thread, ftl_submit_nv_cache, io);
 		return;
 	} else if (rc) {
 		SPDK_ERRLOG("Write to persistent cache failed: %s (%"PRIu64", %"PRIu64")\n",
-			    spdk_strerror(-rc), io->addr.addr, io->lbk_cnt);
+			    spdk_strerror(-rc), io->addr.offset, io->lbk_cnt);
 		spdk_mempool_put(nv_cache->md_pool, io->md);
 		io->status = -EIO;
 		ftl_io_complete(io);
@@ -1247,8 +1247,8 @@ _ftl_write_nv_cache(void *ctx)
 		}
 
 		/* Reserve area on the write buffer cache */
-		child->addr.addr = ftl_reserve_nv_cache(&dev->nv_cache, &num_lbks, &phase);
-		if (child->addr.addr == FTL_LBA_INVALID) {
+		child->addr.offset = ftl_reserve_nv_cache(&dev->nv_cache, &num_lbks, &phase);
+		if (child->addr.offset == FTL_LBA_INVALID) {
 			spdk_mempool_put(dev->nv_cache.md_pool, child->md);
 			ftl_io_free(child);
 			spdk_thread_send_msg(thread, _ftl_write_nv_cache, io);
@@ -1371,7 +1371,7 @@ ftl_write_cb(struct ftl_io *io, void *arg, int status)
 		}
 
 		SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write addr:%lu, lba:%lu\n",
-			      entry->addr.addr, entry->lba);
+			      entry->addr.offset, entry->lba);
 	}
 
 	ftl_process_flush(dev, batch);
@@ -1515,7 +1515,7 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 		addr = wptr->addr;
 	} else {
 		assert(io->flags & FTL_IO_DIRECT_ACCESS);
-		assert(io->addr.zone_id == wptr->band->id);
+		assert(ftl_addr_get_band(dev, io->addr) == wptr->band->id);
 		addr = io->addr;
 	}
 
@@ -1530,14 +1530,14 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 
 	rc = spdk_bdev_write_blocks(dev->base_bdev_desc, ioch->base_ioch,
 				    ftl_io_iovec_addr(child),
-				    ftl_block_offset_from_addr(dev, addr),
+				    addr.offset,
 				    lbk_cnt, ftl_io_cmpl_cb, child);
 	if (rc) {
 		wptr->num_outstanding--;
 		ftl_io_fail(child, rc);
 		ftl_io_complete(child);
 		SPDK_ERRLOG("spdk_bdev_write_blocks_with_md failed with status:%d, addr:%lu\n",
-			    rc, addr.addr);
+			    rc, addr.offset);
 		return -EIO;
 	}
 
@@ -1687,8 +1687,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 		addr = ftl_band_next_addr(wptr->band, addr, 1);
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write addr:%lx, %lx\n", wptr->addr.addr,
-		      ftl_block_offset_from_addr(dev, wptr->addr));
+	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write addr:%lx\n", wptr->addr.offset);
 
 	if (ftl_submit_write(wptr, io)) {
 		/* TODO: we need some recovery here */
