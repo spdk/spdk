@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "285aa394_a8230a02",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:03:48Z",
+      "side": 1,
+      "message": "\"opal_test_environment\" -\u003e \"setup_test_environment\" and I think you can take \"opal\" out of all func names, opal is in the filename :)",
+      "range": {
+        "startLine": 12,
+        "startChar": 9,
+        "endLine": 12,
+        "endChar": 30
+      },
+      "revId": "de659c66bc648b6ca3b0fc3fa1637eeeaa9d38ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ff0cb45_85ae900f",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:03:48Z",
+      "side": 1,
+      "message": "all of these rpc names will need to change when you rebase after adopting the new naming convention.",
+      "revId": "de659c66bc648b6ca3b0fc3fa1637eeeaa9d38ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a8233434_2690350b",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:03:48Z",
+      "side": 1,
+      "message": "\"opal_clean\" -\u003e \"delete_vbdevs\"",
+      "revId": "de659c66bc648b6ca3b0fc3fa1637eeeaa9d38ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
