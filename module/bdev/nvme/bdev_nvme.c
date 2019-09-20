@@ -2150,6 +2150,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
 	struct spdk_nvme_transport_id	*trid;
 	const char			*action;
+	const char			*mode;
 
 	if (g_opts.action_on_timeout == SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET) {
 		action = "reset";
@@ -2178,7 +2179,9 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 
 		if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
-			continue;
+			mode = "OCSSD";
+		} else {
+			mode = "standard";
 		}
 
 		trid = &nvme_bdev_ctrlr->trid;
@@ -2189,6 +2192,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "name", nvme_bdev_ctrlr->name);
+		spdk_json_write_named_string(w, "mode", mode);
 		nvme_bdev_dump_trid_json(trid, w);
 		spdk_json_write_named_bool(w, "prchk_reftag",
 					   (nvme_bdev_ctrlr->prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) != 0);
@@ -2203,6 +2207,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	/* Dump as last parameter to give all NVMe bdevs chance to be constructed
 	 * before enabling hotplug poller.
 	 */
+
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "method", "bdev_nvme_set_hotplug");
 
