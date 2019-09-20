@@ -7,7 +7,7 @@ import json
 from collections import OrderedDict
 
 bdev_dict = OrderedDict()
-bdev_dict["set_bdev_options"] = []
+bdev_dict["bdev_set_options"] = []
 bdev_dict["bdev_split_create"] = []
 bdev_dict["bdev_nvme_set_options"] = []
 bdev_dict["bdev_nvme_attach_controller"] = []
@@ -154,7 +154,7 @@ def get_bdev_options_json(config, section):
     for option in config.options("Bdev"):
         set_param(params, option, config.get("Bdev", option))
 
-    return [{"params": to_json_params(params), "method": "set_bdev_options"}]
+    return [{"params": to_json_params(params), "method": "bdev_set_options"}]
 
 
 def get_aio_bdev_json(config, section):

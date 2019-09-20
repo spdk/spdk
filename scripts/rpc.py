@@ -130,15 +130,16 @@ if __name__ == "__main__":
     p.set_defaults(func=context_switch_monitor)
 
     # bdev
-    def set_bdev_options(args):
-        rpc.bdev.set_bdev_options(args.client,
+    def bdev_set_options(args):
+        rpc.bdev.bdev_set_options(args.client,
                                   bdev_io_pool_size=args.bdev_io_pool_size,
                                   bdev_io_cache_size=args.bdev_io_cache_size)
 
-    p = subparsers.add_parser('set_bdev_options', help="""Set options of bdev subsystem""")
+    p = subparsers.add_parser('bdev_set_options', aliases=['set_bdev_options'],
+                              help="""Set options of bdev subsystem""")
     p.add_argument('-p', '--bdev-io-pool-size', help='Number of bdev_io structures in shared buffer pool', type=int)
     p.add_argument('-c', '--bdev-io-cache-size', help='Maximum number of bdev_io structures cached per thread', type=int)
-    p.set_defaults(func=set_bdev_options)
+    p.set_defaults(func=bdev_set_options)
 
     def bdev_compress_create(args):
         print_json(rpc.bdev.bdev_compress_create(args.client,
