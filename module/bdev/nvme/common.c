@@ -133,5 +133,7 @@ nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 
 	assert(TAILQ_EMPTY(&nvme_bdev_ctrlr->bdevs));
 
+	spdk_nvme_detach(nvme_bdev_ctrlr->ctrlr);
+
 	free(nvme_bdev_ctrlr);
 }

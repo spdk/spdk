@@ -213,8 +213,17 @@ static void
 bdev_nvme_unregister_cb(void *io_device)
 {
 	struct spdk_nvme_ctrlr *ctrlr = io_device;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 
-	spdk_nvme_detach(ctrlr);
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+		if (nvme_bdev_ctrlr->ctrlr == ctrlr) {
+			pthread_mutex_unlock(&g_bdev_nvme_mutex);
+			nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
+			return;
+		}
+	}
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
 static int
@@ -233,7 +242,6 @@ bdev_nvme_destruct(void *ctx)
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		spdk_io_device_unregister(nvme_bdev_ctrlr->ctrlr, bdev_nvme_unregister_cb);
 		spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
-		nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 		return 0;
 	}
 
@@ -1074,7 +1082,6 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 				pthread_mutex_unlock(&g_bdev_nvme_mutex);
 				spdk_io_device_unregister(nvme_bdev_ctrlr->ctrlr, bdev_nvme_unregister_cb);
 				spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
-				nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 			} else {
 				pthread_mutex_unlock(&g_bdev_nvme_mutex);
 			}
@@ -1624,7 +1631,6 @@ bdev_nvme_library_fini(void)
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		spdk_io_device_unregister(nvme_bdev_ctrlr->ctrlr, bdev_nvme_unregister_cb);
 		spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
-		nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 		pthread_mutex_lock(&g_bdev_nvme_mutex);
 	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
