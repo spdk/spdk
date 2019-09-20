@@ -22,6 +22,30 @@
       "revId": "be7d6d66e21421b9ce42b7f821128371f7a66e11",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28c9d7e8_4da0408c",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1646,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-20T12:00:37Z",
+      "side": 1,
+      "message": "This function is specific for standard NVMe only, so bdev_nvme_unregister_cb will be always called asynchronously in destruct_ctrlr_fn. Therefore we don\u0027t need this call here.",
+      "parentUuid": "8e59b256_1dc1d979",
+      "range": {
+        "startLine": 1646,
+        "startChar": 2,
+        "endLine": 1646,
+        "endChar": 54
+      },
+      "revId": "be7d6d66e21421b9ce42b7f821128371f7a66e11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
