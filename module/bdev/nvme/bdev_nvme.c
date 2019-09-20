@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "bdev_nvme.h"
+#include "bdev_ocssd.h"
 
 #include "spdk/config.h"
 #include "spdk/conf.h"
@@ -154,23 +155,20 @@ typedef void (*populate_namespace_fn)(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 				      struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx);
 static void nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 		struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx);
-static void nvme_ctrlr_populate_ocssd_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-		struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx);
 
 static populate_namespace_fn g_populate_namespace_fn[] = {
 	NULL,
 	nvme_ctrlr_populate_standard_namespace,
-	nvme_ctrlr_populate_ocssd_namespace,
+	bdev_ocssd_populate_namespace,
 };
 
 typedef void (*depopulate_namespace_fn)(struct nvme_bdev_ns *ns);
 static void nvme_ctrlr_depopulate_standard_namespace(struct nvme_bdev_ns *ns);
-static void nvme_ctrlr_depopulate_ocssd_namespace(struct nvme_bdev_ns *ns);
 
 static depopulate_namespace_fn g_depopulate_namespace_fn[] = {
 	NULL,
 	nvme_ctrlr_depopulate_standard_namespace,
-	nvme_ctrlr_depopulate_ocssd_namespace,
+	bdev_ocssd_depopulate_namespace,
 };
 
 struct spdk_nvme_qpair *
@@ -874,13 +872,6 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, 0);
 }
 
-static void
-nvme_ctrlr_populate_ocssd_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-				    struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx)
-{
-	nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, 0);
-}
-
 static bool
 hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		 struct spdk_nvme_ctrlr_opts *opts)
@@ -1016,11 +1007,6 @@ nvme_ctrlr_depopulate_standard_namespace(struct nvme_bdev_ns *ns)
 	}
 
 	ns->populated = false;
-}
-
-static void
-nvme_ctrlr_depopulate_ocssd_namespace(struct nvme_bdev_ns *ns)
-{
 }
 
 static void nvme_ctrlr_populate_namespace(struct nvme_bdev_ctrlr *ctrlr, struct nvme_bdev_ns *ns,
