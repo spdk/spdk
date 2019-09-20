@@ -74,7 +74,7 @@ setup_band(void)
 
 	g_dev = test_init_ftl_dev(g_geo.write_unit_size, g_geo.zone_size, g_geo.optimal_open_zones,
 				  g_geo.dev_size);
-	g_band = test_init_ftl_band(g_dev, TEST_BAND_IDX);
+	g_band = test_init_ftl_band(g_dev, TEST_BAND_IDX, g_geo.zone_size);
 	rc = ftl_band_alloc_lba_map(g_band);
 	CU_ASSERT_EQUAL_FATAL(rc, 0);
 }
@@ -91,7 +91,7 @@ addr_from_punit(uint64_t punit)
 {
 	struct ftl_addr addr = {};
 
-	addr.pu = punit;
+	addr.offset = punit * g_geo.zone_size;
 	return addr;
 }
 
@@ -104,7 +104,7 @@ test_band_lbkoff_from_addr_base(void)
 	setup_band();
 	for (i = 0; i < ftl_dev_num_punits(g_dev); ++i) {
 		addr = addr_from_punit(i);
-		addr.zone_id = TEST_BAND_IDX;
+		addr.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
 
 		offset = ftl_band_lbkoff_from_addr(g_band, addr);
 		CU_ASSERT_EQUAL(offset, flat_lun * ftl_dev_lbks_in_zone(g_dev));
@@ -123,8 +123,7 @@ test_band_lbkoff_from_addr_offset(void)
 	for (i = 0; i < ftl_dev_num_punits(g_dev); ++i) {
 		for (j = 0; j < g_geo.zone_size; ++j) {
 			addr = addr_from_punit(i);
-			addr.zone_id = TEST_BAND_IDX;
-			addr.offset = j;
+			addr.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev) + j;
 
 			offset = ftl_band_lbkoff_from_addr(g_band, addr);
 
@@ -145,13 +144,12 @@ test_band_addr_from_lbkoff(void)
 	for (i = 0; i < ftl_dev_num_punits(g_dev); ++i) {
 		for (j = 0; j < g_geo.zone_size; ++j) {
 			expect = addr_from_punit(i);
-			expect.zone_id = TEST_BAND_IDX;
-			expect.offset = j;
+			expect.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev) + j;
 
 			offset = ftl_band_lbkoff_from_addr(g_band, expect);
 			addr = ftl_band_addr_from_lbkoff(g_band, offset);
 
-			CU_ASSERT_EQUAL(addr.addr, expect.addr);
+			CU_ASSERT_EQUAL(addr.offset, expect.offset);
 		}
 	}
 	cleanup_band();
@@ -167,7 +165,7 @@ test_band_set_addr(void)
 	setup_band();
 	lba_map = &g_band->lba_map;
 	addr = addr_from_punit(0);
-	addr.zone_id = TEST_BAND_IDX;
+	addr.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
 
 	CU_ASSERT_EQUAL(lba_map->num_vld, 0);
 
@@ -178,13 +176,13 @@ test_band_set_addr(void)
 	CU_ASSERT_EQUAL(lba_map->map[offset], TEST_LBA);
 	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset));
 
-	addr.pu++;
+	addr.offset += g_geo.zone_size;
 	offset = test_offset_from_addr(addr, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA + 1, addr);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 2);
 	CU_ASSERT_EQUAL(lba_map->map[offset], TEST_LBA + 1);
 	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset));
-	addr.pu--;
+	addr.offset -= g_geo.zone_size;
 	offset = test_offset_from_addr(addr, g_band);
 	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset));
 	cleanup_band();
@@ -200,7 +198,7 @@ test_invalidate_addr(void)
 	setup_band();
 	lba_map = &g_band->lba_map;
 	addr = addr_from_punit(0);
-	addr.zone_id = TEST_BAND_IDX;
+	addr.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
 	offset[0] = test_offset_from_addr(addr, g_band);
 
 	ftl_band_set_addr(g_band, TEST_LBA, addr);
@@ -212,7 +210,7 @@ test_invalidate_addr(void)
 
 	offset[0] = test_offset_from_addr(addr, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA, addr);
-	addr.pu++;
+	addr.offset += g_geo.zone_size;
 	offset[1] = test_offset_from_addr(addr, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA + 1, addr);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 2);
@@ -233,69 +231,68 @@ test_next_xfer_addr(void)
 	setup_band();
 	/* Verify simple one lbk incremention */
 	addr = addr_from_punit(0);
-	addr.zone_id = TEST_BAND_IDX;
-	addr.offset = 0;
+	addr.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
 	expect = addr;
-	expect.offset = 1;
+	expect.offset += 1;
 
 	result = ftl_band_next_xfer_addr(g_band, addr, 1);
-	CU_ASSERT_EQUAL(result.addr, expect.addr);
+	CU_ASSERT_EQUAL(result.offset, expect.offset);
 
 	/* Verify jumping between zones */
 	expect = addr_from_punit(1);
-	expect.zone_id = TEST_BAND_IDX;
+	expect.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
 	result = ftl_band_next_xfer_addr(g_band, addr, g_dev->xfer_size);
-	CU_ASSERT_EQUAL(result.addr, expect.addr);
+	CU_ASSERT_EQUAL(result.offset, expect.offset);
 
 	/* Verify jumping works with unaligned offsets */
 	expect = addr_from_punit(1);
-	expect.zone_id = TEST_BAND_IDX;
-	expect.offset = 3;
+	expect.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
+	expect.offset += 3;
 	result = ftl_band_next_xfer_addr(g_band, addr, g_dev->xfer_size + 3);
-	CU_ASSERT_EQUAL(result.addr, expect.addr);
+	CU_ASSERT_EQUAL(result.offset, expect.offset);
 
 	/* Verify jumping from last zone to the first one */
 	expect = addr_from_punit(0);
-	expect.zone_id = TEST_BAND_IDX;
-	expect.offset = g_dev->xfer_size;
+	expect.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
+	expect.offset += g_dev->xfer_size;
 	addr = addr_from_punit(ftl_dev_num_punits(g_dev) - 1);
-	addr.zone_id = TEST_BAND_IDX;
+	addr.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
 	result = ftl_band_next_xfer_addr(g_band, addr, g_dev->xfer_size);
-	CU_ASSERT_EQUAL(result.addr, expect.addr);
+	CU_ASSERT_EQUAL(result.offset, expect.offset);
 
 	/* Verify jumping from last zone to the first one with unaligned offset */
 	expect = addr_from_punit(0);
-	expect.zone_id = TEST_BAND_IDX;
-	expect.offset = g_dev->xfer_size + 2;
+	expect.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
+	expect.offset += g_dev->xfer_size + 2;
 	addr = addr_from_punit(ftl_dev_num_punits(g_dev) - 1);
-	addr.zone_id = TEST_BAND_IDX;
+	addr.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
 	result = ftl_band_next_xfer_addr(g_band, addr, g_dev->xfer_size + 2);
-	CU_ASSERT_EQUAL(result.addr, expect.addr);
+	CU_ASSERT_EQUAL(result.offset, expect.offset);
 
 	/* Verify large offset spanning across the whole band multiple times */
 	expect = addr_from_punit(0);
-	expect.zone_id = TEST_BAND_IDX;
-	expect.offset = g_dev->xfer_size * 5 + 4;
+	expect.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
+	expect.offset += g_dev->xfer_size * 5 + 4;
 	addr = addr_from_punit(0);
-	addr.zone_id = TEST_BAND_IDX;
-	addr.offset = g_dev->xfer_size * 2 + 1;
+	addr.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
+	addr.offset += g_dev->xfer_size * 2 + 1;
 	result = ftl_band_next_xfer_addr(g_band, addr, 3 * g_dev->xfer_size *
 					 ftl_dev_num_punits(g_dev) + 3);
-	CU_ASSERT_EQUAL(result.addr, expect.addr);
+	CU_ASSERT_EQUAL(result.offset, expect.offset);
 
 	/* Remove one zone and verify it's skipped properly */
 	g_band->zone_buf[1].state = SPDK_BDEV_ZONE_STATE_OFFLINE;
 	CIRCLEQ_REMOVE(&g_band->zones, &g_band->zone_buf[1], circleq);
 	g_band->num_zones--;
 	expect = addr_from_punit(2);
-	expect.zone_id = TEST_BAND_IDX;
-	expect.offset = g_dev->xfer_size * 5 + 4;
+	expect.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
+	expect.offset += g_dev->xfer_size * 5 + 4;
 	addr = addr_from_punit(0);
-	addr.zone_id = TEST_BAND_IDX;
-	addr.offset = g_dev->xfer_size * 2 + 1;
+	addr.offset += TEST_BAND_IDX * ftl_num_band_lbks(g_dev);
+	addr.offset += g_dev->xfer_size * 2 + 1;
 	result = ftl_band_next_xfer_addr(g_band, addr, 3 * g_dev->xfer_size *
 					 (ftl_dev_num_punits(g_dev) - 1) + g_dev->xfer_size + 3);
-	CU_ASSERT_EQUAL(result.addr, expect.addr);
+	CU_ASSERT_EQUAL(result.offset, expect.offset);
 	cleanup_band();
 }
 

@@ -45,7 +45,7 @@ struct test_geo {
 
 struct spdk_ftl_dev *test_init_ftl_dev(size_t write_unit_size, size_t zone_size, size_t dev_size,
 				       size_t optimal_open_zones);
-struct ftl_band *test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id);
+struct ftl_band *test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id, size_t zone_size);
 void test_free_ftl_dev(struct spdk_ftl_dev *dev);
 void test_free_ftl_band(struct ftl_band *band);
 uint64_t test_offset_from_addr(struct ftl_addr addr, struct ftl_band *band);
@@ -63,7 +63,6 @@ test_init_ftl_dev(size_t write_unit_size, size_t zone_size, size_t optimal_open_
 	dev->core_thread.thread = spdk_thread_create("unit_test_thread", NULL);
 	spdk_set_thread(dev->core_thread.thread);
 	dev->core_thread.ioch = calloc(1, sizeof(*dev->core_thread.ioch));
-
 	dev->num_bands = dev_size / zone_size / optimal_open_zones;
 	dev->bands = calloc(dev->num_bands, sizeof(*dev->bands));
 	SPDK_CU_ASSERT_FATAL(dev->bands != NULL);
@@ -80,7 +79,7 @@ test_init_ftl_dev(size_t write_unit_size, size_t zone_size, size_t optimal_open_
 }
 
 struct ftl_band *
-test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
+test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id, size_t zone_size)
 {
 	struct ftl_band *band;
 	struct ftl_zone *zone;
@@ -108,8 +107,7 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 	for (size_t i = 0; i < ftl_dev_num_punits(dev); ++i) {
 		zone = &band->zone_buf[i];
 		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
-		zone->start_addr.pu = i;
-		zone->start_addr.zone_id = band->id;
+		zone->start_addr.offset = zone_size * (id * ftl_dev_num_punits(dev) + i);
 		CIRCLEQ_INSERT_TAIL(&band->zones, zone, circleq);
 		band->num_zones++;
 	}
@@ -146,7 +144,7 @@ test_offset_from_addr(struct ftl_addr addr, struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 
-	CU_ASSERT_EQUAL(addr.zone_id, band->id);
+	CU_ASSERT_EQUAL(ftl_addr_band_id(dev, addr), band->id);
 
-	return addr.pu * ftl_dev_lbks_in_zone(dev) + addr.offset;
+	return addr.offset - band->id * ftl_num_band_lbks(dev);
 }

@@ -68,7 +68,7 @@ setup_band(struct ftl_band **band, const struct test_geo *geo)
 
 	dev = test_init_ftl_dev(geo->write_unit_size, geo->zone_size, geo->optimal_open_zones,
 				geo->dev_size);
-	*band = test_init_ftl_band(dev, 0);
+	*band = test_init_ftl_band(dev, 0, geo->zone_size);
 	rc = ftl_band_alloc_lba_map(*band);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	(*band)->state = FTL_BAND_STATE_PREP;

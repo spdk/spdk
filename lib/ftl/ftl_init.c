@@ -223,9 +223,9 @@ ftl_dev_get_zone_info_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 	}
 
 	for (i = 0; i < info->num_zones; ++i) {
-		addr = ftl_addr_from_block_offset(dev, info->info[i].zone_id);
-		band = &dev->bands[addr.zone_id];
-		zone = &band->zone_buf[addr.pu];
+		addr.offset = info->info[i].zone_id;
+		band = &dev->bands[ftl_addr_band_id(dev, addr)];
+		zone = &band->zone_buf[ftl_addr_pu_id(dev, addr)];
 		zone->state = info->info[i].state;
 		zone->start_addr = addr;
 		zone->write_offset = info->info[i].write_pointer;
