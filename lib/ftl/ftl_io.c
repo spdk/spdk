@@ -263,7 +263,7 @@ ftl_io_init(struct ftl_io *io, struct spdk_ftl_dev *dev,
 	io->type = type;
 	io->dev = dev;
 	io->lba.single = FTL_LBA_INVALID;
-	io->addr.addr = FTL_ADDR_INVALID;
+	io->addr.offset = FTL_ADDR_INVALID;
 	io->cb_fn = fn;
 	io->cb_ctx = ctx;
 	io->trace = ftl_trace_alloc_id(dev);
