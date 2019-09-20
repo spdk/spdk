@@ -355,6 +355,12 @@ struct spdk_nvme_qpair {
 	 */
 	uint8_t				no_deletion_notification_needed: 1;
 
+	/*
+	 * Set when the transport specific qpair has become invalid; i.e. the
+	 * socket is disconnected or the rdma qpair loses connection.
+	 */
+	uint8_t				transport_qp_is_failed: 1;
+
 	enum spdk_nvme_transport_type	trtype;
 
 	STAILQ_HEAD(, nvme_request)	free_req;
