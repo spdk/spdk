@@ -405,8 +405,7 @@ ftl_band_tail_md_addr(struct ftl_band *band)
 	}
 
 	addr.offset = (num_req / band->num_zones) * xfer_size;
-	addr.zone_id = band->id;
-	addr.pu = zone->start_addr.pu;
+	addr.offset += zone->start_addr.offset;
 
 	return addr;
 }
@@ -414,16 +413,11 @@ ftl_band_tail_md_addr(struct ftl_band *band)
 struct ftl_addr
 ftl_band_head_md_addr(struct ftl_band *band)
 {
-	struct ftl_addr addr = {};
-
 	if (spdk_unlikely(!band->num_zones)) {
 		return ftl_to_addr(FTL_ADDR_INVALID);
 	}
 
-	addr.pu = CIRCLEQ_FIRST(&band->zones)->start_addr.pu;
-	addr.zone_id = band->id;
-
-	return addr;
+	return CIRCLEQ_FIRST(&band->zones)->start_addr;
 }
 
 void
@@ -511,23 +505,24 @@ ftl_band_user_lbks(const struct ftl_band *band)
 struct ftl_band *
 ftl_band_from_addr(struct spdk_ftl_dev *dev, struct ftl_addr addr)
 {
-	assert(addr.zone_id < ftl_dev_num_bands(dev));
-	return &dev->bands[addr.zone_id];
+	size_t band_id = ftl_addr_band_id(dev, addr);
+
+	assert(band_id < ftl_dev_num_bands(dev));
+	return &dev->bands[band_id];
 }
 
 struct ftl_zone *
 ftl_band_zone_from_addr(struct ftl_band *band, struct ftl_addr addr)
 {
-	assert(addr.pu < ftl_dev_num_punits(band->dev));
-	return &band->zone_buf[addr.pu];
+	return &band->zone_buf[ftl_addr_pu_id(band->dev, addr)];
 }
 
 uint64_t
 ftl_band_lbkoff_from_addr(struct ftl_band *band, struct ftl_addr addr)
 {
-	assert(addr.zone_id == band->id);
-	assert(addr.pu < ftl_dev_num_punits(band->dev));
-	return addr.pu * ftl_dev_lbks_in_zone(band->dev) + addr.offset;
+	assert(ftl_addr_band_id(band->dev, addr) == band->id);
+	assert(ftl_addr_pu_id(band->dev, addr) < ftl_dev_num_punits(band->dev));
+	return addr.offset % ftl_num_band_lbks(band->dev);
 }
 
 struct ftl_addr
@@ -536,13 +531,14 @@ ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_zone *zone;
 	size_t num_xfers, num_stripes;
+	uint64_t offset = addr.offset % ftl_dev_lbks_in_zone(dev);
 
-	assert(addr.zone_id == band->id);
+	assert(ftl_addr_band_id(dev, addr) == band->id);
 
 	zone = ftl_band_zone_from_addr(band, addr);
 
-	num_lbks += (addr.offset % dev->xfer_size);
-	addr.offset  -= (addr.offset % dev->xfer_size);
+	num_lbks += (offset % dev->xfer_size);
+	offset  -= (offset % dev->xfer_size);
 
 #if defined(DEBUG)
 	/* Check that the number of zones has not been changed */
@@ -557,10 +553,10 @@ ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_
 #endif
 	assert(band->num_zones != 0);
 	num_stripes = (num_lbks / dev->xfer_size) / band->num_zones;
-	addr.offset  += num_stripes * dev->xfer_size;
+	offset += num_stripes * dev->xfer_size;
 	num_lbks -= num_stripes * dev->xfer_size * band->num_zones;
 
-	if (addr.offset > ftl_dev_lbks_in_zone(dev)) {
+	if (offset > ftl_dev_lbks_in_zone(dev)) {
 		return ftl_to_addr(FTL_ADDR_INVALID);
 	}
 
@@ -569,26 +565,26 @@ ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_
 		/* When the last zone is reached the lbk part of the address */
 		/* needs to be increased by xfer_size */
 		if (ftl_band_zone_is_last(band, zone)) {
-			addr.offset += dev->xfer_size;
-			if (addr.offset > ftl_dev_lbks_in_zone(dev)) {
+			offset += dev->xfer_size;
+			if (offset > ftl_dev_lbks_in_zone(dev)) {
 				return ftl_to_addr(FTL_ADDR_INVALID);
 			}
 		}
 
 		zone = ftl_band_next_operational_zone(band, zone);
 		assert(zone);
-		addr.pu = zone->start_addr.pu;
 
 		num_lbks -= dev->xfer_size;
 	}
 
 	if (num_lbks) {
-		addr.offset += num_lbks;
-		if (addr.offset > ftl_dev_lbks_in_zone(dev)) {
+		offset += num_lbks;
+		if (offset > ftl_dev_lbks_in_zone(dev)) {
 			return ftl_to_addr(FTL_ADDR_INVALID);
 		}
 	}
 
+	addr.offset = zone->start_addr.offset + offset;
 	return addr;
 }
 
@@ -599,7 +595,7 @@ ftl_xfer_offset_from_addr(struct ftl_band *band, struct ftl_addr addr)
 	unsigned int punit_offset = 0;
 	size_t off, num_stripes, xfer_size = band->dev->xfer_size;
 
-	assert(addr.zone_id == band->id);
+	assert(ftl_addr_band_id(band->dev, addr) == band->id);
 
 	num_stripes = (addr.offset / xfer_size) * band->num_zones;
 	off = addr.offset % xfer_size;
@@ -618,16 +614,9 @@ ftl_xfer_offset_from_addr(struct ftl_band *band, struct ftl_addr addr)
 struct ftl_addr
 ftl_band_addr_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 {
-	struct ftl_addr addr = { .addr = 0 };
-	struct spdk_ftl_dev *dev = band->dev;
-	uint64_t punit;
+	struct ftl_addr addr = { 0 };
 
-	punit = lbkoff / ftl_dev_lbks_in_zone(dev);
-
-	addr.offset = lbkoff % ftl_dev_lbks_in_zone(dev);
-	addr.zone_id = band->id;
-	addr.pu = punit;
-
+	addr.offset = lbkoff + band->id * ftl_num_band_lbks(band->dev);
 	return addr;
 }
 
@@ -1122,7 +1111,7 @@ ftl_band_next_operational_zone(struct ftl_band *band, struct ftl_zone *zone)
 		result = ftl_band_next_zone(band, zone);
 	} else {
 		CIRCLEQ_FOREACH_REVERSE(entry, &band->zones, circleq) {
-			if (entry->start_addr.pu > zone->start_addr.pu) {
+			if (entry->start_addr.offset > zone->start_addr.offset) {
 				result = entry;
 			} else {
 				if (!result) {
