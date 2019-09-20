@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5f9e1f32_119f04f3",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-20T12:06:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "151a7209_7c36a5d6",
+      "range": {
+        "startLine": 176,
+        "startChar": 0,
+        "endLine": 178,
+        "endChar": 11
+      },
+      "revId": "e8e6a3310aee80c15fd11ce79e05720ab62ab2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2f4d713d_bf862de5",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 16
@@ -39,6 +63,24 @@
       "revId": "e8e6a3310aee80c15fd11ce79e05720ab62ab2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1e22706_d112fa3e",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-20T12:06:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2f4d713d_bf862de5",
+      "revId": "e8e6a3310aee80c15fd11ce79e05720ab62ab2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "7439d96a_730499b6",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 712,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-20T12:06:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0cd9a9e2_fe32eebe",
+      "revId": "e8e6a3310aee80c15fd11ce79e05720ab62ab2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "02dcfea2_5ba0fc4a",
         "filename": "test/unit/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut.c",
         "patchSetId": 16
@@ -76,6 +136,24 @@
     },
     {
       "key": {
+        "uuid": "6fd00d2a_a007a3f7",
+        "filename": "test/unit/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-20T12:06:38Z",
+      "side": 1,
+      "message": "Yeah, all the tests assume there\u0027s only one controller. I think there\u0027s no additional benefits in having unit tests verifying multiple controllers.",
+      "parentUuid": "02dcfea2_5ba0fc4a",
+      "revId": "e8e6a3310aee80c15fd11ce79e05720ab62ab2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "164bd134_d968d683",
         "filename": "test/unit/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut.c",
         "patchSetId": 16
@@ -87,6 +165,24 @@
       "writtenOn": "2019-09-20T09:27:47Z",
       "side": 1,
       "message": "Maybe check for case of two bdevs on one namespace",
+      "revId": "e8e6a3310aee80c15fd11ce79e05720ab62ab2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a52bf417_829c141e",
+        "filename": "test/unit/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-20T12:06:38Z",
+      "side": 1,
+      "message": "I\u0027ve intentionally omitted that, as we only disallow this temporararily.",
+      "parentUuid": "164bd134_d968d683",
       "revId": "e8e6a3310aee80c15fd11ce79e05720ab62ab2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
