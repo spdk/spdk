@@ -2246,6 +2246,7 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Data requested length= 0x%x\n", length);
 
 		if (spdk_unlikely(tcp_req->dif_insert_or_strip)) {
+			tcp_req->orig_length = length;
 			length = spdk_dif_get_length_with_md(length, &tcp_req->dif_ctx);
 			tcp_req->elba_length = length;
 		}
@@ -2631,7 +2632,6 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 
 			if (spdk_unlikely(tcp_req->dif_insert_or_strip)) {
 				assert(tcp_req->elba_length >= tcp_req->req.length);
-				tcp_req->orig_length = tcp_req->req.length;
 				tcp_req->req.length = tcp_req->elba_length;
 			}
 
