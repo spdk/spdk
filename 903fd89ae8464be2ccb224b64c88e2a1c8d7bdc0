@@ -1,0 +1,163 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4104d505_59f68eb0",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:15:34Z",
+      "side": 1,
+      "message": "activate -\u003e activating",
+      "range": {
+        "startLine": 129,
+        "startChar": 51,
+        "endLine": 129,
+        "endChar": 59
+      },
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6975726f_31dfe922",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:15:34Z",
+      "side": 1,
+      "message": "no SPDK_ERRLOG here?",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ef433d0_6fac6f1b",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:15:34Z",
+      "side": 1,
+      "message": "extra line",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2f99628_fd0a83f3",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:15:34Z",
+      "side": 1,
+      "message": "no SPDK_ERRLOG here?",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51323c66_8a22b864",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1875,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:15:34Z",
+      "side": 1,
+      "message": "why can\u0027t you used -EBUSY?",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e51475f0_ea9edee1",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1879,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:15:34Z",
+      "side": 1,
+      "message": "\"opal already enabled on this drive\" or something like that.  \"has been owned\" isn\u0027t very clear IMHO",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23788d07_de01886c",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1880,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:15:34Z",
+      "side": 1,
+      "message": "can you use -EACCES?",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03c53e46_3795a666",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2183,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:15:34Z",
+      "side": 1,
+      "message": "just to be consistent with the rest of this function, \"if (ret) {\"",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "193b29e1_13957753",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2207,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:15:34Z",
+      "side": 1,
+      "message": "is there a need to check the ret code and print an error at least?",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
