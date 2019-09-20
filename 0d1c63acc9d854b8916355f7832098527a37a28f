@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "0df791bf_8d588898",
+        "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-20T11:05:34Z",
+      "side": 1,
+      "message": "Let\u0027s change this to an uint64, as we\u0027re using spdk_json_decode_uint64 to decode it.",
+      "range": {
+        "startLine": 45,
+        "startChar": 1,
+        "endLine": 45,
+        "endChar": 8
+      },
+      "revId": "0d1c63acc9d854b8916355f7832098527a37a28f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c1ad1d69_eecf832d",
         "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
         "patchSetId": 5
