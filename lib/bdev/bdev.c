@@ -257,6 +257,8 @@ struct spdk_bdev_channel {
 	 */
 	uint64_t		io_outstanding;
 
+	bdev_io_tailq_t		io_submitted;
+
 	bdev_io_tailq_t		queued_resets;
 
 	uint32_t		flags;
@@ -1746,6 +1748,7 @@ _bdev_io_split(void *_bdev_io)
 			} else {
 				bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 				if (bdev_io->u.bdev.split_outstanding == 0) {
+					TAILQ_REMOVE(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
 					bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 				}
 			}
@@ -1774,6 +1777,7 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	 * Parent I/O finishes when all blocks are consumed.
 	 */
 	if (parent_io->u.bdev.split_remaining_num_blocks == 0) {
+		TAILQ_REMOVE(&parent_io->internal.ch->io_submitted, parent_io, internal.ch_link);
 		parent_io->internal.cb(parent_io, parent_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS,
 				       parent_io->internal.caller_ctx);
 		return;
@@ -1834,7 +1838,6 @@ _bdev_io_submit(void *ctx)
 	tsc = spdk_get_ticks();
 	bdev_io->internal.submit_tsc = tsc;
 	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_START, 0, 0, (uintptr_t)bdev_io, bdev_io->type);
-
 	if (spdk_likely(bdev_ch->flags == 0)) {
 		bdev_io_do_submit(bdev_ch, bdev_io);
 		return;
@@ -1866,7 +1869,14 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	assert(thread != NULL);
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
 
+	/* only add the IO submitted by the upper user to the according channel */
+	if (bdev_io->internal.cb != bdev_io_split_done) {
+		TAILQ_INSERT_TAIL(&bdev_io->internal.ch->io_submitted, bdev_io,
+				  internal.ch_link);
+	}
+
 	if (bdev->split_on_optimal_io_boundary && bdev_io_should_split(bdev_io)) {
+		bdev_io->internal.submit_tsc = spdk_get_ticks();
 		bdev_io_split(NULL, bdev_io);
 		return;
 	}
@@ -2154,6 +2164,8 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&ch->queued_resets);
 	ch->flags = 0;
 	ch->shared_resource = shared_resource;
+
+	TAILQ_INIT(&ch->io_submitted);
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
@@ -3474,6 +3486,7 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	bdev_io->internal.ch = channel;
 	bdev_io->internal.desc = desc;
+	bdev_io->internal.submit_tsc = spdk_get_ticks();
 	bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
 	bdev_io->u.reset.ch_ref = NULL;
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
@@ -3481,6 +3494,10 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	pthread_mutex_lock(&bdev->internal.mutex);
 	TAILQ_INSERT_TAIL(&channel->queued_resets, bdev_io, internal.link);
 	pthread_mutex_unlock(&bdev->internal.mutex);
+
+	/* also add the reset cmd to the according channel */
+	TAILQ_INSERT_TAIL(&bdev_io->internal.ch->io_submitted, bdev_io,
+			  internal.ch_link);
 
 	bdev_channel_start_reset(channel);
 
@@ -3718,6 +3735,7 @@ static inline void
 bdev_io_complete(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
+	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
 	uint64_t tsc, tsc_diff;
 
 	if (spdk_unlikely(bdev_io->internal.in_submit_request || bdev_io->internal.io_submit_ch)) {
@@ -3742,6 +3760,11 @@ bdev_io_complete(void *ctx)
 	tsc = spdk_get_ticks();
 	tsc_diff = tsc - bdev_io->internal.submit_tsc;
 	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io, 0);
+	/* remove the IO when it has been completed */
+	if (bdev_io->internal.cb != bdev_io_split_done) {
+		assert(!TAILQ_EMPTY(&bdev_ch->io_submitted));
+		TAILQ_REMOVE(&bdev_ch->io_submitted, bdev_io, internal.ch_link);
+	}
 
 	if (bdev_io->internal.ch->histogram) {
 		spdk_histogram_data_tally(bdev_io->internal.ch->histogram, tsc_diff);
