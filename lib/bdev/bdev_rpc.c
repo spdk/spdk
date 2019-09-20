@@ -50,7 +50,7 @@ static const struct spdk_json_object_decoder rpc_set_bdev_opts_decoders[] = {
 };
 
 static void
-spdk_rpc_set_bdev_options(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+spdk_rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
 	struct spdk_rpc_set_bdev_opts rpc_opts;
 	struct spdk_bdev_opts bdev_opts;
@@ -90,4 +90,5 @@ spdk_rpc_set_bdev_options(struct spdk_jsonrpc_request *request, const struct spd
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("set_bdev_options", spdk_rpc_set_bdev_options, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER("bdev_set_options", spdk_rpc_bdev_set_options, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_set_options, set_bdev_options)

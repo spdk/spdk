@@ -1,7 +1,8 @@
 from .helpers import deprecated_alias
 
 
-def set_bdev_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None):
+@deprecated_alias('set_bdev_options')
+def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None):
     """Set parameters for the bdev subsystem.
 
     Args:
@@ -15,7 +16,7 @@ def set_bdev_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None):
     if bdev_io_cache_size:
         params['bdev_io_cache_size'] = bdev_io_cache_size
 
-    return client.call('set_bdev_options', params)
+    return client.call('bdev_set_options', params)
 
 
 @deprecated_alias('construct_compress_bdev')

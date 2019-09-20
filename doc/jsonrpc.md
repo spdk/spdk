@@ -271,7 +271,7 @@ Example response:
     "add_initiator_group",
     "iscsi_get_initiator_groups",
     "iscsi_set_options",
-    "set_bdev_options",
+    "bdev_set_options",
     "bdev_set_qos_limit",
     "bdev_get_bdevs",
     "bdev_get_iostat",
@@ -528,7 +528,7 @@ Example response:
 
 # Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
-## set_bdev_options {#rpc_set_bdev_options}
+## bdev_set_options {#rpc_bdev_set_options}
 
 Set global parameters for the block device (bdev) subsystem.  This RPC may only be called
 before SPDK subsystems have been initialized.
@@ -548,7 +548,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "set_bdev_options",
+  "method": "bdev_set_options",
   "params": {
     "bdev_io_pool_size": 65536,
     "bdev_io_cache_size": 256
