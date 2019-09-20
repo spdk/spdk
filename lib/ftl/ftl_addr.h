@@ -45,20 +45,13 @@
 
 /* This structure represents on-disk address. It can have one of the following */
 /* formats: */
-/*        - addr describing the raw address */
+/*        - offset inside the disk */
 /*        - cache_offset inside the cache (indicated by the cached flag) */
 /*        - packed version of the two formats above (can be only used when the */
-/*          raw address can be represented in less than 32 bits) */
+/*          offset can be represented in less than 32 bits) */
 /* Packed format is used, when possible, to avoid wasting RAM on the L2P table. */
 struct ftl_addr {
 	union {
-		struct {
-			uint64_t offset	 : 32;
-			uint64_t zone_id : 16;
-			uint64_t pu	 : 15;
-			uint64_t rsvd	 : 1;
-		};
-
 		struct {
 			uint64_t cache_offset : 63;
 			uint64_t cached	      : 1;
@@ -71,12 +64,12 @@ struct ftl_addr {
 					uint32_t cached	      : 1;
 				};
 
-				uint32_t addr;
+				uint32_t offset;
 			};
 			uint32_t rsvd;
 		} pack;
 
-		uint64_t addr;
+		uint64_t offset;
 	};
 };
 
