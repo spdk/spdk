@@ -48,6 +48,15 @@ struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 };
 
+
+int g_ctrlr_reset = 0;
+
+int
+spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return g_ctrlr_reset;
+}
+
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
@@ -168,12 +177,32 @@ static void struct_packing(void)
 static void test_nvme_qpair_process_completions(void)
 {
 	struct spdk_nvme_qpair		qpair = {};
+	struct spdk_nvme_qpair		admin_qpair = {};
 	struct spdk_nvme_ctrlr		ctrlr = {};
 
-	prepare_submit_request_test(&qpair, &ctrlr);
-	qpair.ctrlr->is_resetting = true;
+	/* If we call spdk_nvme_ctrlr_reset, we will get this back. */
+	g_ctrlr_reset = INT32_MAX;
 
-	spdk_nvme_qpair_process_completions(&qpair, 0);
+	prepare_submit_request_test(&qpair, &ctrlr);
+	nvme_qpair_init(&admin_qpair, 0, &ctrlr, 0, 32);
+	ctrlr.adminq = &admin_qpair;
+	qpair.ctrlr->is_failed = true;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+
+	/* Make sure we call spdk_nvme_ctrlr_reset if the admin transport qp is failed. */
+	admin_qpair.ctrlr->is_failed = false;
+	admin_qpair.is_enabled = true;
+	admin_qpair.transport_qp_is_failed = true;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&admin_qpair, 0) == INT32_MAX);
+
+	/* We should return 0 since the I/O qpair will defer to the failed admin qpair. */
+	qpair.transport_qp_is_failed = true;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+
+	/* return -ENXIO, if the admin qpair is not failed, we return this directly. */
+	admin_qpair.transport_qp_is_failed = false;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == -ENXIO);
+
 	cleanup_submit_request_test(&qpair);
 }
 
