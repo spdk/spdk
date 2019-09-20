@@ -76,12 +76,15 @@ struct bdev_ocssd_io {
 struct ocssd_bdev {
 	struct nvme_bdev	nvme_bdev;
 	struct bdev_ocssd_zone	*zones;
+	TAILQ_ENTRY(ocssd_bdev)	tailq;
 };
 
 struct bdev_ocssd_ns {
 	struct spdk_ocssd_geometry_data	geometry;
 	struct bdev_ocssd_lba_offsets	lba_offsets;
 };
+
+static TAILQ_HEAD(, ocssd_bdev) g_ocssd_bdev_list = TAILQ_HEAD_INITIALIZER(g_ocssd_bdev_list);
 
 static struct bdev_ocssd_ns *
 bdev_ocssd_get_ns_from_nvme(struct nvme_bdev_ns *nvme_ns)
@@ -109,6 +112,26 @@ bdev_ocssd_library_fini(void)
 static int
 bdev_ocssd_config_json(struct spdk_json_write_ctx *w)
 {
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_bdev *nvme_bdev;
+	struct ocssd_bdev *ocssd_bdev;
+
+	TAILQ_FOREACH(ocssd_bdev, &g_ocssd_bdev_list, tailq) {
+		nvme_bdev = &ocssd_bdev->nvme_bdev;
+		nvme_bdev_ctrlr = nvme_bdev->nvme_bdev_ctrlr;
+
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "bdev_ocssd_create");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "ctrlr_name", nvme_bdev_ctrlr->name);
+		spdk_json_write_named_string(w, "bdev_name", nvme_bdev->disk.name);
+		spdk_json_write_named_uint32(w, "nsid", nvme_bdev->nvme_ns->id);
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+
 	return 0;
 }
 
@@ -145,6 +168,8 @@ bdev_ocssd_destruct(void *ctx)
 {
 	struct ocssd_bdev *ocssd_bdev = ctx;
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+
+	TAILQ_REMOVE(&g_ocssd_bdev_list, ocssd_bdev, tailq);
 
 	nvme_bdev_detach_bdev_from_ns(nvme_bdev);
 	bdev_ocssd_free_bdev(ocssd_bdev);
@@ -622,6 +647,7 @@ bdev_ocssd_register_bdev(void *ctx)
 
 	rc = spdk_bdev_register(&nvme_bdev->disk);
 	if (spdk_likely(rc == 0)) {
+		TAILQ_INSERT_TAIL(&g_ocssd_bdev_list, create_ctx->ocssd_bdev, tailq);
 		nvme_bdev_attach_bdev_to_ns(nvme_bdev->nvme_ns, nvme_bdev);
 	} else {
 		SPDK_ERRLOG("Failed to register bdev %s\n", nvme_bdev->disk.name);
