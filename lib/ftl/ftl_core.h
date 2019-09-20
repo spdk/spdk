@@ -281,10 +281,10 @@ struct spdk_io_channel *
 ftl_get_io_channel(const struct spdk_ftl_dev *dev);
 
 #define ftl_to_addr(address) \
-	(struct ftl_addr) { .addr = (uint64_t)(address) }
+	(struct ftl_addr) { .offset = (uint64_t)(address) }
 
 #define ftl_to_addr_packed(address) \
-	(struct ftl_addr) { .pack.addr = (uint32_t)(address) }
+	(struct ftl_addr) { .pack.offset = (uint32_t)(address) }
 
 static inline struct spdk_thread *
 ftl_get_core_thread(const struct spdk_ftl_dev *dev)
@@ -307,7 +307,7 @@ ftl_addr_packed(const struct spdk_ftl_dev *dev)
 static inline int
 ftl_addr_invalid(struct ftl_addr addr)
 {
-	return addr.addr == ftl_to_addr(FTL_ADDR_INVALID).addr;
+	return addr.offset == ftl_to_addr(FTL_ADDR_INVALID).offset;
 }
 
 static inline int
@@ -327,7 +327,7 @@ ftl_addr_to_packed(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
 		p.pack.cached = 1;
 		p.pack.cache_offset = (uint32_t) addr.cache_offset;
 	} else {
-		p.pack.addr = (uint32_t) addr.addr;
+		p.pack.offset = (uint32_t) addr.offset;
 	}
 
 	return p;
@@ -338,7 +338,7 @@ ftl_addr_from_packed(const struct spdk_ftl_dev *dev, struct ftl_addr p)
 {
 	struct ftl_addr addr = {};
 
-	if (p.pack.addr == (uint32_t)FTL_ADDR_INVALID) {
+	if (p.pack.offset == (uint32_t)FTL_ADDR_INVALID) {
 		addr = ftl_to_addr(FTL_ADDR_INVALID);
 	} else if (p.pack.cached) {
 		addr.cached = 1;
@@ -369,7 +369,7 @@ ftl_addr_from_packed(const struct spdk_ftl_dev *dev, struct ftl_addr p)
 	_ftl_l2p_get(l2p, off, 64)
 
 #define ftl_addr_cmp(p1, p2) \
-	((p1).addr == (p2).addr)
+	((p1).offset == (p2).offset)
 
 static inline void
 ftl_l2p_set(struct spdk_ftl_dev *dev, uint64_t lba, struct ftl_addr addr)
@@ -377,9 +377,9 @@ ftl_l2p_set(struct spdk_ftl_dev *dev, uint64_t lba, struct ftl_addr addr)
 	assert(dev->num_lbas > lba);
 
 	if (ftl_addr_packed(dev)) {
-		_ftl_l2p_set32(dev->l2p, lba, ftl_addr_to_packed(dev, addr).addr);
+		_ftl_l2p_set32(dev->l2p, lba, ftl_addr_to_packed(dev, addr).offset);
 	} else {
-		_ftl_l2p_set64(dev->l2p, lba, addr.addr);
+		_ftl_l2p_set64(dev->l2p, lba, addr.offset);
 	}
 }
 
@@ -425,31 +425,28 @@ ftl_dev_lbks_in_zone(const struct spdk_ftl_dev *dev)
 	return spdk_bdev_get_zone_size(spdk_bdev_desc_get_bdev(dev->disk_bdev_desc));
 }
 
-static inline struct ftl_addr
-ftl_addr_from_block_offset(const struct spdk_ftl_dev *dev, uint64_t addr)
-{
-	struct ftl_addr ftl_addr = {};
-	size_t zone_num;
-
-	ftl_addr.offset = addr % ftl_dev_lbks_in_zone(dev);
-	zone_num = addr / ftl_dev_lbks_in_zone(dev);
-	ftl_addr.pu = zone_num % ftl_dev_num_punits(dev);
-	ftl_addr.zone_id = zone_num / ftl_dev_num_punits(dev);
-
-	return ftl_addr;
-}
-
-static inline uint64_t
-ftl_block_offset_from_addr(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
-{
-	return (addr.zone_id * ftl_dev_num_punits(dev) + addr.pu) * ftl_dev_lbks_in_zone(dev) +
-	       addr.offset;
-}
-
 static inline uint64_t
 ftl_num_band_lbks(const struct spdk_ftl_dev *dev)
 {
 	return ftl_dev_num_punits(dev) * ftl_dev_lbks_in_zone(dev);
+}
+
+static inline uint64_t
+ftl_addr_zone_num(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
+{
+	return addr.offset / ftl_dev_lbks_in_zone(dev);
+}
+
+static inline uint64_t
+ftl_addr_band_id(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
+{
+	return ftl_addr_zone_num(dev, addr) / ftl_dev_num_punits(dev) ;
+}
+
+static inline uint64_t
+ftl_addr_pu_id(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
+{
+	return ftl_addr_zone_num(dev, addr) % ftl_dev_num_punits(dev);
 }
 
 static inline size_t
