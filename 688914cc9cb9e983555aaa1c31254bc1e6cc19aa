@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cc2bef2_65da92c7",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T16:17:18Z",
+      "side": 1,
+      "message": "I think you mismerged here.  This should be log_get_flags.",
+      "revId": "688914cc9cb9e983555aaa1c31254bc1e6cc19aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
