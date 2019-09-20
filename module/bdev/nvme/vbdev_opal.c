@@ -215,6 +215,68 @@ vbdev_opal_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 }
 
 static int
+vbdev_opal_get_locking_range_id_by_name(const char *bdev_name)
+{
+	int count = 0;
+	int length = sizeof(bdev_name) / sizeof(char);
+	char *id_str;
+	int id;
+
+	while (bdev_name[count] != 'l') {
+		count++;
+	}
+
+	length = length - count;
+
+	id_str = calloc(1, MIN_LENGTH);
+	if (!id_str) {
+		SPDK_ERRLOG("allocation for id_str failed\n");
+		return -ENOMEM;
+	}
+
+	spdk_strcpy_pad(id_str, bdev_name + count + 1, length, ' ');
+	id = spdk_strtol(id_str, 10);
+
+	free(id_str);
+	return id;
+}
+
+struct spdk_opal_locking_range_info *
+spdk_vbdev_opal_get_info_from_bdev(struct spdk_bdev *opal_bdev, const char *password)
+{
+	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	int locking_range_id;
+	int rc;
+	struct spdk_opal_locking_range_info *info;
+
+	nvme_ctrlr = spdk_vbdev_opal_get_nvme_ctrlr_by_bdev_name(opal_bdev->name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("can't find nvme_ctrlr of %s\n", opal_bdev->name);
+		return NULL;
+	}
+
+	locking_range_id = vbdev_opal_get_locking_range_id_by_name(opal_bdev->name);
+	if (locking_range_id < 0) {
+		SPDK_ERRLOG("can't get locking range ID\n");
+		return NULL;
+	}
+
+	info = spdk_opal_get_locking_range_info(nvme_ctrlr->opal_dev, locking_range_id);
+	if (info != NULL) {
+		return info;
+	}
+
+	rc = spdk_opal_cmd_get_locking_range_info(nvme_ctrlr->opal_dev, password,
+			OPAL_ADMIN1, locking_range_id);
+	if (rc) {
+		SPDK_ERRLOG("Get locking range info error: %d\n", rc);
+		return NULL;
+	}
+
+	return spdk_opal_get_locking_range_info(nvme_ctrlr->opal_dev, locking_range_id);
+}
+
+static int
 vbdev_opal_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct spdk_bdev_part *part = ctx;
@@ -304,8 +366,8 @@ spdk_vbdev_opal_config_init(const char *base_bdev_name, uint8_t locking_range_id
 	return 0;
 }
 
-static struct nvme_bdev_ctrlr *
-vbdev_opal_get_nvme_ctrlr_by_bdev_name(const char *bdev_name)
+struct nvme_bdev_ctrlr *
+spdk_vbdev_opal_get_nvme_ctrlr_by_bdev_name(const char *bdev_name)
 {
 	int count = NVME_LENGTH;
 	char *ctrlr_name;
@@ -313,6 +375,10 @@ vbdev_opal_get_nvme_ctrlr_by_bdev_name(const char *bdev_name)
 
 	while (bdev_name[count] != 'n') {
 		count++;
+	}
+
+	if (count > MIN_LENGTH) { /* It is not a nvme bdev name */
+		return NULL;
 	}
 
 	ctrlr_name = calloc(1, MIN_LENGTH);
@@ -356,7 +422,7 @@ spdk_vbdev_opal_create(struct spdk_vbdev_opal_config *cfg)
 		return -ENODEV;
 	}
 
-	nvme_ctrlr = vbdev_opal_get_nvme_ctrlr_by_bdev_name(cfg->base_bdev_name);
+	nvme_ctrlr = spdk_vbdev_opal_get_nvme_ctrlr_by_bdev_name(cfg->base_bdev_name);
 	if (!nvme_ctrlr) {
 		SPDK_ERRLOG("get nvme ctrlr failed\n");
 		return -ENODEV;
@@ -592,6 +658,7 @@ spdk_vbdev_opal_destruct(const char *bdev_name, const char *password)
 	}
 
 	free(base_bdev_name);
+	spdk_opal_free_locking_range_info(cfg->opal_bdev->opal_dev, locking_range_id);
 	vbdev_opal_destruct_config(cfg);
 	return 0;
 
@@ -605,6 +672,46 @@ vbdev_opal_examine(struct spdk_bdev *bdev)
 {
 	/* TODO */
 	spdk_bdev_module_examine_done(&opal_if);
+}
+
+static int
+vbdev_opal_recv_poll(void *arg)
+{
+	struct nvme_bdev_ctrlr *nvme_ctrlr = arg;
+	int rc;
+
+	rc = spdk_opal_recv_cmd_async(nvme_ctrlr->opal_dev);
+	if (rc) {
+		SPDK_ERRLOG("receive error:%d\n", rc);
+		spdk_poller_unregister(&nvme_ctrlr->opal_poller);
+		return 0;
+	}
+
+	if (spdk_opal_get_dev_state(nvme_ctrlr->opal_dev) != OPAL_BUSY) {
+		/* receive success */
+		spdk_poller_unregister(&nvme_ctrlr->opal_poller);
+		return 0;
+	}
+
+	return -1;
+}
+
+int spdk_vbdev_opal_revert_tper(struct nvme_bdev_ctrlr *nvme_ctrlr, const char *password,
+				spdk_opal_cb cb_fn,
+				void *cb_ctx)
+{
+	int rc;
+
+	rc = spdk_opal_cmd_revert_tper_async(nvme_ctrlr->opal_dev, password, cb_fn, cb_ctx);
+	if (rc) {
+		SPDK_ERRLOG("%s revert tper failur: %d\n", nvme_ctrlr->name, rc);
+		return rc;
+	}
+	nvme_ctrlr->opal_poller = spdk_poller_register(vbdev_opal_recv_poll, nvme_ctrlr, 50);
+	if (nvme_ctrlr->opal_poller == NULL) {
+		return -ENOMEM;
+	}
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vbdev_opal", SPDK_LOG_VBDEV_OPAL)
