@@ -37,7 +37,14 @@
 #include "spdk/stdinc.h"
 #include "common.h"
 
+typedef void (*spdk_bdev_ocssd_create_cb)(struct spdk_bdev *bdev, int status, void *ctx);
+typedef void (*spdk_bdev_ocssd_delete_cb)(int status, void *ctx);
+
 int spdk_bdev_ocssd_create_ctrlr(const struct spdk_nvme_transport_id *trid);
 int spdk_bdev_ocssd_create_bdevs(struct nvme_async_probe_ctx *ctx);
+int spdk_bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
+				spdk_bdev_ocssd_create_cb cb_fn, void *cb_arg);
+int spdk_bdev_ocssd_delete_bdev(const char *bdev_name, spdk_bdev_ocssd_delete_cb cb_fn,
+				void *cb_arg);
 
 #endif /* SPDK_BDEV_OCSSD_H */

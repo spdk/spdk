@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = bdev.c part.c scsi_nvme.c gpt vbdev_lvol.c mt bdev_raid.c
+DIRS-y = bdev.c part.c scsi_nvme.c gpt vbdev_lvol.c mt bdev_raid.c bdev_ocssd.c
 
 DIRS-$(CONFIG_CRYPTO) += crypto.c
 
