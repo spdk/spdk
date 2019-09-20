@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "bdev_nvme.h"
+#include "bdev_ocssd.h"
 
 #include "spdk/config.h"
 #include "spdk/conf.h"
@@ -955,7 +956,7 @@ static size_t
 nvme_ctrlr_get_ns_struct_size(struct nvme_bdev_ctrlr *ctrlr, uint32_t nsid)
 {
 	if (spdk_nvme_ctrlr_is_ocssd_ns(ctrlr->ctrlr, nsid)) {
-		assert(false);
+		return sizeof(struct nvme_namespace) + bdev_ocssd_get_ns_struct_size();
 	} else {
 		return sizeof(struct nvme_namespace);
 	}
@@ -965,7 +966,7 @@ static void
 nvme_ctrlr_init_ns_type(struct nvme_namespace *ns)
 {
 	if (spdk_nvme_ctrlr_is_ocssd_ns(ns->ctrlr->ctrlr, ns->id)) {
-		assert(false);
+		ns->init_fn = bdev_ocssd_init_ns;
 	} else {
 		ns->init_fn = nvme_ctrlr_init_ns;
 	}
