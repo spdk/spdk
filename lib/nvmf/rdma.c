@@ -3258,6 +3258,7 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	/* free all retired buffers back to the transport so we don't short the mempool. */
 	STAILQ_FOREACH_SAFE(buf, &rgroup->retired_bufs, link, tmp_buf) {
 		STAILQ_REMOVE(&rgroup->retired_bufs, buf, spdk_nvmf_transport_pg_cache_buf, link);
+		assert(group->transport != NULL);
 		spdk_mempool_put(group->transport->data_buf_pool, buf);
 	}
 
