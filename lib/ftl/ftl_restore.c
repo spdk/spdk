@@ -1156,6 +1156,7 @@ ftl_pad_zone_cb(struct ftl_io *io, void *arg, int status)
 	struct ftl_band *band = io->band;
 	struct ftl_zone *zone;
 	struct ftl_io *new_io;
+	uint64_t offset;
 
 	restore->num_ios--;
 	/* TODO check for next unit error vs early close error */
@@ -1164,7 +1165,8 @@ ftl_pad_zone_cb(struct ftl_io *io, void *arg, int status)
 		goto end;
 	}
 
-	if (io->addr.offset + io->lbk_cnt == ftl_dev_lbks_in_zone(restore->dev)) {
+	offset = io->addr.offset % ftl_dev_lbks_in_zone(restore->dev);
+	if (offset + io->lbk_cnt == ftl_dev_lbks_in_zone(restore->dev)) {
 		zone = ftl_band_zone_from_addr(band, io->addr);
 		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
 	} else {

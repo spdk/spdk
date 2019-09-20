@@ -118,16 +118,9 @@ ftl_band_lbkoff_from_addr(struct ftl_band *band, struct ftl_addr addr)
 struct ftl_addr
 ftl_band_addr_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 {
-	struct ftl_addr addr = { .addr = 0 };
-	struct spdk_ftl_dev *dev = band->dev;
-	uint64_t punit;
+	struct ftl_addr addr = { 0 };
 
-	punit = lbkoff / ftl_dev_lbks_in_zone(dev);
-
-	addr.offset = lbkoff % ftl_dev_lbks_in_zone(dev);
-	addr.zone_id = band->id;
-	addr.pu = punit;
-
+	addr.offset = lbkoff + band->id * ftl_num_band_lbks(band->dev);
 	return addr;
 }
 
@@ -217,7 +210,7 @@ setup_reloc(struct spdk_ftl_dev **_dev, struct ftl_reloc **_reloc,
 	SPDK_CU_ASSERT_FATAL(ftl_dev_num_bands(dev) > 0);
 
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
-		test_init_ftl_band(dev, i);
+		test_init_ftl_band(dev, i, geo->zone_size);
 	}
 
 	reloc = ftl_reloc_init(dev);
