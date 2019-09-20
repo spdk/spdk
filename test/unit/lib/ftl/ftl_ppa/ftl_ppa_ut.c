@@ -118,19 +118,17 @@ test_addr_pack32(void)
 
 	/* Check valid address transformation */
 	orig.offset = 4;
-	orig.zone_id = 3;
-	orig.pu = 2;
 	addr = ftl_addr_to_packed(g_dev, orig);
-	CU_ASSERT_TRUE(addr.addr <= UINT32_MAX);
+	CU_ASSERT_TRUE(addr.offset <= UINT32_MAX);
 	CU_ASSERT_FALSE(addr.pack.cached);
 	addr = ftl_addr_from_packed(g_dev, addr);
 	CU_ASSERT_FALSE(ftl_addr_invalid(addr));
-	CU_ASSERT_EQUAL(addr.addr, orig.addr);
+	CU_ASSERT_EQUAL(addr.offset, orig.offset);
 
 	/* Check invalid address transformation */
 	orig = ftl_to_addr(FTL_ADDR_INVALID);
 	addr = ftl_addr_to_packed(g_dev, orig);
-	CU_ASSERT_TRUE(addr.addr <= UINT32_MAX);
+	CU_ASSERT_TRUE(addr.offset <= UINT32_MAX);
 	addr = ftl_addr_from_packed(g_dev, addr);
 	CU_ASSERT_TRUE(ftl_addr_invalid(addr));
 
@@ -138,48 +136,12 @@ test_addr_pack32(void)
 	orig.cached = 1;
 	orig.cache_offset = 1024;
 	addr = ftl_addr_to_packed(g_dev, orig);
-	CU_ASSERT_TRUE(addr.addr <= UINT32_MAX);
+	CU_ASSERT_TRUE(addr.offset <= UINT32_MAX);
 	CU_ASSERT_TRUE(addr.pack.cached);
 	addr = ftl_addr_from_packed(g_dev, addr);
 	CU_ASSERT_FALSE(ftl_addr_invalid(addr));
 	CU_ASSERT_TRUE(ftl_addr_cached(addr));
-	CU_ASSERT_EQUAL(addr.addr, orig.addr);
-	clean_l2p();
-}
-
-static void
-test_addr_pack64(void)
-{
-	struct ftl_addr orig = {}, addr;
-
-	orig.offset = 4;
-	orig.zone_id = 3;
-	orig.pu = 2;
-
-	/* Check valid address transformation */
-	addr.addr = ftl_block_offset_from_addr(g_dev, orig);
-	addr = ftl_addr_from_block_offset(g_dev, addr.addr);
-	CU_ASSERT_FALSE(ftl_addr_invalid(addr));
-	CU_ASSERT_EQUAL(addr.addr, orig.addr);
-
-	orig.offset = 0x7ea0be0f;
-	orig.zone_id = 0x6;
-	orig.pu = 0x4;
-
-	addr.addr = ftl_block_offset_from_addr(g_dev, orig);
-	addr = ftl_addr_from_block_offset(g_dev, addr.addr);
-	CU_ASSERT_FALSE(ftl_addr_invalid(addr));
-	CU_ASSERT_EQUAL(addr.addr, orig.addr);
-
-	/* Check maximum valid address */
-	orig.offset = 0xffffffff;
-	orig.zone_id = 0xf;
-	orig.pu = 0x7;
-
-	addr.addr = ftl_block_offset_from_addr(g_dev, orig);
-	addr = ftl_addr_from_block_offset(g_dev, addr.addr);
-	CU_ASSERT_FALSE(ftl_addr_invalid(addr));
-	CU_ASSERT_EQUAL(addr.addr, orig.addr);
+	CU_ASSERT_EQUAL(addr.offset, orig.offset);
 	clean_l2p();
 }
 
@@ -267,8 +229,6 @@ main(int argc, char **argv)
 			       test_addr_invalid) == NULL
 		|| CU_add_test(suite64, "test_addr64_cached",
 			       test_addr_cached) == NULL
-		|| CU_add_test(suite64, "test_addr64_pack",
-			       test_addr_pack64) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
