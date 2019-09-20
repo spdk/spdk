@@ -1741,19 +1741,6 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 		return -ENOMEM;
 	}
 
-	desc = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + inline_segment->address;
-
-	for (i = 0; i < num_sgl_descriptors; i++) {
-		num_buffers += SPDK_CEIL_DIV(desc->keyed.length, rtransport->transport.opts.io_unit_size);
-		desc++;
-	}
-	rc = spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport,
-					   num_buffers);
-	if (rc != 0) {
-		nvmf_rdma_request_free_data(rdma_req, rtransport);
-		return rc;
-	}
-
 	/* The first WR must always be the embedded data WR. This is how we unwind them later. */
 	current_wr = &rdma_req->data.wr;
 	assert(current_wr != NULL);
@@ -1766,6 +1753,13 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 		if (spdk_unlikely(desc->generic.type != SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK ||
 				  desc->keyed.subtype != SPDK_NVME_SGL_SUBTYPE_ADDRESS)) {
 			rc = -EINVAL;
+			goto err_exit;
+		}
+
+		num_buffers = SPDK_CEIL_DIV(desc->keyed.length, rtransport->transport.opts.io_unit_size);
+		rc = spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport,
+						   num_buffers);
+		if (rc != 0) {
 			goto err_exit;
 		}
 
