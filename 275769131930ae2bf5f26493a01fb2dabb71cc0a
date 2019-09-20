@@ -333,6 +333,24 @@
       "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3bc664a4_819cad6b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1901,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-20T11:16:46Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nI was wrong about Intel drive. The one that we have doesn\u0027t support SGL feature, it seems I tested a common SGL write operation. I checked in-capsule data with PRP and, as you said, it doesn\u0027t work. The request fails in _nvme_ns_cmd_split_request_prp - when the function finds a buffer which address is not aligned to page size, it makes an attempt to slit the request and checks that the accumulated length must be multiple of extended LBA size.\nMetadata memory pool provides not aligned entries, that is why the request fails. It is possible to align the entries and that will allow us to use in-capsule data for 1 data block only. But I don\u0027t think that such limited in-capsule data support will be useful for applications.\nI don\u0027t see any solution for that case which would not kill performance. Maybe someone could advise on that issue?",
+      "parentUuid": "35d490ed_f559b71a",
+      "revId": "275769131930ae2bf5f26493a01fb2dabb71cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
