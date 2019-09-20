@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "151a7209_7c36a5d6",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-20T09:27:47Z",
+      "side": 1,
+      "message": "Line 205 is dereferencing a freed pointer (nvme_bdev-\u003edisk)",
+      "range": {
+        "startLine": 176,
+        "startChar": 0,
+        "endLine": 178,
+        "endChar": 11
+      },
+      "revId": "e8e6a3310aee80c15fd11ce79e05720ab62ab2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f4d713d_bf862de5",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-20T09:27:47Z",
+      "side": 1,
+      "message": "Same thing happens here",
+      "revId": "e8e6a3310aee80c15fd11ce79e05720ab62ab2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0cd9a9e2_fe32eebe",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 712,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-20T09:27:47Z",
+      "side": 1,
+      "message": "Add bdev_name arg",
+      "revId": "e8e6a3310aee80c15fd11ce79e05720ab62ab2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "164bd134_d968d683",
+        "filename": "test/unit/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-20T09:27:47Z",
+      "side": 1,
+      "message": "Maybe check for case of two bdevs on one namespace",
+      "revId": "e8e6a3310aee80c15fd11ce79e05720ab62ab2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
