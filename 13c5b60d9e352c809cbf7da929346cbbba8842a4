@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "4bdf083c_6a811a20",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-20T02:13:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "04be2ba1_122e5c27",
+      "revId": "13c5b60d9e352c809cbf7da929346cbbba8842a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f97b7b5b_df989287",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 5
@@ -50,6 +68,24 @@
       "revId": "13c5b60d9e352c809cbf7da929346cbbba8842a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f8e9eb7_e2960f24",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-20T02:13:26Z",
+      "side": 1,
+      "message": "Hi Paul, thanks for your review. I will change to TODO.",
+      "parentUuid": "f97b7b5b_df989287",
+      "revId": "13c5b60d9e352c809cbf7da929346cbbba8842a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "6135db1e_eec0807e",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-20T02:13:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0df6d90f_a2a75a4b",
+      "revId": "13c5b60d9e352c809cbf7da929346cbbba8842a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64d7bbe6_426f9da1",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 5
@@ -87,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "24410ec3_ff424cee",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-20T02:13:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "64d7bbe6_426f9da1",
+      "revId": "13c5b60d9e352c809cbf7da929346cbbba8842a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3b11e72_587bd3c8",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 5
@@ -101,6 +173,24 @@
       "revId": "13c5b60d9e352c809cbf7da929346cbbba8842a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48bc1a47_329297af",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-20T02:13:26Z",
+      "side": 1,
+      "message": "Hi Paul, thanks for your review. vbdev_opal_find_config will return NULL if not found. We need to assign an rc value here. Thank you.",
+      "parentUuid": "c3b11e72_587bd3c8",
+      "revId": "13c5b60d9e352c809cbf7da929346cbbba8842a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
