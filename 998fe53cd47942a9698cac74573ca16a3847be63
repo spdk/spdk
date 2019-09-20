@@ -1,0 +1,356 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78401439_7a3f59a5",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "any concern with an endless loop here?",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0590eb1d_9e235584",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "extra line",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "979da6b2_cc955c75",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "just a question, how is looking for \u0027l\u0027 meaningful?",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95ca382b_af401e3f",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "can you use something like -EINVAL?",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70c8fab9_43489037",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "failur -\u003e failure",
+      "range": {
+        "startLine": 707,
+        "startChar": 30,
+        "endLine": 707,
+        "endChar": 36
+      },
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2be5d811_e01b6434",
+        "filename": "module/bdev/nvme/vbdev_opal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "these new ones should also be on one line (I think I commented on the others when they were introduced)",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa9f50b5_5ecf2af6",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "I believe using the new convention this would be  bdev_opal_init",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb5be994_e7e5d1bd",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "\"has been\" -\u003e \"is already\"",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fbc35235_1fedabde",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "here too... bdev_opal_revert_tper",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e59b6921_2f4bc914",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "reminder, name change throughout for the rpc",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5526141d_205a964b",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "name change (insert bdev before opal)",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f3aed09_c691d434",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "name change",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da4fe03e_beeb4a50",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1960,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "name change",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0951f408_572b625b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1966,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "up to you but I don\u0027t think \", please remember\" sounds right here :)",
+      "range": {
+        "startLine": 1966,
+        "startChar": 63,
+        "endLine": 1966,
+        "endChar": 80
+      },
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17febc3c_c9006556",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1969,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "name change",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5615e57_02982c3b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1994,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "name change",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d03f9f2_9e359ce3",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "name change",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c957331a_4d35d8ac",
+        "filename": "scripts/rpc/nvme.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "name change",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb1d940c_85b85bff",
+        "filename": "scripts/rpc/nvme.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "name change",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c842940f_672256a1",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T16:37:12Z",
+      "side": 1,
+      "message": "name changes",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
