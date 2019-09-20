@@ -1,0 +1,197 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7f29184_14ce70cd",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:56:50Z",
+      "side": 1,
+      "message": "the naming convention has been changed for RPCs.  For thi module you should use:\nbdev_opal_create and bdev_opal_delete for all related RPCs, structs, function names, etc.  This will match with all of the name changes going on now.  So everywhere you see \"construct\" and \"destruct\" update accordingly.",
+      "revId": "6ff57cdad4a7c57469b3d4557e724439b91c5b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cdf91cb_55d44ec5",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:56:50Z",
+      "side": 1,
+      "message": "Maybe this should be SPDK_JSONRPC_ERROR_INTERNAL_ERROR?",
+      "revId": "6ff57cdad4a7c57469b3d4557e724439b91c5b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d38526e_87bc7f60",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:56:50Z",
+      "side": 1,
+      "message": "same here, SPDK_JSONRPC_ERROR_INTERNAL_ERROR",
+      "revId": "6ff57cdad4a7c57469b3d4557e724439b91c5b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0a0c957_2ed78982",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:56:50Z",
+      "side": 1,
+      "message": "\"bdev name\" -\u003e \"bdev names\"",
+      "range": {
+        "startLine": 115,
+        "startChar": 24,
+        "endLine": 115,
+        "endChar": 33
+      },
+      "revId": "6ff57cdad4a7c57469b3d4557e724439b91c5b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d42c20a_150151a6",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:56:50Z",
+      "side": 1,
+      "message": "naming convention mentioned earlier....",
+      "revId": "6ff57cdad4a7c57469b3d4557e724439b91c5b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51641e94_bf74060a",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:56:50Z",
+      "side": 1,
+      "message": "SPDK_JSONRPC_ERROR_INTERNAL_ERROR",
+      "revId": "6ff57cdad4a7c57469b3d4557e724439b91c5b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7aed35c3_83230826",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1960,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:56:50Z",
+      "side": 1,
+      "message": "naming convention here too, change to bdev_opal_create (and below bdev_opal_delete)",
+      "revId": "6ff57cdad4a7c57469b3d4557e724439b91c5b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14704e19_b6eec0ba",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1968,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:56:50Z",
+      "side": 1,
+      "message": "be sure to update help messages, comments, etc.  (contract -\u003e create)",
+      "revId": "6ff57cdad4a7c57469b3d4557e724439b91c5b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25ad0ca4_7dc06237",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1981,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:56:50Z",
+      "side": 1,
+      "message": "delete instead of destruct (everywhere)",
+      "revId": "6ff57cdad4a7c57469b3d4557e724439b91c5b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0fa38594_1768fe7b",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:56:50Z",
+      "side": 1,
+      "message": "naming convention here and with destruct",
+      "revId": "6ff57cdad4a7c57469b3d4557e724439b91c5b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c6f3ca8_cb1cb420",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 704,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-20T15:56:50Z",
+      "side": 1,
+      "message": "blank line removed on accident?",
+      "revId": "6ff57cdad4a7c57469b3d4557e724439b91c5b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
