@@ -457,12 +457,6 @@ struct spdk_nvmf_rdma_poll_group {
 	TAILQ_HEAD(, spdk_nvmf_rdma_poller)		pollers;
 
 	struct spdk_nvmf_rdma_poll_group_stat		stat;
-
-	/*
-	 * buffers which are split across multiple RDMA
-	 * memory regions cannot be used by this transport.
-	 */
-	STAILQ_HEAD(, spdk_nvmf_transport_pg_cache_buf)	retired_bufs;
 };
 
 /* Assuming rdma_cm uses just one protection domain per ibv_context. */
@@ -1467,34 +1461,6 @@ nvmf_request_alloc_wrs(struct spdk_nvmf_rdma_transport *rtransport,
 	return 0;
 }
 
-/* This function is used in the rare case that we have a buffer split over multiple memory regions. */
-static int
-nvmf_rdma_replace_buffer(struct spdk_nvmf_rdma_poll_group *rgroup, void **buf)
-{
-	struct spdk_nvmf_transport_poll_group	*group = &rgroup->group;
-	struct spdk_nvmf_transport		*transport = group->transport;
-	struct spdk_nvmf_transport_pg_cache_buf	*old_buf;
-	void					*new_buf;
-
-	if (!(STAILQ_EMPTY(&group->buf_cache))) {
-		group->buf_cache_count--;
-		new_buf = STAILQ_FIRST(&group->buf_cache);
-		STAILQ_REMOVE_HEAD(&group->buf_cache, link);
-		assert(*buf != NULL);
-	} else {
-		new_buf = spdk_mempool_get(transport->data_buf_pool);
-	}
-
-	if (*buf == NULL) {
-		return -ENOMEM;
-	}
-
-	old_buf = *buf;
-	STAILQ_INSERT_HEAD(&rgroup->retired_bufs, old_buf, link);
-	*buf = new_buf;
-	return 0;
-}
-
 static bool
 nvmf_rdma_fill_wr(struct spdk_nvmf_rdma_device *device,
 		  struct spdk_nvmf_request *req, struct ibv_send_wr *wr)
@@ -1541,7 +1507,8 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 		if (spdk_unlikely(!nvmf_rdma_fill_wr(device, req, wr))) {
 			/* This is a very rare case that can occur when using DPDK version < 19.05 */
 			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions. Removing it from circulation.\n");
-			if (nvmf_rdma_replace_buffer(rgroup, &req->buffers[req->iovcnt]) == -ENOMEM) {
+			if (spdk_nvmf_replace_buffer(&rgroup->group, &rtransport->transport,
+						     &req->buffers[req->iovcnt]) == -ENOMEM) {
 				return -ENOMEM;
 			}
 			continue;
@@ -2977,7 +2944,6 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 	}
 
 	TAILQ_INIT(&rgroup->pollers);
-	STAILQ_INIT(&rgroup->retired_bufs);
 
 	pthread_mutex_lock(&rtransport->lock);
 	TAILQ_FOREACH(device, &rtransport->devices, link) {
@@ -3060,18 +3026,11 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_rdma_poller		*poller, *tmp;
 	struct spdk_nvmf_rdma_qpair		*qpair, *tmp_qpair;
-	struct spdk_nvmf_transport_pg_cache_buf	*buf, *tmp_buf;
 
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
 
 	if (!rgroup) {
 		return;
-	}
-
-	/* free all retired buffers back to the transport so we don't short the mempool. */
-	STAILQ_FOREACH_SAFE(buf, &rgroup->retired_bufs, link, tmp_buf) {
-		STAILQ_REMOVE(&rgroup->retired_bufs, buf, spdk_nvmf_transport_pg_cache_buf, link);
-		spdk_mempool_put(group->transport->data_buf_pool, buf);
 	}
 
 	TAILQ_FOREACH_SAFE(poller, &rgroup->pollers, link, tmp) {
