@@ -255,6 +255,8 @@ struct spdk_bdev_channel {
 	 */
 	uint64_t		io_outstanding;
 
+	bdev_io_tailq_t		io_submitted;
+
 	bdev_io_tailq_t		queued_resets;
 
 	uint32_t		flags;
@@ -1832,6 +1834,9 @@ _spdk_bdev_io_submit(void *ctx)
 	tsc = spdk_get_ticks();
 	bdev_io->internal.submit_tsc = tsc;
 	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_START, 0, 0, (uintptr_t)bdev_io, bdev_io->type);
+	if (!(bdev_ch->flags & BDEV_CH_QOS_ENABLED)) {
+		TAILQ_INSERT_TAIL(&bdev_ch->io_submitted, bdev_io, internal.ch_link);
+	}
 
 	if (spdk_likely(bdev_ch->flags == 0)) {
 		_spdk_bdev_io_do_submit(bdev_ch, bdev_io);
@@ -1870,6 +1875,9 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	}
 
 	if (bdev_io->internal.ch->flags & BDEV_CH_QOS_ENABLED) {
+		/* QoS bdev_io complete in the io_submit_ch so add link here */
+		TAILQ_INSERT_TAIL(&bdev_io->internal.ch->io_submitted, bdev_io,
+				  internal.ch_link);
 		if ((thread == bdev->internal.qos->thread) || !bdev->internal.qos->thread) {
 			_spdk_bdev_io_submit(bdev_io);
 		} else {
@@ -2151,6 +2159,8 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&ch->queued_resets);
 	ch->flags = 0;
 	ch->shared_resource = shared_resource;
+
+	TAILQ_INIT(&ch->io_submitted);
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
@@ -3662,6 +3672,7 @@ static inline void
 _spdk_bdev_io_complete(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
+	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
 	uint64_t tsc, tsc_diff;
 
 	if (spdk_unlikely(bdev_io->internal.in_submit_request || bdev_io->internal.io_submit_ch)) {
@@ -3686,6 +3697,10 @@ _spdk_bdev_io_complete(void *ctx)
 	tsc = spdk_get_ticks();
 	tsc_diff = tsc - bdev_io->internal.submit_tsc;
 	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io, 0);
+	if (bdev_io->type != SPDK_BDEV_IO_TYPE_RESET) {
+		assert(!TAILQ_EMPTY(&bdev_ch->io_submitted));
+		TAILQ_REMOVE(&bdev_ch->io_submitted, bdev_io, internal.ch_link);
+	}
 
 	if (bdev_io->internal.ch->histogram) {
 		spdk_histogram_data_tally(bdev_io->internal.ch->histogram, tsc_diff);
