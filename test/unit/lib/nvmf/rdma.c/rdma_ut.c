@@ -109,6 +109,13 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 {
 	uint32_t i = 0;
 
+	/* If the number of buffers is too large, then we know the I/O is larger than allowed.
+	 *  Fail it.
+	 */
+	if (num_buffers + req->num_buffers > NVMF_REQ_MAX_BUFFERS) {
+		return -EINVAL;
+	}
+
 	while (i < num_buffers) {
 		if (!(STAILQ_EMPTY(&group->buf_cache))) {
 			group->buf_cache_count--;
