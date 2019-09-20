@@ -101,6 +101,7 @@ static TAILQ_HEAD(, nvme_probe_skip_entry) g_skipped_nvme_ctrlrs = TAILQ_HEAD_IN
 			g_skipped_nvme_ctrlrs);
 
 static struct spdk_bdev_nvme_opts g_opts = {
+	.mode = "standard",
 	.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE,
 	.timeout_us = 0,
 	.retry_count = 4,
@@ -2133,6 +2134,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_string(w, "method", "bdev_nvme_set_options");
 
 	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "mode", "standard");
 	spdk_json_write_named_string(w, "action_on_timeout", action);
 	spdk_json_write_named_uint64(w, "timeout_us", g_opts.timeout_us);
 	spdk_json_write_named_uint32(w, "retry_count", g_opts.retry_count);

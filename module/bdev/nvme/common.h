@@ -56,6 +56,7 @@ enum nvme_ctrlr_mode {
 };
 
 struct spdk_bdev_nvme_opts {
+	char *mode;
 	enum spdk_bdev_timeout_action action_on_timeout;
 	uint64_t timeout_us;
 	uint32_t retry_count;

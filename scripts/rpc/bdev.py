@@ -317,11 +317,12 @@ def bdev_aio_delete(client, name):
 
 
 @deprecated_alias('set_bdev_nvme_options')
-def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry_count=None,
+def bdev_nvme_set_options(client, mode=None, action_on_timeout=None, timeout_us=None, retry_count=None,
                           nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None, io_queue_requests=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
+        mode: Selects NVMe mode for which options should be set. Default: standard
         action_on_timeout:  action to take on command time out. Valid values are: none, reset, abort (optional)
         timeout_us: Timeout for each command, in microseconds. If 0, don't track timeouts (optional)
         retry_count: The number of attempts per I/O when an I/O fails (optional)
@@ -330,6 +331,9 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry
         io_queue_requests: The number of requests allocated for each NVMe I/O queue. Default: 512 (optional)
     """
     params = {}
+
+    if mode:
+        params['mode'] = mode
 
     if action_on_timeout:
         params['action_on_timeout'] = action_on_timeout

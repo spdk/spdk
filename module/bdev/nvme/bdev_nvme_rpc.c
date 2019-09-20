@@ -69,7 +69,14 @@ rpc_decode_action_on_timeout(const struct spdk_json_val *val, void *out)
 	return 0;
 }
 
+static void
+free_rpc_bdev_nvme_set_options(struct spdk_bdev_nvme_opts *req)
+{
+	free(req->mode);
+}
+
 static const struct spdk_json_object_decoder rpc_bdev_nvme_options_decoders[] = {
+	{"mode", offsetof(struct spdk_bdev_nvme_opts, mode), spdk_json_decode_string, true},
 	{"action_on_timeout", offsetof(struct spdk_bdev_nvme_opts, action_on_timeout), rpc_decode_action_on_timeout, true},
 	{"timeout_us", offsetof(struct spdk_bdev_nvme_opts, timeout_us), spdk_json_decode_uint64, true},
 	{"retry_count", offsetof(struct spdk_bdev_nvme_opts, retry_count), spdk_json_decode_uint32, true},
@@ -99,12 +106,14 @@ spdk_rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 	rc = spdk_bdev_nvme_set_opts(&opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		free_rpc_bdev_nvme_set_options(&opts);
 		return;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
+	free_rpc_bdev_nvme_set_options(&opts);
 
 	return;
 }

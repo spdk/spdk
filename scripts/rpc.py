@@ -320,6 +320,7 @@ if __name__ == "__main__":
 
     def bdev_nvme_set_options(args):
         rpc.bdev.bdev_nvme_set_options(args.client,
+                                       mode=args.mode,
                                        action_on_timeout=args.action_on_timeout,
                                        timeout_us=args.timeout_us,
                                        retry_count=args.retry_count,
@@ -329,6 +330,8 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('bdev_nvme_set_options', aliases=['set_bdev_nvme_options'],
                               help='Set options for the bdev nvme type. This is startup command.')
+    p.add_argument('-m', '--mode',
+                   help="Selects NVMe mode for which options should be set. Default: standard")
     p.add_argument('-a', '--action-on-timeout',
                    help="Action to take on command time out. Valid valies are: none, reset, abort")
     p.add_argument('-t', '--timeout-us',
