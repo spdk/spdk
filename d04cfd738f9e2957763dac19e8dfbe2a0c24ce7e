@@ -16,6 +16,24 @@
       "revId": "d04cfd738f9e2957763dac19e8dfbe2a0c24ce7e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4735b8bc_976929e3",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-20T20:58:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c4a9d729_4812bc3b",
+      "revId": "d04cfd738f9e2957763dac19e8dfbe2a0c24ce7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
