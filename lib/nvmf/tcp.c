@@ -46,6 +46,7 @@
 #include "nvmf_internal.h"
 #include "transport.h"
 
+#include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
 #include "spdk_internal/nvme_tcp.h"
 
@@ -2312,21 +2313,27 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 	return -1;
 }
 
-static int
-nvmf_tcp_pdu_verify_dif(struct nvme_tcp_pdu *pdu,
-			const struct spdk_dif_ctx *dif_ctx)
-{
-	struct spdk_dif_error err_blk = {};
-	int rc;
+static inline enum spdk_nvme_media_error_status_code
+nvmf_tcp_dif_error_to_compl_status(uint8_t err_type) {
+	enum spdk_nvme_media_error_status_code result;
 
-	rc = spdk_dif_verify_stream(pdu->data_iov, pdu->data_iovcnt,
-				    0, pdu->data_len, pdu->dif_ctx, &err_blk);
-	if (rc != 0) {
-		SPDK_ERRLOG("DIF error detected. type=%d, offset=%" PRIu32 "\n",
-			    err_blk.err_type, err_blk.err_offset);
+	switch (err_type)
+	{
+	case SPDK_DIF_REFTAG_ERROR:
+		result = SPDK_NVME_SC_REFERENCE_TAG_CHECK_ERROR;
+		break;
+	case SPDK_DIF_APPTAG_ERROR:
+		result = SPDK_NVME_SC_APPLICATION_TAG_CHECK_ERROR;
+		break;
+	case SPDK_DIF_GUARD_ERROR:
+		result = SPDK_NVME_SC_GUARD_CHECK_ERROR;
+		break;
+	default:
+		SPDK_UNREACHABLE();
+		break;
 	}
 
-	return rc;
+	return result;
 }
 
 static void
@@ -2388,16 +2395,19 @@ spdk_nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 				  c2h_data->datao, c2h_data->datal);
 
 	if (spdk_unlikely(tcp_req->dif_insert_or_strip)) {
-		rc = nvmf_tcp_pdu_verify_dif(rsp_pdu, rsp_pdu->dif_ctx);
+		struct spdk_nvme_cpl *rsp = &tcp_req->req.rsp->nvme_cpl;
+		struct spdk_dif_error err_blk = {};
+
+		rc = spdk_dif_verify_stream(rsp_pdu->data_iov, rsp_pdu->data_iovcnt,
+					    0, rsp_pdu->data_len, rsp_pdu->dif_ctx, &err_blk);
 		if (rc != 0) {
-			/* Data digest error detected by the NVMe/TCP target is treated as non-fatal
-			 * transport error because the cause will be outside the NVMe/TCP target.
-			 *
-			 * On the other hand, treat DIF check error as fatal transport error here
-			 * here because the error is caused by the target itself. Fatal NVMe/TCP
-			 * transport error is handled by terminating the connection.
-			 */
-			tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
+			SPDK_ERRLOG("DIF error detected. type=%d, offset=%" PRIu32 "\n",
+				    err_blk.err_type, err_blk.err_offset);
+			rsp->status.sct = SPDK_NVME_SCT_MEDIA_ERROR;
+			rsp->status.sc = nvmf_tcp_dif_error_to_compl_status(err_blk.err_type);
+			STAILQ_REMOVE_HEAD(&tqpair->queued_c2h_data_tcp_req, link);
+			spdk_nvmf_tcp_pdu_put(tqpair, rsp_pdu);
+			spdk_nvmf_tcp_send_capsule_resp_pdu(tcp_req, tqpair);
 			return;
 		}
 	}
