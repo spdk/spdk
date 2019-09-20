@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f4a11d98_6f1bd97b",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-20T11:11:30Z",
+      "side": 1,
+      "message": "I don\u0027t think this is correct - you\u0027re using TAILQ_EMPTY before the queue is initialized. Let\u0027s just use the static initializer (TAILQ_HEAD_INITIALIZER), remove this function, and paste the TAILQ_EMPTY assertion at the end of each test.",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 26
+      },
+      "revId": "743e0ca9885e0af6fa8d033b1e08c98f3d645db5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
