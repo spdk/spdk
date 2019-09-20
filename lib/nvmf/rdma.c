@@ -1495,6 +1495,33 @@ nvmf_rdma_replace_buffer(struct spdk_nvmf_rdma_poll_group *rgroup, void **buf)
 	return 0;
 }
 
+static bool
+nvmf_rdma_fill_wr(struct spdk_nvmf_rdma_device *device,
+		  struct spdk_nvmf_request *req, struct ibv_send_wr *wr)
+{
+	uint64_t	translation_len;
+
+	translation_len = req->iov[req->iovcnt].iov_len;
+
+	if (!g_nvmf_hooks.get_rkey) {
+		wr->sg_list[wr->num_sge].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
+						 (uint64_t)req->iov[req->iovcnt].iov_base, &translation_len))->lkey;
+	} else {
+		wr->sg_list[wr->num_sge].lkey = spdk_mem_map_translate(device->map,
+						(uint64_t)req->iov[req->iovcnt].iov_base, &translation_len);
+	}
+
+	if (spdk_unlikely(translation_len < req->iov[req->iovcnt].iov_len)) {
+		return false;
+	}
+
+	wr->sg_list[wr->num_sge].addr = (uintptr_t)(req->iov[req->iovcnt].iov_base);
+	wr->sg_list[wr->num_sge].length = req->iov[req->iovcnt].iov_len;
+	wr->num_sge++;
+
+	return true;
+}
+
 static int
 nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 		       struct spdk_nvmf_rdma_poll_group *rgroup,
@@ -1503,8 +1530,6 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 		       struct ibv_send_wr *wr,
 		       uint32_t length)
 {
-	uint64_t	translation_len;
-
 	wr->num_sge = 0;
 	while (length) {
 		req->iov[req->iovcnt].iov_base = (void *)((uintptr_t)(req->buffers[req->iovcnt] +
@@ -1512,18 +1537,9 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 						 ~NVMF_DATA_BUFFER_MASK);
 		req->iov[req->iovcnt].iov_len  = spdk_min(length,
 						 rtransport->transport.opts.io_unit_size);
-		translation_len = req->iov[req->iovcnt].iov_len;
 
-		if (!g_nvmf_hooks.get_rkey) {
-			wr->sg_list[wr->num_sge].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-							 (uint64_t)req->iov[req->iovcnt].iov_base, &translation_len))->lkey;
-		} else {
-			wr->sg_list[wr->num_sge].lkey = spdk_mem_map_translate(device->map,
-							(uint64_t)req->iov[req->iovcnt].iov_base, &translation_len);
-		}
-
-		/* This is a very rare case that can occur when using DPDK version < 19.05 */
-		if (spdk_unlikely(translation_len < req->iov[req->iovcnt].iov_len)) {
+		if (spdk_unlikely(!nvmf_rdma_fill_wr(device, req, wr))) {
+			/* This is a very rare case that can occur when using DPDK version < 19.05 */
 			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions. Removing it from circulation.\n");
 			if (nvmf_rdma_replace_buffer(rgroup, &req->buffers[req->iovcnt]) == -ENOMEM) {
 				return -ENOMEM;
@@ -1532,10 +1548,7 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		length -= req->iov[req->iovcnt].iov_len;
-		wr->sg_list[wr->num_sge].addr = (uintptr_t)(req->iov[req->iovcnt].iov_base);
-		wr->sg_list[wr->num_sge].length = req->iov[req->iovcnt].iov_len;
 		req->iovcnt++;
-		wr->num_sge++;
 	}
 
 	return 0;
