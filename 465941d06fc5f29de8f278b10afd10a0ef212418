@@ -16,6 +16,23 @@
       "revId": "465941d06fc5f29de8f278b10afd10a0ef212418",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ef1ebb9_6a3bb16a",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T20:49:31Z",
+      "side": 1,
+      "message": "I think the RPC name should just be \"blobfs_detect\".  I don\u0027t think we need bdev in the name.  We don\u0027t pretend to support blobfs on anything except bdev right now.  And with all of the RPC renaming we have done, \"bdev_blobfs\" would indicate a bdev module named \"blobfs\" which isn\u0027t accurate (i.e. all of our RPCs are named things like bdev_malloc_create, bdev_split_create, etc.)",
+      "revId": "465941d06fc5f29de8f278b10afd10a0ef212418",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
