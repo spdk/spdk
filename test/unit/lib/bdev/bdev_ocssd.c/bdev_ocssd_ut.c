@@ -42,6 +42,7 @@
 #include "bdev/nvme/bdev_ocssd.c"
 #include "bdev/nvme/common.c"
 #include "common/lib/test_env.c"
+#include "unit/lib/json_mock.c"
 
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 DEFINE_STUB_V(spdk_bdev_io_complete_nvme_status, (struct spdk_bdev_io *bdev_io, int sct, int sc));
