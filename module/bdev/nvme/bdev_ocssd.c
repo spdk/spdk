@@ -42,6 +42,10 @@
 #include "common.h"
 #include "bdev_ocssd.h"
 
+struct ocssd_bdev {
+	struct nvme_bdev nvme_bdev;
+};
+
 struct bdev_ocssd_ns {
 	struct spdk_ocssd_geometry_data	geometry;
 };
@@ -90,6 +94,219 @@ static struct spdk_bdev_module ocssd_if = {
 };
 
 SPDK_BDEV_MODULE_REGISTER(ocssd, &ocssd_if);
+
+static void
+bdev_ocssd_free_bdev(struct ocssd_bdev *ocssd_bdev)
+{
+	if (!ocssd_bdev) {
+		return;
+	}
+
+	free(ocssd_bdev->nvme_bdev.disk.name);
+	free(ocssd_bdev);
+}
+
+static int
+bdev_ocssd_destruct(void *ctx)
+{
+	struct ocssd_bdev *ocssd_bdev = ctx;
+	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+
+	nvme_bdev_detach_bdev_from_ns(nvme_bdev);
+	bdev_ocssd_free_bdev(ocssd_bdev);
+
+	return 0;
+}
+
+static void
+bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
+{
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+}
+
+static bool
+bdev_ocssd_io_type_supported(void *ctx, enum spdk_bdev_io_type type)
+{
+	return false;
+}
+
+static struct spdk_io_channel *
+bdev_ocssd_get_io_channel(void *ctx)
+{
+	struct ocssd_bdev *ocssd_bdev = ctx;
+
+	return spdk_get_io_channel(ocssd_bdev->nvme_bdev.nvme_bdev_ctrlr);
+}
+
+static struct spdk_bdev_fn_table ocssdlib_fn_table = {
+	.destruct		= bdev_ocssd_destruct,
+	.submit_request		= bdev_ocssd_submit_request,
+	.io_type_supported	= bdev_ocssd_io_type_supported,
+	.get_io_channel		= bdev_ocssd_get_io_channel,
+};
+
+void
+bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
+		       bdev_ocssd_create_cb cb_fn, void *cb_arg)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_bdev *nvme_bdev = NULL;
+	struct ocssd_bdev *ocssd_bdev = NULL;
+	struct spdk_nvme_ns *ns;
+	struct nvme_namespace *nvme_ns;
+	struct bdev_ocssd_ns *ocssd_ns;
+	struct spdk_ocssd_geometry_data *geometry;
+	int rc = 0;
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(ctrlr_name);
+	if (!nvme_bdev_ctrlr) {
+		SPDK_ERRLOG("Unable to find controller %s\n", ctrlr_name);
+		rc = -ENODEV;
+		goto finish;
+	}
+
+	ns = spdk_nvme_ctrlr_get_ns(nvme_bdev_ctrlr->ctrlr, nsid);
+	if (!ns) {
+		SPDK_ERRLOG("Unable to retrieve namespace %"PRIu32"\n", nsid);
+		rc = -ENODEV;
+		goto finish;
+	}
+
+	if (!spdk_nvme_ns_is_active(ns)) {
+		SPDK_ERRLOG("Namespace %"PRIu32" is inactive\n", nsid);
+		rc = -EACCES;
+		goto finish;
+	}
+
+	assert(nsid <= nvme_bdev_ctrlr->num_ns);
+	nvme_ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
+	if (nvme_ns == NULL) {
+		SPDK_ERRLOG("Namespace %"PRIu32" is not initialized\n", nsid);
+		rc = -EINVAL;
+		goto finish;
+	}
+
+	if (!spdk_nvme_ctrlr_is_ocssd_ns(nvme_bdev_ctrlr->ctrlr, nvme_ns->id)) {
+		SPDK_ERRLOG("Specified namespace is not Open Channel\n");
+		rc = -EINVAL;
+		goto finish;
+	}
+
+	if (spdk_bdev_get_by_name(bdev_name) != NULL) {
+		SPDK_ERRLOG("Device with provided name (%s) already exists\n", bdev_name);
+		rc = -EEXIST;
+		goto finish;
+	}
+
+	/* Only allow one bdev per namespace for now */
+	if (!TAILQ_EMPTY(&nvme_ns->bdevs)) {
+		SPDK_ERRLOG("Namespace %"PRIu32" was already claimed by bdev %s\n",
+			    nsid, nvme_bdev->disk.name);
+		rc = -EEXIST;
+		goto finish;
+	}
+
+	ocssd_bdev = calloc(1, sizeof(*ocssd_bdev));
+	if (!ocssd_bdev) {
+		rc = -ENOMEM;
+		goto finish;
+	}
+
+	nvme_bdev = &ocssd_bdev->nvme_bdev;
+	nvme_bdev->ns = ns;
+	nvme_bdev->nvme_ns = nvme_ns;
+	nvme_bdev->nvme_bdev_ctrlr = nvme_bdev_ctrlr;
+
+	ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
+	geometry = &ocssd_ns->geometry;
+
+	nvme_bdev->disk.name = strdup(bdev_name);
+	if (!nvme_bdev->disk.name) {
+		rc = -ENOMEM;
+		goto finish;
+	}
+
+	nvme_bdev->disk.product_name = "Open Channel SSD";
+	nvme_bdev->disk.ctxt = ocssd_bdev;
+	nvme_bdev->disk.fn_table = &ocssdlib_fn_table;
+	nvme_bdev->disk.module = &ocssd_if;
+	nvme_bdev->disk.blocklen = spdk_nvme_ns_get_extended_sector_size(nvme_bdev->ns);
+	nvme_bdev->disk.zoned = true;
+	nvme_bdev->disk.blockcnt = geometry->num_grp * geometry->num_pu *
+				   geometry->num_chk * geometry->clba;
+	nvme_bdev->disk.zone_size = geometry->clba;
+	nvme_bdev->disk.max_open_zones = geometry->maxoc;
+	nvme_bdev->disk.optimal_open_zones = geometry->num_grp * geometry->num_pu;
+	nvme_bdev->disk.write_unit_size = geometry->ws_opt;
+
+	if (geometry->maxocpu != 0 && geometry->maxocpu != geometry->maxoc) {
+		SPDK_WARNLOG("Maximum open chunks per PU is not zero. Reducing the maximum "
+			     "number of open zones: %"PRIu32" -> %"PRIu32"\n",
+			     geometry->maxoc, geometry->maxocpu);
+		nvme_bdev->disk.max_open_zones = geometry->maxocpu;
+	}
+
+	rc = spdk_bdev_register(&nvme_bdev->disk);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("Failed to register bdev %s\n", nvme_bdev->disk.name);
+		goto finish;
+	}
+
+	nvme_bdev_attach_bdev_to_ns(nvme_ns, nvme_bdev);
+finish:
+	if (spdk_unlikely(rc != 0)) {
+		bdev_ocssd_free_bdev(ocssd_bdev);
+		bdev_name = NULL;
+	}
+
+	cb_fn(bdev_name, rc, cb_arg);
+}
+
+struct bdev_ocssd_delete_ctx {
+	bdev_ocssd_delete_cb	cb_fn;
+	void			*cb_arg;
+};
+
+static void
+bdev_ocssd_unregister_cb(void *cb_arg, int status)
+{
+	struct bdev_ocssd_delete_ctx *delete_ctx = cb_arg;
+
+	delete_ctx->cb_fn(status, delete_ctx->cb_arg);
+	free(delete_ctx);
+}
+
+void
+bdev_ocssd_delete_bdev(const char *bdev_name, bdev_ocssd_delete_cb cb_fn, void *cb_arg)
+{
+	struct spdk_bdev *bdev;
+	struct bdev_ocssd_delete_ctx *delete_ctx;
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	if (!bdev) {
+		SPDK_ERRLOG("Unable to find bdev %s\n", bdev_name);
+		cb_fn(-ENODEV, cb_arg);
+		return;
+	}
+
+	if (bdev->module != &ocssd_if) {
+		SPDK_ERRLOG("Specified bdev %s is not an OCSSD bdev\n", bdev_name);
+		cb_fn(-EINVAL, cb_arg);
+		return;
+	}
+
+	delete_ctx = calloc(1, sizeof(*delete_ctx));
+	if (!delete_ctx) {
+		SPDK_ERRLOG("Unable to allocate deletion context\n");
+		cb_fn(-ENOMEM, cb_arg);
+		return;
+	}
+
+	delete_ctx->cb_fn = cb_fn;
+	delete_ctx->cb_arg = cb_arg;
+
+	spdk_bdev_unregister(bdev, bdev_ocssd_unregister_cb, delete_ctx);
+}
 
 struct bdev_ocssd_init_ns_ctx {
 	struct nvme_namespace		*nvme_ns;
