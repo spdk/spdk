@@ -55,6 +55,8 @@ struct vbdev_ocf_qcxt {
 	/* Base devices channels */
 	struct spdk_io_channel      *cache_ch;
 	struct spdk_io_channel      *core_ch;
+	/* If true, we have to free this context on queue stop */
+	bool allocated;
 	/* Link to per-bdev list of queue contexts */
 	TAILQ_ENTRY(vbdev_ocf_qcxt)  tailq;
 };
