@@ -730,6 +730,9 @@ vbdev_ocf_ctx_queue_stop(ocf_queue_t q)
 		spdk_put_io_channel(qctx->cache_ch);
 		spdk_put_io_channel(qctx->core_ch);
 		spdk_poller_unregister(&qctx->poller);
+		if (qctx->allocated) {
+			free(qctx);
+		}
 	}
 }
 
@@ -779,6 +782,7 @@ io_device_destroy_cb(void *io_device, void *ctx_buf)
 		memcpy(copy, qctx, sizeof(*copy));
 		spdk_poller_unregister(&qctx->poller);
 		copy->poller = spdk_poller_register(queue_poll, copy, 0);
+		copy->allocated = true;
 	} else {
 		SPDK_ERRLOG("Unable to stop OCF queue properly: %s\n",
 			    spdk_strerror(ENOMEM));
