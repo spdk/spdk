@@ -112,6 +112,28 @@ bdev_ocssd_config_json(struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+void
+bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *ns)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_bdev *nvme_bdev;
+
+	TAILQ_FOREACH(nvme_bdev, &ns->bdevs, tailq) {
+		nvme_bdev_ctrlr = nvme_bdev->nvme_bdev_ctrlr;
+
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "bdev_ocssd_create");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "ctrlr_name", nvme_bdev_ctrlr->name);
+		spdk_json_write_named_string(w, "bdev_name", nvme_bdev->disk.name);
+		spdk_json_write_named_uint32(w, "nsid", nvme_bdev->nvme_ns->id);
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+}
+
 static int
 bdev_ocssd_get_ctx_size(void)
 {
