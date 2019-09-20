@@ -141,6 +141,32 @@ err_exit:
 	return -ENOMEM;
 }
 
+int
+spdk_nvmf_replace_buffer(struct spdk_nvmf_transport_poll_group *group,
+			 struct spdk_nvmf_transport *transport, void **buf)
+{
+	struct spdk_nvmf_transport_pg_cache_buf	*old_buf;
+	void					*new_buf;
+
+	if (!(STAILQ_EMPTY(&group->buf_cache))) {
+		group->buf_cache_count--;
+		new_buf = STAILQ_FIRST(&group->buf_cache);
+		STAILQ_REMOVE_HEAD(&group->buf_cache, link);
+		assert(*buf != NULL);
+	} else {
+		new_buf = spdk_mempool_get(transport->data_buf_pool);
+	}
+
+	if (*buf == NULL) {
+		return -ENOMEM;
+	}
+
+	old_buf = *buf;
+	STAILQ_INSERT_HEAD(&group->retired_bufs, old_buf, link);
+	*buf = new_buf;
+	return 0;
+}
+
 uint64_t
 spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t *size)
 {
@@ -201,8 +227,9 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	STAILQ_INIT(&group.group.buf_cache);
 	group.group.buf_cache_size = 0;
 	group.group.buf_cache_count = 0;
+	STAILQ_INIT(&group.group.retired_bufs);
 	group.group.transport = &rtransport.transport;
-	STAILQ_INIT(&group.retired_bufs);
+	STAILQ_INIT(&group.group.retired_bufs);
 	poller.group = &group;
 	rqpair.poller = &poller;
 	rqpair.max_send_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
@@ -524,10 +551,10 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 			~NVMF_DATA_BUFFER_MASK));
 	CU_ASSERT(rdma_req.data.wr.sg_list[0].length == rtransport.transport.opts.io_unit_size / 2);
 	CU_ASSERT(rdma_req.data.wr.sg_list[0].lkey == g_rdma_mr.lkey);
-	buffer_ptr = STAILQ_FIRST(&group.retired_bufs);
+	buffer_ptr = STAILQ_FIRST(&group.group.retired_bufs);
 	CU_ASSERT(buffer_ptr == &buffer);
-	STAILQ_REMOVE(&group.retired_bufs, buffer_ptr, spdk_nvmf_transport_pg_cache_buf, link);
-	CU_ASSERT(STAILQ_EMPTY(&group.retired_bufs));
+	STAILQ_REMOVE(&group.group.retired_bufs, buffer_ptr, spdk_nvmf_transport_pg_cache_buf, link);
+	CU_ASSERT(STAILQ_EMPTY(&group.group.retired_bufs));
 
 	reset_nvmf_rdma_request(&rdma_req);
 }

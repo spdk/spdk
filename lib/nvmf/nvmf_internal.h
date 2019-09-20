@@ -116,6 +116,10 @@ struct spdk_nvmf_transport_poll_group {
 	STAILQ_HEAD(, spdk_nvmf_transport_pg_cache_buf)			buf_cache;
 	uint32_t							buf_cache_count;
 	uint32_t							buf_cache_size;
+	/* buffers which are split across multiple (RDMA) memory regions
+	 * cannot be used by this transport.
+	 */
+	STAILQ_HEAD(, spdk_nvmf_transport_pg_cache_buf)			retired_bufs;
 	struct spdk_nvmf_poll_group					*group;
 	TAILQ_ENTRY(spdk_nvmf_transport_poll_group)			link;
 };
@@ -391,6 +395,8 @@ int spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 				  struct spdk_nvmf_transport_poll_group *group,
 				  struct spdk_nvmf_transport *transport,
 				  uint32_t num_buffers);
+int spdk_nvmf_replace_buffer(struct spdk_nvmf_transport_poll_group *group,
+			     struct spdk_nvmf_transport *transport, void **buf);
 
 bool spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx *dif_ctx);
 

@@ -198,6 +198,7 @@ spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 
 	STAILQ_INIT(&group->pending_buf_queue);
 	STAILQ_INIT(&group->buf_cache);
+	STAILQ_INIT(&group->retired_bufs);
 
 	if (transport->opts.buf_cache_size) {
 		group->buf_cache_count = 0;
@@ -237,6 +238,11 @@ spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *gr
 
 	STAILQ_FOREACH_SAFE(buf, &group->buf_cache, link, tmp) {
 		STAILQ_REMOVE(&group->buf_cache, buf, spdk_nvmf_transport_pg_cache_buf, link);
+		spdk_mempool_put(group->transport->data_buf_pool, buf);
+	}
+	/* free all retired buffers back to the transport so we don't short the mempool. */
+	STAILQ_FOREACH_SAFE(buf, &group->retired_bufs, link, tmp) {
+		STAILQ_REMOVE(&group->retired_bufs, buf, spdk_nvmf_transport_pg_cache_buf, link);
 		spdk_mempool_put(group->transport->data_buf_pool, buf);
 	}
 	group->transport->ops->poll_group_destroy(group);
@@ -428,4 +434,31 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 err_exit:
 	spdk_nvmf_request_free_buffers(req, group, transport);
 	return -ENOMEM;
+}
+
+/* This function is used in the rare case that we have a buffer split over multiple memory regions. */
+int
+spdk_nvmf_replace_buffer(struct spdk_nvmf_transport_poll_group *group,
+			 struct spdk_nvmf_transport *transport, void **buf)
+{
+	struct spdk_nvmf_transport_pg_cache_buf	*old_buf;
+	void					*new_buf;
+
+	if (!(STAILQ_EMPTY(&group->buf_cache))) {
+		group->buf_cache_count--;
+		new_buf = STAILQ_FIRST(&group->buf_cache);
+		STAILQ_REMOVE_HEAD(&group->buf_cache, link);
+		assert(*buf != NULL);
+	} else {
+		new_buf = spdk_mempool_get(transport->data_buf_pool);
+	}
+
+	if (*buf == NULL) {
+		return -ENOMEM;
+	}
+
+	old_buf = *buf;
+	STAILQ_INSERT_HEAD(&group->retired_bufs, old_buf, link);
+	*buf = new_buf;
+	return 0;
 }
