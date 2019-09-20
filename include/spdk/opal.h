@@ -164,6 +164,8 @@ struct spdk_opal_locking_range_info {
 
 struct spdk_opal_dev;
 
+typedef void (*spdk_opal_revert_cb)(struct spdk_opal_dev *dev, void *ctx, int rc);
+
 struct spdk_opal_dev *spdk_opal_init_dev(void *dev_handler);
 
 void spdk_opal_close(struct spdk_opal_dev *dev);
@@ -173,7 +175,32 @@ bool spdk_opal_supported(struct spdk_opal_dev *dev);
 
 int spdk_opal_cmd_scan(struct spdk_opal_dev *dev);
 int spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd);
+
+/**
+ * Users should periodically call spdk_opal_revert_poll to check if the response is received.
+ * Once a final result is received, no matter success or failure, dev->revert_cb_fn will be called.
+ * Error code is put to dev->revert_cb_fn.
+ *
+ * Return: -EAGAIN for no result yet. 0 for final result received.
+ */
+int spdk_opal_revert_poll(struct spdk_opal_dev *dev);
+
+/**
+ * asynchronous function: Just send cmd and return.
+ *
+ * Users should periodically call spdk_opal_revert_poll to check if the response is received.
+ * Because usually revert TPer operation will take a while.
+ */
+int spdk_opal_cmd_revert_tper_async(struct spdk_opal_dev *dev, const char *passwd,
+				    spdk_opal_revert_cb cb_fn, void *cb_ctx);
+
+/**
+ * synchronous function: send and then receive.
+ *
+ * Wait until response is received.
+ */
 int spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd);
+
 int spdk_opal_cmd_activate_locking_sp(struct spdk_opal_dev *dev, const char *passwd);
 int spdk_opal_cmd_lock_unlock(struct spdk_opal_dev *dev, enum spdk_opal_user user,
 			      enum spdk_opal_lock_state flag, enum spdk_opal_locking_range locking_range,
@@ -198,6 +225,8 @@ int spdk_opal_cmd_erase_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_
 
 struct spdk_opal_locking_range_info *spdk_opal_get_locking_range_info(struct spdk_opal_dev *dev,
 		enum spdk_opal_locking_range id);
+void spdk_opal_free_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_locking_range id);
+
 uint8_t spdk_opal_get_max_locking_ranges(struct spdk_opal_dev *dev);
 
 #endif
