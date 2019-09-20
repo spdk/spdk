@@ -882,7 +882,7 @@ opal_discovery0_end(struct spdk_opal_dev *dev)
 			supported = true;
 			break;
 		default:
-			SPDK_NOTICELOG("Unknow feature code: %d\n", feature_code);
+			SPDK_INFOLOG(SPDK_LOG_OPAL, "Unknow feature code: %d\n", feature_code);
 		}
 		cpos += body->tper.length + 4;
 	}
@@ -893,7 +893,7 @@ opal_discovery0_end(struct spdk_opal_dev *dev)
 	}
 
 	if (single_user == false) {
-		SPDK_NOTICELOG("Single User Mode Not Supported\n");
+		SPDK_INFOLOG(SPDK_LOG_OPAL, "Single User Mode Not Supported\n");
 	}
 
 	if (found_com_id == false) {
@@ -1062,7 +1062,6 @@ opal_start_generic_session(struct spdk_opal_dev *dev,
 
 	return opal_finalize_and_send(dev, 1, opal_start_session_cb, NULL);
 }
-
 
 static int
 opal_start_anybody_adminsp_session(struct spdk_opal_dev *dev)

@@ -44,7 +44,7 @@
 #define OPAL_UID_LENGTH			8
 #define OPAL_MAX_LRS			8 /* minimum 8 defined by spec */
 
-#define SPDK_OPAL_TPER_TIMEOUT		30 /* seconds */
+#define SPDK_OPAL_TPER_TIMEOUT		600 /* seconds */
 
 #define GENERIC_HOST_SESSION_NUM	0x69
 
