@@ -105,13 +105,15 @@ int
 spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			      struct spdk_nvmf_transport_poll_group *group,
 			      struct spdk_nvmf_transport *transport,
-			      uint32_t num_buffers)
+			      uint32_t length)
 {
+	uint32_t num_buffers;
 	uint32_t i = 0;
 
 	/* If the number of buffers is too large, then we know the I/O is larger than allowed.
 	 *  Fail it.
 	 */
+	num_buffers = SPDK_CEIL_DIV(length, transport->opts.io_unit_size);
 	if (num_buffers + req->num_buffers > NVMF_REQ_MAX_BUFFERS) {
 		return -EINVAL;
 	}

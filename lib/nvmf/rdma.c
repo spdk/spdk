@@ -1529,7 +1529,6 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvmf_rdma_qpair		*rqpair;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_request		*req = &rdma_req->req;
-	uint32_t				num_buffers;
 	uint32_t				i = 0;
 	int					rc = 0;
 
@@ -1537,10 +1536,8 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	rgroup = rqpair->poller->group;
 	req->iovcnt = 0;
 
-	num_buffers = SPDK_CEIL_DIV(req->length, rtransport->transport.opts.io_unit_size);
-
 	if (spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport,
-					  num_buffers)) {
+					  req->length)) {
 		return -ENOMEM;
 	}
 
@@ -1581,7 +1578,6 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	struct spdk_nvmf_request		*req = &rdma_req->req;
 	struct spdk_nvme_sgl_descriptor		*inline_segment, *desc;
 	uint32_t				num_sgl_descriptors;
-	uint32_t				num_buffers = 0;
 	uint32_t				i;
 	int					rc;
 
@@ -1613,9 +1609,8 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 			goto err_exit;
 		}
 
-		num_buffers = SPDK_CEIL_DIV(desc->keyed.length, rtransport->transport.opts.io_unit_size);
 		rc = spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport,
-						   num_buffers);
+						   desc->keyed.length);
 		if (rc != 0) {
 			goto err_exit;
 		}

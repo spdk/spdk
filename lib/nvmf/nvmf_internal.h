@@ -394,7 +394,7 @@ void spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 int spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 				  struct spdk_nvmf_transport_poll_group *group,
 				  struct spdk_nvmf_transport *transport,
-				  uint32_t num_buffers);
+				  uint32_t length);
 int spdk_nvmf_replace_buffer(struct spdk_nvmf_transport_poll_group *group,
 			     struct spdk_nvmf_transport *transport, void **buf);
 
