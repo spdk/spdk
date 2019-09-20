@@ -1960,6 +1960,25 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=ioat_scan_copy_engine)
 
     # opal
+    def bdev_nvme_opal_init(args):
+        rpc.nvme.bdev_nvme_opal_init(args.client,
+                                     base_bdev_name=args.base_bdev_name,
+                                     password=args.password)
+
+    p = subparsers.add_parser('bdev_nvme_opal_init', help='take ownership and activate')
+    p.add_argument('-b', '--base_bdev_name', help='nvme bdev')
+    p.add_argument('-p', '--password', help='password for admin')
+    p.set_defaults(func=bdev_nvme_opal_init)
+
+    def bdev_nvme_opal_revert(args):
+        rpc.nvme.bdev_nvme_opal_revert(args.client,
+                                       base_bdev_name=args.base_bdev_name,
+                                       password=args.password)
+    p = subparsers.add_parser('bdev_nvme_opal_revert', help='Revert to default factory settings')
+    p.add_argument('-b', '--base_bdev_name', help='nvme bdev')
+    p.add_argument('-p', '--password', help='password')
+    p.set_defaults(func=bdev_nvme_opal_revert)
+
     def bdev_opal_create(args):
         print_array(rpc.bdev.bdev_opal_create(args.client,
                                               base_bdev_name=args.base_bdev_name,
@@ -1975,6 +1994,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-l', '--range_length', help='locking range length', type=int)
     p.add_argument('-p', '--password', help='password for admin')
     p.set_defaults(func=bdev_opal_create)
+
+    def bdev_opal_get_info(args):
+        print_dict(rpc.bdev.bdev_opal_get_info(args.client,
+                                               bdev_name=args.bdev_name,
+                                               password=args.password))
+
+    p = subparsers.add_parser('bdev_opal_get_info', help='get opal locking range info for this bdev')
+    p.add_argument('-b', '--bdev_name', help='opal bdev')
+    p.add_argument('-p', '--password', help='password')
+    p.set_defaults(func=bdev_opal_get_info)
 
     def bdev_opal_delete(args):
         rpc.bdev.bdev_opal_delete(args.client,
