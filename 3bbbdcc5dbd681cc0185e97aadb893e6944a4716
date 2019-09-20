@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc99d51b_691d432f",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T21:41:31Z",
+      "side": 1,
+      "message": "We should only change the RPC name - not the name of this C function.  This C function is part of the public NVMf API so we shouldn\u0027t change it.",
+      "revId": "3bbbdcc5dbd681cc0185e97aadb893e6944a4716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9da0864a_bdffd059",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T21:41:31Z",
+      "side": 1,
+      "message": "we shouldn\u0027t change the C API",
+      "revId": "3bbbdcc5dbd681cc0185e97aadb893e6944a4716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
