@@ -87,7 +87,7 @@ function tgt_check_notifications() {
                 fi
 
                 shift
-        done < <(tgt_rpc get_notifications -i ${last_event_id} | jq -r '.[] | "\(.type):\(.ctx):\(.id)"')
+        done < <(tgt_rpc notify_get_notifications -i ${last_event_id} | jq -r '.[] | "\(.type):\(.ctx):\(.id)"')
 
         $rc
 
