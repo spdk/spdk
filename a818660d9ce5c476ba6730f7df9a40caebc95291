@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a4585ad_6525c923",
+        "filename": "module/blobfs/bdev/blobfs_fuse.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-20T21:07:16Z",
+      "side": 1,
+      "message": "This copies almost all of the code from test/blobfs/fuse/fuse.c.  We don\u0027t want two copies of the same code.",
+      "revId": "a818660d9ce5c476ba6730f7df9a40caebc95291",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
