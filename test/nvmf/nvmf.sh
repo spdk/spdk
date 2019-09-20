@@ -50,6 +50,7 @@ run_test suite test/nvmf/host/perf.sh $TEST_ARGS
 #run_test test/nvmf/host/identify_kernel_nvmf.sh $TEST_ARGS
 run_test suite test/nvmf/host/aer.sh $TEST_ARGS
 run_test suite test/nvmf/host/fio.sh $TEST_ARGS
+run_test suite test/nvmf/host/target_disconnect.sh $TEST_ARGS
 
 timing_exit host
 
