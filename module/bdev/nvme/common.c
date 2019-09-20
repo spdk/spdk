@@ -32,6 +32,8 @@
  */
 
 #include "spdk/env.h"
+#include "spdk/nvme_ocssd.h"
+#include "bdev_ocssd.h"
 #include "common.h"
 
 struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_bdev_ctrlrs);
@@ -142,6 +144,10 @@ bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	assert(nvme_bdev_ctrlr->destruct);
 	if (nvme_bdev_ctrlr->opal_dev) {
 		spdk_opal_close(nvme_bdev_ctrlr->opal_dev);
+	}
+
+	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		spdk_bdev_ocssd_fini_ctrlr(nvme_bdev_ctrlr);
 	}
 
 	spdk_io_device_unregister(nvme_bdev_ctrlr, bdev_nvme_unregister_cb);

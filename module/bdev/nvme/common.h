@@ -50,6 +50,8 @@ enum nvme_ctrlr_mode {
 	SPDK_NVME_FTL_CTRLR
 };
 
+struct ocssd_bdev_ctrlr;
+
 struct nvme_bdev_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -78,6 +80,8 @@ struct nvme_bdev_ctrlr {
 
 	struct spdk_poller		*adminq_timer_poller;
 
+	struct ocssd_bdev_ctrlr		*ocssd_ctrlr;
+
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;
 };
@@ -105,6 +109,8 @@ struct nvme_async_probe_ctx {
 	bool probe_done;
 	spdk_bdev_create_nvme_fn cb_fn;
 	void *cb_ctx;
+	spdk_bdev_create_nvme_fn create_cb_fn;
+	void *create_cb_ctx;
 };
 
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);

@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "bdev_nvme.h"
+#include "bdev_ocssd.h"
 
 #include "spdk/config.h"
 #include "spdk/conf.h"
@@ -932,6 +933,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	     uint32_t prchk_flags)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	int rc;
 
 	nvme_bdev_ctrlr = calloc(1, sizeof(*nvme_bdev_ctrlr));
 	if (nvme_bdev_ctrlr == NULL) {
@@ -940,6 +942,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	}
 	nvme_bdev_ctrlr->num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 
+	nvme_bdev_ctrlr->mode = SPDK_NVME_STANDARD_CTRLR;
 	nvme_bdev_ctrlr->adminq_timer_poller = NULL;
 	nvme_bdev_ctrlr->ctrlr = ctrlr;
 	nvme_bdev_ctrlr->ref = 0;
@@ -955,6 +958,18 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		free(nvme_bdev_ctrlr->name);
 		free(nvme_bdev_ctrlr);
 		return -ENOMEM;
+	}
+
+	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		nvme_bdev_ctrlr->mode = SPDK_NVME_OCSSD_CTRLR;
+
+		rc = spdk_bdev_ocssd_init_ctrlr(nvme_bdev_ctrlr);
+		if (spdk_unlikely(rc != 0)) {
+			SPDK_ERRLOG("Unable to initialize OCSSD ctrlr\n");
+			free(nvme_bdev_ctrlr->name);
+			free(nvme_bdev_ctrlr);
+			return rc;
+		}
 	}
 
 	nvme_bdev_ctrlr->prchk_flags = prchk_flags;
@@ -981,8 +996,6 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	    SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
 		nvme_bdev_ctrlr->opal_dev = spdk_opal_init_dev(nvme_bdev_ctrlr->ctrlr);
 	}
-
-	nvme_bdev_ctrlr->mode = SPDK_NVME_STANDARD_CTRLR;
 
 	return 0;
 }
@@ -1233,7 +1246,9 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
+	if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
+		spdk_bdev_ocssd_create_bdevs(ctx, create_bdevs_cb, ctx);
+	} else {
 		bdev_nvme_create_bdevs(ctx, create_bdevs_cb, ctx);
 	}
 }
