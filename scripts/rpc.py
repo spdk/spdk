@@ -1984,11 +1984,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=bdev_nvme_send_cmd)
 
     # Notifications
-    def get_notification_types(args):
-        print_dict(rpc.notify.get_notification_types(args.client))
+    def notify_get_types(args):
+        print_dict(rpc.notify.notify_get_types(args.client))
 
-    p = subparsers.add_parser('get_notification_types', help='List available notifications that user can subscribe to.')
-    p.set_defaults(func=get_notification_types)
+    p = subparsers.add_parser('notify_get_types', aliases=['get_notification_types'],
+                              help='List available notifications that user can subscribe to.')
+    p.set_defaults(func=notify_get_types)
 
     def get_notifications(args):
         ret = rpc.notify.get_notifications(args.client,

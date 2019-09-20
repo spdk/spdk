@@ -5422,7 +5422,7 @@ Example response:
 
 # Notifications
 
-## get_notification_types {#rpc_get_notification_types}
+## notify_get_types {#rpc_notify_get_types}
 
 Return list of all supported notification types.
 
@@ -5441,7 +5441,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "get_notification_types",
+  "method": "notify_get_types",
   "id": 1
 }
 ~~~

@@ -41,15 +41,15 @@
 #include "spdk_internal/log.h"
 
 static int
-get_notification_types_cb(const struct spdk_notify_type *type, void *ctx)
+notify_get_types_cb(const struct spdk_notify_type *type, void *ctx)
 {
 	spdk_json_write_string((struct spdk_json_write_ctx *)ctx, spdk_notify_type_get_name(type));
 	return 0;
 }
 
 static void
-spdk_rpc_get_notification_types(struct spdk_jsonrpc_request *request,
-				const struct spdk_json_val *params)
+spdk_rpc_notify_get_types(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 
@@ -61,12 +61,13 @@ spdk_rpc_get_notification_types(struct spdk_jsonrpc_request *request,
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
-	spdk_notify_foreach_type(get_notification_types_cb, w);
+	spdk_notify_foreach_type(notify_get_types_cb, w);
 	spdk_json_write_array_end(w);
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_notification_types", spdk_rpc_get_notification_types, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("notify_get_types", spdk_rpc_notify_get_types, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(notify_get_types, get_notification_types)
 
 struct rpc_get_notifications {
 	uint64_t id;
