@@ -2530,6 +2530,10 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 	if (ctrlr->keep_alive_interval_ticks) {
 		nvme_ctrlr_keep_alive(ctrlr);
 	}
+	if (ctrlr->adminq->transport_qp_is_failed) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return spdk_nvme_ctrlr_reset(ctrlr);
+	}
 	num_completions = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
