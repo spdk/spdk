@@ -69,6 +69,9 @@
 /* number of STAILQ entries for holding pending RDMA CM events. */
 #define NVME_RDMA_NUM_CM_EVENTS			256
 
+/* CM event processing timeout */
+#define NVME_RDMA_QPAIR_CM_EVENT_TIMEOUT_S	3
+
 struct spdk_nvmf_cmd {
 	struct spdk_nvme_cmd cmd;
 	struct spdk_nvme_sgl_descriptor sgl[NVME_RDMA_MAX_SGL_DESCRIPTORS];
@@ -348,6 +351,7 @@ nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
 			enum rdma_cm_event_type evt)
 {
 	struct nvme_rdma_ctrlr	*rctrlr;
+	uint64_t timeout_ticks;
 	int	rc = 0;
 
 	if (rqpair->evt != NULL) {
@@ -357,10 +361,15 @@ nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
 		}
 	}
 
+	timeout_ticks = NVME_RDMA_QPAIR_CM_EVENT_TIMEOUT_S * spdk_get_ticks_hz() + spdk_get_ticks();
 	rctrlr = nvme_rdma_ctrlr(rqpair->qpair.ctrlr);
 	assert(rctrlr != NULL);
-	while (!rqpair->evt) {
+	while (!rqpair->evt && spdk_get_ticks() < timeout_ticks) {
 		nvme_rdma_poll_events(rctrlr);
+	}
+
+	if (rqpair->evt == NULL) {
+		return -EADDRNOTAVAIL;
 	}
 
 	if (rqpair->evt->event != evt) {
