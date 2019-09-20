@@ -195,7 +195,7 @@
             "model_number": "SPDK_Controller1",
             "nqn": "nqn.2016-06.io.spdk:cnode1"
           },
-          "method": "nvmf_subsystem_create"
+          "method": "nvmf_create_subsystem"
         },
         {
           "params": {
@@ -243,7 +243,7 @@
             "model_number": "SPDK_Controller2",
             "nqn": "nqn.2016-06.io.spdk:cnode2"
           },
-          "method": "nvmf_subsystem_create"
+          "method": "nvmf_create_subsystem"
         },
         {
           "method": "nvmf_subsystem_add_listener",

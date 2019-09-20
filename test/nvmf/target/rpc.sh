@@ -56,7 +56,7 @@ MALLOC_BLOCK_SIZE=512
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc1
 
 # Disallow host NQN and make sure connect fails
-$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
 $rpc_py nvmf_subsystem_allow_any_host -d nqn.2016-06.io.spdk:cnode1
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
@@ -85,7 +85,7 @@ $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 # do frequent add delete of namespaces with different nsid.
 for i in $(seq 1 $times)
 do
-	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001
+	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1 -n 5
 	$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode1
@@ -103,7 +103,7 @@ done
 # do frequent add delete.
 for i in $(seq 1 $times)
 do
-	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001
+	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
 	$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode1

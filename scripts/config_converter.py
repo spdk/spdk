@@ -355,11 +355,11 @@ def get_nvmf_subsystem_json(config, section):
                     "bdev_name": items[0],
                 })
     # Get parameters: nqn, allow_any_host, serial_number
-    # for nvmf_subsystem_create rpc method
+    # for nvmf_create_subsystem rpc method
     parameters = to_json_params(params[1:5])
     nvmf_subsystem_methods.append({
         "params": parameters,
-        "method": "nvmf_subsystem_create"
+        "method": "nvmf_create_subsystem"
     })
     for listen in listen_address:
         nvmf_subsystem_methods.append({

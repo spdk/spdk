@@ -25,7 +25,7 @@ $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 null_bdevs="$($rpc_py bdev_null_create Null0 $NULL_BDEV_SIZE $NULL_BLOCK_SIZE) "
 null_bdevs+="$($rpc_py bdev_null_create Null1 $NULL_BDEV_SIZE $NULL_BLOCK_SIZE)"
 
-$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 for null_bdev in $null_bdevs; do
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $null_bdev
 done

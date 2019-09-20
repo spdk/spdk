@@ -3836,7 +3836,7 @@ Example response:
 }
 ~~~
 
-## nvmf_subsystem_create method {#rpc_nvmf_subsystem_create}
+## nvmf_create_subsystem method {#rpc_nvmf_create_subsystem}
 
 Construct an NVMe over Fabrics target subsystem.
 
@@ -3859,7 +3859,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "nvmf_subsystem_create",
+  "method": "nvmf_create_subsystem",
   "params": {
     "nqn": "nqn.2016-06.io.spdk:cnode1",
     "allow_any_host": false,
