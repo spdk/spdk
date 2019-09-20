@@ -6,9 +6,10 @@ def notify_get_types(client):
     return client.call("notify_get_types")
 
 
-def get_notifications(client,
-                      id=None,
-                      max=None):
+@deprecated_alias('get_notifications')
+def notify_get_notifications(client,
+                             id=None,
+                             max=None):
     """
 
     Args:
@@ -26,4 +27,4 @@ def get_notifications(client,
     if max:
         params['max'] = max
 
-    return client.call("get_notifications", params)
+    return client.call("notify_get_notifications", params)
