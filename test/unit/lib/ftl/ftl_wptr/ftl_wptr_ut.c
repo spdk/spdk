@@ -109,7 +109,7 @@ setup_wptr_test(struct spdk_ftl_dev **dev, const struct base_bdev_geometry *geo)
 
 	t_dev = test_init_ftl_dev(geo);
 	for (i = 0; i < ftl_get_num_bands(t_dev); ++i) {
-		test_init_ftl_band(t_dev, i);
+		test_init_ftl_band(t_dev, i, geo->zone_size);
 		t_dev->bands[i].state = FTL_BAND_STATE_CLOSED;
 		ftl_band_set_state(&t_dev->bands[i], FTL_BAND_STATE_FREE);
 	}
@@ -155,7 +155,6 @@ test_wptr(void)
 
 		for (lbk = 0, offset = 0; lbk < ftl_get_num_blocks_in_zone(dev) / xfer_size; ++lbk) {
 			for (zone = 0; zone < band->num_zones; ++zone) {
-				CU_ASSERT_EQUAL(wptr->addr.offset, (lbk * xfer_size));
 				CU_ASSERT_EQUAL(wptr->offset, offset);
 				ftl_wptr_advance(wptr, xfer_size);
 				offset += xfer_size;
@@ -163,7 +162,6 @@ test_wptr(void)
 		}
 
 		CU_ASSERT_EQUAL(band->state, FTL_BAND_STATE_FULL);
-		CU_ASSERT_EQUAL(wptr->addr.offset, ftl_get_num_blocks_in_zone(dev));
 
 		ftl_band_set_state(band, FTL_BAND_STATE_CLOSING);
 
