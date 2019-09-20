@@ -1614,6 +1614,11 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 
 	num_sgl_descriptors = inline_segment->unkeyed.length / sizeof(struct spdk_nvme_sgl_descriptor);
 	assert(num_sgl_descriptors <= SPDK_NVMF_MAX_SGL_ENTRIES);
+
+	if (nvmf_request_alloc_wrs(rtransport, rdma_req, num_sgl_descriptors - 1) != 0) {
+		return -ENOMEM;
+	}
+
 	desc = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + inline_segment->address;
 
 	for (i = 0; i < num_sgl_descriptors; i++) {
@@ -1622,15 +1627,12 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	}
 	/* If the number of buffers is too large, then we know the I/O is larger than allowed. Fail it. */
 	if (num_buffers > NVMF_REQ_MAX_BUFFERS) {
+		nvmf_rdma_request_free_data(rdma_req, rtransport);
 		return -EINVAL;
 	}
 	if (spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport,
 					  num_buffers) != 0) {
-		return -ENOMEM;
-	}
-
-	if (nvmf_request_alloc_wrs(rtransport, rdma_req, num_sgl_descriptors - 1) != 0) {
-		spdk_nvmf_request_free_buffers(req, &rgroup->group, &rtransport->transport, num_buffers);
+		nvmf_rdma_request_free_data(rdma_req, rtransport);
 		return -ENOMEM;
 	}
 
