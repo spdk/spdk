@@ -517,7 +517,7 @@ class SPDKTarget(Target):
                 nqn = "nqn.2018-09.io.spdk:cnode%s" % c
                 serial = "SPDK00%s" % c
                 bdev_name = "Nvme%sn1" % (c - 1)
-                rpc.nvmf.nvmf_subsystem_create(self.client, nqn, serial,
+                rpc.nvmf.nvmf_create_subsystem(self.client, nqn, serial,
                                                allow_any_host=True, max_namespaces=8)
                 rpc.nvmf.nvmf_subsystem_add_ns(self.client, nqn, bdev_name)
 

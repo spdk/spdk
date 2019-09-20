@@ -319,7 +319,7 @@ int spdk_nvmf_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
  *
  * \return a pointer to a NVMe-oF subsystem on success, or NULL on failure.
  */
-struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
+struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 		const char *nqn,
 		enum spdk_nvmf_subtype type,
 		uint32_t num_ns);

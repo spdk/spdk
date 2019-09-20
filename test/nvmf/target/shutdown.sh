@@ -57,7 +57,7 @@ rm -rf $testdir/rpcs.txt
 for i in $(seq 1 $num_subsystems)
 do
 	echo bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i >> $testdir/rpcs.txt
-	echo nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i >> $testdir/rpcs.txt
+	echo nvmf_create_subsystem nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i >> $testdir/rpcs.txt
 	echo nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i Malloc$i >> $testdir/rpcs.txt
 	echo nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT >> $testdir/rpcs.txt
 

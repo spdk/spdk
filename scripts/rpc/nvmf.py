@@ -147,7 +147,8 @@ def nvmf_get_subsystems(client, tgt_name=None):
     return client.call('nvmf_get_subsystems', params)
 
 
-def nvmf_subsystem_create(client,
+@deprecated_alias('nvmf_subsystem_create')
+def nvmf_create_subsystem(client,
                           nqn,
                           serial_number,
                           tgt_name=None,
@@ -186,7 +187,7 @@ def nvmf_subsystem_create(client,
     if tgt_name:
         params['tgt_name'] = tgt_name
 
-    return client.call('nvmf_subsystem_create', params)
+    return client.call('nvmf_create_subsystem', params)
 
 
 def nvmf_subsystem_add_listener(client, nqn, trtype, traddr, trsvcid, adrfam, tgt_name=None):
