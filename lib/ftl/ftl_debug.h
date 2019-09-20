@@ -53,8 +53,7 @@
 static inline const char *
 ftl_addr2str(struct ftl_addr addr, char *buf, size_t size)
 {
-	snprintf(buf, size, "(pu: %u, chk: %u, lbk: %u)",
-		 addr.pu, addr.zone_id, addr.offset);
+	snprintf(buf, size, "(%"PRIu64")", addr.offset);
 	return buf;
 }
 
