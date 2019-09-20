@@ -1016,13 +1016,17 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 
+	/*
+	 * At this point, the transport level qpair is complete. If
+	 * this is a reset, let the upper layer know we are ready.
+	 */
+	rqpair->qpair.transport_qp_is_failed = false;
 	rc = nvme_fabric_qpair_connect(&rqpair->qpair, rqpair->num_entries);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
 		return -1;
 	}
 
-	rqpair->qpair.transport_qp_is_failed = false;
 	return 0;
 }
 
