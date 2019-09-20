@@ -20,7 +20,7 @@
             "bdev_io_pool_size": 65536,
             "bdev_io_cache_size": 256
           },
-          "method": "set_bdev_options"
+          "method": "bdev_set_options"
         },
         {
           "params": {
