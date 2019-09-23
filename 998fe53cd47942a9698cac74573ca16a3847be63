@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3da63cb2_ad88990a",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "As far as I can see, it is safe here. For most of the time, the state of opal_dev is not OPAL_BUSY. It is only busy when issuing a revert tper command and waiting for responses. Once it gets the response, the state will not be busy anymore. For revert tper, it is better not to interrupt which will cause some errors.",
+      "parentUuid": "78401439_7a3f59a5",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0590eb1d_9e235584",
         "filename": "module/bdev/nvme/bdev_nvme.c",
         "patchSetId": 2
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "e698bb76_ea8a5667",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "opal vbdev will have a name like this: nvme0n1l1, nvme0n1l2... Before ‘l’, it is the name of the base nvme bdev",
+      "parentUuid": "979da6b2_cc955c75",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "95ca382b_af401e3f",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 2
@@ -64,6 +100,24 @@
       "writtenOn": "2019-09-20T16:37:12Z",
       "side": 1,
       "message": "can you use something like -EINVAL?",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b6ca01b_02e7b77e",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Hi Paul, thanks for your review. I checked some other files that use spdk_poller_register and the return value for the spdk_poller_fn just uses -1, because it is not an error code here. I think I will just keep it here. Thank you.",
+      "parentUuid": "95ca382b_af401e3f",
       "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -93,6 +147,30 @@
     },
     {
       "key": {
+        "uuid": "d67cf5da_a035d32e",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "70c8fab9_43489037",
+      "range": {
+        "startLine": 707,
+        "startChar": 30,
+        "endLine": 707,
+        "endChar": 36
+      },
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2be5d811_e01b6434",
         "filename": "module/bdev/nvme/vbdev_opal.h",
         "patchSetId": 2
@@ -110,6 +188,24 @@
     },
     {
       "key": {
+        "uuid": "97ec4f0b_0cf43bd1",
+        "filename": "module/bdev/nvme/vbdev_opal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2be5d811_e01b6434",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa9f50b5_5ecf2af6",
         "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
         "patchSetId": 2
@@ -121,6 +217,24 @@
       "writtenOn": "2019-09-20T16:37:12Z",
       "side": 1,
       "message": "I believe using the new convention this would be  bdev_opal_init",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb5a77db_3fedffe9",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Hi Paul, thanks for you review. Here, it is actually not targeting opal bdev but the corresponding nvme bdev. Change to bdev_nvme_opal_init. Thank you.",
+      "parentUuid": "fa9f50b5_5ecf2af6",
       "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -144,6 +258,24 @@
     },
     {
       "key": {
+        "uuid": "061ec1da_c2f3580d",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bb5be994_e7e5d1bd",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fbc35235_1fedabde",
         "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
         "patchSetId": 2
@@ -155,6 +287,24 @@
       "writtenOn": "2019-09-20T16:37:12Z",
       "side": 1,
       "message": "here too... bdev_opal_revert_tper",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27c7cb7c_dcd3f392",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "change to bdev_nvme_opal_revert",
+      "parentUuid": "fbc35235_1fedabde",
       "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -195,6 +345,24 @@
     },
     {
       "key": {
+        "uuid": "b068ae5c_f7cd52be",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5526141d_205a964b",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f3aed09_c691d434",
         "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
         "patchSetId": 2
@@ -212,6 +380,24 @@
     },
     {
       "key": {
+        "uuid": "03725693_05e923a1",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3f3aed09_c691d434",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da4fe03e_beeb4a50",
         "filename": "scripts/rpc.py",
         "patchSetId": 2
@@ -226,6 +412,24 @@
       "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71841ec7_7400ace0",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1960,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da4fe03e_beeb4a50",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -252,6 +456,30 @@
     },
     {
       "key": {
+        "uuid": "a508575c_d0cc7112",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1966,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "removed",
+      "parentUuid": "0951f408_572b625b",
+      "range": {
+        "startLine": 1966,
+        "startChar": 63,
+        "endLine": 1966,
+        "endChar": 80
+      },
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "17febc3c_c9006556",
         "filename": "scripts/rpc.py",
         "patchSetId": 2
@@ -266,6 +494,24 @@
       "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "610ff2f7_be7967cc",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1969,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "17febc3c_c9006556",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -286,6 +532,24 @@
     },
     {
       "key": {
+        "uuid": "c6682d18_3af66639",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1994,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f5615e57_02982c3b",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d03f9f2_9e359ce3",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 2
@@ -300,6 +564,24 @@
       "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc522ea7_5192e04a",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2d03f9f2_9e359ce3",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -320,6 +602,24 @@
     },
     {
       "key": {
+        "uuid": "295cae3d_a9ca5424",
+        "filename": "scripts/rpc/nvme.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c957331a_4d35d8ac",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cb1d940c_85b85bff",
         "filename": "scripts/rpc/nvme.py",
         "patchSetId": 2
@@ -337,6 +637,24 @@
     },
     {
       "key": {
+        "uuid": "959e06bd_5caceaa1",
+        "filename": "scripts/rpc/nvme.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cb1d940c_85b85bff",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c842940f_672256a1",
         "filename": "test/nvme/nvme_opal.sh",
         "patchSetId": 2
@@ -351,6 +669,24 @@
       "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eff0900a_3f600ddd",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T06:05:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c842940f_672256a1",
+      "revId": "998fe53cd47942a9698cac74573ca16a3847be63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
