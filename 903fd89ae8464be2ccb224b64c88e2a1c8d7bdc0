@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da7a7ad3_7dbff5f8",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T04:18:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4104d505_59f68eb0",
+      "range": {
+        "startLine": 129,
+        "startChar": 51,
+        "endLine": 129,
+        "endChar": 59
+      },
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6975726f_31dfe922",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 2
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "fc1fe5f6_09753d9b",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T04:18:57Z",
+      "side": 1,
+      "message": "Add an error log here. Thanks for your comments.",
+      "parentUuid": "6975726f_31dfe922",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4ef433d0_6fac6f1b",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 2
@@ -53,6 +95,24 @@
       "writtenOn": "2019-09-20T16:15:34Z",
       "side": 1,
       "message": "extra line",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e65f0de_0609905b",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T04:18:57Z",
+      "side": 1,
+      "message": "removed.",
+      "parentUuid": "4ef433d0_6fac6f1b",
       "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -76,6 +136,24 @@
     },
     {
       "key": {
+        "uuid": "a4007564_a81db13b",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T04:18:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d2f99628_fd0a83f3",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "51323c66_8a22b864",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 2
@@ -90,6 +168,24 @@
       "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b39873ff_a0a92930",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1875,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T04:18:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "51323c66_8a22b864",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -110,6 +206,24 @@
     },
     {
       "key": {
+        "uuid": "3c84e68d_20d33a72",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1879,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T04:18:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e51475f0_ea9edee1",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "23788d07_de01886c",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 2
@@ -124,6 +238,24 @@
       "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7af839ce_dac04992",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1880,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T04:18:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "23788d07_de01886c",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -144,6 +276,24 @@
     },
     {
       "key": {
+        "uuid": "d56e235d_be276dd4",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2183,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T04:18:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "03c53e46_3795a666",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "193b29e1_13957753",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 2
@@ -155,6 +305,24 @@
       "writtenOn": "2019-09-20T16:15:34Z",
       "side": 1,
       "message": "is there a need to check the ret code and print an error at least?",
+      "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f826f0d_0d57f907",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2207,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T04:18:57Z",
+      "side": 1,
+      "message": "I think it\u0027s OK here. return code will be checked outside this function and error log is generated inside the function. I will just keep it here. Thank you.",
+      "parentUuid": "193b29e1_13957753",
       "revId": "903fd89ae8464be2ccb224b64c88e2a1c8d7bdc0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
