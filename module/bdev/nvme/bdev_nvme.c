@@ -1283,8 +1283,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char **names, size_t count,
 		      const char *hostnqn,
 		      uint32_t prchk_flags,
-		      spdk_nvme_create_ctrlr_fn create_ctrlr_fn,
-		      spdk_nvme_create_bdevs_fn create_bdevs_fn,
+		      struct nvme_bdev_create_opts opts,
 		      spdk_bdev_create_nvme_fn cb_fn,
 		      void *cb_ctx)
 {
@@ -1322,8 +1321,8 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->cb_ctx = cb_ctx;
 	ctx->prchk_flags = prchk_flags;
 	ctx->trid = *trid;
-	ctx->create_bdevs_fn = create_bdevs_fn;
-	ctx->create_ctrlr_fn = create_ctrlr_fn;
+	ctx->create_bdevs_fn = opts.create_bdevs_fn;
+	ctx->create_ctrlr_fn = opts.create_ctrlr_fn;
 
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->opts, sizeof(ctx->opts));
 	ctx->opts.transport_retry_count = g_opts.retry_count;

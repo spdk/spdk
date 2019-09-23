@@ -247,8 +247,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_create_nvme_bdev_ctx *ctx;
 	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvme_host_id hostid = {};
-	spdk_nvme_create_ctrlr_fn create_ctrlr_fn;
-	spdk_nvme_create_bdevs_fn create_bdevs_fn;
+	struct nvme_bdev_create_opts opts = {};
 	uint32_t prchk_flags = 0;
 	int rc;
 
@@ -268,8 +267,8 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	if (ctx->req.mode == NULL || !strcasecmp(ctx->req.mode, "standard")) {
-		create_ctrlr_fn = spdk_bdev_nvme_create_ctrlr;
-		create_bdevs_fn = spdk_bdev_nvme_create_bdevs;
+		opts.create_ctrlr_fn = spdk_bdev_nvme_create_ctrlr;
+		opts.create_bdevs_fn = spdk_bdev_nvme_create_bdevs;
 	} else {
 		SPDK_ERRLOG("Unknown NVMe bdev type\n");
 		goto cleanup;
@@ -327,7 +326,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	ctx->count = NVME_MAX_BDEVS_PER_RPC;
 	rc = spdk_bdev_nvme_create(&trid, &hostid, ctx->req.name, ctx->names, ctx->count, ctx->req.hostnqn,
-				   prchk_flags, create_ctrlr_fn, create_bdevs_fn, spdk_rpc_construct_nvme_bdev_done, ctx);
+				   prchk_flags, opts, spdk_rpc_construct_nvme_bdev_done, ctx);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
