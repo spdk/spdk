@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9714cd6c_794f3baa",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-23T13:31:46Z",
+      "side": 1,
+      "message": "I think this should only be updated in case of a successful append?",
+      "revId": "17175c8061d30fe6d9412dbe486c63a8954f947f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bdf5e505_61127359",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-23T13:31:46Z",
+      "side": 1,
+      "message": "Clear busy in case of failure",
+      "revId": "17175c8061d30fe6d9412dbe486c63a8954f947f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
