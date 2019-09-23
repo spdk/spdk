@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "b67c1dd4_2d76b971",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-23T08:30:48Z",
+      "side": 1,
+      "message": "Should we check the value returned by nvme_rdma_poll_events? There might occur an infinite loop if rdma_get_cm_event returns errors and nvme_rdma_poll_events doesn\u0027t set rqpair-\u003eevt",
+      "revId": "4b98f54542e26ebe3157466087bdf8fcb3d2fccf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0dee6dde_3ec4e6e4",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 14
