@@ -360,6 +360,10 @@ bdev_ocssd_write_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct spdk_bdev_io *bdev_io = ctx;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_ZONE_APPEND) {
+		bdev_io->u.bdev.offset_blocks = ocdev_io->io.zone->write_pointer;
+	}
+
 	ocdev_io->io.zone->write_pointer = bdev_io->u.bdev.offset_blocks +
 					   bdev_io->u.bdev.num_blocks;
 	assert(ocdev_io->io.zone->write_pointer <= ocdev_io->io.zone->slba +
@@ -401,6 +405,51 @@ bdev_ocssd_write(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 					     bdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
 	if (spdk_unlikely(rc != 0)) {
 		__atomic_store_n(&ocdev_io->io.zone->busy, false, __ATOMIC_SEQ_CST);
+	}
+
+	return rc;
+}
+
+static int
+bdev_ocssd_zone_append(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
+{
+	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
+	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	struct bdev_ocssd_io_channel *ocssd_ioch = spdk_io_channel_get_ctx(ioch);
+	struct nvme_io_channel *nvme_ioch = ocssd_ioch->nvme_ioch;
+	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	struct bdev_ocssd_zone *zone;
+	uint64_t lba;
+	int rc = 0;
+
+	zone = bdev_ocssd_get_zone_by_slba(ocssd_bdev, bdev_io->u.bdev.offset_blocks);
+	if (!zone) {
+		SPDK_ERRLOG("Invalid zone SLBA: %"PRIu64"\n", bdev_io->u.bdev.offset_blocks);
+		return -EINVAL;
+	}
+
+	if (__atomic_exchange_n(&zone->busy, true, __ATOMIC_SEQ_CST)) {
+		return -EAGAIN;
+	}
+
+	if (zone->slba + zone->capacity - zone->write_pointer < bdev_io->u.bdev.num_blocks) {
+		SPDK_ERRLOG("Insufficient number of blocks remaining\n");
+		rc = -ENOSPC;
+		goto out;
+	}
+
+	ocdev_io->io.zone = zone;
+	ocdev_io->io.iov_pos = 0;
+	ocdev_io->io.iov_off = 0;
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, zone->write_pointer);
+	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ioch->qpair, lba,
+					     bdev_io->u.bdev.num_blocks, bdev_ocssd_write_cb,
+					     bdev_io, 0, bdev_ocssd_reset_sgl,
+					     bdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
+out:
+	if (spdk_unlikely(rc != 0)) {
+		__atomic_store_n(&zone->busy, false, __ATOMIC_SEQ_CST);
 	}
 
 	return rc;
@@ -619,6 +668,10 @@ bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bde
 		rc = bdev_ocssd_get_zone_info(ioch, bdev_io);
 		break;
 
+	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
+		rc = bdev_ocssd_zone_append(ioch, bdev_io);
+		break;
+
 	default:
 		rc = -EINVAL;
 		break;
@@ -669,6 +722,7 @@ bdev_ocssd_io_type_supported(void *ctx, enum spdk_bdev_io_type type)
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
 		return true;
 
 	default:
