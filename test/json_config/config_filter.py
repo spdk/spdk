@@ -24,7 +24,7 @@ def sort_json_object(o):
 def filter_methods(do_remove_global_rpcs):
     global_rpcs = [
         'iscsi_set_options',
-        'set_nvmf_target_config',
+        'nvmf_set_config',
         'nvmf_set_max_subsystems',
         'nvmf_create_transport',
         'bdev_set_options',

@@ -1544,18 +1544,19 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-x', '--max-subsystems', help='Max number of NVMf subsystems', type=int, required=True)
     p.set_defaults(func=nvmf_set_max_subsystems)
 
-    def set_nvmf_target_config(args):
-        rpc.nvmf.set_nvmf_target_config(args.client,
-                                        acceptor_poll_rate=args.acceptor_poll_rate,
-                                        conn_sched=args.conn_sched)
+    def nvmf_set_config(args):
+        rpc.nvmf.nvmf_set_config(args.client,
+                                 acceptor_poll_rate=args.acceptor_poll_rate,
+                                 conn_sched=args.conn_sched)
 
-    p = subparsers.add_parser('set_nvmf_target_config', help='Set NVMf target config')
+    p = subparsers.add_parser('nvmf_set_config', aliases=['set_nvmf_target_config'],
+                              help='Set NVMf target config')
     p.add_argument('-r', '--acceptor-poll-rate', help='Polling interval of the acceptor for incoming connections (usec)', type=int)
     p.add_argument('-s', '--conn-sched', help="""'roundrobin' - Schedule the incoming connections from any host
     on the cores in a round robin manner (Default). 'hostip' - Schedule all the incoming connections from a
     specific host IP on to the same core. Connections from different IP will be assigned to cores in a round
     robin manner. 'transport' - Schedule the connection according to the transport characteristics.""")
-    p.set_defaults(func=set_nvmf_target_config)
+    p.set_defaults(func=nvmf_set_config)
 
     def nvmf_create_transport(args):
         rpc.nvmf.nvmf_create_transport(args.client,
