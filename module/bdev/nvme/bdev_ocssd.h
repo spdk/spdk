@@ -45,4 +45,7 @@ int spdk_bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, u
 int spdk_bdev_ocssd_delete_bdev(const char *bdev_name, spdk_bdev_ocssd_delete_cb cb_fn,
 				void *cb_arg);
 
+void spdk_bdev_ocssd_create_bdevs(struct nvme_async_probe_ctx *ctx, spdk_bdev_create_nvme_fn cb_fn,
+				  void *cb_arg);
+
 #endif /* SPDK_BDEV_OCSSD_H */
