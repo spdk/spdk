@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "214a0f49_5d6dadd4",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 19
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T09:21:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ec5c6db2_7ada2876",
+      "revId": "0d428bb4f0b07b3b9bcaa4e95f0db505b26d71ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8a5d5f01_0bebbf66",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 19
@@ -33,6 +51,24 @@
       "revId": "0d428bb4f0b07b3b9bcaa4e95f0db505b26d71ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a416ea02_d66af811",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T09:21:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8a5d5f01_0bebbf66",
+      "revId": "0d428bb4f0b07b3b9bcaa4e95f0db505b26d71ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "73525038_5576e423",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T09:21:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "66354d09_a1f70673",
+      "revId": "0d428bb4f0b07b3b9bcaa4e95f0db505b26d71ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2bb3f79b_13781338",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 19
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "2e757df2_dab63c3a",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T09:21:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2bb3f79b_13781338",
+      "revId": "0d428bb4f0b07b3b9bcaa4e95f0db505b26d71ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a9df3fd_bf63db94",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 19
@@ -84,6 +156,24 @@
       "revId": "0d428bb4f0b07b3b9bcaa4e95f0db505b26d71ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cafaaf5f_022d29d5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T09:21:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a9df3fd_bf63db94",
+      "revId": "0d428bb4f0b07b3b9bcaa4e95f0db505b26d71ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
