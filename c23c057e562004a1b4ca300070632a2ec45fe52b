@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "264f2f9c_0873f4f3",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T09:03:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "37165f59_da4a1491",
+      "revId": "c23c057e562004a1b4ca300070632a2ec45fe52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9b1c2c5a_b938370c",
         "filename": "include/spdk/bdev_zone.h",
         "patchSetId": 20
@@ -30,6 +48,24 @@
       "writtenOn": "2019-09-21T23:21:40Z",
       "side": 1,
       "message": "what about something like:\n\nint spdk_bdev_zone_action(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,\n                          uint64_t zone_id, enum spdk_bdev_zone_action action,\n                          spdk_bdev_io_completion_cb cb, void *cb_arg);\n\nThen we just one function that handles all 5 actions?",
+      "revId": "c23c057e562004a1b4ca300070632a2ec45fe52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78c6e568_e174896b",
+        "filename": "include/spdk/bdev_zone.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T09:03:15Z",
+      "side": 1,
+      "message": "There is one issue with this - I put SPDK_BDEV_ZONE_INFO to spdk_bdev_zone_action and this requires slightly different interface (we need to pass spdk_bdev_zone_info *info during spdk_bdev_get_zone_info() call). I can add new io type SPDK_BDEV_IO_TYPE_ZONE_INFO and remove _ZONE_INFO it from spdk_bdev_zone_action?",
+      "parentUuid": "9b1c2c5a_b938370c",
       "revId": "c23c057e562004a1b4ca300070632a2ec45fe52b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
