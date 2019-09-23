@@ -1310,6 +1310,8 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		}
 	}
 
+	spdk_bdev_nvme_set_opts(&opts.nvme_opts);
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
 		return -ENOMEM;

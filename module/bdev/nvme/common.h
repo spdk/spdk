@@ -43,6 +43,21 @@ extern pthread_mutex_t g_bdev_nvme_mutex;
 
 #define NVME_MAX_CONTROLLERS 1024
 
+enum spdk_bdev_timeout_action {
+	SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE = 0,
+	SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET,
+	SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT,
+};
+
+struct spdk_bdev_nvme_opts {
+	enum spdk_bdev_timeout_action action_on_timeout;
+	uint64_t timeout_us;
+	uint32_t retry_count;
+	uint64_t nvme_adminq_poll_period_us;
+	uint64_t nvme_ioq_poll_period_us;
+	uint32_t io_queue_requests;
+};
+
 struct nvme_bdev_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -104,6 +119,7 @@ struct nvme_async_probe_ctx {
 struct nvme_bdev_create_opts {
 	spdk_nvme_create_ctrlr_fn create_ctrlr_fn;
 	spdk_nvme_create_bdevs_fn create_bdevs_fn;
+	struct spdk_bdev_nvme_opts nvme_opts;
 };
 
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);

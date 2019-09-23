@@ -269,6 +269,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	if (ctx->req.mode == NULL || !strcasecmp(ctx->req.mode, "standard")) {
 		opts.create_ctrlr_fn = spdk_bdev_nvme_create_ctrlr;
 		opts.create_bdevs_fn = spdk_bdev_nvme_create_bdevs;
+		spdk_bdev_nvme_get_opts(&opts.nvme_opts);
 	} else {
 		SPDK_ERRLOG("Unknown NVMe bdev type\n");
 		goto cleanup;
