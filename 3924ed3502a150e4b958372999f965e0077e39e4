@@ -1,0 +1,153 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3208d7b6_55cd9f77",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-23T08:57:25Z",
+      "side": 1,
+      "message": "Commit message body could use some better description.\n\n- why are we doing the test\n- general test description\n- test expectations\n- etc, etc...",
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9717ba53_f3b79fb3",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-23T08:57:25Z",
+      "side": 1,
+      "message": "This script should probably use some trap function to kill hanging processes.",
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2eac899_39ad38aa",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-23T08:57:25Z",
+      "side": 1,
+      "message": "If you change IFS when it\u0027s a good idea to restore old IFS so that it does not interfere with other functions where we expect it to be default.",
+      "range": {
+        "startLine": 10,
+        "startChar": 4,
+        "endLine": 10,
+        "endChar": 47
+      },
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a970753_40cbced3",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-23T08:57:25Z",
+      "side": 1,
+      "message": "This function is from test/vhost/hotplug/common.sh but youre not sourcing common anywhere. This comment applies to all other functions from common.sh in this script.\n\nI am aware it WILL work if you launch the test using test/vhost/hotplug/scsi_hotplug.sh, but I don\u0027t see a point in doing that. Why not make virtio_hotremove.sh possible to run as as standalone script?",
+      "range": {
+        "startLine": 17,
+        "startChar": 4,
+        "endLine": 17,
+        "endChar": 15
+      },
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3554f128_48abfe5d",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-23T08:57:25Z",
+      "side": 1,
+      "message": "I think you planned to put some comments in code about what\u0027s happening, but didn\u0027t stick to the idea.\nJust a single comment is not really useful, so either add more info in other places, or remove this comment.",
+      "range": {
+        "startLine": 18,
+        "startChar": 4,
+        "endLine": 18,
+        "endChar": 49
+      },
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f3929ed_d797da73",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-23T08:57:25Z",
+      "side": 1,
+      "message": "Nitpick: Do we plan to re-use these functions in some other scripts?\nIf not then use of functions is probably not needed, there\u0027s just no gain from using them.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 31
+      },
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aefcf790_76c19b25",
+        "filename": "test/vhost/manual.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-23T08:57:25Z",
+      "side": 1,
+      "message": "tabs vs spaces",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 101,
+        "endChar": 16
+      },
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
