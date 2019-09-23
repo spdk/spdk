@@ -1235,9 +1235,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
 		bdev_nvme_create_bdevs(ctx, create_bdevs_cb, ctx);
 	} else {
-		ctx->bdevs_done = true;
-		ctx->count = 0;
-		nvme_bdev_attach_done(ctx, 0);
+		spdk_bdev_ocssd_create_bdevs(ctx);
 	}
 }
 

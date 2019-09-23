@@ -111,6 +111,8 @@ struct nvme_async_probe_ctx {
 	const char **names;
 	size_t max_names;
 	size_t count;
+	size_t num_done;
+	size_t num_bdevs;
 	uint32_t prchk_flags;
 	struct spdk_poller *poller;
 	struct spdk_nvme_transport_id trid;
