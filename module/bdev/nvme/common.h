@@ -49,6 +49,12 @@ enum spdk_bdev_timeout_action {
 	SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT,
 };
 
+enum nvme_ctrlr_mode {
+	SPDK_NVME_STANDARD_CTRLR,
+	SPDK_NVME_OCSSD_CTRLR,
+	SPDK_NVME_FTL_CTRLR
+};
+
 struct spdk_bdev_nvme_opts {
 	enum spdk_bdev_timeout_action action_on_timeout;
 	uint64_t timeout_us;
@@ -69,6 +75,7 @@ struct nvme_bdev_ctrlr {
 	char				*name;
 	int				ref;
 	bool				destruct;
+	enum nvme_ctrlr_mode		mode;
 	/**
 	 * PI check flags. This flags is set to NVMe controllers created only
 	 * through construct_nvme_bdev RPC or .INI config file. Hot added

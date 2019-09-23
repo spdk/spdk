@@ -1013,6 +1013,8 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 
 	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, nvme_bdev_ctrlr);
 
+	nvme_bdev_ctrlr->mode = SPDK_NVME_STANDARD_CTRLR;
+
 	return 0;
 }
 
@@ -2187,7 +2189,8 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 
-		if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr) &&
+		    nvme_bdev_ctrlr->mode == SPDK_NVME_FTL_CTRLR) {
 			continue;
 		}
 
