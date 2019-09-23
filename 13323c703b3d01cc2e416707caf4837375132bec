@@ -16,6 +16,24 @@
       "revId": "13323c703b3d01cc2e416707caf4837375132bec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e55ac4d5_d35951e8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3102,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-23T19:21:22Z",
+      "side": 1,
+      "message": "Talked with Ben.  Technically you could have a connection before you create a poll group although that\u0027s not done anywhere today (at least in our current implementation).\n\nBut I think it would be simpler to understand if it was liked this, before checking the qid:\n\nif (TAILQ_EMPTY(\u0026rtransport-\u003epoll_groups)) {\n  pthread_mutex_unlock(\u0026rtransport-\u003elock);\n  return NULL;\n}",
+      "parentUuid": "baeacd80_4cfbbe8a",
+      "revId": "13323c703b3d01cc2e416707caf4837375132bec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
