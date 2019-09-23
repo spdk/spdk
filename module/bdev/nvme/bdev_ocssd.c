@@ -62,9 +62,10 @@ struct bdev_ocssd_zone {
 struct bdev_ocssd_io {
 	union {
 		struct {
-			size_t		iov_pos;
-			size_t		iov_off;
-			uint64_t	lba[SPDK_NVME_OCSSD_MAX_LBAL_ENTRIES];
+			struct bdev_ocssd_zone	*zone;
+			size_t			iov_pos;
+			size_t			iov_off;
+			uint64_t		lba[SPDK_NVME_OCSSD_MAX_LBAL_ENTRIES];
 		} io;
 		struct {
 			size_t						chunk_offset;
@@ -238,20 +239,28 @@ static struct spdk_bdev_module ocssd_if = {
 SPDK_BDEV_MODULE_REGISTER(ocssd, &ocssd_if);
 
 static struct bdev_ocssd_zone *
-bdev_ocssd_get_zone_by_slba(struct ocssd_bdev *ocssd_bdev, uint64_t slba)
+bdev_ocssd_get_zone_by_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
 {
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
 	size_t zone_size = nvme_bdev->disk.zone_size;
 
-	if (slba % zone_size != 0) {
+	if (lba >= nvme_bdev->disk.blockcnt) {
 		return NULL;
 	}
 
-	if (slba >= nvme_bdev->disk.blockcnt) {
+	return &ocssd_bdev->zones[lba / zone_size];
+}
+
+static struct bdev_ocssd_zone *
+bdev_ocssd_get_zone_by_slba(struct ocssd_bdev *ocssd_bdev, uint64_t slba)
+{
+	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+
+	if (slba % nvme_bdev->disk.zone_size != 0) {
 		return NULL;
 	}
 
-	return &ocssd_bdev->zones[slba / zone_size];
+	return bdev_ocssd_get_zone_by_lba(ocssd_bdev, slba);
 }
 
 static void
@@ -427,7 +436,14 @@ static void
 bdev_ocssd_write_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
+	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 
+	ocdev_io->io.zone->write_pointer = bdev_io->u.bdev.offset_blocks +
+					   bdev_io->u.bdev.num_blocks;
+	assert(ocdev_io->io.zone->write_pointer <= ocdev_io->io.zone->slba +
+	       ocdev_io->io.zone->capacity);
+
+	__atomic_store_n(&ocdev_io->io.zone->busy, false, __ATOMIC_SEQ_CST);
 	spdk_bdev_io_complete_nvme_status(bdev_io, 0, cpl->status.sct, cpl->status.sc);
 }
 
@@ -440,21 +456,31 @@ bdev_ocssd_write(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	const size_t zone_size = nvme_bdev->disk.zone_size;
 	uint64_t lba;
+	int rc;
 
 	if ((bdev_io->u.bdev.offset_blocks % zone_size) + bdev_io->u.bdev.num_blocks > zone_size) {
 		SPDK_ERRLOG("Tried to cross zone boundary during write command\n");
 		return -EINVAL;
 	}
 
+	ocdev_io->io.zone = bdev_ocssd_get_zone_by_lba(ocssd_bdev, bdev_io->u.bdev.offset_blocks);
+	if (__atomic_exchange_n(&ocdev_io->io.zone->busy, true, __ATOMIC_SEQ_CST)) {
+		return -ENOMEM;
+	}
+
 	ocdev_io->io.iov_pos = 0;
 	ocdev_io->io.iov_off = 0;
 
 	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev_io->u.bdev.offset_blocks);
+	rc = spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ioch->qpair, lba,
+					     bdev_io->u.bdev.num_blocks, bdev_ocssd_write_cb,
+					     bdev_io, 0, bdev_ocssd_reset_sgl,
+					     bdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
+	if (spdk_unlikely(rc != 0)) {
+		__atomic_store_n(&ocdev_io->io.zone->busy, false, __ATOMIC_SEQ_CST);
+	}
 
-	return spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->nvme_ns->ns, nvme_ioch->qpair, lba,
-					       bdev_io->u.bdev.num_blocks, bdev_ocssd_write_cb,
-					       bdev_io, 0, bdev_ocssd_reset_sgl,
-					       bdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
+	return rc;
 }
 
 static void
@@ -481,7 +507,10 @@ static void
 bdev_ocssd_reset_zone_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
+	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 
+	ocdev_io->io.zone->write_pointer = ocdev_io->io.zone->slba;
+	__atomic_store_n(&ocdev_io->io.zone->busy, false, __ATOMIC_SEQ_CST);
 	spdk_bdev_io_complete_nvme_status(bdev_io, 0, cpl->status.sct, cpl->status.sc);
 }
 
@@ -494,10 +523,16 @@ bdev_ocssd_reset_zone(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io
 	struct nvme_io_channel *nvme_ioch = spdk_io_channel_get_ctx(ioch);
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	uint64_t offset, zone_size = nvme_bdev->disk.zone_size;
+	int rc;
 
 	if (num_zones > 1) {
 		SPDK_ERRLOG("Exceeded maximum number of zones per single reset: 1\n");
 		return -EINVAL;
+	}
+
+	ocdev_io->io.zone = bdev_ocssd_get_zone_by_slba(ocssd_bdev, slba);
+	if (__atomic_exchange_n(&ocdev_io->io.zone->busy, true, __ATOMIC_SEQ_CST)) {
+		return -ENOMEM;
 	}
 
 	for (offset = 0; offset < num_zones; ++offset) {
@@ -505,8 +540,14 @@ bdev_ocssd_reset_zone(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io
 					   slba + offset * zone_size);
 	}
 
-	return spdk_nvme_ocssd_ns_cmd_vector_reset(nvme_bdev->nvme_ns->ns, nvme_ioch->qpair,
-			ocdev_io->io.lba, num_zones, NULL, bdev_ocssd_reset_zone_cb, bdev_io);
+	rc = spdk_nvme_ocssd_ns_cmd_vector_reset(nvme_bdev->nvme_ns->ns, nvme_ioch->qpair,
+			ocdev_io->io.lba, num_zones, NULL,
+			bdev_ocssd_reset_zone_cb, bdev_io);
+	if (spdk_unlikely(rc != 0)) {
+		__atomic_store_n(&ocdev_io->io.zone->busy, false, __ATOMIC_SEQ_CST);
+	}
+
+	return rc;
 }
 
 static int _bdev_ocssd_get_zone_info(struct spdk_bdev_io *bdev_io);
