@@ -1,11 +1,15 @@
-def enable_tpoint_group(client, name):
+from .helpers import deprecated_alias
+
+
+@deprecated_alias('enable_tpoint_group')
+def trace_enable_tpoint_group(client, name):
     """Enable trace on a specific tpoint group.
 
     Args:
         name: trace group name we want to enable in tpoint_group_mask. (for example "bdev").
     """
     params = {'name': name}
-    return client.call('enable_tpoint_group', params)
+    return client.call('trace_enable_tpoint_group', params)
 
 
 def disable_tpoint_group(client, name):
