@@ -1626,7 +1626,7 @@ static const struct spdk_json_object_decoder rpc_get_transport_decoders[] = {
 };
 
 static void
-spdk_rpc_get_nvmf_transports(struct spdk_jsonrpc_request *request,
+spdk_rpc_nvmf_get_transports(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct rpc_get_transport req = { 0 };
@@ -1663,7 +1663,8 @@ spdk_rpc_get_nvmf_transports(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 	free(req.tgt_name);
 }
-SPDK_RPC_REGISTER("get_nvmf_transports", spdk_rpc_get_nvmf_transports, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("nvmf_get_transports", spdk_rpc_nvmf_get_transports, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_get_transports, get_nvmf_transports)
 
 struct rpc_nvmf_get_stats_ctx {
 	char *tgt_name;
