@@ -20,7 +20,7 @@ class UINVMfTransports(UINode):
 
     def refresh(self):
         self._children = set([])
-        for transport in self.get_root().get_nvmf_transports():
+        for transport in self.get_root().nvmf_get_transports():
             UINVMfTransport(transport, self)
 
     def ui_command_create(self, trtype, max_queue_depth=None, max_qpairs_per_ctrlr=None, in_capsule_data_size=None,
