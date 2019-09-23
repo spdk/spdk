@@ -58,6 +58,12 @@ struct spdk_bdev_nvme_opts {
 	uint32_t io_queue_requests;
 };
 
+enum nvme_ctrlr_mode {
+	SPDK_NVME_STANDARD_CTRLR,
+	SPDK_NVME_OCSSD_CTRLR,
+	SPDK_NVME_FTL_CTRLR
+};
+
 struct nvme_bdev {
 	struct spdk_bdev	disk;
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
@@ -104,6 +110,7 @@ struct nvme_bdev_ctrlr {
 	int				ref;
 	bool				destruct;
 	bool				detaching;
+	enum nvme_ctrlr_mode		mode;
 	/**
 	 * PI check flags. This flags is set to NVMe controllers created only
 	 * through construct_nvme_bdev RPC or .INI config file. Hot added
