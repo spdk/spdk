@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ea3ffc0_3f1ddf97",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-23T08:02:38Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we check this under the ctrlr-\u003elock too?",
+      "range": {
+        "startLine": 476,
+        "startChar": 1,
+        "endLine": 476,
+        "endChar": 35
+      },
+      "revId": "a9099117ba2156c1052e1ea5c86ee1b166999450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5d5ee24_7121e79f",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-23T08:02:38Z",
+      "side": 1,
+      "message": "Let\u0027s make this a part of ftl_anm_poller, so we don\u0027t have to handle the memory allocation errors.",
+      "range": {
+        "startLine": 497,
+        "startChar": 0,
+        "endLine": 501,
+        "endChar": 2
+      },
+      "revId": "a9099117ba2156c1052e1ea5c86ee1b166999450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62c3e0a0_354d7d04",
+        "filename": "lib/ftl/ftl_anm.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-23T08:02:38Z",
+      "side": 1,
+      "message": "Swap the places of the arguments.",
+      "range": {
+        "startLine": 67,
+        "startChar": 30,
+        "endLine": 67,
+        "endChar": 71
+      },
+      "revId": "a9099117ba2156c1052e1ea5c86ee1b166999450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1727331_1d967577",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1324,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-23T08:02:38Z",
+      "side": 1,
+      "message": "Having the same name in two files makes it a bit confusing, let\u0027s rename this.",
+      "range": {
+        "startLine": 1324,
+        "startChar": 0,
+        "endLine": 1324,
+        "endChar": 28
+      },
+      "revId": "a9099117ba2156c1052e1ea5c86ee1b166999450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2bbc260_f6002bb9",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1339,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-23T08:02:38Z",
+      "side": 1,
+      "message": "We shouldn\u0027t be passing that as the result of the poller. We should be able to handle any errors returned by ftl_anm_unregister_device.",
+      "range": {
+        "startLine": 1339,
+        "startChar": 2,
+        "endLine": 1339,
+        "endChar": 6
+      },
+      "revId": "a9099117ba2156c1052e1ea5c86ee1b166999450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
