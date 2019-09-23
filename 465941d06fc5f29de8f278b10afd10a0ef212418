@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e0889f0d_f54047d9",
+        "filename": "module/blobfs/bdev/blobfs_bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-23T04:39:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "68d0f7e5_e47ec88d",
+      "revId": "465941d06fc5f29de8f278b10afd10a0ef212418",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a68abe36_ce66ddc6",
         "filename": "module/blobfs/bdev/blobfs_bdev.c",
         "patchSetId": 12
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "393eddac_14975f71",
+        "filename": "module/blobfs/bdev/blobfs_bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-23T04:39:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a68abe36_ce66ddc6",
+      "revId": "465941d06fc5f29de8f278b10afd10a0ef212418",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "00824ab3_0a19dbea",
         "filename": "module/blobfs/bdev/blobfs_bdev.h",
         "patchSetId": 12
@@ -47,6 +83,24 @@
       "writtenOn": "2019-09-20T18:46:51Z",
       "side": 1,
       "message": "we should use the same scheme as blobstore and blobfs for determining whether a blobfs exists\n\nmeaning just say that -EILSEQ means that no blobfs was found; any other error means there was some problem with detecting\n\nthat drastically simplifies the code and makes it consistent with existing blobstore/blobfs code",
+      "revId": "465941d06fc5f29de8f278b10afd10a0ef212418",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57b24561_7f8ac4c7",
+        "filename": "module/blobfs/bdev/blobfs_bdev.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-23T04:39:26Z",
+      "side": 1,
+      "message": "Good suggestion, Jim\nApplied it.",
+      "parentUuid": "00824ab3_0a19dbea",
       "revId": "465941d06fc5f29de8f278b10afd10a0ef212418",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "c6ed8d56_c5fa11fd",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-23T04:39:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "28d4e8d9_cc88be59",
+      "revId": "465941d06fc5f29de8f278b10afd10a0ef212418",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ef1ebb9_6a3bb16a",
         "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
         "patchSetId": 12
@@ -84,6 +156,24 @@
       "revId": "465941d06fc5f29de8f278b10afd10a0ef212418",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af8ee1cb_22be56d7",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-23T04:39:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9ef1ebb9_6a3bb16a",
+      "revId": "465941d06fc5f29de8f278b10afd10a0ef212418",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
