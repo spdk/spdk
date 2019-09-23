@@ -59,6 +59,14 @@ struct bdev_ocssd_zone {
 	bool		busy;
 };
 
+struct bdev_ocssd_config {
+	char				*ctrlr_name;
+	char				*bdev_name;
+	uint32_t			nsid;
+	struct nvme_async_probe_ctx	*probe_ctx;
+	TAILQ_ENTRY(bdev_ocssd_config)	tailq;
+};
+
 struct bdev_ocssd_io {
 	union {
 		struct {
@@ -91,6 +99,58 @@ struct ocssd_bdev_ctrlr {
 	struct bdev_ocssd_ns *ns;
 };
 
+static TAILQ_HEAD(, bdev_ocssd_config) g_ocssd_config = TAILQ_HEAD_INITIALIZER(g_ocssd_config);
+
+static void
+bdev_ocssd_free_config(struct bdev_ocssd_config *config)
+{
+	free(config->ctrlr_name);
+	free(config->bdev_name);
+	free(config);
+}
+
+static int
+bdev_ocssd_save_config(const char *ctrlr_name, const char *bdev_name, uint32_t nsid)
+{
+	struct bdev_ocssd_config *config;
+
+	config = calloc(1, sizeof(*config));
+	if (!config) {
+		return -ENOMEM;
+	}
+
+	config->ctrlr_name = strdup(ctrlr_name);
+	if (!config->ctrlr_name) {
+		bdev_ocssd_free_config(config);
+		return -ENOMEM;
+	}
+
+	config->bdev_name = strdup(bdev_name);
+	if (!config->bdev_name) {
+		bdev_ocssd_free_config(config);
+		return -ENOMEM;
+	}
+
+	config->nsid = nsid;
+	TAILQ_INSERT_TAIL(&g_ocssd_config, config, tailq);
+
+	return 0;
+}
+
+static struct bdev_ocssd_config *
+bdev_ocssd_find_config(const char *bdev_name)
+{
+	struct bdev_ocssd_config *config;
+
+	TAILQ_FOREACH(config, &g_ocssd_config, tailq) {
+		if (strcmp(config->bdev_name, bdev_name) == 0) {
+			return config;
+		}
+	}
+
+	return NULL;
+}
+
 static int
 bdev_ocssd_library_init(void)
 {
@@ -100,6 +160,12 @@ bdev_ocssd_library_init(void)
 static void
 bdev_ocssd_library_fini(void)
 {
+	struct bdev_ocssd_config *config;
+
+	while ((config = TAILQ_FIRST(&g_ocssd_config))) {
+		TAILQ_REMOVE(&g_ocssd_config, config, tailq);
+		bdev_ocssd_free_config(config);
+	}
 }
 
 static int
@@ -775,9 +841,9 @@ bdev_ocssd_init_zones(struct bdev_ocssd_create_ctx *create_ctx)
 	return bdev_ocssd_init_zone(create_ctx);
 }
 
-int
-spdk_bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
-			    spdk_bdev_ocssd_create_cb cb_fn, void *cb_arg)
+static int
+bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
+		       spdk_bdev_ocssd_create_cb cb_fn, void *cb_arg)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct bdev_ocssd_create_ctx *create_ctx = NULL;
@@ -893,6 +959,47 @@ error:
 	return rc;
 }
 
+int
+spdk_bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
+			    spdk_bdev_ocssd_create_cb cb_fn, void *cb_arg)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	int rc = 0;
+
+	if (spdk_bdev_get_by_name(bdev_name) != NULL) {
+		SPDK_ERRLOG("Device with provided name (%s) already exists\n", bdev_name);
+		return -EEXIST;
+	}
+
+	if (bdev_ocssd_find_config(bdev_name) != NULL) {
+		SPDK_ERRLOG("Device with provided name (%s) is already being created\n",
+			    bdev_name);
+		return -EEXIST;
+	}
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(ctrlr_name);
+	if (!nvme_bdev_ctrlr) {
+		SPDK_ERRLOG("Unable to find controller %s, deferring bdev %s initialization\n",
+			    ctrlr_name, bdev_name);
+
+		rc = bdev_ocssd_save_config(ctrlr_name, bdev_name, nsid);
+		if (spdk_unlikely(rc != 0)) {
+			SPDK_ERRLOG("Unable to save bdev %s configuration\n", bdev_name);
+			return rc;
+		}
+
+		/* Return bdev's name even though we haven't created it yet to allow creating it
+		 * later (e.g. due to changing the order of creating NVMe controller vs. creating
+		 * OCSSD bdev during load_config).
+		 */
+		cb_fn(bdev_name, 0, cb_arg);
+
+		return 0;
+	}
+
+	return bdev_ocssd_create_bdev(ctrlr_name, bdev_name, nsid, cb_fn, cb_arg);
+}
+
 struct bdev_ocssd_delete_ctx {
 	spdk_bdev_ocssd_delete_cb	cb_fn;
 	void				*cb_arg;
@@ -941,7 +1048,77 @@ spdk_bdev_ocssd_delete_bdev(const char *bdev_name, spdk_bdev_ocssd_delete_cb cb_
 static void
 bdev_ocssd_probe_done(struct nvme_async_probe_ctx *ctx, int rc)
 {
-	ctx->create_cb_fn(ctx->create_cb_ctx, 0, rc);
+	ctx->create_cb_fn(ctx->create_cb_ctx, ctx->count, rc);
+}
+
+static void
+bdev_ocssd_create_deferred_cb(const char *bdev_name, int status, void *ctx)
+{
+	struct bdev_ocssd_config *config = ctx;
+	struct nvme_async_probe_ctx *probe_ctx = config->probe_ctx;
+
+	if (spdk_unlikely(status != 0)) {
+		SPDK_ERRLOG("Failed to create bdev %s\n", config->bdev_name);
+	} else {
+		if (probe_ctx->count < probe_ctx->max_names) {
+			probe_ctx->names[probe_ctx->count++] = bdev_name;
+		} else {
+			SPDK_ERRLOG("Maximum number of bdevs per create call is %"PRIu32". Unable"
+				    "to return all names of created bdevs\n", probe_ctx->max_names);
+		}
+	}
+
+	TAILQ_REMOVE(&g_ocssd_config, config, tailq);
+	bdev_ocssd_free_config(config);
+
+	if (++probe_ctx->num_done == probe_ctx->num_bdevs) {
+		bdev_ocssd_probe_done(probe_ctx, 0);
+	}
+}
+
+static void
+bdev_ocssd_create_bdevs_deferred(struct nvme_async_probe_ctx *ctx)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct bdev_ocssd_config *config, *tmp;
+	int rc;
+
+	ctx->num_done = 0;
+	ctx->num_bdevs = 0;
+	ctx->count = 0;
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
+	assert(nvme_bdev_ctrlr != NULL);
+
+	TAILQ_FOREACH(config, &g_ocssd_config, tailq) {
+		if (strcmp(config->ctrlr_name, nvme_bdev_ctrlr->name) == 0) {
+			ctx->num_bdevs++;
+		}
+	}
+
+	if (ctx->num_bdevs == 0) {
+		bdev_ocssd_probe_done(ctx, 0);
+	}
+
+	TAILQ_FOREACH_SAFE(config, &g_ocssd_config, tailq, tmp) {
+		if (strcmp(config->ctrlr_name, nvme_bdev_ctrlr->name) != 0) {
+			continue;
+		}
+
+		config->probe_ctx = ctx;
+		rc = bdev_ocssd_create_bdev(config->ctrlr_name, config->bdev_name, config->nsid,
+					    bdev_ocssd_create_deferred_cb, config);
+		if (spdk_unlikely(rc != 0)) {
+			SPDK_ERRLOG("Unable to create bdev %s on controller %s, freeing config\n",
+				    config->bdev_name, config->ctrlr_name);
+			TAILQ_REMOVE(&g_ocssd_config, config, tailq);
+			bdev_ocssd_free_config(config);
+
+			if (++ctx->num_done == ctx->num_bdevs) {
+				bdev_ocssd_probe_done(ctx, 0);
+			}
+		}
+	}
 }
 
 static void bdev_ocssd_get_geometry(struct nvme_async_probe_ctx *ctx);
@@ -974,7 +1151,7 @@ bdev_ocssd_geometry_cb(void *_ctx, const struct spdk_nvme_cpl *cpl)
 	if (++ctx->count < nvme_bdev_ctrlr->num_ns) {
 		bdev_ocssd_get_geometry(ctx);
 	} else {
-		bdev_ocssd_probe_done(ctx, 0);
+		bdev_ocssd_create_bdevs_deferred(ctx);
 	}
 }
 
@@ -988,12 +1165,12 @@ bdev_ocssd_get_geometry(struct nvme_async_probe_ctx *ctx)
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
 	if (!nvme_bdev_ctrlr) {
 		SPDK_ERRLOG("Failed to find NVMe controller: %s\n", ctx->trid.traddr);
-		bdev_ocssd_probe_done(ctx, -ENODEV);
+		ctx->create_cb_fn(ctx->create_cb_ctx, 0, -ENODEV);
 		return;
 	}
 
 	if (ctx->count == nvme_bdev_ctrlr->num_ns) {
-		bdev_ocssd_probe_done(ctx, 0);
+		bdev_ocssd_create_bdevs_deferred(ctx);
 		return;
 	}
 
@@ -1005,7 +1182,7 @@ bdev_ocssd_get_geometry(struct nvme_async_probe_ctx *ctx)
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Failed to retrieve OC geometry: %s\n", spdk_strerror(-rc));
 		if (++ctx->count == nvme_bdev_ctrlr->num_ns) {
-			bdev_ocssd_probe_done(ctx, 0);
+			bdev_ocssd_create_bdevs_deferred(ctx);
 		}
 	}
 }
