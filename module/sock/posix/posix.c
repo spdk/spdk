@@ -322,7 +322,7 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 	int				rc, fd;
 	struct spdk_posix_sock		*new_sock;
 	int				flag;
-	size_t				sz;
+	size_t				sz = 0;
 
 	memset(&sa, 0, sizeof(sa));
 	salen = sizeof(sa);
