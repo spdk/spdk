@@ -1133,11 +1133,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         (for example "bdev" for bdev trace group, "all" for all trace groups).""")
     p.set_defaults(func=trace_disable_tpoint_group)
 
-    def get_tpoint_group_mask(args):
-        print_dict(rpc.trace.get_tpoint_group_mask(args.client))
+    def trace_get_tpoint_group_mask(args):
+        print_dict(rpc.trace.trace_get_tpoint_group_mask(args.client))
 
-    p = subparsers.add_parser('get_tpoint_group_mask', help='get trace point group mask')
-    p.set_defaults(func=get_tpoint_group_mask)
+    p = subparsers.add_parser('trace_get_tpoint_group_mask', aliases=['get_tpoint_group_mask'],
+                              help='get trace point group mask')
+    p.set_defaults(func=trace_get_tpoint_group_mask)
 
     # log
     def log_set_flag(args):

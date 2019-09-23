@@ -23,10 +23,11 @@ def trace_disable_tpoint_group(client, name):
     return client.call('trace_disable_tpoint_group', params)
 
 
-def get_tpoint_group_mask(client):
+@deprecated_alias('get_tpoint_group_mask')
+def trace_get_tpoint_group_mask(client):
     """Get trace point group mask
 
     Returns:
         List of trace point group mask
     """
-    return client.call('get_tpoint_group_mask')
+    return client.call('trace_get_tpoint_group_mask')
