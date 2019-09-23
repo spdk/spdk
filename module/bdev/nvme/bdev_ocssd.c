@@ -64,6 +64,13 @@ struct bdev_ocssd_zone {
 	bool		busy;
 };
 
+struct bdev_ocssd_config {
+	char				*ctrlr_name;
+	char				*bdev_name;
+	uint32_t			nsid;
+	TAILQ_ENTRY(bdev_ocssd_config)	tailq;
+};
+
 struct bdev_ocssd_io {
 	union {
 		struct {
@@ -84,6 +91,8 @@ struct ocssd_bdev {
 	struct bdev_ocssd_lba_offsets	lba_offsets;
 	struct bdev_ocssd_zone		*zones;
 };
+
+static TAILQ_HEAD(, bdev_ocssd_config) g_ocssd_config = TAILQ_HEAD_INITIALIZER(g_ocssd_config);
 
 static int
 bdev_ocssd_library_init(void)
@@ -887,9 +896,45 @@ bdev_ocssd_geometry_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	}
 }
 
-int
-spdk_bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
-			    spdk_bdev_ocssd_create_cb cb_fn, void *cb_arg)
+static void
+bdev_ocssd_free_config(struct bdev_ocssd_config *config)
+{
+	free(config->ctrlr_name);
+	free(config->bdev_name);
+	free(config);
+}
+
+static int
+bdev_ocssd_save_config(const char *ctrlr_name, const char *bdev_name, uint32_t nsid)
+{
+	struct bdev_ocssd_config *config;
+
+	config = calloc(1, sizeof(*config));
+	if (!config) {
+		return -ENOMEM;
+	}
+
+	config->ctrlr_name = strdup(ctrlr_name);
+	if (!config->ctrlr_name) {
+		bdev_ocssd_free_config(config);
+		return -ENOMEM;
+	}
+
+	config->bdev_name = strdup(bdev_name);
+	if (!config->bdev_name) {
+		bdev_ocssd_free_config(config);
+		return -ENOMEM;
+	}
+
+	config->nsid = nsid;
+	TAILQ_INSERT_TAIL(&g_ocssd_config, config, tailq);
+
+	return 0;
+}
+
+static int
+bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
+		       spdk_bdev_ocssd_create_cb cb_fn, void *cb_arg)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_bdev *nvme_bdev = NULL;
@@ -978,6 +1023,36 @@ error:
 	return rc;
 }
 
+int
+spdk_bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
+			    spdk_bdev_ocssd_create_cb cb_fn, void *cb_arg)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	int rc = 0;
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(ctrlr_name);
+	if (!nvme_bdev_ctrlr) {
+		SPDK_ERRLOG("Unable to find controller %s, deferring bdev %s initialization\n",
+			    ctrlr_name, bdev_name);
+
+		rc = bdev_ocssd_save_config(ctrlr_name, bdev_name, nsid);
+		if (spdk_unlikely(rc != 0)) {
+			SPDK_ERRLOG("Unable to save bdev %s configuration\n", bdev_name);
+			return rc;
+		}
+
+		/* Return bdev's name even though we haven't created it yet to allow creating it
+		 * later (e.g. due to changing the order of creating NVMe controller vs. creating
+		 * OCSSD bdev druing load_config).
+		 */
+		cb_fn(bdev_name, 0, cb_arg);
+
+		return 0;
+	}
+
+	return bdev_ocssd_create_bdev(ctrlr_name, bdev_name, nsid, cb_fn, cb_arg);
+}
+
 struct bdev_ocssd_delete_ctx {
 	spdk_bdev_ocssd_delete_cb	cb_fn;
 	void				*cb_arg;
@@ -1023,6 +1098,41 @@ spdk_bdev_ocssd_delete_bdev(const char *bdev_name, spdk_bdev_ocssd_delete_cb cb_
 	return 0;
 }
 
+static void
+bdev_ocssd_create_deferred_cb(const char *bdev_name, int status, void *ctx)
+{
+	struct bdev_ocssd_config *config = ctx;
+
+	if (spdk_unlikely(status != 0)) {
+		SPDK_ERRLOG("Failed to create bdev %s\n", config->bdev_name);
+	}
+
+	TAILQ_REMOVE(&g_ocssd_config, config, tailq);
+	bdev_ocssd_free_config(config);
+}
+
+static void
+bdev_ocssd_create_deferred(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+{
+	struct bdev_ocssd_config *config, *tmp;
+	int rc;
+
+	TAILQ_FOREACH_SAFE(config, &g_ocssd_config, tailq, tmp) {
+		if (strcmp(config->ctrlr_name, nvme_bdev_ctrlr->name) != 0) {
+			continue;
+		}
+
+		rc = bdev_ocssd_create_bdev(config->ctrlr_name, config->bdev_name, config->nsid,
+					    bdev_ocssd_create_deferred_cb, config);
+		if (spdk_unlikely(rc != 0)) {
+			SPDK_ERRLOG("Unable to create bdev %s on controller %s, freeing config\n",
+				    config->bdev_name, config->ctrlr_name);
+			TAILQ_REMOVE(&g_ocssd_config, config, tailq);
+			bdev_ocssd_free_config(config);
+		}
+	}
+}
+
 int
 spdk_bdev_ocssd_create_ctrlr(const struct spdk_nvme_transport_id *trid)
 {
@@ -1048,6 +1158,8 @@ spdk_bdev_ocssd_create_ctrlr(const struct spdk_nvme_transport_id *trid)
 
 	nvme_bdev_ctrlr->destruct_ctrlr_fn = bdev_ocssd_destruct_ctrlr_cb;
 	nvme_bdev_ctrlr->mode = SPDK_NVME_OCSSD_CTRLR;
+
+	bdev_ocssd_create_deferred(nvme_bdev_ctrlr);
 
 	return 0;
 }
