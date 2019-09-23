@@ -36,6 +36,29 @@
     },
     {
       "key": {
+        "uuid": "159072ac_b6f569d1",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-23T08:26:08Z",
+      "side": 1,
+      "message": "I think we should ack the event in that case, otherwise we\u0027ll get a memory leak and possible block of rdma_destroy_event_channel",
+      "range": {
+        "startLine": 352,
+        "startChar": 4,
+        "endLine": 352,
+        "endChar": 19
+      },
+      "revId": "a95d09c895161d589c8e3e45138f4b347e00c5ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dfedf29f_cd1440f5",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 15
