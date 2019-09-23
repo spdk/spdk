@@ -69,6 +69,24 @@
       "revId": "c23c057e562004a1b4ca300070632a2ec45fe52b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10e2daea_af09bd0b",
+        "filename": "include/spdk/bdev_zone.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-23T12:51:35Z",
+      "side": 1,
+      "message": "Yeah - I think your solution is best.  Make ZONE_INFO a different IO type (maybe call it GET_ZONE_INFO?) and then we can collapse these other functions into a single \"zone_action\" one",
+      "parentUuid": "78c6e568_e174896b",
+      "revId": "c23c057e562004a1b4ca300070632a2ec45fe52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
