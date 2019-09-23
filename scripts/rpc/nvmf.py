@@ -1,8 +1,9 @@
 from .helpers import deprecated_alias
 
 
-def set_nvmf_target_max_subsystems(client,
-                                   max_subsystems=None):
+@deprecated_alias('set_nvmf_target_max_subsystems')
+def nvmf_set_max_subsystems(client,
+                            max_subsystems=None):
     """Set NVMe-oF target options.
 
     Args:
@@ -14,7 +15,7 @@ def set_nvmf_target_max_subsystems(client,
     params = {}
 
     params['max_subsystems'] = max_subsystems
-    return client.call('set_nvmf_target_max_subsystems', params)
+    return client.call('nvmf_set_max_subsystems', params)
 
 
 def set_nvmf_target_config(client,

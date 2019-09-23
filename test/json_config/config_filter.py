@@ -25,7 +25,7 @@ def filter_methods(do_remove_global_rpcs):
     global_rpcs = [
         'iscsi_set_options',
         'set_nvmf_target_config',
-        'set_nvmf_target_max_subsystems',
+        'nvmf_set_max_subsystems',
         'nvmf_create_transport',
         'bdev_set_options',
         'bdev_nvme_set_options',
