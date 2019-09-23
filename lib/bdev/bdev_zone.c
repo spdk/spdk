@@ -107,3 +107,9 @@ spdk_bdev_zone_management(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
+
+uint64_t
+spdk_bdev_io_get_append_location(struct spdk_bdev_io *bdev_io)
+{
+	return bdev_io->u.bdev.offset_blocks;
+}
