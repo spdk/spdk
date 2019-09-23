@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c4dde2d_f6bc73f2",
+        "filename": "include/spdk/bdev_zone.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-23T09:57:04Z",
+      "side": 1,
+      "message": "I think you\u0027ve meant bdev_io-\u003eu.bdev.offset_blocks. However, I\u0027m not sure we can state that here. The spdk_bdev_io structure should be transparent to the user - only bdev modules should  touch it directly.\nTherefore, I think we should have a spdk_bdev_io_get_offset() returning bdev_io-\u003eu.bdev.offset_blocks and state here that this function needs to be used to retrieve the offset.",
+      "range": {
+        "startLine": 215,
+        "startChar": 0,
+        "endLine": 215,
+        "endChar": 83
+      },
+      "revId": "58a3d9737a8b8fb83fc3df8e32d25c64dfe22fd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
