@@ -34,7 +34,7 @@ echo "  TransportID \"trtype:$TEST_TRANSPORT adrfam:IPv4 subnqn:nqn.2016-06.io.s
 $rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w verify -t 1
 sync
 rm -rf $testdir/bdevperf.conf
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 trap - SIGINT SIGTERM EXIT
 

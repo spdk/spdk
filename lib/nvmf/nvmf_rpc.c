@@ -476,7 +476,7 @@ static const struct spdk_json_object_decoder rpc_delete_subsystem_decoders[] = {
 };
 
 static void
-spdk_rpc_delete_nvmf_subsystem(struct spdk_jsonrpc_request *request,
+spdk_rpc_nvmf_delete_subsystem(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
 	struct rpc_delete_subsystem req = { 0 };
@@ -520,7 +520,8 @@ invalid:
 invalid_custom_response:
 	free_rpc_delete_subsystem(&req);
 }
-SPDK_RPC_REGISTER("delete_nvmf_subsystem", spdk_rpc_delete_nvmf_subsystem, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("nvmf_delete_subsystem", spdk_rpc_nvmf_delete_subsystem, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_delete_subsystem, delete_nvmf_subsystem)
 
 struct rpc_listen_address {
 	char *transport;

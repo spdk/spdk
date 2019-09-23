@@ -377,7 +377,8 @@ def nvmf_subsystem_allow_any_host(client, nqn, disable, tgt_name=None):
     return client.call('nvmf_subsystem_allow_any_host', params)
 
 
-def delete_nvmf_subsystem(client, nqn, tgt_name=None):
+@deprecated_alias('delete_nvmf_subsystem')
+def nvmf_delete_subsystem(client, nqn, tgt_name=None):
     """Delete an existing NVMe-oF subsystem.
 
     Args:
@@ -392,7 +393,7 @@ def delete_nvmf_subsystem(client, nqn, tgt_name=None):
     if tgt_name:
         params['tgt_name'] = tgt_name
 
-    return client.call('delete_nvmf_subsystem', params)
+    return client.call('nvmf_delete_subsystem', params)
 
 
 def nvmf_get_stats(client, tgt_name=None):

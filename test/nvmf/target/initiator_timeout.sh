@@ -63,7 +63,7 @@ else
         exit 1
 fi
 
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 rm -f ./local-job0-0-verify.state
 

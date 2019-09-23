@@ -80,7 +80,7 @@ nvme connect -t $TEST_TRANSPORT -n nqn.2016-06.io.spdk:cnode1 -q nqn.2016-06.io.
 waitforblk "nvme0n1"
 nvme disconnect -n nqn.2016-06.io.spdk:cnode1
 
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 # do frequent add delete of namespaces with different nsid.
 for i in $(seq 1 $times)
@@ -96,7 +96,7 @@ do
 	nvme disconnect -n nqn.2016-06.io.spdk:cnode1
 
 	$rpc_py nvmf_subsystem_remove_ns nqn.2016-06.io.spdk:cnode1 5
-	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+	$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 done
 
@@ -110,7 +110,7 @@ do
 
 	$rpc_py nvmf_subsystem_remove_ns nqn.2016-06.io.spdk:cnode1 1
 
-	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+	$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 done
 
 stats=$($rpc_py nvmf_get_stats)
