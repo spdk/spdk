@@ -33,68 +33,34 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/blobfs.h"
-#include "spdk/bdev.h"
 #include "spdk/event.h"
-#include "spdk/blob_bdev.h"
+#include "spdk/blobfs.h"
+#include "spdk/blobfs_bdev.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
 
-struct spdk_bs_dev *g_bs_dev;
 const char *g_bdev_name;
 static uint64_t g_cluster_size;
 
 static void
-stop_cb(void *ctx, int fserrno)
+shutdown_cb(void *cb_arg, int fserrno)
 {
-	spdk_app_stop(0);
-}
-
-static void
-shutdown_cb(void *arg1, void *arg2)
-{
-	struct spdk_filesystem *fs = arg1;
+	if (fserrno) {
+		printf("\nFailed to initialize filesystem on bdev %s...", g_bdev_name);
+	}
 
 	printf("done.\n");
-	spdk_fs_unload(fs, stop_cb, NULL);
-}
 
-static void
-init_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
-{
-	struct spdk_event *event;
-
-	event = spdk_event_allocate(0, shutdown_cb, fs, NULL);
-	spdk_event_call(event);
+	spdk_app_stop(0);
 }
 
 static void
 spdk_mkfs_run(void *arg1)
 {
-	struct spdk_bdev *bdev;
-	struct spdk_blobfs_opts blobfs_opt;
-
-	bdev = spdk_bdev_get_by_name(g_bdev_name);
-
-	if (bdev == NULL) {
-		SPDK_ERRLOG("bdev %s not found\n", g_bdev_name);
-		spdk_app_stop(-1);
-		return;
-	}
-
 	printf("Initializing filesystem on bdev %s...", g_bdev_name);
 	fflush(stdout);
 
-	spdk_fs_opts_init(&blobfs_opt);
-	if (g_cluster_size) {
-		blobfs_opt.cluster_sz = g_cluster_size;
-	}
-	g_bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
-	if (blobfs_opt.cluster_sz) {
-		spdk_fs_init(g_bs_dev, &blobfs_opt, NULL, init_cb, NULL);
-	} else {
-		spdk_fs_init(g_bs_dev, NULL, NULL, init_cb, NULL);
-	}
+	spdk_blobfs_bdev_create(g_bdev_name, g_cluster_size, shutdown_cb, NULL);
 }
 
 static void
