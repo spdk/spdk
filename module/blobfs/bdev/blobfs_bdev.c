@@ -41,9 +41,9 @@
 #include "spdk/string.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
+#include "spdk/blobfs_bdev.h"
 
 #include "spdk_internal/log.h"
-#include "blobfs_bdev.h"
 
 /* Dummy bdev module used to to claim bdevs. */
 static struct spdk_bdev_module blobfs_bdev_module = {

@@ -31,6 +31,14 @@ function has been deprecated.
 The new create function can cowork with spdk_bdev_open_ext function, which provides callback
 function that will be called by asynchronous event such as bdev removal.
 
+### blobfs_bdev
+
+A new blobfs module `bdev` has been added to simplify the operations of blobfs on bdev.
+
+Function spdk_blobfs_bdev_detect is added to detect whether blobfs exists on the given block device.
+
+Function spdk_blobfs_bdev_create is added to create a blobfs on the given block device.
+
 ### nvme
 
 Added `no_shn_notification` to NVMe controller initialization options, users can enable
