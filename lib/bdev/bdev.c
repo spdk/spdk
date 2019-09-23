@@ -4576,6 +4576,12 @@ spdk_bdev_io_get_md_buf(struct spdk_bdev_io *bdev_io)
 	return NULL;
 }
 
+uint64_t
+spdk_bdev_io_get_offset(struct spdk_bdev_io *bdev_io)
+{
+	return bdev_io->u.bdev.offset_blocks;
+}
+
 void
 spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 {
