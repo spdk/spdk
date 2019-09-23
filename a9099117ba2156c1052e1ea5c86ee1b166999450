@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a2ce8b22_b716a88e",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T11:10:35Z",
+      "side": 1,
+      "message": "We keep anm_lock during ftl_anm_register_device so it should be safe. ftl_anm_poller_cb is called on same thread as ftl_anm_unregister_device_cb now.",
+      "parentUuid": "6ea3ffc0_3f1ddf97",
+      "range": {
+        "startLine": 476,
+        "startChar": 1,
+        "endLine": 476,
+        "endChar": 35
+      },
+      "revId": "a9099117ba2156c1052e1ea5c86ee1b166999450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b5d5ee24_7121e79f",
         "filename": "lib/ftl/ftl_anm.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-09-23T08:02:38Z",
       "side": 1,
       "message": "Let\u0027s make this a part of ftl_anm_poller, so we don\u0027t have to handle the memory allocation errors.",
+      "range": {
+        "startLine": 497,
+        "startChar": 0,
+        "endLine": 501,
+        "endChar": 2
+      },
+      "revId": "a9099117ba2156c1052e1ea5c86ee1b166999450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1101a14_ed6c37c2",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T11:10:35Z",
+      "side": 1,
+      "message": "This will require more changes in ANM logic - I think we should ignore this allocation for now and fix it in ocssd bdev - this whole code will be removed soon from FTL.",
+      "parentUuid": "b5d5ee24_7121e79f",
       "range": {
         "startLine": 497,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "93da765a_634a016e",
+        "filename": "lib/ftl/ftl_anm.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T11:10:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "62c3e0a0_354d7d04",
+      "range": {
+        "startLine": 67,
+        "startChar": 30,
+        "endLine": 67,
+        "endChar": 71
+      },
+      "revId": "a9099117ba2156c1052e1ea5c86ee1b166999450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1727331_1d967577",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 2
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "13a062dc_01021857",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1324,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T11:10:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a1727331_1d967577",
+      "range": {
+        "startLine": 1324,
+        "startChar": 0,
+        "endLine": 1324,
+        "endChar": 28
+      },
+      "revId": "a9099117ba2156c1052e1ea5c86ee1b166999450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f2bbc260_f6002bb9",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 2
@@ -114,6 +210,30 @@
       "revId": "a9099117ba2156c1052e1ea5c86ee1b166999450",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36a8eb3a_1947ca02",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1339,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T11:10:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f2bbc260_f6002bb9",
+      "range": {
+        "startLine": 1339,
+        "startChar": 2,
+        "endLine": 1339,
+        "endChar": 6
+      },
+      "revId": "a9099117ba2156c1052e1ea5c86ee1b166999450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
