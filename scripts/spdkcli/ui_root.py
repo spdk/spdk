@@ -306,11 +306,11 @@ class UIRoot(UINode):
 
     def list_nvmf_transports(self):
         if self.is_init:
-            self.current_nvmf_transports = rpc.nvmf.get_nvmf_transports(self.client)
+            self.current_nvmf_transports = rpc.nvmf.nvmf_get_transports(self.client)
 
     @verbose
     @is_method_available
-    def get_nvmf_transports(self):
+    def nvmf_get_transports(self):
         if self.is_init:
             self.list_nvmf_transports()
             for transport in self.current_nvmf_transports:
