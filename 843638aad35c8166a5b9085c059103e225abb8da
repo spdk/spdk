@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ac9daec_984e7493",
+        "filename": "include/spdk/bdev_zone.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-23T12:50:15Z",
+      "side": 1,
+      "message": "as you suggested, let\u0027s make INFO a separate bdev io type, and then just implement a single API for zone actions",
+      "revId": "843638aad35c8166a5b9085c059103e225abb8da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
