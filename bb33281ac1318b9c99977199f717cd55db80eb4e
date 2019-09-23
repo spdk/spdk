@@ -16,6 +16,24 @@
       "revId": "bb33281ac1318b9c99977199f717cd55db80eb4e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96e45eaa_a8346daa",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-23T20:53:29Z",
+      "side": 1,
+      "message": "Done. See https://review.gerrithub.io/c/spdk/spdk/+/468902 for the WIP implementation of the more robust connect/disconnect handling.",
+      "parentUuid": "f6303b07_f86f9878",
+      "revId": "bb33281ac1318b9c99977199f717cd55db80eb4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
