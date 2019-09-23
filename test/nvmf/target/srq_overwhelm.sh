@@ -43,7 +43,7 @@ sync
 
 for i in $(seq 0 5); do
 	nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}"
-	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode$i
+	$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode$i
 done
 
 trap - SIGINT SIGTERM EXIT

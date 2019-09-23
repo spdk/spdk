@@ -58,7 +58,7 @@ $rpc_py bdev_lvol_inflate $clone
 wait $perf_pid
 
 # Clean up
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode0
+$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode0
 $rpc_py bdev_lvol_delete $lvol
 $rpc_py bdev_lvol_delete_lvstore -u $lvs
 

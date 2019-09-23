@@ -1632,17 +1632,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    type=int, default=0)
     p.set_defaults(func=nvmf_create_subsystem)
 
-    def delete_nvmf_subsystem(args):
-        rpc.nvmf.delete_nvmf_subsystem(args.client,
+    def nvmf_delete_subsystem(args):
+        rpc.nvmf.nvmf_delete_subsystem(args.client,
                                        nqn=args.subsystem_nqn,
                                        tgt_name=args.tgt_name)
 
-    p = subparsers.add_parser('delete_nvmf_subsystem',
+    p = subparsers.add_parser('nvmf_delete_subsystem',
                               help='Delete a nvmf subsystem')
-    p.add_argument('subsystem_nqn',
+    p.add_argument('subsystem_nqn', aliases=['delete_nvmf_subsystem'],
                    help='subsystem nqn to be deleted. Example: nqn.2016-06.io.spdk:cnode1.')
     p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
-    p.set_defaults(func=delete_nvmf_subsystem)
+    p.set_defaults(func=nvmf_delete_subsystem)
 
     def nvmf_subsystem_add_listener(args):
         rpc.nvmf.nvmf_subsystem_add_listener(args.client,
