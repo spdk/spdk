@@ -18,9 +18,10 @@ def nvmf_set_max_subsystems(client,
     return client.call('nvmf_set_max_subsystems', params)
 
 
-def set_nvmf_target_config(client,
-                           acceptor_poll_rate=None,
-                           conn_sched=None):
+@deprecated_alias('set_nvmf_target_config')
+def nvmf_set_config(client,
+                    acceptor_poll_rate=None,
+                    conn_sched=None):
     """Set NVMe-oF target subsystem configuration.
 
     Args:
@@ -36,7 +37,7 @@ def set_nvmf_target_config(client,
         params['acceptor_poll_rate'] = acceptor_poll_rate
     if conn_sched:
         params['conn_sched'] = conn_sched
-    return client.call('set_nvmf_target_config', params)
+    return client.call('nvmf_set_config', params)
 
 
 def nvmf_create_target(client,
