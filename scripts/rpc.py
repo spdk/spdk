@@ -1535,13 +1535,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=net_get_interfaces)
 
     # NVMe-oF
-    def set_nvmf_target_max_subsystems(args):
-        rpc.nvmf.set_nvmf_target_max_subsystems(args.client,
-                                                max_subsystems=args.max_subsystems)
+    def nvmf_set_max_subsystems(args):
+        rpc.nvmf.nvmf_set_max_subsystems(args.client,
+                                         max_subsystems=args.max_subsystems)
 
-    p = subparsers.add_parser('set_nvmf_target_max_subsystems', help='Set the maximum number of NVMf target subsystems')
+    p = subparsers.add_parser('nvmf_set_max_subsystems', aliases=['set_nvmf_target_max_subsystems'],
+                              help='Set the maximum number of NVMf target subsystems')
     p.add_argument('-x', '--max-subsystems', help='Max number of NVMf subsystems', type=int, required=True)
-    p.set_defaults(func=set_nvmf_target_max_subsystems)
+    p.set_defaults(func=nvmf_set_max_subsystems)
 
     def set_nvmf_target_config(args):
         rpc.nvmf.set_nvmf_target_config(args.client,
