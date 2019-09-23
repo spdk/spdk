@@ -4172,7 +4172,7 @@ Example response:
 }
 ~~~
 
-## set_nvmf_target_max_subsystems {#rpc_set_nvmf_target_max_subsystems}
+## nvmf_set_max_subsystems {#rpc_nvmf_set_max_subsystems}
 
 Set the maximum allowed subsystems for the NVMe-oF target.  This RPC may only be called
 before SPDK subsystems have been initialized.
@@ -4191,7 +4191,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "set_nvmf_target_max_subsystems",
+  "method": "nvmf_set_max_subsystems",
   "params": {
     "max_subsystems": 1024
   }

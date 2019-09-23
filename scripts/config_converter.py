@@ -30,7 +30,7 @@ iscsi_dict["iscsi_create_target_node"] = []
 
 nvmf_dict = OrderedDict()
 nvmf_dict["set_nvmf_target_config"] = []
-nvmf_dict["set_nvmf_target_max_subsystems"] = []
+nvmf_dict["nvmf_set_max_subsystems"] = []
 nvmf_dict["subsystems"] = []
 
 
@@ -305,7 +305,7 @@ def get_nvmf_options_json(config, section):
     })
     nvmf_json.append({
         "params": to_json_params(params[1:7]),
-        "method": "set_nvmf_target_max_subsystems"
+        "method": "nvmf_set_max_subsystems"
     })
 
     return nvmf_json
