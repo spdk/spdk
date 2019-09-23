@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a47a8f47_71e05386",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T09:21:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "edb80018_79b23ed0",
+      "revId": "ea11ef15e503824b832888867f3594b8c747ac30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4418ce67_a76ba033",
         "filename": "lib/bdev/bdev_zone.c",
         "patchSetId": 20
@@ -33,6 +51,24 @@
       "revId": "ea11ef15e503824b832888867f3594b8c747ac30",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7300a0a_a255e678",
+        "filename": "lib/bdev/bdev_zone.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-23T09:21:33Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4418ce67_a76ba033",
+      "revId": "ea11ef15e503824b832888867f3594b8c747ac30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
