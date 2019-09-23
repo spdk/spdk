@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "bdev_nvme.h"
+#include "bdev_ocssd.h"
 
 #include "spdk/config.h"
 #include "spdk/conf.h"
@@ -1228,8 +1229,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
-		/* Open Channel bdevs are created with a separate call */
-		create_bdevs_cb(ctx, 0, 0);
+		spdk_bdev_ocssd_create_bdevs(ctx, create_bdevs_cb, ctx);
 	} else {
 		bdev_nvme_create_bdevs(ctx, create_bdevs_cb, ctx);
 	}
