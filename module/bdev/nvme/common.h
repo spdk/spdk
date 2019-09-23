@@ -44,6 +44,12 @@ extern pthread_mutex_t g_bdev_nvme_mutex;
 
 #define NVME_MAX_CONTROLLERS 1024
 
+enum nvme_ctrlr_mode {
+	SPDK_NVME_STANDARD_CTRLR,
+	SPDK_NVME_OCSSD_CTRLR,
+	SPDK_NVME_FTL_CTRLR
+};
+
 struct nvme_bdev_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -55,6 +61,7 @@ struct nvme_bdev_ctrlr {
 	char				*name;
 	int				ref;
 	bool				destruct;
+	enum nvme_ctrlr_mode		mode;
 	/**
 	 * PI check flags. This flags is set to NVMe controllers created only
 	 * through bdev_nvme_attach_controller RPC or .INI config file. Hot added
