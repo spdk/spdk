@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "664eee06_c92be3bc",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1629,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-23T09:18:55Z",
+      "side": 1,
+      "message": "We should also deallocate all previously allocated PDs and close open devices. Maybe it\u0027s better to call nvme_rdma_ctrlr_destruct instead of freeing individual allocations?",
+      "revId": "d4f9bf34c4eee6fd4ce7690a719ba1e95bd8e024",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "160cbf99_04a4534f",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1634,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-23T09:18:55Z",
+      "side": 1,
+      "message": "It seems that we will use the same device again and and again since i counter is not increased in the case of PD allocation failure. Maybe we should have 2 counters - one to iterate over devices and another to store values to rctrlr-\u003econtexts? In that case we can change `while` loop to `for`",
+      "range": {
+        "startLine": 1634,
+        "startChar": 3,
+        "endLine": 1634,
+        "endChar": 69
+      },
+      "revId": "d4f9bf34c4eee6fd4ce7690a719ba1e95bd8e024",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ad659a9_c7b5a545",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1739,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-23T09:18:55Z",
+      "side": 1,
+      "message": "The actual number of open devices/PDs might be less than rctrlr-\u003enum_contexts. In that case rctrlr-\u003econtexts[i].pd and rctrlr-\u003econtexts[i].ctx might be NULL. We should add a check for NULL before calling ibv_dealloc_pd and ibv_close_device",
+      "range": {
+        "startLine": 1739,
+        "startChar": 25,
+        "endLine": 1739,
+        "endChar": 37
+      },
+      "revId": "d4f9bf34c4eee6fd4ce7690a719ba1e95bd8e024",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1248883_4d000ac2",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1742,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-23T09:18:55Z",
+      "side": 1,
+      "message": "We should free rctrlr-\u003econtexts",
+      "range": {
+        "startLine": 1742,
+        "startChar": 1,
+        "endLine": 1742,
+        "endChar": 2
+      },
+      "revId": "d4f9bf34c4eee6fd4ce7690a719ba1e95bd8e024",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
