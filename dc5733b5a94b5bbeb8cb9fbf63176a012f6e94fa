@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd8bf169_d73c888e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-23T13:21:30Z",
+      "side": 1,
+      "message": "Add better SC description in commit message",
+      "revId": "dc5733b5a94b5bbeb8cb9fbf63176a012f6e94fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
