@@ -43,6 +43,21 @@ extern pthread_mutex_t g_bdev_nvme_mutex;
 
 #define NVME_MAX_CONTROLLERS 1024
 
+enum spdk_bdev_timeout_action {
+	SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE = 0,
+	SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET,
+	SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT,
+};
+
+struct spdk_bdev_nvme_opts {
+	enum spdk_bdev_timeout_action action_on_timeout;
+	uint64_t timeout_us;
+	uint32_t retry_count;
+	uint64_t nvme_adminq_poll_period_us;
+	uint64_t nvme_ioq_poll_period_us;
+	uint32_t io_queue_requests;
+};
+
 struct nvme_bdev_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -65,6 +80,8 @@ struct nvme_bdev_ctrlr {
 	TAILQ_HEAD(, nvme_bdev)		bdevs;
 
 	struct spdk_poller		*adminq_timer_poller;
+
+	struct spdk_bdev_nvme_opts	opts;
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;

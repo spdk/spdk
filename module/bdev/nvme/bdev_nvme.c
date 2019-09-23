@@ -530,6 +530,7 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 	struct spdk_nvme_ctrlr *ctrlr = io_device;
 	struct nvme_io_channel *ch = ctx_buf;
 	struct spdk_nvme_io_qpair_opts opts;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 
 #ifdef SPDK_CONFIG_VTUNE
 	ch->collect_spin_stat = true;
@@ -537,10 +538,16 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 	ch->collect_spin_stat = false;
 #endif
 
+	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+		if (nvme_bdev_ctrlr->ctrlr == ctrlr) {
+			break;
+		}
+	}
+
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
 	opts.delay_pcie_doorbell = true;
-	opts.io_queue_requests = spdk_max(g_opts.io_queue_requests, opts.io_queue_requests);
-	g_opts.io_queue_requests = opts.io_queue_requests;
+	opts.io_queue_requests = spdk_max(nvme_bdev_ctrlr->opts.io_queue_requests, opts.io_queue_requests);
+	nvme_bdev_ctrlr->opts.io_queue_requests = opts.io_queue_requests;
 
 	ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
 
@@ -548,7 +555,8 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	ch->poller = spdk_poller_register(bdev_nvme_poll, ch, g_opts.nvme_ioq_poll_period_us);
+	ch->poller = spdk_poller_register(bdev_nvme_poll, ch,
+					  nvme_bdev_ctrlr->opts.nvme_ioq_poll_period_us);
 	return 0;
 }
 
@@ -849,6 +857,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 {
 	int rc;
 	union spdk_nvme_csts_register csts;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 
 	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n", ctrlr, qpair, cid);
 
@@ -862,7 +871,13 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 		return;
 	}
 
-	switch (g_opts.action_on_timeout) {
+	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+		if (nvme_bdev_ctrlr->ctrlr == ctrlr) {
+			break;
+		}
+	}
+
+	switch (nvme_bdev_ctrlr->opts.action_on_timeout) {
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT:
 		if (qpair) {
 			rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid,
@@ -954,6 +969,14 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_bdev_ctrlr->ctrlr = ctrlr;
 	nvme_bdev_ctrlr->ref = 0;
 	nvme_bdev_ctrlr->trid = *trid;
+
+	if (!spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		spdk_bdev_nvme_get_opts(&nvme_bdev_ctrlr->opts);
+	} else {
+		/* TODO: add 'get opts' for ocssd controller with ocssd controller implementation */
+		assert(false);
+	}
+
 	nvme_bdev_ctrlr->name = strdup(name);
 	if (nvme_bdev_ctrlr->name == NULL) {
 		free(nvme_bdev_ctrlr);
@@ -966,14 +989,14 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 				name);
 
 	nvme_bdev_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, ctrlr,
-					       g_opts.nvme_adminq_poll_period_us);
+					       nvme_bdev_ctrlr->opts.nvme_adminq_poll_period_us);
 
 	TAILQ_INIT(&nvme_bdev_ctrlr->bdevs);
 
 	TAILQ_INSERT_TAIL(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
 
-	if (g_opts.timeout_us > 0) {
-		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_opts.timeout_us,
+	if (nvme_bdev_ctrlr->opts.timeout_us > 0) {
+		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, nvme_bdev_ctrlr->opts.timeout_us,
 				timeout_cb, NULL);
 	}
 
@@ -2032,6 +2055,10 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 		const char *trtype;
 		const char *prchk_flags;
+
+		if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+			continue;
+		}
 
 		trtype = spdk_nvme_transport_id_trtype_str(nvme_bdev_ctrlr->trid.trtype);
 		if (!trtype) {
