@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6c264203_c16a8151",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T02:41:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "285aa394_a8230a02",
+      "range": {
+        "startLine": 12,
+        "startChar": 9,
+        "endLine": 12,
+        "endChar": 30
+      },
+      "revId": "de659c66bc648b6ca3b0fc3fa1637eeeaa9d38ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0ff0cb45_85ae900f",
         "filename": "test/nvme/nvme_opal.sh",
         "patchSetId": 6
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "7a825651_45c2daae",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T02:41:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0ff0cb45_85ae900f",
+      "revId": "de659c66bc648b6ca3b0fc3fa1637eeeaa9d38ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a8233434_2690350b",
         "filename": "test/nvme/nvme_opal.sh",
         "patchSetId": 6
@@ -53,6 +95,24 @@
       "writtenOn": "2019-09-20T16:03:48Z",
       "side": 1,
       "message": "\"opal_clean\" -\u003e \"delete_vbdevs\"",
+      "revId": "de659c66bc648b6ca3b0fc3fa1637eeeaa9d38ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b8f6417_ed78af5c",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T02:41:44Z",
+      "side": 1,
+      "message": "Hi Paul, thank you for your comments. In this function, some other rpc commands will be added in later patch. delete_vbdevs will not be exact anymore. I will rename to clean_up. Thanks.",
+      "parentUuid": "a8233434_2690350b",
       "revId": "de659c66bc648b6ca3b0fc3fa1637eeeaa9d38ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
