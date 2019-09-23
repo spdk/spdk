@@ -466,7 +466,7 @@ class SPDKTarget(Target):
         # Create RDMA transport layer
         rpc.nvmf.nvmf_create_transport(self.client, trtype=self.transport, num_shared_buffers=self.num_shared_buffers)
         self.log_print("SPDK NVMeOF transport layer:")
-        rpc.client.print_dict(rpc.nvmf.get_nvmf_transports(self.client))
+        rpc.client.print_dict(rpc.nvmf.nvmf_get_transports(self.client))
 
         if self.null_block:
             nvme_section = self.spdk_tgt_add_nullblock()

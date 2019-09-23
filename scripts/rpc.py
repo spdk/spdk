@@ -1619,13 +1619,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-y', '--sock-priority', help='The sock priority of the tcp connection. Relevant only for TCP transport', type=int)
     p.set_defaults(func=nvmf_create_transport)
 
-    def get_nvmf_transports(args):
-        print_dict(rpc.nvmf.get_nvmf_transports(args.client, tgt_name=args.tgt_name))
+    def nvmf_get_transports(args):
+        print_dict(rpc.nvmf.nvmf_get_transports(args.client, tgt_name=args.tgt_name))
 
-    p = subparsers.add_parser('get_nvmf_transports',
+    p = subparsers.add_parser('nvmf_get_transports', aliases=['get_nvmf_transports'],
                               help='Display nvmf transports')
     p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
-    p.set_defaults(func=get_nvmf_transports)
+    p.set_defaults(func=nvmf_get_transports)
 
     def nvmf_get_subsystems(args):
         print_dict(rpc.nvmf.nvmf_get_subsystems(args.client, tgt_name=args.tgt_name))
