@@ -31,11 +31,19 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file
+ * Operations on blobfs whose backing device is spdk_bdev
+ */
+
 #ifndef SPDK_BLOBFS_BDEV_H
 #define SPDK_BLOBFS_BDEV_H
 
 #include "spdk/stdinc.h"
 #include "spdk/bdev.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * blobfs on bdev operation completion callback.
@@ -64,5 +72,9 @@ int spdk_blobfs_bdev_detect(const char *bdev_name,
  */
 int spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
 			    spdk_blobfs_bdev_op_complete cb_fn, void *cb_arg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_BLOBFS_BDEV_H */
