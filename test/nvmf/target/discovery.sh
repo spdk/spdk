@@ -35,7 +35,7 @@ echo "Perform nvmf subsystem discovery via RPC"
 $rpc_py nvmf_get_subsystems
 
 for i in $(seq 1 4); do
-	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode$i
+	$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode$i
 	$rpc_py bdev_null_delete Null$i
 done
 

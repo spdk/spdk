@@ -36,7 +36,7 @@ nvme discover -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 echo "Perform nvmf subsystem discovery via RPC"
 $rpc_py nvmf_get_subsystems
 
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 for null_bdev in $null_bdevs; do
 	$rpc_py bdev_null_delete $null_bdev

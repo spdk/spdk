@@ -72,7 +72,7 @@ class UINVMfSubsystems(UINode):
             UINVMfSubsystem(subsystem, self)
 
     def delete(self, subsystem_nqn):
-        self.get_root().delete_nvmf_subsystem(nqn=subsystem_nqn)
+        self.get_root().nvmf_delete_subsystem(nqn=subsystem_nqn)
 
     def ui_command_create(self, nqn, serial_number=None,
                           max_namespaces=None, allow_any_host="false"):

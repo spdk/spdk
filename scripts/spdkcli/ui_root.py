@@ -333,8 +333,8 @@ class UIRoot(UINode):
         rpc.nvmf.nvmf_create_subsystem(self.client, **kwargs)
 
     @verbose
-    def delete_nvmf_subsystem(self, **kwargs):
-        rpc.nvmf.delete_nvmf_subsystem(self.client, **kwargs)
+    def nvmf_delete_subsystem(self, **kwargs):
+        rpc.nvmf.nvmf_delete_subsystem(self.client, **kwargs)
 
     @verbose
     def nvmf_subsystem_add_listener(self, **kwargs):

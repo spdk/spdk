@@ -34,7 +34,7 @@ $rootdir/test/app/fuzz/nvme_fuzz/nvme_fuzz -m 0xF0 -r "/var/tmp/nvme_fuzz" -t 30
 $rootdir/test/app/fuzz/nvme_fuzz/nvme_fuzz -m 0xF0 -r "/var/tmp/nvme_fuzz" -C $testdir/nvmf_fuzz.conf -j $rootdir/test/app/fuzz/nvme_fuzz/example.json -a 2>$output_dir/nvmf_fuzz_logs2.txt
 
 rm -f $testdir/nvmf_fuzz.conf
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 trap - SIGINT SIGTERM EXIT
 

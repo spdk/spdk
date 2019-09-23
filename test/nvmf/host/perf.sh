@@ -44,7 +44,7 @@ fi
 $rootdir/examples/nvme/perf/perf -q 32 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 $rootdir/examples/nvme/perf/perf -q 128 -o 262144 -w randrw -M 50 -t 2 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 sync
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	# Configure nvme devices with nvmf lvol_bdev backend
@@ -81,7 +81,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 		done
 
 		# Delete subsystems, lvol_bdev and destroy lvol_store.
-		$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+		$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 		$rpc_py bdev_lvol_delete "$lb_nested_guid"
 		$rpc_py bdev_lvol_delete_lvstore -l lvs_n_0
 		$rpc_py bdev_lvol_delete "$lb_guid"

@@ -48,7 +48,7 @@ $rootdir/examples/nvme/identify/identify -r "\
         trsvcid:$NVMF_PORT \
         subnqn:nqn.2016-06.io.spdk:cnode1" -L all
 sync
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 trap - SIGINT SIGTERM EXIT
 

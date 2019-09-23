@@ -64,7 +64,7 @@ for incapsule in 0 4096; do
 	sync
 	nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
 
-	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+	$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 	trap - SIGINT SIGTERM EXIT
 

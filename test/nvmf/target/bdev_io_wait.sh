@@ -42,7 +42,7 @@ wait $FLUSH_PID
 wait $UNMAP_PID
 
 rm -rf $testdir/bdevperf.conf
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 trap - SIGINT SIGTERM EXIT
 

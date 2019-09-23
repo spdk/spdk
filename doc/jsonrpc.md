@@ -3879,7 +3879,7 @@ Example response:
 }
 ~~~
 
-## delete_nvmf_subsystem method {#rpc_delete_nvmf_subsystem}
+## nvmf_delete_subsystem method {#rpc_nvmf_delete_subsystem}
 
 Delete an existing NVMe-oF subsystem.
 
@@ -3898,7 +3898,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "delete_nvmf_subsystem",
+  "method": "nvmf_delete_subsystem",
   "params": {
     "nqn": "nqn.2016-06.io.spdk:cnode1"
   }

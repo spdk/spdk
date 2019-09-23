@@ -71,7 +71,7 @@ def clear_bdev_subsystem(args, bdev_config):
 
 
 def get_nvmf_destroy_method(nvmf):
-    delete_method_map = {'nvmf_create_subsystem': "delete_nvmf_subsystem"}
+    delete_method_map = {'nvmf_create_subsystem': "nvmf_delete_subsystem"}
     try:
         return delete_method_map[nvmf['method']]
     except KeyError:
