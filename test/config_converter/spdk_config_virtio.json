@@ -85,7 +85,7 @@
           "params": {
             "acceptor_poll_rate": 10000
           },
-          "method": "set_nvmf_target_config"
+          "method": "nvmf_set_config"
         },
         {
           "params": {
