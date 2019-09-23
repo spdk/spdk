@@ -4136,7 +4136,7 @@ Example response:
 }
 ~~~
 
-## set_nvmf_target_config {#rpc_set_nvmf_target_config}
+## nvmf_set_config {#rpc_nvmf_set_config}
 
 Set global configuration of NVMe-oF target.  This RPC may only be called before SPDK subsystems
 have been initialized.
@@ -4155,7 +4155,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "set_nvmf_target_config",
+  "method": "nvmf_set_config",
   "params": {
     "acceptor_poll_rate": 10000
   }
