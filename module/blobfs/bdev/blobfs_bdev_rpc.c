@@ -40,10 +40,9 @@
 #include "spdk/string.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
+#include "spdk/blobfs_bdev.h"
 
 #include "spdk_internal/log.h"
-
-#include "blobfs_bdev.h"
 
 struct rpc_blobfs_detect {
 	char *bdev_name;
