@@ -16,6 +16,24 @@
       "revId": "e01a4a5a6bbf8b4d6128b7f65231ae1cdcaecf3b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c879985a_0372e3af",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-23T01:46:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f046ff60_6cf5827a",
+      "revId": "e01a4a5a6bbf8b4d6128b7f65231ae1cdcaecf3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
