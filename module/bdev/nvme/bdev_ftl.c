@@ -145,6 +145,7 @@ bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transpo
 		ftl_ctrlr->ctrlr = ctrlr;
 		ftl_ctrlr->trid = *trid;
 		ftl_ctrlr->ref = 1;
+		ftl_ctrlr->mode = SPDK_NVME_FTL_CTRLR;
 
 		ftl_ctrlr->name = spdk_sprintf_alloc("NVMe_%s", trid->traddr);
 		if (!ftl_ctrlr->name) {
