@@ -142,4 +142,11 @@ int spdk_bdev_zone_management(struct spdk_bdev_desc *desc, struct spdk_io_channe
 			      uint64_t zone_id, enum spdk_bdev_zone_action action,
 			      spdk_bdev_io_completion_cb cb, void *cb_arg);
 
+/**
+ * Get append location (offset in blocks of the bdev) for this I/O.
+ *
+ * \param bdev_io I/O to get append location from.
+ */
+uint64_t spdk_bdev_io_get_append_location(struct spdk_bdev_io *bdev_io);
+
 #endif /* SPDK_BDEV_ZONE_H */
