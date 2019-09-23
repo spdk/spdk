@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c235744b_c9c5f31f",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-23T08:17:41Z",
+      "side": 1,
+      "message": "Is this value due to some 4k size multiple or is it arbitrary?\nIf it\u0027s calculated I think it\u0027d be better to show how.",
+      "revId": "2d75096dc4228bde5c00927a4d7d67fb74d6f90f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a826050d_b3ea5c86",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 732,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-23T08:17:41Z",
+      "side": 1,
+      "message": "same zone",
+      "revId": "2d75096dc4228bde5c00927a4d7d67fb74d6f90f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66d407a6_000b455b",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-23T08:17:41Z",
+      "side": 1,
+      "message": "have been",
+      "revId": "2d75096dc4228bde5c00927a4d7d67fb74d6f90f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
