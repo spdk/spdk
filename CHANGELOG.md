@@ -2,6 +2,19 @@
 
 ## v19.10: (Upcoming Release)
 
+### bdev zone
+
+Added new public header for zoned bdev. Zoned bdev is an extension
+of the bdev interface.
+
+`spdk_bdev_get_zone_size()`, `spdk_bdev_get_max_open_zones()`, `spdk_bdev_get_optimal_open_zones()`
+APIs were added for retrieving zoned device information.
+`spdk_bdev_get_zone_info()` API was added for retrieving information about zones in zoned
+device.
+Added `spdk_bdev_zone_management()` API for changing zone state.
+`spdk_bdev_zone_append()` and `spdk_bdev_zone_append_with_md()` APIs were added for
+appending data to a zone.
+
 ### bdev
 
 Added `spdk_bdev_get_write_unit_size()` function for retrieving required number
