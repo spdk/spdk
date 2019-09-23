@@ -185,7 +185,7 @@
           "params": {
             "max_subsystems": 1024
           },
-          "method": "set_nvmf_target_max_subsystems"
+          "method": "nvmf_set_max_subsystems"
         },
         {
           "params": {
