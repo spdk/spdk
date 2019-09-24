@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81d22dcf_4d114ad5",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-24T19:54:09Z",
+      "side": 1,
+      "message": "This is 100% just a curiosity question. was there a specific reason you switched from an unsigned to a signed value for num_buffers?",
+      "revId": "72bb889dd5338b188f1b6d1f7b05a47fb041fd73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
