@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d01fdd8c_2f2e292b",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-24T14:32:51Z",
+      "side": 1,
+      "message": "This value is too big - FTL init time take few seconds on qemu.",
+      "revId": "e91dfe995e44716449753e892aedae0293da5710",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
