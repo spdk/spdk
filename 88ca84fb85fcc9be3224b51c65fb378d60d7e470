@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70a660a3_76e8201d",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1398,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-24T14:56:35Z",
+      "side": 1,
+      "message": "This is just returning the LBA, right? That\u0027s technically an offset, but I tend to think of them more as addresses. I\u0027d name this spdk_bdev_io_get_append_location maybe. Also, could this function go in the bdev_zone header?",
+      "revId": "88ca84fb85fcc9be3224b51c65fb378d60d7e470",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
