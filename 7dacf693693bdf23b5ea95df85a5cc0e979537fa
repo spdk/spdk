@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b4b2fc7a_ec765613",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-24T21:26:54Z",
+      "side": 1,
+      "message": "so my first patch looked at the xattr, See Tomek\u0027s comment on my first patch as to why he didn\u0027t think that was the correct approach.  That\u0027s why I went this direction",
+      "parentUuid": "40731042_36d24e54",
+      "revId": "7dacf693693bdf23b5ea95df85a5cc0e979537fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6fc56447_a88e2dac",
         "filename": "include/spdk/blob.h",
         "patchSetId": 9
@@ -30,6 +48,24 @@
       "writtenOn": "2019-09-24T20:22:26Z",
       "side": 1,
       "message": "I\u0027m not sure we need this new function (see comment on commit message).  But for these type of _ext options, we should have an opts structure that contains the clear method.  See spdk_bs_open_blob_ext.  That ensures API compatibility if we find some other type of option we need to add in the future (rather than creating an _ext2, _ext3, etc. function).",
+      "revId": "7dacf693693bdf23b5ea95df85a5cc0e979537fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b14e5738_9e0bc057",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-24T21:26:54Z",
+      "side": 1,
+      "message": "ahhh yes, an opts struct would be better.  Look at my reply to your other comment as to whether or not we do this or can just use the xattr that\u0027s persisted",
+      "parentUuid": "6fc56447_a88e2dac",
       "revId": "7dacf693693bdf23b5ea95df85a5cc0e979537fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
