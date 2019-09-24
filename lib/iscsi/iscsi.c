@@ -790,9 +790,6 @@ iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 	if (conn->sess->target != NULL) {
 		ag_tag = conn->sess->target->chap_group;
 	} else {
-		ag_tag = -1;
-	}
-	if (ag_tag < 0) {
 		ag_tag = g_spdk_iscsi.chap_group;
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ag_tag=%d\n", ag_tag);
