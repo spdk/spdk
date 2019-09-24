@@ -93,6 +93,30 @@
       "revId": "5acf0c67bf1a5500cf1e745697ab81c403f34007",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8eba859_b374b353",
+        "filename": "scripts/vagrant/run-autorun.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-09-24T13:38:37Z",
+      "side": 1,
+      "message": "I agree with Karol about splitting SHCK_EXCLUDE to two lists.",
+      "parentUuid": "64f55eca_cf5f5187",
+      "range": {
+        "startLine": 184,
+        "startChar": 0,
+        "endLine": 185,
+        "endChar": 36
+      },
+      "revId": "5acf0c67bf1a5500cf1e745697ab81c403f34007",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
