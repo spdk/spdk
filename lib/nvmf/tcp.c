@@ -2197,16 +2197,13 @@ static int
 spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 			    struct spdk_nvmf_tcp_req *tcp_req, uint32_t length)
 {
-	uint32_t				num_buffers;
 	struct spdk_nvmf_tcp_qpair		*tqpair;
 	struct spdk_nvmf_transport_poll_group	*group;
 
 	tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	group = &tqpair->group->group;
 
-	num_buffers = SPDK_CEIL_DIV(length, ttransport->transport.opts.io_unit_size);
-
-	if (spdk_nvmf_request_get_buffers(&tcp_req->req, group, &ttransport->transport, num_buffers)) {
+	if (spdk_nvmf_request_get_buffers(&tcp_req->req, group, &ttransport->transport, length)) {
 		tcp_req->req.iovcnt = 0;
 		return -ENOMEM;
 	}

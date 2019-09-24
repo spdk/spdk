@@ -1298,14 +1298,11 @@ static int
 nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 {
 	uint32_t length = fc_req->req.length;
-	uint32_t num_buffers;
 	struct spdk_nvmf_fc_poll_group *fgroup = fc_req->hwqp->fgroup;
 	struct spdk_nvmf_transport_poll_group *group = &fgroup->group;
 	struct spdk_nvmf_transport *transport = group->transport;
 
-	num_buffers = SPDK_CEIL_DIV(length, transport->opts.io_unit_size);
-
-	if (spdk_nvmf_request_get_buffers(&fc_req->req, group, transport, num_buffers)) {
+	if (spdk_nvmf_request_get_buffers(&fc_req->req, group, transport, length)) {
 		return -ENOMEM;
 	}
 
