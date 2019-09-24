@@ -105,7 +105,7 @@ setup_cmd="vm_setup --force=0 --memory=8192"
 setup_cmd+=" --os=$vm_image"
 
 if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
-	$rpc_py construct_vhost_scsi_controller naa.0.0
+	$rpc_py vhost_create_scsi_controller naa.0.0
 	$rpc_py add_vhost_scsi_lun naa.0.0 0 Nvme0n1
 	$rpc_py add_vhost_scsi_lun naa.0.0 1 Malloc0
 	$rpc_py add_vhost_scsi_lun naa.0.0 2 Aio0

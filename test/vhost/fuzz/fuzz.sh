@@ -31,11 +31,11 @@ $vhost_rpc_py bdev_malloc_create -b Malloc0 64 512
 $vhost_rpc_py construct_vhost_blk_controller Vhost.1 Malloc0
 
 $vhost_rpc_py bdev_malloc_create -b Malloc1 64 512
-$vhost_rpc_py construct_vhost_scsi_controller naa.VhostScsi0.1
+$vhost_rpc_py vhost_create_scsi_controller naa.VhostScsi0.1
 $vhost_rpc_py add_vhost_scsi_lun naa.VhostScsi0.1 0 Malloc1
 
 $vhost_rpc_py bdev_malloc_create -b Malloc2 64 512
-$vhost_rpc_py construct_vhost_scsi_controller naa.VhostScsi0.2
+$vhost_rpc_py vhost_create_scsi_controller naa.VhostScsi0.2
 $vhost_rpc_py add_vhost_scsi_lun naa.VhostScsi0.2 0 Malloc2
 
 # test the vhost blk controller with valid data buffers.

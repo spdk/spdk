@@ -718,7 +718,7 @@ class UIVhostScsi(UIVhost):
         cpumask - Optional. Integer to specify mask of CPUs to use.
                   Default: 1.
         """
-        self.get_root().create_vhost_scsi_controller(ctrlr=name,
+        self.get_root().vhost_create_scsi_controller(ctrlr=name,
                                                      cpumask=cpumask)
 
 
