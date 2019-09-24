@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df6c6a23_febdfd8e",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-09-24T09:07:37Z",
+      "side": 0,
+      "message": "need this blank line。",
+      "revId": "47547dd5b0c123c613a10910540c1dfb049e57ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
