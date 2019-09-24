@@ -1358,10 +1358,12 @@ static int
 iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_pdu *pdu;
-	int i, rc;
+	int rc;
+
+	conn->pdu_loop_cnt = 0;
 
 	/* Read new PDUs from network */
-	for (i = 0; i < GET_PDU_LOOP_COUNT; i++) {
+	while (conn->pdu_loop_cnt < GET_PDU_LOOP_COUNT) {
 		rc = spdk_iscsi_read_pdu(conn, &pdu);
 		if (rc == 0) {
 			break;
@@ -1391,7 +1393,7 @@ iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 		}
 	}
 
-	return i;
+	return conn->pdu_loop_cnt;
 }
 
 static void

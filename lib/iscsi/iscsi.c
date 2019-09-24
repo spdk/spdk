@@ -578,6 +578,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 	}
 
 	*_pdu = pdu;
+	conn->pdu_loop_cnt++;
 	return 1;
 
 error:

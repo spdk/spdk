@@ -103,6 +103,7 @@ struct spdk_iscsi_conn {
 	struct spdk_poller *shutdown_timer;
 
 	struct spdk_iscsi_pdu *pdu_in_progress;
+	uint32_t pdu_loop_cnt;
 
 	TAILQ_HEAD(, spdk_iscsi_pdu) write_pdu_list;
 	TAILQ_HEAD(, spdk_iscsi_pdu) snack_pdu_list;
