@@ -1616,25 +1616,27 @@ nvmf_rdma_fill_wr_sge(struct spdk_nvmf_rdma_device *device,
 		      struct spdk_nvmf_request *req, struct ibv_send_wr *wr)
 {
 	uint64_t	translation_len;
+	struct iovec	*iov = &req->iov[req->iovcnt];
+	struct ibv_sge	*sg_ele = &wr->sg_list[wr->num_sge];
 
-	translation_len = req->iov[req->iovcnt].iov_len;
+	translation_len = iov->iov_len;
 
 	if (!g_nvmf_hooks.get_rkey) {
-		wr->sg_list[wr->num_sge].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-						 (uint64_t)req->iov[req->iovcnt].iov_base, &translation_len))->lkey;
+		sg_ele->lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
+				(uint64_t)iov->iov_base, &translation_len))->lkey;
 	} else {
-		wr->sg_list[wr->num_sge].lkey = spdk_mem_map_translate(device->map,
-						(uint64_t)req->iov[req->iovcnt].iov_base, &translation_len);
+		sg_ele->lkey = spdk_mem_map_translate(device->map,
+						      (uint64_t)iov->iov_base, &translation_len);
 	}
 
-	if (spdk_unlikely(translation_len < req->iov[req->iovcnt].iov_len)) {
+	if (spdk_unlikely(translation_len < iov->iov_len)) {
 		/* This is a very rare case that can occur when using DPDK version < 19.05 */
 		SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions. Removing it from circulation.\n");
 		return false;
 	}
 
-	wr->sg_list[wr->num_sge].addr = (uintptr_t)(req->iov[req->iovcnt].iov_base);
-	wr->sg_list[wr->num_sge].length = req->iov[req->iovcnt].iov_len;
+	sg_ele->addr = (uintptr_t)(iov->iov_base);
+	sg_ele->length = iov->iov_len;
 	wr->num_sge++;
 
 	return true;
