@@ -264,6 +264,8 @@ struct spdk_nvmf_rdma_request {
 
 	struct spdk_nvmf_rdma_request_data	data;
 
+	int					iovcnt;
+
 	uint32_t				num_outstanding_data_wr;
 	uint64_t				receive_tsc;
 
@@ -1652,9 +1654,10 @@ nvmf_rdma_fill_buffers_with_md_interleave(struct spdk_nvmf_rdma_transport *rtran
 
 static bool
 nvmf_rdma_fill_wr_sge(struct spdk_nvmf_rdma_device *device,
-		      struct spdk_nvmf_request *req, struct ibv_send_wr *wr)
+		      struct spdk_nvmf_request *req, struct ibv_send_wr *wr,
+		      int iovpos)
 {
-	struct iovec	*iov = &req->iov[req->iovcnt];
+	struct iovec	*iov = &req->iov[iovpos];
 	struct ibv_sge	*sg_ele = &wr->sg_list[wr->num_sge];
 
 	if (spdk_unlikely(!nvmf_rdma_get_lkey(device, iov, &sg_ele->lkey))) {
@@ -1671,34 +1674,46 @@ nvmf_rdma_fill_wr_sge(struct spdk_nvmf_rdma_device *device,
 }
 
 static int
+nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
+		      struct spdk_nvmf_rdma_device *device,
+		      struct spdk_nvmf_rdma_request *rdma_req,
+		      struct ibv_send_wr *wr,
+		      uint32_t length)
+{
+	struct spdk_nvmf_request *req = &rdma_req->req;
+
+	wr->num_sge = 0;
+	while (length) {
+		while (spdk_unlikely(!nvmf_rdma_fill_wr_sge(device, req, wr, rdma_req->iovcnt))) {
+			if (nvmf_rdma_replace_buffer(rgroup, &req->buffers[rdma_req->iovcnt]) == -ENOMEM) {
+				return -ENOMEM;
+			}
+			req->iov[rdma_req->iovcnt].iov_base = (void *)((uintptr_t)(req->buffers[rdma_req->iovcnt] +
+							      NVMF_DATA_BUFFER_MASK) &
+							      ~NVMF_DATA_BUFFER_MASK);
+		}
+
+		length -= req->iov[rdma_req->iovcnt].iov_len;
+		rdma_req->iovcnt++;
+	}
+
+	return 0;
+}
+
+static void
 nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
-		       struct spdk_nvmf_rdma_poll_group *rgroup,
-		       struct spdk_nvmf_rdma_device *device,
 		       struct spdk_nvmf_request *req,
-		       struct ibv_send_wr *wr,
 		       uint32_t length)
 {
-	wr->num_sge = 0;
 	while (length) {
 		req->iov[req->iovcnt].iov_base = (void *)((uintptr_t)(req->buffers[req->iovcnt] +
 						 NVMF_DATA_BUFFER_MASK) &
 						 ~NVMF_DATA_BUFFER_MASK);
 		req->iov[req->iovcnt].iov_len  = spdk_min(length,
 						 rtransport->transport.opts.io_unit_size);
-		while (spdk_unlikely(!nvmf_rdma_fill_wr_sge(device, req, wr))) {
-			if (nvmf_rdma_replace_buffer(rgroup, &req->buffers[req->iovcnt]) == -ENOMEM) {
-				return -ENOMEM;
-			}
-			req->iov[req->iovcnt].iov_base = (void *)((uintptr_t)(req->buffers[req->iovcnt] +
-							 NVMF_DATA_BUFFER_MASK) &
-							 ~NVMF_DATA_BUFFER_MASK);
-		}
-
 		length -= req->iov[req->iovcnt].iov_len;
 		req->iovcnt++;
 	}
-
-	return 0;
 }
 
 static int
@@ -1722,6 +1737,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	}
 
 	req->iovcnt = 0;
+	rdma_req->iovcnt = 0;
 
 	if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
 		rc = nvmf_rdma_fill_buffers_with_md_interleave(rtransport,
@@ -1732,7 +1748,8 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 				length,
 				&rdma_req->dif_ctx);
 	} else {
-		rc = nvmf_rdma_fill_buffers(rtransport, rgroup, device, req, wr, length);
+		nvmf_rdma_fill_buffers(rtransport, req, length);
+		rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, wr, length);
 	}
 	if (rc != 0) {
 		goto err_exit;
@@ -1786,6 +1803,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 
 	req->iovcnt = 0;
 	req->length = 0;
+	rdma_req->iovcnt = 0;
 	desc = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + inline_segment->address;
 	for (i = 0; i < num_sgl_descriptors; i++) {
 		/* The descriptors must be keyed data block descriptors with an address, not an offset. */
@@ -1803,8 +1821,8 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 
 		current_wr->num_sge = 0;
 
-		rc = nvmf_rdma_fill_buffers(rtransport, rgroup, device, req, current_wr,
-					    desc->keyed.length);
+		nvmf_rdma_fill_buffers(rtransport, req, desc->keyed.length);
+		rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, current_wr, desc->keyed.length);
 		if (rc != 0) {
 			rc = -ENOMEM;
 			goto err_exit;
