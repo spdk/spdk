@@ -170,7 +170,7 @@ DEFINE_STUB(spdk_nvmf_transport_req_complete,
 DEFINE_STUB(spdk_nvmf_request_get_buffers,
 	    int,
 	    (struct spdk_nvmf_request *req, struct spdk_nvmf_transport_poll_group *group,
-	     struct spdk_nvmf_transport *transport, uint32_t num_buffers),
+	     struct spdk_nvmf_transport *transport, uint32_t length),
 	    0);
 
 DEFINE_STUB_V(spdk_nvmf_request_free_buffers,
