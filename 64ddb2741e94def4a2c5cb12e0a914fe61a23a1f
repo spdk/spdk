@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43a130c1_eb53d662",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1528,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-24T20:21:41Z",
+      "side": 1,
+      "message": "It looks to me like nvmf_rdma_fill_wr_sge is just a special case of this function where _remaining_data_block \u003d iov_len, *_offset \u003d 0, and md_size \u003d 0.\nI think from a code reuse perspective you could combine the two functions.\nThis function is also a little bit slower I think, so if you wanted to keep the two separate to keep the fast / slow path, I\u0027m OK with that as well. So basically take or leave this comment, I just wanted to bring it up in case you hadn\u0027t thought of it.",
+      "revId": "64ddb2741e94def4a2c5cb12e0a914fe61a23a1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64187630_5fc3cfb7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1540,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-24T20:21:41Z",
+      "side": 1,
+      "message": "I think this variable would be more clear if it was called sg_element or sg_ele, some variation on that. Since it only represents the one element and you don\u0027t ever iterate over it.",
+      "revId": "64ddb2741e94def4a2c5cb12e0a914fe61a23a1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
