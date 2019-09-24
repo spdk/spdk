@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5a8f665_e0ad0624",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-09-24T13:00:24Z",
+      "side": 1,
+      "message": "Are you going to use bdev in this file ?",
+      "revId": "729acbe57e35bd53f832d1fd68bbe0efe91cfa87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b84d0434_a68581f9",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-09-24T13:00:24Z",
+      "side": 1,
+      "message": "In most cases in SPDK, static variables (pointers) are initialized by NULL. It\u0027s redundant. But we should follow the same code style",
+      "revId": "729acbe57e35bd53f832d1fd68bbe0efe91cfa87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
