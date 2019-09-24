@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6827361a_e3a730c4",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-24T15:17:41Z",
+      "side": 1,
+      "message": "Maybe some background on why multiple targets makes sense would be useful. Namely that each target defines a discovery service.",
+      "revId": "b7a967ebd23bf4beb612db0eef3e22b33aeac3de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48cafda1_a48c6d4c",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-24T15:17:41Z",
+      "side": 1,
+      "message": "At the time of writing this post -\u003e as of this release.\n\nThis is a changelog, so it\u0027s published for each release.",
+      "revId": "b7a967ebd23bf4beb612db0eef3e22b33aeac3de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e31e397_6d84eef9",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-24T15:17:41Z",
+      "side": 1,
+      "message": "which uses a global target option -\u003e which has a single, global target",
+      "revId": "b7a967ebd23bf4beb612db0eef3e22b33aeac3de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
