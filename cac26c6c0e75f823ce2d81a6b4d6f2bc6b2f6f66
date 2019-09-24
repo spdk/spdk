@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e022511_a4209bc8",
+        "filename": "test/unit/lib/nvmf/subsystem.c/subsystem_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1276,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-24T17:51:58Z",
+      "side": 1,
+      "message": "Maybe also CU_ASSERT that g_ns_changed_nsid/_ctrlr are unchanged (0xFFFFFFFF/NULL) and subsystem.ns[0] is not NULL?  basically confirming further that spdk_nvmf_ctrlr_ns_changed() doesn\u0027t get called until you poll_threads()",
+      "revId": "cac26c6c0e75f823ce2d81a6b4d6f2bc6b2f6f66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
