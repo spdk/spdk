@@ -1612,24 +1612,38 @@ nvmf_rdma_fill_buffers_with_md_interleave(struct spdk_nvmf_rdma_transport *rtran
 }
 
 static bool
-nvmf_rdma_fill_wr_sge(struct spdk_nvmf_rdma_device *device,
-		      struct spdk_nvmf_request *req, struct ibv_send_wr *wr)
+nvmf_rdma_get_lkey(struct spdk_nvmf_rdma_device *device, struct iovec *iov,
+		   uint32_t *_lkey)
 {
 	uint64_t	translation_len;
-	struct iovec	*iov = &req->iov[req->iovcnt];
-	struct ibv_sge	*sg_ele = &wr->sg_list[wr->num_sge];
+	uint32_t	lkey;
 
 	translation_len = iov->iov_len;
 
 	if (!g_nvmf_hooks.get_rkey) {
-		sg_ele->lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
+		lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
 				(uint64_t)iov->iov_base, &translation_len))->lkey;
 	} else {
-		sg_ele->lkey = spdk_mem_map_translate(device->map,
-						      (uint64_t)iov->iov_base, &translation_len);
+		lkey = spdk_mem_map_translate(device->map,
+					      (uint64_t)iov->iov_base, &translation_len);
 	}
 
 	if (spdk_unlikely(translation_len < iov->iov_len)) {
+		return false;
+	}
+
+	*_lkey = lkey;
+	return true;
+}
+
+static bool
+nvmf_rdma_fill_wr_sge(struct spdk_nvmf_rdma_device *device,
+		      struct spdk_nvmf_request *req, struct ibv_send_wr *wr)
+{
+	struct iovec	*iov = &req->iov[req->iovcnt];
+	struct ibv_sge	*sg_ele = &wr->sg_list[wr->num_sge];
+
+	if (spdk_unlikely(!nvmf_rdma_get_lkey(device, iov, &sg_ele->lkey))) {
 		/* This is a very rare case that can occur when using DPDK version < 19.05 */
 		SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions. Removing it from circulation.\n");
 		return false;
