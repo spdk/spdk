@@ -34,6 +34,24 @@
       "revId": "13323c703b3d01cc2e416707caf4837375132bec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9495dc33_a36dd972",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3102,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-24T06:10:32Z",
+      "side": 1,
+      "message": "Thanks, I\u0027ll add this check",
+      "parentUuid": "e55ac4d5_d35951e8",
+      "revId": "13323c703b3d01cc2e416707caf4837375132bec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
