@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c92647e6_a8d1d66b",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-24T18:10:00Z",
+      "side": 1,
+      "message": "Let\u0027s call this SPDK_BDEV_EVENT_RESIZE instead.  There are other ways that a block device may \"change\" in the future - so want this to be as precise as possible.",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75e44d0a_a60e83de",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 4259,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-24T18:10:00Z",
+      "side": 1,
+      "message": "we\u0027re using __atomic_ variations now - see commit d4cbbf17 for more details on why",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42c64ce7_64ba6afc",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-24T18:10:00Z",
+      "side": 1,
+      "message": "Let\u0027s remove the shrinking case.  We already test the shrinking block number case above (line 657).  Since this is adding tests for async notifications, we shouldn\u0027t get a notification for a failed blockcnt change, so I don\u0027t think this is needed here.\n\n(To be honest, first time I read this unit test, I didn\u0027t even notice that the CU_ASSERT was checking that it returned !\u003d 0.)",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
