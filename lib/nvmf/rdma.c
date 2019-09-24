@@ -1530,8 +1530,7 @@ nvmf_rdma_fill_wr_sge_with_md_interleave(struct spdk_nvmf_rdma_device *device,
 		struct ibv_send_wr *wr,
 		uint32_t *_remaining_data_block,
 		uint32_t *_offset,
-		uint32_t data_block_size,
-		uint32_t md_size)
+		const struct spdk_dif_ctx *dif_ctx)
 {
 	struct iovec *iovec = &req->iov[req->iovcnt];
 	uint32_t remaining_io_buffer_length;
@@ -1539,6 +1538,8 @@ nvmf_rdma_fill_wr_sge_with_md_interleave(struct spdk_nvmf_rdma_device *device,
 	uint64_t translation_len;
 	struct ibv_sge *sg_list;
 	uint32_t lkey = 0;
+	uint32_t data_block_size = dif_ctx->block_size - dif_ctx->md_size;
+	uint32_t md_size = dif_ctx->md_size;
 
 	remaining_io_buffer_length = iovec->iov_len - *_offset;
 	translation_len = iovec->iov_len;
@@ -1595,11 +1596,10 @@ nvmf_rdma_fill_buffers_with_md_interleave(struct spdk_nvmf_rdma_transport *rtran
 		struct spdk_nvmf_request *req,
 		struct ibv_send_wr *wr,
 		uint32_t length,
-		uint32_t data_block_size,
-		uint32_t md_size)
+		const struct spdk_dif_ctx *dif_ctx)
 {
 	uint32_t remaining_length = length;
-	uint32_t remaining_data_block = data_block_size;
+	uint32_t remaining_data_block = dif_ctx->block_size - dif_ctx->md_size;
 	uint32_t offset = 0;
 	struct iovec *iovec;
 
@@ -1612,8 +1612,7 @@ nvmf_rdma_fill_buffers_with_md_interleave(struct spdk_nvmf_rdma_transport *rtran
 		iovec->iov_len = spdk_min(remaining_length, rtransport->transport.opts.io_unit_size);
 
 		if (spdk_unlikely(!nvmf_rdma_fill_wr_sge_with_md_interleave(device, req, wr,
-				  &remaining_data_block, &offset,
-				  data_block_size, md_size))) {
+				  &remaining_data_block, &offset, dif_ctx))) {
 			if (nvmf_rdma_replace_buffer(rgroup, &req->buffers[req->iovcnt]) == -ENOMEM) {
 				return -ENOMEM;
 			}
@@ -1716,11 +1715,10 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 		rc = nvmf_rdma_fill_buffers_with_md_interleave(rtransport,
 				rgroup,
 				device,
-				&rdma_req->req,
+				req,
 				&rdma_req->data.wr,
 				length,
-				rdma_req->dif_ctx.block_size - rdma_req->dif_ctx.md_size,
-				rdma_req->dif_ctx.md_size);
+				&rdma_req->dif_ctx);
 	} else {
 		rc = nvmf_rdma_fill_buffers(rtransport, rgroup, device, req, wr, length);
 	}
