@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0e46aed_45c33445",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-24T06:40:57Z",
+      "side": 1,
+      "message": "Will you insert an empty line after the title? Otherwise, the following lines are included in the title.",
+      "revId": "278f5bea28c64db2791bedf48581818403058687",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "675f38f8_0790b3a0",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-24T06:40:57Z",
+      "side": 1,
+      "message": "Will you limit length of each line to around 80 ~ 100 chars (if reasonable and possible)?",
+      "revId": "278f5bea28c64db2791bedf48581818403058687",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
