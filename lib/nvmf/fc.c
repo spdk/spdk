@@ -1483,7 +1483,7 @@ spdk_nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 
 	/* Release IO buffers */
 	if (fc_req->req.data_from_pool) {
-		spdk_nvmf_request_free_buffers(&fc_req->req, group, transport, fc_req->req.iovcnt);
+		spdk_nvmf_request_free_buffers(&fc_req->req, group, transport);
 	}
 	fc_req->req.data = NULL;
 	fc_req->req.iovcnt  = 0;

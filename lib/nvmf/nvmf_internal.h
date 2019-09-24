@@ -213,6 +213,7 @@ struct spdk_nvmf_request {
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
 	void				*buffers[NVMF_REQ_MAX_BUFFERS];
+	uint32_t			num_buffers;
 	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
 	uint32_t			iovcnt;
 	bool				data_from_pool;
@@ -385,8 +386,7 @@ int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 
 void spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 				    struct spdk_nvmf_transport_poll_group *group,
-				    struct spdk_nvmf_transport *transport,
-				    uint32_t num_buffers);
+				    struct spdk_nvmf_transport *transport);
 int spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 				  struct spdk_nvmf_transport_poll_group *group,
 				  struct spdk_nvmf_transport *transport,
