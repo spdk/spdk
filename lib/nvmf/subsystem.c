@@ -899,15 +899,13 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_registrant *reg, *reg_tmp;
 
-	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED ||
-	       subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
-
-	if (nsid == 0 || nsid > subsystem->max_nsid) {
+	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
+	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+		assert(false);
 		return -1;
 	}
 
-	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
-	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+	if (nsid == 0 || nsid > subsystem->max_nsid) {
 		return -1;
 	}
 
