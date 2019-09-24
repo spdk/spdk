@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "970d99c3_85b17beb",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1724,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-24T20:42:27Z",
+      "side": 1,
+      "message": "Setting this in the generic transport code makes more sense.",
+      "revId": "5fa55921eadea4cf646669baac2e003fbae7fb1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a578674c_a89f1794",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1813,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-24T20:42:27Z",
+      "side": 1,
+      "message": "This gets a little weird in the multi-sgl case, but I think setting this in the generic transport code makes more sense.",
+      "revId": "5fa55921eadea4cf646669baac2e003fbae7fb1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48c20bc4_630b715f",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2189,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-24T20:42:27Z",
+      "side": 1,
+      "message": "I think setting this in spdk_nvmf_request_get_buffers and clearing it in spdk_nvmf_request_free_buffers makes more sense.",
+      "revId": "5fa55921eadea4cf646669baac2e003fbae7fb1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
