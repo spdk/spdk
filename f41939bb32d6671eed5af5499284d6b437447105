@@ -1,0 +1,251 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0e30191_0ce68899",
+        "filename": "autotest.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-24T09:32:19Z",
+      "side": 1,
+      "message": "When adding new test flag you should probably add it\u0027s default value to autotest_common.sh",
+      "range": {
+        "startLine": 261,
+        "startChar": 6,
+        "endLine": 261,
+        "endChar": 21
+      },
+      "revId": "f41939bb32d6671eed5af5499284d6b437447105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0cf3a5f_b6a693a1",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-24T09:32:19Z",
+      "side": 1,
+      "message": "I guess for running the test as part of autotest.sh that\u0027s OK.\nBut in case of running the test as standalone you have no information about PCI_WHITELIST and PCI_BLACKLIST and you can accidentally use a NVMe drive which is mounted in the system.\n\nI think it\u0027d be better to use gen_nvme.sh which generates you a config file with Nvme bdevs based on the driver they\u0027re attached to.",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 47
+      },
+      "revId": "f41939bb32d6671eed5af5499284d6b437447105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2a20d1e_ae596c4a",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-24T09:32:19Z",
+      "side": 1,
+      "message": "Is this looking for a bdev which was created as a result of commands on line 15 and 16? If so, the you could probably just use the value which $rpc_py returns after creating a bdev.\n\nOr does this test assume that we have more than 1 NVMe Opal-enabled drive installed in the server?  If so, then this will give you the same nvme drive as command on line 13, and that\u0027s because each of our physical CI servers have 1 nvme installed.",
+      "range": {
+        "startLine": 18,
+        "startChar": 1,
+        "endLine": 18,
+        "endChar": 47
+      },
+      "revId": "f41939bb32d6671eed5af5499284d6b437447105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "317feaee_c17c39f7",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-24T09:32:19Z",
+      "side": 1,
+      "message": "This doesn\u0027t test anything and just generates unnecessary output, probably should be removed.",
+      "range": {
+        "startLine": 23,
+        "startChar": 1,
+        "endLine": 23,
+        "endChar": 23
+      },
+      "revId": "f41939bb32d6671eed5af5499284d6b437447105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36dcbd0e_b3be63ec",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-24T09:32:19Z",
+      "side": 1,
+      "message": "These are the same as on lines 24-25, so bdevs should not exist at this point.\nIs this done to test that bdevs are really gone?\n\nIf so, then $rpc_py commands should be in \"if\" statements. Otherwise they will return with a non-zero return code here and script will fail due to set -e.",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 46
+      },
+      "revId": "f41939bb32d6671eed5af5499284d6b437447105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eeaf1def_f61c827c",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-24T09:32:19Z",
+      "side": 1,
+      "message": "Same as line 23.",
+      "range": {
+        "startLine": 36,
+        "startChar": 1,
+        "endLine": 36,
+        "endChar": 23
+      },
+      "revId": "f41939bb32d6671eed5af5499284d6b437447105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b29620b_dde639ee",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-24T09:32:19Z",
+      "side": 1,
+      "message": "Same as line 23.",
+      "range": {
+        "startLine": 41,
+        "startChar": 1,
+        "endLine": 41,
+        "endChar": 23
+      },
+      "revId": "f41939bb32d6671eed5af5499284d6b437447105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75c5f54a_44c8f478",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-24T09:32:19Z",
+      "side": 1,
+      "message": "Same as line 23.",
+      "range": {
+        "startLine": 45,
+        "startChar": 1,
+        "endLine": 45,
+        "endChar": 23
+      },
+      "revId": "f41939bb32d6671eed5af5499284d6b437447105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff62cbc4_ebecb862",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-24T09:32:19Z",
+      "side": 1,
+      "message": "If opel bdevs are persistent and claim nvme bdevs, then this cleaup should probably be added to trap instruction at some point of the test.",
+      "range": {
+        "startLine": 48,
+        "startChar": 9,
+        "endLine": 48,
+        "endChar": 17
+      },
+      "revId": "f41939bb32d6671eed5af5499284d6b437447105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "144b4e7a_8d152171",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-24T09:32:19Z",
+      "side": 1,
+      "message": "You clean trap instructions just at the end of the script, so setting EXIT seems redundant.",
+      "range": {
+        "startLine": 70,
+        "startChar": 54,
+        "endLine": 70,
+        "endChar": 58
+      },
+      "revId": "f41939bb32d6671eed5af5499284d6b437447105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0147ab0_a8abca16",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-24T09:32:19Z",
+      "side": 1,
+      "message": "Trap should probably be updated at line 78.\n- $bdevio_pid no longer points to any existing process, trap will fail if it executes.\n- in case of error $bdevperf_pid process will not be killed because it\u0027s not included in trap instructions",
+      "revId": "f41939bb32d6671eed5af5499284d6b437447105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
