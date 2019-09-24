@@ -1110,6 +1110,7 @@ spdk_vpp_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_event
 static int
 spdk_vpp_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 {
+	free(_group);
 	return 0;
 }
 

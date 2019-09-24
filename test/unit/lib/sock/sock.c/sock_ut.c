@@ -310,6 +310,7 @@ spdk_ut_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 	struct spdk_ut_sock_group_impl *group = __ut_group(_group);
 
 	CU_ASSERT(group->sock == NULL);
+	free(_group);
 
 	return 0;
 }
