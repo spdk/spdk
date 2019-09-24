@@ -81,6 +81,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_QOS_MIN_IOS_PER_SEC		1000
 #define SPDK_BDEV_QOS_MIN_BYTES_PER_SEC		(1024 * 1024)
 #define SPDK_BDEV_QOS_LIMIT_NOT_DEFINED		UINT64_MAX
+#define SPDK_BDEV_IO_POLL_INTERVAL_IN_MSEC	1000
 
 #define SPDK_BDEV_POOL_ALIGNMENT 512
 
@@ -277,6 +278,20 @@ struct spdk_bdev_channel {
 	bdev_io_tailq_t		queued_resets;
 };
 
+struct timeout_set_ctx {
+	uint64_t		timeout_in_sec;
+	spdk_bdev_io_timeout_cb	cb_fn;
+	void			*cb_arg;
+};
+
+enum desc_state {
+	DESC_POLLER_STATE_NONE = 0,
+	DESC_POLLER_STATE_SET,
+	DESC_POLLER_STATE_RUNNING,
+	DESC_POLLER_STATE_STOP,
+	DESC_STATE_CLOSE
+};
+
 struct spdk_bdev_desc {
 	struct spdk_bdev		*bdev;
 	struct spdk_thread		*thread;
@@ -293,6 +308,12 @@ struct spdk_bdev_desc {
 	pthread_mutex_t			mutex;
 	uint32_t			refs;
 	TAILQ_ENTRY(spdk_bdev_desc)	link;
+
+	struct timeout_set_ctx		ori_ctx;
+	struct timeout_set_ctx		next_ctx;
+	struct spdk_poller		*io_timeout_poller;
+	enum desc_state			current_state;
+	enum desc_state			next_state;
 };
 
 struct spdk_bdev_iostat_ctx {
@@ -2111,6 +2132,110 @@ bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 
 		ch->flags |= BDEV_CH_QOS_ENABLED;
 	}
+}
+
+static void
+bdev_channel_poll_timeout_io_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_bdev_desc *desc = spdk_io_channel_iter_get_ctx(i);
+
+	desc->current_state = DESC_POLLER_STATE_STOP;
+
+	switch (desc->next_state) {
+	case DESC_POLLER_STATE_SET:
+		spdk_bdev_set_timeout(desc, desc->next_ctx.timeout_in_sec,
+				      desc->next_ctx.cb_fn, desc->next_ctx.cb_arg);
+		desc->next_state = DESC_POLLER_STATE_NONE;
+		break;
+	case DESC_STATE_CLOSE:
+		spdk_bdev_close(desc);
+		break;
+	default:
+		break;
+	}
+}
+
+static void
+bdev_channel_poll_timeout_io(struct spdk_io_channel_iter *i)
+{
+	struct spdk_bdev_desc *desc = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_io_channel *io_ch = spdk_get_io_channel(__bdev_to_io_dev(bdev));
+	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	struct spdk_bdev_io *bdev_io;
+	uint64_t now;
+
+	now = spdk_get_ticks();
+	TAILQ_FOREACH(bdev_io, &bdev_ch->io_submitted, internal.ch_link) {
+		/* I/O are added to this TAILQ as they are submitted.
+		 * So once we find an I/O that has not timed out, we can immediately exit the loop. */
+		if (now < (bdev_io->internal.submit_tsc +
+			   desc->ori_ctx.timeout_in_sec * spdk_get_ticks_hz())) {
+			goto end;
+		}
+
+		if (bdev_io->internal.desc == desc) {
+			desc->ori_ctx.cb_fn(desc->ori_ctx.cb_arg, bdev_io);
+		}
+	}
+
+end:
+	spdk_put_io_channel(io_ch);
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static int
+bdev_poll_timeout_io(void *arg)
+{
+	struct spdk_bdev_desc *desc = arg;
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+
+	desc->current_state = DESC_POLLER_STATE_RUNNING;
+
+	spdk_for_each_channel(__bdev_to_io_dev(bdev),
+			      bdev_channel_poll_timeout_io,
+			      desc,
+			      bdev_channel_poll_timeout_io_done);
+
+	return 0;
+}
+
+int
+spdk_bdev_set_timeout(struct spdk_bdev_desc *desc, uint64_t timeout_in_sec,
+		      spdk_bdev_io_timeout_cb cb_fn, void *cb_arg)
+{
+	assert(desc->thread == spdk_get_thread());
+
+	if (desc->current_state == DESC_POLLER_STATE_RUNNING) {
+		if (desc->next_state != DESC_STATE_CLOSE) {
+			desc->next_ctx.timeout_in_sec = timeout_in_sec;
+			desc->next_ctx.cb_fn = cb_fn;
+			desc->next_ctx.cb_arg = cb_arg;
+			desc->next_state = DESC_POLLER_STATE_SET;
+		}
+
+		return 0;
+	}
+
+	spdk_poller_unregister(&desc->io_timeout_poller);
+
+	if (timeout_in_sec) {
+		assert(cb_fn != NULL);
+		desc->io_timeout_poller = spdk_poller_register(bdev_poll_timeout_io,
+					  desc,
+					  SPDK_BDEV_IO_POLL_INTERVAL_IN_MSEC * SPDK_SEC_TO_USEC /
+					  1000);
+		if (desc->io_timeout_poller == NULL) {
+			SPDK_ERRLOG("can not register the desc timeout IO poller\n");
+			return -1;
+		}
+	}
+
+	desc->ori_ctx.cb_fn = cb_fn;
+	desc->ori_ctx.cb_arg = cb_arg;
+	desc->ori_ctx.timeout_in_sec = timeout_in_sec;
+
+	return 0;
 }
 
 static int
@@ -4473,6 +4598,8 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	desc->callback.open_with_ext = false;
 	desc->callback.remove_fn = remove_cb;
 	desc->callback.ctx = remove_ctx;
+	desc->current_state = DESC_POLLER_STATE_NONE;
+	desc->next_state = DESC_POLLER_STATE_NONE;
 	pthread_mutex_init(&desc->mutex, NULL);
 
 	pthread_mutex_lock(&g_bdev_mgr.mutex);
@@ -4523,6 +4650,8 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 	desc->callback.open_with_ext = true;
 	desc->callback.event_fn = event_cb;
 	desc->callback.ctx = event_ctx;
+	desc->current_state = DESC_POLLER_STATE_NONE;
+	desc->next_state = DESC_POLLER_STATE_NONE;
 	pthread_mutex_init(&desc->mutex, NULL);
 
 	rc = bdev_open(bdev, write, desc);
@@ -4548,6 +4677,12 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 		      spdk_get_thread());
 
 	assert(desc->thread == spdk_get_thread());
+
+	spdk_poller_unregister(&desc->io_timeout_poller);
+	if (desc->current_state == DESC_POLLER_STATE_RUNNING) {
+		desc->next_state = DESC_STATE_CLOSE;
+		return;
+	}
 
 	pthread_mutex_lock(&bdev->internal.mutex);
 	pthread_mutex_lock(&desc->mutex);
