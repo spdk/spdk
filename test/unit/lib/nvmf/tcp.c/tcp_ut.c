@@ -175,7 +175,7 @@ DEFINE_STUB(spdk_nvmf_request_get_buffers,
 
 DEFINE_STUB_V(spdk_nvmf_request_free_buffers,
 	      (struct spdk_nvmf_request *req, struct spdk_nvmf_transport_poll_group *group,
-	       struct spdk_nvmf_transport *transport, uint32_t num_buffers));
+	       struct spdk_nvmf_transport *transport));
 
 DEFINE_STUB(spdk_sock_get_optimal_sock_group,
 	    int,
