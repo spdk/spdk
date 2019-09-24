@@ -2677,8 +2677,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 		case TCP_REQUEST_STATE_COMPLETED:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_COMPLETED, 0, 0, (uintptr_t)tcp_req, 0);
 			if (tcp_req->req.data_from_pool) {
-				spdk_nvmf_request_free_buffers(&tcp_req->req, group, &ttransport->transport,
-							       tcp_req->req.iovcnt);
+				spdk_nvmf_request_free_buffers(&tcp_req->req, group, &ttransport->transport);
 			}
 			tcp_req->req.length = 0;
 			tcp_req->req.iovcnt = 0;
