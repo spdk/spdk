@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d6c48ef_18b8c7d4",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-09-24T08:52:24Z",
+      "side": 1,
+      "message": "align issue.",
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
