@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e25f1e8_5fd49b34",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-24T22:44:27Z",
+      "side": 1,
+      "message": "Hey Seth,\n\nBy \"example SPDK application\" - you mean spdk_tgt and nvmf_tgt?  For most people, these aren\u0027t examples, they\u0027re the real thing.\n\nI guess the other question I have is what happens if someone calls one of these RPCs with nvmf_tgt or spdk_tgt?\n\n-Jim",
+      "revId": "08bb7c2c3817c75bc5b203b7f3ce6e17d2d78fae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
