@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5ff15d3_b39f9caf",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1788,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-24T17:37:37Z",
+      "side": 1,
+      "message": "Let\u0027s add SPDK_NVME_NS_WRITE_UNCORRECTABLE_SUPPORTED here.  Then users can check this flag before calling your new function.  It follows the similar flag for WRITE_ZEROES which can be checked before calling the spdk_nvme_ns_cmd_write_zeroes function.\n\nYou\u0027ll need to update nvme_ns.c to set the flag when ONCS indicates that write_uncorrectable is supported.  Look for where the SPDK_NVME_NS_WRITE_ZEROES_SUPPORTED flag is set and the WRITE_UNCORRECTABLE stuff should go just after it.",
+      "revId": "01cdeded82d5f28dd272281a9d2ed0c584651ce9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
