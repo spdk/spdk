@@ -200,6 +200,14 @@ typedef void (*spdk_bdev_get_device_stat_cb)(struct spdk_bdev *bdev,
 		struct spdk_bdev_io_stat *stat, void *cb_arg, int rc);
 
 /**
+ * Block device channel IO timeout callback
+ *
+ * \param cb_arg Callback argument
+ * \param bdev_io The IO cause the timeout
+ */
+typedef void (*spdk_bdev_io_timeout_cb)(void *cb_arg, struct spdk_bdev_io *bdev_io);
+
+/**
  * Initialize block device modules.
  *
  * \param cb_fn Called when the initialization is complete.
@@ -325,6 +333,27 @@ void spdk_bdev_close(struct spdk_bdev_desc *desc);
  * \return bdev associated with the descriptor
  */
 struct spdk_bdev *spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc);
+
+/**
+ * Set a time limit for the timeout IO of the bdev and timeout callback.
+ * We can use this function to enable/disable the timeout handler. If
+ * the timeout_in_sec > 0 then it means to enable the timeout IO handling
+ * or change the time limit. If the timeout_in_sec == 0 it means to
+ * disable the timeout IO handling. If you want to enable or change the
+ * timeout IO handle you need to specify the spdk_bdev_io_timeout_cb it
+ * means the upper user determines what to do if you meet the timeout IO,
+ * for example, you can reset the device or abort the IO.
+ *
+ * \param desc Block device descriptor.
+ * \param timeout_in_sec Timeout value
+ * \param cb_fn bdev IO timeout callback
+ * \param cb_arg Callback argument
+ * \param timeout Timeout value(millisecond)
+ *
+ * \return A handle to the I/O channel or NULL on failure.
+ */
+int spdk_bdev_set_timeout(struct spdk_bdev_desc *desc, uint64_t timeout_in_sec,
+			  spdk_bdev_io_timeout_cb cb_fn, void *cb_arg);
 
 /**
  * Check whether the block device supports the I/O type.
