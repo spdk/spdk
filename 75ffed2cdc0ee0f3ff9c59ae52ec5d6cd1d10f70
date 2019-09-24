@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e93dba99_175cee94",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 8
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-09-24T12:44:12Z",
+      "side": 1,
+      "message": "Look and check if my changes will be good idea ?",
+      "parentUuid": "63da3239_3c37947e",
+      "range": {
+        "startLine": 136,
+        "startChar": 4,
+        "endLine": 144,
+        "endChar": 9
+      },
+      "revId": "75ffed2cdc0ee0f3ff9c59ae52ec5d6cd1d10f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ba54cc9a_faff2e7e",
         "filename": "scripts/vagrant/Vagrantfile",
         "patchSetId": 8
@@ -80,6 +104,24 @@
       "revId": "75ffed2cdc0ee0f3ff9c59ae52ec5d6cd1d10f70",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef629d86_06003131",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-09-24T12:44:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5421b731_5e94f9b9",
+      "revId": "75ffed2cdc0ee0f3ff9c59ae52ec5d6cd1d10f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
