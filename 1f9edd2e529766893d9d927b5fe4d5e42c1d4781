@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "622f3cd2_1e891d58",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-24T17:18:49Z",
+      "side": 1,
+      "message": "spdk_opal_supported returns bool, so I think this should use spdk_json_write_named_bool?",
+      "revId": "1f9edd2e529766893d9d927b5fe4d5e42c1d4781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
