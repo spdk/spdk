@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0d597ec_1ad1ec1e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1765,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-24T20:48:55Z",
+      "side": 1,
+      "message": "Thanks for putting this check back to the beginning of the function. Being able to fail out of this early is a big time saver in the case where we are starved of buffers.",
+      "revId": "387e422aa19a5a5d7aab74d560291195a0f68d1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
