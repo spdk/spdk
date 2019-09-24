@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bb5f5fbf_ce0077a0",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-24T07:31:27Z",
+      "side": 1,
+      "message": "You\u0027re not actually applying anything, just removing SC check from exception list.\nWe\u0027re not fixing anything here so I think it\u0027d be better to explain in commit message why is this removed.",
+      "range": {
+        "startLine": 7,
+        "startChar": 19,
+        "endLine": 7,
+        "endChar": 25
+      },
+      "revId": "015161ab875bff861a48a86859058d00738ce353",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
