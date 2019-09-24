@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4d85f0d_8f9fe139",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1334,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-09-24T12:52:17Z",
+      "side": 1,
+      "message": "sigemptyset  can return errors. Return error code should be checked",
+      "revId": "930db7be2732f75df4b0b7ddaa337bcb349f0ae8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be990b8e_a4c0af4e",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1336,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-09-24T12:52:17Z",
+      "side": 1,
+      "message": "Return value should be checked",
+      "revId": "930db7be2732f75df4b0b7ddaa337bcb349f0ae8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d7f441e_db7bda9d",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1343,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-09-24T12:52:17Z",
+      "side": 1,
+      "message": "Adding errno value to the message can help to understand a reason for the error",
+      "revId": "930db7be2732f75df4b0b7ddaa337bcb349f0ae8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
