@@ -196,6 +196,13 @@ typedef void (*spdk_bdev_get_device_stat_cb)(struct spdk_bdev *bdev,
 		struct spdk_bdev_io_stat *stat, void *cb_arg, int rc);
 
 /**
+ *Block device channel IO timeout callback
+ *
+ * \param cb_arg Callback argument
+ */
+typedef void (*spdk_bdev_channel_timeout_cb)(void *cb_arg);
+
+/**
  * Initialize block device modules.
  *
  * \param cb_fn Called when the initialization is complete.
@@ -609,6 +616,24 @@ uint64_t spdk_bdev_get_weighted_io_time(const struct spdk_bdev *bdev);
  * \return A handle to the I/O channel or NULL on failure.
  */
 struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc);
+
+/**
+ * Obtain an I/O channel for the block device opened by the specified
+ * descriptor. I/O channels are bound to threads, so the resulting I/O
+ * channel may only be used from the thread it was originally obtained
+ * from. Also it support the channel IO timeout handling that user can
+ * specify the callback function and the timeout value.
+ *
+ * \param desc Block device descriptor.
+ * \param cb Channel IO timeout callback
+ * \param cb_arg Callback argument
+ * \param timeout Timeout value(millisecond)
+ *
+ * \return A handle to the I/O channel or NULL on failure.
+ */
+struct spdk_io_channel *spdk_bdev_get_io_channel_with_timeout(struct spdk_bdev_desc *desc,
+		spdk_bdev_channel_timeout_cb cb, void *cb_arg, uint64_t timeout);
+
 
 /**
  * \defgroup bdev_io_submit_functions bdev I/O Submit Functions
