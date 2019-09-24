@@ -1592,39 +1592,33 @@ nvmf_rdma_fill_wr_sge_with_md_interleave(struct spdk_nvmf_rdma_device *device,
  * and points to part of buffer
  */
 static int
-nvmf_rdma_fill_buffers_with_md_interleave(struct spdk_nvmf_rdma_transport *rtransport,
-		struct spdk_nvmf_rdma_poll_group *rgroup,
+nvmf_rdma_fill_wr_sgl_with_md_interleave(struct spdk_nvmf_rdma_poll_group *rgroup,
 		struct spdk_nvmf_rdma_device *device,
-		struct spdk_nvmf_request *req,
+		struct spdk_nvmf_rdma_request *rdma_req,
 		struct ibv_send_wr *wr,
 		uint32_t length,
 		const struct spdk_dif_ctx *dif_ctx)
 {
+	struct spdk_nvmf_request *req = &rdma_req->req;
 	uint32_t remaining_length = length;
 	uint32_t remaining_data_block = dif_ctx->block_size - dif_ctx->md_size;
 	uint32_t offset = 0;
-	struct iovec *iovec;
 
 	wr->num_sge = 0;
 
 	while (remaining_length && wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES) {
-		iovec = &req->iov[req->iovcnt];
-		iovec->iov_base = (void *)((uintptr_t)(req->buffers[req->iovcnt] + NVMF_DATA_BUFFER_MASK)
-					   & ~NVMF_DATA_BUFFER_MASK);
-		iovec->iov_len = spdk_min(remaining_length, rtransport->transport.opts.io_unit_size);
-
 		while (spdk_unlikely(!nvmf_rdma_fill_wr_sge_with_md_interleave(device, req, wr,
-				  &remaining_data_block, &offset, dif_ctx))) {
-			if (nvmf_rdma_replace_buffer(rgroup, &req->buffers[req->iovcnt]) == -ENOMEM) {
+				     &remaining_data_block, &offset, dif_ctx))) {
+			if (nvmf_rdma_replace_buffer(rgroup, &req->buffers[rdma_req->iovcnt]) == -ENOMEM) {
 				return -ENOMEM;
 			}
-			req->iov[req->iovcnt].iov_base = (void *)((uintptr_t)(req->buffers[req->iovcnt] +
-							 NVMF_DATA_BUFFER_MASK) &
-							 ~NVMF_DATA_BUFFER_MASK);
+			req->iov[rdma_req->iovcnt].iov_base = (void *)((uintptr_t)(req->buffers[rdma_req->iovcnt] +
+							      NVMF_DATA_BUFFER_MASK) &
+							      ~NVMF_DATA_BUFFER_MASK);
 		}
 
-		req->iovcnt++;
-		remaining_length -= iovec->iov_len;
+		remaining_length -= req->iov[rdma_req->iovcnt].iov_len;
+		rdma_req->iovcnt++;
 	}
 
 	if (remaining_length) {
@@ -1731,16 +1725,12 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	req->iovcnt = 0;
 	rdma_req->iovcnt = 0;
 
+	nvmf_rdma_fill_buffers(rtransport, req, length);
+
 	if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
-		rc = nvmf_rdma_fill_buffers_with_md_interleave(rtransport,
-				rgroup,
-				device,
-				req,
-				&rdma_req->data.wr,
-				length,
-				&rdma_req->dif_ctx);
+		rc = nvmf_rdma_fill_wr_sgl_with_md_interleave(rgroup, device, rdma_req,
+				&rdma_req->data.wr, length, &rdma_req->dif_ctx);
 	} else {
-		nvmf_rdma_fill_buffers(rtransport, req, length);
 		rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, wr, length);
 	}
 	if (rc != 0) {
