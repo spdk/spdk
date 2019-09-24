@@ -138,6 +138,15 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 		}
 	}
 
+	while (length) {
+		req->iov[req->iovcnt].iov_base = (void *)((uintptr_t)(req->buffers[req->iovcnt] +
+						 NVMF_DATA_BUFFER_MASK) &
+						 ~NVMF_DATA_BUFFER_MASK);
+		req->iov[req->iovcnt].iov_len  = spdk_min(length, transport->opts.io_unit_size);
+		length -= req->iov[req->iovcnt].iov_len;
+		req->iovcnt++;
+	}
+
 	return 0;
 
 err_exit:
