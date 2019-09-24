@@ -103,11 +103,11 @@ spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 	req->data_from_pool = false;
 }
 
-int
-spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
-			      struct spdk_nvmf_transport_poll_group *group,
-			      struct spdk_nvmf_transport *transport,
-			      uint32_t length)
+static int
+nvmf_request_get_buffers(struct spdk_nvmf_request *req,
+			 struct spdk_nvmf_transport_poll_group *group,
+			 struct spdk_nvmf_transport *transport,
+			 uint32_t length)
 {
 	uint32_t num_buffers;
 	uint32_t i = 0;
@@ -131,7 +131,7 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			if (spdk_mempool_get_bulk(transport->data_buf_pool,
 						  &req->buffers[req->num_buffers],
 						  num_buffers - i)) {
-				goto err_exit;
+				return -ENOMEM;
 			}
 			req->num_buffers += num_buffers - i;
 			i += num_buffers - i;
@@ -149,10 +149,49 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 
 	req->data_from_pool = true;
 	return 0;
+}
+
+int
+spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
+			      struct spdk_nvmf_transport_poll_group *group,
+			      struct spdk_nvmf_transport *transport,
+			      uint32_t length)
+{
+	int rc;
+
+	req->iovcnt = 0;
+
+	rc = nvmf_request_get_buffers(req, group, transport, length);
+	if (rc == -ENOMEM) {
+		spdk_nvmf_request_free_buffers(req, group, transport);
+	}
+
+	return rc;
+}
+
+int
+spdk_nvmf_request_get_buffers_multi(struct spdk_nvmf_request *req,
+				    struct spdk_nvmf_transport_poll_group *group,
+				    struct spdk_nvmf_transport *transport,
+				    uint32_t *lengths, uint32_t num_lengths)
+{
+	int rc = 0;
+	uint32_t i;
+
+	req->iovcnt = 0;
+
+	for (i = 0; i < num_lengths; i++) {
+		rc = nvmf_request_get_buffers(req, group, transport, lengths[i]);
+		if (rc != 0) {
+			goto err_exit;
+		}
+	}
+
+	return 0;
 
 err_exit:
 	spdk_nvmf_request_free_buffers(req, group, transport);
-	return -ENOMEM;
+	return rc;
 }
 
 uint64_t
