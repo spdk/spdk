@@ -49,7 +49,7 @@ $NVMF_RPC nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSP
 
 # Configure VHost on host machine
 $VHOST_RPC bdev_nvme_attach_controller -b Nvme0 -t $TEST_TRANSPORT -f ipv4 -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
-$VHOST_RPC construct_vhost_scsi_controller naa.VhostScsi0.3
+$VHOST_RPC vhost_create_scsi_controller naa.VhostScsi0.3
 $VHOST_RPC add_vhost_scsi_lun naa.VhostScsi0.3 0 "Nvme0n1"
 
 # start qemu based VM.

@@ -99,13 +99,13 @@ $rpc_py bdev_aio_create $aio_file Aio0 512
 $rpc_py bdev_malloc_create -b Malloc0 256 512
 $rpc_py bdev_get_bdevs
 
-# Construct vhost controllers
+# Create vhost controllers
 # Prepare VM setup command
 setup_cmd="vm_setup --force=0 --memory=8192"
 setup_cmd+=" --os=$vm_image"
 
 if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
-	$rpc_py construct_vhost_scsi_controller naa.0.0
+	$rpc_py vhost_create_scsi_controller naa.0.0
 	$rpc_py add_vhost_scsi_lun naa.0.0 0 Nvme0n1
 	$rpc_py add_vhost_scsi_lun naa.0.0 1 Malloc0
 	$rpc_py add_vhost_scsi_lun naa.0.0 2 Aio0

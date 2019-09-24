@@ -711,14 +711,14 @@ class UIVhostScsi(UIVhost):
 
     def ui_command_create(self, name, cpumask=None):
         """
-        Construct a Vhost SCSI controller.
+        Create a Vhost SCSI controller.
 
         Arguments:
         name - Controller name.
         cpumask - Optional. Integer to specify mask of CPUs to use.
                   Default: 1.
         """
-        self.get_root().create_vhost_scsi_controller(ctrlr=name,
+        self.get_root().vhost_create_scsi_controller(ctrlr=name,
                                                      cpumask=cpumask)
 
 

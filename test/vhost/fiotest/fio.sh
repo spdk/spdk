@@ -129,7 +129,7 @@ for vm_conf in ${vms[@]}; do
 					$rpc_py construct_vhost_blk_controller naa.$disk.${conf[0]} $based_disk
 				else
 					notice "Creating controller naa.$disk.${conf[0]}"
-					$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]}
+					$rpc_py vhost_create_scsi_controller naa.$disk.${conf[0]}
 
 					notice "Adding device (0) to naa.$disk.${conf[0]}"
 					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $based_disk

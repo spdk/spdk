@@ -51,11 +51,11 @@ fi
 
 if [ "$TEST_TRANSPORT" == "scsi" ] || [ "$TEST_TRANSPORT" == "all" ]; then
     $vhost_rpc_py bdev_malloc_create -b Malloc1 64 512
-    $vhost_rpc_py construct_vhost_scsi_controller naa.VhostScsi0.1
+    $vhost_rpc_py vhost_create_scsi_controller naa.VhostScsi0.1
     $vhost_rpc_py add_vhost_scsi_lun naa.VhostScsi0.1 0 Malloc1
 
     $vhost_rpc_py bdev_malloc_create -b Malloc2 64 512
-    $vhost_rpc_py construct_vhost_scsi_controller naa.VhostScsi0.2
+    $vhost_rpc_py vhost_create_scsi_controller naa.VhostScsi0.2
     $vhost_rpc_py add_vhost_scsi_lun naa.VhostScsi0.2 0 Malloc2
 
     # test the vhost scsi I/O queue with valid data buffers on a valid lun.

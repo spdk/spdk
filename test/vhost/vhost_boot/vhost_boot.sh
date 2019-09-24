@@ -90,7 +90,7 @@ timing_exit convert_vm_image
 
 trap 'err_clean "${FUNCNAME}" "${LINENO}"' ERR
 timing_enter create_vhost_controller
-$rpc_py construct_vhost_scsi_controller naa.vhost_vm.$vm_no
+$rpc_py vhost_create_scsi_controller naa.vhost_vm.$vm_no
 $rpc_py add_vhost_scsi_lun naa.vhost_vm.$vm_no 0 $lvb_u
 timing_exit create_vhost_controller
 

@@ -56,21 +56,21 @@ free_rpc_vhost_scsi_ctrlr(struct rpc_vhost_scsi_ctrlr *req)
 	free(req->cpumask);
 }
 
-static const struct spdk_json_object_decoder rpc_construct_vhost_ctrlr[] = {
+static const struct spdk_json_object_decoder rpc_vhost_create_scsi_ctrlr[] = {
 	{"ctrlr", offsetof(struct rpc_vhost_scsi_ctrlr, ctrlr), spdk_json_decode_string },
 	{"cpumask", offsetof(struct rpc_vhost_scsi_ctrlr, cpumask), spdk_json_decode_string, true},
 };
 
 static void
-spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
-		const struct spdk_json_val *params)
+spdk_rpc_vhost_create_scsi_controller(struct spdk_jsonrpc_request *request,
+				      const struct spdk_json_val *params)
 {
 	struct rpc_vhost_scsi_ctrlr req = {0};
 	struct spdk_json_write_ctx *w;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_construct_vhost_ctrlr,
-				    SPDK_COUNTOF(rpc_construct_vhost_ctrlr),
+	if (spdk_json_decode_object(params, rpc_vhost_create_scsi_ctrlr,
+				    SPDK_COUNTOF(rpc_vhost_create_scsi_ctrlr),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
@@ -94,8 +94,9 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("construct_vhost_scsi_controller", spdk_rpc_construct_vhost_scsi_controller,
+SPDK_RPC_REGISTER("vhost_create_scsi_controller", spdk_rpc_vhost_create_scsi_controller,
 		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_create_scsi_controller, construct_vhost_scsi_controller)
 
 struct rpc_add_vhost_scsi_ctrlr_lun {
 	char *ctrlr;

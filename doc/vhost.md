@@ -134,7 +134,7 @@ on NUMA systems, the cpumask should specify cores on the same CPU socket as its
 associated VM.
 
 ~~~{.sh}
-scripts/rpc.py construct_vhost_scsi_controller --cpumask 0x1 vhost.0
+scripts/rpc.py vhost_create_scsi_controller --cpumask 0x1 vhost.0
 ~~~
 
 The following RPC will attach the Malloc0 bdev to the vhost.0 vhost-scsi
@@ -272,7 +272,7 @@ Malloc0
 ~~~
 
 ~~~{.sh}
-host:~# ./scripts/rpc.py construct_vhost_scsi_controller --cpumask 0x1 vhost.0
+host:~# ./scripts/rpc.py vhost_create_scsi_controller --cpumask 0x1 vhost.0
 VHOST_CONFIG: vhost-user server: socket created, fd: 21
 VHOST_CONFIG: bind to /var/tmp/vhost.0
 vhost.c: 596:spdk_vhost_dev_construct: *NOTICE*: Controller vhost.0: new controller added

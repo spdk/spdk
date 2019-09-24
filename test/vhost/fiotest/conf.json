@@ -131,7 +131,7 @@
             "cpumask": "0x1",
             "ctrlr": "vhost.0"
           },
-          "method": "construct_vhost_scsi_controller"
+          "method": "vhost_create_scsi_controller"
         },
         {
           "params": {
