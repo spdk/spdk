@@ -19,6 +19,40 @@
     },
     {
       "key": {
+        "uuid": "d1ba9768_0b7ab715",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2657,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-24T21:20:52Z",
+      "side": 1,
+      "message": "I think there are some tricky races here.  desc-\u003eclosed is currently only touched by the thread the opens the descriptor.  But this patch now potentially reads it from a different thread.  I think there are race problems with the refs as well.  For example:\n\nThread A                       Thread B\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d                       \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\ncalls blockcnt_change\n  increments refs to 1\n  sends message 1 to thread B\n                               closes desc\n\n                               starts executing message 1\n                                  decrements refs to 0\ncalls unregister_bdev             sees desc is closed and refs is 0\n  increments ref\n  sends message 2 to thread B\n                                     frees desc\n\n                               starts executing message 2\n                                  desc has already been freed!\n\n\nOne option is that we put a lock in the descriptor itself to coordinate work between the bdev module removing/resizing the bdev on one thread, with the user operating on a descriptor on another thread.\n\nThere may be other options around using compare+swap, but I think for simplicity, the lock would be easiest to understand and ensure correctness.\n\nI\u0027d suggest adding the lock (plus ref count) in a separate patch before this one.  I think by adding the lock+refs you can eliminate the current remove_scheduled member as well.\n\nTake a look and let me know on Slack if you have any questions or additional thoughts.",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ee728cd_f5624b07",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2683,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-24T21:20:52Z",
+      "side": 1,
+      "message": "I think you should just check desc-\u003ecallback.open_with_ext here.  There\u0027s no need to add the ref and send the message if there\u0027s no callback routine registered.",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "75e44d0a_a60e83de",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
