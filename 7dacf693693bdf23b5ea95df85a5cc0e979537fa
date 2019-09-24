@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40731042_36d24e54",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-24T20:22:26Z",
+      "side": 1,
+      "message": "If the user specified the clear method when the lvol was created, why do we need to specify it again when we destroy the lvol?  It clearly looks like we should be persisting a clear_method xattr on the blob - is that not getting persisted, or just not respected by blobstore?",
+      "revId": "7dacf693693bdf23b5ea95df85a5cc0e979537fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fc56447_a88e2dac",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-24T20:22:26Z",
+      "side": 1,
+      "message": "I\u0027m not sure we need this new function (see comment on commit message).  But for these type of _ext options, we should have an opts structure that contains the clear method.  See spdk_bs_open_blob_ext.  That ensures API compatibility if we find some other type of option we need to add in the future (rather than creating an _ext2, _ext3, etc. function).",
+      "revId": "7dacf693693bdf23b5ea95df85a5cc0e979537fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
