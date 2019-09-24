@@ -1762,6 +1762,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	assert(current_wr != NULL);
 
 	req->iovcnt = 0;
+	req->length = 0;
 	desc = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + inline_segment->address;
 	for (i = 0; i < num_sgl_descriptors; i++) {
 		/* The descriptors must be keyed data block descriptors with an address, not an offset. */
@@ -1772,7 +1773,6 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 		}
 
 		current_wr->num_sge = 0;
-		req->length += desc->keyed.length;
 
 		rc = nvmf_rdma_fill_buffers(rtransport, rgroup, device, req, current_wr,
 					    desc->keyed.length);
@@ -1781,6 +1781,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 			goto err_exit;
 		}
 
+		req->length += desc->keyed.length;
 		current_wr->wr.rdma.rkey = desc->keyed.key;
 		current_wr->wr.rdma.remote_addr = desc->address;
 		current_wr = current_wr->next;
