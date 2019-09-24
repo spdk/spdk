@@ -64,8 +64,12 @@ init_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
 {
 	struct spdk_event *event;
 
-	event = spdk_event_allocate(0, shutdown_cb, fs, NULL);
-	spdk_event_call(event);
+	if (fserrno == 0) {
+		event = spdk_event_allocate(0, shutdown_cb, fs, NULL);
+		spdk_event_call(event);
+	} else {
+		SPDK_ERRLOG("spdk_fs_init() failed with %s\n", g_bdev_name);
+	}
 }
 
 static void
