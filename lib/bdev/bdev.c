@@ -64,6 +64,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define BUF_LARGE_POOL_SIZE			1023
 #define NOMEM_THRESHOLD_COUNT			8
 #define ZERO_BUFFER_SIZE			0x100000
+#define MS_PER_SEC				1000
 
 #define OWNER_BDEV		0x2
 
@@ -270,6 +271,10 @@ struct spdk_bdev_channel {
 	struct spdk_bdev_io_stat prev_stat;
 #endif
 
+	struct spdk_poller *io_timeout_poller;
+	spdk_bdev_channel_timeout_cb cb;
+	void *cb_arg;
+	uint64_t timeout;
 };
 
 struct spdk_bdev_desc {
@@ -2094,6 +2099,29 @@ _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 }
 
 static int
+spdk_bdev_channel_io_timeout_check(void *ctx)
+{
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *ch = ctx;
+	uint64_t now;
+
+	if (ch->cb == NULL) {
+		return 0;
+	}
+
+	now = spdk_get_ticks();
+	TAILQ_FOREACH(bdev_io, &ch->io_submitted, internal.ch_link) {
+		if (now > (bdev_io->internal.submit_tsc +
+			   ch->timeout * spdk_get_ticks_hz() / MS_PER_SEC)) {
+			ch->cb(ch->cb_arg);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static int
 spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev		*bdev = __bdev_from_io_dev(io_device);
@@ -2101,6 +2129,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	struct spdk_io_channel		*mgmt_io_ch;
 	struct spdk_bdev_mgmt_channel	*mgmt_ch;
 	struct spdk_bdev_shared_resource *shared_resource;
+	struct spdk_poller *ch_poller;
 
 	ch->bdev = bdev;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
@@ -2156,6 +2185,15 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	ch->shared_resource = shared_resource;
 
 	TAILQ_INIT(&ch->io_submitted);
+	ch_poller = spdk_poller_register(spdk_bdev_channel_io_timeout_check, ch,
+					 ch->timeout * SPDK_SEC_TO_USEC /
+					 MS_PER_SEC);
+	if (ch_poller == NULL) {
+		SPDK_ERRLOG("can not register channel poller\n");
+		_spdk_bdev_channel_destroy_resource(ch);
+		return -1;
+	}
+	ch->io_timeout_poller = ch_poller;
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
@@ -2164,6 +2202,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 		name = spdk_sprintf_alloc("spdk_bdev_%s_%p", ch->bdev->name, ch);
 		if (!name) {
 			_spdk_bdev_channel_destroy_resource(ch);
+			spdk_poller_unregister(&ch_poller)
 			return -1;
 		}
 		ch->handle = __itt_string_handle_create(name);
@@ -2345,6 +2384,10 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 		spdk_histogram_data_free(ch->histogram);
 	}
 
+	if (ch->io_timeout_poller) {
+		spdk_poller_unregister(&ch->io_timeout_poller);
+	}
+
 	_spdk_bdev_channel_destroy_resource(ch);
 }
 
@@ -2416,6 +2459,24 @@ struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {
 	return spdk_get_io_channel(__bdev_to_io_dev(spdk_bdev_desc_get_bdev(desc)));
+}
+
+struct spdk_io_channel *
+spdk_bdev_get_io_channel_with_timeout(struct spdk_bdev_desc *desc,
+				      spdk_bdev_channel_timeout_cb cb, void *cb_arg, uint64_t timeout)
+{
+	struct spdk_io_channel *io_channel;
+	struct spdk_bdev_channel *ch;
+
+	io_channel = spdk_get_io_channel(__bdev_to_io_dev(spdk_bdev_desc_get_bdev(desc)));
+	if (io_channel != NULL) {
+		ch = spdk_io_channel_get_ctx(io_channel);
+		ch->cb = cb;
+		ch->cb_arg = cb_arg;
+		ch->timeout = timeout;
+	}
+
+	return io_channel;
 }
 
 const char *
