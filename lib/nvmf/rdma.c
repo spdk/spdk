@@ -1672,7 +1672,6 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 	rqpair = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rgroup = rqpair->poller->group;
-	req->iovcnt = 0;
 
 	num_buffers = SPDK_CEIL_DIV(length, rtransport->transport.opts.io_unit_size);
 
