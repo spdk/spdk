@@ -16,6 +16,23 @@
       "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3c532c7_c2f7473e",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-09-24T13:03:51Z",
+      "side": 1,
+      "message": "Some error messages start from capital letters, and the rest from lowercase letters. The style should be the same in all messages",
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
