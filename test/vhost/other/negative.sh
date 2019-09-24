@@ -83,7 +83,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 
 	# SCSI
 	notice "Trying to create scsi controller with incorrect cpumask"
-	if $rpc_py construct_vhost_scsi_controller vhost.invalid.cpumask --cpumask 0x2; then
+	if $rpc_py vhost_create_scsi_controller vhost.invalid.cpumask --cpumask 0x2; then
 		error "Creating scsi controller with incorrect cpumask succeeded, but it shouldn't"
 	fi
 
@@ -98,12 +98,12 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	fi
 
 	notice "Trying to create scsi controller with incorrect name"
-	if $rpc_py construct_vhost_scsi_controller .; then
+	if $rpc_py vhost_create_scsi_controller .; then
 		error "Creating scsi controller with incorrect name succeeded, but it shouldn't"
 	fi
 
 	notice "Creating controller naa.0"
-	$rpc_py construct_vhost_scsi_controller naa.0
+	$rpc_py vhost_create_scsi_controller naa.0
 
 	notice "Adding initial device (0) to naa.0"
 	$rpc_py add_vhost_scsi_lun naa.0 0 Malloc0

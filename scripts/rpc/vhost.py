@@ -16,7 +16,8 @@ def set_vhost_controller_coalescing(client, ctrlr, delay_base_us, iops_threshold
     return client.call('set_vhost_controller_coalescing', params)
 
 
-def construct_vhost_scsi_controller(client, ctrlr, cpumask=None):
+@deprecated_alias('construct_vhost_scsi_controller')
+def vhost_create_scsi_controller(client, ctrlr, cpumask=None):
     """Construct a vhost scsi controller.
     Args:
         ctrlr: controller name
@@ -27,7 +28,7 @@ def construct_vhost_scsi_controller(client, ctrlr, cpumask=None):
     if cpumask:
         params['cpumask'] = cpumask
 
-    return client.call('construct_vhost_scsi_controller', params)
+    return client.call('vhost_create_scsi_controller', params)
 
 
 def add_vhost_scsi_lun(client, ctrlr, scsi_target_num, bdev_name):

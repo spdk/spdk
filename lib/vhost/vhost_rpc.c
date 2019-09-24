@@ -62,7 +62,7 @@ static const struct spdk_json_object_decoder rpc_construct_vhost_ctrlr[] = {
 };
 
 static void
-spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
+spdk_rpc_vhost_create_scsi_controller(struct spdk_jsonrpc_request *request,
 		const struct spdk_json_val *params)
 {
 	struct rpc_vhost_scsi_ctrlr req = {0};
@@ -94,8 +94,9 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("construct_vhost_scsi_controller", spdk_rpc_construct_vhost_scsi_controller,
+SPDK_RPC_REGISTER("vhost_create_scsi_controller", spdk_rpc_vhost_create_scsi_controller,
 		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_create_scsi_controller, construct_vhost_scsi_controller)
 
 struct rpc_add_vhost_scsi_ctrlr_lun {
 	char *ctrlr;
