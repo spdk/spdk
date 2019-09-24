@@ -70,7 +70,7 @@ lvs_uuid=$($rpc_py bdev_lvol_create_lvstore Nvme0n1 lvol_store)
 $rpc_py bdev_lvol_create lvol_bdev 10000 -l lvol_store
 
 if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
-	$rpc_py construct_vhost_scsi_controller naa.Nvme0n1.0
+	$rpc_py vhost_create_scsi_controller naa.Nvme0n1.0
 	$rpc_py add_vhost_scsi_lun naa.Nvme0n1.0 0 lvol_store/lvol_bdev
 elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
 	$rpc_py construct_vhost_blk_controller naa.Nvme0n1.0 lvol_store/lvol_bdev
