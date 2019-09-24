@@ -1274,26 +1274,6 @@ complete:
 				     (void *)fc_req);
 }
 
-static void
-nvmf_fc_request_fill_buffers(struct spdk_nvmf_request *req,
-			     struct spdk_nvmf_transport *transport, uint32_t length)
-{
-	uint32_t i;
-
-	req->iovcnt = 0;
-
-	while (length) {
-		i = req->iovcnt;
-		req->iov[i].iov_base = (void *)((uintptr_t)((char *)req->buffers[i] +
-						NVMF_DATA_BUFFER_MASK) &
-						~NVMF_DATA_BUFFER_MASK);
-		req->iov[i].iov_len  = spdk_min(length, transport->opts.io_unit_size);
-		req->iovcnt++;
-		length -= req->iov[i].iov_len;
-	}
-	req->data_from_pool = true;
-}
-
 static int
 nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 {
@@ -1306,8 +1286,7 @@ nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 		return -ENOMEM;
 	}
 
-	nvmf_fc_request_fill_buffers(&fc_req->req, transport, length);
-
+	fc_req->req.data_from_pool = true;
 	return 0;
 }
 
