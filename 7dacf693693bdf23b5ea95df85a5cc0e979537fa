@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "c2078420_32ee7e95",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-24T21:49:13Z",
+      "side": 1,
+      "message": "I see where _spdk_load_next_lvol tries to get the clear_method xattr.  But I don\u0027t see where anyone actually sets the clear_method xattr.  I think lvol intended to set the clear_method xattr when it created the blob for the lvol.  Then presumably you can use that value later when calling spdk_bs_open_blob_ext?  But I really don\u0027t think that can work - the blobs for the lvols are all opened internally via lvol library calling spdk_bs_iter, meaning no clear_method is specified.\n\nI think we really need to understand and fix whatever is going on with the existing clear_method functionality before we add this new API.  Have you synced up with Maciek on this?  He did the original clear_method stuff.",
+      "parentUuid": "b4b2fc7a_ec765613",
+      "revId": "7dacf693693bdf23b5ea95df85a5cc0e979537fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6fc56447_a88e2dac",
         "filename": "include/spdk/blob.h",
         "patchSetId": 9
