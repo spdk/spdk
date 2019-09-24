@@ -3658,6 +3658,10 @@ Example response:
 
 Initialize an NVMe-oF target with the given attributes.
 
+This RPC enables library functionality not used in the in-tree
+spdk target applications (spdk_tgt and nvmf_tgt) and should not
+be used with them.
+
 ### Parameters
 
 Name                        | Optional | Type        | Description
@@ -3694,6 +3698,10 @@ Example response:
 ## nvmf_delete_target method {#rpc_nvmf_delete_target}
 
 Destroy the given NVMe-oF target.
+
+This RPC enables library functionality not used in the in-tree
+spdk target applications (spdk_tgt and nvmf_tgt) and should not
+be used with them.
 
 ### Parameters
 
