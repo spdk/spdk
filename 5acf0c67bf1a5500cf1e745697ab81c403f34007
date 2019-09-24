@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "57ef060e_11d22b37",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-24T10:16:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8531397c_b1e41025",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 60
+      },
+      "revId": "5acf0c67bf1a5500cf1e745697ab81c403f34007",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5531c78e_245284c5",
         "filename": "scripts/vagrant/run-autorun.sh",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "5acf0c67bf1a5500cf1e745697ab81c403f34007",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64f55eca_cf5f5187",
+        "filename": "scripts/vagrant/run-autorun.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-24T10:16:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5531c78e_245284c5",
+      "range": {
+        "startLine": 184,
+        "startChar": 0,
+        "endLine": 185,
+        "endChar": 36
+      },
+      "revId": "5acf0c67bf1a5500cf1e745697ab81c403f34007",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
