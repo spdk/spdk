@@ -124,7 +124,7 @@ function host1_start_vhost()
 	trap 'host1_cleanup_vhost; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 	vhost_run 0 "-u"
 	$rpc_0 bdev_nvme_attach_controller -b Nvme0 -t rdma -f ipv4 -a $RDMA_TARGET_IP -s 4420 -n "nqn.2018-02.io.spdk:cnode1"
-	$rpc_0 construct_vhost_scsi_controller $incoming_vm_ctrlr
+	$rpc_0 vhost_create_scsi_controller $incoming_vm_ctrlr
 	$rpc_0 add_vhost_scsi_lun $incoming_vm_ctrlr 0 Nvme0n1
 
 	vm_setup --os="$share_dir/migration.qcow2" --force=$incoming_vm --disk-type=spdk_vhost_scsi --disks=VhostScsi0 \

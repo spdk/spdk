@@ -4335,7 +4335,7 @@ Example response:
 }
 ~~~
 
-## construct_vhost_scsi_controller {#rpc_construct_vhost_scsi_controller}
+## vhost_create_scsi_controller {#rpc_vhost_create_scsi_controller}
 
 Construct vhost SCSI target.
 
@@ -4357,7 +4357,7 @@ Example request:
     "ctrlr": "VhostScsi0"
   },
   "jsonrpc": "2.0",
-  "method": "construct_vhost_scsi_controller",
+  "method": "vhost_create_scsi_controller",
   "id": 1
 }
 ~~~

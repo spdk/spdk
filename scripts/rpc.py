@@ -1818,16 +1818,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('iops_threshold', help='IOPS threshold when coalescing is enabled', type=int)
     p.set_defaults(func=set_vhost_controller_coalescing)
 
-    def construct_vhost_scsi_controller(args):
-        rpc.vhost.construct_vhost_scsi_controller(args.client,
-                                                  ctrlr=args.ctrlr,
-                                                  cpumask=args.cpumask)
+    def vhost_create_scsi_controller(args):
+        rpc.vhost.vhost_create_scsi_controller(args.client,
+                                               ctrlr=args.ctrlr,
+                                               cpumask=args.cpumask)
 
     p = subparsers.add_parser(
-        'construct_vhost_scsi_controller', help='Add new vhost controller')
+        'vhost_create_scsi_controller', aliases=['construct_vhost_scsi_controller'],
+        help='Add new vhost controller')
     p.add_argument('ctrlr', help='controller name')
     p.add_argument('--cpumask', help='cpu mask for this controller')
-    p.set_defaults(func=construct_vhost_scsi_controller)
+    p.set_defaults(func=vhost_create_scsi_controller)
 
     def add_vhost_scsi_lun(args):
         print_json(rpc.vhost.add_vhost_scsi_lun(args.client,

@@ -318,7 +318,7 @@
             "cpumask": "1",
             "ctrlr": "naa.vhost.0"
           },
-          "method": "construct_vhost_scsi_controller"
+          "method": "vhost_create_scsi_controller"
         },
         {
           "params": {
@@ -349,7 +349,7 @@
             "cpumask": "1",
             "ctrlr": "naa.vhost.1"
           },
-          "method": "construct_vhost_scsi_controller"
+          "method": "vhost_create_scsi_controller"
         },
         {
           "params": {

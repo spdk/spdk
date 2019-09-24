@@ -14,14 +14,14 @@ fi
 # Then prepare vhost with rpc calls and setup and run 4 VMs.
 function pre_hot_attach_detach_test_case() {
     used_vms=""
-    $rpc_py construct_vhost_scsi_controller naa.Nvme0n1p0.0
-    $rpc_py construct_vhost_scsi_controller naa.Nvme0n1p1.0
-    $rpc_py construct_vhost_scsi_controller naa.Nvme0n1p2.1
-    $rpc_py construct_vhost_scsi_controller naa.Nvme0n1p3.1
-    $rpc_py construct_vhost_scsi_controller naa.Nvme0n1p4.2
-    $rpc_py construct_vhost_scsi_controller naa.Nvme0n1p5.2
-    $rpc_py construct_vhost_scsi_controller naa.Nvme0n1p6.3
-    $rpc_py construct_vhost_scsi_controller naa.Nvme0n1p7.3
+    $rpc_py vhost_create_scsi_controller naa.Nvme0n1p0.0
+    $rpc_py vhost_create_scsi_controller naa.Nvme0n1p1.0
+    $rpc_py vhost_create_scsi_controller naa.Nvme0n1p2.1
+    $rpc_py vhost_create_scsi_controller naa.Nvme0n1p3.1
+    $rpc_py vhost_create_scsi_controller naa.Nvme0n1p4.2
+    $rpc_py vhost_create_scsi_controller naa.Nvme0n1p5.2
+    $rpc_py vhost_create_scsi_controller naa.Nvme0n1p6.3
+    $rpc_py vhost_create_scsi_controller naa.Nvme0n1p7.3
     $rpc_py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
     $rpc_py add_vhost_scsi_lun naa.Nvme0n1p4.2 1 Nvme0n1p9
     $rpc_py add_vhost_scsi_lun naa.Nvme0n1p5.2 0 Nvme0n1p10
