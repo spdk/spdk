@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a7dcec5_1def82a9",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1111,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-24T07:44:54Z",
+      "side": 1,
+      "message": "You also need to clean the list on module_fini",
+      "revId": "530e909f2ef6343083a567d6c9162428fe19a1e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
