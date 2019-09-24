@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bfb6181_791e3855",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-24T08:40:15Z",
+      "side": 1,
+      "message": "This field is only valid for unmap, use slba",
+      "range": {
+        "startLine": 534,
+        "startChar": 57,
+        "endLine": 534,
+        "endChar": 86
+      },
+      "revId": "41255ae9e454dffc56686a1cc8bb60314415d30e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1a20d4e_ae35ef8c",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-24T08:40:15Z",
+      "side": 1,
+      "message": "You\u0027re resetting multiple zones, but only the first one is marked as busy",
+      "range": {
+        "startLine": 534,
+        "startChar": 0,
+        "endLine": 542,
+        "endChar": 2
+      },
+      "revId": "41255ae9e454dffc56686a1cc8bb60314415d30e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
