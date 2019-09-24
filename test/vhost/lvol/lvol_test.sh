@@ -197,7 +197,7 @@ for (( i=0; i<$vm_count; i++)); do
     fi
 
     if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
-        $rpc_py construct_vhost_scsi_controller naa.0.$i $mask_arg
+        $rpc_py vhost_create_scsi_controller naa.0.$i $mask_arg
         for (( j=0; j<${#bdevs[@]}; j++)); do
             $rpc_py add_vhost_scsi_lun naa.0.$i $j ${bdevs[$j]}
         done

@@ -55,7 +55,7 @@ $rpc_py bdev_nvme_set_hotplug -e
 $rpc_py bdev_malloc_create 256 4096 -b Malloc0
 $rpc_py bdev_aio_create $aio_file Aio0 512
 $rpc_py bdev_get_bdevs
-$rpc_py construct_vhost_scsi_controller naa.vhost.1
+$rpc_py vhost_create_scsi_controller naa.vhost.1
 $rpc_py add_vhost_scsi_lun naa.vhost.1 0 Nvme0n1
 $rpc_py add_vhost_scsi_lun naa.vhost.1 1 Malloc0
 # TODO: Currently there is bug for aio device. Disable this test

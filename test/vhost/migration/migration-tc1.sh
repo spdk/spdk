@@ -29,10 +29,10 @@ function migration_tc1_configure_vhost()
 	$rpc bdev_malloc_create -b Malloc0 128 4096
 
 	# And two controllers - one for each VM. Both are using the same Malloc Bdev as LUN 0
-	$rpc construct_vhost_scsi_controller $incoming_vm_ctrlr
+	$rpc vhost_create_scsi_controller $incoming_vm_ctrlr
 	$rpc add_vhost_scsi_lun $incoming_vm_ctrlr 0 Malloc0
 
-	$rpc construct_vhost_scsi_controller $target_vm_ctrlr
+	$rpc vhost_create_scsi_controller $target_vm_ctrlr
 	$rpc add_vhost_scsi_lun $target_vm_ctrlr 0 Malloc0
 }
 
