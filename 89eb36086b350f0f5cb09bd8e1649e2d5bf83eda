@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8900cce4_7ea04d24",
+        "filename": "test/unit/lib/nvmf/fc.c/fc_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-24T21:36:04Z",
+      "side": 0,
+      "message": "we should remove this is in a separate patch - it\u0027s not related to namespace resize",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
