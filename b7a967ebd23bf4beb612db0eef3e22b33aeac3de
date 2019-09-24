@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "53c0a4d1_8db058f5",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-24T19:27:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6827361a_e3a730c4",
+      "revId": "b7a967ebd23bf4beb612db0eef3e22b33aeac3de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48cafda1_a48c6d4c",
         "filename": "CHANGELOG.md",
         "patchSetId": 5
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "bbb64287_1e5b8407",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-24T19:27:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "48cafda1_a48c6d4c",
+      "revId": "b7a967ebd23bf4beb612db0eef3e22b33aeac3de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e31e397_6d84eef9",
         "filename": "CHANGELOG.md",
         "patchSetId": 5
@@ -50,6 +86,24 @@
       "revId": "b7a967ebd23bf4beb612db0eef3e22b33aeac3de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "323f15d1_7bc7c6a4",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-24T19:27:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6e31e397_6d84eef9",
+      "revId": "b7a967ebd23bf4beb612db0eef3e22b33aeac3de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
