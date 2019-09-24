@@ -1666,8 +1666,8 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvmf_rdma_qpair		*rqpair;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_request		*req = &rdma_req->req;
+	struct ibv_send_wr			*wr = &rdma_req->data.wr;
 	uint32_t				num_buffers;
-	uint32_t				i = 0;
 	int					rc = 0;
 
 	rqpair = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_rdma_qpair, qpair);
@@ -1693,7 +1693,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 				rdma_req->dif_ctx.block_size - rdma_req->dif_ctx.md_size,
 				rdma_req->dif_ctx.md_size);
 	} else {
-		rc = nvmf_rdma_fill_buffers(rtransport, rgroup, device, req, &rdma_req->data.wr, length);
+		rc = nvmf_rdma_fill_buffers(rtransport, rgroup, device, req, wr, length);
 	}
 	if (rc != 0) {
 		goto err_exit;
@@ -1707,12 +1707,8 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 err_exit:
 	spdk_nvmf_request_free_buffers(req, &rgroup->group, &rtransport->transport, num_buffers);
-	while (i) {
-		i--;
-		rdma_req->data.wr.sg_list[i].addr = 0;
-		rdma_req->data.wr.sg_list[i].length = 0;
-		rdma_req->data.wr.sg_list[i].lkey = 0;
-	}
+	memset(wr->sg_list, 0, sizeof(wr->sg_list[0]) * wr->num_sge);
+	wr->num_sge = 0;
 	req->iovcnt = 0;
 	return rc;
 }
