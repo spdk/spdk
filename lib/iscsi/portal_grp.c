@@ -44,6 +44,7 @@
 #include "iscsi/iscsi.h"
 #include "iscsi/conn.h"
 #include "iscsi/portal_grp.h"
+#include "iscsi/tgt_node.h"
 
 #define PORTNUMSTRLEN 32
 #define ACCEPT_TIMEOUT_US 1000 /* 1ms */
@@ -421,6 +422,24 @@ spdk_iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
 
 	p->group = pg;
 	TAILQ_INSERT_TAIL(&pg->head, p, per_pg_tailq);
+}
+
+int
+spdk_iscsi_portal_grp_set_chap_params(struct spdk_iscsi_portal_grp *pg,
+				      bool disable_chap, bool require_chap,
+				      bool mutual_chap, int32_t chap_group)
+{
+	if (!spdk_iscsi_check_chap_params(disable_chap, require_chap,
+					  mutual_chap, chap_group)) {
+		return -EINVAL;
+	}
+
+	pg->disable_chap = disable_chap;
+	pg->require_chap = require_chap;
+	pg->mutual_chap = mutual_chap;
+	pg->chap_group = chap_group;
+
+	return 0;
 }
 
 static int

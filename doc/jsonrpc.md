@@ -3559,6 +3559,51 @@ Example response:
 }
 ~~~
 
+### iscsi_portal_group_set_auth method {#rpc_iscsi_portal_group_set_auth}
+
+Set CHAP authentication for discovery sessions specific for the existing iSCSI portal group.
+This RPC overwrites the setting by the global parameters for the iSCSI portal group.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+disable_chap                | Optional | boolean | CHAP for discovery session should be disabled (default: `false`)
+require_chap                | Optional | boolean | CHAP for discovery session should be required (default: `false`)
+mutual_chap                 | Optional | boolean | CHAP for discovery session should be unidirectional (`false`) or bidirectional (`true`) (default: `false`)
+chap_group                  | Optional | number  | CHAP group ID for discovery session (default: 0)
+
+Parameters `disable_chap` and `require_chap` are mutually exclusive.
+
+### Example
+
+Example request:
+
+~~~
+request:
+{
+  "params": {
+    "tag": 1,
+    "chap_group": 1,
+    "require_chap": true,
+    "mutual_chap": true
+  },
+  "jsonrpc": "2.0",
+  "method": "iscsi_portal_group_set_auth",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## iscsi_get_connections method {#rpc_iscsi_get_connections}
 
 Show information about all active connections.
