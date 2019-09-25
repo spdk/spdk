@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f9ef741_0b36e659",
+        "filename": "module/blobfs/bdev/blobfs_bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T05:21:08Z",
+      "side": 1,
+      "message": "This structure is the exact same as struct blobfs_bdev_detect_ctx.  Let\u0027s use the same structure for both detect and create.  Then you should also be able to reuse some of the unload code between the two code paths.",
+      "revId": "a50267894d3a63932914bf0b94f2ce86761c432d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
