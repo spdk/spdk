@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48fdce31_c8dc40c1",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T17:56:41Z",
+      "side": 0,
+      "message": "let\u0027s remove this newline in previous patch",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
