@@ -3,10 +3,24 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
+source $testdir/common.sh
 
 declare -A suite
 suite['basic']='randw-verify randw-verify-j2 randw-verify-depth128'
 suite['extended']='drive-prep randw-verify-qd128-ext randw randr randrw'
+
+rpc_py=$rootdir/scripts/rpc.py
+ftl_bdev_conf=$testdir/config/ftl.conf
+gen_ftl_nvme_conf > $ftl_bdev_conf
+
+fio_kill() {
+	rmmod nbd || true
+	$rpc_py delete_ftl_bdev -b ftl0 || true
+	$rpc_py bdev_ocssd_delete nvme0n1 || true
+	$rpc_py delete_nvme_controller nvme0 || true
+	killprocess $svcpid
+	rm -f $ftl_bdev_conf
+}
 
 device=$1
 tests=${suite[$2]}
@@ -22,19 +36,34 @@ if [ -z "$tests" ]; then
 	exit 1
 fi
 
-export FTL_BDEV_CONF=$testdir/config/ftl.conf
-export FTL_BDEV_NAME=nvme0
+export FTL_BDEV_NAME=/dev/nbd0
+
+trap "fio_kill; exit 1" SIGINT SIGTERM EXIT
+
+$rootdir/app/spdk_tgt/spdk_tgt -c $ftl_bdev_conf  & svcpid=$!
+waitforlisten $svcpid
+
+$rpc_py bdev_nvme_attach_controller -b nvme0 -a $device  -t pcie
+$rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1 -n 1
 
 if [ -z "$uuid" ]; then
-	$rootdir/scripts/gen_ftl.sh -a $device -n nvme0 > $FTL_BDEV_CONF
+	$rpc_py construct_ftl_bdev -b ftl0 -d nvme0n1
 else
-	$rootdir/scripts/gen_ftl.sh -a $device -n nvme0 -u $uuid > $FTL_BDEV_CONF
+	$rpc_py construct_ftl_bdev -b ftl0 -d nvme0n1 -u $uuid
 fi
+
+modprobe nbd
+$rpc_py start_nbd_disk ftl0 /dev/nbd0
+waitfornbd nbd0
 
 for test in ${tests[@]}; do
 	timing_enter $test
-	fio_bdev $testdir/config/fio/$test.fio
+	/usr/src/fio/fio $testdir/config/fio/$test.fio
 	timing_exit $test
 done
 
+$rpc_py stop_nbd_disk /dev/nbd0
 report_test_completion ftl_fio
+
+trap - SIGINT SIGTERM EXIT
+fio_kill
