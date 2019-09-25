@@ -16,6 +16,40 @@
       "revId": "a50267894d3a63932914bf0b94f2ce86761c432d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a3c2241_b4e70854",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T05:37:39Z",
+      "side": 1,
+      "message": "same as detect - treat all errors here the same (no special case for -EINVAL)",
+      "revId": "a50267894d3a63932914bf0b94f2ce86761c432d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c09f1063_e83c2994",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T05:37:39Z",
+      "side": 1,
+      "message": "if (rc !\u003d 0) {\n  _rpc_blobfs_create_done(req, rc);\n}\n\nand remove the goto, return and invalid label",
+      "revId": "a50267894d3a63932914bf0b94f2ce86761c432d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
