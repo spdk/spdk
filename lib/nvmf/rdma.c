@@ -1524,6 +1524,31 @@ nvmf_rdma_replace_buffer(struct spdk_nvmf_rdma_poll_group *rgroup, void **buf)
 	return 0;
 }
 
+static bool
+nvmf_rdma_get_lkey(struct spdk_nvmf_rdma_device *device, struct iovec *iov,
+		   uint32_t *_lkey)
+{
+	uint64_t	translation_len;
+	uint32_t	lkey;
+
+	translation_len = iov->iov_len;
+
+	if (!g_nvmf_hooks.get_rkey) {
+		lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
+				(uint64_t)iov->iov_base, &translation_len))->lkey;
+	} else {
+		lkey = spdk_mem_map_translate(device->map,
+					      (uint64_t)iov->iov_base, &translation_len);
+	}
+
+	if (spdk_unlikely(translation_len < iov->iov_len)) {
+		return false;
+	}
+
+	*_lkey = lkey;
+	return true;
+}
+
 /*
  * Fills iov and SGL, iov[i] points to buffer[i], SGE[i] is limited in length to data block size
  * and points to part of buffer
@@ -1609,31 +1634,6 @@ nvmf_rdma_fill_buffers_with_md_interleave(struct spdk_nvmf_rdma_transport *rtran
 	}
 
 	return 0;
-}
-
-static bool
-nvmf_rdma_get_lkey(struct spdk_nvmf_rdma_device *device, struct iovec *iov,
-		   uint32_t *_lkey)
-{
-	uint64_t	translation_len;
-	uint32_t	lkey;
-
-	translation_len = iov->iov_len;
-
-	if (!g_nvmf_hooks.get_rkey) {
-		lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-				(uint64_t)iov->iov_base, &translation_len))->lkey;
-	} else {
-		lkey = spdk_mem_map_translate(device->map,
-					      (uint64_t)iov->iov_base, &translation_len);
-	}
-
-	if (spdk_unlikely(translation_len < iov->iov_len)) {
-		return false;
-	}
-
-	*_lkey = lkey;
-	return true;
 }
 
 static bool
