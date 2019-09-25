@@ -16,6 +16,24 @@
       "revId": "72bb889dd5338b188f1b6d1f7b05a47fb041fd73",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f13a5856_43a00890",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T03:01:16Z",
+      "side": 1,
+      "message": "Thank you Seth, changing uint32_t to int was not intentional. I fixed it.",
+      "parentUuid": "81d22dcf_4d114ad5",
+      "revId": "72bb889dd5338b188f1b6d1f7b05a47fb041fd73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
