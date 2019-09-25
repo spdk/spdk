@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ba8f990_e50254c5",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T05:52:52Z",
+      "side": 1,
+      "message": "don\u0027t treat -EINVAL as special error case (similar to earlier patches)",
+      "revId": "f4abcf3cfe2792ba9d998b9141459c148041c05f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6335e722_0b11a16a",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T05:52:52Z",
+      "side": 1,
+      "message": "remove goto/label same as earlier patches",
+      "revId": "f4abcf3cfe2792ba9d998b9141459c148041c05f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
