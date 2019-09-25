@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1f3c6fd_cfdef63c",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T21:38:43Z",
+      "side": 1,
+      "message": "is lock acquisition required here?  we don\u0027t need to protect the pg, since it was just allocated earlier in this function",
+      "revId": "77ee96f7ee738d2bff10bf6e22a2be1c8f50f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
