@@ -1,6 +1,5 @@
 [drive_prep]
-ioengine=spdk_bdev
-spdk_conf=${FTL_BDEV_CONF}
+ioengine=libaio
 filename=${FTL_BDEV_NAME}
 thread=1
 
