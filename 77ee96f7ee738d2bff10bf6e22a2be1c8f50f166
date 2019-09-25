@@ -34,6 +34,24 @@
       "revId": "77ee96f7ee738d2bff10bf6e22a2be1c8f50f166",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dfeb9dd9_df42da1d",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T23:53:37Z",
+      "side": 1,
+      "message": "Some use cases may use only internal of JSON RPC and so adding mutex is nice to have for them.",
+      "parentUuid": "ba6c6d3b_2f34147e",
+      "revId": "77ee96f7ee738d2bff10bf6e22a2be1c8f50f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
