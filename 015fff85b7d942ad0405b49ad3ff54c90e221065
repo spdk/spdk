@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10778967_1b6f0bb7",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T18:34:18Z",
+      "side": 1,
+      "message": "now that FTL will be moved up to a higher layer - how will this mode be used?\n\nfor example, what happens if user specifies \"standard\" for an Open Channel SSD?  or specifies \"ocssd\" for a standard SSD?\n\nI guess I\u0027m thinking some of this should be automatic.  i.e. if we attach to a controller with standard namespaces, then we should automatically create a bdev for each of those namespaces\n\nOC is different.  We have Konrad\u0027s ocssd mode, which takes Open Channel namespaces and creates a \u0027virtual\u0027 zoned bdev for each.  Maybe for now we just make that the automatic behavior.  But there could theoretically be use cases where someone wants to consume an Open Channel namespace differently.\n\nSimilar for zoned namespaces.  I think the default behavior would just be to create a zoned block device for each zoned namespace.\n\nSo I guess I\u0027d like to understand more about how this mode thing will work once we have standard, zoned and Open Channel namespaces.  There\u0027s even the possibility for one controller to have different types of namespaces.",
+      "revId": "015fff85b7d942ad0405b49ad3ff54c90e221065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
