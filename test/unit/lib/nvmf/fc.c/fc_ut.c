@@ -81,7 +81,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.req_complete = NULL,
 
 	.qpair_fini = NULL,
-	.qpair_is_idle = NULL,
 	.qpair_get_peer_trid = NULL,
 	.qpair_get_local_trid = NULL,
 	.qpair_get_listen_trid = NULL,
