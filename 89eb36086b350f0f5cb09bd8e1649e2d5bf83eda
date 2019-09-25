@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "b8342d57_8d8ae5cf",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2657,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T15:23:48Z",
+      "side": 1,
+      "message": "Yes - you\u0027re right on the descriptor getting removed - so this case shouldn\u0027t happen.  And reading this more for the closed flag and races between the two threads, I think that\u0027s OK also, since:\n\n1) spdk_bdev_close and spdk_bdev_notify_blockcnt_change acquire the bdev mutex before changing/checking the closed flag\n2) _update_notify doesn\u0027t acquire the bdev lock, but it always runs on the same thread as spdk_bdev_close so there\u0027s no possibility for race there either\n\nIt\u0027s still pretty messy though, and if the two of us have spent this much time discussing it, it will look suspect a few months from now if we have any problems in this area.\n\nI\u0027ll be curious to see if you\u0027re able to help readability with a per-descriptor lock.",
+      "parentUuid": "8d1d032c_202d81be",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0ee728cd_f5624b07",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
