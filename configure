@@ -688,6 +688,12 @@ if [[ "${CONFIG[URING]}" = "y" ]]; then
 	fi
 fi
 
+if [[ ! -d /usr/include/fuse3 ]] && [[ ! -d /usr/local/include/fuse3 ]]; then
+	echo "libfuse3 is not installed. Please install then re-run this script, if"
+	echo "you want to use blobfs with FUSE."
+	CONFIG[FUSE]=n
+fi
+
 # We are now ready to generate final configuration. But first do sanity
 # check to see if all keys in CONFIG array have its reflection in CONFIG file.
 if [ $(egrep -c "^\s*CONFIG_[[:alnum:]_]+=" $rootdir/CONFIG) -ne ${#CONFIG[@]} ]; then
