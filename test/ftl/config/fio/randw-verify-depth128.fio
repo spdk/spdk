@@ -1,7 +1,6 @@
 [global]
-ioengine=spdk_bdev
-spdk_conf=${FTL_BDEV_CONF}
-filename=${FTL_BDEV_NAME}
+ioengine=libaio
+filename=/dev/nbd0
 thread=1
 direct=1
 iodepth=128
