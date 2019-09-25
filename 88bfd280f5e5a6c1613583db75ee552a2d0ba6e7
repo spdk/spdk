@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea19906d_3dd87d7a",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1077,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-25T11:46:04Z",
+      "side": 1,
+      "message": "during",
+      "range": {
+        "startLine": 1077,
+        "startChar": 16,
+        "endLine": 1077,
+        "endChar": 23
+      },
+      "revId": "88bfd280f5e5a6c1613583db75ee552a2d0ba6e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
