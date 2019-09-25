@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9fb3064_032812e1",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 3662,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T05:58:50Z",
+      "side": 1,
+      "message": "I\u0027m tempted to just remove documentation of these from jsonrpc.md.  I\u0027m pretty sure there are other RPCs that aren\u0027t in jsonrpc.md (not saying that\u0027s a good thing - it\u0027s just a fact).  Putting them here is just going to raise more confusion I think.\n\nI\u0027m just thinking that the vast majority of people reading this file are normal spdk_tgt/nvmf_tgt users, and seeing the documentation here, but no support in rpc.py, will be confusing.",
+      "revId": "32b037252bdafc65d93be785c5292f687a5c404c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
