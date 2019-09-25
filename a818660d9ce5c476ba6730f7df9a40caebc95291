@@ -34,6 +34,24 @@
       "revId": "a818660d9ce5c476ba6730f7df9a40caebc95291",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e99c64f_17eb29f7",
+        "filename": "module/blobfs/bdev/blobfs_fuse.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-25T03:05:38Z",
+      "side": 1,
+      "message": "Hi, @Jim\nI\u0027ve added a new patch (https://review.gerrithub.io/c/spdk/spdk/+/469347) as an interim to avoid \n two copies.\nCode changes between test/blobfs/fuse/fuse.c and fuse RPC are also separated now.",
+      "parentUuid": "350a9041_10a5d588",
+      "revId": "a818660d9ce5c476ba6730f7df9a40caebc95291",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
