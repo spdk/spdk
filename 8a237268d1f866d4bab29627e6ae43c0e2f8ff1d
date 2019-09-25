@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b4ce836_a0763f87",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-25T09:10:11Z",
+      "side": 1,
+      "message": "Let\u0027s replace it with the following:\nbdev_node-\u003enum_zones -\u003d bdev_node-\u003enum_zones % name-\u003eoptimal_open_zones;",
+      "range": {
+        "startLine": 362,
+        "startChar": 2,
+        "endLine": 362,
+        "endChar": 100
+      },
+      "revId": "8a237268d1f866d4bab29627e6ae43c0e2f8ff1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9bb8eab5_797542a3",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-25T09:10:11Z",
+      "side": 1,
+      "message": "Let\u0027s add a SPDK_NOTICELOG saying how much capacity was lost.",
+      "revId": "8a237268d1f866d4bab29627e6ae43c0e2f8ff1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
