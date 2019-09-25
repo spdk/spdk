@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3372354_801f9f8c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-25T07:26:37Z",
+      "side": 1,
+      "message": "Pawel, just like in one of other patches - if you\u0027re removing SC check from the exclusion list and you\u0027re not fixing anything then its probably best to mention that fact.",
+      "revId": "1a6a385747a67ebafb3fd6fd84b43686d47c143d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
