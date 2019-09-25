@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "3a9329eb_d53670be",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T15:33:52Z",
+      "side": 1,
+      "message": "You bring up a good point, but I still think precise events is better.\n\nFor example, we have a use case coming up around zones, where a zoned block device may need to tell the upper layer about a status update on a zone.  Handling of this type of async event will be completely different than a resize.  Short-term, exporting zoned bdevs over NVMe-oF isn\u0027t a strong use case - but if it was in the future, these types of events would be reported to the initiator with a different AER type (since the change is not part of namespace identify - it\u0027s a different log page).\n\nIf we do find multiple properties that could change, and be reported via NS_ATTR_CHANGED, that could result in multiple AERs.  But that should be very rare.  We may even be able to build some kind of coalescing into the NVMe-oF target - for example, after resuming the subsystem, don\u0027t complete the AER immediately, but wait some amount of time (1ms?) to allow multiple changes to coalesce.\n\nI also think it is cleaner to be precise, so that in the future, if we have 10 different types of changes that can happen on a bdev, the application can now exactly what parameter changed by looking at the event type.  If it\u0027s too general, then the application is forced to check 10 different things to figure out what changed.",
+      "parentUuid": "1432816b_dac8a3ee",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d1ba9768_0b7ab715",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
