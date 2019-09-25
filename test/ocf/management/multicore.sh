@@ -38,6 +38,9 @@ $rpc_py bdev_malloc_create 101 512 -b Cache
 $rpc_py bdev_ocf_get_bdevs | jq -e \
 	'all(select(.started)) == true'
 
+#Be sure that we will not fail delete because examine is still in progress
+sleep 1
+
 # Detaching cores
 
 $rpc_py  bdev_ocf_delete C2
