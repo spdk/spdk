@@ -55,4 +55,9 @@ endif
 SYS_LIBS += -lufc
 endif
 
+# libfuse3 is required internally by blobfs_bdev
+ifeq ($(CONFIG_FUSE),y)
+LIBS+= -L/usr/local/lib -lfuse3
+endif
+
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
