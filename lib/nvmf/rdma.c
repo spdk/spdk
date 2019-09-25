@@ -1669,14 +1669,15 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_request		*req = &rdma_req->req;
 	struct ibv_send_wr			*wr = &rdma_req->data.wr;
-	int					rc = 0;
+	int					rc;
 
 	rqpair = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rgroup = rqpair->poller->group;
 
-	if (spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport,
-					  length)) {
-		return -ENOMEM;
+	rc = spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport,
+					   length);
+	if (rc != 0) {
+		return rc;
 	}
 
 	assert(req->iovcnt <= rqpair->max_send_sge);
@@ -1737,7 +1738,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 			lengths, num_sgl_descriptors);
 	if (rc != 0) {
 		nvmf_rdma_request_free_data(rdma_req, rtransport);
-		return -ENOMEM;
+		return rc;
 	}
 
 	/* The first WR must always be the embedded data WR. This is how we unwind them later. */
