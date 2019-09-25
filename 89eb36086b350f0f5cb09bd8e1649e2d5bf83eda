@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1432816b_dac8a3ee",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-25T11:04:20Z",
+      "side": 1,
+      "message": "I agree that precise events make life easier for application. But what if multiple properties of block device change simultaneously. We will have to generate several precise events. This will force NVMf target to send multiple NS_ATTR_CHANGED async events to initiator and initiator will have to re-identify namespace multiple times.\nThis may be not a real world example at the moment. But I\u0027d like to know your thoughts about it.",
+      "parentUuid": "c92647e6_a8d1d66b",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d1ba9768_0b7ab715",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-09-24T21:20:52Z",
       "side": 1,
       "message": "I think there are some tricky races here.  desc-\u003eclosed is currently only touched by the thread the opens the descriptor.  But this patch now potentially reads it from a different thread.  I think there are race problems with the refs as well.  For example:\n\nThread A                       Thread B\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d                       \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\ncalls blockcnt_change\n  increments refs to 1\n  sends message 1 to thread B\n                               closes desc\n\n                               starts executing message 1\n                                  decrements refs to 0\ncalls unregister_bdev             sees desc is closed and refs is 0\n  increments ref\n  sends message 2 to thread B\n                                     frees desc\n\n                               starts executing message 2\n                                  desc has already been freed!\n\n\nOne option is that we put a lock in the descriptor itself to coordinate work between the bdev module removing/resizing the bdev on one thread, with the user operating on a descriptor on another thread.\n\nThere may be other options around using compare+swap, but I think for simplicity, the lock would be easiest to understand and ensure correctness.\n\nI\u0027d suggest adding the lock (plus ref count) in a separate patch before this one.  I think by adding the lock+refs you can eliminate the current remove_scheduled member as well.\n\nTake a look and let me know on Slack if you have any questions or additional thoughts.",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d1d032c_202d81be",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2657,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-25T11:04:20Z",
+      "side": 1,
+      "message": "The race you suggested is not possible because spdk_bdev_close removes descriptor from open_desc list and spdk_bdev_unregister will not send a message.\nI do not see any races in current implementation. But I agree that it is really hard to follow all the possible sequences and to prove correctness. I will check if locks will improve readability and update the patch.",
+      "parentUuid": "d1ba9768_0b7ab715",
       "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "dc99af63_2d2cf3db",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2683,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-25T11:04:20Z",
+      "side": 1,
+      "message": "It should work. I\u0027ll update",
+      "parentUuid": "0ee728cd_f5624b07",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "75e44d0a_a60e83de",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "392b367b_06f0f923",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 4259,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-25T11:04:20Z",
+      "side": 1,
+      "message": "Will update. I noticed this changed after I pushed this one for review.",
+      "parentUuid": "75e44d0a_a60e83de",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "42c64ce7_64ba6afc",
         "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
         "patchSetId": 3
@@ -81,6 +153,24 @@
       "writtenOn": "2019-09-24T18:10:00Z",
       "side": 1,
       "message": "Let\u0027s remove the shrinking case.  We already test the shrinking block number case above (line 657).  Since this is adding tests for async notifications, we shouldn\u0027t get a notification for a failed blockcnt change, so I don\u0027t think this is needed here.\n\n(To be honest, first time I read this unit test, I didn\u0027t even notice that the CU_ASSERT was checking that it returned !\u003d 0.)",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6acb16f_96de71f3",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-25T11:04:20Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "42c64ce7_64ba6afc",
       "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
