@@ -42,8 +42,9 @@ C_SRCS := fuse.c
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 SPDK_LIB_LIST += event_bdev event_copy event_vmd
 SPDK_LIB_LIST += bdev copy event thread util conf trace \
-		log jsonrpc json rpc sock notify
+		log jsonrpc json rpc sock notify blobfs_bdev
 
+# libfuse3 is required internally by blobfs_bdev
 LIBS+= -L/usr/local/lib -lfuse3
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
