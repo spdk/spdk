@@ -19,6 +19,40 @@
     },
     {
       "key": {
+        "uuid": "d1048e4b_a9d32cba",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T08:50:41Z",
+      "side": 1,
+      "message": "Any specific plan to use copy engine?",
+      "revId": "729acbe57e35bd53f832d1fd68bbe0efe91cfa87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3daa7e4_82c9f2ba",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T08:50:41Z",
+      "side": 1,
+      "message": "It may be nice if we include only header files necessary in this patch.",
+      "revId": "729acbe57e35bd53f832d1fd68bbe0efe91cfa87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b84d0434_a68581f9",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 5
@@ -30,6 +64,29 @@
       "writtenOn": "2019-09-24T13:00:24Z",
       "side": 1,
       "message": "In most cases in SPDK, static variables (pointers) are initialized by NULL. It\u0027s redundant. But we should follow the same code style",
+      "revId": "729acbe57e35bd53f832d1fd68bbe0efe91cfa87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db673d26_ef9aebc4",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T08:50:41Z",
+      "side": 1,
+      "message": "Can we have \"0x1\" as default value? (Please see lib/event/app.c) Other options are same.",
+      "range": {
+        "startLine": 74,
+        "startChar": 1,
+        "endLine": 74,
+        "endChar": 13
+      },
       "revId": "729acbe57e35bd53f832d1fd68bbe0efe91cfa87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
