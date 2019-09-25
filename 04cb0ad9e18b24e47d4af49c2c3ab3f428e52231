@@ -2,6 +2,69 @@
   "comments": [
     {
       "key": {
+        "uuid": "d30cdfed_f0748d3a",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T08:58:48Z",
+      "side": 1,
+      "message": "Please align the macro value ((1 \u003c\u003c 14), 10000, and CONNECT_SCHED_ROUND_ROBIN) by using tab.",
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2972392_57beac08",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T08:58:48Z",
+      "side": 1,
+      "message": "We can remove this.",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 39
+      },
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "736c03b6_20824d17",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T08:58:48Z",
+      "side": 1,
+      "message": "Can we free nvmf_thread in nvmf_cleanup_thread()?",
+      "range": {
+        "startLine": 209,
+        "startChar": 0,
+        "endLine": 212,
+        "endChar": 0
+      },
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8d6c48ef_18b8c7d4",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 4
@@ -13,6 +76,121 @@
       "writtenOn": "2019-09-24T08:52:24Z",
       "side": 1,
       "message": "align issue.",
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f275a7d_77d68d51",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T08:58:48Z",
+      "side": 1,
+      "message": "Same comment again. Any specific plan to use copy engine?",
+      "range": {
+        "startLine": 249,
+        "startChar": 1,
+        "endLine": 249,
+        "endChar": 28
+      },
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "424d150f_87d35527",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T08:58:48Z",
+      "side": 1,
+      "message": "Can we move this change to the patch which starts using bdev?",
+      "range": {
+        "startLine": 251,
+        "startChar": 0,
+        "endLine": 253,
+        "endChar": 0
+      },
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e11ed065_46c7c0f2",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T08:58:48Z",
+      "side": 1,
+      "message": "We know the size of struct cpuset now. So we can allocate tmp_cpumask on the stack instead.",
+      "range": {
+        "startLine": 342,
+        "startChar": 1,
+        "endLine": 342,
+        "endChar": 35
+      },
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb763776_baeb3ac3",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T08:58:48Z",
+      "side": 1,
+      "message": "I think we can inline this into nvmf_exit_threads.",
+      "range": {
+        "startLine": 426,
+        "startChar": 0,
+        "endLine": 429,
+        "endChar": 0
+      },
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7377338_c2e09eb1",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T08:58:48Z",
+      "side": 1,
+      "message": "We can move this before nvmf_init_threads, and then can remove the declaration at the line 97.",
+      "range": {
+        "startLine": 432,
+        "startChar": 0,
+        "endLine": 432,
+        "endChar": 17
+      },
       "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
