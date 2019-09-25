@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2548994_1499e2ac",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-25T09:49:52Z",
+      "side": 1,
+      "message": "I think we should be checking this after setting zone-\u003ebusy \u003d true.",
+      "range": {
+        "startLine": 339,
+        "startChar": 0,
+        "endLine": 343,
+        "endChar": 2
+      },
+      "revId": "3c15bbc8047e26da63a83d2fd45d49860f69ca07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
