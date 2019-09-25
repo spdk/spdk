@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f4a07912_cf16f61c",
+        "filename": "test/unit/lib/nvmf/rdma.c/rdma_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-25T13:01:25Z",
+      "side": 1,
+      "message": "Just a question - is it possible to include transport.c like it is done in fc_ut.c to avoid duplication of changes?",
+      "range": {
+        "startLine": 117,
+        "startChar": 1,
+        "endLine": 119,
+        "endChar": 2
+      },
+      "revId": "fbc6d39a0c3064677f299dba6a403270778396c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
