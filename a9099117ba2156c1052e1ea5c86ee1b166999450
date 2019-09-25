@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "6d11c3d4_2b3d272a",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-25T09:04:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a2ce8b22_b716a88e",
+      "range": {
+        "startLine": 476,
+        "startChar": 1,
+        "endLine": 476,
+        "endChar": 35
+      },
+      "revId": "a9099117ba2156c1052e1ea5c86ee1b166999450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b5d5ee24_7121e79f",
         "filename": "lib/ftl/ftl_anm.c",
         "patchSetId": 2
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "This will require more changes in ANM logic - I think we should ignore this allocation for now and fix it in ocssd bdev - this whole code will be removed soon from FTL.",
       "parentUuid": "b5d5ee24_7121e79f",
+      "range": {
+        "startLine": 497,
+        "startChar": 0,
+        "endLine": 501,
+        "endChar": 2
+      },
+      "revId": "a9099117ba2156c1052e1ea5c86ee1b166999450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "298005b1_9239babb",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-25T09:04:52Z",
+      "side": 1,
+      "message": "Not checking for the error is not the correct solution. If we don\u0027t want to make this a part of ftl_anm_poller, let\u0027s at least try unregistering until we succeed, like this:\n\nrc \u003d ftl_anm_unregister_device(dev, ftl_anm_unregister_cb);\nif (rc !\u003d 0) {\n SPDK_ERRLOG(\"Failed to unregister ANM device, will retry later\\n\");\n} else {\n spdk_poller_unregister(\u0026dev-\u003efini_ctx.poller);\n}",
+      "parentUuid": "d1101a14_ed6c37c2",
       "range": {
         "startLine": 497,
         "startChar": 0,
