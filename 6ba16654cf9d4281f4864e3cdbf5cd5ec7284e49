@@ -16,6 +16,24 @@
       "revId": "6ba16654cf9d4281f4864e3cdbf5cd5ec7284e49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be1b40b5_c57c4685",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-25T07:30:53Z",
+      "side": 1,
+      "message": "In my previous comment I was rather thinking of something like:\nnvmes\u003d($(cmd))\n\nbut I guess this works too.",
+      "parentUuid": "4b3780c9_f90478e8",
+      "revId": "6ba16654cf9d4281f4864e3cdbf5cd5ec7284e49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
