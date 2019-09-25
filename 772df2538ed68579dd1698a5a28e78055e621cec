@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "631c7193_a86d45d8",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 3737,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T06:00:54Z",
+      "side": 1,
+      "message": "Maybe we should just not include this in jsonrpc.md for now (see comment on previous patch).",
+      "revId": "772df2538ed68579dd1698a5a28e78055e621cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
