@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d6d85f9_48bcaa50",
+        "filename": "include/spdk/blobfs_bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T05:42:24Z",
+      "side": 1,
+      "message": "let\u0027s name this file as include/spdk/blobfs_bdev.h in the detect patch - rather than naming it one thing in the detect patch and then renaming it in this patch\n\nthen all of these changes would just go in the detect patch when this file is first created",
+      "revId": "058962c18cc9b65feb83f1f7795883b433922a15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc1bc05e_dd906005",
+        "filename": "test/blobfs/mkfs/mkfs.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T05:42:24Z",
+      "side": 1,
+      "message": "shutdown_cb(NULL, rc);\nreturn;\n\nthen you avoid the goto and associated label",
+      "revId": "058962c18cc9b65feb83f1f7795883b433922a15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
