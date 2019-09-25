@@ -116,7 +116,6 @@ static void reset_nvmf_rdma_request(struct spdk_nvmf_rdma_request *rdma_req)
 		rdma_req->data.wr.sg_list[i].lkey = 0;
 	}
 	rdma_req->req.iovcnt = 0;
-	rdma_req->req.num_buffers = 0;
 }
 
 static void
