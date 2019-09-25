@@ -31,92 +31,22 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef SPDK_BLOBFS_FUSE_H
+#define SPDK_BLOBFS_FUSE_H
+
 #include "spdk/stdinc.h"
-
-#define FUSE_USE_VERSION 30
-#include "fuse3/fuse.h"
-#include "fuse3/fuse_lowlevel.h"
-
 #include "spdk/blobfs.h"
-#include "spdk/bdev.h"
-#include "spdk/event.h"
-#include "spdk/thread.h"
-#include "spdk/blob_bdev.h"
-#include "spdk/blobfs_bdev.h"
-#include "spdk/log.h"
-#include "spdk/string.h"
 
-char *g_bdev_name;
-char *g_mountpoint;
+struct spdk_blobfs_fuse;
 
-int g_fuse_argc = 0;
-char **g_fuse_argv = NULL;
+void spdk_blobfs_fuse_send_request(fs_request_fn fn, void *arg);
 
-static void
-fuse_run_cb(void *cb_arg, int fserrno)
-{
-	if (fserrno) {
-		printf("Failed to mount filesystem on bdev %s to path %s: %s",
-		       g_bdev_name, g_mountpoint, spdk_strerror(fserrno));
+typedef void (*blobfs_fuse_unmount_cb)(void *arg);
 
-		spdk_app_stop(0);
-		return;
-	}
+int spdk_blobfs_fuse_start(const char *bdev_name, const char *mountpoint,
+			   struct spdk_filesystem *fs, blobfs_fuse_unmount_cb cb_fn,
+			   void *cb_arg, struct spdk_blobfs_fuse **bfuse);
 
-	printf("done.\n");
-}
+void spdk_blobfs_fuse_stop(struct spdk_blobfs_fuse *bfuse);
 
-static void
-spdk_fuse_run(void *arg1)
-{
-	int rc;
-
-	printf("Mounting filesystem on bdev %s to path %s...",
-	       g_bdev_name, g_mountpoint);
-	fflush(stdout);
-
-	rc = spdk_blobfs_bdev_mount(g_bdev_name, g_mountpoint, fuse_run_cb, NULL);
-	if (rc != 0) {
-		goto invalid;
-	}
-
-	return;
-
-invalid:
-	fuse_run_cb(NULL, rc);
-}
-
-static void
-spdk_fuse_shutdown(void)
-{
-	spdk_app_stop(0);
-}
-
-int main(int argc, char **argv)
-{
-	struct spdk_app_opts opts = {};
-	int rc = 0;
-
-	if (argc < 4) {
-		fprintf(stderr, "usage: %s <conffile> <bdev name> <mountpoint>\n", argv[0]);
-		exit(1);
-	}
-
-	spdk_app_opts_init(&opts);
-	opts.name = "spdk_fuse";
-	opts.config_file = argv[1];
-	opts.reactor_mask = "0x3";
-	opts.shutdown_cb = spdk_fuse_shutdown;
-
-	g_bdev_name = argv[2];
-	g_mountpoint = argv[3];
-
-	/* TODO: mount blobfs with extra FUSE options. */
-	g_fuse_argc = argc - 2;
-	g_fuse_argv = &argv[2];
-
-	rc = spdk_app_start(&opts, spdk_fuse_run, NULL);
-	spdk_app_fini();
-
-	return rc;
-}
+#endif /* SPDK_BLOBFS_FUSE_H */
