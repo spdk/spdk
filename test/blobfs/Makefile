@@ -35,11 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y = mkfs
-
-# TODO: do not check a hardcoded path here
-ifneq (,$(wildcard /usr/local/include/fuse3))
-DIRS-y += fuse
-endif
+DIRS-$(CONFIG_FUSE) += fuse
 
 .PHONY: all clean $(DIRS-y)
 
