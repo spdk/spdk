@@ -376,6 +376,13 @@ vbdev_ocf_destruct(void *opaque)
 	if (vbdev->state.doing_finish) {
 		return -EALREADY;
 	}
+
+	if (vbdev->state.starting && !vbdev->state.started) {
+		/* Prevent before detach cache/core during register path of
+		  this bdev */
+		return -EBUSY;
+	}
+
 	vbdev->state.doing_finish = true;
 
 	if (vbdev->state.started) {
@@ -1022,6 +1029,7 @@ register_vbdev(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_callback cb, void *cb_arg
 		return;
 	}
 
+	vbdev->state.starting = true;
 	rc = vbdev_ocf_mngt_start(vbdev, register_path, cb, cb_arg);
 	if (rc) {
 		cb(rc, vbdev, cb_arg);

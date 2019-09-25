@@ -69,6 +69,8 @@ struct vbdev_ocf_state {
 	bool                         doing_reset;
 	/* From the moment when exp_bdev is registered */
 	bool                         started;
+	/* From the moment when register path started */
+	bool                         starting;
 	/* Status of last attempt for stopping this device */
 	int                          stop_status;
 };
