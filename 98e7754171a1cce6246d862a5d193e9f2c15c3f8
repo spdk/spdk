@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "567b0bc8_1e9376f5",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T05:35:15Z",
+      "side": 1,
+      "message": "I would just treat -EINVAL as any other error (except -EILSEQ).  The spdk_strerror will indicate the EINVAL.  It reduces the amount of code.",
+      "revId": "98e7754171a1cce6246d862a5d193e9f2c15c3f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "187cb663_85217df7",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T05:35:15Z",
+      "side": 1,
+      "message": "this would be simpler as:\n\nif (rc !\u003d 0) {\n  _rpc_blobfs_detect_done(req, rc);\n}\n\nThen you avoid the goto, label and return.",
+      "revId": "98e7754171a1cce6246d862a5d193e9f2c15c3f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
