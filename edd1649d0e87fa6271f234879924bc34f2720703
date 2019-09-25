@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ddd996e8_afc493bc",
+        "filename": "scripts/vagrant/run-autorun.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-25T07:35:26Z",
+      "side": 1,
+      "message": "That\u0027s not what I meant previously, can you please double check?",
+      "range": {
+        "startLine": 184,
+        "startChar": 0,
+        "endLine": 184,
+        "endChar": 27
+      },
+      "revId": "edd1649d0e87fa6271f234879924bc34f2720703",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
