@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "175cd9d9_b8b315dd",
+        "filename": "module/blobfs/bdev/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T21:27:11Z",
+      "side": 1,
+      "message": "I\u0027d like to get some of this in configure and/or the common .mk files.  We shouldn\u0027t explicitly define SPDK_CONFIG_* values here.\n\nIt would also be nice if the build system detected fuse, and if it wasn\u0027t available, we wouldn\u0027t even try to build or link in the blobfs_fuse.c file.  We also wouldn\u0027t build or link in the mount RPC either.  That\u0027s cleaner than compiling in a stub that just fails.",
+      "revId": "7e9cc54d50150cdd07ad4ce2ef2969d207a76adb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4623526f_2c1eca45",
+        "filename": "module/blobfs/bdev/blobfs_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T21:27:11Z",
+      "side": 1,
+      "message": "evnet \u003d\u003e event",
+      "revId": "7e9cc54d50150cdd07ad4ce2ef2969d207a76adb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a803fcc_6d1ad0f1",
+        "filename": "module/blobfs/bdev/blobfs_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T21:27:11Z",
+      "side": 1,
+      "message": "same as earlier patches - let\u0027s have this return void",
+      "revId": "7e9cc54d50150cdd07ad4ce2ef2969d207a76adb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
