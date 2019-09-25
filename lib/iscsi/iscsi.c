@@ -782,30 +782,6 @@ iscsi_append_param(struct spdk_iscsi_conn *conn, const char *key,
 }
 
 static int
-iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
-{
-	int ag_tag;
-	int rc;
-
-	if (conn->sess->target != NULL) {
-		ag_tag = conn->sess->target->chap_group;
-	} else {
-		ag_tag = -1;
-	}
-	if (ag_tag < 0) {
-		ag_tag = g_spdk_iscsi.chap_group;
-	}
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ag_tag=%d\n", ag_tag);
-
-	rc = spdk_iscsi_chap_get_authinfo(&conn->auth, authuser, ag_tag);
-	if (rc < 0) {
-		SPDK_ERRLOG("chap_get_authinfo() failed\n");
-		return -1;
-	}
-	return 0;
-}
-
-static int
 iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		  struct iscsi_param *params, const char *method, uint8_t *data,
 		  int alloc_len, int data_len)
@@ -930,10 +906,12 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		}
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_N/CHAP_R\n");
 
-		rc = iscsi_get_authinfo(conn, name);
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ag_tag=%d\n", conn->chap_group);
+
+		rc = spdk_iscsi_chap_get_authinfo(&conn->auth, name, conn->chap_group);
 		if (rc < 0) {
 			/* SPDK_ERRLOG("auth user or secret is missing\n"); */
-			SPDK_ERRLOG("iscsi_get_authinfo() failed\n");
+			SPDK_ERRLOG("spdk_iscsi_chap_get_authinfo() failed\n");
 			goto error_return;
 		}
 		if (conn->auth.user[0] == '\0' || conn->auth.secret[0] == '\0') {
@@ -1277,26 +1255,14 @@ iscsi_op_login_update_param(struct spdk_iscsi_conn *conn,
 }
 
 static int
-iscsi_negotiate_chap_param(struct spdk_iscsi_conn *conn, bool disable_chap,
-			   bool require_chap, bool mutual_chap)
+iscsi_negotiate_chap_param(struct spdk_iscsi_conn *conn)
 {
 	int rc = 0;
 
-	if (disable_chap) {
-		conn->require_chap = false;
+	if (conn->disable_chap) {
 		rc = iscsi_op_login_update_param(conn, "AuthMethod", "None", "None");
-		if (rc < 0) {
-			return rc;
-		}
-	} else if (require_chap) {
-		conn->require_chap = true;
+	} else if (conn->require_chap) {
 		rc = iscsi_op_login_update_param(conn, "AuthMethod", "CHAP", "CHAP");
-		if (rc < 0) {
-			return rc;
-		}
-	}
-	if (mutual_chap) {
-		conn->mutual_chap = true;
 	}
 
 	return rc;
@@ -1311,9 +1277,7 @@ iscsi_negotiate_chap_param(struct spdk_iscsi_conn *conn, bool disable_chap,
 static int
 iscsi_op_login_session_discovery_chap(struct spdk_iscsi_conn *conn)
 {
-	return iscsi_negotiate_chap_param(conn, g_spdk_iscsi.disable_chap,
-					  g_spdk_iscsi.require_chap,
-					  g_spdk_iscsi.mutual_chap);
+	return iscsi_negotiate_chap_param(conn);
 }
 
 /*
@@ -1326,9 +1290,12 @@ static int
 iscsi_op_login_negotiate_chap_param(struct spdk_iscsi_conn *conn,
 				    struct spdk_iscsi_tgt_node *target)
 {
-	return iscsi_negotiate_chap_param(conn, target->disable_chap,
-					  target->require_chap,
-					  target->mutual_chap);
+	conn->disable_chap = target->disable_chap;
+	conn->require_chap = target->require_chap;
+	conn->mutual_chap = target->mutual_chap;
+	conn->chap_group = target->chap_group;
+
+	return iscsi_negotiate_chap_param(conn);
 }
 
 static int
