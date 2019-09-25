@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0371c52_70bdcf8b",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1313,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-25T06:06:24Z",
+      "side": 1,
+      "message": "I think it\u0027d make more sense to have these opts be a part of nvme_bdev_ctrlr, set it here and whenever we need to use the value from the opts you\u0027d do nvme_bdev_ctrlr-\u003eopts. That way common code could initialize common stuff using module specific opts.",
+      "range": {
+        "startLine": 1313,
+        "startChar": 1,
+        "endLine": 1313,
+        "endChar": 42
+      },
+      "revId": "c27ec1f35f65520a4bb17c117b7e9d8da912200a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
