@@ -16,6 +16,24 @@
       "revId": "0ef958038a6d0025e823b4b55a6782d65ebb97de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e73de5e7_2aac4d58",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T03:49:50Z",
+      "side": 1,
+      "message": "Yes, thank you Seth! I could merge in the patch https://review.gerrithub.io/c/spdk/spdk/+/469350. I followed your suggestion in the patch.",
+      "parentUuid": "fee15617_294bddf8",
+      "revId": "0ef958038a6d0025e823b4b55a6782d65ebb97de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
