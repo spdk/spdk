@@ -53,8 +53,12 @@ struct spdk_iscsi_portal {
 };
 
 struct spdk_iscsi_portal_grp {
-	int ref;
-	int tag;
+	int					ref;
+	int					tag;
+	bool					disable_chap;
+	bool					require_chap;
+	bool					mutual_chap;
+	int32_t					chap_group;
 	TAILQ_ENTRY(spdk_iscsi_portal_grp)	tailq;
 	TAILQ_HEAD(, spdk_iscsi_portal)		head;
 };

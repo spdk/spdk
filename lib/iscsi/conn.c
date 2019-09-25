@@ -222,10 +222,10 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	conn->nop_outstanding = false;
 	conn->data_out_cnt = 0;
 	conn->data_in_cnt = 0;
-	conn->disable_chap = g_spdk_iscsi.disable_chap;
-	conn->require_chap = g_spdk_iscsi.require_chap;
-	conn->mutual_chap = g_spdk_iscsi.mutual_chap;
-	conn->chap_group = g_spdk_iscsi.chap_group;
+	conn->disable_chap = portal->group->disable_chap;
+	conn->require_chap = portal->group->require_chap;
+	conn->mutual_chap = portal->group->mutual_chap;
+	conn->chap_group = portal->group->chap_group;
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 	conn->MaxRecvDataSegmentLength = 8192; /* RFC3720(12.12) */
 
