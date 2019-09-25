@@ -35,6 +35,12 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 C_SRCS = blobfs_bdev.c blobfs_bdev_rpc.c
+
+# libfuse3 is required by blobfs_fuse.c
+ifeq ($(CONFIG_FUSE),y)
+C_SRCS += blobfs_fuse.c
+endif
+
 LIBNAME = blobfs_bdev
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
