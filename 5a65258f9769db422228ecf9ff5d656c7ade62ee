@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7faa8c5_e133c2c9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2671,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T22:26:40Z",
+      "side": 1,
+      "message": "this can just be:\n\nif (desc-\u003eclosed \u0026\u0026 desc-\u003erefs \u003d\u003d 0) {\n  free(desc);\n}",
+      "revId": "5a65258f9769db422228ecf9ff5d656c7ade62ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5134d393_8d06841e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2675,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T22:26:40Z",
+      "side": 1,
+      "message": "you don\u0027t need to check open_with_ext here since you now check it before sending the message",
+      "revId": "5a65258f9769db422228ecf9ff5d656c7ade62ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
