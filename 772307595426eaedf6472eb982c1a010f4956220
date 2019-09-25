@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b78741df_a813c669",
+        "filename": "mk/spdk.lib_deps.mk",
+        "patchSetId": 8
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T17:47:08Z",
+      "side": 1,
+      "message": "this should be $(BDEV_DEPS)\n\nyou may not need util and the json libs now, but I\u0027d suggest just using $(BDEV_DEPS) now since you\u0027ll need them eventually",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5fae82ff_5e34e79b",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 8
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T17:47:08Z",
+      "side": 1,
+      "message": "currently the first two BLOCKDEV_MODULES_LIST lines include the bdev modules, the third line contains other SPDK dependency libraries for the first two lines\n\nso I\u0027d put bdev_zone_block either at the end of the second line, or create a new third line just for bdev_zone_block (to keep the second line from getting too long)",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ba0c3f5_6abc2ba1",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T17:47:08Z",
+      "side": 1,
+      "message": "so the spec allows zone size (ZSZE) and capacity (ZCAP) to be different - I think your new bdev module should also support that; it will ensure we can model that with the FTL that will be built on top",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "77c923be_67be9b55",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T17:47:08Z",
+      "side": 1,
+      "message": "we can just make it an error if the user passes 0\n\nthe error would actually be better from an API perspective, since it removes the needs to publish the default",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ac152b1_9c4cc4b1",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T17:47:08Z",
+      "side": 1,
+      "message": "return not needed at the end of a void function (we typically omit them in SPDK)",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
