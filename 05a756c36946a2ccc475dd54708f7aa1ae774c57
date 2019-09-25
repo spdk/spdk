@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "337372ff_8cc947db",
+        "filename": "test/iscsi_tgt/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T22:59:56Z",
+      "side": 1,
+      "message": "extra newline not needed",
+      "revId": "05a756c36946a2ccc475dd54708f7aa1ae774c57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd3b6198_0d7753e5",
+        "filename": "test/iscsi_tgt/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T22:59:56Z",
+      "side": 1,
+      "message": "if you put \"-M do\" earlier in the command, does it avoid the shellcheck error?  i.e.\n\nping -c 1 -s $(( $MTU -28 )) -M do $TARGET_IP\n\nthen you could avoid having to explain the shellcheck disable",
+      "revId": "05a756c36946a2ccc475dd54708f7aa1ae774c57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
