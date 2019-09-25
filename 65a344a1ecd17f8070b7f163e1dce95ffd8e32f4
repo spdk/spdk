@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3147be6f_14a317cb",
+        "filename": "module/blobfs/bdev/blobfs_bdev.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T21:00:12Z",
+      "side": 1,
+      "message": "Thinking about this more - we should just have this function return void, and in error cases, do this:\n\ncb_fn(cb_arg, -ENOMEM);\nreturn;\n\nThat\u0027s what we do in a lot of other places within SPDK.  Then the caller doesn\u0027t need to do thing like:\n\nrc \u003d spdk_blobfs_bdev_detect(...);\nif (rc !\u003d 0) {\n  callback_function(argument);\n}",
+      "revId": "65a344a1ecd17f8070b7f163e1dce95ffd8e32f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20cfb633_196c10d9",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T21:00:12Z",
+      "side": 1,
+      "message": "see earlier comment on this review about how to avoid having to do this rc !\u003d 0 check",
+      "revId": "65a344a1ecd17f8070b7f163e1dce95ffd8e32f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
