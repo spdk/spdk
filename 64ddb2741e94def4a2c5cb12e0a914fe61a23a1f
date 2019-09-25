@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b82d3902_bc533c05",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1528,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T03:51:28Z",
+      "side": 1,
+      "message": "Thank you, please see my comments in the previous patch.",
+      "parentUuid": "43a130c1_eb53d662",
+      "revId": "64ddb2741e94def4a2c5cb12e0a914fe61a23a1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "64187630_5fc3cfb7",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-09-24T20:21:41Z",
       "side": 1,
       "message": "I think this variable would be more clear if it was called sg_element or sg_ele, some variation on that. Since it only represents the one element and you don\u0027t ever iterate over it.",
+      "revId": "64ddb2741e94def4a2c5cb12e0a914fe61a23a1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c0296c0_0864985f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1540,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-25T03:51:28Z",
+      "side": 1,
+      "message": "Sounds good. I inserted a patch before this patch. https://review.gerrithub.io/c/spdk/spdk/+/469201/2",
+      "parentUuid": "64187630_5fc3cfb7",
       "revId": "64ddb2741e94def4a2c5cb12e0a914fe61a23a1f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
