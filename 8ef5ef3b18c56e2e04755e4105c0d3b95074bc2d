@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d547c4c7_7ccb5691",
+        "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-25T09:00:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9acc5625_7d2cc454",
+      "revId": "8ef5ef3b18c56e2e04755e4105c0d3b95074bc2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d6e817c9_a0af0ab7",
         "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
         "patchSetId": 8
@@ -33,6 +51,24 @@
       "revId": "8ef5ef3b18c56e2e04755e4105c0d3b95074bc2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b646bfcc_59acf40c",
+        "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-25T09:00:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d6e817c9_a0af0ab7",
+      "revId": "8ef5ef3b18c56e2e04755e4105c0d3b95074bc2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "de18c1d2_f7170aa8",
+        "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-25T09:00:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d8e1d9e2_1c7668d3",
+      "revId": "8ef5ef3b18c56e2e04755e4105c0d3b95074bc2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a0df86d6_37ff621f",
         "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
         "patchSetId": 8
@@ -64,6 +118,24 @@
       "writtenOn": "2019-09-24T11:08:26Z",
       "side": 1,
       "message": "I think that better idea will be to add here \u0027return\u0027 and add \u0027free_rpc_delete_vbdev\u0027 call at the end of _rpc_vbdev_delete_block_cb.",
+      "revId": "8ef5ef3b18c56e2e04755e4105c0d3b95074bc2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a31e7ecf_23954c61",
+        "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-25T09:00:42Z",
+      "side": 1,
+      "message": "free_rpc_delete_vbdev is freeing a buffer from a local variable (which isn\u0027t passed to spdk_vbdev_zone_block_delete), so I don\u0027t think this is a good idea.",
+      "parentUuid": "a0df86d6_37ff621f",
       "revId": "8ef5ef3b18c56e2e04755e4105c0d3b95074bc2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -90,6 +162,30 @@
       "revId": "8ef5ef3b18c56e2e04755e4105c0d3b95074bc2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "474e7547_468be192",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-25T09:00:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a011968c_7c1b875c",
+      "range": {
+        "startLine": 431,
+        "startChar": 93,
+        "endLine": 432,
+        "endChar": 51
+      },
+      "revId": "8ef5ef3b18c56e2e04755e4105c0d3b95074bc2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
