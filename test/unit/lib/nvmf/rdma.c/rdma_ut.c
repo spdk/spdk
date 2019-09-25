@@ -35,6 +35,7 @@
 #include "spdk_cunit.h"
 #include "common/lib/test_env.c"
 #include "nvmf/rdma.c"
+#include "nvmf/transport.c"
 
 uint64_t g_mr_size;
 uint64_t g_mr_next_size;
@@ -78,121 +79,6 @@ DEFINE_STUB(spdk_nvme_transport_id_compare, int, (const struct spdk_nvme_transpo
 DEFINE_STUB_V(spdk_nvmf_ctrlr_abort_aer, (struct spdk_nvmf_ctrlr *ctrlr));
 DEFINE_STUB(spdk_nvmf_request_get_dif_ctx, bool, (struct spdk_nvmf_request *req,
 		struct spdk_dif_ctx *dif_ctx), false);
-
-void
-spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
-			       struct spdk_nvmf_transport_poll_group *group,
-			       struct spdk_nvmf_transport *transport)
-{
-	uint32_t i;
-
-	for (i = 0; i < req->num_buffers; i++) {
-		if (group->buf_cache_count < group->buf_cache_size) {
-			STAILQ_INSERT_HEAD(&group->buf_cache,
-					   (struct spdk_nvmf_transport_pg_cache_buf *)req->buffers[i],
-					   link);
-			group->buf_cache_count++;
-		} else {
-			spdk_mempool_put(transport->data_buf_pool, req->buffers[i]);
-		}
-		req->iov[i].iov_base = NULL;
-		req->buffers[i] = NULL;
-		req->iov[i].iov_len = 0;
-	}
-	req->num_buffers = 0;
-	req->data_from_pool = false;
-}
-
-static int
-nvmf_request_get_buffers(struct spdk_nvmf_request *req,
-			 struct spdk_nvmf_transport_poll_group *group,
-			 struct spdk_nvmf_transport *transport,
-			 uint32_t length)
-{
-	uint32_t num_buffers;
-	uint32_t i = 0;
-
-	/* If the number of buffers is too large, then we know the I/O is larger than allowed.
-	 *  Fail it.
-	 */
-	num_buffers = SPDK_CEIL_DIV(length, transport->opts.io_unit_size);
-	if (num_buffers + req->num_buffers > NVMF_REQ_MAX_BUFFERS) {
-		return -EINVAL;
-	}
-
-	while (i < num_buffers) {
-		if (!(STAILQ_EMPTY(&group->buf_cache))) {
-			group->buf_cache_count--;
-			req->buffers[req->num_buffers] = STAILQ_FIRST(&group->buf_cache);
-			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
-			req->num_buffers++;
-			i++;
-		} else {
-			if (spdk_mempool_get_bulk(transport->data_buf_pool,
-						  &req->buffers[req->num_buffers],
-						  num_buffers - i)) {
-				return -ENOMEM;
-			}
-			req->num_buffers += num_buffers - i;
-			i += num_buffers - i;
-		}
-	}
-
-	while (length) {
-		req->iov[req->iovcnt].iov_base = (void *)((uintptr_t)(req->buffers[req->iovcnt] +
-						 NVMF_DATA_BUFFER_MASK) &
-						 ~NVMF_DATA_BUFFER_MASK);
-		req->iov[req->iovcnt].iov_len  = spdk_min(length, transport->opts.io_unit_size);
-		length -= req->iov[req->iovcnt].iov_len;
-		req->iovcnt++;
-	}
-
-	req->data_from_pool = true;
-	return 0;
-}
-
-int
-spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
-			      struct spdk_nvmf_transport_poll_group *group,
-			      struct spdk_nvmf_transport *transport,
-			      uint32_t length)
-{
-	int rc;
-
-	req->iovcnt = 0;
-
-	rc = nvmf_request_get_buffers(req, group, transport, length);
-	if (rc == -ENOMEM) {
-		spdk_nvmf_request_free_buffers(req, group, transport);
-	}
-
-	return rc;
-}
-
-int
-spdk_nvmf_request_get_buffers_multi(struct spdk_nvmf_request *req,
-				    struct spdk_nvmf_transport_poll_group *group,
-				    struct spdk_nvmf_transport *transport,
-				    uint32_t *lengths, uint32_t num_lengths)
-{
-	int rc = 0;
-	uint32_t i;
-
-	req->iovcnt = 0;
-
-	for (i = 0; i < num_lengths; i++) {
-		rc = nvmf_request_get_buffers(req, group, transport, lengths[i]);
-		if (rc != 0) {
-			goto err_exit;
-		}
-	}
-
-	return 0;
-
-err_exit:
-	spdk_nvmf_request_free_buffers(req, group, transport);
-	return rc;
-}
 
 uint64_t
 spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t *size)
