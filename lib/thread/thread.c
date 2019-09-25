@@ -843,7 +843,7 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 
 	thread = spdk_get_thread();
 	if (!thread) {
-		SPDK_ERRLOG("%s called from non-SPDK thread\n", __func__);
+		SPDK_ERRLOG("called from non-SPDK thread\n");
 		assert(false);
 		return;
 	}
@@ -919,7 +919,7 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 
 	thread = spdk_get_thread();
 	if (!thread) {
-		SPDK_ERRLOG("%s called from non-SPDK thread\n", __func__);
+		SPDK_ERRLOG("called from non-SPDK thread\n");
 		assert(false);
 		return;
 	}
@@ -1049,7 +1049,7 @@ _spdk_put_io_channel(void *arg)
 
 	thread = spdk_get_thread();
 	if (!thread) {
-		SPDK_ERRLOG("%s called from non-SPDK thread\n", __func__);
+		SPDK_ERRLOG("called from non-SPDK thread\n");
 		assert(false);
 		return;
 	}

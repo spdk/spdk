@@ -1000,8 +1000,8 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 	}
 
 	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
-		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
-			    __func__, vaddr, len);
+		DEBUG_PRINT("invalid parameters, vaddr=%p len=%ju\n",
+			    vaddr, len);
 		return -EINVAL;
 	}
 

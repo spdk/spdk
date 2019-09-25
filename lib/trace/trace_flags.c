@@ -47,7 +47,7 @@ uint64_t
 spdk_trace_get_tpoint_mask(uint32_t group_id)
 {
 	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
-		SPDK_ERRLOG("%s: invalid group ID %d\n", __func__, group_id);
+		SPDK_ERRLOG("invalid group ID %d\n", group_id);
 		return 0ULL;
 	}
 
@@ -58,7 +58,7 @@ void
 spdk_trace_set_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
 	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
-		SPDK_ERRLOG("%s: invalid group ID %d\n", __func__, group_id);
+		SPDK_ERRLOG("invalid group ID %d\n", group_id);
 		return;
 	}
 
@@ -69,7 +69,7 @@ void
 spdk_trace_clear_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
 	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
-		SPDK_ERRLOG("%s: invalid group ID %d\n", __func__, group_id);
+		SPDK_ERRLOG("invalid group ID %d\n", group_id);
 		return;
 	}
 

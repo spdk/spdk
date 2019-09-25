@@ -167,7 +167,7 @@ static int spdk_process_new_interface_msg(struct nlmsghdr *h)
 
 	ifc = (struct spdk_interface *) malloc(sizeof(*ifc));
 	if (ifc == NULL) {
-		SPDK_ERRLOG("%s: Malloc failed\n", __func__);
+		SPDK_ERRLOG("Malloc failed\n");
 		return 1;
 	}
 

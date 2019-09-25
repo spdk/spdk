@@ -1803,7 +1803,7 @@ _spdk_blob_request_submit_op_split_next(void *cb_arg, int bserrno)
 		break;
 	case SPDK_BLOB_READV:
 	case SPDK_BLOB_WRITEV:
-		SPDK_ERRLOG("readv/write not valid for %s\n", __func__);
+		SPDK_ERRLOG("readv/write not valid\n");
 		spdk_bs_sequence_finish(ctx->seq, -EINVAL);
 		free(ctx);
 		break;
