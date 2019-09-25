@@ -366,6 +366,13 @@ spdk_iscsi_portal_grp_create(int tag)
 	pg->ref = 0;
 	pg->tag = tag;
 
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pg->disable_chap = g_spdk_iscsi.disable_chap;
+	pg->require_chap = g_spdk_iscsi.require_chap;
+	pg->mutual_chap = g_spdk_iscsi.mutual_chap;
+	pg->chap_group = g_spdk_iscsi.chap_group;
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
 	TAILQ_INIT(&pg->head);
 
 	return pg;
