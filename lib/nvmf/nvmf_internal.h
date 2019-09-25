@@ -213,7 +213,6 @@ struct spdk_nvmf_request {
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
 	void				*buffers[NVMF_REQ_MAX_BUFFERS];
-	uint32_t			num_buffers;
 	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
 	uint32_t			iovcnt;
 	bool				data_from_pool;
