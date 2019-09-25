@@ -1549,6 +1549,59 @@ nvmf_rdma_get_lkey(struct spdk_nvmf_rdma_device *device, struct iovec *iov,
 	return true;
 }
 
+static bool
+nvmf_rdma_fill_wr_sge_with_md_interleave(struct spdk_nvmf_rdma_device *device,
+		struct spdk_nvmf_request *req,
+		struct ibv_send_wr *wr,
+		uint32_t *_remaining_data_block,
+		uint32_t *_offset,
+		const struct spdk_dif_ctx *dif_ctx)
+{
+	struct iovec *iov = &req->iov[req->iovcnt];
+	struct ibv_sge *sg_ele;
+	uint32_t lkey = 0;
+	uint32_t sge_len;
+	uint32_t remaining_io_buffer_length;
+	uint32_t data_block_size = dif_ctx->block_size - dif_ctx->md_size;
+	uint32_t md_size = dif_ctx->md_size;
+
+	if (spdk_unlikely(!nvmf_rdma_get_lkey(device, iov, &lkey))) {
+		/* This is a very rare case that can occur when using DPDK version < 19.05 */
+		SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions. Removing it from circulation.\n");
+		return false;
+	}
+
+	remaining_io_buffer_length = iov->iov_len - *_offset;
+
+	while (remaining_io_buffer_length && wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES) {
+		sg_ele = &wr->sg_list[wr->num_sge];
+		sg_ele->lkey = lkey;
+		sg_ele->addr = (uintptr_t)((char *)iov->iov_base + *_offset);
+		sge_len = spdk_min(remaining_io_buffer_length, *_remaining_data_block);
+		sg_ele->length = sge_len;
+		remaining_io_buffer_length -= sge_len;
+		*_remaining_data_block -= sge_len;
+		*_offset += sge_len;
+		wr->num_sge++;
+
+		if (*_remaining_data_block == 0) {
+			/* skip metadata */
+			*_offset += md_size;
+			/* Metadata that do not fit this IO buffer will be included in the next IO buffer */
+			remaining_io_buffer_length -= spdk_min(remaining_io_buffer_length, md_size);
+			*_remaining_data_block = data_block_size;
+		}
+
+		if (remaining_io_buffer_length == 0) {
+			/* By subtracting the size of the last IOV from the offset, we ensure that we skip
+			   the remaining metadata bits at the beginning of the next buffer */
+			*_offset -= iov->iov_len;
+		}
+	}
+
+	return true;
+}
+
 /*
  * Fills iov and SGL, iov[i] points to buffer[i], SGE[i] is limited in length to data block size
  * and points to part of buffer
@@ -1563,15 +1616,9 @@ nvmf_rdma_fill_buffers_with_md_interleave(struct spdk_nvmf_rdma_transport *rtran
 		const struct spdk_dif_ctx *dif_ctx)
 {
 	uint32_t remaining_length = length;
-	uint32_t remaining_io_buffer_length;
-	uint32_t data_block_size = dif_ctx->block_size - dif_ctx->md_size;
-	uint32_t md_size = dif_ctx->md_size;
-	uint32_t remaining_data_block = data_block_size;
+	uint32_t remaining_data_block = dif_ctx->block_size - dif_ctx->md_size;
 	uint32_t offset = 0;
-	uint32_t sge_len;
 	struct iovec *iov;
-	struct ibv_sge *sg_ele;
-	uint32_t lkey = 0;
 
 	wr->num_sge = 0;
 
@@ -1580,45 +1627,17 @@ nvmf_rdma_fill_buffers_with_md_interleave(struct spdk_nvmf_rdma_transport *rtran
 		iov->iov_base = (void *)((uintptr_t)(req->buffers[req->iovcnt] + NVMF_DATA_BUFFER_MASK)
 					 & ~NVMF_DATA_BUFFER_MASK);
 		iov->iov_len = spdk_min(remaining_length, rtransport->transport.opts.io_unit_size);
-		remaining_io_buffer_length = iov->iov_len - offset;
 
-		if (spdk_unlikely(!nvmf_rdma_get_lkey(device, iov, &lkey))) {
-			/* This is a very rare case that can occur when using DPDK version < 19.05 */
-			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions. Removing it from circulation.\n");
+		if (spdk_unlikely(!nvmf_rdma_fill_wr_sge_with_md_interleave(device, req, wr,
+				  &remaining_data_block, &offset, dif_ctx))) {
 			if (nvmf_rdma_replace_buffer(rgroup, &req->buffers[req->iovcnt]) == -ENOMEM) {
 				return -ENOMEM;
 			}
 			continue;
 		}
 
-		req->iovcnt++;
-
-		while (remaining_io_buffer_length && wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES) {
-			sg_ele = &wr->sg_list[wr->num_sge];
-			sg_ele->lkey = lkey;
-			sg_ele->addr = (uintptr_t)((char *)iov->iov_base + offset);
-			sge_len = spdk_min(remaining_io_buffer_length, remaining_data_block);
-			sg_ele->length = sge_len;
-			remaining_io_buffer_length -= sge_len;
-			remaining_data_block -= sge_len;
-			offset += sge_len;
-			wr->num_sge++;
-
-			if (remaining_data_block == 0) {
-				/* skip metadata */
-				offset += md_size;
-				/* Metadata that do not fit this IO buffer will be included in the next IO buffer */
-				remaining_io_buffer_length -= spdk_min(remaining_io_buffer_length, md_size);
-				remaining_data_block = data_block_size;
-			}
-
-			if (remaining_io_buffer_length == 0) {
-				/* By subtracting the size of the last IOV from the offset, we ensure that we skip
-				   the remaining metadata bits at the beginning of the next buffer */
-				offset -= iov->iov_len;
-			}
-		}
 		remaining_length -= iov->iov_len;
+		req->iovcnt++;
 	}
 
 	if (remaining_length) {
