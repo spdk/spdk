@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ebc6f8f_f8a5a7d3",
+        "filename": "test/blobfs/mkfs/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T21:13:47Z",
+      "side": 1,
+      "message": "you should never have to add /usr/lib - this is part of the automatic search path for libraries\n\nbut this seems to be different than what test/blobfs/fuse application does - the fuse/Makefile doesn\u0027t check anything, it just automatically adds -L/usr/local/lib -lfuse3 to LIBS\n\nit would be good if this was consistent - I think now mkfs depends on fuse3 which it did not before - that\u0027s OK, but then I think we should consider only building the test/blobfs directory if fuse3 is available",
+      "revId": "77ca970a51e57417e0a447d356a5e176abd6f2d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e75ea334_bbd08c7d",
+        "filename": "test/blobfs/mkfs/mkfs.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T21:13:47Z",
+      "side": 1,
+      "message": "you\u0027ll need to adjust this once spdk_blobfs_bdev_create returns void - you\u0027ll need to print this out before calling spdk_blobfs_bdev_create",
+      "revId": "77ca970a51e57417e0a447d356a5e176abd6f2d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
