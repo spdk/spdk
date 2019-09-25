@@ -371,11 +371,16 @@ $rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --l
 CC=$(cat $rootdir/mk/cc.mk | grep "DEFAULT_CC=" | cut -d "=" -f 2)
 CC_TYPE=$(cat $rootdir/mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
 
-BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS -march=native)
+arch=$($CC -dumpmachine)
+
+if [[ $arch == x86_64* ]]; then
+	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS -march=native)
+else
+	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS)
+fi
 
 # Detect architecture and force no ISA-L if non-x86 archtecture
 if [[ "${CONFIG[ISAL]}" = "y" ]]; then
-	arch=$($CC -dumpmachine)
 	if [[ $arch != x86_64* ]]; then
 		echo "Notice: ISA-L disabled due to CPU incompatiblity."
 		CONFIG[ISAL]=n
