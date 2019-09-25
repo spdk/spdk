@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7d9562f_65399242",
+        "filename": "include/spdk/bdev_zone.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T16:28:35Z",
+      "side": 1,
+      "message": "Submit a zone_append request with metadata to the bdev.\n\nThis functions uses a separate buffer for metadata transfer (valid only\nif bdev supports this mode.)\n\n\nSeparating out the first line from the rest of the comment ensures that the Doxygen output comes out right - it will only put that first line in the \"short\" description.",
+      "revId": "3de7391a0ab25991592a9b5a6efa2c0a9f461ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72ab8e4d_7e694a88",
+        "filename": "lib/bdev/bdev_zone.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T16:28:35Z",
+      "side": 1,
+      "message": "do we need \"appendv\" variants too that can take an array of iov for the incoming write/append data?",
+      "revId": "3de7391a0ab25991592a9b5a6efa2c0a9f461ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
