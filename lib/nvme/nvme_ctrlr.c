@@ -828,16 +828,34 @@ static void
 nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
 		     uint64_t timeout_in_ms)
 {
+	uint64_t ticks_per_ms, timeout_in_ticks, now_ticks;
+
 	ctrlr->state = state;
-	if (timeout_in_ms == 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "setting state to %s (no timeout)\n",
-			      nvme_ctrlr_state_string(ctrlr->state));
-		ctrlr->state_timeout_tsc = NVME_TIMEOUT_INFINITE;
-	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "setting state to %s (timeout %" PRIu64 " ms)\n",
-			      nvme_ctrlr_state_string(ctrlr->state), timeout_in_ms);
-		ctrlr->state_timeout_tsc = spdk_get_ticks() + (timeout_in_ms * spdk_get_ticks_hz()) / 1000;
+	if (timeout_in_ms == NVME_TIMEOUT_INFINITE) {
+		goto inf;
 	}
+
+	ticks_per_ms = spdk_get_ticks_hz() / 1000;
+	if (timeout_in_ms > UINT64_MAX / ticks_per_ms) {
+		SPDK_ERRLOG("Specified timeout would cause integer overflow. Defaulting to no timeout.\n");
+		goto inf;
+	}
+
+	now_ticks = spdk_get_ticks();
+	timeout_in_ticks = timeout_in_ms * ticks_per_ms;
+	if (timeout_in_ticks > UINT64_MAX - now_ticks) {
+		SPDK_ERRLOG("Specified timeout would cause integer overflow. Defaulting to no timeout.\n");
+		goto inf;
+	}
+
+	ctrlr->state_timeout_tsc = timeout_in_ticks + now_ticks;
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "setting state to %s (timeout %" PRIu64 " ms)\n",
+		      nvme_ctrlr_state_string(ctrlr->state), ctrlr->state_timeout_tsc);
+	return;
+inf:
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "setting state to %s (no timeout)\n",
+		      nvme_ctrlr_state_string(ctrlr->state));
+	ctrlr->state_timeout_tsc = NVME_TIMEOUT_INFINITE;
 }
 
 static void
