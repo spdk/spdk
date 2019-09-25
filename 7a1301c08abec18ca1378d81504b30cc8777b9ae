@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b3336a6_b034d2e1",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T22:09:35Z",
+      "side": 1,
+      "message": "can you keep the tab here to indicate it\u0027s part of the previous line?  you do that in one of the files later in this patch",
+      "revId": "7a1301c08abec18ca1378d81504b30cc8777b9ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fdcbe2ad_940b3fd7",
+        "filename": "test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T22:09:35Z",
+      "side": 1,
+      "message": "can you keep the tab here to indicate it\u0027s part of the previous line?  you do that in the next file in this patch",
+      "revId": "7a1301c08abec18ca1378d81504b30cc8777b9ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b596f23d_0159baf3",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T22:09:35Z",
+      "side": 1,
+      "message": "can you keep the tab here?",
+      "revId": "7a1301c08abec18ca1378d81504b30cc8777b9ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
