@@ -54,6 +54,10 @@ Added `arbitration_burst` option for arbitration feature, and added three
 Portals may no longer be associated with a cpumask. The scheduling of
 connections is moving to a more dynamic model.
 
+An new RPC `iscsi_portal_group_set_auth` has been added to set CHAP authentication
+for discovery sessions specific for the existing iSCSI portal group. This RPC overwrites
+the setting by the global parameters for the iSCSI portal group.
+
 ### delay bdev
 
 The `bdev_delay_update_latency` has been added to allow users to update

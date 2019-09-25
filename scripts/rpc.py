@@ -1099,6 +1099,28 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=iscsi_delete_initiator_group)
 
+    def iscsi_portal_group_set_auth(args):
+        rpc.iscsi.iscsi_portal_group_set_auth(
+            args.client,
+            tag=args.tag,
+            chap_group=args.chap_group,
+            disable_chap=args.disable_chap,
+            require_chap=args.require_chap,
+            mutual_chap=args.mutual_chap)
+
+    p = subparsers.add_parser('iscsi_portal_group_set_auth',
+                              help='Set CHAP authentication for discovery sessions specific for the portal group')
+    p.add_argument('tag', help='Portal group tag (unique, integer > 0)', type=int)
+    p.add_argument('-g', '--chap-group', help="""Authentication group ID for this portal group.
+    *** Authentication group must be precreated ***""", type=int, default=0)
+    p.add_argument('-d', '--disable-chap', help="""CHAP authentication should be disabled for this portal group.
+    *** Mutually exclusive with --require-chap ***""", action='store_true')
+    p.add_argument('-r', '--require-chap', help="""CHAP authentication should be required for this portal group.
+    *** Mutually exclusive with --disable-chap ***""", action='store_true')
+    p.add_argument('-m', '--mutual-chap', help='CHAP authentication should be mutual/bidirectional.',
+                   action='store_true')
+    p.set_defaults(func=iscsi_portal_group_set_auth)
+
     def iscsi_get_connections(args):
         print_dict(rpc.iscsi.iscsi_get_connections(args.client))
 

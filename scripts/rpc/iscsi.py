@@ -493,6 +493,40 @@ def iscsi_delete_initiator_group(client, tag):
     return client.call('iscsi_delete_initiator_group', params)
 
 
+def iscsi_portal_group_set_auth(
+        client,
+        tag,
+        chap_group=None,
+        disable_chap=None,
+        require_chap=None,
+        mutual_chap=None):
+    """Set CHAP authentication for discovery sessions specific for the portal group.
+
+    Args:
+        tag: Portal group tag (unique, integer > 0)
+        chap_group: Authentication group ID for this portal group
+        disable_chap: CHAP authentication should be disabled for this portal group
+        require_chap: CHAP authentication should be required for this portal group
+        mutual_chap: CHAP authentication should be mutual/bidirectional
+
+    Returns:
+        True or False
+    """
+    params = {
+        'tag': tag,
+    }
+
+    if chap_group:
+        params['chap_group'] = chap_group
+    if disable_chap:
+        params['disable_chap'] = disable_chap
+    if require_chap:
+        params['require_chap'] = require_chap
+    if mutual_chap:
+        params['mutual_chap'] = mutual_chap
+    return client.call('iscsi_portal_group_set_auth', params)
+
+
 @deprecated_alias('get_iscsi_connections')
 def iscsi_get_connections(client):
     """Display iSCSI connections.
