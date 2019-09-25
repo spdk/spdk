@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e44feb7_c8a04e91",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 960,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T18:26:02Z",
+      "side": 1,
+      "message": "I guess this is OK, but doesn\u0027t really seem related to this patch.",
+      "revId": "a3da08c3532dc2a19b02dd46fcd665abaf742d96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
