@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14993cb2_be14ed7a",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-25T13:10:56Z",
+      "side": 1,
+      "message": "Small nit - could you initialize num_buffers where it is defined?",
+      "range": {
+        "startLine": 404,
+        "startChar": 1,
+        "endLine": 404,
+        "endChar": 12
+      },
+      "revId": "6c83bd3e2b7586694f671b081d549d3594d65194",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
