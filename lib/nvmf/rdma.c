@@ -1552,21 +1552,16 @@ nvmf_rdma_get_lkey(struct spdk_nvmf_rdma_device *device, struct iovec *iov,
 }
 
 static bool
-nvmf_rdma_fill_wr_sge_with_md_interleave(struct spdk_nvmf_rdma_device *device,
-		struct spdk_nvmf_request *req,
-		struct ibv_send_wr *wr,
-		int iovpos,
-		uint32_t *_remaining_data_block,
-		uint32_t *_offset,
-		const struct spdk_dif_ctx *dif_ctx)
+nvmf_rdma_fill_wr_sge(struct spdk_nvmf_rdma_device *device,
+		      struct spdk_nvmf_request *req, struct ibv_send_wr *wr,
+		      int iovpos,
+		      uint32_t *_remaining_data_block, uint32_t *_offset,
+		      const struct spdk_dif_ctx *dif_ctx)
 {
-	struct iovec *iov = &req->iov[iovpos];
-	struct ibv_sge *sg_ele;
-	uint32_t lkey = 0;
-	uint32_t sge_len;
-	uint32_t remaining_io_buffer_length;
-	uint32_t data_block_size = dif_ctx->block_size - dif_ctx->md_size;
-	uint32_t md_size = dif_ctx->md_size;
+	struct iovec	*iov = &req->iov[iovpos];
+	struct ibv_sge	*sg_ele = &wr->sg_list[wr->num_sge];
+	uint32_t	lkey = 0;
+	uint32_t	remaining, data_block_size, md_size, sge_len;
 
 	if (spdk_unlikely(!nvmf_rdma_get_lkey(device, iov, &lkey))) {
 		/* This is a very rare case that can occur when using DPDK version < 19.05 */
@@ -1574,96 +1569,43 @@ nvmf_rdma_fill_wr_sge_with_md_interleave(struct spdk_nvmf_rdma_device *device,
 		return false;
 	}
 
-	remaining_io_buffer_length = iov->iov_len - *_offset;
-
-	while (remaining_io_buffer_length && wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES) {
-		sg_ele = &wr->sg_list[wr->num_sge];
+	if (spdk_likely(!dif_ctx)) {
 		sg_ele->lkey = lkey;
-		sg_ele->addr = (uintptr_t)((char *)iov->iov_base + *_offset);
-		sge_len = spdk_min(remaining_io_buffer_length, *_remaining_data_block);
-		sg_ele->length = sge_len;
-		remaining_io_buffer_length -= sge_len;
-		*_remaining_data_block -= sge_len;
-		*_offset += sge_len;
+		sg_ele->addr = (uintptr_t)(iov->iov_base);
+		sg_ele->length = iov->iov_len;
 		wr->num_sge++;
+	} else {
+		remaining = iov->iov_len - *_offset;
+		data_block_size = dif_ctx->block_size - dif_ctx->md_size;
+		md_size = dif_ctx->md_size;
 
-		if (*_remaining_data_block == 0) {
-			/* skip metadata */
-			*_offset += md_size;
-			/* Metadata that do not fit this IO buffer will be included in the next IO buffer */
-			remaining_io_buffer_length -= spdk_min(remaining_io_buffer_length, md_size);
-			*_remaining_data_block = data_block_size;
-		}
+		while (remaining && wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES) {
+			sg_ele->lkey = lkey;
+			sg_ele->addr = (uintptr_t)((char *)iov->iov_base + *_offset);
+			sge_len = spdk_min(remaining, *_remaining_data_block);
+			sg_ele->length = sge_len;
+			remaining -= sge_len;
+			*_remaining_data_block -= sge_len;
+			*_offset += sge_len;
 
-		if (remaining_io_buffer_length == 0) {
-			/* By subtracting the size of the last IOV from the offset, we ensure that we skip
-			   the remaining metadata bits at the beginning of the next buffer */
-			*_offset -= iov->iov_len;
-		}
-	}
+			sg_ele++;
+			wr->num_sge++;
 
-	return true;
-}
-
-/*
- * Fills iov and SGL, iov[i] points to buffer[i], SGE[i] is limited in length to data block size
- * and points to part of buffer
- */
-static int
-nvmf_rdma_fill_wr_sgl_with_md_interleave(struct spdk_nvmf_rdma_poll_group *rgroup,
-		struct spdk_nvmf_rdma_device *device,
-		struct spdk_nvmf_rdma_request *rdma_req,
-		struct ibv_send_wr *wr,
-		uint32_t length,
-		const struct spdk_dif_ctx *dif_ctx)
-{
-	struct spdk_nvmf_request *req = &rdma_req->req;
-	uint32_t remaining_length = length;
-	uint32_t remaining_data_block = dif_ctx->block_size - dif_ctx->md_size;
-	uint32_t offset = 0;
-
-	wr->num_sge = 0;
-
-	while (remaining_length && wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES) {
-		while (spdk_unlikely(!nvmf_rdma_fill_wr_sge_with_md_interleave(device, req, wr,
-				     rdma_req->iovcnt, &remaining_data_block, &offset, dif_ctx))) {
-			if (nvmf_rdma_replace_buffer(rgroup, &req->buffers[rdma_req->iovcnt]) == -ENOMEM) {
-				return -ENOMEM;
+			if (*_remaining_data_block == 0) {
+				/* skip metadata */
+				*_offset += md_size;
+				/* Metadata that do not fit this IO buffer will be included in the next IO buffer */
+				remaining -= spdk_min(remaining, md_size);
+				*_remaining_data_block = data_block_size;
 			}
-			req->iov[rdma_req->iovcnt].iov_base = (void *)((uintptr_t)(req->buffers[rdma_req->iovcnt] +
-							      NVMF_DATA_BUFFER_MASK) &
-							      ~NVMF_DATA_BUFFER_MASK);
+
+			if (remaining == 0) {
+				/* By subtracting the size of the last IOV from the offset, we ensure that we skip
+				   the remaining metadata bits at the beginning of the next buffer */
+				*_offset -= iov->iov_len;
+			}
 		}
-
-		remaining_length -= req->iov[rdma_req->iovcnt].iov_len;
-		rdma_req->iovcnt++;
 	}
-
-	if (remaining_length) {
-		SPDK_ERRLOG("Not enough SG entries to hold data buffer\n");
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
-static bool
-nvmf_rdma_fill_wr_sge(struct spdk_nvmf_rdma_device *device,
-		      struct spdk_nvmf_request *req, struct ibv_send_wr *wr,
-		      int iovpos)
-{
-	struct iovec	*iov = &req->iov[iovpos];
-	struct ibv_sge	*sg_ele = &wr->sg_list[wr->num_sge];
-
-	if (spdk_unlikely(!nvmf_rdma_get_lkey(device, iov, &sg_ele->lkey))) {
-		/* This is a very rare case that can occur when using DPDK version < 19.05 */
-		SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions. Removing it from circulation.\n");
-		return false;
-	}
-
-	sg_ele->addr = (uintptr_t)(iov->iov_base);
-	sg_ele->length = iov->iov_len;
-	wr->num_sge++;
 
 	return true;
 }
@@ -1676,10 +1618,20 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 		      uint32_t length)
 {
 	struct spdk_nvmf_request *req = &rdma_req->req;
+	struct spdk_dif_ctx *dif_ctx = NULL;
+	uint32_t remaining_data_block = 0;
+	uint32_t offset = 0;
+
+	if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
+		dif_ctx = &rdma_req->dif_ctx;
+		remaining_data_block = dif_ctx->block_size - dif_ctx->md_size;
+	}
 
 	wr->num_sge = 0;
-	while (length) {
-		while (spdk_unlikely(!nvmf_rdma_fill_wr_sge(device, req, wr, rdma_req->iovcnt))) {
+
+	while (length && wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES) {
+		while (spdk_unlikely(!nvmf_rdma_fill_wr_sge(device, req, wr, rdma_req->iovcnt,
+				     &remaining_data_block, &offset, dif_ctx))) {
 			if (nvmf_rdma_replace_buffer(rgroup, &req->buffers[rdma_req->iovcnt]) == -ENOMEM) {
 				return -ENOMEM;
 			}
@@ -1690,6 +1642,11 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 
 		length -= req->iov[rdma_req->iovcnt].iov_len;
 		rdma_req->iovcnt++;
+	}
+
+	if (length) {
+		SPDK_ERRLOG("Not enough SG entries to hold data buffer\n");
+		return -EINVAL;
 	}
 
 	return 0;
@@ -1736,12 +1693,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 	nvmf_rdma_fill_buffers(rtransport, req, length);
 
-	if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
-		rc = nvmf_rdma_fill_wr_sgl_with_md_interleave(rgroup, device, rdma_req,
-				wr, length, &rdma_req->dif_ctx);
-	} else {
-		rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, wr, length);
-	}
+	rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, wr, length);
 	if (rc != 0) {
 		goto err_exit;
 	}
