@@ -23,7 +23,9 @@ restore_kill() {
 	rm -f $testdir/testfile.md5
 	rm -f $testdir/testfile2.md5
 
-	$rpc_py delete_ftl_bdev -b nvme0 || true
+	$rpc_py delete_ftl_bdev -b ftl0 || true
+	$rpc_py bdev_ocssd_delete nvme0n1 || true
+	$rpc_py delete_nvme_controller nvme0 || true
 	killprocess $svcpid || true
 	rmmod nbd || true
 }

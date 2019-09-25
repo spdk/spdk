@@ -17,9 +17,12 @@ for (( i=0; i<${#tests[@]}; i++ )) do
 	$rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1 -n 1
 	$rpc_py construct_ftl_bdev -b ftl0 -d nvme0n1
 	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
+	$rpc_py delete_ftl_bdev -b ftl0
+	$rpc_py bdev_ocssd_delete nvme0n1
+	$rpc_py delete_nvme_controller nvme0
 	killprocess $bdevperf_pid
+	trap - SIGINT SIGTERM EXIT
 	timing_exit "${tests[$i]}"
 done
 
 report_test_completion ftl_bdevperf
-trap - SIGINT SIGTERM EXIT

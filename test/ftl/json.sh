@@ -31,6 +31,8 @@ $rpc_py delete_ftl_bdev -b ftl0
 # Restore bdev from json configuration
 $rootdir/scripts/gen_ftl.sh -n ftl0 -d nvme0n1 -u $uuid | $rpc_py load_subsystem_config
 $rpc_py delete_ftl_bdev -b ftl0
+$rpc_py bdev_ocssd_delete nvme0n1
+$rpc_py delete_nvme_controller nvme0
 
 trap - SIGINT SIGTERM EXIT
 json_kill

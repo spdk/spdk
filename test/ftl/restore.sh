@@ -31,7 +31,10 @@ restore_kill() {
 	rm -f $testdir/testfile2.md5
 	rm -f $testdir/config/ftl.json
 
-	$rpc_py delete_ftl_bdev -b nvme0
+	$rpc_py delete_ftl_bdev -b ftl0
+	$rpc_py bdev_ocssd_delete nvme0n1
+	$rpc_py delete_nvme_controller nvme0
+
 	killprocess $svcpid
 	rmmod nbd || true
 }
