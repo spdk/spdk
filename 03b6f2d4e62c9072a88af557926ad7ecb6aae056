@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "e80bfd9f_6d54639e",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-25T09:23:18Z",
+      "side": 1,
+      "message": "I think we should return an error even if we were able to get info about some of the zones. Let\u0027s say the user requests zone info and passes slba \u003d last zone LBA and num_zones \u003d 2. We\u0027ll fill in the first zone info and return 0, but the user has no way of knowing that the second one hasn\u0027t been touched.",
+      "parentUuid": "f69552e7_4b295217",
+      "range": {
+        "startLine": 251,
+        "startChar": 3,
+        "endLine": 251,
+        "endChar": 9
+      },
+      "revId": "03b6f2d4e62c9072a88af557926ad7ecb6aae056",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d52baffa_5afdee2d",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 6
