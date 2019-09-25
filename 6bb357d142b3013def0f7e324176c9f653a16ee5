@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3dfb34ee_18d68a98",
+        "filename": "mk/spdk.lib_deps.mk",
+        "patchSetId": 9
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T18:07:04Z",
+      "side": 1,
+      "message": "I\u0027d suggest moving this down now with the other bdev modules that depend on BDEV_DEPS_THREAD (just so that similar modules are grouped together)\n\nyou could even consider just making this dependent on $(BDEV_DEPS_THREAD) in the first patch for this module so that you don\u0027t have to change it again in subsequent patches",
+      "revId": "6bb357d142b3013def0f7e324176c9f653a16ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a145cc6_345c3879",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-25T18:07:04Z",
+      "side": 1,
+      "message": "return not needed",
+      "revId": "6bb357d142b3013def0f7e324176c9f653a16ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
