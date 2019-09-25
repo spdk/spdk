@@ -674,7 +674,7 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (cc.bits.en != 0) {
-		SPDK_ERRLOG("%s called with CC.EN = 1\n", __func__);
+		SPDK_ERRLOG("called with CC.EN = 1\n");
 		return -EINVAL;
 	}
 
@@ -986,7 +986,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	while (ctrlr->state != NVME_CTRLR_STATE_READY) {
 		if (nvme_ctrlr_process_init(ctrlr) != 0) {
-			SPDK_ERRLOG("%s: controller reinitialization failed\n", __func__);
+			SPDK_ERRLOG("controller reinitialization failed\n");
 			nvme_ctrlr_fail(ctrlr, false);
 			rc = -1;
 			break;

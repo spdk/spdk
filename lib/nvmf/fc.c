@@ -1208,7 +1208,7 @@ spdk_nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
 	if (cb) {
 		ctx = calloc(1, sizeof(struct spdk_nvmf_fc_caller_ctx));
 		if (!ctx) {
-			SPDK_ERRLOG("%s: ctx alloc failed.\n", __func__);
+			SPDK_ERRLOG("ctx alloc failed.\n");
 			return;
 		}
 		ctx->cb = cb;
@@ -1263,7 +1263,7 @@ spdk_nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
 		goto complete;
 	} else {
 		/* Should never happen */
-		SPDK_ERRLOG("%s: Request in invalid state\n", __func__);
+		SPDK_ERRLOG("Request in invalid state\n");
 		goto complete;
 	}
 
@@ -1548,11 +1548,11 @@ spdk_nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 	rc = nvmf_fc_hwqp_find_nport_and_rport(hwqp, d_id, &nport, s_id, &rport);
 	if (rc) {
 		if (nport == NULL) {
-			SPDK_ERRLOG("%s: Nport not found. Dropping\n", __func__);
+			SPDK_ERRLOG("Nport not found. Dropping\n");
 			/* increment invalid nport counter */
 			hwqp->counters.nport_invalid++;
 		} else if (rport == NULL) {
-			SPDK_ERRLOG("%s: Rport not found. Dropping\n", __func__);
+			SPDK_ERRLOG("Rport not found. Dropping\n");
 			/* increment invalid rport counter */
 			hwqp->counters.rport_invalid++;
 		}
@@ -1561,7 +1561,7 @@ spdk_nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 
 	if (nport->nport_state != SPDK_NVMF_FC_OBJECT_CREATED ||
 	    rport->rport_state != SPDK_NVMF_FC_OBJECT_CREATED) {
-		SPDK_ERRLOG("%s: %s state not created. Dropping\n", __func__,
+		SPDK_ERRLOG("%s state not created. Dropping\n",
 			    nport->nport_state != SPDK_NVMF_FC_OBJECT_CREATED ?
 			    "Nport" : "Rport");
 		return -EACCES;
@@ -1615,7 +1615,7 @@ spdk_nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 		rc = nvmf_fc_hwqp_handle_request(hwqp, frame, buff_idx, buffer, plen);
 	} else {
 
-		SPDK_ERRLOG("%s Unknown frame received. Dropping\n", __func__);
+		SPDK_ERRLOG("Unknown frame received. Dropping\n");
 		hwqp->counters.unknown_frame++;
 		rc = -EINVAL;
 	}
@@ -1657,11 +1657,11 @@ spdk_nvmf_fc_hwqp_process_pending_ls_rqsts(struct spdk_nvmf_fc_hwqp *hwqp)
 		int rc = nvmf_fc_hwqp_find_nport_and_rport(hwqp, ls_rqst->d_id, &nport, ls_rqst->s_id, &rport);
 		if (rc) {
 			if (nport == NULL) {
-				SPDK_ERRLOG("%s: Nport not found. Dropping\n", __func__);
+				SPDK_ERRLOG("Nport not found. Dropping\n");
 				/* increment invalid nport counter */
 				hwqp->counters.nport_invalid++;
 			} else if (rport == NULL) {
-				SPDK_ERRLOG("%s: Rport not found. Dropping\n", __func__);
+				SPDK_ERRLOG("Rport not found. Dropping\n");
 				/* increment invalid rport counter */
 				hwqp->counters.rport_invalid++;
 			}
@@ -1672,7 +1672,7 @@ spdk_nvmf_fc_hwqp_process_pending_ls_rqsts(struct spdk_nvmf_fc_hwqp *hwqp)
 		}
 		if (nport->nport_state != SPDK_NVMF_FC_OBJECT_CREATED ||
 		    rport->rport_state != SPDK_NVMF_FC_OBJECT_CREATED) {
-			SPDK_ERRLOG("%s: %s state not created. Dropping\n", __func__,
+			SPDK_ERRLOG("%s state not created. Dropping\n",
 				    nport->nport_state != SPDK_NVMF_FC_OBJECT_CREATED ?
 				    "Nport" : "Rport");
 			TAILQ_REMOVE(&hwqp->ls_pending_queue, ls_rqst, ls_pending_link);

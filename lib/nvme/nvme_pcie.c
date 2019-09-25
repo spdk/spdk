@@ -639,8 +639,7 @@ nvme_pcie_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, siz
 	 * Do nothing for now.
 	 * TODO: Track free space so buffers may be reused.
 	 */
-	SPDK_ERRLOG("%s: no deallocation for CMB buffers yet!\n",
-		    __func__);
+	SPDK_ERRLOG("no deallocation for CMB buffers yet!\n");
 	return 0;
 }
 
