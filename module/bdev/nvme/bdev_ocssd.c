@@ -1280,7 +1280,7 @@ spdk_bdev_ocssd_create_ctrlr(const struct spdk_nvme_transport_id *trid)
 	}
 
 	nvme_bdev_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_ocssd_poll_adminq,
-					       nvme_bdev_ctrlr, 100000ULL);
+					       nvme_bdev_ctrlr, 10ULL);
 	if (!nvme_bdev_ctrlr->adminq_timer_poller) {
 		SPDK_ERRLOG("Failed to register admin queue poller\n");
 		return -ENOMEM;
