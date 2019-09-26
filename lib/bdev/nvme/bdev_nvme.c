@@ -1258,6 +1258,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char **names, size_t *count,
 		      const char *hostnqn,
 		      uint32_t prchk_flags,
+		      bool enable_cuse,
 		      spdk_bdev_create_nvme_fn cb_fn,
 		      void *cb_ctx)
 {
@@ -1316,6 +1317,9 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		free(ctx);
 		return -ENODEV;
 	}
+
+	ctx->opts.enable_cuse_devices = enable_cuse;
+
 	ctx->poller = spdk_poller_register(bdev_nvme_async_poll, ctx, 1000);
 
 	return 0;
