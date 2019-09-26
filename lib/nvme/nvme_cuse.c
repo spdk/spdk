@@ -205,6 +205,112 @@ cuse_nvme_io_msg_alloc(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, fuse_req_t 
 	return io;
 }
 
+#define FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, val)		\
+	if (out_bufsz == 0) {						\
+		struct iovec out_iov;					\
+		out_iov.iov_base = (void *)arg;				\
+		out_iov.iov_len = sizeof(val);				\
+		fuse_reply_ioctl_retry(req, NULL, 0, &out_iov, 1);	\
+		return;							\
+	}
+
+static void
+cuse_nvme_admin_done_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_io_msg *ctx = arg;
+	struct iovec out_iov[2];
+
+	out_iov[0].iov_base = &cpl->cdw0;
+	out_iov[0].iov_len = sizeof(cpl->cdw0);
+	if (ctx->data_len > 0) {
+		out_iov[1].iov_base = ctx->data;
+		out_iov[1].iov_len = ctx->data_len;
+		fuse_reply_ioctl_iov(ctx->req, 0, out_iov, 2);
+		spdk_free(ctx->data);
+	} else {
+		fuse_reply_ioctl_iov(ctx->req, 0, out_iov, 1);
+	}
+
+	free(ctx);
+}
+
+static void
+cuse_nvme_admin_cb(struct spdk_nvme_io_msg *io)
+{
+	int rc;
+
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(io->ctrlr, &io->nvme_cmd, io->data, io->data_len,
+					   cuse_nvme_admin_done_cb, (void *)io);
+	if (rc < 0) {
+		fuse_reply_err(io->req, EINVAL);
+	}
+}
+
+static void
+nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
+	       struct fuse_file_info *fi, unsigned flags,
+	       const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+{
+	struct nvme_admin_cmd *admin_cmd;
+	struct iovec in_iov, out_iov[2];
+	struct spdk_nvme_io_msg *io;
+	struct cuse_device *cuse_device = fuse_req_userdata(req);
+
+	FUSE_REPLY_CHECK_BUFFER(req, arg, in_bufsz, *admin_cmd);
+
+	admin_cmd = (struct nvme_admin_cmd *)in_buf;
+
+	switch (spdk_nvme_opc_get_data_transfer(admin_cmd->opcode)) {
+	case SPDK_NVME_DATA_NONE:
+		SPDK_ERRLOG("SPDK_NVME_DATA_NONE not implemented\n");
+		fuse_reply_err(req, EINVAL);
+		return;
+	case SPDK_NVME_DATA_HOST_TO_CONTROLLER:
+		SPDK_ERRLOG("SPDK_NVME_DATA_HOST_TO_CONTROLLER not implemented\n");
+		fuse_reply_err(req, EINVAL);
+		return;
+	case SPDK_NVME_DATA_CONTROLLER_TO_HOST:
+		if (out_bufsz == 0) {
+			out_iov[0].iov_base = &((struct nvme_admin_cmd *)arg)->result;
+			out_iov[0].iov_len = sizeof(uint32_t);
+			if (admin_cmd->data_len > 0) {
+				out_iov[1].iov_base = (void *)admin_cmd->addr;
+				out_iov[1].iov_len = admin_cmd->data_len;
+				fuse_reply_ioctl_retry(req, &in_iov, 1, out_iov, 2);
+			} else {
+				fuse_reply_ioctl_retry(req, &in_iov, 1, out_iov, 1);
+			}
+			return;
+		}
+
+		io = cuse_nvme_io_msg_alloc(cuse_device->ctrlr, 0, req);
+
+		memset(&io->nvme_cmd, 0, sizeof(io->nvme_cmd));
+		io->nvme_cmd.opc = admin_cmd->opcode;
+		io->nvme_cmd.nsid = admin_cmd->nsid;
+		io->nvme_cmd.cdw10 = admin_cmd->cdw10;
+		io->nvme_cmd.cdw11 = admin_cmd->cdw11;
+		io->nvme_cmd.cdw12 = admin_cmd->cdw12;
+		io->nvme_cmd.cdw13 = admin_cmd->cdw13;
+		io->nvme_cmd.cdw14 = admin_cmd->cdw14;
+		io->nvme_cmd.cdw15 = admin_cmd->cdw15;
+
+		io->req = req;
+		io->data_len = admin_cmd->data_len;
+		if (io->data_len > 0) {
+			io->data = spdk_malloc(io->data_len, 0, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		}
+
+		break;
+	case SPDK_NVME_DATA_BIDIRECTIONAL:
+		fuse_reply_err(req, EINVAL);
+		return;
+		break;
+	}
+
+	spdk_nvme_io_msg_send(io, cuse_nvme_admin_cb, NULL);
+}
+
 static void
 cuse_ioctl(fuse_req_t req, int cmd, void *arg,
 	   struct fuse_file_info *fi, unsigned flags,
@@ -215,8 +321,23 @@ cuse_ioctl(fuse_req_t req, int cmd, void *arg,
 		return;
 	}
 
-	SPDK_ERRLOG("Unsupported IOCTL 0x%X.\n", cmd);
-	fuse_reply_err(req, EINVAL);
+	switch (cmd) {
+	case NVME_IOCTL_ADMIN_CMD:
+		nvme_admin_cmd(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
+		break;
+
+	case NVME_IOCTL_RESET:
+		fuse_reply_err(req, EINVAL);
+		break;
+
+	case NVME_IOCTL_IO_CMD:
+		fuse_reply_err(req, EINVAL);
+		break;
+
+	default:
+		SPDK_ERRLOG("Unsupported IOCTL 0x%X.\n", cmd);
+		fuse_reply_err(req, EINVAL);
+	}
 }
 
 /*****************************************************************************
