@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fc1aeafe_89b653f6",
+        "filename": "mk/spdk.lib_deps.mk",
+        "patchSetId": 8
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-26T08:55:58Z",
+      "side": 1,
+      "message": "The dependencies are added incrementally in each patch, because the verification builds are now checking for any mismatch between shared library dependencies and ones defined here, so this needs to be an exact list (or maybe the builds always did this, I didn\u0027t have a chance to work with this part of the codebase earlier).",
+      "parentUuid": "b78741df_a813c669",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5fae82ff_5e34e79b",
         "filename": "mk/spdk.modules.mk",
         "patchSetId": 8
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "0295234f_f8c16254",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 8
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-26T08:55:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5fae82ff_5e34e79b",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ba0c3f5_6abc2ba1",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 8
@@ -47,6 +83,24 @@
       "writtenOn": "2019-09-25T17:47:08Z",
       "side": 1,
       "message": "so the spec allows zone size (ZSZE) and capacity (ZCAP) to be different - I think your new bdev module should also support that; it will ensure we can model that with the FTL that will be built on top",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ce867b4_8d42f50b",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-26T08:55:58Z",
+      "side": 1,
+      "message": "I\u0027m currently unsure what would be a use case for specifying a ZCAP for a zone device built on top of a regular bdev and the best way to handle that. ZCAP values in a proper zoned device could be different for each zone, so would we want an interface where the user could override the value for some given list of zones during creation, or do we want a global ZCAP? If the value is global, why differentiate it from ZSZE?\nAt the moment FTL only works with all chunks/zones having equal size - OC spec does allow for different chunk sizes, but it\u0027s an optional behavior.",
+      "parentUuid": "2ba0c3f5_6abc2ba1",
       "revId": "772307595426eaedf6472eb982c1a010f4956220",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "154fe3d6_8481c079",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-26T08:55:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "77c923be_67be9b55",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0ac152b1_9c4cc4b1",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 8
@@ -84,6 +156,24 @@
       "revId": "772307595426eaedf6472eb982c1a010f4956220",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e854f8e_19b78a66",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-26T08:55:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0ac152b1_9c4cc4b1",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
