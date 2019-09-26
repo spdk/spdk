@@ -9,6 +9,7 @@
 * @ref nvme_fabrics_host
 * @ref nvme_multi_process
 * @ref nvme_hotplug
+* @ref nvme_cuse
 
 # Introduction {#nvme_intro}
 
@@ -266,3 +267,21 @@ This means I/O in flight during a hot remove will complete with an appropriate e
 code and will not crash the application.
 
 @sa spdk_nvme_probe
+
+# External IO message queue
+
+1. IO Messsage producer
+
+2. Sending messages from producer
+
+3. Message polling
+
+## NVMe Character Devices {#nvme_cuse}
+
+![NVMe character devices processing diagram](nvme_cuse.svg)
+
+1. Initialize cuse devices and poll cuse message queue. For each controller as well as
+namespace, cuse device is created using locations:
+
+	/dev/spdk/nvmeX
+	/dev/spdk/nvmeXnY
