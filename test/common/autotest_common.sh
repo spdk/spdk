@@ -416,11 +416,15 @@ function waitforbdev() {
 	local i
 
 	for ((i=1; i<=20; i++)); do
-		if ! $rpc_py bdev_get_bdevs | jq -r '.[] .name' | grep -qw $bdev_name; then
-			sleep 0.1
-		else
+		if $rpc_py bdev_get_bdevs | jq -r '.[] .name' | grep -qw $bdev_name; then
 			return 0
 		fi
+
+		if $rpc_py bdev_get_bdevs | jq -r '.[] .aliases' | grep -qw $bdev_name; then
+			return 0
+		fi
+
+		sleep 0.1
 	done
 
 	return 1
