@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33cbe933_a1ee59a7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1556,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-26T14:21:31Z",
+      "side": 1,
+      "message": "I think we can simplify the signature of this function by passing a pointer to the corresponding iovec since req and iovpos are only used to subscript iovec pointer.",
+      "revId": "0c4fd6e51aa036b08e5edd929bd785fbd19a6e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
