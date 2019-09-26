@@ -585,6 +585,7 @@ nvme_ctrlr_set_supported_features(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
+	int had_lock;
 	/*
 	 * Set the flag here and leave the work failure of qpairs to
 	 * spdk_nvme_qpair_process_completions().
@@ -592,8 +593,32 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 	if (hot_remove) {
 		ctrlr->is_removed = true;
 	}
+
+	/*
+	 * Return if we have already set the state to failed since we
+	 * don't want to call the disconnect callback twice.
+	 */
+	if (ctrlr->is_failed) {
+		return;
+	}
 	ctrlr->is_failed = true;
 	SPDK_ERRLOG("ctrlr %s in failed state.\n", ctrlr->trid.traddr);
+
+	/*
+	 * In the pcie hotplug case, this function may be called with the
+	 * global driver lock. In that case, we want to make sure that we
+	 * release it before calling the remove callback and restore the
+	 * old state afterwards.
+	 */
+	if (ctrlr->remove_cb != NULL) {
+		had_lock = nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+
+		ctrlr->remove_cb(ctrlr->cb_ctx, ctrlr);
+
+		if (had_lock == 0) {
+			nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+		}
+	}
 }
 
 static void
