@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "3615a1bb_cc99e6bc",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-26T21:15:07Z",
+      "side": 1,
+      "message": "I didn\u0027t notice this on my first review but the logic here, looping on the base list and then using a goto for something other than error handling doesn\u0027t seem to be something I\u0027ve seen a lot of in the code base.  Any reason why you didn\u0027t reverse the logic on the internal if and put all the stuff before the next into the loop? Just curious",
+      "revId": "f10ad6046aaf9a739aa5044ae855787c82ea8241",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "11ee62f8_886d6779",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 8
