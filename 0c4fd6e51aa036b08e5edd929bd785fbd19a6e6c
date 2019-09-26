@@ -16,6 +16,24 @@
       "revId": "0c4fd6e51aa036b08e5edd929bd785fbd19a6e6c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "46438040_6640ae4b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1556,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-26T23:06:43Z",
+      "side": 1,
+      "message": "Thank you Alexey. Sounds good! The next patch merges nvmf_rdma_fill_wr_sge_with_md_interleave() into nvmf_rdma_fill_wr_sge(). So I will append your suggestion as a separate patch after the patch series. Will you see https://review.gerrithub.io/c/spdk/spdk/+/469639 ?",
+      "parentUuid": "33cbe933_a1ee59a7",
+      "revId": "0c4fd6e51aa036b08e5edd929bd785fbd19a6e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
