@@ -57,8 +57,13 @@
 
 #include "nvme_internal.h"
 #include "nvme_cuse.h"
+#include "nvme_io_msg.h"
 
 #include "spdk/thread.h"
+
+static bool g_cuse_initialized;
+static struct spdk_ring *g_nvme_io_msgs;
+
 
 struct cuse_device {
 	char				dev_name[128];
@@ -78,10 +83,6 @@ struct cuse_device {
 
 static TAILQ_HEAD(, cuse_device) g_ctrlr_ctx_head = TAILQ_HEAD_INITIALIZER(g_ctrlr_ctx_head);
 static int g_controllers_found = 0;
-static bool g_cuse_initialized = false;
-
-struct spdk_ring *g_nvme_io_msgs;
-pthread_mutex_t g_cuse_io_requests_lock;
 
 static void
 cuse_ioctl(fuse_req_t req, int cmd, void *arg,
@@ -160,7 +161,7 @@ spdk_nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr_device->ctrlr = ctrlr;
 	ctrlr_device->idx = g_controllers_found++;
 	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name),
-		 "DEVNAME=nvme%d\n", ctrlr_device->idx);
+		 "DEVNAME=spdk/nvme%d\n", ctrlr_device->idx);
 
 	if (pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device)) {
 		SPDK_ERRLOG("pthread_create failed\n");
@@ -177,7 +178,7 @@ spdk_nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 		ns_device->ctrlr_device = ctrlr_device;
 		ns_device->idx = nsid;
 		ns_device->nsid = nsid;
-		snprintf(ns_device->dev_name, sizeof(ns_device->dev_name), "DEVNAME=nvme%dn%d\n", ctrlr_device->idx,
+		snprintf(ns_device->dev_name, sizeof(ns_device->dev_name), "DEVNAME=spdk/nvme%dn%d\n", ctrlr_device->idx,
 			 ns_device->idx);
 
 		if (pthread_create(&ns_device->tid, NULL, cuse_thread, ns_device)) {
@@ -220,3 +221,12 @@ spdk_nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr)
 
 	return 0;
 }
+
+static struct spdk_nvme_io_msg_producer cuse_nvme_io_msg_producer = {
+	.name = "cuse",
+
+	.ctrlr_start = spdk_nvme_cuse_start,
+	.ctrlr_stop = spdk_nvme_cuse_stop,
+};
+
+SPDK_NVME_IO_MSG_REGISTER(cuse, &cuse_nvme_io_msg_producer);
