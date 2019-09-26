@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "3a74840a_2b97d245",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-26T14:01:48Z",
+      "side": 1,
+      "message": "Can we rename this field to something like iov_pos? It is easy to mix up this field with req-\u003eiovcnt",
+      "range": {
+        "startLine": 267,
+        "startChar": 9,
+        "endLine": 267,
+        "endChar": 15
+      },
+      "revId": "dbf7823cf183f1a7b9b51201150354a7218fe0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3e97ba74_d35bca28",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 5
