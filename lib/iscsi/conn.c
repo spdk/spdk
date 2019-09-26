@@ -1201,7 +1201,7 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	bytes = spdk_sock_writev(conn->sock, iov, iovcnt);
 	if (bytes == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
-			return 1;
+			return 2;
 		} else {
 			SPDK_ERRLOG("spdk_sock_writev() failed, errno %d: %s\n",
 				    errno, spdk_strerror(errno));
@@ -1276,6 +1276,12 @@ iscsi_conn_flush_pdus(void *_conn)
 		} else if (rc == 1 && conn->flush_poller == NULL) {
 			conn->flush_poller = spdk_poller_register(iscsi_conn_flush_pdus,
 					     conn, 50);
+		} else if (rc == 2) {
+			if (conn->flush_poller != NULL) {
+				spdk_poller_unregister(&conn->flush_poller);
+			}
+			conn->flush_poller = spdk_poller_register(iscsi_conn_flush_pdus,
+					     conn, 1000);
 		}
 	} else {
 		/*
