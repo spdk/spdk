@@ -16,6 +16,24 @@
       "revId": "015fff85b7d942ad0405b49ad3ff54c90e221065",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e0c32be_8bf2db17",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-26T12:22:38Z",
+      "side": 1,
+      "message": "In module specific create controller function (see next patches - first Konrad\u0027s patch) for OCSSD we check if this is OCSSD type of controller and if not we fail. We could probably do opposite logic for standard NVMe controller (but we probably won\u0027t need to do this, because...). Yes, we want to do this so that NVMe controller type will be discovered automatically. We weren\u0027t sure if this is possible before, that\u0027s why I added \u0027mode\u0027 parameter. After recent discussion with Konrad we know now that it can be done, but it will require few more patches for bdev_nvme.c. I will remove this new parameter and new function pointers when required patches are ready, so please hold for now with reviewing this part of patches.",
+      "parentUuid": "10778967_1b6f0bb7",
+      "revId": "015fff85b7d942ad0405b49ad3ff54c90e221065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
