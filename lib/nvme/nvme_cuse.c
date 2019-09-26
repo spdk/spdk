@@ -80,8 +80,130 @@ static TAILQ_HEAD(, cuse_device) g_ctrlr_ctx_head = TAILQ_HEAD_INITIALIZER(g_ctr
 static int g_controllers_found = 0;
 static bool g_cuse_initialized = false;
 
+struct spdk_nvme_io_msg;
+
+typedef void (*spdk_nvme_io_msg_fn)(struct spdk_nvme_io_msg *io);
+
 struct spdk_ring *g_nvme_io_msgs;
 pthread_mutex_t g_cuse_io_requests_lock;
+
+struct spdk_nvme_io_msg {
+	struct spdk_nvme_ctrlr	*ctrlr;
+	uint32_t		nsid;
+
+	spdk_nvme_io_msg_fn	fn;
+	void			*arg;
+
+	struct spdk_nvme_cmd	nvme_cmd;
+	struct nvme_user_io	*nvme_user_io;
+
+	uint64_t		lba;
+	uint32_t		lba_count;
+
+	void			*data;
+	int			data_len;
+
+	fuse_req_t		req;
+
+	struct spdk_io_channel *io_channel;
+	struct spdk_nvme_qpair *qpair;
+};
+
+#define SPDK_CUSE_REQUESTS_PROCESS_SIZE 8
+
+/**
+ * Send message to IO queue.
+ */
+static int
+spdk_nvme_io_msg_send(struct spdk_nvme_io_msg *io, spdk_nvme_io_msg_fn fn, void *arg)
+{
+	int rc;
+
+	io->fn = fn;
+	io->arg = arg;
+
+	/* Protect requests ring against preemptive producers */
+	pthread_mutex_lock(&g_cuse_io_requests_lock);
+
+	rc = spdk_ring_enqueue(g_nvme_io_msgs, (void **)&io, 1, NULL);
+	if (rc != 1) {
+		assert(false);
+		/* FIXIT! Do something with request here */
+		return -ENOMEM;
+	}
+
+	pthread_mutex_unlock(&g_cuse_io_requests_lock);
+
+	return 0;
+}
+
+/**
+ * Get next IO message and process on the current SPDK thread.
+ */
+struct nvme_io_channel {
+	struct spdk_nvme_qpair	*qpair;
+	struct spdk_poller	*poller;
+
+	bool			collect_spin_stat;
+	uint64_t		spin_ticks;
+	uint64_t		start_ticks;
+	uint64_t		end_ticks;
+};
+
+int
+spdk_nvme_io_msg_process(void)
+{
+	int i;
+	void *requests[SPDK_CUSE_REQUESTS_PROCESS_SIZE];
+	int count;
+	struct nvme_io_channel *ch;
+
+	if (!g_cuse_initialized) {
+		return 0;
+	}
+
+	count = spdk_ring_dequeue(g_nvme_io_msgs, requests, SPDK_CUSE_REQUESTS_PROCESS_SIZE);
+	if (count == 0) {
+		return 0;
+	}
+
+	for (i = 0; i < count; i++) {
+		struct spdk_nvme_io_msg *io = requests[i];
+
+		assert(io != NULL);
+
+		if (io->nsid != 0) {
+			io->io_channel = spdk_get_io_channel(io->ctrlr);
+			ch = spdk_io_channel_get_ctx(io->io_channel);
+			io->qpair = ch->qpair;
+		}
+
+		io->fn(io);
+	}
+
+	return 0;
+}
+
+static void
+cuse_nvme_io_msg_free(struct spdk_nvme_io_msg *io)
+{
+	if (io->io_channel) {
+		spdk_put_io_channel(io->io_channel);
+	}
+	spdk_free(io->data);
+	free(io);
+}
+
+static struct spdk_nvme_io_msg *
+cuse_nvme_io_msg_alloc(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, fuse_req_t req)
+{
+	struct spdk_nvme_io_msg *io = (struct spdk_nvme_io_msg *)calloc(1, sizeof(struct spdk_nvme_io_msg));
+
+	io->ctrlr = ctrlr;
+	io->nsid = nsid;
+	io->req = req;
+	return io;
+}
 
 static void
 cuse_ioctl(fuse_req_t req, int cmd, void *arg,
