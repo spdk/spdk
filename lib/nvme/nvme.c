@@ -33,6 +33,7 @@
 
 #include "spdk/nvmf_spec.h"
 #include "nvme_internal.h"
+#include "nvme_io_msg.h"
 
 #define SPDK_NVME_DRIVER_NAME "spdk_nvme_driver"
 
@@ -476,6 +477,15 @@ nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr,
 	 */
 	nvme_ctrlr_proc_get_ref(ctrlr);
 	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+
+	if (ctrlr->opts.enable_cuse_devices) {
+		rc = spdk_nvme_io_msg_ctrlr_start(ctrlr);
+
+		if (rc < 0) {
+			SPDK_ERRLOG("Starting cuse devices failed\n");
+			/* FIXIT: Should we exit here? */
+		}
+	}
 
 	if (probe_ctx->attach_cb) {
 		probe_ctx->attach_cb(probe_ctx->cb_ctx, &ctrlr->trid, ctrlr, &ctrlr->opts);
