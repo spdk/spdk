@@ -751,6 +751,20 @@ nvme_qpair_is_io_queue(struct spdk_nvme_qpair *qpair)
 }
 
 static inline int
+nvme_robust_mutex_trylock(pthread_mutex_t *mtx)
+{
+	int rc = pthread_mutex_trylock(mtx);
+
+#ifndef __FreeBSD__
+	if (rc == EOWNERDEAD) {
+		rc = pthread_mutex_consistent(mtx);
+	}
+#endif
+
+	return rc;
+}
+
+static inline int
 nvme_robust_mutex_lock(pthread_mutex_t *mtx)
 {
 	int rc = pthread_mutex_lock(mtx);
