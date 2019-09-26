@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e97ba74_d35bca28",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1686,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-26T13:44:21Z",
+      "side": 1,
+      "message": "You\u0027ve added num_buffers member to spdk_nvmf_rdma_request structure. Can we use it here in the following way?\nfor (uint32_t i \u003d 0; i \u003c rdma_req-\u003enum_buffer\u0027 i++) {\n\twhile (spdk_unlikely(!nvmf_rdma_fill_wr_sge(device, req, wr, i))) {\n\t\tif (nvmf_rdma_replace_buffer(rgroup, \u0026req-\u003ebuffers[i]) \u003d\u003d -ENOMEM) {\n\t\t\treturn -ENOMEM;\n\t\t}\n\t\treq-\u003eiov[i].iov_base \u003d (void *)((uintptr_t)(req-\u003ebuffers[i] \n\t\t\t\t\t\t      NVMF_DATA_BUFFER_MASK) \u0026\n\t\t\t\t\t\t      ~NVMF_DATA_BUFFER_MASK);\n\t}\n}\n\nSo we can get rid of length parameter and new rdma_req-\u003eiovcnt",
+      "range": {
+        "startLine": 1686,
+        "startChar": 1,
+        "endLine": 1686,
+        "endChar": 17
+      },
+      "revId": "dbf7823cf183f1a7b9b51201150354a7218fe0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
