@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85661c95_1214e1fa",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 11
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-26T13:02:54Z",
+      "side": 1,
+      "message": "suggested name change:\nnvme_types? emulated_nvme_types? em_nvme_types?\n\nDisk is too general and may also refer to disk used to boot VM\u0027s OS.",
+      "range": {
+        "startLine": 101,
+        "startChar": 2,
+        "endLine": 101,
+        "endChar": 11
+      },
+      "revId": "b3f952313130d19daa5b958a8677e82466f32b7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7633db9_759710d4",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 11
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-26T13:02:54Z",
+      "side": 1,
+      "message": "Suggested name change:\n\nnvme_namespaces",
+      "range": {
+        "startLine": 102,
+        "startChar": 2,
+        "endLine": 102,
+        "endChar": 17
+      },
+      "revId": "b3f952313130d19daa5b958a8677e82466f32b7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81cdae73_91c417cd",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 11
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-26T13:02:54Z",
+      "side": 1,
+      "message": "Not really sure, but did you miss a \",\" between f and o here? Kinda looks like it",
+      "range": {
+        "startLine": 159,
+        "startChar": 72,
+        "endLine": 159,
+        "endChar": 74
+      },
+      "revId": "b3f952313130d19daa5b958a8677e82466f32b7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9eb99c22_014a9f66",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-26T13:02:54Z",
+      "side": 1,
+      "message": "This is getting over complicated but I see no other way how to handle multiple nvme configurations",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 6
+      },
+      "revId": "b3f952313130d19daa5b958a8677e82466f32b7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
