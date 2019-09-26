@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -283,9 +283,10 @@ struct spdk_bdev_desc {
 		};
 		void *ctx;
 	}				callback;
-	bool				remove_scheduled;
 	bool				closed;
 	bool				write;
+	pthread_mutex_t		mutex;
+	uint32_t			refs;
 	TAILQ_ENTRY(spdk_bdev_desc)	link;
 };
 
@@ -320,6 +321,8 @@ _spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_cha
 				 struct iovec *iov, int iovcnt, void *md_buf,
 				 uint64_t offset_blocks, uint64_t num_blocks,
 				 spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+static void spdk_bdev_desc_fini(struct spdk_bdev_desc *desc);
 
 void
 spdk_bdev_get_opts(struct spdk_bdev_opts *opts)
@@ -4214,17 +4217,22 @@ _remove_notify(void *arg)
 {
 	struct spdk_bdev_desc *desc = arg;
 
-	desc->remove_scheduled = false;
+	pthread_mutex_lock(&desc->mutex);
+	desc->refs--;
 
-	if (desc->closed) {
-		free(desc);
-	} else {
+	if (!desc->closed) {
+		pthread_mutex_unlock(&desc->mutex);
 		if (desc->callback.open_with_ext) {
 			desc->callback.event_fn(SPDK_BDEV_EVENT_REMOVE, desc->bdev, desc->callback.ctx);
 		} else {
 			desc->callback.remove_fn(desc->callback.ctx);
 		}
+		return;
+	} else if (0 == desc->refs) {
+		spdk_bdev_desc_fini(desc);
+		return;
 	}
+	pthread_mutex_unlock(&desc->mutex);
 }
 
 /* Must be called while holding bdev->internal.mutex.
@@ -4239,17 +4247,16 @@ spdk_bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	/* Notify each descriptor about hotremoval */
 	TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
 		rc = -EBUSY;
+		pthread_mutex_lock(&desc->mutex);
 		/*
 		 * Defer invocation of the event_cb to a separate message that will
 		 *  run later on its thread.  This ensures this context unwinds and
 		 *  we don't recursively unregister this bdev again if the event_cb
 		 *  immediately closes its descriptor.
 		 */
-		if (!desc->remove_scheduled) {
-			/* Avoid scheduling removal of the same descriptor multiple times. */
-			desc->remove_scheduled = true;
-			spdk_thread_send_msg(desc->thread, _remove_notify, desc);
-		}
+		desc->refs++;
+		spdk_thread_send_msg(desc->thread, _remove_notify, desc);
+		pthread_mutex_unlock(&desc->mutex);
 	}
 
 	/* If there are no descriptors, proceed removing the bdev */
@@ -4308,6 +4315,15 @@ static void
 _spdk_bdev_dummy_event_cb(void *remove_ctx)
 {
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Bdev remove event received with no remove callback specified");
+}
+
+static void spdk_bdev_desc_fini(struct spdk_bdev_desc *desc)
+{
+	/* Do trylock to allow this function be called with locked and unlocked mutex */
+	pthread_mutex_trylock(&desc->mutex);
+	pthread_mutex_unlock(&desc->mutex);
+	pthread_mutex_destroy(&desc->mutex);
+	free(desc);
 }
 
 static int
@@ -4383,12 +4399,13 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	desc->callback.open_with_ext = false;
 	desc->callback.remove_fn = remove_cb;
 	desc->callback.ctx = remove_ctx;
+	pthread_mutex_init(&desc->mutex, NULL);
 
 	pthread_mutex_lock(&g_bdev_mgr.mutex);
 
 	rc = _spdk_bdev_open(bdev, write, desc);
 	if (rc != 0) {
-		free(desc);
+		spdk_bdev_desc_fini(desc);
 		desc = NULL;
 	}
 
@@ -4432,10 +4449,11 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 	desc->callback.open_with_ext = true;
 	desc->callback.event_fn = event_cb;
 	desc->callback.ctx = event_ctx;
+	pthread_mutex_init(&desc->mutex, NULL);
 
 	rc = _spdk_bdev_open(bdev, write, desc);
 	if (rc != 0) {
-		free(desc);
+		spdk_bdev_desc_fini(desc);
 		desc = NULL;
 	}
 
@@ -4458,13 +4476,16 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	assert(desc->thread == spdk_get_thread());
 
 	pthread_mutex_lock(&bdev->internal.mutex);
+	pthread_mutex_lock(&desc->mutex);
 
 	TAILQ_REMOVE(&bdev->internal.open_descs, desc, link);
 
 	desc->closed = true;
 
-	if (!desc->remove_scheduled) {
-		free(desc);
+	if (0 == desc->refs) {
+		spdk_bdev_desc_fini(desc);
+	} else {
+		pthread_mutex_unlock(&desc->mutex);
 	}
 
 	/* If no more descriptors, kill QoS channel */
