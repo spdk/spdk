@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eaed3ef8_16238ade",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 851,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-26T00:15:34Z",
+      "side": 1,
+      "message": "this basically duplicates line 843\n\nmaybe line 841 and 846 should just do:\n\ntimeout_in_tsc \u003d NVME_TIMEOUT_INFINITE\n\nand then line 851 can do:\n\nctrlr-\u003estate_timeout_tsc \u003d timeout_in_tsc;",
+      "revId": "caabe32ee6675cbdb7b05958b5b991893258ece0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
