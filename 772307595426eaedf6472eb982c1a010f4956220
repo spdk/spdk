@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "167bcaac_6865a45c",
+        "filename": "mk/spdk.lib_deps.mk",
+        "patchSetId": 8
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-26T23:22:41Z",
+      "side": 1,
+      "message": "Ah OK.  Never mind my comment then.",
+      "parentUuid": "fc1aeafe_89b653f6",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5fae82ff_5e34e79b",
         "filename": "mk/spdk.modules.mk",
         "patchSetId": 8
@@ -101,6 +119,24 @@
       "side": 1,
       "message": "I\u0027m currently unsure what would be a use case for specifying a ZCAP for a zone device built on top of a regular bdev and the best way to handle that. ZCAP values in a proper zoned device could be different for each zone, so would we want an interface where the user could override the value for some given list of zones during creation, or do we want a global ZCAP? If the value is global, why differentiate it from ZSZE?\nAt the moment FTL only works with all chunks/zones having equal size - OC spec does allow for different chunk sizes, but it\u0027s an optional behavior.",
       "parentUuid": "2ba0c3f5_6abc2ba1",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb41f857_3cd85e28",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-26T23:22:41Z",
+      "side": 1,
+      "message": "Zoned devices may report sizes that are the capacity rounded up to the nearest power of 2.  This enables conversion between an LBA and its zone/offset.  For example, if size is exactly 16384 blocks, but capacity is 16000 blocks, to generate the LBA for zone 5 offset 21, you just do:\n\n(5 \u003c\u003c 14) + 21\n\nSimilarly if you have to convert from an LBA back to the zone/offset, it\u0027s a bit mask/shift operation rather than a div (the latter is expensive and we try to avoid in the SPDK I/O path).\n\nChristoph Hellwig says there will be zoned namespace devices that do this, so we should be prepared.",
+      "parentUuid": "0ce867b4_8d42f50b",
       "revId": "772307595426eaedf6472eb982c1a010f4956220",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
