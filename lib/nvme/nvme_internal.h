@@ -707,6 +707,10 @@ struct spdk_nvme_ctrlr {
 
 	STAILQ_HEAD(, nvme_request)	queued_aborts;
 	uint32_t			outstanding_aborts;
+
+	/* CB to notify the user when the ctrlr is removed/failed. */
+	spdk_nvme_remove_cb			remove_cb;
+	void					*cb_ctx;
 };
 
 struct spdk_nvme_probe_ctx {
