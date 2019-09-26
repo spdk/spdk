@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ff9b66a4_970dda0c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2671,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-26T18:41:04Z",
+      "side": 1,
+      "message": "In this case it will call event_fn for closed device if refs is not zero.\nI inverted desc-\u003eclosed check in next version to have only one level of \u0027ifs\u0027.\nI did the same in remove_notify handler.",
+      "parentUuid": "f7faa8c5_e133c2c9",
+      "revId": "5a65258f9769db422228ecf9ff5d656c7ade62ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5134d393_8d06841e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
@@ -33,6 +51,24 @@
       "revId": "5a65258f9769db422228ecf9ff5d656c7ade62ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0221cd13_5ca6d4c2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2675,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-26T18:41:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5134d393_8d06841e",
+      "revId": "5a65258f9769db422228ecf9ff5d656c7ade62ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "11d9ba53_1c3edaff",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-26T18:41:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a9329eb_d53670be",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d1ba9768_0b7ab715",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
@@ -108,6 +126,24 @@
     },
     {
       "key": {
+        "uuid": "6bb2351f_b52a9a10",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2657,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-26T18:41:04Z",
+      "side": 1,
+      "message": "Please, have a look at version with locks in next patchset. I made it a separate patch before this one and also added some unit tests.\nI turned on paranoid mode and guarded the maximum possible blocks with mutexes. I\u0027m not sure that it improves readability a lot. But it seems a little bit easier to keep all in my head now.\nWe can probably wrap with mutex only blocks that change descriptor fields. This will produce slightly less code.\n\nRemove scheduled is not needed anymore.",
+      "parentUuid": "b8342d57_8d8ae5cf",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0ee728cd_f5624b07",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
@@ -140,6 +176,24 @@
       "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7315f9c6_8caa0b91",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2683,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-26T18:41:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dc99af63_2d2cf3db",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -178,6 +232,24 @@
     },
     {
       "key": {
+        "uuid": "4f08a63e_b0725fe5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 4259,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-26T18:41:04Z",
+      "side": 1,
+      "message": "With locks there is no need in atomics",
+      "parentUuid": "392b367b_06f0f923",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "42c64ce7_64ba6afc",
         "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
         "patchSetId": 3
@@ -210,6 +282,24 @@
       "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9dde902_01a73388",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-26T18:41:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d6acb16f_96de71f3",
+      "revId": "89eb36086b350f0f5cb09bd8e1649e2d5bf83eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
