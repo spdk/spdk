@@ -479,7 +479,9 @@ _iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	spdk_clear_all_transfer_task(conn, NULL, NULL);
 
 	iscsi_poll_group_remove_conn(conn->pg, conn);
-	spdk_sock_close(&conn->sock);
+	if (conn->sock) {
+		spdk_sock_close(&conn->sock);
+	}
 	spdk_poller_unregister(&conn->logout_timer);
 
 	rc = iscsi_conn_free_tasks(conn);
@@ -920,6 +922,7 @@ spdk_iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
 			SPDK_ERRLOG("spdk_sock_readv() failed, errno %d: %s\n",
 				    errno, spdk_strerror(errno));
 		}
+		spdk_sock_close(&conn->sock);
 	}
 
 	/* connection closed */
@@ -1202,6 +1205,7 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 		} else {
 			SPDK_ERRLOG("spdk_sock_writev() failed, errno %d: %s\n",
 				    errno, spdk_strerror(errno));
+			spdk_sock_close(&conn->sock);
 			return -1;
 		}
 	}
