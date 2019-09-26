@@ -38,7 +38,7 @@ waitforblk "nvme0n2"
 
 nvme list
 
-for ctrl in /dev/nvme?; do
+for ctrl in /dev/spdk/nvme?; do
 	nvme id-ctrl $ctrl
 	nvme smart-log $ctrl
 	nvme_model=$(nvme id-ctrl $ctrl | grep -w mn | sed 's/^.*: //' | sed 's/ *$//')
@@ -48,7 +48,7 @@ for ctrl in /dev/nvme?; do
 	fi
 done
 
-for ns in /dev/nvme?n*; do
+for ns in /dev/spdk/nvme?n*; do
 	nvme id-ns $ns
 done
 
@@ -58,12 +58,12 @@ if [ -d  $spdk_nvme_cli ]; then
 	# Test spdk/nvme-cli NVMe-oF commands: discover, connect and disconnect
 	cd $spdk_nvme_cli
 	sed -i 's/shm_id=.*/shm_id=-1/g' spdk.conf
-	./nvme discover -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
-	nvme_num_before_connection=$(nvme list |grep "/dev/nvme"|awk '{print $1}'|wc -l)
-	./nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	nvme discover -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
+	nvme_num_before_connection=$(nvme list |grep "/dev/spdk/nvme*"|awk '{print $1}'|wc -l)
+	nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 	sleep 1
-	nvme_num=$(nvme list |grep "/dev/nvme"|awk '{print $1}'|wc -l)
-	./nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+	nvme_num=$(nvme list |grep "/dev/spdk/nvme*"|awk '{print $1}'|wc -l)
+	nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 	if [ $nvme_num -le $nvme_num_before_connection ]; then
 		echo "spdk/nvme-cli connect target devices failed"
 		exit 1
