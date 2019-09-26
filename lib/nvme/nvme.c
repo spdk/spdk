@@ -422,6 +422,8 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 		}
 
 		ctrlr = nvme_transport_ctrlr_construct(trid, &opts, devhandle);
+		ctrlr->remove_cb = probe_ctx->remove_cb;
+		ctrlr->cb_ctx = probe_ctx->cb_ctx;
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("Failed to construct NVMe controller for SSD: %s\n", trid->traddr);
 			return -1;
