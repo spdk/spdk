@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "21315380_0215455a",
+        "filename": "test/blobfs/mkfs/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-26T04:26:30Z",
+      "side": 1,
+      "message": "At this point, fuse3 is not required by blobfs_bdev, so they should be removed here in this patch. It is really weird to let mkfs test app include libfuse3.\n\nI\u0027m going to add build system detection for fuse in next patch, like you recommended. Then this patch can be decoupled with the fuse detection.",
+      "parentUuid": "9ebc6f8f_f8a5a7d3",
+      "revId": "77ca970a51e57417e0a447d356a5e176abd6f2d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e75ea334_bbd08c7d",
         "filename": "test/blobfs/mkfs/mkfs.c",
         "patchSetId": 6
@@ -33,6 +51,24 @@
       "revId": "77ca970a51e57417e0a447d356a5e176abd6f2d0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d604aad_58aa8179",
+        "filename": "test/blobfs/mkfs/mkfs.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-26T04:26:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e75ea334_bbd08c7d",
+      "revId": "77ca970a51e57417e0a447d356a5e176abd6f2d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
