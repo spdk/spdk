@@ -69,6 +69,24 @@
       "revId": "3de7391a0ab25991592a9b5a6efa2c0a9f461ee5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60443ca0_60de3adb",
+        "filename": "lib/bdev/bdev_zone.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-26T16:17:17Z",
+      "side": 1,
+      "message": "offset_blocks describes where the data goes on the block device.  The iovs describe where the data is in memory.  It is still just one block I/O operation - so you still only need one append location.",
+      "parentUuid": "cd627572_8b5d88bf",
+      "revId": "3de7391a0ab25991592a9b5a6efa2c0a9f461ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
