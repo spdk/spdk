@@ -1797,14 +1797,16 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_device *device,
 				 struct spdk_nvmf_rdma_request *rdma_req)
 {
+	struct spdk_nvmf_request		*req = &rdma_req->req;
 	struct spdk_nvme_cmd			*cmd;
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
+	struct ibv_send_wr			*wr;
 	int					rc;
 	uint32_t				length;
 
-	cmd = &rdma_req->req.cmd->nvme_cmd;
-	rsp = &rdma_req->req.rsp->nvme_cpl;
+	cmd = &req->cmd->nvme_cmd;
+	rsp = &req->rsp->nvme_cpl;
 	sgl = &cmd->dptr.sgl1;
 
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
@@ -1828,7 +1830,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 #endif
 
 		/* fill request length and populate iovs */
-		rdma_req->req.length = length;
+		req->length = length;
 
 		if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
 			rdma_req->orig_length = length;
@@ -1843,26 +1845,27 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		/* backward compatible */
-		rdma_req->req.data = rdma_req->req.iov[0].iov_base;
+		req->data = req->iov[0].iov_base;
 
 		/* rdma wr specifics */
-		rdma_req->data.wr.wr.rdma.rkey = sgl->keyed.key;
-		rdma_req->data.wr.wr.rdma.remote_addr = sgl->address;
-		if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-			rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
-			rdma_req->data.wr.next = &rdma_req->rsp.wr;
-			rdma_req->data.wr.send_flags &= ~IBV_SEND_SIGNALED;
-		} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-			rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
-			rdma_req->data.wr.next = NULL;
-			rdma_req->data.wr.send_flags |= IBV_SEND_SIGNALED;
+		wr = &rdma_req->data.wr;
+		wr->wr.rdma.rkey = sgl->keyed.key;
+		wr->wr.rdma.remote_addr = sgl->address;
+		if (req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+			wr->opcode = IBV_WR_RDMA_WRITE;
+			wr->next = &rdma_req->rsp.wr;
+			wr->send_flags &= ~IBV_SEND_SIGNALED;
+		} else if (req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+			wr->opcode = IBV_WR_RDMA_READ;
+			wr->next = NULL;
+			wr->send_flags |= IBV_SEND_SIGNALED;
 		}
 
 		/* set the number of outstanding data WRs for this request. */
 		rdma_req->num_outstanding_data_wr = 1;
 
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Request %p took %d buffer/s from central pool\n", rdma_req,
-			      rdma_req->req.iovcnt);
+			      req->iovcnt);
 
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
@@ -1889,13 +1892,13 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		rdma_req->num_outstanding_data_wr = 0;
-		rdma_req->req.data = rdma_req->recv->buf + offset;
-		rdma_req->req.data_from_pool = false;
-		rdma_req->req.length = sgl->unkeyed.length;
+		req->data = rdma_req->recv->buf + offset;
+		req->data_from_pool = false;
+		req->length = sgl->unkeyed.length;
 
-		rdma_req->req.iov[0].iov_base = rdma_req->req.data;
-		rdma_req->req.iov[0].iov_len = rdma_req->req.length;
-		rdma_req->req.iovcnt = 1;
+		req->iov[0].iov_base = req->data;
+		req->iov[0].iov_len = req->length;
+		req->iovcnt = 1;
 
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT &&
@@ -1911,10 +1914,10 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		/* backward compatible */
-		rdma_req->req.data = rdma_req->req.iov[0].iov_base;
+		req->data = req->iov[0].iov_base;
 
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Request %p took %d buffer/s from central pool\n", rdma_req,
-			      rdma_req->req.iovcnt);
+			      req->iovcnt);
 
 		return 0;
 	}
