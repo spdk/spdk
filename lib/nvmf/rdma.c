@@ -1659,22 +1659,6 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 	return 0;
 }
 
-static void
-nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
-		       struct spdk_nvmf_request *req,
-		       uint32_t length)
-{
-	while (length) {
-		req->iov[req->iovcnt].iov_base = (void *)((uintptr_t)(req->buffers[req->iovcnt] +
-						 NVMF_DATA_BUFFER_MASK) &
-						 ~NVMF_DATA_BUFFER_MASK);
-		req->iov[req->iovcnt].iov_len  = spdk_min(length,
-						 rtransport->transport.opts.io_unit_size);
-		length -= req->iov[req->iovcnt].iov_len;
-		req->iovcnt++;
-	}
-}
-
 static int
 spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_device *device,
@@ -1689,25 +1673,21 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 	rqpair = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rgroup = rqpair->poller->group;
+	req->iovcnt = 0;
 
 	if (spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport,
 					  length)) {
 		return -ENOMEM;
 	}
 
-	req->iovcnt = 0;
-	rdma_req->iovpos = 0;
+	assert(req->iovcnt <= rqpair->max_send_sge);
 
-	nvmf_rdma_fill_buffers(rtransport, req, length);
+	rdma_req->iovpos = 0;
 
 	rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, wr, length);
 	if (rc != 0) {
 		goto err_exit;
 	}
-
-	assert(req->iovcnt <= rqpair->max_send_sge);
-
-	req->data_from_pool = true;
 
 	return rc;
 
@@ -1771,7 +1751,6 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 
 		current_wr->num_sge = 0;
 
-		nvmf_rdma_fill_buffers(rtransport, req, desc->keyed.length);
 		rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, current_wr, desc->keyed.length);
 		if (rc != 0) {
 			rc = -ENOMEM;
@@ -1797,7 +1776,6 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 #endif
 
 	rdma_req->num_outstanding_data_wr = num_sgl_descriptors;
-	req->data_from_pool = true;
 
 	return 0;
 
