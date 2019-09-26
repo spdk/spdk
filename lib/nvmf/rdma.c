@@ -1560,12 +1560,10 @@ nvmf_rdma_get_lkey(struct spdk_nvmf_rdma_device *device, struct iovec *iov,
 
 static bool
 nvmf_rdma_fill_wr_sge(struct spdk_nvmf_rdma_device *device,
-		      struct spdk_nvmf_request *req, struct ibv_send_wr *wr,
-		      int iovpos,
+		      struct iovec *iov, struct ibv_send_wr *wr,
 		      uint32_t *_remaining_data_block, uint32_t *_offset,
 		      const struct spdk_dif_ctx *dif_ctx)
 {
-	struct iovec	*iov = &req->iov[iovpos];
 	struct ibv_sge	*sg_ele = &wr->sg_list[wr->num_sge];
 	uint32_t	lkey = 0;
 	uint32_t	remaining, data_block_size, md_size, sge_len;
@@ -1637,7 +1635,7 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 	wr->num_sge = 0;
 
 	while (length && wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES) {
-		while (spdk_unlikely(!nvmf_rdma_fill_wr_sge(device, req, wr, rdma_req->iovpos,
+		while (spdk_unlikely(!nvmf_rdma_fill_wr_sge(device, &req->iov[rdma_req->iovpos], wr,
 				     &remaining_data_block, &offset, dif_ctx))) {
 			if (nvmf_rdma_replace_buffer(rgroup, &req->buffers[rdma_req->iovpos]) == -ENOMEM) {
 				return -ENOMEM;
