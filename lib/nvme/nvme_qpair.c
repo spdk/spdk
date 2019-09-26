@@ -33,6 +33,7 @@
 
 #include "nvme_internal.h"
 #include "spdk/nvme_ocssd.h"
+#include "nvme_io_msg.h"
 
 static void nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
 
@@ -454,6 +455,9 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		qpair->ctrlr->is_failed = true;
 	}
 	qpair->in_completion_context = 0;
+
+	spdk_nvme_io_msg_process();
+
 	if (qpair->delete_after_completion_context) {
 		/*
 		 * A request to delete this qpair was made in the context of this completion
