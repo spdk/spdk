@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19a7ea28_b6e3a9cd",
+        "filename": "configure",
+        "patchSetId": 4
+      },
+      "lineNbr": 692,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-26T18:44:15Z",
+      "side": 1,
+      "message": "Seems like we should indicate what\u0027s not going to work int his case especially since I assume you meant to not exit 1 here? (folks can get this message and may not know why/if they care)",
+      "revId": "dfc26e8dacae373e7e6b2b145731fe6f36934482",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
