@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -414,6 +414,24 @@ get_device_stat_cb(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat, void 
 	free_bdev(bdev);
 
 	*(bool *)cb_arg = true;
+}
+
+static void
+bdev_open_cb1(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
+
+	g_event_type1 = type;
+	spdk_bdev_close(desc);
+}
+
+static void
+bdev_open_cb2(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
+
+	g_event_type2 = type;
+	spdk_bdev_close(desc);
 }
 
 static void
@@ -1998,24 +2016,6 @@ bdev_open_while_hotremove(void)
 
 	spdk_bdev_close(desc[0]);
 	free_bdev(bdev);
-}
-
-static void
-bdev_open_cb1(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
-{
-	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
-
-	g_event_type1 = type;
-	spdk_bdev_close(desc);
-}
-
-static void
-bdev_open_cb2(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
-{
-	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
-
-	g_event_type2 = type;
-	spdk_bdev_close(desc);
 }
 
 static void
