@@ -49,6 +49,15 @@ struct nvme_driver _g_nvme_driver = {
 };
 
 void
+nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
+{
+	if (hot_remove) {
+		ctrlr->is_removed = true;
+	}
+	ctrlr->is_failed = true;
+}
+
+void
 nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 }
