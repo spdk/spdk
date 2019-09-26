@@ -55,6 +55,7 @@ uint16_t abort_cid = 1;
 uint16_t abort_sqid = 1;
 uint32_t namespace_management_nsid = 1;
 uint32_t format_nvme_nsid = 1;
+uint32_t sanitize_nvme_nsid = 1;
 
 uint32_t expected_feature_ns = 2;
 uint32_t expected_feature_cdw10 = SPDK_NVME_FEAT_LBA_RANGE_TYPE;
@@ -267,6 +268,14 @@ static void verify_fw_image_download(struct nvme_request *req)
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD);
 	CU_ASSERT(req->cmd.cdw10 == (fw_img_size >> 2) - 1);
 	CU_ASSERT(req->cmd.cdw11 == fw_img_offset >> 2);
+}
+
+static void verify_nvme_sanitize(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_SANITIZE);
+	CU_ASSERT(req->cmd.cdw10 == 0x309);
+	CU_ASSERT(req->cmd.cdw11 == 0);
+	CU_ASSERT(req->cmd.nsid == sanitize_nvme_nsid);
 }
 
 struct nvme_request *
@@ -601,6 +610,23 @@ test_fw_image_download(void)
 					 NULL, NULL);
 }
 
+static void
+test_sanitize(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+	struct spdk_nvme_sanitize sanitize = {};
+
+	sanitize.sanact = 1;
+	sanitize.ause   = 1;
+	sanitize.oipbp  = 1;
+	sanitize.ndas   = 1;
+
+	verify_fn = verify_nvme_sanitize;
+
+	nvme_ctrlr_cmd_sanitize(&ctrlr, sanitize_nvme_nsid, &sanitize, 0, NULL, NULL);
+
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -632,6 +658,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test ctrlr cmd format_nvme", test_format_nvme) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd fw_commit", test_fw_commit) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd fw_image_download", test_fw_image_download) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd sanitize", test_sanitize) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
