@@ -26,7 +26,7 @@ function destroy_vols() {
 }
 
 function create_vols() {
-	$rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
+	$rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
 	$rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs0
 	$rpc_py bdev_lvol_create -t -l lvs0 lv0 100
 	$rpc_py bdev_lvol_create -t -l lvs0 lv1 100
@@ -67,7 +67,6 @@ function run_bdevperf() {
 
 timing_enter compress_test
 mkdir -p /tmp/pmem
-bdf=$(iter_pci_class_code 01 08 02 | head -1)
 
 # per patch bdevperf uses slightly different params than nightly
 run_bdevperf 32 4096 3
