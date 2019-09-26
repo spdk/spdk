@@ -190,7 +190,6 @@ static int g_latency_sw_tracking_level = 0;
 static bool g_vmd = false;
 
 static struct ctrlr_entry *g_controllers = NULL;
-static int g_controllers_found = 0;
 static struct ns_entry *g_namespaces = NULL;
 static int g_num_namespaces = 0;
 static struct worker_thread *g_workers = NULL;
@@ -1836,7 +1835,6 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct spdk_pci_device	*pci_dev;
 	struct spdk_pci_id	pci_id;
 
-	g_controllers_found++;
 	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		printf("Attached to NVMe over Fabrics controller at %s:%s: %s\n",
 		       trid->traddr, trid->trsvcid,
