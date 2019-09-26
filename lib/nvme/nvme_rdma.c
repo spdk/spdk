@@ -1402,14 +1402,17 @@ nvme_rdma_qpair_disconnect(struct spdk_nvme_qpair *qpair)
 			rdma_destroy_qp(rqpair->cm_id);
 		}
 		rdma_destroy_id(rqpair->cm_id);
+		rqpair->cm_id = NULL;
 	}
 
 	if (rqpair->cq) {
 		ibv_destroy_cq(rqpair->cq);
+		rqpair->cq = NULL;
 	}
 
 	if (rqpair->cm_channel) {
 		rdma_destroy_event_channel(rqpair->cm_channel);
+		rqpair->cm_channel = NULL;
 	}
 }
 
