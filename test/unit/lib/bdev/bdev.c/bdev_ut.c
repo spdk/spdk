@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -67,6 +67,8 @@ int g_count;
 enum spdk_bdev_event_type g_event_type1;
 enum spdk_bdev_event_type g_event_type2;
 struct spdk_histogram_data *g_histogram;
+void *g_unregister_arg;
+int g_unregister_rc;
 
 void
 spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
@@ -414,6 +416,31 @@ get_device_stat_cb(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat, void 
 	free_bdev(bdev);
 
 	*(bool *)cb_arg = true;
+}
+
+static void
+bdev_unregister_cb(void *cb_arg, int rc)
+{
+	g_unregister_arg = cb_arg;
+	g_unregister_rc = rc;
+}
+
+static void
+bdev_open_cb1(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
+
+	g_event_type1 = type;
+	spdk_bdev_close(desc);
+}
+
+static void
+bdev_open_cb2(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
+
+	g_event_type2 = type;
+	spdk_bdev_close(desc);
 }
 
 static void
@@ -2001,21 +2028,38 @@ bdev_open_while_hotremove(void)
 }
 
 static void
-bdev_open_cb1(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+bdev_close_while_hotremove(void)
 {
-	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	int rc = 0;
 
-	g_event_type1 = type;
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_open_cb1, &desc, &desc);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	/* Simulate hot-unplug by unregistering bdev */
+	g_event_type1 = 0xFF;
+	g_unregister_arg = NULL;
+	g_unregister_rc = -1;
+	spdk_bdev_unregister(bdev, bdev_unregister_cb, (void *)0x12345678);
+	/* Close device while remove event is in flight */
 	spdk_bdev_close(desc);
-}
 
-static void
-bdev_open_cb2(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
-{
-	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
+	/* Ensure that unregister callback is delayed */
+	CU_ASSERT_EQUAL(g_unregister_arg, NULL);
+	CU_ASSERT_EQUAL(g_unregister_rc, -1);
 
-	g_event_type2 = type;
-	spdk_bdev_close(desc);
+	poll_threads();
+
+	/* Event callback shall not be issued because device was closed */
+	CU_ASSERT_EQUAL(g_event_type1, 0xFF);
+	/* Unregister callback is issued */
+	CU_ASSERT_EQUAL(g_unregister_arg, (void *)0x12345678);
+	CU_ASSERT_EQUAL(g_unregister_rc, 0);
+
+	free_bdev(bdev);
 }
 
 static void
@@ -2085,6 +2129,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_histograms", bdev_histograms) == NULL ||
 		CU_add_test(suite, "bdev_write_zeroes", bdev_write_zeroes) == NULL ||
 		CU_add_test(suite, "bdev_open_while_hotremove", bdev_open_while_hotremove) == NULL ||
+		CU_add_test(suite, "bdev_close_while_hotremove", bdev_close_while_hotremove) == NULL ||
 		CU_add_test(suite, "bdev_open_ext", bdev_open_ext) == NULL
 	) {
 		CU_cleanup_registry();
