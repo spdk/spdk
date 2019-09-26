@@ -46,6 +46,30 @@
       "revId": "fbc6d39a0c3064677f299dba6a403270778396c8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ba95870_1fcd4dba",
+        "filename": "test/unit/lib/nvmf/rdma.c/rdma_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-26T01:42:04Z",
+      "side": 1,
+      "message": "I append a patch to do that. https://review.gerrithub.io/c/spdk/spdk/+/469488 I added you to sign-off of the patch but please  review the patch (put any score) and don\u0027t care.",
+      "parentUuid": "ba43d9bf_ea99bd43",
+      "range": {
+        "startLine": 117,
+        "startChar": 1,
+        "endLine": 119,
+        "endChar": 2
+      },
+      "revId": "fbc6d39a0c3064677f299dba6a403270778396c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
