@@ -994,7 +994,12 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_qpair_complete_error_reqs(ctrlr->adminq);
 	nvme_transport_qpair_abort_reqs(ctrlr->adminq, 0 /* retry */);
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
-	nvme_transport_ctrlr_connect_qpair(ctrlr, ctrlr->adminq);
+	if (nvme_transport_ctrlr_connect_qpair(ctrlr, ctrlr->adminq) != 0) {
+		SPDK_ERRLOG("Controller reinitialization failed.\n");
+		nvme_ctrlr_fail(ctrlr, false);
+		rc = -1;
+		goto out;
+	}
 
 	/* Doorbell buffer config is invalid during reset */
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
@@ -1021,6 +1026,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
+out:
 	ctrlr->is_resetting = false;
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
