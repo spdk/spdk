@@ -16,6 +16,24 @@
       "revId": "772307595426eaedf6472eb982c1a010f4956220",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4902476_536f4b08",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-26T10:07:07Z",
+      "side": 0,
+      "message": "Done",
+      "parentUuid": "48fdce31_c8dc40c1",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
