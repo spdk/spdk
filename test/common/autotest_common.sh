@@ -39,6 +39,7 @@ export RUN_NIGHTLY_FAILING
 : ${SPDK_TEST_ISCSI_INITIATOR=0}; export SPDK_TEST_ISCSI_INITIATOR
 : ${SPDK_TEST_NVME=0}; export SPDK_TEST_NVME
 : ${SPDK_TEST_NVME_CLI=0}; export SPDK_TEST_NVME_CLI
+: ${SPDK_TEST_NVME_CUSE=0}; export SPDK_TEST_NVME_CUSE
 : ${SPDK_TEST_NVMF=0}; export SPDK_TEST_NVMF
 : ${SPDK_TEST_NVMF_TRANSPORT="rdma"}; export SPDK_TEST_NVMF_TRANSPORT
 : ${SPDK_TEST_RBD=0}; export SPDK_TEST_RBD
@@ -155,6 +156,10 @@ if [ -d /usr/include/iscsi ]; then
 	if [ $libiscsi_version -ge 20150621 ]; then
 		config_params+=' --with-iscsi-initiator'
 	fi
+fi
+
+if [ $SPDK_TEST_NVME_CUSE -eq 1 ]; then
+	config_params+='--with-cuse'
 fi
 
 # for options with both dependencies and a test flag, set them here
