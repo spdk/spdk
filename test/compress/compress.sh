@@ -27,18 +27,26 @@ function destroy_vols() {
 
 function create_vols() {
 	$rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
+	waitforbdev Nvme0n1
+
 	$rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs0
 	$rpc_py bdev_lvol_create -t -l lvs0 lv0 100
+	waitforbdev lvs0/lv0
+
 	$rpc_py bdev_lvol_create -t -l lvs0 lv1 100
+	waitforbdev lvs0/lv1
+
 	# use QAT for lv0, if the test system does not have QAT this will
 	# fail which is what we want
 	$rpc_py set_compress_pmd -p 1
 	$rpc_py bdev_compress_create -b lvs0/lv0 -p /tmp/pmem
+	waitforbdev COMP_lvs0/lv0
+
 	# use ISAL for lv1, if ISAL is for some reason not available this will
 	# fail which is what we want
 	$rpc_py set_compress_pmd -p 2
-	compress_bdev=$($rpc_py bdev_compress_create -b lvs0/lv1 -p /tmp/pmem)
-	waitforbdev $compress_bdev
+	$rpc_py bdev_compress_create -b lvs0/lv1 -p /tmp/pmem
+	waitforbdev COMP_lvs0/lv1
 }
 
 function run_bdevio() {
