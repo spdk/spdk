@@ -33,6 +33,7 @@
 
 #include "nvme_internal.h"
 #include "spdk/nvme_ocssd.h"
+#include "nvme_io_msg.h"
 
 static void nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
 static int nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req);

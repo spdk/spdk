@@ -174,6 +174,7 @@ struct rpc_bdev_nvme_attach_controller {
 	char *hostsvcid;
 	bool prchk_reftag;
 	bool prchk_guard;
+	bool cuse;
 };
 
 static void
@@ -203,7 +204,9 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 	{"hostsvcid", offsetof(struct rpc_bdev_nvme_attach_controller, hostsvcid), spdk_json_decode_string, true},
 
 	{"prchk_reftag", offsetof(struct rpc_bdev_nvme_attach_controller, prchk_reftag), spdk_json_decode_bool, true},
-	{"prchk_guard", offsetof(struct rpc_bdev_nvme_attach_controller, prchk_guard), spdk_json_decode_bool, true}
+	{"prchk_guard", offsetof(struct rpc_bdev_nvme_attach_controller, prchk_guard), spdk_json_decode_bool, true},
+
+	{"cuse", offsetof(struct rpc_bdev_nvme_attach_controller, cuse), spdk_json_decode_bool, true}
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
