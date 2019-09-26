@@ -16,6 +16,24 @@
       "revId": "e4a2e040e69e78da0bf222f720dcf3de6be79e5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2c9ed7b_756e52fa",
+        "filename": "test/ocf/management/multicore.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-09-26T11:27:22Z",
+      "side": 1,
+      "message": "I agree, it will be definitely better option here.\n\nNext time, before I push something connected with tests, I have to look into autotest_common and check are there nice helpers functions like this instead of writing something in my own :)",
+      "parentUuid": "9a78562e_ea0bc70e",
+      "revId": "e4a2e040e69e78da0bf222f720dcf3de6be79e5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
