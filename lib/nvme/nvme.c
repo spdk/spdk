@@ -426,6 +426,8 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 			SPDK_ERRLOG("Failed to construct NVMe controller for SSD: %s\n", trid->traddr);
 			return -1;
 		}
+		ctrlr->remove_cb = probe_ctx->remove_cb;
+		ctrlr->cb_ctx = probe_ctx->cb_ctx;
 
 		TAILQ_INSERT_TAIL(&probe_ctx->init_ctrlrs, ctrlr, tailq);
 		return 0;
