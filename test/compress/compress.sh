@@ -101,5 +101,6 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	nvmftestfini
 fi
 
+error_cleanup
 rm -rf /tmp/pmem
 timing_exit compress_test
