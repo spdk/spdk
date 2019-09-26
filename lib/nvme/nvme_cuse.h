@@ -44,4 +44,6 @@
 int spdk_nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr);
 int spdk_nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr);
 
+int spdk_nvme_io_msg_process(void);
+
 #endif /* SPDK_NVME_CUSE_H_ */
