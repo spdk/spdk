@@ -455,7 +455,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	ret = nvme_transport_qpair_process_completions(qpair, max_completions);
 	if (ret < 0) {
 		SPDK_ERRLOG("CQ error, abort requests after transport retry counter exceeded\n");
-		qpair->ctrlr->is_failed = true;
+		nvme_ctrlr_fail(qpair->ctrlr, false);
 	}
 	qpair->in_completion_context = 0;
 	if (qpair->delete_after_completion_context) {
