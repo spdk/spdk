@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "386ea40e_498bbaa0",
+        "filename": "include/spdk/bdev_zone.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-26T14:12:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c7d9562f_65399242",
+      "revId": "3de7391a0ab25991592a9b5a6efa2c0a9f461ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "72ab8e4d_7e694a88",
         "filename": "lib/bdev/bdev_zone.c",
         "patchSetId": 20
@@ -30,6 +48,24 @@
       "writtenOn": "2019-09-25T16:28:35Z",
       "side": 1,
       "message": "do we need \"appendv\" variants too that can take an array of iov for the incoming write/append data?",
+      "revId": "3de7391a0ab25991592a9b5a6efa2c0a9f461ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd627572_8b5d88bf",
+        "filename": "lib/bdev/bdev_zone.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-26T14:12:57Z",
+      "side": 1,
+      "message": "If we want to add appendv we need to change the way how we return append location because now we are using bdev_io-\u003eu.bdev.offset_blocks field for it and in case iovec we need an array that describes append location of each io in iovec. Could we add it as separate patch if we decide to do it?",
+      "parentUuid": "72ab8e4d_7e694a88",
       "revId": "3de7391a0ab25991592a9b5a6efa2c0a9f461ee5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
