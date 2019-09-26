@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1beb6b37_03aa48c7",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 5772,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-26T16:27:26Z",
+      "side": 1,
+      "message": "This patch overall looks good.  But the comment here about 4KiB page size multiple may be confusing.  The blobstore will technically work with a 4KiB cluster size, but performance will be completely terrible.  I would suggest mentioning the default here, and maybe enforce a minimum cluster size.  We should direct users to sensible values which will avoid bug reports for known design constraints.\n\nThe 4KiB page size multiple is mentioned in several places in this patch - they should all be adjusted.",
+      "revId": "c68f4841c46573443ba200220d0924d7458b882b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
