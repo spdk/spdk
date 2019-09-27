@@ -109,7 +109,15 @@ endif
 endif
 endif
 
-DPDK_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%$(DPDK_LIB_EXT))
+define dpdk_lib_list_to_libs
+$(1:%=$(DPDK_ABS_DIR)/lib/lib%$(DPDK_LIB_EXT))
+endef
+
+define dpdk_env_linker_args
+$(ENV_DPDK_FILE) -Wl,--whole-archive,--no-as-needed $(call dpdk_lib_list_to_libs,$1) -Wl,--no-whole-archive
+endef
+
+DPDK_LIB = $(call dpdk_lib_list_to_libs,$(DPDK_LIB_LIST))
 
 # SPDK memory registration requires experimental (deprecated) rte_memory API for DPDK 18.05
 ENV_CFLAGS = $(DPDK_INC) -Wno-deprecated-declarations
@@ -120,7 +128,7 @@ else
 ENV_DPDK_FILE = $(call spdk_lib_list_to_static_libs,env_dpdk)
 endif
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_LIB)
-ENV_LINKER_ARGS = $(ENV_DPDK_FILE) -Wl,--whole-archive,--no-as-needed $(DPDK_LIB) -Wl,--no-whole-archive
+ENV_LINKER_ARGS = $(call dpdk_env_linker_args,$(DPDK_LIB_LIST))
 
 ifeq ($(CONFIG_IPSEC_MB),y)
 ENV_LINKER_ARGS += -lIPSec_MB -L$(IPSEC_MB_DIR)
