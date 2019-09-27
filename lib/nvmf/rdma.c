@@ -264,7 +264,7 @@ struct spdk_nvmf_rdma_request {
 
 	struct spdk_nvmf_rdma_request_data	data;
 
-	int					iovpos;
+	uint32_t				iovpos;
 
 	uint32_t				num_outstanding_data_wr;
 	uint64_t				receive_tsc;
