@@ -878,7 +878,7 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair)
 			    tqpair->pdu_recv_buf.size);
 		return -1;
 	}
-	tqpair->pdu_in_progress.hdr = (union nvme_tcp_pdu_hdr *)tqpair->pdu_recv_buf.buf;
+	tqpair->pdu_in_progress.hdr = &tqpair->pdu_in_progress.hdr_mem;
 
 	return 0;
 }
@@ -902,6 +902,8 @@ spdk_nvmf_tcp_qpair_init(struct spdk_nvmf_qpair *qpair)
 
 	tqpair->host_hdgst_enable = true;
 	tqpair->host_ddgst_enable = true;
+	tqpair->pdu_in_progress.hdr = &tqpair->pdu_in_progress.hdr_mem;
+
 	return 0;
 }
 
@@ -1062,30 +1064,6 @@ spdk_nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	free(tgroup);
 }
 
-static inline void
-spdk_nvmf_tcp_reset_pdu_in_process(struct spdk_nvmf_tcp_qpair *tqpair)
-{
-	struct nvme_tcp_pdu_recv_buf *pdu_recv_buf = &tqpair->pdu_recv_buf;
-	char *dst, *src;
-
-	if (spdk_unlikely((pdu_recv_buf->off + sizeof(union nvme_tcp_pdu_hdr)) >
-			  pdu_recv_buf->size)) {
-		if (pdu_recv_buf->remain_size) {
-			dst = pdu_recv_buf->buf;
-			src = (char *)((void *)pdu_recv_buf->buf + pdu_recv_buf->off);
-
-			/* purpose: to avoid overlap copy, so do not use memcpy if there is overlap case */
-			memmove(dst, src, pdu_recv_buf->remain_size);
-		}
-		tqpair->pdu_recv_buf.off = 0;
-	} else if (!pdu_recv_buf->remain_size) {
-		tqpair->pdu_recv_buf.off = 0;
-	}
-
-	tqpair->pdu_in_progress.hdr = (union nvme_tcp_pdu_hdr *)((void *)pdu_recv_buf->buf +
-				      pdu_recv_buf->off);
-}
-
 static void
 spdk_nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
 				   enum nvme_tcp_pdu_recv_state state)
@@ -1117,7 +1095,7 @@ spdk_nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
 	case NVME_TCP_PDU_RECV_STATE_ERROR:
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
 		memset(&tqpair->pdu_in_progress, 0, sizeof(tqpair->pdu_in_progress));
-		spdk_nvmf_tcp_reset_pdu_in_process(tqpair);
+		tqpair->pdu_in_progress.hdr = &tqpair->pdu_in_progress.hdr_mem;
 		break;
 	default:
 		SPDK_ERRLOG("The state(%d) is invalid\n", state);
@@ -1777,8 +1755,10 @@ nvme_tcp_recv_buf_read(struct spdk_sock *sock, struct nvme_tcp_pdu_recv_buf *pdu
 {
 	int rc;
 
-	rc = nvme_tcp_read_data(sock, pdu_recv_buf->size - pdu_recv_buf->off,
-				(void *)pdu_recv_buf->buf + pdu_recv_buf->off);
+	assert(pdu_recv_buf->off == 0);
+	assert(pdu_recv_buf->remain_size == 0);
+	rc = nvme_tcp_read_data(sock, pdu_recv_buf->size,
+				pdu_recv_buf->buf);
 	if (rc < 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconnect sock=%p\n", sock);
 	} else if (rc > 0) {
@@ -1798,12 +1778,12 @@ nvme_tcp_read_data_from_pdu_recv_buf(struct nvme_tcp_pdu_recv_buf *pdu_recv_buf,
 
 	assert(pdu_recv_buf->remain_size > 0);
 	size = spdk_min(expected_size, pdu_recv_buf->remain_size);
-	if (dst) {
-		memcpy(dst, (void *)pdu_recv_buf->buf + pdu_recv_buf->off, size);
-	}
+	memcpy(dst, (void *)pdu_recv_buf->buf + pdu_recv_buf->off, size);
 	pdu_recv_buf->off += size;
 	pdu_recv_buf->remain_size -= size;
-
+	if (spdk_unlikely(!pdu_recv_buf->remain_size)) {
+		pdu_recv_buf->off = 0;
+	}
 
 	return size;
 }
@@ -1815,7 +1795,6 @@ nvme_tcp_read_payload_data_from_pdu_recv_buf(struct nvme_tcp_pdu_recv_buf *pdu_r
 	struct iovec iov[NVME_TCP_MAX_SGL_DESCRIPTORS + 1];
 	int iovcnt, i;
 	uint32_t size = 0;
-	void *dst;
 
 	assert(pdu_recv_buf->remain_size > 0);
 	iovcnt = nvme_tcp_build_payload_iovs(iov, NVME_TCP_MAX_SGL_DESCRIPTORS + 1, pdu,
@@ -1825,12 +1804,7 @@ nvme_tcp_read_payload_data_from_pdu_recv_buf(struct nvme_tcp_pdu_recv_buf *pdu_r
 		if (!pdu_recv_buf->remain_size) {
 			break;
 		}
-
-		dst = NULL;
-		if (pdu->hdr->common.pdu_type != SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ) {
-			dst = iov[i].iov_base;
-		}
-		size += nvme_tcp_read_data_from_pdu_recv_buf(pdu_recv_buf, iov[i].iov_len, dst);
+		size += nvme_tcp_read_data_from_pdu_recv_buf(pdu_recv_buf, iov[i].iov_len, iov[i].iov_base);
 	}
 
 	return size;
@@ -1868,7 +1842,7 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			}
 			rc = nvme_tcp_read_data_from_pdu_recv_buf(&tqpair->pdu_recv_buf,
 					sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
-					NULL);
+					(void *)&pdu->hdr->common + pdu->ch_valid_bytes);
 			pdu->ch_valid_bytes += rc;
 			if (spdk_likely(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY)) {
 				spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
@@ -1892,7 +1866,7 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 
 			rc = nvme_tcp_read_data_from_pdu_recv_buf(&tqpair->pdu_recv_buf,
 					pdu->psh_len - pdu->psh_valid_bytes,
-					NULL);
+					(void *)&pdu->hdr->raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes);
 			pdu->psh_valid_bytes += rc;
 			if (pdu->psh_valid_bytes < pdu->psh_len) {
 				return NVME_TCP_PDU_IN_PROGRESS;
