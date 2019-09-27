@@ -284,6 +284,34 @@ raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 
 /*
  * brief:
+ * raid_bdev_base_io_completion is the completion callback for member disk requests
+ * params:
+ * bdev_io - pointer to member disk requested bdev_io
+ * success - true if successful, false if unsuccessful
+ * cb_arg - callback argument (parent raid bdev_io)
+ * returns:
+ * none
+ */
+static void
+raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *parent_io = cb_arg;
+	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)parent_io->driver_ctx;
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (!success) {
+		raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+
+	raid_io->base_bdev_io_completed++;
+	if (raid_io->base_bdev_io_completed == raid_io->base_bdev_io_expected) {
+		spdk_bdev_io_complete(parent_io, raid_io->base_bdev_io_status);
+	}
+}
+
+/*
+ * brief:
  * raid0_submit_rw_request function is used to submit I/O to the correct
  * member disk for raid0 bdevs.
  * params:
@@ -468,34 +496,6 @@ raid0_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	ret = raid0_submit_rw_request(bdev_io, start_strip);
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
-	}
-}
-
-/*
- * brief:
- * raid_bdev_base_io_completion is the completion callback for member disk requests
- * params:
- * bdev_io - pointer to member disk requested bdev_io
- * success - true if successful, false if unsuccessful
- * cb_arg - callback argument (parent raid bdev_io)
- * returns:
- * none
- */
-static void
-raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
-{
-	struct spdk_bdev_io *parent_io = cb_arg;
-	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)parent_io->driver_ctx;
-
-	spdk_bdev_free_io(bdev_io);
-
-	if (!success) {
-		raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_FAILED;
-	}
-
-	raid_io->base_bdev_io_completed++;
-	if (raid_io->base_bdev_io_completed == raid_io->base_bdev_io_expected) {
-		spdk_bdev_io_complete(parent_io, raid_io->base_bdev_io_status);
 	}
 }
 
