@@ -48,7 +48,51 @@
 
 #include "spdk_internal/vhost_user.h"
 
-extern const struct vhost_device_ops g_spdk_vhost_ops;
+static int
+new_connection(int vid)
+{
+	char ifname[PATH_MAX];
+
+	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
+		SPDK_ERRLOG("Couldn't get a valid ifname for device with vid %d\n", vid);
+		return -1;
+	}
+
+	return vhost_new_connection_cb(vid, ifname);
+}
+
+static int
+start_device(int vid)
+{
+	return vhost_start_device_cb(vid);
+}
+
+static void
+stop_device(int vid)
+{
+	vhost_stop_device_cb(vid);
+}
+
+static void
+destroy_connection(int vid)
+{
+	vhost_destroy_connection_cb(vid);
+}
+
+const struct vhost_device_ops g_spdk_vhost_ops = {
+	.new_device =  start_device,
+	.destroy_device = stop_device,
+	.new_connection = new_connection,
+	.destroy_connection = destroy_connection,
+#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
+	.get_config = get_config,
+	.set_config = set_config,
+	.vhost_nvme_admin_passthrough = vhost_nvme_admin_passthrough,
+	.vhost_nvme_set_cq_call = vhost_nvme_set_cq_call,
+	.vhost_nvme_get_cap = vhost_nvme_get_cap,
+	.vhost_nvme_set_bar_mr = vhost_nvme_set_bar_mr,
+#endif
+};
 
 #ifndef SPDK_CONFIG_VHOST_INTERNAL_LIB
 
