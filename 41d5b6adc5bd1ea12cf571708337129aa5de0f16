@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6b29d87d_62b4a70c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1643,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-27T20:07:16Z",
+      "side": 1,
+      "message": "Never mind.  I see this code moves again in next patch.",
+      "parentUuid": "8464eb6b_6af77968",
+      "revId": "41d5b6adc5bd1ea12cf571708337129aa5de0f16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "80479a5c_89acb0dc",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 6
