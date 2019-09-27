@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8464eb6b_6af77968",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1643,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-27T20:03:00Z",
+      "side": 1,
+      "message": "You can use iov-\u003eiov_base here instead of req-\u003eiov[req-\u003eiovcnt].iov_base.\n\nBut would this be any better - avoiding duplicated code for assigning iov_base?\n\nwhile (remaining_length \u0026\u0026 wr-\u003enum_sge \u003c SPDK_NVME_MAX_SGL_ENTRIES) {\n  iov \u003d ...;\n  iov-\u003eiov_len \u003d ...;\n  while (true) {\n    iov-\u003eiov_base \u003d ...;\n    if (spdk_likely(nvmf_rdma_fill_wr_sge(...))) {\n      break;\n    } else if (nvmf_rdma_replace_buffer(...) \u003d\u003d -ENOMEM) {\n      return -ENOMEM;\n    }\n  }\n}",
+      "revId": "41d5b6adc5bd1ea12cf571708337129aa5de0f16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80479a5c_89acb0dc",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1695,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-27T20:03:00Z",
+      "side": 1,
+      "message": "same as above\n\nI\u0027m OK with the code as you have it here - only change it if you think my suggestion is any better.  I personally find it easier to understand but others may not agree.",
+      "revId": "41d5b6adc5bd1ea12cf571708337129aa5de0f16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
