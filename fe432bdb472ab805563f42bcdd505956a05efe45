@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f7ecb63_dfef05a6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 12
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-27T14:01:25Z",
+      "side": 1,
+      "message": "This patch requires much more expansive commit message, since it adds important feature to NVMe lib.",
+      "revId": "fe432bdb472ab805563f42bcdd505956a05efe45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0818147_c1684b45",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-27T14:01:25Z",
+      "side": 1,
+      "message": "Yes we should ;)\nBest would be to move it up to line 459 and exit same way as when nvme_ctrlr_process_init() fails.\n\nAnd just for posterity, you plan to use callbacks to CUSE lib to avoid the ifdefs - right ?",
+      "range": {
+        "startLine": 485,
+        "startChar": 3,
+        "endLine": 485,
+        "endChar": 36
+      },
+      "revId": "fe432bdb472ab805563f42bcdd505956a05efe45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5aa7f417_4cddfdf0",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 2368,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-27T14:01:25Z",
+      "side": 1,
+      "message": "nvme_ctrlr_destruct() can be called from multiple places, including error paths in initialization. Since spdk_nvme_cuse_start() is called when ctrlr is attached, lets move stop to spdk_nvme_detach.\nRight now its possible to call stopping cuse without starting it first.",
+      "range": {
+        "startLine": 2364,
+        "startChar": 0,
+        "endLine": 2368,
+        "endChar": 6
+      },
+      "revId": "fe432bdb472ab805563f42bcdd505956a05efe45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4be24672_9673e696",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-27T14:01:25Z",
+      "side": 1,
+      "message": "Don\u0027t think it is required, as it is not used.",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 81,
+        "endChar": 39
+      },
+      "revId": "fe432bdb472ab805563f42bcdd505956a05efe45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5d50a90_58836ab5",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-27T14:01:25Z",
+      "side": 1,
+      "message": "Currently cleanup for session is missing. Have you explored using cuse_lowlevel_main() ? It does creation/loop/cleanup by itself.",
+      "range": {
+        "startLine": 129,
+        "startChar": 0,
+        "endLine": 131,
+        "endChar": 41
+      },
+      "revId": "fe432bdb472ab805563f42bcdd505956a05efe45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14d1762b_6e0b7588",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-27T14:01:25Z",
+      "side": 1,
+      "message": "This might be tricky, shouldn\u0027t we name the device same as in bdev nvme ? This complicates things since bdev name is not used in NVMe lib.\nAt the very least some detection of conflicting names, as well as correlation of devices between SPDK and char dev should be possible.",
+      "range": {
+        "startLine": 162,
+        "startChar": 0,
+        "endLine": 163,
+        "endChar": 42
+      },
+      "revId": "fe432bdb472ab805563f42bcdd505956a05efe45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
