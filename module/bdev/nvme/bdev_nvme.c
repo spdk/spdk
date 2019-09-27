@@ -944,12 +944,6 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		return -ENOMEM;
 	}
 	nvme_bdev_ctrlr->num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
-	nvme_bdev_ctrlr->bdevs = calloc(nvme_bdev_ctrlr->num_ns, sizeof(struct nvme_bdev));
-	if (!nvme_bdev_ctrlr->bdevs) {
-		SPDK_ERRLOG("Failed to allocate block devices struct\n");
-		free(nvme_bdev_ctrlr);
-		return -ENOMEM;
-	}
 
 	nvme_bdev_ctrlr->adminq_timer_poller = NULL;
 	nvme_bdev_ctrlr->ctrlr = ctrlr;
@@ -957,7 +951,6 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_bdev_ctrlr->trid = *trid;
 	nvme_bdev_ctrlr->name = strdup(name);
 	if (nvme_bdev_ctrlr->name == NULL) {
-		free(nvme_bdev_ctrlr->bdevs);
 		free(nvme_bdev_ctrlr);
 		return -ENOMEM;
 	}
@@ -1173,6 +1166,12 @@ bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx)
 		return -1;
 	}
 
+	nvme_bdev_ctrlr->bdevs = calloc(nvme_bdev_ctrlr->num_ns, sizeof(struct nvme_bdev));
+	if (!nvme_bdev_ctrlr->bdevs) {
+		SPDK_ERRLOG("Failed to allocate block devices struct\n");
+		return -ENOMEM;
+	}
+
 	nvme_ctrlr_create_bdevs(nvme_bdev_ctrlr);
 
 	/*
@@ -1193,6 +1192,7 @@ bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx)
 		} else {
 			SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %zu. Unable to return all names of created bdevs\n",
 				    ctx->count);
+			free(nvme_bdev_ctrlr->bdevs);
 			return -1;
 		}
 	}
@@ -1210,7 +1210,6 @@ free_controller(const struct spdk_nvme_transport_id *trid)
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
-	free(nvme_bdev_ctrlr->bdevs);
 	free(nvme_bdev_ctrlr->name);
 	free(nvme_bdev_ctrlr);
 }
