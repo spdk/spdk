@@ -770,7 +770,7 @@ class UIVhostScsiCtrlObj(UIVhostCtrl):
         target_num - Integer identifier of target node to modify.
         bdev - Which bdev to add as LUN.
         """
-        self.get_root().add_vhost_scsi_lun(ctrlr=self.ctrlr.ctrlr,
+        self.get_root().vhost_scsi_controller_add_target(ctrlr=self.ctrlr.ctrlr,
                                            scsi_target_num=int(target_num),
                                            bdev_name=bdev_name)
         for ctrlr in self.get_root().get_vhost_controllers(ctrlr_type="scsi"):

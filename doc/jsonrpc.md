@@ -4417,7 +4417,7 @@ Example response:
 }
 ~~~
 
-## add_vhost_scsi_lun {#rpc_add_vhost_scsi_lun}
+## vhost_scsi_controller_add_target {#rpc_vhost_scsi_controller_add_target}
 
 In vhost target `ctrlr` create SCSI target with ID `scsi_target_num` and add `bdev_name` as LUN 0.
 
@@ -4445,7 +4445,7 @@ Example request:
     "ctrlr": "VhostScsi0"
   },
   "jsonrpc": "2.0",
-  "method": "add_vhost_scsi_lun",
+  "method": "vhost_scsi_controller_add_target",
   "id": 1
 }
 ~~~
