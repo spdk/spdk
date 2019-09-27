@@ -16,6 +16,29 @@
       "revId": "8dace88d89d60f16f9bcb3b34b5e162e178cf9e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47735eff_67f075f8",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2134,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-27T05:26:05Z",
+      "side": 1,
+      "message": "bdev_open_while_hotremove -\u003e bdev_close_while_hotremove is easy and nice to read, but swapping bdev_close_while_hotremove and bdev_open_ext can avoid moving bdev_open_cb1 and bdev_open_cb2.\n\nThe contents of bdev_close_while_hotremove is very similar with bdev_open_ext and extended version of bdev_open_ext. So swapping is acceptable?",
+      "range": {
+        "startLine": 2132,
+        "startChar": 0,
+        "endLine": 2134,
+        "endChar": 0
+      },
+      "revId": "8dace88d89d60f16f9bcb3b34b5e162e178cf9e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
