@@ -1,5 +1,12 @@
 # Changelog
 
+## v19.07.1: (Upcoming Release)
+
+### build
+
+Improved inter-lib dependencies to allow linking against only a subset of SPDK
+libraries when building SPDK applications.
+
 ## v19.07:
 
 ### ftl
