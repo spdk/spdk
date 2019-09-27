@@ -1709,6 +1709,14 @@ spdk_nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	struct spdk_nvme_tcp_ic_resp *ic_resp;
 	uint32_t error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
+	uint32_t in_capsule_data_size;
+	ssize_t recvbuf_sz;
+	int rc;
+
+	in_capsule_data_size = ttransport->transport.opts.in_capsule_data_size;
+	if (ttransport->transport.opts.dif_insert_or_strip) {
+		in_capsule_data_size = SPDK_BDEV_BUF_SIZE_WITH_MD(in_capsule_data_size);
+	}
 
 	/* Only PFV 0 is defined currently */
 	if (ic_req->pfv != 0) {
@@ -1721,14 +1729,25 @@ spdk_nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	/* MAXR2T is 0's based */
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "maxr2t =%u\n", (ic_req->maxr2t + 1u));
 
+	/* Calculate optimal recvbuf size. */
+	recvbuf_sz = (in_capsule_data_size + sizeof(struct spdk_nvme_tcp_cmd) *
+		      SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR);
 	tqpair->host_hdgst_enable = ic_req->dgst.bits.hdgst_enable ? true : false;
-	if (!tqpair->host_hdgst_enable) {
-		tqpair->pdu_recv_buf.size -= SPDK_NVME_TCP_DIGEST_LEN * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
+	if (tqpair->host_hdgst_enable) {
+		recvbuf_sz += SPDK_NVME_TCP_DIGEST_LEN * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
 	}
 	tqpair->host_ddgst_enable = ic_req->dgst.bits.ddgst_enable ? true : false;
-	if (!tqpair->host_ddgst_enable) {
-		tqpair->pdu_recv_buf.size -= SPDK_NVME_TCP_DIGEST_LEN * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
+	if (tqpair->host_ddgst_enable) {
+		recvbuf_sz += SPDK_NVME_TCP_DIGEST_LEN * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
 	}
+
+	rc = spdk_sock_set_recvbuf(tqpair->sock, recvbuf_sz);
+	if (rc) {
+		SPDK_ERRLOG("Unable to allocate sufficient pdu recvbuf on tqpair=%p\n", tqpair);
+		/* This isn't a fatal error. Keep moving. */
+	}
+
+	tqpair->pdu_recv_buf.size = recvbuf_sz;
 
 	tqpair->cpda = spdk_min(ic_req->hpda, SPDK_NVME_TCP_CPDA_MAX);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "cpda of tqpair=(%p) is : %u\n", tqpair, tqpair->cpda);
