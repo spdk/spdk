@@ -1571,7 +1571,7 @@ bdev_nvme_library_init(void)
 
 	if (local_nvme_num > 0) {
 		/* used to probe local NVMe device */
-		if (spdk_nvme_probe(NULL, probe_ctx, probe_cb, attach_cb, NULL)) {
+		if (spdk_nvme_probe(NULL, probe_ctx, probe_cb, attach_cb, remove_cb)) {
 			rc = -1;
 			goto end;
 		}
