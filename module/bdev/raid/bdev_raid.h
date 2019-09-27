@@ -36,6 +36,8 @@
 
 #include "spdk/bdev_module.h"
 
+#define RAID0 0
+
 /*
  * Raid state describes the state of the raid. This raid bdev can be either in
  * configured list or configuring list
