@@ -181,7 +181,7 @@ static const struct spdk_json_object_decoder rpc_vhost_remove_target[] = {
 };
 
 static int
-spdk_rpc_remove_vhost_scsi_target_finish_cb(struct spdk_vhost_dev *vdev, void *arg)
+spdk_rpc_vhost_scsi_controller_remove_target_finish_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_jsonrpc_request *request = arg;
 	struct spdk_json_write_ctx *w;
@@ -193,8 +193,8 @@ spdk_rpc_remove_vhost_scsi_target_finish_cb(struct spdk_vhost_dev *vdev, void *a
 }
 
 static void
-spdk_rpc_remove_vhost_scsi_target(struct spdk_jsonrpc_request *request,
-				  const struct spdk_json_val *params)
+spdk_rpc_vhost_scsi_controller_remove_target(struct spdk_jsonrpc_request *request,
+					     const struct spdk_json_val *params)
 {
 	struct rpc_remove_vhost_scsi_ctrlr_target req = {0};
 	struct spdk_vhost_dev *vdev;
@@ -217,7 +217,7 @@ spdk_rpc_remove_vhost_scsi_target(struct spdk_jsonrpc_request *request,
 	}
 
 	rc = spdk_vhost_scsi_dev_remove_tgt(vdev, req.scsi_target_num,
-					    spdk_rpc_remove_vhost_scsi_target_finish_cb,
+					    spdk_rpc_vhost_scsi_controller_remove_target_finish_cb,
 					    request);
 	spdk_vhost_unlock();
 	if (rc < 0) {
@@ -233,7 +233,8 @@ invalid:
 					 spdk_strerror(-rc));
 }
 
-SPDK_RPC_REGISTER("remove_vhost_scsi_target", spdk_rpc_remove_vhost_scsi_target, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("vhost_scsi_controller_remove_target", spdk_rpc_vhost_scsi_controller_remove_target, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_scsi_controller_remove_target, remove_vhost_scsi_target)
 
 struct rpc_vhost_blk_ctrlr {
 	char *ctrlr;
