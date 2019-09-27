@@ -105,6 +105,24 @@
       "revId": "3de7391a0ab25991592a9b5a6efa2c0a9f461ee5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aaa9892f_d2b14239",
+        "filename": "lib/bdev/bdev_zone.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-27T14:56:22Z",
+      "side": 1,
+      "message": "I think it\u0027s possible splitting could happen with a single iov too.  For example, what happens if an NVMe device has MDTS 128KB and someone does a 256KB append?\n\nI think we\u0027ll need to have hard limits on the size of an append operation, and ensure it never gets split.  So give the upper layer enough information so that it can issue append I/O in a way that they do not have to be split up.",
+      "parentUuid": "8a81e1c3_32a29da2",
+      "revId": "3de7391a0ab25991592a9b5a6efa2c0a9f461ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
