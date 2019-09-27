@@ -163,7 +163,7 @@ if [[ $test_type == "spdk_vhost_scsi" ]]; then
 					based_disk="$disk"
 				fi
 				notice "Hotdetach test. Trying to remove existing device from a controller naa.$disk.${conf[0]}"
-				$rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 0
+				$rpc_py vhost_scsi_controller_remove_target naa.$disk.${conf[0]} 0
 
 				sleep 0.1
 
@@ -239,7 +239,7 @@ if ! $no_shutdown; then
 					disk=${disk%%_*}
 					notice "Removing all vhost devices from controller naa.$disk.${conf[0]}"
 					if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
-						$rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 0
+						$rpc_py vhost_scsi_controller_remove_target naa.$disk.${conf[0]} 0
 					fi
 
 					$rpc_py remove_vhost_controller naa.$disk.${conf[0]}
