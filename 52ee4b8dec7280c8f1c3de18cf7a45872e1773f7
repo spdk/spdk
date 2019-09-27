@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "996fb776_4a513d37",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-27T20:20:53Z",
+      "side": 1,
+      "message": "I\u0027m just curious - why 3 seconds?\n\nThat\u0027s a really long timeout.  It means nothing else would happen on this core for 3 seconds.  I\u0027m thinking it should be a lot shorter delay.  Like 10ms.  Or even less.",
+      "revId": "52ee4b8dec7280c8f1c3de18cf7a45872e1773f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
