@@ -35,14 +35,14 @@ function pre_hot_attach_detach_test_case() {
 }
 
 function clear_vhost_config() {
-    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p4.2 0
-    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p4.2 1
-    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p5.2 0
-    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p5.2 1
-    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p6.3 0
-    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p6.3 1
-    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p7.3 0
-    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p7.3 1
+    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p4.2 0
+    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p4.2 1
+    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p5.2 0
+    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p5.2 1
+    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p6.3 0
+    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p6.3 1
+    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p7.3 0
+    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p7.3 1
     $rpc_py remove_vhost_controller naa.Nvme0n1p0.0
     $rpc_py remove_vhost_controller naa.Nvme0n1p1.0
     $rpc_py remove_vhost_controller naa.Nvme0n1p2.1
