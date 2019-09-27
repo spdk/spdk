@@ -420,6 +420,7 @@ int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	int32_t ret;
+	int32_t i;
 	struct nvme_request *req, *tmp;
 
 	if (qpair->ctrlr->is_failed) {
@@ -460,7 +461,28 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		 *  routine - so it is safe to delete it now.
 		 */
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
+		return ret;
 	}
+
+	/*
+	 * At this point, ret must represent the number of completions we reaped.
+	 * submit as many queued requests as we completed.
+	 */
+	i = 0;
+	while (i < ret && !STAILQ_EMPTY(&qpair->queued_req) && !qpair->ctrlr->is_resetting) {
+		req = STAILQ_FIRST(&qpair->queued_req);
+		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+		nvme_qpair_submit_request(qpair, req);
+		/* This will almost certainly never happen. But we want to catch it if it does. */
+		if (spdk_unlikely(req == STAILQ_LAST(&qpair->queued_req, nvme_request, stailq))) {
+			SPDK_NOTICELOG("Unable to submit a queued request after reaping completions.\n");
+			STAILQ_REMOVE(&qpair->queued_req, req, nvme_request, stailq);
+			STAILQ_INSERT_HEAD(&qpair->queued_req, req, stailq);
+			break;
+		}
+		i++;
+	}
+
 	return ret;
 }
 
