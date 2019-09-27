@@ -386,7 +386,7 @@ int spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name
 		CU_ASSERT(req->strip_size_kb == val);
 	} else if (strcmp(name, "blocklen_shift") == 0) {
 		CU_ASSERT(spdk_u32log2(g_block_len) == val);
-	} else if (strcmp(name, "raid_level") == 0) {
+	} else if (strcmp(name, "raid_level") == RAID0) {
 		CU_ASSERT(req->raid_level == val);
 	} else if (strcmp(name, "num_base_bdevs") == 0) {
 		CU_ASSERT(req->base_bdevs.num_base_bdevs == val);
@@ -1067,7 +1067,7 @@ create_test_req(struct rpc_bdev_raid_create *r, const char *raid_name,
 	r->name = strdup(raid_name);
 	SPDK_CU_ASSERT_FATAL(r->name != NULL);
 	r->strip_size_kb = (g_strip_size * g_block_len) / 1024;
-	r->raid_level = 0;
+	r->raid_level = RAID0;
 	r->base_bdevs.num_base_bdevs = g_max_base_drives;
 	for (i = 0; i < g_max_base_drives; i++, bbdev_idx++) {
 		snprintf(name, 16, "%s%u%s", "Nvme", bbdev_idx, "n1");

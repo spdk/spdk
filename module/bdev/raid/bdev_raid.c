@@ -1128,7 +1128,7 @@ raid_bdev_config_add(const char *raid_name, uint32_t strip_size, uint8_t num_bas
 		return -EINVAL;
 	}
 
-	if (raid_level != 0) {
+	if (raid_level != RAID0) {
 		SPDK_ERRLOG("invalid raid level %u, only raid level 0 is supported\n",
 			    raid_level);
 		return -EINVAL;
@@ -1564,7 +1564,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 	raid_bdev->raid_level = raid_cfg->raid_level;
 
 	switch (raid_bdev->raid_level) {
-	case 0:
+	case RAID0:
 		raid_bdev->fn_table = &g_raid0_fn_table;
 		break;
 	default:
