@@ -22,7 +22,7 @@ vhost_run vhost0 "-m 0x1"
 # Create vhost scsi controller
 vhost_rpc vhost0 construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 vhost_rpc vhost0 vhost_create_scsi_controller naa.VhostScsi0.0
-vhost_rpc vhost0 add_vhost_scsi_lun naa.VhostScsi0.0 0 "Malloc0"
+vhost_rpc vhost0 vhost_scsi_controller_add_target naa.VhostScsi0.0 0 "Malloc0"
 
 # Construct vhost blk controller
 vhost_rpc vhost0 construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc1

@@ -37,7 +37,7 @@ function host_2_start_vhost()
 
 	$rpc bdev_nvme_attach_controller -b Nvme0 -t rdma -f ipv4 -a $RDMA_TARGET_IP -s 4420 -n "nqn.2018-02.io.spdk:cnode1"
 	$rpc vhost_create_scsi_controller $target_vm_ctrl
-	$rpc add_vhost_scsi_lun $target_vm_ctrl 0 Nvme0n1
+	$rpc vhost_scsi_controller_add_target $target_vm_ctrl 0 Nvme0n1
 
 	vm_setup --os="$os_image" --force=$target_vm --disk-type=spdk_vhost_scsi --disks=VhostScsi0 \
 		--memory=512 --vhost-name=1 --incoming=$incoming_vm

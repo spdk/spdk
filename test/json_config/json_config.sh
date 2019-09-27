@@ -282,8 +282,8 @@ function create_vhost_subsystem_config() {
 	tgt_rpc bdev_split_create MallocForVhost0 8
 
 	tgt_rpc vhost_create_scsi_controller      VhostScsiCtrlr0
-	tgt_rpc add_vhost_scsi_lun                VhostScsiCtrlr0 0 MallocForVhost0p3
-	tgt_rpc add_vhost_scsi_lun                VhostScsiCtrlr0 -1 MallocForVhost0p4
+	tgt_rpc vhost_scsi_controller_add_target  VhostScsiCtrlr0 0 MallocForVhost0p3
+	tgt_rpc vhost_scsi_controller_add_target  VhostScsiCtrlr0 -1 MallocForVhost0p4
 	tgt_rpc vhost_controller_set_coalescing   VhostScsiCtrlr0 1 100
 
 	tgt_rpc construct_vhost_blk_controller    VhostBlkCtrlr0 MallocForVhost0p5

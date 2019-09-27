@@ -285,7 +285,7 @@ for (( i=0; i<$vm_count; i++)); do
 
 	if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
 		$rpc_py vhost_create_scsi_controller naa.0.$i
-		$rpc_py add_vhost_scsi_lun naa.0.$i 0 ${bdevs[$i]}
+		$rpc_py vhost_scsi_controller_add_target naa.0.$i 0 ${bdevs[$i]}
 		setup_cmd+=" --disks=0"
 	elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
 		$rpc_py construct_vhost_blk_controller naa.$i.$i ${bdevs[$i]}
