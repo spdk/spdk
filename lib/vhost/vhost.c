@@ -86,32 +86,6 @@ struct vhost_session_fn_ctx {
 	void *user_ctx;
 };
 
-static int new_connection(int vid);
-static int start_device(int vid);
-static void stop_device(int vid);
-static void destroy_connection(int vid);
-
-#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
-static int get_config(int vid, uint8_t *config, uint32_t len);
-static int set_config(int vid, uint8_t *config, uint32_t offset,
-		      uint32_t size, uint32_t flags);
-#endif
-
-const struct vhost_device_ops g_spdk_vhost_ops = {
-	.new_device =  start_device,
-	.destroy_device = stop_device,
-	.new_connection = new_connection,
-	.destroy_connection = destroy_connection,
-#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
-	.get_config = get_config,
-	.set_config = set_config,
-	.vhost_nvme_admin_passthrough = vhost_nvme_admin_passthrough,
-	.vhost_nvme_set_cq_call = vhost_nvme_set_cq_call,
-	.vhost_nvme_get_cap = vhost_nvme_get_cap,
-	.vhost_nvme_set_bar_mr = vhost_nvme_set_bar_mr,
-#endif
-};
-
 static TAILQ_HEAD(, spdk_vhost_dev) g_vhost_devices = TAILQ_HEAD_INITIALIZER(
 			g_vhost_devices);
 static pthread_mutex_t g_vhost_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -609,7 +583,6 @@ vhost_session_mem_unregister(struct spdk_vhost_session *vsession)
 			assert(false);
 		}
 	}
-
 }
 
 struct spdk_vhost_dev *
@@ -1086,8 +1059,8 @@ _stop_session(struct spdk_vhost_session *vsession)
 	free(vsession->mem);
 }
 
-static void
-stop_device(int vid)
+void
+vhost_stop_device_cb(int vid)
 {
 	struct spdk_vhost_session *vsession;
 
@@ -1109,8 +1082,8 @@ stop_device(int vid)
 	pthread_mutex_unlock(&g_vhost_mutex);
 }
 
-static int
-start_device(int vid)
+int
+vhost_start_device_cb(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_session *vsession;
@@ -1200,8 +1173,8 @@ out:
 }
 
 #ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
-static int
-get_config(int vid, uint8_t *config, uint32_t len)
+int
+vhost_get_config_cb(int vid, uint8_t *config, uint32_t len)
 {
 	struct spdk_vhost_session *vsession;
 	struct spdk_vhost_dev *vdev;
@@ -1224,8 +1197,8 @@ out:
 	return rc;
 }
 
-static int
-set_config(int vid, uint8_t *config, uint32_t offset, uint32_t size, uint32_t flags)
+int
+vhost_set_config_cb(int vid, uint8_t *config, uint32_t offset, uint32_t size, uint32_t flags)
 {
 	struct spdk_vhost_session *vsession;
 	struct spdk_vhost_dev *vdev;
@@ -1290,20 +1263,13 @@ spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 	return vdev->backend->remove_device(vdev);
 }
 
-static int
-new_connection(int vid)
+int
+vhost_new_connection_cb(int vid, const char *ifname)
 {
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_session *vsession;
-	char ifname[PATH_MAX];
 
 	pthread_mutex_lock(&g_vhost_mutex);
-
-	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
-		SPDK_ERRLOG("Couldn't get a valid ifname for device with vid %d\n", vid);
-		pthread_mutex_unlock(&g_vhost_mutex);
-		return -1;
-	}
 
 	vdev = spdk_vhost_dev_find(ifname);
 	if (vdev == NULL) {
@@ -1353,8 +1319,8 @@ new_connection(int vid)
 	return 0;
 }
 
-static void
-destroy_connection(int vid)
+void
+vhost_destroy_connection_cb(int vid)
 {
 	struct spdk_vhost_session *vsession;
 
