@@ -281,6 +281,7 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			break;
 		case RDMA_CM_EVENT_DISCONNECTED:
 		case RDMA_CM_EVENT_DEVICE_REMOVAL:
+			rqpair->qpair.transport_qp_is_failed = true;
 			break;
 		case RDMA_CM_EVENT_MULTICAST_JOIN:
 		case RDMA_CM_EVENT_MULTICAST_ERROR:
@@ -655,7 +656,6 @@ fail:
 static int
 nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, uint64_t rsp_idx)
 {
-	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
 	struct spdk_nvme_rdma_req *rdma_req;
 	struct spdk_nvme_cpl *rsp;
 	struct nvme_request *req;
@@ -676,12 +676,6 @@ nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, uint64_t rsp_idx)
 	if (nvme_rdma_post_recv(rqpair, rsp_idx)) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return -1;
-	}
-
-	if (!STAILQ_EMPTY(&qpair->queued_req) && !qpair->ctrlr->is_resetting) {
-		req = STAILQ_FIRST(&qpair->queued_req);
-		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
-		nvme_qpair_submit_request(qpair, req);
 	}
 
 	return 0;
@@ -1028,6 +1022,7 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 
+	rqpair->qpair.transport_qp_is_failed = false;
 	return 0;
 }
 
@@ -1897,6 +1892,17 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		nvme_rdma_poll_events(rctrlr);
 	}
 	nvme_rdma_qpair_process_cm_event(rqpair);
+
+	/*
+	 * Catch ourselves if the qpair was moved to a failed
+	 * state by the event processing. Then free the rdma level
+	 * resources.
+	 */
+	if (spdk_unlikely(rqpair->qpair.transport_qp_is_failed)) {
+		nvme_rdma_qpair_disconnect(qpair);
+		nvme_rdma_qpair_abort_reqs(qpair, 0);
+		return 0;
+	}
 
 	cq = rqpair->cq;
 
