@@ -1189,18 +1189,22 @@ spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, voi
 }
 
 static void
-free_controller(const struct spdk_nvme_transport_id *trid)
+create_bdevs_cb(void *cb_arg, size_t count, int rc)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_async_probe_ctx *ctx = cb_arg;
 
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
-	free(nvme_bdev_ctrlr->bdevs);
-	free(nvme_bdev_ctrlr->name);
-	free(nvme_bdev_ctrlr);
+	ctx->count = count;
+
+	if (ctx->probe_done || rc) {
+		nvme_bdev_attach_done(ctx, rc);
+	} else {
+		ctx->bdevs_done = true;
+	}
 }
 
-static int
-bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx)
+static void
+bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx, spdk_bdev_create_nvme_fn cb_fn,
+		       void *cb_arg)
 {
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	struct nvme_bdev	*nvme_bdev;
@@ -1213,7 +1217,8 @@ bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx)
 
 	rc = nvme_ctrlr_create_bdevs(nvme_bdev_ctrlr);
 	if (rc) {
-		return rc;
+		cb_fn(cb_arg, 0, rc);
+		return;
 	}
 
 	/*
@@ -1234,20 +1239,12 @@ bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx)
 		} else {
 			SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %du. Unable to return all names of created bdevs\n",
 				    ctx->count);
-			nvme_bdev_attach_done(ctx, -ERANGE);
-			return -1;
+			cb_fn(cb_arg, 0, -ERANGE);
+			return;
 		}
 	}
 
-	ctx->count = j;
-
-	if (ctx->probe_done) {
-		nvme_bdev_attach_done(ctx, 0);
-	} else {
-		ctx->bdevs_done = true;
-	}
-
-	return 0;
+	cb_fn(cb_arg, j, 0);
 }
 
 static void
@@ -1268,10 +1265,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
-		rc = bdev_nvme_create_bdevs(ctx);
-		if (rc) {
-			SPDK_ERRLOG("Failed to create bdevs\n");
-		}
+		bdev_nvme_create_bdevs(ctx, create_bdevs_cb, ctx);
 	}
 }
 
