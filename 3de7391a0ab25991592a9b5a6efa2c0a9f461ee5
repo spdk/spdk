@@ -87,6 +87,24 @@
       "revId": "3de7391a0ab25991592a9b5a6efa2c0a9f461ee5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a81e1c3_32a29da2",
+        "filename": "lib/bdev/bdev_zone.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-27T08:15:59Z",
+      "side": 1,
+      "message": "I was thinking on a situation where iovec is splitted into multiple nvme requests - in case ZNS NVMe append command this requires that each append should be synchronized and we end up with QD\u003d1 to the zone. But I probably look into it in wrong way - as you said such request should has only one append location.",
+      "parentUuid": "60443ca0_60de3adb",
+      "revId": "3de7391a0ab25991592a9b5a6efa2c0a9f461ee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
