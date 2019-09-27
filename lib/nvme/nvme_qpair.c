@@ -419,7 +419,8 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
-	int32_t ret;
+	int32_t ret = 0;
+	int32_t i;
 	struct nvme_request *req, *tmp;
 
 	if (qpair->ctrlr->is_failed) {
@@ -433,6 +434,20 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		 *  in progress.
 		 */
 		return 0;
+	}
+
+	if (spdk_unlikely(qpair->transport_qp_is_failed)) {
+		if (nvme_qpair_is_admin_queue(qpair)) {
+			nvme_robust_mutex_unlock(&qpair->ctrlr->ctrlr_lock);
+			ret = spdk_nvme_ctrlr_reset(qpair->ctrlr);
+			nvme_robust_mutex_lock(&qpair->ctrlr->ctrlr_lock);
+		} else if (!qpair->ctrlr->adminq->transport_qp_is_failed) {
+			/* TODO: add the individual qpair recovery code here */
+			ret = -ENXIO;
+		}
+
+		/* If the admin qpair is failed, defer to it to reset the ctrlr. */
+		return ret;
 	}
 
 	/* error injection for those queued error requests */
@@ -460,7 +475,21 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		 *  routine - so it is safe to delete it now.
 		 */
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
+		return ret;
 	}
+
+	/*
+	 * At this point, ret must represent the number of completions we reaped.
+	 * submit as many queued requests as we completed.
+	 */
+	i = 0;
+	while (i < ret && !STAILQ_EMPTY(&qpair->queued_req) && !qpair->ctrlr->is_resetting) {
+		req = STAILQ_FIRST(&qpair->queued_req);
+		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+		nvme_qpair_submit_request(qpair, req);
+		i++;
+	}
+
 	return ret;
 }
 
@@ -614,7 +643,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		req->submit_tick = 0;
 	}
 
-	if (spdk_likely(qpair->is_enabled)) {
+	if (spdk_likely(qpair->is_enabled && !qpair->transport_qp_is_failed)) {
 		rc = nvme_transport_qpair_submit_request(qpair, req);
 	} else if (nvme_qpair_is_admin_queue(qpair) && req->cmd.opc == SPDK_NVME_OPC_FABRIC) {
 		/* Always allow fabrics commands through on the admin qpair - these get
