@@ -12,7 +12,8 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 timing_enter bdevio
 nvmftestinit
-nvmfappstart "-m 0xF"
+# Don't use cores 0 - 2 to avoid overlap with bdevio.
+nvmfappstart "-m 0x78"
 
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
