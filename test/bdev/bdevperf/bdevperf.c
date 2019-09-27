@@ -113,7 +113,7 @@ struct io_target {
 
 struct io_target **g_head;
 uint32_t *g_coremap;
-static int g_target_count = 0;
+static uint32_t g_target_count = 0;
 
 /*
  * Used to determine how the I/O buffers should be aligned.
@@ -411,6 +411,11 @@ bdevperf_construct_targets(void)
 			}
 
 			bdev = spdk_bdev_next_leaf(bdev);
+			if (bdev == NULL) {
+				if (g_target_count < spdk_env_get_core_count()) {
+					bdev = spdk_bdev_first_leaf();
+				}
+			}
 		}
 	}
 }
