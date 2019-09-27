@@ -216,7 +216,7 @@ COMMON_CFLAGS += -pthread
 LDFLAGS += -pthread
 
 CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-definition -std=gnu99
-CXXFLAGS += $(COMMON_CFLAGS) -std=c++0x
+CXXFLAGS += $(COMMON_CFLAGS)
 
 SYS_LIBS += -lrt
 SYS_LIBS += -luuid
