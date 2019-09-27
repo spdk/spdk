@@ -149,7 +149,7 @@ scripts/rpc.py vhost_scsi_controller_add_target vhost.0 0 Malloc0
 To remove a bdev from a vhost-scsi controller use the following RPC:
 
 ~~~{.sh}
-scripts/rpc.py remove_vhost_scsi_target vhost.0 0
+scripts/rpc.py vhost_scsi_controller_remove_target vhost.0 0
 ~~~
 
 ### Vhost-BLK
@@ -387,7 +387,7 @@ Just like hot-attach, the hot-detach is done by simply removing bdev from a cont
 when QEMU VM is already started.
 
 ~~~{.sh}
-scripts/rpc.py remove_vhost_scsi_target vhost.0 0
+scripts/rpc.py vhost_scsi_controller_remove_target vhost.0 0
 ~~~
 
 Removing an entire bdev will hot-detach it from a controller as well.

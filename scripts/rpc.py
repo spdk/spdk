@@ -1886,15 +1886,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('bdev_name', help='bdev name')
     p.set_defaults(func=vhost_scsi_controller_add_target)
 
-    def remove_vhost_scsi_target(args):
-        rpc.vhost.remove_vhost_scsi_target(args.client,
-                                           ctrlr=args.ctrlr,
-                                           scsi_target_num=args.scsi_target_num)
+    def vhost_scsi_controller_remove_target(args):
+        rpc.vhost.vhost_scsi_controller_remove_target(args.client,
+                                                      ctrlr=args.ctrlr,
+                                                      scsi_target_num=args.scsi_target_num)
 
-    p = subparsers.add_parser('remove_vhost_scsi_target', help='Remove target from vhost controller')
+    p = subparsers.add_parser('vhost_scsi_controller_remove_target',
+                              aliases=['remove_vhost_scsi_target'],
+                              help='Remove target from vhost controller')
     p.add_argument('ctrlr', help='controller name to remove target from')
     p.add_argument('scsi_target_num', help='scsi_target_num', type=int)
-    p.set_defaults(func=remove_vhost_scsi_target)
+    p.set_defaults(func=vhost_scsi_controller_remove_target)
 
     def construct_vhost_blk_controller(args):
         rpc.vhost.construct_vhost_blk_controller(args.client,

@@ -4462,7 +4462,7 @@ response:
 }
 ~~~
 
-## remove_vhost_scsi_target {#rpc_remove_vhost_scsi_target}
+## vhost_scsi_controller_remove_target {#rpc_vhost_scsi_controller_remove_target}
 
 Remove SCSI target ID `scsi_target_num` from vhost target `scsi_target_num`.
 
@@ -4487,7 +4487,7 @@ request:
     "ctrlr": "VhostScsi0"
   },
   "jsonrpc": "2.0",
-  "method": "remove_vhost_scsi_target",
+  "method": "vhost_scsi_controller_remove_target",
   "id": 1
 }
 ~~~
@@ -4777,7 +4777,7 @@ Example response:
 Remove vhost target.
 
 This call will fail if there is an initiator connected or there is at least one SCSI target configured in case of
-vhost SCSI target. In the later case please remove all SCSI targets first using @ref rpc_remove_vhost_scsi_target.
+vhost SCSI target. In the later case please remove all SCSI targets first using @ref rpc_vhost_scsi_controller_remove_target.
 
 ### Parameters
 
