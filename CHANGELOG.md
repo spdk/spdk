@@ -1,6 +1,6 @@
 # Changelog
 
-## v19.07.1: (Upcoming Release)
+## v19.07.1:
 
 ### build
 
