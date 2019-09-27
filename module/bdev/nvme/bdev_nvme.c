@@ -120,7 +120,7 @@ static struct spdk_poller *g_hotplug_poller;
 static struct spdk_nvme_probe_ctx *g_hotplug_probe_ctx;
 static char *g_nvme_hostnqn = NULL;
 
-static void nvme_ctrlr_create_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+static int nvme_ctrlr_create_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
 static int bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
@@ -944,12 +944,6 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		return -ENOMEM;
 	}
 	nvme_bdev_ctrlr->num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
-	nvme_bdev_ctrlr->bdevs = calloc(nvme_bdev_ctrlr->num_ns, sizeof(struct nvme_bdev));
-	if (!nvme_bdev_ctrlr->bdevs) {
-		SPDK_ERRLOG("Failed to allocate block devices struct\n");
-		free(nvme_bdev_ctrlr);
-		return -ENOMEM;
-	}
 
 	nvme_bdev_ctrlr->adminq_timer_poller = NULL;
 	nvme_bdev_ctrlr->ctrlr = ctrlr;
@@ -957,7 +951,6 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_bdev_ctrlr->trid = *trid;
 	nvme_bdev_ctrlr->name = strdup(name);
 	if (nvme_bdev_ctrlr->name == NULL) {
-		free(nvme_bdev_ctrlr->bdevs);
 		free(nvme_bdev_ctrlr);
 		return -ENOMEM;
 	}
@@ -1166,6 +1159,7 @@ bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx)
 	struct nvme_bdev	*nvme_bdev;
 	uint32_t		i, nsid;
 	size_t			j;
+	int			rc;
 
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
 	if (!nvme_bdev_ctrlr) {
@@ -1173,7 +1167,10 @@ bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx)
 		return -1;
 	}
 
-	nvme_ctrlr_create_bdevs(nvme_bdev_ctrlr);
+	rc = nvme_ctrlr_create_bdevs(nvme_bdev_ctrlr);
+	if (rc) {
+		return rc;
+	}
 
 	/*
 	 * Report the new bdevs that were created in this call.
@@ -1606,12 +1603,18 @@ bdev_nvme_library_fini(void)
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
-static void
+static int
 nvme_ctrlr_create_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	int			rc;
 	int			bdev_created = 0;
 	uint32_t		nsid;
+
+	nvme_bdev_ctrlr->bdevs = calloc(nvme_bdev_ctrlr->num_ns, sizeof(struct nvme_bdev));
+	if (!nvme_bdev_ctrlr->bdevs) {
+		SPDK_ERRLOG("Failed to allocate block devices struct\n");
+		return -ENOMEM;
+	}
 
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(nvme_bdev_ctrlr->ctrlr);
 	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(nvme_bdev_ctrlr->ctrlr, nsid)) {
@@ -1626,6 +1629,8 @@ nvme_ctrlr_create_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	if (bdev_created == 0) {
 		SPDK_NOTICELOG("No bdev is created for NVMe controller %s\n", nvme_bdev_ctrlr->name);
 	}
+
+	return 0;
 }
 
 static void
