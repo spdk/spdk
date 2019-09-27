@@ -22,6 +22,30 @@
       "revId": "edb621b3f6e14439d39c68a5da8e4a787cec6841",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf3c49a2_5e9544a4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4322,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-27T13:34:54Z",
+      "side": 1,
+      "message": "No necessary. Just for convenience and to save a couple of lines. There\u0027s also line 4486 and one more line in the next patch which requires unlocking.\nIf you think it\u0027s too tricky, I\u0027ll replace with unlocks.",
+      "parentUuid": "a3198d3d_f6eba823",
+      "range": {
+        "startLine": 4322,
+        "startChar": 1,
+        "endLine": 4322,
+        "endChar": 81
+      },
+      "revId": "edb621b3f6e14439d39c68a5da8e4a787cec6841",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
