@@ -52,10 +52,10 @@ function scsi_hotremove_tc1() {
 function scsi_hotremove_tc2() {
     echo "Scsi hotremove test case 2"
     # 1. Attach split NVMe bdevs to scsi controller.
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p0.0 0 HotInNvme0n1p0
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p1.0 0 Mallocp0
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p2.1 0 HotInNvme0n1p1
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p3.1 0 Mallocp1
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p0.0 0 HotInNvme0n1p0
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p1.0 0 Mallocp0
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p2.1 0 HotInNvme0n1p1
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p3.1 0 Mallocp1
 
     # 2. Run two VMs, attached to scsi controllers.
     vms_setup
@@ -102,7 +102,7 @@ function scsi_hotremove_tc2() {
 function scsi_hotremove_tc3() {
     echo "Scsi hotremove test case 3"
     # 1. Attach added NVMe bdev to scsi controller.
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p0.0 0 HotInNvme1n1p0
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p0.0 0 HotInNvme1n1p0
     # 2. Run two VM, attached to scsi controllers.
     vm_run_with_arg 0 1
     vms_prepare "0 1"
@@ -143,8 +143,8 @@ function scsi_hotremove_tc3() {
 function scsi_hotremove_tc4() {
     echo "Scsi hotremove test case 4"
     # 1. Attach NVMe bdevs to scsi controllers.
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p0.0 0 HotInNvme2n1p0
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p2.1 0 HotInNvme2n1p1
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p0.0 0 HotInNvme2n1p0
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p2.1 0 HotInNvme2n1p1
     # 2. Run two VMs, attach to scsi controller.
     vm_run_with_arg 0 1
     vms_prepare "0 1"

@@ -1552,7 +1552,7 @@ vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write
 		lun = spdk_scsi_dev_get_lun(scsi_dev, 0);
 
 		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "add_vhost_scsi_lun");
+		spdk_json_write_named_string(w, "method", "vhost_scsi_controller_add_target");
 
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "ctrlr", vdev->name);

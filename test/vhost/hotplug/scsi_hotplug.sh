@@ -22,14 +22,14 @@ function pre_hot_attach_detach_test_case() {
     $rpc_py vhost_create_scsi_controller naa.Nvme0n1p5.2
     $rpc_py vhost_create_scsi_controller naa.Nvme0n1p6.3
     $rpc_py vhost_create_scsi_controller naa.Nvme0n1p7.3
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p4.2 1 Nvme0n1p9
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p5.2 0 Nvme0n1p10
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p5.2 1 Nvme0n1p11
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p6.3 0 Nvme0n1p12
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p6.3 1 Nvme0n1p13
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p7.3 0 Nvme0n1p14
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p7.3 1 Nvme0n1p15
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p4.2 0 Nvme0n1p8
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p4.2 1 Nvme0n1p9
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p5.2 0 Nvme0n1p10
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p5.2 1 Nvme0n1p11
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p6.3 0 Nvme0n1p12
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p6.3 1 Nvme0n1p13
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p7.3 0 Nvme0n1p14
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p7.3 1 Nvme0n1p15
     vms_setup_and_run "0 1 2 3"
     vms_prepare "0 1 2 3"
 }

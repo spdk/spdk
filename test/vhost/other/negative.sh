@@ -93,7 +93,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	fi
 
 	notice "Trying to add device to nonexistent scsi controller"
-	if $rpc_py add_vhost_scsi_lun vhost.nonexistent.name 0 Malloc0; then
+	if $rpc_py vhost_scsi_controller_add_target vhost.nonexistent.name 0 Malloc0; then
 		error "Adding device to nonexistent scsi controller succeeded, but it shouldn't"
 	fi
 
@@ -106,7 +106,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	$rpc_py vhost_create_scsi_controller naa.0
 
 	notice "Adding initial device (0) to naa.0"
-	$rpc_py add_vhost_scsi_lun naa.0 0 Malloc0
+	$rpc_py vhost_scsi_controller_add_target naa.0 0 Malloc0
 
 	notice "Trying to remove nonexistent device on existing controller"
 	if $rpc_py remove_vhost_scsi_target naa.0 1 > /dev/null; then
@@ -122,7 +122,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	fi
 
 	notice "Re-adding device 0 to naa.0"
-	$rpc_py add_vhost_scsi_lun naa.0 0 Malloc0
+	$rpc_py vhost_scsi_controller_add_target naa.0 0 Malloc0
 
 	# BLK
 	notice "Trying to create block controller with incorrect cpumask"

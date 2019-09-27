@@ -143,7 +143,7 @@ target ID 0. SPDK Vhost-SCSI device currently supports only one LUN per SCSI tar
 Additional LUNs can be added by specifying a different target ID.
 
 ~~~{.sh}
-scripts/rpc.py add_vhost_scsi_lun vhost.0 0 Malloc0
+scripts/rpc.py vhost_scsi_controller_add_target vhost.0 0 Malloc0
 ~~~
 
 To remove a bdev from a vhost-scsi controller use the following RPC:
@@ -279,13 +279,13 @@ vhost.c: 596:spdk_vhost_dev_construct: *NOTICE*: Controller vhost.0: new control
 ~~~
 
 ~~~{.sh}
-host:~# ./scripts/rpc.py add_vhost_scsi_lun vhost.0 0 Nvme0n1
+host:~# ./scripts/rpc.py vhost_scsi_controller_add_target vhost.0 0 Nvme0n1
 vhost_scsi.c: 840:spdk_vhost_scsi_dev_add_tgt: *NOTICE*: Controller vhost.0: defined target 'Target 0' using lun 'Nvme0'
 
 ~~~
 
 ~~~{.sh}
-host:~# ./scripts/rpc.py add_vhost_scsi_lun vhost.0 1 Malloc0
+host:~# ./scripts/rpc.py vhost_scsi_controller_add_target vhost.0 1 Malloc0
 vhost_scsi.c: 840:spdk_vhost_scsi_dev_add_tgt: *NOTICE*: Controller vhost.0: defined target 'Target 1' using lun 'Malloc0'
 ~~~
 
@@ -378,7 +378,7 @@ Hot-attach is is done by simply attaching a bdev to a vhost controller with a QE
 already started. No other extra action is necessary.
 
 ~~~{.sh}
-scripts/rpc.py add_vhost_scsi_lun vhost.0 0 Malloc0
+scripts/rpc.py vhost_scsi_controller_add_target vhost.0 0 Malloc0
 ~~~
 
 ### Hot-detach

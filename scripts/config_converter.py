@@ -419,7 +419,7 @@ def get_vhost_scsi_json(config, section):
     for target in targets:
         vhost_scsi_json.append({
             "params": target,
-            "method": "add_vhost_scsi_lun"
+            "method": "vhost_scsi_controller_add_target"
         })
 
     return vhost_scsi_json
