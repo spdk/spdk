@@ -125,7 +125,7 @@ function host1_start_vhost()
 	vhost_run 0 "-u"
 	$rpc_0 bdev_nvme_attach_controller -b Nvme0 -t rdma -f ipv4 -a $RDMA_TARGET_IP -s 4420 -n "nqn.2018-02.io.spdk:cnode1"
 	$rpc_0 vhost_create_scsi_controller $incoming_vm_ctrlr
-	$rpc_0 add_vhost_scsi_lun $incoming_vm_ctrlr 0 Nvme0n1
+	$rpc_0 vhost_scsi_controller_add_target $incoming_vm_ctrlr 0 Nvme0n1
 
 	vm_setup --os="$share_dir/migration.qcow2" --force=$incoming_vm --disk-type=spdk_vhost_scsi --disks=VhostScsi0 \
 		--migrate-to=$target_vm --memory=512 --queue_num=1
