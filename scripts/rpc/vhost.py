@@ -48,7 +48,8 @@ def vhost_scsi_controller_add_target(client, ctrlr, scsi_target_num, bdev_name):
     return client.call('vhost_scsi_controller_add_target', params)
 
 
-def remove_vhost_scsi_target(client, ctrlr, scsi_target_num):
+@deprecated_alias('remove_vhost_scsi_target')
+def vhost_scsi_controller_remove_target(client, ctrlr, scsi_target_num):
     """Remove target from vhost scsi controller.
     Args:
         ctrlr: controller name to remove target from
@@ -58,7 +59,7 @@ def remove_vhost_scsi_target(client, ctrlr, scsi_target_num):
         'ctrlr': ctrlr,
         'scsi_target_num': scsi_target_num
     }
-    return client.call('remove_vhost_scsi_target', params)
+    return client.call('vhost_scsi_controller_remove_target', params)
 
 
 def construct_vhost_nvme_controller(client, ctrlr, io_queues, cpumask=None):
