@@ -496,6 +496,42 @@ nvme_submit_io(fuse_req_t req, int cmd, void *arg,
 
 }
 
+static void
+cuse_nvme_reset_cb(struct spdk_nvme_io_msg *io)
+{
+	int rc;
+
+	if (io->nsid) {
+		SPDK_ERRLOG("Namespace reset not supported\n");
+		fuse_reply_err(io->req, EINVAL);
+	}
+
+	rc = spdk_nvme_ctrlr_reset(io->ctrlr);
+	if (rc) {
+		fuse_reply_err(io->req, rc);
+		return;
+	}
+
+	fuse_reply_ioctl_iov(io->req, 0, NULL, 0);
+}
+
+static void
+nvme_reset(fuse_req_t req, int cmd, void *arg,
+	   struct fuse_file_info *fi, unsigned flags,
+	   const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+{
+	struct spdk_nvme_io_msg *io;
+	struct cuse_device *cuse_device = fuse_req_userdata(req);
+
+	/* FIXIT! This function should be called from a single thread while no
+	   other threads are actively using the NVMe device. */
+	io = cuse_nvme_io_msg_alloc(cuse_device->ctrlr, cuse_device->nsid, req);
+
+	spdk_nvme_io_msg_send(io, cuse_nvme_reset_cb, NULL);
+
+	spdk_nvme_ctrlr_reset(cuse_device->ctrlr);
+}
+
 /*****************************************************************************
  * Other namespace IOCTLs
  */
@@ -579,7 +615,7 @@ cuse_ioctl(fuse_req_t req, int cmd, void *arg,
 		break;
 
 	case NVME_IOCTL_RESET:
-		fuse_reply_err(req, EINVAL);
+		nvme_reset(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
 	case NVME_IOCTL_IO_CMD:
