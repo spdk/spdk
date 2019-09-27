@@ -35,12 +35,16 @@
 
 #include "spdk_cunit.h"
 
+#include "spdk_internal/log.h"
+
 #include "common/lib/test_env.c"
 
 pid_t g_spdk_nvme_pid;
 
-bool trace_flag = false;
-#define SPDK_LOG_NVME trace_flag
+struct spdk_log_flag SPDK_LOG_NVME = {
+	.name = "nvme",
+	.enabled = false,
+};
 
 #include "nvme/nvme_qpair.c"
 

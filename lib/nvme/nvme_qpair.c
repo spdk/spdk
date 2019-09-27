@@ -420,6 +420,7 @@ int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	int32_t ret;
+	int32_t submitted_reqs;
 	struct nvme_request *req, *tmp;
 
 	if (qpair->ctrlr->is_failed) {
@@ -460,7 +461,17 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		 *  routine - so it is safe to delete it now.
 		 */
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
+		return ret;
 	}
+
+	/*
+	 * At this point, ret must represent the number of completions we reaped.
+	 * submit as many queued requests as we completed.
+	 */
+	submitted_reqs = nvme_qpair_resubmit_queued_requests(qpair, ret);
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "%d completions reaped, %d requests submitted.\n", ret,
+		      submitted_reqs);
+
 	return ret;
 }
 
