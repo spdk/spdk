@@ -113,7 +113,7 @@ struct io_target {
 
 struct io_target **g_head;
 uint32_t *g_coremap;
-static int g_target_count = 0;
+static uint32_t g_target_count = 0;
 
 /*
  * Used to determine how the I/O buffers should be aligned.
@@ -401,7 +401,9 @@ bdevperf_construct_targets(void)
 			return;
 		}
 
-		bdevperf_construct_target(bdev);
+		do {
+			bdevperf_construct_target(bdev);
+		} while (g_target_count < spdk_env_get_core_count());
 	} else {
 		bdev = spdk_bdev_first_leaf();
 		while (bdev != NULL) {
@@ -1252,6 +1254,7 @@ bdevperf_test(void)
 	struct io_target *target;
 	struct spdk_event *event;
 	int rc;
+	uint32_t target_count = spdk_min(g_target_count, spdk_env_get_core_count());
 
 	rc = bdevperf_construct_targets_tasks();
 	if (rc) {
@@ -1269,7 +1272,7 @@ bdevperf_test(void)
 	}
 
 	/* Send events to start all I/O */
-	for (i = 0; i < spdk_env_get_core_count(); i++) {
+	for (i = 0; i < target_count; i++) {
 		target = g_head[i];
 		if (target == NULL) {
 			return -1;
