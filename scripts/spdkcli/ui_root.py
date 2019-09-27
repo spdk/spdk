@@ -294,8 +294,8 @@ class UIRoot(UINode):
         rpc.vhost.remove_vhost_scsi_target(self.client, **kwargs)
 
     @verbose
-    def add_vhost_scsi_lun(self, **kwargs):
-        rpc.vhost.add_vhost_scsi_lun(self.client, **kwargs)
+    def vhost_scsi_controller_add_target(self, **kwargs):
+        rpc.vhost.vhost_scsi_controller_add_target(self.client, **kwargs)
 
     def set_vhost_controller_coalescing(self, **kwargs):
         rpc.vhost.set_vhost_controller_coalescing(self.client, **kwargs)

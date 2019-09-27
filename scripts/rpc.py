@@ -1864,18 +1864,19 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('--cpumask', help='cpu mask for this controller')
     p.set_defaults(func=vhost_create_scsi_controller)
 
-    def add_vhost_scsi_lun(args):
-        print_json(rpc.vhost.add_vhost_scsi_lun(args.client,
-                                                ctrlr=args.ctrlr,
-                                                scsi_target_num=args.scsi_target_num,
-                                                bdev_name=args.bdev_name))
+    def vhost_scsi_controller_add_target(args):
+        print_json(rpc.vhost.vhost_scsi_controller_add_target(args.client,
+                                                              ctrlr=args.ctrlr,
+                                                              scsi_target_num=args.scsi_target_num,
+                                                              bdev_name=args.bdev_name))
 
-    p = subparsers.add_parser('add_vhost_scsi_lun',
+    p = subparsers.add_parser('vhost_scsi_controller_add_target',
+                              aliases=['add_vhost_scsi_lun'],
                               help='Add lun to vhost controller')
     p.add_argument('ctrlr', help='conntroller name where add lun')
     p.add_argument('scsi_target_num', help='scsi_target_num', type=int)
     p.add_argument('bdev_name', help='bdev name')
-    p.set_defaults(func=add_vhost_scsi_lun)
+    p.set_defaults(func=vhost_scsi_controller_add_target)
 
     def remove_vhost_scsi_target(args):
         rpc.vhost.remove_vhost_scsi_target(args.client,

@@ -132,7 +132,7 @@ for vm_conf in ${vms[@]}; do
 					$rpc_py vhost_create_scsi_controller naa.$disk.${conf[0]}
 
 					notice "Adding device (0) to naa.$disk.${conf[0]}"
-					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $based_disk
+					$rpc_py vhost_scsi_controller_add_target naa.$disk.${conf[0]} 0 $based_disk
 				fi
 			done
 		done <<< "${conf[2]}"
@@ -168,7 +168,7 @@ if [[ $test_type == "spdk_vhost_scsi" ]]; then
 				sleep 0.1
 
 				notice "Hotattach test. Re-adding device 0 to naa.$disk.${conf[0]}"
-				$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $based_disk
+				$rpc_py vhost_scsi_controller_add_target naa.$disk.${conf[0]} 0 $based_disk
 			done
 		done <<< "${conf[2]}"
 		unset IFS;
