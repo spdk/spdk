@@ -22,6 +22,30 @@
       "revId": "a5c69457651d530a7deaf40ca2fdd7bdc495c573",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26b42789_b0d1f6ef",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-27T06:30:19Z",
+      "side": 1,
+      "message": "Ack! Thank you Alexey!\n\nThis was my mistake.\n\niovpos is only accessed and incremented. iovpos is not used for comparison (\u003e\u003c\u003d).\nHence to avoid rerunning CI, I want to append the fix to the end of the patch series.",
+      "parentUuid": "05751e7b_dc131200",
+      "range": {
+        "startLine": 267,
+        "startChar": 1,
+        "endLine": 267,
+        "endChar": 4
+      },
+      "revId": "a5c69457651d530a7deaf40ca2fdd7bdc495c573",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
