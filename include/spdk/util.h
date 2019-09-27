@@ -92,6 +92,13 @@ spdk_divide_round_up(uint64_t num, uint64_t divisor)
 	return (num + divisor - 1) / divisor;
 }
 
+/**
+ * Copy the data described by the source iovec to the destination iovec.
+ *
+ * \return The number of bytes copied.
+ */
+size_t spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt);
+
 
 /**
  * Scan build is really pessimistic and assumes that mempool functions can
