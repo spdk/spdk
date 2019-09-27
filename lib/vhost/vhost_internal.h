@@ -316,6 +316,21 @@ int vhost_blk_controller_construct(void);
 void vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 
 /*
+ * Vhost callbacks for vhost_device_ops interface
+ */
+
+int vhost_new_connection_cb(int vid, const char *ifname);
+int vhost_start_device_cb(int vid);
+void vhost_stop_device_cb(int vid);
+void vhost_destroy_connection_cb(int vid);
+
+#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
+int vhost_get_config_cb(int vid, uint8_t *config, uint32_t len)
+int vhost_set_config_cb(int vid, uint8_t *config, uint32_t offset,
+			uint32_t size, uint32_t flags)
+#endif
+
+/*
  * Call a function for each session of the provided vhost device.
  * The function will be called one-by-one on each session's thread.
  *
