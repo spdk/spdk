@@ -576,7 +576,6 @@ fail:
 static int
 nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, uint64_t rsp_idx)
 {
-	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
 	struct spdk_nvme_rdma_req *rdma_req;
 	struct spdk_nvme_cpl *rsp;
 	struct nvme_request *req;
@@ -597,12 +596,6 @@ nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, uint64_t rsp_idx)
 	if (nvme_rdma_post_recv(rqpair, rsp_idx)) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return -1;
-	}
-
-	if (!STAILQ_EMPTY(&qpair->queued_req) && !qpair->ctrlr->is_resetting) {
-		req = STAILQ_FIRST(&qpair->queued_req);
-		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
-		nvme_qpair_submit_request(qpair, req);
 	}
 
 	return 0;
