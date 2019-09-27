@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3198d3d_f6eba823",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4322,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-27T04:59:25Z",
+      "side": 1,
+      "message": "Too tricky? Necessary? spdk_bdev_desc_fini() does only destroying desc-\u003emutex and freeing desc. Why do we have to take desc-\u003emutex? I think inserting pthread_mutex_unlock(\u0026desc-\u003emutex) between the line 4231 and 4232 is enough.",
+      "range": {
+        "startLine": 4322,
+        "startChar": 1,
+        "endLine": 4322,
+        "endChar": 81
+      },
+      "revId": "edb621b3f6e14439d39c68a5da8e4a787cec6841",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
