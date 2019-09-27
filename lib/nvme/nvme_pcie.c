@@ -1972,12 +1972,8 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	tr = TAILQ_FIRST(&pqpair->free_tr);
 
 	if (tr == NULL) {
-		/*
-		 * Put the request on the qpair's request queue to be
-		 *  processed when a tracker frees up via a command
-		 *  completion.
-		 */
-		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		/* Inform the upper layer to try again later. */
+		rc = -EAGAIN;
 		goto exit;
 	}
 

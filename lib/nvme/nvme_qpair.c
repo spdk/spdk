@@ -647,6 +647,11 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		return 0;
 	}
 
+	if (rc == -EAGAIN) {
+		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		return 0;
+	}
+
 error:
 	if (req->parent != NULL) {
 		nvme_request_remove_child(req->parent, req);

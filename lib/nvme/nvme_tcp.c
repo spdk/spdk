@@ -694,12 +694,8 @@ nvme_tcp_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 
 	tcp_req = nvme_tcp_req_get(tqpair);
 	if (!tcp_req) {
-		/*
-		 * No tcp_req is available, so queue the request to be
-		 *  processed later.
-		 */
-		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
-		return 0;
+		/* Inform the upper layer to try again later. */
+		return -EAGAIN;
 	}
 
 	if (nvme_tcp_req_init(tqpair, req, tcp_req)) {
