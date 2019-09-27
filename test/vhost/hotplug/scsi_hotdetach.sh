@@ -232,7 +232,7 @@ function hotdetach_tc4() {
 }
 
 function clear_after_tests() {
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p4.2 0 Nvme0n1p8
 }
 
 hotdetach_tc1

@@ -98,36 +98,36 @@ SPDK_RPC_REGISTER("vhost_create_scsi_controller", spdk_rpc_vhost_create_scsi_con
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_create_scsi_controller, construct_vhost_scsi_controller)
 
-struct rpc_add_vhost_scsi_ctrlr_lun {
+struct rpc_vhost_scsi_ctrlr_add_target {
 	char *ctrlr;
 	int32_t scsi_target_num;
 	char *bdev_name;
 };
 
 static void
-free_rpc_add_vhost_scsi_ctrlr_lun(struct rpc_add_vhost_scsi_ctrlr_lun *req)
+free_rpc_vhost_scsi_ctrlr_add_target(struct rpc_vhost_scsi_ctrlr_add_target *req)
 {
 	free(req->ctrlr);
 	free(req->bdev_name);
 }
 
-static const struct spdk_json_object_decoder rpc_vhost_add_lun[] = {
-	{"ctrlr", offsetof(struct rpc_add_vhost_scsi_ctrlr_lun, ctrlr), spdk_json_decode_string },
-	{"scsi_target_num", offsetof(struct rpc_add_vhost_scsi_ctrlr_lun, scsi_target_num), spdk_json_decode_int32},
-	{"bdev_name", offsetof(struct rpc_add_vhost_scsi_ctrlr_lun, bdev_name), spdk_json_decode_string },
+static const struct spdk_json_object_decoder rpc_vhost_scsi_ctrlr_add_target[] = {
+	{"ctrlr", offsetof(struct rpc_vhost_scsi_ctrlr_add_target, ctrlr), spdk_json_decode_string },
+	{"scsi_target_num", offsetof(struct rpc_vhost_scsi_ctrlr_add_target, scsi_target_num), spdk_json_decode_int32},
+	{"bdev_name", offsetof(struct rpc_vhost_scsi_ctrlr_add_target, bdev_name), spdk_json_decode_string },
 };
 
 static void
-spdk_rpc_add_vhost_scsi_lun(struct spdk_jsonrpc_request *request,
-			    const struct spdk_json_val *params)
+spdk_rpc_vhost_scsi_controller_add_target(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
 {
-	struct rpc_add_vhost_scsi_ctrlr_lun req = {0};
+	struct rpc_vhost_scsi_ctrlr_add_target req = {0};
 	struct spdk_json_write_ctx *w;
 	struct spdk_vhost_dev *vdev;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_vhost_add_lun,
-				    SPDK_COUNTOF(rpc_vhost_add_lun),
+	if (spdk_json_decode_object(params, rpc_vhost_scsi_ctrlr_add_target,
+				    SPDK_COUNTOF(rpc_vhost_scsi_ctrlr_add_target),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
@@ -148,7 +148,7 @@ spdk_rpc_add_vhost_scsi_lun(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	free_rpc_add_vhost_scsi_ctrlr_lun(&req);
+	free_rpc_vhost_scsi_ctrlr_add_target(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_int32(w, rc);
@@ -156,11 +156,13 @@ spdk_rpc_add_vhost_scsi_lun(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	free_rpc_add_vhost_scsi_ctrlr_lun(&req);
+	free_rpc_vhost_scsi_ctrlr_add_target(&req);
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("add_vhost_scsi_lun", spdk_rpc_add_vhost_scsi_lun, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("vhost_scsi_controller_add_target", spdk_rpc_vhost_scsi_controller_add_target,
+		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_scsi_controller_add_target, add_vhost_scsi_lun)
 
 struct rpc_remove_vhost_scsi_ctrlr_target {
 	char *ctrlr;
