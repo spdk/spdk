@@ -17,7 +17,7 @@ function err_clean
 	set +e
 	error "Error on $1 $2"
 	vm_kill_all
-	$rpc_py remove_vhost_scsi_target naa.vhost_vm.$vm_no 0
+	$rpc_py vhost_scsi_controller_remove_target naa.vhost_vm.$vm_no 0
 	$rpc_py vhost_delete_controller naa.vhost_vm.$vm_no
 	$rpc_py bdev_lvol_delete $lvb_u
 	$rpc_py bdev_lvol_delete_lvstore -u $lvs_u
@@ -115,7 +115,7 @@ timing_exit run_vm_cmd
 vm_shutdown_all
 
 timing_enter clean_vhost
-$rpc_py remove_vhost_scsi_target naa.vhost_vm.$vm_no 0
+$rpc_py vhost_scsi_controller_remove_target naa.vhost_vm.$vm_no 0
 $rpc_py vhost_delete_controller naa.vhost_vm.$vm_no
 $rpc_py bdev_lvol_delete $lvb_u
 $rpc_py bdev_lvol_delete_lvstore -u $lvs_u

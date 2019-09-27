@@ -88,7 +88,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	fi
 
 	notice "Trying to remove device from nonexistent scsi controller"
-	if $rpc_py remove_vhost_scsi_target vhost.nonexistent.name 0; then
+	if $rpc_py vhost_scsi_controller_remove_target vhost.nonexistent.name 0; then
 		error "Removing device from nonexistent scsi controller succeeded, but it shouldn't"
 	fi
 
@@ -109,15 +109,15 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	$rpc_py vhost_scsi_controller_add_target naa.0 0 Malloc0
 
 	notice "Trying to remove nonexistent device on existing controller"
-	if $rpc_py remove_vhost_scsi_target naa.0 1 > /dev/null; then
+	if $rpc_py vhost_scsi_controller_remove_target naa.0 1 > /dev/null; then
 		error "Removing nonexistent device (1) from controller naa.0 succeeded, but it shouldn't"
 	fi
 
 	notice "Trying to remove existing device from a controller"
-	$rpc_py remove_vhost_scsi_target naa.0 0
+	$rpc_py vhost_scsi_controller_remove_target naa.0 0
 
 	notice "Trying to remove a just-deleted device from a controller again"
-	if $rpc_py remove_vhost_scsi_target naa.0 0 > /dev/null; then
+	if $rpc_py vhost_scsi_controller_remove_target naa.0 0 > /dev/null; then
 		error "Removing device 0 from controller naa.0 succeeded, but it shouldn't"
 	fi
 
