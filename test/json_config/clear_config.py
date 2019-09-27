@@ -145,7 +145,7 @@ def clear_vhost_subsystem(args, vhost_config):
         if 'method' in vhost:
             method = vhost['method']
             if method in ['vhost_scsi_controller_add_target']:
-                args.client.call("remove_vhost_scsi_target",
+                args.client.call("vhost_scsi_controller_remove_target",
                                  {"ctrlr": vhost['params']['ctrlr'],
                                   "scsi_target_num": vhost['params']['scsi_target_num']})
             elif method in ['vhost_create_scsi_controller', 'construct_vhost_blk_controller',

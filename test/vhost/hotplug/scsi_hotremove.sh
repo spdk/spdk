@@ -206,8 +206,8 @@ function scsi_hotremove_tc4() {
     vm_shutdown_all
     add_nvme "HotInNvme3" "$traddr"
     sleep 1
-    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p1.0 0
-    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p3.1 0
+    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p1.0 0
+    $rpc_py vhost_scsi_controller_remove_target naa.Nvme0n1p3.1 0
 }
 
 function pre_scsi_hotremove_test_case() {

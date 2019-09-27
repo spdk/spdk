@@ -259,7 +259,7 @@ if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
     for (( i=0; i<$vm_count; i++)); do
         notice "Removing devices from vhost SCSI controller naa.0.$i"
         for (( j=0; j<${#bdevs[@]}; j++)); do
-            $rpc_py remove_vhost_scsi_target naa.0.$i $j
+            $rpc_py vhost_scsi_controller_remove_target naa.0.$i $j
             notice "Removed device $j"
         done
         notice "Removing vhost SCSI controller naa.0.$i"
