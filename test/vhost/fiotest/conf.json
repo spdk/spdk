@@ -139,7 +139,7 @@
             "bdev_name": "Malloc0",
             "ctrlr": "vhost.0"
           },
-          "method": "add_vhost_scsi_lun"
+          "method": "vhost_scsi_controller_add_target"
         },
         {
           "params": {

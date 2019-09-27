@@ -31,7 +31,8 @@ def vhost_create_scsi_controller(client, ctrlr, cpumask=None):
     return client.call('vhost_create_scsi_controller', params)
 
 
-def add_vhost_scsi_lun(client, ctrlr, scsi_target_num, bdev_name):
+@deprecated_alias('add_vhost_scsi_lun')
+def vhost_scsi_controller_add_target(client, ctrlr, scsi_target_num, bdev_name):
     """Add LUN to vhost scsi controller target.
     Args:
         ctrlr: controller name
@@ -43,7 +44,7 @@ def add_vhost_scsi_lun(client, ctrlr, scsi_target_num, bdev_name):
         'scsi_target_num': scsi_target_num,
         'bdev_name': bdev_name,
     }
-    return client.call('add_vhost_scsi_lun', params)
+    return client.call('vhost_scsi_controller_add_target', params)
 
 
 def remove_vhost_scsi_target(client, ctrlr, scsi_target_num):

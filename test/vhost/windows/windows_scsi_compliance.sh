@@ -56,10 +56,10 @@ $rpc_py bdev_malloc_create 256 4096 -b Malloc0
 $rpc_py bdev_aio_create $aio_file Aio0 512
 $rpc_py bdev_get_bdevs
 $rpc_py vhost_create_scsi_controller naa.vhost.1
-$rpc_py add_vhost_scsi_lun naa.vhost.1 0 Nvme0n1
-$rpc_py add_vhost_scsi_lun naa.vhost.1 1 Malloc0
+$rpc_py vhost_scsi_controller_add_target naa.vhost.1 0 Nvme0n1
+$rpc_py vhost_scsi_controller_add_target naa.vhost.1 1 Malloc0
 # TODO: Currently there is bug for aio device. Disable this test
-# $rpc_py add_vhost_scsi_lun naa.vhost.1 2 Aio0
+# $rpc_py vhost_scsi_controller_add_target naa.vhost.1 2 Aio0
 timing_exit vhost_run
 
 timing_enter start_vm

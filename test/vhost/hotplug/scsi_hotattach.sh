@@ -28,7 +28,7 @@ function prepare_fio_cmd_tc1() {
 function hotattach_tc1() {
     notice "Hotattach test case 1"
 
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p0.0 0 Nvme0n1p0
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p0.0 0 Nvme0n1p0
 
     sleep 3
     prepare_fio_cmd_tc1 "0"
@@ -45,7 +45,7 @@ function hotattach_tc2() {
     $run_fio &
     last_pid=$!
     sleep 3
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p0.0 1 Nvme0n1p1
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p0.0 1 Nvme0n1p1
     wait $last_pid
     check_fio_retcode "Hotattach test case 2: Iteration 1." 0 $?
 }
@@ -59,7 +59,7 @@ function hotattach_tc3() {
     $run_fio &
     last_pid=$!
     sleep 3
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p1.0 0 Nvme0n1p2
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p1.0 0 Nvme0n1p2
     wait $last_pid
     check_fio_retcode "Hotattach test case 3: Iteration 1." 0 $?
 }
@@ -75,7 +75,7 @@ function hotattach_tc4() {
     $run_fio &
     last_pid=$!
     sleep 3
-    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p2.1 0 Nvme0n1p3
+    $rpc_py vhost_scsi_controller_add_target naa.Nvme0n1p2.1 0 Nvme0n1p3
     wait $last_pid
     check_fio_retcode "Hotattach test case 4: Iteration 1." 0 $?
 
