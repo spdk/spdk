@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "762c7cdf_5c6c4cdb",
+        "filename": "test/iscsi_tgt/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-28T23:00:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "337372ff_8cc947db",
+      "revId": "05a756c36946a2ccc475dd54708f7aa1ae774c57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fd3b6198_0d7753e5",
         "filename": "test/iscsi_tgt/common.sh",
         "patchSetId": 6
@@ -33,6 +51,24 @@
       "revId": "05a756c36946a2ccc475dd54708f7aa1ae774c57",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "acde0d2b_0f7d93c1",
+        "filename": "test/iscsi_tgt/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-28T23:00:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fd3b6198_0d7753e5",
+      "revId": "05a756c36946a2ccc475dd54708f7aa1ae774c57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
