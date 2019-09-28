@@ -69,6 +69,24 @@
       "revId": "05a756c36946a2ccc475dd54708f7aa1ae774c57",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ede7cf3_f767ec6c",
+        "filename": "test/iscsi_tgt/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-28T23:09:39Z",
+      "side": 1,
+      "message": "It doesn\u0027t help",
+      "parentUuid": "acde0d2b_0f7d93c1",
+      "revId": "05a756c36946a2ccc475dd54708f7aa1ae774c57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
