@@ -66,6 +66,7 @@ struct nvme_bdev_ctrlr {
 	struct nvme_bdev		*bdevs;
 
 	struct spdk_opal_dev		*opal_dev;
+	struct spdk_poller		*opal_poller;
 
 	struct spdk_poller		*adminq_timer_poller;
 
