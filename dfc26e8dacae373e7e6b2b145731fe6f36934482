@@ -16,6 +16,24 @@
       "revId": "dfc26e8dacae373e7e6b2b145731fe6f36934482",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d94bf88_6fba57c8",
+        "filename": "configure",
+        "patchSetId": 4
+      },
+      "lineNbr": 692,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-29T05:52:37Z",
+      "side": 1,
+      "message": "Got it.\nAdded indication that if user wants to use blobfs with FUSE, they should install and rerun.\nDone",
+      "parentUuid": "19a7ea28_b6e3a9cd",
+      "revId": "dfc26e8dacae373e7e6b2b145731fe6f36934482",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
