@@ -54,10 +54,16 @@ int spdk_vbdev_opal_config_init(const char *nvme_ctrlr_name, uint8_t locking_ran
 				uint64_t range_start,
 				uint64_t range_length, const char *password, struct spdk_vbdev_opal_config **cfg);
 
+struct spdk_opal_locking_range_info *spdk_vbdev_opal_get_info_from_bdev(struct spdk_bdev *opal_bdev,
+		const char *password);
+
 int spdk_vbdev_opal_create(struct spdk_vbdev_opal_config *cfg);
 
 struct spdk_bdev_part_base *spdk_vbdev_opal_get_part_base(const char *nvme_ctrlr_name);
 
 int spdk_vbdev_opal_destruct(const char *bdev_name, const char *password);
 
+int spdk_vbdev_opal_revert_tper(struct nvme_bdev_ctrlr *nvme_ctrlr, const char *password,
+				spdk_opal_cb cb_fn,
+				void *cb_ctx);
 #endif
