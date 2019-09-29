@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "18ece330_3099dc01",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-29T07:36:29Z",
+      "side": 1,
+      "message": "Hi Changpeng. spdk_bdev_nvme_get_ctrlr will return spdk_nvme_ctrlr, but I will nedd nvme_bdev_ctrlr here. So I think I will keep it here.",
+      "parentUuid": "ff0c4e39_d55bc7f4",
+      "revId": "f10ad6046aaf9a739aa5044ae855787c82ea8241",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3615a1bb_cc99e6bc",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 8
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "4541b702_43221800",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-29T07:36:29Z",
+      "side": 1,
+      "message": "Hi Paul, thanks for your review. I am afraid there is not a particular reason. At first, I think this logic is more adequate for me. Maybe this logic is more easy to get out (once we find a previous created one). Do you think we need to change the logic here?",
+      "parentUuid": "3615a1bb_cc99e6bc",
+      "revId": "f10ad6046aaf9a739aa5044ae855787c82ea8241",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "11ee62f8_886d6779",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 8
@@ -47,6 +83,30 @@
       "writtenOn": "2019-09-26T08:06:37Z",
       "side": 1,
       "message": "part_tailq should be a list head embedded in the cfg structure.",
+      "range": {
+        "startLine": 391,
+        "startChar": 0,
+        "endLine": 395,
+        "endChar": 1
+      },
+      "revId": "f10ad6046aaf9a739aa5044ae855787c82ea8241",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f4f7d69_75792824",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-09-29T07:36:29Z",
+      "side": 1,
+      "message": "Hi Changpeng, thanks for your review. I am not quite sure what embedded means. If you mean to use the struct itself not a pointer in cfg, then there will be something wrong. Because the cfg might be freed early during delete process, but the part_tailq is still needed until all the parts with the same base are freed. It is freed during base_free function. I think will keep it here. Thank you.",
+      "parentUuid": "11ee62f8_886d6779",
       "range": {
         "startLine": 391,
         "startChar": 0,
