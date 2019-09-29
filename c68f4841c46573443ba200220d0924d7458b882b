@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "42cf82a5_93edeaf0",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 5772,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-29T05:03:40Z",
+      "side": 1,
+      "message": "OK.\nSet 1M as enforced minimal cluster size when decoding RPC parameters.\nNotes about 4KiB size are adjusted in RPC related files.",
+      "parentUuid": "1beb6b37_03aa48c7",
+      "revId": "c68f4841c46573443ba200220d0924d7458b882b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bac4722e_72c2bdb0",
         "filename": "module/blobfs/bdev/blobfs_bdev.c",
         "patchSetId": 21
@@ -30,6 +48,24 @@
       "writtenOn": "2019-09-26T18:27:19Z",
       "side": 1,
       "message": "missing spdk_bdev_close(desc) or will destroy do that?",
+      "revId": "c68f4841c46573443ba200220d0924d7458b882b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7ed62bc_c50a5bde",
+        "filename": "module/blobfs/bdev/blobfs_bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-09-29T05:03:40Z",
+      "side": 1,
+      "message": "Yes, destroy() should do that.",
+      "parentUuid": "bac4722e_72c2bdb0",
       "revId": "c68f4841c46573443ba200220d0924d7458b882b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
