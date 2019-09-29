@@ -232,6 +232,56 @@ vbdev_opal_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	}
 }
 
+struct spdk_opal_locking_range_info *
+spdk_vbdev_opal_get_info_from_bdev(struct spdk_bdev *opal_bdev, const char *password)
+{
+	struct opal_vbdev *vbdev;
+	struct spdk_vbdev_opal_config *cfg;
+	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	int locking_range_id;
+	int rc;
+	struct spdk_opal_locking_range_info *info;
+
+	TAILQ_FOREACH(vbdev, &g_opal_vbdev, tailq) {
+		if (strcmp(vbdev->name, opal_bdev->name) == 0) {
+			break;
+		}
+	}
+
+	if (vbdev == NULL) {
+		SPDK_ERRLOG("%s not found\n", opal_bdev->name);
+		return NULL;
+	}
+
+	cfg = vbdev->cfg;
+	if (!cfg) {
+		SPDK_ERRLOG("Configuration for this virtual bdev is not found\n");
+		return NULL;
+	} else {
+		locking_range_id = cfg->locking_range_id;
+	}
+
+	nvme_ctrlr = vbdev->nvme_ctrlr;
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("can't find nvme_ctrlr of %s\n", vbdev->name);
+		return NULL;
+	}
+
+	info = spdk_opal_get_locking_range_info(nvme_ctrlr->opal_dev, locking_range_id);
+	if (info != NULL) {
+		return info;
+	}
+
+	rc = spdk_opal_cmd_get_locking_range_info(nvme_ctrlr->opal_dev, password,
+			OPAL_ADMIN1, locking_range_id);
+	if (rc) {
+		SPDK_ERRLOG("Get locking range info error: %d\n", rc);
+		return NULL;
+	}
+
+	return spdk_opal_get_locking_range_info(nvme_ctrlr->opal_dev, locking_range_id);
+}
+
 static int
 vbdev_opal_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
@@ -349,6 +399,7 @@ spdk_vbdev_opal_create(struct spdk_vbdev_opal_config *cfg)
 	}
 
 	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(cfg->nvme_ctrlr_name);
+
 	if (!nvme_ctrlr) {
 		SPDK_ERRLOG("get nvme ctrlr failed\n");
 		vbdev_opal_free_cfg(cfg);
@@ -572,6 +623,7 @@ spdk_vbdev_opal_destruct(const char *bdev_name, const char *password)
 		goto err;
 	}
 
+	spdk_opal_free_locking_range_info(opal_bdev->opal_dev, locking_range_id);
 	vbdev_opal_destruct_bdev(opal_bdev);
 	return 0;
 
@@ -584,6 +636,46 @@ vbdev_opal_examine(struct spdk_bdev *bdev)
 {
 	/* TODO */
 	spdk_bdev_module_examine_done(&opal_if);
+}
+
+static int
+vbdev_opal_recv_poll(void *arg)
+{
+	struct nvme_bdev_ctrlr *nvme_ctrlr = arg;
+	int rc;
+
+	rc = spdk_opal_recv_cmd_async(nvme_ctrlr->opal_dev);
+	if (rc) {
+		SPDK_ERRLOG("receive error:%d\n", rc);
+		spdk_poller_unregister(&nvme_ctrlr->opal_poller);
+		return 0;
+	}
+
+	if (spdk_opal_get_dev_state(nvme_ctrlr->opal_dev) != OPAL_BUSY) {
+		/* receive success */
+		spdk_poller_unregister(&nvme_ctrlr->opal_poller);
+		return 0;
+	}
+
+	return -1;
+}
+
+int spdk_vbdev_opal_revert_tper(struct nvme_bdev_ctrlr *nvme_ctrlr, const char *password,
+				spdk_opal_cb cb_fn,
+				void *cb_ctx)
+{
+	int rc;
+
+	rc = spdk_opal_cmd_revert_tper_async(nvme_ctrlr->opal_dev, password, cb_fn, cb_ctx);
+	if (rc) {
+		SPDK_ERRLOG("%s revert tper failure: %d\n", nvme_ctrlr->name, rc);
+		return rc;
+	}
+	nvme_ctrlr->opal_poller = spdk_poller_register(vbdev_opal_recv_poll, nvme_ctrlr, 50);
+	if (nvme_ctrlr->opal_poller == NULL) {
+		return -ENOMEM;
+	}
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vbdev_opal", SPDK_LOG_VBDEV_OPAL)
