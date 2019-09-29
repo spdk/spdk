@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e55e59f_fa6ad53a",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1279,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-29T22:52:47Z",
+      "side": 1,
+      "message": "Another simple fix may be core_count \u003d spdk_min(spdk_env_get_count(), g_target_count) and use it here.\nBut number of cores is increased manually by user. So the proposed fix will be better.",
+      "revId": "d8e631db06d6bde4820acf16af9af21a7569ab4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
