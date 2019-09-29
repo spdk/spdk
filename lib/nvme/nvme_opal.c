@@ -1612,14 +1612,19 @@ opal_get_locking_range_info(struct spdk_opal_dev *dev,
 		return err;
 	}
 
-	info = calloc(1, sizeof(struct spdk_opal_locking_range_info));
-	if (info == NULL) {
-		SPDK_ERRLOG("Memory allocation failed for spdk_opal_locking_range_info\n");
-		return -ENOMEM;
+	if (dev->locking_range_info[locking_range_id] == NULL) {
+		info = calloc(1, sizeof(struct spdk_opal_locking_range_info));
+		if (info == NULL) {
+			SPDK_ERRLOG("Memory allocation failed for spdk_opal_locking_range_info\n");
+			return -ENOMEM;
+		}
+		info->locking_range_id = locking_range_id;
+		dev->locking_range_info[locking_range_id] = info;
+	} else {
+		info = dev->locking_range_info[locking_range_id];
+		memset(info, 0, sizeof(*info));
+		info->locking_range_id = locking_range_id;
 	}
-
-	info->locking_range_id = locking_range_id;
-	dev->locking_range_info[locking_range_id] = info;
 
 	opal_clear_cmd(dev);
 	opal_set_comid(dev, dev->comid);
