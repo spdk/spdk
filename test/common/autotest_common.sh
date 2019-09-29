@@ -62,6 +62,7 @@ export RUN_NIGHTLY_FAILING
 : ${SPDK_TEST_OCF=0}; export SPDK_TEST_OCF
 : ${SPDK_TEST_FTL_EXTENDED=0}; export SPDK_TEST_FTL_EXTENDED
 : ${SPDK_TEST_VMD=0}; export SPDK_TEST_VMD
+: ${SPDK_TEST_OPAL=0}; export SPDK_TEST_OPAL
 : ${SPDK_AUTOTEST_X=true}; export SPDK_AUTOTEST_X
 
 # Export PYTHONPATH with addition of RPC framework. New scripts can be created
@@ -875,6 +876,24 @@ function get_nvme_name_from_bdf {
 	done
 
 	printf '%s\n' "${blkname[@]}"
+}
+
+function opal_revert_cleanup {
+	$rootdir/app/spdk_tgt/spdk_tgt &
+	spdk_tgt_pid=$!
+	waitforlisten $spdk_tgt_pid
+	count=0
+
+	# ignore the result here
+	set +e
+	for bdf in $(iter_pci_class_code 01 08 02); do
+		$rpc_py bdev_nvme_attach_controller -b "nvme$count" -t "pcie" -a $bdf
+		$rpc_py bdev_nvme_opal_revert -b "nvme$count" -p test
+		((count++))
+	done
+	set -e
+
+	killprocess $spdk_tgt_pid
 }
 
 set -o errtrace
