@@ -5468,6 +5468,80 @@ Example response:
 
 # OPAL
 
+## bdev_nvme_opal_init {#rpc_bdev_nvme_opal_init}
+
+This is used to initialize OPAL of a given NVMe ctrlr, including taking ownership and activating.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nvme_ctrlr_name         | Required | string      | name of nvme ctrlr
+password                | Required | string      | admin password of OPAL
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_opal_init",
+  "id": 1,
+  "params": {
+    "nvme_ctrlr_name": "nvme0",
+    "password": "*****"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## bdev_nvme_opal_revert {#rpc_bdev_nvme_opal_revert}
+
+This is used to revert OPAL to its factory settings. Erase all user configuration and data.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nvme_ctrlr_name         | Required | string      | name of nvme ctrlr
+password                | Required | string      | admin password of OPAL
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_opal_revert",
+  "id": 1,
+  "params": {
+    "nvme_ctrlr_name": "nvme0",
+    "password": "*****"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## bdev_opal_create {#rpc_bdev_opal_create}
 
 This is used to create an OPAL virtual bdev.
@@ -5509,6 +5583,53 @@ Example response:
   "id": 1,
   "result": [
     "nvme0n1r1"
+  ]
+}
+~~~
+
+## bdev_opal_get_info {#rpc_bdev_opal_get_info}
+
+This is used to get information of a given OPAL bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev_name               | Required | string      | name of OPAL vbdev
+password                | Required | string      | admin password
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_opal_get_info",
+  "id": 1,
+  "params": {
+    "bdev_name": "nvme0n1r1",
+    "password": "*****"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "nvme0n1r1",
+      "range_start": 0,
+      "range_length": 4096,
+      "read lock enabled": true,
+      "write lock enabled": true,
+      "read locked": false,
+      "write locked": false
+    }
   ]
 }
 ~~~

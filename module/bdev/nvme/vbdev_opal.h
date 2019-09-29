@@ -42,6 +42,11 @@ int spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint8_t locking_range_id
 
 struct spdk_bdev *spdk_vbdev_opal_get_latest_bdev(void);
 
+struct spdk_opal_locking_range_info *spdk_vbdev_opal_get_info_from_bdev(struct spdk_bdev *opal_bdev,
+		const char *password);
+
 int spdk_vbdev_opal_destruct(const char *bdev_name, const char *password);
 
+int spdk_vbdev_opal_revert_tper(struct nvme_bdev_ctrlr *nvme_ctrlr, const char *password,
+				spdk_opal_revert_cb cb_fn, void *cb_ctx);
 #endif
