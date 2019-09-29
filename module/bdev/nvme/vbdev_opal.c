@@ -228,6 +228,50 @@ vbdev_opal_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	}
 }
 
+struct spdk_opal_locking_range_info *
+spdk_vbdev_opal_get_info_from_bdev(const char *opal_bdev_name, const char *password)
+{
+	struct opal_vbdev *vbdev;
+	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	int locking_range_id;
+	int rc;
+
+	TAILQ_FOREACH(vbdev, &g_opal_vbdev, tailq) {
+		if (strcmp(vbdev->name, opal_bdev_name) == 0) {
+			break;
+		}
+	}
+
+	if (vbdev == NULL) {
+		SPDK_ERRLOG("%s not found\n", opal_bdev_name);
+		return NULL;
+	}
+
+	locking_range_id = vbdev->cfg.locking_range_id;
+	nvme_ctrlr = vbdev->nvme_ctrlr;
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("can't find nvme_ctrlr of %s\n", vbdev->name);
+		return NULL;
+	}
+
+	if (spdk_opal_get_max_locking_ranges(nvme_ctrlr->opal_dev) == 0) {
+		rc = spdk_opal_cmd_get_max_ranges(nvme_ctrlr->opal_dev, password);
+		if (rc) {
+			SPDK_ERRLOG("Get locking range number failure: %d\n", rc);
+			return NULL;
+		}
+	}
+
+	rc = spdk_opal_cmd_get_locking_range_info(nvme_ctrlr->opal_dev, password,
+			OPAL_ADMIN1, locking_range_id);
+	if (rc) {
+		SPDK_ERRLOG("Get locking range info error: %d\n", rc);
+		return NULL;
+	}
+
+	return spdk_opal_get_locking_range_info(nvme_ctrlr->opal_dev, locking_range_id);
+}
+
 static int
 vbdev_opal_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
@@ -523,6 +567,7 @@ spdk_vbdev_opal_destruct(const char *bdev_name, const char *password)
 		goto err;
 	}
 
+	spdk_opal_free_locking_range_info(opal_bdev->opal_dev, locking_range_id);
 	vbdev_opal_destruct_bdev(opal_bdev);
 	return 0;
 
@@ -535,6 +580,44 @@ vbdev_opal_examine(struct spdk_bdev *bdev)
 {
 	/* TODO */
 	spdk_bdev_module_examine_done(&opal_if);
+}
+
+static int
+vbdev_opal_recv_poll(void *arg)
+{
+	struct nvme_bdev_ctrlr *nvme_ctrlr = arg;
+	int rc;
+
+	rc = spdk_opal_revert_poll(nvme_ctrlr->opal_dev);
+	if (rc == -EAGAIN) {
+		return -1;
+	}
+
+	/* receive end */
+	spdk_poller_unregister(&nvme_ctrlr->opal_poller);
+	nvme_ctrlr->opal_poller = NULL;
+	if (rc == 0) {
+		/* receive success */
+		return 1;
+	} else {
+		SPDK_ERRLOG("receive error:%d\n", rc);
+		return rc;
+	}
+}
+
+int
+spdk_vbdev_opal_revert_tper(struct nvme_bdev_ctrlr *nvme_ctrlr, const char *password,
+			    spdk_opal_revert_cb cb_fn, void *cb_ctx)
+{
+	int rc;
+
+	rc = spdk_opal_cmd_revert_tper_async(nvme_ctrlr->opal_dev, password, cb_fn, cb_ctx);
+	if (rc) {
+		SPDK_ERRLOG("%s revert tper failure: %d\n", nvme_ctrlr->name, rc);
+		return rc;
+	}
+	nvme_ctrlr->opal_poller = spdk_poller_register(vbdev_opal_recv_poll, nvme_ctrlr, 50);
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vbdev_opal", SPDK_LOG_VBDEV_OPAL)
