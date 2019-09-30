@@ -45,12 +45,14 @@ struct rpc_create_ocssd_bdev {
 	char		*ctrlr_name;
 	char		*bdev_name;
 	uint32_t	nsid;
+	const char	*range;
 };
 
 static const struct spdk_json_object_decoder rpc_create_ocssd_bdev_decoders[] = {
 	{"ctrlr_name", offsetof(struct rpc_create_ocssd_bdev, ctrlr_name), spdk_json_decode_string},
 	{"bdev_name", offsetof(struct rpc_create_ocssd_bdev, bdev_name), spdk_json_decode_string},
 	{"nsid", offsetof(struct rpc_create_ocssd_bdev, nsid), spdk_json_decode_uint32, true},
+	{"range", offsetof(struct rpc_create_ocssd_bdev, range), spdk_json_decode_string, true},
 };
 
 static void
@@ -61,8 +63,9 @@ free_rpc_create_ocssd_bdev(struct rpc_create_ocssd_bdev *rpc)
 }
 
 struct rpc_bdev_ocssd_create_ctx {
-	struct spdk_jsonrpc_request *request;
-	struct rpc_create_ocssd_bdev rpc;
+	struct spdk_jsonrpc_request	*request;
+	struct rpc_create_ocssd_bdev	rpc;
+	struct bdev_ocssd_range		range;
 };
 
 static void
@@ -88,6 +91,8 @@ static void
 rpc_bdev_ocssd_create(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
 	struct rpc_bdev_ocssd_create_ctx *ctx;
+	struct bdev_ocssd_range *range = NULL;
+	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -102,13 +107,26 @@ rpc_bdev_ocssd_create(struct spdk_jsonrpc_request *request, const struct spdk_js
 				    SPDK_COUNTOF(rpc_create_ocssd_bdev_decoders),
 				    &ctx->rpc)) {
 		spdk_jsonrpc_send_error_response(request, -EINVAL, "Failed to parse the request");
-		free_rpc_create_ocssd_bdev(&ctx->rpc);
-		free(ctx);
-		return;
+		goto out;
+	}
+
+	if (ctx->rpc.range != NULL) {
+		rc = sscanf(ctx->rpc.range, "%"PRIu64"-%"PRIu64,
+			    &ctx->range.begin, &ctx->range.end);
+		if (rc != 2) {
+			spdk_jsonrpc_send_error_response(request, -EINVAL, "Failed to parse range");
+			goto out;
+		}
+
+		range = &ctx->range;
 	}
 
 	bdev_ocssd_create_bdev(ctx->rpc.ctrlr_name, ctx->rpc.bdev_name, ctx->rpc.nsid,
-			       rpc_bdev_ocssd_create_done, ctx);
+			       range, rpc_bdev_ocssd_create_done, ctx);
+	return;
+out:
+	free_rpc_create_ocssd_bdev(&ctx->rpc);
+	free(ctx);
 }
 
 SPDK_RPC_REGISTER("bdev_ocssd_create", rpc_bdev_ocssd_create, SPDK_RPC_RUNTIME)
