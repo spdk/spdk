@@ -844,7 +844,10 @@ finish_register(struct vbdev_ocf *vbdev)
 				sizeof(struct vbdev_ocf_qcxt), vbdev->name);
 	result = spdk_bdev_register(&vbdev->exp_bdev);
 	if (result) {
-		SPDK_ERRLOG("Could not register exposed bdev\n");
+		SPDK_ERRLOG("Could not register exposed bdev %s\n",
+			    vbdev->name);
+		vbdev_ocf_mngt_stop(vbdev, unregister_path, result);
+		return;
 	} else {
 		vbdev->state.started = true;
 	}
@@ -860,7 +863,10 @@ add_core_cmpl(ocf_cache_t cache, ocf_core_t core, void *priv, int error)
 	ocf_mngt_cache_unlock(cache);
 
 	if (error) {
-		SPDK_ERRLOG("Failed to add core device to cache instance\n");
+		SPDK_ERRLOG("Failed to add core device to cache instance,"
+			    "starting rollback\n", error, vbdev->name);
+		vbdev_ocf_mngt_stop(vbdev, unregister_path, error);
+		return;
 	} else {
 		vbdev->ocf_core = core;
 		vbdev->core.id  = ocf_core_get_id(core);
@@ -885,7 +891,7 @@ add_core_poll(struct vbdev_ocf *vbdev)
 static void
 add_core(struct vbdev_ocf *vbdev)
 {
-	vbdev_ocf_mngt_poll(vbdev, add_core_poll, NULL);
+	vbdev_ocf_mngt_poll(vbdev, add_core_poll, unregister_path);
 }
 
 static void
@@ -894,6 +900,13 @@ start_cache_cmpl(ocf_cache_t cache, void *priv, int error)
 	struct vbdev_ocf *vbdev = priv;
 
 	ocf_mngt_cache_unlock(cache);
+
+	if (error) {
+		SPDK_ERRLOG("Error %d during start cache %s, starting rollback\n",
+			    error, vbdev->name);
+		vbdev_ocf_mngt_stop(vbdev, unregister_path, error);
+		return;
+	}
 
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
