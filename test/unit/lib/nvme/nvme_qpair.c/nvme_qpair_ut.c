@@ -65,6 +65,15 @@ nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nv
 int g_ctrlr_reset = 0;
 
 int
+nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (g_ctrlr_reset == 0) {
+		ctrlr->adminq->transport_qp_is_failed = false;
+	}
+	return g_ctrlr_reset;
+}
+
+int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return g_ctrlr_reset;
@@ -204,19 +213,60 @@ static void test_nvme_qpair_process_completions(void)
 	qpair.ctrlr->is_failed = true;
 	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
 
-	/* Make sure we call spdk_nvme_ctrlr_reset if the admin transport qp is failed. */
+	MOCK_SET(spdk_get_ticks, 500);
+	/* Fail a reset on the admin queue on our last attempt. */
+	ctrlr.qp_reconnect_attempt_limit = 0;
+	ctrlr.qp_reconnect_delay_ticks = 500;
 	admin_qpair.ctrlr->is_failed = false;
 	admin_qpair.state = NVME_QPAIR_ENABLED;
 	admin_qpair.transport_qp_is_failed = true;
-	CU_ASSERT(spdk_nvme_qpair_process_completions(&admin_qpair, 0) == INT32_MAX);
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&admin_qpair, 0) == -ENXIO);
+	CU_ASSERT(admin_qpair.reconnect_retry_ticks == 1000);
+	CU_ASSERT(admin_qpair.reconnect_retry_number == 1);
+	CU_ASSERT(ctrlr.is_failed == true);
+
+	/* Fail a reset on the admin queue before the last attempt. */
+	ctrlr.is_failed = false;
+	ctrlr.qp_reconnect_attempt_limit = 2;
+	admin_qpair.reconnect_retry_number = 0;
+	admin_qpair.reconnect_retry_ticks = 0;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&admin_qpair, 0) == 0);
+	CU_ASSERT(admin_qpair.reconnect_retry_ticks == 1000);
+	CU_ASSERT(admin_qpair.reconnect_retry_number == 1);
+	CU_ASSERT(ctrlr.is_failed == false);
+
+	/* Pass a reset on the admin qpair before the last attempt. */
+	g_ctrlr_reset = 0;
+	admin_qpair.reconnect_retry_number = 0;
+	admin_qpair.reconnect_retry_ticks = 0;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&admin_qpair, 0) == 0);
+	CU_ASSERT(admin_qpair.reconnect_retry_ticks == 0);
+	CU_ASSERT(admin_qpair.reconnect_retry_number == 0);
+	CU_ASSERT(ctrlr.is_failed == false);
 
 	/* We should return 0 since the I/O qpair will defer to the failed admin qpair. */
+	admin_qpair.transport_qp_is_failed = true;
 	qpair.transport_qp_is_failed = true;
+	qpair.state = NVME_QPAIR_ENABLED;
 	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	CU_ASSERT(qpair.reconnect_retry_ticks == 1000);
+	CU_ASSERT(qpair.reconnect_retry_number == 0);
 
-	/* return -ENXIO, this happens when reconnect fails. */
+	/* Fail a reset on an I/O qpair before the last attempt. */
 	admin_qpair.transport_qp_is_failed = false;
+	qpair.reconnect_retry_number = 0;
+	qpair.reconnect_retry_ticks = 0;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	CU_ASSERT(qpair.reconnect_retry_ticks == 1000);
+	CU_ASSERT(qpair.reconnect_retry_number == 1);
+
+	/* Fail a reset on an I/O qpair on the last attempt. */
+	admin_qpair.transport_qp_is_failed = false;
+	qpair.reconnect_retry_number = 2;
+	qpair.reconnect_retry_ticks = 400;
 	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == -ENXIO);
+	CU_ASSERT(qpair.reconnect_retry_ticks == 1000);
+	CU_ASSERT(qpair.reconnect_retry_number == 3);
 
 	/* return 0 when we successfully complete the reconnect. */
 	g_transport_connect_qpair = 0;
