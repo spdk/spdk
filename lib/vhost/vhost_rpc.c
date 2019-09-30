@@ -291,31 +291,31 @@ invalid:
 SPDK_RPC_REGISTER("construct_vhost_blk_controller", spdk_rpc_construct_vhost_blk_controller,
 		  SPDK_RPC_RUNTIME)
 
-struct rpc_remove_vhost_ctrlr {
+struct rpc_delete_vhost_ctrlr {
 	char *ctrlr;
 };
 
-static const struct spdk_json_object_decoder rpc_remove_vhost_ctrlr[] = {
-	{"ctrlr", offsetof(struct rpc_remove_vhost_ctrlr, ctrlr), spdk_json_decode_string },
+static const struct spdk_json_object_decoder rpc_delete_vhost_ctrlr_decoder[] = {
+	{"ctrlr", offsetof(struct rpc_delete_vhost_ctrlr, ctrlr), spdk_json_decode_string },
 };
 
 static void
-free_rpc_remove_vhost_ctrlr(struct rpc_remove_vhost_ctrlr *req)
+free_rpc_delete_vhost_ctrlr(struct rpc_delete_vhost_ctrlr *req)
 {
 	free(req->ctrlr);
 }
 
 static void
-spdk_rpc_remove_vhost_controller(struct spdk_jsonrpc_request *request,
+spdk_rpc_vhost_delete_controller(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params)
 {
-	struct rpc_remove_vhost_ctrlr req = {0};
+	struct rpc_delete_vhost_ctrlr req = {0};
 	struct spdk_json_write_ctx *w;
 	struct spdk_vhost_dev *vdev;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_remove_vhost_ctrlr,
-				    SPDK_COUNTOF(rpc_remove_vhost_ctrlr), &req)) {
+	if (spdk_json_decode_object(params, rpc_delete_vhost_ctrlr_decoder,
+				    SPDK_COUNTOF(rpc_delete_vhost_ctrlr_decoder), &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
@@ -335,7 +335,7 @@ spdk_rpc_remove_vhost_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	free_rpc_remove_vhost_ctrlr(&req);
+	free_rpc_delete_vhost_ctrlr(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, true);
@@ -344,12 +344,13 @@ spdk_rpc_remove_vhost_controller(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	free_rpc_remove_vhost_ctrlr(&req);
+	free_rpc_delete_vhost_ctrlr(&req);
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 
 }
-SPDK_RPC_REGISTER("remove_vhost_controller", spdk_rpc_remove_vhost_controller, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("vhost_delete_controller", spdk_rpc_vhost_delete_controller, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_delete_controller, remove_vhost_controller)
 
 struct rpc_get_vhost_ctrlrs {
 	char *name;

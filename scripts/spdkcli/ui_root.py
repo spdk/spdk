@@ -278,8 +278,8 @@ class UIRoot(UINode):
                 yield VhostCtrlr(ctrlr)
 
     @verbose
-    def remove_vhost_controller(self, **kwargs):
-        rpc.vhost.remove_vhost_controller(self.client, **kwargs)
+    def vhost_delete_controller(self, **kwargs):
+        rpc.vhost.vhost_delete_controller(self.client, **kwargs)
 
     @verbose
     def create_vhost_scsi_controller(self, **kwargs):

@@ -263,13 +263,13 @@ if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
             notice "Removed device $j"
         done
         notice "Removing vhost SCSI controller naa.0.$i"
-        $rpc_py remove_vhost_controller naa.0.$i
+        $rpc_py vhost_delete_controller naa.0.$i
     done
 elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
     for (( i=0; i<$vm_count; i++)); do
         for (( j=0; j<${#bdevs[@]}; j++)); do
             notice "Removing vhost BLK controller naa.$j.$i"
-            $rpc_py remove_vhost_controller naa.$j.$i
+            $rpc_py vhost_delete_controller naa.$j.$i
             notice "Removed naa.$j.$i"
         done
     done

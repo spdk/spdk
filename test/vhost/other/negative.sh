@@ -77,7 +77,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 
 	# General commands
 	notice "Trying to remove nonexistent controller"
-	if $rpc_py remove_vhost_controller unk0 > /dev/null; then
+	if $rpc_py vhost_delete_controller unk0 > /dev/null; then
 		error "Removing nonexistent controller succeeded, but it shouldn't"
 	fi
 
@@ -131,7 +131,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	fi
 
 	notice "Trying to remove nonexistent block controller"
-	if $rpc_py remove_vhost_controller vhost.nonexistent.name; then
+	if $rpc_py vhost_delete_controller vhost.nonexistent.name; then
 		error "Removing nonexistent block controller succeeded, but it shouldn't"
 	fi
 
