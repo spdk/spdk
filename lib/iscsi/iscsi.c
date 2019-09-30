@@ -2845,6 +2845,16 @@ iscsi_queue_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 static void
 iscsi_queue_mgmt_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 {
+	struct spdk_scsi_lun *lun;
+
+	lun = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
+	if (lun == NULL) {
+		task->scsi.response = SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN;
+		spdk_iscsi_task_mgmt_response(conn, task);
+		spdk_iscsi_task_put(task);
+		return;
+	}
+
 	spdk_scsi_dev_queue_mgmt_task(conn->dev, &task->scsi);
 }
 
@@ -3352,15 +3362,17 @@ static int
 _iscsi_op_abort_task(void *arg)
 {
 	struct spdk_iscsi_task *task = arg;
+	struct spdk_iscsi_conn *conn = task->conn;
 	int rc;
 
-	rc = iscsi_conn_abort_queued_datain_task(task->conn, task->scsi.abort_id);
+	rc = iscsi_conn_abort_queued_datain_task(conn, task->scsi.abort_id);
 	if (rc != 0) {
 		return 1;
 	}
 
 	spdk_poller_unregister(&task->mgmt_poller);
-	iscsi_queue_mgmt_task(task->conn, task);
+
+	iscsi_queue_mgmt_task(conn, task);
 	return 1;
 }
 
@@ -3376,6 +3388,7 @@ static int
 _iscsi_op_abort_task_set(void *arg)
 {
 	struct spdk_iscsi_task *task = arg;
+	struct spdk_iscsi_conn *conn = task->conn;
 	int rc;
 
 	rc = iscsi_conn_abort_queued_datain_tasks(task->conn, task->scsi.lun,
@@ -3385,7 +3398,8 @@ _iscsi_op_abort_task_set(void *arg)
 	}
 
 	spdk_poller_unregister(&task->mgmt_poller);
-	iscsi_queue_mgmt_task(task->conn, task);
+
+	iscsi_queue_mgmt_task(conn, task);
 	return 1;
 }
 
