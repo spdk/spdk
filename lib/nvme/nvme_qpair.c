@@ -442,12 +442,16 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			ret = spdk_nvme_ctrlr_reset(qpair->ctrlr);
 			nvme_robust_mutex_lock(&qpair->ctrlr->ctrlr_lock);
 		} else if (!qpair->ctrlr->adminq->transport_qp_is_failed) {
-			/* TODO: add the individual qpair recovery code here */
-			ret = -ENXIO;
+			if (nvme_transport_ctrlr_connect_qpair(qpair->ctrlr, qpair) != 0) {
+				nvme_transport_ctrlr_disconnect_qpair(qpair->ctrlr, qpair);
+				ret = -ENXIO;
+			}
 		}
 
-		/* If the admin qpair is failed, defer to it to reset the ctrlr. */
-		return ret;
+		/* If we have fixed the qpair, then continue the function. */
+		if (qpair->transport_qp_is_failed) {
+			return ret;
+		}
 	}
 
 	/* error injection for those queued error requests */
