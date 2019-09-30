@@ -995,7 +995,6 @@ int nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
 	if (nvme_transport_ctrlr_connect_qpair(ctrlr, ctrlr->adminq) != 0) {
 		SPDK_ERRLOG("Controller reinitialization failed.\n");
-		nvme_ctrlr_fail(ctrlr, false);
 		rc = -1;
 		goto out;
 	}
@@ -1009,17 +1008,15 @@ int nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	while (ctrlr->state != NVME_CTRLR_STATE_READY) {
 		if (nvme_ctrlr_process_init(ctrlr) != 0) {
 			SPDK_ERRLOG("controller reinitialization failed\n");
-			nvme_ctrlr_fail(ctrlr, false);
 			rc = -1;
 			break;
 		}
 	}
 
-	if (!ctrlr->is_failed) {
+	if (rc == 0) {
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 			if (nvme_transport_ctrlr_connect_qpair(ctrlr, qpair) != 0) {
-				nvme_ctrlr_fail(ctrlr, false);
 				rc = -1;
 			}
 		}
@@ -1036,7 +1033,12 @@ out:
 int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return nvme_ctrlr_reset(ctrlr);
+	if (nvme_ctrlr_reset(ctrlr) != 0) {
+		nvme_ctrlr_fail(ctrlr, false);
+		return -1;
+	}
+
+	return 0;
 }
 
 static void
