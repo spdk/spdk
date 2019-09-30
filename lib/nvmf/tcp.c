@@ -1075,17 +1075,7 @@ spdk_nvmf_tcp_qpair_init(struct spdk_nvmf_qpair *qpair)
 static int
 spdk_nvmf_tcp_qpair_sock_init(struct spdk_nvmf_tcp_qpair *tqpair)
 {
-
 	int rc;
-	int buf_size;
-
-	/* set send buffer size */
-	buf_size = 2 * 1024 * 1024;
-	rc = spdk_sock_set_sendbuf(tqpair->sock, buf_size);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_sock_set_sendbuf failed\n");
-		return rc;
-	}
 
 	/* set low water mark */
 	rc = spdk_sock_set_recvlowat(tqpair->sock, sizeof(struct spdk_nvme_tcp_c2h_data_hdr));
