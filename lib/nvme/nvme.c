@@ -448,6 +448,7 @@ nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr,
 		/* Controller failed to initialize. */
 		TAILQ_REMOVE(&probe_ctx->init_ctrlrs, ctrlr, tailq);
 		SPDK_ERRLOG("Failed to initialize SSD: %s\n", ctrlr->trid.traddr);
+		nvme_ctrlr_fail(ctrlr, false);
 		nvme_ctrlr_destruct(ctrlr);
 		return rc;
 	}
