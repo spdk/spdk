@@ -46,6 +46,7 @@
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
 #define SO_RCVBUF_SIZE (2 * 1024 * 1024)
+#define SO_SNDBUF_SIZE (2 * 1024 * 1024)
 
 struct spdk_posix_sock {
 	struct spdk_sock	base;
@@ -178,6 +179,26 @@ spdk_posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 	}
 
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
+	if (rc < 0) {
+		return rc;
+	}
+
+	return 0;
+}
+
+static int
+spdk_posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
+
+	assert(sock != NULL);
+
+	if (sz < SO_SNDBUF_SIZE) {
+		sz = SO_SNDBUF_SIZE;
+	}
+
+	rc = setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz));
 	if (rc < 0) {
 		return rc;
 	}
@@ -323,6 +344,11 @@ retry:
 		/* Not fatal */
 	}
 
+	rc = spdk_posix_sock_set_sendbuf(&sock->base, SO_SNDBUF_SIZE);
+	if (rc) {
+		/* Not fatal */
+	}
+
 	return &sock->base;
 }
 
@@ -378,6 +404,11 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 	new_sock->fd = fd;
 
 	rc = spdk_posix_sock_set_recvbuf(&new_sock->base, SO_RCVBUF_SIZE);
+	if (rc) {
+		/* Not fatal */
+	}
+
+	rc = spdk_posix_sock_set_sendbuf(&new_sock->base, SO_SNDBUF_SIZE);
 	if (rc) {
 		/* Not fatal */
 	}
@@ -438,17 +469,6 @@ spdk_posix_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 		return -1;
 	}
 	return 0;
-}
-
-static int
-spdk_posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
-{
-	struct spdk_posix_sock *sock = __posix_sock(_sock);
-
-	assert(sock != NULL);
-
-	return setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF,
-			  &sz, sizeof(sz));
 }
 
 static int
