@@ -94,7 +94,8 @@ def add_vhost_nvme_ns(client, ctrlr, bdev_name):
     return client.call('add_vhost_nvme_ns', params)
 
 
-def construct_vhost_blk_controller(client, ctrlr, dev_name, cpumask=None, readonly=None):
+@deprecated_alias('construct_vhost_blk_controller')
+def vhost_create_blk_controller(client, ctrlr, dev_name, cpumask=None, readonly=None):
     """Construct vhost BLK controller.
     Args:
         ctrlr: controller name
@@ -110,7 +111,7 @@ def construct_vhost_blk_controller(client, ctrlr, dev_name, cpumask=None, readon
         params['cpumask'] = cpumask
     if readonly:
         params['readonly'] = readonly
-    return client.call('construct_vhost_blk_controller', params)
+    return client.call('vhost_create_blk_controller', params)
 
 
 @deprecated_alias('get_vhost_controllers')

@@ -286,8 +286,8 @@ class UIRoot(UINode):
         rpc.vhost.vhost_create_scsi_controller(self.client, **kwargs)
 
     @verbose
-    def create_vhost_blk_controller(self, **kwargs):
-        rpc.vhost.construct_vhost_blk_controller(self.client, **kwargs)
+    def vhost_create_blk_controller(self, **kwargs):
+        rpc.vhost.vhost_create_blk_controller(self.client, **kwargs)
 
     @verbose
     def vhost_scsi_controller_remove_target(self, **kwargs):

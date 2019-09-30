@@ -161,14 +161,14 @@ always CPU 0. For NUMA systems, the cpumask should specify cores on the same CPU
 socket as its associated VM.
 
 ~~~{.sh}
-scripts/rpc.py construct_vhost_blk_controller --cpumask 0x1 vhost.1 Malloc0
+scripts/rpc.py vhost_create_blk_controller --cpumask 0x1 vhost.1 Malloc0
 ~~~
 
 It is also possible to construct a read-only vhost-blk device by specifying an
 extra `-r` or `--readonly` parameter.
 
 ~~~{.sh}
-scripts/rpc.py construct_vhost_blk_controller --cpumask 0x1 -r vhost.1 Malloc0
+scripts/rpc.py vhost_create_blk_controller --cpumask 0x1 -r vhost.1 Malloc0
 ~~~
 
 ### Vhost-NVMe (experimental)
@@ -295,7 +295,7 @@ Malloc1
 ~~~
 
 ~~~{.sh}
-host:~# ./scripts/rpc.py construct_vhost_blk_controller --cpumask 0x2 vhost.1 Malloc1
+host:~# ./scripts/rpc.py vhost_create_blk_controller --cpumask 0x2 vhost.1 Malloc1
 vhost_blk.c: 719:spdk_vhost_blk_construct: *NOTICE*: Controller vhost.1: using bdev 'Malloc1'
 ~~~
 
