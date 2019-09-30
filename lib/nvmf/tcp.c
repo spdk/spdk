@@ -878,9 +878,10 @@ spdk_nvmf_tcp_qpair_flush_pdus(void *_tqpair)
 		 * empty - to make sure all data is sent before
 		 * closing the connection.
 		 */
+		errno = 0;
 		do {
 			rc = spdk_nvmf_tcp_qpair_flush_pdus_internal(tqpair);
-		} while (rc == 1);
+		} while (rc == 1 && errno == 0);
 	}
 
 	if (rc < 0 && tqpair->state < NVME_TCP_QPAIR_STATE_EXITING) {
