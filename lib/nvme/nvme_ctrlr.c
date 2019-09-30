@@ -2114,7 +2114,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			goto init_timeout;
 		}
 		SPDK_ERRLOG("Failed to read CC and CSTS in state %d\n", ctrlr->state);
-		nvme_ctrlr_fail(ctrlr, false);
 		return -EIO;
 	}
 
@@ -2161,7 +2160,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			cc.bits.en = 0;
 			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
 				SPDK_ERRLOG("set_cc() failed\n");
-				nvme_ctrlr_fail(ctrlr, false);
 				return -EIO;
 			}
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
@@ -2193,7 +2191,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			cc.bits.en = 0;
 			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
 				SPDK_ERRLOG("set_cc() failed\n");
-				nvme_ctrlr_fail(ctrlr, false);
 				return -EIO;
 			}
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
@@ -2348,7 +2345,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	default:
 		assert(0);
-		nvme_ctrlr_fail(ctrlr, false);
 		return -1;
 	}
 
@@ -2356,7 +2352,6 @@ init_timeout:
 	if (ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE &&
 	    spdk_get_ticks() > ctrlr->state_timeout_tsc) {
 		SPDK_ERRLOG("Initialization timed out in state %d\n", ctrlr->state);
-		nvme_ctrlr_fail(ctrlr, false);
 		return -1;
 	}
 
