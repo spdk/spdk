@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00b23a10_4eaf0855",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1937,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-30T22:03:11Z",
+      "side": 1,
+      "message": "Delete a vhost controller",
+      "revId": "fa96d7616f7c646d4959c53569c508807803d42f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbaae08d_c444957e",
+        "filename": "scripts/rpc/vhost.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-30T22:03:11Z",
+      "side": 1,
+      "message": "Remove \u003d\u003e Delete\n\n(for some reason I feel like we must use Delete in the help - I think create/construct can be used interchangeably, but not remove/delete)",
+      "revId": "fa96d7616f7c646d4959c53569c508807803d42f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
