@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a344687e_9bf1444c",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-30T23:08:57Z",
+      "side": 1,
+      "message": "I don\u0027t see _decoders in this file, and so rpc_vhost_create_scsi_ctrlr may be better.",
+      "parentUuid": "c9ba9cab_00553949",
+      "range": {
+        "startLine": 59,
+        "startChar": 45,
+        "endLine": 59,
+        "endChar": 70
+      },
+      "revId": "92430633a5daf77e1a62208b130f56f5e0386f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f020ea09_88de8ee8",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 3
