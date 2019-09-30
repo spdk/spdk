@@ -408,7 +408,8 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_request *req;
 
-	if (!qpair->is_enabled && !qpair->ctrlr->is_resetting && !qpair->qp_is_enabling) {
+	if (!qpair->is_enabled && !qpair->ctrlr->is_resetting && !qpair->transport_qp_is_failed &&
+	    !qpair->qp_is_enabling) {
 		qpair->qp_is_enabling = 1;
 		nvme_qpair_complete_error_reqs(qpair);
 		nvme_transport_qpair_abort_reqs(qpair, 0 /* retry */);
@@ -428,6 +429,67 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 	}
 
 	return qpair->is_enabled;
+}
+
+static int32_t
+nvme_qpair_reconnect(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
+	uint64_t		ticks;
+	int32_t			rc = 0;
+
+	if (qpair->reconnect_retry_number >= ctrlr->qp_reconnect_attempt_limit) {
+		return -ENXIO;
+	}
+
+	ticks = spdk_get_ticks();
+	if (ticks < qpair->reconnect_retry_ticks) {
+		/* Try again later */
+		return -EAGAIN;
+	}
+
+	if (qpair->reconnect_retry_ticks == 0) {
+		SPDK_NOTICELOG("Detected qpair failure on ctrlr: %p with qpid %d. Reconnecting.\n", ctrlr,
+			       qpair->id);
+		qpair->reconnect_retry_ticks = ticks + ctrlr->qp_reconnect_delay_ticks;
+		return -EAGAIN;
+	}
+
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvme_robust_mutex_unlock(&qpair->ctrlr->ctrlr_lock);
+		rc = nvme_ctrlr_reset(qpair->ctrlr);
+		nvme_robust_mutex_lock(&qpair->ctrlr->ctrlr_lock);
+	} else if (!qpair->ctrlr->adminq->transport_qp_is_failed && !qpair->ctrlr->is_resetting) {
+		if (nvme_transport_ctrlr_connect_qpair(qpair->ctrlr, qpair) != 0) {
+			nvme_transport_ctrlr_disconnect_qpair(qpair->ctrlr, qpair);
+		}
+	}
+
+	if (qpair->transport_qp_is_failed || (nvme_qpair_is_admin_queue(qpair) && rc)) {
+		SPDK_NOTICELOG("Reconnect attempt on ctrlr: %p with qpid %d failed.\n", ctrlr, qpair->id);
+		rc = -EAGAIN;
+		qpair->reconnect_retry_number++;
+		qpair->reconnect_retry_ticks = ticks + ctrlr->qp_reconnect_delay_ticks;
+
+		/* If we were unable to reset the ctrlr, keep the admin qp in failed state. */
+		qpair->transport_qp_is_failed = true;
+	} else {
+		SPDK_NOTICELOG("Reconnect attempt on ctrlr: %p with qpid %d successful.\n", ctrlr, qpair->id);
+		rc = 0;
+		qpair->reconnect_retry_number = 0;
+		qpair->reconnect_retry_ticks = 0;
+	}
+
+	if (qpair->reconnect_retry_number == ctrlr->qp_reconnect_attempt_limit) {
+		rc = -ENXIO;
+		if (nvme_qpair_is_admin_queue(qpair)) {
+			nvme_ctrlr_fail(qpair->ctrlr, false);
+		} else {
+			nvme_qpair_disable(qpair);
+		}
+	}
+
+	return rc;
 }
 
 int32_t
@@ -451,19 +513,10 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	if (spdk_unlikely(qpair->transport_qp_is_failed)) {
-		if (nvme_qpair_is_admin_queue(qpair)) {
-			nvme_robust_mutex_unlock(&qpair->ctrlr->ctrlr_lock);
-			ret = spdk_nvme_ctrlr_reset(qpair->ctrlr);
-			nvme_robust_mutex_lock(&qpair->ctrlr->ctrlr_lock);
-		} else if (!qpair->ctrlr->adminq->transport_qp_is_failed) {
-			if (nvme_transport_ctrlr_connect_qpair(qpair->ctrlr, qpair) != 0) {
-				nvme_transport_ctrlr_disconnect_qpair(qpair->ctrlr, qpair);
-				ret = -ENXIO;
-			}
-		}
-
-		/* If we have fixed the qpair, then continue the function. */
-		if (qpair->transport_qp_is_failed) {
+		ret = nvme_qpair_reconnect(qpair);
+		if (ret == -EAGAIN) {
+			return 0;
+		} else if (ret != 0) {
 			return ret;
 		}
 	}
