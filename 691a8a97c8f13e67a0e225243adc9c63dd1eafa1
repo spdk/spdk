@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c9f8ad1_6a5d95a8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4226,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-30T08:15:31Z",
+      "side": 1,
+      "message": "Should we copy desc-\u003ecallback.event_fn to a local variable and use it before unlocking mutex?",
+      "range": {
+        "startLine": 4226,
+        "startChar": 3,
+        "endLine": 4226,
+        "endChar": 26
+      },
+      "revId": "691a8a97c8f13e67a0e225243adc9c63dd1eafa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21ef25b5_97b596b4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4228,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-30T08:15:31Z",
+      "side": 1,
+      "message": "same as above?",
+      "range": {
+        "startLine": 4228,
+        "startChar": 3,
+        "endLine": 4228,
+        "endChar": 28
+      },
+      "revId": "691a8a97c8f13e67a0e225243adc9c63dd1eafa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
