@@ -135,15 +135,8 @@ struct spdk_app_opts {
 
 	/**
 	 * for passing user-provided log call
-	 *
-	 * \param level Log level threshold.
-	 * \param file Name of the current source file.
-	 * \param line Current source file line.
-	 * \param func Current source function name.
-	 * \param format Format string to the message.
 	 */
-	void (* log)(int level, const char *file, const int line,
-		     const char *func, const char *format);
+	logfunc         *log;
 
 };
 
