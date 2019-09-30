@@ -216,7 +216,7 @@ for (( i=0; i<$vm_count; i++)); do
     used_vms+=" $i"
 done
 
-$rpc_py get_vhost_controllers
+$rpc_py vhost_get_controllers
 
 # Run VMs
 vm_run $used_vms
@@ -279,7 +279,7 @@ clean_lvol_cfg
 
 $rpc_py bdev_lvol_get_lvstores
 $rpc_py bdev_get_bdevs
-$rpc_py get_vhost_controllers
+$rpc_py vhost_get_controllers
 
 notice "Shutting down SPDK vhost app..."
 vhost_kill 0
