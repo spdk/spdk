@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "14fe4218_85f5624a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4226,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-30T12:42:06Z",
+      "side": 1,
+      "message": "_remove_notify is always called on the thread that opened descriptor. It is even impossible that two _remove_notify messages will be generated, because they are sent under bdev mutex and \"status !\u003d REMOVING\" check (in spdk_bdev_unregister).\n\nWe can probably add assert(desc-\u003ethread \u003d\u003d spdk_get_thread()), like in spdk_bdev_close.\nThis will serve as additional enforcement and documentation. What do you think?",
+      "parentUuid": "265c05ef_11fa1ff8",
+      "range": {
+        "startLine": 4226,
+        "startChar": 3,
+        "endLine": 4226,
+        "endChar": 26
+      },
+      "revId": "691a8a97c8f13e67a0e225243adc9c63dd1eafa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "21ef25b5_97b596b4",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
