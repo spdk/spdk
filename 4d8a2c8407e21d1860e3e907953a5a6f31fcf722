@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7310269b_c75da80b",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-30T21:59:49Z",
+      "side": 1,
+      "message": "fix tabs to keep the parameters aligned",
+      "revId": "4d8a2c8407e21d1860e3e907953a5a6f31fcf722",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
