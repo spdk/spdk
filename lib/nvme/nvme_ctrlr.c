@@ -2427,6 +2427,9 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->is_resetting = false;
 	ctrlr->is_failed = false;
 	ctrlr->is_shutdown = false;
+	ctrlr->qp_reconnect_delay_ticks = (NVME_QPAIR_RECONNECT_DELAY_US * spdk_get_ticks_hz()) /
+					  SPDK_SEC_TO_USEC;
+	ctrlr->qp_reconnect_attempt_limit = NVME_QPAIR_RECONNECT_LIMIT;
 
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	STAILQ_INIT(&ctrlr->queued_aborts);
