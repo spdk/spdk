@@ -17,7 +17,7 @@ function host_2_cleanup_vhost()
 
 	notice "Removing bdev & controller from vhost 1 on remote server"
 	$rpc delete_nvme_controller Nvme0
-	$rpc remove_vhost_controller $target_vm_ctrl
+	$rpc vhost_delete_controller $target_vm_ctrl
 
 	notice "Shutting down vhost app"
 	vhost_kill 1
