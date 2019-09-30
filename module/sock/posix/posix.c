@@ -166,6 +166,26 @@ enum spdk_posix_sock_create_type {
 	SPDK_SOCK_CREATE_CONNECT,
 };
 
+static int
+spdk_posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
+
+	assert(sock != NULL);
+
+	if (sz < SO_RCVBUF_SIZE) {
+		sz = SO_RCVBUF_SIZE;
+	}
+
+	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
+	if (rc < 0) {
+		return rc;
+	}
+
+	return 0;
+}
+
 static struct spdk_sock *
 spdk_posix_sock_create(const char *ip, int port, enum spdk_posix_sock_create_type type)
 {
@@ -298,6 +318,12 @@ retry:
 	}
 
 	sock->fd = fd;
+
+	rc = spdk_posix_sock_set_recvbuf(&sock->base, SO_RCVBUF_SIZE);
+	if (rc) {
+		/* Not fatal */
+	}
+
 	return &sock->base;
 }
 
@@ -322,7 +348,6 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 	int				rc, fd;
 	struct spdk_posix_sock		*new_sock;
 	int				flag;
-	size_t				sz = 0;
 
 	memset(&sa, 0, sizeof(sa));
 	salen = sizeof(sa);
@@ -344,21 +369,6 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 		return NULL;
 	}
 
-	rc = getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &sz, &salen);
-	if (rc < 0) {
-		SPDK_ERRLOG("Unable to get recvbuf size for socket fd %d (%s)\n", fd, spdk_strerror(errno));
-		close(fd);
-		return NULL;
-	}
-
-	if (sz < SO_RCVBUF_SIZE) {
-		sz = SO_RCVBUF_SIZE;
-		rc = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
-		if (rc < 0) {
-			SPDK_WARNLOG("Unable to increase size of rcvbuf for socket fd %d (%s)", fd, spdk_strerror(errno));
-		}
-	}
-
 	new_sock = calloc(1, sizeof(*sock));
 	if (new_sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
@@ -367,6 +377,12 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 	}
 
 	new_sock->fd = fd;
+
+	rc = spdk_posix_sock_set_recvbuf(&new_sock->base, SO_RCVBUF_SIZE);
+	if (rc) {
+		/* Not fatal */
+	}
+
 	return &new_sock->base;
 }
 
@@ -423,17 +439,6 @@ spdk_posix_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 		return -1;
 	}
 	return 0;
-}
-
-static int
-spdk_posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
-{
-	struct spdk_posix_sock *sock = __posix_sock(_sock);
-
-	assert(sock != NULL);
-
-	return setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF,
-			  &sz, sizeof(sz));
 }
 
 static int
