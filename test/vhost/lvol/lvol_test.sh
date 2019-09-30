@@ -205,7 +205,7 @@ for (( i=0; i<$vm_count; i++)); do
     elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
         disk=""
         for (( j=0; j<${#bdevs[@]}; j++)); do
-            $rpc_py construct_vhost_blk_controller naa.$j.$i ${bdevs[$j]} $mask_arg
+            $rpc_py vhost_create_blk_controller naa.$j.$i ${bdevs[$j]} $mask_arg
             disk+="${j}:"
         done
         disk="${disk::-1}"

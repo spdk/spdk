@@ -4579,7 +4579,7 @@ Example response:
 }
 ~~~
 
-## construct_vhost_blk_controller {#rpc_construct_vhost_blk_controller}
+## vhost_create_blk_controller {#rpc_vhost_create_blk_controller}
 
 Construct vhost block controller
 
@@ -4607,7 +4607,7 @@ Example request:
     "ctrlr": "VhostBlk0"
   },
   "jsonrpc": "2.0",
-  "method": "construct_vhost_blk_controller",
+  "method": "vhost_create_blk_controller",
   "id": 1
 }
 ~~~

@@ -126,7 +126,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 
 	# BLK
 	notice "Trying to create block controller with incorrect cpumask"
-	if $rpc_py construct_vhost_blk_controller vhost.invalid.cpumask  Malloc0 --cpumask 0x2; then
+	if $rpc_py vhost_create_blk_controller vhost.invalid.cpumask  Malloc0 --cpumask 0x2; then
 		error "Creating block controller with incorrect cpumask succeeded, but it shouldn't"
 	fi
 
@@ -136,7 +136,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	fi
 
 	notice "Trying to create block controller with incorrect name"
-	if $rpc_py construct_vhost_blk_controller . Malloc0; then
+	if $rpc_py vhost_create_blk_controller . Malloc0; then
 		error "Creating block controller with incorrect name succeeded, but it shouldn't"
 	fi
 

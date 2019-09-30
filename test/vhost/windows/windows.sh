@@ -111,9 +111,9 @@ if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
 	$rpc_py add_vhost_scsi_lun naa.0.0 2 Aio0
 	setup_cmd+=" --disk-type=spdk_vhost_scsi --disks=0"
 elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
-	$rpc_py construct_vhost_blk_controller naa.0.0 Nvme0n1
-	$rpc_py construct_vhost_blk_controller naa.1.0 Malloc0
-	$rpc_py construct_vhost_blk_controller naa.2.0 Aio0
+	$rpc_py vhost_create_blk_controller naa.0.0 Nvme0n1
+	$rpc_py vhost_create_blk_controller naa.1.0 Malloc0
+	$rpc_py vhost_create_blk_controller naa.2.0 Aio0
 	setup_cmd+=" --disk-type=spdk_vhost_blk --disks=0:1:2"
 fi
 $rpc_py get_vhost_controllers

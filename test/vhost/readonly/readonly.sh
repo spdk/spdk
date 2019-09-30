@@ -85,7 +85,7 @@ function blk_ro_tc1()
 #Create controller and create file on disk for later test
 	notice "Creating vhost_blk controller"
 	vhost_blk_name="naa.$disk_name.$vm_no"
-	$rpc_py construct_vhost_blk_controller $vhost_blk_name $disk_name
+	$rpc_py vhost_create_blk_controller $vhost_blk_name $disk_name
 	vm_setup --disk-type=spdk_vhost_blk --force=$vm_no --os=$vm_img --disks=$disk --read-only=true
 
 	vm_run $vm_no
@@ -98,7 +98,7 @@ function blk_ro_tc1()
 #Create readonly controller and test readonly feature
 	notice "Removing controller and creating new one with readonly flag"
 	$rpc_py remove_vhost_controller $vhost_blk_name
-	$rpc_py construct_vhost_blk_controller -r $vhost_blk_name $disk_name
+	$rpc_py vhost_create_blk_controller -r $vhost_blk_name $disk_name
 
 	vm_run $vm_no
 	vm_wait_for_boot 300 $vm_no
@@ -110,7 +110,7 @@ function blk_ro_tc1()
 #Delete file from disk and delete partition
 	echo "INFO: Removing controller and creating new one"
 	$rpc_py remove_vhost_controller $vhost_blk_name
-	$rpc_py construct_vhost_blk_controller $vhost_blk_name $disk_name
+	$rpc_py vhost_create_blk_controller $vhost_blk_name $disk_name
 
 	vm_run $vm_no
 	vm_wait_for_boot 300 $vm_no

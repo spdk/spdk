@@ -1886,19 +1886,21 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('scsi_target_num', help='scsi_target_num', type=int)
     p.set_defaults(func=remove_vhost_scsi_target)
 
-    def construct_vhost_blk_controller(args):
-        rpc.vhost.construct_vhost_blk_controller(args.client,
-                                                 ctrlr=args.ctrlr,
-                                                 dev_name=args.dev_name,
-                                                 cpumask=args.cpumask,
-                                                 readonly=args.readonly)
+    def vhost_create_blk_controller(args):
+        rpc.vhost.vhost_create_blk_controller(args.client,
+                                              ctrlr=args.ctrlr,
+                                              dev_name=args.dev_name,
+                                              cpumask=args.cpumask,
+                                              readonly=args.readonly)
 
-    p = subparsers.add_parser('construct_vhost_blk_controller', help='Add a new vhost block controller')
+    p = subparsers.add_parser('vhost_create_blk_controller',
+                              aliases=['construct_vhost_blk_controller'],
+                              help='Add a new vhost block controller')
     p.add_argument('ctrlr', help='controller name')
     p.add_argument('dev_name', help='device name')
     p.add_argument('--cpumask', help='cpu mask for this controller')
     p.add_argument("-r", "--readonly", action='store_true', help='Set controller as read-only')
-    p.set_defaults(func=construct_vhost_blk_controller)
+    p.set_defaults(func=vhost_create_blk_controller)
 
     def construct_vhost_nvme_controller(args):
         rpc.vhost.construct_vhost_nvme_controller(args.client,

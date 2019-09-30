@@ -19,7 +19,7 @@ bdev_dict["bdev_virtio_attach_controller"] = []
 
 vhost_dict = OrderedDict()
 vhost_dict["construct_vhost_scsi_controller"] = []
-vhost_dict["construct_vhost_blk_controller"] = []
+vhost_dict["vhost_create_blk_controller"] = []
 vhost_dict["construct_vhost_nvme_controller"] = []
 
 iscsi_dict = OrderedDict()
@@ -434,7 +434,7 @@ def get_vhost_blk_json(config, section):
     ]
     for option in config.options(section):
         set_param(params, option, config.get(section, option))
-    return [{"method": "construct_vhost_blk_controller",
+    return [{"method": "vhost_create_blk_controller",
             "params": to_json_params(params)}]
 
 

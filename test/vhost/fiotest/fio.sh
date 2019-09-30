@@ -126,7 +126,7 @@ for vm_conf in ${vms[@]}; do
 				if [[ "$test_type" == "spdk_vhost_blk" ]]; then
 					disk=${disk%%_*}
 					notice "Creating vhost block controller naa.$disk.${conf[0]} with device $disk"
-					$rpc_py construct_vhost_blk_controller naa.$disk.${conf[0]} $based_disk
+					$rpc_py vhost_create_blk_controller naa.$disk.${conf[0]} $based_disk
 				else
 					notice "Creating controller naa.$disk.${conf[0]}"
 					$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]}
