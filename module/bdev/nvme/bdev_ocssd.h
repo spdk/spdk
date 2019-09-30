@@ -37,12 +37,18 @@
 #include "spdk/stdinc.h"
 #include "common.h"
 
+struct bdev_ocssd_range {
+	uint64_t begin;
+	uint64_t end;
+};
+
 typedef void (*spdk_bdev_ocssd_create_cb)(const char *bdev_name, int status, void *ctx);
 typedef void (*spdk_bdev_ocssd_delete_cb)(int status, void *ctx);
 
 void spdk_bdev_ocssd_get_opts(struct spdk_bdev_nvme_opts *opts);
 
 int spdk_bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
+				const struct bdev_ocssd_range *range,
 				spdk_bdev_ocssd_create_cb cb_fn, void *cb_arg);
 int spdk_bdev_ocssd_delete_bdev(const char *bdev_name, spdk_bdev_ocssd_delete_cb cb_fn,
 				void *cb_arg);

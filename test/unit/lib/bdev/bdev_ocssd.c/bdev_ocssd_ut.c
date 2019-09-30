@@ -485,6 +485,7 @@ test_create_controller(void)
 	struct spdk_nvme_transport_id trid = { .traddr = "00:00:00" };
 	struct spdk_ocssd_geometry_data geometry = {};
 	struct spdk_bdev *bdev;
+	struct bdev_ocssd_range range;
 	const char *controller_name = "nvme0";
 	const size_t ns_count = 16;
 	char namebuf[128];
@@ -512,7 +513,8 @@ test_create_controller(void)
 
 	for (nsid = 1; nsid <= ns_count; ++nsid) {
 		snprintf(namebuf, sizeof(namebuf), "%sn%"PRIu32, controller_name, nsid);
-		rc = spdk_bdev_ocssd_create_bdev(controller_name, namebuf, nsid, create_bdev_cb, NULL);
+		rc = spdk_bdev_ocssd_create_bdev(controller_name, namebuf, nsid, NULL,
+						 create_bdev_cb, NULL);
 		CU_ASSERT_EQUAL(rc, 0);
 		rc = spdk_thread_poll(g_thread, 0, 0);
 		CU_ASSERT_EQUAL(rc, 1);
@@ -529,7 +531,8 @@ test_create_controller(void)
 
 	for (nsid = 1; nsid <= ns_count; ++nsid) {
 		snprintf(namebuf, sizeof(namebuf), "%sn%"PRIu32, controller_name, nsid);
-		rc = spdk_bdev_ocssd_create_bdev(controller_name, namebuf, nsid, create_bdev_cb, NULL);
+		rc = spdk_bdev_ocssd_create_bdev(controller_name, namebuf, nsid, NULL,
+						 create_bdev_cb, NULL);
 		CU_ASSERT_EQUAL(rc, 0);
 		rc = spdk_thread_poll(g_thread, 0, 0);
 		CU_ASSERT_EQUAL(rc, 1);
@@ -544,8 +547,54 @@ test_create_controller(void)
 	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
 
 	/* Verify it's not possible to create a bdev on non-existent namespace */
-	rc = spdk_bdev_ocssd_create_bdev(controller_name, "invalid", ns_count + 1, create_bdev_cb, NULL);
+	rc = spdk_bdev_ocssd_create_bdev(controller_name, "invalid", ns_count + 1, NULL,
+					 create_bdev_cb, NULL);
 	CU_ASSERT_EQUAL(rc, -ENODEV);
+
+	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
+
+	/* Verify the correctness of parallel unit range validation */
+	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
+
+	range.begin = 0;
+	range.end = geometry.num_grp * geometry.num_pu;
+
+	rc = spdk_bdev_ocssd_create_bdev(controller_name, "invalid", 1, &range,
+					 create_bdev_cb, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	spdk_thread_poll(g_thread, 0, 0);
+	bdev = spdk_bdev_get_by_name("invalid");
+	CU_ASSERT_PTR_NULL(bdev);
+
+	/* Verify it's not possible for the bdevs to overlap */
+	range.begin = 0;
+	range.end = 16;
+	rc = spdk_bdev_ocssd_create_bdev(controller_name, "valid", 1, &range,
+					 create_bdev_cb, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_thread_poll(g_thread, 0, 0);
+	CU_ASSERT_EQUAL(rc, 1);
+	bdev = spdk_bdev_get_by_name("valid");
+	CU_ASSERT_PTR_NOT_NULL(bdev);
+
+	range.begin = 16;
+	range.end = 31;
+	rc = spdk_bdev_ocssd_create_bdev(controller_name, "invalid", 1, &range,
+					 create_bdev_cb, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	spdk_thread_poll(g_thread, 0, 0);
+	bdev = spdk_bdev_get_by_name("invalid");
+	CU_ASSERT_PTR_NULL(bdev);
+
+	/* But it is possible to create them without overlap */
+	range.begin = 17;
+	range.end = 31;
+	rc = spdk_bdev_ocssd_create_bdev(controller_name, "valid2", 1, &range,
+					 create_bdev_cb, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	spdk_thread_poll(g_thread, 0, 0);
+	bdev = spdk_bdev_get_by_name("valid2");
+	CU_ASSERT_PTR_NOT_NULL(bdev);
 
 	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
 
@@ -583,7 +632,7 @@ test_device_geometry(void)
 	ctrlr = create_controller(&trid, 1, &geometry);
 	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
 
-	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, create_bdev_cb, NULL);
+	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, NULL, create_bdev_cb, NULL);
 	CU_ASSERT_EQUAL(rc, 0);
 	rc = spdk_thread_poll(g_thread, 0, 0);
 	CU_ASSERT_EQUAL(rc, 1);
@@ -656,7 +705,7 @@ test_lba_translation(void)
 	ctrlr = create_controller(&trid, 1, &geometry);
 	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
 
-	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, create_bdev_cb, NULL);
+	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, NULL, create_bdev_cb, NULL);
 	CU_ASSERT_EQUAL(rc, 0);
 	rc = spdk_thread_poll(g_thread, 0, 0);
 	CU_ASSERT_EQUAL(rc, 1);
@@ -708,7 +757,7 @@ test_lba_translation(void)
 	ctrlr = create_controller(&trid, 1, &geometry);
 	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
 
-	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, create_bdev_cb, NULL);
+	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, NULL, create_bdev_cb, NULL);
 	CU_ASSERT_EQUAL(rc, 0);
 	rc = spdk_thread_poll(g_thread, 0, 0);
 	CU_ASSERT_EQUAL(rc, 1);
@@ -742,6 +791,118 @@ test_lba_translation(void)
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 68, 1, 0, 0));
 	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev, lba),
 			bdev->zone_size * geometry.num_pu * geometry.num_grp + 68);
+
+	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
+
+	free_controller(ctrlr);
+}
+
+static void
+punit_range_to_addr(const struct spdk_nvme_ctrlr *ctrlr, uint64_t punit,
+		    uint64_t *grp, uint64_t *pu)
+{
+	const struct spdk_ocssd_geometry_data *geo = &ctrlr->geometry;
+
+	*grp = punit / geo->num_pu;
+	*pu = punit % geo->num_pu;
+
+	CU_ASSERT(*grp < geo->num_grp);
+}
+
+static void
+test_parallel_unit_range(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct spdk_nvme_transport_id trid = { .traddr = "00:00:00" };
+	const char *controller_name = "nvme0";
+	const char *bdev_name[] = { "nvme0n1", "nvme0n2", "nvme0n3" };
+	const struct bdev_ocssd_range range[3] = { { 0, 5 }, { 6, 18 }, { 19, 23 } };
+	struct ocssd_bdev *ocssd_bdev[3];
+	struct spdk_ocssd_geometry_data geometry = {};
+	struct spdk_bdev *bdev[3];
+	uint64_t lba, i, offset, grp, pu, zone_size;
+	int rc;
+
+	geometry = (struct spdk_ocssd_geometry_data) {
+		.clba = 500,
+		.num_chk = 60,
+		.num_pu = 8,
+		.num_grp = 3,
+		.lbaf = {
+			.lbk_len = 9,
+			.chk_len = 6,
+			.pu_len = 3,
+			.grp_len = 2,
+		}
+	};
+
+	ctrlr = create_controller(&trid, 1, &geometry);
+	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
+
+	for (i = 0; i < SPDK_COUNTOF(range); ++i) {
+		rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name[i], 1, &range[i],
+						 create_bdev_cb, NULL);
+		CU_ASSERT_EQUAL(rc, 0);
+		rc = spdk_thread_poll(g_thread, 0, 0);
+		CU_ASSERT_EQUAL(rc, 1);
+
+		bdev[i] = spdk_bdev_get_by_name(bdev_name[i]);
+		SPDK_CU_ASSERT_FATAL(bdev[i] != NULL);
+		ocssd_bdev[i] = SPDK_CONTAINEROF(bdev[i], struct ocssd_bdev, nvme_bdev.disk);
+	}
+
+	zone_size = bdev[0]->zone_size;
+	CU_ASSERT_EQUAL(zone_size, bdev[1]->zone_size);
+	CU_ASSERT_EQUAL(zone_size, bdev[2]->zone_size);
+
+	/* Verify the first addresses are correct */
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev[0], 0);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, 0, 0));
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev[0], lba), 0);
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev[1], 0);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, 6, 0));
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev[1], lba), 0);
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev[2], 0);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, 3, 2));
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev[2], lba), 0);
+
+	/* Verify last address correctness */
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev[0], bdev[0]->blockcnt - 1);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, geometry.clba - 1, geometry.num_chk - 1, 5, 0));
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev[0], lba), bdev[0]->blockcnt - 1);
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev[1], bdev[1]->blockcnt - 1);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, geometry.clba - 1, geometry.num_chk - 1, 2, 2));
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev[1], lba), bdev[1]->blockcnt - 1);
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev[2], bdev[2]->blockcnt - 1);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, geometry.clba - 1, geometry.num_chk - 1, 7, 2));
+	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev[2], lba), bdev[2]->blockcnt - 1);
+
+	/* Verify correct jumps across parallel units / groups */
+	for (i = 0; i < SPDK_COUNTOF(range); ++i) {
+		for (offset = 0; offset < bdev_ocssd_num_parallel_units(ocssd_bdev[i]); ++offset) {
+			punit_range_to_addr(ctrlr, range[i].begin + offset, &grp, &pu);
+			lba = bdev_ocssd_to_disk_lba(ocssd_bdev[i], offset * zone_size + 68);
+			CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 68, 0, pu, grp));
+			CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev[i], lba),
+					offset * zone_size + 68);
+		}
+	}
+
+	/* Verify correct address wrapping */
+	for (i = 0; i < SPDK_COUNTOF(range); ++i) {
+		punit_range_to_addr(ctrlr, range[i].begin, &grp, &pu);
+
+		offset = bdev_ocssd_num_parallel_units(ocssd_bdev[i]) * zone_size + 68;
+		lba = bdev_ocssd_to_disk_lba(ocssd_bdev[i], offset);
+		CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 68, 1, pu, grp));
+		assert(lba == generate_lba(&geometry, 68, 1, pu, grp));
+		CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_bdev[i], lba), offset);
+	}
 
 	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
 
@@ -843,7 +1004,7 @@ test_get_zone_info(void)
 	ctrlr = create_controller(&trid, 1, &geometry);
 	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
 
-	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, create_bdev_cb, NULL);
+	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, NULL, create_bdev_cb, NULL);
 	CU_ASSERT_EQUAL(rc, 0);
 	rc = spdk_thread_poll(g_thread, 0, 0);
 	CU_ASSERT_EQUAL(rc, 1);
@@ -986,6 +1147,7 @@ main(int argc, const char **argv)
 		CU_add_test(suite, "test_create_controller", test_create_controller) == NULL ||
 		CU_add_test(suite, "test_device_geometry", test_device_geometry) == NULL ||
 		CU_add_test(suite, "test_lba_translation", test_lba_translation) == NULL ||
+		CU_add_test(suite, "test_parallel_unit_range", test_parallel_unit_range) == NULL ||
 		CU_add_test(suite, "test_get_zone_info", test_get_zone_info) == NULL
 	) {
 		CU_cleanup_registry();
