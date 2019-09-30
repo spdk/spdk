@@ -158,6 +158,10 @@ extern pid_t g_spdk_nvme_pid;
 						sizeof(struct spdk_nvme_cmd), \
 						sizeof(struct spdk_nvme_cpl)))
 
+/* Default configuration options for reconnecting a qpair. */
+#define NVME_QPAIR_RECONNECT_DELAY_US	(5000000)
+#define NVME_QPAIR_RECONNECT_LIMIT	(3)
+
 enum nvme_payload_type {
 	NVME_PAYLOAD_TYPE_INVALID = 0,
 
@@ -380,6 +384,10 @@ struct spdk_nvme_qpair {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
 	void				*req_buf;
+
+	/* Reconnect tracking variables. */
+	uint64_t			reconnect_retry_ticks;
+	uint32_t			reconnect_retry_number;
 };
 
 struct spdk_nvme_ns {
@@ -707,6 +715,10 @@ struct spdk_nvme_ctrlr {
 
 	STAILQ_HEAD(, nvme_request)	queued_aborts;
 	uint32_t			outstanding_aborts;
+
+	/* desired configuration for failed qpair reconnect. */
+	uint64_t			qp_reconnect_delay_ticks;
+	uint32_t			qp_reconnect_attempt_limit;
 
 	/* CB to notify the user when the ctrlr is removed/failed. */
 	spdk_nvme_remove_cb			remove_cb;
