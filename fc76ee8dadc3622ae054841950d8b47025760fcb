@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c80058f_1295a370",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1297,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-30T17:25:19Z",
+      "side": 1,
+      "message": "I think with the change above, we will get a bunch of ERRLOG messages when writev returns -1 and connection is EXITING.  Maybe that\u0027s OK.  But should we consider not modifying iscsi_conn_flush_pdus_internal(), and instead doing something like this:\n\ndo {\n  errno \u003d 0;\n  rc \u003d iscsi_conn_flush_pdus_internal(conn);\n} while (rc \u003d\u003d 1 \u0026\u0026 errno \u003d\u003d 0); /* this will still break since errno \u003d\u003d EAGAIN/EWOULDBLOCK */",
+      "revId": "fc76ee8dadc3622ae054841950d8b47025760fcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
