@@ -51,6 +51,8 @@
 struct spdk_posix_sock {
 	struct spdk_sock	base;
 	int			fd;
+
+	struct spdk_posix_sock_group_impl *group;
 };
 
 struct spdk_posix_sock_group_impl {
@@ -620,6 +622,9 @@ spdk_posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct 
 
 	rc = kevent(group->fd, &event, 1, NULL, 0, &ts);
 #endif
+
+	sock->group = group;
+
 	return rc;
 }
 
@@ -646,6 +651,9 @@ spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, stru
 		errno = event.data;
 	}
 #endif
+
+	sock->group = NULL;
+
 	return rc;
 }
 
