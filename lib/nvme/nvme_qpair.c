@@ -656,7 +656,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
 	} else if (spdk_likely(qpair->is_enabled)) {
 		rc = nvme_transport_qpair_submit_request(qpair, req);
-	} else if (nvme_qpair_is_admin_queue(qpair) && req->cmd.opc == SPDK_NVME_OPC_FABRIC) {
+	} else if (req->cmd.opc == SPDK_NVME_OPC_FABRIC && qpair->is_connecting) {
 		rc = nvme_transport_qpair_submit_request(qpair, req);
 	} else {
 		/* The controller is being reset - queue this request and
