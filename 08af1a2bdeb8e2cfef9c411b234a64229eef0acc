@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c9ee46c_cb4db48e",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 924,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-30T23:28:37Z",
+      "side": 1,
+      "message": "Hi Chunyang,\n\nbase_bdev \u003d spdk_bdev_part_base_get_bdev(part);\nname \u003d spdk_bdev_get_name(base_bdev)\n\nis not enough?\n\nspdk_bdev_part_base_get_desc() provides similar feature but just returns part_base-\u003edesc.\nname is not of part_base and so returning part_base-\u003ebdev-\u003ename doesn\u0027t look safe to me.",
+      "revId": "08af1a2bdeb8e2cfef9c411b234a64229eef0acc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
