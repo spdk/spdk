@@ -68,6 +68,10 @@ export RUN_NIGHTLY_FAILING
 # specific use cases for tests.
 export PYTHONPATH=$PYTHONPATH:$rootdir/scripts
 
+# Don't create Python .pyc files. When running with sudo these will be
+# created with root ownership and can cause problems when cleaning the repository.
+export PYTHONDONTWRITEBYTECODE=1
+
 # Export flag to skip the known bug that exists in librados
 # Bug is reported on ceph bug tracker with number 24078
 export ASAN_OPTIONS=new_delete_type_mismatch=0
