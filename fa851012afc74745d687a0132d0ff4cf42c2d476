@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25363903_7bd0f63d",
+        "filename": "examples/seastar/sock.cc",
+        "patchSetId": 12
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-09-30T17:27:42Z",
+      "side": 1,
+      "message": "Here, we still cannot use zero copy? //or just for test purpose.",
+      "range": {
+        "startLine": 412,
+        "startChar": 2,
+        "endLine": 412,
+        "endChar": 34
+      },
+      "revId": "fa851012afc74745d687a0132d0ff4cf42c2d476",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9308e59f_30f7a01f",
+        "filename": "examples/seastar/sock.cc",
+        "patchSetId": 12
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-09-30T17:27:42Z",
+      "side": 1,
+      "message": "Need to make the alignment better.",
+      "range": {
+        "startLine": 544,
+        "startChar": 2,
+        "endLine": 544,
+        "endChar": 38
+      },
+      "revId": "fa851012afc74745d687a0132d0ff4cf42c2d476",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
