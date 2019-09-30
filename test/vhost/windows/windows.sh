@@ -116,7 +116,7 @@ elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
 	$rpc_py construct_vhost_blk_controller naa.2.0 Aio0
 	setup_cmd+=" --disk-type=spdk_vhost_blk --disks=0:1:2"
 fi
-$rpc_py get_vhost_controllers
+$rpc_py vhost_get_controllers
 $setup_cmd
 
 # Spin up VM

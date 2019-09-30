@@ -137,7 +137,7 @@ for vm_conf in ${vms[@]}; do
 			done
 		done <<< "${conf[2]}"
 		unset IFS;
-		$rpc_py get_vhost_controllers
+		$rpc_py vhost_get_controllers
 	fi
 
 	setup_cmd="vm_setup --force=${conf[0]} --disk-type=$test_type"

@@ -109,7 +109,8 @@ def construct_vhost_blk_controller(client, ctrlr, dev_name, cpumask=None, readon
     return client.call('construct_vhost_blk_controller', params)
 
 
-def get_vhost_controllers(client, name=None):
+@deprecated_alias('get_vhost_controllers')
+def vhost_get_controllers(client, name=None):
     """Get information about configured vhost controllers.
 
     Args:
@@ -121,7 +122,7 @@ def get_vhost_controllers(client, name=None):
     params = {}
     if name:
         params['name'] = name
-    return client.call('get_vhost_controllers', params)
+    return client.call('vhost_get_controllers', params)
 
 
 @deprecated_alias('remove_vhost_controller')

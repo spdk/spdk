@@ -389,7 +389,7 @@ free_rpc_get_vhost_ctrlrs(struct rpc_get_vhost_ctrlrs *req)
 }
 
 static void
-spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
+spdk_rpc_vhost_get_controllers(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
 	struct rpc_get_vhost_ctrlrs req = {0};
@@ -447,7 +447,8 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("get_vhost_controllers", spdk_rpc_get_vhost_controllers, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("vhost_get_controllers", spdk_rpc_vhost_get_controllers, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_get_controllers, get_vhost_controllers)
 
 
 struct rpc_vhost_ctrlr_coalescing {
