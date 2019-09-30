@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "265c05ef_11fa1ff8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4226,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-30T12:26:24Z",
+      "side": 1,
+      "message": "Hi Eugene,\n\nI\u0027m sorry for my unclear comment.\nWhat I wanted to say was:\n- desc-\u003eref \u003d 2\n- thread 1 calls _remove_notify() but its callback is not called yet.\n- thread 2 calls _remove_notify() and then frees desc by spdk_bdev_desc_fini().\n- the freed desc is reused by other malloc().\n- thread 1 then calls its callback, but desc was already freed, and so the function pointer is not ensured.\n\nIs this case probable? If probable, we have to copy desc-\u003ecallback.event_fn, desc-\u003ebdev, and desc-\u003ecallback.ctx to local variables.\n\nI\u0027m afraid I overlooked the key logic.\n\n-Shuhei",
+      "parentUuid": "1b1e247a_01efc1c6",
+      "range": {
+        "startLine": 4226,
+        "startChar": 3,
+        "endLine": 4226,
+        "endChar": 26
+      },
+      "revId": "691a8a97c8f13e67a0e225243adc9c63dd1eafa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "21ef25b5_97b596b4",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
