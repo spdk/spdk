@@ -4339,7 +4339,7 @@ directory path needs to be valid UNIX socket name.
 @ref cpu_mask parameter is used to choose CPU on which pollers will be launched when new initiator is connecting.
 It must be a subset of application CPU mask. Default value is CPU mask of the application.
 
-## set_vhost_controller_coalescing {#rpc_set_vhost_controller_coalescing}
+## vhost_controller_set_coalescing {#rpc_vhost_controller_set_coalescing}
 
 Controls interrupt coalescing for specific target. Because `delay_base_us` is used to calculate delay in CPU ticks
 there is no hardcoded limit for this parameter. Only limitation is that final delay in CPU ticks might not overflow
@@ -4366,7 +4366,7 @@ Example request:
     "delay_base_us": 80
   },
   "jsonrpc": "2.0",
-  "method": "set_vhost_controller_coalescing",
+  "method": "vhost_controller_set_coalescing",
   "id": 1
 }
 ~~~
