@@ -41,6 +41,29 @@
 #include "spdk_internal/log.h"
 #include "vmd_spec.h"
 
+/*
+ * States for the LED
+ */
+typedef enum {
+	VMD_LED_STATE_UNKNOWN = 0,
+	VMD_LED_STATE_OFF,
+	VMD_LED_STATE_IDENT,
+	VMD_LED_STATE_FAULT,
+	VMD_LED_STATE_REBUILD,
+	VMD_LED_STATE_UNSUPPORTED = 0xFF
+} VMD_LED_STATE;
+
+#define is_device_enumerated(dev) \
+ (((dev)->header->one.prefetch_base_upper == UPPER_BASE_SIG) && \
+  ((dev)->header->one.prefetch_limit_upper == UPPER_LIMIT_SIG))
+
+#define is_root_port(dev) \
+    ((dev)->header->common.vendor_id == 0x8086 && \
+    (((dev)->header->common.device_id == 0x2030) || \
+     ((dev)->header->common.device_id == 0x2031) || \
+     ((dev)->header->common.device_id == 0x2032) || \
+     ((dev)->header->common.device_id == 0x2033)))
+
 struct vmd_hot_plug;
 struct vmd_adapter;
 struct vmd_pci_device;
@@ -119,8 +142,7 @@ struct vmd_hot_plug {
 	uint32_t reserved_bus_count : 4;
 	uint32_t max_hotplug_bus_number : 8;
 	uint32_t next_bus_number : 8;
-	uint32_t addr_size;
-	uint64_t physical_addr;
+	struct pci_bars bar;
 	union express_slot_status_register slot_status;
 	struct pci_mem_mgr mem[ADDR_ELEM_COUNT];
 	uint8_t bus_numbers[RESERVED_HOTPLUG_BUSES];
@@ -152,7 +174,9 @@ struct vmd_adapter {
 	uint32_t is_ready : 1;
 	uint32_t processing_hp : 1;
 	uint32_t max_payload_size: 3;
-	uint32_t rsv : 6;
+	uint32_t root_port_updated : 1;
+	uint32_t scan_completed : 1;
+	uint32_t rsv : 4;
 
 	/* end devices attached to vmd adapters */
 	struct vmd_pci_device *target[MAX_VMD_TARGET];
@@ -185,17 +209,20 @@ vmd_hp_enable_hotplug(struct vmd_hot_plug *hp)
 
 }
 
-static inline struct vmd_hot_plug *
-vmd_new_hotplug(struct vmd_pci_bus *newBus, uint8_t reservedBuses)
-{
-	return NULL;
-}
-
 static inline uint8_t
 vmd_hp_get_next_bus_number(struct vmd_hot_plug *hp)
 {
 	assert(false);
 	return 0;
 }
+
+struct vmd_pci_device *
+spdk_vmd_find_dev(struct spdk_pci_addr *addr);
+
+bool
+vmd_led_set_state(struct spdk_pci_addr *addr, VMD_LED_STATE state);
+
+VMD_LED_STATE
+vmd_led_get_state(struct spdk_pci_addr *addr);
 
 #endif /* VMD_H */
