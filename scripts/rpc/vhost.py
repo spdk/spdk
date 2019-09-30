@@ -1,7 +1,8 @@
 from .helpers import deprecated_alias
 
 
-def set_vhost_controller_coalescing(client, ctrlr, delay_base_us, iops_threshold):
+@deprecated_alias('set_vhost_controller_coalescing')
+def vhost_controller_set_coalescing(client, ctrlr, delay_base_us, iops_threshold):
     """Set coalescing for vhost controller.
     Args:
         ctrlr: controller name
@@ -13,7 +14,7 @@ def set_vhost_controller_coalescing(client, ctrlr, delay_base_us, iops_threshold
         'delay_base_us': delay_base_us,
         'iops_threshold': iops_threshold,
     }
-    return client.call('set_vhost_controller_coalescing', params)
+    return client.call('vhost_controller_set_coalescing', params)
 
 
 def construct_vhost_scsi_controller(client, ctrlr, cpumask=None):
