@@ -332,6 +332,33 @@ vbdev_ocf_mngt_fn unregister_path[] = {
 	NULL
 };
 
+static void
+clear_starting_inidicator_vbdev(struct vbdev_ocf *vbdev)
+{
+	vbdev->state.starting = false;
+	vbdev_ocf_mngt_continue(vbdev, 0);
+}
+
+/* Procedures called during register_rollback */
+vbdev_ocf_mngt_fn register_rollback_path[] = {
+	clear_starting_inidicator_vbdev,
+	flush_vbdev,
+	stop_vbdev,
+	detach_cache,
+	close_cache_bdev,
+	detach_core,
+	close_core_bdev,
+	unregister_finish,
+	NULL
+};
+
+/* Procedures called during start cache rollback */
+vbdev_ocf_mngt_fn start_cache_rollback_path[] = {
+	clear_starting_inidicator_vbdev,
+	NULL
+};
+
+
 /* Start asynchronous management operation using unregister_path */
 static void
 unregister_cb(void *opaque)
@@ -844,7 +871,10 @@ finish_register(struct vbdev_ocf *vbdev)
 				sizeof(struct vbdev_ocf_qcxt), vbdev->name);
 	result = spdk_bdev_register(&vbdev->exp_bdev);
 	if (result) {
-		SPDK_ERRLOG("Could not register exposed bdev\n");
+		SPDK_ERRLOG("Could not register exposed bdev %s\n",
+			    vbdev->name);
+		vbdev_ocf_mngt_stop(vbdev, unregister_path, result);
+		return;
 	} else {
 		vbdev->state.started = true;
 	}
@@ -860,7 +890,10 @@ add_core_cmpl(ocf_cache_t cache, ocf_core_t core, void *priv, int error)
 	ocf_mngt_cache_unlock(cache);
 
 	if (error) {
-		SPDK_ERRLOG("Failed to add core device to cache instance\n");
+		SPDK_ERRLOG("Failed to add core device to cache instance,"
+			    "starting rollback\n", error, vbdev->name);
+		vbdev_ocf_mngt_stop(vbdev, unregister_path, error);
+		return;
 	} else {
 		vbdev->ocf_core = core;
 		vbdev->core.id  = ocf_core_get_id(core);
@@ -885,7 +918,7 @@ add_core_poll(struct vbdev_ocf *vbdev)
 static void
 add_core(struct vbdev_ocf *vbdev)
 {
-	vbdev_ocf_mngt_poll(vbdev, add_core_poll, NULL);
+	vbdev_ocf_mngt_poll(vbdev, add_core_poll, register_rollback_path);
 }
 
 static void
@@ -894,6 +927,13 @@ start_cache_cmpl(ocf_cache_t cache, void *priv, int error)
 	struct vbdev_ocf *vbdev = priv;
 
 	ocf_mngt_cache_unlock(cache);
+
+	if (error) {
+		SPDK_ERRLOG("Error %d during start cache %s, starting rollback\n",
+			    error, vbdev->name);
+		vbdev_ocf_mngt_stop(vbdev, register_rollback_path, error);
+		return;
+	}
 
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
@@ -948,7 +988,7 @@ start_cache(struct vbdev_ocf *vbdev)
 
 	vbdev->cache_ctx = calloc(1, sizeof(struct vbdev_ocf_cache_ctx));
 	if (vbdev->cache_ctx == NULL) {
-		vbdev_ocf_mngt_stop(vbdev, NULL, -ENOMEM);
+		vbdev_ocf_mngt_stop(vbdev, start_cache_rollback_path, -ENOMEM);
 		return;
 	}
 
@@ -958,7 +998,7 @@ start_cache(struct vbdev_ocf *vbdev)
 	rc = ocf_mngt_cache_start(vbdev_ocf_ctx, &vbdev->ocf_cache, &vbdev->cfg.cache);
 	if (rc) {
 		vbdev_ocf_cache_ctx_put(vbdev->cache_ctx);
-		vbdev_ocf_mngt_stop(vbdev, NULL, rc);
+		vbdev_ocf_mngt_stop(vbdev, start_cache_rollback_path, rc);
 		return;
 	}
 
@@ -969,7 +1009,7 @@ start_cache(struct vbdev_ocf *vbdev)
 	if (rc) {
 		SPDK_ERRLOG("Unable to create mngt_queue: %d\n", rc);
 		vbdev_ocf_cache_ctx_put(vbdev->cache_ctx);
-		vbdev_ocf_mngt_stop(vbdev, NULL, rc);
+		vbdev_ocf_mngt_stop(vbdev, start_cache_rollback_path, rc);
 		return;
 	}
 
