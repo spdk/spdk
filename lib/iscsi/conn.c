@@ -334,16 +334,24 @@ spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pd
 	spdk_put_pdu(pdu);
 }
 
+static void
+iscsi_conn_free_write_pdu_list(struct spdk_iscsi_conn *conn)
+{
+	struct spdk_iscsi_pdu *pdu, *tmp_pdu;
+
+	TAILQ_FOREACH_SAFE(pdu, &conn->write_pdu_list, tailq, tmp_pdu) {
+		TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
+		spdk_iscsi_conn_free_pdu(conn, pdu);
+	}
+}
+
 static int
 iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_pdu *pdu, *tmp_pdu;
 	struct spdk_iscsi_task *iscsi_task, *tmp_iscsi_task;
 
-	TAILQ_FOREACH_SAFE(pdu, &conn->write_pdu_list, tailq, tmp_pdu) {
-		TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
-		spdk_iscsi_conn_free_pdu(conn, pdu);
-	}
+	iscsi_conn_free_write_pdu_list(conn);
 
 	TAILQ_FOREACH_SAFE(pdu, &conn->snack_pdu_list, tailq, tmp_pdu) {
 		TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
@@ -1201,7 +1209,8 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 
 	bytes = spdk_sock_writev(conn->sock, iov, iovcnt);
 	if (bytes == -1) {
-		if (errno == EWOULDBLOCK || errno == EAGAIN) {
+		if ((errno == EWOULDBLOCK || errno == EAGAIN) &&
+		    conn->state < ISCSI_CONN_STATE_EXITING) {
 			return 1;
 		} else {
 			SPDK_ERRLOG("spdk_sock_writev() failed, errno %d: %s\n",
@@ -1287,6 +1296,9 @@ iscsi_conn_flush_pdus(void *_conn)
 		do {
 			rc = iscsi_conn_flush_pdus_internal(conn);
 		} while (rc == 1);
+
+		/* clear the list if flush PDUs failed */
+		iscsi_conn_free_write_pdu_list(conn);
 	}
 
 	if (rc < 0 && conn->state < ISCSI_CONN_STATE_EXITING) {
