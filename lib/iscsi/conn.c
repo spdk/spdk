@@ -1284,9 +1284,14 @@ iscsi_conn_flush_pdus(void *_conn)
 		 * empty - to make sure all data is sent before
 		 * closing the connection.
 		 */
+		errno = 0;
 		do {
 			rc = iscsi_conn_flush_pdus_internal(conn);
-		} while (rc == 1);
+		} while (rc == 1 && errno == 0);
+
+		if (conn->flush_poller != NULL) {
+			spdk_poller_unregister(&conn->flush_poller);
+		}
 	}
 
 	if (rc < 0 && conn->state < ISCSI_CONN_STATE_EXITING) {
