@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "adc5ce3e_c198d2f8",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-09-30T17:31:40Z",
+      "side": 1,
+      "message": "From the code it is all related with opal error, you may rename it as g_opal_errno.",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 23
+      },
+      "revId": "6f7265a45b952c4c17d705c83e69fa3350b76e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0771474a_d49ba5ac",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-09-30T17:31:40Z",
+      "side": 1,
+      "message": "Can we move the code into other script file then, directly include the script file, which will be easy for further maintenance.",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 135,
+        "endChar": 4
+      },
+      "revId": "6f7265a45b952c4c17d705c83e69fa3350b76e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
