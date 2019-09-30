@@ -1840,17 +1840,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=get_subsystem_config)
 
     # vhost
-    def set_vhost_controller_coalescing(args):
-        rpc.vhost.set_vhost_controller_coalescing(args.client,
+    def vhost_controller_set_coalescing(args):
+        rpc.vhost.vhost_controller_set_coalescing(args.client,
                                                   ctrlr=args.ctrlr,
                                                   delay_base_us=args.delay_base_us,
                                                   iops_threshold=args.iops_threshold)
 
-    p = subparsers.add_parser('set_vhost_controller_coalescing', help='Set vhost controller coalescing')
+    p = subparsers.add_parser('vhost_controller_set_coalescing', aliases=['set_vhost_controller_coalescing'],
+                              help='Set vhost controller coalescing')
     p.add_argument('ctrlr', help='controller name')
     p.add_argument('delay_base_us', help='Base delay time', type=int)
     p.add_argument('iops_threshold', help='IOPS threshold when coalescing is enabled', type=int)
-    p.set_defaults(func=set_vhost_controller_coalescing)
+    p.set_defaults(func=vhost_controller_set_coalescing)
 
     def construct_vhost_scsi_controller(args):
         rpc.vhost.construct_vhost_scsi_controller(args.client,

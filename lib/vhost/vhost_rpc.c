@@ -470,7 +470,7 @@ free_rpc_set_vhost_controllers_event_coalescing(struct rpc_vhost_ctrlr_coalescin
 }
 
 static void
-spdk_rpc_set_vhost_controller_coalescing(struct spdk_jsonrpc_request *request,
+spdk_rpc_vhost_controller_set_coalescing(struct spdk_jsonrpc_request *request,
 		const struct spdk_json_val *params)
 {
 	struct rpc_vhost_ctrlr_coalescing req = {0};
@@ -512,8 +512,9 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("set_vhost_controller_coalescing", spdk_rpc_set_vhost_controller_coalescing,
+SPDK_RPC_REGISTER("vhost_controller_set_coalescing", spdk_rpc_vhost_controller_set_coalescing,
 		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_controller_set_coalescing, set_vhost_controller_coalescing)
 
 #ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
 

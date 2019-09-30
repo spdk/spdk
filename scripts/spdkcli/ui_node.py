@@ -736,7 +736,7 @@ class UIVhostCtrl(UINode):
         delay_base_us = self.ui_eval_param(delay_base_us, "number", None)
         iops_threshold = self.ui_eval_param(iops_threshold, "number", None)
 
-        self.get_root().set_vhost_controller_coalescing(ctrlr=self.ctrlr.ctrlr,
+        self.get_root().vhost_controller_set_coalescing(ctrlr=self.ctrlr.ctrlr,
                                                         delay_base_us=delay_base_us,
                                                         iops_threshold=iops_threshold)
 

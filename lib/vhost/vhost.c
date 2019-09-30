@@ -1613,7 +1613,7 @@ spdk_vhost_config_json(struct spdk_json_write_ctx *w)
 		spdk_vhost_get_coalescing(vdev, &delay_base_us, &iops_threshold);
 		if (delay_base_us) {
 			spdk_json_write_object_begin(w);
-			spdk_json_write_named_string(w, "method", "set_vhost_controller_coalescing");
+			spdk_json_write_named_string(w, "method", "vhost_controller_set_coalescing");
 
 			spdk_json_write_named_object_begin(w, "params");
 			spdk_json_write_named_string(w, "ctrlr", vdev->name);

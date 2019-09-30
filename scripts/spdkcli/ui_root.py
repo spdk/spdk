@@ -297,8 +297,8 @@ class UIRoot(UINode):
     def add_vhost_scsi_lun(self, **kwargs):
         rpc.vhost.add_vhost_scsi_lun(self.client, **kwargs)
 
-    def set_vhost_controller_coalescing(self, **kwargs):
-        rpc.vhost.set_vhost_controller_coalescing(self.client, **kwargs)
+    def vhost_controller_set_coalescing(self, **kwargs):
+        rpc.vhost.vhost_controller_set_coalescing(self.client, **kwargs)
 
     @verbose
     def create_nvmf_transport(self, **kwargs):
