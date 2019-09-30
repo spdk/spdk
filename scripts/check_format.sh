@@ -239,8 +239,9 @@ if hash shellcheck 2>/dev/null; then
 	# For more information about the topic and a list of human-friendly error descripions
 	# go to: https://trello.com/c/29Z90j1W
 	# Error descriptions can also be found at: https://github.com/koalaman/shellcheck/wiki
+	# This SHCK_EXCLUDE list is out "to do" and we work to fix all of this errors.
 	SHCK_EXCLUDE="SC1001,SC1003,SC1010,\
-SC1083,SC1090,SC1091,SC1113,SC2001,SC2002,SC2003,SC2004,SC2005,\
+SC1083,SC1113,SC2001,SC2002,SC2003,SC2004,SC2005,\
 SC2010,SC2012,SC2013,SC2015,SC2016,SC2018,SC2019,SC2022,\
 SC2027,SC2030,SC2031,SC2034,SC2035,SC2039,SC2043,SC2044,SC2045,SC2046,\
 SC2068,SC2086,SC2089,SC2090,SC2094,\
@@ -254,8 +255,10 @@ SC2206,SC2207,SC2214,SC2223,SC2230,SC2231,SC2235"
 	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1117"
 	# SPDK has decided to not fix violations of these errors.
 	# We are aware about below exclude list and we want this errors to be excluded.
-	# SC2091: Remove surrounding $() to avoid executing output
-        SHCK_EXCLUDE="$SHCK_EXCLUDE,SC2091"
+	# SC1090: Can't follow non-constant source. Use a directive to specify location.
+	# SC1091: Not following: (error message here)
+        # SC2091: Remove surrounding $() to avoid executing output
+	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1090,SC1091,SC2091"
 
 	SHCK_FORMAT="diff"
 	SHCK_APPLY=true
