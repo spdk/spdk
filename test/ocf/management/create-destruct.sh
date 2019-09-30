@@ -8,7 +8,7 @@ rpc_py=$rootdir/scripts/rpc.py
 
 function bdev_check_claimed()
 {
-       if $($rpc_py get_bdevs -b "$@" | jq '.[0].claimed'); then
+       if $rpc_py get_bdevs -b "$@" | jq '.[0].claimed'; then
                return 0;
        else
                return 1;
