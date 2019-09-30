@@ -43,14 +43,14 @@ function clear_vhost_config() {
     $rpc_py remove_vhost_scsi_target naa.Nvme0n1p6.3 1
     $rpc_py remove_vhost_scsi_target naa.Nvme0n1p7.3 0
     $rpc_py remove_vhost_scsi_target naa.Nvme0n1p7.3 1
-    $rpc_py remove_vhost_controller naa.Nvme0n1p0.0
-    $rpc_py remove_vhost_controller naa.Nvme0n1p1.0
-    $rpc_py remove_vhost_controller naa.Nvme0n1p2.1
-    $rpc_py remove_vhost_controller naa.Nvme0n1p3.1
-    $rpc_py remove_vhost_controller naa.Nvme0n1p4.2
-    $rpc_py remove_vhost_controller naa.Nvme0n1p5.2
-    $rpc_py remove_vhost_controller naa.Nvme0n1p6.3
-    $rpc_py remove_vhost_controller naa.Nvme0n1p7.3
+    $rpc_py vhost_delete_controller naa.Nvme0n1p0.0
+    $rpc_py vhost_delete_controller naa.Nvme0n1p1.0
+    $rpc_py vhost_delete_controller naa.Nvme0n1p2.1
+    $rpc_py vhost_delete_controller naa.Nvme0n1p3.1
+    $rpc_py vhost_delete_controller naa.Nvme0n1p4.2
+    $rpc_py vhost_delete_controller naa.Nvme0n1p5.2
+    $rpc_py vhost_delete_controller naa.Nvme0n1p6.3
+    $rpc_py vhost_delete_controller naa.Nvme0n1p7.3
 }
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR

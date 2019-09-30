@@ -668,7 +668,7 @@ class UIVhost(UINode):
         Arguments:
         name - Controller name.
         """
-        self.get_root().remove_vhost_controller(ctrlr=name)
+        self.get_root().vhost_delete_controller(ctrlr=name)
 
 
 class UIVhostBlk(UIVhost):

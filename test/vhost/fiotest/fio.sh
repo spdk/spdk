@@ -242,7 +242,7 @@ if ! $no_shutdown; then
 						$rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 0
 					fi
 
-					$rpc_py remove_vhost_controller naa.$disk.${conf[0]}
+					$rpc_py vhost_delete_controller naa.$disk.${conf[0]}
 					if [[ $disk == "RaidBdev2" ]]; then
 						notice "Removing lvol bdev and lvol store"
 						$rpc_py bdev_lvol_delete lvs_0/lbd_0
