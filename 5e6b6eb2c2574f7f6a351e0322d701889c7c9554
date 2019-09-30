@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca120272_be8beece",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-30T19:41:48Z",
+      "side": 1,
+      "message": "it would be nice to assert that the request was able to be submitted - I agree that if we reaped two, we should be able to submit two from the queued list\n\nI\u0027m just concerned about some case we haven\u0027t thought of yet where we can\u0027t submit one of these for some reason.  in that case, it will still get requeued, but at the *tail* not back at the head - I\u0027d like to make sure we keep ordering intact",
+      "revId": "5e6b6eb2c2574f7f6a351e0322d701889c7c9554",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
