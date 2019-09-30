@@ -205,7 +205,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 {
 	struct spdk_iscsi_poll_group *pg;
 	struct spdk_iscsi_conn *conn;
-	int bufsize, i, rc;
+	int i, rc;
 
 	conn = allocate_conn();
 	if (conn == NULL) {
@@ -265,15 +265,6 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_sock_getaddr() failed\n");
 		goto error_return;
-	}
-
-	bufsize = 32 * 1024 * 1024 / g_spdk_iscsi.MaxConnections;
-	if (bufsize > 2 * 1024 * 1024) {
-		bufsize = 2 * 1024 * 1024;
-	}
-	rc = spdk_sock_set_sendbuf(conn->sock, bufsize);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_sock_set_sendbuf failed\n");
 	}
 
 	/* set low water mark */
