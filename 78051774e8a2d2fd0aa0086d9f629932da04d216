@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4d19c7a_023b162e",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-30T22:07:27Z",
+      "side": 1,
+      "message": "this patch really should have been part of the other vhost patches - this will surely conflict with the patches that touch construct_vhost_scsi_controller",
+      "revId": "78051774e8a2d2fd0aa0086d9f629932da04d216",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8bff8f25_8d46e0ef",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-30T22:07:27Z",
+      "side": 1,
+      "message": "vhost_create_blk_controller",
+      "revId": "78051774e8a2d2fd0aa0086d9f629932da04d216",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
