@@ -70,6 +70,30 @@
       "revId": "edb621b3f6e14439d39c68a5da8e4a787cec6841",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9988940f_db0aea4a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4322,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-30T08:02:12Z",
+      "side": 1,
+      "message": "If we get here and the lock is hold by another thread, there is definitely a bug somewhere.\nBut OK, I\u0027ll move unlock out of this function.",
+      "parentUuid": "ee191786_b2861fe9",
+      "range": {
+        "startLine": 4322,
+        "startChar": 1,
+        "endLine": 4322,
+        "endChar": 81
+      },
+      "revId": "edb621b3f6e14439d39c68a5da8e4a787cec6841",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
