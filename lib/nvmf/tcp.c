@@ -414,12 +414,10 @@ spdk_nvmf_tcp_drain_state_queue(struct spdk_nvmf_tcp_qpair *tqpair,
 }
 
 static void
-spdk_nvmf_tcp_cleanup_all_states(struct spdk_nvmf_tcp_qpair *tqpair)
+spdk_nvmf_tcp_drain_send_queue(struct spdk_nvmf_tcp_qpair *tqpair)
 {
-	struct spdk_nvmf_tcp_req *tcp_req, *req_tmp;
 	struct nvme_tcp_pdu *pdu, *tmp_pdu;
 
-	/* Free the pdus in the send_queue */
 	TAILQ_FOREACH_SAFE(pdu, &tqpair->send_queue, tailq, tmp_pdu) {
 		TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
 		/* Also check the pdu type, we need to calculte the c2h_data_pdu_cnt later */
@@ -429,6 +427,14 @@ spdk_nvmf_tcp_cleanup_all_states(struct spdk_nvmf_tcp_qpair *tqpair)
 		}
 		spdk_nvmf_tcp_pdu_put(tqpair, pdu);
 	}
+}
+
+static void
+spdk_nvmf_tcp_cleanup_all_states(struct spdk_nvmf_tcp_qpair *tqpair)
+{
+	struct spdk_nvmf_tcp_req *tcp_req, *req_tmp;
+
+	spdk_nvmf_tcp_drain_send_queue(tqpair);
 
 	while (!STAILQ_EMPTY(&tqpair->queued_c2h_data_tcp_req)) {
 		STAILQ_REMOVE_HEAD(&tqpair->queued_c2h_data_tcp_req, link);
@@ -878,9 +884,19 @@ spdk_nvmf_tcp_qpair_flush_pdus(void *_tqpair)
 		 * empty - to make sure all data is sent before
 		 * closing the connection.
 		 */
+		errno = 0;
+
 		do {
 			rc = spdk_nvmf_tcp_qpair_flush_pdus_internal(tqpair);
-		} while (rc == 1);
+		} while (rc == 1 && errno == 0);
+
+		if (rc < 0 || errno != 0) {
+			spdk_nvmf_tcp_drain_send_queue(tqpair);
+		}
+
+		if (tqpair->flush_poller != NULL) {
+			spdk_poller_unregister(&tqpair->flush_poller);
+		}
 	}
 
 	if (rc < 0 && tqpair->state < NVME_TCP_QPAIR_STATE_EXITING) {
