@@ -20,7 +20,7 @@ trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR SIGTERM SIGABRT
 vhost_run 0
 
 $rpc_py bdev_malloc_create -b Malloc 124 4096
-$rpc_py construct_vhost_blk_controller Malloc.0 Malloc
+$rpc_py vhost_create_blk_controller Malloc.0 Malloc
 
 run_spdk_fio --size=50% --offset=0 --filename=VirtioBlk0 &
 run_fio_pid=$!

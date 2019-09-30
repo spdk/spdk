@@ -43,7 +43,7 @@ trap 'killprocess $vhostpid; killprocess $fuzzpid; exit 1' SIGINT SIGTERM exit
 
 if [ "$TEST_TRANSPORT" == "bdev" ] || [ "$TEST_TRANSPORT" == "all" ]; then
     $vhost_rpc_py bdev_malloc_create -b Malloc0 64 512
-    $vhost_rpc_py construct_vhost_blk_controller Vhost.1 Malloc0
+    $vhost_rpc_py vhost_create_blk_controller Vhost.1 Malloc0
 
     # test the vhost blk controller with valid data buffers.
     $fuzz_specific_rpc_py fuzz_vhost_create_dev -s $(pwd)/Vhost.1 -b -v

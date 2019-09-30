@@ -260,8 +260,8 @@ free_rpc_vhost_blk_ctrlr(struct rpc_vhost_blk_ctrlr *req)
 }
 
 static void
-spdk_rpc_construct_vhost_blk_controller(struct spdk_jsonrpc_request *request,
-					const struct spdk_json_val *params)
+spdk_rpc_vhost_create_blk_controller(struct spdk_jsonrpc_request *request,
+				     const struct spdk_json_val *params)
 {
 	struct rpc_vhost_blk_ctrlr req = {0};
 	struct spdk_json_write_ctx *w;
@@ -293,8 +293,9 @@ invalid:
 					 spdk_strerror(-rc));
 
 }
-SPDK_RPC_REGISTER("construct_vhost_blk_controller", spdk_rpc_construct_vhost_blk_controller,
+SPDK_RPC_REGISTER("vhost_create_blk_controller", spdk_rpc_vhost_create_blk_controller,
 		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_create_blk_controller, construct_vhost_blk_controller)
 
 struct rpc_delete_vhost_ctrlr {
 	char *ctrlr;

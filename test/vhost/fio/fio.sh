@@ -24,9 +24,9 @@ vhost_rpc vhost0 construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b M
 vhost_rpc vhost0 vhost_create_scsi_controller naa.VhostScsi0.0
 vhost_rpc vhost0 vhost_scsi_controller_add_target naa.VhostScsi0.0 0 "Malloc0"
 
-# Construct vhost blk controller
+# Create vhost blk controller
 vhost_rpc vhost0 construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc1
-vhost_rpc vhost0 construct_vhost_blk_controller naa.Malloc1.1 Malloc1
+vhost_rpc vhost0 vhost_create_blk_controller naa.Malloc1.1 Malloc1
 
 # Start qemu based VMs
 vm_setup --os="$VM_IMAGE" --disk-type=spdk_vhost_scsi --disks="VhostScsi0" --vhost-name=vhost0 --force=0
