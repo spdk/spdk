@@ -683,7 +683,7 @@ class UIVhostBlk(UIVhost):
 
     def ui_command_create(self, name, bdev, cpumask=None, readonly=False):
         """
-        Construct a Vhost BLK controller.
+        Create a Vhost BLK controller.
 
         Arguments:
         name - Controller name.
@@ -693,7 +693,7 @@ class UIVhostBlk(UIVhost):
         readonly - Whether controller should be read only or not.
                    Default: False.
         """
-        self.get_root().create_vhost_blk_controller(ctrlr=name,
+        self.get_root().vhost_create_blk_controller(ctrlr=name,
                                                     dev_name=bdev,
                                                     cpumask=cpumask,
                                                     readonly=bool(readonly))

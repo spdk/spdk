@@ -65,7 +65,7 @@ notice "..."
 
 # Set up lvols and vhost controllers
 trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
-notice "Constructing lvol store and lvol bdev on top of Nvme0n1"
+notice "Creating lvol store and lvol bdev on top of Nvme0n1"
 lvs_uuid=$($rpc_py bdev_lvol_create_lvstore Nvme0n1 lvol_store)
 $rpc_py bdev_lvol_create lvol_bdev 10000 -l lvol_store
 
@@ -73,7 +73,7 @@ if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
 	$rpc_py vhost_create_scsi_controller naa.Nvme0n1.0
 	$rpc_py vhost_scsi_controller_add_target naa.Nvme0n1.0 0 lvol_store/lvol_bdev
 elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
-	$rpc_py construct_vhost_blk_controller naa.Nvme0n1.0 lvol_store/lvol_bdev
+	$rpc_py vhost_create_blk_controller naa.Nvme0n1.0 lvol_store/lvol_bdev
 fi
 
 # Set up and run VM

@@ -57,10 +57,10 @@ function blk_hotremove_tc1() {
 function blk_hotremove_tc2() {
     echo "Blk hotremove test case 2"
     # 1. Use rpc command to create blk controllers.
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p0.0 HotInNvme0n1p0
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p1.0 Mallocp0
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p2.1 Mallocp1
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p3.1 Mallocp2
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p0.0 HotInNvme0n1p0
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p1.0 Mallocp0
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p2.1 Mallocp1
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p3.1 Mallocp2
     # 2. Run two VMs and attach every VM to two blk controllers.
     vm_run_with_arg "0 1"
     vms_prepare "0"
@@ -99,10 +99,10 @@ function blk_hotremove_tc2() {
 function blk_hotremove_tc3() {
     echo "Blk hotremove test case 3"
     # 1. Use rpc command to create blk controllers.
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p0.0 HotInNvme1n1p0
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p1.0 Mallocp0
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p2.1 HotInNvme1n1p1
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p3.1 Mallocp1
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p0.0 HotInNvme1n1p0
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p1.0 Mallocp0
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p2.1 HotInNvme1n1p1
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p3.1 Mallocp1
     # 2. Run two VMs and attach every VM to two blk controllers.
     vm_run_with_arg "0 1"
     vms_prepare "0 1"
@@ -141,10 +141,10 @@ function blk_hotremove_tc3() {
 function blk_hotremove_tc4() {
     echo "Blk hotremove test case 4"
     # 1. Use rpc command to create blk controllers.
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p0.0 HotInNvme2n1p0
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p1.0 Mallocp0
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p2.1 HotInNvme2n1p1
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p3.1 Mallocp1
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p0.0 HotInNvme2n1p0
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p1.0 Mallocp0
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p2.1 HotInNvme2n1p1
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p3.1 Mallocp1
     # 2. Run two VM, attached to blk controllers.
     vm_run_with_arg "0 1"
     vms_prepare "0 1"
@@ -192,10 +192,10 @@ function blk_hotremove_tc4() {
 function blk_hotremove_tc5() {
     echo "Blk hotremove test case 5"
     # 1. Use rpc command to create blk controllers.
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p0.0 HotInNvme3n1p0
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p1.0 Mallocp0
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p2.1 Mallocp1
-    $rpc_py construct_vhost_blk_controller naa.Nvme0n1p3.1 Mallocp2
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p0.0 HotInNvme3n1p0
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p1.0 Mallocp0
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p2.1 Mallocp1
+    $rpc_py vhost_create_blk_controller naa.Nvme0n1p3.1 Mallocp2
     # 2. Run two VM, attached to blk controllers.
     vm_run_with_arg "0 1"
     vms_prepare "0 1"
