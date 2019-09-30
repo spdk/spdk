@@ -16,6 +16,29 @@
       "revId": "fc76ee8dadc3622ae054841950d8b47025760fcb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3f230ae_dcb95ee6",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1301,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-09-30T18:30:42Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nFor this, it will be finally freed, I do not think that we should call here",
+      "range": {
+        "startLine": 1299,
+        "startChar": 0,
+        "endLine": 1301,
+        "endChar": 39
+      },
+      "revId": "fc76ee8dadc3622ae054841950d8b47025760fcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
