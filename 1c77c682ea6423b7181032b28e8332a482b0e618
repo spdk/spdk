@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f10a3922_28701b48",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 823,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-09-30T18:26:08Z",
+      "side": 1,
+      "message": "Add spdk_likely would be better.",
+      "range": {
+        "startLine": 822,
+        "startChar": 6,
+        "endLine": 823,
+        "endChar": 53
+      },
+      "revId": "1c77c682ea6423b7181032b28e8332a482b0e618",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1af6f1ba_0c882f01",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 893,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-09-30T18:26:08Z",
+      "side": 1,
+      "message": "Why do we need to call this here? When the connection is recycled, it will call this in pdk_nvmf_tcp_cleanup_all_state. \n\nCould we remove it here?",
+      "range": {
+        "startLine": 892,
+        "startChar": 2,
+        "endLine": 893,
+        "endChar": 41
+      },
+      "revId": "1c77c682ea6423b7181032b28e8332a482b0e618",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
