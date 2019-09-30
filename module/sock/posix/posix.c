@@ -47,6 +47,7 @@
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
 #define SO_RCVBUF_SIZE (2 * 1024 * 1024)
+#define SO_SNDBUF_SIZE (2 * 1024 * 1024)
 
 struct spdk_posix_sock {
 	struct spdk_sock	base;
@@ -181,6 +182,28 @@ spdk_posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to increase size of rcvbuf for socket fd %d (%s)", sock->fd,
+			    spdk_strerror(errno));
+		return rc;
+	}
+
+	return 0;
+}
+
+static int
+spdk_posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
+
+	assert(sock != NULL);
+
+	if (sz < SO_SNDBUF_SIZE) {
+		sz = SO_SNDBUF_SIZE;
+	}
+
+	rc = setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz));
+	if (rc < 0) {
+		SPDK_ERRLOG("Unable to increase size of sndbuf for socket fd %d (%s)", sock->fd,
 			    spdk_strerror(errno));
 		return rc;
 	}
@@ -328,6 +351,13 @@ retry:
 		return NULL;
 	}
 
+	rc = spdk_posix_sock_set_sendbuf(&sock->base, SO_SNDBUF_SIZE);
+	if (rc) {
+		close(fd);
+		free(sock);
+		return NULL;
+	}
+
 	return &sock->base;
 }
 
@@ -383,6 +413,13 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 	new_sock->fd = fd;
 
 	rc = spdk_posix_sock_set_recvbuf(&new_sock->base, SO_RCVBUF_SIZE);
+	if (rc) {
+		close(fd);
+		free(new_sock);
+		return NULL;
+	}
+
+	rc = spdk_posix_sock_set_sendbuf(&new_sock->base, SO_SNDBUF_SIZE);
 	if (rc) {
 		close(fd);
 		free(new_sock);
@@ -445,17 +482,6 @@ spdk_posix_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 		return -1;
 	}
 	return 0;
-}
-
-static int
-spdk_posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
-{
-	struct spdk_posix_sock *sock = __posix_sock(_sock);
-
-	assert(sock != NULL);
-
-	return setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF,
-			  &sz, sizeof(sz));
 }
 
 static int
