@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1b1e247a_01efc1c6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4226,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-09-30T11:04:43Z",
+      "side": 1,
+      "message": "Callbacks are only set at bdev open. They can not change here between mutex unlock and actual call.",
+      "parentUuid": "9c9f8ad1_6a5d95a8",
+      "range": {
+        "startLine": 4226,
+        "startChar": 3,
+        "endLine": 4226,
+        "endChar": 26
+      },
+      "revId": "691a8a97c8f13e67a0e225243adc9c63dd1eafa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "21ef25b5_97b596b4",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
