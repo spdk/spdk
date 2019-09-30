@@ -111,6 +111,8 @@ struct vbdev_ocf_mngt_ctx {
 	vbdev_ocf_mngt_fn                   poller_fn;
 	/* Poller timeout time stamp - when the poller should stop with error */
 	uint64_t                            timeout_ts;
+	/* Rollback path to call in case of timeout */
+	vbdev_ocf_mngt_fn                  *timeout_rollback_path;
 
 	/* Status of management operation */
 	int                                 status;

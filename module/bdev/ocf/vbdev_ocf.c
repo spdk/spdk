@@ -208,7 +208,7 @@ remove_core_poll(struct vbdev_ocf *vbdev)
 		return;
 	}
 
-	vbdev_ocf_mngt_poll(vbdev, NULL);
+	vbdev_ocf_mngt_poll(vbdev, NULL, NULL);
 	ocf_mngt_cache_remove_core(vbdev->ocf_core, remove_core_cmpl, vbdev);
 }
 
@@ -217,7 +217,7 @@ static void
 detach_core(struct vbdev_ocf *vbdev)
 {
 	if (vbdev->ocf_cache && ocf_cache_is_running(vbdev->ocf_cache)) {
-		vbdev_ocf_mngt_poll(vbdev, remove_core_poll);
+		vbdev_ocf_mngt_poll(vbdev, remove_core_poll, NULL);
 	} else {
 		vbdev_ocf_mngt_continue(vbdev, 0);
 	}
@@ -277,7 +277,7 @@ stop_vbdev_poll(struct vbdev_ocf *vbdev)
 		return;
 	}
 
-	vbdev_ocf_mngt_poll(vbdev, NULL);
+	vbdev_ocf_mngt_poll(vbdev, NULL, NULL);
 	ocf_mngt_cache_stop(vbdev->ocf_cache, stop_vbdev_cmpl, vbdev);
 }
 
@@ -286,7 +286,7 @@ stop_vbdev_poll(struct vbdev_ocf *vbdev)
 static void
 stop_vbdev(struct vbdev_ocf *vbdev)
 {
-	vbdev_ocf_mngt_poll(vbdev, stop_vbdev_poll);
+	vbdev_ocf_mngt_poll(vbdev, stop_vbdev_poll, NULL);
 }
 
 static void
@@ -310,14 +310,14 @@ flush_vbdev_poll(struct vbdev_ocf *vbdev)
 		return;
 	}
 
-	vbdev_ocf_mngt_poll(vbdev, NULL);
+	vbdev_ocf_mngt_poll(vbdev, NULL, NULL);
 	ocf_mngt_cache_flush(vbdev->ocf_cache, flush_vbdev_cmpl, vbdev);
 }
 
 static void
 flush_vbdev(struct vbdev_ocf *vbdev)
 {
-	vbdev_ocf_mngt_poll(vbdev, flush_vbdev_poll);
+	vbdev_ocf_mngt_poll(vbdev, flush_vbdev_poll, NULL);
 }
 
 /* Procedures called during unregister */
@@ -877,7 +877,7 @@ add_core_poll(struct vbdev_ocf *vbdev)
 		return;
 	}
 
-	vbdev_ocf_mngt_poll(vbdev, NULL);
+	vbdev_ocf_mngt_poll(vbdev, NULL, NULL);
 	ocf_mngt_cache_add_core(vbdev->ocf_cache, &vbdev->cfg.core, add_core_cmpl, vbdev);
 }
 
@@ -885,7 +885,7 @@ add_core_poll(struct vbdev_ocf *vbdev)
 static void
 add_core(struct vbdev_ocf *vbdev)
 {
-	vbdev_ocf_mngt_poll(vbdev, add_core_poll);
+	vbdev_ocf_mngt_poll(vbdev, add_core_poll, NULL);
 }
 
 static void
