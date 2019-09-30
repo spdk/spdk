@@ -1456,6 +1456,9 @@ nvme_rdma_qpair_disconnect(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
 
+	/* We need to set this every time we disconnect to avoid accessing NULL pointers when polling. */
+	qpair->transport_qp_is_failed = true;
+
 	nvme_rdma_unregister_mem(rqpair);
 	nvme_rdma_unregister_reqs(rqpair);
 	nvme_rdma_unregister_rsps(rqpair);
