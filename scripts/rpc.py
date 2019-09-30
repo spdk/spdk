@@ -1922,12 +1922,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('bdev_name', help='block device name for a new Namespace')
     p.set_defaults(func=add_vhost_nvme_ns)
 
-    def get_vhost_controllers(args):
-        print_dict(rpc.vhost.get_vhost_controllers(args.client, args.name))
+    def vhost_get_controllers(args):
+        print_dict(rpc.vhost.vhost_get_controllers(args.client, args.name))
 
-    p = subparsers.add_parser('get_vhost_controllers', help='List all or specific vhost controller(s)')
+    p = subparsers.add_parser('vhost_get_controllers', aliases=['get_vhost_controllers'],
+                              help='List all or specific vhost controller(s)')
     p.add_argument('-n', '--name', help="Name of vhost controller", required=False)
-    p.set_defaults(func=get_vhost_controllers)
+    p.set_defaults(func=vhost_get_controllers)
 
     def vhost_delete_controller(args):
         rpc.vhost.vhost_delete_controller(args.client,

@@ -4622,7 +4622,7 @@ Example response:
 }
 ~~~
 
-## get_vhost_controllers {#rpc_get_vhost_controllers}
+## vhost_get_controllers {#rpc_vhost_get_controllers}
 
 Display information about all or specific vhost controller(s).
 
@@ -4636,7 +4636,7 @@ Name                    | Optional | Type        | Description
 name                    | Optional | string      | Vhost controller name
 
 
-### Response {#rpc_get_vhost_controllers_response}
+### Response {#rpc_vhost_get_controllers_response}
 
 Response is an array of objects describing requested controller(s). Common fields are:
 
@@ -4648,7 +4648,7 @@ delay_base_us           | number      | Base (minimum) coalescing time in micros
 iops_threshold          | number      | Coalescing activation level
 backend_specific        | object      | Backend specific informations
 
-### Vhost block {#rpc_get_vhost_controllers_blk}
+### Vhost block {#rpc_vhost_get_controllers_blk}
 
 `backend_specific` contains one `block` object  of type:
 
@@ -4657,7 +4657,7 @@ Name                    | Type        | Description
 bdev                    | string      | Backing bdev name or Null if bdev is hot-removed
 readonly                | boolean     | True if controllers is readonly, false otherwise
 
-### Vhost SCSI {#rpc_get_vhost_controllers_scsi}
+### Vhost SCSI {#rpc_vhost_get_controllers_scsi}
 
 `backend_specific` contains `scsi` array of following objects:
 
@@ -4666,9 +4666,9 @@ Name                    | Type        | Description
 target_name             | string      | Name of this SCSI target
 id                      | number      | Unique SPDK global SCSI target ID
 scsi_dev_num            | number      | SCSI target ID initiator will see when scanning this controller
-luns                    | array       | array of objects describing @ref rpc_get_vhost_controllers_scsi_luns
+luns                    | array       | array of objects describing @ref rpc_vhost_get_controllers_scsi_luns
 
-### Vhost SCSI LUN {#rpc_get_vhost_controllers_scsi_luns}
+### Vhost SCSI LUN {#rpc_vhost_get_controllers_scsi_luns}
 
 Object of type:
 
@@ -4677,7 +4677,7 @@ Name                    | Type        | Description
 id                      | number      | SCSI LUN ID
 bdev_name               | string      | Backing bdev name
 
-### Vhost NVMe {#rpc_get_vhost_controllers_nvme}
+### Vhost NVMe {#rpc_vhost_get_controllers_nvme}
 
 `backend_specific` contains `namespaces` array of following objects:
 
@@ -4693,7 +4693,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "get_vhost_controllers",
+  "method": "vhost_get_controllers",
   "id": 1
 }
 ~~~
