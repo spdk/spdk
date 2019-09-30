@@ -48,6 +48,19 @@ struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 };
 
+DEFINE_STUB_V(nvme_transport_ctrlr_disconnect_qpair, (struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair));
+
+int g_transport_connect_qpair = 0;
+
+int
+nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	if (g_transport_connect_qpair == 0) {
+		qpair->transport_qp_is_failed = false;
+	}
+	return g_transport_connect_qpair;
+}
 
 int g_ctrlr_reset = 0;
 
@@ -182,6 +195,8 @@ static void test_nvme_qpair_process_completions(void)
 
 	/* If we call spdk_nvme_ctrlr_reset, we will get this back. */
 	g_ctrlr_reset = INT32_MAX;
+	/* Fail transport_connect_qpair. */
+	g_transport_connect_qpair = 23;
 
 	prepare_submit_request_test(&qpair, &ctrlr);
 	nvme_qpair_init(&admin_qpair, 0, &ctrlr, 0, 32);
@@ -199,10 +214,15 @@ static void test_nvme_qpair_process_completions(void)
 	qpair.transport_qp_is_failed = true;
 	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
 
-	/* return -ENXIO, if the admin qpair is not failed, we return this directly. */
+	/* return -ENXIO, this happens when reconnect fails. */
 	admin_qpair.transport_qp_is_failed = false;
 	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == -ENXIO);
 
+	/* return 0 when we successfully complete the reconnect. */
+	g_transport_connect_qpair = 0;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+
+	nvme_qpair_deinit(&admin_qpair);
 	cleanup_submit_request_test(&qpair);
 }
 
