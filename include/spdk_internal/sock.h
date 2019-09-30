@@ -49,10 +49,11 @@ extern "C" {
 #define MAX_EVENTS_PER_POLL 32
 
 struct spdk_sock {
-	struct spdk_net_impl	*net_impl;
-	spdk_sock_cb		cb_fn;
-	void			*cb_arg;
-	TAILQ_ENTRY(spdk_sock)	link;
+	struct spdk_net_impl		*net_impl;
+	spdk_sock_cb			cb_fn;
+	void				*cb_arg;
+	struct spdk_sock_group_impl	*group_impl;
+	TAILQ_ENTRY(spdk_sock)		link;
 };
 
 struct spdk_sock_group {
