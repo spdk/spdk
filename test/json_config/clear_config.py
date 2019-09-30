@@ -150,7 +150,7 @@ def clear_vhost_subsystem(args, vhost_config):
                                   "scsi_target_num": vhost['params']['scsi_target_num']})
             elif method in ['construct_vhost_scsi_controller', 'construct_vhost_blk_controller',
                             'construct_vhost_nvme_controller']:
-                args.client.call("remove_vhost_controller", {'ctrlr': vhost['params']['ctrlr']})
+                args.client.call("vhost_delete_controller", {'ctrlr': vhost['params']['ctrlr']})
 
 
 def call_test_cmd(func):

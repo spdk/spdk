@@ -188,7 +188,7 @@ Users can use the following command to remove the controller, all the block
 devices attached to controller's Namespace will be removed automatically.
 
 ~~~{.sh}
-$rpc_py remove_vhost_controller vhost.2
+$rpc_py vhost_delete_controller vhost.2
 ~~~
 
 ## QEMU {#vhost_qemu_config}

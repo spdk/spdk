@@ -1929,13 +1929,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-n', '--name', help="Name of vhost controller", required=False)
     p.set_defaults(func=get_vhost_controllers)
 
-    def remove_vhost_controller(args):
-        rpc.vhost.remove_vhost_controller(args.client,
+    def vhost_delete_controller(args):
+        rpc.vhost.vhost_delete_controller(args.client,
                                           ctrlr=args.ctrlr)
 
-    p = subparsers.add_parser('remove_vhost_controller', help='Remove a vhost controller')
+    p = subparsers.add_parser('vhost_delete_controller', aliases=['remove_vhost_controller'],
+                              help='Remove a vhost controller')
     p.add_argument('ctrlr', help='controller name')
-    p.set_defaults(func=remove_vhost_controller)
+    p.set_defaults(func=vhost_delete_controller)
 
     def bdev_virtio_attach_controller(args):
         print_array(rpc.vhost.bdev_virtio_attach_controller(args.client,

@@ -97,7 +97,7 @@ function blk_ro_tc1()
 	vm_shutdown_all
 #Create readonly controller and test readonly feature
 	notice "Removing controller and creating new one with readonly flag"
-	$rpc_py remove_vhost_controller $vhost_blk_name
+	$rpc_py vhost_delete_controller $vhost_blk_name
 	$rpc_py construct_vhost_blk_controller -r $vhost_blk_name $disk_name
 
 	vm_run $vm_no
@@ -109,7 +109,7 @@ function blk_ro_tc1()
 	vm_shutdown_all
 #Delete file from disk and delete partition
 	echo "INFO: Removing controller and creating new one"
-	$rpc_py remove_vhost_controller $vhost_blk_name
+	$rpc_py vhost_delete_controller $vhost_blk_name
 	$rpc_py construct_vhost_blk_controller $vhost_blk_name $disk_name
 
 	vm_run $vm_no

@@ -306,7 +306,7 @@ free_rpc_remove_vhost_ctrlr(struct rpc_remove_vhost_ctrlr *req)
 }
 
 static void
-spdk_rpc_remove_vhost_controller(struct spdk_jsonrpc_request *request,
+spdk_rpc_vhost_delete_controller(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params)
 {
 	struct rpc_remove_vhost_ctrlr req = {0};
@@ -349,7 +349,8 @@ invalid:
 					 spdk_strerror(-rc));
 
 }
-SPDK_RPC_REGISTER("remove_vhost_controller", spdk_rpc_remove_vhost_controller, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("vhost_delete_controller", spdk_rpc_vhost_delete_controller, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_delete_controller, remove_vhost_controller)
 
 struct rpc_get_vhost_ctrlrs {
 	char *name;

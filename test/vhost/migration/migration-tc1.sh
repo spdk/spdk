@@ -8,8 +8,8 @@ function migration_tc1_clean_vhost_config()
 	$rpc bdev_malloc_delete Malloc0
 
 	# Delete controllers
-	$rpc remove_vhost_controller $incoming_vm_ctrlr
-	$rpc remove_vhost_controller $target_vm_ctrlr
+	$rpc vhost_delete_controller $incoming_vm_ctrlr
+	$rpc vhost_delete_controller $target_vm_ctrlr
 
 	unset -v incoming_vm target_vm incoming_vm_ctrlr target_vm_ctrlr rpc
 }

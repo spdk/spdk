@@ -124,13 +124,14 @@ def get_vhost_controllers(client, name=None):
     return client.call('get_vhost_controllers', params)
 
 
-def remove_vhost_controller(client, ctrlr):
+@deprecated_alias('remove_vhost_controller')
+def vhost_delete_controller(client, ctrlr):
     """Remove vhost controller from configuration.
     Args:
         ctrlr: controller name to remove
     """
     params = {'ctrlr': ctrlr}
-    return client.call('remove_vhost_controller', params)
+    return client.call('vhost_delete_controller', params)
 
 
 @deprecated_alias('construct_virtio_dev')

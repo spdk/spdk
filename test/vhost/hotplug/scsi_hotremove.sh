@@ -218,10 +218,10 @@ function pre_scsi_hotremove_test_case() {
 }
 
 function post_scsi_hotremove_test_case() {
-    $rpc_py remove_vhost_controller naa.Nvme0n1p0.0
-    $rpc_py remove_vhost_controller naa.Nvme0n1p1.0
-    $rpc_py remove_vhost_controller naa.Nvme0n1p2.1
-    $rpc_py remove_vhost_controller naa.Nvme0n1p3.1
+    $rpc_py vhost_delete_controller naa.Nvme0n1p0.0
+    $rpc_py vhost_delete_controller naa.Nvme0n1p1.0
+    $rpc_py vhost_delete_controller naa.Nvme0n1p2.1
+    $rpc_py vhost_delete_controller naa.Nvme0n1p3.1
 }
 
 pre_scsi_hotremove_test_case

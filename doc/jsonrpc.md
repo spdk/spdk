@@ -4771,7 +4771,7 @@ Example response:
 }
 ~~~
 
-## remove_vhost_controller {#rpc_remove_vhost_controller}
+## vhost_delete_controller {#rpc_vhost_delete_controller}
 
 Remove vhost target.
 
@@ -4794,7 +4794,7 @@ Example request:
     "ctrlr": "VhostNvme0"
   },
   "jsonrpc": "2.0",
-  "method": "remove_vhost_controller",
+  "method": "vhost_delete_controller",
   "id": 1
 }
 ~~~
