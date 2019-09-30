@@ -953,8 +953,7 @@ error:
 	return rc;
 }
 
-int
-spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
+int nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
 	struct spdk_nvme_qpair	*qpair;
@@ -1032,6 +1031,12 @@ out:
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return rc;
+}
+
+int
+spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return nvme_ctrlr_reset(ctrlr);
 }
 
 static void
