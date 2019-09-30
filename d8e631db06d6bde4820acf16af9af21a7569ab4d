@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "65e202d3_ec468d8c",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-09-30T17:00:28Z",
+      "side": 1,
+      "message": "Better to use: \nif ((bdev \u003d\u003d NULL) \u0026\u0026 (g_target_count \u003c spdk_env_get_core_count()) {\n      bdev \u003d spdk_bdev_first_leaf();\n}",
+      "range": {
+        "startLine": 416,
+        "startChar": 3,
+        "endLine": 421,
+        "endChar": 3
+      },
+      "revId": "d8e631db06d6bde4820acf16af9af21a7569ab4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2e55e59f_fa6ad53a",
         "filename": "test/bdev/bdevperf/bdevperf.c",
         "patchSetId": 2
