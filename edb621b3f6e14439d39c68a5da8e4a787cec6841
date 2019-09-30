@@ -46,6 +46,30 @@
       "revId": "edb621b3f6e14439d39c68a5da8e4a787cec6841",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee191786_b2861fe9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4322,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-30T03:56:23Z",
+      "side": 1,
+      "message": "Hi Eugene,\n\nThis idea is very clever, but I\u0027m concerned that we can\u0027t know either the current thread holds or the other thread holds the mutex from this function. So will you extract unlock from this function even if it increases number of lines?\n\n-Shuhei",
+      "parentUuid": "cf3c49a2_5e9544a4",
+      "range": {
+        "startLine": 4322,
+        "startChar": 1,
+        "endLine": 4322,
+        "endChar": 81
+      },
+      "revId": "edb621b3f6e14439d39c68a5da8e4a787cec6841",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
