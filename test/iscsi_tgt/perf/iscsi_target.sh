@@ -91,9 +91,9 @@ timing_exit run_iscsi_app
 
 timing_enter iscsi_config
 bdevs=($($rpc_py bdev_get_bdevs | jq -r '.[].name'))
-if [ $DISKNO == "ALL" ] || [ $DISKNO == "all" ]; then
+if [[ $DISKNO == "ALL" ]] || [[ $DISKNO == "all" ]]; then
 	DISKNO=${#bdevs[@]}
-elif [ $DISKNO -gt ${#bdevs[@]} ] || [ ! $DISKNO =~ ^[0-9]+$ ]; then
+elif [[ $DISKNO -gt ${#bdevs[@]} ]] || [[ ! $DISKNO =~ ^[0-9]+$ ]]; then
 	error "Required device number ($DISKNO) is not a valid number or it's larger than the number of devices found (${#bdevs[@]})"
 fi
 
