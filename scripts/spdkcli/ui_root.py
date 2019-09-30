@@ -267,11 +267,11 @@ class UIRoot(UINode):
 
     def list_vhost_ctrls(self):
         if self.is_init:
-            self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
+            self.current_vhost_ctrls = rpc.vhost.vhost_get_controllers(self.client)
 
     @verbose
     @is_method_available
-    def get_vhost_controllers(self, ctrlr_type):
+    def vhost_get_controllers(self, ctrlr_type):
         if self.is_init:
             self.list_vhost_ctrls()
             for ctrlr in [x for x in self.current_vhost_ctrls if ctrlr_type in list(x["backend_specific"].keys())]:
@@ -516,7 +516,7 @@ class VhostCtrlr(object):
     def __init__(self, ctrlr_info):
         """
         All class attributes are set based on what information is received
-        from get_vhost_controllers RPC call.
+        from vhost_get_controllers RPC call.
         # TODO: Document in docstring parameters which describe bdevs.
         # TODO: Possible improvement: JSON schema might be used here in future
         """
