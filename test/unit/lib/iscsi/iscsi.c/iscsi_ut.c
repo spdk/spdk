@@ -121,6 +121,11 @@ DEFINE_STUB(spdk_scsi_lun_id_int_to_fmt, uint64_t, (int lun_id), 0);
 
 DEFINE_STUB(spdk_scsi_lun_id_fmt_to_int, int, (uint64_t lun_fmt), 0);
 
+DEFINE_STUB(spdk_scsi_lun_get_dif_ctx, bool,
+	    (struct spdk_scsi_lun *lun, uint8_t *cdb,
+	     uint32_t data_offset, struct spdk_dif_ctx *dif_ctx),
+	    false);
+
 static void
 op_login_check_target_test(void)
 {
@@ -1514,6 +1519,44 @@ build_iovs_with_md_test(void)
 	free(data);
 }
 
+static void
+read_pdu_test(void)
+{
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu *pdu = NULL;
+	int rc;
+
+	conn.pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;
+
+	g_read_data_len = 0;
+
+	rc = spdk_iscsi_read_pdu(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(conn.pdu_in_progress != NULL);
+	CU_ASSERT(conn.pdu_recv_state == ISCSI_PDU_RECV_STATE_AWAIT_PDU_HDR);
+	CU_ASSERT(pdu == NULL);
+
+	g_read_data_len = ISCSI_BHS_LEN;
+
+	rc = spdk_iscsi_read_pdu(&conn, &pdu);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(conn.pdu_in_progress == NULL);
+	CU_ASSERT(conn.pdu_recv_state == ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY);
+	CU_ASSERT(pdu != NULL);
+	CU_ASSERT(pdu->bhs_valid_bytes == ISCSI_BHS_LEN);
+
+	spdk_put_pdu(pdu);
+
+	pdu = NULL;
+	g_read_data_len = -1;
+
+	rc = spdk_iscsi_read_pdu(&conn, &pdu);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(conn.pdu_in_progress == NULL);
+	CU_ASSERT(conn.pdu_recv_state == ISCSI_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(pdu == NULL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1553,6 +1596,7 @@ main(int argc, char **argv)
 			       abort_queued_datain_tasks_test) == NULL
 		|| CU_add_test(suite, "build_iovs_test", build_iovs_test) == NULL
 		|| CU_add_test(suite, "build_iovs_with_md_test", build_iovs_with_md_test) == NULL
+		|| CU_add_test(suite, "read_pdu_test", read_pdu_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
