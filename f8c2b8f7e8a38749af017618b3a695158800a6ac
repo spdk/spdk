@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77b68b6c_f0204f9b",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T19:57:47Z",
+      "side": 1,
+      "message": "Let\u0027s only add the first line.  The extra details can be found by the user if they are interested by looking at jsonrpc.md or the code.\n\nIn general the CHANGELOG should just point out significant changes, without describing them in detail.\n\nBut we can fix up the CHANGELOG later, prior to the release.  So I\u0027m OK merging this as is for now.",
+      "revId": "f8c2b8f7e8a38749af017618b3a695158800a6ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
