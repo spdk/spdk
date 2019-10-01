@@ -120,6 +120,17 @@ struct nvme_async_probe_ctx {
 	uint32_t populates_in_progress;
 };
 
+struct nvme_io_channel {
+	struct spdk_nvme_qpair		*qpair;
+	struct spdk_poller		*poller;
+	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
+
+	bool				collect_spin_stat;
+	uint64_t			spin_ticks;
+	uint64_t			start_ticks;
+	uint64_t			end_ticks;
+};
+
 void nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 					struct nvme_bdev_ns *ns, int rc);
 
