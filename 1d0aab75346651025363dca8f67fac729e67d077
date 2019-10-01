@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73695477_9cc172e4",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T16:43:36Z",
+      "side": 1,
+      "message": "this doesn\u0027t cover the case I was talking about in the last version - if the request has to be queued again, nvme_qpair_submit_request will return 0",
+      "revId": "1d0aab75346651025363dca8f67fac729e67d077",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
