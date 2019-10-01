@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42fc8b37_edbe77a2",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T20:21:10Z",
+      "side": 0,
+      "message": "Hi Maciek,\n\nCould you explain why this needs to be moved?  It seems in place here, since we allocate bdevs at the same time we get the number of namespaces.  Moving it outside of this function doesn\u0027t seem right.  If this is needed as part of some upcoming patch, it would be good to explain that in the commit message.  If this truly is just \"code cleanup\" as described in the commit message, I would say -1 on this patch since I think the existing code is more clear.\n\nThanks,\n\n-Jim",
+      "revId": "f7705691bce73d8664efe1ef9dfca9778eaa8cbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
