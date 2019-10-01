@@ -331,6 +331,7 @@ spdk_nvmf_tcp_pdu_get(struct spdk_nvmf_tcp_qpair *tqpair)
 	tqpair->free_pdu_num--;
 	TAILQ_REMOVE(&tqpair->free_queue, pdu, tailq);
 	memset(pdu, 0, sizeof(*pdu));
+	pdu->qpair = tqpair;
 	pdu->ref = 1;
 	pdu->hdr = &pdu->hdr_mem;
 
