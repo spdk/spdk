@@ -930,7 +930,7 @@ nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 	struct spdk_nvme_cpl cpl = {};
 	uint8_t flags;
 
-	tcp_req = pdu->ctx;
+	tcp_req = pdu->req;
 	assert(tcp_req != NULL);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
@@ -1194,7 +1194,7 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 
 	nvme_tcp_pdu_set_data_buf(pdu, tcp_req->iov, tcp_req->iovcnt,
 				  c2h_data->datao, c2h_data->datal);
-	pdu->ctx = tcp_req;
+	pdu->req = tcp_req;
 
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 	return;
