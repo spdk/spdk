@@ -143,11 +143,9 @@ typedef void (*spdk_sock_op_cb)(void *cb_arg, int len);
  * \param iovcnt Number of I/O vectors in the array.
  * \param cb_fn The function to call when the data has been sent.
  * \param cb_arg A context parameter passed to cb_fn
- *
- * \return 0 n success, -1 on failure.
  */
-int spdk_sock_writev_async(struct spdk_sock *sock, struct iovec *iov, int iovcnt,
-			   spdk_sock_op_cb cb_fn, void *cb_arg);
+void spdk_sock_writev_async(struct spdk_sock *sock, struct iovec *iov, int iovcnt,
+			    spdk_sock_op_cb cb_fn, void *cb_arg);
 
 /**
  * Read message from the given socket to the I/O vector array.

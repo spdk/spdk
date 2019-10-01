@@ -272,16 +272,16 @@ spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 	return sock->net_impl->writev(sock, iov, iovcnt);
 }
 
-int
+void
 spdk_sock_writev_async(struct spdk_sock *sock, struct iovec *iov, int iovcnt,
 		       spdk_sock_op_cb cb_fn, void *cb_arg)
 {
 	if (sock == NULL) {
-		errno = EBADF;
-		return -1;
+		cb_fn(cb_arg, -EBADF);
+		return;
 	}
 
-	return sock->net_impl->writev_async(sock, iov, iovcnt, cb_fn, cb_arg);
+	sock->net_impl->writev_async(sock, iov, iovcnt, cb_fn, cb_arg);
 }
 
 int

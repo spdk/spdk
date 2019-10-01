@@ -48,7 +48,7 @@
 #define SO_RCVBUF_SIZE (2 * 1024 * 1024)
 #define SO_SNDBUF_SIZE (2 * 1024 * 1024)
 #define POSIX_NUM_SOCK_REQS 128
-#define POSIX_MAX_IOV 6
+#define POSIX_MAX_IOV 32
 
 struct spdk_posix_sock_request {
 	struct spdk_posix_sock			*sock;
@@ -516,7 +516,7 @@ spdk_posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	return writev(sock->fd, iov, iovcnt);
 }
 
-static int
+static void
 spdk_posix_sock_writev_async(struct spdk_sock *_sock, struct iovec *iov, int iovcnt,
 			     spdk_sock_op_cb cb_fn, void *cb_arg)
 {
@@ -526,12 +526,16 @@ spdk_posix_sock_writev_async(struct spdk_sock *_sock, struct iovec *iov, int iov
 
 	group = sock->group;
 
+	assert(cb_fn != NULL);
+
 	if (group == NULL) {
-		return -ENOTSUP;
+		cb_fn(cb_arg, -ENOTSUP);
+		return;
 	}
 
 	if (iovcnt > POSIX_MAX_IOV) {
-		return -ENOTSUP;
+		cb_fn(cb_arg, -ENOTSUP);
+		return;
 	}
 
 	req = spdk_posix_sock_request_get(group);
@@ -540,8 +544,6 @@ spdk_posix_sock_writev_async(struct spdk_sock *_sock, struct iovec *iov, int iov
 	memcpy(req->iov, iov, sizeof(*iov) * iovcnt);
 	req->iovcnt = iovcnt;
 	spdk_posix_sock_request_queue(sock, req);
-
-	return 0;
 }
 
 static int
