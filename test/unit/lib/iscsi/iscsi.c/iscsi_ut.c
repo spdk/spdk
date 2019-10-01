@@ -1531,7 +1531,7 @@ read_pdu_test(void)
 
 	rc = spdk_iscsi_read_pdu(&conn);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(conn.pdu_in_progress != NULL);
+	CU_ASSERT(conn.pdu_in_progress.bhs_valid_bytes == 0);
 	CU_ASSERT(conn.pdu_recv_state == ISCSI_PDU_RECV_STATE_AWAIT_PDU_HDR);
 
 	g_read_data_len = ISCSI_BHS_LEN;
@@ -1539,14 +1539,14 @@ read_pdu_test(void)
 
 	rc = spdk_iscsi_read_pdu(&conn);
 	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
-	CU_ASSERT(conn.pdu_in_progress == NULL);
+	CU_ASSERT(conn.pdu_in_progress.bhs_valid_bytes == ISCSI_BHS_LEN);
 	CU_ASSERT(conn.pdu_recv_state == ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY);
 
 	g_read_data_len = -1;
 
 	rc = spdk_iscsi_read_pdu(&conn);
 	CU_ASSERT(rc == -1);
-	CU_ASSERT(conn.pdu_in_progress == NULL);
+	CU_ASSERT(conn.pdu_in_progress.bhs_valid_bytes == 0);
 	CU_ASSERT(conn.pdu_recv_state == ISCSI_PDU_RECV_STATE_ERROR);
 }
 
