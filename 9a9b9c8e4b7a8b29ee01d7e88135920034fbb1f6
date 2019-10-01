@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7b3206b_dce5b7fa",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 899,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-01T20:48:50Z",
+      "side": 1,
+      "message": "I think that for these codes, should not be put here. When the qpair is recycled, it will be handled in spdk_nvmf_tcp_qpair_destroy. So both will be handled. PUtting the code here will make the further maintenance difficult. And this is really the exceptional case. I do not think that it will cause too many overheads with the original code path.",
+      "range": {
+        "startLine": 893,
+        "startChar": 2,
+        "endLine": 899,
+        "endChar": 3
+      },
+      "revId": "9a9b9c8e4b7a8b29ee01d7e88135920034fbb1f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
