@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b55d122_3501c74b",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-10-01T13:13:01Z",
+      "side": 1,
+      "message": "We dont have to duplicate whole unregister path table if the only thing we add is synchronous operation at the start\nWe can do this instead:\n```\nvoid stop_register()\n  vbdev-\u003estate.starting \u003d false;\n  vbdev_ocf_mngt_stop(vbdev, unregister_path);\n}\n```\nand use `stop_register()` in every place we used this table\nThen, we should also change vbdev_mngt_poll() to accept any function (that would be good regardless of how this patch will end up)",
+      "range": {
+        "startLine": 343,
+        "startChar": 46,
+        "endLine": 344,
+        "endChar": 33
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
