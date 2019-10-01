@@ -538,7 +538,7 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 }
 
 static int
-qp_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+qp_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req, bool resubmit)
 {
 	int			rc = 0;
 	struct nvme_request	*child_req, *tmp;
@@ -555,8 +555,12 @@ qp_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 		 */
 		TAILQ_FOREACH_SAFE(child_req, &req->children, child_tailq, tmp) {
 			if (spdk_likely(!child_req_failed)) {
-				rc = qp_submit_request(qpair, child_req);
-				if (spdk_unlikely(rc != 0)) {
+				/*
+				 * A child request cannot ever be part of a resubmit.
+				 * The parent request will never get queued.
+				 * */
+				rc = qp_submit_request(qpair, child_req, false);
+				if (spdk_unlikely(rc != 0 && rc != -ENOMEM)) {
 					child_req_failed = true;
 				}
 			} else { /* free remaining child_reqs since one child_req fails */
@@ -625,8 +629,12 @@ qp_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 		/* The controller is being reset - queue this request and
 		 *  submit it later when the reset is completed.
 		 */
-		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
-		return 0;
+		if (spdk_likely(!resubmit)) {
+			STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		} else {
+			STAILQ_INSERT_HEAD(&qpair->queued_req, req, stailq);
+		}
+		return -ENOMEM;
 	}
 
 	if (spdk_likely(rc == 0)) {
@@ -634,8 +642,12 @@ qp_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 	}
 
 	if (rc == -EAGAIN) {
-		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
-		return 0;
+		if (spdk_likely(!resubmit)) {
+			STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		} else {
+			STAILQ_INSERT_HEAD(&qpair->queued_req, req, stailq);
+		}
+		return -ENOMEM;
 	}
 
 error:
@@ -650,7 +662,18 @@ error:
 int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
-	return qp_submit_request(qpair, req);
+	int rc = qp_submit_request(qpair, req, false);
+
+	/*
+	 * The new function uses -ENOMEM to inform the caller that the request was queued.
+	 * That differs from the previous behavior of this function, so add a check to keep
+	 * this function consistent.
+	 */
+	if (rc == -ENOMEM) {
+		return 0;
+	}
+
+	return rc;
 }
 
 void
