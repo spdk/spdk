@@ -1523,38 +1523,31 @@ static void
 read_pdu_test(void)
 {
 	struct spdk_iscsi_conn conn = {};
-	struct spdk_iscsi_pdu *pdu = NULL;
 	int rc;
 
 	conn.pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;
 
 	g_read_data_len = 0;
 
-	rc = spdk_iscsi_read_pdu(&conn, &pdu);
+	rc = spdk_iscsi_read_pdu(&conn);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(conn.pdu_in_progress != NULL);
 	CU_ASSERT(conn.pdu_recv_state == ISCSI_PDU_RECV_STATE_AWAIT_PDU_HDR);
-	CU_ASSERT(pdu == NULL);
 
 	g_read_data_len = ISCSI_BHS_LEN;
+	conn.state = ISCSI_CONN_STATE_LOGGED_OUT;
 
-	rc = spdk_iscsi_read_pdu(&conn, &pdu);
-	CU_ASSERT(rc == 1);
+	rc = spdk_iscsi_read_pdu(&conn);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
 	CU_ASSERT(conn.pdu_in_progress == NULL);
 	CU_ASSERT(conn.pdu_recv_state == ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY);
-	CU_ASSERT(pdu != NULL);
-	CU_ASSERT(pdu->bhs_valid_bytes == ISCSI_BHS_LEN);
 
-	spdk_put_pdu(pdu);
-
-	pdu = NULL;
 	g_read_data_len = -1;
 
-	rc = spdk_iscsi_read_pdu(&conn, &pdu);
+	rc = spdk_iscsi_read_pdu(&conn);
 	CU_ASSERT(rc == -1);
 	CU_ASSERT(conn.pdu_in_progress == NULL);
 	CU_ASSERT(conn.pdu_recv_state == ISCSI_PDU_RECV_STATE_ERROR);
-	CU_ASSERT(pdu == NULL);
 }
 
 int
