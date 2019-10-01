@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a4105b7_1bef5c80",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T14:36:08Z",
+      "side": 1,
+      "message": "I think SC2223 belongs in a separate (third) list with a different comment.  This comment here is specific to SC1117 which is a deprecated shellcheck error type.  SC2223 is not deprecated - we are just choosing not to try to fix it.\n\n# SPDK has decided to not fix violations of these errors.\n# SC2223 - default assignment may cause DoS due to globbing\nSHCK_EXCLUDE\u003d\"$SHCK_EXCLUDE,SC2223\"",
+      "revId": "320d7573662f5420af23a216a22abc7b51701ab5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
