@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f546b1b7_4567e806",
+        "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-01T10:42:14Z",
+      "side": 1,
+      "message": "base_bdev_name or base_bdev would be more descriptive.",
+      "range": {
+        "startLine": 65,
+        "startChar": 3,
+        "endLine": 65,
+        "endChar": 12
+      },
+      "revId": "73c8011e1bad26fae45cfeaaed2cf74e0ff80207",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
