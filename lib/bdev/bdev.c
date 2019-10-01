@@ -277,6 +277,13 @@ struct spdk_bdev_channel {
 	bdev_io_tailq_t		queued_resets;
 };
 
+struct media_event_entry {
+	struct spdk_bdev_media_event	event;
+	TAILQ_ENTRY(media_event_entry)	tailq;
+};
+
+#define MEDIA_EVENT_POOL_SIZE 64
+
 struct spdk_bdev_desc {
 	struct spdk_bdev		*bdev;
 	struct spdk_thread		*thread;
@@ -292,6 +299,9 @@ struct spdk_bdev_desc {
 	bool				write;
 	pthread_mutex_t			mutex;
 	uint32_t			refs;
+	TAILQ_HEAD(, media_event_entry)	pending_media_events;
+	TAILQ_HEAD(, media_event_entry)	free_media_events;
+	struct media_event_entry	*media_events_buffer;
 	TAILQ_ENTRY(spdk_bdev_desc)	link;
 };
 
@@ -2693,6 +2703,7 @@ static void
 bdev_desc_free(struct spdk_bdev_desc *desc)
 {
 	pthread_mutex_destroy(&desc->mutex);
+	free(desc->media_events_buffer);
 	free(desc);
 }
 
@@ -4476,6 +4487,9 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 		remove_cb = bdev_dummy_event_cb;
 	}
 
+	TAILQ_INIT(&desc->pending_media_events);
+	TAILQ_INIT(&desc->free_media_events);
+
 	desc->callback.open_with_ext = false;
 	desc->callback.remove_fn = remove_cb;
 	desc->callback.ctx = remove_ctx;
@@ -4502,6 +4516,7 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 {
 	struct spdk_bdev_desc *desc;
 	struct spdk_bdev *bdev;
+	unsigned int event_id;
 	int rc;
 
 	if (event_cb == NULL) {
@@ -4526,10 +4541,29 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 		return -ENOMEM;
 	}
 
+	TAILQ_INIT(&desc->pending_media_events);
+	TAILQ_INIT(&desc->free_media_events);
+
 	desc->callback.open_with_ext = true;
 	desc->callback.event_fn = event_cb;
 	desc->callback.ctx = event_ctx;
 	pthread_mutex_init(&desc->mutex, NULL);
+
+	if (bdev->media_events) {
+		desc->media_events_buffer = calloc(MEDIA_EVENT_POOL_SIZE,
+						   sizeof(*desc->media_events_buffer));
+		if (desc->media_events_buffer == NULL) {
+			SPDK_ERRLOG("Failed to initialize media event pool\n");
+			bdev_desc_free(desc);
+			pthread_mutex_unlock(&g_bdev_mgr.mutex);
+			return -ENOMEM;
+		}
+
+		for (event_id = 0; event_id < MEDIA_EVENT_POOL_SIZE; ++event_id) {
+			TAILQ_INSERT_TAIL(&desc->free_media_events,
+					  &desc->media_events_buffer[event_id], tailq);
+		}
+	}
 
 	rc = bdev_open(bdev, write, desc);
 	if (rc != 0) {
@@ -5180,6 +5214,82 @@ spdk_bdev_histogram_get(struct spdk_bdev *bdev, struct spdk_histogram_data *hist
 
 	spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_histogram_get_channel, ctx,
 			      bdev_histogram_get_channel_cb);
+}
+
+size_t
+spdk_bdev_get_media_events(struct spdk_bdev_desc *desc, struct spdk_bdev_media_event *events,
+			   size_t max_events)
+{
+	struct media_event_entry *entry;
+	size_t num_events = 0;
+
+	for (; num_events < max_events; ++num_events) {
+		entry = TAILQ_FIRST(&desc->pending_media_events);
+		if (entry == NULL) {
+			break;
+		}
+
+		events[num_events] = entry->event;
+		TAILQ_REMOVE(&desc->pending_media_events, entry, tailq);
+		TAILQ_INSERT_TAIL(&desc->free_media_events, entry, tailq);
+	}
+
+	return num_events;
+}
+
+int
+spdk_bdev_push_media_events(struct spdk_bdev *bdev, const struct spdk_bdev_media_event *events,
+			    size_t num_events)
+{
+	struct spdk_bdev_desc *desc;
+	struct media_event_entry *entry;
+	size_t event_id;
+	int rc = 0;
+
+	assert(bdev->media_events);
+
+	pthread_mutex_lock(&bdev->internal.mutex);
+	TAILQ_FOREACH(desc, &bdev->internal.open_descs, link) {
+		if (desc->write) {
+			break;
+		}
+	}
+
+	if (desc == NULL || desc->media_events_buffer == NULL) {
+		rc = -ENODEV;
+		goto out;
+	}
+
+	for (event_id = 0; event_id < num_events; ++event_id) {
+		entry = TAILQ_FIRST(&desc->free_media_events);
+		if (entry == NULL) {
+			break;
+		}
+
+		TAILQ_REMOVE(&desc->free_media_events, entry, tailq);
+		TAILQ_INSERT_TAIL(&desc->pending_media_events, entry, tailq);
+		entry->event = events[event_id];
+	}
+
+	rc = event_id;
+out:
+	pthread_mutex_unlock(&bdev->internal.mutex);
+	return rc;
+}
+
+void
+spdk_bdev_notify_media_management(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_desc *desc;
+
+	pthread_mutex_lock(&bdev->internal.mutex);
+	TAILQ_FOREACH(desc, &bdev->internal.open_descs, link) {
+		if (!TAILQ_EMPTY(&desc->pending_media_events)) {
+			desc->callback.event_fn(SPDK_BDEV_EVENT_MEDIA_MANAGEMENT, bdev,
+						desc->callback.ctx);
+		}
+	}
+	pthread_mutex_unlock(&bdev->internal.mutex);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
