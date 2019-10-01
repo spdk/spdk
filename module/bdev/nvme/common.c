@@ -146,3 +146,29 @@ bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 
 	spdk_io_device_unregister(nvme_bdev_ctrlr, bdev_nvme_unregister_cb);
 }
+
+void
+nvme_bdev_attach_bdev_to_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev *nvme_disk)
+{
+	nvme_bdev_ctrlr->ref++;
+
+	TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->bdevs, nvme_disk, tailq);
+}
+
+void
+nvme_bdev_detach_bdev_from_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+				 struct nvme_bdev *nvme_disk)
+{
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	nvme_bdev_ctrlr->ref--;
+
+	TAILQ_REMOVE(&nvme_bdev_ctrlr->bdevs, nvme_disk, tailq);
+
+	if (nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct) {
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+		bdev_nvme_ctrlr_destruct(nvme_bdev_ctrlr);
+		return;
+	}
+
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+}
