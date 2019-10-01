@@ -517,8 +517,6 @@ test_nvmf_tcp_send_c2h_data(void)
 	CU_ASSERT(tqpair.c2h_data_pdu_cnt == 3);
 	CU_ASSERT(STAILQ_EMPTY(&tqpair.queued_c2h_data_tcp_req));
 
-	spdk_poller_unregister(&tqpair.flush_poller);
-
 	spdk_thread_exit(thread);
 	spdk_thread_destroy(thread);
 }
