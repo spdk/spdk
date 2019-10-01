@@ -124,7 +124,7 @@ struct nvme_tcp_pdu {
 
 	struct spdk_dif_ctx				*dif_ctx;
 
-	void						*ctx; /* data tied to a tcp request */
+	void						*req; /* data tied to a tcp request */
 };
 
 enum nvme_tcp_pdu_recv_state {
