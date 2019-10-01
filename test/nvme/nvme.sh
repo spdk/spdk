@@ -143,6 +143,10 @@ if [ $(uname) = Linux ]; then
 	kill_stub
 fi
 
+timing_enter startup
+$testdir/startup/startup
+timing_exit startup
+
 if [ -d /usr/src/fio ]; then
 	timing_enter fio_plugin
 	PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
