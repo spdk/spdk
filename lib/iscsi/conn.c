@@ -1363,12 +1363,11 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 static int
 iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_pdu *pdu;
 	int i, rc;
 
 	/* Read new PDUs from network */
 	for (i = 0; i < GET_PDU_LOOP_COUNT; i++) {
-		rc = spdk_iscsi_read_pdu(conn, &pdu);
+		rc = spdk_iscsi_read_pdu(conn);
 		if (rc == 0) {
 			break;
 		} else if (rc < 0) {
@@ -1376,22 +1375,6 @@ iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 			return SPDK_ISCSI_CONNECTION_FATAL;
 		}
 
-		if (conn->state == ISCSI_CONN_STATE_LOGGED_OUT) {
-			SPDK_ERRLOG("pdu received after logout\n");
-			spdk_put_pdu(pdu);
-			return SPDK_ISCSI_CONNECTION_FATAL;
-		}
-
-		rc = spdk_iscsi_execute(conn, pdu);
-		spdk_put_pdu(pdu);
-		if (rc < 0) {
-			SPDK_ERRLOG("spdk_iscsi_execute() fatal error on %s(%s)\n",
-				    conn->target_port != NULL ? spdk_scsi_port_get_name(conn->target_port) : "NULL",
-				    conn->initiator_port != NULL ? spdk_scsi_port_get_name(conn->initiator_port) : "NULL");
-			return SPDK_ISCSI_CONNECTION_FATAL;
-		}
-
-		spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
 		if (conn->is_stopped) {
 			break;
 		}
