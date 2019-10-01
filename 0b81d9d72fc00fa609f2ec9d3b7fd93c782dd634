@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f93ac8e_0dadd40b",
+        "filename": "module/bdev/ocf/utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-10-01T13:17:30Z",
+      "side": 1,
+      "message": "maybe change this to something like \"in case of timeout rollback is called\"?\nWe can also add that default argument is vbdev_ocf_mngt_continue()",
+      "range": {
+        "startLine": 54,
+        "startChar": 3,
+        "endLine": 54,
+        "endChar": 59
+      },
+      "revId": "0b81d9d72fc00fa609f2ec9d3b7fd93c782dd634",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f06930c5_fe5ea117",
+        "filename": "module/bdev/ocf/utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-10-01T13:17:30Z",
+      "side": 1,
+      "message": "I think we should accept any function here as argument\nUser can start management operation himself if he wants to, I don\u0027t see why would we need to force that",
+      "range": {
+        "startLine": 56,
+        "startChar": 4,
+        "endLine": 56,
+        "endChar": 21
+      },
+      "revId": "0b81d9d72fc00fa609f2ec9d3b7fd93c782dd634",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
