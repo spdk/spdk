@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2411c476_f170d551",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1230,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T20:15:13Z",
+      "side": 1,
+      "message": "I think this could be simpler by just calling nvme_bdev_attach_done(ctx, rc) here and then returning.  Then the reader doesn\u0027t have to understand the complexity around calling nvme_bdev_attach_done() after calling bdev_nvme_create_bdevs().  In that case, rc \u003d\u003d 0 so the function won\u0027t actually do anything, but that\u0027s not very clear.\n\nThen you can also remove the \"end\" label.",
+      "revId": "f7705691bce73d8664efe1ef9dfca9778eaa8cbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1274b732_38d52987",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T20:15:13Z",
+      "side": 1,
+      "message": "what is the case where bdevs_done \u003d\u003d true but ctrlr_done \u003d\u003d false?",
+      "revId": "f7705691bce73d8664efe1ef9dfca9778eaa8cbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
