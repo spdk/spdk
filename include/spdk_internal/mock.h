@@ -116,4 +116,6 @@ DECLARE_WRAPPER(pthread_mutex_init, int,
 DECLARE_WRAPPER(pthread_mutexattr_init, int,
 		(pthread_mutexattr_t *attr));
 
+DECLARE_WRAPPER(writev, ssize_t, (int fd, const struct iovec *iov, int iovcnt));
+
 #endif /* SPDK_INTERNAL_MOCK_H */
