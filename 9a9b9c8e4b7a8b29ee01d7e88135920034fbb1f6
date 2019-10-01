@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "d11d5928_93a3aadd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-01T20:51:01Z",
+      "side": 1,
+      "message": "I would prefer it still be handled in spdk_nvmf_tcp_qpair_destroy. Then we can the single entry to release the pdu and finally recycle the poller resource. Since it is the exceptional case, I do not think that it could bring resource pressure.",
+      "range": {
+        "startLine": 22,
+        "startChar": 8,
+        "endLine": 23,
+        "endChar": 70
+      },
+      "revId": "9a9b9c8e4b7a8b29ee01d7e88135920034fbb1f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f7b3206b_dce5b7fa",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 2
