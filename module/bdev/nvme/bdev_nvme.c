@@ -54,16 +54,6 @@
 static void bdev_nvme_get_spdk_running_config(FILE *fp);
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
-struct nvme_io_channel {
-	struct spdk_nvme_qpair	*qpair;
-	struct spdk_poller	*poller;
-
-	bool			collect_spin_stat;
-	uint64_t		spin_ticks;
-	uint64_t		start_ticks;
-	uint64_t		end_ticks;
-};
-
 struct nvme_bdev_io {
 	/** array of iovecs to transfer. */
 	struct iovec *iovs;
