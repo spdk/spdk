@@ -141,6 +141,40 @@
       "revId": "691a8a97c8f13e67a0e225243adc9c63dd1eafa1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5fedc56_273ddb38",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4231,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T22:38:35Z",
+      "side": 1,
+      "message": "let\u0027s add a comment here - just to make it clearer next time someone reads this function - something like:\n\n/* This descriptor was closed after this remove_notify message was sent.  spdk_bdev_close()\n * could not free the descriptor since this message was in flight, so we free it now using\n * _spdk_bdev_desc_free().\n */",
+      "revId": "691a8a97c8f13e67a0e225243adc9c63dd1eafa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a249f10_b6167d7b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4321,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T22:38:35Z",
+      "side": 1,
+      "message": "a few nits:\n\n1) let\u0027s define this function before it\u0027s used the first time, to avoid the extra function declaration\n2) add _ to beginning of the function name - that indicates internally to this file that it\u0027s a static function (not part of the public API)\n3) I think I would prefer _spdk_bdev_desc_free().  It makes it more clear at the calling sites what the function is doing.",
+      "revId": "691a8a97c8f13e67a0e225243adc9c63dd1eafa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
