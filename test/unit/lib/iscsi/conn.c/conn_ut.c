@@ -142,9 +142,6 @@ DEFINE_STUB_V(spdk_iscsi_task_mgmt_response,
 
 DEFINE_STUB_V(spdk_iscsi_send_nopin, (struct spdk_iscsi_conn *conn));
 
-DEFINE_STUB(spdk_iscsi_execute, int,
-	    (struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu), 0);
-
 DEFINE_STUB_V(spdk_del_transfer_task,
 	      (struct spdk_iscsi_conn *conn, uint32_t task_tag));
 
