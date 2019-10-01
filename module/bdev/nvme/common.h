@@ -120,6 +120,16 @@ struct nvme_async_probe_ctx {
 	void *cb_ctx;
 };
 
+struct nvme_io_channel {
+	struct spdk_nvme_qpair	*qpair;
+	struct spdk_poller	*poller;
+
+	bool			collect_spin_stat;
+	uint64_t		spin_ticks;
+	uint64_t		start_ticks;
+	uint64_t		end_ticks;
+};
+
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get_by_name(const char *name);
 struct nvme_bdev_ctrlr *nvme_bdev_first_ctrlr(void);
