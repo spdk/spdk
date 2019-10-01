@@ -219,18 +219,11 @@ bdev_nvme_destruct(void *ctx)
 	struct nvme_bdev *nvme_disk = ctx;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = nvme_disk->nvme_bdev_ctrlr;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	nvme_bdev_ctrlr->ref--;
-	free(nvme_disk->disk.name);
-	TAILQ_REMOVE(&nvme_bdev_ctrlr->bdevs, nvme_disk, tailq);
-	free(nvme_disk);
-	if (nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		bdev_nvme_ctrlr_destruct(nvme_bdev_ctrlr);
-		return 0;
-	}
+	nvme_bdev_detach_bdev_from_ctrlr(nvme_bdev_ctrlr, nvme_disk);
 
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	free(nvme_disk->disk.name);
+	free(nvme_disk);
+
 	return 0;
 }
 
@@ -709,11 +702,9 @@ nvme_ctrlr_create_bdev(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, uint32_t nsid)
 
 	bdev->nvme_bdev_ctrlr = nvme_bdev_ctrlr;
 	bdev->ns = ns;
-	nvme_bdev_ctrlr->ref++;
 
 	bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_bdev_ctrlr->name, spdk_nvme_ns_get_id(ns));
 	if (!bdev->disk.name) {
-		nvme_bdev_ctrlr->ref--;
 		free(bdev);
 		return -ENOMEM;
 	}
@@ -750,12 +741,11 @@ nvme_ctrlr_create_bdev(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, uint32_t nsid)
 	rc = spdk_bdev_register(&bdev->disk);
 	if (rc) {
 		free(bdev->disk.name);
-		nvme_bdev_ctrlr->ref--;
 		free(bdev);
 		return rc;
 	}
 
-	TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->bdevs, bdev, tailq);
+	nvme_bdev_attach_bdev_to_ctrlr(nvme_bdev_ctrlr, bdev);
 
 	return 0;
 }
