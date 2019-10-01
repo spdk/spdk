@@ -129,7 +129,7 @@ if [ -d /usr/src/fio ]; then
 		fio_config_add_job $testdir/bdev.fio $b
 	done
 
-	run_fio --spdk_conf=./test/bdev/bdev.conf --spdk_mem=$PRE_RESERVED_MEM
+	run_fio --spdk_conf=./test/bdev/bdev.conf --spdk_mem=$PRE_RESERVED_MEM --output=$output_dir/blockdev_fio_verify.txt
 
 	rm -f *.state
 	rm -f $testdir/bdev.fio
@@ -142,7 +142,7 @@ if [ -d /usr/src/fio ]; then
 		fio_config_add_job $testdir/bdev.fio $b
 	done
 
-	run_fio --spdk_conf=./test/bdev/bdev.conf
+	run_fio --spdk_conf=./test/bdev/bdev.conf --output=$output_dir/blockdev_trim.txt
 
 	rm -f *.state
 	rm -f $testdir/bdev.fio
