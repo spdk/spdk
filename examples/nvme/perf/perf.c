@@ -1125,7 +1125,8 @@ static void usage(char *program_name)
 	printf("\t[-s DPDK huge memory size in MB.]\n");
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
-	printf("\t[-i shared memory group ID]\n");
+	printf("\t[-i shared memory group ID]\n\t");
+	spdk_log_usage(stdout, "-T");
 	printf("\t[-V enable VMD enumeration]\n");
 #ifdef DEBUG
 	printf("\t[-G enable debug logging]\n");
@@ -1534,6 +1535,7 @@ parse_args(int argc, char **argv)
 	int op;
 	bool mix_specified = false;
 	long int val;
+	int rc;
 
 	/* default value */
 	g_queue_depth = 0;
@@ -1544,7 +1546,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:NU:V")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:NT:U:V")) != -1) {
 		switch (op) {
 		case 'i':
 		case 'm':
@@ -1641,6 +1643,21 @@ parse_args(int argc, char **argv)
 			break;
 		case 'N':
 			g_no_shn_notification = true;
+			break;
+		case 'T':
+			rc = spdk_log_set_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+			}
+			spdk_log_set_print_level(SPDK_LOG_DEBUG);
+#ifndef DEBUG
+			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -L flag.\n",
+				argv[0]);
+			usage(argv[0]);
+			return 0;
+#endif
 			break;
 		case 'V':
 			g_vmd = true;
