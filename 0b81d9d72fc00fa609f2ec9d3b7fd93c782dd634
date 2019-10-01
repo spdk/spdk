@@ -93,6 +93,30 @@
       "revId": "0b81d9d72fc00fa609f2ec9d3b7fd93c782dd634",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aefc7a98_79a1eb0e",
+        "filename": "module/bdev/ocf/utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-10-01T15:05:26Z",
+      "side": 1,
+      "message": "In response here, arguments used in mngt_stop() and mngt_poll() are not the same.\nWe should use standard types (function callback) instead of custom ones (vbdev_ocf_mngt_fn*) every time we can.\nThe only reason we have vbdev_ocf_mngt_fn* type in mngt_stop() is that we needed some way to initiate another management operation from current one.\n\n\u003e both of this functions will do similar (in most cases the same) things in case of error \n\nAgree, but only on high level\n\n\u003e .. so they should have the same type of argument for rollback\n\nNo, because implementation can be different for seemingly same things. Following patch is a showcase for that - if you are going to change following patch to not duplicate unregister_path, with this unchanged mngt_poll() function you will have to create a dummy path table just for it to work. If you had general function callback here, that would not happened.",
+      "parentUuid": "59023d66_15faecbb",
+      "range": {
+        "startLine": 56,
+        "startChar": 4,
+        "endLine": 56,
+        "endChar": 21
+      },
+      "revId": "0b81d9d72fc00fa609f2ec9d3b7fd93c782dd634",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
