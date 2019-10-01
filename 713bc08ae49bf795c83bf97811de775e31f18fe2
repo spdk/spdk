@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dec7e472_cc1c8093",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T15:57:20Z",
+      "side": 1,
+      "message": "! should not be added here",
+      "revId": "713bc08ae49bf795c83bf97811de775e31f18fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15390452_fe63fab5",
+        "filename": "test/pmem/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T15:57:20Z",
+      "side": 1,
+      "message": "should we just remove this if statement?  I\u0027m trying to understand when this if statement could actually fail\n\nfor example:\n\n./run_some_non_existent_app \u0026\necho $?\n\nthis shows 0 - even though the app couldn\u0027t launch because it doesn\u0027t exist",
+      "revId": "713bc08ae49bf795c83bf97811de775e31f18fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "795101f7_cdc609b5",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T15:57:20Z",
+      "side": 1,
+      "message": "! mkdir",
+      "revId": "713bc08ae49bf795c83bf97811de775e31f18fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4178bce_29f846bb",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T15:57:20Z",
+      "side": 1,
+      "message": "! mount",
+      "revId": "713bc08ae49bf795c83bf97811de775e31f18fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e150fdb0_6428a288",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T15:57:20Z",
+      "side": 1,
+      "message": "truncate (no !)",
+      "revId": "713bc08ae49bf795c83bf97811de775e31f18fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
