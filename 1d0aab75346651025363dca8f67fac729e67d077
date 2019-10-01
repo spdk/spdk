@@ -16,6 +16,24 @@
       "revId": "1d0aab75346651025363dca8f67fac729e67d077",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33678d8b_81f3310d",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-01T19:02:22Z",
+      "side": 1,
+      "message": "Ah right, sorry. I wasn\u0027t thinking right this morning. I have uploaded a few preliminary changes to make resubmitting ordering safe. Please review those, and let me know if that fixes it.",
+      "parentUuid": "73695477_9cc172e4",
+      "revId": "1d0aab75346651025363dca8f67fac729e67d077",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
