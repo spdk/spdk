@@ -154,6 +154,7 @@ _spdk_bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 			pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
 			return -ENOSPC;
 		}
+		SPDK_ERRLOG("Claming extent_page %lu for blob %lu\n", *lowest_free_extent, blob->id);
 		_spdk_bs_claim_extent(blob->bs, *lowest_free_extent);
 	}
 	pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
@@ -1748,6 +1749,12 @@ _spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 		_spdk_blob_persist_zero_pages(seq, ctx, 0);
 		return;
 
+	}
+
+	for (i = 0; i < blob->active.num_et; i++) {
+		if (blob->active.extent_table[i] != 0) {
+			SPDK_ERRLOG("Persist extent page [%"PRIu64"] = %"PRIu64"\n", i, blob->active.extent_table[i]);
+		}
 	}
 
 	/* Generate the new metadata */
@@ -6215,9 +6222,64 @@ _spdk_blob_insert_cluster_msg_cb(void *arg, int bserrno)
 }
 
 static void
+_spdk_blob_persist_single_extent_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob_md_page        *page = cb_arg;
+
+	if (bserrno == 0) {
+		/* _spdk_blob_mark_clean(blob); */
+	}
+
+	spdk_bs_sequence_finish(seq, bserrno);
+
+	free(page);
+}
+
+static void
+_spdk_blob_insert_extent(struct spdk_blob_insert_cluster_ctx *ctx)
+{
+	spdk_bs_sequence_t		*seq;
+	struct spdk_bs_cpl		cpl;
+	struct spdk_blob_md_page	*page = NULL;
+	struct spdk_blob_md_page	*cur_page = NULL;
+	uint32_t			page_count = 0;
+	uint64_t			start_cluster;
+
+
+	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	cpl.u.blob_basic.cb_fn = _spdk_blob_insert_cluster_msg_cb;
+	cpl.u.blob_basic.cb_arg = ctx;
+
+	seq = spdk_bs_sequence_start(ctx->blob->bs->md_channel, &cpl);
+	if (!seq) {
+		ctx->rc = -ENOMEM;
+		spdk_thread_send_msg(ctx->thread, _spdk_blob_insert_cluster_msg_cpl, ctx);
+		return;
+	}
+	ctx->rc = _spdk_blob_serialize_add_page(ctx->blob, &page, &page_count, &cur_page);
+	if (ctx->rc < 0) {
+		spdk_thread_send_msg(ctx->thread, _spdk_blob_insert_cluster_msg_cpl, ctx);
+		return;
+	}
+
+	start_cluster = (ctx->cluster_num / SPDK_EXTENTS_PER_ET) * SPDK_EXTENTS_PER_ET;
+
+	_spdk_blob_serialize_extent(ctx->blob, start_cluster, cur_page);
+
+	page->crc = _spdk_blob_md_page_calc_crc(page);
+
+	assert(spdk_bit_array_get(ctx->blob->bs->used_md_pages, ctx->extent) == true);
+
+	spdk_bs_sequence_write_dev(seq, page, _spdk_bs_page_to_lba(ctx->blob->bs, ctx->extent),
+				   _spdk_bs_byte_to_lba(ctx->blob->bs, SPDK_BS_PAGE_SIZE),
+				   _spdk_blob_persist_single_extent_cpl, page);
+}
+
+static void
 _spdk_blob_insert_cluster_msg(void *arg)
 {
 	struct spdk_blob_insert_cluster_ctx *ctx = arg;
+	uint64_t i;
 
 	ctx->rc = _spdk_blob_insert_cluster(ctx->blob, ctx->cluster_num, ctx->cluster, ctx->extent);
 	if (ctx->rc != 0) {
@@ -6225,8 +6287,26 @@ _spdk_blob_insert_cluster_msg(void *arg)
 		return;
 	}
 
-	ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
-	_spdk_blob_sync_md(ctx->blob, _spdk_blob_insert_cluster_msg_cb, ctx);
+	if (ctx->extent == 0) {
+		for (i = 0; i < ctx->blob->active.num_et; i++) {
+			if (ctx->extent == ctx->blob->active.extent_table[i]) {
+				SPDK_ERRLOG("INSERT new extent page [%"PRIu64"] = %"PRIu64"\n", i,
+					    ctx->blob->active.extent_table[i]);
+			}
+		}
+		ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
+
+		/* For now update all extents/extent table */
+		_spdk_blob_sync_md(ctx->blob, _spdk_blob_insert_cluster_msg_cb, ctx);
+	} else if (ctx->extent != 0) {
+		for (i = 0; i < ctx->blob->active.num_et; i++) {
+			if (ctx->extent == ctx->blob->active.extent_table[i]) {
+				SPDK_ERRLOG("Updating extent page [%"PRIu64"] = %"PRIu64"\n", i, ctx->blob->active.extent_table[i]);
+			}
+		}
+		/* Update just single extent */
+		_spdk_blob_insert_extent(ctx);
+	}
 }
 
 static void

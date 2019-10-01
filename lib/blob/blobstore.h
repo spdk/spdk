@@ -53,7 +53,7 @@
 #define SPDK_BLOB_BLOBID_HIGH_BIT (1ULL << 32)
 
 /* Set to low amount on purpose for testing */
-#define SPDK_EXTENTS_PER_ET 10
+#define SPDK_EXTENTS_PER_ET 500
 #define SPDK_EXTENT_PAGE_INVALID UINT64_MAX
 #define SPDK_EXTENT_PAGE_UNALLOCATED 0
 
