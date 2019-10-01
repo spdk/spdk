@@ -63,7 +63,14 @@ extern "C" {
 /** Asynchronous event type */
 enum spdk_bdev_event_type {
 	SPDK_BDEV_EVENT_REMOVE,
-	SPDK_BDEV_EVENT_RESIZE
+	SPDK_BDEV_EVENT_RESIZE,
+	SPDK_BDEV_EVENT_MEDIA_MANAGEMENT,
+};
+
+/** Media management event details */
+struct spdk_bdev_media_event {
+	uint64_t	offset;
+	uint64_t	num_blocks;
 };
 
 /**
@@ -1428,6 +1435,20 @@ void spdk_bdev_histogram_enable(struct spdk_bdev *bdev, spdk_bdev_histogram_stat
 void spdk_bdev_histogram_get(struct spdk_bdev *bdev, struct spdk_histogram_data *histogram,
 			     spdk_bdev_histogram_data_cb cb_fn,
 			     void *cb_arg);
+
+/**
+ * Retrieves media events.  Can only be called from the context of
+ * SPDK_BDEV_EVENT_MEDIA_MANAGEMENT event callback.  These events are sent by
+ * devices exposing raw access to the physical medium (e.g. Open Channel SSD).
+ *
+ * \param bdev_desc Block device descriptor
+ * \param events Array of media mangement event descriptors
+ * \param max_events Size of the events array
+ *
+ * \return number of events retrieved
+ */
+size_t spdk_bdev_get_media_events(struct spdk_bdev_desc *bdev_desc,
+				  struct spdk_bdev_media_event *events, size_t max_events);
 
 #ifdef __cplusplus
 }
