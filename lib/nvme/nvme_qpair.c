@@ -537,8 +537,8 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 	spdk_free(qpair->req_buf);
 }
 
-int
-nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+static inline int
+_nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	int			rc = 0;
 	struct nvme_request	*child_req, *tmp;
@@ -645,6 +645,12 @@ error:
 	nvme_free_request(req);
 
 	return rc;
+}
+
+int
+nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+{
+	return _nvme_qpair_submit_request(qpair, req);
 }
 
 void
