@@ -111,6 +111,13 @@ struct nvme_tcp_pdu {
 
 	nvme_tcp_qpair_xfer_complete_cb			cb_fn;
 	void						*cb_arg;
+
+	/* The sock request ends with a 0 length iovec. Place the actual iovec immediately
+	 * after it. There is a static assert below to check if the compiler inserted
+	 * any unwanted padding */
+	struct spdk_sock_request			sock_req;
+	struct iovec					iov[NVME_TCP_MAX_SGL_DESCRIPTORS * 2];
+
 	struct iovec					data_iov[NVME_TCP_MAX_SGL_DESCRIPTORS];
 	uint32_t					data_iovcnt;
 	uint32_t					data_len;
@@ -127,6 +134,9 @@ struct nvme_tcp_pdu {
 	void						*req; /* data tied to a tcp request */
 	void						*qpair;
 };
+SPDK_STATIC_ASSERT(offsetof(struct nvme_tcp_pdu,
+			    sock_req) + sizeof(struct spdk_sock_request) == offsetof(struct nvme_tcp_pdu, iov),
+		   "Compiler inserted padding between iov and sock_req");
 
 enum nvme_tcp_pdu_recv_state {
 	/* Ready to wait for PDU */
