@@ -409,7 +409,7 @@ iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 }
 
 int
-spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
+spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 {
 	enum iscsi_pdu_recv_state prev_state;
 	struct spdk_iscsi_pdu *pdu;
@@ -595,9 +595,25 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 				}
 			}
 
-			*_pdu = pdu;
 			conn->pdu_in_progress = NULL;
 			conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;
+
+			if (conn->state == ISCSI_CONN_STATE_LOGGED_OUT) {
+				SPDK_ERRLOG("pdu received after logout\n");
+				spdk_put_pdu(pdu);
+				return SPDK_ISCSI_CONNECTION_FATAL;
+			}
+
+			rc = spdk_iscsi_execute(conn, pdu);
+			spdk_put_pdu(pdu);
+			if (rc < 0) {
+				SPDK_ERRLOG("spdk_iscsi_execute() fatal error on %s(%s)\n",
+					    conn->target_port != NULL ? spdk_scsi_port_get_name(conn->target_port) : "NULL",
+					    conn->initiator_port != NULL ? spdk_scsi_port_get_name(conn->initiator_port) : "NULL");
+				return SPDK_ISCSI_CONNECTION_FATAL;
+			}
+
+			spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
 			return 1;
 		case ISCSI_PDU_RECV_STATE_ERROR:
 			spdk_put_pdu(pdu);
