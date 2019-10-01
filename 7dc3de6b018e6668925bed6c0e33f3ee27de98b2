@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27eb4c0c_6bc4df5e",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1156,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T23:38:56Z",
+      "side": 1,
+      "message": "let\u0027s move this function as part of a separate patch",
+      "revId": "7dc3de6b018e6668925bed6c0e33f3ee27de98b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
