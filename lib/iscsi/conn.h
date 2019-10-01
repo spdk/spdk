@@ -116,7 +116,7 @@ struct spdk_iscsi_conn {
 	 */
 	struct spdk_poller *shutdown_timer;
 
-	struct spdk_iscsi_pdu *pdu_in_progress;
+	struct spdk_iscsi_pdu pdu_in_progress;
 	enum iscsi_pdu_recv_state pdu_recv_state;
 
 	TAILQ_HEAD(, spdk_iscsi_pdu) write_pdu_list;

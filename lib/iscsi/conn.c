@@ -253,6 +253,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 		conn->outstanding_r2t_tasks[i] = NULL;
 	}
 
+	memset(&conn->pdu_in_progress, 0, sizeof(conn->pdu_in_progress));
 	conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;
 
 	TAILQ_INIT(&conn->write_pdu_list);
@@ -377,12 +378,6 @@ _iscsi_conn_free(struct spdk_iscsi_conn *conn)
 	}
 
 	spdk_iscsi_param_free(conn->params);
-
-	/*
-	 * Each connection pre-allocates its next PDU - make sure these get
-	 *  freed here.
-	 */
-	spdk_put_pdu(conn->pdu_in_progress);
 
 	free_conn(conn);
 }
