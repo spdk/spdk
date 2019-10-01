@@ -22,6 +22,30 @@
       "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0d16efb_8cfda314",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-01T14:36:04Z",
+      "side": 1,
+      "message": "I agree that we can use this function in case mentioned by you, but I disagree with changing type of rollback argument in vbdev_mngt_poll without changing type of rollback argument in vbdev_ocf_mngt_stop, both of this functions will do similar (in most cases the same) things in case of error, so they should have the same type of argument for rollback.",
+      "parentUuid": "0b55d122_3501c74b",
+      "range": {
+        "startLine": 343,
+        "startChar": 46,
+        "endLine": 344,
+        "endChar": 33
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
