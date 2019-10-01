@@ -213,50 +213,17 @@ bdev_nvme_poll_adminq(void *arg)
 	return spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 }
 
-static void
-bdev_nvme_unregister_cb(void *io_device)
-{
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = io_device;
-
-	spdk_nvme_detach(nvme_bdev_ctrlr->ctrlr);
-	spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
-	assert(TAILQ_EMPTY(&nvme_bdev_ctrlr->bdevs));
-	free(nvme_bdev_ctrlr->inactive_ns);
-	free(nvme_bdev_ctrlr->name);
-	free(nvme_bdev_ctrlr);
-}
-
-static void
-bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
-{
-	assert(nvme_bdev_ctrlr->destruct);
-	if (nvme_bdev_ctrlr->opal_dev) {
-		spdk_opal_close(nvme_bdev_ctrlr->opal_dev);
-	}
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
-	spdk_io_device_unregister(nvme_bdev_ctrlr, bdev_nvme_unregister_cb);
-}
-
 static int
 bdev_nvme_destruct(void *ctx)
 {
 	struct nvme_bdev *nvme_disk = ctx;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = nvme_disk->nvme_bdev_ctrlr;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	nvme_bdev_ctrlr->ref--;
-	free(nvme_disk->disk.name);
-	TAILQ_REMOVE(&nvme_bdev_ctrlr->bdevs, nvme_disk, tailq);
-	free(nvme_disk);
-	if (nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		bdev_nvme_ctrlr_destruct(nvme_bdev_ctrlr);
-		return 0;
-	}
+	nvme_bdev_detach_bdev_from_ctrlr(nvme_bdev_ctrlr, nvme_disk);
 
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	free(nvme_disk->disk.name);
+	free(nvme_disk);
+
 	return 0;
 }
 
@@ -735,11 +702,9 @@ nvme_ctrlr_create_bdev(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, uint32_t nsid)
 
 	bdev->nvme_bdev_ctrlr = nvme_bdev_ctrlr;
 	bdev->ns = ns;
-	nvme_bdev_ctrlr->ref++;
 
 	bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_bdev_ctrlr->name, spdk_nvme_ns_get_id(ns));
 	if (!bdev->disk.name) {
-		nvme_bdev_ctrlr->ref--;
 		free(bdev);
 		return -ENOMEM;
 	}
@@ -776,12 +741,11 @@ nvme_ctrlr_create_bdev(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, uint32_t nsid)
 	rc = spdk_bdev_register(&bdev->disk);
 	if (rc) {
 		free(bdev->disk.name);
-		nvme_bdev_ctrlr->ref--;
 		free(bdev);
 		return rc;
 	}
 
-	TAILQ_INSERT_TAIL(&nvme_bdev_ctrlr->bdevs, bdev, tailq);
+	nvme_bdev_attach_bdev_to_ctrlr(nvme_bdev_ctrlr, bdev);
 
 	return 0;
 }
