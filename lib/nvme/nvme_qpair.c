@@ -537,8 +537,8 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 	spdk_free(qpair->req_buf);
 }
 
-int
-nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+static int
+qp_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	int			rc = 0;
 	struct nvme_request	*child_req, *tmp;
@@ -555,7 +555,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		 */
 		TAILQ_FOREACH_SAFE(child_req, &req->children, child_tailq, tmp) {
 			if (spdk_likely(!child_req_failed)) {
-				rc = nvme_qpair_submit_request(qpair, child_req);
+				rc = qp_submit_request(qpair, child_req);
 				if (spdk_unlikely(rc != 0)) {
 					child_req_failed = true;
 				}
@@ -645,6 +645,12 @@ error:
 	nvme_free_request(req);
 
 	return rc;
+}
+
+int
+nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+{
+	return qp_submit_request(qpair, req);
 }
 
 void
