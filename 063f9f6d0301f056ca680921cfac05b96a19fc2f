@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03913ee3_9595ec95",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T20:07:28Z",
+      "side": 1,
+      "message": "Could we use uint32_t (or some other uintxx_t type) instead of size_t?  I know the original *count variable used size_t, but I\u0027d prefer not to proliferate it into another place as well.\n\nMaybe that should be a separate patch before this one?  Your call.",
+      "revId": "063f9f6d0301f056ca680921cfac05b96a19fc2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
