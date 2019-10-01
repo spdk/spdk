@@ -848,6 +848,7 @@ void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_complete_error_reqs(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 				  struct nvme_request *req);
+int32_t	nvme_qpair_resubmit_queued_requests(struct spdk_nvme_qpair *qpair, int32_t num_requests);
 
 int	nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_set_identify_data(struct spdk_nvme_ns *ns);

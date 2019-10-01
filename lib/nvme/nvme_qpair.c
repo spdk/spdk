@@ -676,6 +676,23 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	return rc;
 }
 
+int32_t
+nvme_qpair_resubmit_queued_requests(struct spdk_nvme_qpair *qpair, int32_t num_requests)
+{
+	int rc = 0;
+	int32_t submitted_requests = -1;
+	struct nvme_request *req;
+
+	req = STAILQ_FIRST(&qpair->queued_req);
+	while (rc == 0 && ++submitted_requests <= num_requests && req) {
+		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+		rc = qp_submit_request(qpair, req, true);
+		req = STAILQ_FIRST(&qpair->queued_req);
+	}
+
+	return submitted_requests;
+}
+
 void
 nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
