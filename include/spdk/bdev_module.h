@@ -356,6 +356,11 @@ struct spdk_bdev {
 	uint32_t optimal_open_zones;
 
 	/**
+	 * Specifies whether bdev supports media management events.
+	 */
+	bool media_events;
+
+	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */
 	struct spdk_bdev_module *module;
@@ -1094,6 +1099,27 @@ struct spdk_bdev *spdk_bdev_part_get_base_bdev(struct spdk_bdev_part *part);
  * \return the block offset of this part from it's underlying bdev.
  */
 uint64_t spdk_bdev_part_get_offset_blocks(struct spdk_bdev_part *part);
+
+/**
+ * Push media management events.  To send the notification that new events are
+ * avialable, spdk_bdev_notify_media_management needs to be called.
+ *
+ * \param bdev Block device
+ * \param events Array of media events
+ * \param num_events Size of the events array
+ *
+ * \return 0 on succes, negative errno otherwise
+ */
+int spdk_bdev_push_media_events(struct spdk_bdev *bdev, const struct spdk_bdev_media_event *events,
+				size_t num_events);
+
+/**
+ * Send SPDK_BDEV_EVENT_MEDIA_MANAGEMENT to all open descriptors that have
+ * pending media events.
+ *
+ * \param bdev Block device
+ */
+void spdk_bdev_notify_media_management(struct spdk_bdev *bdev);
 
 /*
  *  Macro used to register module for later initialization.
