@@ -408,9 +408,12 @@ iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 	}
 }
 
+#define PDU_RECV_LOOP_COUNT	16
+
 int
-spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
+spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 {
+	int pdu_recv_loop_cnt = 0;
 	enum iscsi_pdu_recv_state prev_state;
 	struct spdk_iscsi_pdu *pdu;
 	struct spdk_mempool *pool;
@@ -589,6 +592,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 			}
 
 			conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;
+			pdu_recv_loop_cnt++;
 
 			if (conn->state == ISCSI_CONN_STATE_LOGGED_OUT) {
 				SPDK_ERRLOG("pdu received after logout\n");
@@ -612,9 +616,12 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 			SPDK_ERRLOG("code should not come here\n");
 			break;
 		}
-	} while (conn->pdu_recv_state != prev_state);
 
-	return SPDK_ISCSI_CONNECTION_FATAL;
+	} while (conn->pdu_recv_state != prev_state &&
+		 pdu_recv_loop_cnt < PDU_RECV_LOOP_COUNT &&
+		 !conn->is_stopped);
+
+	return pdu_recv_loop_cnt;
 }
 
 struct _iscsi_sgl {
