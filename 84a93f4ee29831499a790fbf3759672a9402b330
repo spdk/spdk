@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ba3725c_9436a676",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 906,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T23:54:50Z",
+      "side": 1,
+      "message": "what happens if a controller is attached with a namespace that is not active, and then we get a NS_ATTR_CHANGED which makes that namespace active?",
+      "revId": "84a93f4ee29831499a790fbf3759672a9402b330",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "190a5542_5fc67e95",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-01T23:54:50Z",
+      "side": 1,
+      "message": "before this patch, \u0027active\u0027 was used to know which entries in the bdevs array was actually being used - for example, when iterating through the bdevs array\n\nbut with this patch, it\u0027s not clear what \u0027active\u0027 means anymore",
+      "revId": "84a93f4ee29831499a790fbf3759672a9402b330",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
