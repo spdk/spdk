@@ -16,6 +16,24 @@
       "revId": "7dc3de6b018e6668925bed6c0e33f3ee27de98b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0284b094_e0413729",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1156,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-02T12:19:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "27eb4c0c_6bc4df5e",
+      "revId": "7dc3de6b018e6668925bed6c0e33f3ee27de98b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
