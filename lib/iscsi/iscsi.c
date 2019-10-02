@@ -76,13 +76,6 @@ struct spdk_iscsi_globals g_spdk_iscsi = {
 	.poll_group_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.poll_group_head),
 };
 
-static int iscsi_send_r2t(struct spdk_iscsi_conn *conn,
-			  struct spdk_iscsi_task *task, int offset,
-			  int len, uint32_t transfer_tag, uint32_t *R2TSN);
-static int iscsi_send_r2t_recovery(struct spdk_iscsi_conn *conn,
-				   struct spdk_iscsi_task *r2t_task, uint32_t r2t_sn,
-				   bool send_new_r2tsn);
-
 static int create_iscsi_sess(struct spdk_iscsi_conn *conn,
 			     struct spdk_iscsi_tgt_node *target, enum session_type session_type);
 static uint8_t append_iscsi_sess(struct spdk_iscsi_conn *conn,
@@ -2555,6 +2548,127 @@ iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 }
 
 static int
+iscsi_send_r2t(struct spdk_iscsi_conn *conn,
+	       struct spdk_iscsi_task *task, int offset,
+	       int len, uint32_t transfer_tag, uint32_t *R2TSN)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_r2t *rsph;
+	uint64_t fmt_lun;
+
+	/* R2T PDU */
+	rsp_pdu = spdk_get_pdu();
+	if (rsp_pdu == NULL) {
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+	rsph = (struct iscsi_bhs_r2t *)&rsp_pdu->bhs;
+	rsp_pdu->data = NULL;
+	rsph->opcode = ISCSI_OP_R2T;
+	rsph->flags |= 0x80; /* bit 0 is default to 1 */
+	fmt_lun = spdk_scsi_lun_id_int_to_fmt(task->lun_id);
+	to_be64(&rsph->lun, fmt_lun);
+	to_be32(&rsph->itt, task->tag);
+	to_be32(&rsph->ttt, transfer_tag);
+
+	to_be32(&rsph->stat_sn, conn->StatSN);
+	to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
+	to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
+
+	to_be32(&rsph->r2t_sn, *R2TSN);
+	*R2TSN += 1;
+
+	task->r2t_datasn = 0; /* next expected datasn to ack */
+
+	to_be32(&rsph->buffer_offset, (uint32_t)offset);
+	to_be32(&rsph->desired_xfer_len, (uint32_t)len);
+	task->desired_data_transfer_length = (size_t)len;
+
+	/* we need to hold onto this task/cmd because until the PDU has been
+	 * written out */
+	rsp_pdu->task = task;
+	task->scsi.ref++;
+
+	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
+
+	return 0;
+}
+
+/* This function is used to remove the r2t pdu from snack_pdu_list by < task, r2t_sn> info */
+static struct spdk_iscsi_pdu *
+iscsi_remove_r2t_pdu_from_snack_list(struct spdk_iscsi_conn *conn,
+				     struct spdk_iscsi_task *task,
+				     uint32_t r2t_sn)
+{
+	struct spdk_iscsi_pdu *pdu;
+	struct iscsi_bhs_r2t *r2t_header;
+
+	TAILQ_FOREACH(pdu, &conn->snack_pdu_list, tailq) {
+		if (pdu->bhs.opcode == ISCSI_OP_R2T) {
+			r2t_header = (struct iscsi_bhs_r2t *)&pdu->bhs;
+			if (pdu->task == task &&
+			    from_be32(&r2t_header->r2t_sn) == r2t_sn) {
+				TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
+				return pdu;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+/* This function is used re-send the r2t packet */
+static int
+iscsi_send_r2t_recovery(struct spdk_iscsi_conn *conn,
+			struct spdk_iscsi_task *task, uint32_t r2t_sn,
+			bool send_new_r2tsn)
+{
+	struct spdk_iscsi_pdu *pdu;
+	struct iscsi_bhs_r2t *rsph;
+	uint32_t transfer_len;
+	uint32_t len;
+	int rc;
+
+	/* remove the r2t pdu from the snack_list */
+	pdu = iscsi_remove_r2t_pdu_from_snack_list(conn, task, r2t_sn);
+	if (!pdu) {
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "No pdu is found\n");
+		return -1;
+	}
+
+	/* flag
+	 * false: only need to re-send the old r2t with changing statsn
+	 * true: we send a r2t with new r2tsn
+	 */
+	if (!send_new_r2tsn) {
+		to_be32(&pdu->bhs.stat_sn, conn->StatSN);
+		spdk_iscsi_conn_write_pdu(conn, pdu);
+	} else {
+		rsph = (struct iscsi_bhs_r2t *)&pdu->bhs;
+		transfer_len = from_be32(&rsph->desired_xfer_len);
+
+		/* still need to increase the acked r2tsn */
+		task->acked_r2tsn++;
+		len = DMIN32(conn->sess->MaxBurstLength, (transfer_len -
+				task->next_expected_r2t_offset));
+
+		/* remove the old_r2t_pdu */
+		if (pdu->task) {
+			spdk_iscsi_task_put(pdu->task);
+		}
+		spdk_put_pdu(pdu);
+
+		/* re-send a new r2t pdu */
+		rc = iscsi_send_r2t(conn, task, task->next_expected_r2t_offset,
+				    len, task->ttt, &task->R2TSN);
+		if (rc < 0) {
+			return SPDK_ISCSI_CONNECTION_FATAL;
+		}
+	}
+
+	return 0;
+}
+
+static int
 add_transfer_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 {
 	uint32_t transfer_len;
@@ -4022,81 +4136,6 @@ reject_return:
 	return iscsi_reject(conn, pdu, ISCSI_REASON_INVALID_SNACK);
 }
 
-/* This function is used to remove the r2t pdu from snack_pdu_list by < task, r2t_sn> info */
-static struct spdk_iscsi_pdu *
-iscsi_remove_r2t_pdu_from_snack_list(struct spdk_iscsi_conn *conn,
-				     struct spdk_iscsi_task *task,
-				     uint32_t r2t_sn)
-{
-	struct spdk_iscsi_pdu *pdu;
-	struct iscsi_bhs_r2t *r2t_header;
-
-	TAILQ_FOREACH(pdu, &conn->snack_pdu_list, tailq) {
-		if (pdu->bhs.opcode == ISCSI_OP_R2T) {
-			r2t_header = (struct iscsi_bhs_r2t *)&pdu->bhs;
-			if (pdu->task == task &&
-			    from_be32(&r2t_header->r2t_sn) == r2t_sn) {
-				TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
-				return pdu;
-			}
-		}
-	}
-
-	return NULL;
-}
-
-/* This function is used re-send the r2t packet */
-static int
-iscsi_send_r2t_recovery(struct spdk_iscsi_conn *conn,
-			struct spdk_iscsi_task *task, uint32_t r2t_sn,
-			bool send_new_r2tsn)
-{
-	struct spdk_iscsi_pdu *pdu;
-	struct iscsi_bhs_r2t *rsph;
-	uint32_t transfer_len;
-	uint32_t len;
-	int rc;
-
-	/* remove the r2t pdu from the snack_list */
-	pdu = iscsi_remove_r2t_pdu_from_snack_list(conn, task, r2t_sn);
-	if (!pdu) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "No pdu is found\n");
-		return -1;
-	}
-
-	/* flag
-	 * false: only need to re-send the old r2t with changing statsn
-	 * true: we send a r2t with new r2tsn
-	 */
-	if (!send_new_r2tsn) {
-		to_be32(&pdu->bhs.stat_sn, conn->StatSN);
-		spdk_iscsi_conn_write_pdu(conn, pdu);
-	} else {
-		rsph = (struct iscsi_bhs_r2t *)&pdu->bhs;
-		transfer_len = from_be32(&rsph->desired_xfer_len);
-
-		/* still need to increase the acked r2tsn */
-		task->acked_r2tsn++;
-		len = DMIN32(conn->sess->MaxBurstLength, (transfer_len -
-				task->next_expected_r2t_offset));
-
-		/* remove the old_r2t_pdu */
-		if (pdu->task) {
-			spdk_iscsi_task_put(pdu->task);
-		}
-		spdk_put_pdu(pdu);
-
-		/* re-send a new r2t pdu */
-		rc = iscsi_send_r2t(conn, task, task->next_expected_r2t_offset,
-				    len, task->ttt, &task->R2TSN);
-		if (rc < 0) {
-			return SPDK_ISCSI_CONNECTION_FATAL;
-		}
-	}
-
-	return 0;
-}
-
 /* This function is used to handle the snack request from the initiator */
 static int
 iscsi_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
@@ -4314,52 +4353,6 @@ send_r2t_recovery_return:
 
 reject_return:
 	return iscsi_reject(conn, pdu, reject_reason);
-}
-
-static int
-iscsi_send_r2t(struct spdk_iscsi_conn *conn,
-	       struct spdk_iscsi_task *task, int offset,
-	       int len, uint32_t transfer_tag, uint32_t *R2TSN)
-{
-	struct spdk_iscsi_pdu *rsp_pdu;
-	struct iscsi_bhs_r2t *rsph;
-	uint64_t fmt_lun;
-
-	/* R2T PDU */
-	rsp_pdu = spdk_get_pdu();
-	if (rsp_pdu == NULL) {
-		return SPDK_ISCSI_CONNECTION_FATAL;
-	}
-	rsph = (struct iscsi_bhs_r2t *)&rsp_pdu->bhs;
-	rsp_pdu->data = NULL;
-	rsph->opcode = ISCSI_OP_R2T;
-	rsph->flags |= 0x80; /* bit 0 is default to 1 */
-	fmt_lun = spdk_scsi_lun_id_int_to_fmt(task->lun_id);
-	to_be64(&rsph->lun, fmt_lun);
-	to_be32(&rsph->itt, task->tag);
-	to_be32(&rsph->ttt, transfer_tag);
-
-	to_be32(&rsph->stat_sn, conn->StatSN);
-	to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
-	to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
-
-	to_be32(&rsph->r2t_sn, *R2TSN);
-	*R2TSN += 1;
-
-	task->r2t_datasn = 0; /* next expected datasn to ack */
-
-	to_be32(&rsph->buffer_offset, (uint32_t)offset);
-	to_be32(&rsph->desired_xfer_len, (uint32_t)len);
-	task->desired_data_transfer_length = (size_t)len;
-
-	/* we need to hold onto this task/cmd because until the PDU has been
-	 * written out */
-	rsp_pdu->task = task;
-	task->scsi.ref++;
-
-	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
-
-	return 0;
 }
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
