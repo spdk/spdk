@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0102c7c4_8a3832e4",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1230,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-02T11:38:47Z",
+      "side": 1,
+      "message": "This is actually done as a preparation for asynchronous bdevs creation. Continuation of this is here:\nhttps://review.gerrithub.io/c/spdk/spdk/+/469699/3/module/bdev/nvme/bdev_nvme.c\nwhere the nvme_bdev_attach_done goes to callback and starts to making sense. I can do this change here, but this won\u0027t change much as it will be changed in patch mentioned above.",
+      "parentUuid": "2411c476_f170d551",
+      "revId": "f7705691bce73d8664efe1ef9dfca9778eaa8cbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1274b732_38d52987",
         "filename": "module/bdev/nvme/common.h",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-01T20:15:13Z",
       "side": 1,
       "message": "what is the case where bdevs_done \u003d\u003d true but ctrlr_done \u003d\u003d false?",
+      "revId": "f7705691bce73d8664efe1ef9dfca9778eaa8cbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89c1b29d_2f255d9d",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-02T11:38:47Z",
+      "side": 1,
+      "message": "My understanding is that we call bdev_nvme_create_bdevs before bdev_nvme_async_poll is called and that is the case. Am I wrong?",
+      "parentUuid": "1274b732_38d52987",
       "revId": "f7705691bce73d8664efe1ef9dfca9778eaa8cbe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
