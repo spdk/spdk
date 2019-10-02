@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a4212a8e_a801ad0b",
+        "filename": "include/spdk/queue_extras.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-02T13:28:37Z",
+      "side": 1,
+      "message": "Stailq_last contains a call to __containerof( which is defined in the header file I included. That function contains references to __uintptr_t which is just an alias of uintptr_t. But was previously undefined.",
+      "parentUuid": "5cf92864_50f679fb",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 26
+      },
+      "revId": "4f09cb6f7dd53008db84380c2a95dc6c6a6f8350",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4ad2e91b_49416bc4",
         "filename": "lib/nvme/nvme_qpair.c",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2019-10-02T06:51:04Z",
       "side": 1,
       "message": "What if we return -ENOMEM from nvme_qpair_submit_request without putting the request to qpair-\u003equeued_req when transport layer has no resources to process the request? In that case we can check return value here and put the request to qpair-\u003equeued_req",
+      "range": {
+        "startLine": 475,
+        "startChar": 2,
+        "endLine": 475,
+        "endChar": 39
+      },
+      "revId": "4f09cb6f7dd53008db84380c2a95dc6c6a6f8350",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd5315b3_abd8fab8",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-02T13:28:37Z",
+      "side": 1,
+      "message": "That might work. I\u0027ll look into it, off the top of my head, I think child requests could get a bit messy. If you look at ps7 I had a few patches before this one to clean up the function calls and always put requests back, but it got downvoted for being too complicated so I am trying to go with the simplest implementation possible.",
+      "parentUuid": "4ad2e91b_49416bc4",
       "range": {
         "startLine": 475,
         "startChar": 2,
