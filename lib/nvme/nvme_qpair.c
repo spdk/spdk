@@ -33,11 +33,7 @@
 
 #include "nvme_internal.h"
 #include "spdk/nvme_ocssd.h"
-
-#ifdef SPDK_CONFIG_CUSE
-/* FIXIT: This include is for testing purposes */
-#include "nvme_cuse.h"
-#endif
+#include "nvme_io_msg.h"
 
 static void nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
 
@@ -460,10 +456,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 	qpair->in_completion_context = 0;
 
-#ifdef SPDK_CONFIG_CUSE
-	/* FIXIT: this is for testing purposes */
 	spdk_nvme_io_msg_process();
-#endif
 
 	if (qpair->delete_after_completion_context) {
 		/*
