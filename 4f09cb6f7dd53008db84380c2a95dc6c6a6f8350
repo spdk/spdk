@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cf92864_50f679fb",
+        "filename": "include/spdk/queue_extras.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-02T06:51:04Z",
+      "side": 1,
+      "message": "Could you explain what the purpose of this change is?",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 26
+      },
+      "revId": "4f09cb6f7dd53008db84380c2a95dc6c6a6f8350",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ad2e91b_49416bc4",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-02T06:51:04Z",
+      "side": 1,
+      "message": "What if we return -ENOMEM from nvme_qpair_submit_request without putting the request to qpair-\u003equeued_req when transport layer has no resources to process the request? In that case we can check return value here and put the request to qpair-\u003equeued_req",
+      "range": {
+        "startLine": 475,
+        "startChar": 2,
+        "endLine": 475,
+        "endChar": 39
+      },
+      "revId": "4f09cb6f7dd53008db84380c2a95dc6c6a6f8350",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
