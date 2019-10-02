@@ -2228,6 +2228,18 @@ iscsi_op_login_rsp_handle(struct spdk_iscsi_conn *conn,
 }
 
 static int
+iscsi_pdu_login_req_hdr_handle(struct spdk_iscsi_conn *conn,
+			       struct spdk_iscsi_pdu *pdu)
+{
+	if (conn->full_feature && conn->sess != NULL &&
+	    conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	return 0;
+}
+
+static int
 iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	int rc;
@@ -2237,9 +2249,9 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	int alloc_len;
 	int cid;
 
-	if (conn->full_feature && conn->sess != NULL &&
-	    conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
-		return SPDK_ISCSI_CONNECTION_FATAL;
+	rc = iscsi_pdu_login_req_hdr_handle(conn, pdu);
+	if (rc < 0) {
+		return rc;
 	}
 
 	rsp_pdu = spdk_get_pdu();
