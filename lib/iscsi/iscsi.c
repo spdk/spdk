@@ -81,9 +81,6 @@ static int create_iscsi_sess(struct spdk_iscsi_conn *conn,
 static uint8_t append_iscsi_sess(struct spdk_iscsi_conn *conn,
 				 const char *initiator_port_name, uint16_t tsih, uint16_t cid);
 
-static int iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
-			int reason);
-
 #define DMIN32(A,B) ((uint32_t) ((uint32_t)(A) > (uint32_t)(B) ? (uint32_t)(B) : (uint32_t)(A)))
 #define DMIN64(A,B) ((uint64_t) ((A) > (B) ? (B) : (A)))
 
@@ -256,6 +253,87 @@ hex2bin(uint8_t *data, size_t data_len, const char *str)
 		p += 2;
 	}
 	return total;
+}
+
+static int
+iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
+	     int reason)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_reject *rsph;
+	uint8_t *data;
+	int total_ahs_len;
+	int data_len;
+	int alloc_len;
+
+	total_ahs_len = pdu->bhs.total_ahs_len;
+	data_len = 0;
+	alloc_len = ISCSI_BHS_LEN + (4 * total_ahs_len);
+
+	if (conn->header_digest) {
+		alloc_len += ISCSI_DIGEST_LEN;
+	}
+
+	data = calloc(1, alloc_len);
+	if (!data) {
+		SPDK_ERRLOG("calloc() failed for data segment\n");
+		return -ENOMEM;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Reject PDU reason=%d\n", reason);
+
+	if (conn->sess != NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+			      "StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
+			      conn->StatSN, conn->sess->ExpCmdSN,
+			      conn->sess->MaxCmdSN);
+	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN=%u\n", conn->StatSN);
+	}
+
+	memcpy(data, &pdu->bhs, ISCSI_BHS_LEN);
+	data_len += ISCSI_BHS_LEN;
+
+	if (total_ahs_len != 0) {
+		memcpy(data + data_len, pdu->ahs, (4 * total_ahs_len));
+		data_len += (4 * total_ahs_len);
+	}
+
+	if (conn->header_digest) {
+		memcpy(data + data_len, pdu->header_digest, ISCSI_DIGEST_LEN);
+		data_len += ISCSI_DIGEST_LEN;
+	}
+
+	rsp_pdu = spdk_get_pdu();
+	if (rsp_pdu == NULL) {
+		free(data);
+		return -ENOMEM;
+	}
+
+	rsph = (struct iscsi_bhs_reject *)&rsp_pdu->bhs;
+	rsp_pdu->data = data;
+	rsph->opcode = ISCSI_OP_REJECT;
+	rsph->flags |= 0x80;	/* bit 0 is default to 1 */
+	rsph->reason = reason;
+	DSET24(rsph->data_segment_len, data_len);
+
+	rsph->ffffffff = 0xffffffffU;
+	to_be32(&rsph->stat_sn, conn->StatSN);
+	conn->StatSN++;
+
+	if (conn->sess != NULL) {
+		to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
+		to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
+	} else {
+		to_be32(&rsph->exp_cmd_sn, 1);
+		to_be32(&rsph->max_cmd_sn, 1);
+	}
+
+	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "PDU", (void *)&rsp_pdu->bhs, ISCSI_BHS_LEN);
+
+	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
+
+	return 0;
 }
 
 uint32_t
@@ -1013,87 +1091,6 @@ error_return:
 	conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_A;
 	free(in_val);
 	return -1;
-}
-
-static int
-iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
-	     int reason)
-{
-	struct spdk_iscsi_pdu *rsp_pdu;
-	struct iscsi_bhs_reject *rsph;
-	uint8_t *data;
-	int total_ahs_len;
-	int data_len;
-	int alloc_len;
-
-	total_ahs_len = pdu->bhs.total_ahs_len;
-	data_len = 0;
-	alloc_len = ISCSI_BHS_LEN + (4 * total_ahs_len);
-
-	if (conn->header_digest) {
-		alloc_len += ISCSI_DIGEST_LEN;
-	}
-
-	data = calloc(1, alloc_len);
-	if (!data) {
-		SPDK_ERRLOG("calloc() failed for data segment\n");
-		return -ENOMEM;
-	}
-
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Reject PDU reason=%d\n", reason);
-
-	if (conn->sess != NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
-			      "StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
-			      conn->StatSN, conn->sess->ExpCmdSN,
-			      conn->sess->MaxCmdSN);
-	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN=%u\n", conn->StatSN);
-	}
-
-	memcpy(data, &pdu->bhs, ISCSI_BHS_LEN);
-	data_len += ISCSI_BHS_LEN;
-
-	if (total_ahs_len != 0) {
-		memcpy(data + data_len, pdu->ahs, (4 * total_ahs_len));
-		data_len += (4 * total_ahs_len);
-	}
-
-	if (conn->header_digest) {
-		memcpy(data + data_len, pdu->header_digest, ISCSI_DIGEST_LEN);
-		data_len += ISCSI_DIGEST_LEN;
-	}
-
-	rsp_pdu = spdk_get_pdu();
-	if (rsp_pdu == NULL) {
-		free(data);
-		return -ENOMEM;
-	}
-
-	rsph = (struct iscsi_bhs_reject *)&rsp_pdu->bhs;
-	rsp_pdu->data = data;
-	rsph->opcode = ISCSI_OP_REJECT;
-	rsph->flags |= 0x80;	/* bit 0 is default to 1 */
-	rsph->reason = reason;
-	DSET24(rsph->data_segment_len, data_len);
-
-	rsph->ffffffff = 0xffffffffU;
-	to_be32(&rsph->stat_sn, conn->StatSN);
-	conn->StatSN++;
-
-	if (conn->sess != NULL) {
-		to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
-		to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
-	} else {
-		to_be32(&rsph->exp_cmd_sn, 1);
-		to_be32(&rsph->max_cmd_sn, 1);
-	}
-
-	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "PDU", (void *)&rsp_pdu->bhs, ISCSI_BHS_LEN);
-
-	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
-
-	return 0;
 }
 
 static int
