@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bdf0c87a_16ea0b12",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1290,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-02T22:25:26Z",
+      "side": 1,
+      "message": "Done. Will you check the added comment?",
+      "parentUuid": "41e069aa_a696789b",
+      "revId": "9c0546b951ccf8e4a4f06124d8523216c8daa1f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ed0a9dc9_166692f2",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 5
@@ -48,6 +66,24 @@
       "side": 1,
       "message": "If we don’t check if poller is registered, the above should be changed as well like:\n\nunregister poller In conditionally,\nIf rc is equal to 1\n  register poller with 50 us delay",
       "parentUuid": "ed0a9dc9_166692f2",
+      "revId": "9c0546b951ccf8e4a4f06124d8523216c8daa1f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5bc866bb_266563b1",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1292,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-02T22:25:26Z",
+      "side": 1,
+      "message": "Done. Please review the next after patch.",
+      "parentUuid": "cf4b525f_a51820ae",
       "revId": "9c0546b951ccf8e4a4f06124d8523216c8daa1f2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
