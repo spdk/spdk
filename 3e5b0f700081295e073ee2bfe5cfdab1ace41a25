@@ -16,6 +16,24 @@
       "revId": "3e5b0f700081295e073ee2bfe5cfdab1ace41a25",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a07d3f4c_801de2ce",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2680,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-10-02T10:12:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "38efeb11_40077750",
+      "revId": "3e5b0f700081295e073ee2bfe5cfdab1ace41a25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
