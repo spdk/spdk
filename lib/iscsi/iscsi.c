@@ -3591,6 +3591,18 @@ iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 }
 
 static int
+iscsi_pdu_nopout_hdr_handle(struct spdk_iscsi_conn *conn,
+			    struct spdk_iscsi_pdu *pdu)
+{
+	if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
+		SPDK_ERRLOG("ISCSI_OP_NOPOUT not allowed in discovery session\n");
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	return 0;
+}
+
+static int
 iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_pdu *rsp_pdu;
@@ -3603,10 +3615,11 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint32_t CmdSN;
 	int I_bit;
 	int data_len;
+	int rc;
 
-	if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
-		SPDK_ERRLOG("ISCSI_OP_NOPOUT not allowed in discovery session\n");
-		return SPDK_ISCSI_CONNECTION_FATAL;
+	rc = iscsi_pdu_nopout_hdr_handle(conn, pdu);
+	if (rc < 0) {
+		return rc;
 	}
 
 	reqh = (struct iscsi_bhs_nop_out *)&pdu->bhs;
