@@ -407,11 +407,33 @@ nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 static inline bool
 nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 {
-	if (!nvme_qpair_state_equals(qpair, NVME_QPAIR_ENABLED) && !qpair->ctrlr->is_resetting) {
+	struct nvme_request *req;
+
+	if (qpair->state > NVME_QPAIR_CONNECTED || qpair->ctrlr->is_resetting) {
+		return nvme_qpair_state_equals(qpair, NVME_QPAIR_ENABLED);
+	}
+
+	/* If the controller is failed, we have no recourse, but to fail back up the stack. */
+	if (qpair->ctrlr->is_failed) {
+		nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLING);
 		nvme_qpair_complete_error_reqs(qpair);
-		nvme_qpair_abort_queued_reqs(qpair, 0 /* retry */);
-		nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLED);
-		nvme_transport_qpair_abort_reqs(qpair, 0 /* retry */);
+		nvme_transport_qpair_abort_reqs(qpair, 1 /* dnr */);
+		nvme_qpair_abort_queued_reqs(qpair, 1 /* dnr */);
+		nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
+		return false;
+	}
+
+	/* Otherwise, try to enable the qpair if it's disabled. */
+	nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLING);
+	nvme_qpair_complete_error_reqs(qpair);
+	nvme_transport_qpair_abort_reqs(qpair, 0 /* retry */);
+	nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLED);
+	while (!STAILQ_EMPTY(&qpair->queued_req)) {
+		req = STAILQ_FIRST(&qpair->queued_req);
+		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+		if (nvme_qpair_resubmit_request(qpair, req)) {
+			break;
+		}
 	}
 
 	return nvme_qpair_state_equals(qpair, NVME_QPAIR_ENABLED);
