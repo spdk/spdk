@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3deb07c_acfd0df5",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 869,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-02T23:23:42Z",
+      "side": 1,
+      "message": "The previous meaning is that:\n1 If the sending queue is empty, and flush poller is registered, then we should \nunregistered it.\n2 If the sending queue is not empty, and there is no flush poller, we should start the poller.\n\nWith your change, we will always register/unregister, I think that the cost of poller register/unregister has come cost.",
+      "range": {
+        "startLine": 869,
+        "startChar": 2,
+        "endLine": 869,
+        "endChar": 48
+      },
+      "revId": "d1da6953d53913a0125eb8607fda93fa99921513",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
