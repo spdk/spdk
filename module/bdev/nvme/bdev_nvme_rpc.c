@@ -210,7 +210,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 
 struct rpc_bdev_nvme_attach_controller_ctx {
 	struct rpc_bdev_nvme_attach_controller req;
-	size_t count;
+	uint32_t count;
 	const char *names[NVME_MAX_BDEVS_PER_RPC];
 	struct spdk_jsonrpc_request *request;
 };
