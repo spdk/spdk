@@ -76,15 +76,6 @@ struct spdk_iscsi_globals g_spdk_iscsi = {
 	.poll_group_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.poll_group_head),
 };
 
-/* random value generation */
-static void gen_random(uint8_t *buf, size_t len);
-#ifndef HAVE_SRANDOMDEV
-static void srandomdev(void);
-#endif /* HAVE_SRANDOMDEV */
-#ifndef HAVE_ARC4RANDOM
-/* static uint32_t arc4random(void); */
-#endif /* HAVE_ARC4RANDOM */
-
 static int add_transfer_task(struct spdk_iscsi_conn *conn,
 			     struct spdk_iscsi_task *task);
 
