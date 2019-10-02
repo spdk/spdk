@@ -76,11 +76,6 @@ struct spdk_iscsi_globals g_spdk_iscsi = {
 	.poll_group_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.poll_group_head),
 };
 
-static int create_iscsi_sess(struct spdk_iscsi_conn *conn,
-			     struct spdk_iscsi_tgt_node *target, enum session_type session_type);
-static uint8_t append_iscsi_sess(struct spdk_iscsi_conn *conn,
-				 const char *initiator_port_name, uint16_t tsih, uint16_t cid);
-
 #define DMIN32(A,B) ((uint32_t) ((uint32_t)(A) > (uint32_t)(B) ? (uint32_t)(B) : (uint32_t)(A)))
 #define DMIN64(A,B) ((uint64_t) ((A) > (B) ? (B) : (A)))
 
@@ -788,6 +783,233 @@ end:
 	}
 
 	return iovcnt - sgl.iovcnt;
+}
+
+void spdk_free_sess(struct spdk_iscsi_sess *sess)
+{
+	if (sess == NULL) {
+		return;
+	}
+
+	sess->tag = 0;
+	sess->target = NULL;
+	sess->session_type = SESSION_TYPE_INVALID;
+	spdk_iscsi_param_free(sess->params);
+	free(sess->conns);
+	spdk_scsi_port_free(&sess->initiator_port);
+	spdk_mempool_put(g_spdk_iscsi.session_pool, (void *)sess);
+}
+
+static int
+create_iscsi_sess(struct spdk_iscsi_conn *conn,
+		  struct spdk_iscsi_tgt_node *target,
+		  enum session_type session_type)
+{
+	struct spdk_iscsi_sess *sess;
+	int rc;
+
+	sess = spdk_mempool_get(g_spdk_iscsi.session_pool);
+	if (!sess) {
+		SPDK_ERRLOG("Unable to get session object\n");
+		SPDK_ERRLOG("MaxSessions set to %d\n", g_spdk_iscsi.MaxSessions);
+		return -ENOMEM;
+	}
+
+	/* configuration values */
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+
+	sess->MaxConnections = g_spdk_iscsi.MaxConnectionsPerSession;
+	sess->MaxOutstandingR2T = DEFAULT_MAXOUTSTANDINGR2T;
+
+	sess->DefaultTime2Wait = g_spdk_iscsi.DefaultTime2Wait;
+	sess->DefaultTime2Retain = g_spdk_iscsi.DefaultTime2Retain;
+	sess->FirstBurstLength = g_spdk_iscsi.FirstBurstLength;
+	sess->MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
+	sess->InitialR2T = DEFAULT_INITIALR2T;
+	sess->ImmediateData = g_spdk_iscsi.ImmediateData;
+	sess->DataPDUInOrder = DEFAULT_DATAPDUINORDER;
+	sess->DataSequenceInOrder = DEFAULT_DATASEQUENCEINORDER;
+	sess->ErrorRecoveryLevel = g_spdk_iscsi.ErrorRecoveryLevel;
+
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
+	sess->tag = conn->pg_tag;
+
+	sess->conns = calloc(sess->MaxConnections, sizeof(*sess->conns));
+	if (!sess->conns) {
+		SPDK_ERRLOG("calloc() failed for connection array\n");
+		return -ENOMEM;
+	}
+
+	sess->connections = 0;
+
+	sess->conns[sess->connections] = conn;
+	sess->connections++;
+
+	sess->params = NULL;
+	sess->target = target;
+	sess->isid = 0;
+	sess->session_type = session_type;
+	sess->current_text_itt = 0xffffffffU;
+
+	/* set default params */
+	rc = spdk_iscsi_sess_params_init(&sess->params);
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_sess_params_init() failed\n");
+		goto error_return;
+	}
+	/* replace with config value */
+	rc = spdk_iscsi_param_set_int(sess->params, "MaxConnections",
+				      sess->MaxConnections);
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
+		goto error_return;
+	}
+
+	rc = spdk_iscsi_param_set_int(sess->params, "MaxOutstandingR2T",
+				      sess->MaxOutstandingR2T);
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
+		goto error_return;
+	}
+
+	rc = spdk_iscsi_param_set_int(sess->params, "DefaultTime2Wait",
+				      sess->DefaultTime2Wait);
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
+		goto error_return;
+	}
+
+	rc = spdk_iscsi_param_set_int(sess->params, "DefaultTime2Retain",
+				      sess->DefaultTime2Retain);
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
+		goto error_return;
+	}
+
+	rc = spdk_iscsi_param_set_int(sess->params, "FirstBurstLength",
+				      sess->FirstBurstLength);
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
+		goto error_return;
+	}
+
+	rc = spdk_iscsi_param_set_int(sess->params, "MaxBurstLength",
+				      sess->MaxBurstLength);
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
+		goto error_return;
+	}
+
+	rc = spdk_iscsi_param_set(sess->params, "InitialR2T",
+				  sess->InitialR2T ? "Yes" : "No");
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_param_set() failed\n");
+		goto error_return;
+	}
+
+	rc = spdk_iscsi_param_set(sess->params, "ImmediateData",
+				  sess->ImmediateData ? "Yes" : "No");
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_param_set() failed\n");
+		goto error_return;
+	}
+
+	rc = spdk_iscsi_param_set(sess->params, "DataPDUInOrder",
+				  sess->DataPDUInOrder ? "Yes" : "No");
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_param_set() failed\n");
+		goto error_return;
+	}
+
+	rc = spdk_iscsi_param_set(sess->params, "DataSequenceInOrder",
+				  sess->DataSequenceInOrder ? "Yes" : "No");
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_param_set() failed\n");
+		goto error_return;
+	}
+
+	rc = spdk_iscsi_param_set_int(sess->params, "ErrorRecoveryLevel",
+				      sess->ErrorRecoveryLevel);
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
+		goto error_return;
+	}
+
+	/* realloc buffer */
+	rc = spdk_iscsi_param_set_int(conn->params, "MaxRecvDataSegmentLength",
+				      conn->MaxRecvDataSegmentLength);
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
+		goto error_return;
+	}
+
+	/* sess for first connection of session */
+	conn->sess = sess;
+	return 0;
+
+error_return:
+	spdk_free_sess(sess);
+	conn->sess = NULL;
+	return -1;
+}
+
+static struct spdk_iscsi_sess *
+get_iscsi_sess_by_tsih(uint16_t tsih)
+{
+	struct spdk_iscsi_sess *session;
+
+	if (tsih == 0 || tsih > g_spdk_iscsi.MaxSessions) {
+		return NULL;
+	}
+
+	session = g_spdk_iscsi.session[tsih - 1];
+	assert(tsih == session->tsih);
+
+	return session;
+}
+
+static uint8_t
+append_iscsi_sess(struct spdk_iscsi_conn *conn,
+		  const char *initiator_port_name, uint16_t tsih, uint16_t cid)
+{
+	struct spdk_iscsi_sess *sess;
+
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "append session: init port name=%s, tsih=%u, cid=%u\n",
+		      initiator_port_name, tsih, cid);
+
+	sess = get_iscsi_sess_by_tsih(tsih);
+	if (sess == NULL) {
+		SPDK_ERRLOG("spdk_get_iscsi_sess_by_tsih failed\n");
+		return ISCSI_LOGIN_CONN_ADD_FAIL;
+	}
+	if ((conn->pg_tag != sess->tag) ||
+	    (strcasecmp(initiator_port_name, spdk_scsi_port_get_name(sess->initiator_port)) != 0) ||
+	    (conn->target != sess->target)) {
+		/* no match */
+		SPDK_ERRLOG("no MCS session for init port name=%s, tsih=%d, cid=%d\n",
+			    initiator_port_name, tsih, cid);
+		return ISCSI_LOGIN_CONN_ADD_FAIL;
+	}
+
+	if (sess->connections >= sess->MaxConnections) {
+		/* no slot for connection */
+		SPDK_ERRLOG("too many connections for init port name=%s, tsih=%d, cid=%d\n",
+			    initiator_port_name, tsih, cid);
+		return ISCSI_LOGIN_TOO_MANY_CONNECTIONS;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Connections (tsih %d): %d\n", sess->tsih, sess->connections);
+	conn->sess = sess;
+
+	/*
+	 * TODO: need a mutex or other sync mechanism to protect the session's
+	 *  connection list.
+	 */
+	sess->conns[sess->connections] = conn;
+	sess->connections++;
+
+	return 0;
 }
 
 static int
@@ -4651,233 +4873,6 @@ spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 	}
 
 	return spdk_scsi_lun_get_dif_ctx(lun_dev, cdb, data_offset, dif_ctx);
-}
-
-void spdk_free_sess(struct spdk_iscsi_sess *sess)
-{
-	if (sess == NULL) {
-		return;
-	}
-
-	sess->tag = 0;
-	sess->target = NULL;
-	sess->session_type = SESSION_TYPE_INVALID;
-	spdk_iscsi_param_free(sess->params);
-	free(sess->conns);
-	spdk_scsi_port_free(&sess->initiator_port);
-	spdk_mempool_put(g_spdk_iscsi.session_pool, (void *)sess);
-}
-
-static int
-create_iscsi_sess(struct spdk_iscsi_conn *conn,
-		  struct spdk_iscsi_tgt_node *target,
-		  enum session_type session_type)
-{
-	struct spdk_iscsi_sess *sess;
-	int rc;
-
-	sess = spdk_mempool_get(g_spdk_iscsi.session_pool);
-	if (!sess) {
-		SPDK_ERRLOG("Unable to get session object\n");
-		SPDK_ERRLOG("MaxSessions set to %d\n", g_spdk_iscsi.MaxSessions);
-		return -ENOMEM;
-	}
-
-	/* configuration values */
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-
-	sess->MaxConnections = g_spdk_iscsi.MaxConnectionsPerSession;
-	sess->MaxOutstandingR2T = DEFAULT_MAXOUTSTANDINGR2T;
-
-	sess->DefaultTime2Wait = g_spdk_iscsi.DefaultTime2Wait;
-	sess->DefaultTime2Retain = g_spdk_iscsi.DefaultTime2Retain;
-	sess->FirstBurstLength = g_spdk_iscsi.FirstBurstLength;
-	sess->MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
-	sess->InitialR2T = DEFAULT_INITIALR2T;
-	sess->ImmediateData = g_spdk_iscsi.ImmediateData;
-	sess->DataPDUInOrder = DEFAULT_DATAPDUINORDER;
-	sess->DataSequenceInOrder = DEFAULT_DATASEQUENCEINORDER;
-	sess->ErrorRecoveryLevel = g_spdk_iscsi.ErrorRecoveryLevel;
-
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-
-	sess->tag = conn->pg_tag;
-
-	sess->conns = calloc(sess->MaxConnections, sizeof(*sess->conns));
-	if (!sess->conns) {
-		SPDK_ERRLOG("calloc() failed for connection array\n");
-		return -ENOMEM;
-	}
-
-	sess->connections = 0;
-
-	sess->conns[sess->connections] = conn;
-	sess->connections++;
-
-	sess->params = NULL;
-	sess->target = target;
-	sess->isid = 0;
-	sess->session_type = session_type;
-	sess->current_text_itt = 0xffffffffU;
-
-	/* set default params */
-	rc = spdk_iscsi_sess_params_init(&sess->params);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_sess_params_init() failed\n");
-		goto error_return;
-	}
-	/* replace with config value */
-	rc = spdk_iscsi_param_set_int(sess->params, "MaxConnections",
-				      sess->MaxConnections);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
-		goto error_return;
-	}
-
-	rc = spdk_iscsi_param_set_int(sess->params, "MaxOutstandingR2T",
-				      sess->MaxOutstandingR2T);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
-		goto error_return;
-	}
-
-	rc = spdk_iscsi_param_set_int(sess->params, "DefaultTime2Wait",
-				      sess->DefaultTime2Wait);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
-		goto error_return;
-	}
-
-	rc = spdk_iscsi_param_set_int(sess->params, "DefaultTime2Retain",
-				      sess->DefaultTime2Retain);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
-		goto error_return;
-	}
-
-	rc = spdk_iscsi_param_set_int(sess->params, "FirstBurstLength",
-				      sess->FirstBurstLength);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
-		goto error_return;
-	}
-
-	rc = spdk_iscsi_param_set_int(sess->params, "MaxBurstLength",
-				      sess->MaxBurstLength);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
-		goto error_return;
-	}
-
-	rc = spdk_iscsi_param_set(sess->params, "InitialR2T",
-				  sess->InitialR2T ? "Yes" : "No");
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_param_set() failed\n");
-		goto error_return;
-	}
-
-	rc = spdk_iscsi_param_set(sess->params, "ImmediateData",
-				  sess->ImmediateData ? "Yes" : "No");
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_param_set() failed\n");
-		goto error_return;
-	}
-
-	rc = spdk_iscsi_param_set(sess->params, "DataPDUInOrder",
-				  sess->DataPDUInOrder ? "Yes" : "No");
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_param_set() failed\n");
-		goto error_return;
-	}
-
-	rc = spdk_iscsi_param_set(sess->params, "DataSequenceInOrder",
-				  sess->DataSequenceInOrder ? "Yes" : "No");
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_param_set() failed\n");
-		goto error_return;
-	}
-
-	rc = spdk_iscsi_param_set_int(sess->params, "ErrorRecoveryLevel",
-				      sess->ErrorRecoveryLevel);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
-		goto error_return;
-	}
-
-	/* realloc buffer */
-	rc = spdk_iscsi_param_set_int(conn->params, "MaxRecvDataSegmentLength",
-				      conn->MaxRecvDataSegmentLength);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_param_set_int() failed\n");
-		goto error_return;
-	}
-
-	/* sess for first connection of session */
-	conn->sess = sess;
-	return 0;
-
-error_return:
-	spdk_free_sess(sess);
-	conn->sess = NULL;
-	return -1;
-}
-
-static struct spdk_iscsi_sess *
-get_iscsi_sess_by_tsih(uint16_t tsih)
-{
-	struct spdk_iscsi_sess *session;
-
-	if (tsih == 0 || tsih > g_spdk_iscsi.MaxSessions) {
-		return NULL;
-	}
-
-	session = g_spdk_iscsi.session[tsih - 1];
-	assert(tsih == session->tsih);
-
-	return session;
-}
-
-static uint8_t
-append_iscsi_sess(struct spdk_iscsi_conn *conn,
-		  const char *initiator_port_name, uint16_t tsih, uint16_t cid)
-{
-	struct spdk_iscsi_sess *sess;
-
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "append session: init port name=%s, tsih=%u, cid=%u\n",
-		      initiator_port_name, tsih, cid);
-
-	sess = get_iscsi_sess_by_tsih(tsih);
-	if (sess == NULL) {
-		SPDK_ERRLOG("spdk_get_iscsi_sess_by_tsih failed\n");
-		return ISCSI_LOGIN_CONN_ADD_FAIL;
-	}
-	if ((conn->pg_tag != sess->tag) ||
-	    (strcasecmp(initiator_port_name, spdk_scsi_port_get_name(sess->initiator_port)) != 0) ||
-	    (conn->target != sess->target)) {
-		/* no match */
-		SPDK_ERRLOG("no MCS session for init port name=%s, tsih=%d, cid=%d\n",
-			    initiator_port_name, tsih, cid);
-		return ISCSI_LOGIN_CONN_ADD_FAIL;
-	}
-
-	if (sess->connections >= sess->MaxConnections) {
-		/* no slot for connection */
-		SPDK_ERRLOG("too many connections for init port name=%s, tsih=%d, cid=%d\n",
-			    initiator_port_name, tsih, cid);
-		return ISCSI_LOGIN_TOO_MANY_CONNECTIONS;
-	}
-
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Connections (tsih %d): %d\n", sess->tsih, sess->connections);
-	conn->sess = sess;
-
-	/*
-	 * TODO: need a mutex or other sync mechanism to protect the session's
-	 *  connection list.
-	 */
-	sess->conns[sess->connections] = conn;
-	sess->connections++;
-
-	return 0;
 }
 
 bool spdk_iscsi_is_deferred_free_pdu(struct spdk_iscsi_pdu *pdu)
