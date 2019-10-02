@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5829ac30_99799b65",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-02T15:53:29Z",
+      "side": 1,
+      "message": "Which information specifically do you need? The tgt structure is passed into the accept function already and is accessible from the qpair via qpair-\u003etransport-\u003etgt in the new_qpair function. Can you get the information you need from the target structure?\n\nOr is it some sort of metadata about the target? For example, your application has some sort of global state that it stores around the target (equivalent or similar to the g_tgt_state concept in the in-tree spdk application). In that case it would be a little bit trickier to handle.\nIf it\u0027s the second case, I have a few questions to see if we can figure out how to avoid passing a new argument to the public API functions.\nIf you can\u0027t store global state, is the lifecycle of that information only valid from the time that you call accept to the time that you return? If so, can you derive that information from the target in new_qpair the same as you can in the wrapper function that calls accept?",
+      "range": {
+        "startLine": 9,
+        "startChar": 29,
+        "endLine": 10,
+        "endChar": 6
+      },
+      "revId": "4536226fb1b0771c903e263c65845cdba686c96f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
