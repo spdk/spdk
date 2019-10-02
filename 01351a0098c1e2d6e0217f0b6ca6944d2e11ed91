@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62c5ce85_e799eccd",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-02T00:09:40Z",
+      "side": 1,
+      "message": "this will look simpler if you implement the io_device_register idea from earlier patch - marking -1 for now just because this patch will look different once that\u0027s implemented (and want to defer reviewing the patch further until then)",
+      "revId": "01351a0098c1e2d6e0217f0b6ca6944d2e11ed91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
