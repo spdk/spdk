@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "663eb322_576c4a1f",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-02T17:36:41Z",
+      "side": 1,
+      "message": "Yup, sure.",
+      "parentUuid": "7740ec8a_0655eae6",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 46
+      },
+      "revId": "29690cb5bc20a07b54303119044df812857f1e55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e8fba83b_d9b24316",
         "filename": "test/ocf/management/remove.sh",
         "patchSetId": 3
@@ -45,6 +69,30 @@
       "revId": "29690cb5bc20a07b54303119044df812857f1e55",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "634f12f9_05e09800",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-02T17:36:41Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e8fba83b_d9b24316",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 29
+      },
+      "revId": "29690cb5bc20a07b54303119044df812857f1e55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
