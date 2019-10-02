@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf7d1a02_bbbf3e00",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-02T00:06:29Z",
+      "side": 1,
+      "message": "I think this would be cleaner if you make the nvme_bdev_ctrlr the io_device instead of the spdk_nvme_ctrlr.  For example, pass nvme_bdev_ctrlr as the first argument to spdk_io_device_register in create_ctrlr.\n\nBut let\u0027s make that a separate patch before this one.",
+      "revId": "287f1db0ca3585e9fff6c78b7d0b190a9e67a8e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1bce1b55_eff584a8",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 876,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-02T00:06:29Z",
+      "side": 1,
+      "message": "Iterating through all of the controllers like this isn\u0027t ideal.  It indicates a deficiency in our NVMe API.  In the attach callback, we should allow users to be able to call something like spdk_nvme_ctrlr_set_ctx().  Then in create_ctrlr(), when you allocate the nvme_bdev_ctrlr, you pass that as the ctx to this new function.\n\nThen here, when you get a timeout_cb, you can just do:\n\nstruct nvme_bdev_ctrlr *nvme_bdev_ctrlr \u003d spdk_nvme_ctrlr_get_ctx(ctrlr);",
+      "revId": "287f1db0ca3585e9fff6c78b7d0b190a9e67a8e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
