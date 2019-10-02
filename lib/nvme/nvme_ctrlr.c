@@ -364,6 +364,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
+	nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
 	spdk_bit_array_clear(ctrlr->free_io_qids, qid);
 	TAILQ_INSERT_TAIL(&ctrlr->active_io_qpairs, qpair, tailq);
 
