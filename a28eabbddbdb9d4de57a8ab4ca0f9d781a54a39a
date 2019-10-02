@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5dc03490_c63993a2",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 13
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-02T07:55:13Z",
+      "side": 1,
+      "message": "These are hardcoded, but as commented in create_nvme_disk.sh they probably shouldn\u0027t be.\nI\u0027m fine with leaving it hardcoded for now for simplicty\u0027s sake, but we should try to tweak the params so that total size of file does not go beyond 10G. If we can make it even smaller then it\u0027d be even better.\n44G file seems just too much.",
+      "range": {
+        "startLine": 159,
+        "startChar": 100,
+        "endLine": 159,
+        "endChar": 193
+      },
+      "revId": "a28eabbddbdb9d4de57a8ab4ca0f9d781a54a39a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6972c4a1_701be06f",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-02T07:55:13Z",
+      "side": 1,
+      "message": "That\u0027s a simple approach and works with hardcoded Qemu arguments in Vagrantfile, but is actually a bit more complicated than that.\n\nSo the total backend size depends on the Qemu arguments for the ocssd drive:\n- lnum_lun\n- lnum_pln\n- lpgs_per_blk\n- lsecs_per_pg\n- lblks_per_pln\n\nFor example:\nlnum_lun\u003d8,lnum_pln\u003d2,lpgs_per_blk\u003d1536,lsecs_per_pg\u003d2,lblks_per_pln\u003d45 and assuming block size \u003d 4096 gives\n9059696640 bytes, which is about 8.43GB. That\u0027s the minimal size of file used for emulation. You could probably reduce the size of the file to about 10G and try using the qemu arg values I posted here. It should work.",
+      "range": {
+        "startLine": 50,
+        "startChar": 3,
+        "endLine": 50,
+        "endChar": 50
+      },
+      "revId": "a28eabbddbdb9d4de57a8ab4ca0f9d781a54a39a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4cb30194_b8f3c3fa",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-02T07:55:13Z",
+      "side": 1,
+      "message": "This should be probably removed.",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 47
+      },
+      "revId": "a28eabbddbdb9d4de57a8ab4ca0f9d781a54a39a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
