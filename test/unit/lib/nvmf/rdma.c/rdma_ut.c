@@ -106,9 +106,7 @@ static void reset_nvmf_rdma_request(struct spdk_nvmf_rdma_request *rdma_req)
 	rdma_req->data.wr.num_sge = 0;
 	rdma_req->data.wr.wr.rdma.remote_addr = 0;
 	rdma_req->data.wr.wr.rdma.rkey = 0;
-	rdma_req->elba_length = 0;
-	rdma_req->orig_length = 0;
-	rdma_req->dif_insert_or_strip = false;
+	memset(&rdma_req->req.dif, 0, sizeof(rdma_req->req.dif));
 
 	for (i = 0; i < SPDK_NVMF_MAX_SGL_ENTRIES; i++) {
 		rdma_req->req.iov[i].iov_base = 0;
