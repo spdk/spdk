@@ -865,9 +865,9 @@ spdk_nvmf_tcp_qpair_flush_pdus(void *_tqpair)
 
 	if (tqpair->state == NVME_TCP_QPAIR_STATE_RUNNING) {
 		rc = spdk_nvmf_tcp_qpair_flush_pdus_internal(tqpair);
-		if (rc == 0 && tqpair->flush_poller != NULL) {
-			spdk_poller_unregister(&tqpair->flush_poller);
-		} else if (rc == 1 && tqpair->flush_poller == NULL) {
+
+		spdk_poller_unregister(&tqpair->flush_poller);
+		if (rc == 1) {
 			tqpair->flush_poller = spdk_poller_register(spdk_nvmf_tcp_qpair_flush_pdus,
 					       tqpair, 50);
 		}
