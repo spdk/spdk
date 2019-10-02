@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66d1b99a_b576e724",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-02T10:45:52Z",
+      "side": 1,
+      "message": "More CUSE specific title is needed here. \n(mechanizm -\u003e mechanism)",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 40
+      },
+      "revId": "6088f48cdeefcb8a08067fd342c9122e938edb75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b649158_3daf3c3c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-02T10:45:52Z",
+      "side": 1,
+      "message": "Along with general description of how messages are passed between CUSE and NVMe driver using the ring.",
+      "revId": "6088f48cdeefcb8a08067fd342c9122e938edb75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4e47682_e2c8491a",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-02T10:45:52Z",
+      "side": 1,
+      "message": "Maybe move the ring creation to this patch as well ? So all of related functionality is in single patch.",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 33
+      },
+      "revId": "6088f48cdeefcb8a08067fd342c9122e938edb75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fea21ef1_96a6de79",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-02T10:45:52Z",
+      "side": 1,
+      "message": "This structure is part of bdev_nvme.c, we should not depend on it in just nvme lib.",
+      "range": {
+        "startLine": 143,
+        "startChar": 0,
+        "endLine": 151,
+        "endChar": 2
+      },
+      "revId": "6088f48cdeefcb8a08067fd342c9122e938edb75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b9b85e9_6fc51b5b",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-02T10:45:52Z",
+      "side": 1,
+      "message": "There are generic callbacks in NVMe for functions are WIP at this time, but this api should be discussed a bit.\nThere will be another function that is supposed to be used along spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr) and spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair * qpair, uint32_t max_completions). Responsible for calling all registered \u0027poll\u0027 type functions. Just wonder if it should take some parameters. admin poll takes ctrlr, io poll takes qpair of a controller.\n\nCurrent implementation below is responsible for sending both admin and io. When CUSE msg is received, known are ctrlr and nsid. Meaning that admin cmds should be fine to send (got ctrlr).\nMeanwhile IO has nsid, but is missing qpair. Right now it is taken from io_channel ctx, which should not be assumed to be allocated. User of just NVMe lib, might not use the io_channels (and not put ctx as expected here).\nThis means that this poll should either:\n- allocate new qpair for each io to be sent down, and let user know of it to poll (doesn\u0027t seem logical to me)\n- take qpair as an argument and depend on user to allocate/poll it (this would require to change ring structure to more granular than single one)\n\nFor this reason I wonder if more clear implementation would be to put the CUSE poll into admin/IO poll (as in previous patch sets) and expand the ring between CUSE - NVMe to multiple ones (two per ctrlr ?).\n\nLets discuss this bit more.",
+      "range": {
+        "startLine": 154,
+        "startChar": 0,
+        "endLine": 154,
+        "endChar": 30
+      },
+      "revId": "6088f48cdeefcb8a08067fd342c9122e938edb75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
