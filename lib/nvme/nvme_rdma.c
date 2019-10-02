@@ -1775,6 +1775,7 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	rc = ibv_post_send(rqpair->cm_id->qp, wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma send for NVMf completion: %d (%s)\n", rc, spdk_strerror(rc));
+		nvme_rdma_req_put(rqpair, rdma_req);
 	}
 
 	return rc;
