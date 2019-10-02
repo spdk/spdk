@@ -151,7 +151,7 @@ DEFINE_STUB_V(spdk_del_transfer_task,
 DEFINE_STUB(spdk_iscsi_conn_handle_queued_datain_tasks, int,
 	    (struct spdk_iscsi_conn *conn), 0);
 
-DEFINE_STUB(spdk_iscsi_read_pdu, int, (struct spdk_iscsi_conn *conn), 0);
+DEFINE_STUB(spdk_iscsi_conn_handle_incoming_pdus, int, (struct spdk_iscsi_conn *conn), 0);
 
 DEFINE_STUB_V(spdk_free_sess, (struct spdk_iscsi_sess *sess));
 
