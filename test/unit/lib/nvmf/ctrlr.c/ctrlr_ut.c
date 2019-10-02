@@ -47,6 +47,9 @@ struct spdk_bdev {
 	uint64_t blockcnt;
 };
 
+const char subsystem_default_sn[SPDK_NVME_CTRLR_SN_LEN + 1] = "subsys_default_sn";
+const char subsystem_default_mn[SPDK_NVME_CTRLR_MN_LEN + 1] = "subsys_default_mn";
+
 DEFINE_STUB(spdk_nvmf_tgt_find_subsystem,
 	    struct spdk_nvmf_subsystem *,
 	    (struct spdk_nvmf_tgt *tgt, const char *subnqn),
@@ -60,12 +63,12 @@ DEFINE_STUB(spdk_nvmf_poll_group_create,
 DEFINE_STUB(spdk_nvmf_subsystem_get_sn,
 	    const char *,
 	    (const struct spdk_nvmf_subsystem *subsystem),
-	    NULL);
+	    subsystem_default_sn);
 
 DEFINE_STUB(spdk_nvmf_subsystem_get_mn,
 	    const char *,
 	    (const struct spdk_nvmf_subsystem *subsystem),
-	    NULL);
+	    subsystem_default_mn);
 
 DEFINE_STUB(spdk_nvmf_subsystem_get_first_ns,
 	    struct spdk_nvmf_ns *,
@@ -1270,6 +1273,51 @@ test_get_dif_ctx(void)
 	CU_ASSERT(ret == true);
 }
 
+static void
+test_identify_ctrlr(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {
+		.subtype = SPDK_NVMF_SUBTYPE_NVME
+	};
+	struct spdk_nvmf_transport_ops tops = {};
+	struct spdk_nvmf_transport transport = {
+		.ops = &tops,
+		.opts = {
+			.in_capsule_data_size = 4096,
+		},
+	};
+	struct spdk_nvmf_qpair admin_qpair = { .transport = &transport};
+	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsystem, .admin_qpair = &admin_qpair };
+	struct spdk_nvme_ctrlr_data cdata = {};
+	uint32_t expected_ioccsz;
+
+	/* Check ioccsz, TCP transport */
+	tops.type = SPDK_NVME_TRANSPORT_TCP;
+	expected_ioccsz = sizeof(struct spdk_nvme_cmd) / 16 + transport.opts.in_capsule_data_size / 16;
+	CU_ASSERT(spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(cdata.nvmf_specific.ioccsz == expected_ioccsz);
+
+	/* Check ioccsz, RDMA transport */
+	tops.type = SPDK_NVME_TRANSPORT_RDMA;
+	expected_ioccsz = sizeof(struct spdk_nvme_cmd) / 16 + transport.opts.in_capsule_data_size / 16;
+	CU_ASSERT(spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(cdata.nvmf_specific.ioccsz == expected_ioccsz);
+
+	/* Check ioccsz, TCP transport with dif_insert_or_strip */
+	tops.type = SPDK_NVME_TRANSPORT_TCP;
+	ctrlr.dif_insert_or_strip = true;
+	expected_ioccsz = sizeof(struct spdk_nvme_cmd) / 16 + transport.opts.in_capsule_data_size / 16;
+	CU_ASSERT(spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(cdata.nvmf_specific.ioccsz == expected_ioccsz);
+
+	/* Check ioccsz, RDMA transport with dif_insert_or_strip */
+	tops.type = SPDK_NVME_TRANSPORT_RDMA;
+	ctrlr.dif_insert_or_strip = true;
+	expected_ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
+	CU_ASSERT(spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(cdata.nvmf_specific.ioccsz == expected_ioccsz);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1285,24 +1333,22 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	if (
-		CU_add_test(suite, "get_log_page", test_get_log_page) == NULL ||
-		CU_add_test(suite, "process_fabrics_cmd", test_process_fabrics_cmd) == NULL ||
-		CU_add_test(suite, "connect", test_connect) == NULL ||
-		CU_add_test(suite, "get_ns_id_desc_list", test_get_ns_id_desc_list) == NULL ||
-		CU_add_test(suite, "identify_ns", test_identify_ns) == NULL ||
-		CU_add_test(suite, "reservation_write_exclusive", test_reservation_write_exclusive) == NULL ||
-		CU_add_test(suite, "reservation_exclusive_access", test_reservation_exclusive_access) == NULL ||
-		CU_add_test(suite, "reservation_write_exclusive_regs_only_and_all_regs",
-			    test_reservation_write_exclusive_regs_only_and_all_regs) == NULL ||
-		CU_add_test(suite, "reservation_exclusive_access_regs_only_and_all_regs",
-			    test_reservation_exclusive_access_regs_only_and_all_regs) == NULL ||
-		CU_add_test(suite, "reservation_notification_log_page",
-			    test_reservation_notification_log_page) == NULL ||
-		CU_add_test(suite, "get_dif_ctx", test_get_dif_ctx) == NULL ||
-		CU_add_test(suite, "set_get_features",
-			    test_set_get_features) == NULL
-	) {
+	if (CU_add_test(suite, "get_log_page", test_get_log_page) == NULL ||
+	    CU_add_test(suite, "process_fabrics_cmd", test_process_fabrics_cmd) == NULL ||
+	    CU_add_test(suite, "connect", test_connect) == NULL ||
+	    CU_add_test(suite, "get_ns_id_desc_list", test_get_ns_id_desc_list) == NULL ||
+	    CU_add_test(suite, "identify_ns", test_identify_ns) == NULL ||
+	    CU_add_test(suite, "reservation_write_exclusive", test_reservation_write_exclusive) == NULL ||
+	    CU_add_test(suite, "reservation_exclusive_access", test_reservation_exclusive_access) == NULL ||
+	    CU_add_test(suite, "reservation_write_exclusive_regs_only_and_all_regs",
+			test_reservation_write_exclusive_regs_only_and_all_regs) == NULL ||
+	    CU_add_test(suite, "reservation_exclusive_access_regs_only_and_all_regs",
+			test_reservation_exclusive_access_regs_only_and_all_regs) == NULL ||
+	    CU_add_test(suite, "reservation_notification_log_page",
+			test_reservation_notification_log_page) == NULL ||
+	    CU_add_test(suite, "get_dif_ctx", test_get_dif_ctx) == NULL ||
+	    CU_add_test(suite, "set_get_features", test_set_get_features) == NULL ||
+	    CU_add_test(suite, "identify_ctrlr", test_identify_ctrlr) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
