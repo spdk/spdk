@@ -537,7 +537,7 @@ function kill_stub() {
 
 function run_test() {
 	xtrace_disable
-	local test_type="$(echo $1 | tr 'a-z' '[:upper:]')"
+	local test_type="$(echo $1 | tr '[:lower:]' '[:upper:]')"
 	shift
 	echo "************************************"
 	echo "START TEST $test_type $@"
