@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83febb1c_89c9d263",
+        "filename": "module/bdev/nvme/common.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-02T00:13:05Z",
+      "side": 1,
+      "message": "let\u0027s just move these two functions (bdev_nvme_ctrlr_destruct and nvme_bdev_unregister_cb) in one patch - it\u0027s hard to review the patch as-is because it\u0027s not clear if code is changing while it is being moved - I don\u0027t think it is, but it\u0027s much easier on the reviewer if code is moved in a separate patch",
+      "revId": "ecdd3b3ad251808282145bd4343fb7849cd97031",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
