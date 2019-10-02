@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d5572d3_77939c11",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-02T14:30:47Z",
+      "side": 1,
+      "message": "Can you provide a brief background on some changes in commit message ?\nSuch as \"ocf_stats_collect_core() no longer requires locking\", \"ocf_mngt_cache_flush() now is now calling the callback after all flushed IO is confirmed\", etc.\n\nCouple of smaller changes like in the ocf_env.h, on surface do not seem related to the update.",
+      "revId": "d7654047b628dbadd76c312453ecb6c4e2671e7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb0a6759_2e268369",
+        "filename": "module/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-02T14:30:47Z",
+      "side": 1,
+      "message": "I don\u0027t think there is a reason to pass req in ctx, since core_id was already read and the only thing done to req in spdk_rpc_bdev_ocf_get_stats_cmpl() is freeing it.\nMaybe lets just free the req in original caller, instead of callback.",
+      "range": {
+        "startLine": 194,
+        "startChar": 31,
+        "endLine": 194,
+        "endChar": 34
+      },
+      "revId": "d7654047b628dbadd76c312453ecb6c4e2671e7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59c67fa6_3e12faca",
+        "filename": "module/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-02T14:30:47Z",
+      "side": 1,
+      "message": "This field is unused",
+      "range": {
+        "startLine": 197,
+        "startChar": 0,
+        "endLine": 197,
+        "endChar": 12
+      },
+      "revId": "d7654047b628dbadd76c312453ecb6c4e2671e7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26aeb2b6_20e37494",
+        "filename": "module/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-02T14:30:47Z",
+      "side": 1,
+      "message": "There doesn\u0027t seem to be a place where ctx is freed.",
+      "range": {
+        "startLine": 241,
+        "startChar": 1,
+        "endLine": 241,
+        "endChar": 31
+      },
+      "revId": "d7654047b628dbadd76c312453ecb6c4e2671e7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
