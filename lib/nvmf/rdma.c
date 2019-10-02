@@ -1500,6 +1500,25 @@ nvmf_request_alloc_wrs(struct spdk_nvmf_rdma_transport *rtransport,
 	return 0;
 }
 
+static inline void
+nvmf_rdma_setup_request(struct spdk_nvmf_rdma_request *rdma_req)
+{
+	struct ibv_send_wr		*wr = &rdma_req->data.wr;
+	struct spdk_nvme_sgl_descriptor	*sgl = &rdma_req->req.cmd->nvme_cmd.dptr.sgl1;
+
+	wr->wr.rdma.rkey = sgl->keyed.key;
+	wr->wr.rdma.remote_addr = sgl->address;
+	if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		wr->opcode = IBV_WR_RDMA_WRITE;
+		wr->next = &rdma_req->rsp.wr;
+		wr->send_flags &= ~IBV_SEND_SIGNALED;
+	} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+		wr->opcode = IBV_WR_RDMA_READ;
+		wr->next = NULL;
+		wr->send_flags |= IBV_SEND_SIGNALED;
+	}
+}
+
 /* This function is used in the rare case that we have a buffer split over multiple memory regions. */
 static int
 nvmf_rdma_replace_buffer(struct spdk_nvmf_rdma_poll_group *rgroup, void **buf)
@@ -1797,16 +1816,13 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_request *rdma_req)
 {
 	struct spdk_nvmf_request		*req = &rdma_req->req;
-	struct spdk_nvme_cmd			*cmd;
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
-	struct ibv_send_wr			*wr;
 	int					rc;
 	uint32_t				length;
 
-	cmd = &req->cmd->nvme_cmd;
 	rsp = &req->rsp->nvme_cpl;
-	sgl = &cmd->dptr.sgl1;
+	sgl = &req->cmd->nvme_cmd.dptr.sgl1;
 
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
 	    (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
@@ -1852,18 +1868,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		req->data = req->iov[0].iov_base;
 
 		/* rdma wr specifics */
-		wr = &rdma_req->data.wr;
-		wr->wr.rdma.rkey = sgl->keyed.key;
-		wr->wr.rdma.remote_addr = sgl->address;
-		if (req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-			wr->opcode = IBV_WR_RDMA_WRITE;
-			wr->next = &rdma_req->rsp.wr;
-			wr->send_flags &= ~IBV_SEND_SIGNALED;
-		} else if (req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-			wr->opcode = IBV_WR_RDMA_READ;
-			wr->next = NULL;
-			wr->send_flags |= IBV_SEND_SIGNALED;
-		}
+		nvmf_rdma_setup_request(rdma_req);
 
 		/* set the number of outstanding data WRs for this request. */
 		rdma_req->num_outstanding_data_wr = 1;
