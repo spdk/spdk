@@ -105,6 +105,8 @@ static void remove_acked_pdu(struct spdk_iscsi_conn *conn, uint32_t ExpStatSN);
 static int iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 			int reason);
 
+static int iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
+
 #define DMIN32(A,B) ((uint32_t) ((uint32_t)(A) > (uint32_t)(B) ? (uint32_t)(B) : (uint32_t)(A)))
 #define DMIN64(A,B) ((uint64_t) ((A) > (B) ? (B) : (A)))
 
@@ -599,9 +601,9 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 				break;
 			}
 
-			rc = spdk_iscsi_execute(conn, pdu);
+			rc = iscsi_execute(conn, pdu);
 			if (rc < 0) {
-				SPDK_ERRLOG("spdk_iscsi_execute() fatal error on %s(%s)\n",
+				SPDK_ERRLOG("iscsi_execute() fatal error on %s(%s)\n",
 					    conn->target_port != NULL ? spdk_scsi_port_get_name(conn->target_port) : "NULL",
 					    conn->initiator_port != NULL ? spdk_scsi_port_get_name(conn->initiator_port) : "NULL");
 				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
@@ -4482,8 +4484,8 @@ iscsi_pdu_dump(struct spdk_iscsi_pdu *pdu)
 	SPDK_ERRLOGDUMP("PDU", (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN);
 }
 
-int
-spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+static int
+iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	int opcode;
 	int rc;
