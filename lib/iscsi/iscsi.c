@@ -408,9 +408,12 @@ iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 	}
 }
 
+#define PDU_RECV_LOOP_COUNT	16
+
 int
-spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
+spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 {
+	int pdu_recv_loop_cnt = 0;
 	enum iscsi_pdu_recv_state prev_state;
 	struct spdk_iscsi_pdu *pdu;
 	struct spdk_mempool *pool;
@@ -444,7 +447,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				}
 				pdu->bhs_valid_bytes += rc;
 				if (pdu->bhs_valid_bytes < ISCSI_BHS_LEN) {
-					return 0;
+					break;
 				}
 			}
 			/* AHS */
@@ -460,7 +463,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				}
 				pdu->ahs_valid_bytes += rc;
 				if (pdu->ahs_valid_bytes < ahs_len) {
-					return 0;
+					break;
 				}
 			}
 			/* Header Digest */
@@ -475,7 +478,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				}
 				pdu->hdigest_valid_bytes += rc;
 				if (pdu->hdigest_valid_bytes < ISCSI_DIGEST_LEN) {
-					return 0;
+					break;
 				}
 			}
 
@@ -491,13 +494,12 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				} else {
 					SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
 						    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
-					rc = SPDK_ISCSI_CONNECTION_FATAL;
 					conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 					break;
 				}
 				pdu->mobj = spdk_mempool_get(pool);
 				if (pdu->mobj == NULL) {
-					return 0;
+					break;
 				}
 				pdu->data_buf = pdu->mobj->buf;
 
@@ -521,7 +523,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 
 				pdu->data_valid_bytes += rc;
 				if (pdu->data_valid_bytes < data_len) {
-					return 0;
+					break;
 				}
 			}
 
@@ -538,7 +540,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 
 				pdu->ddigest_valid_bytes += rc;
 				if (pdu->ddigest_valid_bytes < ISCSI_DIGEST_LEN) {
-					return 0;
+					break;
 				}
 			}
 
@@ -559,11 +561,10 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 						spdk_put_pdu(pdu);
 						conn->pdu_in_progress = NULL;
 						conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;
-						return 0;
 					} else {
 						conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
-						break;
 					}
+					break;
 				}
 
 				pdu->data = pdu->data_buf;
@@ -577,7 +578,6 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				rc = MATCH_DIGEST_WORD(pdu->header_digest, crc32c);
 				if (rc == 0) {
 					SPDK_ERRLOG("header digest error (%s)\n", conn->initiator_name);
-					rc = SPDK_ISCSI_CONNECTION_FATAL;
 					conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 					break;
 				}
@@ -586,7 +586,6 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
 				rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
 				if (rc == 0) {
-					rc = SPDK_ISCSI_CONNECTION_FATAL;
 					SPDK_ERRLOG("data digest error (%s)\n", conn->initiator_name);
 					conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 					break;
@@ -595,7 +594,6 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 
 			if (conn->state == ISCSI_CONN_STATE_LOGGED_OUT) {
 				SPDK_ERRLOG("pdu received after logout\n");
-				rc = SPDK_ISCSI_CONNECTION_FATAL;
 				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 				break;
 			}
@@ -612,21 +610,23 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 			spdk_put_pdu(pdu);
 			conn->pdu_in_progress = NULL;
 			conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;
+			pdu_recv_loop_cnt++;
 
 			spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
-			return 1;
+			break;
 		case ISCSI_PDU_RECV_STATE_ERROR:
 			spdk_put_pdu(pdu);
 			conn->pdu_in_progress = NULL;
-			return rc;
+			return SPDK_ISCSI_CONNECTION_FATAL;
 		default:
 			assert(false);
 			SPDK_ERRLOG("code should not come here\n");
 			break;
 		}
-	} while (conn->pdu_recv_state != prev_state);
+	} while (conn->pdu_recv_state != prev_state &&
+		 pdu_recv_loop_cnt < PDU_RECV_LOOP_COUNT && !conn->is_stopped);
 
-	return rc;
+	return pdu_recv_loop_cnt;
 }
 
 struct _iscsi_sgl {
