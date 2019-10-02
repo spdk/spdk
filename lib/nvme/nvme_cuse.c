@@ -57,8 +57,13 @@
 
 #include "nvme_internal.h"
 #include "nvme_cuse.h"
+#include "nvme_io_msg.h"
 
 #include "spdk/thread.h"
+
+static bool g_cuse_initialized;
+static struct spdk_ring *g_nvme_io_msgs;
+
 
 struct cuse_device {
 	char				dev_name[128];
@@ -78,132 +83,6 @@ struct cuse_device {
 
 static TAILQ_HEAD(, cuse_device) g_ctrlr_ctx_head = TAILQ_HEAD_INITIALIZER(g_ctrlr_ctx_head);
 static int g_controllers_found = 0;
-static bool g_cuse_initialized = false;
-
-struct spdk_nvme_io_msg;
-
-typedef void (*spdk_nvme_io_msg_fn)(struct spdk_nvme_io_msg *io);
-
-struct spdk_ring *g_nvme_io_msgs;
-pthread_mutex_t g_cuse_io_requests_lock;
-
-struct spdk_nvme_io_msg {
-	struct spdk_nvme_ctrlr	*ctrlr;
-	uint32_t		nsid;
-
-	spdk_nvme_io_msg_fn	fn;
-	void			*arg;
-
-	struct spdk_nvme_cmd	nvme_cmd;
-	struct nvme_user_io	*nvme_user_io;
-
-	uint64_t		lba;
-	uint32_t		lba_count;
-
-	void			*data;
-	int			data_len;
-
-	fuse_req_t		req;
-
-	struct spdk_io_channel *io_channel;
-	struct spdk_nvme_qpair *qpair;
-};
-
-#define SPDK_CUSE_REQUESTS_PROCESS_SIZE 8
-
-/**
- * Send message to IO queue.
- */
-static int
-spdk_nvme_io_msg_send(struct spdk_nvme_io_msg *io, spdk_nvme_io_msg_fn fn, void *arg)
-{
-	int rc;
-
-	io->fn = fn;
-	io->arg = arg;
-
-	/* Protect requests ring against preemptive producers */
-	pthread_mutex_lock(&g_cuse_io_requests_lock);
-
-	rc = spdk_ring_enqueue(g_nvme_io_msgs, (void **)&io, 1, NULL);
-	if (rc != 1) {
-		assert(false);
-		/* FIXIT! Do something with request here */
-		return -ENOMEM;
-	}
-
-	pthread_mutex_unlock(&g_cuse_io_requests_lock);
-
-	return 0;
-}
-
-/**
- * Get next IO message and process on the current SPDK thread.
- */
-struct nvme_io_channel {
-	struct spdk_nvme_qpair	*qpair;
-	struct spdk_poller	*poller;
-
-	bool			collect_spin_stat;
-	uint64_t		spin_ticks;
-	uint64_t		start_ticks;
-	uint64_t		end_ticks;
-};
-
-int
-spdk_nvme_io_msg_process(void)
-{
-	int i;
-	void *requests[SPDK_CUSE_REQUESTS_PROCESS_SIZE];
-	int count;
-	struct nvme_io_channel *ch;
-
-	if (!g_cuse_initialized) {
-		return 0;
-	}
-
-	count = spdk_ring_dequeue(g_nvme_io_msgs, requests, SPDK_CUSE_REQUESTS_PROCESS_SIZE);
-	if (count == 0) {
-		return 0;
-	}
-
-	for (i = 0; i < count; i++) {
-		struct spdk_nvme_io_msg *io = requests[i];
-
-		assert(io != NULL);
-
-		if (io->nsid != 0) {
-			io->io_channel = spdk_get_io_channel(io->ctrlr);
-			ch = spdk_io_channel_get_ctx(io->io_channel);
-			io->qpair = ch->qpair;
-		}
-
-		io->fn(io);
-	}
-
-	return 0;
-}
-
-static void
-cuse_nvme_io_msg_free(struct spdk_nvme_io_msg *io)
-{
-	if (io->io_channel) {
-		spdk_put_io_channel(io->io_channel);
-	}
-	spdk_free(io->data);
-	free(io);
-}
-
-static struct spdk_nvme_io_msg *
-cuse_nvme_io_msg_alloc(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, fuse_req_t req)
-{
-	struct spdk_nvme_io_msg *io = (struct spdk_nvme_io_msg *)calloc(1, sizeof(struct spdk_nvme_io_msg));
-
-	io->ctrlr = ctrlr;
-	io->nsid = nsid;
-	io->req = req;
-	return io;
-}
 
 #define FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, val)		\
 	if (out_bufsz == 0) {						\
@@ -217,21 +96,21 @@ cuse_nvme_io_msg_alloc(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, fuse_req_t 
 static void
 cuse_nvme_admin_done_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_nvme_io_msg *ctx = arg;
+	struct spdk_nvme_io_msg *io = arg;
 	struct iovec out_iov[2];
 
 	out_iov[0].iov_base = &cpl->cdw0;
 	out_iov[0].iov_len = sizeof(cpl->cdw0);
-	if (ctx->data_len > 0) {
-		out_iov[1].iov_base = ctx->data;
-		out_iov[1].iov_len = ctx->data_len;
-		fuse_reply_ioctl_iov(ctx->req, 0, out_iov, 2);
-		spdk_free(ctx->data);
+	if (io->data_len > 0) {
+		out_iov[1].iov_base = io->data;
+		out_iov[1].iov_len = io->data_len;
+		fuse_reply_ioctl_iov(io->ctx, 0, out_iov, 2);
+		spdk_free(io->data);
 	} else {
-		fuse_reply_ioctl_iov(ctx->req, 0, out_iov, 1);
+		fuse_reply_ioctl_iov(io->ctx, 0, out_iov, 1);
 	}
 
-	free(ctx);
+	cuse_nvme_io_msg_free(io);
 }
 
 static void
@@ -242,7 +121,7 @@ cuse_nvme_admin_cb(struct spdk_nvme_io_msg *io)
 	rc = spdk_nvme_ctrlr_cmd_admin_raw(io->ctrlr, &io->nvme_cmd, io->data, io->data_len,
 					   cuse_nvme_admin_done_cb, (void *)io);
 	if (rc < 0) {
-		fuse_reply_err(io->req, EINVAL);
+		fuse_reply_err(io->ctx, EINVAL);
 	}
 }
 
@@ -295,7 +174,7 @@ nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 		io->nvme_cmd.cdw14 = admin_cmd->cdw14;
 		io->nvme_cmd.cdw15 = admin_cmd->cdw15;
 
-		io->req = req;
+		io->ctx = req;
 		io->data_len = admin_cmd->data_len;
 		if (io->data_len > 0) {
 			io->data = spdk_malloc(io->data_len, 0, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
@@ -320,7 +199,7 @@ cuse_nvme_submit_io_write_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_nvme_io_msg *io = (struct spdk_nvme_io_msg *)ref;
 
-	fuse_reply_ioctl_iov(io->req, 0, NULL, 0);
+	fuse_reply_ioctl_iov(io->ctx, 0, NULL, 0);
 
 	cuse_nvme_io_msg_free(io);
 }
@@ -345,7 +224,7 @@ cuse_nvme_submit_io_write_cb(struct spdk_nvme_io_msg *io)
 
 	if (rc != 0 && rc != -ENOMEM) {
 		SPDK_ERRLOG("write failed: rc = %d\n", rc);
-		fuse_reply_err(io->req, EINVAL);
+		fuse_reply_err(io->ctx, EINVAL);
 		cuse_nvme_io_msg_free(io);
 		return;
 	}
@@ -379,7 +258,7 @@ cuse_nvme_submit_io_write(fuse_req_t req, int cmd, void *arg,
 	}
 	if (io->data == NULL) {
 		SPDK_ERRLOG("Write buffer allocation failed\n");
-		fuse_reply_err(io->req, ENOMEM);
+		fuse_reply_err(io->ctx, ENOMEM);
 		cuse_nvme_io_msg_free(io);
 		return;
 	}
@@ -398,7 +277,7 @@ cuse_nvme_submit_io_read_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	iov.iov_base = io->data;
 	iov.iov_len = io->data_len;
 
-	fuse_reply_ioctl_iov(io->req, 0, &iov, 1);
+	fuse_reply_ioctl_iov(io->ctx, 0, &iov, 1);
 
 	cuse_nvme_io_msg_free(io);
 }
@@ -420,7 +299,7 @@ cuse_nvme_submit_io_read_cb(struct spdk_nvme_io_msg *io)
 	}
 	if (io->data == NULL) {
 		SPDK_ERRLOG("Read buffer allocation failed\n");
-		fuse_reply_err(io->req, ENOMEM);
+		fuse_reply_err(io->ctx, ENOMEM);
 		cuse_nvme_io_msg_free(io);
 		return;
 	}
@@ -432,7 +311,7 @@ cuse_nvme_submit_io_read_cb(struct spdk_nvme_io_msg *io)
 
 	if (rc != 0 && rc != -ENOMEM) {
 		SPDK_ERRLOG("read failed: rc = %d\n", rc);
-		fuse_reply_err(io->req, EINVAL);
+		fuse_reply_err(io->ctx, EINVAL);
 		cuse_nvme_io_msg_free(io);
 		return;
 	}
@@ -505,16 +384,16 @@ cuse_nvme_reset_cb(struct spdk_nvme_io_msg *io)
 
 	if (io->nsid) {
 		SPDK_ERRLOG("Namespace reset not supported\n");
-		fuse_reply_err(io->req, EINVAL);
+		fuse_reply_err(io->ctx, EINVAL);
 	}
 
 	rc = spdk_nvme_ctrlr_reset(io->ctrlr);
 	if (rc) {
-		fuse_reply_err(io->req, rc);
+		fuse_reply_err(io->ctx, rc);
 		return;
 	}
 
-	fuse_reply_ioctl_iov(io->req, 0, NULL, 0);
+	fuse_reply_ioctl_iov(io->ctx, 0, NULL, 0);
 }
 
 static void
@@ -781,3 +660,12 @@ spdk_nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr)
 
 	return 0;
 }
+
+static struct spdk_nvme_io_msg_producer cuse_nvme_io_msg_producer = {
+	.name = "cuse",
+
+	.ctrlr_start = spdk_nvme_cuse_start,
+	.ctrlr_stop = spdk_nvme_cuse_stop,
+};
+
+SPDK_NVME_IO_MSG_REGISTER(cuse, &cuse_nvme_io_msg_producer);
