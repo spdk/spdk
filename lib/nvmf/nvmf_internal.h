@@ -206,6 +206,13 @@ union nvmf_c2h_msg {
 };
 SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
 
+struct spdk_nvmf_dif_info {
+	struct spdk_dif_ctx			dif_ctx;
+	bool					dif_insert_or_strip;
+	uint32_t				elba_length;
+	uint32_t				orig_length;
+};
+
 struct spdk_nvmf_request {
 	struct spdk_nvmf_qpair		*qpair;
 	uint32_t			length;
@@ -218,6 +225,7 @@ struct spdk_nvmf_request {
 	uint32_t			iovcnt;
 	bool				data_from_pool;
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
+	struct spdk_nvmf_dif_info	dif;
 
 	STAILQ_ENTRY(spdk_nvmf_request)	buf_link;
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
