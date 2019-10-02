@@ -171,6 +171,9 @@ struct spdk_vhost_dev {
 	struct spdk_cpuset *cpumask;
 	bool registered;
 
+	uint64_t virtio_features;
+	uint64_t disabled_features;
+
 	const struct spdk_vhost_dev_backend *backend;
 
 	/* Saved orginal values used to setup coalescing to avoid integer
@@ -214,9 +217,6 @@ typedef int (*spdk_vhost_session_fn)(struct spdk_vhost_dev *vdev,
 typedef void (*spdk_vhost_dev_fn)(struct spdk_vhost_dev *vdev, void *arg);
 
 struct spdk_vhost_dev_backend {
-	uint64_t virtio_features;
-	uint64_t disabled_features;
-
 	/**
 	 * Size of additional per-session context data
 	 * allocated whenever a new client connects.
