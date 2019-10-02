@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7740ec8a_0655eae6",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-02T12:44:35Z",
+      "side": 1,
+      "message": "Set of RPC will be deprecated starting with SPDK 19.10, and removed altogether in a later release.\nCan we avoid adding old ones in this patch (rpc.py posts warning about this)?\nconstruct_ocf_bdev is deprecated, use bdev_ocf_create instead.",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 46
+      },
+      "revId": "29690cb5bc20a07b54303119044df812857f1e55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8fba83b_d9b24316",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-02T12:44:35Z",
+      "side": 1,
+      "message": "delete_ocf_bdev is deprecated, use bdev_ocf_delete instead.",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 29
+      },
+      "revId": "29690cb5bc20a07b54303119044df812857f1e55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
