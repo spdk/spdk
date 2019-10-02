@@ -16,6 +16,8 @@ SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
 TAILQ_HEAD(, spdk_iscsi_pdu) g_write_pdu_list;
 
+int g_read_data_len = 0;
+
 struct spdk_iscsi_task *
 spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
 		    struct spdk_iscsi_task *parent,
@@ -136,11 +138,24 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 
 DEFINE_STUB_V(spdk_iscsi_task_mgmt_cpl, (struct spdk_scsi_task *scsi_task));
 
-DEFINE_STUB(spdk_iscsi_conn_read_data, int,
-	    (struct spdk_iscsi_conn *conn, int bytes, void *buf), 0);
+int
+spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes, void *buf)
+{
+	int read_data_len = g_read_data_len;
 
-DEFINE_STUB(spdk_iscsi_conn_readv_data, int,
-	    (struct spdk_iscsi_conn *conn, struct iovec *iov, int iovcnt), 0);
+	g_read_data_len = 0;
+	return read_data_len;
+}
+
+int
+spdk_iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
+			   struct iovec *iov, int iovcnt)
+{
+	int read_data_len = g_read_data_len;
+
+	g_read_data_len = 0;
+	return read_data_len;
+}
 
 void
 spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
