@@ -407,15 +407,27 @@ nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 static inline bool
 nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 {
+	struct nvme_request *req;
+
 	/*
-	 * This is the point at which we re-enable the qpair after a reset. If the qpair has been
-	 * disabled for some reason, we need to flush it and restart submitting and completing I/O.
+	 * Either during initial connect or reset, the qpair should follow the given state machine.
+	 * QPAIR_DISABLED->QPAIR_CONNECTING->QPAIR_CONNECTED->QPAIR_ENABLING->QPAIR_ENABLED. In the
+	 * reset case, once the qpair is properly connected, we need to abort any outstanding requests
+	 * from the old transport connection and encourage the application to retry them. We also need
+	 * to submit any queued requests that built up while we were in the connected or enabling state.
 	 */
-	if (!nvme_qpair_state_equals(qpair, NVME_QPAIR_ENABLED) && !qpair->ctrlr->is_resetting) {
+	if (nvme_qpair_state_equals(qpair, NVME_QPAIR_CONNECTED) && !qpair->ctrlr->is_resetting) {
+		nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLING);
 		nvme_qpair_complete_error_reqs(qpair);
-		nvme_qpair_abort_queued_reqs(qpair, 0 /* retry */);
-		nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLED);
 		nvme_transport_qpair_abort_reqs(qpair, 0 /* retry */);
+		nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLED);
+		while (!STAILQ_EMPTY(&qpair->queued_req)) {
+			req = STAILQ_FIRST(&qpair->queued_req);
+			STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+			if (nvme_qpair_resubmit_request(qpair, req)) {
+				break;
+			}
+		}
 	}
 
 	return nvme_qpair_state_equals(qpair, NVME_QPAIR_ENABLED);
