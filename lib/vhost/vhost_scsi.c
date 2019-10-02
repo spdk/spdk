@@ -151,8 +151,6 @@ static void vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev,
 static int vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
 
 const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
-	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
-	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
 	.session_ctx_size = sizeof(struct spdk_vhost_scsi_session) - sizeof(struct spdk_vhost_session),
 	.start_session =  vhost_scsi_start,
 	.stop_session = vhost_scsi_stop,
@@ -835,6 +833,9 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 	if (svdev == NULL) {
 		return -ENOMEM;
 	}
+
+	svdev->vdev.virtio_features = SPDK_VHOST_SCSI_FEATURES;
+	svdev->vdev.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES;
 
 	spdk_vhost_lock();
 	rc = vhost_dev_register(&svdev->vdev, name, cpumask,
