@@ -365,6 +365,8 @@ struct spdk_nvme_qpair {
 	 */
 	uint8_t				transport_qp_is_failed: 1;
 
+	uint8_t				qp_is_enabling: 1;
+
 	enum spdk_nvme_transport_type	trtype;
 
 	STAILQ_HEAD(, nvme_request)	free_req;

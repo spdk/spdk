@@ -406,11 +406,25 @@ nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 static inline bool
 nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 {
-	if (!qpair->is_enabled && !qpair->ctrlr->is_resetting) {
+	struct nvme_request *req;
+
+	if (!qpair->is_enabled && !qpair->ctrlr->is_resetting && !qpair->qp_is_enabling) {
+		qpair->qp_is_enabling = 1;
 		nvme_qpair_complete_error_reqs(qpair);
-		nvme_qpair_abort_queued_reqs(qpair, 0 /* retry */);
-		nvme_qpair_enable(qpair);
 		nvme_transport_qpair_abort_reqs(qpair, 0 /* retry */);
+		nvme_qpair_enable(qpair);
+		qpair->qp_is_enabling = 0;
+		while (!STAILQ_EMPTY(&qpair->queued_req)) {
+			req = STAILQ_FIRST(&qpair->queued_req);
+			STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+			nvme_qpair_submit_request(qpair, req);
+			if (spdk_unlikely(req == STAILQ_LAST(&qpair->queued_req, nvme_request, stailq))) {
+				SPDK_NOTICELOG("Unable to submit a queued request after reaping completions.\n");
+				STAILQ_REMOVE(&qpair->queued_req, req, nvme_request, stailq);
+				STAILQ_INSERT_HEAD(&qpair->queued_req, req, stailq);
+				break;
+			}
+		}
 	}
 
 	return qpair->is_enabled;
