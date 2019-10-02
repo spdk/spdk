@@ -1176,7 +1176,6 @@ bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx, spdk_bdev_create_nvme_f
 {
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	struct nvme_bdev	*nvme_bdev, *tmp;
-	size_t			j;
 	int			rc;
 
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
@@ -1196,15 +1195,15 @@ bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx, spdk_bdev_create_nvme_f
 	 * Report the new bdevs that were created in this call.
 	 * There can be more than one bdev per NVMe controller since one bdev is created per namespace.
 	 */
-	j = 0;
+	ctx->count = 0;
 
 	TAILQ_FOREACH_SAFE(nvme_bdev, &nvme_bdev_ctrlr->bdevs, tailq, tmp) {
 		if (!nvme_bdev->active) {
 			continue;
 		}
-		if (j < ctx->count) {
-			ctx->names[j] = nvme_bdev->disk.name;
-			j++;
+		if (ctx->count < ctx->max_names) {
+			ctx->names[ctx->count] = nvme_bdev->disk.name;
+			ctx->count++;
 		} else {
 			SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %zu. Unable to return all names of created bdevs\n",
 				    ctx->count);
@@ -1213,7 +1212,7 @@ bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx, spdk_bdev_create_nvme_f
 		}
 	}
 
-	cb_fn(cb_arg, j, 0);
+	cb_fn(cb_arg, ctx->count, 0);
 }
 
 static void
@@ -1300,7 +1299,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	}
 	ctx->base_name = base_name;
 	ctx->names = names;
-	ctx->count = count;
+	ctx->max_names = count;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_ctx = cb_ctx;
 	ctx->prchk_flags = prchk_flags;
