@@ -1188,6 +1188,17 @@ spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, voi
 	return 0;
 }
 
+static void
+free_controller(const struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
+	free(nvme_bdev_ctrlr->bdevs);
+	free(nvme_bdev_ctrlr->name);
+	free(nvme_bdev_ctrlr);
+}
+
 static int
 bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx)
 {
