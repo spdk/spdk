@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41e069aa_a696789b",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1290,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-02T16:38:10Z",
+      "side": 1,
+      "message": "I think you may want a comment here explaining the errno check.  Something as simple as:\n/* If iscsi_conn_flush_pdus_internal() got an EAGAIN, we can check that here and stop trying to flush\n *.PDUs on an exiting connection.\n */",
+      "revId": "9c0546b951ccf8e4a4f06124d8523216c8daa1f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed0a9dc9_166692f2",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1292,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-02T16:38:10Z",
+      "side": 1,
+      "message": "you don\u0027t need to check conn-\u003eflush_poller - spdk_poller_unregister does it for you\n\n(of course, line 1274 just above is also checking flush_poller, but that one could be removed in a later patch)",
+      "revId": "9c0546b951ccf8e4a4f06124d8523216c8daa1f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
