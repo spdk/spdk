@@ -216,23 +216,13 @@ bdev_nvme_poll_adminq(void *arg)
 static void
 bdev_nvme_unregister_cb(void *io_device)
 {
-	struct spdk_nvme_ctrlr *ctrlr = io_device;
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = io_device;
 
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		if (nvme_bdev_ctrlr->ctrlr == ctrlr) {
-			TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
-			pthread_mutex_unlock(&g_bdev_nvme_mutex);
-			spdk_nvme_detach(ctrlr);
-			spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
-			free(nvme_bdev_ctrlr->name);
-			free(nvme_bdev_ctrlr->bdevs);
-			free(nvme_bdev_ctrlr);
-			return;
-		}
-	}
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	spdk_nvme_detach(nvme_bdev_ctrlr->ctrlr);
+	spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
+	free(nvme_bdev_ctrlr->name);
+	free(nvme_bdev_ctrlr->bdevs);
+	free(nvme_bdev_ctrlr);
 }
 
 static void
@@ -242,8 +232,10 @@ bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	if (nvme_bdev_ctrlr->opal_dev) {
 		spdk_opal_close(nvme_bdev_ctrlr->opal_dev);
 	}
-
-	spdk_io_device_unregister(nvme_bdev_ctrlr->ctrlr, bdev_nvme_unregister_cb);
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	spdk_io_device_unregister(nvme_bdev_ctrlr, bdev_nvme_unregister_cb);
 }
 
 static int
@@ -540,7 +532,7 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 static int
 bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 {
-	struct spdk_nvme_ctrlr *ctrlr = io_device;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = io_device;
 	struct nvme_io_channel *ch = ctx_buf;
 	struct spdk_nvme_io_qpair_opts opts;
 
@@ -550,12 +542,12 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 	ch->collect_spin_stat = false;
 #endif
 
-	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(nvme_bdev_ctrlr->ctrlr, &opts, sizeof(opts));
 	opts.delay_pcie_doorbell = true;
 	opts.io_queue_requests = spdk_max(g_opts.io_queue_requests, opts.io_queue_requests);
 	g_opts.io_queue_requests = opts.io_queue_requests;
 
-	ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
+	ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(nvme_bdev_ctrlr->ctrlr, &opts, sizeof(opts));
 
 	if (ch->qpair == NULL) {
 		return -1;
@@ -579,7 +571,7 @@ bdev_nvme_get_io_channel(void *ctx)
 {
 	struct nvme_bdev *nvme_bdev = ctx;
 
-	return spdk_get_io_channel(nvme_bdev->nvme_bdev_ctrlr->ctrlr);
+	return spdk_get_io_channel(nvme_bdev->nvme_bdev_ctrlr);
 }
 
 static int
@@ -989,7 +981,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	}
 	nvme_bdev_ctrlr->prchk_flags = prchk_flags;
 
-	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
+	spdk_io_device_register(nvme_bdev_ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel),
 				name);
 
