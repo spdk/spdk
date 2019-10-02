@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ee6e2f4b_3813f394",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 906,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-02T12:40:39Z",
+      "side": 1,
+      "message": "I see two possible solutions here:\n1. Build separate list for inactive namespaces at controller creation time and loop through this loop here as well (only with ns numbers - should be easy)\n2. Add inactive namespaces as a bdev to current list, but do not register these bdevs (more complicated - would require more complex tracking of bdevs - e.g. ref count in nvme ctrlr, allocation, releasing...)\n\nWhat do you think Jim?",
+      "parentUuid": "4ba3725c_9436a676",
+      "revId": "84a93f4ee29831499a790fbf3759672a9402b330",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "190a5542_5fc67e95",
         "filename": "module/bdev/nvme/common.h",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-01T23:54:50Z",
       "side": 1,
       "message": "before this patch, \u0027active\u0027 was used to know which entries in the bdevs array was actually being used - for example, when iterating through the bdevs array\n\nbut with this patch, it\u0027s not clear what \u0027active\u0027 means anymore",
+      "revId": "84a93f4ee29831499a790fbf3759672a9402b330",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9e0a45d_bd0b5c2c",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-02T12:40:39Z",
+      "side": 1,
+      "message": "Yeah, we can remove it now.",
+      "parentUuid": "190a5542_5fc67e95",
       "revId": "84a93f4ee29831499a790fbf3759672a9402b330",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
