@@ -410,6 +410,80 @@ iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 	}
 }
 
+static void
+iscsi_pdu_payload_handle(struct spdk_iscsi_conn *conn,
+			 struct spdk_iscsi_pdu *pdu, int data_len)
+{
+	uint32_t crc32c;
+	int rc;
+
+	/* Data Segment */
+	if (data_len != 0) {
+		if (!iscsi_check_data_segment_length(conn, pdu, data_len)) {
+			rc = iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+			/*
+			 * If spdk_iscsi_reject() was not able to reject the PDU,
+			 * treat it as a fatal connection error.  Otherwise,
+			 * return SUCCESS here so that the caller will continue
+			 * to attempt to read PDUs.
+			 */
+			if (rc == 0) {
+				spdk_put_pdu(pdu);
+				conn->pdu_in_progress = NULL;
+				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;
+			} else {
+				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
+			}
+			return;
+		}
+
+		pdu->data = pdu->data_buf;
+		pdu->data_from_mempool = true;
+		pdu->data_segment_len = data_len;
+	}
+
+	/* check digest */
+	if (conn->header_digest) {
+		crc32c = spdk_iscsi_pdu_calc_header_digest(pdu);
+		rc = MATCH_DIGEST_WORD(pdu->header_digest, crc32c);
+		if (rc == 0) {
+			SPDK_ERRLOG("header digest error (%s)\n", conn->initiator_name);
+			conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
+			return;
+		}
+	}
+	if (conn->data_digest && data_len != 0) {
+		crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
+		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
+		if (rc == 0) {
+			SPDK_ERRLOG("data digest error (%s)\n", conn->initiator_name);
+			conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
+			return;
+		}
+	}
+
+	if (conn->state == ISCSI_CONN_STATE_LOGGED_OUT) {
+		SPDK_ERRLOG("pdu received after logout\n");
+		conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
+		return;
+	}
+
+	rc = iscsi_execute(conn, pdu);
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_execute() fatal error on %s(%s)\n",
+			    conn->target_port != NULL ? spdk_scsi_port_get_name(conn->target_port) : "NULL",
+			    conn->initiator_port != NULL ? spdk_scsi_port_get_name(conn->initiator_port) : "NULL");
+		conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
+		return;
+	}
+
+	spdk_put_pdu(pdu);
+	conn->pdu_in_progress = NULL;
+	conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;
+
+	spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
+}
+
 #define PDU_RECV_LOOP_COUNT	16
 
 int
@@ -419,7 +493,6 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 	enum iscsi_pdu_recv_state prev_state;
 	struct spdk_iscsi_pdu *pdu;
 	struct spdk_mempool *pool;
-	uint32_t crc32c;
 	int ahs_len;
 	int data_len;
 	int rc = 0;
@@ -548,72 +621,8 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 			spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->id, pdu->data_valid_bytes,
 					  (uintptr_t)pdu, pdu->bhs.opcode);
 
-			/* Data Segment */
-			if (data_len != 0) {
-				if (!iscsi_check_data_segment_length(conn, pdu, data_len)) {
-					rc = iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
-					/*
-					 * If spdk_iscsi_reject() was not able to reject the PDU,
-					 * treat it as a fatal connection error.  Otherwise,
-					 * return SUCCESS here so that the caller will continue
-					 * to attempt to read PDUs.
-					 */
-					if (rc == 0) {
-						spdk_put_pdu(pdu);
-						conn->pdu_in_progress = NULL;
-						conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;
-					} else {
-						conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
-					}
-					break;
-				}
-
-				pdu->data = pdu->data_buf;
-				pdu->data_from_mempool = true;
-				pdu->data_segment_len = data_len;
-			}
-
-			/* check digest */
-			if (conn->header_digest) {
-				crc32c = spdk_iscsi_pdu_calc_header_digest(pdu);
-				rc = MATCH_DIGEST_WORD(pdu->header_digest, crc32c);
-				if (rc == 0) {
-					SPDK_ERRLOG("header digest error (%s)\n", conn->initiator_name);
-					conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
-					break;
-				}
-			}
-			if (conn->data_digest && data_len != 0) {
-				crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
-				rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
-				if (rc == 0) {
-					SPDK_ERRLOG("data digest error (%s)\n", conn->initiator_name);
-					conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
-					break;
-				}
-			}
-
-			if (conn->state == ISCSI_CONN_STATE_LOGGED_OUT) {
-				SPDK_ERRLOG("pdu received after logout\n");
-				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
-				break;
-			}
-
-			rc = iscsi_execute(conn, pdu);
-			if (rc < 0) {
-				SPDK_ERRLOG("iscsi_execute() fatal error on %s(%s)\n",
-					    conn->target_port != NULL ? spdk_scsi_port_get_name(conn->target_port) : "NULL",
-					    conn->initiator_port != NULL ? spdk_scsi_port_get_name(conn->initiator_port) : "NULL");
-				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
-				break;
-			}
-
-			spdk_put_pdu(pdu);
-			conn->pdu_in_progress = NULL;
-			conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;
+			iscsi_pdu_payload_handle(conn, pdu, data_len);
 			pdu_recv_loop_cnt++;
-
-			spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
 			break;
 		case ISCSI_PDU_RECV_STATE_ERROR:
 			spdk_put_pdu(pdu);
