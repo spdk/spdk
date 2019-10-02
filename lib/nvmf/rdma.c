@@ -1723,7 +1723,13 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 
 	desc = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + inline_segment->address;
 	for (i = 0; i < num_sgl_descriptors; i++) {
-		lengths[i] = desc->keyed.length;
+		if (spdk_likely(!rdma_req->req.dif.dif_insert_or_strip)) {
+			lengths[i] = desc->keyed.length;
+		} else {
+			rdma_req->req.dif.orig_length += desc->keyed.length;
+			lengths[i] = spdk_dif_get_length_with_md(desc->keyed.length, &rdma_req->req.dif.dif_ctx);
+			rdma_req->req.dif.elba_length += lengths[i];
+		}
 		desc++;
 	}
 
@@ -1751,7 +1757,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 
 		current_wr->num_sge = 0;
 
-		rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, current_wr, desc->keyed.length);
+		rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, current_wr, lengths[i]);
 		if (rc != 0) {
 			rc = -ENOMEM;
 			goto err_exit;
