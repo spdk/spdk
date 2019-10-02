@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d4d0d69_81dfa9d6",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-02T09:17:32Z",
+      "side": 1,
+      "message": "I don\u0027t think we specify relation between number of cores and bdevs anywhere in help for this app. I just wonder if instead of current approach, each core should have targets for all bdevs (just like in single target -T case in this patch). Then each bdev is accessed from all cores specified when starting the app.\n\nRight now there is uneven balance between work being done by each core (some will handle single bdev, some multiple) or some bdevs will have multiple cores.\n\nOverall this patch looks good and accomplishes what it sets out to do. Just wanted to confirm the approach taken here.",
+      "range": {
+        "startLine": 416,
+        "startChar": 0,
+        "endLine": 418,
+        "endChar": 4
+      },
+      "revId": "0a4d29a02a4c104a9f9a60d002a2bc7ad32cb1eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
