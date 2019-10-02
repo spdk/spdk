@@ -33,6 +33,12 @@
 #ifndef SPDK_QUEUE_EXTRAS_H
 #define SPDK_QUEUE_EXTRAS_H
 
+/* needed by the implementation of __containerof. */
+#define __uintptr_t uintptr_t
+
+/* contains the implementation of __containerof used by the macros. */
+#include <bsd/sys/cdefs.h>
+
 /*
  * This file defines four types of data structures: singly-linked lists,
  * singly-linked tail queues, lists and tail queues.

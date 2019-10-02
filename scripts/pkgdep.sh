@@ -56,7 +56,7 @@ if [ -s /etc/redhat-release ]; then
 
 	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
 		git astyle python-pycodestyle lcov python libuuid-devel \
-		sg3_utils libiscsi-devel pciutils ShellCheck
+		sg3_utils libiscsi-devel pciutils ShellCheck libbsd-devel
 	# Additional (optional) dependencies for showing backtrace in logs
 	yum install -y libunwind-devel || true
 	# Additional dependencies for NVMe over Fabrics
@@ -77,7 +77,7 @@ elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
 		git astyle pep8 lcov clang uuid-dev sg3-utils libiscsi-dev pciutils \
-		shellcheck
+		shellcheck libbsd-dev
 	# Additional python style checker not available on ubuntu 16.04 or earlier.
 	apt-get install -y pycodestyle || true
 	# Additional (optional) dependencies for showing backtrace in logs
@@ -98,7 +98,7 @@ elif [ -f /etc/debian_version ]; then
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
 		git-core lcov python-base python-pycodestyle libuuid-devel sg3_utils pciutils \
-		ShellCheck
+		ShellCheck libbsd-devel
 	# Additional (optional) dependencies for showing backtrace in logs
 	zypper install libunwind-devel || true
 	# Additional dependencies for NVMe over Fabrics
@@ -122,7 +122,7 @@ elif [ -f /etc/arch-release ]; then
 	# Install main dependencies
 	pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
 		git astyle autopep8 python clang libutil-linux sg3_utils \
-		libiscsi pciutils shellcheck
+		libiscsi pciutils shellcheck libbsd
 
 	# Additional (optional) dependencies for showing backtrace in logs
 	pacman -Sy --needed --noconfirm libunwind
