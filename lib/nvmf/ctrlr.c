@@ -1631,7 +1631,11 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		}
 
 		/* TODO: this should be set by the transport */
-		cdata->nvmf_specific.ioccsz += transport->opts.in_capsule_data_size / 16;
+		/* Disable in-capsule data transfer for RDMA controller when dif_insert_or_strip is enabled
+		   since in-capsule data only works with NVME drives that support SGL memory layout */
+		if (!(transport->ops->type == SPDK_NVME_TRANSPORT_RDMA && ctrlr->dif_insert_or_strip)) {
+			cdata->nvmf_specific.ioccsz += transport->opts.in_capsule_data_size / 16;
+		}
 
 		cdata->oncs.dsm = spdk_nvmf_ctrlr_dsm_supported(ctrlr);
 		cdata->oncs.write_zeroes = spdk_nvmf_ctrlr_write_zeroes_supported(ctrlr);
