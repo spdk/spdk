@@ -16,6 +16,24 @@
       "revId": "f7705691bce73d8664efe1ef9dfca9778eaa8cbe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed72dcb4_eae6e25b",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-02T12:02:52Z",
+      "side": 0,
+      "message": "I should have wrote more detailed description - I\u0027ll update it. This is actually needed as part of upcoming patches. Today we create one bdev per namespace. With OCSSD controller we can create more bdevs than we have namespaces, so we will need to allocate bdevs when we create them. We won\u0027t know how many of them we will have at the time of controller creation.",
+      "parentUuid": "42fc8b37_edbe77a2",
+      "revId": "f7705691bce73d8664efe1ef9dfca9778eaa8cbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
