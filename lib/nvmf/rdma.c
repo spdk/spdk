@@ -1837,7 +1837,12 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			req->dif.elba_length = length;
 		}
 
-		if (spdk_nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req, length) < 0) {
+		rc = spdk_nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req, length);
+		if (spdk_unlikely(rc < 0)) {
+			if (rc == -EINVAL) {
+				SPDK_ERRLOG("SGL length exceeds the max I/O size\n");
+				return -1;
+			}
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
 			return 0;
