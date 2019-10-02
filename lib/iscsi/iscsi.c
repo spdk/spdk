@@ -281,6 +281,36 @@ hex2bin(uint8_t *data, size_t data_len, const char *str)
 	return total;
 }
 
+static int
+iscsi_pdu_get_data_buffer(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
+			  int data_len)
+{
+	struct spdk_mempool *pool;
+
+	if (data_len <= spdk_get_max_immediate_data_size()) {
+		pool = g_spdk_iscsi.pdu_immediate_data_pool;
+		pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(spdk_get_max_immediate_data_size());
+	} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+		pool = g_spdk_iscsi.pdu_data_out_pool;
+		pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+	} else {
+		SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
+			    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+		return -EINVAL;
+	}
+	pdu->mobj = spdk_mempool_get(pool);
+	if (pdu->mobj == NULL) {
+		return -ENOMEM;
+	}
+	pdu->data_buf = pdu->mobj->buf;
+
+	if (spdk_unlikely(spdk_iscsi_get_dif_ctx(conn, pdu, &pdu->dif_ctx))) {
+		pdu->dif_insert_or_strip = true;
+	}
+
+	return 0;
+}
+
 uint32_t
 spdk_iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu)
 {
@@ -418,7 +448,6 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 	int pdu_recv_loop_cnt = 0;
 	enum iscsi_pdu_recv_state prev_state;
 	struct spdk_iscsi_pdu *pdu;
-	struct spdk_mempool *pool;
 	uint32_t crc32c;
 	int ahs_len;
 	int data_len;
@@ -487,27 +516,12 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 			data_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
 
 			if (data_len != 0 && pdu->data_buf == NULL) {
-				if (data_len <= spdk_get_max_immediate_data_size()) {
-					pool = g_spdk_iscsi.pdu_immediate_data_pool;
-					pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(spdk_get_max_immediate_data_size());
-				} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
-					pool = g_spdk_iscsi.pdu_data_out_pool;
-					pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
-				} else {
-					SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
-						    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
-					rc = SPDK_ISCSI_CONNECTION_FATAL;
+				rc = iscsi_pdu_get_data_buffer(conn, pdu, data_len);
+				if (rc == -ENOMEM) {
+					break;
+				} else if (rc < 0) {
 					conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 					break;
-				}
-				pdu->mobj = spdk_mempool_get(pool);
-				if (pdu->mobj == NULL) {
-					break;
-				}
-				pdu->data_buf = pdu->mobj->buf;
-
-				if (spdk_unlikely(spdk_iscsi_get_dif_ctx(conn, pdu, &pdu->dif_ctx))) {
-					pdu->dif_insert_or_strip = true;
 				}
 			}
 
