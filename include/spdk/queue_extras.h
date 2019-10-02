@@ -30,6 +30,8 @@
  * $FreeBSD$
  */
 
+/* Make sure we don't include the redefined functions on FreeBSD. They will cause build failures. */
+#ifndef __FreeBSD__
 #ifndef SPDK_QUEUE_EXTRAS_H
 #define SPDK_QUEUE_EXTRAS_H
 
@@ -105,6 +107,8 @@
  *
  */
 
+#include "spdk/util.h"
+
 /*
  * Singly-linked Tail queue declarations.
  */
@@ -141,7 +145,7 @@ struct name {								\
 
 #define	STAILQ_LAST(head, type, field)					\
 	(STAILQ_EMPTY((head)) ? NULL :					\
-	    __containerof((head)->stqh_last, struct type, field.stqe_next))
+	    SPDK_CONTAINEROF((head)->stqh_last, struct type, field.stqe_next))
 
 #define	STAILQ_NEXT(elm, field)	((elm)->field.stqe_next)
 
@@ -233,7 +237,7 @@ struct {								\
 
 #define	LIST_PREV(elm, head, type, field)				\
 	((elm)->field.le_prev == &LIST_FIRST((head)) ? NULL :		\
-	    __containerof((elm)->field.le_prev, struct type, field.le_next))
+	    SPDK_CONTAINEROF((elm)->field.le_prev, struct type, field.le_next))
 
 #define LIST_SWAP(head1, head2, type, field) do {			\
 	struct type *swap_tmp = LIST_FIRST((head1));			\
@@ -338,4 +342,5 @@ struct {								\
 		(head2)->tqh_last = &(head2)->tqh_first;		\
 } while (0)
 
+#endif
 #endif
