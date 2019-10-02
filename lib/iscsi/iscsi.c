@@ -81,8 +81,6 @@ static int create_iscsi_sess(struct spdk_iscsi_conn *conn,
 static uint8_t append_iscsi_sess(struct spdk_iscsi_conn *conn,
 				 const char *initiator_port_name, uint16_t tsih, uint16_t cid);
 
-static void remove_acked_pdu(struct spdk_iscsi_conn *conn, uint32_t ExpStatSN);
-
 static int iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 			int reason);
 
@@ -4206,23 +4204,6 @@ iscsi_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	return rc;
 }
 
-/* This function is used to refree the pdu when it is acknowledged */
-static void
-remove_acked_pdu(struct spdk_iscsi_conn *conn, uint32_t ExpStatSN)
-{
-	struct spdk_iscsi_pdu *pdu, *pdu_temp;
-	uint32_t stat_sn;
-
-	conn->exp_statsn = DMIN32(ExpStatSN, conn->StatSN);
-	TAILQ_FOREACH_SAFE(pdu, &conn->snack_pdu_list, tailq, pdu_temp) {
-		stat_sn = from_be32(&pdu->bhs.stat_sn);
-		if (SN32_LT(stat_sn, conn->exp_statsn)) {
-			TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
-			spdk_iscsi_conn_free_pdu(conn, pdu);
-		}
-	}
-}
-
 static int
 iscsi_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
@@ -4417,6 +4398,23 @@ static void
 iscsi_pdu_dump(struct spdk_iscsi_pdu *pdu)
 {
 	SPDK_ERRLOGDUMP("PDU", (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN);
+}
+
+/* This function is used to refree the pdu when it is acknowledged */
+static void
+remove_acked_pdu(struct spdk_iscsi_conn *conn, uint32_t ExpStatSN)
+{
+	struct spdk_iscsi_pdu *pdu, *pdu_temp;
+	uint32_t stat_sn;
+
+	conn->exp_statsn = DMIN32(ExpStatSN, conn->StatSN);
+	TAILQ_FOREACH_SAFE(pdu, &conn->snack_pdu_list, tailq, pdu_temp) {
+		stat_sn = from_be32(&pdu->bhs.stat_sn);
+		if (SN32_LT(stat_sn, conn->exp_statsn)) {
+			TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
+			spdk_iscsi_conn_free_pdu(conn, pdu);
+		}
+	}
 }
 
 int
