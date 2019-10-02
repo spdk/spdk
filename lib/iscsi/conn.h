@@ -67,6 +67,23 @@
 #define TRACE_ISCSI_TASK_EXECUTED		SPDK_TPOINT_ID(TRACE_GROUP_ISCSI, 0x6)
 #define TRACE_ISCSI_PDU_COMPLETED		SPDK_TPOINT_ID(TRACE_GROUP_ISCSI, 0x7)
 
+enum iscsi_pdu_recv_state {
+	/* Ready to wait for PDU */
+	ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY,
+
+	/* Active connection waiting for any PDU header */
+	ISCSI_PDU_RECV_STATE_AWAIT_PDU_HDR,
+
+	/* Active connection trying to get a data buffer */
+	ISCSI_PDU_RECV_STATE_NEED_BUFFER,
+
+	/* Active connection waiting for payload */
+	ISCSI_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD,
+
+	/* Active connection does not wait for payload */
+	ISCSI_PDU_RECV_STATE_ERROR,
+};
+
 struct spdk_poller;
 
 struct spdk_iscsi_conn {
@@ -103,6 +120,7 @@ struct spdk_iscsi_conn {
 	struct spdk_poller *shutdown_timer;
 
 	struct spdk_iscsi_pdu *pdu_in_progress;
+	enum iscsi_pdu_recv_state pdu_recv_state;
 
 	TAILQ_HEAD(, spdk_iscsi_pdu) write_pdu_list;
 	TAILQ_HEAD(, spdk_iscsi_pdu) snack_pdu_list;

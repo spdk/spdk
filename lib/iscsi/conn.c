@@ -253,6 +253,8 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 		conn->outstanding_r2t_tasks[i] = NULL;
 	}
 
+	conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;
+
 	TAILQ_INIT(&conn->write_pdu_list);
 	TAILQ_INIT(&conn->snack_pdu_list);
 	TAILQ_INIT(&conn->queued_r2t_tasks);
