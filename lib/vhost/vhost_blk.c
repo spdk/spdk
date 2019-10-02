@@ -45,6 +45,19 @@
 
 #include "vhost_internal.h"
 
+/* Minimal set of features supported by every SPDK VHOST-BLK device */
+#define SPDK_VHOST_BLK_FEATURES_BASE (SPDK_VHOST_FEATURES | \
+		(1ULL << VIRTIO_BLK_F_SIZE_MAX) | (1ULL << VIRTIO_BLK_F_SEG_MAX) | \
+		(1ULL << VIRTIO_BLK_F_GEOMETRY) | (1ULL << VIRTIO_BLK_F_BLK_SIZE) | \
+		(1ULL << VIRTIO_BLK_F_TOPOLOGY) | (1ULL << VIRTIO_BLK_F_BARRIER)  | \
+		(1ULL << VIRTIO_BLK_F_SCSI)     | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) | \
+		(1ULL << VIRTIO_BLK_F_MQ))
+
+/* Not supported features */
+#define SPDK_VHOST_BLK_DISABLED_FEATURES (SPDK_VHOST_DISABLED_FEATURES | \
+		(1ULL << VIRTIO_BLK_F_GEOMETRY) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) | \
+		(1ULL << VIRTIO_BLK_F_BARRIER)  | (1ULL << VIRTIO_BLK_F_SCSI))
+
 struct spdk_vhost_blk_task {
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_vhost_blk_session *bvsession;
@@ -887,18 +900,6 @@ vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 }
 
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
-	.virtio_features = SPDK_VHOST_FEATURES |
-	(1ULL << VIRTIO_BLK_F_SIZE_MAX) | (1ULL << VIRTIO_BLK_F_SEG_MAX) |
-	(1ULL << VIRTIO_BLK_F_GEOMETRY) | (1ULL << VIRTIO_BLK_F_RO) |
-	(1ULL << VIRTIO_BLK_F_BLK_SIZE) | (1ULL << VIRTIO_BLK_F_TOPOLOGY) |
-	(1ULL << VIRTIO_BLK_F_BARRIER)  | (1ULL << VIRTIO_BLK_F_SCSI) |
-	(1ULL << VIRTIO_BLK_F_FLUSH)    | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
-	(1ULL << VIRTIO_BLK_F_MQ)       | (1ULL << VIRTIO_BLK_F_DISCARD) |
-	(1ULL << VIRTIO_BLK_F_WRITE_ZEROES),
-	.disabled_features = SPDK_VHOST_DISABLED_FEATURES | (1ULL << VIRTIO_BLK_F_GEOMETRY) |
-	(1ULL << VIRTIO_BLK_F_RO) | (1ULL << VIRTIO_BLK_F_FLUSH) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
-	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI) | (1ULL << VIRTIO_BLK_F_DISCARD) |
-	(1ULL << VIRTIO_BLK_F_WRITE_ZEROES),
 	.session_ctx_size = sizeof(struct spdk_vhost_blk_session) - sizeof(struct spdk_vhost_session),
 	.start_session =  vhost_blk_start,
 	.stop_session = vhost_blk_stop,
@@ -955,8 +956,8 @@ int
 spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name, bool readonly)
 {
 	struct spdk_vhost_blk_dev *bvdev = NULL;
+	struct spdk_vhost_dev *vdev;
 	struct spdk_bdev *bdev;
-	uint64_t features = 0;
 	int ret = 0;
 
 	spdk_vhost_lock();
@@ -974,6 +975,23 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		goto out;
 	}
 
+	vdev = &bvdev->vdev;
+	vdev->virtio_features = SPDK_VHOST_BLK_FEATURES_BASE;
+	vdev->disabled_features = SPDK_VHOST_BLK_DISABLED_FEATURES;
+
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_DISCARD);
+	}
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
+		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_WRITE_ZEROES);
+	}
+	if (readonly) {
+		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_RO);
+	}
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH)) {
+		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_FLUSH);
+	}
+
 	ret = spdk_bdev_open(bdev, true, bdev_remove_cb, bvdev, &bvdev->bdev_desc);
 	if (ret != 0) {
 		SPDK_ERRLOG("%s: could not open bdev '%s', error=%d\n",
@@ -983,34 +1001,9 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 
 	bvdev->bdev = bdev;
 	bvdev->readonly = readonly;
-	ret = vhost_dev_register(&bvdev->vdev, name, cpumask, &vhost_blk_device_backend);
+	ret = vhost_dev_register(vdev, name, cpumask, &vhost_blk_device_backend);
 	if (ret != 0) {
 		spdk_bdev_close(bvdev->bdev_desc);
-		goto out;
-	}
-
-	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-		features |= (1ULL << VIRTIO_BLK_F_DISCARD);
-	}
-	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
-		features |= (1ULL << VIRTIO_BLK_F_WRITE_ZEROES);
-	}
-	if (readonly) {
-		features |= (1ULL << VIRTIO_BLK_F_RO);
-	}
-	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH)) {
-		features |= (1ULL << VIRTIO_BLK_F_FLUSH);
-	}
-
-	if (features && rte_vhost_driver_enable_features(bvdev->vdev.path, features)) {
-		SPDK_ERRLOG("%s: failed to enable features 0x%"PRIx64"\n", name, features);
-
-		if (vhost_dev_unregister(&bvdev->vdev) != 0) {
-			SPDK_ERRLOG("%s: failed to remove device\n", name);
-		}
-
-		spdk_bdev_close(bvdev->bdev_desc);
-		ret = -1;
 		goto out;
 	}
 
