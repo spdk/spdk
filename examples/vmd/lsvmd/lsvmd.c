@@ -42,13 +42,19 @@ parse_args(int argc, char **argv)
 {
 	int op;
 
-	while ((op = getopt(argc, argv, "r:")) != -1) {
+	while ((op = getopt(argc, argv, "r:d")) != -1) {
 		switch (op) {
 		case 'r':
 			if (spdk_pci_addr_parse(&g_probe_addr, optarg)) {
 				SPDK_ERRLOG("Error parsing PCI address\n");
 				return 1;
 			}
+
+			break;
+
+		case 'd':
+			spdk_log_set_print_level(SPDK_LOG_DEBUG);
+			spdk_log_set_flag("vmd");
 			break;
 
 		default:
