@@ -69,23 +69,6 @@ ocf_get_cache_modename(ocf_cache_mode_t mode)
 	}
 }
 
-static int
-mngt_poll_fn(void *opaque)
-{
-	struct vbdev_ocf *vbdev = opaque;
-
-	if (vbdev->mngt_ctx.poller_fn) {
-		if (vbdev->mngt_ctx.timeout_ts &&
-		    spdk_get_ticks() >= vbdev->mngt_ctx.timeout_ts) {
-			vbdev_ocf_mngt_continue(vbdev, -ETIMEDOUT);
-		} else {
-			vbdev->mngt_ctx.poller_fn(vbdev);
-		}
-	}
-
-	return 0;
-}
-
 int
 vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
 		     vbdev_ocf_mngt_callback cb, void *cb_arg)
@@ -96,11 +79,6 @@ vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
 
 	memset(&vbdev->mngt_ctx, 0, sizeof(vbdev->mngt_ctx));
 
-	vbdev->mngt_ctx.poller = spdk_poller_register(mngt_poll_fn, vbdev, 200);
-	if (vbdev->mngt_ctx.poller == NULL) {
-		return -ENOMEM;
-	}
-
 	vbdev->mngt_ctx.current_step = path;
 	vbdev->mngt_ctx.cb = cb;
 	vbdev->mngt_ctx.cb_arg = cb_arg;
@@ -108,24 +86,6 @@ vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
 	(*vbdev->mngt_ctx.current_step)(vbdev);
 
 	return 0;
-}
-
-
-static void
-vbdev_ocf_mngt_poll_set_timeout(struct vbdev_ocf *vbdev, uint64_t millisec)
-{
-	uint64_t ticks;
-
-	ticks = millisec * spdk_get_ticks_hz() / 1000;
-	vbdev->mngt_ctx.timeout_ts = spdk_get_ticks() + ticks;
-}
-
-void
-vbdev_ocf_mngt_poll(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn fn)
-{
-	assert(vbdev->mngt_ctx.poller != NULL);
-	vbdev->mngt_ctx.poller_fn = fn;
-	vbdev_ocf_mngt_poll_set_timeout(vbdev, 5000);
 }
 
 void
@@ -141,8 +101,6 @@ vbdev_ocf_mngt_stop(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *rollback_path, i
 		(*vbdev->mngt_ctx.current_step)(vbdev);
 		return;
 	}
-
-	spdk_poller_unregister(&vbdev->mngt_ctx.poller);
 
 	if (vbdev->mngt_ctx.cb) {
 		vbdev->mngt_ctx.cb(vbdev->mngt_ctx.status, vbdev, vbdev->mngt_ctx.cb_arg);
@@ -161,7 +119,6 @@ vbdev_ocf_mngt_continue(struct vbdev_ocf *vbdev, int status)
 	assert((*vbdev->mngt_ctx.current_step) != NULL);
 
 	vbdev->mngt_ctx.status = status;
-	vbdev->mngt_ctx.poller_fn = NULL;
 
 	vbdev->mngt_ctx.current_step++;
 	if (*vbdev->mngt_ctx.current_step) {
