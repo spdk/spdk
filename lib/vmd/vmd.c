@@ -845,7 +845,8 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 			new_bus->self = new_dev;
 			new_dev->bus_object = new_bus;
 
-			if (slot_cap.bit_field.hotplug_capable) {
+			if (slot_cap.bit_field.hotplug_capable &&
+			    new_dev->pcie_cap->express_cap_register.bit_field.slot_implemented) {
 				new_bus->hotplug_buses = vmd_get_hotplug_bus_numbers(new_dev);
 				new_bus->subordinate_bus += new_bus->hotplug_buses;
 			}
@@ -858,8 +859,14 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 			vmd_add_bus_to_list(bus->vmd, new_bus);
 
 			/* Attach hot plug instance if HP is supported */
-			if (slot_cap.bit_field.hotplug_capable) {
-				new_dev->hp = vmd_new_hotplug(new_bus, new_bus->hotplug_buses);
+			/* Hot inserted SSDs can be assigned port bus of sub-ordinate + 1 */
+			SPDK_DEBUGLOG(SPDK_LOG_VMD, "bit_field.hotplug_capable:slot_implemented = %x:%x\n",
+				      slot_cap.bit_field.hotplug_capable,
+				      new_dev->pcie_cap->express_cap_register.bit_field.slot_implemented);
+
+			if (slot_cap.bit_field.hotplug_capable &&
+			    new_dev->pcie_cap->express_cap_register.bit_field.slot_implemented) {
+				new_dev->hp = vmd_new_hotplug(new_bus);
 			}
 
 			vmd_dev_init(new_dev);
