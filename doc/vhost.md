@@ -181,7 +181,7 @@ controller, at least 1 Namespace is required for each controller.
 
 ~~~{.sh}
 $rpc_py vhost_create_nvme_controller --cpumask 0x1 vhost.2 16
-$rpc_py add_vhost_nvme_ns vhost.2 Malloc0
+$rpc_py vhost_nvme_controller_add_ns vhost.2 Malloc0
 ~~~
 
 Users can use the following command to remove the controller, all the block
