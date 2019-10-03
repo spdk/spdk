@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a4ea73b_0319fd5d",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-03T11:26:55Z",
+      "side": 1,
+      "message": "You add here free_test_globals(), but you don\u0027t use init_test_globals() in this function.",
+      "range": {
+        "startLine": 513,
+        "startChar": 1,
+        "endLine": 513,
+        "endChar": 18
+      },
+      "revId": "742a885e09dcf0c5f7fba90ebf239f78eeb5ae56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a846230_099e8a8c",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-03T11:26:55Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 550,
+        "startChar": 1,
+        "endLine": 550,
+        "endChar": 21
+      },
+      "revId": "742a885e09dcf0c5f7fba90ebf239f78eeb5ae56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
