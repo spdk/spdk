@@ -385,3 +385,21 @@ vhost_register_unix_socket(const char *path, const char *ctrl_name,
 
 	return 0;
 }
+
+int
+vhost_get_mem_table(int vid, struct rte_vhost_memory **mem)
+{
+	return rte_vhost_get_mem_table(vid, mem);
+}
+
+int
+vhost_driver_unregister(const char *path)
+{
+	return rte_vhost_driver_unregister(path);
+}
+
+int
+vhost_get_negotiated_features(int vid, uint64_t *negotiated_features)
+{
+	return rte_vhost_get_negotiated_features(vid, negotiated_features);
+}
