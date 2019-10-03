@@ -16,6 +16,23 @@
       "revId": "66a9e5dbb9c57410bcb3c1fefd148552702bc3a5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7227f3a0_004db2f5",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-03T19:54:57Z",
+      "side": 1,
+      "message": "I think you need to make nvme_qpair_submit_request return EAGAIN or EBUSY or something when it needs to queue something up, and then do the queueing in the generic layer. That way you can just check the return code here.",
+      "revId": "66a9e5dbb9c57410bcb3c1fefd148552702bc3a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
