@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ed63c8f0_0e4182e1",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 13
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-03T11:29:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5dc03490_c63993a2",
+      "range": {
+        "startLine": 159,
+        "startChar": 100,
+        "endLine": 159,
+        "endChar": 193
+      },
+      "revId": "a28eabbddbdb9d4de57a8ab4ca0f9d781a54a39a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6972c4a1_701be06f",
         "filename": "scripts/vagrant/create_nvme_img.sh",
         "patchSetId": 13
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "54a10635_13b544b5",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-03T11:29:00Z",
+      "side": 1,
+      "message": "I fixed it and set 8.5GB that\u0027s look fine and will save developers space.",
+      "parentUuid": "6972c4a1_701be06f",
+      "range": {
+        "startLine": 50,
+        "startChar": 3,
+        "endLine": 50,
+        "endChar": 50
+      },
+      "revId": "a28eabbddbdb9d4de57a8ab4ca0f9d781a54a39a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4cb30194_b8f3c3fa",
         "filename": "scripts/vagrant/create_nvme_img.sh",
         "patchSetId": 13
@@ -68,6 +116,30 @@
       "revId": "a28eabbddbdb9d4de57a8ab4ca0f9d781a54a39a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78e46cdf_9afdf8e1",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-03T11:29:00Z",
+      "side": 1,
+      "message": "That\u0027s true, it was my mistake, removed now.",
+      "parentUuid": "4cb30194_b8f3c3fa",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 47
+      },
+      "revId": "a28eabbddbdb9d4de57a8ab4ca0f9d781a54a39a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
