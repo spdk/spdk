@@ -4502,7 +4502,7 @@ Example response:
 }
 ~~~
 
-## construct_vhost_nvme_controller {#rpc_construct_vhost_nvme_controller}
+## vhost_create_nvme_controller {#rpc_vhost_create_nvme_controller}
 
 Construct empty vhost NVMe controller.
 
@@ -4527,7 +4527,7 @@ Example request:
     "ctrlr": "VhostNvme0"
   },
   "jsonrpc": "2.0",
-  "method": "construct_vhost_nvme_controller",
+  "method": "vhost_create_nvme_controller",
   "id": 1
 }
 ~~~

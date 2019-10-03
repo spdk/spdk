@@ -58,7 +58,8 @@ def remove_vhost_scsi_target(client, ctrlr, scsi_target_num):
     return client.call('remove_vhost_scsi_target', params)
 
 
-def construct_vhost_nvme_controller(client, ctrlr, io_queues, cpumask=None):
+@deprecated_alias('construct_vhost_nvme_controller')
+def vhost_create_nvme_controller(client, ctrlr, io_queues, cpumask=None):
     """Construct vhost NVMe controller.
     Args:
         ctrlr: controller name
@@ -73,7 +74,7 @@ def construct_vhost_nvme_controller(client, ctrlr, io_queues, cpumask=None):
     if cpumask:
         params['cpumask'] = cpumask
 
-    return client.call('construct_vhost_nvme_controller', params)
+    return client.call('vhost_create_nvme_controller', params)
 
 
 def add_vhost_nvme_ns(client, ctrlr, bdev_name):

@@ -20,7 +20,7 @@ bdev_dict["bdev_virtio_attach_controller"] = []
 vhost_dict = OrderedDict()
 vhost_dict["construct_vhost_scsi_controller"] = []
 vhost_dict["construct_vhost_blk_controller"] = []
-vhost_dict["construct_vhost_nvme_controller"] = []
+vhost_dict["vhost_create_nvme_controller"] = []
 
 iscsi_dict = OrderedDict()
 iscsi_dict["iscsi_set_options"] = []
@@ -452,7 +452,7 @@ def get_vhost_nvme_json(config, section):
     vhost_nvme_json = []
     vhost_nvme_json.append({
         "params": to_json_params(params[:3]),
-        "method": "construct_vhost_nvme_controller"
+        "method": "vhost_create_nvme_controller"
     })
     for namespace in params[3][3]:
         vhost_nvme_json.append({
@@ -705,7 +705,7 @@ if __name__ == "__main__":
                 if match_section == "VhostScsi":
                     section_to_subsystem[match_section]["construct_vhost_scsi_controller"].append(item)
                 elif match_section == "VhostNvme":
-                    section_to_subsystem[match_section]["construct_vhost_nvme_controller"].append(item)
+                    section_to_subsystem[match_section]["vhost_create_nvme_controller"].append(item)
                 elif match_section == "Subsystem":
                     section_to_subsystem[match_section]["subsystems"].append(item)
                 else:

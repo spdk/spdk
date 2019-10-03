@@ -1908,17 +1908,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument("-r", "--readonly", action='store_true', help='Set controller as read-only')
     p.set_defaults(func=construct_vhost_blk_controller)
 
-    def construct_vhost_nvme_controller(args):
-        rpc.vhost.construct_vhost_nvme_controller(args.client,
-                                                  ctrlr=args.ctrlr,
-                                                  io_queues=args.io_queues,
-                                                  cpumask=args.cpumask)
+    def vhost_create_nvme_controller(args):
+        rpc.vhost.vhost_create_nvme_controller(args.client,
+                                               ctrlr=args.ctrlr,
+                                               io_queues=args.io_queues,
+                                               cpumask=args.cpumask)
 
-    p = subparsers.add_parser('construct_vhost_nvme_controller', help='Add new vhost controller')
+    p = subparsers.add_parser('vhost_create_nvme_controller', aliases=['vhost_create_nvme_controller'],
+                              help='Add new vhost controller')
     p.add_argument('ctrlr', help='controller name')
     p.add_argument('io_queues', help='number of IO queues for the controller', type=int)
     p.add_argument('--cpumask', help='cpu mask for this controller')
-    p.set_defaults(func=construct_vhost_nvme_controller)
+    p.set_defaults(func=vhost_create_nvme_controller)
 
     def add_vhost_nvme_ns(args):
         rpc.vhost.add_vhost_nvme_ns(args.client,

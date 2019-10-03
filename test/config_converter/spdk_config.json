@@ -383,7 +383,7 @@
             "io_queues": 2,
             "ctrlr": "naa.vhost.3"
           },
-          "method": "construct_vhost_nvme_controller"
+          "method": "vhost_create_nvme_controller"
         },
         {
           "params": {
