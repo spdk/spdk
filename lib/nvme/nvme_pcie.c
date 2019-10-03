@@ -1346,18 +1346,6 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 
 		TAILQ_REMOVE(&pqpair->outstanding_tr, tr, tq_list);
 		TAILQ_INSERT_HEAD(&pqpair->free_tr, tr, tq_list);
-
-		/*
-		 * If the controller is in the middle of resetting, don't
-		 *  try to submit queued requests here - let the reset logic
-		 *  handle that instead.
-		 */
-		if (!STAILQ_EMPTY(&qpair->queued_req) &&
-		    !qpair->ctrlr->is_resetting) {
-			req = STAILQ_FIRST(&qpair->queued_req);
-			STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
-			nvme_qpair_submit_request(qpair, req);
-		}
 	}
 }
 
