@@ -4650,8 +4650,6 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		}
 	}
 
-	data_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
-
 	/* AHS */
 	ahs_len = pdu->bhs.total_ahs_len * 4;
 	assert(ahs_len <= ISCSI_AHS_LEN);
@@ -4684,6 +4682,8 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 			return 0;
 		}
 	}
+
+	data_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
 
 	/* copy the actual data into local buffer */
 	if (pdu->data_valid_bytes < data_len) {
