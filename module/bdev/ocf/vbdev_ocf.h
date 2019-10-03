@@ -107,8 +107,6 @@ struct vbdev_ocf_mngt_ctx {
 	 * It gets incremented on each step until it dereferences to NULL */
 	vbdev_ocf_mngt_fn                  *current_step;
 
-	/* Poller, registered once per whole management operation */
-	struct spdk_poller                 *poller;
 	/* Function that gets invoked by poller on each iteration */
 	vbdev_ocf_mngt_fn                   poller_fn;
 	/* Poller timeout time stamp - when the poller should stop with error */
