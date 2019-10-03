@@ -22,6 +22,30 @@
       "revId": "7c63fc579ad1999263fadc18fd9c8006f9eb5bf1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95ceb9bb_cb190499",
+        "filename": "test/nvmf/target/nvme_cli.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-03T11:48:20Z",
+      "side": 1,
+      "message": "This was sugested by https://github.com/koalaman/shellcheck/wiki/SC2022\nTheoretically your proposition will work fine.\nShould I change it ?",
+      "parentUuid": "bddee09c_5a8a0b15",
+      "range": {
+        "startLine": 62,
+        "startChar": 47,
+        "endLine": 62,
+        "endChar": 48
+      },
+      "revId": "7c63fc579ad1999263fadc18fd9c8006f9eb5bf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
