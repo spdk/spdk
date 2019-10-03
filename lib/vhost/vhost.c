@@ -664,7 +664,7 @@ vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 		return -EBUSY;
 	}
 
-	if (vdev->registered && rte_vhost_driver_unregister(vdev->path) != 0) {
+	if (vdev->registered && vhost_driver_unregister(vdev->path) != 0) {
 		SPDK_ERRLOG("Could not unregister controller %s with vhost library\n"
 			    "Check if domain socket %s still exists\n",
 			    vdev->name, vdev->path);
@@ -1074,12 +1074,12 @@ vhost_start_device_cb(int vid)
 		vsession->max_queues = i + 1;
 	}
 
-	if (rte_vhost_get_negotiated_features(vid, &vsession->negotiated_features) != 0) {
+	if (vhost_get_negotiated_features(vid, &vsession->negotiated_features) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
 		goto out;
 	}
 
-	if (rte_vhost_get_mem_table(vid, &vsession->mem) != 0) {
+	if (vhost_get_mem_table(vid, &vsession->mem) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
 		goto out;
 	}
@@ -1436,7 +1436,7 @@ session_shutdown(void *arg)
 	struct spdk_vhost_dev *vdev = NULL;
 
 	TAILQ_FOREACH(vdev, &g_vhost_devices, tailq) {
-		rte_vhost_driver_unregister(vdev->path);
+		vhost_driver_unregister(vdev->path);
 		vdev->registered = false;
 	}
 
