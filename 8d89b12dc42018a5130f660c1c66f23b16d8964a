@@ -16,6 +16,24 @@
       "revId": "8d89b12dc42018a5130f660c1c66f23b16d8964a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12ca9a05_03203b0c",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1249,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-03T07:29:21Z",
+      "side": 1,
+      "message": "This is a good question. For current code I think we should add this cleanup for case from line 1205. I\u0027m not that sure for case from line 1228. In upcoming patches I\u0027m adding memory allocation which may fail and in such case we need that new function for sure.",
+      "parentUuid": "63d88d4d_50b61893",
+      "revId": "8d89b12dc42018a5130f660c1c66f23b16d8964a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
