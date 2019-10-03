@@ -22,6 +22,30 @@
       "revId": "4536226fb1b0771c903e263c65845cdba686c96f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc681735_4714b2d8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011829
+      },
+      "writtenOn": "2019-10-03T09:18:16Z",
+      "side": 1,
+      "message": "Hi Seth, thanks for your comment. As you say, if it was just about getting the tgt pointer then the ctx argument would not be really necessary. In my case the context structure is holding a global state related to nvmf target: tgt pointer, trid, tgt opts, acceptor poller pointer and nvmf poll group pointer. Though the only thing which is used from this state in the new_qpair() is the poll group pointer. So if there was a way how to obtain all poll groups for given target, then I would not need the context parameter. I haven\u0027t found such a function in public api. Though even if it existed, I\u0027m not sure it\u0027s the right solution. It works only until you don\u0027t need any other information from tgt state to make the right decision about which poll group to schedule the new qpair to.\n\nRe using globals: Rust is not very good with globals but apart from that if we consider a general case of having multiple nvmf targets, each with its own poll groups, then this would turn into a global lookup table with two levels. First I would have to find a target that matches the tgt passed to new_qpair() and then select pg from the list of pgs. That sounds like a lot of work for something that can be solved by passing a context parameter.",
+      "parentUuid": "5829ac30_99799b65",
+      "range": {
+        "startLine": 9,
+        "startChar": 29,
+        "endLine": 10,
+        "endChar": 6
+      },
+      "revId": "4536226fb1b0771c903e263c65845cdba686c96f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
