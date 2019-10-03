@@ -4557,57 +4557,29 @@ spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	switch (opcode) {
 	case ISCSI_OP_NOPOUT:
 		rc = iscsi_op_nopout(conn, pdu);
-		if (rc < 0) {
-			SPDK_ERRLOG("spdk_iscsi_op_nopout() failed\n");
-			return rc;
-		}
 		break;
 
 	case ISCSI_OP_SCSI:
 		rc = iscsi_op_scsi(conn, pdu);
-		if (rc < 0) {
-			SPDK_ERRLOG("spdk_iscsi_op_scsi() failed\n");
-			return rc;
-		}
 		break;
 	case ISCSI_OP_TASK:
 		rc = iscsi_op_task(conn, pdu);
-		if (rc < 0) {
-			SPDK_ERRLOG("spdk_iscsi_op_task() failed\n");
-			return rc;
-		}
 		break;
 
 	case ISCSI_OP_TEXT:
 		rc = iscsi_op_text(conn, pdu);
-		if (rc < 0) {
-			SPDK_ERRLOG("spdk_iscsi_op_text() failed\n");
-			return rc;
-		}
 		break;
 
 	case ISCSI_OP_LOGOUT:
 		rc = iscsi_op_logout(conn, pdu);
-		if (rc < 0) {
-			SPDK_ERRLOG("spdk_iscsi_op_logout() failed\n");
-			return rc;
-		}
 		break;
 
 	case ISCSI_OP_SCSI_DATAOUT:
 		rc = iscsi_op_data(conn, pdu);
-		if (rc < 0) {
-			SPDK_ERRLOG("spdk_iscsi_op_data() failed\n");
-			return rc;
-		}
 		break;
 
 	case ISCSI_OP_SNACK:
 		rc = iscsi_op_snack(conn, pdu);
-		if (rc < 0) {
-			SPDK_ERRLOG("spdk_iscsi_op_snack() failed\n");
-			return rc;
-		}
 		break;
 
 	default:
@@ -4615,7 +4587,14 @@ spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 	}
 
-	return 0;
+	if (rc < 0) {
+		SPDK_ERRLOG("processing PDU (opcode=%x) failed on %s(%s)\n",
+			    opcode,
+			    conn->target_port != NULL ? spdk_scsi_port_get_name(conn->target_port) : "NULL",
+			    conn->initiator_port != NULL ? spdk_scsi_port_get_name(conn->initiator_port) : "NULL");
+	}
+
+	return rc;
 }
 
 int
