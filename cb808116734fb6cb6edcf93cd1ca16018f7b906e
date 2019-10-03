@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "381ac228_5eca3e83",
+        "filename": "module/bdev/ocf/utils.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-03T09:36:13Z",
+      "side": 1,
+      "message": "Even if accurate, reading this comment for function is as complex as reading the function itself.\nLets leave it as is right now.\n\nIn the future if this interface gets more complex, maybe it would be better to describe it in doxygen-like fashion. (whole header)",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 52
+      },
+      "revId": "cb808116734fb6cb6edcf93cd1ca16018f7b906e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
