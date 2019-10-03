@@ -460,7 +460,7 @@ def get_vhost_nvme_json(config, section):
                 "ctrlr": params[0][3],
                 "bdev_name": namespace,
             },
-            "method": "add_vhost_nvme_ns"
+            "method": "vhost_nvme_controller_add_ns"
         })
 
     return vhost_nvme_json
