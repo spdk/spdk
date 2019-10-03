@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90f3d4d8_9a7053ec",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-03T15:51:30Z",
+      "side": 1,
+      "message": "I don\u0027t totally see the purpose of while loop using i, why not just drain the queue until empty or until you break because one couldn\u0027t be resubmitted.  Keep the counter and then after the loop assert that i \u003d\u003d ret, or just print a warn if not? I could be missing something though....",
+      "revId": "66a9e5dbb9c57410bcb3c1fefd148552702bc3a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
