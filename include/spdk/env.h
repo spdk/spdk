@@ -655,6 +655,7 @@ struct spdk_pci_device {
 	struct spdk_pci_addr		addr;
 	struct spdk_pci_id		id;
 	int				socket_id;
+	const char			*type;
 
 	int (*map_bar)(struct spdk_pci_device *dev, uint32_t bar,
 		       void **mapped_addr, uint64_t *phys_addr, uint64_t *size);
@@ -1100,6 +1101,15 @@ void spdk_pci_hook_device(struct spdk_pci_driver *drv, struct spdk_pci_device *d
  * \param dev fully initialized PCI device struct
  */
 void spdk_pci_unhook_device(struct spdk_pci_device *dev);
+
+/**
+ * Return the type of the PCI device.
+ *
+ * \param dev PCI device
+ *
+ * \return string representing the type of the device
+ */
+const char *spdk_pci_device_get_type(const struct spdk_pci_device *dev);
 
 /**
  * Remove any CPU affinity from the current thread.

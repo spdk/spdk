@@ -334,6 +334,7 @@ spdk_pci_device_init(struct rte_pci_driver *_drv,
 	dev->id.subvendor_id = _dev->id.subsystem_vendor_id;
 	dev->id.subdevice_id = _dev->id.subsystem_device_id;
 	dev->socket_id = _dev->device.numa_node;
+	dev->type = "pci";
 
 	dev->map_bar = spdk_map_bar_rte;
 	dev->unmap_bar = spdk_unmap_bar_rte;
@@ -886,4 +887,10 @@ spdk_pci_unhook_device(struct spdk_pci_device *dev)
 {
 	assert(!dev->internal.attached);
 	TAILQ_REMOVE(&g_pci_devices, dev, internal.tailq);
+}
+
+const char *
+spdk_pci_device_get_type(const struct spdk_pci_device *dev)
+{
+	return dev->type;
 }
