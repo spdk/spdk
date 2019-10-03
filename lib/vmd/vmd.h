@@ -188,7 +188,7 @@ vmd_hp_enable_hotplug(struct vmd_hot_plug *hp)
 }
 
 static inline struct vmd_hot_plug *
-vmd_new_hotplug(struct vmd_pci_bus *newBus, uint8_t reservedBuses)
+vmd_new_hotplug(struct vmd_pci_bus *newBus)
 {
 	return NULL;
 }
