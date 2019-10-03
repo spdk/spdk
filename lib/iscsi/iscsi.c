@@ -4343,18 +4343,16 @@ iscsi_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 }
 
 static int
-iscsi_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_task	*task, *subtask;
 	struct iscsi_bhs_data_out *reqh;
 	struct spdk_scsi_lun	*lun_dev;
 	uint32_t transfer_tag;
 	uint32_t task_tag;
-	uint32_t transfer_len;
 	uint32_t DataSN;
 	uint32_t buffer_offset;
-	uint32_t len;
-	int F_bit;
+	uint32_t data_len;
 	int rc;
 	int reject_reason = ISCSI_REASON_INVALID_PDU_FIELD;
 
@@ -4369,11 +4367,11 @@ iscsi_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	reqh = (struct iscsi_bhs_data_out *)&pdu->bhs;
-	F_bit = !!(reqh->flags & ISCSI_FLAG_FINAL);
 	transfer_tag = from_be32(&reqh->ttt);
 	task_tag = from_be32(&reqh->itt);
 	DataSN = from_be32(&reqh->data_sn);
 	buffer_offset = from_be32(&reqh->buffer_offset);
+	data_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
 
 	task = get_transfer_task(conn, transfer_tag);
 	if (task == NULL) {
@@ -4383,7 +4381,7 @@ iscsi_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	lun_dev = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
 
-	if (pdu->data_segment_len > task->desired_data_transfer_length) {
+	if (data_len > task->desired_data_transfer_length) {
 		SPDK_ERRLOG("the dataout pdu data length is larger than the value sent by R2T PDU\n");
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
@@ -4409,17 +4407,79 @@ iscsi_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 
+	if (task->current_r2t_length + data_len > conn->sess->MaxBurstLength) {
+		SPDK_ERRLOG("R2T burst(%u) > MaxBurstLength(%u)\n",
+			    task->current_r2t_length + data_len,
+			    conn->sess->MaxBurstLength);
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	subtask = spdk_iscsi_task_get(conn, task, spdk_iscsi_task_cpl);
+	if (subtask == NULL) {
+		SPDK_ERRLOG("Unable to acquire subtask\n");
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+	subtask->scsi.offset = buffer_offset;
+	subtask->scsi.length = data_len;
+	spdk_iscsi_task_associate_pdu(subtask, pdu);
+
+	if (lun_dev == NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "LUN %d is removed, complete the task immediately\n",
+			      task->lun_id);
+		subtask->scsi.transfer_len = subtask->scsi.length;
+		spdk_scsi_task_process_null_lun(&subtask->scsi);
+		spdk_iscsi_task_cpl(&subtask->scsi);
+		return 0;
+	}
+
+	pdu->task = subtask;
+	return 0;
+
+send_r2t_recovery_return:
+	rc = iscsi_send_r2t_recovery(conn, task, task->acked_r2tsn, true);
+	if (rc == 0) {
+		return 0;
+	}
+
+reject_return:
+	return iscsi_reject(conn, pdu, reject_reason);
+}
+
+static int
+iscsi_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	struct spdk_iscsi_task	*task, *subtask;
+	struct iscsi_bhs_data_out *reqh;
+	uint32_t transfer_len;
+	uint32_t len;
+	int F_bit;
+	int rc;
+
+	rc = iscsi_pdu_hdr_op_data(conn, pdu);
+	if (rc != 0 || pdu->is_rejected || pdu->task == NULL) {
+		return rc;
+	}
+
+	subtask = pdu->task;
+	task = spdk_iscsi_task_get_primary(subtask);
+	assert(task != subtask);
+
+	if (spdk_scsi_dev_get_lun(conn->dev, task->lun_id) == NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "LUN %d is removed, complete the task immediately\n",
+			      task->lun_id);
+		subtask->scsi.transfer_len = subtask->scsi.length;
+		spdk_scsi_task_process_null_lun(&subtask->scsi);
+		spdk_iscsi_task_cpl(&subtask->scsi);
+		return 0;
+	}
+
+	reqh = (struct iscsi_bhs_data_out *)&pdu->bhs;
+	F_bit = !!(reqh->flags & ISCSI_FLAG_FINAL);
+
 	transfer_len = task->scsi.transfer_len;
 	task->current_r2t_length += pdu->data_segment_len;
 	task->next_expected_r2t_offset += pdu->data_segment_len;
 	task->r2t_datasn++;
-
-	if (task->current_r2t_length > conn->sess->MaxBurstLength) {
-		SPDK_ERRLOG("R2T burst(%u) > MaxBurstLength(%u)\n",
-			    task->current_r2t_length,
-			    conn->sess->MaxBurstLength);
-		return SPDK_ISCSI_CONNECTION_FATAL;
-	}
 
 	if (F_bit) {
 		/*
@@ -4429,19 +4489,11 @@ iscsi_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		task->current_r2t_length = 0;
 	}
 
-	subtask = spdk_iscsi_task_get(conn, task, spdk_iscsi_task_cpl);
-	if (subtask == NULL) {
-		SPDK_ERRLOG("Unable to acquire subtask\n");
-		return SPDK_ISCSI_CONNECTION_FATAL;
-	}
-	subtask->scsi.offset = buffer_offset;
-	subtask->scsi.length = pdu->data_segment_len;
 	if (spdk_likely(!pdu->dif_insert_or_strip)) {
 		spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_segment_len);
 	} else {
 		spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_buf_len);
 	}
-	spdk_iscsi_task_associate_pdu(subtask, pdu);
 
 	if (task->next_expected_r2t_offset == transfer_len) {
 		task->acked_r2tsn++;
@@ -4457,26 +4509,8 @@ iscsi_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		task->next_r2t_offset += len;
 	}
 
-	if (lun_dev == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "LUN %d is removed, complete the task immediately\n",
-			      task->lun_id);
-		subtask->scsi.transfer_len = subtask->scsi.length;
-		spdk_scsi_task_process_null_lun(&subtask->scsi);
-		spdk_iscsi_task_cpl(&subtask->scsi);
-		return 0;
-	}
-
 	iscsi_queue_task(conn, subtask);
 	return 0;
-
-send_r2t_recovery_return:
-	rc = iscsi_send_r2t_recovery(conn, task, task->acked_r2tsn, true);
-	if (rc == 0) {
-		return 0;
-	}
-
-reject_return:
-	return iscsi_reject(conn, pdu, reject_reason);
 }
 
 static void
