@@ -1702,6 +1702,12 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 		goto err_exit;
 	}
 
+	/* rdma wr specifics */
+	nvmf_rdma_setup_wr(rdma_req);
+
+	/* set the number of outstanding data WRs for this request. */
+	rdma_req->num_outstanding_data_wr = 1;
+
 	return rc;
 
 err_exit:
@@ -1867,12 +1873,6 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 
 		/* backward compatible */
 		req->data = req->iov[0].iov_base;
-
-		/* rdma wr specifics */
-		nvmf_rdma_setup_wr(rdma_req);
-
-		/* set the number of outstanding data WRs for this request. */
-		rdma_req->num_outstanding_data_wr = 1;
 
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Request %p took %d buffer/s from central pool\n", rdma_req,
 			      req->iovcnt);
