@@ -4443,9 +4443,11 @@ remove_acked_pdu(struct spdk_iscsi_conn *conn, uint32_t ExpStatSN)
 	}
 }
 
-int
-spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+static int
+iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
+	uint32_t crc32c;
+	int data_len;
 	int opcode;
 	int rc;
 	struct spdk_iscsi_pdu *rsp_pdu = NULL;
@@ -4456,6 +4458,31 @@ spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	if (pdu == NULL) {
 		return -1;
+	}
+
+	data_len = pdu->data_segment_len;
+
+	/* check digest */
+	if (conn->header_digest) {
+		crc32c = spdk_iscsi_pdu_calc_header_digest(pdu);
+		rc = MATCH_DIGEST_WORD(pdu->header_digest, crc32c);
+		if (rc == 0) {
+			SPDK_ERRLOG("header digest error (%s)\n", conn->initiator_name);
+			return SPDK_ISCSI_CONNECTION_FATAL;
+		}
+	}
+	if (conn->data_digest && data_len != 0) {
+		crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
+		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
+		if (rc == 0) {
+			SPDK_ERRLOG("data digest error (%s)\n", conn->initiator_name);
+			return SPDK_ISCSI_CONNECTION_FATAL;
+		}
+	}
+
+	if (conn->is_logged_out) {
+		SPDK_ERRLOG("pdu received after logout\n");
+		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 
 	opcode = pdu->bhs.opcode;
@@ -4588,7 +4615,6 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_pdu *pdu;
 	struct spdk_mempool *pool;
-	uint32_t crc32c;
 	int ahs_len;
 	int data_len;
 	int rc;
@@ -4711,31 +4737,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 	spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->id, pdu->data_valid_bytes,
 			  (uintptr_t)pdu, pdu->bhs.opcode);
 
-	/* check digest */
-	if (conn->header_digest) {
-		crc32c = spdk_iscsi_pdu_calc_header_digest(pdu);
-		rc = MATCH_DIGEST_WORD(pdu->header_digest, crc32c);
-		if (rc == 0) {
-			SPDK_ERRLOG("header digest error (%s)\n", conn->initiator_name);
-			goto error;
-		}
-	}
-	if (conn->data_digest && data_len != 0) {
-		crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
-		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
-		if (rc == 0) {
-			SPDK_ERRLOG("data digest error (%s)\n", conn->initiator_name);
-			goto error;
-		}
-	}
-
-	if (conn->is_logged_out) {
-		SPDK_ERRLOG("pdu received after logout\n");
-		spdk_put_pdu(pdu);
-		return SPDK_ISCSI_CONNECTION_FATAL;
-	}
-
-	rc = spdk_iscsi_execute(conn, pdu);
+	rc = iscsi_execute(conn, pdu);
 	spdk_put_pdu(pdu);
 	if (rc < 0) {
 		return SPDK_ISCSI_CONNECTION_FATAL;
