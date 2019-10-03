@@ -1003,4 +1003,16 @@ spdk_vmd_init(void)
 	return spdk_pci_enumerate(spdk_pci_vmd_get_driver(), vmd_enum_cb, &g_vmd_container);
 }
 
+bool
+spdk_pci_device_is_vmd(const struct spdk_pci_device *pci_device)
+{
+	return pci_device->internal.driver == spdk_pci_vmd_get_driver();
+}
+
+bool
+spdk_pci_device_is_behind_vmd(const struct spdk_pci_device *pci_device)
+{
+	return pci_device->parent != NULL && spdk_pci_device_is_vmd(pci_device->parent);
+}
+
 SPDK_LOG_REGISTER_COMPONENT("vmd", SPDK_LOG_VMD)
