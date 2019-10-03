@@ -3309,22 +3309,6 @@ iscsi_queue_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	spdk_scsi_dev_queue_task(conn->dev, &task->scsi);
 }
 
-static void
-iscsi_queue_mgmt_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
-{
-	struct spdk_scsi_lun *lun;
-
-	lun = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
-	if (lun == NULL) {
-		task->scsi.response = SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN;
-		spdk_iscsi_task_mgmt_response(conn, task);
-		spdk_iscsi_task_put(task);
-		return;
-	}
-
-	spdk_scsi_dev_queue_mgmt_task(conn->dev, &task->scsi);
-}
-
 int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_task *task;
@@ -3809,6 +3793,22 @@ iscsi_conn_abort_queued_datain_tasks(struct spdk_iscsi_conn *conn,
 	}
 
 	return 0;
+}
+
+static void
+iscsi_queue_mgmt_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
+{
+	struct spdk_scsi_lun *lun;
+
+	lun = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
+	if (lun == NULL) {
+		task->scsi.response = SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN;
+		spdk_iscsi_task_mgmt_response(conn, task);
+		spdk_iscsi_task_put(task);
+		return;
+	}
+
+	spdk_scsi_dev_queue_mgmt_task(conn->dev, &task->scsi);
 }
 
 static int
