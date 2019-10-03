@@ -152,7 +152,9 @@ struct vmd_adapter {
 	uint32_t is_ready : 1;
 	uint32_t processing_hp : 1;
 	uint32_t max_payload_size: 3;
-	uint32_t rsv : 6;
+	uint32_t root_port_updated : 1;
+	uint32_t scan_completed : 1;
+	uint32_t rsv : 4;
 
 	/* end devices attached to vmd adapters */
 	struct vmd_pci_device *target[MAX_VMD_TARGET];

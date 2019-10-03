@@ -82,6 +82,23 @@ vmd_align_base_addrs(struct vmd_adapter *vmd, uint32_t alignment)
 	}
 }
 
+static bool
+vmd_device_is_enumerated(const struct vmd_pci_device *vmd_device)
+{
+	return vmd_device->header->one.prefetch_base_upper == VMD_UPPER_BASE_SIGNATURE &&
+	       vmd_device->header->one.prefetch_limit_upper == VMD_UPPER_LIMIT_SIGNATURE;
+}
+
+static bool
+vmd_device_is_root_port(const struct vmd_pci_device *vmd_device)
+{
+	return vmd_device->header->common.vendor_id == 0x8086 &&
+	       (vmd_device->header->common.device_id == 0x2030 ||
+		vmd_device->header->common.device_id == 0x2031 ||
+		vmd_device->header->common.device_id == 0x2032 ||
+		vmd_device->header->common.device_id == 0x2033);
+}
+
 /*
  *  Allocates an address from vmd membar for the input memory size
  *  vmdAdapter - vmd adapter object
@@ -143,10 +160,24 @@ vmd_is_end_device(struct vmd_pci_device *dev)
 static void
 vmd_update_base_limit_register(struct vmd_pci_device *dev, uint16_t base, uint16_t limit)
 {
-	struct vmd_pci_bus *bus = dev->parent;
+	struct vmd_pci_bus *bus;
 	struct vmd_pci_device *bridge;
 
 	if (base == 0 ||  limit == 0) {
+		return;
+	}
+
+	if (dev->header->common.header_type == PCI_HEADER_TYPE_BRIDGE) {
+		bus = dev->bus_object;
+	} else {
+		bus = dev->parent;
+	}
+
+	bridge = bus->self;
+	SPDK_DEBUGLOG(SPDK_LOG_VMD, "base:limit = %x:%x\n", bridge->header->one.mem_base,
+		      bridge->header->one.mem_limit);
+
+	if (dev->bus->vmd->scan_completed) {
 		return;
 	}
 
@@ -165,6 +196,18 @@ vmd_update_base_limit_register(struct vmd_pci_device *dev, uint16_t base, uint16
 		}
 
 		bus = bus->parent;
+	}
+}
+
+static uint64_t
+vmd_get_base_addr(struct vmd_pci_device *dev, uint32_t index)
+{
+	struct vmd_pci_bus *bus = dev->parent;
+
+	if (dev->header_type == PCI_HEADER_TYPE_BRIDGE) {
+		return dev->header->zero.BAR[index] & ~0xf;
+	} else {
+		return (uint64_t)bus->self->header->one.mem_base << 16;
 	}
 }
 
@@ -203,7 +246,13 @@ vmd_assign_base_addrs(struct vmd_pci_device *dev)
 		}
 		mem_attr = dev->bar[i].size & PCI_BASE_ADDR_MASK;
 		dev->bar[i].size = TWOS_COMPLEMENT(dev->bar[i].size & PCI_BASE_ADDR_MASK);
-		dev->bar[i].start = vmd_allocate_base_addr(vmd, dev, dev->bar[i].size);
+
+		if (vmd->scan_completed) {
+			dev->bar[i].start = vmd_get_base_addr(dev, i);
+		} else {
+			dev->bar[i].start = vmd_allocate_base_addr(vmd, dev, dev->bar[i].size);
+		}
+
 		dev->header->zero.BAR[i] = (uint32_t)dev->bar[i].start;
 
 		if (!dev->bar[i].start) {
@@ -329,6 +378,73 @@ vmd_read_config_space(struct vmd_pci_device *dev)
 			DEVICE_SERIAL_NUMBER_CAP_ID);
 }
 
+static void
+vmd_update_scan_info(struct vmd_pci_device *dev)
+{
+	struct vmd_adapter *vmd_adapter = dev->bus->vmd;
+
+	if (vmd_adapter->root_port_updated) {
+		return;
+	}
+
+	if (dev->header_type == PCI_HEADER_TYPE_NORMAL) {
+		return;
+	}
+
+	if (vmd_device_is_root_port(dev)) {
+		vmd_adapter->root_port_updated = 1;
+		SPDK_DEBUGLOG(SPDK_LOG_VMD, "root_port_updated = %d\n",
+			      vmd_adapter->root_port_updated);
+		SPDK_DEBUGLOG(SPDK_LOG_VMD, "upper:limit = %x : %x\n",
+			      dev->header->one.prefetch_base_upper,
+			      dev->header->one.prefetch_limit_upper);
+		if (vmd_device_is_enumerated(dev)) {
+			vmd_adapter->scan_completed = 1;
+			SPDK_DEBUGLOG(SPDK_LOG_VMD, "scan_completed = %d\n",
+				      vmd_adapter->scan_completed);
+		}
+	}
+}
+
+static void
+vmd_reset_base_limit_registers(struct vmd_pci_device *dev)
+{
+	uint32_t reg __attribute__((unused));
+
+	if (dev->header_type == PCI_HEADER_TYPE_NORMAL) {
+		return;
+	}
+
+	/*
+	 * Writes to the pci config space are posted writes.
+	 * To ensure transaction reaches its destination
+	 * before another write is posted, an immediate read
+	 * of the written value should be performed.
+	 */
+	dev->header->one.mem_base = 0xfff0;
+	reg = dev->header->one.mem_base;
+	dev->header->one.mem_limit = 0x0;
+	reg = dev->header->one.mem_limit;
+	dev->header->one.prefetch_base = 0x0;
+	reg = dev->header->one.prefetch_base;
+	dev->header->one.prefetch_limit = 0x0;
+	reg = dev->header->one.prefetch_limit;
+	dev->header->one.prefetch_base_upper = 0x0;
+	reg = dev->header->one.prefetch_base_upper;
+	dev->header->one.prefetch_limit_upper = 0x0;
+	reg = dev->header->one.prefetch_limit_upper;
+	dev->header->one.io_base_upper = 0x0;
+	reg = dev->header->one.io_base_upper;
+	dev->header->one.io_limit_upper = 0x0;
+	reg = dev->header->one.io_limit_upper;
+	dev->header->one.primary = 0;
+	reg = dev->header->one.primary;
+	dev->header->one.secondary = 0;
+	reg = dev->header->one.secondary;
+	dev->header->one.subordinate = 0;
+	reg = dev->header->one.subordinate;
+}
+
 static struct vmd_pci_device *
 vmd_alloc_dev(struct vmd_pci_bus *bus, uint32_t devfn)
 {
@@ -336,7 +452,6 @@ vmd_alloc_dev(struct vmd_pci_bus *bus, uint32_t devfn)
 	struct pci_header volatile *header;
 	uint8_t header_type;
 	uint32_t rev_class;
-	uint32_t reg __attribute__((unused));
 
 	header = (struct pci_header * volatile)(bus->vmd->cfg_vaddr +
 						CONFIG_OFFSET_ADDR(bus->bus_number, devfn, 0, 0));
@@ -368,34 +483,10 @@ vmd_alloc_dev(struct vmd_pci_bus *bus, uint32_t devfn)
 	dev->header_type = header_type & 0x7;
 
 	if (header_type == PCI_HEADER_TYPE_BRIDGE) {
-		dev->header->one.mem_base = 0xfff0;
-		/*
-		 * Writes to the pci config space are posted writes.
-		 * To ensure transaction reaches its destination
-		 * before another write is posted, an immediate read
-		 * of the written value should be performed.
-		 */
-		reg = dev->header->one.mem_base;
-		dev->header->one.mem_limit = 0x0;
-		reg = dev->header->one.mem_limit;
-		dev->header->one.prefetch_base = 0x0;
-		reg = dev->header->one.prefetch_base;
-		dev->header->one.prefetch_limit = 0x0;
-		reg = dev->header->one.prefetch_limit;
-		dev->header->one.prefetch_base_upper = 0x0;
-		reg = dev->header->one.prefetch_base_upper;
-		dev->header->one.prefetch_limit_upper = 0x0;
-		reg = dev->header->one.prefetch_limit_upper;
-		dev->header->one.io_base_upper = 0x0;
-		reg = dev->header->one.io_base_upper;
-		dev->header->one.io_limit_upper = 0x0;
-		reg = dev->header->one.io_limit_upper;
-		dev->header->one.primary = 0;
-		reg = dev->header->one.primary;
-		dev->header->one.secondary = 0;
-		reg = dev->header->one.secondary;
-		dev->header->one.subordinate = 0;
-		reg = dev->header->one.subordinate;
+		vmd_update_scan_info(dev);
+		if (!dev->bus->vmd->scan_completed) {
+			vmd_reset_base_limit_registers(dev);
+		}
 	}
 
 	vmd_read_config_space(dev);
@@ -850,41 +941,63 @@ vmd_print_pci_info(struct vmd_pci_device *dev)
 }
 
 static void
-vmd_pci_print(struct vmd_pci_bus *bus_list)
+vmd_cache_scan_info(struct vmd_pci_device *dev)
 {
-	struct vmd_pci_bus *bus = bus_list;
-	struct vmd_pci_device *dev;
+	uint32_t reg __attribute__((unused));
 
-	SPDK_INFOLOG(SPDK_LOG_VMD, "\n ...PCIE devices attached to VMD %04x:%02x:%02x:%x...\n",
-		     bus_list->vmd->pci.addr.domain, bus_list->vmd->pci.addr.bus,
-		     bus_list->vmd->pci.addr.dev, bus_list->vmd->pci.addr.func);
-	SPDK_INFOLOG(SPDK_LOG_VMD, "----------------------------------------------\n");
+	if (dev->header_type == PCI_HEADER_TYPE_NORMAL) {
+		return;
+	}
 
-	while (bus != NULL) {
-		vmd_print_pci_info(bus->self);
-		dev = bus->dev_list;
-		while (dev != NULL) {
-			vmd_print_pci_info(dev);
-			dev = dev->next;
-		}
-		bus = bus->next;
+	SPDK_DEBUGLOG(SPDK_LOG_VMD, "vendor/device id:%x:%x\n", dev->header->common.vendor_id,
+		      dev->header->common.device_id);
+
+	if (vmd_device_is_root_port(dev)) {
+		dev->header->one.prefetch_base_upper = VMD_UPPER_BASE_SIGNATURE;
+		reg = dev->header->one.prefetch_base_upper;
+		dev->header->one.prefetch_limit_upper = VMD_UPPER_LIMIT_SIGNATURE;
+		reg = dev->header->one.prefetch_limit_upper;
+
+		SPDK_DEBUGLOG(SPDK_LOG_VMD, "prefetch: %x:%x\n",
+			      dev->header->one.prefetch_base_upper,
+			      dev->header->one.prefetch_limit_upper);
 	}
 }
 
 static uint8_t
 vmd_scan_pcibus(struct vmd_pci_bus *bus)
 {
+	struct vmd_pci_bus *bus_entry;
+	struct vmd_pci_device *dev;
 	uint8_t dev_cnt;
 
 	g_end_device_count = 0;
 	vmd_add_bus_to_list(bus->vmd, bus);
 	bus->vmd->next_bus_number = bus->bus_number + 1;
 	dev_cnt = vmd_scan_single_bus(bus, NULL);
+	bus_entry = bus->vmd->bus_list;
 
-	SPDK_DEBUGLOG(SPDK_LOG_VMD, "\tVMD scan found %u devices\n", dev_cnt);
-	SPDK_DEBUGLOG(SPDK_LOG_VMD, "\tVMD scan found %u END DEVICES\n", g_end_device_count);
+	SPDK_DEBUGLOG(SPDK_LOG_VMD, "VMD scan found %u devices\n", dev_cnt);
+	SPDK_DEBUGLOG(SPDK_LOG_VMD, "VMD scan found %u END DEVICES\n", g_end_device_count);
 
-	vmd_pci_print(bus->vmd->bus_list);
+	SPDK_INFOLOG(SPDK_LOG_VMD, "PCIe devices attached to VMD %04x:%02x:%02x:%x...\n",
+		     bus_entry->vmd->pci.addr.domain, bus_entry->vmd->pci.addr.bus,
+		     bus_entry->vmd->pci.addr.dev, bus_entry->vmd->pci.addr.func);
+
+	while (bus_entry != NULL) {
+		if (bus_entry->self != NULL) {
+			vmd_print_pci_info(bus_entry->self);
+			vmd_cache_scan_info(bus_entry->self);
+		}
+
+		dev = bus_entry->dev_list;
+		while (dev != NULL) {
+			vmd_print_pci_info(dev);
+			dev = dev->next;
+		}
+
+		bus_entry = bus_entry->next;
+	}
 
 	return dev_cnt;
 }
