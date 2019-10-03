@@ -331,6 +331,12 @@ int vhost_set_config_cb(int vid, uint8_t *config, uint32_t offset,
 #endif
 
 /*
+ * Memory registration functions used in start/stop device callbacks
+ */
+void vhost_session_mem_register(struct rte_vhost_memory *mem);
+void vhost_session_mem_unregister(struct rte_vhost_memory *mem);
+
+/*
  * Call a function for each session of the provided vhost device.
  * The function will be called one-by-one on each session's thread.
  *
