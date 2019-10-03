@@ -199,16 +199,17 @@ remove_core_cmpl(void *priv, int error)
 
 /* Try to lock cache, then remove core */
 static void
-remove_core_poll(struct vbdev_ocf *vbdev)
+remove_core_cache_lock_cmpl(ocf_cache_t cache, void *priv, int error)
 {
-	int rc;
+	struct vbdev_ocf *vbdev = (struct vbdev_ocf *)priv;
 
-	rc = ocf_mngt_cache_trylock(vbdev->ocf_cache);
-	if (rc) {
+	if (error) {
+		SPDK_ERRLOG("Error %d, can not lock cache instance %s,"
+			    "starting rollback\n", error, vbdev->name);
+		vbdev_ocf_mngt_continue(vbdev, error);
 		return;
 	}
 
-	vbdev_ocf_mngt_poll(vbdev, NULL);
 	ocf_mngt_cache_remove_core(vbdev->ocf_core, remove_core_cmpl, vbdev);
 }
 
@@ -217,7 +218,7 @@ static void
 detach_core(struct vbdev_ocf *vbdev)
 {
 	if (vbdev->ocf_cache && ocf_cache_is_running(vbdev->ocf_cache)) {
-		vbdev_ocf_mngt_poll(vbdev, remove_core_poll);
+		ocf_mngt_cache_lock(vbdev->ocf_cache, remove_core_cache_lock_cmpl, vbdev);
 	} else {
 		vbdev_ocf_mngt_continue(vbdev, 0);
 	}
@@ -258,7 +259,24 @@ stop_vbdev_cmpl(ocf_cache_t cache, void *priv, int error)
 
 /* Try to lock cache, then stop it */
 static void
-stop_vbdev_poll(struct vbdev_ocf *vbdev)
+stop_vbdev_cache_lock_cmpl(ocf_cache_t cache, void *priv, int error)
+{
+	struct vbdev_ocf *vbdev = (struct vbdev_ocf *)priv;
+
+	if (error) {
+		SPDK_ERRLOG("Error %d, can not lock cache instance %s,"
+			    "starting rollback\n", error, vbdev->name);
+		vbdev_ocf_mngt_continue(vbdev, error);
+		return;
+	}
+
+	ocf_mngt_cache_stop(vbdev->ocf_cache, stop_vbdev_cmpl, vbdev);
+}
+
+/* Stop OCF cache object
+ * vbdev_ocf is not operational after this */
+static void
+stop_vbdev(struct vbdev_ocf *vbdev)
 {
 	if (!ocf_cache_is_running(vbdev->ocf_cache)) {
 		vbdev_ocf_mngt_continue(vbdev, 0);
@@ -273,20 +291,7 @@ stop_vbdev_poll(struct vbdev_ocf *vbdev)
 		return;
 	}
 
-	if (ocf_mngt_cache_trylock(vbdev->ocf_cache)) {
-		return;
-	}
-
-	vbdev_ocf_mngt_poll(vbdev, NULL);
-	ocf_mngt_cache_stop(vbdev->ocf_cache, stop_vbdev_cmpl, vbdev);
-}
-
-/* Stop OCF cache object
- * vbdev_ocf is not operational after this */
-static void
-stop_vbdev(struct vbdev_ocf *vbdev)
-{
-	vbdev_ocf_mngt_poll(vbdev, stop_vbdev_poll);
+	ocf_mngt_cache_lock(vbdev->ocf_cache, stop_vbdev_cache_lock_cmpl, vbdev);
 }
 
 static void
@@ -299,25 +304,29 @@ flush_vbdev_cmpl(ocf_cache_t cache, void *priv, int error)
 }
 
 static void
-flush_vbdev_poll(struct vbdev_ocf *vbdev)
+flush_vbdev_cache_lock_cmpl(ocf_cache_t cache, void *priv, int error)
 {
-	if (!ocf_cache_is_running(vbdev->ocf_cache)) {
-		vbdev_ocf_mngt_continue(vbdev, -EINVAL);
+	struct vbdev_ocf *vbdev = (struct vbdev_ocf *)priv;
+
+	if (error) {
+		SPDK_ERRLOG("Error %d, can not lock cache instance %s,"
+			    "starting rollback\n", error, vbdev->name);
+		vbdev_ocf_mngt_continue(vbdev, error);
 		return;
 	}
 
-	if (ocf_mngt_cache_trylock(vbdev->ocf_cache)) {
-		return;
-	}
-
-	vbdev_ocf_mngt_poll(vbdev, NULL);
 	ocf_mngt_cache_flush(vbdev->ocf_cache, flush_vbdev_cmpl, vbdev);
 }
 
 static void
 flush_vbdev(struct vbdev_ocf *vbdev)
 {
-	vbdev_ocf_mngt_poll(vbdev, flush_vbdev_poll);
+	if (!ocf_cache_is_running(vbdev->ocf_cache)) {
+		vbdev_ocf_mngt_continue(vbdev, -EINVAL);
+		return;
+	}
+
+	ocf_mngt_cache_lock(vbdev->ocf_cache, flush_vbdev_cache_lock_cmpl, vbdev);
 }
 
 /* Procedures called during dirty unregister */
@@ -938,13 +947,16 @@ add_core_cmpl(ocf_cache_t cache, ocf_core_t core, void *priv, int error)
 
 /* Try to lock cache, then add core */
 static void
-add_core_poll(struct vbdev_ocf *vbdev)
+add_core_cache_lock_cmpl(ocf_cache_t cache, void *priv, int error)
 {
-	if (ocf_mngt_cache_trylock(vbdev->ocf_cache)) {
-		return;
-	}
+	struct vbdev_ocf *vbdev = (struct vbdev_ocf *)priv;
 
-	vbdev_ocf_mngt_poll(vbdev, NULL);
+	if (error) {
+		SPDK_ERRLOG("Error %d, can not lock cache instance %s,"
+			    "starting rollback\n", error, vbdev->name);
+		clear_starting_indicator_vbdev(vbdev);
+		vbdev_ocf_mngt_stop(vbdev, unregister_path_dirty, error);
+	}
 	ocf_mngt_cache_add_core(vbdev->ocf_cache, &vbdev->cfg.core, add_core_cmpl, vbdev);
 }
 
@@ -952,7 +964,7 @@ add_core_poll(struct vbdev_ocf *vbdev)
 static void
 add_core(struct vbdev_ocf *vbdev)
 {
-	vbdev_ocf_mngt_poll(vbdev, add_core_poll);
+	ocf_mngt_cache_lock(vbdev->ocf_cache, add_core_cache_lock_cmpl, vbdev);
 }
 
 static void
