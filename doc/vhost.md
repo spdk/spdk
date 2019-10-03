@@ -180,7 +180,7 @@ controller. Users must specify the maximum I/O queues supported for the
 controller, at least 1 Namespace is required for each controller.
 
 ~~~{.sh}
-$rpc_py construct_vhost_nvme_controller --cpumask 0x1 vhost.2 16
+$rpc_py vhost_create_nvme_controller --cpumask 0x1 vhost.2 16
 $rpc_py add_vhost_nvme_ns vhost.2 Malloc0
 ~~~
 
