@@ -1361,25 +1361,17 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 static int
 iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_pdu *pdu;
 	int i, rc;
 
 	/* Read new PDUs from network */
 	for (i = 0; i < GET_PDU_LOOP_COUNT; i++) {
-		rc = spdk_iscsi_read_pdu(conn, &pdu);
+		rc = spdk_iscsi_read_pdu(conn);
 		if (rc == 0) {
 			break;
 		} else if (rc < 0) {
 			return rc;
 		}
 
-		rc = spdk_iscsi_execute(conn, pdu);
-		spdk_put_pdu(pdu);
-		if (rc < 0) {
-			return SPDK_ISCSI_CONNECTION_FATAL;
-		}
-
-		spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
 		if (conn->is_stopped) {
 			break;
 		}
