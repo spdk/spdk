@@ -3275,6 +3275,110 @@ iscsi_transfer_in(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	return sent_status;
 }
 
+void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
+			      struct spdk_iscsi_task *task)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_scsi_resp *rsph;
+	uint32_t task_tag;
+	uint32_t transfer_len;
+	size_t residual_len;
+	size_t data_len;
+	int O_bit, U_bit;
+	int rc;
+	struct spdk_iscsi_task *primary;
+
+	primary = spdk_iscsi_task_get_primary(task);
+
+	transfer_len = primary->scsi.transfer_len;
+	task_tag = task->tag;
+
+	/* transfer data from logical unit */
+	/* (direction is view of initiator side) */
+	if (spdk_iscsi_task_is_read(primary)) {
+		rc = iscsi_transfer_in(conn, task);
+		if (rc > 0) {
+			/* sent status by last DATAIN PDU */
+			return;
+		}
+
+		if (primary->bytes_completed != primary->scsi.transfer_len) {
+			return;
+		}
+	}
+
+	O_bit = U_bit = 0;
+	residual_len = 0;
+	data_len = primary->scsi.data_transferred;
+
+	if ((transfer_len != 0) &&
+	    (task->scsi.status == SPDK_SCSI_STATUS_GOOD)) {
+		if (data_len < transfer_len) {
+			/* underflow */
+			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Underflow %zu/%u\n", data_len, transfer_len);
+			residual_len = transfer_len - data_len;
+			U_bit = 1;
+		} else if (data_len > transfer_len) {
+			/* overflow */
+			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Overflow %zu/%u\n", data_len, transfer_len);
+			residual_len = data_len - transfer_len;
+			O_bit = 1;
+		} else {
+			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Transfer %u\n", transfer_len);
+		}
+	}
+
+	/* response PDU */
+	rsp_pdu = spdk_get_pdu();
+	assert(rsp_pdu != NULL);
+	rsph = (struct iscsi_bhs_scsi_resp *)&rsp_pdu->bhs;
+	assert(task->scsi.sense_data_len <= sizeof(rsp_pdu->sense.data));
+	memcpy(rsp_pdu->sense.data, task->scsi.sense_data, task->scsi.sense_data_len);
+	to_be16(&rsp_pdu->sense.length, task->scsi.sense_data_len);
+	rsp_pdu->data = (uint8_t *)&rsp_pdu->sense;
+	rsp_pdu->data_from_mempool = true;
+
+	/*
+	 * we need to hold onto this task/cmd because until the
+	 * PDU has been written out
+	 */
+	rsp_pdu->task = task;
+	task->scsi.ref++;
+
+	rsph->opcode = ISCSI_OP_SCSI_RSP;
+	rsph->flags |= 0x80; /* bit 0 is default to 1 */
+
+	if (O_bit) {
+		rsph->flags |= ISCSI_SCSI_OVERFLOW;
+	}
+
+	if (U_bit) {
+		rsph->flags |= ISCSI_SCSI_UNDERFLOW;
+	}
+
+	rsph->status = task->scsi.status;
+	if (task->scsi.sense_data_len) {
+		/* SenseLength (2 bytes) + SenseData  */
+		DSET24(rsph->data_segment_len, 2 + task->scsi.sense_data_len);
+	}
+	to_be32(&rsph->itt, task_tag);
+
+	to_be32(&rsph->stat_sn, conn->StatSN);
+	conn->StatSN++;
+
+	if (!spdk_iscsi_task_is_immediate(primary)) {
+		conn->sess->MaxCmdSN++;
+	}
+
+	to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
+	to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
+
+	to_be32(&rsph->bi_read_res_cnt, 0);
+	to_be32(&rsph->res_cnt, residual_len);
+
+	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
+}
+
 /*
  *  This function compare the input pdu's bhs with the pdu's bhs associated by
  *  active_r2t_tasks and queued_r2t_tasks in a connection
@@ -3605,110 +3709,6 @@ spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 
 	to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
 	to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
-
-	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
-}
-
-void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
-			      struct spdk_iscsi_task *task)
-{
-	struct spdk_iscsi_pdu *rsp_pdu;
-	struct iscsi_bhs_scsi_resp *rsph;
-	uint32_t task_tag;
-	uint32_t transfer_len;
-	size_t residual_len;
-	size_t data_len;
-	int O_bit, U_bit;
-	int rc;
-	struct spdk_iscsi_task *primary;
-
-	primary = spdk_iscsi_task_get_primary(task);
-
-	transfer_len = primary->scsi.transfer_len;
-	task_tag = task->tag;
-
-	/* transfer data from logical unit */
-	/* (direction is view of initiator side) */
-	if (spdk_iscsi_task_is_read(primary)) {
-		rc = iscsi_transfer_in(conn, task);
-		if (rc > 0) {
-			/* sent status by last DATAIN PDU */
-			return;
-		}
-
-		if (primary->bytes_completed != primary->scsi.transfer_len) {
-			return;
-		}
-	}
-
-	O_bit = U_bit = 0;
-	residual_len = 0;
-	data_len = primary->scsi.data_transferred;
-
-	if ((transfer_len != 0) &&
-	    (task->scsi.status == SPDK_SCSI_STATUS_GOOD)) {
-		if (data_len < transfer_len) {
-			/* underflow */
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Underflow %zu/%u\n", data_len, transfer_len);
-			residual_len = transfer_len - data_len;
-			U_bit = 1;
-		} else if (data_len > transfer_len) {
-			/* overflow */
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Overflow %zu/%u\n", data_len, transfer_len);
-			residual_len = data_len - transfer_len;
-			O_bit = 1;
-		} else {
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Transfer %u\n", transfer_len);
-		}
-	}
-
-	/* response PDU */
-	rsp_pdu = spdk_get_pdu();
-	assert(rsp_pdu != NULL);
-	rsph = (struct iscsi_bhs_scsi_resp *)&rsp_pdu->bhs;
-	assert(task->scsi.sense_data_len <= sizeof(rsp_pdu->sense.data));
-	memcpy(rsp_pdu->sense.data, task->scsi.sense_data, task->scsi.sense_data_len);
-	to_be16(&rsp_pdu->sense.length, task->scsi.sense_data_len);
-	rsp_pdu->data = (uint8_t *)&rsp_pdu->sense;
-	rsp_pdu->data_from_mempool = true;
-
-	/*
-	 * we need to hold onto this task/cmd because until the
-	 * PDU has been written out
-	 */
-	rsp_pdu->task = task;
-	task->scsi.ref++;
-
-	rsph->opcode = ISCSI_OP_SCSI_RSP;
-	rsph->flags |= 0x80; /* bit 0 is default to 1 */
-
-	if (O_bit) {
-		rsph->flags |= ISCSI_SCSI_OVERFLOW;
-	}
-
-	if (U_bit) {
-		rsph->flags |= ISCSI_SCSI_UNDERFLOW;
-	}
-
-	rsph->status = task->scsi.status;
-	if (task->scsi.sense_data_len) {
-		/* SenseLength (2 bytes) + SenseData  */
-		DSET24(rsph->data_segment_len, 2 + task->scsi.sense_data_len);
-	}
-	to_be32(&rsph->itt, task_tag);
-
-	to_be32(&rsph->stat_sn, conn->StatSN);
-	conn->StatSN++;
-
-	if (!spdk_iscsi_task_is_immediate(primary)) {
-		conn->sess->MaxCmdSN++;
-	}
-
-	to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
-	to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
-
-	to_be32(&rsph->bi_read_res_cnt, 0);
-	to_be32(&rsph->res_cnt, residual_len);
 
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
 }
