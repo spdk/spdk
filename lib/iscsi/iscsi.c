@@ -3299,6 +3299,57 @@ iscsi_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 }
 
 static int
+iscsi_op_scsi_write(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
+{
+	struct spdk_iscsi_pdu *pdu;
+	struct iscsi_bhs_scsi_req *reqh;
+	uint32_t transfer_len;
+	uint32_t scsi_data_len;
+	int rc;
+
+	pdu = spdk_iscsi_task_get_pdu(task);
+	reqh = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
+
+	transfer_len = task->scsi.transfer_len;
+
+	if (spdk_likely(!pdu->dif_insert_or_strip)) {
+		scsi_data_len = pdu->data_segment_len;
+	} else {
+		scsi_data_len = pdu->data_buf_len;
+	}
+
+	if (reqh->final_bit &&
+	    pdu->data_segment_len < transfer_len) {
+		/* needs R2T */
+		rc = add_transfer_task(conn, task);
+		if (rc < 0) {
+			SPDK_ERRLOG("add_transfer_task() failed\n");
+			spdk_iscsi_task_put(task);
+			return SPDK_ISCSI_CONNECTION_FATAL;
+		}
+
+		/* Non-immediate writes */
+		if (pdu->data_segment_len == 0) {
+			return 0;
+		} else {
+			/* we are doing the first partial write task */
+			task->scsi.ref++;
+			spdk_scsi_task_set_data(&task->scsi, pdu->data, scsi_data_len);
+			task->scsi.length = pdu->data_segment_len;
+		}
+	}
+
+	if (pdu->data_segment_len == transfer_len) {
+		/* we are doing small writes with no R2T */
+		spdk_scsi_task_set_data(&task->scsi, pdu->data, scsi_data_len);
+		task->scsi.length = transfer_len;
+	}
+
+	iscsi_queue_task(conn, task);
+	return 0;
+}
+
+static int
 iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_task	*task;
@@ -3307,9 +3358,8 @@ iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint64_t lun;
 	uint32_t task_tag;
 	uint32_t transfer_len;
-	uint32_t scsi_data_len;
-	int F_bit, R_bit, W_bit;
-	int lun_i, rc;
+	int R_bit, W_bit;
+	int lun_i;
 	struct iscsi_bhs_scsi_req *reqh;
 
 	if (conn->sess->session_type != SESSION_TYPE_NORMAL) {
@@ -3319,7 +3369,6 @@ iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	reqh = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
 
-	F_bit = reqh->final_bit;
 	R_bit = reqh->read_bit;
 	W_bit = reqh->write_bit;
 	lun = from_be64(&reqh->lun);
@@ -3395,37 +3444,7 @@ iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 		}
 
-		if (spdk_likely(!pdu->dif_insert_or_strip)) {
-			scsi_data_len = pdu->data_segment_len;
-		} else {
-			scsi_data_len = pdu->data_buf_len;
-		}
-
-		if (F_bit && pdu->data_segment_len < transfer_len) {
-			/* needs R2T */
-			rc = add_transfer_task(conn, task);
-			if (rc < 0) {
-				SPDK_ERRLOG("add_transfer_task() failed\n");
-				spdk_iscsi_task_put(task);
-				return SPDK_ISCSI_CONNECTION_FATAL;
-			}
-
-			/* Non-immediate writes */
-			if (pdu->data_segment_len == 0) {
-				return 0;
-			} else {
-				/* we are doing the first partial write task */
-				task->scsi.ref++;
-				spdk_scsi_task_set_data(&task->scsi, pdu->data, scsi_data_len);
-				task->scsi.length = pdu->data_segment_len;
-			}
-		}
-
-		if (pdu->data_segment_len == transfer_len) {
-			/* we are doing small writes with no R2T */
-			spdk_scsi_task_set_data(&task->scsi, pdu->data, scsi_data_len);
-			task->scsi.length = transfer_len;
-		}
+		return iscsi_op_scsi_write(conn, task);
 	} else {
 		/* neither R nor W bit set */
 		task->scsi.dxfer_dir = SPDK_SCSI_DIR_NONE;
