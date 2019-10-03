@@ -43,6 +43,9 @@
 #define PCI_OFFSET_OF(object, member)  ((uint32_t)&((object*)0)->member)
 #define TWOS_COMPLEMENT(value) (~(value) + 1)
 
+#define VMD_UPPER_BASE_SIGNATURE  0xFFFFFFEF
+#define VMD_UPPER_LIMIT_SIGNATURE 0xFFFFFFED
+
 /*
  *  BAR assignment constants
  */
