@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a62b28e4_2ddb099b",
+        "filename": "scripts/rpc/vhost.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-03T14:46:17Z",
+      "side": 1,
+      "message": "Remove the word \"construct\" - use create or add or something that isn\u0027t in the name of the deprecated API",
+      "revId": "031c9bfa5cfec9d6264a976addb82c6efef9b3ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f5b594c_8935a56f",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-03T14:46:17Z",
+      "side": 1,
+      "message": "Contract -\u003e something else",
+      "revId": "031c9bfa5cfec9d6264a976addb82c6efef9b3ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f4536ca_509b2f49",
+        "filename": "test/vhost/fio/fio.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-03T14:46:17Z",
+      "side": 1,
+      "message": "Construct -\u003e something else",
+      "revId": "031c9bfa5cfec9d6264a976addb82c6efef9b3ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "daa762d7_37682394",
+        "filename": "test/vhost/windows/windows.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-03T14:46:17Z",
+      "side": 1,
+      "message": "Construct -\u003e something else",
+      "revId": "031c9bfa5cfec9d6264a976addb82c6efef9b3ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
