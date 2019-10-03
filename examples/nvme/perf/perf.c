@@ -218,6 +218,7 @@ static bool g_warn;
 static bool g_header_digest;
 static bool g_data_digest;
 static bool g_no_shn_notification = false;
+static bool g_controller_disconnected = false;
 static uint32_t g_keep_alive_timeout_in_ms = 0;
 
 static const char *g_core_mask;
@@ -1039,7 +1040,7 @@ work_fn(void *arg)
 		ns_ctx = ns_ctx->next;
 	}
 
-	while (1) {
+	while (!g_controller_disconnected) {
 		/*
 		 * Check for completed I/O for each controller. A new
 		 * I/O will be submitted in the io_complete callback
@@ -1054,6 +1055,11 @@ work_fn(void *arg)
 		if (spdk_get_ticks() > tsc_end) {
 			break;
 		}
+	}
+
+	if (g_controller_disconnected) {
+		fprintf(stderr, "One of the controllers disconnected. Shutting down early.");
+		return 1;
 	}
 
 	/* drain the io of each ns_ctx in round robin to make the fairness */
@@ -1877,6 +1883,12 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	register_ctrlr(ctrlr, trid_entry);
 }
 
+static void
+remove_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr)
+{
+	g_controller_disconnected = true;
+}
+
 static int
 register_controllers(void)
 {
@@ -1890,7 +1902,7 @@ register_controllers(void)
 	}
 
 	TAILQ_FOREACH(trid_entry, &g_trid_list, tailq) {
-		if (spdk_nvme_probe(&trid_entry->trid, trid_entry, probe_cb, attach_cb, NULL) != 0) {
+		if (spdk_nvme_probe(&trid_entry->trid, trid_entry, probe_cb, attach_cb, remove_cb) != 0) {
 			fprintf(stderr, "spdk_nvme_probe() failed for transport address '%s'\n",
 				trid_entry->trid.traddr);
 			return -1;
