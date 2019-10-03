@@ -1665,6 +1665,27 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 	return 0;
 }
 
+static inline uint32_t
+nvmf_rdma_calc_num_wrs(uint32_t length, uint32_t io_unit_size, uint32_t block_size)
+{
+	/* estimate the number of SG entries and WRs needed to process the request */
+	uint32_t num_sge = 0;
+	uint32_t i;
+	uint32_t num_buffers = SPDK_CEIL_DIV(length, io_unit_size);
+
+	for (i = 0; i < num_buffers && length > 0; i++) {
+		uint32_t buffer_len = spdk_min(length, io_unit_size);
+		uint32_t num_sge_in_block = SPDK_CEIL_DIV(buffer_len, block_size);
+
+		if (num_sge_in_block * block_size > buffer_len) {
+			++num_sge_in_block;
+		}
+		num_sge += num_sge_in_block;
+		length -= buffer_len;
+	}
+	return SPDK_CEIL_DIV(num_sge, SPDK_NVMF_MAX_SGL_ENTRIES);
+}
+
 static int
 spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_device *device,
@@ -1676,6 +1697,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvmf_request		*req = &rdma_req->req;
 	struct ibv_send_wr			*wr = &rdma_req->data.wr;
 	int					rc;
+	uint32_t				num_wrs = 1;
 
 	rqpair = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rgroup = rqpair->poller->group;
@@ -1693,20 +1715,30 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 	rdma_req->iovpos = 0;
 
+	if (spdk_unlikely(req->dif.dif_insert_or_strip)) {
+		num_wrs = nvmf_rdma_calc_num_wrs(length, rtransport->transport.opts.io_unit_size,
+						 req->dif.dif_ctx.block_size);
+		if (num_wrs > 1) {
+			rc = nvmf_request_alloc_wrs(rtransport, rdma_req, num_wrs - 1);
+			if (rc != 0) {
+				goto err_exit;
+			}
+		}
+	}
+
 	rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, wr, length);
-	if (rc != 0) {
+	if (spdk_unlikely(rc != 0)) {
 		goto err_exit;
 	}
 
 	/* set the number of outstanding data WRs for this request. */
-	rdma_req->num_outstanding_data_wr = 1;
+	rdma_req->num_outstanding_data_wr = num_wrs;
 
 	return rc;
 
 err_exit:
 	spdk_nvmf_request_free_buffers(req, &rgroup->group, &rtransport->transport);
-	memset(wr->sg_list, 0, sizeof(wr->sg_list[0]) * wr->num_sge);
-	wr->num_sge = 0;
+	nvmf_rdma_request_free_data(rdma_req, rtransport);
 	req->iovcnt = 0;
 	return rc;
 }
