@@ -58,6 +58,12 @@ ocf_get_cache_mode(const char *cache_mode)
 	return ocf_cache_mode_none;
 }
 
+ocf_cache_mode_t
+ocf_get_cache_line_size(const char *cache_line_size)
+{
+	return strtol(cache_line_size, NULL, 10);
+}
+
 const char *
 ocf_get_cache_modename(ocf_cache_mode_t mode)
 {
