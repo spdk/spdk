@@ -71,6 +71,28 @@ struct vmd_pci_bus {
 	struct vmd_pci_bus *next;            /* link for all buses found during scan */
 };
 
+/*
+ * memory element for base address assignment and reuse
+ */
+struct pci_mem_mgr {
+	uint32_t size : 30;        /* size of memory element */
+	uint32_t in_use : 1;
+	uint32_t rsv : 1;
+	uint64_t addr;
+};
+
+struct vmd_hot_plug {
+	uint32_t count  : 12;
+	uint32_t reserved_bus_count : 4;
+	uint32_t max_hotplug_bus_number : 8;
+	uint32_t next_bus_number : 8;
+	struct pci_bars bar;
+	union express_slot_status_register slot_status;
+	struct pci_mem_mgr mem[ADDR_ELEM_COUNT];
+	uint8_t bus_numbers[RESERVED_HOTPLUG_BUSES];
+	struct vmd_pci_bus *bus;
+};
+
 struct vmd_pci_device {
 	struct spdk_pci_device pci;
 	struct pci_bars bar[6];
@@ -91,6 +113,7 @@ struct vmd_pci_device {
 	uint16_t  did;
 	uint16_t  pcie_flags, msix_table_size;
 	uint32_t  devfn;
+	bool      hotplug_capable;
 
 	uint32_t  header_type    : 1;
 	uint32_t  multifunction  : 1;
@@ -100,33 +123,9 @@ struct vmd_pci_device {
 	uint32_t  rsv1           : 12;
 	uint32_t  target         : 16;
 
-	struct vmd_hot_plug *hp;
+	struct vmd_hot_plug hp;
 	/* Cached version of the slot_control register */
 	union express_slot_control_register cached_slot_control;
-};
-
-
-/*
- * memory element for base address assignment and reuse
- */
-struct pci_mem_mgr {
-	uint32_t size : 30;        /* size of memory element */
-	uint32_t in_use : 1;
-	uint32_t rsv : 1;
-	uint64_t addr;
-};
-
-struct vmd_hot_plug {
-	uint32_t count  : 12;
-	uint32_t reserved_bus_count : 4;
-	uint32_t max_hotplug_bus_number : 8;
-	uint32_t next_bus_number : 8;
-	uint32_t addr_size;
-	uint64_t physical_addr;
-	union express_slot_status_register slot_status;
-	struct pci_mem_mgr mem[ADDR_ELEM_COUNT];
-	uint8_t bus_numbers[RESERVED_HOTPLUG_BUSES];
-	struct vmd_pci_bus *bus;
 };
 
 /*
@@ -187,12 +186,6 @@ static inline void
 vmd_hp_enable_hotplug(struct vmd_hot_plug *hp)
 {
 
-}
-
-static inline struct vmd_hot_plug *
-vmd_new_hotplug(struct vmd_pci_bus *newBus)
-{
-	return NULL;
 }
 
 static inline uint8_t

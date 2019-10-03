@@ -34,6 +34,7 @@
 #include "vmd.h"
 
 #include "spdk/stdinc.h"
+#include "spdk/likely.h"
 
 static unsigned char *device_type[] = {
 	"PCI Express Endpoint",
@@ -126,8 +127,8 @@ vmd_allocate_base_addr(struct vmd_adapter *vmd, struct vmd_pci_device *dev, uint
 	 */
 	if (dev) {
 		hp_bus = vmd_is_dev_in_hotplug_path(dev);
-		if (hp_bus && hp_bus->self) {
-			return vmd_hp_allocate_base_addr(hp_bus->self->hp, size);
+		if (hp_bus && hp_bus->self && hp_bus->self->hotplug_capable) {
+			return vmd_hp_allocate_base_addr(&hp_bus->self->hp, size);
 		}
 	}
 
@@ -442,6 +443,30 @@ vmd_reset_base_limit_registers(struct vmd_pci_device *dev)
 	reg = dev->header->one.subordinate;
 }
 
+static void
+vmd_init_hotplug(struct vmd_pci_device *dev, struct vmd_pci_bus *bus)
+{
+	struct vmd_adapter *vmd = bus->vmd;
+	struct vmd_hot_plug *hp = &dev->hp;
+
+	dev->hotplug_capable = true;
+	hp->bar.size = 1 << 20;
+
+	if (!vmd->scan_completed) {
+		hp->bar.start = vmd_allocate_base_addr(vmd, NULL, hp->bar.size);
+		bus->self->header->one.mem_base = BRIDGE_BASEREG(hp->bar.start);
+		bus->self->header->one.mem_limit =
+			bus->self->header->one.mem_base + BRIDGE_BASEREG(hp->bar.size - 1);
+	} else {
+		hp->bar.start = (uint64_t)bus->self->header->one.mem_base << 16;
+	}
+
+	hp->bar.vaddr = (uint64_t)vmd->mem_vaddr + (hp->bar.start - vmd->membar);
+
+	SPDK_DEBUGLOG(SPDK_LOG_VMD, "%s: mem_base:mem_limit = %x : %x\n", __func__,
+		      bus->self->header->one.mem_base, bus->self->header->one.mem_limit);
+}
+
 static struct vmd_pci_device *
 vmd_alloc_dev(struct vmd_pci_bus *bus, uint32_t devfn)
 {
@@ -589,8 +614,8 @@ vmd_get_next_bus_number(struct vmd_pci_device *dev, struct vmd_adapter *vmd)
 
 	if (dev) {
 		hp_bus = vmd_is_dev_in_hotplug_path(dev);
-		if (hp_bus && hp_bus->self && hp_bus->self->hp) {
-			return vmd_hp_get_next_bus_number(hp_bus->self->hp);
+		if (hp_bus && hp_bus->self && hp_bus->self->hotplug_capable) {
+			return vmd_hp_get_next_bus_number(&hp_bus->self->hp);
 		}
 	}
 
@@ -776,6 +801,7 @@ vmd_dev_init(struct vmd_pci_device *dev)
 	dev->pci.cfg_write = vmd_dev_cfg_write;
 	dev->pci.detach = vmd_dev_detach;
 	dev->cached_slot_control = dev->pcie_cap->slot_control;
+	dev->hotplug_capable = false;
 
 	if (vmd_is_supported_device(dev)) {
 		spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->pci.addr);
@@ -862,12 +888,12 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 				      slot_cap.bit_field.hotplug_capable,
 				      new_dev->pcie_cap->express_cap_register.bit_field.slot_implemented);
 
+			vmd_dev_init(new_dev);
+
 			if (slot_cap.bit_field.hotplug_capable &&
 			    new_dev->pcie_cap->express_cap_register.bit_field.slot_implemented) {
-				new_dev->hp = vmd_new_hotplug(new_bus);
+				vmd_init_hotplug(new_dev, new_bus);
 			}
-
-			vmd_dev_init(new_dev);
 
 			dev_cnt += vmd_scan_single_bus(new_bus, new_dev);
 			if (new_dev->pcie_cap != NULL) {
