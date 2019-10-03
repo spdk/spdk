@@ -4685,32 +4685,32 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 
 	data_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
 
+	if (data_len != 0 && pdu->data_buf == NULL) {
+		if (data_len <= spdk_get_max_immediate_data_size()) {
+			pool = g_spdk_iscsi.pdu_immediate_data_pool;
+			pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(spdk_get_max_immediate_data_size());
+		} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+			pool = g_spdk_iscsi.pdu_data_out_pool;
+			pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+		} else {
+			SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
+				    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+			rc = SPDK_ISCSI_CONNECTION_FATAL;
+			goto error;
+		}
+		pdu->mobj = spdk_mempool_get(pool);
+		if (pdu->mobj == NULL) {
+			return 0;
+		}
+		pdu->data_buf = pdu->mobj->buf;
+
+		if (spdk_unlikely(spdk_iscsi_get_dif_ctx(conn, pdu, &pdu->dif_ctx))) {
+			pdu->dif_insert_or_strip = true;
+		}
+	}
+
 	/* copy the actual data into local buffer */
 	if (pdu->data_valid_bytes < data_len) {
-		if (pdu->data_buf == NULL) {
-			if (data_len <= spdk_get_max_immediate_data_size()) {
-				pool = g_spdk_iscsi.pdu_immediate_data_pool;
-				pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(spdk_get_max_immediate_data_size());
-			} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
-				pool = g_spdk_iscsi.pdu_data_out_pool;
-				pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
-			} else {
-				SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
-					    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
-				rc = SPDK_ISCSI_CONNECTION_FATAL;
-				goto error;
-			}
-			pdu->mobj = spdk_mempool_get(pool);
-			if (pdu->mobj == NULL) {
-				return 0;
-			}
-			pdu->data_buf = pdu->mobj->buf;
-
-			if (spdk_unlikely(spdk_iscsi_get_dif_ctx(conn, pdu, &pdu->dif_ctx))) {
-				pdu->dif_insert_or_strip = true;
-			}
-		}
-
 		rc = iscsi_conn_read_data_segment(conn, pdu, data_len);
 		if (rc < 0) {
 			goto error;
