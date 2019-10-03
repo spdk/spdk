@@ -35,6 +35,7 @@
 #include "spdk/nvme_ocssd.h"
 
 static void nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
+static int nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req);
 
 struct nvme_string {
 	uint16_t	value;
@@ -420,6 +421,8 @@ int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	int32_t ret;
+	int32_t resubmit_rc;
+	int32_t i;
 	struct nvme_request *req, *tmp;
 
 	if (qpair->ctrlr->is_failed) {
@@ -460,7 +463,25 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		 *  routine - so it is safe to delete it now.
 		 */
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
+		return ret;
 	}
+
+	/*
+	 * At this point, ret must represent the number of completions we reaped.
+	 * submit as many queued requests as we completed.
+	 */
+	i = 0;
+	while (i < ret && !STAILQ_EMPTY(&qpair->queued_req) && !qpair->ctrlr->is_resetting) {
+		req = STAILQ_FIRST(&qpair->queued_req);
+		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+		resubmit_rc = nvme_qpair_resubmit_request(qpair, req);
+		if (spdk_unlikely(resubmit_rc != 0)) {
+			SPDK_ERRLOG("Unable to resubmit as many requests as we completed.\n");
+			break;
+		}
+		i++;
+	}
+
 	return ret;
 }
 
@@ -654,6 +675,19 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	if (rc == -EAGAIN) {
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
 		rc = 0;
+	}
+
+	return rc;
+}
+
+static int
+nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+{
+	int rc;
+
+	rc = _nvme_qpair_submit_request(qpair, req);
+	if (spdk_unlikely(rc == -EAGAIN)) {
+		STAILQ_INSERT_HEAD(&qpair->queued_req, req, stailq);
 	}
 
 	return rc;

@@ -922,18 +922,6 @@ get_nvme_active_req_by_cid(struct nvme_tcp_qpair *tqpair, uint32_t cid)
 }
 
 static void
-nvme_tcp_free_and_handle_queued_req(struct spdk_nvme_qpair *qpair)
-{
-	struct nvme_request *req;
-
-	if (!STAILQ_EMPTY(&qpair->queued_req) && !qpair->ctrlr->is_resetting) {
-		req = STAILQ_FIRST(&qpair->queued_req);
-		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
-		nvme_qpair_submit_request(qpair, req);
-	}
-}
-
-static void
 nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 				 struct nvme_tcp_pdu *pdu, uint32_t *reaped)
 {
@@ -963,7 +951,6 @@ nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 		nvme_tcp_req_complete(tcp_req->req, &cpl);
 		nvme_tcp_req_put(tqpair, tcp_req);
 		(*reaped)++;
-		nvme_tcp_free_and_handle_queued_req(&tqpair->qpair);
 	}
 }
 
@@ -1123,7 +1110,6 @@ nvme_tcp_capsule_resp_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 	nvme_tcp_req_complete(tcp_req->req, &cpl);
 	nvme_tcp_req_put(tqpair, tcp_req);
 	(*reaped)++;
-	nvme_tcp_free_and_handle_queued_req(&tqpair->qpair);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "complete tcp_req(%p) on tqpair=%p\n", tcp_req, tqpair);
 
