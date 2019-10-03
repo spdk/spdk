@@ -4598,7 +4598,7 @@ spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 }
 
 int
-spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
+spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_pdu *pdu;
 	struct spdk_mempool *pool;
@@ -4772,7 +4772,13 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 
-	*_pdu = pdu;
+	rc = spdk_iscsi_execute(conn, pdu);
+	spdk_put_pdu(pdu);
+	if (rc < 0) {
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
 	return 1;
 
 error:
