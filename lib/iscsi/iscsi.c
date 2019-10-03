@@ -3060,6 +3060,20 @@ void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 	start_queued_transfer_tasks(conn);
 }
 
+static struct spdk_iscsi_task *
+get_transfer_task(struct spdk_iscsi_conn *conn, uint32_t transfer_tag)
+{
+	int i;
+
+	for (i = 0; i < conn->pending_r2t; i++) {
+		if (conn->outstanding_r2t_tasks[i]->ttt == transfer_tag) {
+			return (conn->outstanding_r2t_tasks[i]);
+		}
+	}
+
+	return NULL;
+}
+
 static int
 iscsi_send_datain(struct spdk_iscsi_conn *conn,
 		  struct spdk_iscsi_task *task, int datain_flag,
@@ -3703,20 +3717,6 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 	to_be32(&rsph->res_cnt, residual_len);
 
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
-}
-
-static struct spdk_iscsi_task *
-get_transfer_task(struct spdk_iscsi_conn *conn, uint32_t transfer_tag)
-{
-	int i;
-
-	for (i = 0; i < conn->pending_r2t; i++) {
-		if (conn->outstanding_r2t_tasks[i]->ttt == transfer_tag) {
-			return (conn->outstanding_r2t_tasks[i]);
-		}
-	}
-
-	return NULL;
 }
 
 static int
