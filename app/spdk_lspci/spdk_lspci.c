@@ -60,11 +60,11 @@ print_pci_dev(struct spdk_pci_device *dev)
 	       spdk_pci_device_get_vendor_id(dev),
 	       spdk_pci_device_get_device_id(dev));
 
-	if (dev->parent && dev->parent->internal.driver == spdk_pci_vmd_get_driver()) {
+	if (spdk_pci_device_is_behind_vmd(dev)) {
 		printf(" (NVMe disk behind VMD) ");
 	}
 
-	if (dev->internal.driver == spdk_pci_vmd_get_driver()) {
+	if (spdk_pci_device_is_vmd(dev)) {
 		printf(" (VMD) ");
 	}
 

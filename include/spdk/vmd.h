@@ -47,17 +47,17 @@ extern "C" {
 #include "spdk/config.h"
 #include "spdk/env.h"
 
-/* Maximum VMD devices - up to 6 per cpu */
+/** Maximum VMD devices - up to 6 per cpu */
 #define MAX_VMD_TARGET  24
 
-/*
+/**
  * Enumerate VMD devices and hook them into the spdk pci subsystem
  *
  * \return 0 on success, -1 on failure
  */
 int spdk_vmd_init(void);
 
-/*
+/**
  * Returns a list of nvme devices found on the given vmd pci BDF.
  *
  * \param vmd_addr pci BDF of the vmd device to return end device list
@@ -66,6 +66,24 @@ int spdk_vmd_init(void);
  * \return Returns count of nvme device attached to input VMD.
  */
 int spdk_vmd_pci_device_list(struct spdk_pci_addr vmd_addr, struct spdk_pci_device *nvme_list);
+
+/**
+ * Checks whether the PCI device is VMD.
+ *
+ * \param pci_device PCI device
+ *
+ * \return true if the device is a VMD
+ */
+bool spdk_pci_device_is_vmd(const struct spdk_pci_device *pci_device);
+
+/**
+ * Checks whether the PCI device is behind VMD.
+ *
+ * \param pci_device PCI device
+ *
+ * \return true if the device is behind VMD
+ */
+bool spdk_pci_device_is_behind_vmd(const struct spdk_pci_device *pci_device);
 
 #ifdef __cplusplus
 }
