@@ -43,6 +43,9 @@
 #define PCI_OFFSET_OF(object, member)  ((uint32_t)&((object*)0)->member)
 #define TWOS_COMPLEMENT(value) (~(value) + 1)
 
+#define VMD_UPPER_BASE_SIGNATURE  0xFFFFFFEF
+#define VMD_UPPER_LIMIT_SIGNATURE 0xFFFFFFED
+
 /*
  *  BAR assignment constants
  */
@@ -378,7 +381,7 @@ union express_root_control_register {
 		uint16_t Rsvd : 11;
 	} bit_field;
 	uint16_t as_uint16_t;
-} express_root_control_register;
+};
 
 struct pci_express_cap {
 	uint8_t capid;
