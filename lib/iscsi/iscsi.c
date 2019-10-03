@@ -3060,47 +3060,6 @@ void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 	start_queued_transfer_tasks(conn);
 }
 
-/* This function returns the spdk_scsi_task by searching the snack list via
- * task transfertag and the pdu's opcode
- */
-static struct spdk_iscsi_task *
-get_scsi_task_from_ttt(struct spdk_iscsi_conn *conn, uint32_t transfer_tag)
-{
-	struct spdk_iscsi_pdu *pdu;
-	struct iscsi_bhs_data_in *datain_bhs;
-
-	TAILQ_FOREACH(pdu, &conn->snack_pdu_list, tailq) {
-		if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
-			datain_bhs = (struct iscsi_bhs_data_in *)&pdu->bhs;
-			if (from_be32(&datain_bhs->ttt) == transfer_tag) {
-				return pdu->task;
-			}
-		}
-	}
-
-	return NULL;
-}
-
-/* This function returns the spdk_scsi_task by searching the snack list via
- * initiator task tag and the pdu's opcode
- */
-static struct spdk_iscsi_task *
-get_scsi_task_from_itt(struct spdk_iscsi_conn *conn,
-		       uint32_t task_tag, enum iscsi_op opcode)
-{
-	struct spdk_iscsi_pdu *pdu;
-
-	TAILQ_FOREACH(pdu, &conn->snack_pdu_list, tailq) {
-		if (pdu->bhs.opcode == opcode &&
-		    pdu->task != NULL &&
-		    pdu->task->tag == task_tag) {
-			return pdu->task;
-		}
-	}
-
-	return NULL;
-}
-
 static int
 iscsi_send_datain(struct spdk_iscsi_conn *conn,
 		  struct spdk_iscsi_task *task, int datain_flag,
@@ -4128,6 +4087,47 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	conn->last_nopin = spdk_get_ticks();
 
 	return 0;
+}
+
+/* This function returns the spdk_scsi_task by searching the snack list via
+ * task transfertag and the pdu's opcode
+ */
+static struct spdk_iscsi_task *
+get_scsi_task_from_ttt(struct spdk_iscsi_conn *conn, uint32_t transfer_tag)
+{
+	struct spdk_iscsi_pdu *pdu;
+	struct iscsi_bhs_data_in *datain_bhs;
+
+	TAILQ_FOREACH(pdu, &conn->snack_pdu_list, tailq) {
+		if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
+			datain_bhs = (struct iscsi_bhs_data_in *)&pdu->bhs;
+			if (from_be32(&datain_bhs->ttt) == transfer_tag) {
+				return pdu->task;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+/* This function returns the spdk_scsi_task by searching the snack list via
+ * initiator task tag and the pdu's opcode
+ */
+static struct spdk_iscsi_task *
+get_scsi_task_from_itt(struct spdk_iscsi_conn *conn,
+		       uint32_t task_tag, enum iscsi_op opcode)
+{
+	struct spdk_iscsi_pdu *pdu;
+
+	TAILQ_FOREACH(pdu, &conn->snack_pdu_list, tailq) {
+		if (pdu->bhs.opcode == opcode &&
+		    pdu->task != NULL &&
+		    pdu->task->tag == task_tag) {
+			return pdu->task;
+		}
+	}
+
+	return NULL;
 }
 
 /* This function is used to handle the r2t snack */
