@@ -117,6 +117,30 @@
       "revId": "0b81d9d72fc00fa609f2ec9d3b7fd93c782dd634",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c37c181_89bccee7",
+        "filename": "module/bdev/ocf/utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-10-03T11:54:58Z",
+      "side": 1,
+      "message": "After more discussion, I think it\u0027s fine to go with current solution. I will propose my solution on top of this series and if people see it as an improvement, we can merge it.",
+      "parentUuid": "aefc7a98_79a1eb0e",
+      "range": {
+        "startLine": 56,
+        "startChar": 4,
+        "endLine": 56,
+        "endChar": 21
+      },
+      "revId": "0b81d9d72fc00fa609f2ec9d3b7fd93c782dd634",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
