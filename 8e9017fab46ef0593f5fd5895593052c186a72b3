@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7cece01f_9a47e1a6",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-03T17:29:55Z",
+      "side": 1,
+      "message": "in an earlier patch I commented on a similar function where you were checking ret and using a counter in the while loop.  If you rework that one to not use the counter in the while condition you can create a helper function _drain_queued_requests() maybe?",
+      "revId": "8e9017fab46ef0593f5fd5895593052c186a72b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
