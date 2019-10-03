@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3f906a8_00529d08",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-03T23:35:55Z",
+      "side": 1,
+      "message": "Clear \u003d\u003e clean?",
+      "revId": "26a855a9d55c368b396fea1b8d6aa146116f09d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e006dc1e_440318d6",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-03T23:35:55Z",
+      "side": 1,
+      "message": "_vbdev_ocf_destruct_clean?\n\nThe changes above all use \"clean\", so I\u0027m guessing this should be \"clean\" too.",
+      "revId": "26a855a9d55c368b396fea1b8d6aa146116f09d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc7bb74f_9e1ef562",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-03T23:35:55Z",
+      "side": 1,
+      "message": "recovery \u003d\u003e recover",
+      "revId": "26a855a9d55c368b396fea1b8d6aa146116f09d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "104c8fac_a1151a5d",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-03T23:35:55Z",
+      "side": 1,
+      "message": "Let\u0027s just use a regular if statement here, since it doesn\u0027t fit on one line.",
+      "revId": "26a855a9d55c368b396fea1b8d6aa146116f09d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
