@@ -876,6 +876,12 @@ const struct ocf_queue_ops mngt_queue_ops = {
 	.stop = vbdev_ocf_ctx_mngt_queue_stop,
 };
 
+static void
+clear_starting_indicator_vbdev(struct vbdev_ocf *vbdev)
+{
+	vbdev->state.starting = false;
+}
+
 /* Create exported spdk object */
 static void
 finish_register(struct vbdev_ocf *vbdev)
@@ -900,7 +906,11 @@ finish_register(struct vbdev_ocf *vbdev)
 				sizeof(struct vbdev_ocf_qcxt), vbdev->name);
 	result = spdk_bdev_register(&vbdev->exp_bdev);
 	if (result) {
-		SPDK_ERRLOG("Could not register exposed bdev\n");
+		SPDK_ERRLOG("Could not register exposed bdev %s\n",
+			    vbdev->name);
+		clear_starting_indicator_vbdev(vbdev);
+		vbdev_ocf_mngt_stop(vbdev, unregister_path_dirty, result);
+		return;
 	} else {
 		vbdev->state.started = true;
 	}
@@ -916,7 +926,11 @@ add_core_cmpl(ocf_cache_t cache, ocf_core_t core, void *priv, int error)
 	ocf_mngt_cache_unlock(cache);
 
 	if (error) {
-		SPDK_ERRLOG("Failed to add core device to cache instance\n");
+		SPDK_ERRLOG("Error %d, failed to add core device to cache instance %s,"
+			    "starting rollback\n", error, vbdev->name);
+		clear_starting_indicator_vbdev(vbdev);
+		vbdev_ocf_mngt_stop(vbdev, unregister_path_dirty, error);
+		return;
 	} else {
 		vbdev->ocf_core = core;
 		vbdev->core.id  = ocf_core_get_id(core);
@@ -950,6 +964,15 @@ start_cache_cmpl(ocf_cache_t cache, void *priv, int error)
 	struct vbdev_ocf *vbdev = priv;
 
 	ocf_mngt_cache_unlock(cache);
+
+	if (error) {
+		SPDK_ERRLOG("Error %d during start cache %s, starting rollback\n",
+			    error, vbdev->name);
+		vbdev_ocf_cache_ctx_put(vbdev->cache_ctx);
+		clear_starting_indicator_vbdev(vbdev);
+		vbdev_ocf_mngt_stop(vbdev, NULL, error);
+		return;
+	}
 
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
@@ -1004,6 +1027,7 @@ start_cache(struct vbdev_ocf *vbdev)
 
 	vbdev->cache_ctx = calloc(1, sizeof(struct vbdev_ocf_cache_ctx));
 	if (vbdev->cache_ctx == NULL) {
+		clear_starting_indicator_vbdev(vbdev);
 		vbdev_ocf_mngt_stop(vbdev, NULL, -ENOMEM);
 		return;
 	}
@@ -1014,6 +1038,7 @@ start_cache(struct vbdev_ocf *vbdev)
 	rc = ocf_mngt_cache_start(vbdev_ocf_ctx, &vbdev->ocf_cache, &vbdev->cfg.cache);
 	if (rc) {
 		vbdev_ocf_cache_ctx_put(vbdev->cache_ctx);
+		clear_starting_indicator_vbdev(vbdev);
 		vbdev_ocf_mngt_stop(vbdev, NULL, rc);
 		return;
 	}
@@ -1025,6 +1050,7 @@ start_cache(struct vbdev_ocf *vbdev)
 	if (rc) {
 		SPDK_ERRLOG("Unable to create mngt_queue: %d\n", rc);
 		vbdev_ocf_cache_ctx_put(vbdev->cache_ctx);
+		clear_starting_indicator_vbdev(vbdev);
 		vbdev_ocf_mngt_stop(vbdev, NULL, rc);
 		return;
 	}
