@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfe46cc3_345e7c3d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-03T16:46:50Z",
+      "side": 1,
+      "message": "I\u0027m sure there are more than a few, but is there a common/primary reason by this function would be called twice before the flag is cleared?",
+      "revId": "6dead5b4ca043f4e2b0b8a092d7dda27a801513b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2b4d61e_a874fb4a",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 616,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-03T16:46:50Z",
+      "side": 1,
+      "message": "This is probably a dumb question but if the unlock fails why are you taking and then releasing the lock below?",
+      "revId": "6dead5b4ca043f4e2b0b8a092d7dda27a801513b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
