@@ -295,7 +295,7 @@ maxburstlength_test(void)
 	req->write_bit = 1;
 	req->final_bit = 1;
 
-	rc = spdk_iscsi_execute(&conn, req_pdu);
+	rc = iscsi_execute(&conn, req_pdu);
 	CU_ASSERT(rc == 0);
 
 	response_pdu = TAILQ_FIRST(&g_write_pdu_list);
@@ -320,7 +320,7 @@ maxburstlength_test(void)
 	data_out->ttt = r2t->ttt;
 	DSET24(data_out->data_segment_len, 1028);
 
-	rc = spdk_iscsi_execute(&conn, data_out_pdu);
+	rc = iscsi_execute(&conn, data_out_pdu);
 	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
 
 	SPDK_CU_ASSERT_FATAL(response_pdu->task != NULL);
