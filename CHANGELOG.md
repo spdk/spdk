@@ -115,6 +115,14 @@ Added optional parameter '--md-size' to 'construct_null_bdev' RPC method.
 Added optional parameters '--dif-type' and '--dif-is-head-of-md' to 'construct_null_bdev'
 RPC method.
 
+### ocf
+
+Updated OCF submodule to OCF v19.06
+
+Along with update, new cache mode 'write only' was added.
+
+New version of OCF provides fully asynchronous management API.
+
 ## v19.07:
 
 ### ftl
