@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "6671419b_37136be0",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-03T13:00:54Z",
+      "side": 1,
+      "message": "1) Would it be possible for clear_starting_inidicator_vbdev() to mark state.starting \u003d false and call stop with unregister path ?",
+      "range": {
+        "startLine": 335,
+        "startChar": 0,
+        "endLine": 340,
+        "endChar": 1
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0b55d122_3501c74b",
         "filename": "module/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 7
@@ -42,6 +65,145 @@
         "startChar": 46,
         "endLine": 344,
         "endChar": 33
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1430543_b77bc9ac",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-03T13:00:54Z",
+      "side": 1,
+      "message": "Agreed Marcin, let\u0027s keep paths as the \u0027rollback argument\u0027 for poll.\nOn the other hand can we keep number of paths to minimum as to encourage reuse and prevent accidental mistakes. Please see steps below that might improve that.",
+      "parentUuid": "f0d16efb_8cfda314",
+      "range": {
+        "startLine": 343,
+        "startChar": 46,
+        "endLine": 344,
+        "endChar": 33
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9de01846_c5da2e30",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-03T13:00:54Z",
+      "side": 1,
+      "message": "2) Remove register_rollback_path",
+      "range": {
+        "startLine": 343,
+        "startChar": 0,
+        "endLine": 353,
+        "endChar": 2
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "495e4d0a_3c43f8bf",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-03T13:00:54Z",
+      "side": 1,
+      "message": "3) Keep start_cache_rollback_path as is [adjust name if needed] and use it in start_cache_cmpl() and add_core()",
+      "range": {
+        "startLine": 355,
+        "startChar": 0,
+        "endLine": 360,
+        "endChar": 0
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4122d986_690a8b08",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 991,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-03T13:00:54Z",
+      "side": 1,
+      "message": "4) set vbdev-\u003estate.starting \u003d false; in addition to stopping. Path set to NULL.",
+      "range": {
+        "startLine": 991,
+        "startChar": 2,
+        "endLine": 991,
+        "endChar": 65
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8237d853_61c82aaf",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1001,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-03T13:00:54Z",
+      "side": 1,
+      "message": "^ See above",
+      "range": {
+        "startLine": 1001,
+        "startChar": 2,
+        "endLine": 1001,
+        "endChar": 60
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c858c83_394ae3cc",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1012,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-03T13:00:54Z",
+      "side": 1,
+      "message": "^ See above",
+      "range": {
+        "startLine": 1012,
+        "startChar": 2,
+        "endLine": 1012,
+        "endChar": 60
       },
       "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
