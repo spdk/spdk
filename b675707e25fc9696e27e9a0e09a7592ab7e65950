@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03fc40d1_07f155aa",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-03T23:32:44Z",
+      "side": 1,
+      "message": "I think I don\u0027t understand how this is supposed to work.\n\nOnce bdev_ocf_delete is called, that means there is no more ocfWT?  So ocf_bdevs should basically be empty.\n\nBut comments on line 28, 38 and 46 are a bit unclear.  38 and 46 indicate that ocfWT should exist.\n\nI think it\u0027s important that you specifically check if ocfWT exists.  Just doing the diff is not enough - if the diff passes, it could mean that ocfWT did not exist in either, or it existed in both.  We want to only check for one case.",
+      "revId": "b675707e25fc9696e27e9a0e09a7592ab7e65950",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
