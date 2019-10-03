@@ -390,14 +390,14 @@
             "bdev_name": "Nvme0n1p0",
             "ctrlr": "naa.vhost.3"
           },
-          "method": "add_vhost_nvme_ns"
+          "method": "vhost_nvme_controller_add_ns"
         },
         {
           "params": {
             "bdev_name": "Nvme0n1p1",
             "ctrlr": "naa.vhost.3"
           },
-          "method": "add_vhost_nvme_ns"
+          "method": "vhost_nvme_controller_add_ns"
         }
       ]
     },
