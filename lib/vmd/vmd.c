@@ -34,6 +34,7 @@
 #include "vmd.h"
 
 #include "spdk/stdinc.h"
+#include "spdk/likely.h"
 
 static unsigned char *device_type[] = {
 	"PCI Express Endpoint",
@@ -443,6 +444,36 @@ vmd_reset_base_limit_registers(struct vmd_pci_device *dev)
 	reg = dev->header->one.secondary;
 	dev->header->one.subordinate = 0;
 	reg = dev->header->one.subordinate;
+}
+
+static struct vmd_hot_plug *
+vmd_new_hotplug(struct vmd_pci_bus *bus)
+{
+	struct vmd_adapter *vmd = bus->vmd;
+	struct vmd_hot_plug *hp;
+
+	hp = calloc(1, sizeof(*hp));
+	if (spdk_unlikely(!hp)) {
+		return NULL;
+	}
+
+	hp->bar.size = 1 << 20;
+
+	if (!vmd->scan_completed) {
+		hp->bar.start = vmd_allocate_base_addr(vmd, NULL, hp->bar.size);
+		bus->self->header->one.mem_base = BRIDGE_BASEREG(hp->bar.start);
+		bus->self->header->one.mem_limit =
+			bus->self->header->one.mem_base + BRIDGE_BASEREG(hp->bar.size - 1);
+	} else {
+		hp->bar.start = (uint64_t)bus->self->header->one.mem_base << 16;
+	}
+
+	hp->bar.vaddr = (uint64_t)vmd->mem_vaddr + (hp->bar.start - vmd->membar);
+
+	SPDK_DEBUGLOG(SPDK_LOG_VMD, "%s: mem_base:mem_limit = %x : %x\n", __func__,
+		      bus->self->header->one.mem_base, bus->self->header->one.mem_limit);
+
+	return hp;
 }
 
 static struct vmd_pci_device *
