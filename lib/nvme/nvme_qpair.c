@@ -659,6 +659,19 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	return rc;
 }
 
+int
+nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+{
+	int rc;
+
+	rc = _nvme_qpair_submit_request(qpair, req);
+	if (rc == -EAGAIN) {
+		STAILQ_INSERT_HEAD(&qpair->queued_req, req, stailq);
+	}
+
+	return rc;
+}
+
 void
 nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
