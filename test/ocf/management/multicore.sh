@@ -27,8 +27,8 @@ start_spdk
 $rpc_py bdev_malloc_create   1 512 -b Core0
 $rpc_py bdev_malloc_create   1 512 -b Core1
 
-$rpc_py bdev_ocf_create C1 wt Cache Core0
-$rpc_py bdev_ocf_create C2 wt Cache Core1
+$rpc_py bdev_ocf_create C1 wt 4096 Cache Core0
+$rpc_py bdev_ocf_create C2 wt 4096 Cache Core1
 
 $rpc_py bdev_ocf_get_bdevs | jq -e \
 	'any(select(.started)) == false'
@@ -48,7 +48,7 @@ $rpc_py  bdev_ocf_delete C2
 $rpc_py bdev_ocf_get_bdevs C1 | jq -e \
 	'.[0] | .started'
 
-$rpc_py bdev_ocf_create C2 wt Cache Core1
+$rpc_py bdev_ocf_create C2 wt 4096 Cache Core1
 
 $rpc_py bdev_ocf_get_bdevs C2 | jq -e \
 	'.[0] | .started'
@@ -64,8 +64,8 @@ $rpc_py bdev_malloc_create 101 512 -b Cache
 $rpc_py bdev_malloc_create 101 512 -b Malloc
 $rpc_py bdev_malloc_create   1 512 -b Core
 
-$rpc_py bdev_ocf_create C1 wt Cache Malloc
-$rpc_py bdev_ocf_create C2 wt Cache Core
+$rpc_py bdev_ocf_create C1 wt 4096 Cache Malloc
+$rpc_py bdev_ocf_create C2 wt 4096 Cache Core
 
 $rpc_py bdev_ocf_get_bdevs Cache | jq \
 	'length == 2'
@@ -77,8 +77,8 @@ $rpc_py bdev_ocf_get_bdevs | jq -e \
 
 # Not fully initialized shutdown
 
-$rpc_py bdev_ocf_create C1 wt Malloc NonExisting
-$rpc_py bdev_ocf_create C2 wt Malloc NonExisting
-$rpc_py bdev_ocf_create C3 wt Malloc Core
+$rpc_py bdev_ocf_create C1 wt 4096 Malloc NonExisting
+$rpc_py bdev_ocf_create C2 wt 4096 Malloc NonExisting
+$rpc_py bdev_ocf_create C3 wt 4096 Malloc Core
 
 stop_spdk

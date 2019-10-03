@@ -58,6 +58,29 @@ ocf_get_cache_mode(const char *cache_mode)
 	return ocf_cache_mode_none;
 }
 
+ocf_cache_line_size_t
+ocf_get_cache_line_size(const char *cache_line_size)
+{
+	ocf_cache_line_t line_size;
+
+	line_size = strtol(cache_line_size, NULL, 10);
+
+	switch (line_size) {
+	/* TODO: change to ocf_cache_line_size_none after update to OCF v19.6 */
+	case 0:
+	case ocf_cache_line_size_4:
+	case ocf_cache_line_size_8:
+	case ocf_cache_line_size_16:
+	case ocf_cache_line_size_32:
+	case ocf_cache_line_size_64:
+		return line_size;
+	default:
+		break;
+	}
+
+	return ocf_cache_line_size_inf;
+}
+
 const char *
 ocf_get_cache_modename(ocf_cache_mode_t mode)
 {
