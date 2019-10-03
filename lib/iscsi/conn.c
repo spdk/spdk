@@ -1370,14 +1370,7 @@ iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 		if (rc == 0) {
 			break;
 		} else if (rc < 0) {
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Failed to read pdu, error=%d\n", rc);
-			return SPDK_ISCSI_CONNECTION_FATAL;
-		}
-
-		if (conn->state == ISCSI_CONN_STATE_LOGGED_OUT) {
-			SPDK_ERRLOG("pdu received after logout\n");
-			spdk_put_pdu(pdu);
-			return SPDK_ISCSI_CONNECTION_FATAL;
+			return rc;
 		}
 
 		rc = spdk_iscsi_execute(conn, pdu);

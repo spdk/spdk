@@ -4787,13 +4787,19 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		}
 	}
 
+	if (conn->state == ISCSI_CONN_STATE_LOGGED_OUT) {
+		SPDK_ERRLOG("pdu received after logout\n");
+		spdk_put_pdu(pdu);
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
 	*_pdu = pdu;
 	return 1;
 
 error:
 	spdk_put_pdu(pdu);
 	conn->pdu_in_progress = NULL;
-	return rc;
+	return SPDK_ISCSI_CONNECTION_FATAL;
 }
 
 bool
