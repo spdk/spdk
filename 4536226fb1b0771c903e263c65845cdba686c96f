@@ -46,6 +46,30 @@
       "revId": "4536226fb1b0771c903e263c65845cdba686c96f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16225274_8a97127f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-03T19:55:52Z",
+      "side": 1,
+      "message": "Thanks for explaining more about your use case. Looking at the rest of the public API functions with callbacks, you have the opportunity to pass an arbitrary callback argument to them. I assume that you are using that field to pass the target context around when starting/stopping subsystems, etc.\n\nThe API here was made before application based scheduling of qpairs was a thing, and I can\u0027t think of a better way to get around it.\n\nOne alternative to passing the context to the accept function, would be to add a pointer to the context inside of the target and pass it to the create structure in the spdk_nvmf_tgt_opts structure which would allow you to access that structure at any time. But I don\u0027t see any inherent benefits to that method over this one, since there is a cb_arg in the rest of the functions that you can use to pass that context.",
+      "parentUuid": "cc681735_4714b2d8",
+      "range": {
+        "startLine": 9,
+        "startChar": 29,
+        "endLine": 10,
+        "endChar": 6
+      },
+      "revId": "4536226fb1b0771c903e263c65845cdba686c96f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
