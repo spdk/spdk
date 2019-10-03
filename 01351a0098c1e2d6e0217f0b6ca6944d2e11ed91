@@ -16,6 +16,24 @@
       "revId": "01351a0098c1e2d6e0217f0b6ca6944d2e11ed91",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a126b0f8_46424ca4",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-03T09:26:22Z",
+      "side": 1,
+      "message": "Jim I added patch for io_device_register change, but I had to do it after this patch. The reason is that if I did it before this one I would free nvme_bdev_ctrlr in bdev_nvme_ctrlr_destruct function and then get this freed nvme_bdev_ctrlr in bdev_nvme_unregister_cb function and try to access it here: spdk_nvme_detach(nvme_bdev_ctrlr-\u003ectrlr) (please see the latest patch version).",
+      "parentUuid": "62c5ce85_e799eccd",
+      "revId": "01351a0098c1e2d6e0217f0b6ca6944d2e11ed91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
