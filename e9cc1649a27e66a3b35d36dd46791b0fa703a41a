@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d57f4f77_1943ac97",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-03T14:48:44Z",
+      "side": 1,
+      "message": "Yes it is, but we still need step like this to use in rollback path after timeout.",
+      "parentUuid": "6671419b_37136be0",
+      "range": {
+        "startLine": 335,
+        "startChar": 0,
+        "endLine": 340,
+        "endChar": 1
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0b55d122_3501c74b",
         "filename": "module/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 7
@@ -119,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "7600504e_9a6d6697",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-03T14:48:44Z",
+      "side": 1,
+      "message": "Probably you were mixed start_cache_rollback_path and register_rollback_path, if we keep paths as the \u0027rollback argument\u0027 for poll, we need this full path with extra step to clear starting indicator to use in rollback in vbdev_mngt_poll.",
+      "parentUuid": "9de01846_c5da2e30",
+      "range": {
+        "startLine": 343,
+        "startChar": 0,
+        "endLine": 353,
+        "endChar": 2
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "495e4d0a_3c43f8bf",
         "filename": "module/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 7
@@ -165,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "cce32dfe_02e58784",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 991,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-03T14:48:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4122d986_690a8b08",
+      "range": {
+        "startLine": 991,
+        "startChar": 2,
+        "endLine": 991,
+        "endChar": 65
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8237d853_61c82aaf",
         "filename": "module/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 7
@@ -188,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "1064fcc3_69ddcd18",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1001,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-03T14:48:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8237d853_61c82aaf",
+      "range": {
+        "startLine": 1001,
+        "startChar": 2,
+        "endLine": 1001,
+        "endChar": 60
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3c858c83_394ae3cc",
         "filename": "module/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 7
@@ -208,6 +304,30 @@
       "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca12a68e_10d24c7d",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1012,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-03T14:48:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3c858c83_394ae3cc",
+      "range": {
+        "startLine": 1012,
+        "startChar": 2,
+        "endLine": 1012,
+        "endChar": 60
+      },
+      "revId": "e9cc1649a27e66a3b35d36dd46791b0fa703a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
