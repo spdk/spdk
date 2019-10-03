@@ -1466,6 +1466,12 @@ nvmf_request_alloc_wrs(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvmf_rdma_request_data	*current_data_wr;
 	uint32_t				i;
 
+	if (num_sgl_descriptors > SPDK_NVMF_MAX_SGL_ENTRIES) {
+		SPDK_ERRLOG("Requested too much entries (%u), the limit is %u\n",
+			    num_sgl_descriptors, SPDK_NVMF_MAX_SGL_ENTRIES);
+		return -EINVAL;
+	}
+
 	if (spdk_mempool_get_bulk(rtransport->data_wr_pool, (void **)work_requests, num_sgl_descriptors)) {
 		return -ENOMEM;
 	}
@@ -1555,10 +1561,12 @@ nvmf_rdma_get_lkey(struct spdk_nvmf_rdma_device *device, struct iovec *iov,
 
 static bool
 nvmf_rdma_fill_wr_sge(struct spdk_nvmf_rdma_device *device,
-		      struct iovec *iov, struct ibv_send_wr *wr,
+		      struct iovec *iov, struct ibv_send_wr **_wr,
 		      uint32_t *_remaining_data_block, uint32_t *_offset,
+		      uint32_t *_num_extra_wrs,
 		      const struct spdk_dif_ctx *dif_ctx)
 {
+	struct ibv_send_wr *wr = *_wr;
 	struct ibv_sge	*sg_ele = &wr->sg_list[wr->num_sge];
 	uint32_t	lkey = 0;
 	uint32_t	remaining, data_block_size, md_size, sge_len;
@@ -1579,7 +1587,18 @@ nvmf_rdma_fill_wr_sge(struct spdk_nvmf_rdma_device *device,
 		data_block_size = dif_ctx->block_size - dif_ctx->md_size;
 		md_size = dif_ctx->md_size;
 
-		while (remaining && wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES) {
+		while (remaining) {
+			if (wr->num_sge >= SPDK_NVMF_MAX_SGL_ENTRIES) {
+				if (*_num_extra_wrs > 0 && wr->next) {
+					*_wr = wr->next;
+					wr = *_wr;
+					wr->num_sge = 0;
+					sg_ele = &wr->sg_list[wr->num_sge];
+					(*_num_extra_wrs)--;
+				} else {
+					break;
+				}
+			}
 			sg_ele->lkey = lkey;
 			sg_ele->addr = (uintptr_t)((char *)iov->iov_base + *_offset);
 			sge_len = spdk_min(remaining, *_remaining_data_block);
@@ -1615,7 +1634,8 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 		      struct spdk_nvmf_rdma_device *device,
 		      struct spdk_nvmf_rdma_request *rdma_req,
 		      struct ibv_send_wr *wr,
-		      uint32_t length)
+		      uint32_t length,
+		      uint32_t num_extra_wrs)
 {
 	struct spdk_nvmf_request *req = &rdma_req->req;
 	struct spdk_dif_ctx *dif_ctx = NULL;
@@ -1629,9 +1649,9 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 
 	wr->num_sge = 0;
 
-	while (length && wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES) {
-		while (spdk_unlikely(!nvmf_rdma_fill_wr_sge(device, &req->iov[rdma_req->iovpos], wr,
-				     &remaining_data_block, &offset, dif_ctx))) {
+	while (length && (num_extra_wrs || wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES)) {
+		while (spdk_unlikely(!nvmf_rdma_fill_wr_sge(device, &req->iov[rdma_req->iovpos], &wr,
+				     &remaining_data_block, &offset, &num_extra_wrs, dif_ctx))) {
 			if (nvmf_rdma_replace_buffer(rgroup, &req->buffers[rdma_req->iovpos]) == -ENOMEM) {
 				return -ENOMEM;
 			}
@@ -1653,7 +1673,7 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 }
 
 static void
-nvmf_rdma_setup_wr(struct spdk_nvmf_rdma_request *rdma_req)
+nvmf_rdma_setup_wr(struct spdk_nvmf_rdma_request *rdma_req, uint32_t num_wrs)
 {
 	/* rdma wr specifics */
 	struct ibv_send_wr		*wr = &rdma_req->data.wr;
@@ -1661,14 +1681,31 @@ nvmf_rdma_setup_wr(struct spdk_nvmf_rdma_request *rdma_req)
 
 	wr->wr.rdma.rkey = sgl->keyed.key;
 	wr->wr.rdma.remote_addr = sgl->address;
-	if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-		wr->opcode = IBV_WR_RDMA_WRITE;
-		wr->next = &rdma_req->rsp.wr;
-		wr->send_flags &= ~IBV_SEND_SIGNALED;
-	} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-		wr->opcode = IBV_WR_RDMA_READ;
-		wr->next = NULL;
-		wr->send_flags |= IBV_SEND_SIGNALED;
+
+	if (spdk_likely(num_wrs == 1)) {
+		if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+			wr->opcode = IBV_WR_RDMA_WRITE;
+			wr->next = &rdma_req->rsp.wr;
+			wr->send_flags &= ~IBV_SEND_SIGNALED;
+		} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+			wr->opcode = IBV_WR_RDMA_READ;
+			wr->next = NULL;
+			wr->send_flags |= IBV_SEND_SIGNALED;
+		}
+	} else {
+		/* additional WRs have been allocated, flags, opcodes & links to the next WR already filled */
+		uint32_t i;
+		int j;
+		uint64_t remote_addr_offset = 0;
+
+		for (i = 0; i < num_wrs; ++i) {
+			wr->wr.rdma.rkey = sgl->keyed.key;
+			wr->wr.rdma.remote_addr = sgl->address + remote_addr_offset;
+			for (j = 0; j < wr->num_sge; ++j) {
+				remote_addr_offset += wr->sg_list[j].length;
+			}
+			wr = wr->next;
+		}
 	}
 }
 
@@ -1730,13 +1767,13 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 	}
 
-	rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, wr, length);
+	rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, wr, length, num_wrs - 1);
 	if (spdk_unlikely(rc != 0)) {
 		goto err_exit;
 	}
 
 	/* rdma wr specifics */
-	nvmf_rdma_setup_wr(rdma_req);
+	nvmf_rdma_setup_wr(rdma_req, num_wrs);
 
 	/* set the number of outstanding data WRs for this request. */
 	rdma_req->num_outstanding_data_wr = num_wrs;
@@ -1815,7 +1852,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 
 		current_wr->num_sge = 0;
 
-		rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, current_wr, lengths[i]);
+		rc = nvmf_rdma_fill_wr_sgl(rgroup, device, rdma_req, current_wr, lengths[i], 0);
 		if (rc != 0) {
 			rc = -ENOMEM;
 			goto err_exit;
