@@ -681,6 +681,7 @@ vmd_dev_init(struct vmd_pci_device *dev)
 	dev->pci.addr.func = 0;
 	dev->pci.id.vendor_id = dev->header->common.vendor_id;
 	dev->pci.id.device_id = dev->header->common.device_id;
+	dev->pci.type = "vmd";
 	dev->pci.map_bar = vmd_dev_map_bar;
 	dev->pci.unmap_bar = vmd_dev_unmap_bar;
 	dev->pci.cfg_read = vmd_dev_cfg_read;
