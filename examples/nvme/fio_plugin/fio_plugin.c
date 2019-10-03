@@ -41,6 +41,7 @@
 #include "spdk/endian.h"
 #include "spdk/dif.h"
 #include "spdk/util.h"
+#include "spdk/likely.h"
 
 #include "config-host.h"
 #include "fio.h"
@@ -98,6 +99,7 @@ struct spdk_fio_ctrlr {
 	struct spdk_nvme_ctrlr_opts	opts;
 	struct spdk_nvme_ctrlr		*ctrlr;
 	struct spdk_fio_ctrlr		*next;
+	bool				removed;
 };
 
 static struct spdk_fio_ctrlr *g_ctrlr;
@@ -236,6 +238,19 @@ fio_do_nvme_pi_check(struct spdk_fio_qpair *fio_qpair)
 	}
 
 	return true;
+}
+
+static void
+remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_fio_ctrlr	*fio_ctrlr;
+
+	fio_ctrlr = get_fio_ctrlr(spdk_nvme_ctrlr_get_transport_id(ctrlr));
+	if (fio_ctrlr == NULL) {
+		return;
+	}
+
+	fio_ctrlr->removed = true;
 }
 
 static void
@@ -491,7 +506,7 @@ static int spdk_fio_setup(struct thread_data *td)
 			attach_cb(td, &trid, fio_ctrlr->ctrlr, &fio_ctrlr->opts);
 		} else {
 			/* Enumerate all of the controllers */
-			if (spdk_nvme_probe(&trid, td, probe_cb, attach_cb, NULL) != 0) {
+			if (spdk_nvme_probe(&trid, td, probe_cb, attach_cb, remove_cb) != 0) {
 				SPDK_ERRLOG("spdk_nvme_probe() failed\n");
 				continue;
 			}
@@ -779,7 +794,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 		}
 		fio_qpair = fio_qpair->next;
 	}
-	if (fio_qpair == NULL || ns == NULL) {
+	if (fio_qpair == NULL || ns == NULL || fio_qpair->fio_ctrlr->removed) {
 		return -ENXIO;
 	}
 	if (fio_qpair->do_nvme_pi && !fio_qpair->extended_lba) {
@@ -892,6 +907,10 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 		}
 
 		while (fio_qpair != NULL) {
+			if (spdk_unlikely(fio_qpair->fio_ctrlr->removed)) {
+				return -ENXIO;
+			}
+
 			spdk_nvme_qpair_process_completions(fio_qpair->qpair, max - fio_thread->iocq_count);
 
 			if (fio_thread->iocq_count >= min) {
