@@ -119,8 +119,7 @@ struct vmd_hot_plug {
 	uint32_t reserved_bus_count : 4;
 	uint32_t max_hotplug_bus_number : 8;
 	uint32_t next_bus_number : 8;
-	uint32_t addr_size;
-	uint64_t physical_addr;
+	struct pci_bars bar;
 	union express_slot_status_register slot_status;
 	struct pci_mem_mgr mem[ADDR_ELEM_COUNT];
 	uint8_t bus_numbers[RESERVED_HOTPLUG_BUSES];
@@ -185,12 +184,6 @@ static inline void
 vmd_hp_enable_hotplug(struct vmd_hot_plug *hp)
 {
 
-}
-
-static inline struct vmd_hot_plug *
-vmd_new_hotplug(struct vmd_pci_bus *newBus)
-{
-	return NULL;
 }
 
 static inline uint8_t
