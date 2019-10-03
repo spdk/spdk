@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e9fa52c3_e5af5d21",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-03T22:38:10Z",
+      "side": 1,
+      "message": "The intent was to maintain the behavior of the old code. We have always only submitted as many as we complete. That was done mostly, I think, because that is the logical limit of how many we can resubmit. But I didn\u0027t want to rock the boat too much by changing that behavior.",
+      "parentUuid": "90f3d4d8_9a7053ec",
+      "revId": "66a9e5dbb9c57410bcb3c1fefd148552702bc3a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7227f3a0_004db2f5",
         "filename": "lib/nvme/nvme_qpair.c",
         "patchSetId": 11
