@@ -1269,7 +1269,7 @@ spdk_vhost_nvme_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_
 		}
 
 		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "add_vhost_nvme_ns");
+		spdk_json_write_named_string(w, "method", "vhost_nvme_controller_add_ns");
 
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "ctrlr", nvme->vdev.name);

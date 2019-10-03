@@ -77,7 +77,8 @@ def vhost_create_nvme_controller(client, ctrlr, io_queues, cpumask=None):
     return client.call('vhost_create_nvme_controller', params)
 
 
-def add_vhost_nvme_ns(client, ctrlr, bdev_name):
+@deprecated_alias('add_vhost_nvme_ns')
+def vhost_nvme_controller_add_ns(client, ctrlr, bdev_name):
     """Add namespace to vhost nvme controller.
     Args:
         ctrlr: controller name where to add a namespace
@@ -88,7 +89,7 @@ def add_vhost_nvme_ns(client, ctrlr, bdev_name):
         'bdev_name': bdev_name,
     }
 
-    return client.call('add_vhost_nvme_ns', params)
+    return client.call('vhost_nvme_controller_add_ns', params)
 
 
 def construct_vhost_blk_controller(client, ctrlr, dev_name, cpumask=None, readonly=None):

@@ -1921,15 +1921,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('--cpumask', help='cpu mask for this controller')
     p.set_defaults(func=vhost_create_nvme_controller)
 
-    def add_vhost_nvme_ns(args):
-        rpc.vhost.add_vhost_nvme_ns(args.client,
-                                    ctrlr=args.ctrlr,
-                                    bdev_name=args.bdev_name)
+    def vhost_nvme_controller_add_ns(args):
+        rpc.vhost.vhost_nvme_controller_add_ns(args.client,
+                                               ctrlr=args.ctrlr,
+                                               bdev_name=args.bdev_name)
 
-    p = subparsers.add_parser('add_vhost_nvme_ns', help='Add a Namespace to vhost controller')
+    p = subparsers.add_parser('vhost_nvme_controller_add_ns', aliases=['add_vhost_nvme_ns'],
+                              help='Add a Namespace to vhost controller')
     p.add_argument('ctrlr', help='conntroller name where add a Namespace')
     p.add_argument('bdev_name', help='block device name for a new Namespace')
-    p.set_defaults(func=add_vhost_nvme_ns)
+    p.set_defaults(func=vhost_nvme_controller_add_ns)
 
     def get_vhost_controllers(args):
         print_dict(rpc.vhost.get_vhost_controllers(args.client, args.name))

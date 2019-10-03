@@ -571,28 +571,28 @@ SPDK_RPC_REGISTER("vhost_create_nvme_controller", spdk_rpc_vhost_create_nvme_con
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_create_nvme_controller, construct_vhost_nvme_controller)
 
-struct rpc_add_vhost_nvme_ctrlr_ns {
+struct rpc_vhost_nvme_ctrlr_add_ns {
 	char *ctrlr;
 	char *bdev_name;
 };
 
 static void
-free_rpc_add_vhost_nvme_ctrlr_ns(struct rpc_add_vhost_nvme_ctrlr_ns *req)
+free_rpc_vhost_nvme_ctrlr_add_ns(struct rpc_vhost_nvme_ctrlr_add_ns *req)
 {
 	free(req->ctrlr);
 	free(req->bdev_name);
 }
 
 static const struct spdk_json_object_decoder rpc_vhost_nvme_add_ns[] = {
-	{"ctrlr", offsetof(struct rpc_add_vhost_nvme_ctrlr_ns, ctrlr), spdk_json_decode_string },
-	{"bdev_name", offsetof(struct rpc_add_vhost_nvme_ctrlr_ns, bdev_name), spdk_json_decode_string },
+	{"ctrlr", offsetof(struct rpc_vhost_nvme_ctrlr_add_ns, ctrlr), spdk_json_decode_string },
+	{"bdev_name", offsetof(struct rpc_vhost_nvme_ctrlr_add_ns, bdev_name), spdk_json_decode_string },
 };
 
 static void
-spdk_rpc_add_vhost_nvme_ns(struct spdk_jsonrpc_request *request,
+spdk_rpc_vhost_nvme_controller_add_ns(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
-	struct rpc_add_vhost_nvme_ctrlr_ns req = {0};
+	struct rpc_vhost_nvme_ctrlr_add_ns req = {0};
 	struct spdk_json_write_ctx *w;
 	struct spdk_vhost_dev *vdev;
 	int rc;
@@ -618,7 +618,7 @@ spdk_rpc_add_vhost_nvme_ns(struct spdk_jsonrpc_request *request,
 	if (rc < 0) {
 		goto invalid;
 	}
-	free_rpc_add_vhost_nvme_ctrlr_ns(&req);
+	free_rpc_vhost_nvme_ctrlr_add_ns(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, true);
@@ -626,11 +626,12 @@ spdk_rpc_add_vhost_nvme_ns(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	free_rpc_add_vhost_nvme_ctrlr_ns(&req);
+	free_rpc_vhost_nvme_ctrlradd__ns(&req);
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("add_vhost_nvme_ns", spdk_rpc_add_vhost_nvme_ns, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("vhost_nvme_controller_add_ns", spdk_rpc_vhost_nvme_controller_add_ns, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_nvme_controller_add_ns, add_vhost_nvme_ns)
 
 #endif /* SPDK_CONFIG_VHOST_INTERNAL_LIB */
 

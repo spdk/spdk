@@ -4542,7 +4542,7 @@ Example response:
 }
 ~~~
 
-## add_vhost_nvme_ns {#rpc_add_vhost_nvme_ns}
+## vhost_nvme_controller_add_ns {#rpc_vhost_nvme_controller_add_ns}
 
 Add namespace backed by `bdev_name`
 
@@ -4565,7 +4565,7 @@ Example request:
     "ctrlr": "VhostNvme0"
   },
   "jsonrpc": "2.0",
-  "method": "add_vhost_nvme_ns",
+  "method": "vhost_nvme_controller_add_ns",
   "id": 1
 }
 ~~~
