@@ -22,6 +22,30 @@
       "revId": "0a4d29a02a4c104a9f9a60d002a2bc7ad32cb1eb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5801540b_b2ce4e5f",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-03T12:41:20Z",
+      "side": 1,
+      "message": "Thanks Tomek for your comment. Yes, you are right. Currently it is in the Round Robin way. In this case, for example, if there is 6 bdevs and 4 cores. The 1st and 2nd core will have 2 bdevs and the 3rd and 4th core will have 1 bdev. That is determined by the bdevperf_construct_target() function. If we do want to have a single bdev been accessed by multiple cores, then as suggested, we could use the -T parameter. My patch here is to make sure that if we configure more cores than number of bdevs, this bdevperf app could properly start up in the current way (round robin) instead of terminating unexpectedly. If we prefer other ways that 4 cores all access 6 bdevs at same time, we may add another later patch to address with a new parameter. Hope this address your comment. Thanks, Gang\n\nRunning log as below:\nroot@storage35:/home/gangcao/storage17/20160628/waikiki/spdk/test/bdev/bdevperf# ./bdevperf -c qos_ssd.conf -q 16 -o 4096 -t 3 -w read -m 0xF\nStarting SPDK v19.10-pre / DPDK 19.05.0 initialization...\n[ DPDK EAL parameters: bdevperf --no-shconf -c 0xF --log-level\u003dlib.eal:6 --log-level\u003dlib.cryptodev:5 --log-level\u003duser1:6 --base-virtaddr\u003d0x200000000000 --match-allocations --file-prefix\u003dspdk_pid13076 ]\nEAL: No available hugepages reported in hugepages-1048576kB\napp.c: 630:spdk_app_start: *NOTICE*: Total cores available: 4\nreactor.c: 340:_spdk_reactor_run: *NOTICE*: Reactor started on core 1\nreactor.c: 340:_spdk_reactor_run: *NOTICE*: Reactor started on core 2\nreactor.c: 340:_spdk_reactor_run: *NOTICE*: Reactor started on core 3\nreactor.c: 340:_spdk_reactor_run: *NOTICE*: Reactor started on core 0\nRunning I/O for 3 seconds...\n Logical core: 0\n Nvme1n1             :  113669.67 IO/s     444.02 MB/s\n Nvme4n1             :  142184.67 IO/s     555.41 MB/s\n Logical core: 1\n Nvme6n1             :  303251.33 IO/s    1184.58 MB/s\n Nvme2n1             :  179728.67 IO/s     702.07 MB/s\n Logical core: 2\n Nvme0n1             :   97709.33 IO/s     381.68 MB/s\n Logical core: 3\n Nvme5n1             :  146305.00 IO/s     571.50 MB/s\n \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n Total               :  982848.67 IO/s    3839.25 MB/s\nroot@storage35:/home/gangcao/storage17/20160628/waikiki/spdk/test/bdev/bdevperf# ./bdevperf -c qos_ssd.conf -q 16 -o 4096 -t 3 -w read -m 0xF -T Nvme0n1\nStarting SPDK v19.10-pre / DPDK 19.05.0 initialization...\n[ DPDK EAL parameters: bdevperf --no-shconf -c 0xF --log-level\u003dlib.eal:6 --log-level\u003dlib.cryptodev:5 --log-level\u003duser1:6 --base-virtaddr\u003d0x200000000000 --match-allocations --file-prefix\u003dspdk_pid13109 ]\nEAL: No available hugepages reported in hugepages-1048576kB\napp.c: 630:spdk_app_start: *NOTICE*: Total cores available: 4\nreactor.c: 340:_spdk_reactor_run: *NOTICE*: Reactor started on core 1\nreactor.c: 340:_spdk_reactor_run: *NOTICE*: Reactor started on core 2\nreactor.c: 340:_spdk_reactor_run: *NOTICE*: Reactor started on core 3\nreactor.c: 340:_spdk_reactor_run: *NOTICE*: Reactor started on core 0\nRunning I/O for 3 seconds...\n Logical core: 0\n Nvme0n1             :   82707.67 IO/s     323.08 MB/s\n Logical core: 1\n Nvme0n1             :   83059.67 IO/s     324.45 MB/s\n Logical core: 2\n Nvme0n1             :   83078.33 IO/s     324.52 MB/s\n Logical core: 3\n Nvme0n1             :   82974.67 IO/s     324.12 MB/s\n \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n Total               :  331820.33 IO/s    1296.17 MB/s",
+      "parentUuid": "8d4d0d69_81dfa9d6",
+      "range": {
+        "startLine": 416,
+        "startChar": 0,
+        "endLine": 418,
+        "endChar": 4
+      },
+      "revId": "0a4d29a02a4c104a9f9a60d002a2bc7ad32cb1eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
