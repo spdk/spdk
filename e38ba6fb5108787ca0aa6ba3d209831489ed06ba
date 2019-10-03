@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8af666ae_82abd4e4",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-03T23:06:48Z",
+      "side": 1,
+      "message": "Let\u0027s make this static inline int.\n\nI just want to make sure this gets inlined in the primary nvme_qpair_submit_request case since it\u0027s part of the 10M+ I/O path.",
+      "revId": "e38ba6fb5108787ca0aa6ba3d209831489ed06ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5a322e2_72186c64",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-03T23:06:48Z",
+      "side": 1,
+      "message": "This is a total nit - but we don\u0027t use \"qp\" anywhere else in this file, so I\u0027d prefer to not add it here.\n\nI think _nvme_qpair_submit_request, nvme_qpair_submit_request_impl, or qpair_submit_request would be better.",
+      "revId": "e38ba6fb5108787ca0aa6ba3d209831489ed06ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72bb87e4_b74c23bb",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 558,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-03T23:06:48Z",
+      "side": 1,
+      "message": "This should still be nvme_qpair_submit_request.",
+      "revId": "e38ba6fb5108787ca0aa6ba3d209831489ed06ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
