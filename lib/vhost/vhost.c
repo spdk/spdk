@@ -524,62 +524,6 @@ vhost_session_find_by_vid(int vid)
 	return NULL;
 }
 
-static void
-vhost_session_mem_register(struct rte_vhost_memory *mem)
-{
-	struct rte_vhost_mem_region *region;
-	uint32_t i;
-	uint64_t previous_start = UINT64_MAX;
-
-	for (i = 0; i < mem->nregions; i++) {
-		uint64_t start, end, len;
-		region = &mem->regions[i];
-		start = FLOOR_2MB(region->mmap_addr);
-		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
-		if (start == previous_start) {
-			start += (size_t) VALUE_2MB;
-		}
-		previous_start = start;
-		len = end - start;
-		SPDK_INFOLOG(SPDK_LOG_VHOST, "Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
-			     start, len);
-
-		if (spdk_mem_register((void *)start, len) != 0) {
-			SPDK_WARNLOG("Failed to register memory region %"PRIu32". Future vtophys translation might fail.\n",
-				     i);
-			continue;
-		}
-	}
-}
-
-static void
-vhost_session_mem_unregister(struct rte_vhost_memory *mem)
-{
-	struct rte_vhost_mem_region *region;
-	uint32_t i;
-	uint64_t previous_start = UINT64_MAX;
-
-	for (i = 0; i < mem->nregions; i++) {
-		uint64_t start, end, len;
-		region = &mem->regions[i];
-		start = FLOOR_2MB(region->mmap_addr);
-		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
-		if (start == previous_start) {
-			start += (size_t) VALUE_2MB;
-		}
-		previous_start = start;
-		len = end - start;
-
-		if (spdk_vtophys((void *) start, NULL) == SPDK_VTOPHYS_ERROR) {
-			continue; /* region has not been registered */
-		}
-
-		if (spdk_mem_unregister((void *)start, len) != 0) {
-			assert(false);
-		}
-	}
-}
-
 struct spdk_vhost_dev *
 spdk_vhost_dev_next(struct spdk_vhost_dev *vdev)
 {
