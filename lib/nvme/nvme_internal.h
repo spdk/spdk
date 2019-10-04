@@ -331,6 +331,13 @@ struct nvme_async_event_request {
 	struct spdk_nvme_cpl		cpl;
 };
 
+enum nvme_qpair_state {
+	NVME_QPAIR_DISABLED,
+	NVME_QPAIR_CONNECTING,
+	NVME_QPAIR_CONNECTED,
+	NVME_QPAIR_ENABLED,
+};
+
 struct spdk_nvme_qpair {
 	struct spdk_nvme_ctrlr		*ctrlr;
 
@@ -338,8 +345,7 @@ struct spdk_nvme_qpair {
 
 	uint8_t				qprio;
 
-	uint8_t				is_enabled : 1;
-	uint8_t				is_connecting: 1;
+	uint8_t				state : 3;
 
 	/*
 	 * Members for handling IO qpair deletion inside of a completion context.
@@ -843,8 +849,6 @@ int	nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 			enum spdk_nvme_qprio qprio,
 			uint32_t num_requests);
 void	nvme_qpair_deinit(struct spdk_nvme_qpair *qpair);
-void	nvme_qpair_enable(struct spdk_nvme_qpair *qpair);
-void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_complete_error_reqs(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 				  struct nvme_request *req);
@@ -966,6 +970,18 @@ nvme_free_request(struct nvme_request *req)
 	assert(req->qpair != NULL);
 
 	STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
+}
+
+static inline void
+nvme_qpair_set_state(struct spdk_nvme_qpair *qpair, enum nvme_qpair_state state)
+{
+	qpair->state = state;
+}
+
+static inline bool
+nvme_qpair_state_equals(struct spdk_nvme_qpair *qpair, enum nvme_qpair_state state)
+{
+	return qpair->state == state;
 }
 
 static inline void
