@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "395b049c_48521997",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 15
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-04T08:34:15Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we use #{nvme_disk_id} for this?",
+      "range": {
+        "startLine": 157,
+        "startChar": 76,
+        "endLine": 157,
+        "endChar": 86
+      },
+      "revId": "1ed1c980f28efc8ebc882a70bf279bb5800f0f7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e579475_a82d8e0e",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-04T08:34:15Z",
+      "side": 1,
+      "message": "Shoulnd\u0027t we use the $size for this?",
+      "range": {
+        "startLine": 50,
+        "startChar": 33,
+        "endLine": 50,
+        "endChar": 49
+      },
+      "revId": "1ed1c980f28efc8ebc882a70bf279bb5800f0f7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e0ddf05_13b70e45",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-04T08:34:15Z",
+      "side": 1,
+      "message": "Let\u0027s use fallocate instead to speed this up.",
+      "range": {
+        "startLine": 50,
+        "startChar": 3,
+        "endLine": 50,
+        "endChar": 5
+      },
+      "revId": "1ed1c980f28efc8ebc882a70bf279bb5800f0f7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
