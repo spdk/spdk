@@ -67,6 +67,35 @@ int spdk_vmd_init(void);
  */
 int spdk_vmd_pci_device_list(struct spdk_pci_addr vmd_addr, struct spdk_pci_device *nvme_list);
 
+/** State of the LEDs */
+enum spdk_vmd_led_state {
+	SPDK_VMD_LED_STATE_OFF,
+	SPDK_VMD_LED_STATE_IDENTIFY,
+	SPDK_VMD_LED_STATE_FAULT,
+	SPDK_VMD_LED_STATE_REBUILD,
+	SPDK_VMD_LED_STATE_UNKNOWN,
+};
+
+/**
+ * Sets the state of the LED on specified PCI device.  The device needs to be behind VMD.
+ *
+ * \param pci_device PCI device
+ * \param state LED state to set
+ *
+ * \return 0 on success, negative errno otherwise
+ */
+int spdk_vmd_set_led_state(struct spdk_pci_device *pci_device, enum spdk_vmd_led_state state);
+
+/**
+ * Retrieves the state of the LED on specified PCI device.  The device needs to be behind VMD.
+ *
+ * \param pci_device PCI device
+ * \param state current LED state
+ *
+ * \return 0 on success, negative errno otherwise
+ */
+int spdk_vmd_get_led_state(struct spdk_pci_device *pci_device, enum spdk_vmd_led_state *state);
+
 #ifdef __cplusplus
 }
 #endif
