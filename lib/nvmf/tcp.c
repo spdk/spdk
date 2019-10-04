@@ -171,6 +171,8 @@ struct spdk_nvmf_tcp_req  {
 
 	bool					has_incapsule_data;
 
+	bool					dif_insert_or_strip;
+
 	/* transfer_tag */
 	uint16_t				ttag;
 
@@ -189,7 +191,6 @@ struct spdk_nvmf_tcp_req  {
 	uint32_t				c2h_data_pdu_num;
 
 	struct spdk_dif_ctx			dif_ctx;
-	bool					dif_insert_or_strip;
 	uint32_t				elba_length;
 	uint32_t				orig_length;
 
