@@ -130,6 +130,7 @@ spdk_ut_sock_accept(struct spdk_sock *_sock)
 
 	SPDK_CU_ASSERT_FATAL(g_ut_client_sock != NULL);
 	g_ut_client_sock->peer = new_sock;
+	new_sock->peer = g_ut_client_sock;
 
 	return &new_sock->base;
 }
@@ -145,6 +146,11 @@ spdk_ut_sock_close(struct spdk_sock *_sock)
 	if (sock == g_ut_client_sock) {
 		g_ut_client_sock = NULL;
 	}
+
+	if (sock->peer != NULL) {
+		sock->peer->peer = NULL;
+	}
+
 	free(_sock);
 
 	return 0;
@@ -244,6 +250,14 @@ spdk_ut_sock_is_ipv4(struct spdk_sock *_sock)
 	return true;
 }
 
+static bool
+spdk_ut_sock_is_connected(struct spdk_sock *_sock)
+{
+	struct spdk_ut_sock *sock = __ut_sock(_sock);
+
+	return (sock->peer != NULL);
+}
+
 static int
 spdk_ut_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 {
@@ -331,6 +345,7 @@ static struct spdk_net_impl g_ut_net_impl = {
 	.set_priority	= spdk_ut_sock_set_priority,
 	.is_ipv6	= spdk_ut_sock_is_ipv6,
 	.is_ipv4	= spdk_ut_sock_is_ipv4,
+	.is_connected	= spdk_ut_sock_is_connected,
 	.get_placement_id	= spdk_ut_sock_get_placement_id,
 	.group_impl_create	= spdk_ut_sock_group_impl_create,
 	.group_impl_add_sock	= spdk_ut_sock_group_impl_add_sock,
@@ -371,6 +386,8 @@ _sock(const char *ip, int port)
 
 	server_sock = spdk_sock_accept(listen_sock);
 	SPDK_CU_ASSERT_FATAL(server_sock != NULL);
+	CU_ASSERT(spdk_sock_is_connected(client_sock) == true);
+	CU_ASSERT(spdk_sock_is_connected(server_sock) == true);
 
 	/* Test spdk_sock_recv */
 	iov.iov_base = test_string;
@@ -417,6 +434,11 @@ _sock(const char *ip, int port)
 	rc = spdk_sock_close(&client_sock);
 	CU_ASSERT(client_sock == NULL);
 	CU_ASSERT(rc == 0);
+
+	/* On FreeBSD, it takes a small amount of time for a close to propagate to the
+	 * other side, even in loopback. Introduce a small sleep. */
+	sleep(1);
+	CU_ASSERT(spdk_sock_is_connected(server_sock) == false);
 
 	rc = spdk_sock_close(&server_sock);
 	CU_ASSERT(server_sock == NULL);

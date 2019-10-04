@@ -1006,6 +1006,14 @@ spdk_vpp_sock_is_ipv4(struct spdk_sock *_sock)
 	return __vpp_session(_sock)->app_session.transport.is_ip4;
 }
 
+static bool
+spdk_vpp_sock_is_connected(struct spdk_sock *_sock)
+{
+	assert(g_svm.vpp_initialized);
+
+	return (__vpp_session(_sock)->app_session.session_state == VPP_SESSION_STATE_READY);
+}
+
 static int
 spdk_vpp_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 {
@@ -1440,6 +1448,7 @@ static struct spdk_net_impl g_vpp_net_impl = {
 	.set_priority	= spdk_vpp_sock_set_priority,
 	.is_ipv6	= spdk_vpp_sock_is_ipv6,
 	.is_ipv4	= spdk_vpp_sock_is_ipv4,
+	.is_connected	= spdk_vpp_sock_is_connected,
 	.get_placement_id	= spdk_vpp_sock_get_placement_id,
 	.group_impl_create	= spdk_vpp_sock_group_impl_create,
 	.group_impl_add_sock	= spdk_vpp_sock_group_impl_add_sock,
