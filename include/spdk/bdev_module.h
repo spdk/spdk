@@ -576,6 +576,14 @@ struct spdk_bdev_io {
 			} scsi;
 		} error;
 
+		/* Device type specific extended completion info */
+		union {
+			struct {
+				/** NVMe completion queue entry DW0 */
+				uint32_t cdw0;
+			} nvme;
+		} ext_cmpl_info;
+
 		/**
 		 * Set to true while the bdev module submit_request function is in progress.
 		 *
@@ -817,13 +825,15 @@ void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io,
 			   enum spdk_bdev_io_status status);
 
 /**
- * Complete a bdev_io with an NVMe status code.
+ * Complete a bdev_io with an NVMe status code and optional DW0 complete queue entry
  *
  * \param bdev_io I/O to complete.
+ * \param cdw0 NVMe Completion Queue DW0 value (set to 0 if not applicable)
  * \param sct NVMe Status Code Type.
  * \param sc NVMe Status Code.
  */
-void spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, int sct, int sc);
+void spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cdw0, int sct,
+				       int sc);
 
 /**
  * Complete a bdev_io with a SCSI status code.

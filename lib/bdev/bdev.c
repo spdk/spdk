@@ -3930,7 +3930,7 @@ spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
 }
 
 void
-spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, int sct, int sc)
+spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cdw0, int sct, int sc)
 {
 	if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_SUCCESS) {
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
@@ -3940,14 +3940,17 @@ spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, int sct, int sc)
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
 	}
 
+	bdev_io->internal.ext_cmpl_info.nvme.cdw0 = cdw0;
+
 	spdk_bdev_io_complete(bdev_io, bdev_io->internal.status);
 }
 
 void
-spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *sc)
+spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0, int *sct, int *sc)
 {
 	assert(sct != NULL);
 	assert(sc != NULL);
+	assert(cdw0 != NULL);
 
 	if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR) {
 		*sct = bdev_io->internal.error.nvme.sct;
@@ -3959,6 +3962,8 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *
 		*sct = SPDK_NVME_SCT_GENERIC;
 		*sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 	}
+
+	*cdw0 = bdev_io->internal.ext_cmpl_info.nvme.cdw0;
 }
 
 struct spdk_thread *

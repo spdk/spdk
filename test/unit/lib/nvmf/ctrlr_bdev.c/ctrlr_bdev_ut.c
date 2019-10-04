@@ -173,7 +173,7 @@ spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem, struct sp
 }
 
 DEFINE_STUB_V(spdk_bdev_io_get_nvme_status,
-	      (const struct spdk_bdev_io *bdev_io, int *sct, int *sc));
+	      (const struct spdk_bdev_io *bdev_io, uint32_t *cdw0, int *sct, int *sc));
 
 int
 spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,

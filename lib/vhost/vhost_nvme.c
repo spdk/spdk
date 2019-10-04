@@ -392,10 +392,11 @@ blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	struct spdk_vhost_nvme_task *task = cb_arg;
 	struct spdk_nvme_cmd *cmd = &task->cmd;
 	int sc, sct;
+	uint32_t cdw0;
 
 	assert(bdev_io != NULL);
 
-	spdk_bdev_io_get_nvme_status(bdev_io, &sct, &sc);
+	spdk_bdev_io_get_nvme_status(bdev_io, &cdw0, &sct, &sc);
 	spdk_bdev_free_io(bdev_io);
 
 	task->dnr = !success;
@@ -416,13 +417,14 @@ blk_unmap_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct spdk_vhost_nvme_task *task = child->parent;
 	struct spdk_vhost_nvme_dev *nvme = task->nvme;
 	int sct, sc;
+	uint32_t cdw0;
 
 	assert(bdev_io != NULL);
 
 	task->num_children--;
 	if (!success) {
 		task->dnr = 1;
-		spdk_bdev_io_get_nvme_status(bdev_io, &sct, &sc);
+		spdk_bdev_io_get_nvme_status(bdev_io, &cdw0, &sct, &sc);
 		task->sct = sct;
 		task->sc = sc;
 	}
