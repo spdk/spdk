@@ -268,19 +268,10 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 }
 
 void
-nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
-{
-}
-
-void
 nvme_qpair_complete_error_reqs(struct spdk_nvme_qpair *qpair)
 {
 }
 
-void
-nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
-{
-}
 
 void
 nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
