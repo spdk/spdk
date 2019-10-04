@@ -331,7 +331,6 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_create_decoders[] = {
 	{"lvol_name", offsetof(struct rpc_bdev_lvol_create, lvol_name), spdk_json_decode_string},
 	{"size", offsetof(struct rpc_bdev_lvol_create, size), spdk_json_decode_uint64},
 	{"thin_provision", offsetof(struct rpc_bdev_lvol_create, thin_provision), spdk_json_decode_bool, true},
-	{"clear_method", offsetof(struct rpc_bdev_lvol_create, clear_method), spdk_json_decode_string, true},
 };
 
 static void
@@ -359,7 +358,6 @@ spdk_rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_create req = {};
-	enum lvol_clear_method clear_method;
 	int rc = 0;
 	struct spdk_lvol_store *lvs = NULL;
 
@@ -380,23 +378,8 @@ spdk_rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (req.clear_method != NULL) {
-		if (!strcasecmp(req.clear_method, "none")) {
-			clear_method = LVOL_CLEAR_WITH_NONE;
-		} else if (!strcasecmp(req.clear_method, "unmap")) {
-			clear_method = LVOL_CLEAR_WITH_UNMAP;
-		} else if (!strcasecmp(req.clear_method, "write_zeroes")) {
-			clear_method = LVOL_CLEAR_WITH_WRITE_ZEROES;
-		} else {
-			spdk_jsonrpc_send_error_response(request, -EINVAL, "Invalid clean_method option");
-			goto cleanup;
-		}
-	} else {
-		clear_method = LVOL_CLEAR_WITH_DEFAULT;
-	}
-
 	rc = vbdev_lvol_create(lvs, req.lvol_name, req.size, req.thin_provision,
-			       clear_method, _spdk_rpc_bdev_lvol_create_cb, request);
+			       _spdk_rpc_bdev_lvol_create_cb, request);
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

@@ -1261,7 +1261,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                              lvol_name=args.lvol_name,
                                              size=args.size * 1024 * 1024,
                                              thin_provision=args.thin_provision,
-                                             clear_method=args.clear_method,
                                              uuid=args.uuid,
                                              lvs_name=args.lvs_name))
 
@@ -1270,8 +1269,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
     p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
     p.add_argument('-t', '--thin-provision', action='store_true', help='create lvol bdev as thin provisioned')
-    p.add_argument('-c', '--clear-method', help="""Change default data clusters clear method.
-        Available: none, unmap, write_zeroes""", required=False)
     p.add_argument('lvol_name', help='name for this lvol')
     p.add_argument('size', help='size in MiB for this bdev', type=int)
     p.set_defaults(func=bdev_lvol_create)
