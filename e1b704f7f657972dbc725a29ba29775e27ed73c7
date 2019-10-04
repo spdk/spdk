@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "0c5f617c_07ec7ebd",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-04T13:17:48Z",
+      "side": 1,
+      "message": "This comment doesn\u0027t represent what is actually done since you don\u0027t use `ret`",
+      "range": {
+        "startLine": 467,
+        "startChar": 1,
+        "endLine": 470,
+        "endChar": 4
+      },
+      "revId": "e1b704f7f657972dbc725a29ba29775e27ed73c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ae2c94dd_a5e171a6",
         "filename": "lib/nvme/nvme_qpair.c",
         "patchSetId": 12
