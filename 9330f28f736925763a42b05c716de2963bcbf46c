@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "603030a1_a5ac99d5",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-04T22:59:29Z",
+      "side": 1,
+      "message": "Good call, I added a little state machine and cleaned it up a bit. Couldn\u0027t combine as much as I wanted because the transport flag is kind of its own animal and spans across a couple of the other states (but it\u0027s not a clean break).",
+      "parentUuid": "9ddbfc69_697cdfad",
+      "revId": "9330f28f736925763a42b05c716de2963bcbf46c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fc536c9d_ba005105",
         "filename": "lib/nvme/nvme_qpair.c",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "9330f28f736925763a42b05c716de2963bcbf46c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87e4ef5c_537ba4a9",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-04T22:59:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fc536c9d_ba005105",
+      "revId": "9330f28f736925763a42b05c716de2963bcbf46c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
