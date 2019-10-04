@@ -88,6 +88,30 @@
     },
     {
       "key": {
+        "uuid": "3c4f28e6_3105c185",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-04T10:42:22Z",
+      "side": 1,
+      "message": "Can we move it to nvme_internal.h? We may also pass qpair to spdk_nvme_io_msg_process() as an argument and resolve it in bdev_nvme when required to leave this structure opaque here.",
+      "parentUuid": "fea21ef1_96a6de79",
+      "range": {
+        "startLine": 143,
+        "startChar": 0,
+        "endLine": 151,
+        "endChar": 2
+      },
+      "revId": "6088f48cdeefcb8a08067fd342c9122e938edb75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7b9b85e9_6fc51b5b",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 2
