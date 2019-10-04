@@ -275,12 +275,6 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	abort();
 }
 
-void
-nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
-{
-	abort();
-}
-
 int
 nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 			   struct spdk_nvme_ctrlr_process *active_proc,
