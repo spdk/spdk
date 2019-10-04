@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57755669_c97494b4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-04T16:33:33Z",
+      "side": 1,
+      "message": "module/bdev/ocf?\n\nFew more words about changes probably will be more than welcome :)",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 4
+      },
+      "revId": "fb7b6e277b488d3320cfc1bf4b2ca5e22100e45e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a75fbaf7_f87245e6",
+        "filename": "module/bdev/ocf/utils.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-04T16:33:33Z",
+      "side": 1,
+      "message": "I believe that we should compare given number with possible cache line sizes and if it isn\u0027t accurate return -1.",
+      "range": {
+        "startLine": 64,
+        "startChar": 1,
+        "endLine": 64,
+        "endChar": 42
+      },
+      "revId": "fb7b6e277b488d3320cfc1bf4b2ca5e22100e45e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8e2574e_2ead66a9",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1059,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-04T16:33:33Z",
+      "side": 1,
+      "message": "Please remove TODO.\n\nProbably you need also remove this setting, or set default cache line size only if cfg-\u003ecache.cache_line_size are not set.",
+      "range": {
+        "startLine": 1056,
+        "startChar": 1,
+        "endLine": 1059,
+        "endChar": 0
+      },
+      "revId": "fb7b6e277b488d3320cfc1bf4b2ca5e22100e45e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "416bbb84_be26b068",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1066,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-04T16:33:33Z",
+      "side": 1,
+      "message": "Please look on above comment",
+      "range": {
+        "startLine": 1065,
+        "startChar": 1,
+        "endLine": 1066,
+        "endChar": 53
+      },
+      "revId": "fb7b6e277b488d3320cfc1bf4b2ca5e22100e45e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6305ac62_8c227351",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1148,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-04T16:33:33Z",
+      "side": 1,
+      "message": "Please look on comment in utils.c file. Now if somebody pass cache_line_size \u003d 4097, we will treat it here as correct.",
+      "range": {
+        "startLine": 1147,
+        "startChar": 1,
+        "endLine": 1148,
+        "endChar": 63
+      },
+      "revId": "fb7b6e277b488d3320cfc1bf4b2ca5e22100e45e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00ea2586_a6d7f712",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1170,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-04T16:33:33Z",
+      "side": 1,
+      "message": "Please look on comments inside this function.",
+      "range": {
+        "startLine": 1170,
+        "startChar": 1,
+        "endLine": 1170,
+        "endChar": 26
+      },
+      "revId": "fb7b6e277b488d3320cfc1bf4b2ca5e22100e45e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41c66d35_1bef5df7",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1226,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-04T16:33:33Z",
+      "side": 1,
+      "message": "!linesize",
+      "range": {
+        "startLine": 1226,
+        "startChar": 6,
+        "endLine": 1226,
+        "endChar": 15
+      },
+      "revId": "fb7b6e277b488d3320cfc1bf4b2ca5e22100e45e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
