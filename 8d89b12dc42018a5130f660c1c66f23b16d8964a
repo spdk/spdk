@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "9e36c66a_5fcf9226",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1202,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-04T20:00:31Z",
+      "side": 1,
+      "message": "I think the confusion is that this can really never fail.  It should be an assert.\n\nIf create_ctrlr() succeeds, then we know that an nvme_bdev_ctrlr was created and inserted into the global TAILQ with the specified trid.",
+      "revId": "8d89b12dc42018a5130f660c1c66f23b16d8964a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "63d88d4d_50b61893",
         "filename": "module/bdev/nvme/bdev_nvme.c",
         "patchSetId": 3
