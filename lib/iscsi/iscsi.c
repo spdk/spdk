@@ -3480,6 +3480,12 @@ iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	task = pdu->task;
 
+	if (spdk_scsi_dev_get_lun(conn->dev, task->lun_id) == NULL) {
+		spdk_scsi_task_process_null_lun(&task->scsi);
+		spdk_iscsi_task_cpl(&task->scsi);
+		return 0;
+	}
+
 	switch (task->scsi.dxfer_dir) {
 	case SPDK_SCSI_DIR_FROM_DEV:
 		return iscsi_op_scsi_read(conn, task);
@@ -4485,6 +4491,15 @@ iscsi_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		task->next_r2t_offset += len;
 	}
 
+	if (spdk_scsi_dev_get_lun(conn->dev, task->lun_id) == NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "LUN %d is removed, complete the task immediately\n",
+			      task->lun_id);
+		subtask->scsi.transfer_len = subtask->scsi.length;
+		spdk_scsi_task_process_null_lun(&subtask->scsi);
+		spdk_iscsi_task_cpl(&subtask->scsi);
+		return 0;
+	}
+
 	iscsi_queue_task(conn, subtask);
 	return 0;
 }
@@ -4802,6 +4817,12 @@ spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 					return pdu_recv_loop_cnt;
 				}
 			}
+
+			rc = iscsi_pdu_hdr_handle(conn, pdu);
+			if (rc < 0) {
+				/* We can't exit until reading all data for this PDU. */
+				pdu->is_failed = true;
+			}
 			conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD;
 			break;
 		case ISCSI_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
@@ -4866,6 +4887,11 @@ spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 			spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->id, pdu->data_valid_bytes,
 					  (uintptr_t)pdu, pdu->bhs.opcode);
 
+			if (pdu->is_failed) {
+				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
+				break;
+			}
+
 			/* Data Segment */
 			if (data_len != 0) {
 				if (!iscsi_check_data_segment_length(conn, pdu, data_len)) {
@@ -4892,10 +4918,7 @@ spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 				pdu->data_segment_len = data_len;
 			}
 
-			rc = iscsi_pdu_hdr_handle(conn, pdu);
-			if (rc == 0) {
-				rc = iscsi_pdu_payload_handle(conn, pdu);
-			}
+			rc = iscsi_pdu_payload_handle(conn, pdu);
 			if (rc < 0) {
 				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 				break;
