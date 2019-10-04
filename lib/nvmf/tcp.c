@@ -891,6 +891,17 @@ spdk_nvmf_tcp_qpair_flush_pdus(void *_tqpair)
 }
 
 static void
+spdk_nvmf_tcp_qpair_disconnect(struct spdk_nvmf_tcp_qpair *tqpair)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Disconnecting qpair %p\n", tqpair);
+
+	tqpair->state = NVME_TCP_QPAIR_STATE_EXITED;
+	spdk_nvmf_tcp_qpair_flush_pdus(tqpair);
+	spdk_poller_unregister(&tqpair->timeout_poller);
+	spdk_nvmf_qpair_disconnect(&tqpair->qpair, NULL, NULL);
+}
+
+static void
 spdk_nvmf_tcp_qpair_write_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 			      struct nvme_tcp_pdu *pdu,
 			      nvme_tcp_qpair_xfer_complete_cb cb_fn,
@@ -1286,11 +1297,8 @@ spdk_nvmf_tcp_qpair_handle_timeout(void *ctx)
 
 	SPDK_ERRLOG("No pdu coming for tqpair=%p within %d seconds\n", tqpair,
 		    SPDK_NVME_TCP_QPAIR_EXIT_TIMEOUT);
-	tqpair->state = NVME_TCP_QPAIR_STATE_EXITED;
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconect the tqpair=%p\n", tqpair);
-	spdk_poller_unregister(&tqpair->timeout_poller);
-	spdk_nvmf_qpair_disconnect(&tqpair->qpair, NULL, NULL);
 
+	spdk_nvmf_tcp_qpair_disconnect(tqpair);
 	return 0;
 }
 
@@ -2670,11 +2678,7 @@ spdk_nvmf_tcp_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock
 	 * State of tqpair: The tqpair is in EXITING state due to internal error
 	 */
 	if ((rc < 0) || (tqpair->state == NVME_TCP_QPAIR_STATE_EXITING)) {
-		tqpair->state = NVME_TCP_QPAIR_STATE_EXITED;
-		spdk_nvmf_tcp_qpair_flush_pdus(tqpair);
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconect the tqpair=%p\n", tqpair);
-		spdk_poller_unregister(&tqpair->timeout_poller);
-		spdk_nvmf_qpair_disconnect(&tqpair->qpair, NULL, NULL);
+		spdk_nvmf_tcp_qpair_disconnect(tqpair);
 	}
 }
 
