@@ -1016,7 +1016,7 @@ _spdk_lvs_verify_lvol_name(struct spdk_lvol_store *lvs, const char *name)
 
 int
 spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
-		 bool thin_provision, enum lvol_clear_method clear_method, spdk_lvol_op_with_handle_complete cb_fn,
+		 bool thin_provision, spdk_lvol_op_with_handle_complete cb_fn,
 		 void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
@@ -1056,7 +1056,6 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	lvol->lvol_store = lvs;
 	num_clusters = spdk_divide_round_up(sz, spdk_bs_get_cluster_size(bs));
 	lvol->thin_provision = thin_provision;
-	lvol->clear_method = (enum blob_clear_method)clear_method;
 	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->pending_lvols, lvol, link);
 	spdk_uuid_generate(&lvol->uuid);
