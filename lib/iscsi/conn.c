@@ -1138,6 +1138,7 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 			SPDK_ERRLOG("  initiator=%s, target=%s\n", conn->initiator_name,
 				    conn->target_short_name);
 			conn->state = ISCSI_CONN_STATE_EXITING;
+			conn->is_timeout = true;
 		}
 	} else if (tsc - conn->last_nopin > conn->nopininterval) {
 		spdk_iscsi_send_nopin(conn);
@@ -1277,7 +1278,7 @@ iscsi_conn_flush_pdus(void *_conn)
 			conn->flush_poller = spdk_poller_register(iscsi_conn_flush_pdus,
 					     conn, 50);
 		}
-	} else {
+	} else if (!conn->is_timeout) {
 		/*
 		 * If the connection state is not RUNNING, then
 		 * keep trying to flush PDUs until our list is
@@ -1287,6 +1288,8 @@ iscsi_conn_flush_pdus(void *_conn)
 		do {
 			rc = iscsi_conn_flush_pdus_internal(conn);
 		} while (rc == 1);
+	} else {
+		spdk_poller_unregister(&conn->flush_poller);
 	}
 
 	if (rc < 0 && conn->state < ISCSI_CONN_STATE_EXITING) {
