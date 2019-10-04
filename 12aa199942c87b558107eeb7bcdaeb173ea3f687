@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e114d3b_842d47b0",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-04T10:35:03Z",
+      "side": 1,
+      "message": "Commit message should probably say that this warning is not actually present in any of spdk/spdk scripts.",
+      "revId": "12aa199942c87b558107eeb7bcdaeb173ea3f687",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
