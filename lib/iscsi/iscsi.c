@@ -4786,6 +4786,11 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 		}
 	}
 
+	rc = iscsi_pdu_hdr_handle(conn, pdu);
+	if (rc < 0) {
+		pdu->is_failed = true;
+	}
+
 	data_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
 
 	if (data_len != 0 && pdu->data_buf == NULL) {
@@ -4846,6 +4851,10 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 	spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->id, pdu->data_valid_bytes,
 			  (uintptr_t)pdu, pdu->bhs.opcode);
 
+	if (pdu->is_failed) {
+		goto error;
+	}
+
 	/* Data Segment */
 	if (data_len != 0) {
 		if (!iscsi_check_data_segment_length(conn, pdu, data_len)) {
@@ -4869,10 +4878,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 		pdu->data_segment_len = data_len;
 	}
 
-	rc = iscsi_pdu_hdr_handle(conn, pdu);
-	if (rc == 0) {
-		rc = iscsi_pdu_payload_handle(conn, pdu);
-	}
+	rc = iscsi_pdu_payload_handle(conn, pdu);
 	spdk_put_pdu(pdu);
 	if (rc < 0) {
 		return SPDK_ISCSI_CONNECTION_FATAL;

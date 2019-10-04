@@ -170,6 +170,7 @@ struct spdk_iscsi_pdu {
 	int hdigest_valid_bytes;
 	int ddigest_valid_bytes;
 	int ref;
+	bool is_failed;
 	bool data_from_mempool;  /* indicate whether the data buffer is allocated from mempool */
 	struct spdk_iscsi_task *task; /* data tied to a task buffer */
 	uint32_t cmd_sn;
