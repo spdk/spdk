@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4cfd3e0_24fb088e",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-04T23:29:50Z",
+      "side": 1,
+      "message": "We should consider changing _nvme_pcie_hotplug_monitor to now use ctrlr-\u003eremove_cb instead of probe-\u003eremove_cb.\n\nI think your patch is correct, but it leads to an odd API consideration where use could specify a remove_cb when the ctrlr was originally probed, but a different remove_cb could be specified later when doing a probe to find hot-removed PCIe devices.  It\u0027s not clear in the API which would be used.  I think we should use this ctrlr-\u003eremove_cb in all cases, rather than probe-\u003eremove_cb for PCIe and ctrlr-\u003eremove_cb for fabrics controllers.",
+      "revId": "5aa765e6f052c0dfbde50fe7ad5464f5611a82a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
