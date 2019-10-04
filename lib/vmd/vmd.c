@@ -923,6 +923,32 @@ vmd_enumerate_devices(struct vmd_adapter *vmd)
 	return vmd_scan_pcibus(&vmd->vmd_bus);
 }
 
+struct vmd_pci_device *
+vmd_find_device(const struct spdk_pci_addr *addr)
+{
+	struct vmd_pci_bus *bus;
+	struct vmd_pci_device *dev;
+	int i;
+
+	for (i = 0; i < MAX_VMD_TARGET; ++i) {
+		for (bus = g_vmd_container.vmd[i].bus_list; bus != NULL; bus = bus->next) {
+			if (bus->self) {
+				if (spdk_pci_addr_compare(&bus->self->pci.addr, addr) == 0) {
+					return bus->self;
+				}
+			}
+
+			for (dev = bus->dev_list; dev != NULL; dev = dev->next) {
+				if (spdk_pci_addr_compare(&dev->pci.addr, addr) == 0) {
+					return dev;
+				}
+			}
+		}
+	}
+
+	return NULL;
+}
+
 static int
 vmd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 {
