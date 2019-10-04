@@ -359,14 +359,14 @@ spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 	uint32_t num_blocks;
 
 	crc32c = SPDK_CRC32C_INITIAL;
-	if (spdk_likely(!pdu->dif_insert_or_strip)) {
+	if (spdk_likely(!pdu->dif_ctx)) {
 		crc32c = spdk_crc32c_update(pdu->data, data_len, crc32c);
 	} else {
 		iov.iov_base = pdu->data_buf;
 		iov.iov_len = pdu->data_buf_len;
-		num_blocks = pdu->data_buf_len / pdu->dif_ctx.block_size;
+		num_blocks = pdu->data_buf_len / pdu->dif_ctx->block_size;
 
-		spdk_dif_update_crc32c(&iov, 1, num_blocks, &crc32c, &pdu->dif_ctx);
+		spdk_dif_update_crc32c(&iov, 1, num_blocks, &crc32c, pdu->dif_ctx);
 	}
 
 	mod = data_len % ISCSI_ALIGNMENT;
@@ -431,7 +431,7 @@ iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 	struct iovec buf_iov, iovs[32];
 	int rc, _rc;
 
-	if (spdk_likely(!pdu->dif_insert_or_strip)) {
+	if (spdk_likely(!pdu->dif_ctx)) {
 		return spdk_iscsi_conn_read_data(conn,
 						 segment_len - pdu->data_valid_bytes,
 						 pdu->data_buf + pdu->data_valid_bytes);
@@ -441,13 +441,13 @@ iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 		rc = spdk_dif_set_md_interleave_iovs(iovs, 32, &buf_iov, 1,
 						     pdu->data_valid_bytes,
 						     segment_len - pdu->data_valid_bytes, NULL,
-						     &pdu->dif_ctx);
+						     pdu->dif_ctx);
 		if (rc > 0) {
 			rc = spdk_iscsi_conn_readv_data(conn, iovs, rc);
 			if (rc > 0) {
 				_rc = spdk_dif_generate_stream(&buf_iov, 1,
 							       pdu->data_valid_bytes, rc,
-							       &pdu->dif_ctx);
+							       pdu->dif_ctx);
 				if (_rc != 0) {
 					SPDK_ERRLOG("DIF generate failed\n");
 					rc = _rc;
@@ -582,13 +582,13 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int iovc
 
 	/* Data Segment */
 	if (data_len > 0) {
-		if (!pdu->dif_insert_or_strip) {
+		if (!pdu->dif_ctx) {
 			if (!_iscsi_sgl_append(&sgl, pdu->data, data_len)) {
 				goto end;
 			}
 		} else {
 			if (!_iscsi_sgl_append_with_md(&sgl, pdu->data, pdu->data_buf_len,
-						       data_len, &pdu->dif_ctx)) {
+						       data_len, pdu->dif_ctx)) {
 				goto end;
 			}
 		}
@@ -2988,6 +2988,10 @@ iscsi_send_datain(struct spdk_iscsi_conn *conn,
 		to_be32(&rsph->res_cnt, residual_len);
 	}
 
+	if (spdk_unlikely(task->dif_insert_or_strip)) {
+		rsp_pdu->dif_ctx = &task->dif_ctx;
+	}
+
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
 
 	return DataSN;
@@ -3198,6 +3202,10 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 	to_be32(&rsph->bi_read_res_cnt, 0);
 	to_be32(&rsph->res_cnt, residual_len);
 
+	if (spdk_unlikely(task->dif_insert_or_strip)) {
+		rsp_pdu->dif_ctx = &task->dif_ctx;
+	}
+
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
 }
 
@@ -3282,6 +3290,12 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 				return 0;
 			}
 
+			if (spdk_unlikely(spdk_scsi_lun_get_dif_ctx(task->scsi.lun, task->scsi.cdb,
+					  task->current_datain_offset,
+					  &task->dif_ctx))) {
+				task->dif_insert_or_strip = true;
+			}
+
 			iscsi_queue_task(conn, subtask);
 		}
 		if (task->current_datain_offset == task->scsi.transfer_len) {
@@ -3304,6 +3318,11 @@ iscsi_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 
 	remaining_size = task->scsi.transfer_len - task->scsi.length;
 	task->current_datain_offset = 0;
+
+	if (spdk_unlikely(spdk_scsi_lun_get_dif_ctx(task->scsi.lun, task->scsi.cdb, 0,
+			  &task->dif_ctx))) {
+		task->dif_insert_or_strip = true;
+	}
 
 	if (remaining_size == 0) {
 		iscsi_queue_task(conn, task);
@@ -3329,7 +3348,7 @@ iscsi_op_scsi_write(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 
 	transfer_len = task->scsi.transfer_len;
 
-	if (spdk_likely(!pdu->dif_insert_or_strip)) {
+	if (spdk_likely(!pdu->dif_ctx)) {
 		scsi_data_len = pdu->data_segment_len;
 	} else {
 		scsi_data_len = pdu->data_buf_len;
@@ -3454,6 +3473,11 @@ iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		    (data_len > conn->sess->FirstBurstLength)) {
 			spdk_iscsi_task_put(task);
 			return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+		}
+
+		if (spdk_unlikely(spdk_scsi_lun_get_dif_ctx(task->scsi.lun, cdb, 0, &task->dif_ctx))) {
+			task->dif_insert_or_strip = true;
+			pdu->dif_ctx = &task->dif_ctx;
 		}
 	} else {
 		/* neither R nor W bit set */
@@ -4471,7 +4495,7 @@ iscsi_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		task->current_r2t_length = 0;
 	}
 
-	if (spdk_likely(!pdu->dif_insert_or_strip)) {
+	if (spdk_likely(!pdu->dif_ctx)) {
 		spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_segment_len);
 	} else {
 		spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_buf_len);
@@ -4846,10 +4870,6 @@ spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 					return pdu_recv_loop_cnt;
 				}
 				pdu->data_buf = pdu->mobj->buf;
-
-				if (spdk_unlikely(spdk_iscsi_get_dif_ctx(conn, pdu, &pdu->dif_ctx))) {
-					pdu->dif_insert_or_strip = true;
-				}
 			}
 
 			/* copy the actual data into local buffer */

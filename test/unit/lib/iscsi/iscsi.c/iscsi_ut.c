@@ -121,6 +121,10 @@ DEFINE_STUB(spdk_scsi_lun_id_int_to_fmt, uint64_t, (int lun_id), 0);
 
 DEFINE_STUB(spdk_scsi_lun_id_fmt_to_int, int, (uint64_t lun_fmt), 0);
 
+DEFINE_STUB(spdk_scsi_lun_get_dif_ctx, bool,
+	    (struct spdk_scsi_lun *lun, uint8_t *cdb, uint32_t data_offset,
+	     struct spdk_dif_ctx *dif_ctx), false);
+
 static void
 op_login_check_target_test(void)
 {
@@ -1448,6 +1452,7 @@ build_iovs_test(void)
 static void
 build_iovs_with_md_test(void)
 {
+	struct spdk_dif_ctx dif_ctx = {};
 	struct spdk_iscsi_conn conn = {};
 	struct spdk_iscsi_pdu pdu = {};
 	struct iovec iovs[6] = {};
@@ -1467,11 +1472,11 @@ build_iovs_with_md_test(void)
 	pdu.bhs.total_ahs_len = 0;
 	pdu.bhs.opcode = ISCSI_OP_SCSI;
 
-	rc = spdk_dif_ctx_init(&pdu.dif_ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
+	rc = spdk_dif_ctx_init(&dif_ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
 			       0, 0, 0, 0, 0, 0);
 	CU_ASSERT(rc == 0);
 
-	pdu.dif_insert_or_strip = true;
+	pdu.dif_ctx = &dif_ctx;
 
 	pdu.writev_offset = 0;
 	rc = spdk_iscsi_build_iovs(&conn, iovs, 6, &pdu, &mapped_length);

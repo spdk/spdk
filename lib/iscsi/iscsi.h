@@ -176,8 +176,7 @@ struct spdk_iscsi_pdu {
 	uint32_t cmd_sn;
 	uint32_t writev_offset;
 	uint32_t data_buf_len;
-	bool dif_insert_or_strip;
-	struct spdk_dif_ctx dif_ctx;
+	struct spdk_dif_ctx *dif_ctx;
 	TAILQ_ENTRY(spdk_iscsi_pdu)	tailq;
 
 
