@@ -198,4 +198,6 @@ vmd_hp_get_next_bus_number(struct vmd_hot_plug *hp)
 	return 0;
 }
 
+struct vmd_pci_device *vmd_find_device(const struct spdk_pci_addr *addr);
+
 #endif /* VMD_H */
