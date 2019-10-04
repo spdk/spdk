@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6cd47eee_fdfc0b61",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-04T23:41:18Z",
+      "side": 1,
+      "message": "add blank line after variable declarations",
+      "revId": "1f0b5078e746e711a5ec75bd65743498b74bab0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d36896a_ca4d3138",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-04T23:41:18Z",
+      "side": 1,
+      "message": "if (ctrlr-\u003eremove_cb \u003d\u003d NULL) {\n  return;\n}\n\n/*\n * In the pcie...\n\nThen you don\u0027t have to indent lines 614-620.",
+      "revId": "1f0b5078e746e711a5ec75bd65743498b74bab0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b693b383_e256e1f9",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-04T23:41:18Z",
+      "side": 1,
+      "message": "I had to go look at the nvme_robust_mutex_unlock implementation and then the pthread_mutex_unlock man page to convince myself that this works.  :-)\n\nI think a small comment like this would help future readers.\n/* This returns EPERM if this function was called without the global driver lock. */",
+      "revId": "1f0b5078e746e711a5ec75bd65743498b74bab0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "837fb881_2fce810d",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-04T23:41:18Z",
+      "side": 1,
+      "message": "see comment on previous patch - I think we should use the remove_cb specified when the ctrlr was originally attached (to keep it consistent with fabrics controllers)",
+      "revId": "1f0b5078e746e711a5ec75bd65743498b74bab0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
