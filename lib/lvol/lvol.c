@@ -167,7 +167,6 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	struct spdk_lvol *lvol, *tmp;
 	spdk_blob_id blob_id;
 	const char *attr;
-	const enum blob_clear_method *clear_method;
 	size_t value_len;
 	int rc;
 
@@ -224,13 +223,6 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		_spdk_lvol_free(lvol);
 		req->lvserrno = -EINVAL;
 		goto invalid;
-	}
-
-	rc = spdk_blob_get_xattr_value(blob, "clear_method", (const void **)&clear_method, &value_len);
-	if (rc != 0) {
-		lvol->clear_method = BLOB_CLEAR_WITH_DEFAULT;
-	} else {
-		lvol->clear_method = *clear_method;
 	}
 
 	snprintf(lvol->name, sizeof(lvol->name), "%s", attr);
@@ -987,9 +979,6 @@ spdk_lvol_get_xattr_value(void *xattr_ctx, const char *name,
 	} else if (!strcmp("uuid", name)) {
 		*value = lvol->uuid_str;
 		*value_len = sizeof(lvol->uuid_str);
-	} else if (!strcmp("clear_method", name)) {
-		*value = &lvol->clear_method;
-		*value_len = sizeof(int);
 	}
 }
 
@@ -1035,7 +1024,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	struct spdk_lvol *lvol;
 	struct spdk_blob_opts opts;
 	uint64_t num_clusters;
-	char *xattr_names[] = {LVOL_NAME, "uuid", "clear_method"};
+	char *xattr_names[] = {LVOL_NAME, "uuid"};
 	int rc;
 
 	if (lvs == NULL) {
