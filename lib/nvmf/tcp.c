@@ -759,14 +759,22 @@ spdk_nvmf_tcp_stop_listen(struct spdk_nvmf_transport *transport,
 	return rc;
 }
 
+static void spdk_nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
+		enum nvme_tcp_pdu_recv_state state);
+
 static void
 spdk_nvmf_tcp_qpair_disconnect(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Disconnecting qpair %p\n", tqpair);
 
-	tqpair->state = NVME_TCP_QPAIR_STATE_EXITED;
-	spdk_poller_unregister(&tqpair->timeout_poller);
-	spdk_nvmf_qpair_disconnect(&tqpair->qpair, NULL, NULL);
+	if (tqpair->state <= NVME_TCP_QPAIR_STATE_RUNNING) {
+		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
+		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+		spdk_poller_unregister(&tqpair->timeout_poller);
+
+		/* This will end up calling spdk_nvmf_tcp_close_qpair */
+		spdk_nvmf_qpair_disconnect(&tqpair->qpair, NULL, NULL);
+	}
 }
 
 static void
@@ -1238,8 +1246,7 @@ spdk_nvmf_tcp_send_c2h_term_req(struct spdk_nvmf_tcp_qpair *tqpair, struct nvme_
 
 	rsp_pdu = spdk_nvmf_tcp_pdu_get(tqpair);
 	if (!rsp_pdu) {
-		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
-		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+		spdk_nvmf_tcp_qpair_disconnect(tqpair);
 		return;
 	}
 
@@ -1411,8 +1418,7 @@ spdk_nvmf_tcp_send_capsule_resp_pdu(struct spdk_nvmf_tcp_req *tcp_req,
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter, tqpair=%p\n", tqpair);
 	rsp_pdu = spdk_nvmf_tcp_pdu_get(tqpair);
 	if (!rsp_pdu) {
-		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
-		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
+		spdk_nvmf_tcp_qpair_disconnect(tqpair);
 		return;
 	}
 
@@ -1460,8 +1466,7 @@ spdk_nvmf_tcp_send_r2t_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 
 	rsp_pdu = spdk_nvmf_tcp_pdu_get(tqpair);
 	if (!rsp_pdu) {
-		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
-		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+		spdk_nvmf_tcp_qpair_disconnect(tqpair);
 		return;
 	}
 
@@ -1671,8 +1676,7 @@ spdk_nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 
 	rsp_pdu = spdk_nvmf_tcp_pdu_get(tqpair);
 	if (!rsp_pdu) {
-		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
-		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+		spdk_nvmf_tcp_qpair_disconnect(tqpair);
 		return;
 	}
 
@@ -2591,7 +2595,7 @@ spdk_nvmf_tcp_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock
 	 * rc: The socket is closed
 	 * State of tqpair: The tqpair is in EXITING state due to internal error
 	 */
-	if ((rc < 0) || (tqpair->state == NVME_TCP_QPAIR_STATE_EXITING)) {
+	if (rc < 0) {
 		spdk_nvmf_tcp_qpair_disconnect(tqpair);
 	}
 }
@@ -2687,6 +2691,8 @@ static void
 spdk_nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Qpair: %p\n", qpair);
+
+	qpair->state = NVME_TCP_QPAIR_STATE_EXITED;
 
 	spdk_nvmf_tcp_qpair_destroy(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair));
 }
