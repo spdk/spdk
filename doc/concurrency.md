@@ -68,48 +68,65 @@ their documentation (e.g. @ref nvme). Most libraries, however, depend on SPDK's
 abstraction, located in `libspdk_thread.a`. The thread abstraction provides a
 basic message passing framework and defines a few key primitives.
 
-First, spdk_thread is an abstraction for a thread of execution and
-spdk_poller is an abstraction for a function that should be
-periodically called on the given thread. On each system thread that the user
-wishes to use with SPDK, they must first call spdk_thread_create().
+First, `spdk_thread` is an abstraction for a lightweight, stackless thread of
+execution. A lower level framework can execute an `spdk_thread` for a single
+timeslice by calling `spdk_thread_poll()`. A lower level framework is allowed to
+move an `spdk_thread` between system threads at any time, as long as there is
+only a single system thread executing that `spdk_thread_poll()` on that
+`spdk_thread` at any given time. New lightweight threads may be created at any
+time by calling `spdk_thread_create()` and destroyed by calling
+`spdk_thread_exit()`.The lightweight thread is the foundational abstraction for
+threading in SPDK.
 
-The library also defines two other abstractions: spdk_io_device and
-spdk_io_channel. In the course of implementing SPDK we noticed the
-same pattern emerging in a number of different libraries. In order to
-implement a message passing strategy, the code would describe some object with
-global state and also some per-thread context associated with that object that
-was accessed in the I/O path to avoid locking on the global state. The pattern
-was clearest in the lowest layers where I/O was being submitted to block
-devices. These devices often expose multiple queues that can be assigned to
-threads and then accessed without a lock to submit I/O. To abstract that, we
-generalized the device to spdk_io_device and the thread-specific queue to
-spdk_io_channel. Over time, however, the pattern has appeared in a huge
-number of places that don't fit quite so nicely with the names we originally
-chose. In today's code spdk_io_device is any pointer, whose uniqueness is
-predicated only on its memory address, and spdk_io_channel is the per-thread
-context associated with a particular spdk_io_device.
+There are then a few additional abstractions layered on top of the
+`spdk_thread`. One is the `spdk_poller`, which is is an abstraction for a
+function that should be repeatedly called on the given thread. Another is an
+`spdk_thread_msg`, which is a function pointer and a context pointer, that can
+be sent to a thread for execution via `spdk_thread_send_msg()`.
+
+The library also defines two additional abstractions: `spdk_io_device` and
+`spdk_io_channel`. In the course of implementing SPDK we noticed the same
+pattern emerging in a number of different libraries. In order to implement a
+message passing strategy, the code would describe some object with global state
+and also some per-thread context associated with that object that was accessed
+in the I/O path to avoid locking on the global state. The pattern was clearest
+in the lowest layers where I/O was being submitted to block devices. These
+devices often expose multiple queues that can be assigned to threads and then
+accessed without a lock to submit I/O. To abstract that, we generalized the
+device to `spdk_io_device` and the thread-specific queue to `spdk_io_channel`.
+Over time, however, the pattern has appeared in a huge number of places that
+don't fit quite so nicely with the names we originally chose. In today's code
+`spdk_io_device` is any pointer, whose uniqueness is predicated only on its
+memory address, and `spdk_io_channel` is the per-thread context associated with
+a particular `spdk_io_device`.
 
 The threading abstraction provides functions to send a message to any other
 thread, to send a message to all threads one by one, and to send a message to
 all threads for which there is an io_channel for a given io_device.
 
+Most critically, the thread abstraction does not actually spawn any system level
+threads of its own. Instead, it relies on the existence of some lower level
+framework that spawns system threads and sets up event loops. Inside those event
+loops, the threading abstraction simply requires the lower level framework to
+repeatedly call `spdk_thread_poll()` on each `spdk_thread()` that exists. This
+makes SPDK very portable to a wide variety of asynchronous, event-based
+frameworks such as [Seastar](https://www.seastar.io) or [libuv](https://libuv.org/).
+
 # The event Framework
 
-As the number of example applications in SPDK grew, it became clear that a
-large portion of the code in each was implementing the basic message passing
-infrastructure required to call spdk_thread_create(). This includes spawning
-one thread per core, pinning each thread to a unique core, and allocating
-lockless rings between the threads for message passing. Instead of
-re-implementing that infrastructure for each example application, SPDK
-provides the SPDK @ref event. This library handles setting up all of the
-message passing infrastructure, installing signal handlers to cleanly
-shutdown, implements periodic pollers, and does basic command line parsing.
-When started through spdk_app_start(), the library automatically spawns all of
-the threads requested, pins them, and calls spdk_thread_create(). This makes
-it much easier to implement a brand new SPDK application and is the recommended
-method for those starting out. Only established applications with sufficient
-message passing infrastructure should consider directly integrating the lower
-level libraries.
+The SPDK project didn't want to officially pick an asynchronous, event-based
+framework for all of the example applications it shipped with, in the interest
+of supporting the widest variety of frameworks possible. But the applications do
+of course require something that implements an asynchronous event loop in order
+to run, so enter the `event` framework located in `lib/event`. This framework
+includes things like spawning one thread per core, pinning each thread to a
+unique core, polling and scheduling the lightweight threads, installing signal
+handlers to cleanly shutdown, and basic command line option parsing. When
+started through spdk_app_start(), the library automatically spawns all of the
+threads requested, pins them, and is ready for lightweight threads to be
+created. This makes it much easier to implement a brand new SPDK application and
+is the recommended method for those starting out. Only established applications
+should consider directly integrating the lower level libraries.
 
 # Limitations of the C Language
 
