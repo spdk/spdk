@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80dfc513_20f4adc5",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 956,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-04T23:22:10Z",
+      "side": 1,
+      "message": "style: we should still leave int on a separate line",
+      "revId": "fc899fda3dbb5eeb91f489622640aec33a8e09cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e474c57_6e16f434",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 830,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-04T23:22:10Z",
+      "side": 1,
+      "message": "will this need to be called from a different file than nvme_ctrlr.c?  if not, let\u0027s just make it static and not add it here",
+      "revId": "fc899fda3dbb5eeb91f489622640aec33a8e09cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
