@@ -16,6 +16,24 @@
       "revId": "1f39a5cfa3019c331ce610d95092202990b0da31",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6ff3825_b1dd772d",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-04T06:49:50Z",
+      "side": 1,
+      "message": "After Ben sugestion, I remove this from excluded.",
+      "parentUuid": "ec1f3658_b930bf5f",
+      "revId": "1f39a5cfa3019c331ce610d95092202990b0da31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
