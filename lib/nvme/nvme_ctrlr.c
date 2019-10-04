@@ -987,18 +987,20 @@ nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	/* Disable all queues before disabling the controller hardware. */
 	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
-		nvme_qpair_disable(qpair);
+		nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
 		nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
 	}
-	nvme_qpair_disable(ctrlr->adminq);
+	nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_DISABLED);
 	nvme_qpair_complete_error_reqs(ctrlr->adminq);
 	nvme_transport_qpair_abort_reqs(ctrlr->adminq, 0 /* retry */);
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
 	if (nvme_transport_ctrlr_connect_qpair(ctrlr, ctrlr->adminq) != 0) {
 		SPDK_ERRLOG("Controller reinitialization failed.\n");
+		nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_DISABLED);
 		rc = -1;
 		goto out;
 	}
+	nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_CONNECTED);
 
 	/* Doorbell buffer config is invalid during reset */
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
@@ -1018,8 +1020,10 @@ nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 			if (nvme_transport_ctrlr_connect_qpair(ctrlr, qpair) != 0) {
+				nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_DISABLED);
 				rc = -1;
 			}
+			nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_CONNECTED);
 		}
 	}
 
@@ -2086,7 +2090,7 @@ nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr)
 static void
 nvme_ctrlr_enable_admin_queue(struct spdk_nvme_ctrlr *ctrlr)
 {
-	nvme_qpair_enable(ctrlr->adminq);
+	nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_ENABLED);
 }
 
 /**
