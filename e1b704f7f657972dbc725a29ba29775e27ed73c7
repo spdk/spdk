@@ -39,6 +39,24 @@
       "revId": "e1b704f7f657972dbc725a29ba29775e27ed73c7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a702e4e1_9e366bef",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-04T13:23:53Z",
+      "side": 1,
+      "message": "Ahh, that makes sense now.  Thanks",
+      "parentUuid": "ae2c94dd_a5e171a6",
+      "revId": "e1b704f7f657972dbc725a29ba29775e27ed73c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
