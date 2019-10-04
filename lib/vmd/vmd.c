@@ -687,6 +687,7 @@ vmd_dev_init(struct vmd_pci_device *dev)
 	dev->pci.cfg_read = vmd_dev_cfg_read;
 	dev->pci.cfg_write = vmd_dev_cfg_write;
 	dev->pci.detach = vmd_dev_detach;
+	dev->cached_slot_control = dev->pcie_cap->slot_control;
 
 	if (vmd_is_supported_device(dev)) {
 		spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->pci.addr);
@@ -921,6 +922,32 @@ vmd_enumerate_devices(struct vmd_adapter *vmd)
 	vmd->vmd_bus.domain = vmd->pci.addr.domain;
 
 	return vmd_scan_pcibus(&vmd->vmd_bus);
+}
+
+struct vmd_pci_device *
+vmd_find_device(const struct spdk_pci_addr *addr)
+{
+	struct vmd_pci_bus *bus;
+	struct vmd_pci_device *dev;
+	int i;
+
+	for (i = 0; i < MAX_VMD_TARGET; ++i) {
+		for (bus = g_vmd_container.vmd[i].bus_list; bus != NULL; bus = bus->next) {
+			if (bus->self) {
+				if (spdk_pci_addr_compare(&bus->self->pci.addr, addr) == 0) {
+					return bus->self;
+				}
+			}
+
+			for (dev = bus->dev_list; dev != NULL; dev = dev->next) {
+				if (spdk_pci_addr_compare(&dev->pci.addr, addr) == 0) {
+					return dev;
+				}
+			}
+		}
+	}
+
+	return NULL;
 }
 
 static int

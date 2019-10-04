@@ -101,6 +101,8 @@ struct vmd_pci_device {
 	uint32_t  target         : 16;
 
 	struct vmd_hot_plug *hp;
+	/* Cached version of the slot_control register */
+	union express_slot_control_register cached_slot_control;
 };
 
 
@@ -197,5 +199,7 @@ vmd_hp_get_next_bus_number(struct vmd_hot_plug *hp)
 	assert(false);
 	return 0;
 }
+
+struct vmd_pci_device *vmd_find_device(const struct spdk_pci_addr *addr);
 
 #endif /* VMD_H */
