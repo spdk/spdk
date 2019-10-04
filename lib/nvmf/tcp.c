@@ -2083,9 +2083,7 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			spdk_nvmf_tcp_pdu_payload_handle(tqpair);
 			break;
 		case NVME_TCP_PDU_RECV_STATE_ERROR:
-			/* Check whether the connection is closed. Each time, we only read 1 byte every time */
-			rc = nvme_tcp_read_data(tqpair->sock, 1, (void *)&pdu->hdr->common);
-			if (rc < 0) {
+			if (!spdk_sock_is_connected(tqpair->sock)) {
 				return NVME_TCP_PDU_FATAL;
 			}
 			break;
