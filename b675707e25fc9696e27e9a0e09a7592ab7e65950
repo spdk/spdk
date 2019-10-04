@@ -16,6 +16,24 @@
       "revId": "b675707e25fc9696e27e9a0e09a7592ab7e65950",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7368752_ae14fc81",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-04T15:44:29Z",
+      "side": 1,
+      "message": "I will rewrite this test in more clear way, I will also update all comments.",
+      "parentUuid": "03fc40d1_07f155aa",
+      "revId": "b675707e25fc9696e27e9a0e09a7592ab7e65950",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
