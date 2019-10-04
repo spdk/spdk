@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8913c15_afb80e19",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1232,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-04T19:52:33Z",
+      "side": 1,
+      "message": "ok - I think I understand now why you\u0027re adding these bdevs_done and ctrlr_done booleans - you are preparing for ocssd to create bdevs asynchronously\n\nbut I really think ocssd needs to create its bdevs with some kind of context separate from this probe ctx - but maybe we can defer that for now and continue with this approach you have here\n\nI still think it\u0027s a bit difficult to understand though.  For example, you\u0027ve added bdevs_done *and* ctrlr_done, but you don\u0027t call nvme_bdev_attach_done here.  I\u0027d suggest adding that call now in this patch, with a comment explaining that it\u0027s not needed now but will be in the future.\n\nI\u0027d also suggest the following changes:\n\n1) nvme_bdev_attach_done should always call the callback and free the ctx - don\u0027t have it check bdevs_done, ctrlr_done or rc at all\n2) then here you can do something like:\n     if (ctx-\u003ectrlr_done) {\n       nvme_bdev_attach_done();\n     } else {\n       ctx-\u003ebdevs_done \u003d true;\n     }\n3) do something similar in bdev_nvme_async_poll (but in reverse - check bdevs_done, and set ctrlr_done in the else case)\n4) instead of \"ctrlr_done\", let\u0027s call it \"probe_done\"",
+      "revId": "f68c3c71be3ff618ca86ad1b08c8eafeab12f4b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
