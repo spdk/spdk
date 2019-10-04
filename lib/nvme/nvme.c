@@ -429,7 +429,7 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 		ctrlr->remove_cb = probe_ctx->remove_cb;
 		ctrlr->cb_ctx = probe_ctx->cb_ctx;
 
-		nvme_qpair_enable(ctrlr->adminq);
+		nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_ENABLED);
 		TAILQ_INSERT_TAIL(&probe_ctx->init_ctrlrs, ctrlr, tailq);
 		return 0;
 	}

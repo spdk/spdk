@@ -182,9 +182,8 @@ nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 int
 nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
-	qpair->is_connecting = 1;
+	nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTING);
 	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_connect_qpair, (ctrlr, qpair));
-	qpair->is_connecting = 0;
 }
 
 volatile struct spdk_nvme_registers *
