@@ -1013,7 +1013,7 @@ end:
 
 int
 vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
-		  bool thin_provision, enum lvol_clear_method clear_method, spdk_lvol_op_with_handle_complete cb_fn,
+		  bool thin_provision, spdk_lvol_op_with_handle_complete cb_fn,
 		  void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
@@ -1026,8 +1026,7 @@ vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	rc = spdk_lvol_create(lvs, name, sz, thin_provision, clear_method,
-			      _vbdev_lvol_create_cb, req);
+	rc = spdk_lvol_create(lvs, name, sz, thin_provision, _vbdev_lvol_create_cb, req);
 	if (rc != 0) {
 		free(req);
 	}

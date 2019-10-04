@@ -359,7 +359,6 @@ spdk_rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_create req = {};
-	enum lvol_clear_method clear_method;
 	int rc = 0;
 	struct spdk_lvol_store *lvs = NULL;
 
@@ -381,22 +380,14 @@ spdk_rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.clear_method != NULL) {
-		if (!strcasecmp(req.clear_method, "none")) {
-			clear_method = LVOL_CLEAR_WITH_NONE;
-		} else if (!strcasecmp(req.clear_method, "unmap")) {
-			clear_method = LVOL_CLEAR_WITH_UNMAP;
-		} else if (!strcasecmp(req.clear_method, "write_zeroes")) {
-			clear_method = LVOL_CLEAR_WITH_WRITE_ZEROES;
-		} else {
-			spdk_jsonrpc_send_error_response(request, -EINVAL, "Invalid clean_method option");
-			goto cleanup;
-		}
-	} else {
-		clear_method = LVOL_CLEAR_WITH_DEFAULT;
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "The clear-method option is no longer available on create.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	rc = vbdev_lvol_create(lvs, req.lvol_name, req.size, req.thin_provision,
-			       clear_method, _spdk_rpc_bdev_lvol_create_cb, request);
+			       _spdk_rpc_bdev_lvol_create_cb, request);
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
