@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "c03416bf_c918c6b8",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-04T15:28:58Z",
+      "side": 1,
+      "message": "Please correct me if I\u0027m wrong, but as I remember unlocking not locked mutex results in undefined behaviour (except of ERRORCHECK and RECURSIVE mutex types)",
+      "revId": "6dead5b4ca043f4e2b0b8a092d7dda27a801513b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a2b4d61e_a874fb4a",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 9
