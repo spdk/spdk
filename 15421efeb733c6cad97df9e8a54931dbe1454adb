@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "124fcda6_7acaa10c",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-04T05:37:42Z",
+      "side": 1,
+      "message": "This is for the case that if -T is specified to assign one bdev, if more than one core is specified, the bdevperf will not exit unexpectedly and also all specified cores will be used to send IOs to this single bdev. Result as below:\n\n./bdevperf -c qos_ssd.conf -q 16 -o 4096 -t 3 -w read -m 0xF -T Nvme0n1 -T Nvme1n1\nStarting SPDK v19.10-pre / DPDK 19.05.0 initialization...\n[ DPDK EAL parameters: bdevperf --no-shconf -c 0xF --log-level\u003dlib.eal:6 --log-level\u003dlib.cryptodev:5 --log-level\u003duser1:6 --base-virtaddr\u003d0x200000000000 --match-allocations --file-prefix\u003dspdk_pid17521 ]\nEAL: No available hugepages reported in hugepages-1048576kB\napp.c: 630:spdk_app_start: *NOTICE*: Total cores available: 4\nreactor.c: 340:_spdk_reactor_run: *NOTICE*: Reactor started on core 1\nreactor.c: 340:_spdk_reactor_run: *NOTICE*: Reactor started on core 2\nreactor.c: 340:_spdk_reactor_run: *NOTICE*: Reactor started on core 3\nreactor.c: 340:_spdk_reactor_run: *NOTICE*: Reactor started on core 0\nRunning I/O for 3 seconds...\n Logical core: 0\n Nvme1n1             :   86073.67 IO/s     336.23 MB/s\n Logical core: 1\n Nvme1n1             :   95577.33 IO/s     373.35 MB/s\n Logical core: 2\n Nvme1n1             :   90968.67 IO/s     355.35 MB/s\n Logical core: 3\n Nvme1n1             :   91291.00 IO/s     356.61 MB/s\n \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n Total               :  363910.67 IO/s    1421.53 MB/s",
+      "range": {
+        "startLine": 406,
+        "startChar": 11,
+        "endLine": 406,
+        "endChar": 53
+      },
+      "revId": "15421efeb733c6cad97df9e8a54931dbe1454adb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4664a6b8_82660464",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1275,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-04T05:37:42Z",
+      "side": 1,
+      "message": "This fix the case the bdevperf exits unexpectedly if more cores are specified than number of bdevs. Other code logic is same as before like the round robin assign of bdevs to specified cores.",
+      "range": {
+        "startLine": 1275,
+        "startChar": 17,
+        "endLine": 1275,
+        "endChar": 29
+      },
+      "revId": "15421efeb733c6cad97df9e8a54931dbe1454adb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
