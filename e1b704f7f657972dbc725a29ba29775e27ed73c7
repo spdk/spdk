@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae2c94dd_a5e171a6",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-04T00:28:56Z",
+      "side": 1,
+      "message": "I know Paul said in the last revision to keep trying until you get an EAGAIN, but I disagree.  For example, if you got two completions, let\u0027s only try to resubmit two requests.  Otherwise we waste time calling down to the transport layer for that third one which we\u0027re 99.999% sure will get kicked back to us to queue up again.",
+      "revId": "e1b704f7f657972dbc725a29ba29775e27ed73c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
