@@ -70,6 +70,30 @@
       "revId": "7c63fc579ad1999263fadc18fd9c8006f9eb5bf1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "941dd26f_c71569bc",
+        "filename": "test/nvmf/target/nvme_cli.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-04T06:57:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ead4e80f_d042c5ca",
+      "range": {
+        "startLine": 62,
+        "startChar": 47,
+        "endLine": 62,
+        "endChar": 48
+      },
+      "revId": "7c63fc579ad1999263fadc18fd9c8006f9eb5bf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
