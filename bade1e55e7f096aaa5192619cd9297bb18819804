@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4121eb31_177c6080",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1287,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-04T16:26:03Z",
+      "side": 1,
+      "message": "What about the case where the target started doing an intentional close on the connection, but while flushing the remaining PDUs the initiator side goes away? The send buffer could get stuck in a full state and the NOP timeout will never kick in because it\u0027s running on this same core.",
+      "revId": "bade1e55e7f096aaa5192619cd9297bb18819804",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed0b324c_f8ae3c2d",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1300,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-04T16:26:03Z",
+      "side": 1,
+      "message": "This case causes a problem too, right? If there are PDUs on the list, but the connection has been down long enough that the socket detects it is down and fails the writev while flushing, it will spin forever the next time iscsi_conn_flush_pdus is called.",
+      "revId": "bade1e55e7f096aaa5192619cd9297bb18819804",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0ed085e_0f0e0ac5",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1337,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-04T16:26:03Z",
+      "side": 1,
+      "message": "This case can wedge it too. For example, if the target receives a large batch of PDUs, then the initiator silently disconnects. While processing those PDUs, this condition hits which triggers the flushing of PDUs. If the send buffer fills up, it will never drain and the NOP timeout will never occur either because it\u0027s on the same thread.",
+      "revId": "bade1e55e7f096aaa5192619cd9297bb18819804",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
