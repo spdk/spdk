@@ -108,6 +108,30 @@
       "revId": "6088f48cdeefcb8a08067fd342c9122e938edb75",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bddad262_7ae88f3a",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-04T09:59:07Z",
+      "side": 1,
+      "message": "We have one use case scenario when this model is hard to catch -- when we create NVMe device, but we don\u0027t use it. We want to have an ability to set up NVMe before we use it. That mean no iSCSI or other system is used to handle IO queues, e.g.:\n1) create NVMe with CUSE enabled,\n2) configure NVMe using CUSE devices,\n3) add NVMe to the target/portal,\n4) start handling iSCSI requests,\n5) stop iSCSI,\n6) remove NVMe device\n\nAdmin queue is polled in 1-4, IO queues are \"polled\" in 4 when some request is handled.\n\nSo:\nI. in 2) we may not have any qpair for IO allocated,\nII. IO qpair is not polled (so, spdk_nvme_qpair_process_completions will not be executed at all for IO qpair), also, we have no guarancy that any of IO channels is created for a thread,\nIII. in 4) IO qpair is allocated and \"polled\" only when some requests from iSCSI are being processed, so if there\u0027s no traffic it will be not \"polled\" at all, and there\u0027s no chance to consume any of requests from CUSE queue and there\u0027s no difference if we\u0027ll have one or more queues.\n\nIn conclusion (at least for bdev):\n - we need to create new poller for CUSE queue and allocate/create at least one IO channel for them,\n - easiest way to handle requests from CUSE is to create one queue and distribute them over all controllers/namespaces at one point (having more than one queue will require to start poller for IO requests, at least on each controller).\n\nI don\u0027t think we can handle IO requests without creating new poll thread, assigning at least one channel for IO operations for it, to handle requests from CUSE.",
+      "parentUuid": "7b9b85e9_6fc51b5b",
+      "range": {
+        "startLine": 154,
+        "startChar": 0,
+        "endLine": 154,
+        "endChar": 30
+      },
+      "revId": "6088f48cdeefcb8a08067fd342c9122e938edb75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
