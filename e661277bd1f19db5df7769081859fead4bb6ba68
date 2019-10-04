@@ -16,6 +16,24 @@
       "revId": "e661277bd1f19db5df7769081859fead4bb6ba68",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c02b7e65_95c6c980",
+        "filename": "test/unit/lib/nvme/nvme_qpair.c/nvme_qpair_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-04T23:00:29Z",
+      "side": 1,
+      "message": "Yeah, I added unit tests for this through the process_completions function. Thanks for the reminder!",
+      "parentUuid": "b37e2b03_709e88ba",
+      "revId": "e661277bd1f19db5df7769081859fead4bb6ba68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
