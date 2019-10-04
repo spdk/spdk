@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c3358340_f051d0ab",
+        "filename": "scripts/rpc/vhost.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-04T14:11:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a62b28e4_2ddb099b",
+      "revId": "031c9bfa5cfec9d6264a976addb82c6efef9b3ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f5b594c_8935a56f",
         "filename": "scripts/spdkcli/ui_node.py",
         "patchSetId": 4
@@ -33,6 +51,24 @@
       "revId": "031c9bfa5cfec9d6264a976addb82c6efef9b3ef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89e7ba8b_105fec2d",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-04T14:11:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4f5b594c_8935a56f",
+      "revId": "031c9bfa5cfec9d6264a976addb82c6efef9b3ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "2cd09d5e_e9657514",
+        "filename": "test/vhost/fio/fio.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-04T14:11:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f4536ca_509b2f49",
+      "revId": "031c9bfa5cfec9d6264a976addb82c6efef9b3ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "daa762d7_37682394",
         "filename": "test/vhost/windows/windows.sh",
         "patchSetId": 4
@@ -67,6 +121,24 @@
       "revId": "031c9bfa5cfec9d6264a976addb82c6efef9b3ef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f90f8ddf_cb9cccb0",
+        "filename": "test/vhost/windows/windows.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-04T14:11:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "daa762d7_37682394",
+      "revId": "031c9bfa5cfec9d6264a976addb82c6efef9b3ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
