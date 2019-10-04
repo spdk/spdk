@@ -47,9 +47,17 @@
 extern "C" {
 #endif
 
+/**
+ * A stackless, lightweight thread.
+ */
 struct spdk_thread;
-struct spdk_io_channel_iter;
+
+/**
+ * A function repeatedly called on the same spdk_thread.
+ */
 struct spdk_poller;
+
+struct spdk_io_channel_iter;
 
 /**
  * A function that is called each time a new thread is created.
