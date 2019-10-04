@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78b639bd_28a68d76",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1636,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-04T20:13:14Z",
+      "side": 1,
+      "message": "None of the callers of this function check the return value.",
+      "revId": "c1e85391a78e58fb57f77b0f9e446be3c58a3e4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
