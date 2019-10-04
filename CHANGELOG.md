@@ -115,6 +115,8 @@ Added optional parameter '--md-size' to 'construct_null_bdev' RPC method.
 Added optional parameters '--dif-type' and '--dif-is-head-of-md' to 'construct_null_bdev'
 RPC method.
 
+The `--clear-method` was removed from RPC `bdev_lvol_create`.
+
 ## v19.07:
 
 ### ftl
