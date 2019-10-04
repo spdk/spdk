@@ -407,14 +407,14 @@ nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 static inline bool
 nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 {
-	if (!qpair->is_enabled && !qpair->ctrlr->is_resetting) {
+	if (!nvme_qpair_state_equals(qpair, NVME_QPAIR_ENABLED) && !qpair->ctrlr->is_resetting) {
 		nvme_qpair_complete_error_reqs(qpair);
 		nvme_qpair_abort_queued_reqs(qpair, 0 /* retry */);
-		nvme_qpair_enable(qpair);
+		nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLED);
 		nvme_transport_qpair_abort_reqs(qpair, 0 /* retry */);
 	}
 
-	return qpair->is_enabled;
+	return nvme_qpair_state_equals(qpair, NVME_QPAIR_ENABLED);
 }
 
 int32_t
@@ -430,7 +430,8 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		return 0;
 	}
 
-	if (spdk_unlikely(!nvme_qpair_check_enabled(qpair) && !qpair->is_connecting)) {
+	if (spdk_unlikely(!nvme_qpair_check_enabled(qpair) &&
+			  !nvme_qpair_state_equals(qpair, NVME_QPAIR_CONNECTING))) {
 		/*
 		 * qpair is not enabled, likely because a controller reset is
 		 *  in progress.
@@ -660,9 +661,10 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 		 * out of failed.
 		 */
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
-	} else if (spdk_likely(qpair->is_enabled)) {
+	} else if (nvme_qpair_state_equals(qpair, NVME_QPAIR_ENABLED)) {
 		rc = nvme_transport_qpair_submit_request(qpair, req);
-	} else if (req->cmd.opc == SPDK_NVME_OPC_FABRIC && qpair->is_connecting) {
+	} else if (req->cmd.opc == SPDK_NVME_OPC_FABRIC &&
+		   nvme_qpair_state_equals(qpair, NVME_QPAIR_CONNECTING)) {
 		rc = nvme_transport_qpair_submit_request(qpair, req);
 	} else {
 		/* The controller is being reset - queue this request and
@@ -713,18 +715,6 @@ nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *
 	}
 
 	return rc;
-}
-
-void
-nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
-{
-	qpair->is_enabled = true;
-}
-
-void
-nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
-{
-	qpair->is_enabled = false;
 }
 
 static void

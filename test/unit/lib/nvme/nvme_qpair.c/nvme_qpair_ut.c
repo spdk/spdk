@@ -206,7 +206,7 @@ static void test_nvme_qpair_process_completions(void)
 
 	/* Make sure we call spdk_nvme_ctrlr_reset if the admin transport qp is failed. */
 	admin_qpair.ctrlr->is_failed = false;
-	admin_qpair.is_enabled = true;
+	admin_qpair.state = NVME_QPAIR_ENABLED;
 	admin_qpair.transport_qp_is_failed = true;
 	CU_ASSERT(spdk_nvme_qpair_process_completions(&admin_qpair, 0) == INT32_MAX);
 
