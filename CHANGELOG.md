@@ -141,6 +141,8 @@ Added `blobfs_detect` RPC method to detect whether a blobfs exists on given bdev
 
 Added `blobfs_create` RPC method to build blobfs on given bdev.
 
+The `--clear-method` option was removed from RPC `bdev_lvol_create`.
+
 ## v19.07:
 
 ### ftl
