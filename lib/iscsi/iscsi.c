@@ -4792,11 +4792,12 @@ spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 					conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 					break;
 				}
+			}
 
-				pdu->hdigest_valid_bytes += rc;
-				if (pdu->hdigest_valid_bytes < ISCSI_DIGEST_LEN) {
-					return pdu_recv_loop_cnt;
-				}
+			rc = iscsi_pdu_hdr_handle(conn, pdu);
+			if (rc < 0) {
+				/* We can't exit until reading all data for this PDU. */
+				pdu->is_failed = true;
 			}
 			conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD;
 			break;
@@ -4862,6 +4863,11 @@ spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 			spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->id, pdu->data_valid_bytes,
 					  (uintptr_t)pdu, pdu->bhs.opcode);
 
+			if (pdu->is_failed) {
+				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
+				break;
+			}
+
 			/* Data Segment */
 			if (data_len != 0) {
 				if (!iscsi_check_data_segment_length(conn, pdu, data_len)) {
@@ -4888,10 +4894,7 @@ spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 				pdu->data_segment_len = data_len;
 			}
 
-			rc = iscsi_pdu_hdr_handle(conn, pdu);
-			if (rc == 0) {
-				rc = iscsi_pdu_payload_handle(conn, pdu);
-			}
+			rc = iscsi_pdu_payload_handle(conn, pdu);
 			if (rc < 0) {
 				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 				break;
