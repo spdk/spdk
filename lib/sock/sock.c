@@ -308,6 +308,12 @@ spdk_sock_is_ipv4(struct spdk_sock *sock)
 	return sock->net_impl->is_ipv4(sock);
 }
 
+bool
+spdk_sock_is_connected(struct spdk_sock *sock)
+{
+	return sock->net_impl->is_connected(sock);
+}
+
 struct spdk_sock_group *
 spdk_sock_group_create(void *ctx)
 {
