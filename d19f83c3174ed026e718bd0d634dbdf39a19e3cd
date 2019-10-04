@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a7eadae_126c42c9",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4419,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-04T02:09:39Z",
+      "side": 1,
+      "message": "pdu-\u003etask \u003d subtask",
+      "revId": "d19f83c3174ed026e718bd0d634dbdf39a19e3cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
