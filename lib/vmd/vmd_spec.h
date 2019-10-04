@@ -378,7 +378,7 @@ union express_root_control_register {
 		uint16_t Rsvd : 11;
 	} bit_field;
 	uint16_t as_uint16_t;
-} express_root_control_register;
+};
 
 struct pci_express_cap {
 	uint8_t capid;
