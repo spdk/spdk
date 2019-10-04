@@ -120,4 +120,6 @@ struct nvme_bdev_ctrlr *nvme_bdev_next_ctrlr(struct nvme_bdev_ctrlr *prev);
 void nvme_bdev_dump_trid_json(struct spdk_nvme_transport_id *trid,
 			      struct spdk_json_write_ctx *w);
 
+void bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+
 #endif /* SPDK_COMMON_BDEV_NVME_H */
