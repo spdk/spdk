@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "393a3b38_bb47e31f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-04T11:56:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3208d7b6_55cd9f77",
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9717ba53_f3b79fb3",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "0f2183c3_95bc7c38",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-04T11:56:46Z",
+      "side": 1,
+      "message": "This is done in scsi_hotplug.sh",
+      "parentUuid": "9717ba53_f3b79fb3",
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c2eac899_39ad38aa",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 2
@@ -47,6 +83,30 @@
       "writtenOn": "2019-09-23T08:57:25Z",
       "side": 1,
       "message": "If you change IFS when it\u0027s a good idea to restore old IFS so that it does not interfere with other functions where we expect it to be default.",
+      "range": {
+        "startLine": 10,
+        "startChar": 4,
+        "endLine": 10,
+        "endChar": 47
+      },
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7bfcec23_da2e8685",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-04T11:56:46Z",
+      "side": 1,
+      "message": "Could you clarify because I don\u0027t understand. This is not assigment but creating array",
+      "parentUuid": "c2eac899_39ad38aa",
       "range": {
         "startLine": 10,
         "startChar": 4,
@@ -82,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "c42339f5_22232a64",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-04T11:56:46Z",
+      "side": 1,
+      "message": "Let\u0027s leave it as it is. I can adjust all hotplug scripts to work independently in other commit.",
+      "parentUuid": "2a970753_40cbced3",
+      "range": {
+        "startLine": 17,
+        "startChar": 4,
+        "endLine": 17,
+        "endChar": 15
+      },
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3554f128_48abfe5d",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 2
@@ -105,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "3acc6121_6127d08a",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-04T11:56:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3554f128_48abfe5d",
+      "range": {
+        "startLine": 18,
+        "startChar": 4,
+        "endLine": 18,
+        "endChar": 49
+      },
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f3929ed_d797da73",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 2
@@ -116,6 +224,30 @@
       "writtenOn": "2019-09-23T08:57:25Z",
       "side": 1,
       "message": "Nitpick: Do we plan to re-use these functions in some other scripts?\nIf not then use of functions is probably not needed, there\u0027s just no gain from using them.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 31
+      },
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b93f427_fe9f4efe",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-04T11:56:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1f3929ed_d797da73",
       "range": {
         "startLine": 39,
         "startChar": 0,
@@ -148,6 +280,30 @@
       "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa9e7ed1_e7d4ceb7",
+        "filename": "test/vhost/manual.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-04T11:56:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aefcf790_76c19b25",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 101,
+        "endChar": 16
+      },
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
