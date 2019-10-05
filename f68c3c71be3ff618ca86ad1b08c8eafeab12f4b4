@@ -16,6 +16,24 @@
       "revId": "f68c3c71be3ff618ca86ad1b08c8eafeab12f4b4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9f9b923_31967ac2",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1232,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-05T17:59:02Z",
+      "side": 1,
+      "message": "The idea behind nvme_bdev_attach_done flow was that if somebody that will be implementing new NVMe mode in the future will not have to put such \u0027complex\u0027 (maybe this is too big word for 5 lines ;) ) code in his/her implementation (I mean the point 2 from your suggestion), but it will be only required to set one boolean and rest of logic will be done in generic NVMe code.\n\nYour suggestion is definitively more readable and I can change this code to your suggestion - I just wanted to point out that I\u0027ve put ease of future implementation over readability :)",
+      "parentUuid": "f8913c15_afb80e19",
+      "revId": "f68c3c71be3ff618ca86ad1b08c8eafeab12f4b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
