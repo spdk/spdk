@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57e3e1f5_a6973214",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-05T00:02:09Z",
+      "side": 1,
+      "message": "ha - this last parameter should be has_suffix - but it\u0027s wrong in the spdk_parse_capacity() definition so I guess it\u0027s fine here for now\n\nwhen we have something like 1M, \u0027M\u0027 comes after the \u00271\u0027, so \u0027M\u0027 is a suffix (prefix means it comes before)",
+      "revId": "22ebb0650688d8e3a61bc420af33cf64af811838",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
