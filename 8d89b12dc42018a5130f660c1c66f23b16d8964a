@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "30a63d45_1e6d14de",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1202,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-05T17:40:06Z",
+      "side": 1,
+      "message": "Agree",
+      "parentUuid": "9e36c66a_5fcf9226",
+      "revId": "8d89b12dc42018a5130f660c1c66f23b16d8964a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "63d88d4d_50b61893",
         "filename": "module/bdev/nvme/bdev_nvme.c",
         "patchSetId": 3
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "If this function gets called due to a failure on line 1205 the program will crash because nvme_bdev_ctrlr is NULL.",
       "parentUuid": "12ca9a05_03203b0c",
+      "revId": "8d89b12dc42018a5130f660c1c66f23b16d8964a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50ac4e7d_3cb4fc9d",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1249,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-05T17:40:06Z",
+      "side": 1,
+      "message": "Yeah, you\u0027re right :)",
+      "parentUuid": "9df2ff87_63ebe0ce",
       "revId": "8d89b12dc42018a5130f660c1c66f23b16d8964a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
