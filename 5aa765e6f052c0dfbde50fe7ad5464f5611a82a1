@@ -16,6 +16,24 @@
       "revId": "5aa765e6f052c0dfbde50fe7ad5464f5611a82a1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc1a4c52_d6e1b3ba",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-05T00:02:14Z",
+      "side": 1,
+      "message": "Yeah, I definitely agree with this. The hard part (from my perspective) is that the user facing APIs for hotplug all require passing in a probe_ctx which includes a remove_cb. I was thinking that in order to clear up that confusion, we would need to update that whole API chain with a new wrapper struct that doesn\u0027t contain a remove_cb. I can do that before this patch if you\u0027d like, or if you feel that there is a simpler way - maybe just documenting the function calls to indicate that the remove_cb the user passes in for hotplug will be unused - I\u0027m good to do that too. I just wasn\u0027t sure about the best path.",
+      "parentUuid": "a4cfd3e0_24fb088e",
+      "revId": "5aa765e6f052c0dfbde50fe7ad5464f5611a82a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
