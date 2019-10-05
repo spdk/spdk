@@ -16,6 +16,24 @@
       "revId": "c1e85391a78e58fb57f77b0f9e446be3c58a3e4b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "023150c0_e4b7dc23",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1636,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-05T18:28:14Z",
+      "side": 1,
+      "message": "bdev_nvme_create_bdevs actually checks that :) I will add also check in bdev_nvme_library_init. I\u0027m wondering if I should add it in attach_cb - it won\u0027t change anything, but if someone adds some code below this call it will actually make sense then. I think it will be better to add it just in case.",
+      "parentUuid": "78b639bd_28a68d76",
+      "revId": "c1e85391a78e58fb57f77b0f9e446be3c58a3e4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
