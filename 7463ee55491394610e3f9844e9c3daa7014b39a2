@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2a17fce_4504a287",
+        "filename": "configure",
+        "patchSetId": 6
+      },
+      "lineNbr": 691,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-05T00:12:17Z",
+      "side": 1,
+      "message": "thanks for adding this CONFIG option!\n\ncould you add this (and the associated Makefile changes for mkfs app) in a separate patch?\n\nalso, we don\u0027t currently install fuse by default (i.e. it\u0027s not in pkgdep.sh) - so I think the default value for CONFIG_FUSE should be n, not y.  Otherwise most users will start getting this warning message which will be unexpected.",
+      "revId": "7463ee55491394610e3f9844e9c3daa7014b39a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5b24c78_9b4f703c",
+        "filename": "module/blobfs/bdev/blobfs_bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-05T00:12:17Z",
+      "side": 1,
+      "message": "Why can we not just call ctx-\u003ecb_fn()?\n\nI think this comment needs to be more clear.  It says \"set cb_fn as NULL\" but the code is not setting cb_fn, it is setting ctx-\u003ecb_fn.",
+      "revId": "7463ee55491394610e3f9844e9c3daa7014b39a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
