@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "777002ce_e12a4ea3",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-05T00:02:43Z",
+      "side": 1,
+      "message": "The only real reason is if we hot-removed a pcie drive right after failing a reset on it. For the rest of the transports, this is just future proofing.",
+      "parentUuid": "cfe46cc3_345e7c3d",
+      "revId": "6dead5b4ca043f4e2b0b8a092d7dda27a801513b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c03416bf_c918c6b8",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 9
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-04T15:28:58Z",
       "side": 1,
       "message": "Please correct me if I\u0027m wrong, but as I remember unlocking not locked mutex results in undefined behaviour (except of ERRORCHECK and RECURSIVE mutex types)",
+      "revId": "6dead5b4ca043f4e2b0b8a092d7dda27a801513b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f98758f2_f6760c3b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-05T00:02:43Z",
+      "side": 1,
+      "message": "According to the man page on my system, if the normal lock is robust(which this one is), then unlocking it when you are not the owner returns an error code.",
+      "parentUuid": "c03416bf_c918c6b8",
       "revId": "6dead5b4ca043f4e2b0b8a092d7dda27a801513b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -50,6 +86,24 @@
       "revId": "6dead5b4ca043f4e2b0b8a092d7dda27a801513b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3884f53_fc8ae826",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 616,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-05T00:02:43Z",
+      "side": 1,
+      "message": "You know, I thought I was being really really smart when I wrote this, but it makes no sense to me anymore. In fact it\u0027s a really bad idea. If I didn\u0027t have the lock, there is no reason to try to take it. I must have written this first thing in the morning or something.",
+      "parentUuid": "a2b4d61e_a874fb4a",
+      "revId": "6dead5b4ca043f4e2b0b8a092d7dda27a801513b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
