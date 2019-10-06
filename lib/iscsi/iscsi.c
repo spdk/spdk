@@ -152,16 +152,6 @@ arc4random(void)
 static void
 gen_random(uint8_t *buf, size_t len)
 {
-#ifdef USE_RANDOM
-	long l;
-	size_t idx;
-
-	srandomdev();
-	for (idx = 0; idx < len; idx++) {
-		l = random();
-		buf[idx] = (uint8_t) l;
-	}
-#else
 	uint32_t r;
 	size_t idx;
 
@@ -169,7 +159,6 @@ gen_random(uint8_t *buf, size_t len)
 		r = arc4random();
 		buf[idx] = (uint8_t) r;
 	}
-#endif /* USE_RANDOM */
 }
 
 static uint64_t
