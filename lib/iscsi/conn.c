@@ -70,7 +70,6 @@ static pthread_mutex_t g_conns_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static struct spdk_poller *g_shutdown_timer = NULL;
 
-static void iscsi_conn_stop(struct spdk_iscsi_conn *conn);
 static void iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group,
 			       struct spdk_sock *sock);
 
@@ -455,126 +454,6 @@ end:
 	pthread_mutex_unlock(&g_conns_mutex);
 }
 
-static int
-_iscsi_conn_check_shutdown(void *arg)
-{
-	struct spdk_iscsi_conn *conn = arg;
-	int rc;
-
-	rc = iscsi_conn_free_tasks(conn);
-	if (rc < 0) {
-		return 1;
-	}
-
-	spdk_poller_unregister(&conn->shutdown_timer);
-
-	iscsi_conn_stop(conn);
-	iscsi_conn_free(conn);
-
-	return 1;
-}
-
-static void
-_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
-{
-	int rc;
-
-	spdk_clear_all_transfer_task(conn, NULL, NULL);
-
-	iscsi_poll_group_remove_conn(conn->pg, conn);
-	spdk_sock_close(&conn->sock);
-	spdk_poller_unregister(&conn->logout_timer);
-
-	rc = iscsi_conn_free_tasks(conn);
-	if (rc < 0) {
-		/* The connection cannot be freed yet. Check back later. */
-		conn->shutdown_timer = spdk_poller_register(_iscsi_conn_check_shutdown, conn, 1000);
-	} else {
-		iscsi_conn_stop(conn);
-		iscsi_conn_free(conn);
-	}
-}
-
-static int
-_iscsi_conn_check_pending_tasks(void *arg)
-{
-	struct spdk_iscsi_conn *conn = arg;
-
-	if (conn->dev != NULL && spdk_scsi_dev_has_pending_tasks(conn->dev)) {
-		return 1;
-	}
-
-	spdk_poller_unregister(&conn->shutdown_timer);
-
-	_iscsi_conn_destruct(conn);
-
-	return 1;
-}
-
-void
-spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
-{
-	/* If a connection is already in exited status, just return */
-	if (conn->state >= ISCSI_CONN_STATE_EXITED) {
-		return;
-	}
-
-	conn->state = ISCSI_CONN_STATE_EXITED;
-
-	if (conn->sess != NULL && conn->pending_task_cnt > 0) {
-		iscsi_conn_cleanup_backend(conn);
-	}
-
-	if (conn->dev != NULL && spdk_scsi_dev_has_pending_tasks(conn->dev)) {
-		conn->shutdown_timer = spdk_poller_register(_iscsi_conn_check_pending_tasks, conn, 1000);
-	} else {
-		_iscsi_conn_destruct(conn);
-	}
-}
-
-int
-spdk_iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target)
-{
-	struct spdk_iscsi_conn *conn;
-	int num = 0;
-	int i;
-
-	pthread_mutex_lock(&g_conns_mutex);
-	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
-		conn = find_iscsi_connection_by_id(i);
-		if (conn == NULL) {
-			continue;
-		}
-		if (target != NULL && conn->target != target) {
-			continue;
-		}
-		num++;
-	}
-	pthread_mutex_unlock(&g_conns_mutex);
-	return num;
-}
-
-static void
-iscsi_conn_check_shutdown_cb(void *arg1)
-{
-	_iscsi_conns_cleanup();
-	spdk_shutdown_iscsi_conns_done();
-}
-
-static int
-iscsi_conn_check_shutdown(void *arg)
-{
-	if (spdk_iscsi_get_active_conns(NULL) != 0) {
-		return 1;
-	}
-
-	spdk_poller_unregister(&g_shutdown_timer);
-
-	spdk_thread_send_msg(spdk_get_thread(), iscsi_conn_check_shutdown_cb, NULL);
-
-	return 1;
-}
-
 static void
 iscsi_conn_close_lun(struct spdk_iscsi_conn *conn, int lun_id)
 {
@@ -730,6 +609,126 @@ iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 
 	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg)) ==
 	       spdk_get_thread());
+}
+
+static int
+_iscsi_conn_check_shutdown(void *arg)
+{
+	struct spdk_iscsi_conn *conn = arg;
+	int rc;
+
+	rc = iscsi_conn_free_tasks(conn);
+	if (rc < 0) {
+		return 1;
+	}
+
+	spdk_poller_unregister(&conn->shutdown_timer);
+
+	iscsi_conn_stop(conn);
+	iscsi_conn_free(conn);
+
+	return 1;
+}
+
+static void
+_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
+{
+	int rc;
+
+	spdk_clear_all_transfer_task(conn, NULL, NULL);
+
+	iscsi_poll_group_remove_conn(conn->pg, conn);
+	spdk_sock_close(&conn->sock);
+	spdk_poller_unregister(&conn->logout_timer);
+
+	rc = iscsi_conn_free_tasks(conn);
+	if (rc < 0) {
+		/* The connection cannot be freed yet. Check back later. */
+		conn->shutdown_timer = spdk_poller_register(_iscsi_conn_check_shutdown, conn, 1000);
+	} else {
+		iscsi_conn_stop(conn);
+		iscsi_conn_free(conn);
+	}
+}
+
+static int
+_iscsi_conn_check_pending_tasks(void *arg)
+{
+	struct spdk_iscsi_conn *conn = arg;
+
+	if (conn->dev != NULL && spdk_scsi_dev_has_pending_tasks(conn->dev)) {
+		return 1;
+	}
+
+	spdk_poller_unregister(&conn->shutdown_timer);
+
+	_iscsi_conn_destruct(conn);
+
+	return 1;
+}
+
+void
+spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
+{
+	/* If a connection is already in exited status, just return */
+	if (conn->state >= ISCSI_CONN_STATE_EXITED) {
+		return;
+	}
+
+	conn->state = ISCSI_CONN_STATE_EXITED;
+
+	if (conn->sess != NULL && conn->pending_task_cnt > 0) {
+		iscsi_conn_cleanup_backend(conn);
+	}
+
+	if (conn->dev != NULL && spdk_scsi_dev_has_pending_tasks(conn->dev)) {
+		conn->shutdown_timer = spdk_poller_register(_iscsi_conn_check_pending_tasks, conn, 1000);
+	} else {
+		_iscsi_conn_destruct(conn);
+	}
+}
+
+int
+spdk_iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target)
+{
+	struct spdk_iscsi_conn *conn;
+	int num = 0;
+	int i;
+
+	pthread_mutex_lock(&g_conns_mutex);
+	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
+		conn = find_iscsi_connection_by_id(i);
+		if (conn == NULL) {
+			continue;
+		}
+		if (target != NULL && conn->target != target) {
+			continue;
+		}
+		num++;
+	}
+	pthread_mutex_unlock(&g_conns_mutex);
+	return num;
+}
+
+static void
+iscsi_conn_check_shutdown_cb(void *arg1)
+{
+	_iscsi_conns_cleanup();
+	spdk_shutdown_iscsi_conns_done();
+}
+
+static int
+iscsi_conn_check_shutdown(void *arg)
+{
+	if (spdk_iscsi_get_active_conns(NULL) != 0) {
+		return 1;
+	}
+
+	spdk_poller_unregister(&g_shutdown_timer);
+
+	spdk_thread_send_msg(spdk_get_thread(), iscsi_conn_check_shutdown_cb, NULL);
+
+	return 1;
 }
 
 void
