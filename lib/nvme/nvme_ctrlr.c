@@ -1069,6 +1069,26 @@ out:
 	return rc;
 }
 
+int
+spdk_nvme_ctrlr_set_trid(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_transport_id *trid)
+{
+	if (ctrlr->is_failed == false) {
+		return -EPERM;
+	}
+
+	if (trid->trtype != ctrlr->trid.trtype) {
+		return -EINVAL;
+	}
+
+	if (strncmp(trid->subnqn, ctrlr->trid.subnqn, SPDK_NVMF_NQN_MAX_LEN)) {
+		return -EINVAL;
+	}
+
+	ctrlr->trid = *trid;
+
+	return 0;
+}
+
 static void
 nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
