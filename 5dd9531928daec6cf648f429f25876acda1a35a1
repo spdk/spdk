@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "278f9a52_b74a94de",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-07T13:06:21Z",
+      "side": 1,
+      "message": "The rollback is not started here. It just passes the error code further and ignores it, isn\u0027t that right ?\nContinuing is fine since this is removal and we do our best to clean up, but the message is misleading.",
+      "range": {
+        "startLine": 208,
+        "startChar": 8,
+        "endLine": 208,
+        "endChar": 25
+      },
+      "revId": "5dd9531928daec6cf648f429f25876acda1a35a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4ca263c_88a8985f",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-07T13:06:21Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 268,
+        "startChar": 8,
+        "endLine": 268,
+        "endChar": 25
+      },
+      "revId": "5dd9531928daec6cf648f429f25876acda1a35a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
