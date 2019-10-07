@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CXX = g++
-CXXFLAGS = $(shell pkg-config --cflags $(SPDK_ROOT_DIR)/../seastar/build/debug/seastar.pc)
+CXXFLAGS = $(shell pkg-config --cflags $(SPDK_ROOT_DIR)/../seastar/build/release/seastar.pc)
 
 LIBNAME = sock_seastar
 CXX_SRCS = seastar.cpp

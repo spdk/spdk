@@ -31,7 +31,7 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SEASTAR_FLAGS := $(shell pkg-config --libs --cflags --static ../../../seastar/build/debug/seastar.pc)
+SEASTAR_FLAGS := $(shell pkg-config --libs --cflags --static ../../../seastar/build/release/seastar.pc)
 
 SPDK_ROOT_DIR = ../..
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
