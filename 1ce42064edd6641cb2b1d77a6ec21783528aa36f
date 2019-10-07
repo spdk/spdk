@@ -22,6 +22,30 @@
       "revId": "1ce42064edd6641cb2b1d77a6ec21783528aa36f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "176b3f63_de1b32f9",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-07T16:26:51Z",
+      "side": 1,
+      "message": "You mean document it in a separate patch? Or flip the order of the declarations in a separate patch? I just put the commented ones together.",
+      "parentUuid": "cfeb3850_a42cb89a",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 28
+      },
+      "revId": "1ce42064edd6641cb2b1d77a6ec21783528aa36f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
