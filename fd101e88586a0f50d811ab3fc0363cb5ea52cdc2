@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4f056d8_45efede4",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 770,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-07T10:38:26Z",
+      "side": 1,
+      "message": "Could you use some constant for that?",
+      "range": {
+        "startLine": 770,
+        "startChar": 19,
+        "endLine": 770,
+        "endChar": 21
+      },
+      "revId": "fd101e88586a0f50d811ab3fc0363cb5ea52cdc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
