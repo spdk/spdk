@@ -16,6 +16,24 @@
       "revId": "22ebb0650688d8e3a61bc420af33cf64af811838",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c5f4bd8_88acf34f",
+        "filename": "module/blobfs/bdev/blobfs_bdev_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-10-07T14:04:37Z",
+      "side": 1,
+      "message": "Got it, Jim.\neh, yes, it was directly copied from spdk_parse_capacity.",
+      "parentUuid": "57e3e1f5_a6973214",
+      "revId": "22ebb0650688d8e3a61bc420af33cf64af811838",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
