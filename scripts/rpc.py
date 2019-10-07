@@ -326,6 +326,26 @@ if __name__ == "__main__":
     p.add_argument('name', help='aio bdev name')
     p.set_defaults(func=bdev_aio_delete)
 
+    def bdev_uring_create(args):
+        print_json(rpc.bdev.bdev_uring_create(args.client,
+                                              filename=args.filename,
+                                              name=args.name))
+
+    p = subparsers.add_parser('bdev_uring_create', aliases=['construct_uring_bdev'],
+                              help='Add a bdev with uring backend')
+    p.add_argument('filename', help='Path to device or file (ex: /dev/nvme0n1)')
+    p.add_argument('name', help='Block device name')
+    p.set_defaults(func=bdev_uring_create)
+
+    def bdev_uring_delete(args):
+        rpc.bdev.bdev_uring_delete(args.client,
+                                   name=args.name)
+
+    p = subparsers.add_parser('bdev_uring_delete', aliases=['delete_uring_bdev'],
+                              help='Delete a uring disk')
+    p.add_argument('name', help='uring bdev name')
+    p.set_defaults(func=bdev_uring_delete)
+
     def bdev_nvme_set_options(args):
         rpc.bdev.bdev_nvme_set_options(args.client,
                                        action_on_timeout=args.action_on_timeout,
