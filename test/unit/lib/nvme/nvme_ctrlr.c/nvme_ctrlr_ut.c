@@ -1876,6 +1876,38 @@ test_nvme_ctrlr_init_delay(void)
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
+static void
+test_spdk_nvme_ctrlr_set_trid(void)
+{
+	struct spdk_nvme_ctrlr	ctrlr = {0};
+	struct spdk_nvme_transport_id	new_trid = {0};
+
+	ctrlr.is_failed = false;
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	snprintf(ctrlr.trid.subnqn, SPDK_NVMF_NQN_MAX_LEN, "%s", "nqn.2016-06.io.spdk:cnode1");
+	snprintf(ctrlr.trid.traddr, SPDK_NVMF_TRADDR_MAX_LEN, "%s", "192.168.100.8");
+	snprintf(ctrlr.trid.trsvcid, SPDK_NVMF_TRSVCID_MAX_LEN, "%s", "4420");
+	CU_ASSERT(spdk_nvme_ctrlr_set_trid(&ctrlr, &new_trid) == -EPERM);
+
+	ctrlr.is_failed = true;
+	new_trid.trtype = SPDK_NVME_TRANSPORT_TCP;
+	CU_ASSERT(spdk_nvme_ctrlr_set_trid(&ctrlr, &new_trid) == -EINVAL);
+	CU_ASSERT(ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA);
+
+	new_trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	snprintf(new_trid.subnqn, SPDK_NVMF_NQN_MAX_LEN, "%s", "nqn.2016-06.io.spdk:cnode2");
+	CU_ASSERT(spdk_nvme_ctrlr_set_trid(&ctrlr, &new_trid) == -EINVAL);
+	CU_ASSERT(strncmp(ctrlr.trid.subnqn, "nqn.2016-06.io.spdk:cnode1", SPDK_NVMF_NQN_MAX_LEN) == 0);
+
+
+	snprintf(new_trid.subnqn, SPDK_NVMF_NQN_MAX_LEN, "%s", "nqn.2016-06.io.spdk:cnode1");
+	snprintf(new_trid.traddr, SPDK_NVMF_TRADDR_MAX_LEN, "%s", "192.168.100.9");
+	snprintf(new_trid.trsvcid, SPDK_NVMF_TRSVCID_MAX_LEN, "%s", "4421");
+	CU_ASSERT(spdk_nvme_ctrlr_set_trid(&ctrlr, &new_trid) == 0);
+	CU_ASSERT(strncmp(ctrlr.trid.traddr, "192.168.100.9", SPDK_NVMF_TRADDR_MAX_LEN) == 0);
+	CU_ASSERT(strncmp(ctrlr.trid.trsvcid, "4421", SPDK_NVMF_TRSVCID_MAX_LEN) == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1930,6 +1962,7 @@ int main(int argc, char **argv)
 			       test_nvme_ctrlr_test_active_ns) == NULL
 		|| CU_add_test(suite, "test_spdk_nvme_ctrlr_reconnect_io_qpair",
 			       test_spdk_nvme_ctrlr_reconnect_io_qpair) == NULL
+		|| CU_add_test(suite, "test_spdk_nvme_ctrlr_set_trid", test_spdk_nvme_ctrlr_set_trid) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
