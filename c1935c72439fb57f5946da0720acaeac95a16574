@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c73d11c_2b9715e3",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-07T12:45:09Z",
+      "side": 1,
+      "message": "I think in this case this would become an array with a signle element, thus breaking the script\u0027s logic.",
+      "range": {
+        "startLine": 194,
+        "startChar": 11,
+        "endLine": 194,
+        "endChar": 19
+      },
+      "revId": "c1935c72439fb57f5946da0720acaeac95a16574",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
