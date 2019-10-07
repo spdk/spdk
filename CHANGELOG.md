@@ -106,6 +106,10 @@ Added `arbitration_burst` option for arbitration feature, and added three
 
 Added `spdk_nvme_ns_cmd_write_uncorrectable`.
 
+A new api function `spdk_nvme_ctrlr_update_trid` allows the user to change the trid of the
+controller when it is in a failed state. Upon resetting the controller, it will connect to
+the new transport ID.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
