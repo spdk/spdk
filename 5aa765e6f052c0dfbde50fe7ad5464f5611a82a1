@@ -34,6 +34,24 @@
       "revId": "5aa765e6f052c0dfbde50fe7ad5464f5611a82a1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3195a97_96588bca",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-07T16:23:24Z",
+      "side": 1,
+      "message": "Nevermind, I am thinking a bit more clearly on Monday morning. We will need to keep the destroy_cb in the context for when we hot-insert a controller. I will just update the docs to make it clear that the remove_cb provided in the probe_ctx is only for new controllers.",
+      "parentUuid": "dc1a4c52_d6e1b3ba",
+      "revId": "5aa765e6f052c0dfbde50fe7ad5464f5611a82a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
