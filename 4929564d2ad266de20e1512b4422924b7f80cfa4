@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22be39e8_d5a7967f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-10-07T12:02:40Z",
+      "side": 1,
+      "message": "... and we won\u0027t have to deal with sem_wait() in our mocked implementation. After all, the semaphore is only a workaround for rte_vhost.\n\nThe end goal is also to move the semaphore inside rte_vhost_compat.c and hence slim down vhost.c - we don\u0027t want to mix the hacky DPDK workaround code with the clean, relevant SPDK code.",
+      "revId": "4929564d2ad266de20e1512b4422924b7f80cfa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
