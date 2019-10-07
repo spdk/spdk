@@ -505,6 +505,15 @@ spdk_posix_sock_is_ipv4(struct spdk_sock *_sock)
 	return (sa.ss_family == AF_INET);
 }
 
+static ssize_t
+spdk_posix_sock_peek_msg(struct spdk_sock *_sock)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	char buf;
+
+	return recv(sock->fd, &buf, 1, MSG_PEEK | MSG_DONTWAIT);
+}
+
 static int
 spdk_posix_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 {
@@ -662,6 +671,7 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.set_priority	= spdk_posix_sock_set_priority,
 	.is_ipv6	= spdk_posix_sock_is_ipv6,
 	.is_ipv4	= spdk_posix_sock_is_ipv4,
+	.peek_msg	= spdk_posix_sock_peek_msg,
 	.get_placement_id	= spdk_posix_sock_get_placement_id,
 	.group_impl_create	= spdk_posix_sock_group_impl_create,
 	.group_impl_add_sock	= spdk_posix_sock_group_impl_add_sock,

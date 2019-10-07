@@ -196,6 +196,15 @@ bool spdk_sock_is_ipv6(struct spdk_sock *sock);
 bool spdk_sock_is_ipv4(struct spdk_sock *sock);
 
 /**
+ * Take a peek at an incoming message to the socket.
+ *
+ * \param sock Socket to check.
+ *
+ * \return positive if an incoming message, zero if none, or negative otherwise.
+ */
+ssize_t spdk_sock_peek_msg(struct spdk_sock *sock);
+
+/**
  * Callback function for spdk_sock_group_add_sock().
  *
  * \param arg Argument for the callback function.
