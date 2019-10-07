@@ -16,6 +16,24 @@
       "revId": "7031e6b27923a297ccb82f8f32606f33b1ba7182",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af396b76_475d72db",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1258,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-07T20:38:21Z",
+      "side": 1,
+      "message": "I checked with the failure report,this value should be initialized.",
+      "parentUuid": "fab886e9_63610696",
+      "revId": "7031e6b27923a297ccb82f8f32606f33b1ba7182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
