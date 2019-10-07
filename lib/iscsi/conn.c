@@ -1258,7 +1258,7 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
  * then subsequent calls to this routine will eventually flush
  * remaining PDUs.
  *
- * During other connection states (EXITING or LOGGED_OUT), this
+ * During other connection states (EXITING), this
  * function will spin until all PDUs have successfully been flushed.
  */
 static int
@@ -1372,7 +1372,7 @@ iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 			return SPDK_ISCSI_CONNECTION_FATAL;
 		}
 
-		if (conn->state == ISCSI_CONN_STATE_LOGGED_OUT) {
+		if (conn->is_logged_out) {
 			SPDK_ERRLOG("pdu received after logout\n");
 			spdk_put_pdu(pdu);
 			return SPDK_ISCSI_CONNECTION_FATAL;
@@ -1499,7 +1499,7 @@ logout_timeout(void *arg)
 void
 spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn)
 {
-	conn->state = ISCSI_CONN_STATE_LOGGED_OUT;
+	conn->is_logged_out = true;
 	conn->logout_timer = spdk_poller_register(logout_timeout, conn, ISCSI_LOGOUT_TIMEOUT * 1000000);
 }
 
