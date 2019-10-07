@@ -1491,7 +1491,9 @@ logout_timeout(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 
-	spdk_iscsi_conn_destruct(conn);
+	if (conn->state < ISCSI_CONN_STATE_EXITING) {
+		conn->state = ISCSI_CONN_STATE_EXITING;
+	} 
 
 	return -1;
 }
