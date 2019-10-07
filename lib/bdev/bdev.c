@@ -1915,6 +1915,7 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.orig_iovs = NULL;
 	bdev_io->internal.orig_iovcnt = 0;
 	bdev_io->internal.orig_md_buf = NULL;
+	bdev_io->internal.error.nvme.cdw0 = 0;
 }
 
 static bool
@@ -3708,6 +3709,7 @@ _spdk_bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 		bdev_io->internal.ch->io_outstanding++;
 		shared_resource->io_outstanding++;
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
+		bdev_io->internal.error.nvme.cdw0 = 0;
 		bdev->fn_table->submit_request(spdk_bdev_io_get_io_channel(bdev_io), bdev_io);
 		if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM) {
 			break;
@@ -3931,24 +3933,27 @@ spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
 }
 
 void
-spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, int sct, int sc)
+spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cdw0, int sct, int sc)
 {
 	if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_SUCCESS) {
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	} else {
-		bdev_io->internal.error.nvme.sct = sct;
-		bdev_io->internal.error.nvme.sc = sc;
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
 	}
+
+	bdev_io->internal.error.nvme.cdw0 = cdw0;
+	bdev_io->internal.error.nvme.sct = sct;
+	bdev_io->internal.error.nvme.sc = sc;
 
 	spdk_bdev_io_complete(bdev_io, bdev_io->internal.status);
 }
 
 void
-spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *sc)
+spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0, int *sct, int *sc)
 {
 	assert(sct != NULL);
 	assert(sc != NULL);
+	assert(cdw0 != NULL);
 
 	if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR) {
 		*sct = bdev_io->internal.error.nvme.sct;
@@ -3960,6 +3965,8 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *
 		*sct = SPDK_NVME_SCT_GENERIC;
 		*sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 	}
+
+	*cdw0 = bdev_io->internal.error.nvme.cdw0;
 }
 
 struct spdk_thread *

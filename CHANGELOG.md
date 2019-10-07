@@ -2,6 +2,13 @@
 
 ## v19.10: (Upcoming Release)
 
+### bdev
+
+Added new parameter `cdw0` to `spdk_bdev_io_complete_nvme_status()` and
+`spdk_bdev_io_get_nvme_status()` that allows setting/getting
+the NVMe completion queue DW0 entry. This allows vendor specific IO commands
+to return commmand specific completion info back to the initiator.
+
 ### bdev zone
 
 Added new public header for zoned bdev. Zoned bdev is an extension
