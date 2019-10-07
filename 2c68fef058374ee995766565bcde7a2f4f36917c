@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f79ee63_fc836240",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-07T23:55:04Z",
+      "side": 1,
+      "message": "Remove this",
+      "range": {
+        "startLine": 479,
+        "startChar": 3,
+        "endLine": 479,
+        "endChar": 73
+      },
+      "revId": "2c68fef058374ee995766565bcde7a2f4f36917c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
