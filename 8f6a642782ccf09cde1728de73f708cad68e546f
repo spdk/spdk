@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e55330d4_2c55987b",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 782,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-07T12:54:29Z",
+      "side": 1,
+      "message": "I\u0027m pretty sure you\u0027ve done escaping wrong.\nI think it should be:\n\" \\\"$asan_lib\\\" \\\"$bdev_plugin\\\" \"\n\nIt\u0027s the inner quotes we need to stay in place, not the outer ones.",
+      "range": {
+        "startLine": 782,
+        "startChar": 12,
+        "endLine": 782,
+        "endChar": 42
+      },
+      "revId": "8f6a642782ccf09cde1728de73f708cad68e546f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "754abea2_7e32bdd6",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 794,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-07T12:54:29Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 794,
+        "startChar": 12,
+        "endLine": 794,
+        "endChar": 42
+      },
+      "revId": "8f6a642782ccf09cde1728de73f708cad68e546f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
