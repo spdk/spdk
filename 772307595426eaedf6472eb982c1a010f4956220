@@ -161,6 +161,24 @@
     },
     {
       "key": {
+        "uuid": "8a87c143_64c7355a",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-07T08:26:34Z",
+      "side": 1,
+      "message": "Ok, I understand the use case now. So to be clear - the module would allow for specifying both ZCAP (which can be any value) and ZSZE (which from what I understand needs to be a power of two?). If so, maybe it\u0027d be better to calculate ZSZE to be the ZCAP rounded up to the nearest power of 2 and let the user supply ZCAP only?",
+      "parentUuid": "cb7373ff_36f904b6",
+      "revId": "772307595426eaedf6472eb982c1a010f4956220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "77c923be_67be9b55",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 8
