@@ -694,6 +694,22 @@ int spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx);
 int spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Update the transport ID for a given controller.
+ *
+ * This function allows the user to set a new trid for a controller only if the
+ * controller is failed. A controller is failed when a call to spdk_nvme_reset_ctrlr
+ * fails. The new trid must specify the same trtype and subnqn as the controller's
+ * current trid.
+ *
+ * \param ctrlr Opaque handle to an NVMe controller.
+ * \param trid The new transport ID.
+ *
+ * \return 0 on success, -EINVAL if the trid is invalid,
+ * -EPERM if the ctrlr is not failed.
+ */
+int spdk_nvme_ctrlr_set_trid(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_transport_id *trid);
+
+/**
  * Perform a full hardware reset of the NVMe controller.
  *
  * This function should be called from a single thread while no other threads
