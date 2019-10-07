@@ -1284,6 +1284,16 @@ iscsi_conn_flush_pdus(void *_conn)
 		 */
 		do {
 			rc = iscsi_conn_flush_pdus_internal(conn);
+			if (rc == 1) {
+				/* If spdk_sock_peek_msg() returns non-positive,
+				 * the connection is disconnected in the middle and
+				 * exit the loop.
+				 */
+				rc = spdk_sock_peek_msg(conn->sock);
+				if (rc == 0) {
+					rc = -1;
+				}
+			}
 		} while (rc == 1);
 	}
 
