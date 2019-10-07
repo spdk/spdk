@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = bdev_uring.c
+C_SRCS = bdev_uring.c bdev_uring_rpc.c
 LIBNAME = bdev_uring
 LOCAL_SYS_LIBS = -luring
 
