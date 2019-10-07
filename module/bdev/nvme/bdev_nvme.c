@@ -1707,7 +1707,7 @@ bdev_nvme_no_pi_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	}
 
 	/* Return original completion status */
-	spdk_bdev_io_complete_nvme_status(bdev_io, bio->cpl.status.sct,
+	spdk_bdev_io_complete_nvme_status(bdev_io, bio->cpl.cdw0, bio->cpl.status.sct,
 					  bio->cpl.status.sc);
 }
 
@@ -1739,7 +1739,7 @@ bdev_nvme_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 		}
 	}
 
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->status.sct, cpl->status.sc);
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
 }
 
 static void
@@ -1754,7 +1754,7 @@ bdev_nvme_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 		bdev_nvme_verify_pi_error(bdev_io);
 	}
 
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->status.sct, cpl->status.sc);
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
 }
 
 static void
@@ -1762,7 +1762,7 @@ bdev_nvme_queued_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
 
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->status.sct, cpl->status.sc);
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
 }
 
 static void
@@ -1772,7 +1772,7 @@ bdev_nvme_admin_passthru_completion(void *ctx)
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	spdk_bdev_io_complete_nvme_status(bdev_io,
-					  bio->cpl.status.sct, bio->cpl.status.sc);
+					  bio->cpl.cdw0, bio->cpl.status.sct, bio->cpl.status.sc);
 }
 
 static void
