@@ -321,6 +321,30 @@ def bdev_aio_delete(client, name):
     return client.call('bdev_aio_delete', params)
 
 
+def bdev_uring_create(client, filename, name):
+    """Create a bdev with Linux io_uring backend.
+    Args:
+        name: name of bdev
+        filename: path to device or file (ex: /dev/nvme0n1)
+    Returns:
+        Name of created bdev.
+    """
+    params = {'name': name,
+              'filename': filename}
+
+    return client.call('bdev_uring_create', params)
+
+
+def bdev_uring_delete(client, name):
+    """Delete a uring bdev.
+
+    Args:
+        name: name of uring bdev to delete
+    """
+    params = {'name': name}
+    return client.call('bdev_uring_delete', params)
+
+
 @deprecated_alias('set_bdev_nvme_options')
 def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry_count=None,
                           arbitration_burst=None, low_priority_weight=None,
