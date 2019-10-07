@@ -937,7 +937,7 @@ blockdev_test_nvme_passthru_vendor_specific(void)
 	execute_spdk_function(__blockdev_nvme_passthru, &pt_req);
 	CU_ASSERT(pt_req.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(pt_req.sc == SPDK_NVME_SC_INVALID_OPCODE);
-	CU_ASSERT(pt_req.cdw0 == 0xbeef);
+	CU_ASSERT(pt_req.cdw0 == 0x0);
 }
 
 static void
