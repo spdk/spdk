@@ -1359,13 +1359,16 @@ void spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat 
 			       spdk_bdev_get_device_stat_cb cb, void *cb_arg);
 
 /**
- * Get the status of bdev_io as an NVMe status code.
+ * Get the status of bdev_io as an NVMe status code and command specific
+ * completion queue value.
  *
  * \param bdev_io I/O to get the status from.
+ * \param cdw0 Command specific completion queue value
  * \param sct Status Code Type return value, as defined by the NVMe specification.
  * \param sc Status Code return value, as defined by the NVMe specification.
  */
-void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *sc);
+void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0, int *sct,
+				  int *sc);
 
 /**
  * Get the status of bdev_io as a SCSI status code.

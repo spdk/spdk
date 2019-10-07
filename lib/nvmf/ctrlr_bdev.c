@@ -93,8 +93,10 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 	struct spdk_nvmf_request	*req = cb_arg;
 	struct spdk_nvme_cpl		*response = &req->rsp->nvme_cpl;
 	int				sc, sct;
+	uint32_t			cdw0;
 
-	spdk_bdev_io_get_nvme_status(bdev_io, &sct, &sc);
+	spdk_bdev_io_get_nvme_status(bdev_io, &cdw0, &sct, &sc);
+	response->cdw0 = cdw0;
 	response->status.sc = sc;
 	response->status.sct = sct;
 
@@ -386,12 +388,14 @@ nvmf_bdev_ctrlr_unmap_cpl(struct spdk_bdev_io *bdev_io, bool success,
 	struct spdk_nvmf_request	*req = unmap_ctx->req;
 	struct spdk_nvme_cpl		*response = &req->rsp->nvme_cpl;
 	int				sc, sct;
+	uint32_t			cdw0;
 
 	unmap_ctx->count--;
 
 	if (response->status.sct == SPDK_NVME_SCT_GENERIC &&
 	    response->status.sc == SPDK_NVME_SC_SUCCESS) {
-		spdk_bdev_io_get_nvme_status(bdev_io, &sct, &sc);
+		spdk_bdev_io_get_nvme_status(bdev_io, &cdw0, &sct, &sc);
+		response->cdw0 = cdw0;
 		response->status.sc = sc;
 		response->status.sct = sct;
 	}

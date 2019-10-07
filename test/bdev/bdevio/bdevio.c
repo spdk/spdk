@@ -840,6 +840,7 @@ struct bdevio_passthrough_request {
 	struct io_target *target;
 	int sct;
 	int sc;
+	uint32_t cdw0;
 };
 
 static void
@@ -847,7 +848,7 @@ nvme_pt_test_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 {
 	struct bdevio_passthrough_request *pt_req = arg;
 
-	spdk_bdev_io_get_nvme_status(bdev_io, &pt_req->sct, &pt_req->sc);
+	spdk_bdev_io_get_nvme_status(bdev_io, &pt_req->cdw0, &pt_req->sct, &pt_req->sc);
 	spdk_bdev_free_io(bdev_io);
 	wake_ut_thread();
 }
@@ -932,9 +933,11 @@ blockdev_test_nvme_passthru_vendor_specific(void)
 
 	pt_req.sct = SPDK_NVME_SCT_VENDOR_SPECIFIC;
 	pt_req.sc = SPDK_NVME_SC_SUCCESS;
+	pt_req.cdw0 = 0xbeef;
 	execute_spdk_function(__blockdev_nvme_passthru, &pt_req);
 	CU_ASSERT(pt_req.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(pt_req.sc == SPDK_NVME_SC_INVALID_OPCODE);
+	CU_ASSERT(pt_req.cdw0 == 0x0);
 }
 
 static void
