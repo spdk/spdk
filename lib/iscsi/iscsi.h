@@ -196,9 +196,8 @@ struct spdk_iscsi_pdu {
 enum iscsi_connection_state {
 	ISCSI_CONN_STATE_INVALID = 0,
 	ISCSI_CONN_STATE_RUNNING = 1,
-	ISCSI_CONN_STATE_LOGGED_OUT = 2,
-	ISCSI_CONN_STATE_EXITING = 3,
-	ISCSI_CONN_STATE_EXITED = 4,
+	ISCSI_CONN_STATE_EXITING = 2,
+	ISCSI_CONN_STATE_EXITED = 3,
 };
 
 enum iscsi_chap_phase {
