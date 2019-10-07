@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "643cb561_db0e5bb5",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-10-07T10:33:00Z",
+      "side": 1,
+      "message": "The bdev was claimed at line 1355, so you should un-claim it here by calling spdk_bdev_module_release_bdev(bdev). Otherwise it won\u0027t be possible to open the bdev again.",
+      "revId": "2f9f031cc2a1bbf1195c19f345c6350942f1d5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
