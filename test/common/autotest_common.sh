@@ -779,7 +779,7 @@ function fio_bdev()
 	# Preload AddressSanitizer library to fio if fio_plugin was compiled with it
 	local asan_lib=$(ldd $bdev_plugin | grep libasan | awk '{print $3}')
 
-	LD_PRELOAD=""$asan_lib" "$bdev_plugin"" "$fio_dir"/fio "$@"
+	LD_PRELOAD="\"$asan_lib" "$bdev_plugin"\" "$fio_dir"/fio "$@"
 }
 
 function fio_nvme()
@@ -791,7 +791,7 @@ function fio_nvme()
 	# Preload AddressSanitizer library to fio if fio_plugin was compiled with it
 	asan_lib=$(ldd $nvme_plugin | grep libasan | awk '{print $3}')
 
-	LD_PRELOAD=""$asan_lib" "$nvme_plugin"" "$fio_dir"/fio "$@"
+	LD_PRELOAD="\"$asan_lib" "$nvme_plugin"\" "$fio_dir"/fio "$@"
 }
 
 function get_lvs_free_mb()
