@@ -287,6 +287,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 		SPDK_ERRLOG("iscsi_conn_params_init() failed\n");
 		goto error_return;
 	}
+	conn->logout_request_timer = NULL;
 	conn->logout_timer = NULL;
 	conn->shutdown_timer = NULL;
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Launching connection on acceptor thread\n");
@@ -731,8 +732,68 @@ iscsi_conn_check_shutdown(void *arg)
 	return 1;
 }
 
+static int
+logout_request_timeout(void *arg)
+{
+	struct spdk_iscsi_conn *conn = arg;
+
+	spdk_iscsi_conn_destruct(conn);
+
+	return -1;
+}
+
+static int
+iscsi_send_logout(struct spdk_iscsi_conn *conn)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_async *rsph;
+
+	if (conn->state != ISCSI_CONN_STATE_RUNNING) {
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	rsp_pdu = spdk_get_pdu();
+	if (rsp_pdu == NULL) {
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	rsph = (struct iscsi_bhs_async *)&rsp_pdu->bhs;
+	rsp_pdu->data = NULL;
+
+	rsph->opcode = ISCSI_OP_ASYNC;
+	to_be32(&rsph->ffffffff, 0xFFFFFFFF);
+	rsph->async_event = 1;
+	to_be16(&rsph->param3, ISCSI_LOGOUT_REQUEST_TIMEOUT);
+
+	to_be32(&rsph->stat_sn, conn->StatSN);
+	to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
+	to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
+
+	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
+	return 0;
+}
+
+static void
+iscsi_conn_request_logout(struct spdk_iscsi_conn *conn)
+{
+	int rc;
+
+	if (conn->state >= ISCSI_CONN_STATE_LOGOUT_REQUESTED) {
+		return;
+	}
+
+	rc = iscsi_send_logout(conn);
+	if (rc < 0) {
+		spdk_iscsi_conn_destruct(conn);
+		return;
+	}
+
+	conn->logout_request_timer = spdk_poller_register(logout_request_timeout,
+				     conn, ISCSI_LOGOUT_REQUEST_TIMEOUT * 1000000);
+}
+
 void
-spdk_iscsi_conns_start_logout(struct spdk_iscsi_tgt_node *target)
+spdk_iscsi_conns_request_logout(struct spdk_iscsi_tgt_node *target)
 {
 	struct spdk_iscsi_conn	*conn;
 	int			i;
@@ -749,7 +810,7 @@ spdk_iscsi_conns_start_logout(struct spdk_iscsi_tgt_node *target)
 			continue;
 		}
 
-		spdk_iscsi_conn_logout(conn);
+		iscsi_conn_request_logout(conn);
 	}
 
 	pthread_mutex_unlock(&g_conns_mutex);
@@ -758,7 +819,7 @@ spdk_iscsi_conns_start_logout(struct spdk_iscsi_tgt_node *target)
 void
 spdk_shutdown_iscsi_conns(void)
 {
-	spdk_iscsi_conns_start_logout(NULL);
+	spdk_iscsi_conns_request_logout(NULL);
 
 	g_shutdown_timer = spdk_poller_register(iscsi_conn_check_shutdown, NULL, 1000);
 }
@@ -815,7 +876,7 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CID=%u\n", xconn->cid);
 
-			spdk_iscsi_conn_logout(xconn);
+			iscsi_conn_request_logout(xconn);
 			num++;
 		}
 	}
@@ -1125,7 +1186,7 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 			SPDK_ERRLOG("  tsc=0x%lx, last_nopin=0x%lx\n", tsc, conn->last_nopin);
 			SPDK_ERRLOG("  initiator=%s, target=%s\n", conn->initiator_name,
 				    conn->target_short_name);
-			spdk_iscsi_conn_logout(conn);
+			iscsi_conn_request_logout(conn);
 		}
 	} else if (tsc - conn->last_nopin > conn->nopininterval) {
 		spdk_iscsi_send_nopin(conn);
@@ -1330,7 +1391,7 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 		rc = iscsi_dif_verify(pdu, &pdu->dif_ctx);
 		if (rc != 0) {
 			spdk_iscsi_conn_free_pdu(conn, pdu);
-			spdk_iscsi_conn_logout(conn);
+			iscsi_conn_request_logout(conn);
 			return;
 		}
 		pdu->dif_insert_or_strip = true;
@@ -1505,6 +1566,7 @@ spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn)
 		return;
 	}
 
+	spdk_poller_unregister(&conn->logout_request_timer);
 	conn->state = ISCSI_CONN_STATE_LOGGED_OUT;
 	conn->logout_timer = spdk_poller_register(logout_timeout, conn, ISCSI_LOGOUT_TIMEOUT * 1000000);
 }

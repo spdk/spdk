@@ -127,6 +127,11 @@
  */
 #define ISCSI_LOGOUT_TIMEOUT 5 /* in seconds */
 
+/** Define how long we should wait for a logout request when
+ *   the target requests logout asynchronously.
+ */
+#define ISCSI_LOGOUT_REQUEST_TIMEOUT 5 /* in seconds */
+
 /* according to RFC1982 */
 #define SN32_CMPMAX (((uint32_t)1U) << (32 - 1))
 #define SN32_LT(S1,S2) \
@@ -196,9 +201,10 @@ struct spdk_iscsi_pdu {
 enum iscsi_connection_state {
 	ISCSI_CONN_STATE_INVALID = 0,
 	ISCSI_CONN_STATE_RUNNING = 1,
-	ISCSI_CONN_STATE_LOGGED_OUT = 2,
-	ISCSI_CONN_STATE_EXITING = 3,
-	ISCSI_CONN_STATE_EXITED = 4,
+	ISCSI_CONN_STATE_LOGOUT_REQUESTED = 2,
+	ISCSI_CONN_STATE_LOGGED_OUT = 3,
+	ISCSI_CONN_STATE_EXITING = 4,
+	ISCSI_CONN_STATE_EXITED = 5,
 };
 
 enum iscsi_chap_phase {

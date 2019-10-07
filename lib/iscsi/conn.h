@@ -93,6 +93,11 @@ struct spdk_iscsi_conn {
 	uint64_t	last_fill;
 	uint64_t	last_nopin;
 
+	/* Timer used to destroy connection after requesting logout if
+	 *  initiator does not send logout request.
+	 */
+	struct spdk_poller *logout_request_timer;
+
 	/* Timer used to destroy connection after logout if initiator does
 	 *  not close the connection.
 	 */
@@ -173,7 +178,7 @@ extern struct spdk_iscsi_conn *g_conns_array;
 
 int spdk_initialize_iscsi_conns(void);
 void spdk_shutdown_iscsi_conns(void);
-void spdk_iscsi_conns_start_logout(struct spdk_iscsi_tgt_node *target);
+void spdk_iscsi_conns_request_logout(struct spdk_iscsi_tgt_node *target);
 int spdk_iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target);
 
 int spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal, struct spdk_sock *sock);
