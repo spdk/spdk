@@ -22,6 +22,30 @@
       "revId": "c2408ef770b7528d6c47185f50788bcf29b21be8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "402291e9_ab970c00",
+        "filename": "include/spdk/vmd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-07T14:35:00Z",
+      "side": 1,
+      "message": "I think it makes sense to have all the VMD-related stuff here. And I think these type of functions are pretty useful, otherwise it\u0027s hard for the user to know if the device is behind the VMD (thus having additional capabilities e.g. LED management).",
+      "parentUuid": "ff412f04_325e6f83",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 86,
+        "endChar": 77
+      },
+      "revId": "c2408ef770b7528d6c47185f50788bcf29b21be8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
