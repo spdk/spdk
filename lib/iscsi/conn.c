@@ -732,7 +732,7 @@ iscsi_conn_check_shutdown(void *arg)
 }
 
 void
-spdk_iscsi_conns_start_exit(struct spdk_iscsi_tgt_node *target)
+spdk_iscsi_conns_start_logout(struct spdk_iscsi_tgt_node *target)
 {
 	struct spdk_iscsi_conn	*conn;
 	int			i;
@@ -749,12 +749,7 @@ spdk_iscsi_conns_start_exit(struct spdk_iscsi_tgt_node *target)
 			continue;
 		}
 
-		/* Do not set conn->state if the connection has already started exiting.
-		  * This ensures we do not move a connection from EXITED state back to EXITING.
-		  */
-		if (conn->state < ISCSI_CONN_STATE_EXITING) {
-			conn->state = ISCSI_CONN_STATE_EXITING;
-		}
+		spdk_iscsi_conn_logout(conn);
 	}
 
 	pthread_mutex_unlock(&g_conns_mutex);
@@ -763,7 +758,7 @@ spdk_iscsi_conns_start_exit(struct spdk_iscsi_tgt_node *target)
 void
 spdk_shutdown_iscsi_conns(void)
 {
-	spdk_iscsi_conns_start_exit(NULL);
+	spdk_iscsi_conns_start_logout(NULL);
 
 	g_shutdown_timer = spdk_poller_register(iscsi_conn_check_shutdown, NULL, 1000);
 }
@@ -820,12 +815,7 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CID=%u\n", xconn->cid);
 
-			/* Do not set xconn->state if the connection has already started exiting.
-			  * This ensures we do not move a connection from EXITED state back to EXITING.
-			  */
-			if (xconn->state < ISCSI_CONN_STATE_EXITING) {
-				xconn->state = ISCSI_CONN_STATE_EXITING;
-			}
+			spdk_iscsi_conn_logout(xconn);
 			num++;
 		}
 	}
@@ -1122,8 +1112,8 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 	  * we need to check the connection state first, then do the nop interval
 	  * expiration check work.
 	  */
-	if ((conn->state == ISCSI_CONN_STATE_EXITED) ||
-	    (conn->state == ISCSI_CONN_STATE_EXITING)) {
+	if ((conn->state != ISCSI_CONN_STATE_INVALID) &&
+	    (conn->state != ISCSI_CONN_STATE_RUNNING)) {
 		return;
 	}
 
@@ -1135,7 +1125,7 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 			SPDK_ERRLOG("  tsc=0x%lx, last_nopin=0x%lx\n", tsc, conn->last_nopin);
 			SPDK_ERRLOG("  initiator=%s, target=%s\n", conn->initiator_name,
 				    conn->target_short_name);
-			conn->state = ISCSI_CONN_STATE_EXITING;
+			spdk_iscsi_conn_logout(conn);
 		}
 	} else if (tsc - conn->last_nopin > conn->nopininterval) {
 		spdk_iscsi_send_nopin(conn);
@@ -1275,9 +1265,9 @@ iscsi_conn_flush_pdus(void *_conn)
 			conn->flush_poller = spdk_poller_register(iscsi_conn_flush_pdus,
 					     conn, 50);
 		}
-	} else {
+	} else if (conn->state == ISCSI_CONN_STATE_LOGGED_OUT) {
 		/*
-		 * If the connection state is not RUNNING, then
+		 * If the connection state is LOGGED_OUT, then
 		 * keep trying to flush PDUs until our list is
 		 * empty - to make sure all data is sent before
 		 * closing the connection.
@@ -1340,7 +1330,7 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 		rc = iscsi_dif_verify(pdu, &pdu->dif_ctx);
 		if (rc != 0) {
 			spdk_iscsi_conn_free_pdu(conn, pdu);
-			conn->state = ISCSI_CONN_STATE_EXITING;
+			spdk_iscsi_conn_logout(conn);
 			return;
 		}
 		pdu->dif_insert_or_strip = true;
@@ -1423,7 +1413,6 @@ iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *s
 	rc = iscsi_conn_handle_incoming_pdus(conn);
 	if (rc < 0) {
 		conn->state = ISCSI_CONN_STATE_EXITING;
-		iscsi_conn_flush_pdus(conn);
 	}
 }
 
@@ -1509,6 +1498,13 @@ logout_timeout(void *arg)
 void
 spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn)
 {
+	/* Do not set conn->state if it is already LOGGED_OUT.  This ensures we do not
+	 *  repeat logout timer.
+	 */
+	if (conn->state >= ISCSI_CONN_STATE_LOGGED_OUT) {
+		return;
+	}
+
 	conn->state = ISCSI_CONN_STATE_LOGGED_OUT;
 	conn->logout_timer = spdk_poller_register(logout_timeout, conn, ISCSI_LOGOUT_TIMEOUT * 1000000);
 }
