@@ -244,6 +244,12 @@ spdk_ut_sock_is_ipv4(struct spdk_sock *_sock)
 	return true;
 }
 
+static ssize_t
+spdk_ut_sock_peek_msg(struct spdk_sock *_sock)
+{
+	return 0;
+}
+
 static int
 spdk_ut_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 {
@@ -331,6 +337,7 @@ static struct spdk_net_impl g_ut_net_impl = {
 	.set_priority	= spdk_ut_sock_set_priority,
 	.is_ipv6	= spdk_ut_sock_is_ipv6,
 	.is_ipv4	= spdk_ut_sock_is_ipv4,
+	.peek_msg	= spdk_ut_sock_peek_msg,
 	.get_placement_id	= spdk_ut_sock_get_placement_id,
 	.group_impl_create	= spdk_ut_sock_group_impl_create,
 	.group_impl_add_sock	= spdk_ut_sock_group_impl_add_sock,
