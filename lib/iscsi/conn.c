@@ -1267,7 +1267,7 @@ iscsi_conn_flush_pdus(void *_conn)
 	struct spdk_iscsi_conn *conn = _conn;
 	int rc;
 
-	if (conn->state == ISCSI_CONN_STATE_RUNNING) {
+	if (conn->state <= ISCSI_CONN_STATE_RUNNING) {
 		rc = iscsi_conn_flush_pdus_internal(conn);
 		if (rc == 0 && conn->flush_poller != NULL) {
 			spdk_poller_unregister(&conn->flush_poller);
