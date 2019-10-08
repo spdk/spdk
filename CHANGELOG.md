@@ -44,6 +44,11 @@ Function spdk_blobfs_bdev_detect is added to detect whether blobfs exists on the
 
 Function spdk_blobfs_bdev_create is added to create a blobfs on the given block device.
 
+### build
+
+Option to compile blobfs_bdev module with libfuse3 related functions. By default, it is disabled.
+And it will be enabled if run `./configure` with `--with-fuse` option.
+
 ### nvme
 
 Added `no_shn_notification` to NVMe controller initialization options, users can enable
