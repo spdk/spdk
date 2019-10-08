@@ -139,6 +139,15 @@ static void verify_abort_cmd(struct nvme_request *req)
 	CU_ASSERT(req->cmd.cdw10 == (((uint32_t)abort_cid << 16) | abort_sqid));
 }
 
+static void verify_io_cmd_raw_no_payload_build(struct nvme_request *req)
+{
+	struct spdk_nvme_cmd    command = {};
+	struct nvme_payload payload = {};
+
+	CU_ASSERT(memcmp(&req->cmd, &command, sizeof(req->cmd)) == 0);
+	CU_ASSERT(memcmp(&req->payload, &payload, sizeof(req->payload)) == 0);
+}
+
 static void verify_io_raw_cmd(struct nvme_request *req)
 {
 	struct spdk_nvme_cmd	command = {};
@@ -503,6 +512,18 @@ test_abort_cmd(void)
 }
 
 static void
+test_io_cmd_raw_no_payload_build(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+	struct spdk_nvme_qpair  qpair = {};
+	struct spdk_nvme_cmd    cmd = {};
+
+	verify_fn = verify_io_cmd_raw_no_payload_build;
+
+	spdk_nvme_ctrlr_io_cmd_raw_no_payload_build(&ctrlr, &qpair, &cmd, NULL, NULL);
+}
+
+static void
 test_io_raw_cmd(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
@@ -649,6 +670,8 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test ctrlr cmd get_feature", test_get_feature_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd get_feature_ns", test_get_feature_ns_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd abort_cmd", test_abort_cmd) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd io_raw_no_payload_build",
+			       test_io_cmd_raw_no_payload_build) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd io_raw_cmd", test_io_raw_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd io_raw_cmd_with_md", test_io_raw_cmd_with_md) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd namespace_attach", test_namespace_attach) == NULL
