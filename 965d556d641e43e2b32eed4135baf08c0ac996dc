@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e998b74_44574952",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 782,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-08T08:22:06Z",
+      "side": 1,
+      "message": "TBH I didn\u0027t expect it to work with this quoting, but it seems OK:P",
+      "range": {
+        "startLine": 782,
+        "startChar": 12,
+        "endLine": 782,
+        "endChar": 36
+      },
+      "revId": "965d556d641e43e2b32eed4135baf08c0ac996dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
