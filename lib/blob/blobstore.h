@@ -52,6 +52,9 @@
 #define SPDK_BLOB_OPTS_DEFAULT_CHANNEL_OPS 512
 #define SPDK_BLOB_BLOBID_HIGH_BIT (1ULL << 32)
 
+/* Set to low amount on purpose for testing */
+#define SPDK_EXTENTS_PER_ET 10
+
 struct spdk_xattr {
 	uint32_t	index;
 	uint16_t	value_len;
@@ -76,6 +79,17 @@ struct spdk_blob_mut_data {
 	 * equal to 'num_clusters'.
 	 */
 	size_t		cluster_array_size;
+
+	/* Number of extent tables allocated in the blob */
+	uint64_t	num_et;
+
+	/* Array of pages that are the corresponding to the extents. */
+	uint64_t	*extent_table;
+
+	/* The size of the extent table array. This is greater than or
+	 * equal to 'num_et'.
+	 */
+	size_t		et_array_size;
 
 	/* Number of metadata pages */
 	uint32_t	num_pages;
@@ -246,6 +260,7 @@ struct spdk_bs_md_mask {
 #define SPDK_MD_DESCRIPTOR_TYPE_XATTR 2
 #define SPDK_MD_DESCRIPTOR_TYPE_FLAGS 3
 #define SPDK_MD_DESCRIPTOR_TYPE_XATTR_INTERNAL 4
+#define SPDK_MD_DESCRIPTOR_TYPE_EXTENT_TABLE 5
 
 struct spdk_blob_md_descriptor_xattr {
 	uint8_t		type;
@@ -266,6 +281,14 @@ struct spdk_blob_md_descriptor_extent_rle {
 		uint32_t        cluster_idx;
 		uint32_t        length; /* In units of clusters */
 	} extents[0];
+};
+
+struct spdk_blob_md_descriptor_extent_table {
+	uint8_t		type;
+	uint32_t	length;
+
+	uint32_t	extent_page[0];
+	/* TODO: Run-length encoding */
 };
 
 #define SPDK_BLOB_THIN_PROV (1ULL << 0)
@@ -456,6 +479,20 @@ static inline uint64_t
 _spdk_bs_back_dev_lba_to_io_unit(struct spdk_blob *blob, uint64_t lba)
 {
 	return lba * (blob->back_bs_dev->blocklen / blob->bs->io_unit_size);
+}
+
+static inline uint64_t
+_spdk_bs_cluster_to_extent_table_id(uint64_t cluster_num)
+{
+	return cluster_num / SPDK_EXTENTS_PER_ET;
+}
+
+static inline uint64_t *
+_spdk_bs_cluster_to_extent_page(struct spdk_blob *blob, uint64_t cluster_num)
+{
+	uint64_t extent_table_id = _spdk_bs_cluster_to_extent_table_id(cluster_num);
+
+	return &blob->active.extent_table[extent_table_id];
 }
 
 /* End basic conversions */
