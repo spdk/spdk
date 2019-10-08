@@ -22,6 +22,30 @@
       "revId": "965d556d641e43e2b32eed4135baf08c0ac996dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc958a3c_887a9a6d",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 782,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-08T09:14:23Z",
+      "side": 1,
+      "message": "Can\u0027t recall original motivation behind for quoting the LD_PRELOAD that much, but checking out the build.log it seems to work in both cases (ASAN on/off).",
+      "parentUuid": "1e998b74_44574952",
+      "range": {
+        "startLine": 782,
+        "startChar": 12,
+        "endLine": 782,
+        "endChar": 36
+      },
+      "revId": "965d556d641e43e2b32eed4135baf08c0ac996dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
