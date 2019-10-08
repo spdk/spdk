@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "091db413_1f431db7",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 4585,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-08T20:10:32Z",
+      "side": 1,
+      "message": "Construct --\u003e Create",
+      "revId": "5c4ad291ef98f440fb2d8809acd0ba0d96e04d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d119e29_ad7ccb9a",
+        "filename": "doc/vhost.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-08T20:10:32Z",
+      "side": 1,
+      "message": "Construct --\u003e Create",
+      "revId": "5c4ad291ef98f440fb2d8809acd0ba0d96e04d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f3d7e3d_31b5afa4",
+        "filename": "scripts/rpc/vhost.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-08T20:10:32Z",
+      "side": 1,
+      "message": "Construct --\u003e Create",
+      "revId": "5c4ad291ef98f440fb2d8809acd0ba0d96e04d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc79306a_18c8e5a9",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-08T20:10:32Z",
+      "side": 1,
+      "message": "Construct --\u003e Create",
+      "revId": "5c4ad291ef98f440fb2d8809acd0ba0d96e04d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "347a2546_2d7dc397",
+        "filename": "test/vhost/fio/fio.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-08T20:10:32Z",
+      "side": 1,
+      "message": "Construct --\u003e Create",
+      "revId": "5c4ad291ef98f440fb2d8809acd0ba0d96e04d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed4278ea_524d9e62",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-08T20:10:32Z",
+      "side": 1,
+      "message": "Constructing --\u003e Creating",
+      "revId": "5c4ad291ef98f440fb2d8809acd0ba0d96e04d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
