@@ -1306,12 +1306,10 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
  * underlying TCP socket buffer - for example, in the case where the
  * socket buffer is already full.
  *
- * During normal RUNNING connection state, if not all PDUs are flushed,
- * then subsequent calls to this routine will eventually flush
- * remaining PDUs.
+ * If not all PDUs are flushed, then subsequent calls to this routine
+ * will eventually flush remaining PDUs.
  *
- * During other connection states (EXITING), this
- * function will spin until all PDUs have successfully been flushed.
+ * PDUs are flushed only during normal RUNNING connection state.
  */
 static int
 iscsi_conn_flush_pdus(void *_conn)
@@ -1319,32 +1317,19 @@ iscsi_conn_flush_pdus(void *_conn)
 	struct spdk_iscsi_conn *conn = _conn;
 	int rc;
 
-	if (conn->state <= ISCSI_CONN_STATE_RUNNING) {
-		rc = iscsi_conn_flush_pdus_internal(conn);
-		if (rc == 0 && conn->flush_poller != NULL) {
-			spdk_poller_unregister(&conn->flush_poller);
-		} else if (rc == 1 && conn->flush_poller == NULL) {
-			conn->flush_poller = spdk_poller_register(iscsi_conn_flush_pdus,
-					     conn, 50);
-		}
-	} else {
-		/*
-		 * If the connection state is not RUNNING, then
-		 * keep trying to flush PDUs until our list is
-		 * empty - to make sure all data is sent before
-		 * closing the connection.
-		 */
-		do {
-			rc = iscsi_conn_flush_pdus_internal(conn);
-		} while (rc == 1);
+	if (spdk_unlikely(conn->state > ISCSI_CONN_STATE_RUNNING)) {
+		return 1;
 	}
 
-	if (rc < 0 && conn->state < ISCSI_CONN_STATE_EXITING) {
-		/*
-		 * If the poller has already started destruction of the connection,
-		 *  i.e. the socket read failed, then the connection state may already
-		 *  be EXITED.  We don't want to set it back to EXITING in that case.
-		 */
+	rc = iscsi_conn_flush_pdus_internal(conn);
+	if (rc == 0 && conn->flush_poller != NULL) {
+		spdk_poller_unregister(&conn->flush_poller);
+	} else if (rc == 1 && conn->flush_poller == NULL) {
+		conn->flush_poller = spdk_poller_register(iscsi_conn_flush_pdus,
+				     conn, 50);
+	}
+
+	if (rc < 0) {
 		conn->state = ISCSI_CONN_STATE_EXITING;
 	}
 
@@ -1465,7 +1450,6 @@ iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *s
 	rc = iscsi_conn_handle_incoming_pdus(conn);
 	if (rc < 0) {
 		conn->state = ISCSI_CONN_STATE_EXITING;
-		iscsi_conn_flush_pdus(conn);
 	}
 }
 
