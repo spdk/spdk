@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "a7355971_4b86c579",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-08T12:26:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2d4246f7_13476449",
+      "range": {
+        "startLine": 422,
+        "startChar": 76,
+        "endLine": 422,
+        "endChar": 85
+      },
+      "revId": "64f7eeff9b9301c73771ab5121b300888dca9fd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dfd6b722_048ab35c",
         "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
         "patchSetId": 5
@@ -164,6 +188,30 @@
       "revId": "64f7eeff9b9301c73771ab5121b300888dca9fd4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85b28980_54af9122",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-08T12:26:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dfd6b722_048ab35c",
+      "range": {
+        "startLine": 428,
+        "startChar": 4,
+        "endLine": 428,
+        "endChar": 9
+      },
+      "revId": "64f7eeff9b9301c73771ab5121b300888dca9fd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
