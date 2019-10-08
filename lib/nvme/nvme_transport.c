@@ -222,6 +222,12 @@ nvme_transport_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_r
 	NVME_TRANSPORT_CALL(qpair->trtype, qpair_submit_request, (qpair, req));
 }
 
+bool
+nvme_transport_qpair_has_free_entry(struct spdk_nvme_qpair *qpair)
+{
+	NVME_TRANSPORT_CALL(qpair->trtype, qpair_has_free_entry, (qpair));
+}
+
 int32_t
 nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {

@@ -423,7 +423,6 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 {
 	int32_t ret;
 	int32_t resubmit_rc;
-	int32_t i;
 	struct nvme_request *req, *tmp;
 
 	if (qpair->ctrlr->is_failed) {
@@ -467,13 +466,8 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		return ret;
 	}
 
-	/*
-	 * At this point, ret must represent the number of completions we reaped.
-	 * submit as many queued requests as we completed.
-	 */
-	i = 0;
-
-	while (i < ret && !STAILQ_EMPTY(&qpair->queued_req) && !qpair->ctrlr->is_resetting) {
+	while (nvme_transport_qpair_has_free_entry(qpair) && !STAILQ_EMPTY(&qpair->queued_req) &&
+	       !qpair->ctrlr->is_resetting) {
 		req = STAILQ_FIRST(&qpair->queued_req);
 		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
 		req->status = NVME_REQUEST_RESUBMITTING;
@@ -482,7 +476,6 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			SPDK_ERRLOG("Unable to resubmit as many requests as we completed.\n");
 			break;
 		}
-		i++;
 	}
 
 	return ret;

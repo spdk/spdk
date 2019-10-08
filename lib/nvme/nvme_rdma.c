@@ -2022,3 +2022,13 @@ spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
 {
 	g_nvme_hooks = *hooks;
 }
+
+bool
+nvme_rdma_qpair_has_free_entry(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_rdma_qpair *rqpair;
+
+	rqpair = nvme_rdma_qpair(qpair);
+
+	return !TAILQ_EMPTY(&rqpair->free_reqs);
+}
