@@ -645,13 +645,13 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	 */
 	if ((rc = spdk_reactors_init()) != 0) {
 		SPDK_ERRLOG("Reactor Initilization failed: rc = %d\n", rc);
-		goto app_start_log_close_err;
+		return 1;
 	}
 
 	tmp_cpumask = spdk_cpuset_alloc();
 	if (tmp_cpumask == NULL) {
 		SPDK_ERRLOG("spdk_cpuset_alloc() failed\n");
-		goto app_start_log_close_err;
+		return 1;
 	}
 
 	spdk_cpuset_zero(tmp_cpumask);
@@ -663,7 +663,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	spdk_cpuset_free(tmp_cpumask);
 	if (!g_app_thread) {
 		SPDK_ERRLOG("Unable to create an spdk_thread for initialization\n");
-		goto app_start_log_close_err;
+		return 1;
 	}
 
 	/*
@@ -674,11 +674,11 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	 * in spdk_app_setup_signal_handlers().
 	 */
 	if (spdk_app_setup_trace(opts) != 0) {
-		goto app_start_log_close_err;
+		return 1;
 	}
 
 	if ((rc = spdk_app_setup_signal_handlers(opts)) != 0) {
-		goto app_start_trace_cleanup_err;
+		return 1;
 	}
 
 	g_delay_subsystem_init = opts->delay_subsystem_init;
@@ -691,13 +691,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	spdk_reactors_start();
 
 	return g_spdk_app.rc;
-
-app_start_trace_cleanup_err:
-	spdk_trace_cleanup();
-
-app_start_log_close_err:
-	spdk_log_close();
-	return 1;
 }
 
 void
