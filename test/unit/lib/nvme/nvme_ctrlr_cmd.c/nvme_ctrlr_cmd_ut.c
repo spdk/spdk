@@ -508,7 +508,7 @@ test_abort_cmd(void)
 	verify_fn = verify_abort_cmd;
 
 	qpair.id = abort_sqid;
-	spdk_nvme_ctrlr_cmd_abort(&ctrlr, &qpair, abort_cid, NULL, NULL);
+	spdk_nvme_ctrlr_cmd_abort(&ctrlr, &qpair, abort_cid, spdk_nvme_ctrlr_cmd_abort_cpl, NULL);
 }
 
 static void
