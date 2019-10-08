@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a431408_269f5727",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T23:01:29Z",
+      "side": 1,
+      "message": "I\u0027d remove this from the commit message.  I think anything related to changing -T behavior should be a separate patch (see explanation below).",
+      "revId": "5d92d566f7fe9b68ddc4da913b6afb69020e2ac7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "138a7815_135dc09d",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T23:01:29Z",
+      "side": 1,
+      "message": "I think this should be a different patch, and maybe controlled by a different flag.\n\nThe change below fixes a bug - when user specifies more cores than there are bdevs.  That belongs in this patch.\n\nBut this part here also changes behavior when only one bdev is specified.  Imagine two cases:\n\n1) conf file describes only 1 bdev, and -T is not used\n2) conf file describes only 1 bdev, and -T is used\n\nI think the behavior should be the same for both.  But with this patch, #2 will execute that bdev on all cores, while #1 will not.\n\nMaybe a new flag can be added to run the specified bdev on all cores, but that should be a separate patch.",
+      "revId": "5d92d566f7fe9b68ddc4da913b6afb69020e2ac7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c54deac9_6eb82043",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1257,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T23:01:29Z",
+      "side": 1,
+      "message": "Let\u0027s name this \"core_count\" instead of \"target_count\".  It more accurately describes what this variable is counting.",
+      "revId": "5d92d566f7fe9b68ddc4da913b6afb69020e2ac7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
