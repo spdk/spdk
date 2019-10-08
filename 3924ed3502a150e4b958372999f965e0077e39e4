@@ -119,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "aff93f59_877370d2",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-08T07:29:09Z",
+      "side": 1,
+      "message": "You\u0027re changing IFS variable to something other than shell default. This could affect the rest of the script.\nI think just to be safe you should do:\n\nOLD_IFS\u003d$IFS\nIFS\u003d\":\" read -ra [etc, etc]\nIFS\u003d$OLD_IFS",
+      "parentUuid": "7bfcec23_da2e8685",
+      "range": {
+        "startLine": 10,
+        "startChar": 4,
+        "endLine": 10,
+        "endChar": 47
+      },
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2a970753_40cbced3",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 2

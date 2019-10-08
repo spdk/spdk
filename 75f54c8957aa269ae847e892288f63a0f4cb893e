@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46a58465_8c5cba10",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-08T07:29:09Z",
+      "side": 1,
+      "message": "Like hinted before - you should probably use additional variable OLD_IFS to restore the original value in IFS variable.",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 7
+      },
+      "revId": "75f54c8957aa269ae847e892288f63a0f4cb893e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c02254a_f86b93bd",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-08T07:29:09Z",
+      "side": 1,
+      "message": "That\u0027s a single script so you probably don\u0027t need local anyway.\nAlso - part of the variables are local, some are not so this is not consistent.",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 6
+      },
+      "revId": "75f54c8957aa269ae847e892288f63a0f4cb893e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be9a864b_b617ee1b",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-08T07:29:09Z",
+      "side": 1,
+      "message": "I think \"retcode_fio1\u003d$?\" should be put in a separate line.",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 44
+      },
+      "revId": "75f54c8957aa269ae847e892288f63a0f4cb893e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7eeabd0_03559cd9",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-08T07:29:09Z",
+      "side": 1,
+      "message": "I don\u0027t think using \"$?\" in these lines is correct. \n\"$?\" means a return code of the last executed command, which in this case is probably the \"wait\" command run as a part of wait_for_finish on line 25. It means that you use the same return code for both check_fio_retcode calls.\nYou should probably use retcode_fioX variables.",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 45
+      },
+      "revId": "75f54c8957aa269ae847e892288f63a0f4cb893e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
