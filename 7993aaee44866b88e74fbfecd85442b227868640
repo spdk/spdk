@@ -33,6 +33,24 @@
       "revId": "7993aaee44866b88e74fbfecd85442b227868640",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dacf43ee_ff3123a9",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-08T23:25:24Z",
+      "side": 1,
+      "message": "nvme_qpair_submit_request can be called by _nvme_qpair_submit_request. So If a request is queued, then resubmit again, then \nnvme_qpair_resubmit_quest -\u003e _nvme_qpair_submit_quest -\u003e nvme_qpair_submit_request.\nThus, the req status could not be new.",
+      "parentUuid": "5e68e476_37d2db9e",
+      "revId": "7993aaee44866b88e74fbfecd85442b227868640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
