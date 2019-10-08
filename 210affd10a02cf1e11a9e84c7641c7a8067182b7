@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa7ca801_e9acbfe7",
+        "filename": "include/spdk/vmd.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-08T08:03:38Z",
+      "side": 1,
+      "message": "Double space.",
+      "range": {
+        "startLine": 98,
+        "startChar": 53,
+        "endLine": 98,
+        "endChar": 55
+      },
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92242393_9c56f95e",
+        "filename": "include/spdk/vmd.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-08T08:03:38Z",
+      "side": 1,
+      "message": "Double space.",
+      "range": {
+        "startLine": 108,
+        "startChar": 58,
+        "endLine": 108,
+        "endChar": 60
+      },
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "588aa2e3_5596611f",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-08T08:03:38Z",
+      "side": 1,
+      "message": "Let\u0027s call this file vmd_led.c",
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70a043d5_7892ce85",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-08T08:03:38Z",
+      "side": 1,
+      "message": "I\u0027m not sure if this will work on some aggressive optimization?",
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc6c91de_e7bf6170",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-08T08:03:38Z",
+      "side": 1,
+      "message": "Since you are operating on spdk_pci_device now instead spdk_pci_addr you could update this description.",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 103,
+        "endChar": 8
+      },
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
