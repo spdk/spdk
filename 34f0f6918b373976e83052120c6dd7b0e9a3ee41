@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "0088b14b_47ddedfc",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T21:03:21Z",
+      "side": 1,
+      "message": "Build FUSE components for mounting a blobfs filesystem.",
+      "revId": "34f0f6918b373976e83052120c6dd7b0e9a3ee41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "45ad3a60_db26e705",
         "filename": "configure",
         "patchSetId": 2
