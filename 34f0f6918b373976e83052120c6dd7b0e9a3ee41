@@ -16,6 +16,24 @@
       "revId": "34f0f6918b373976e83052120c6dd7b0e9a3ee41",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "461bc038_92f1fa9a",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 701,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-10-08T11:12:19Z",
+      "side": 1,
+      "message": "Hi, Changpeng,\nJust copied them from line 591~594.\nIn ./configure, Seems some ECHO segments without \"\", but some of them with \"\".\nThey are not unified.",
+      "parentUuid": "45ad3a60_db26e705",
+      "revId": "34f0f6918b373976e83052120c6dd7b0e9a3ee41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
