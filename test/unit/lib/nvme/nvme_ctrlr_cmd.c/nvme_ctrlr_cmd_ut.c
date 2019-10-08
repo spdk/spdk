@@ -54,6 +54,8 @@ uint32_t fw_img_offset = 0;
 uint16_t abort_cid = 1;
 uint16_t abort_sqid = 1;
 uint32_t namespace_management_nsid = 1;
+uint64_t PRP_ENTRY_1 = 4096;
+uint64_t PRP_ENTRY_2 = 4096;
 uint32_t format_nvme_nsid = 1;
 uint32_t sanitize_nvme_nsid = 1;
 
@@ -257,6 +259,13 @@ static void verify_namespace_delete(struct nvme_request *req)
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_NS_MANAGEMENT);
 	CU_ASSERT(req->cmd.cdw10 == SPDK_NVME_NS_MANAGEMENT_DELETE);
 	CU_ASSERT(req->cmd.nsid == namespace_management_nsid);
+}
+
+static void verify_doorbell_buffer_config(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_DOORBELL_BUFFER_CONFIG);
+	CU_ASSERT(req->cmd.dptr.prp.prp1 == PRP_ENTRY_1);
+	CU_ASSERT(req->cmd.dptr.prp.prp2 == PRP_ENTRY_2);
 }
 
 static void verify_format_nvme(struct nvme_request *req)
@@ -596,6 +605,16 @@ test_namespace_delete(void)
 }
 
 static void
+test_doorbell_buffer_config(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+
+	verify_fn = verify_doorbell_buffer_config;
+
+	nvme_ctrlr_cmd_doorbell_buffer_config(&ctrlr, PRP_ENTRY_1, PRP_ENTRY_2, NULL, NULL);
+}
+
+static void
 test_format_nvme(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
@@ -678,6 +697,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test ctrlr cmd namespace_detach", test_namespace_detach) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd namespace_create", test_namespace_create) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd namespace_delete", test_namespace_delete) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd doorbell_buffer_config", test_doorbell_buffer_config) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd format_nvme", test_format_nvme) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd fw_commit", test_fw_commit) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd fw_image_download", test_fw_image_download) == NULL
