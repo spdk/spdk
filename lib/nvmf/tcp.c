@@ -880,6 +880,13 @@ spdk_nvmf_tcp_qpair_flush_pdus(void *_tqpair)
 		 */
 		do {
 			rc = spdk_nvmf_tcp_qpair_flush_pdus_internal(tqpair);
+			if (rc == 1) {
+				/* Check if the connection is closed by peeking message. */
+				rc = spdk_sock_peek_msg(tqpair->sock);
+				if (rc <= 0) {
+					break;
+				}
+			}
 		} while (rc == 1);
 	}
 
@@ -2669,7 +2676,10 @@ spdk_nvmf_tcp_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock
 	 */
 	if ((rc < 0) || (tqpair->state == NVME_TCP_QPAIR_STATE_EXITING)) {
 		tqpair->state = NVME_TCP_QPAIR_STATE_EXITED;
-		spdk_nvmf_tcp_qpair_flush_pdus(tqpair);
+		/* Flush PDUs only if the socket is not closed. */
+		if (rc >= 0) {
+			spdk_nvmf_tcp_qpair_flush_pdus(tqpair);
+		}
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconect the tqpair=%p\n", tqpair);
 		spdk_poller_unregister(&tqpair->timeout_poller);
 		spdk_nvmf_qpair_disconnect(&tqpair->qpair, NULL, NULL);
