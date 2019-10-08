@@ -100,18 +100,6 @@ struct raid_bdev_io {
 	uint8_t				base_bdev_io_status;
 };
 
-/* raid0 IO range */
-struct raid_bdev_io_range {
-	uint64_t	strip_size;
-	uint64_t	start_strip_in_disk;
-	uint64_t	end_strip_in_disk;
-	uint64_t	start_offset_in_strip;
-	uint64_t	end_offset_in_strip;
-	uint8_t		start_disk;
-	uint8_t		end_disk;
-	uint8_t		n_disks_involved;
-};
-
 /*
  * raid_bdev is the single entity structure which contains SPDK block device
  * and the information related to any raid bdev either configured or
@@ -246,5 +234,15 @@ int raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg,
 				   const char *base_bdev_name, uint8_t slot);
 void raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg);
 struct raid_bdev_config *raid_bdev_config_find_by_name(const char *raid_name);
+
+void
+raid0_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
+void
+raid0_submit_null_payload_request(void *_bdev_io);
+void
+raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
+void
+raid_bdev_queue_io_wait(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx,
+			spdk_bdev_io_wait_cb cb_fn, int ret);
 
 #endif /* SPDK_BDEV_RAID_INTERNAL_H */
