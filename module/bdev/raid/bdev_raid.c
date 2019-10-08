@@ -271,9 +271,13 @@ raid_bdev_destruct(void *ctxt)
 static void
 raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_bdev_io         *parent_io = cb_arg;
+	struct spdk_bdev_io	*parent_io = cb_arg;
+	struct raid_bdev_io	*raid_io = (struct raid_bdev_io *)parent_io->driver_ctx;
+	struct spdk_io_channel	*ch = raid_io->ch;
 
 	spdk_bdev_free_io(bdev_io);
+
+	assert(spdk_io_channel_get_thread(ch) == spdk_get_thread());
 
 	if (success) {
 		spdk_bdev_io_complete(parent_io, SPDK_BDEV_IO_STATUS_SUCCESS);
