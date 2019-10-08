@@ -131,7 +131,7 @@ if [ -d /usr/src/fio ]; then
 
 	run_fio --spdk_conf=./test/bdev/bdev.conf --spdk_mem=$PRE_RESERVED_MEM --output=$output_dir/blockdev_fio_verify.txt
 
-	rm -f *.state
+	rm -f ./*.state
 	rm -f $testdir/bdev.fio
 	timing_exit fio_rw_verify
 
@@ -144,7 +144,7 @@ if [ -d /usr/src/fio ]; then
 
 	run_fio --spdk_conf=./test/bdev/bdev.conf --output=$output_dir/blockdev_trim.txt
 
-	rm -f *.state
+	rm -f ./*.state
 	rm -f $testdir/bdev.fio
 	timing_exit fio_trim
 	report_test_completion "bdev_fio"
