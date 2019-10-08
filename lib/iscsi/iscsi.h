@@ -122,6 +122,11 @@
  */
 #define DEFAULT_MAX_QUEUE_DEPTH	64
 
+/** Defines how long we should wait for a logout request when the target
+ *   requests logout to the initiator asynchronously.
+ */
+#define ISCSI_LOGOUT_REQUEST_TIMEOUT 30 /* in seconds */
+
 /** Defines how long we should wait for a TCP close after responding to a
  *   logout request, before terminating the connection ourselves.
  */
