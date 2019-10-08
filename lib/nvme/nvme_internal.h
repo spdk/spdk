@@ -221,6 +221,19 @@ struct nvme_error_cmd {
 	TAILQ_ENTRY(nvme_error_cmd)	link;
 };
 
+enum nvme_request_status {
+	NVME_REQUEST_NEW = 0,
+
+	/** nvme_request is queued in queue_req of qpair*/
+	NVME_REQUEST_QUEUED,
+
+	/** nvme_request is in resubmitting status */
+	NVME_REQUEST_RESUBMITTING,
+
+	/** nvme_request is aborted */
+	NVME_REQUEST_ABORTED,
+};
+
 struct nvme_request {
 	struct spdk_nvme_cmd		cmd;
 
@@ -318,6 +331,7 @@ struct nvme_request {
 	spdk_nvme_cmd_cb		user_cb_fn;
 	void				*user_cb_arg;
 	void				*user_buffer;
+	enum nvme_request_status	status;
 };
 
 struct nvme_completion_poll_status {
@@ -896,6 +910,7 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 	req->payload_size = payload_size;
 	req->pid = g_spdk_nvme_pid;
 	req->submit_tick = 0;
+	req->status = NVME_REQUEST_NEW;
 
 	return req;
 }

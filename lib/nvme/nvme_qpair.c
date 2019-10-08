@@ -396,6 +396,7 @@ nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	while (!STAILQ_EMPTY(&qpair->queued_req)) {
 		req = STAILQ_FIRST(&qpair->queued_req);
 		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+		req->status = NVME_REQUEST_ABORTED;
 		if (!qpair->ctrlr->opts.disable_error_logging) {
 			SPDK_ERRLOG("aborting queued i/o\n");
 		}
@@ -471,9 +472,11 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	 * submit as many queued requests as we completed.
 	 */
 	i = 0;
+
 	while (i < ret && !STAILQ_EMPTY(&qpair->queued_req) && !qpair->ctrlr->is_resetting) {
 		req = STAILQ_FIRST(&qpair->queued_req);
 		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+		req->status = NVME_REQUEST_RESUBMITTING;
 		resubmit_rc = nvme_qpair_resubmit_request(qpair, req);
 		if (spdk_unlikely(resubmit_rc != 0)) {
 			SPDK_ERRLOG("Unable to resubmit as many requests as we completed.\n");
@@ -670,14 +673,34 @@ int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	int rc;
+	struct nvme_request *_req = req;
 
-	rc = _nvme_qpair_submit_request(qpair, req);
-	if (rc == -EAGAIN) {
+	assert((req->status == NVME_REQUEST_NEW) || (req->status == NVME_REQUEST_RESUBMITTING));
+
+	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->queued_req)) && (req->status == NVME_REQUEST_NEW)) {
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
-		rc = 0;
+		req->status = NVME_REQUEST_QUEUED;
+		/* pick up a new request */
+		_req = STAILQ_FIRST(&qpair->queued_req);
+		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
 	}
 
-	return rc;
+	rc = _nvme_qpair_submit_request(qpair, _req);
+	if (rc == -EAGAIN) {
+		rc = 0;
+		if (_req->status == NVME_REQUEST_NEW) {
+			STAILQ_INSERT_TAIL(&qpair->queued_req, _req, stailq);
+		} else {
+			STAILQ_INSERT_HEAD(&qpair->queued_req, _req, stailq);
+		}
+		_req->status = NVME_REQUEST_QUEUED;
+	}
+
+	if (spdk_likely(_req == req)) {
+		return rc;
+	} else {
+		return 0;
+	}
 }
 
 static int
@@ -685,9 +708,11 @@ nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *
 {
 	int rc;
 
+	assert(req->status == NVME_REQUEST_RESUBMITTING);
 	rc = _nvme_qpair_submit_request(qpair, req);
 	if (spdk_unlikely(rc == -EAGAIN)) {
 		STAILQ_INSERT_HEAD(&qpair->queued_req, req, stailq);
+		req->status = NVME_REQUEST_QUEUED;
 	}
 
 	return rc;
