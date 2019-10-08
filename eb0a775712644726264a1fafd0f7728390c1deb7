@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f1c3411_88a2ce5c",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T22:30:45Z",
+      "side": 1,
+      "message": "what if we put cdw0 here instead?  and remove the comment just above (line 559)\n\nI think we can still have sct and sc be valid, even if the bdev_io status is STATUS_SUCCESS.  They would both just equal 0.\n\nI just think your patch shows that we really should have considered cdw0 up front when designing this - it\u0027s just as important as sct and sc.  I think it\u0027s more clear if cdw0 is here.  (I know it\u0027s a bit awkward that it\u0027s part of a union named \"error\" but we could fix that later.)",
+      "revId": "eb0a775712644726264a1fafd0f7728390c1deb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a45acd13_32aaad28",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T22:30:45Z",
+      "side": 1,
+      "message": "I would remove \"optional\".  Any NVMe passthrough command will have a completion that will have a cdw0.  The spec says that cdw0 is reserved if a command doesn\u0027t use it, and reserved fields shall be cleared to zero according to the spec.\n\nThe param help can still say \"set to 0 if not applicable\" though.",
+      "revId": "eb0a775712644726264a1fafd0f7728390c1deb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d35a5901_e0befc53",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3942,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T22:30:45Z",
+      "side": 1,
+      "message": "per suggestion above, let\u0027s set nvme.sct and nvme.sc here so that they\u0027re definitely set to 0 in the SUCCESS case",
+      "revId": "eb0a775712644726264a1fafd0f7728390c1deb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e4a2fb4_65a5cea7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3955,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T22:30:45Z",
+      "side": 1,
+      "message": "can add IO_STATUS_SUCCESS as an || case here and remove 3959/3960.",
+      "revId": "eb0a775712644726264a1fafd0f7728390c1deb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e44a9bf4_f8fc2565",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T22:30:45Z",
+      "side": 1,
+      "message": "cdw0 should be tabbed over to align with sc, sct.",
+      "revId": "eb0a775712644726264a1fafd0f7728390c1deb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75dc4df7_ed8cf20d",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 391,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T22:30:45Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "eb0a775712644726264a1fafd0f7728390c1deb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
