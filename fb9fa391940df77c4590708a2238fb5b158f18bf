@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd236708_20ea85d0",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-08T22:30:35Z",
+      "side": 1,
+      "message": "We could use errno to break the tight loop when errno was EAGAIN or EWOULDBLOCK like:\n\n errno \u003d 0;\n do {\n   rc \u003d flush_pdus();\n } while (rc \u003d\u003d 1 \u0026\u0026 errno \u003d\u003d 0);\n\nBut if we return true when errno is EAGAIN of EWOULDBLOCK, we can\u0027t use is_connected()?\n\ndo {\n  rc \u003d flush_pdus();\n} while (rc \u003d\u003d 1 \u0026\u0026 is_connected());\n\nwill not exit.",
+      "revId": "fb9fa391940df77c4590708a2238fb5b158f18bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
