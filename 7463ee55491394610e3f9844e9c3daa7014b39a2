@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a9dd02f2_98ab7ae1",
+        "filename": "configure",
+        "patchSetId": 6
+      },
+      "lineNbr": 691,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-10-08T05:22:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d2a17fce_4504a287",
+      "revId": "7463ee55491394610e3f9844e9c3daa7014b39a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c5b24c78_9b4f703c",
         "filename": "module/blobfs/bdev/blobfs_bdev.c",
         "patchSetId": 6
@@ -33,6 +51,24 @@
       "revId": "7463ee55491394610e3f9844e9c3daa7014b39a2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13462ed4_341dc4f3",
+        "filename": "module/blobfs/bdev/blobfs_bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-10-08T05:22:59Z",
+      "side": 1,
+      "message": "Got it.\nAmend the explanation here, and also add some explanation for cb_fn element in structure of blobfs_bdev_operation_ctx.\nIt should be much clearer for readers than last version.",
+      "parentUuid": "c5b24c78_9b4f703c",
+      "revId": "7463ee55491394610e3f9844e9c3daa7014b39a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
