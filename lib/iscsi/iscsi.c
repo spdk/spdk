@@ -376,34 +376,7 @@ static bool
 iscsi_check_data_segment_length(struct spdk_iscsi_conn *conn,
 				struct spdk_iscsi_pdu *pdu, int data_len)
 {
-	int max_segment_len = 0;
-
-	/*
-	 * Determine the maximum segment length expected for this PDU.
-	 *  This will be used to make sure the initiator did not send
-	 *  us too much immediate data.
-	 *
-	 * This value is specified separately by the initiator and target,
-	 *  and not negotiated.  So we can use the #define safely here,
-	 *  since the value is not dependent on the initiator's maximum
-	 *  segment lengths (FirstBurstLength/MaxRecvDataSegmentLength),
-	 *  and SPDK currently does not allow configuration of these values
-	 *  at runtime.
-	 */
-	if (conn->sess == NULL) {
-		return true;
-	} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAOUT ||
-		   pdu->bhs.opcode == ISCSI_OP_NOPOUT) {
-		return true;
-	} else {
-		max_segment_len = spdk_get_max_immediate_data_size();
-	}
-	if (data_len <= max_segment_len) {
-		return true;
-	} else {
-		SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n", data_len, max_segment_len);
-		return false;
-	}
+	return true;
 }
 
 static int
@@ -2262,6 +2235,10 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	struct iscsi_bhs_text_req *reqh;
 	struct iscsi_bhs_text_resp *rsph;
 
+	if ((int)pdu->data_segment_len > spdk_get_max_immediate_data_size()) {
+		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+	}
+
 	data_len = 0;
 	alloc_len = conn->MaxRecvDataSegmentLength;
 
@@ -3380,6 +3357,13 @@ iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			spdk_iscsi_task_response(conn, task);
 			spdk_iscsi_task_put(task);
 			return 0;
+		}
+
+		if ((int)pdu->data_segment_len > spdk_get_max_immediate_data_size()) {
+			SPDK_ERRLOG("data segment len(=%d) > immediate data len(=%d)\n",
+				    (int)pdu->data_segment_len, spdk_get_max_immediate_data_size());
+			spdk_iscsi_task_put(task);
+			return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 		}
 
 		if (pdu->data_segment_len > transfer_len) {
