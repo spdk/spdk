@@ -612,18 +612,27 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 
 	config = spdk_app_setup_conf(opts->config_file);
 	if (config == NULL) {
-		goto app_start_setup_conf_err;
+		return 1;
 	}
 
 	if (spdk_app_read_config_file_global_params(opts) < 0) {
-		goto app_start_setup_conf_err;
+		spdk_conf_free(config);
+		return 1;
 	}
+
+	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
+	g_spdk_app.config = config;
+	g_spdk_app.json_config_file = opts->json_config_file;
+	g_spdk_app.rpc_addr = opts->rpc_addr;
+	g_spdk_app.shm_id = opts->shm_id;
+	g_spdk_app.shutdown_cb = opts->shutdown_cb;
+	g_spdk_app.rc = 0;
 
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_LEVEL);
 	spdk_log_set_backtrace_level(SPDK_APP_DEFAULT_BACKTRACE_LOG_LEVEL);
 
 	if (spdk_app_setup_env(opts) < 0) {
-		goto app_start_setup_conf_err;
+		return 1;
 	}
 
 	spdk_log_open(opts->log);
@@ -672,14 +681,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 		goto app_start_trace_cleanup_err;
 	}
 
-	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
-	g_spdk_app.config = config;
-	g_spdk_app.json_config_file = opts->json_config_file;
-	g_spdk_app.rpc_addr = opts->rpc_addr;
-	g_spdk_app.shm_id = opts->shm_id;
-	g_spdk_app.shutdown_cb = opts->shutdown_cb;
-	g_spdk_app.rc = 0;
-
 	g_delay_subsystem_init = opts->delay_subsystem_init;
 	g_start_fn = start_fn;
 	g_start_arg = arg1;
@@ -696,8 +697,6 @@ app_start_trace_cleanup_err:
 
 app_start_log_close_err:
 	spdk_log_close();
-
-app_start_setup_conf_err:
 	return 1;
 }
 
