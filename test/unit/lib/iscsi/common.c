@@ -119,7 +119,7 @@ DEFINE_STUB(spdk_scsi_dev_delete_port, int,
 
 DEFINE_STUB_V(spdk_shutdown_iscsi_conns, (void));
 
-DEFINE_STUB_V(spdk_iscsi_conns_start_exit, (struct spdk_iscsi_tgt_node *target));
+DEFINE_STUB_V(spdk_iscsi_conns_request_logout, (struct spdk_iscsi_tgt_node *target));
 
 DEFINE_STUB(spdk_iscsi_get_active_conns, int, (struct spdk_iscsi_tgt_node *target), 0);
 
