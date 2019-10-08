@@ -69,7 +69,6 @@ struct raid_offline_tailq	g_raid_bdev_offline_list = TAILQ_HEAD_INITIALIZER(
 /* Function declarations */
 static void	raid_bdev_examine(struct spdk_bdev *bdev);
 static int	raid_bdev_init(void);
-static void	raid0_waitq_io_process(void *ctx);
 static void	raid_bdev_deconfigure(struct raid_bdev *raid_bdev,
 				      raid_bdev_destruct_cb cb_fn, void *cb_arg);
 static void	raid_bdev_remove_base_bdev(void *ctx);
@@ -393,42 +392,9 @@ raid0_get_curr_base_bdev_index(struct raid_bdev *raid_bdev, struct raid_bdev_io 
 	return (start_strip % raid_bdev->num_base_bdevs);
 }
 
-/*
- * brief:
- * raid_bdev_io_submit_fail_process function processes the IO which failed to submit.
- * It will try to queue the IOs after storing the context to bdev wait queue logic.
- * params:
- * bdev_io - pointer to bdev_io
- * raid_io - pointer to raid bdev io
- * ret - return code
- * returns:
- * none
- */
 static void
-raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_io *bdev_io,
-				 struct raid_bdev_io *raid_io, int ret)
-{
-	struct raid_bdev_io_channel	*raid_ch;
-	uint8_t				pd_idx;
-
-	if (ret != -ENOMEM) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-	} else {
-		/* Queue the IO to bdev layer wait queue */
-		pd_idx = raid0_get_curr_base_bdev_index(raid_bdev, raid_io);
-		raid_io->waitq_entry.bdev = raid_bdev->base_bdev_info[pd_idx].bdev;
-		raid_io->waitq_entry.cb_fn = raid0_waitq_io_process;
-		raid_io->waitq_entry.cb_arg = raid_io;
-		raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
-		if (spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[pd_idx].bdev,
-					    raid_ch->base_channel[pd_idx],
-					    &raid_io->waitq_entry) != 0) {
-			SPDK_ERRLOG("bdev io waitq error, it should not happen\n");
-			assert(0);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		}
-	}
-}
+raid_bdev_queue_io_wait(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx,
+			spdk_bdev_io_wait_cb cb_fn, int ret);
 
 /*
  * brief:
@@ -443,13 +409,11 @@ raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_i
 static void
 raid0_waitq_io_process(void *ctx)
 {
-	struct raid_bdev_io	*raid_io = ctx;
-	struct spdk_bdev_io	*bdev_io;
+	struct spdk_bdev_io	*bdev_io = ctx;
 	struct raid_bdev	*raid_bdev;
 	int			ret;
 	uint64_t		start_strip;
 
-	bdev_io = SPDK_CONTAINEROF(raid_io, struct spdk_bdev_io, driver_ctx);
 	/*
 	 * Try to submit childs of parent bdev io. If failed due to resource
 	 * crunch then break the loop and don't try to process other queued IOs.
@@ -458,7 +422,10 @@ raid0_waitq_io_process(void *ctx)
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
 	ret = raid0_submit_rw_request(bdev_io, start_strip);
 	if (ret != 0) {
-		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
+		struct raid_bdev_io *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+		uint8_t pd_idx = raid0_get_curr_base_bdev_index(raid_bdev, raid_io);
+
+		raid_bdev_queue_io_wait(bdev_io, pd_idx, raid0_waitq_io_process, ret);
 	}
 }
 
@@ -495,14 +462,16 @@ raid0_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	}
 	ret = raid0_submit_rw_request(bdev_io, start_strip);
 	if (ret != 0) {
-		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
+		uint8_t pd_idx = raid0_get_curr_base_bdev_index(raid_bdev, raid_io);
+
+		raid_bdev_queue_io_wait(bdev_io, pd_idx, raid0_waitq_io_process, ret);
 	}
 }
 
 /*
  * brief:
- * raid_bdev_base_io_submit_fail_process processes IO requests for member disk
- * which failed to submit
+ * raid_bdev_queue_io_wait function processes the IO which failed to submit.
+ * It will try to queue the IOs after storing the context to bdev wait queue logic.
  * params:
  * raid_bdev_io - pointer to raid bdev_io
  * pd_idx - base_dev index in raid_bdev
@@ -512,8 +481,8 @@ raid0_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
  * none
  */
 static void
-raid_bdev_base_io_submit_fail_process(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx,
-				      spdk_bdev_io_wait_cb cb_fn, int ret)
+raid_bdev_queue_io_wait(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx,
+			spdk_bdev_io_wait_cb cb_fn, int ret)
 {
 	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)raid_bdev_io->driver_ctx;
 	struct raid_bdev_io_channel *raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
@@ -568,8 +537,8 @@ _raid_bdev_submit_reset_request_next(void *_bdev_io)
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
 		} else {
-			raid_bdev_base_io_submit_fail_process(bdev_io, i,
-							      _raid_bdev_submit_reset_request_next, ret);
+			raid_bdev_queue_io_wait(bdev_io, i,
+						_raid_bdev_submit_reset_request_next, ret);
 			return;
 		}
 	}
@@ -751,8 +720,8 @@ _raid_bdev_submit_null_payload_request_next(void *_bdev_io)
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
 		} else {
-			raid_bdev_base_io_submit_fail_process(bdev_io, disk_idx,
-							      _raid_bdev_submit_null_payload_request_next, ret);
+			raid_bdev_queue_io_wait(bdev_io, disk_idx,
+						_raid_bdev_submit_null_payload_request_next, ret);
 			return;
 		}
 	}
