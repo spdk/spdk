@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b3d4648_b9656d73",
+        "filename": "test/vhost/hotplug/scsi_hotdetach.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T19:07:14Z",
+      "side": 1,
+      "message": "should we just remove this whole function?  I don\u0027t see it called anywhere",
+      "revId": "cdd8bdad584e53cfdb38c9f4ddbdeff029d91dac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
