@@ -39,7 +39,7 @@ function prepare_fio_cmd_tc1_iter1() {
 function prepare_fio_cmd_tc1_iter2() {
     print_test_fio_header
 
-    for vm_num in 2; do
+    for vm_num in $2; do
         cp $fio_job $tmp_detach_job
         vm_dir=$VM_DIR/$vm_num
         vm_check_scsi_location $vm_num
