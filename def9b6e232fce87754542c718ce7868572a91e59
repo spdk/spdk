@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a5f6ad2_9ab24abb",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-08T08:44:26Z",
+      "side": 1,
+      "message": "That\u0027s a pretty interesting string concatenation, lol :)",
+      "range": {
+        "startLine": 44,
+        "startChar": 40,
+        "endLine": 44,
+        "endChar": 69
+      },
+      "revId": "def9b6e232fce87754542c718ce7868572a91e59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
