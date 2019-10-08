@@ -415,9 +415,9 @@ raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_i
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else {
 		/* Queue the IO to bdev layer wait queue */
-		pd_idx = raid_bdev->fn_table->get_curr_base_index(raid_bdev, raid_io);
+		pd_idx = raid0_get_curr_base_bdev_index(raid_bdev, raid_io);
 		raid_io->waitq_entry.bdev = raid_bdev->base_bdev_info[pd_idx].bdev;
-		raid_io->waitq_entry.cb_fn = raid_bdev->fn_table->waitq_io_process;
+		raid_io->waitq_entry.cb_fn = raid0_waitq_io_process;
 		raid_io->waitq_entry.cb_arg = raid_io;
 		raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
 		if (spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[pd_idx].bdev,
@@ -709,9 +709,9 @@ _raid_bdev_submit_null_payload_request_next(void *_bdev_io)
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
 
-	raid_bdev->fn_table->get_io_range(&io_range, raid_bdev->num_base_bdevs,
-					  raid_bdev->strip_size, raid_bdev->strip_size_shift,
-					  bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks);
+	_raid0_get_io_range(&io_range, raid_bdev->num_base_bdevs,
+			    raid_bdev->strip_size, raid_bdev->strip_size_shift,
+			    bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks);
 
 	raid_io->base_bdev_io_expected = io_range.n_disks_involved;
 
@@ -725,7 +725,7 @@ _raid_bdev_submit_null_payload_request_next(void *_bdev_io)
 		 */
 		disk_idx = (io_range.start_disk + raid_io->base_bdev_io_submitted) % raid_bdev->num_base_bdevs;
 
-		raid_bdev->fn_table->split_io_range(&io_range, disk_idx, &offset_in_disk, &nblocks_in_disk);
+		_raid0_split_io_range(&io_range, disk_idx, &offset_in_disk, &nblocks_in_disk);
 
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_UNMAP:
@@ -799,16 +799,12 @@ static void
 raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		     bool success)
 {
-	struct raid_bdev		*raid_bdev;
-
-	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
-
 	if (!success) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
-	raid_bdev->fn_table->start_rw_request(ch, bdev_io);
+	raid0_start_rw_request(ch, bdev_io);
 }
 
 /*
@@ -825,17 +821,13 @@ raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 static void
 raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct raid_bdev		*raid_bdev;
-
-	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
-
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_buf(bdev_io, raid_bdev_get_buf_cb,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		raid_bdev->fn_table->start_rw_request(ch, bdev_io);
+		raid0_start_rw_request(ch, bdev_io);
 		break;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
@@ -1515,14 +1507,6 @@ raid_bdev_init(void)
 	return 0;
 }
 
-static const struct raid_fn_table g_raid0_fn_table = {
-	.start_rw_request	= raid0_start_rw_request,
-	.get_curr_base_index	= raid0_get_curr_base_bdev_index,
-	.waitq_io_process	= raid0_waitq_io_process,
-	.get_io_range		= _raid0_get_io_range,
-	.split_io_range		= _raid0_split_io_range,
-};
-
 /*
  * brief:
  * raid_bdev_create allocates raid bdev based on passed configuration
@@ -1565,7 +1549,6 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 
 	switch (raid_bdev->raid_level) {
 	case RAID0:
-		raid_bdev->fn_table = &g_raid0_fn_table;
 		break;
 	default:
 		SPDK_ERRLOG("invalid raid level %u\n", raid_bdev->raid_level);
