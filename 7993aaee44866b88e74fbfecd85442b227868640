@@ -16,6 +16,23 @@
       "revId": "7993aaee44866b88e74fbfecd85442b227868640",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e68e476_37d2db9e",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T23:18:58Z",
+      "side": 1,
+      "message": "what is the case where nvme_qpair_submit_request() is called with a req that has status !\u003d NEW?",
+      "revId": "7993aaee44866b88e74fbfecd85442b227868640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
