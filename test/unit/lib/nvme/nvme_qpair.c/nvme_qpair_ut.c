@@ -76,6 +76,13 @@ nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t
 	return 0;
 }
 
+bool
+nvme_transport_qpair_has_free_entry(struct spdk_nvme_qpair *qpair)
+{
+	/* TODO */
+	return true;
+}
+
 int
 spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 {
