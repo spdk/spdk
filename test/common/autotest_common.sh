@@ -214,6 +214,14 @@ if [ $SPDK_TEST_ISAL -eq 0 ]; then
 	config_params+=' --without-isal'
 fi
 
+if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
+	if [[ -d /usr/include/fuse3 ]] && [[ -d /usr/local/include/fuse3 ]]; then
+		config_params+=' --with-fuse'
+	else
+		echo "FUSE not enabled because libfuse3 is not installed."
+	fi
+fi
+
 # By default, --with-dpdk is not set meaning the SPDK build will use the DPDK submodule.
 # If a DPDK installation is found in a well-known location though, WITH_DPDK_DIR will be
 # set which will override the default and use that DPDK installation instead.
