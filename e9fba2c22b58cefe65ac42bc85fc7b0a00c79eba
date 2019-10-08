@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7fdce9e_d06d6803",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T19:31:27Z",
+      "side": 1,
+      "message": "I\u0027d suggest making had_lock a bool, and do something like:\n\nhad_lock \u003d (nvme_robust_mutex_unlock() \u003d\u003d 0);\n\n(Parentheses aren\u0027t technically required, but makes it more readable in my opinion.)\n\nOtherwise when had_lock \u003d EPERM, it means we really didn\u0027t have the lock, and then below you only try to lock if had_lock was 0.  I think you want it to read:\n\nif (had_lock) {\n  nvme_robust_mutex_lock();\n}",
+      "revId": "e9fba2c22b58cefe65ac42bc85fc7b0a00c79eba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
