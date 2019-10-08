@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee809187_05780baf",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1261,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-08T19:10:23Z",
+      "side": 1,
+      "message": "If it\u0027s an OCSSD, where does nvme_bdev_attach_done() get called?",
+      "revId": "9ceb17c7a78c3e278429c2a8efdd83bc6f5b47dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
