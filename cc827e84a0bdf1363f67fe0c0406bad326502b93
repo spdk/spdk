@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d305e04_8a3c58bc",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 1906,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-08T12:53:49Z",
+      "side": 1,
+      "message": "We can avoid unnecessary resubmissions in spdk_nvme_qpair_process_completions if we return some error here",
+      "range": {
+        "startLine": 1906,
+        "startChar": 2,
+        "endLine": 1906,
+        "endChar": 11
+      },
+      "revId": "cc827e84a0bdf1363f67fe0c0406bad326502b93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2a9bed0_0701493b",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 1929,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-08T12:53:49Z",
+      "side": 1,
+      "message": "I think we should set rqpair-\u003eqpair.transport_qp_is_failed \u003d true and disconnect qpair in all cases where we return -1.\nCurrently if this function returns -1 spdk_nvme_qpair_process_completions fails the controller and generic nvme layer doesn\u0027t make attempts to reconnect.",
+      "revId": "cc827e84a0bdf1363f67fe0c0406bad326502b93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
