@@ -476,7 +476,6 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
 		resubmit_rc = nvme_qpair_resubmit_request(qpair, req);
 		if (spdk_unlikely(resubmit_rc != 0)) {
-			SPDK_ERRLOG("Unable to resubmit as many requests as we completed.\n");
 			break;
 		}
 		i++;
