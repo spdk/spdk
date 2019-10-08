@@ -684,13 +684,24 @@ static int
 nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	int rc;
+	struct nvme_request *_req = req;
 
-	rc = _nvme_qpair_submit_request(qpair, req);
-	if (spdk_unlikely(rc == -EAGAIN)) {
-		STAILQ_INSERT_HEAD(&qpair->queued_req, req, stailq);
+	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->queued_req))) {
+		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		_req = STAILQ_FIRST(&qpair->queued_req);
+		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
 	}
 
-	return rc;
+	rc = _nvme_qpair_submit_request(qpair, _req);
+	if (spdk_unlikely(rc == -EAGAIN)) {
+		STAILQ_INSERT_HEAD(&qpair->queued_req, _req, stailq);
+	}
+
+	if (spdk_likely(_req == req)) {
+		return rc;
+	} else {
+		return 0;
+	}
 }
 
 void
