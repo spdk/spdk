@@ -394,7 +394,7 @@ iscsi_check_data_segment_length(struct spdk_iscsi_conn *conn,
 		return true;
 	} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAOUT ||
 		   pdu->bhs.opcode == ISCSI_OP_NOPOUT) {
-		max_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+		return true;
 	} else {
 		max_segment_len = spdk_get_max_immediate_data_size();
 	}
@@ -3862,10 +3862,14 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 
+	if (pdu->data_segment_len > SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+	}
+
 	reqh = (struct iscsi_bhs_nop_out *)&pdu->bhs;
 	I_bit = reqh->immediate;
 
-	data_len = DGET24(reqh->data_segment_len);
+	data_len = pdu->data_segment_len;
 	if (data_len > conn->MaxRecvDataSegmentLength) {
 		data_len = conn->MaxRecvDataSegmentLength;
 	}
@@ -4306,6 +4310,11 @@ iscsi_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
 		SPDK_ERRLOG("ISCSI_OP_SCSI_DATAOUT not allowed in discovery session\n");
 		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	if (pdu->data_segment_len > SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+		reject_reason = ISCSI_REASON_PROTOCOL_ERROR;
+		goto reject_return;
 	}
 
 	reqh = (struct iscsi_bhs_data_out *)&pdu->bhs;
