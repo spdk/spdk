@@ -16,6 +16,24 @@
       "revId": "9ceb17c7a78c3e278429c2a8efdd83bc6f5b47dd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32edea02_02fa87c9",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1261,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T20:08:03Z",
+      "side": 1,
+      "message": "I think it gets done here in this patch, where Konrad starts using this infrastructure for OCSSD.\n\nhttps://review.gerrithub.io/c/spdk/spdk/+/467147/23\n\nSee line 1240 where it now calls create_bdevs_cb() directly, which results indirectly in nvme_bdev_attach_done() getting called.\n\nI\u0027m fine with moving parts of that patch up to this one though.",
+      "parentUuid": "ee809187_05780baf",
+      "revId": "9ceb17c7a78c3e278429c2a8efdd83bc6f5b47dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
