@@ -2172,3 +2172,13 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 
 	return num_completions;
 }
+
+bool
+nvme_pcie_qpair_has_free_entry(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_pcie_qpair *pqpair;
+
+	pqpair = nvme_pcie_qpair(qpair);
+
+	return !TAILQ_EMPTY(&pqpair->free_tr);
+}

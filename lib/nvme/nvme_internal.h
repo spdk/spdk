@@ -1099,6 +1099,7 @@ struct spdk_nvme_ctrlr *spdk_nvme_get_ctrlr_by_trid_unsafe(
 	void nvme_ ## name ## _qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr); \
 	int nvme_ ## name ## _qpair_reset(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req); \
+	bool nvme_ ## name ## _qpair_has_free_entry(struct spdk_nvme_qpair *qpair); \
 	int32_t nvme_ ## name ## _qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions); \
 	void nvme_ ## name ## _admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair); \
 
