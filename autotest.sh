@@ -79,7 +79,8 @@ if [ $(uname -s) = Linux ]; then
 	# discover if it is OCSSD or not so load the kernel driver first.
 
 
-	for dev in $(find /dev -maxdepth 1 -regex '/dev/nvme[0-9]+'); do
+	while IFS= read -r -d '' dev
+	do
 		# Send Open Channel 2.0 Geometry opcode "0xe2" - not supported by NVMe device.
 		if nvme admin-passthru $dev --namespace-id=1 --data-len=4096  --opcode=0xe2 --read >/dev/null; then
 			bdf="$(basename $(readlink -e /sys/class/nvme/${dev#/dev/}/device))"
@@ -87,7 +88,7 @@ if [ $(uname -s) = Linux ]; then
 			PCI_BLACKLIST+=" $bdf"
 			OCSSD_PCI_DEVICES+=" $bdf"
 		fi
-	done
+	done <   <(find /dev -maxdepth 1 -regex '/dev/nvme[0-9]+' -print0)
 
 	export OCSSD_PCI_DEVICES
 
