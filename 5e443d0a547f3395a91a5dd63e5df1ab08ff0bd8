@@ -2,6 +2,132 @@
   "comments": [
     {
       "key": {
+        "uuid": "1852fa56_17cbe4c1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-08T08:44:54Z",
+      "side": 1,
+      "message": "This won\u0027t be true any more after rebase. Latest version discovers this automatically - please remember to update description :)",
+      "range": {
+        "startLine": 10,
+        "startChar": 13,
+        "endLine": 13,
+        "endChar": 69
+      },
+      "revId": "5e443d0a547f3395a91a5dd63e5df1ab08ff0bd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f983f140_be5f2f0d",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-08T08:44:54Z",
+      "side": 1,
+      "message": "This will no longer be needed after rebase :)",
+      "range": {
+        "startLine": 178,
+        "startChar": 1,
+        "endLine": 178,
+        "endChar": 26
+      },
+      "revId": "5e443d0a547f3395a91a5dd63e5df1ab08ff0bd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c795841_721e0c21",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-08T08:44:54Z",
+      "side": 1,
+      "message": "You should probably check here if namespace is active with function spdk_nvme_ctrlr_is_active_ns()",
+      "revId": "5e443d0a547f3395a91a5dd63e5df1ab08ff0bd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "755f18dc_6b714bf8",
+        "filename": "module/bdev/nvme/bdev_ocssd_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-08T08:44:54Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "5e443d0a547f3395a91a5dd63e5df1ab08ff0bd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9062cb7c_f810e803",
+        "filename": "module/bdev/nvme/bdev_ocssd_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-08T08:44:54Z",
+      "side": 1,
+      "message": "Use spdk_json_write_bool(w, true) instead.",
+      "range": {
+        "startLine": 157,
+        "startChar": 1,
+        "endLine": 157,
+        "endChar": 29
+      },
+      "revId": "5e443d0a547f3395a91a5dd63e5df1ab08ff0bd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d31f9958_2ad0b843",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 704,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-08T08:44:54Z",
+      "side": 1,
+      "message": "bdev",
+      "range": {
+        "startLine": 704,
+        "startChar": 34,
+        "endLine": 704,
+        "endChar": 39
+      },
+      "revId": "5e443d0a547f3395a91a5dd63e5df1ab08ff0bd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6ad8dcab_3bef5d0d",
         "filename": "test/unit/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut.c",
         "patchSetId": 7
