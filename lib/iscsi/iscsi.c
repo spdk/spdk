@@ -376,7 +376,7 @@ static bool
 iscsi_check_data_segment_length(struct spdk_iscsi_conn *conn,
 				struct spdk_iscsi_pdu *pdu, int data_len)
 {
-	int max_segment_len;
+	int max_segment_len = 0;
 
 	/*
 	 * Determine the maximum segment length expected for this PDU.
@@ -391,13 +391,7 @@ iscsi_check_data_segment_length(struct spdk_iscsi_conn *conn,
 	 *  at runtime.
 	 */
 	if (conn->sess == NULL) {
-		/*
-		 * If the connection does not yet have a session, then
-		 *  login is not complete and we use the 8KB default
-		 *  FirstBurstLength as our maximum data segment length
-		 *  value.
-		 */
-		max_segment_len = SPDK_ISCSI_FIRST_BURST_LENGTH;
+		return true;
 	} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAOUT ||
 		   pdu->bhs.opcode == ISCSI_OP_NOPOUT) {
 		max_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
@@ -2195,6 +2189,13 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	if (conn->full_feature && conn->sess != NULL &&
 	    conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
 		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	/* During login processing, use the 8KB default FirstBurstLength as
+	 *  our maximum data segment length value.
+	 */
+	if (pdu->data_segment_len > SPDK_ISCSI_FIRST_BURST_LENGTH) {
+		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 	}
 
 	rsp_pdu = spdk_get_pdu();
