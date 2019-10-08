@@ -304,7 +304,8 @@ function report_test_completion() {
 
 function process_core() {
 	ret=0
-	for core in $(find . -type f \( -name 'core\.?[0-9]*' -o -name '*.core' \)); do
+	while IFS= read -r -d '' core
+	do
 		exe=$(eu-readelf -n "$core" | grep psargs | sed "s/.*psargs: \([^ \'\" ]*\).*/\1/")
 		if [[ ! -f "$exe" ]]; then
 			exe=$(eu-readelf -n "$core" | grep -oP -m1 "$exe.+")
@@ -319,7 +320,7 @@ function process_core() {
 		mv $core $output_dir
 		chmod a+r $output_dir/$core
 		ret=1
-	done
+	done <   <(find . -type f \( -name 'core\.?[0-9]*' -o -name '*.core' \))
 	return $ret
 }
 
