@@ -1859,3 +1859,13 @@ nvme_tcp_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 		nvme_tcp_req_put(tqpair, tcp_req);
 	}
 }
+
+bool
+nvme_tcp_qpair_has_free_entry(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_tcp_qpair *tqpair;
+
+	tqpair = nvme_tcp_qpair(qpair);
+
+	return !TAILQ_EMPTY(&tqpair->free_reqs);
+}
