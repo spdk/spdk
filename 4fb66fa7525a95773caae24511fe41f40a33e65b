@@ -16,6 +16,24 @@
       "revId": "4fb66fa7525a95773caae24511fe41f40a33e65b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe114611_5f03054f",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-08T22:47:30Z",
+      "side": 1,
+      "message": "I revised the patch",
+      "parentUuid": "8a8296aa_b51549c8",
+      "revId": "4fb66fa7525a95773caae24511fe41f40a33e65b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
