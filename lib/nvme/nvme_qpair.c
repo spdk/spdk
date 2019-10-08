@@ -422,6 +422,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 {
 	int32_t ret;
 	int32_t resubmit_rc;
+	bool was_empty;
 	int32_t i;
 	struct nvme_request *req, *tmp;
 
@@ -450,6 +451,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		}
 	}
 
+	was_empty = STAILQ_EMPTY(&qpair->queued_req);
 	qpair->in_completion_context = 1;
 	ret = nvme_transport_qpair_process_completions(qpair, max_completions);
 	if (ret < 0) {
@@ -477,6 +479,8 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		resubmit_rc = nvme_qpair_resubmit_request(qpair, req);
 		if (spdk_unlikely(resubmit_rc != 0)) {
 			SPDK_ERRLOG("Unable to resubmit as many requests as we completed.\n");
+			SPDK_ERRLOG("STAILQ was %sempty before calling down to transport\n",
+				    was_empty ? "" : "not ");
 			break;
 		}
 		i++;
