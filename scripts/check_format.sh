@@ -243,7 +243,7 @@ if hash shellcheck 2>/dev/null; then
 	SHCK_EXCLUDE="SC1001,SC1003,\
 SC1083,SC1113,SC2001,SC2002,SC2003,SC2004,SC2005,\
 SC2010,SC2012,SC2013,SC2016,\
-SC2034,SC2044,SC2045,SC2046,\
+SC2034,SC2045,SC2046,\
 SC2068,SC2086,SC2089,SC2090,\
 SC2097,SC2098,SC2103,SC2115,SC2116,SC2119,SC2120,SC2121,SC2124,SC2126,SC2128,\
 SC2129,SC2140,SC2142,SC2143,SC2145,SC2146,SC2148,SC2152,SC2153,SC2154,SC2155,\
@@ -257,7 +257,8 @@ SC2206,SC2207,SC2214,SC2223,SC2230,SC2231"
 	# We are aware about below exclude list and we want this errors to be excluded.
 	# SC1090: Can't follow non-constant source. Use a directive to specify location.
 	# SC1091: Not following: (error message here)
-	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1090,SC1091"
+	# SC2044: For loops over find output are fragile. Use find -exec or a while read loop.
+	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1090,SC1091,SC2044"
 
 	SHCK_FORMAT="diff"
 	SHCK_APPLY=true
