@@ -36,30 +36,6 @@ function prepare_fio_cmd_tc1_iter1() {
     done
 }
 
-function prepare_fio_cmd_tc1_iter2() {
-    print_test_fio_header
-
-    for vm_num in 2; do
-        cp $fio_job $tmp_detach_job
-        vm_dir=$VM_DIR/$vm_num
-        vm_check_scsi_location $vm_num
-        for disk in $SCSI_DISK; do
-            echo "[nvme-host$disk]" >> $tmp_detach_job
-            echo "filename=/dev/$disk" >> $tmp_detach_job
-        done
-        vm_scp "$vm_num" $tmp_detach_job 127.0.0.1:/root/default_integrity_3discs.job
-        rm $tmp_detach_job
-    done
-    run_fio="$fio_bin --eta=never "
-    for vm_num in $used_vms; do
-         if [ $vm_num == 2 ]; then
-             run_fio+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/default_integrity_3discs.job "
-             continue
-         fi
-         run_fio+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/default_integrity_4discs.job "
-    done
-}
-
 function prepare_fio_cmd_tc2_iter1() {
     print_test_fio_header
 
