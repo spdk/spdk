@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc74d2af_487a8501",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 1597,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T18:30:54Z",
+      "side": 1,
+      "message": "Detach NVMe controller and delete any associated bdevs.\n\n(Note: there can be 0 to many bdevs, depending on how many namespace are on the controller.)",
+      "revId": "90d541ebef0edfae471a7b9590d7c72a42bede04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c102945e_77967756",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T18:30:54Z",
+      "side": 1,
+      "message": "I don\u0027t think this is true - you have to specify the name of the controller, not the bdev.\n\nhelp\u003d\u0027Detach an NVMe controller and delete any associated bdevs\u0027\n\nPlease keep this next line the same as it was before:\np.add_argument(\u0027name\u0027, help\u003d\u0027Name of the controller\u0027)",
+      "revId": "90d541ebef0edfae471a7b9590d7c72a42bede04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c5600b2_0da4d44a",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T18:30:54Z",
+      "side": 1,
+      "message": "Detach NVMe controller and delete any associated bdevs.",
+      "revId": "90d541ebef0edfae471a7b9590d7c72a42bede04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
