@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2137542_06eb865d",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-08T23:14:48Z",
+      "side": 1,
+      "message": "Please let\u0027s find a way to fix this without adding this status field.  This will have a major impact on performance. \n\nAt the very least, it needs to be put immediately after cpl, so that it fills the 4 byte hole there (and then won\u0027t dirty an extra cache line).\n\nBut it still adds extra logic on each I/O which would be nice to avoid if possible.",
+      "revId": "7993aaee44866b88e74fbfecd85442b227868640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
