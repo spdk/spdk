@@ -54,7 +54,7 @@
 #define SPDK_EVENT_BATCH_SIZE		8
 
 enum spdk_reactor_state {
-	SPDK_REACTOR_STATE_INVALID = 0,
+	SPDK_REACTOR_STATE_UNINITIALIZED = 0,
 	SPDK_REACTOR_STATE_INITIALIZED = 1,
 	SPDK_REACTOR_STATE_RUNNING = 2,
 	SPDK_REACTOR_STATE_EXITING = 3,
@@ -85,7 +85,7 @@ struct spdk_reactor {
 
 static struct spdk_reactor *g_reactors;
 static struct spdk_cpuset *g_reactor_core_mask;
-static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
+static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_UNINITIALIZED;
 
 static bool g_framework_monitor_context_switch_enabled = true;
 
@@ -172,6 +172,10 @@ spdk_reactors_fini(void)
 {
 	uint32_t i;
 	struct spdk_reactor *reactor;
+
+	if (g_reactor_state == SPDK_REACTOR_STATE_UNINITIALIZED) {
+		return;
+	}
 
 	spdk_thread_lib_fini();
 
