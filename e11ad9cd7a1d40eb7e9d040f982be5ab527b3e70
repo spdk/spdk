@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80db35a7_5e3f8ec7",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 960,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-09T18:48:18Z",
+      "side": 1,
+      "message": "Would it be sufficient for this option to just mean \"send I/O to each bdev from every core\"?\n\nIf user specifies 6 cores, but then passes -C 5, this code will work, but it is not obvious to the user how it will work.  I think it would send I/O to the first bdev from cores 0-4, to the second bdev from cores 1-5, the third bdev from core 0 and 2-5, etc.  It\u0027s rather complicated.\n\nI think the most common case is that user specifies for example 4 cores and 2 bdevs.  They want all 4 cores to send I/O to the first bdev, and also all 4 cores to send I/O to the second bdev.",
+      "revId": "e11ad9cd7a1d40eb7e9d040f982be5ab527b3e70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "016a7a4b_acbe0316",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1404,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-09T18:48:18Z",
+      "side": 1,
+      "message": "if tmp \u003d\u003d 0, should this return an error?",
+      "revId": "e11ad9cd7a1d40eb7e9d040f982be5ab527b3e70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
