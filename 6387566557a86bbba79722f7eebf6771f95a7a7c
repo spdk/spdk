@@ -34,6 +34,24 @@
       "revId": "6387566557a86bbba79722f7eebf6771f95a7a7c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47238254_424d3d65",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1320,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-09T02:37:49Z",
+      "side": 1,
+      "message": "Right, but iscsi_conn_flush_pdus() will return at line 1321 if the state was ISCSI_CONN_STATE_EXITING, is this your intention ?",
+      "parentUuid": "e6bf8f6c_48d78257",
+      "revId": "6387566557a86bbba79722f7eebf6771f95a7a7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
