@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ceff5722_76ecc219",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1262,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-09T14:07:15Z",
+      "side": 1,
+      "message": "I\u0027m a little concerned about folks fully understanding this at some point in the future. Or even now LOL. Seems like you could shorten it a bit by init\u0027ing iov_len 31-60 to 409 and only overwrite the ones that apply. It\u0027s not clear to me at least why you chose some of the addresses that you did.The alignment is clear enough but some are clearly made up for UT but all of the 0x7fff1* addresses, any particular reason for that choice of \"base\"? Anything you can think of to make this a little clearer I think would be great.",
+      "revId": "047de8e2cb63e9dfcbe4beb179db8c044cba8f31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
