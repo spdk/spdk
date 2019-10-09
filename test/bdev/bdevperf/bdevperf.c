@@ -83,6 +83,7 @@ static bool g_mix_specified;
 static const char *g_target_bdev_name;
 static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
+static uint8_t g_core_count_for_each_bdev = 1;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
@@ -393,6 +394,8 @@ bdevperf_construct_targets(void)
 {
 	struct spdk_bdev *bdev;
 	int rc;
+	uint8_t core_idx = 0;
+	uint8_t core_count = spdk_min(spdk_env_get_core_count(), g_core_count_for_each_bdev);
 
 	if (g_target_bdev_name != NULL) {
 		bdev = spdk_bdev_get_by_name(g_target_bdev_name);
@@ -401,13 +404,20 @@ bdevperf_construct_targets(void)
 			return;
 		}
 
-		bdevperf_construct_target(bdev);
-	} else {
-		bdev = spdk_bdev_first_leaf();
-		while (bdev != NULL) {
+		for (core_idx = 0; core_idx < core_count; core_idx++) {
 			rc = bdevperf_construct_target(bdev);
 			if (rc != 0) {
 				return;
+			}
+		}
+	} else {
+		bdev = spdk_bdev_first_leaf();
+		while (bdev != NULL) {
+			for (core_idx = 0; core_idx < core_count; core_idx++) {
+				rc = bdevperf_construct_target(bdev);
+				if (rc != 0) {
+					return;
+				}
 			}
 
 			bdev = spdk_bdev_next_leaf(bdev);
@@ -947,6 +957,7 @@ bdevperf_usage(void)
 	printf(" -S <period>               show performance result in real time every <period> seconds\n");
 	printf(" -T <target>               target bdev\n");
 	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
+	printf(" -C                        specify number of cores to each bdev\n");
 }
 
 /*
@@ -1389,6 +1400,11 @@ bdevperf_parse_arg(int ch, char *arg)
 		case 't':
 			g_time_in_sec = tmp;
 			break;
+		case 'C':
+			if (tmp > 0) {
+				g_core_count_for_each_bdev = tmp;
+			}
+			break;
 		case 'M':
 			g_rw_percentage = tmp;
 			g_mix_specified = true;
@@ -1486,7 +1502,7 @@ main(int argc, char **argv)
 	g_time_in_sec = 0;
 	g_mix_specified = false;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zq:o:t:w:M:P:S:T:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zq:o:t:w:C:M:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
