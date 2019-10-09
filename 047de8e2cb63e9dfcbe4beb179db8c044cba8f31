@@ -16,6 +16,24 @@
       "revId": "047de8e2cb63e9dfcbe4beb179db8c044cba8f31",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24395c96_f292f9db",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1262,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-09T20:49:01Z",
+      "side": 1,
+      "message": "Hi Paul,\n\nAll of the data were the one collected by Geoffrey including the base 0x7ffff*\nI can change iov bases but don’t think I can change iov lengths.\n\nChanging iov lengths or shortening code lines will lost credibility of the test.\n\n“More complex tests” is no meaningful because this was added first. I will refine this comment and update iov bases",
+      "parentUuid": "ceff5722_76ecc219",
+      "revId": "047de8e2cb63e9dfcbe4beb179db8c044cba8f31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
