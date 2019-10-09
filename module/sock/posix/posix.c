@@ -35,6 +35,7 @@
 
 #if defined(__linux__)
 #include <sys/epoll.h>
+#include <linux/errqueue.h>
 #elif defined(__FreeBSD__)
 #include <sys/event.h>
 #endif
@@ -48,9 +49,16 @@
 #define SO_RCVBUF_SIZE (2 * 1024 * 1024)
 #define SO_SNDBUF_SIZE (2 * 1024 * 1024)
 
+#define SENDMSG_RING_SIZE 64
+
 struct spdk_posix_sock {
 	struct spdk_sock	base;
 	int			fd;
+
+	uint32_t				sendmsg_head;
+	uint32_t				sendmsg_tail;
+	ssize_t					sendmsg_calls[SENDMSG_RING_SIZE];
+	bool					zcopy;
 };
 
 struct spdk_posix_sock_group_impl {
@@ -210,7 +218,7 @@ static struct spdk_posix_sock *
 _spdk_posix_sock_alloc(int fd)
 {
 	struct spdk_posix_sock *sock;
-	int rc;
+	int rc, flag;
 
 	sock = calloc(1, sizeof(*sock));
 	if (sock == NULL) {
@@ -230,6 +238,12 @@ _spdk_posix_sock_alloc(int fd)
 		/* Not fatal */
 	}
 
+	/* Try to turn on zero copy sends */
+	flag = 1;
+	rc = setsockopt(sock->fd, SOL_SOCKET, SO_ZEROCOPY, &flag, sizeof(flag));
+	if (rc == 0) {
+		sock->zcopy = true;
+	}
 	return sock;
 }
 
@@ -432,6 +446,100 @@ spdk_posix_sock_close(struct spdk_sock *_sock)
 	return 0;
 }
 
+static void
+_sock_reap_reqs(struct spdk_sock *sock, ssize_t bytes)
+{
+	struct spdk_posix_sock *psock = __posix_sock(sock);
+	struct spdk_sock_request *req;
+	unsigned int offset;
+	size_t len;
+	int i;
+	int retval;
+
+	/* Consume the requests that were actually written */
+	req = TAILQ_FIRST(&sock->pending_reqs);
+	while (req) {
+		offset = req->offset;
+
+		if (psock->zcopy) {
+			assert(offset == 0);
+		}
+
+		for (i = 0; i < req->iovcnt; i++) {
+			/* Advance by the offset first */
+			if (offset >= req->iov[i].iov_len) {
+				offset -= req->iov[i].iov_len;
+				continue;
+			}
+
+			/* Calculate the remaining length of this element */
+			len = req->iov[i].iov_len - offset;
+
+			if (len > (size_t)bytes) {
+				/* This element was partially sent. */
+				req->offset += bytes;
+				return;
+			}
+
+			offset = 0;
+			req->offset += len;
+			bytes -= len;
+		}
+
+		req->offset = 0;
+
+		retval = spdk_sock_request_put(sock, req, 0);
+
+		if (bytes == 0 || retval) {
+			break;
+		}
+
+		req = TAILQ_FIRST(&sock->pending_reqs);
+	}
+}
+
+static void
+_sock_check_zcopy(struct spdk_sock *sock)
+{
+	struct spdk_posix_sock *psock = __posix_sock(sock);
+	struct msghdr msgh = { 0 };
+	uint8_t buf[sizeof(struct cmsghdr) + sizeof(struct sock_extended_err) + 64];
+	ssize_t rc;
+	struct sock_extended_err *serr;
+	struct cmsghdr *cm;
+	uint32_t idx;
+
+	msgh.msg_control = buf;
+	msgh.msg_controllen = sizeof(buf);
+
+	rc = recvmsg(psock->fd, &msgh, MSG_ERRQUEUE);
+
+	if (rc < 0) {
+		return;
+	}
+
+	cm = CMSG_FIRSTHDR(&msgh);
+	if (cm == NULL) {
+		return;
+	}
+	if (cm->cmsg_level != SOL_IP || cm->cmsg_type != IP_RECVERR) {
+		return;
+	}
+
+	serr = (struct sock_extended_err *)CMSG_DATA(cm);
+	if (serr->ee_errno != 0 || serr->ee_origin != SO_EE_ORIGIN_ZEROCOPY) {
+		return;
+	}
+
+	for (idx = serr->ee_info; idx <= serr->ee_data; idx++) {
+		psock->sendmsg_tail++;
+		assert(psock->sendmsg_tail <= psock->sendmsg_head);
+		_sock_reap_reqs(sock, psock->sendmsg_calls[idx % SENDMSG_RING_SIZE]);
+		psock->sendmsg_calls[idx % SENDMSG_RING_SIZE] = 0;
+
+	}
+}
+
 static int
 _sock_flush(struct spdk_sock *sock)
 {
@@ -440,18 +548,33 @@ _sock_flush(struct spdk_sock *sock)
 	int flags;
 	struct iovec iovs[DEFAULT_MAX_IOV];
 	int iovcnt;
-	int retval;
 	struct spdk_sock_request *req;
 	int i;
 	ssize_t rc;
 	unsigned int offset;
-	size_t len;
+	size_t len, remaining;
+
+	if (psock->sendmsg_head > (psock->sendmsg_tail + SENDMSG_RING_SIZE - 1)) {
+		/* No more room in the ring */
+		return 0;
+	}
 
 	/* Gather an iov */
 	iovcnt = 0;
 	req = TAILQ_FIRST(&sock->queued_reqs);
 	while (req) {
 		offset = req->offset;
+
+		if (psock->zcopy) {
+			assert(offset == 0);
+		}
+
+		if (iovcnt + req->iovcnt > DEFAULT_MAX_IOV) {
+			/* Don't process a request if there isn't space for all of its
+			 * elements. This means in zcopy mode, we won't ever have any partial
+			 * sends. */
+			break;
+		}
 
 		for (i = 0; i < req->iovcnt; i++) {
 			/* Consume any offset first */
@@ -485,7 +608,11 @@ _sock_flush(struct spdk_sock *sock)
 	/* Perform the vectored write */
 	msg.msg_iov = iovs;
 	msg.msg_iovlen = iovcnt;
-	flags = 0;
+	if (psock->zcopy) {
+		flags = MSG_ZEROCOPY;
+	} else {
+		flags = 0;
+	}
 	rc = sendmsg(psock->fd, &msg, flags);
 	if (rc <= 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -493,6 +620,8 @@ _sock_flush(struct spdk_sock *sock)
 		}
 		return rc;
 	}
+
+	remaining = (size_t)rc;
 
 	/* Consume the requests that were actually written */
 	req = TAILQ_FIRST(&sock->queued_reqs);
@@ -509,29 +638,33 @@ _sock_flush(struct spdk_sock *sock)
 			/* Calculate the remaining length of this element */
 			len = req->iov[i].iov_len - offset;
 
-			if (len > (size_t)rc) {
+			if (len > remaining) {
 				/* This element was partially sent. */
-				req->offset += rc;
+				req->offset += remaining;
 				return 0;
 			}
 
 			offset = 0;
 			req->offset += len;
-			rc -= len;
+			remaining -= len;
 		}
 
 		/* Handled a full request. */
 		req->offset = 0;
 		spdk_sock_request_pend(sock, req);
 
-		/* The write isn't currently asynchronous, so it's already done. */
-		retval = spdk_sock_request_put(sock, req, 0);
-
-		if (rc == 0 || retval) {
+		if (remaining == 0) {
 			break;
 		}
 
 		req = TAILQ_FIRST(&sock->queued_reqs);
+	}
+
+	if (psock->zcopy) {
+		psock->sendmsg_calls[psock->sendmsg_head % SENDMSG_RING_SIZE] = rc;
+		psock->sendmsg_head++;
+	} else {
+		_sock_reap_reqs(sock, rc);
 	}
 
 	return 0;
@@ -789,6 +922,7 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 {
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	struct spdk_sock *sock, *tmp;
+	struct spdk_posix_sock *psock;
 	int num_events, i, rc;
 #if defined(__linux__)
 	struct epoll_event events[MAX_EVENTS_PER_POLL];
@@ -801,6 +935,13 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 		rc = _sock_flush(sock);
 		if (rc) {
 			spdk_sock_abort_requests(sock);
+			continue;
+		}
+
+		psock = __posix_sock(sock);
+
+		if (psock->zcopy && psock->sendmsg_tail != psock->sendmsg_head) {
+			_sock_check_zcopy(sock);
 		}
 	}
 
