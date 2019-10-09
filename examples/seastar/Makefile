@@ -50,11 +50,12 @@ SPDK_LIB_LIST += event_bdev event_copy event_nvmf event_vmd event_iscsi event_ne
 SPDK_LIB_LIST += nvmf bdev_rpc bdev iscsi scsi net copy event util conf trace log
 SPDK_LIB_LIST += jsonrpc json rpc sock thread notify
 
-EXTRA_DPDK_LIBS = rte_ring rte_mempool_ring rte_pci rte_bus_pci
-EXTRA_DPDK_LIBS += rte_pmd_virtio rte_pmd_i40e rte_pmd_ixgbe rte_bus_vdev rte_net
+#EXTRA_DPDK_LIBS = rte_ring rte_mempool_ring rte_pci rte_bus_pci
+#EXTRA_DPDK_LIBS += rte_pmd_virtio rte_pmd_i40e rte_pmd_ixgbe rte_bus_vdev rte_net
 
 FLAGS += $(SPDK_LIB_LINKER_ARGS)
-FLAGS += $(call dpdk_env_linker_args,$(EXTRA_DPDK_LIBS))
+#FLAGS += $(call dpdk_env_linker_args,$(EXTRA_DPDK_LIBS))
+FLAGS += $(ENV_LINKER_ARGS)
 FLAGS += $(SEASTAR_FLAGS)
 FLAGS += $(SYS_LIBS)
 

@@ -60,7 +60,11 @@ subsystem_fini_done(void *arg) {
 seastar::distributed<seastar_lw_thread> g_lw_thread;
 
 seastar::future<> f() {
-	spdk_env_dpdk_post_init();
+	struct spdk_env_opts opts;
+
+	spdk_env_opts_init(&opts);
+	spdk_env_init(&opts);
+	//spdk_env_dpdk_post_init();
 
 	seastar::engine().at_exit([] {
 		spdk_rpc_finish();
