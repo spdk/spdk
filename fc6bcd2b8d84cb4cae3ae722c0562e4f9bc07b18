@@ -16,6 +16,24 @@
       "revId": "fc6bcd2b8d84cb4cae3ae722c0562e4f9bc07b18",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d6ead45_78bfa55a",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-09T19:37:05Z",
+      "side": 1,
+      "message": "Yes, it causes the hang if only queued. Currently I did not find the path also. But it should definitely be some issue in our general code. If some one could you help on this case, I would also be happy to see this.",
+      "parentUuid": "f51bf278_53ec6760",
+      "revId": "fc6bcd2b8d84cb4cae3ae722c0562e4f9bc07b18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
