@@ -16,6 +16,24 @@
       "revId": "360e0a27fc7569e457969085fb2278beb25350bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4b15f4fd_2e9ebf4b",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-09T07:27:50Z",
+      "side": 1,
+      "message": "Are there any other VMD vendors? And what other device ids would you like to support?",
+      "parentUuid": "77256637_f86f8af2",
+      "revId": "360e0a27fc7569e457969085fb2278beb25350bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
