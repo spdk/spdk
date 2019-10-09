@@ -358,4 +358,9 @@ raid0_submit_null_payload_request(void *_bdev_io)
 	}
 }
 
+static struct raid_bdev_module g_raid0_module = {
+	.level = RAID0,
+};
+RAID_MODULE_REGISTER(&g_raid0_module)
+
 SPDK_LOG_REGISTER_COMPONENT("bdev_raid0", SPDK_LOG_BDEV_RAID0)
