@@ -597,7 +597,7 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	if (opts.io_queue_requests < entry->num_io_requests) {
 		opts.io_queue_requests = entry->num_io_requests;
 	}
-	opts.delay_pcie_doorbell = true;
+	opts.delay_cmd_submit = true;
 
 	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
 		ns_ctx->u.nvme.qpair[i] = spdk_nvme_ctrlr_alloc_io_qpair(entry->u.nvme.ctrlr, &opts,

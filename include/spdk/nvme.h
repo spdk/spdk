@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1017,14 +1017,15 @@ struct spdk_nvme_io_qpair_opts {
 
 	/**
 	 * When submitting I/O via spdk_nvme_ns_read/write and similar functions,
-	 * don't immediately write the submission queue doorbell. Instead, write
-	 * to the doorbell as necessary inside spdk_nvme_qpair_process_completions().
+	 * don't immediately submit it to hardware. Instead, wait for I/O queue
+	 * to be fully processed and submit commands together inside
+	 * spdk_nvme_qpair_process_completions().
 	 *
 	 * This results in better batching of I/O submission and consequently fewer
 	 * MMIO writes to the doorbell, which may increase performance.
 	 *
-	 * This only applies to local PCIe devices. */
-	bool delay_pcie_doorbell;
+	 * This only applies to PCIe and RDMA transports. */
+	bool delay_cmd_submit;
 
 	/**
 	 * These fields allow specifying the memory buffers for the submission and/or
