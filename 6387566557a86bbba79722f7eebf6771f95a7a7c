@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d18bf9a_f6549a60",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1320,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-09T02:17:09Z",
+      "side": 1,
+      "message": "Is there a scenario that the state was set to ISCSI_CONN_STATE_EXITING, and there is a pending response PDU in the list ?\n\nI saw the logout PDU should be fine, because the logout timeout poller will be started after 5 seconds.",
+      "revId": "6387566557a86bbba79722f7eebf6771f95a7a7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
