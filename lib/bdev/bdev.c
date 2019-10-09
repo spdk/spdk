@@ -1696,7 +1696,8 @@ _spdk_bdev_io_split(void *_bdev_io)
 				uint32_t child_iovpos = child_iovcnt - 1;
 				/* don't decrease child_iovcnt so the loop will naturally end */
 
-				to_next_boundary_bytes += _to_next_boundary(to_next_boundary_bytes, blocklen);
+				to_last_block_bytes = blocklen - to_last_block_bytes;
+				to_next_boundary_bytes += to_last_block_bytes;
 				while (to_last_block_bytes > 0 && iovcnt > 0) {
 					iov_len = spdk_min(to_last_block_bytes,
 							   bdev_io->child_iov[child_iovpos].iov_len);

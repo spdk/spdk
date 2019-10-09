@@ -1259,6 +1259,180 @@ bdev_io_split(void)
 	CU_ASSERT(g_io_done == true);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
 
+	/* More complex test. Check if the child iovs are aligned with block size
+	 * when child iovs runs out. The following test data is the one collected
+	 * in the real issue.
+	 */
+	bdev->optimal_io_boundary = 128;
+	g_io_done = false;
+	g_io_status = 0;
+
+	for (i = 0; i < 31; i++) {
+		iov[i].iov_base = (void *)(0xFEEDBEEF + i * 1024);
+		iov[i].iov_len = 1024;
+	}
+
+	iov[31].iov_base = (void *)(0xFEEDBEEF + 31 * 1024);
+	iov[31].iov_len = 32768;
+
+	iov[32].iov_base = (void *)0x7fff11f43f60;
+	iov[32].iov_len = 160;
+
+	/* This is split into 864 and 3232 because of bdev->optimal_io_boundary */
+	iov[33].iov_base = (void *)0x7fff14944000;
+	iov[33].iov_len = 4096;
+
+	iov[34].iov_base = (void *)0x7fff12c91000;
+	iov[34].iov_len = 4096;
+	iov[35].iov_base = (void *)0x7fff10292000;
+	iov[35].iov_len = 4096;
+	iov[36].iov_base = (void *)0x7fff19e41000;
+	iov[36].iov_len = 4096;
+	iov[37].iov_base = (void *)0x7fff19842000;
+	iov[37].iov_len = 4096;
+	iov[38].iov_base = (void *)0x7fff1a343000;
+	iov[38].iov_len = 4096;
+	iov[39].iov_base = (void *)0x7fff1a444000;
+	iov[39].iov_len = 4096;
+	iov[40].iov_base = (void *)0x7fff1a545000;
+	iov[40].iov_len = 4096;
+	iov[41].iov_base = (void *)0x7fff19f46000;
+	iov[41].iov_len = 4096;
+	iov[42].iov_base = (void *)0x7fff19d47000;
+	iov[42].iov_len = 4096;
+	iov[43].iov_base = (void *)0x7fff1a548000;
+	iov[43].iov_len = 12288;
+	iov[44].iov_base = (void *)0x7fff1a24b000;
+	iov[44].iov_len = 8192;
+	iov[45].iov_base = (void *)0x7fff1a54d000;
+	iov[45].iov_len = 4096;
+
+	/* This is split into 864 and 3232 because of bdev->optimal_io_boundary */
+	iov[46].iov_base = (void *)0x7fff1a24e000;
+	iov[46].iov_len = 4096;
+
+	iov[47].iov_base = (void *)0x7fff19e4f000;
+	iov[47].iov_len = 4096;
+	iov[48].iov_base = (void *)0x7fff1a350000;
+	iov[48].iov_len = 24576;
+	iov[49].iov_base = (void *)0x7fff19856000;
+	iov[49].iov_len = 16384;
+	iov[50].iov_base = (void *)0x7fff0365a000;
+	iov[50].iov_len = 12288;
+	iov[51].iov_base = (void *)0x7fff1a35d000;
+	iov[51].iov_len = 4096;
+
+	/* This is split into 864 and 3232 because of bdev->optimal_io_boundary */
+	iov[52].iov_base = (void *)0x7fff09e5e000;
+	iov[52].iov_len = 4096;
+
+	iov[53].iov_base = (void *)0x7fff1a35f000;
+	iov[53].iov_len = 4096;
+	iov[54].iov_base = (void *)0x7fff19d60000;
+	iov[54].iov_len = 28672;
+	iov[55].iov_base = (void *)0x7fff1a367000;
+	iov[55].iov_len = 20480;
+	iov[56].iov_base = (void *)0x7fff19d6c000;
+	iov[56].iov_len = 4096;
+
+	/* This is split into 4960 and 7328 because of bdev->optimal_io_boundary */
+	iov[57].iov_base = (void *)0x7fff1a36d000;
+	iov[57].iov_len = 12288;
+
+	iov[58].iov_base = (void *)0x7fff1a570000;
+	iov[58].iov_len = 4096;
+
+	/* This is split into 3936 and 160 because child iovs run out. */
+	iov[59].iov_base = (void *)0x7fff07b71000;
+	iov[59].iov_len = 4096;
+
+	iov[60].iov_base = (void *)0xDEADBEEF;
+	iov[60].iov_len = 352;
+
+	/* Expected 1st split IO */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 0, 126, 32);
+	for (i = 0; i < 31; i++) {
+		ut_expected_io_set_iov(expected_io, i, iov[i].iov_base, iov[i].iov_len);
+	}
+	ut_expected_io_set_iov(expected_io, 31, iov[31].iov_base, 32768);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* Expected 2nd split IO */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 126, 2, 2);
+	ut_expected_io_set_iov(expected_io, 0, (void *)0x7fff11f43f60, 160);
+	ut_expected_io_set_iov(expected_io, 1, (void *)0x7fff14944000, 864);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* Expected 3rd split IO */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 128, 128, 14);
+	ut_expected_io_set_iov(expected_io, 0, (void *)0x7fff14944360, 3232);
+	ut_expected_io_set_iov(expected_io, 1, (void *)0x7fff12c91000, 4096);
+	ut_expected_io_set_iov(expected_io, 2, (void *)0x7fff10292000, 4096);
+	ut_expected_io_set_iov(expected_io, 3, (void *)0x7fff19e41000, 4096);
+	ut_expected_io_set_iov(expected_io, 4, (void *)0x7fff19842000, 4096);
+	ut_expected_io_set_iov(expected_io, 5, (void *)0x7fff1a343000, 4096);
+	ut_expected_io_set_iov(expected_io, 6, (void *)0x7fff1a444000, 4096);
+	ut_expected_io_set_iov(expected_io, 7, (void *)0x7fff1a545000, 4096);
+	ut_expected_io_set_iov(expected_io, 8, (void *)0x7fff19f46000, 4096);
+	ut_expected_io_set_iov(expected_io, 9, (void *)0x7fff19d47000, 4096);
+	ut_expected_io_set_iov(expected_io, 10, (void *)0x7fff1a548000, 12288);
+	ut_expected_io_set_iov(expected_io, 11, (void *)0x7fff1a24b000, 8192);
+	ut_expected_io_set_iov(expected_io, 12, (void *)0x7fff1a54d000, 4096);
+	ut_expected_io_set_iov(expected_io, 13, (void *)0x7fff1a24e000, 864);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* Expected 4th split IO */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 256, 128, 7);
+	ut_expected_io_set_iov(expected_io, 0, (void *)0x7fff1a24e360, 3232);
+	ut_expected_io_set_iov(expected_io, 1, (void *)0x7fff19e4f000, 4096);
+	ut_expected_io_set_iov(expected_io, 2, (void *)0x7fff1a350000, 24576);
+	ut_expected_io_set_iov(expected_io, 3, (void *)0x7fff19856000, 16384);
+	ut_expected_io_set_iov(expected_io, 4, (void *)0x7fff0365a000, 12288);
+	ut_expected_io_set_iov(expected_io, 5, (void *)0x7fff1a35d000, 4096);
+	ut_expected_io_set_iov(expected_io, 6, (void *)0x7fff09e5e000, 864);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* Expected 5th split I/O */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 384, 128, 6);
+	ut_expected_io_set_iov(expected_io, 0, (void *)0x7fff09e5e360, 3232);
+	ut_expected_io_set_iov(expected_io, 1, (void *)0x7fff1a35f000, 4096);
+	ut_expected_io_set_iov(expected_io, 2, (void *)0x7fff19d60000, 28672);
+	ut_expected_io_set_iov(expected_io, 3, (void *)0x7fff1a367000, 20480);
+	ut_expected_io_set_iov(expected_io, 4, (void *)0x7fff19d6c000, 4096);
+	ut_expected_io_set_iov(expected_io, 5, (void *)0x7fff1a36d000, 4960);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* Expected 6th split I/O */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 512, 30, 3);
+	ut_expected_io_set_iov(expected_io, 0, (void *)0x7fff1a36e360, 7328);
+	ut_expected_io_set_iov(expected_io, 1, (void *)0x7fff1a570000, 4096);
+	ut_expected_io_set_iov(expected_io, 2, (void *)0x7fff07b71000, 3936);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	/* Expected 7th split I/O */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 542, 1, 2);
+	ut_expected_io_set_iov(expected_io, 0, (void *)0x7fff07b71f60, 160);
+	ut_expected_io_set_iov(expected_io, 1, (void *)0xDEADBEEF, 352);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_readv_blocks(desc, io_ch, iov, 61, 0, 543, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 5);
+	stub_complete_io(5);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
 	/* Test a WRITE_ZEROES that would span an I/O boundary.  WRITE_ZEROES should not be
 	 * split, so test that.
 	 */
