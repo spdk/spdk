@@ -36,7 +36,10 @@
 
 #include "spdk/bdev_module.h"
 
-#define RAID0 0
+enum raid_level {
+	INVALID_RAID_LEVEL	= -1,
+	RAID0			= 0,
+};
 
 /*
  * Raid state describes the state of the raid. This raid bdev can be either in
@@ -143,7 +146,7 @@ struct raid_bdev {
 	uint8_t				num_base_bdevs_discovered;
 
 	/* Raid Level of this raid bdev */
-	uint8_t				raid_level;
+	enum raid_level			level;
 
 	/* Set to true if destruct is called for this raid bdev */
 	bool				destruct_called;
@@ -181,7 +184,7 @@ struct raid_bdev_config {
 	uint8_t				num_base_bdevs;
 
 	/* raid level */
-	uint8_t				raid_level;
+	enum raid_level			level;
 
 	TAILQ_ENTRY(raid_bdev_config)	link;
 };
@@ -229,11 +232,13 @@ int raid_bdev_add_base_devices(struct raid_bdev_config *raid_cfg);
 void raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
 				   raid_bdev_destruct_cb cb_fn, void *cb_ctx);
 int raid_bdev_config_add(const char *raid_name, uint32_t strip_size, uint8_t num_base_bdevs,
-			 uint8_t raid_level, struct raid_bdev_config **_raid_cfg);
+			 enum raid_level level, struct raid_bdev_config **_raid_cfg);
 int raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg,
 				   const char *base_bdev_name, uint8_t slot);
 void raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg);
 struct raid_bdev_config *raid_bdev_config_find_by_name(const char *raid_name);
+enum raid_level raid_bdev_parse_raid_level(const char *str);
+const char *raid_bdev_level_to_str(enum raid_level level);
 
 void
 raid0_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
