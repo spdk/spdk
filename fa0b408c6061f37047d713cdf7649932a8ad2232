@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d82be940_b779164d",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1248,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-09T08:19:23Z",
+      "side": 1,
+      "message": "Very preliminary question. If OCSSD is supported, can we return success even if we don\u0027t create bdev nvme?",
+      "revId": "fa0b408c6061f37047d713cdf7649932a8ad2232",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
