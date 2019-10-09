@@ -124,8 +124,6 @@ DEFINE_STUB(spdk_json_decode_array, int, (const struct spdk_json_val *values,
 		spdk_json_decode_fn decode_func,
 		void *out, size_t max_size, size_t *out_size, size_t stride), 0);
 DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
-DEFINE_STUB(spdk_json_write_named_string, int, (struct spdk_json_write_ctx *w,
-		const char *name, const char *val), 0);
 DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_named_object_begin, int, (struct spdk_json_write_ctx *w,
 		const char *name), 0);
@@ -387,8 +385,6 @@ int spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name
 		CU_ASSERT(req->strip_size_kb == val);
 	} else if (strcmp(name, "blocklen_shift") == 0) {
 		CU_ASSERT(spdk_u32log2(g_block_len) == val);
-	} else if (strcmp(name, "raid_level") == RAID0) {
-		CU_ASSERT(req->raid_level == val);
 	} else if (strcmp(name, "num_base_bdevs") == 0) {
 		CU_ASSERT(req->base_bdevs.num_base_bdevs == val);
 	} else if (strcmp(name, "state") == 0) {
@@ -397,6 +393,15 @@ int spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name
 		CU_ASSERT(val == 0);
 	} else if (strcmp(name, "num_base_bdevs_discovered") == 0) {
 		CU_ASSERT(req->base_bdevs.num_base_bdevs == val);
+	}
+	return 0;
+}
+
+int spdk_json_write_named_string(struct spdk_json_write_ctx *w, const char *name, const char *val)
+{
+	struct rpc_bdev_raid_create *req = g_rpc_req;
+	if (strcmp(name, "raid_level") == 0) {
+		CU_ASSERT(strcmp(val, raid_bdev_level_to_str(req->level)) == 0);
 	}
 	return 0;
 }
@@ -485,6 +490,8 @@ spdk_conf_section_get_val(struct spdk_conf_section *sp, const char *key)
 	if (g_config_level_create) {
 		if (strcmp(key, "Name") == 0) {
 			return req->name;
+		} else if (strcmp(key, "RaidLevel") == 0) {
+			return (char *)raid_bdev_level_to_str(req->level);
 		}
 	}
 
@@ -501,8 +508,6 @@ spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
 			return req->strip_size_kb;
 		} else if (strcmp(key, "NumDevices") == 0) {
 			return req->base_bdevs.num_base_bdevs;
-		} else if (strcmp(key, "RaidLevel") == 0) {
-			return req->raid_level;
 		}
 	}
 
@@ -554,7 +559,7 @@ spdk_json_decode_object(const struct spdk_json_val *values,
 		_out->name = strdup(req->name);
 		SPDK_CU_ASSERT_FATAL(_out->name != NULL);
 		_out->strip_size_kb = req->strip_size_kb;
-		_out->raid_level = req->raid_level;
+		_out->level = req->level;
 		_out->base_bdevs.num_base_bdevs = req->base_bdevs.num_base_bdevs;
 		for (i = 0; i < req->base_bdevs.num_base_bdevs; i++) {
 			_out->base_bdevs.base_bdevs[i] = strdup(req->base_bdevs.base_bdevs[i]);
@@ -901,7 +906,7 @@ verify_raid_config(struct rpc_bdev_raid_create *r, bool presence)
 			CU_ASSERT(raid_cfg->raid_bdev != NULL);
 			CU_ASSERT(raid_cfg->strip_size == r->strip_size_kb);
 			CU_ASSERT(raid_cfg->num_base_bdevs == r->base_bdevs.num_base_bdevs);
-			CU_ASSERT(raid_cfg->raid_level == r->raid_level);
+			CU_ASSERT(raid_cfg->level == r->level);
 			if (raid_cfg->base_bdev != NULL) {
 				for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
 					val = strcmp(raid_cfg->base_bdev[i].name,
@@ -945,7 +950,7 @@ verify_raid_bdev(struct rpc_bdev_raid_create *r, bool presence, uint32_t raid_st
 			CU_ASSERT(pbdev->state == raid_state);
 			CU_ASSERT(pbdev->num_base_bdevs == r->base_bdevs.num_base_bdevs);
 			CU_ASSERT(pbdev->num_base_bdevs_discovered == r->base_bdevs.num_base_bdevs);
-			CU_ASSERT(pbdev->raid_level == r->raid_level);
+			CU_ASSERT(pbdev->level == r->level);
 			CU_ASSERT(pbdev->destruct_called == false);
 			for (i = 0; i < pbdev->num_base_bdevs; i++) {
 				if (pbdev->base_bdev_info && pbdev->base_bdev_info[i].bdev) {
@@ -1068,7 +1073,7 @@ create_test_req(struct rpc_bdev_raid_create *r, const char *raid_name,
 	r->name = strdup(raid_name);
 	SPDK_CU_ASSERT_FATAL(r->name != NULL);
 	r->strip_size_kb = (g_strip_size * g_block_len) / 1024;
-	r->raid_level = RAID0;
+	r->level = RAID0;
 	r->base_bdevs.num_base_bdevs = g_max_base_drives;
 	for (i = 0; i < g_max_base_drives; i++, bbdev_idx++) {
 		snprintf(name, 16, "%s%u%s", "Nvme", bbdev_idx, "n1");
@@ -1218,7 +1223,7 @@ test_create_raid_invalid_args(void)
 	verify_raid_config_present("raid1", false);
 	verify_raid_bdev_present("raid1", false);
 	create_raid_bdev_create_req(&req, "raid1", 0, true, 0);
-	req.raid_level = 1;
+	req.level = INVALID_RAID_LEVEL;
 	spdk_rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 1);
 	free_test_req(&req);
@@ -2120,14 +2125,14 @@ test_create_raid_from_config_invalid_params(void)
 	verify_raid_bdev_present("raid1", false);
 
 	create_raid_bdev_create_config(&req, "raid1", 0, false);
-	req.raid_level = 1;
+	req.level = INVALID_RAID_LEVEL;
 	CU_ASSERT(raid_bdev_init() != 0);
 	free_test_req(&req);
 	verify_raid_config_present("raid1", false);
 	verify_raid_bdev_present("raid1", false);
 
 	create_raid_bdev_create_config(&req, "raid1", 0, false);
-	req.raid_level = 1;
+	req.level = INVALID_RAID_LEVEL;
 	CU_ASSERT(raid_bdev_init() != 0);
 	free_test_req(&req);
 	verify_raid_config_present("raid1", false);
@@ -2208,6 +2213,24 @@ test_context_size(void)
 	CU_ASSERT(raid_bdev_get_ctx_size() == sizeof(struct raid_bdev_io));
 }
 
+static void
+test_raid_level_conversions(void)
+{
+	const char *raid_str;
+
+	CU_ASSERT(raid_bdev_parse_raid_level("abcd123") == INVALID_RAID_LEVEL);
+	CU_ASSERT(raid_bdev_parse_raid_level("0") == RAID0);
+	CU_ASSERT(raid_bdev_parse_raid_level("raid0") == RAID0);
+	CU_ASSERT(raid_bdev_parse_raid_level("RAID0") == RAID0);
+
+	raid_str = raid_bdev_level_to_str(INVALID_RAID_LEVEL);
+	CU_ASSERT(raid_str != NULL && strlen(raid_str) == 0);
+	raid_str = raid_bdev_level_to_str(1234);
+	CU_ASSERT(raid_str != NULL && strlen(raid_str) == 0);
+	raid_str = raid_bdev_level_to_str(RAID0);
+	CU_ASSERT(raid_str != NULL && strcmp(raid_str, "raid0") == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite       suite = NULL;
@@ -2243,7 +2266,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "test_create_raid_from_config_invalid_params",
 			    test_create_raid_from_config_invalid_params) == NULL ||
 		CU_add_test(suite, "test_raid_json_dump_info", test_raid_json_dump_info) == NULL ||
-		CU_add_test(suite, "test_context_size", test_context_size) == NULL
+		CU_add_test(suite, "test_context_size", test_context_size) == NULL ||
+		CU_add_test(suite, "test_raid_level_conversions", test_raid_level_conversions) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

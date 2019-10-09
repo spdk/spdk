@@ -165,7 +165,7 @@ struct rpc_bdev_raid_create {
 	uint32_t                             strip_size_kb;
 
 	/* RAID raid level */
-	uint8_t                              raid_level;
+	enum raid_level                      level;
 
 	/* Base bdevs information */
 	struct rpc_bdev_raid_create_base_bdevs base_bdevs;
@@ -189,6 +189,30 @@ free_rpc_bdev_raid_create(struct rpc_bdev_raid_create *req)
 }
 
 /*
+ * Decoder function for RPC bdev_raid_create to decode raid level
+ */
+static int
+decode_raid_level(const struct spdk_json_val *val, void *out)
+{
+	int ret;
+	char *str = NULL;
+	enum raid_level level;
+
+	ret = spdk_json_decode_string(val, &str);
+	if (ret == 0) {
+		level = raid_bdev_parse_raid_level(str);
+		if (level == INVALID_RAID_LEVEL) {
+			ret = -EINVAL;
+		} else {
+			*(enum raid_level *)out = level;
+		}
+	}
+
+	free(str);
+	return ret;
+}
+
+/*
  * Decoder function for RPC bdev_raid_create to decode base bdevs list
  */
 static int
@@ -207,7 +231,7 @@ static const struct spdk_json_object_decoder rpc_bdev_raid_create_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_raid_create, name), spdk_json_decode_string},
 	{"strip_size", offsetof(struct rpc_bdev_raid_create, strip_size), spdk_json_decode_uint32, true},
 	{"strip_size_kb", offsetof(struct rpc_bdev_raid_create, strip_size_kb), spdk_json_decode_uint32, true},
-	{"raid_level", offsetof(struct rpc_bdev_raid_create, raid_level), spdk_json_decode_uint32},
+	{"raid_level", offsetof(struct rpc_bdev_raid_create, level), decode_raid_level},
 	{"base_bdevs", offsetof(struct rpc_bdev_raid_create, base_bdevs), decode_base_bdevs},
 };
 
@@ -251,7 +275,7 @@ spdk_rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 	}
 
 	rc = raid_bdev_config_add(req.name, req.strip_size_kb, req.base_bdevs.num_base_bdevs,
-				  req.raid_level,
+				  req.level,
 				  &raid_cfg);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response_fmt(request, rc,
