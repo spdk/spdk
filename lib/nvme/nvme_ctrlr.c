@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -253,8 +253,8 @@ spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
 		opts->io_queue_requests = ctrlr->opts.io_queue_requests;
 	}
 
-	if (FIELD_OK(delay_pcie_doorbell)) {
-		opts->delay_pcie_doorbell = false;
+	if (FIELD_OK(delay_cmd_submit)) {
+		opts->delay_cmd_submit = false;
 	}
 
 	if (FIELD_OK(sq.vaddr)) {

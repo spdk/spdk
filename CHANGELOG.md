@@ -25,6 +25,11 @@ Added `blobfs_set_cache_size` RPC method to set cache size for blobstore filesys
 `spdk_pipe`, a new utility for buffering data from sockets or files for parsing
 has been added. The public API is available at `include/spdk/pipe.h`.
 
+### nvme
+
+`delayed_pcie_doorbell` parameter in `spdk_nvme_io_qpair_opts` was renamed to `delay_cmd_submit`
+to allow reuse in other transports.
+
 ## v19.10:
 
 ### rpc
