@@ -559,7 +559,7 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 }
 
 static inline int
-_nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+_nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req, bool resubmit)
 {
 	int			rc = 0;
 	struct nvme_request	*child_req, *tmp;
@@ -625,6 +625,10 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 		goto error;
 	}
 
+	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->queued_req) && !resubmit)) {
+		return -EAGAIN;
+	}
+
 	/* assign submit_tick before submitting req to specific transport */
 	if (spdk_unlikely(ctrlr->timeout_enabled)) {
 		if (req->submit_tick == 0) { /* req submitted for the first time */
@@ -671,7 +675,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 {
 	int rc;
 
-	rc = _nvme_qpair_submit_request(qpair, req);
+	rc = _nvme_qpair_submit_request(qpair, req, false);
 	if (rc == -EAGAIN) {
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
 		rc = 0;
@@ -685,7 +689,7 @@ nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *
 {
 	int rc;
 
-	rc = _nvme_qpair_submit_request(qpair, req);
+	rc = _nvme_qpair_submit_request(qpair, req, true);
 	if (spdk_unlikely(rc == -EAGAIN)) {
 		STAILQ_INSERT_HEAD(&qpair->queued_req, req, stailq);
 	}
