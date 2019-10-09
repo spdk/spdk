@@ -52,6 +52,24 @@
       "revId": "6387566557a86bbba79722f7eebf6771f95a7a7c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3bc7de5c_b1679de5",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1320,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-09T02:42:18Z",
+      "side": 1,
+      "message": "Yes, by the previous patches, if the connection is in the EXITING state, flush PDU will never success.\nHence flush_pdus() returns immediately here.\n\nOne of the major goal of this patch series is to remove the tight loop to flush PDUs.",
+      "parentUuid": "47238254_424d3d65",
+      "revId": "6387566557a86bbba79722f7eebf6771f95a7a7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
