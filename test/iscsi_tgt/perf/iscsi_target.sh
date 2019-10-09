@@ -69,7 +69,7 @@ if [ $EUID -ne 0 ]; then
 fi
 
 function ssh_initiator(){
-	ssh -i $HOME/.ssh/spdk_vhost_id_rsa root@$IP_I_SSH "$@"
+	ssh -i $HOME/.ssh/spdk_vhost_id_rsa root@$IP_I_SSH '$@'
 }
 
 NETMASK=$INITIATOR_IP/32
