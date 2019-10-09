@@ -607,4 +607,104 @@ spdk_vbdev_opal_revert_tper(struct nvme_bdev_ctrlr *nvme_ctrlr, const char *pass
 	return 0;
 }
 
+int
+spdk_vbdev_opal_lock_unlock(const char *bdev_name, uint16_t user_id, const char *password,
+			    const char *lock_state)
+{
+	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	int locking_range_id;
+	int rc;
+	enum spdk_opal_lock_state state_flag;
+	struct opal_vbdev *opal_bdev;
+
+	TAILQ_FOREACH(opal_bdev, &g_opal_vbdev, tailq) {
+		if (strcmp(opal_bdev->name, bdev_name) == 0) {
+			break;
+		}
+	}
+
+	if (opal_bdev == NULL) {
+		SPDK_ERRLOG("%s not found\n", bdev_name);
+		return -ENODEV;
+	}
+
+	locking_range_id = opal_bdev->cfg.locking_range_id;
+	nvme_ctrlr = opal_bdev->nvme_ctrlr;
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("can't find nvme_ctrlr of %s\n", opal_bdev->name);
+		return -ENODEV;
+	}
+
+	if (strcmp(lock_state, "READWRITE") == 0) {
+		state_flag = OPAL_READWRITE;
+	} else if (strcmp(lock_state, "READONLY") == 0) {
+		state_flag = OPAL_READONLY;
+	} else if (strcmp(lock_state, "RWLOCK") == 0) {
+		state_flag = OPAL_RWLOCK;
+	} else {
+		SPDK_ERRLOG("Invalid OPAL lock state input\n");
+		return -EINVAL;
+	}
+
+	rc = spdk_opal_cmd_lock_unlock(nvme_ctrlr->opal_dev, user_id, state_flag, locking_range_id,
+				       password);
+	if (rc) {
+		SPDK_ERRLOG("%s lock/unlock failure: %d\n", bdev_name, rc);
+	}
+
+	return rc;
+}
+
+int
+spdk_vbdev_opal_enable_new_user(const char *bdev_name, const char *admin_password, uint16_t user_id,
+				const char *user_password)
+{
+	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	int locking_range_id;
+	int rc;
+	struct opal_vbdev *opal_bdev;
+
+	TAILQ_FOREACH(opal_bdev, &g_opal_vbdev, tailq) {
+		if (strcmp(opal_bdev->name, bdev_name) == 0) {
+			break;
+		}
+	}
+
+	if (opal_bdev == NULL) {
+		SPDK_ERRLOG("%s not found\n", bdev_name);
+		return -ENODEV;
+	}
+
+	locking_range_id = opal_bdev->cfg.locking_range_id;
+	nvme_ctrlr = opal_bdev->nvme_ctrlr;
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("can't find nvme_ctrlr of %s\n", opal_bdev->name);
+		return -ENODEV;
+	}
+
+	rc = spdk_opal_cmd_enable_user(nvme_ctrlr->opal_dev, user_id, admin_password);
+	if (rc) {
+		SPDK_ERRLOG("%s enable user error: %d\n", bdev_name, rc);
+		return rc;
+	}
+
+	rc = spdk_opal_cmd_set_new_passwd(nvme_ctrlr->opal_dev, user_id, user_password, admin_password,
+					  true);
+	if (rc) {
+		SPDK_ERRLOG("%s set user password error: %d\n", bdev_name, rc);
+		return rc;
+	}
+
+	rc = spdk_opal_cmd_add_user_to_locking_range(nvme_ctrlr->opal_dev, user_id, locking_range_id,
+			OPAL_READONLY, admin_password);
+	rc += spdk_opal_cmd_add_user_to_locking_range(nvme_ctrlr->opal_dev, user_id, locking_range_id,
+			OPAL_READWRITE, admin_password);
+	if (rc) {
+		SPDK_ERRLOG("%s add user to locking range error: %d\n", bdev_name, rc);
+		return rc;
+	}
+
+	return 0;
+}
+
 SPDK_LOG_REGISTER_COMPONENT("vbdev_opal", SPDK_LOG_VBDEV_OPAL)
