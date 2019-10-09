@@ -54,90 +54,13 @@ static bool g_cuse_initialized = false;
 
 struct spdk_nvme_io_msg;
 
-static struct spdk_ring *g_nvme_io_msgs;
 pthread_mutex_t g_cuse_io_requests_lock;
 
 #define SPDK_CUSE_REQUESTS_PROCESS_SIZE 8
 
-/**
- * Send message to IO queue.
- */
-int
-spdk_nvme_io_msg_send(struct spdk_nvme_io_msg *io, spdk_nvme_io_msg_fn fn, void *arg)
-{
-	int rc;
-
-	io->fn = fn;
-	io->arg = arg;
-
-	/* Protect requests ring against preemptive producers */
-	pthread_mutex_lock(&g_cuse_io_requests_lock);
-
-	rc = spdk_ring_enqueue(g_nvme_io_msgs, (void **)&io, 1, NULL);
-	if (rc != 1) {
-		assert(false);
-		/* FIXIT! Do something with request here */
-		return -ENOMEM;
-	}
-
-	pthread_mutex_unlock(&g_cuse_io_requests_lock);
-
-	return 0;
-}
-
-/**
- * Get next IO message and process on the current SPDK thread.
- */
-struct nvme_io_channel {
-	struct spdk_nvme_qpair	*qpair;
-	struct spdk_poller	*poller;
-
-	bool			collect_spin_stat;
-	uint64_t		spin_ticks;
-	uint64_t		start_ticks;
-	uint64_t		end_ticks;
-};
-
-int
-spdk_nvme_io_msg_process(void)
-{
-	int i;
-	void *requests[SPDK_CUSE_REQUESTS_PROCESS_SIZE];
-	int count;
-	struct nvme_io_channel *ch;
-
-	if (!g_cuse_initialized) {
-		return 0;
-	}
-
-	count = spdk_ring_dequeue(g_nvme_io_msgs, requests, SPDK_CUSE_REQUESTS_PROCESS_SIZE);
-	if (count == 0) {
-		return 0;
-	}
-
-	for (i = 0; i < count; i++) {
-		struct spdk_nvme_io_msg *io = requests[i];
-
-		assert(io != NULL);
-
-		if (io->nsid != 0) {
-			io->io_channel = spdk_get_io_channel(io->ctrlr);
-			ch = spdk_io_channel_get_ctx(io->io_channel);
-			io->qpair = ch->qpair;
-		}
-
-		io->fn(io);
-	}
-
-	return 0;
-}
-
 void
 cuse_nvme_io_msg_free(struct spdk_nvme_io_msg *io)
 {
-	if (io->io_channel) {
-		spdk_put_io_channel(io->io_channel);
-	}
 	spdk_free(io->data);
 	free(io);
 }
@@ -153,6 +76,67 @@ cuse_nvme_io_msg_alloc(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *ctx)
 	return io;
 }
 
+/**
+ * Send message to IO queue.
+ */
+int
+spdk_nvme_io_msg_send(struct spdk_nvme_io_msg *io, spdk_nvme_io_msg_fn fn, void *arg)
+{
+	int rc;
+
+	io->fn = fn;
+	io->arg = arg;
+
+	/* Protect requests ring against preemptive producers */
+	pthread_mutex_lock(&g_cuse_io_requests_lock);
+
+	rc = spdk_ring_enqueue(io->ctrlr->external_io_msgs, (void **)&io, 1, NULL);
+	if (rc != 1) {
+		assert(false);
+		/* FIXIT! Do something with request here */
+		return -ENOMEM;
+	}
+
+	pthread_mutex_unlock(&g_cuse_io_requests_lock);
+
+	return 0;
+}
+
+int
+spdk_nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int i;
+	int count;
+	struct spdk_nvme_io_msg *io;
+	void *requests[SPDK_CUSE_REQUESTS_PROCESS_SIZE];
+
+	if (!g_cuse_initialized) {
+		return 0;
+	}
+
+	spdk_nvme_qpair_process_completions(ctrlr->external_io_msgs_qpair, 0);
+
+	count = spdk_ring_dequeue(ctrlr->external_io_msgs, requests,
+				  SPDK_CUSE_REQUESTS_PROCESS_SIZE);
+	if (count == 0) {
+		return 0;
+	}
+
+	for (i = 0; i < count; i++) {
+		io = requests[i];
+
+		assert(io != NULL);
+
+		if (io->nsid != 0) {
+			io->qpair = ctrlr->external_io_msgs_qpair;
+		}
+
+		io->fn(io);
+	}
+
+	return count;
+}
+
 static STAILQ_HEAD(, spdk_nvme_io_msg_producer) g_io_producers =
 	STAILQ_HEAD_INITIALIZER(g_io_producers);
 
@@ -160,6 +144,23 @@ int
 spdk_nvme_io_msg_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_io_msg_producer *io_msg_producer = NULL;
+
+	/**
+	 * Initialize external IO msgs
+	 */
+	if (ctrlr->external_io_msgs) {
+		ctrlr->external_io_msgs = spdk_ring_create(SPDK_RING_TYPE_MP_MC, 65536, SPDK_ENV_SOCKET_ID_ANY);
+		if (!ctrlr->external_io_msgs) {
+			SPDK_ERRLOG("Unable to allocate memory for message ring\n");
+			return -ENOMEM;
+		}
+
+		ctrlr->external_io_msgs_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+		if (ctrlr->external_io_msgs_qpair == NULL) {
+			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
+			return -1;
+		}
+	}
 
 	STAILQ_FOREACH(io_msg_producer, &g_io_producers, link) {
 		if (io_msg_producer->ctrlr_start) {
@@ -177,6 +178,32 @@ spdk_nvme_io_msg_ctrlr_stop(struct spdk_nvme_ctrlr *ctrlr)
 	STAILQ_FOREACH(io_msg_producer, &g_io_producers, link) {
 		if (io_msg_producer->ctrlr_stop) {
 			io_msg_producer->ctrlr_stop(ctrlr);
+		}
+	}
+	return 0;
+}
+
+int
+spdk_nvme_io_msg_ns_start(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	struct spdk_nvme_io_msg_producer *io_msg_producer = NULL;
+
+	STAILQ_FOREACH(io_msg_producer, &g_io_producers, link) {
+		if (io_msg_producer->ns_start) {
+			io_msg_producer->ns_start(ctrlr, nsid);
+		}
+	}
+	return 0;
+}
+
+int
+spdk_nvme_io_msg_ns_stop(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	struct spdk_nvme_io_msg_producer *io_msg_producer = NULL;
+
+	STAILQ_FOREACH(io_msg_producer, &g_io_producers, link) {
+		if (io_msg_producer->ns_stop) {
+			io_msg_producer->ns_stop(ctrlr, nsid);
 		}
 	}
 	return 0;

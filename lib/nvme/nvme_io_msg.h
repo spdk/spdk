@@ -71,14 +71,13 @@ void cuse_nvme_io_msg_free(struct spdk_nvme_io_msg *io);
 struct spdk_nvme_io_msg *cuse_nvme_io_msg_alloc(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		void *ctx);
 
-int spdk_nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr);
-int spdk_nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr);
-
-int spdk_nvme_io_msg_process(void);
+int spdk_nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr);
 int spdk_nvme_io_msg_send(struct spdk_nvme_io_msg *io, spdk_nvme_io_msg_fn fn, void *arg);
 
 int spdk_nvme_io_msg_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr);
 int spdk_nvme_io_msg_ctrlr_stop(struct spdk_nvme_ctrlr *ctrlr);
+int spdk_nvme_io_msg_ns_start(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
+int spdk_nvme_io_msg_ns_stop(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
 
 struct spdk_nvme_io_msg_producer {
 	const char *name;
@@ -88,8 +87,10 @@ struct spdk_nvme_io_msg_producer {
 
 	int (*ctrlr_start)(struct spdk_nvme_ctrlr *ctrlr);
 	int (*ctrlr_stop)(struct spdk_nvme_ctrlr *ctrlr);
+	int (*ns_start)(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
+	int (*ns_stop)(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
 
-	STAILQ_ENTRY(spdk_net_framework) link;
+	STAILQ_ENTRY(spdk_nvme_io_msg_producer) link;
 };
 
 void spdk_nvme_io_msg_register(struct spdk_nvme_io_msg_producer *io_msg_producer);
