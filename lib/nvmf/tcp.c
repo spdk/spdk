@@ -790,6 +790,8 @@ _pdu_write_done(void *cb_arg, int err)
 			tqpair->c2h_data_pdu_cnt--;
 		}
 
+		SPDK_WARNLOG("ABORTED\n");
+
 		spdk_nvmf_tcp_pdu_put(tqpair, pdu);
 		spdk_nvmf_tcp_qpair_disconnect(tqpair);
 		return;

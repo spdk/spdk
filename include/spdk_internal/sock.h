@@ -60,6 +60,7 @@ struct spdk_sock {
 	TAILQ_HEAD(, spdk_sock_request)	queued_reqs;
 	TAILQ_HEAD(, spdk_sock_request)	pending_reqs;
 	int				queued_iovcnt;
+	int				queue_depth;
 
 	struct {
 		uint8_t		closed		: 1;
@@ -126,6 +127,7 @@ spdk_sock_request_queue(struct spdk_sock *sock, struct spdk_sock_request *req)
 {
 	TAILQ_INSERT_TAIL(&sock->queued_reqs, req, internal.link);
 	sock->queued_iovcnt += req->iovcnt;
+	sock->queue_depth++;
 }
 
 static inline void
@@ -144,6 +146,11 @@ spdk_sock_request_put(struct spdk_sock *sock, struct spdk_sock_request *req, int
 	int rc = 0;
 
 	TAILQ_REMOVE(&sock->pending_reqs, req, internal.link);
+
+	sock->queue_depth--;
+	printf("Sock: %p Queue depth: %d\n", sock, sock->queue_depth);
+
+	req->internal.offset = 0;
 
 	closed = sock->flags.closed;
 	sock->cb_cnt++;

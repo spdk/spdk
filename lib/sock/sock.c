@@ -238,6 +238,8 @@ spdk_sock_close(struct spdk_sock **_sock)
 		return -1;
 	}
 
+	printf("Closing socket %p\n", sock);
+
 	sock->flags.closed = true;
 
 	if (sock->cb_cnt > 0) {

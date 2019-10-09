@@ -524,6 +524,9 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	target->current_queue_depth--;
+	if (target->is_draining) {
+		printf("Exiting bdevperf (%d). Current queue depth: %d\n", getpid(), target->current_queue_depth);
+	}
 
 	if (success) {
 		target->io_completed++;
