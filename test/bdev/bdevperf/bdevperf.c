@@ -83,6 +83,7 @@ static bool g_mix_specified;
 static const char *g_target_bdev_name;
 static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
+static bool g_send_ios_to_all_bdevs = false;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
@@ -393,6 +394,8 @@ bdevperf_construct_targets(void)
 {
 	struct spdk_bdev *bdev;
 	int rc;
+	uint32_t core_num = 0;
+	uint32_t assigned_core_count = spdk_env_get_core_count();
 
 	if (g_target_bdev_name != NULL) {
 		bdev = spdk_bdev_get_by_name(g_target_bdev_name);
@@ -401,13 +404,28 @@ bdevperf_construct_targets(void)
 			return;
 		}
 
-		bdevperf_construct_target(bdev);
+		if (g_send_ios_to_all_bdevs == true) {
+			for (core_num = 0; core_num < assigned_core_count; core_num++) {
+				bdevperf_construct_target(bdev);
+			}
+		} else {
+			bdevperf_construct_target(bdev);
+		}
 	} else {
 		bdev = spdk_bdev_first_leaf();
 		while (bdev != NULL) {
-			rc = bdevperf_construct_target(bdev);
-			if (rc != 0) {
-				return;
+			if (g_send_ios_to_all_bdevs == true) {
+				for (core_num = 0; core_num < assigned_core_count; core_num++) {
+					rc = bdevperf_construct_target(bdev);
+					if (rc != 0) {
+						return;
+					}
+				}
+			} else {
+				rc = bdevperf_construct_target(bdev);
+				if (rc != 0) {
+					return;
+				}
 			}
 
 			bdev = spdk_bdev_next_leaf(bdev);
@@ -947,6 +965,7 @@ bdevperf_usage(void)
 	printf(" -S <period>               show performance result in real time every <period> seconds\n");
 	printf(" -T <target>               target bdev\n");
 	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
+	printf(" -C                        enable assigned cores to send I/Os to all bdevs\n");
 }
 
 /*
@@ -1369,6 +1388,8 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_target_bdev_name = optarg;
 	} else if (ch == 'z') {
 		g_wait_for_tests = true;
+	} else if (ch == 'C') {
+		g_send_ios_to_all_bdevs = true;
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
@@ -1486,7 +1507,7 @@ main(int argc, char **argv)
 	g_time_in_sec = 0;
 	g_mix_specified = false;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zq:o:t:w:M:P:S:T:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zq:o:t:w:CM:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
