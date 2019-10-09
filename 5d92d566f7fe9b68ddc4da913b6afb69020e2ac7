@@ -50,6 +50,24 @@
       "revId": "5d92d566f7fe9b68ddc4da913b6afb69020e2ac7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25da6e2e_8dc16bba",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1257,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-09T02:29:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c54deac9_6eb82043",
+      "revId": "5d92d566f7fe9b68ddc4da913b6afb69020e2ac7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
