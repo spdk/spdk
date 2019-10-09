@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d4244387_7a60a434",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-09T10:06:29Z",
+      "side": 1,
+      "message": "Hi Changpeng, thanks for your review. I put spdk_bdev_part inside it. For spdk_vbdev_opal_config, it has a pointer to opal_vbdev and mainly I use this structure in the code. So currently, I didn\u0027t see necessaty to put config inside opal_vbdev. When we need it, I can still do it. Thank you.",
+      "parentUuid": "41ebec5a_20dee479",
+      "revId": "5202781ca51bca4eee1af5bb203f8613ac2435cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b34f9d60_e140d0a8",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-09T04:43:51Z",
       "side": 1,
       "message": "Is g_opal_config necessary? I think you can remove it for better code structure.",
+      "revId": "5202781ca51bca4eee1af5bb203f8613ac2435cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b383f8fc_07ac1749",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-09T10:06:29Z",
+      "side": 1,
+      "message": "Hi, Changpeng, thanks for your review. g_opal_config is necessary and is used to record detail data for each construction.",
+      "parentUuid": "b34f9d60_e140d0a8",
       "revId": "5202781ca51bca4eee1af5bb203f8613ac2435cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -50,6 +86,24 @@
       "revId": "5202781ca51bca4eee1af5bb203f8613ac2435cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b897f65_9229a983",
+        "filename": "module/bdev/nvme/vbdev_opal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-09T10:06:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "630ad6a7_4cdac7a3",
+      "revId": "5202781ca51bca4eee1af5bb203f8613ac2435cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
