@@ -625,7 +625,8 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 		/* The controller is being reset - queue this request and
 		 *  submit it later when the reset is completed.
 		 */
-		return -EAGAIN;
+		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		return 0;
 	}
 
 	if (spdk_likely(rc == 0)) {
@@ -633,7 +634,8 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 	}
 
 	if (rc == -EAGAIN) {
-		return -EAGAIN;
+		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		return 0;
 	}
 
 error:
@@ -648,15 +650,7 @@ error:
 int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
-	int rc;
-
-	rc = _nvme_qpair_submit_request(qpair, req);
-	if (rc == -EAGAIN) {
-		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
-		rc = 0;
-	}
-
-	return rc;
+	return _nvme_qpair_submit_request(qpair, req);
 }
 
 void
