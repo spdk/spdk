@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f748edc_f6b5abad",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1828,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-09T22:18:52Z",
+      "side": 1,
+      "message": "Will you use req instead of rdma_req-\u003ereq here?",
+      "revId": "d0fd1cfbeb6e8295b35f66b50e61b62e0b6f8ae0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
