@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "36f9222e_73712921",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-10-09T12:59:15Z",
+      "side": 1,
+      "message": "looks like one sentence...\nBut I also didn\u0027t know what name is better here.",
+      "range": {
+        "startLine": 86,
+        "startChar": 12,
+        "endLine": 86,
+        "endChar": 51
+      },
+      "revId": "788496f59e55c2ff1db8caf117b3fb4f03f2db9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd1d4c89_f74a4f7a",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-10-09T12:59:15Z",
+      "side": 1,
+      "message": "Naming core_idx or core_index might be better.\nIt is easy to misunderstand core_num with core_count.",
+      "range": {
+        "startLine": 397,
+        "startChar": 10,
+        "endLine": 397,
+        "endChar": 19
+      },
+      "revId": "788496f59e55c2ff1db8caf117b3fb4f03f2db9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b2405fc_935ffcd7",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-10-09T12:59:15Z",
+      "side": 1,
+      "message": "just naming core_count or core_num here?",
+      "range": {
+        "startLine": 398,
+        "startChar": 10,
+        "endLine": 398,
+        "endChar": 30
+      },
+      "revId": "788496f59e55c2ff1db8caf117b3fb4f03f2db9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72da5fef_68233105",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-10-09T12:59:15Z",
+      "side": 1,
+      "message": "Result checking is missing in this loop here.\nAnd prefer to extract this loop to be one new interim function like \"bdevperf_construct_core_\u003ccount/num\u003e_targets(bdev)\"",
+      "range": {
+        "startLine": 408,
+        "startChar": 0,
+        "endLine": 410,
+        "endChar": 4
+      },
+      "revId": "788496f59e55c2ff1db8caf117b3fb4f03f2db9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
