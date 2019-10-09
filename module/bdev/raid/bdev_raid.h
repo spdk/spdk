@@ -153,6 +153,9 @@ struct raid_bdev {
 
 	/* Set to true if destroy of this raid bdev is started. */
 	bool				destroy_started;
+
+	/* Module for RAID-level specific operations */
+	struct raid_bdev_module		*module;
 };
 
 /*
@@ -239,6 +242,28 @@ void raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg);
 struct raid_bdev_config *raid_bdev_config_find_by_name(const char *raid_name);
 enum raid_level raid_bdev_parse_raid_level(const char *str);
 const char *raid_bdev_level_to_str(enum raid_level level);
+
+/*
+ * RAID module descriptor
+ */
+struct raid_bdev_module {
+	/* RAID level implemented by this module */
+	enum raid_level level;
+
+	TAILQ_ENTRY(raid_bdev_module) link;
+};
+
+void raid_bdev_module_list_add(struct raid_bdev_module *raid_module);
+
+#define __RAID_MODULE_REGISTER(line) __RAID_MODULE_REGISTER_(line)
+#define __RAID_MODULE_REGISTER_(line) raid_module_register_##line
+
+#define RAID_MODULE_REGISTER(_module)					\
+__attribute__((constructor)) static void				\
+__RAID_MODULE_REGISTER(__LINE__)(void)					\
+{									\
+    raid_bdev_module_list_add(_module);					\
+}
 
 void
 raid0_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
