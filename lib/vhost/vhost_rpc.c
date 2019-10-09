@@ -635,7 +635,7 @@ spdk_rpc_vhost_nvme_controller_add_ns(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	free_rpc_vhost_nvme_ctrlradd__ns(&req);
+	free_rpc_vhost_nvme_ctrlr_add_ns(&req);
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
