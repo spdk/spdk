@@ -843,7 +843,6 @@ class UIRaidBdev(UIBdev):
         for u in base_bdevs.strip().split(" "):
             base_bdevs_array.append(u)
 
-        raid_level = self.ui_eval_param(raid_level, "number", None)
         strip_size_kb = self.ui_eval_param(strip_size_kb, "number", None)
 
         ret_name = self.get_root().bdev_raid_create(name=name,
