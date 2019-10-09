@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b48cbb7e_1ee987b6",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-09T09:47:04Z",
+      "side": 1,
+      "message": "Currently, there\u0027s no way to delete VMD devices, VMD buses etc. We need to add something like spdk_vmd_fini that would take care of the deinitialization. However, I think that is something that needs to be done separately.",
+      "parentUuid": "dab6c4b6_cf4eceab",
+      "revId": "4224aae1ce7eec9126ad851cda35bbc79fa4d4d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "434ab915_40250e24",
         "filename": "lib/vmd/vmd.c",
         "patchSetId": 3
@@ -33,6 +51,24 @@
       "revId": "4224aae1ce7eec9126ad851cda35bbc79fa4d4d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf7aea20_35ba062b",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-09T09:47:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "434ab915_40250e24",
+      "revId": "4224aae1ce7eec9126ad851cda35bbc79fa4d4d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
