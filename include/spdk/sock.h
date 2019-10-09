@@ -70,7 +70,7 @@ struct spdk_sock_request {
 	 */
 	struct __sock_request_internal {
 		TAILQ_ENTRY(spdk_sock_request)	link;
-		unsigned int			offset;
+		uint32_t			offset;
 	} internal;
 
 	int				iovcnt;
