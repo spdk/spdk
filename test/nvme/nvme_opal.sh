@@ -25,7 +25,6 @@ function setup_test_environment() {
 	$rpc_py bdev_opal_create -b nvme0 -n 1 -i 1 -s 0 -l 1024 -p test
 	$rpc_py bdev_opal_create -b nvme0 -n 1 -i 2 -s 1024 -l 512 -p test
 	$rpc_py bdev_opal_get_info -b nvme0n1r1 -p test
-	$rpc_py bdev_opal_get_info -b nvme0n1r2 -p test
 
 	$rpc_py bdev_opal_delete -b nvme0n1r1 -p test
 	$rpc_py bdev_opal_delete -b nvme0n1r2 -p test
@@ -39,6 +38,13 @@ function setup_test_environment() {
 	$rpc_py bdev_opal_create -b nvme0 -n 1 -i 3 -s 4096 -l 4096 -p test
 	$rpc_py bdev_opal_create -b nvme0 -n 1 -i 1 -s 0 -l 1024 -p test
 	$rpc_py bdev_opal_create -b nvme0 -n 1 -i 2 -s 1024 -l 512 -p test
+
+	$rpc_py bdev_opal_new_user -b nvme0n1r3 -p test -i 3 -u tester3
+	$rpc_py bdev_opal_get_info -b nvme0n1r3 -p test
+	$rpc_py bdev_opal_lock_unlock -b nvme0n1r3 -i 3 -p tester3 -l RWLOCK
+	$rpc_py bdev_opal_get_info -b nvme0n1r3 -p test
+	$rpc_py bdev_opal_lock_unlock -b nvme0n1r3 -i 3 -p tester3 -l READWRITE
+	$rpc_py bdev_opal_get_info -b nvme0n1r3 -p test
 }
 
 function clean_up() {

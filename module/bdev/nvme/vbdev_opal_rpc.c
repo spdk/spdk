@@ -370,3 +370,110 @@ out:
 	free_rpc_bdev_opal_delete(&req);
 }
 SPDK_RPC_REGISTER("bdev_opal_delete", spdk_rpc_bdev_opal_delete, SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_opal_lock_unlock {
+	char *bdev_name;
+	uint16_t user_id;
+	char *password;
+	char *lock_state;
+};
+
+static void
+free_rpc_bdev_opal_lock_unlock(struct rpc_bdev_opal_lock_unlock *req)
+{
+	free(req->bdev_name);
+	free(req->password);
+	free(req->lock_state);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_opal_lock_unlock_decoders[] = {
+	{"bdev_name", offsetof(struct rpc_bdev_opal_lock_unlock, bdev_name), spdk_json_decode_string},
+	{"user_id", offsetof(struct rpc_bdev_opal_lock_unlock, user_id), spdk_json_decode_uint16},
+	{"password", offsetof(struct rpc_bdev_opal_lock_unlock, password), spdk_json_decode_string},
+	{"lock_state", offsetof(struct rpc_bdev_opal_lock_unlock, lock_state), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_bdev_opal_lock_unlock(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct rpc_bdev_opal_lock_unlock req = {};
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_opal_lock_unlock_decoders,
+				    SPDK_COUNTOF(rpc_bdev_opal_lock_unlock_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto out;
+	}
+
+	rc = spdk_vbdev_opal_lock_unlock(req.bdev_name, req.user_id, req.password, req.lock_state);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(-rc));
+		goto out;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+out:
+	free_rpc_bdev_opal_lock_unlock(&req);
+}
+SPDK_RPC_REGISTER("bdev_opal_lock_unlock", spdk_rpc_bdev_opal_lock_unlock, SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_opal_new_user {
+	char *bdev_name;
+	char *admin_password;
+	uint16_t user_id;
+	char *user_password;
+};
+
+static void
+free_rpc_bdev_opal_new_user(struct rpc_bdev_opal_new_user *req)
+{
+	free(req->bdev_name);
+	free(req->admin_password);
+	free(req->user_password);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_opal_new_user_decoders[] = {
+	{"bdev_name", offsetof(struct rpc_bdev_opal_new_user, bdev_name), spdk_json_decode_string},
+	{"admin_password", offsetof(struct rpc_bdev_opal_new_user, admin_password), spdk_json_decode_string},
+	{"user_id", offsetof(struct rpc_bdev_opal_new_user, user_id), spdk_json_decode_uint16},
+	{"user_password", offsetof(struct rpc_bdev_opal_new_user, user_password), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_bdev_opal_new_user(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_bdev_opal_new_user req = {};
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_opal_new_user_decoders,
+				    SPDK_COUNTOF(rpc_bdev_opal_new_user_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto out;
+	}
+
+	rc = spdk_vbdev_opal_enable_new_user(req.bdev_name, req.admin_password, req.user_id,
+					     req.user_password);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(-rc));
+		goto out;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+out:
+	free_rpc_bdev_opal_new_user(&req);
+}
+SPDK_RPC_REGISTER("bdev_opal_new_user", spdk_rpc_bdev_opal_new_user, SPDK_RPC_RUNTIME)

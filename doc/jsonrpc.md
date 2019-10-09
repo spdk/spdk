@@ -5671,6 +5671,132 @@ Example response:
 }
 ~~~
 
+## bdev_opal_new_user {#rpc_bdev_opal_new_user}
+
+This is used to enable a new user and add to specific opal bdev so that the user can
+lock/unlock the bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev_name               | Required | string      | name of OPAL vbdev
+admin_password          | Required | string      | admin password
+user_id                 | Required | number      | user ID
+user_password           | Required | string      | user password
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_opal_delete",
+  "id": 1,
+  "params": {
+    "bdev_name": "nvme0n1r1",
+    "admin_password": "*****",
+    "user_id": "1",
+    "user_password": "********"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## bdev_opal_new_user {#rpc_bdev_opal_new_user}
+
+This is used to enable a new user and add to specific opal bdev so that the user can
+lock/unlock the bdev. Recalling this for the same opal bdev, only the newest user will
+have the privilege.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev_name               | Required | string      | name of OPAL vbdev
+admin_password          | Required | string      | admin password
+user_id                 | Required | number      | user ID
+user_password           | Required | string      | user password
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_opal_new_user",
+  "id": 1,
+  "params": {
+    "bdev_name": "nvme0n1r1",
+    "admin_password": "*****",
+    "user_id": "1",
+    "user_password": "********"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## bdev_opal_lock_unlock {#rpc_bdev_opal_lock_unlock}
+
+This is used to lock/unlock specific opal bdev providing user ID and password.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev_name               | Required | string      | name of OPAL vbdev
+user_id                 | Required | number      | user ID
+password                | Required | string      | user password
+lock_state              | Required | string      | lock state
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_opal_lock_unlock",
+  "id": 1,
+  "params": {
+    "bdev_name": "nvme0n1r1",
+    "user_id": "1",
+    "user_password": "********",
+    "lock_state": "RWLOCK"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 # Notifications
 
 ## notify_get_types {#rpc_notify_get_types}
