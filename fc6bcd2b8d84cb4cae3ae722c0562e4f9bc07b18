@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f51bf278_53ec6760",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-09T18:05:25Z",
+      "side": 1,
+      "message": "I still don\u0027t understand why we can\u0027t just queue the request here and return.  I know that this causes a hang - but why does it cause a hang?",
+      "revId": "fc6bcd2b8d84cb4cae3ae722c0562e4f9bc07b18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
