@@ -66,6 +66,32 @@ struct raid_all_tailq		g_raid_bdev_list = TAILQ_HEAD_INITIALIZER(g_raid_bdev_lis
 struct raid_offline_tailq	g_raid_bdev_offline_list = TAILQ_HEAD_INITIALIZER(
 			g_raid_bdev_offline_list);
 
+static TAILQ_HEAD(, raid_bdev_module) g_raid_modules = TAILQ_HEAD_INITIALIZER(g_raid_modules);
+
+static struct raid_bdev_module *raid_bdev_module_find(enum raid_level level)
+{
+	struct raid_bdev_module *raid_module;
+
+	TAILQ_FOREACH(raid_module, &g_raid_modules, link) {
+		if (raid_module->level == level) {
+			return raid_module;
+		}
+	}
+
+	return NULL;
+}
+
+void raid_bdev_module_list_add(struct raid_bdev_module *raid_module)
+{
+	if (raid_bdev_module_find(raid_module->level) != NULL) {
+		SPDK_ERRLOG("module for raid level '%s' already registered.\n",
+			    raid_bdev_level_to_str(raid_module->level));
+		assert(false);
+	} else {
+		TAILQ_INSERT_TAIL(&g_raid_modules, raid_module, link);
+	}
+}
+
 /* Function declarations */
 static void	raid_bdev_examine(struct spdk_bdev *bdev);
 static int	raid_bdev_init(void);
@@ -722,7 +748,7 @@ raid_bdev_config_find_by_name(const char *raid_name)
  * raid_name - name for raid bdev.
  * strip_size - strip size in KB
  * num_base_bdevs - number of base bdevs.
- * level - raid level, only raid level 0 is supported.
+ * level - raid level.
  * _raid_cfg - Pointer to newly added configuration
  */
 int
@@ -745,12 +771,6 @@ raid_bdev_config_add(const char *raid_name, uint32_t strip_size, uint8_t num_bas
 
 	if (num_base_bdevs == 0) {
 		SPDK_ERRLOG("Invalid base device count %u\n", num_base_bdevs);
-		return -EINVAL;
-	}
-
-	if (level != RAID0) {
-		SPDK_ERRLOG("invalid raid level %u, only raid level 0 is supported\n",
-			    level);
 		return -EINVAL;
 	}
 
@@ -1220,11 +1240,10 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 	raid_bdev->config = raid_cfg;
 	raid_bdev->level = raid_cfg->level;
 
-	switch (raid_bdev->level) {
-	case RAID0:
-		break;
-	default:
-		SPDK_ERRLOG("invalid raid level %u\n", raid_bdev->level);
+	raid_bdev->module = raid_bdev_module_find(raid_bdev->level);
+	if (raid_bdev->module == NULL) {
+		SPDK_ERRLOG("Unsupported raid level '%d'\n", raid_bdev->level);
+		free(raid_bdev->base_bdev_info);
 		free(raid_bdev);
 		return -EINVAL;
 	}
