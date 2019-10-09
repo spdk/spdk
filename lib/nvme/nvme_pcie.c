@@ -1,9 +1,9 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   Copyright (c) 2017, IBM Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2017, IBM Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -165,7 +165,7 @@ struct nvme_pcie_qpair {
 
 	struct {
 		uint8_t phase			: 1;
-		uint8_t delay_pcie_doorbell	: 1;
+		uint8_t delay_cmd_submit	: 1;
 		uint8_t has_shadow_doorbell	: 1;
 	} flags;
 
@@ -702,7 +702,7 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	pqpair->num_entries = NVME_ADMIN_ENTRIES;
-	pqpair->flags.delay_pcie_doorbell = 0;
+	pqpair->flags.delay_cmd_submit = 0;
 
 	ctrlr->adminq = &pqpair->qpair;
 
@@ -1300,7 +1300,7 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 		SPDK_ERRLOG("sq_tail is passing sq_head!\n");
 	}
 
-	if (!pqpair->flags.delay_pcie_doorbell) {
+	if (!pqpair->flags.delay_cmd_submit) {
 		nvme_pcie_qpair_ring_sq_doorbell(qpair);
 	}
 }
@@ -1613,7 +1613,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 	}
 
 	pqpair->num_entries = opts->io_queue_size;
-	pqpair->flags.delay_pcie_doorbell = opts->delay_pcie_doorbell;
+	pqpair->flags.delay_cmd_submit = opts->delay_cmd_submit;
 
 	qpair = &pqpair->qpair;
 
@@ -2143,7 +2143,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		nvme_pcie_qpair_ring_cq_doorbell(qpair);
 	}
 
-	if (pqpair->flags.delay_pcie_doorbell) {
+	if (pqpair->flags.delay_cmd_submit) {
 		if (pqpair->last_sq_tail != pqpair->sq_tail) {
 			nvme_pcie_qpair_ring_sq_doorbell(qpair);
 			pqpair->last_sq_tail = pqpair->sq_tail;
