@@ -2071,6 +2071,35 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-p', '--password', help='admin password', required=True)
     p.set_defaults(func=bdev_opal_delete)
 
+    def bdev_opal_new_user(args):
+        rpc.bdev.bdev_opal_new_user(args.client,
+                                    bdev_name=args.bdev_name,
+                                    admin_password=args.admin_password,
+                                    user_id=args.user_id,
+                                    user_password=args.user_password)
+
+    p = subparsers.add_parser('bdev_opal_new_user', help="""Add a user to opal bdev who can set lock state for this bdev""")
+    p.add_argument('-b', '--bdev-name', help='opal bdev', required=True)
+    p.add_argument('-p', '--admin-password', help='admin password', required=True)
+    p.add_argument('-i', '--user-id', help='ID for new user', type=int, required=True)
+    p.add_argument('-u', '--user-password', help='password set for this user', required=True)
+    p.set_defaults(func=bdev_opal_new_user)
+
+    def bdev_opal_set_lock_state(args):
+        rpc.bdev.bdev_opal_set_lock_state(args.client,
+                                          bdev_name=args.bdev_name,
+                                          user_id=args.user_id,
+                                          password=args.password,
+                                          lock_state=args.lock_state)
+
+    p = subparsers.add_parser('bdev_opal_set_lock_state', help="""set lock state for an opal bdev""")
+    p.add_argument('-b', '--bdev-name', help='opal bdev', required=True)
+    p.add_argument('-i', '--user-id', help='ID of the user who want to set lock state, either admin or a user assigned to this bdev',
+                   type=int, required=True)
+    p.add_argument('-p', '--password', help='password of this user', required=True)
+    p.add_argument('-l', '--lock-state', help='lock state to set, choose from {readwrite, readonly, rwlock}', required=True)
+    p.set_defaults(func=bdev_opal_set_lock_state)
+
     # bdev_nvme_send_cmd
     def bdev_nvme_send_cmd(args):
         print_dict(rpc.nvme.bdev_nvme_send_cmd(args.client,
