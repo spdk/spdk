@@ -210,6 +210,8 @@ bdev_nvme_poll_adminq(void *arg)
 {
 	struct spdk_nvme_ctrlr *ctrlr = arg;
 
+	spdk_nvme_io_msg_process(ctrlr);
+
 	return spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 }
 
