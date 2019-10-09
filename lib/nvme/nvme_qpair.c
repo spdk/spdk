@@ -671,6 +671,16 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 {
 	int rc;
 
+	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->queued_req) && req->num_children == 0)) {
+		/*
+		 * requests that have no children should be sent to the transport after all
+		 * currently queued requests. Requests with chilren will be split and go back
+		 * through this path.
+		 */
+		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		return 0;
+	}
+
 	rc = _nvme_qpair_submit_request(qpair, req);
 	if (rc == -EAGAIN) {
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
@@ -685,6 +695,12 @@ nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *
 {
 	int rc;
 
+	/*
+	 * We should never have a request with children on the queue.
+	 * This is necessary to preserve the 1:1 relationship between
+	 * completions and resubmissions.
+	 */
+	assert(req->num_children == 0);
 	rc = _nvme_qpair_submit_request(qpair, req);
 	if (spdk_unlikely(rc == -EAGAIN)) {
 		STAILQ_INSERT_HEAD(&qpair->queued_req, req, stailq);
