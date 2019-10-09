@@ -580,7 +580,7 @@ raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint32(w, "strip_size", raid_bdev->strip_size);
 	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
 	spdk_json_write_named_uint32(w, "state", raid_bdev->state);
-	spdk_json_write_named_uint32(w, "raid_level", raid_bdev->raid_level);
+	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
 	spdk_json_write_named_uint32(w, "destruct_called", raid_bdev->destruct_called);
 	spdk_json_write_named_uint32(w, "num_base_bdevs", raid_bdev->num_base_bdevs);
 	spdk_json_write_named_uint32(w, "num_base_bdevs_discovered", raid_bdev->num_base_bdevs_discovered);
@@ -622,7 +622,7 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", bdev->name);
 	spdk_json_write_named_uint32(w, "strip_size", raid_bdev->strip_size_kb);
-	spdk_json_write_named_uint32(w, "raid_level", raid_bdev->raid_level);
+	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
 
 	spdk_json_write_named_array_begin(w, "base_bdevs");
 	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
@@ -722,12 +722,12 @@ raid_bdev_config_find_by_name(const char *raid_name)
  * raid_name - name for raid bdev.
  * strip_size - strip size in KB
  * num_base_bdevs - number of base bdevs.
- * raid_level - raid level, only raid level 0 is supported.
+ * level - raid level, only raid level 0 is supported.
  * _raid_cfg - Pointer to newly added configuration
  */
 int
 raid_bdev_config_add(const char *raid_name, uint32_t strip_size, uint8_t num_base_bdevs,
-		     uint8_t raid_level, struct raid_bdev_config **_raid_cfg)
+		     enum raid_level level, struct raid_bdev_config **_raid_cfg)
 {
 	struct raid_bdev_config *raid_cfg;
 
@@ -748,9 +748,9 @@ raid_bdev_config_add(const char *raid_name, uint32_t strip_size, uint8_t num_bas
 		return -EINVAL;
 	}
 
-	if (raid_level != RAID0) {
+	if (level != RAID0) {
 		SPDK_ERRLOG("invalid raid level %u, only raid level 0 is supported\n",
-			    raid_level);
+			    level);
 		return -EINVAL;
 	}
 
@@ -768,7 +768,7 @@ raid_bdev_config_add(const char *raid_name, uint32_t strip_size, uint8_t num_bas
 	}
 	raid_cfg->strip_size = strip_size;
 	raid_cfg->num_base_bdevs = num_base_bdevs;
-	raid_cfg->raid_level = raid_level;
+	raid_cfg->level = level;
 
 	raid_cfg->base_bdev = calloc(num_base_bdevs, sizeof(*raid_cfg->base_bdev));
 	if (raid_cfg->base_bdev == NULL) {
@@ -825,6 +825,43 @@ raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg, const char *ba
 
 	return 0;
 }
+
+static struct {
+	const char *name;
+	enum raid_level value;
+} g_raid_level_names[] = {
+	{ "raid0", RAID0 },
+	{ "0", RAID0 },
+	{ }
+};
+
+enum raid_level raid_bdev_parse_raid_level(const char *str)
+{
+	unsigned int i;
+
+	for (i = 0; g_raid_level_names[i].name != NULL; i++) {
+		if (strcasecmp(g_raid_level_names[i].name, str) == 0) {
+			return g_raid_level_names[i].value;
+		}
+	}
+
+	return INVALID_RAID_LEVEL;
+}
+
+const char *
+raid_bdev_level_to_str(enum raid_level level)
+{
+	unsigned int i;
+
+	for (i = 0; g_raid_level_names[i].name != NULL; i++) {
+		if (g_raid_level_names[i].value == level) {
+			return g_raid_level_names[i].name;
+		}
+	}
+
+	return "";
+}
+
 /*
  * brief:
  * raid_bdev_parse_raid is used to parse the raid bdev from config file based on
@@ -855,7 +892,9 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 {
 	const char *raid_name;
 	uint32_t strip_size;
-	uint8_t num_base_bdevs, raid_level;
+	uint8_t num_base_bdevs;
+	const char *raid_level_str;
+	enum raid_level level;
 	const char *base_bdev_name;
 	struct raid_bdev_config *raid_cfg;
 	int rc, i, val;
@@ -878,16 +917,21 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 	}
 	num_base_bdevs = val;
 
-	val = spdk_conf_section_get_intval(conf_section, "RaidLevel");
-	if (val < 0) {
+	raid_level_str = spdk_conf_section_get_val(conf_section, "RaidLevel");
+	if (raid_level_str == NULL) {
+		SPDK_ERRLOG("Missing RaidLevel\n");
 		return -EINVAL;
 	}
-	raid_level = val;
+	level = raid_bdev_parse_raid_level(raid_level_str);
+	if (level == INVALID_RAID_LEVEL) {
+		SPDK_ERRLOG("Invalid RaidLevel\n");
+		return -EINVAL;
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "%s %" PRIu32 " %u %u\n",
-		      raid_name, strip_size, num_base_bdevs, raid_level);
+		      raid_name, strip_size, num_base_bdevs, level);
 
-	rc = raid_bdev_config_add(raid_name, strip_size, num_base_bdevs, raid_level,
+	rc = raid_bdev_config_add(raid_name, strip_size, num_base_bdevs, level,
 				  &raid_cfg);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to add raid bdev config\n");
@@ -1037,9 +1081,10 @@ raid_bdev_get_running_config(FILE *fp)
 			"  Name %s\n"
 			"  StripSize %" PRIu32 "\n"
 			"  NumDevices %u\n"
-			"  RaidLevel %hhu\n",
+			"  RaidLevel %s\n",
 			index, raid_bdev->bdev.name, raid_bdev->strip_size_kb,
-			raid_bdev->num_base_bdevs, raid_bdev->raid_level);
+			raid_bdev->num_base_bdevs,
+			raid_bdev_level_to_str(raid_bdev->level));
 		fprintf(fp,
 			"  Devices ");
 		for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
@@ -1173,13 +1218,13 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 	raid_bdev->strip_size_kb = raid_cfg->strip_size;
 	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 	raid_bdev->config = raid_cfg;
-	raid_bdev->raid_level = raid_cfg->raid_level;
+	raid_bdev->level = raid_cfg->level;
 
-	switch (raid_bdev->raid_level) {
+	switch (raid_bdev->level) {
 	case RAID0:
 		break;
 	default:
-		SPDK_ERRLOG("invalid raid level %u\n", raid_bdev->raid_level);
+		SPDK_ERRLOG("invalid raid level %u\n", raid_bdev->level);
 		free(raid_bdev);
 		return -EINVAL;
 	}
