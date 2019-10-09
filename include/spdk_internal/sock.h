@@ -148,6 +148,8 @@ spdk_sock_request_put(struct spdk_sock *sock, struct spdk_sock_request *req, int
 
 	TAILQ_REMOVE(&sock->pending_reqs, req, internal.link);
 
+	req->internal.offset = 0;
+
 	closed = sock->flags.closed;
 	sock->cb_cnt++;
 	req->cb_fn(req->cb_arg, err);

@@ -785,6 +785,12 @@ _sock_close(const char *ip, int port, char *impl_name)
 	/* Poll the socket so the writev_async's send. The first one's
 	 * callback will close the socket. */
 	spdk_sock_group_poll(group);
+	if (ctx.called == false) {
+		/* Sometimes the zerocopy completion isn't posted immediately. Delay slightly
+		* and poll one more time. */
+		usleep(1000);
+		spdk_sock_group_poll(group);
+	}
 	CU_ASSERT(ctx.called == true);
 	CU_ASSERT(cb_arg2 == true);
 
