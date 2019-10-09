@@ -48,15 +48,6 @@ struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 };
 
-#ifdef SPDK_CONFIG_CUSE
-/* FIXIT: */
-int
-spdk_nvme_io_msg_process(void)
-{
-	return 0;
-}
-#endif
-
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
