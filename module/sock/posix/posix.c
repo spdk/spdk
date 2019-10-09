@@ -35,6 +35,7 @@
 
 #if defined(__linux__)
 #include <sys/epoll.h>
+#include <linux/errqueue.h>
 #elif defined(__FreeBSD__)
 #include <sys/event.h>
 #endif
@@ -62,6 +63,8 @@ struct spdk_posix_sock_request {
 	struct iovec				iov[];
 };
 
+#define SENDMSG_RING_SIZE 64
+
 struct spdk_posix_sock {
 	struct spdk_sock	base;
 	int			fd;
@@ -78,6 +81,11 @@ struct spdk_posix_sock {
 		uint8_t		closed		: 1;
 		uint8_t		reserved	: 6;
 	} flags;
+
+	uint32_t				sendmsg_head;
+	uint32_t				sendmsg_tail;
+	ssize_t					sendmsg_calls[SENDMSG_RING_SIZE];
+	bool					zcopy;
 };
 
 struct spdk_posix_sock_group_impl {
@@ -339,7 +347,7 @@ static struct spdk_posix_sock *
 _spdk_posix_sock_alloc(int fd, int num_reqs, int max_iovcnt)
 {
 	struct spdk_posix_sock *sock;
-	int rc;
+	int rc, flag;
 
 	sock = calloc(1, sizeof(*sock));
 	if (sock == NULL) {
@@ -366,6 +374,12 @@ _spdk_posix_sock_alloc(int fd, int num_reqs, int max_iovcnt)
 		/* Not fatal */
 	}
 
+	/* Try to turn on zero copy sends */
+	flag = 1;
+	rc = setsockopt(sock->fd, SOL_SOCKET, SO_ZEROCOPY, &flag, sizeof(flag));
+	if (rc == 0) {
+		sock->zcopy = true;
+	}
 	return sock;
 }
 
@@ -554,37 +568,10 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 }
 
 static void
-_spdk_posix_sock_abort_requests(struct spdk_posix_sock *sock)
+_spdk_posix_sock_free(struct spdk_posix_sock *sock)
 {
-	struct spdk_posix_sock_request *req, *tmp;
-	spdk_sock_op_cb cb_fn;
-	void *cb_arg;
-
-	sock->flags.in_cb = true;
-	TAILQ_FOREACH_SAFE(req, &sock->queued_reqs, link, tmp) {
-		cb_fn = req->cb_fn;
-		cb_arg = req->cb_arg;
-		spdk_posix_sock_request_put(sock, req);
-		cb_fn(cb_arg, -ECANCELED);
-	}
-	sock->flags.in_cb = false;
-
 	assert(TAILQ_EMPTY(&sock->queued_reqs));
-}
-
-static int
-spdk_posix_sock_close(struct spdk_sock *_sock)
-{
-	struct spdk_posix_sock *sock = __posix_sock(_sock);
-
-	sock->flags.closed = true;
-
-	if (sock->flags.in_cb) {
-		/* Let the callback unwind before destroying the socket */
-		return 0;
-	}
-
-	_spdk_posix_sock_abort_requests(sock);
+	assert(TAILQ_EMPTY(&sock->pending_reqs));
 
 	/* If the socket fails to close, the best choice is to
 	 * leak it but continue to free the rest of the sock
@@ -593,8 +580,169 @@ spdk_posix_sock_close(struct spdk_sock *_sock)
 
 	free(sock->req_mem);
 	free(sock);
+}
+
+static void
+_spdk_posix_sock_abort_requests(struct spdk_posix_sock *sock)
+{
+	struct spdk_posix_sock_request *req, *tmp;
+	spdk_sock_op_cb cb_fn;
+	void *cb_arg;
+	bool orig_in_cb;
+
+	orig_in_cb = sock->flags.in_cb;
+
+	TAILQ_FOREACH_SAFE(req, &sock->queued_reqs, link, tmp) {
+		spdk_posix_sock_request_pend(sock, req);
+	}
+
+	sock->flags.in_cb = true;
+	TAILQ_FOREACH_SAFE(req, &sock->pending_reqs, link, tmp) {
+		cb_fn = req->cb_fn;
+		cb_arg = req->cb_arg;
+		spdk_posix_sock_request_put(sock, req);
+		cb_fn(cb_arg, -ECANCELED);
+	}
+	sock->flags.in_cb = orig_in_cb;
+
+	assert(TAILQ_EMPTY(&sock->queued_reqs));
+	assert(TAILQ_EMPTY(&sock->pending_reqs));
+}
+
+static int spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
+						  struct spdk_sock *_sock);
+
+static int
+spdk_posix_sock_close(struct spdk_sock *_sock)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+
+	if (sock->flags.closed) {
+		/* Nested calls to close do nothing */
+		return 0;
+	}
+
+	sock->flags.closed = true;
+
+	/* Make sure the socket is out of the group */
+	if (_sock->group_impl != NULL) {
+		spdk_posix_sock_group_impl_remove_sock(_sock->group_impl, _sock);
+	}
+
+	_spdk_posix_sock_abort_requests(sock);
+
+	if (sock->flags.in_cb) {
+		/* Let the callback unwind before destroying the socket resources */
+		return 0;
+	}
+
+	_spdk_posix_sock_free(sock);
 
 	return 0;
+}
+
+static void
+spdk_posix_sock_reap_reqs(struct spdk_posix_sock *sock, ssize_t bytes)
+{
+	struct spdk_posix_sock_request *req;
+	unsigned int offset;
+	size_t len;
+	int i;
+	spdk_sock_op_cb cb_fn;
+	void *cb_arg;
+
+	/* Consume the requests that were actually written */
+	req = TAILQ_FIRST(&sock->pending_reqs);
+	while (req) {
+		offset = req->offset;
+
+		if (sock->zcopy) {
+			assert(offset == 0);
+		}
+
+		for (i = 0; i < req->iovcnt; i++) {
+			/* Advance by the offset first */
+			if (offset >= req->iov[i].iov_len) {
+				offset -= req->iov[i].iov_len;
+				continue;
+			}
+
+			/* Calculate the remaining length of this element */
+			len = req->iov[i].iov_len - offset;
+
+			if (len > (size_t)bytes) {
+				/* This element was partially sent. */
+				req->offset += bytes;
+				return;
+			}
+
+			offset = 0;
+			req->offset += len;
+			bytes -= len;
+		}
+
+		req->offset = 0;
+		cb_fn = req->cb_fn;
+		cb_arg = req->cb_arg;
+		spdk_posix_sock_request_put(sock, req);
+
+		sock->flags.in_cb = true;
+		cb_fn(cb_arg, 0);
+		sock->flags.in_cb = false;
+
+		if (sock->flags.closed) {
+			/* The user closed the socket inside the callback. Free the resources here. */
+			_spdk_posix_sock_free(sock);
+			return;
+		}
+
+		if (bytes == 0) {
+			break;
+		}
+
+		req = TAILQ_FIRST(&sock->pending_reqs);
+	}
+}
+
+static void
+spdk_posix_sock_check_zcopy(struct spdk_posix_sock *sock)
+{
+	struct msghdr msgh = { 0 };
+	uint8_t buf[sizeof(struct cmsghdr) + sizeof(struct sock_extended_err) + 64];
+	ssize_t rc;
+	struct sock_extended_err *serr;
+	struct cmsghdr *cm;
+	uint32_t idx;
+
+	msgh.msg_control = buf;
+	msgh.msg_controllen = sizeof(buf);
+
+	rc = recvmsg(sock->fd, &msgh, MSG_ERRQUEUE);
+
+	if (rc < 0) {
+		return;
+	}
+
+	cm = CMSG_FIRSTHDR(&msgh);
+	if (cm == NULL) {
+		return;
+	}
+	if (cm->cmsg_level != SOL_IP || cm->cmsg_type != IP_RECVERR) {
+		return;
+	}
+
+	serr = (struct sock_extended_err *)CMSG_DATA(cm);
+	if (serr->ee_errno != 0 || serr->ee_origin != SO_EE_ORIGIN_ZEROCOPY) {
+		return;
+	}
+
+	for (idx = serr->ee_info; idx <= serr->ee_data; idx++) {
+		sock->sendmsg_tail++;
+		assert(sock->sendmsg_tail <= sock->sendmsg_head);
+		spdk_posix_sock_reap_reqs(sock, sock->sendmsg_calls[idx % SENDMSG_RING_SIZE]);
+		sock->sendmsg_calls[idx % SENDMSG_RING_SIZE] = 0;
+
+	}
 }
 
 static int
@@ -608,15 +756,29 @@ spdk_posix_sock_flush(struct spdk_posix_sock *sock)
 	int i;
 	ssize_t rc;
 	unsigned int offset;
-	size_t len;
-	spdk_sock_op_cb cb_fn;
-	void *cb_arg;
+	size_t len, remaining;
+
+	if (sock->sendmsg_head > (sock->sendmsg_tail + SENDMSG_RING_SIZE - 1)) {
+		/* No more room in the ring */
+		return 0;
+	}
 
 	/* Gather an iov */
 	iovcnt = 0;
 	req = TAILQ_FIRST(&sock->queued_reqs);
 	while (req) {
 		offset = req->offset;
+
+		if (sock->zcopy) {
+			assert(offset == 0);
+		}
+
+		if (iovcnt + req->iovcnt > DEFAULT_MAX_IOV) {
+			/* Don't process a request if there isn't space for all of its
+			 * elements. This means in zcopy mode, we won't ever have any partial
+			 * sends. */
+			break;
+		}
 
 		for (i = 0; i < req->iovcnt; i++) {
 			/* Consume any offset first */
@@ -650,7 +812,11 @@ spdk_posix_sock_flush(struct spdk_posix_sock *sock)
 	/* Perform the vectored write */
 	msg.msg_iov = iovs;
 	msg.msg_iovlen = iovcnt;
-	flags = 0;
+	if (sock->zcopy) {
+		flags = MSG_ZEROCOPY;
+	} else {
+		flags = 0;
+	}
 	rc = sendmsg(sock->fd, &msg, flags);
 	if (rc <= 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -658,6 +824,8 @@ spdk_posix_sock_flush(struct spdk_posix_sock *sock)
 		}
 		return rc;
 	}
+
+	remaining = (size_t)rc;
 
 	/* Consume the requests that were actually written */
 	req = TAILQ_FIRST(&sock->queued_reqs);
@@ -674,41 +842,33 @@ spdk_posix_sock_flush(struct spdk_posix_sock *sock)
 			/* Calculate the remaining length of this element */
 			len = req->iov[i].iov_len - offset;
 
-			if (len > (size_t)rc) {
+			if (len > remaining) {
 				/* This element was partially sent. */
-				req->offset += rc;
+				req->offset += remaining;
 				return 0;
 			}
 
 			offset = 0;
 			req->offset += len;
-			rc -= len;
+			remaining -= len;
 		}
 
 		/* Handled a full request. */
 		req->offset = 0;
 		spdk_posix_sock_request_pend(sock, req);
 
-		/* The write isn't currently asynchronous, so it's already done. */
-		cb_fn = req->cb_fn;
-		cb_arg = req->cb_arg;
-		spdk_posix_sock_request_put(sock, req);
-
-		sock->flags.in_cb = true;
-		cb_fn(cb_arg, 0);
-		sock->flags.in_cb = false;
-
-		if (sock->flags.closed) {
-			/* The user closed the socket inside the callback. Free the resources here. */
-			spdk_posix_sock_close(&sock->base);
-			return 0;
-		}
-
-		if (rc == 0) {
+		if (remaining == 0) {
 			break;
 		}
 
 		req = TAILQ_FIRST(&sock->queued_reqs);
+	}
+
+	if (sock->zcopy) {
+		sock->sendmsg_calls[sock->sendmsg_head % SENDMSG_RING_SIZE] = rc;
+		sock->sendmsg_head++;
+	} else {
+		spdk_posix_sock_reap_reqs(sock, rc);
 	}
 
 	return 0;
@@ -758,6 +918,11 @@ spdk_posix_sock_writev_async(struct spdk_sock *_sock, struct iovec *iov, int iov
 		return;
 	}
 
+	if (sock->flags.closed) {
+		cb_fn(cb_arg, -ECONNRESET);
+		return;
+	}
+
 	req = spdk_posix_sock_request_get(sock);
 	if (req == NULL) {
 		cb_fn(cb_arg, -EAGAIN);
@@ -777,7 +942,7 @@ spdk_posix_sock_writev_async(struct spdk_sock *_sock, struct iovec *iov, int iov
 			_spdk_posix_sock_abort_requests(sock);
 			if (sock->flags.closed) {
 				/* The user closed the socket in response to a callback */
-				spdk_posix_sock_close(_sock);
+				_spdk_posix_sock_free(sock);
 			}
 		}
 	}
@@ -979,10 +1144,15 @@ spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, stru
 	}
 #endif
 
+	if (sock->flags.closed) {
+		/* The close will abort all of the requests */
+		return rc;
+	}
+
 	_spdk_posix_sock_abort_requests(sock);
 	if (sock->flags.closed) {
 		/* The user closed the socket in response to a callback above. */
-		spdk_posix_sock_close(_sock);
+		_spdk_posix_sock_free(sock);
 	}
 
 	return rc;
@@ -1011,8 +1181,13 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 			_spdk_posix_sock_abort_requests(sock);
 			if (sock->flags.closed) {
 				/* The user closed the socket in response to a callback above. */
-				spdk_posix_sock_close(_sock);
+				_spdk_posix_sock_free(sock);
 			}
+			continue;
+		}
+
+		if (sock->zcopy && sock->sendmsg_tail != sock->sendmsg_head) {
+			spdk_posix_sock_check_zcopy(sock);
 		}
 	}
 
