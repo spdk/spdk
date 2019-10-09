@@ -286,16 +286,7 @@ start_fuse_fn(void *arg1, void *arg2)
 	fuse_destroy(g_fuse);
 }
 
-static void
-init_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
-{
-	struct spdk_event *event;
-
-	g_fs = fs;
-	g_channel = spdk_fs_alloc_thread_ctx(g_fs);
-	event = spdk_event_allocate(1, start_fuse_fn, NULL, NULL);
-	spdk_event_call(event);
-}
+static void init_cb(void *ctx, struct spdk_filesystem *fs, int fserrno);
 
 static void
 spdk_fuse_run(void *arg1)
@@ -316,8 +307,31 @@ shutdown_cb(void *ctx, int fserrno)
 static void
 spdk_fuse_shutdown(void)
 {
+	/* when load fs fail, fs will return null. called from init_cb when fserrno != 0 */
+	if (g_fs == NULL && g_fuse == NULL) {
+		spdk_app_stop(0);
+		return ;
+	}
+
 	spdk_fs_unload(g_fs, shutdown_cb, NULL);
 }
+
+static void
+init_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
+{
+	struct spdk_event *event;
+	if (fserrno != 0) {
+		SPDK_ERRLOG("Blobfs load fail. fserrno=%d\n", fserrno);
+		spdk_fuse_shutdown();
+		return;
+	}
+	g_fs = fs;
+	g_channel = spdk_fs_alloc_thread_ctx(g_fs);
+	event = spdk_event_allocate(1, start_fuse_fn, NULL, NULL);
+	spdk_event_call(event);
+}
+
+
 
 int main(int argc, char **argv)
 {
