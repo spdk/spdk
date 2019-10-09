@@ -51,6 +51,24 @@
       "revId": "7993aaee44866b88e74fbfecd85442b227868640",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a111c08a_56a19a5a",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-09T16:11:46Z",
+      "side": 1,
+      "message": "That\u0027s not possible. The only time that we call nvme_qpair_submit_request from _nvme_qpair_submit_request is when a request is split into children. This only happens when submitting a new request.\n\nI believe you could accomplish this same thing with a local boolean in nvme_qpair_submit_request. This boolean could be called _req_requeue and you could rely on that when trying to determine if a request should be queued at the front or back of the queue.\n\nI also don\u0027t really agree with the idea of pulling something off the front of the queue and submitting it if we find the queue not empty. That\u0027s what the queueing in process_completions is for.",
+      "parentUuid": "dacf43ee_ff3123a9",
+      "revId": "7993aaee44866b88e74fbfecd85442b227868640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
