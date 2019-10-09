@@ -719,6 +719,44 @@ def bdev_opal_delete(client, bdev_name, password):
     return client.call('bdev_opal_delete', params)
 
 
+def bdev_opal_new_user(client, bdev_name, admin_password, user_id, user_password):
+    """Add a user to opal bdev who can lock/unlock this bdev.
+
+    Args:
+        bdev_name: name of opal vbdev
+        admin_password: admin password
+        user_id: ID of the user who will be added to this opal bdev
+        user_password: password set for this user
+    """
+    params = {
+        'bdev_name': bdev_name,
+        'admin_password': admin_password,
+        'user_id': user_id,
+        'user_password': user_password,
+    }
+
+    return client.call('bdev_opal_new_user', params)
+
+
+def bdev_opal_lock_unlock(client, bdev_name, user_id, password, lock_state):
+    """lock/unlock an opal bdev.
+
+    Args:
+        bdev_name: name of opal vbdev
+        user_id: ID of the user who will lock/unlock this bdev
+        password: password of the user
+        lock_state: lock state to set
+    """
+    params = {
+        'bdev_name': bdev_name,
+        'user_id': user_id,
+        'password': password,
+        'lock_state': lock_state,
+    }
+
+    return client.call('bdev_opal_lock_unlock', params)
+
+
 @deprecated_alias('construct_split_vbdev')
 def bdev_split_create(client, base_bdev, split_count, split_size_mb=None):
     """Create split block devices from a base bdev.

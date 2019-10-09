@@ -49,4 +49,10 @@ int spdk_vbdev_opal_destruct(const char *bdev_name, const char *password);
 
 int spdk_vbdev_opal_revert_tper(struct nvme_bdev_ctrlr *nvme_ctrlr, const char *password,
 				spdk_opal_revert_cb cb_fn, void *cb_ctx);
+int spdk_vbdev_opal_new_user_enable(const char *bdev_name, const char *admin_password,
+				    uint16_t user_id, const char *user_password);
+
+int spdk_vbdev_opal_lock_unlock(const char *bdev_name, uint16_t user_id, const char *password,
+				const char *lock_state);
+
 #endif

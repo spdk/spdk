@@ -2069,6 +2069,34 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-p', '--password', help='admin password')
     p.set_defaults(func=bdev_opal_delete)
 
+    def bdev_opal_new_user(args):
+        rpc.bdev.bdev_opal_new_user(args.client,
+                                  bdev_name=args.bdev_name,
+                                  admin_password=args.admin_password,
+                                  user_id=args.user_id,
+                                  user_password=args.user_password)
+
+    p = subparsers.add_parser('bdev_opal_new_user', help="""Add a user to opal bdev who can lock/unlock this bdev""")
+    p.add_argument('-b', '--bdev_name', help='opal virtual bdev')
+    p.add_argument('-p', '--admin_password', help='admin password')
+    p.add_argument('-i', '--user_id', help='ID of the user who will be added to this opal bdev', type=int)
+    p.add_argument('-u', '--user_password', help='password set for this user')
+    p.set_defaults(func=bdev_opal_new_user)
+
+    def bdev_opal_lock_unlock(args):
+        rpc.bdev.bdev_opal_lock_unlock(args.client,
+                                  bdev_name=args.bdev_name,
+                                  user_id=args.user_id,
+                                  password=args.password,
+                                  lock_state=args.lock_state)
+
+    p = subparsers.add_parser('bdev_opal_lock_unlock', help="""lock/unlock a opal bdev""")
+    p.add_argument('-b', '--bdev_name', help='opal virtual bdev')
+    p.add_argument('-i', '--user_id', help='ID of the user who want to lock/unlock, either admin or a user assigned to this bdev', type=int)
+    p.add_argument('-p', '--password', help='password of this user')
+    p.add_argument('-l', '--lock_state', help='lock state to set, choose from {READWRITE, READONLY, RWLOCK}')
+    p.set_defaults(func=bdev_opal_lock_unlock)
+
     # bdev_nvme_send_cmd
     def bdev_nvme_send_cmd(args):
         print_dict(rpc.nvme.bdev_nvme_send_cmd(args.client,
