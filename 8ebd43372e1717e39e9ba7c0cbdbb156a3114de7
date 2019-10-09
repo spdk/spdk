@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf09a004_6e3369ac",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 3404,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-09T20:49:06Z",
+      "side": 1,
+      "message": "so things changed a bit.  On create lvolstore clear_method only affects the create action, it does not affect how the lvolstore is deleted. Deletion of the lvolstore data space depends on how each lvol was deleted. So, you don\u0027t need this parm here for this test.",
+      "revId": "8ebd43372e1717e39e9ba7c0cbdbb156a3114de7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "832a90ed_96875f50",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 3421,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-09T20:49:06Z",
+      "side": 1,
+      "message": "technically you don\u0027t need this step for the test - or at least you shouldn\u0027t",
+      "revId": "8ebd43372e1717e39e9ba7c0cbdbb156a3114de7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61e0e64a_72edcc87",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 3424,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-09T20:49:06Z",
+      "side": 1,
+      "message": "remove \"and lvol store\" based on my prev comment",
+      "revId": "8ebd43372e1717e39e9ba7c0cbdbb156a3114de7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
