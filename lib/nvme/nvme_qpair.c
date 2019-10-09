@@ -456,8 +456,6 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 	qpair->in_completion_context = 0;
 
-	spdk_nvme_io_msg_process();
-
 	if (qpair->delete_after_completion_context) {
 		/*
 		 * A request to delete this qpair was made in the context of this completion

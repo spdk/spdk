@@ -701,6 +701,9 @@ struct spdk_nvme_ctrlr {
 
 	STAILQ_HEAD(, nvme_request)	queued_aborts;
 	uint32_t			outstanding_aborts;
+
+	struct spdk_nvme_qpair		*external_io_msgs_qpair;
+	struct spdk_ring		*external_io_msgs;
 };
 
 struct spdk_nvme_probe_ctx {

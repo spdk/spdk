@@ -56,14 +56,11 @@
 #include "spdk/uuid.h"
 
 #include "nvme_internal.h"
-#include "nvme_cuse.h"
 #include "nvme_io_msg.h"
 
 #include "spdk/thread.h"
 
 static bool g_cuse_initialized;
-static struct spdk_ring *g_nvme_io_msgs;
-
 
 struct cuse_device {
 	char				dev_name[128];
@@ -213,9 +210,6 @@ cuse_nvme_submit_io_write_cb(struct spdk_nvme_io_msg *io)
 	uint32_t block_size = spdk_nvme_ns_get_sector_size(ns);
 
 	io->data_len = io->lba_count * block_size;
-
-	printf("block_size: %d\n", block_size);
-	printf("data_len: %d\n", io->data_len);
 
 	rc = spdk_nvme_ns_cmd_write(ns, io->qpair, io->data,
 				    io->lba, /* LBA start */
@@ -577,23 +571,53 @@ cuse_thread(void *arg)
  * CUSE devices management
  */
 
-int
+static int
+spdk_nvme_cuse_ns_start(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	struct cuse_device *ns_device;
+	struct cuse_device *ctrlr_device;
+
+	TAILQ_FOREACH(ctrlr_device, &g_ctrlr_ctx_head, tailq) {
+		if (ctrlr_device->ctrlr == ctrlr) {
+			break;
+		}
+	}
+
+	if (!ctrlr_device) {
+		SPDK_ERRLOG("Cannot find associated CUSE device\n");
+		return -1;
+	}
+
+	ns_device = (struct cuse_device *)calloc(1, sizeof(struct cuse_device));
+	ns_device->ctrlr = ctrlr;
+	ns_device->ctrlr_device = ctrlr_device;
+	ns_device->idx = nsid;
+	ns_device->nsid = nsid;
+	snprintf(ns_device->dev_name, sizeof(ns_device->dev_name), "DEVNAME=spdk/nvme%dn%d\n",
+		 ctrlr_device->idx, ns_device->idx);
+
+	if (pthread_create(&ns_device->tid, NULL, cuse_thread, ns_device)) {
+		SPDK_ERRLOG("pthread_create failed\n");
+	}
+
+	TAILQ_INSERT_TAIL(&ctrlr_device->ns_devices, ns_device, tailq);
+	return 0;
+}
+
+static int
+spdk_nvme_cuse_ns_stop(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	return 0;
+}
+
+static int
 spdk_nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t i, nsid;
 	struct cuse_device *ctrlr_device;
-	struct cuse_device *ns_device;
 
 	if (!ctrlr->opts.enable_cuse_devices) {
 		return 0;
-	}
-
-	if (!g_nvme_io_msgs) {
-		g_nvme_io_msgs = spdk_ring_create(SPDK_RING_TYPE_MP_MC, 65536, SPDK_ENV_SOCKET_ID_ANY);
-		if (!g_nvme_io_msgs) {
-			SPDK_ERRLOG("Unable to allocate memory for message ring\n");
-			return -ENOMEM;
-		}
 	}
 
 	ctrlr_device = (struct cuse_device *)calloc(1, sizeof(struct cuse_device));
@@ -605,6 +629,7 @@ spdk_nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 	if (pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device)) {
 		SPDK_ERRLOG("pthread_create failed\n");
 	}
+	TAILQ_INSERT_TAIL(&g_ctrlr_ctx_head, ctrlr_device, tailq);
 
 	for (i = 0; i < spdk_nvme_ctrlr_get_num_ns(ctrlr); i++) {
 		nsid = i + 1;
@@ -612,17 +637,7 @@ spdk_nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 			continue;
 		}
 
-		ns_device = (struct cuse_device *)calloc(1, sizeof(struct cuse_device));
-		ns_device->ctrlr = ctrlr;
-		ns_device->ctrlr_device = ctrlr_device;
-		ns_device->idx = nsid;
-		ns_device->nsid = nsid;
-		snprintf(ns_device->dev_name, sizeof(ns_device->dev_name), "DEVNAME=spdk/nvme%dn%d\n",
-			 ctrlr_device->idx, ns_device->idx);
-
-		if (pthread_create(&ns_device->tid, NULL, cuse_thread, ns_device)) {
-			SPDK_ERRLOG("pthread_create failed\n");
-		}
+		spdk_nvme_cuse_ns_start(ctrlr, nsid);
 	}
 
 	g_cuse_initialized = true;
@@ -630,7 +645,7 @@ spdk_nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-int
+static int
 spdk_nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct cuse_device *ctrlr_device;
@@ -666,6 +681,8 @@ static struct spdk_nvme_io_msg_producer cuse_nvme_io_msg_producer = {
 
 	.ctrlr_start = spdk_nvme_cuse_start,
 	.ctrlr_stop = spdk_nvme_cuse_stop,
+	.ns_start = spdk_nvme_cuse_ns_start,
+	.ns_stop = spdk_nvme_cuse_ns_stop,
 };
 
 SPDK_NVME_IO_MSG_REGISTER(cuse, &cuse_nvme_io_msg_producer);
