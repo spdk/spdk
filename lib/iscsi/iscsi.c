@@ -4596,9 +4596,12 @@ iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	return rc;
 }
 
+#define PDU_RECV_LOOP_COUNT	16
+
 int
-spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
+spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 {
+	int pdu_recv_loop_cnt = 0;
 	enum iscsi_pdu_recv_state prev_state;
 	struct spdk_iscsi_pdu *pdu;
 	struct spdk_mempool *pool;
@@ -4632,7 +4635,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				}
 				pdu->bhs_valid_bytes += rc;
 				if (pdu->bhs_valid_bytes < ISCSI_BHS_LEN) {
-					return 0;
+					return pdu_recv_loop_cnt;
 				}
 			}
 
@@ -4649,7 +4652,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				}
 				pdu->ahs_valid_bytes += rc;
 				if (pdu->ahs_valid_bytes < ahs_len) {
-					return 0;
+					return pdu_recv_loop_cnt;
 				}
 			}
 
@@ -4665,7 +4668,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				}
 				pdu->hdigest_valid_bytes += rc;
 				if (pdu->hdigest_valid_bytes < ISCSI_DIGEST_LEN) {
-					return 0;
+					return pdu_recv_loop_cnt;
 				}
 			}
 
@@ -4699,7 +4702,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				}
 				pdu->mobj = spdk_mempool_get(pool);
 				if (pdu->mobj == NULL) {
-					return 0;
+					return pdu_recv_loop_cnt;
 				}
 				pdu->data_buf = pdu->mobj->buf;
 				pdu->data = pdu->mobj->buf;
@@ -4720,7 +4723,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				}
 				pdu->data_valid_bytes += rc;
 				if (pdu->data_valid_bytes < data_len) {
-					return 0;
+					return pdu_recv_loop_cnt;
 				}
 			}
 
@@ -4736,7 +4739,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				}
 				pdu->ddigest_valid_bytes += rc;
 				if (pdu->ddigest_valid_bytes < ISCSI_DIGEST_LEN) {
-					return 0;
+					return pdu_recv_loop_cnt;
 				}
 			}
 
@@ -4758,9 +4761,10 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 
 			spdk_put_pdu(pdu);
 			conn->pdu_in_progress = NULL;
+			pdu_recv_loop_cnt++;
 
 			spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
-			return 1;
+			break;
 		case ISCSI_PDU_RECV_STATE_ERROR:
 			spdk_put_pdu(pdu);
 			conn->pdu_in_progress = NULL;
@@ -4770,9 +4774,10 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 			SPDK_ERRLOG("connection should not come here\n");
 			break;
 		}
-	} while (prev_state != conn->pdu_recv_state);
+	} while (prev_state != conn->pdu_recv_state &&
+		 pdu_recv_loop_cnt < PDU_RECV_LOOP_COUNT && !conn->is_stopped);
 
-	return 0;
+	return pdu_recv_loop_cnt;
 }
 
 bool
