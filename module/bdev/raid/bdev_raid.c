@@ -346,27 +346,38 @@ raid_bdev_queue_io_wait(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx,
 	spdk_bdev_io_complete(raid_bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 }
 
+static void
+raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io);
+
+static void
+_raid_bdev_submit_reset_request(void *_bdev_io)
+{
+	struct spdk_bdev_io *bdev_io = _bdev_io;
+	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+
+	raid_bdev_submit_reset_request(raid_io);
+}
+
 /*
  * brief:
- * _raid_bdev_submit_reset_request_next function submits the next batch of reset requests
+ * raid_bdev_submit_reset_request function submits reset requests
  * to member disks; it will submit as many as possible unless a reset fails with -ENOMEM, in
  * which case it will queue it for later submission
  * params:
- * bdev_io - pointer to parent bdev_io on raid bdev device
+ * raid_io
  * returns:
  * none
  */
 static void
-_raid_bdev_submit_reset_request_next(void *_bdev_io)
+raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 {
-	struct spdk_bdev_io		*bdev_io = _bdev_io;
-	struct raid_bdev_io		*raid_io;
+	struct spdk_bdev_io		*bdev_io;
 	struct raid_bdev		*raid_bdev;
 	int				ret;
 	uint8_t				i;
 
+	bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
-	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 
 	raid_io->base_bdev_io_expected = raid_bdev->num_base_bdevs;
 
@@ -379,7 +390,7 @@ _raid_bdev_submit_reset_request_next(void *_bdev_io)
 			raid_io->base_bdev_io_submitted++;
 		} else {
 			raid_bdev_queue_io_wait(bdev_io, i,
-						_raid_bdev_submit_reset_request_next, ret);
+						_raid_bdev_submit_reset_request, ret);
 			return;
 		}
 	}
@@ -399,12 +410,14 @@ static void
 raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		     bool success)
 {
+	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+
 	if (!success) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
-	raid0_submit_rw_request(bdev_io);
+	raid0_submit_rw_request(raid_io);
 }
 
 /*
@@ -434,16 +447,16 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		raid0_submit_rw_request(bdev_io);
+		raid0_submit_rw_request(raid_io);
 		break;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		_raid_bdev_submit_reset_request_next(bdev_io);
+		raid_bdev_submit_reset_request(raid_io);
 		break;
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		raid0_submit_null_payload_request(bdev_io);
+		raid0_submit_null_payload_request(raid_io);
 		break;
 
 	default:
