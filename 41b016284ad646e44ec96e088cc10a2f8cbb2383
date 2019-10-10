@@ -16,6 +16,70 @@
       "revId": "41b016284ad646e44ec96e088cc10a2f8cbb2383",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e38a43a5_d4e7e539",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-10T05:32:45Z",
+      "side": 1,
+      "message": "Please see the below comment.",
+      "parentUuid": "51ef21a3_20449349",
+      "revId": "41b016284ad646e44ec96e088cc10a2f8cbb2383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89ba5183_287f9bc9",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-10T05:32:45Z",
+      "side": 1,
+      "message": "Hi Gang,\n\ng_every_core_for_each_bdev or g_all_cores_for_each_bdev may be better as Jim suggests.",
+      "range": {
+        "startLine": 399,
+        "startChar": 7,
+        "endLine": 399,
+        "endChar": 11
+      },
+      "revId": "41b016284ad646e44ec96e088cc10a2f8cbb2383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dbe38f70_afcd6cd7",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 965,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-10T05:32:45Z",
+      "side": 1,
+      "message": "every core or all cores may be better. Otherwise please take Jim\u0027s comment as is.",
+      "range": {
+        "startLine": 965,
+        "startChar": 43,
+        "endLine": 965,
+        "endChar": 48
+      },
+      "revId": "41b016284ad646e44ec96e088cc10a2f8cbb2383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
