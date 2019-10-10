@@ -11,7 +11,7 @@ test_file_name="some_test_file"
 function error()
 {
 	echo "==========="
-	echo -e "ERROR: $@"
+	echo -e "ERROR: $*"
 	echo "==========="
 	trap - ERR
 	set +e

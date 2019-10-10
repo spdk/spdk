@@ -82,7 +82,7 @@ function pci_dev_echo() {
 	local vendor="$(cat /sys/bus/pci/devices/$bdf/vendor)"
 	local device="$(cat /sys/bus/pci/devices/$bdf/device)"
 	shift
-	echo "$bdf (${vendor#0x} ${device#0x}): $@"
+	echo "$bdf (${vendor#0x} ${device#0x}): $*"
 }
 
 function linux_bind_driver() {
