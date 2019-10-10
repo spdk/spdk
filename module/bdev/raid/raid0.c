@@ -82,7 +82,7 @@ static void
 raid0_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
 {
 	struct raid_bdev_io		*raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-	struct raid_bdev_io_channel	*raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
+	struct raid_bdev_io_channel	*raid_ch = raid_io->raid_ch;
 	struct raid_bdev		*raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	uint64_t			pd_strip;
 	uint32_t			offset_in_strip;
@@ -178,7 +178,7 @@ raid0_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-	raid_io->ch = ch;
+	raid_io->raid_ch = spdk_io_channel_get_ctx(ch);
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
 	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
 		    raid_bdev->strip_size_shift;
@@ -309,7 +309,7 @@ raid0_submit_null_payload_request(void *_bdev_io)
 
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-	raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
+	raid_ch = raid_io->raid_ch;
 
 	_raid0_get_io_range(&io_range, raid_bdev->num_base_bdevs,
 					  raid_bdev->strip_size, raid_bdev->strip_size_shift,

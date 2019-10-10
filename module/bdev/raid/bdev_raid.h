@@ -93,8 +93,8 @@ struct raid_bdev_io {
 	/* WaitQ entry, used only in waitq logic */
 	struct spdk_bdev_io_wait_entry	waitq_entry;
 
-	/* Original channel for this IO, used in queuing logic */
-	struct spdk_io_channel		*ch;
+	/* Context of the original channel for this IO */
+	struct raid_bdev_io_channel	*raid_ch;
 
 	/* Used for tracking progress on io requests sent to member disks. */
 	uint8_t				base_bdev_io_submitted;
