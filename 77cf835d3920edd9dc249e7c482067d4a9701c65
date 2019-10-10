@@ -16,6 +16,24 @@
       "revId": "77cf835d3920edd9dc249e7c482067d4a9701c65",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b77fd337_938fc80e",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2238,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-10T20:05:22Z",
+      "side": 1,
+      "message": "and you might want to add an SPDK_ERRLOG for this case as done below, seems appropriate.",
+      "parentUuid": "809acb96_e9da5625",
+      "revId": "77cf835d3920edd9dc249e7c482067d4a9701c65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
