@@ -24,6 +24,8 @@ trap 'cleanup_veth_interfaces $TEST_TYPE; exit 1' SIGINT SIGTERM EXIT
 
 run_test "iscsi_tgt_sock" ./test/iscsi_tgt/sock/sock.sh $TEST_TYPE
 if [ "$TEST_TYPE" == "posix" ]; then
+	run_test "iscsi_tgt_fuzz" ./test/iscsi_tgt/fuzz/fuzz.sh
+
 	# calsoft doesn't handle TCP stream properly and fails decoding iSCSI
 	# requests when are divided by TCP segmentation. This is very common
 	# situation for VPP and causes that calsoft.sh never PASS.
