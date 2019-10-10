@@ -80,6 +80,10 @@ if [ $SPDK_TEST_ISCSI_INITIATOR -eq 1 ]; then
 	run_test suite ./test/iscsi_tgt/bdev_io_wait/bdev_io_wait.sh
 fi
 
+if [ "$TEST_TYPE" == "posix" ]; then
+	run_test suite ./test/iscsi_tgt/fuzz/fuzz.sh
+fi
+
 cleanup_veth_interfaces $TEST_TYPE
 trap - SIGINT SIGTERM EXIT
 timing_exit iscsi_tgt

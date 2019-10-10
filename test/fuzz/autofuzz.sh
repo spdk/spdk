@@ -66,5 +66,9 @@ fi
 if [ "$TEST_MODULE" == "vhost" ]; then
 	sudo $testdir/autofuzz_vhost.sh --iso --transport=$TEST_TRANSPORT --timeout=$TEST_TIMEOUT
 fi
+
+if [ "$TEST_MODULE" == "iscsi" ]; then
+	sudo $testdir/autofuzz_iscsi.sh --iso --transport=$TEST_TRANSPORT --timeout=$TEST_TIMEOUT
+fi
 timing_exit fuzz_module
 timing_exit autofuzz
