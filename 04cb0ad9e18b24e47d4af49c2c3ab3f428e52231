@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "aa525bbd_c613a732",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-10-10T05:18:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d30cdfed_f0748d3a",
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e53b152a_f9a3ca66",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2019-09-26T14:41:04Z",
       "side": 1,
       "message": "Something to think about - It\u0027s possible to use multiple target structures in the same application, we just don\u0027t in app/nvmf_tgt/nvmf_tgt. Each one of those subsystems is in charge of its own discovery service. If you feel up to it, it could be useful to enable a multi-target SPDK application in this example. It would definitely show a unique way of using the nvmf libraries.",
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "259c1240_e08d2f04",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-10-10T05:18:30Z",
+      "side": 1,
+      "message": "Ok, I will think about it and try it. I have one question that does we have any benefits by doing multi-target.",
+      "parentUuid": "e53b152a_f9a3ca66",
       "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -59,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "3cae4b06_01836406",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-10-10T05:18:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a2972392_57beac08",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 39
+      },
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "736c03b6_20824d17",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 4
@@ -70,6 +130,30 @@
       "writtenOn": "2019-09-25T08:58:48Z",
       "side": 1,
       "message": "Can we free nvmf_thread in nvmf_cleanup_thread()?",
+      "range": {
+        "startLine": 209,
+        "startChar": 0,
+        "endLine": 212,
+        "endChar": 0
+      },
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d32ab64_e43d9c99",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-10-10T05:18:30Z",
+      "side": 1,
+      "message": "I think I can\u0027t. Because the other threads fully exist after spdk_env_thread_wait_all(), so after that, I could free the threads.",
+      "parentUuid": "736c03b6_20824d17",
       "range": {
         "startLine": 209,
         "startChar": 0,
@@ -99,6 +183,24 @@
     },
     {
       "key": {
+        "uuid": "5f63d0ca_5058c4c4",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-10-10T05:18:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8d6c48ef_18b8c7d4",
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f275a7d_77d68d51",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 4
@@ -110,6 +212,30 @@
       "writtenOn": "2019-09-25T08:58:48Z",
       "side": 1,
       "message": "Same comment again. Any specific plan to use copy engine?",
+      "range": {
+        "startLine": 249,
+        "startChar": 1,
+        "endLine": 249,
+        "endChar": 28
+      },
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a40063c_4252df49",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-10-10T05:18:30Z",
+      "side": 1,
+      "message": "I will delete it.",
+      "parentUuid": "4f275a7d_77d68d51",
       "range": {
         "startLine": 249,
         "startChar": 1,
@@ -145,6 +271,30 @@
     },
     {
       "key": {
+        "uuid": "46cec91a_ec88afeb",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-10-10T05:18:30Z",
+      "side": 1,
+      "message": "This patch is used to set up the basic environment such as the bdev layer and spdk thread. That\u0027s why I put it here.",
+      "parentUuid": "424d150f_87d35527",
+      "range": {
+        "startLine": 251,
+        "startChar": 0,
+        "endLine": 253,
+        "endChar": 0
+      },
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e11ed065_46c7c0f2",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 4
@@ -165,6 +315,30 @@
       "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "721fecbb_e43245a0",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-10-10T05:18:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e11ed065_46c7c0f2",
+      "range": {
+        "startLine": 342,
+        "startChar": 1,
+        "endLine": 342,
+        "endChar": 35
+      },
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -191,6 +365,30 @@
     },
     {
       "key": {
+        "uuid": "2f92715f_bc39474d",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-10-10T05:18:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "bb763776_baeb3ac3",
+      "range": {
+        "startLine": 426,
+        "startChar": 0,
+        "endLine": 429,
+        "endChar": 0
+      },
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7377338_c2e09eb1",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 4
@@ -214,6 +412,30 @@
     },
     {
       "key": {
+        "uuid": "2d030309_c9bab41e",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-10-10T05:18:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c7377338_c2e09eb1",
+      "range": {
+        "startLine": 432,
+        "startChar": 0,
+        "endLine": 432,
+        "endChar": 17
+      },
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3c532c7_c2f7473e",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 4
@@ -228,6 +450,24 @@
       "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4d3889d_fea17114",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-10-10T05:18:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c3c532c7_c2f7473e",
+      "revId": "04cb0ad9e18b24e47d4af49c2c3ab3f428e52231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
