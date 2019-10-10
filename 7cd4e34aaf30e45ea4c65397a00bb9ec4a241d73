@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7da9e2d1_3dc16f38",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-10-10T10:20:35Z",
+      "side": 1,
+      "message": "I think \"test/ceph: update script to fix some issues\" should be better.",
+      "revId": "7cd4e34aaf30e45ea4c65397a00bb9ec4a241d73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
