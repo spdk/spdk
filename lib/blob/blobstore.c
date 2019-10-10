@@ -3408,6 +3408,8 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 /* START spdk_bs_dump */
 
+#define SPDK_BS_DUMP_CTX_XATTR_NAME_LEN 4096
+
 struct spdk_bs_dump_ctx {
 	struct spdk_blob_store		*bs;
 	struct spdk_bs_super_block	*super;
@@ -3416,7 +3418,7 @@ struct spdk_bs_dump_ctx {
 	spdk_bs_sequence_t		*seq;
 	FILE				*fp;
 	spdk_bs_dump_print_xattr	print_xattr_fn;
-	char				xattr_name[4096];
+	char				xattr_name[SPDK_BS_DUMP_CTX_XATTR_NAME_LEN];
 };
 
 static void
@@ -3467,7 +3469,6 @@ _spdk_bs_dump_print_md_page(struct spdk_bs_dump_ctx *ctx)
 			unsigned int				i;
 
 			desc_extent_rle = (struct spdk_blob_md_descriptor_extent_rle *)desc;
-
 			for (i = 0; i < desc_extent_rle->length / sizeof(desc_extent_rle->extents[0]); i++) {
 				if (desc_extent_rle->extents[i].cluster_idx != 0) {
 					fprintf(ctx->fp, "Allocated Extent - Start: %" PRIu32,
@@ -3478,6 +3479,7 @@ _spdk_bs_dump_print_md_page(struct spdk_bs_dump_ctx *ctx)
 				fprintf(ctx->fp, " Length: %" PRIu32, desc_extent_rle->extents[i].length);
 				fprintf(ctx->fp, "\n");
 			}
+
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {
 			struct spdk_blob_md_descriptor_xattr *desc_xattr;
 			uint32_t i;
@@ -3489,8 +3491,14 @@ _spdk_bs_dump_print_md_page(struct spdk_bs_dump_ctx *ctx)
 			    desc_xattr->name_length + desc_xattr->value_length) {
 			}
 
-			memcpy(ctx->xattr_name, desc_xattr->name, desc_xattr->name_length);
-			ctx->xattr_name[desc_xattr->name_length] = '\0';
+			if (desc_xattr->name_length >= 4096) {
+				memcpy(ctx->xattr_name, desc_xattr->name, SPDK_BS_DUMP_CTX_XATTR_NAME_LEN);
+				ctx->xattr_name[SPDK_BS_DUMP_CTX_XATTR_NAME_LEN - 1] = '\0';
+			} else {
+				memcpy(ctx->xattr_name, desc_xattr->name, desc_xattr->name_length);
+				ctx->xattr_name[desc_xattr->name_length] = '\0';
+			}
+
 			fprintf(ctx->fp, "XATTR: name = \"%s\"\n", ctx->xattr_name);
 			fprintf(ctx->fp, "       value = \"");
 			ctx->print_xattr_fn(ctx->fp, ctx->super->bstype.bstype, ctx->xattr_name,
