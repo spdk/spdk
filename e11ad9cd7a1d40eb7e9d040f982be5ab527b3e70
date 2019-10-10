@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "11071048_1470b664",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 960,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-10T02:41:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "80db35a7_5e3f8ec7",
+      "revId": "e11ad9cd7a1d40eb7e9d040f982be5ab527b3e70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "016a7a4b_acbe0316",
         "filename": "test/bdev/bdevperf/bdevperf.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-09T18:48:18Z",
       "side": 1,
       "message": "if tmp \u003d\u003d 0, should this return an error?",
+      "revId": "e11ad9cd7a1d40eb7e9d040f982be5ab527b3e70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63764e03_f59245a5",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1404,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-10T02:41:09Z",
+      "side": 1,
+      "message": "Yes, will return error in this case.",
+      "parentUuid": "016a7a4b_acbe0316",
       "revId": "e11ad9cd7a1d40eb7e9d040f982be5ab527b3e70",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
