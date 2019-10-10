@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34469b70_7386aaf6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-10T21:39:29Z",
+      "side": 1,
+      "message": "This commit message should mention something about spdk_unaffinitize_thread().  Otherwise it will be confusing to the reader what is meant by \"user\u0027s own thread\".",
+      "revId": "5733181ee7b61829ed5cd3f9eb150746b4fef3ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4aa1ed82_e81db754",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-10T21:39:29Z",
+      "side": 1,
+      "message": "should we assert(orig_num_cores \u003d\u003d 1)?  I know that DPDK has rte_thread_set_affinity(), but we don\u0027t expose that anywhere - I\u0027m not even sure what might happen in SPDK if someone called rte_thread_set_affinity on one of our reactor cores",
+      "revId": "5733181ee7b61829ed5cd3f9eb150746b4fef3ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
