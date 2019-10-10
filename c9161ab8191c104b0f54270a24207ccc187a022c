@@ -131,6 +131,29 @@
       "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5fdd38dc_8b02bcb6",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-10T08:01:25Z",
+      "side": 1,
+      "message": "Not sure how this is handled, but I noticed that emulated nvmes are not in the same order as they are specfied in the command line.\ne.g: [klateck@GrizzlyPass8 work]$ ./spdk/scripts/vagrant/create_vbox.sh --nvme-disks-type\u003dnvme 1 --nvme-disks-type\u003dnvme 5\n\nResults in 5-namepace nvme being the first emulated device, and 1-namespace nve the second:\n\n```\n[vagrant@fedora30 ~]$ sudo nvme list\nNode             SN                   Model                                    Namespace Usage                      Format           FW Rev\n---------------- -------------------- ---------------------------------------- --------- -------------------------- ---------------- --------\n/dev/nvme0n1     12341                QEMU NVMe Ctrl                           1         214.75  MB / 214.75  MB      4 KiB +  0 B   1.0\n/dev/nvme0n2     12341                QEMU NVMe Ctrl                           2         214.75  MB / 214.75  MB      4 KiB +  0 B   1.0\n/dev/nvme0n3     12341                QEMU NVMe Ctrl                           3         214.75  MB / 214.75  MB      4 KiB +  0 B   1.0\n/dev/nvme0n4     12341                QEMU NVMe Ctrl                           4         214.75  MB / 214.75  MB      4 KiB +  0 B   1.0\n/dev/nvme0n5     12341                QEMU NVMe Ctrl                           5         214.75  MB / 214.75  MB      4 KiB +  0 B   1.0\n/dev/nvme1n1     12340                QEMU NVMe Ctrl                           1           1.07  GB /   1.07  GB      4 KiB +  0 B   1.0\n\n```\n\nIt\u0027s a nitpick, at least for now, but it would be good to have the emulated backends created in correct order.",
+      "range": {
+        "startLine": 74,
+        "startChar": 3,
+        "endLine": 74,
+        "endChar": 21
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
