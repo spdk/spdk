@@ -65,7 +65,7 @@ function message()
 
 	local msg_type="$1"
 	shift
-	echo -e "${msg_type}${verbose_out}: $@"
+	echo -e "${msg_type}${verbose_out}: $*"
 }
 
 function fail()
