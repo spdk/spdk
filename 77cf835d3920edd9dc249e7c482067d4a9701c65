@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "809acb96_e9da5625",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2238,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-10T19:04:50Z",
+      "side": 1,
+      "message": "Just a nit - but should we also change spdk_get_max_immediate_data_size() to return uint32_t?  There is no reason for it to return a signed value.  Then you can avoid (int) cast here and below.\n\nI\u0027m fine making that change in this patch.",
+      "revId": "77cf835d3920edd9dc249e7c482067d4a9701c65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
