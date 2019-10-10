@@ -327,7 +327,7 @@ raid_bdev_base_io_submit_fail_process(struct spdk_bdev_io *raid_bdev_io, uint8_t
 {
 	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)raid_bdev_io->driver_ctx;
 	struct raid_bdev_io_channel *raid_ch = raid_io->raid_ch;
-	struct raid_bdev *raid_bdev = (struct raid_bdev *)raid_bdev_io->bdev->ctxt;
+	struct raid_bdev *raid_bdev = raid_bdev_io_get_raid_bdev(raid_io);
 
 	assert(ret != 0);
 
@@ -378,7 +378,7 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 	uint8_t				i;
 
 	bdev_io = spdk_bdev_io_from_ctx(raid_io);
-	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
+	raid_bdev = raid_bdev_io_get_raid_bdev(raid_io);
 	raid_ch = raid_io->raid_ch;
 
 	raid_io->base_bdev_io_expected = raid_bdev->num_base_bdevs;
