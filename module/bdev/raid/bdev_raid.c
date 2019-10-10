@@ -401,11 +401,7 @@ _raid_bdev_submit_reset_request(struct spdk_io_channel *ch, struct spdk_bdev_io 
 
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-	raid_io->raid_ch = spdk_io_channel_get_ctx(ch);
-	raid_io->base_bdev_io_submitted = 0;
-	raid_io->base_bdev_io_completed = 0;
 	raid_io->base_bdev_io_expected = raid_bdev->num_base_bdevs;
-	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	_raid_bdev_submit_reset_request_next(bdev_io);
 }
 
@@ -422,14 +418,6 @@ _raid_bdev_submit_reset_request(struct spdk_io_channel *ch, struct spdk_bdev_io 
 static void
 _raid_bdev_submit_null_payload_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct raid_bdev_io		*raid_io;
-
-	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-	raid_io->raid_ch = spdk_io_channel_get_ctx(ch);
-	raid_io->base_bdev_io_submitted = 0;
-	raid_io->base_bdev_io_completed = 0;
-	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
-
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev: type %d, range (0x%lx, 0x%lx)\n",
 		      bdev_io->type, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks);
 
@@ -472,6 +460,13 @@ raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 static void
 raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
+	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+
+	raid_io->raid_ch = spdk_io_channel_get_ctx(ch);
+	raid_io->base_bdev_io_submitted = 0;
+	raid_io->base_bdev_io_completed = 0;
+	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_buf(bdev_io, raid_bdev_get_buf_cb,
