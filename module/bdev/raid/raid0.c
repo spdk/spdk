@@ -47,21 +47,21 @@
  * params:
  * bdev_io - pointer to bdev io submitted to lower layers, like child io
  * success - bdev_io status
- * cb_arg - function callback context, like parent io pointer
+ * cb_arg - function callback context (parent raid_bdev_io)
  * returns:
  * none
  */
 static void
 raid0_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_bdev_io         *parent_io = cb_arg;
+	struct raid_bdev_io *raid_io = cb_arg;
 
 	spdk_bdev_free_io(bdev_io);
 
 	if (success) {
-		spdk_bdev_io_complete(parent_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	} else {
-		spdk_bdev_io_complete(parent_io, SPDK_BDEV_IO_STATUS_FAILED);
+		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
 
@@ -105,7 +105,7 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 	if (start_strip != end_strip && raid_bdev->num_base_bdevs > 1) {
 		assert(false);
 		SPDK_ERRLOG("I/O spans strip boundary!\n");
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
@@ -132,12 +132,12 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 		ret = spdk_bdev_readv_blocks(base_bdev->desc, base_ch,
 					     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 					     pd_lba, pd_blocks, raid0_bdev_io_completion,
-					     bdev_io);
+					     raid_io);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 		ret = spdk_bdev_writev_blocks(base_bdev->desc, base_ch,
 					      bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 					      pd_lba, pd_blocks, raid0_bdev_io_completion,
-					      bdev_io);
+					      raid_io);
 	} else {
 		SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
 		assert(0);
@@ -149,7 +149,7 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 	} else if (ret != 0) {
 		SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
 		assert(false);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
 
@@ -304,13 +304,13 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 		case SPDK_BDEV_IO_TYPE_UNMAP:
 			ret = spdk_bdev_unmap_blocks(base_bdev->desc, base_ch,
 						     offset_in_disk, nblocks_in_disk,
-						     raid_bdev_base_io_completion, bdev_io);
+						     raid_bdev_base_io_completion, raid_io);
 			break;
 
 		case SPDK_BDEV_IO_TYPE_FLUSH:
 			ret = spdk_bdev_flush_blocks(base_bdev->desc, base_ch,
 						     offset_in_disk, nblocks_in_disk,
-						     raid_bdev_base_io_completion, bdev_io);
+						     raid_bdev_base_io_completion, raid_io);
 			break;
 
 		default:
@@ -328,7 +328,7 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 		} else {
 			SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
 			assert(false);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
 			return;
 		}
 	}

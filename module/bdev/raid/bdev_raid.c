@@ -282,21 +282,28 @@ raid_bdev_destruct(void *ctxt)
 	return 0;
 }
 
+void
+raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
+{
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
+
+	spdk_bdev_io_complete(bdev_io, status);
+}
+
 /*
  * brief:
  * raid_bdev_base_io_completion is the completion callback for member disk requests
  * params:
  * bdev_io - pointer to member disk requested bdev_io
  * success - true if successful, false if unsuccessful
- * cb_arg - callback argument (parent raid bdev_io)
+ * cb_arg - callback argument (parent raid_bdev_io)
  * returns:
  * none
  */
 void
 raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_bdev_io *parent_io = cb_arg;
-	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)parent_io->driver_ctx;
+	struct raid_bdev_io *raid_io = cb_arg;
 
 	spdk_bdev_free_io(bdev_io);
 
@@ -306,7 +313,7 @@ raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *c
 
 	raid_io->base_bdev_io_completed++;
 	if (raid_io->base_bdev_io_completed == raid_io->base_bdev_io_expected) {
-		spdk_bdev_io_complete(parent_io, raid_io->base_bdev_io_status);
+		raid_bdev_io_complete(raid_io, raid_io->base_bdev_io_status);
 	}
 }
 
@@ -356,14 +363,12 @@ _raid_bdev_submit_reset_request(void *_raid_io)
 static void
 raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 {
-	struct spdk_bdev_io		*bdev_io;
 	struct raid_bdev		*raid_bdev;
 	int				ret;
 	uint8_t				i;
 	struct raid_base_bdev_info	*base_bdev;
 	struct spdk_io_channel		*base_ch;
 
-	bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	raid_bdev = raid_io->raid_bdev;
 
 	raid_io->base_bdev_io_expected = raid_bdev->num_base_bdevs;
@@ -373,7 +378,7 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 		base_bdev = &raid_bdev->base_bdev_info[i];
 		base_ch = raid_io->raid_ch->base_channel[i];
 		ret = spdk_bdev_reset(base_bdev->desc, base_ch,
-				      raid_bdev_base_io_completion, bdev_io);
+				      raid_bdev_base_io_completion, raid_io);
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
 		} else if (ret == -ENOMEM) {
@@ -383,7 +388,7 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 		} else {
 			SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
 			assert(false);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
 			return;
 		}
 	}
@@ -406,7 +411,7 @@ raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 
 	if (!success) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
@@ -455,10 +460,9 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 
 	default:
 		SPDK_ERRLOG("submit request, invalid io type %u\n", bdev_io->type);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
 		break;
 	}
-
 }
 
 /*
