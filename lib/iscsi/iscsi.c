@@ -2219,7 +2219,6 @@ static int
 iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct iscsi_param *params = NULL;
-	struct iscsi_param **params_p = &params;
 	struct spdk_iscsi_pdu *rsp_pdu;
 	uint8_t *data;
 	uint64_t lun;
@@ -2305,17 +2304,17 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	/* negotiate parameters */
-	data_len = spdk_iscsi_negotiate_params(conn, params_p,
+	data_len = spdk_iscsi_negotiate_params(conn, &params,
 					       data, alloc_len, data_len);
 	if (data_len < 0) {
 		SPDK_ERRLOG("spdk_iscsi_negotiate_params() failed\n");
-		spdk_iscsi_param_free(*params_p);
+		spdk_iscsi_param_free(params);
 		free(data);
 		return -1;
 	}
 
 	/* sendtargets is special case */
-	val = spdk_iscsi_param_get_val(*params_p, "SendTargets");
+	val = spdk_iscsi_param_get_val(params, "SendTargets");
 	if (val != NULL) {
 		if (spdk_iscsi_param_eq_val(conn->sess->params,
 					    "SessionType", "Discovery")) {
@@ -2349,7 +2348,7 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		}
 	} else {
 		if (spdk_iscsi_param_eq_val(conn->sess->params, "SessionType", "Discovery")) {
-			spdk_iscsi_param_free(*params_p);
+			spdk_iscsi_param_free(params);
 			free(data);
 			return SPDK_ISCSI_CONNECTION_FATAL;
 		}
@@ -2360,7 +2359,7 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	/* response PDU */
 	rsp_pdu = spdk_get_pdu();
 	if (rsp_pdu == NULL) {
-		spdk_iscsi_param_free(*params_p);
+		spdk_iscsi_param_free(params);
 		free(data);
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
@@ -2404,7 +2403,7 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	rc = spdk_iscsi_copy_param2var(conn);
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_copy_param2var() failed\n");
-		spdk_iscsi_param_free(*params_p);
+		spdk_iscsi_param_free(params);
 		return -1;
 	}
 
@@ -2412,11 +2411,11 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	rc = iscsi_check_values(conn);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_check_values() failed\n");
-		spdk_iscsi_param_free(*params_p);
+		spdk_iscsi_param_free(params);
 		return -1;
 	}
 
-	spdk_iscsi_param_free(*params_p);
+	spdk_iscsi_param_free(params);
 	return 0;
 }
 
