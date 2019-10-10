@@ -43,7 +43,7 @@ function get_cores(){
 function get_cores_numa_node(){
 	local cores=$1
 	for core in $cores; do
-		echo $(lscpu -p=cpu,node | grep "^$core\b" | awk -F ',' '{print $2}')
+		lscpu -p=cpu,node | grep "^$core\b" | awk -F ',' '{print $2}'
 	done
 }
 
@@ -55,20 +55,20 @@ function get_numa_node(){
 			local driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 			# Use this check to ommit blacklisted devices ( not binded to driver with setup.sh script )
 			if [ "$driver" = "vfio-pci" ] || [ "$driver" = "uio_pci_generic" ]; then
-				echo $(cat /sys/bus/pci/devices/$bdf/numa_node)
+				cat /sys/bus/pci/devices/$bdf/numa_node
 			fi
 		done
 	elif [ "$plugin" = "bdev" ] || [ "$plugin" = "bdevperf" ]; then
 		local bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
 		for name in $disks; do
 			local bdev_bdf=$(jq -r ".[] | select(.name==\"$name\").driver_specific.nvme.pci_address" <<< $bdevs)
-			echo $(cat /sys/bus/pci/devices/$bdev_bdf/numa_node)
+			cat /sys/bus/pci/devices/$bdev_bdf/numa_node
 		done
 	else
 		# Only target not mounted NVMes
 		for bdf in $(iter_pci_class_code 01 08 02); do
 			if is_bdf_not_mounted $bdf; then
-				echo $(cat /sys/bus/pci/devices/$bdf/numa_node)
+				cat /sys/bus/pci/devices/$bdf/numa_node
 			fi
 		done
 	fi
@@ -85,7 +85,7 @@ function get_disks(){
 		done
 	elif [ "$plugin" = "bdev" ] || [ "$plugin" = "bdevperf" ]; then
 		local bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
-		echo $(jq -r '.[].name' <<< $bdevs)
+		jq -r '.[].name' <<< $bdevs
 	else
 		# Only target not mounted NVMes
 		for bdf in $(iter_pci_class_code 01 08 02); do
@@ -297,7 +297,7 @@ function run_nvme_fio(){
 
 function run_bdevperf(){
 	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
-	echo $($BDEVPERF_DIR/bdevperf -c $BASE_DIR/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME)
+	$BDEVPERF_DIR/bdevperf -c $BASE_DIR/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME
 	sleep 1
 }
 
