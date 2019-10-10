@@ -66,7 +66,12 @@ raid0_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 }
 
 static void
-raid0_waitq_io_process(void *ctx);
+_raid0_submit_rw_request(void *_raid_io)
+{
+	struct raid_bdev_io *raid_io = _raid_io;
+
+	raid0_submit_rw_request(raid_io);
+}
 
 /*
  * brief:
@@ -139,31 +144,13 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 	}
 
 	if (ret == -ENOMEM) {
-		raid_bdev_queue_io_wait(bdev_io, pd_idx, raid0_waitq_io_process);
+		raid_bdev_queue_io_wait(raid_io, base_bdev->bdev, base_ch,
+					_raid0_submit_rw_request);
 	} else if (ret != 0) {
 		SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
 		assert(false);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
-}
-
-/*
- * brief:
- * raid0_waitq_io_process function is the callback function
- * registered by raid bdev module to bdev when bdev_io was unavailable
- * for raid0 bdevs.
- * params:
- * ctx - pointer to raid_bdev_io
- * returns:
- * none
- */
-static void
-raid0_waitq_io_process(void *ctx)
-{
-	struct spdk_bdev_io     *bdev_io = ctx;
-	struct raid_bdev_io	*raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-
-	raid0_submit_rw_request(raid_io);
 }
 
 /* raid0 IO range */
@@ -262,10 +249,9 @@ _raid0_split_io_range(struct raid_bdev_io_range *io_range, uint8_t disk_idx,
 }
 
 static void
-_raid0_submit_null_payload_request(void *_bdev_io)
+_raid0_submit_null_payload_request(void *_raid_io)
 {
-	struct spdk_bdev_io *bdev_io = _bdev_io;
-	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	struct raid_bdev_io *raid_io = _raid_io;
 
 	raid0_submit_null_payload_request(raid_io);
 }
@@ -336,7 +322,7 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
 		} else if (ret == -ENOMEM) {
-			raid_bdev_queue_io_wait(bdev_io, disk_idx,
+			raid_bdev_queue_io_wait(raid_io, base_bdev->bdev, base_ch,
 						_raid0_submit_null_payload_request);
 			return;
 		} else {

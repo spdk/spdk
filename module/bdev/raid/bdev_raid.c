@@ -315,35 +315,30 @@ raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *c
  * raid_bdev_queue_io_wait function processes the IO which failed to submit.
  * It will try to queue the IOs after storing the context to bdev wait queue logic.
  * params:
- * raid_bdev_io - pointer to raid bdev_io
- * pd_idx - base_dev index in raid_bdev
- * cb_fn - callback when the spdk_bdev_io for base_bdev becomes available
+ * raid_io - pointer to raid_bdev_io
+ * bdev - the block device that the IO is submitted to
+ * ch - io channel
+ * cb_fn - callback when the spdk_bdev_io for bdev becomes available
  * returns:
  * none
  */
 void
-raid_bdev_queue_io_wait(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx,
-			spdk_bdev_io_wait_cb cb_fn)
+raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
+			struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn)
 {
-	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)raid_bdev_io->driver_ctx;
-	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
-
-	raid_io->waitq_entry.bdev = raid_bdev->base_bdev_info[pd_idx].bdev;
+	raid_io->waitq_entry.bdev = bdev;
 	raid_io->waitq_entry.cb_fn = cb_fn;
-	raid_io->waitq_entry.cb_arg = raid_bdev_io;
-	spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[pd_idx].bdev,
-				raid_io->raid_ch->base_channel[pd_idx],
-				&raid_io->waitq_entry);
+	raid_io->waitq_entry.cb_arg = raid_io;
+	spdk_bdev_queue_io_wait(bdev, ch, &raid_io->waitq_entry);
 }
 
 static void
 raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io);
 
 static void
-_raid_bdev_submit_reset_request(void *_bdev_io)
+_raid_bdev_submit_reset_request(void *_raid_io)
 {
-	struct spdk_bdev_io *bdev_io = _bdev_io;
-	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	struct raid_bdev_io *raid_io = _raid_io;
 
 	raid_bdev_submit_reset_request(raid_io);
 }
@@ -382,7 +377,7 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
 		} else if (ret == -ENOMEM) {
-			raid_bdev_queue_io_wait(bdev_io, i,
+			raid_bdev_queue_io_wait(raid_io, base_bdev->bdev, base_ch,
 						_raid_bdev_submit_reset_request);
 			return;
 		} else {
