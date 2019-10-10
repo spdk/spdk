@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc0c183f_0f3cecfc",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1607,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-10T06:31:41Z",
+      "side": 1,
+      "message": "Hi Anil,\n\nThis addition makes sense to me.\nThis is OK to me but do you have specific reason why add this check into FC transport?\n\nI thought we may be able to add the following into nvmf_fc_process_queue() in LLD.\n\nif (hwqp-\u003efgroup) {\n\tspdk_nvmf_fc_hwqp_process_pending_reqs(hwqp);\n} else {\n\tspdk_nvmf_fc_hwqp_process_pending_ls_rqsts(hwqp);\n}\n\n-Shuhei",
+      "revId": "b2e60b2f6ec3f7b6b08aac6a5fc26d518ffefb06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
