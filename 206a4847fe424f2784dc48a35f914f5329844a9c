@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "e1d1df2d_9a22efca",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3955,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2019-10-10T17:34:54Z",
+      "side": 1,
+      "message": "I can change it back.",
+      "parentUuid": "54aa75f7_bb94b99e",
+      "revId": "206a4847fe424f2784dc48a35f914f5329844a9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3bee566e_39d99ea8",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
@@ -47,6 +65,24 @@
       "writtenOn": "2019-10-10T17:05:29Z",
       "side": 1,
       "message": "This is only set if it\u0027s an NVMe error (i.e. SPDK_BDEV_IO_STATUS_NVME_ERROR)",
+      "revId": "206a4847fe424f2784dc48a35f914f5329844a9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba2b5994_b7f4761e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3963,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2019-10-10T17:34:54Z",
+      "side": 1,
+      "message": "Hi Ben, are you saying that we should only set CDW0 when there\u0027s an error? Maybe the placement of the cdw0 in error.nvme is misleading but CDW0 is valid regardless of the command completion. In fact, most of the time it is probably used when there\u0027s no error for vendor specific IO commands.\nJim suggested to stick it in internal.error.",
+      "parentUuid": "3bee566e_39d99ea8",
       "revId": "206a4847fe424f2784dc48a35f914f5329844a9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
