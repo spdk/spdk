@@ -3750,12 +3750,11 @@ spdk_iscsi_op_abort_task_set(struct spdk_iscsi_task *task, uint8_t function)
 }
 
 static int
-iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_hdr_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct iscsi_bhs_task_req *reqh;
 	uint64_t lun;
 	uint32_t task_tag;
-	uint32_t ref_task_tag;
 	uint8_t function;
 	int lun_i;
 	struct spdk_iscsi_task *task;
@@ -3770,10 +3769,9 @@ iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	function = reqh->flags & ISCSI_TASK_FUNCTION_MASK;
 	lun = from_be64(&reqh->lun);
 	task_tag = from_be32(&reqh->itt);
-	ref_task_tag = from_be32(&reqh->ref_task_tag);
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "I=%d, func=%d, ITT=%x, ref TT=%x, LUN=0x%16.16"PRIx64"\n",
-		      reqh->immediate, function, task_tag, ref_task_tag, lun);
+		      reqh->immediate, function, task_tag, from_be32(&reqh->ref_task_tag), lun);
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
 		      conn->StatSN, conn->sess->ExpCmdSN, conn->sess->MaxCmdSN);
@@ -3791,6 +3789,7 @@ iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task->scsi.target_port = conn->target_port;
 	task->scsi.initiator_port = conn->initiator_port;
 	task->tag = task_tag;
+	task->lun_id = lun_i;
 	task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_i);
 	task->lun_id = lun_i;
 
@@ -3801,11 +3800,34 @@ iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return 0;
 	}
 
+	pdu->task = task;
+	return 0;
+}
+
+static int
+iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	struct iscsi_bhs_task_req *reqh;
+	struct spdk_iscsi_task *task;
+	uint8_t function;
+	uint32_t ref_task_tag;
+	int rc;
+
+	rc = iscsi_pdu_hdr_op_task(conn, pdu);
+	if (rc < 0 || pdu->is_rejected || pdu->task == NULL) {
+		return rc;
+	}
+
+	reqh = (struct iscsi_bhs_task_req *)&pdu->bhs;
+	function = reqh->flags & ISCSI_TASK_FUNCTION_MASK;
+	task = pdu->task;
+
 	switch (function) {
 	/* abort task identified by Referenced Task Tag field */
 	case ISCSI_TASK_FUNC_ABORT_TASK:
 		SPDK_NOTICELOG("ABORT_TASK\n");
 
+		ref_task_tag = from_be32(&reqh->ref_task_tag);
 		iscsi_op_abort_task(task, ref_task_tag);
 		return 0;
 
@@ -3877,6 +3899,7 @@ iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	spdk_iscsi_task_mgmt_response(conn, task);
 	spdk_iscsi_task_put(task);
 	return 0;
+
 }
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
