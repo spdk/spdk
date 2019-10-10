@@ -3944,6 +3944,24 @@ void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
 }
 
 static int
+iscsi_pdu_hdr_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	uint32_t data_len;
+
+	if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
+		SPDK_ERRLOG("ISCSI_OP_NOPOUT not allowed in discovery session\n");
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	data_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
+	if (data_len > SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+	}
+
+	return 0;
+}
+
+static int
 iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_pdu *rsp_pdu;
@@ -3956,14 +3974,11 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint32_t CmdSN;
 	int I_bit;
 	int data_len;
+	int rc;
 
-	if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
-		SPDK_ERRLOG("ISCSI_OP_NOPOUT not allowed in discovery session\n");
-		return SPDK_ISCSI_CONNECTION_FATAL;
-	}
-
-	if (pdu->data_segment_len > SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
-		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+	rc = iscsi_pdu_hdr_op_nopout(conn, pdu);
+	if (rc != 0 || pdu->is_rejected) {
+		return rc;
 	}
 
 	reqh = (struct iscsi_bhs_nop_out *)&pdu->bhs;
