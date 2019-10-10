@@ -82,7 +82,7 @@ static void
 raid0_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
 {
 	struct raid_bdev_io		*raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-	struct raid_bdev_io_channel	*raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
+	struct raid_bdev_io_channel	*raid_ch = raid_io->raid_ch;
 	struct raid_bdev		*raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	uint64_t			pd_strip;
 	uint32_t			offset_in_strip;
@@ -176,7 +176,7 @@ raid0_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-	raid_io->ch = ch;
+	raid_io->raid_ch = spdk_io_channel_get_ctx(ch);
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
 	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
 		    raid_bdev->strip_size_shift;
@@ -301,13 +301,11 @@ raid0_submit_null_payload_request(void *_bdev_io)
 	struct spdk_bdev_io		*bdev_io = _bdev_io;
 	struct raid_bdev_io		*raid_io;
 	struct raid_bdev		*raid_bdev;
-	struct raid_bdev_io_channel	*raid_ch;
 	struct raid_bdev_io_range	io_range;
 	int				ret;
 
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-	raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
 
 	_raid0_get_io_range(&io_range, raid_bdev->num_base_bdevs,
 			    raid_bdev->strip_size, raid_bdev->strip_size_shift,
@@ -330,14 +328,14 @@ raid0_submit_null_payload_request(void *_bdev_io)
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_UNMAP:
 			ret = spdk_bdev_unmap_blocks(raid_bdev->base_bdev_info[disk_idx].desc,
-						     raid_ch->base_channel[disk_idx],
+						     raid_io->raid_ch->base_channel[disk_idx],
 						     offset_in_disk, nblocks_in_disk,
 						     raid_bdev_base_io_completion, bdev_io);
 			break;
 
 		case SPDK_BDEV_IO_TYPE_FLUSH:
 			ret = spdk_bdev_flush_blocks(raid_bdev->base_bdev_info[disk_idx].desc,
-						     raid_ch->base_channel[disk_idx],
+						     raid_io->raid_ch->base_channel[disk_idx],
 						     offset_in_disk, nblocks_in_disk,
 						     raid_bdev_base_io_completion, bdev_io);
 			break;
