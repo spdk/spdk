@@ -241,7 +241,7 @@ if hash shellcheck 2>/dev/null; then
 	# Error descriptions can also be found at: https://github.com/koalaman/shellcheck/wiki
 	# This SHCK_EXCLUDE list is out "to do" and we work to fix all of this errors.
 	SHCK_EXCLUDE="SC1001,SC1003,\
-SC1083,SC1113,SC2001,SC2002,SC2004,\
+SC1083,SC1113,SC2002,SC2004,\
 SC2010,SC2012,SC2013,SC2016,\
 SC2034,SC2045,SC2046,\
 SC2068,SC2086,SC2089,SC2090,\
@@ -257,11 +257,12 @@ SC2230"
 	# We are aware about below exclude list and we want this errors to be excluded.
 	# SC1090: Can't follow non-constant source. Use a directive to specify location.
 	# SC1091: Not following: (error message here)
+        # SC2001: See if you can use ${variable//search/replace} instead.
 	# SC2206: Quote to prevent word splitting/globbing,
 	#         or split robustly with mapfile or read -a.
 	# SC2207: Prefer mapfile or read -a to split command output (or quote to avoid splitting).
 	# SC2223: This default assignment may cause DoS due to globbing. Quote it.
-	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1090,SC1091,SC2206,SC2207,SC2223"
+	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1090,SC1091,SC2001,SC2206,SC2207,SC2223"
 
 	SHCK_FORMAT="diff"
 	SHCK_APPLY=true
