@@ -219,15 +219,6 @@ load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	}
 	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
 
-	if (!spdk_mem_all_zero(&lvol->uuid, sizeof(lvol->uuid))) {
-		snprintf(lvol->unique_id, sizeof(lvol->unique_id), "%s", lvol->uuid_str);
-	} else {
-		spdk_uuid_fmt_lower(lvol->unique_id, sizeof(lvol->unique_id), &lvol->lvol_store->uuid);
-		value_len = strlen(lvol->unique_id);
-		snprintf(lvol->unique_id + value_len, sizeof(lvol->unique_id) - value_len, "_%"PRIu64,
-			 (uint64_t)blob_id);
-	}
-
 	rc = spdk_blob_get_xattr_value(blob, "name", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len > SPDK_LVOL_NAME_MAX) {
 		SPDK_ERRLOG("Cannot assign lvol name\n");
@@ -936,7 +927,17 @@ lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->lvols, lvol, link);
 
-	snprintf(lvol->unique_id, sizeof(lvol->unique_id), "%s", lvol->uuid_str);
+	/*
+	 * unique_id becomes bdev.name which is why we use lvol name instead
+	 * of randomly generated uuid.
+	 */
+	if (snprintf(lvol->unique_id, sizeof(lvol->unique_id), "%s", lvol->name) < 0) {
+		/*
+		 * we don't care if name is longer than unique_id because
+		 * with mayastor that does not happen
+		 */
+		abort();
+	}
 	lvol->ref_count++;
 
 	assert(req->cb_fn != NULL);
