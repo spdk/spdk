@@ -4340,6 +4340,22 @@ reject_return:
 
 /* This function is used to handle the snack request from the initiator */
 static int
+iscsi_pdu_hdr_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
+		SPDK_ERRLOG("ISCSI_OP_SNACK not allowed in  discovery session\n");
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	if (!conn->sess->ErrorRecoveryLevel) {
+		SPDK_ERRLOG("Got a SNACK request in ErrorRecoveryLevel=0\n");
+		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+	}
+
+	return 0;
+}
+
+static int
 iscsi_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct iscsi_bhs_snack_req *reqh;
@@ -4350,17 +4366,12 @@ iscsi_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint32_t run_length;
 	int rc;
 
-	if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
-		SPDK_ERRLOG("ISCSI_OP_SNACK not allowed in  discovery session\n");
-		return SPDK_ISCSI_CONNECTION_FATAL;
+	rc = iscsi_pdu_hdr_op_snack(conn, pdu);
+	if (rc < 0 || pdu->is_rejected) {
+		return rc;
 	}
 
 	reqh = (struct iscsi_bhs_snack_req *)&pdu->bhs;
-	if (!conn->sess->ErrorRecoveryLevel) {
-		SPDK_ERRLOG("Got a SNACK request in ErrorRecoveryLevel=0\n");
-		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
-	}
-
 	type = reqh->flags & ISCSI_FLAG_SNACK_TYPE_MASK;
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "The value of type is %d\n", type);
 
