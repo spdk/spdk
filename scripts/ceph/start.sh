@@ -8,7 +8,7 @@ script_dir=$(readlink -f $(dirname $0))
 
 base_dir=/var/tmp/ceph
 mon_ip=$1
-mon_dir=${base_dir}/mon.a/
+mon_dir=${base_dir}/mon.a
 pid_dir=${base_dir}/pid
 ceph_conf=${base_dir}/ceph.conf
 mnt_dir=${base_dir}/mnt
@@ -51,7 +51,7 @@ kpartx ${dev}
 
 # prep osds
 
-mnt_pt=${mnt_dir}/osd-device-0-data/
+mnt_pt=${mnt_dir}/osd-device-0-data
 mkdir -p ${mnt_pt}
 mkfs.xfs -f /dev/disk/by-partlabel/osd-device-0-data
 mount /dev/disk/by-partlabel/osd-device-0-data ${mnt_pt}
@@ -68,7 +68,7 @@ mkdir -p ${mon_dir}
 mkdir -p ${pid_dir}
 
 ceph-authtool --create-keyring --gen-key --name=mon. ${base_dir}/keyring --cap mon 'allow *'
-ceph-authtool --gen-key --name=client.admin --set-uid=0 --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *' ${base_dir}/keyring
+ceph-authtool --gen-key --name=client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *' ${base_dir}/keyring
 
 monmaptool --create --clobber --add a ${mon_ip}:12046 --print ${base_dir}/monmap
 
