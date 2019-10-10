@@ -277,7 +277,7 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io);
 void
 raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 void
-raid_bdev_queue_io_wait(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx,
-			spdk_bdev_io_wait_cb cb_fn);
+raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
+			struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn);
 
 #endif /* SPDK_BDEV_RAID_INTERNAL_H */
