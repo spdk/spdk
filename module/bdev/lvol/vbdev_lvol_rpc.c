@@ -1144,7 +1144,7 @@ spdk_rpc_construct_ms_lvol_bdev(struct spdk_jsonrpc_request *request,
 
 	rc = vbdev_lvol_create_with_uuid(lvs, req.lvol_name, req.size,
 					 req.thin_provision, clear_method, req.uuid,
-					 _spdk_rpc_construct_lvol_bdev_cb, request);
+					 rpc_bdev_lvol_create_cb, request);
 	if (rc < 0) {
 		goto invalid;
 	}
