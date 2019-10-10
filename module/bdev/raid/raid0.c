@@ -66,7 +66,12 @@ raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 }
 
 static void
-raid0_waitq_io_process(void *ctx);
+_raid0_submit_rw_request(void *_raid_io)
+{
+	struct raid_bdev_io *raid_io = _raid_io;
+
+	raid0_submit_rw_request(raid_io);
+}
 
 /*
  * brief:
@@ -137,33 +142,10 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 	}
 
 	if (ret) {
-		raid_bdev_base_io_submit_fail_process(bdev_io, pd_idx,
-						      raid0_waitq_io_process,
+		raid_bdev_base_io_submit_fail_process(raid_io, pd_idx,
+						      _raid0_submit_rw_request,
 						      ret);
 	}
-}
-
-/*
- * brief:
- * raid0_waitq_io_process function is the callback function
- * registered by raid bdev module to bdev when bdev_io was unavailable
- * for raid0 bdevs.
- * params:
- * ctx - pointer to raid_bdev_io
- * returns:
- * none
- */
-static void
-raid0_waitq_io_process(void *ctx)
-{
-	struct spdk_bdev_io     *bdev_io = ctx;
-	struct raid_bdev_io	*raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-
-	/*
-	 * Try to submit childs of parent bdev io. If failed due to resource
-	 * crunch then break the loop and don't try to process other queued IOs.
-	 */
-	raid0_submit_rw_request(raid_io);
 }
 
 /* raid0 IO range */
@@ -262,10 +244,9 @@ _raid0_split_io_range(struct raid_bdev_io_range *io_range, uint8_t disk_idx,
 }
 
 static void
-_raid0_submit_null_payload_request(void *_bdev_io)
+_raid0_submit_null_payload_request(void *_raid_io)
 {
-	struct spdk_bdev_io *bdev_io = _bdev_io;
-	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	struct raid_bdev_io *raid_io = _raid_io;
 
 	raid0_submit_null_payload_request(raid_io);
 }
@@ -336,7 +317,7 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
 		} else {
-			raid_bdev_base_io_submit_fail_process(bdev_io, disk_idx,
+			raid_bdev_base_io_submit_fail_process(raid_io, disk_idx,
 							      _raid0_submit_null_payload_request, ret);
 			return;
 		}

@@ -314,7 +314,7 @@ raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *c
  * raid_bdev_base_io_submit_fail_process processes IO requests for member disk
  * which failed to submit
  * params:
- * raid_bdev_io - pointer to raid bdev_io
+ * raid_io
  * pd_idx - base_dev index in raid_bdev
  * cb_fn - callback when the spdk_bdev_io for base_bdev becomes available
  * ret - return code
@@ -322,19 +322,19 @@ raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *c
  * none
  */
 void
-raid_bdev_base_io_submit_fail_process(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx,
+raid_bdev_base_io_submit_fail_process(struct raid_bdev_io *raid_io, uint8_t pd_idx,
 				      spdk_bdev_io_wait_cb cb_fn, int ret)
 {
-	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)raid_bdev_io->driver_ctx;
 	struct raid_bdev_io_channel *raid_ch = raid_io->raid_ch;
 	struct raid_bdev *raid_bdev = raid_bdev_io_get_raid_bdev(raid_io);
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
 
 	assert(ret != 0);
 
 	if (ret == -ENOMEM) {
 		raid_io->waitq_entry.bdev = raid_bdev->base_bdev_info[pd_idx].bdev;
 		raid_io->waitq_entry.cb_fn = cb_fn;
-		raid_io->waitq_entry.cb_arg = raid_bdev_io;
+		raid_io->waitq_entry.cb_arg = raid_io;
 		spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[pd_idx].bdev,
 					raid_ch->base_channel[pd_idx],
 					&raid_io->waitq_entry);
@@ -343,17 +343,16 @@ raid_bdev_base_io_submit_fail_process(struct spdk_bdev_io *raid_bdev_io, uint8_t
 
 	SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
 	assert(false);
-	spdk_bdev_io_complete(raid_bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 }
 
 static void
 raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io);
 
 static void
-_raid_bdev_submit_reset_request(void *_bdev_io)
+_raid_bdev_submit_reset_request(void *_raid_io)
 {
-	struct spdk_bdev_io *bdev_io = _bdev_io;
-	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	struct raid_bdev_io *raid_io = _raid_io;
 
 	raid_bdev_submit_reset_request(raid_io);
 }
@@ -391,7 +390,7 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
 		} else {
-			raid_bdev_base_io_submit_fail_process(bdev_io, i,
+			raid_bdev_base_io_submit_fail_process(raid_io, i,
 							      _raid_bdev_submit_reset_request, ret);
 			return;
 		}
