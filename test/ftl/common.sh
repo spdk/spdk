@@ -1,8 +1,8 @@
 # Common utility functions to be sourced by the libftl test scripts
 
 function get_chunk_size() {
-	echo $($rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:$1" | \
-		grep 'Logical blks per chunk' | sed 's/[^0-9]//g')
+	$rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:$1" |
+		grep 'Logical blks per chunk' | sed 's/[^0-9]//g'
 }
 
 function has_separate_md() {

@@ -241,7 +241,7 @@ if hash shellcheck 2>/dev/null; then
 	# Error descriptions can also be found at: https://github.com/koalaman/shellcheck/wiki
 	# This SHCK_EXCLUDE list is out "to do" and we work to fix all of this errors.
 	SHCK_EXCLUDE="SC1001,SC1003,\
-SC1083,SC1113,SC2001,SC2002,SC2003,SC2004,SC2005,\
+SC1083,SC1113,SC2001,SC2002,SC2003,SC2004,\
 SC2010,SC2012,SC2013,SC2016,\
 SC2034,SC2045,SC2046,\
 SC2068,SC2086,SC2089,SC2090,\
