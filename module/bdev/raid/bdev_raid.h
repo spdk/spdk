@@ -266,7 +266,7 @@ __RAID_MODULE_REGISTER(__LINE__)(void)					\
 }
 
 void
-raid0_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
+raid0_submit_rw_request(struct spdk_bdev_io *bdev_io);
 void
 raid0_submit_null_payload_request(void *_bdev_io);
 void

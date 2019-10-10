@@ -368,6 +368,8 @@ _raid_bdev_submit_reset_request_next(void *_bdev_io)
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 
+	raid_io->base_bdev_io_expected = raid_bdev->num_base_bdevs;
+
 	while (raid_io->base_bdev_io_submitted < raid_bdev->num_base_bdevs) {
 		i = raid_io->base_bdev_io_submitted;
 		ret = spdk_bdev_reset(raid_bdev->base_bdev_info[i].desc,
@@ -381,47 +383,6 @@ _raid_bdev_submit_reset_request_next(void *_bdev_io)
 			return;
 		}
 	}
-}
-
-/*
- * brief:
- * _raid_bdev_submit_reset_request function is the submit_request function for
- * reset requests
- * params:
- * ch - pointer to raid bdev io channel
- * bdev_io - pointer to parent bdev_io on raid bdev device
- * returns:
- * none
- */
-static void
-_raid_bdev_submit_reset_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
-{
-	struct raid_bdev_io		*raid_io;
-	struct raid_bdev		*raid_bdev;
-
-	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
-	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
-	raid_io->base_bdev_io_expected = raid_bdev->num_base_bdevs;
-	_raid_bdev_submit_reset_request_next(bdev_io);
-}
-
-/*
- * brief:
- * _raid_bdev_submit_null_payload_request function is the submit_request function
- * for io requests with range but without payload, like UNMAP and FLUSH.
- * params:
- * ch - pointer to raid bdev io channel
- * bdev_io - pointer to parent bdev_io on raid bdev device
- * returns:
- * none
- */
-static void
-_raid_bdev_submit_null_payload_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
-{
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev: type %d, range (0x%lx, 0x%lx)\n",
-		      bdev_io->type, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks);
-
-	raid0_submit_null_payload_request(bdev_io);
 }
 
 /*
@@ -443,7 +404,7 @@ raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		return;
 	}
 
-	raid0_start_rw_request(ch, bdev_io);
+	raid0_submit_rw_request(bdev_io);
 }
 
 /*
@@ -473,16 +434,16 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		raid0_start_rw_request(ch, bdev_io);
+		raid0_submit_rw_request(bdev_io);
 		break;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		_raid_bdev_submit_reset_request(ch, bdev_io);
+		_raid_bdev_submit_reset_request_next(bdev_io);
 		break;
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		_raid_bdev_submit_null_payload_request(ch, bdev_io);
+		raid0_submit_null_payload_request(bdev_io);
 		break;
 
 	default:
