@@ -35,6 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += nvme_fuzz
+DIRS-y += iscsi_fuzz
 
 ifeq ($(OS),Linux)
 DIRS-$(CONFIG_VIRTIO) += vhost_fuzz
