@@ -553,13 +553,13 @@ function run_test() {
 	local test_type="$(echo $1 | tr '[:lower:]' '[:upper:]')"
 	shift
 	echo "************************************"
-	echo "START TEST $test_type $@"
+	echo "START TEST $test_type $*"
 	echo "************************************"
 	xtrace_restore
 	time "$@"
 	xtrace_disable
 	echo "************************************"
-	echo "END TEST $test_type $@"
+	echo "END TEST $test_type $*"
 	echo "************************************"
 	xtrace_restore
 }

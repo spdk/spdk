@@ -183,7 +183,7 @@ else
 fi
 notice "Preparing NVMe setup..."
 notice "Using $max_disks physical NVMe drives"
-notice "Nvme split list: ${splits[@]}"
+notice "Nvme split list: ${splits[*]}"
 
 # ===== Precondition NVMes if specified =====
 if [[ $run_precondition == true ]]; then
