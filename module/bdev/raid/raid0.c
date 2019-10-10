@@ -82,7 +82,7 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 {
 	struct spdk_bdev_io		*bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	struct raid_bdev_io_channel	*raid_ch = raid_io->raid_ch;
-	struct raid_bdev		*raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
+	struct raid_bdev		*raid_bdev = raid_io->raid_bdev;
 	uint64_t			pd_strip;
 	uint32_t			offset_in_strip;
 	uint64_t			pd_lba;
@@ -284,7 +284,7 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 	int				ret;
 
 	bdev_io = spdk_bdev_io_from_ctx(raid_io);
-	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
+	raid_bdev = raid_io->raid_bdev;
 
 	_raid0_get_io_range(&io_range, raid_bdev->num_base_bdevs,
 			    raid_bdev->strip_size, raid_bdev->strip_size_shift,
