@@ -103,6 +103,11 @@ struct raid_bdev_io {
 	uint8_t				base_bdev_io_status;
 };
 
+static inline struct raid_bdev *raid_bdev_io_get_raid_bdev(struct raid_bdev_io *raid_io)
+{
+	return spdk_bdev_io_from_ctx(raid_io)->bdev->ctxt;
+}
+
 /*
  * raid_bdev is the single entity structure which contains SPDK block device
  * and the information related to any raid bdev either configured or
