@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8a6f62f6_249fb903",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-10T21:43:32Z",
+      "side": 1,
+      "message": "Let me revise it.",
+      "parentUuid": "34469b70_7386aaf6",
+      "revId": "5733181ee7b61829ed5cd3f9eb150746b4fef3ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4aa1ed82_e81db754",
         "filename": "lib/env_dpdk/env.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-10T21:39:29Z",
       "side": 1,
       "message": "should we assert(orig_num_cores \u003d\u003d 1)?  I know that DPDK has rte_thread_set_affinity(), but we don\u0027t expose that anywhere - I\u0027m not even sure what might happen in SPDK if someone called rte_thread_set_affinity on one of our reactor cores",
+      "revId": "5733181ee7b61829ed5cd3f9eb150746b4fef3ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1ac2172_45521f95",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-10T21:43:32Z",
+      "side": 1,
+      "message": "Let me add it.",
+      "parentUuid": "4aa1ed82_e81db754",
       "revId": "5733181ee7b61829ed5cd3f9eb150746b4fef3ab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
