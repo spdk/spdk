@@ -1605,6 +1605,13 @@ spdk_nvmf_fc_hwqp_process_pending_reqs(struct spdk_nvmf_fc_hwqp *hwqp)
 	struct spdk_nvmf_fc_request *fc_req;
 	int budget = 64;
 
+	if (!hwqp->fgroup) {
+		/* LS queue is tied to acceptor_poll group and LS pending requests
+		 * are stagged and processed using hwqp->ls_pending_queue.
+		 */
+		return;
+	}
+
 	STAILQ_FOREACH_SAFE(req, &hwqp->fgroup->group.pending_buf_queue, buf_link, tmp) {
 		fc_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_fc_request, req);
 		if (!nvmf_fc_request_execute(fc_req)) {
