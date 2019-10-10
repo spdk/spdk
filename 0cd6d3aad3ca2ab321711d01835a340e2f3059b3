@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "0bfffdd0_142601b9",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-10T13:02:47Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we support write_config_json instead .config_json?",
+      "revId": "0cd6d3aad3ca2ab321711d01835a340e2f3059b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "31b60a1b_85ac2747",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 13
