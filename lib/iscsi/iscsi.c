@@ -250,6 +250,8 @@ iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 	int data_len;
 	int alloc_len;
 
+	pdu->is_rejected = true;
+
 	total_ahs_len = pdu->bhs.total_ahs_len;
 	data_len = 0;
 	alloc_len = ISCSI_BHS_LEN + (4 * total_ahs_len);
