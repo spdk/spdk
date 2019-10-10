@@ -254,6 +254,8 @@ const char *raid_bdev_level_to_str(enum raid_level level);
 struct raid_bdev_module {
 	enum raid_level level;
 	TAILQ_ENTRY(raid_bdev_module) link;
+	void (*submit_rw_request)(struct raid_bdev_io *raid_io);
+	void (*submit_null_payload_request)(struct raid_bdev_io *raid_io);
 };
 
 void raid_bdev_module_list_add(struct raid_bdev_module *raid_module);
@@ -268,10 +270,6 @@ __RAID_MODULE_REGISTER(__LINE__)(void)					\
     raid_bdev_module_list_add(_module);					\
 }
 
-void
-raid0_submit_rw_request(struct raid_bdev_io *raid_io);
-void
-raid0_submit_null_payload_request(struct raid_bdev_io *raid_io);
 void
 raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 void
