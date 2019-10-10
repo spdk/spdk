@@ -71,6 +71,8 @@ if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	fi
 fi
 
+run_test suite ./test/iscsi_tgt/fuzz/fuzz.sh
+
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test suite ./test/iscsi_tgt/multiconnection/multiconnection.sh
 fi
