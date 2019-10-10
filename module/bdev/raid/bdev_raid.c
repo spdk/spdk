@@ -415,7 +415,7 @@ raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		return;
 	}
 
-	raid0_submit_rw_request(raid_io);
+	raid_io->raid_bdev->module->submit_rw_request(raid_io);
 }
 
 /*
@@ -446,7 +446,7 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		raid0_submit_rw_request(raid_io);
+		raid_io->raid_bdev->module->submit_rw_request(raid_io);
 		break;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
@@ -455,7 +455,7 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		raid0_submit_null_payload_request(raid_io);
+		raid_io->raid_bdev->module->submit_null_payload_request(raid_io);
 		break;
 
 	default:

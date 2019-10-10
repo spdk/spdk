@@ -66,6 +66,9 @@ raid0_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 }
 
 static void
+raid0_submit_rw_request(struct raid_bdev_io *raid_io);
+
+static void
 _raid0_submit_rw_request(void *_raid_io)
 {
 	struct raid_bdev_io *raid_io = _raid_io;
@@ -82,7 +85,7 @@ _raid0_submit_rw_request(void *_raid_io)
  * returns:
  * none
  */
-void
+static void
 raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 {
 	struct spdk_bdev_io		*bdev_io = spdk_bdev_io_from_ctx(raid_io);
@@ -249,6 +252,9 @@ _raid0_split_io_range(struct raid_bdev_io_range *io_range, uint8_t disk_idx,
 }
 
 static void
+raid0_submit_null_payload_request(struct raid_bdev_io *raid_io);
+
+static void
 _raid0_submit_null_payload_request(void *_raid_io)
 {
 	struct raid_bdev_io *raid_io = _raid_io;
@@ -267,7 +273,7 @@ _raid0_submit_null_payload_request(void *_raid_io)
  * returns:
  * none
  */
-void
+static void
 raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 {
 	struct spdk_bdev_io		*bdev_io;
@@ -336,6 +342,8 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 
 static struct raid_bdev_module g_raid0_module = {
 	.level = RAID0,
+	.submit_rw_request = raid0_submit_rw_request,
+	.submit_null_payload_request = raid0_submit_null_payload_request,
 };
 RAID_MODULE_REGISTER(&g_raid0_module)
 
