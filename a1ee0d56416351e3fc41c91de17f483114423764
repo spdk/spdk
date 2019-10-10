@@ -16,6 +16,24 @@
       "revId": "a1ee0d56416351e3fc41c91de17f483114423764",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13510d98_8078cdfc",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-10T20:02:56Z",
+      "side": 1,
+      "message": "disregard, I see this has been removed in a subsequent patch",
+      "parentUuid": "930eeaa3_4b653a2b",
+      "revId": "a1ee0d56416351e3fc41c91de17f483114423764",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
