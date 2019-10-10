@@ -74,12 +74,11 @@ raid0_waitq_io_process(void *ctx);
  * member disk for raid0 bdevs.
  * params:
  * bdev_io - parent bdev io
- * start_strip - start strip number of this io
  * returns:
  * none
  */
-static void
-raid0_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
+void
+raid0_submit_rw_request(struct spdk_bdev_io *bdev_io)
 {
 	struct raid_bdev_io		*raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	struct raid_bdev_io_channel	*raid_ch = raid_io->raid_ch;
@@ -90,6 +89,18 @@ raid0_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
 	uint64_t			pd_blocks;
 	uint8_t				pd_idx;
 	int				ret = 0;
+	uint64_t			start_strip;
+	uint64_t			end_strip;
+
+	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
+	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
+		    raid_bdev->strip_size_shift;
+	if (start_strip != end_strip && raid_bdev->num_base_bdevs > 1) {
+		assert(false);
+		SPDK_ERRLOG("I/O spans strip boundary!\n");
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
 
 	pd_strip = start_strip / raid_bdev->num_base_bdevs;
 	pd_idx = start_strip % raid_bdev->num_base_bdevs;
@@ -144,46 +155,8 @@ static void
 raid0_waitq_io_process(void *ctx)
 {
 	struct spdk_bdev_io     *bdev_io = ctx;
-	struct raid_bdev	*raid_bdev;
-	uint64_t		start_strip;
 
-	/*
-	 * Try to submit childs of parent bdev io. If failed due to resource
-	 * crunch then break the loop and don't try to process other queued IOs.
-	 */
-	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
-	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-	raid0_submit_rw_request(bdev_io, start_strip);
-}
-
-/*
- * brief:
- * raid0_start_rw_request function is the submit_request function for
- * read/write requests for raid0 bdevs.
- * params:
- * ch - pointer to raid bdev io channel
- * bdev_io - pointer to parent bdev_io on raid bdev device
- * returns:
- * none
- */
-void
-raid0_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
-{
-	struct raid_bdev		*raid_bdev;
-	uint64_t			start_strip = 0;
-	uint64_t			end_strip = 0;
-
-	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
-	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
-		    raid_bdev->strip_size_shift;
-	if (start_strip != end_strip && raid_bdev->num_base_bdevs > 1) {
-		assert(false);
-		SPDK_ERRLOG("I/O spans strip boundary!\n");
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		return;
-	}
-	raid0_submit_rw_request(bdev_io, start_strip);
+	raid0_submit_rw_request(bdev_io);
 }
 
 /* raid0 IO range */
