@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "962ffc2b_8ce39a28",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-10T16:59:51Z",
+      "side": 1,
+      "message": "nvme/rdma: Allow fabrics commands to be submitted during a reset\n\nIt\u0027s not all I/O commands you\u0027re allowing - it\u0027s specifically fabrics commands.",
+      "revId": "b35a827e695fc025ca3d33fa3d74d66479adbcee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1aa16d0_a5783853",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-10T16:59:51Z",
+      "side": 1,
+      "message": "Let\u0027s leave this comment here - just remove the part about the admin qpair specifically. You want to allow all fabrics commands through during a reset so you can send a FABRIC CONNECT basically.",
+      "revId": "b35a827e695fc025ca3d33fa3d74d66479adbcee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
