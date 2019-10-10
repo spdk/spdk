@@ -315,45 +315,30 @@ raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *c
  * raid_bdev_queue_io_wait function processes the IO which failed to submit.
  * It will try to queue the IOs after storing the context to bdev wait queue logic.
  * params:
- * raid_bdev_io - pointer to raid bdev_io
- * pd_idx - base_dev index in raid_bdev
- * cb_fn - callback when the spdk_bdev_io for base_bdev becomes available
- * ret - return code
+ * raid_io - pointer to raid_bdev_io
+ * bdev - the block device that the IO is submitted to
+ * ch - io channel
+ * cb_fn - callback when the spdk_bdev_io for bdev becomes available
  * returns:
  * none
  */
 void
-raid_bdev_queue_io_wait(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx,
-			spdk_bdev_io_wait_cb cb_fn, int ret)
+raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
+			struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn)
 {
-	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)raid_bdev_io->driver_ctx;
-	struct raid_bdev *raid_bdev = raid_bdev_io_get_raid_bdev(raid_io);
-
-	assert(ret != 0);
-
-	if (ret == -ENOMEM) {
-		raid_io->waitq_entry.bdev = raid_bdev->base_bdev_info[pd_idx].bdev;
-		raid_io->waitq_entry.cb_fn = cb_fn;
-		raid_io->waitq_entry.cb_arg = raid_bdev_io;
-		spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[pd_idx].bdev,
-					raid_io->raid_ch->base_channel[pd_idx],
-					&raid_io->waitq_entry);
-		return;
-	}
-
-	SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
-	assert(false);
-	spdk_bdev_io_complete(raid_bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	raid_io->waitq_entry.bdev = bdev;
+	raid_io->waitq_entry.cb_fn = cb_fn;
+	raid_io->waitq_entry.cb_arg = raid_io;
+	spdk_bdev_queue_io_wait(bdev, ch, &raid_io->waitq_entry);
 }
 
 static void
 raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io);
 
 static void
-_raid_bdev_submit_reset_request(void *_bdev_io)
+_raid_bdev_submit_reset_request(void *_raid_io)
 {
-	struct spdk_bdev_io *bdev_io = _bdev_io;
-	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	struct raid_bdev_io *raid_io = _raid_io;
 
 	raid_bdev_submit_reset_request(raid_io);
 }
@@ -375,6 +360,8 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 	struct raid_bdev		*raid_bdev;
 	int				ret;
 	uint8_t				i;
+	struct raid_base_bdev_info	*bdi;
+	struct spdk_io_channel		*base_ch;
 
 	bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	raid_bdev = raid_bdev_io_get_raid_bdev(raid_io);
@@ -383,14 +370,20 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 
 	while (raid_io->base_bdev_io_submitted < raid_bdev->num_base_bdevs) {
 		i = raid_io->base_bdev_io_submitted;
-		ret = spdk_bdev_reset(raid_bdev->base_bdev_info[i].desc,
-				      raid_io->raid_ch->base_channel[i],
+		bdi = &raid_bdev->base_bdev_info[i];
+		base_ch = raid_io->raid_ch->base_channel[i];
+		ret = spdk_bdev_reset(bdi->desc, base_ch,
 				      raid_bdev_base_io_completion, bdev_io);
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
+		} else if (ret == -ENOMEM) {
+			raid_bdev_queue_io_wait(raid_io, bdi->bdev, base_ch,
+						_raid_bdev_submit_reset_request);
+			return;
 		} else {
-			raid_bdev_queue_io_wait(bdev_io, i,
-						_raid_bdev_submit_reset_request, ret);
+			SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
+			assert(false);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 			return;
 		}
 	}
