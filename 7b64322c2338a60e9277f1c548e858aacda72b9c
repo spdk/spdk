@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03066295_0f9a0a93",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1700,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-10T06:40:18Z",
+      "side": 1,
+      "message": "Yes, it\u0027s the right fix.",
+      "revId": "7b64322c2338a60e9277f1c548e858aacda72b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
