@@ -16,6 +16,23 @@
       "revId": "bcaaf3aaf048d223928fb45bafad630d80809295",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58d762a1_9ce94a65",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 691,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-10T17:33:37Z",
+      "side": 1,
+      "message": "we may also want to consider something like:\n\n/* Requests with children requests aren\u0027t sent to the transport, so they\n * should never be queued and resubmitted.\n */\nassert(req-\u003enum_children \u003d\u003d 0);",
+      "revId": "bcaaf3aaf048d223928fb45bafad630d80809295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
