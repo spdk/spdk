@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "930eeaa3_4b653a2b",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-10T19:47:17Z",
+      "side": 1,
+      "message": "was this necessary? Seems like the first time you use it is at line 401 and it would been set via the if block before that.  I don\u0027t think you need to change it, just curious if I\u0027m missing something",
+      "revId": "a1ee0d56416351e3fc41c91de17f483114423764",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
