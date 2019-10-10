@@ -73,14 +73,14 @@ raid0_waitq_io_process(void *ctx);
  * raid0_submit_rw_request function is used to submit I/O to the correct
  * member disk for raid0 bdevs.
  * params:
- * bdev_io - parent bdev io
+ * raid_io
  * returns:
  * none
  */
 void
-raid0_submit_rw_request(struct spdk_bdev_io *bdev_io)
+raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 {
-	struct raid_bdev_io		*raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	struct spdk_bdev_io		*bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	struct raid_bdev_io_channel	*raid_ch = raid_io->raid_ch;
 	struct raid_bdev		*raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	uint64_t			pd_strip;
@@ -157,12 +157,13 @@ static void
 raid0_waitq_io_process(void *ctx)
 {
 	struct spdk_bdev_io     *bdev_io = ctx;
+	struct raid_bdev_io	*raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 
 	/*
 	 * Try to submit childs of parent bdev io. If failed due to resource
 	 * crunch then break the loop and don't try to process other queued IOs.
 	 */
-	raid0_submit_rw_request(bdev_io);
+	raid0_submit_rw_request(raid_io);
 }
 
 /* raid0 IO range */
@@ -260,6 +261,15 @@ _raid0_split_io_range(struct raid_bdev_io_range *io_range, uint8_t disk_idx,
 	*_nblocks_in_disk = nblocks_in_disk;
 }
 
+static void
+_raid0_submit_null_payload_request(void *_bdev_io)
+{
+	struct spdk_bdev_io *bdev_io = _bdev_io;
+	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+
+	raid0_submit_null_payload_request(raid_io);
+}
+
 /*
  * brief:
  * raid0_submit_null_payload_request function submits the next batch of
@@ -272,17 +282,16 @@ _raid0_split_io_range(struct raid_bdev_io_range *io_range, uint8_t disk_idx,
  * none
  */
 void
-raid0_submit_null_payload_request(void *_bdev_io)
+raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 {
-	struct spdk_bdev_io		*bdev_io = _bdev_io;
-	struct raid_bdev_io		*raid_io;
+	struct spdk_bdev_io		*bdev_io;
 	struct raid_bdev		*raid_bdev;
 	struct raid_bdev_io_channel	*raid_ch;
 	struct raid_bdev_io_range	io_range;
 	int				ret;
 
+	bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
-	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	raid_ch = raid_io->raid_ch;
 
 	_raid0_get_io_range(&io_range, raid_bdev->num_base_bdevs,
@@ -328,7 +337,7 @@ raid0_submit_null_payload_request(void *_bdev_io)
 			raid_io->base_bdev_io_submitted++;
 		} else {
 			raid_bdev_base_io_submit_fail_process(bdev_io, disk_idx,
-							      raid0_submit_null_payload_request, ret);
+							      _raid0_submit_null_payload_request, ret);
 			return;
 		}
 	}
