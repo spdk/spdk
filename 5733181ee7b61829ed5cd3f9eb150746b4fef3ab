@@ -69,6 +69,24 @@
       "revId": "5733181ee7b61829ed5cd3f9eb150746b4fef3ab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82c09f6b_530f211b",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-10T22:14:15Z",
+      "side": 1,
+      "message": "The assert should not be added. It causes the failure, if the app configures multiple cpus, then it should not be 1",
+      "parentUuid": "d1ac2172_45521f95",
+      "revId": "5733181ee7b61829ed5cd3f9eb150746b4fef3ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
