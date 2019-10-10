@@ -37,6 +37,7 @@ run_test suite ./test/iscsi_tgt/rpc_config/rpc_config.sh $TEST_TYPE
 run_test suite ./test/iscsi_tgt/lvol/iscsi_lvol.sh
 run_test suite ./test/iscsi_tgt/fio/fio.sh
 run_test suite ./test/iscsi_tgt/qos/qos.sh
+run_test suite ./test/iscsi_tgt/fuzz/fuzz.sh
 
 # IP Migration tests do not support network namespaces,
 # they can only be run on posix sockets.
