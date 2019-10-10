@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5522bebc_46a105e8",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 16
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-10T07:56:37Z",
+      "side": 1,
+      "message": "Should probably be \"nvme\", otherwise this refers to variable nvme which is undefined",
+      "range": {
+        "startLine": 101,
+        "startChar": 49,
+        "endLine": 101,
+        "endChar": 53
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2399a158_6962c418",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 16
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-10T07:56:37Z",
+      "side": 1,
+      "message": "create_nvme_img.sh allows to create a backend file with any name, but we still enforce the name here.\nCurrently the syntax for adding an emulated backend is:\n--nvme-disks-type\u003dnvme 1\n\nHow about we change it to something like:\n--nvme-disks-type\u003dnvme,X,$PATH\nWhere first param is the type - nvme or ocssd\nSecond param - number of namespaces (defaults to 1)\nThird param - path to backend file\n\nIf no --nvme-disks-type option is given when running create_vbox.sh - default to nvme/1/nvme_disk.img",
+      "range": {
+        "startLine": 138,
+        "startChar": 8,
+        "endLine": 138,
+        "endChar": 44
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6f2b8e6_be80bd6b",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-10T07:56:37Z",
+      "side": 1,
+      "message": "nitpick: spaces to align text.\nOtherwise the lines are not aligned in the console",
+      "range": {
+        "startLine": 11,
+        "startChar": 16,
+        "endLine": 11,
+        "endChar": 20
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ace0eb3_851ccb71",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-10T07:56:37Z",
+      "side": 1,
+      "message": "You should probably add a check for a wrong type",
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6234a803_6acc7593",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-10T07:56:37Z",
+      "side": 1,
+      "message": "Didn\u0027t notice this one before.\nInstead of adding a new option --nvme-disk-type we could modify this one, but keep the current default as-is. Also need to be extra careful, as this would also affect VirtualBox part of the Vagrantfile",
+      "range": {
+        "startLine": 22,
+        "startChar": 9,
+        "endLine": 22,
+        "endChar": 63
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5ab2ddc_88bad622",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-10T07:56:37Z",
+      "side": 1,
+      "message": "This section could really use 2-3 examples how to run a VM with multiple emualted devices, various number of namespaces, attaching OCSSD, etc.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 22
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
