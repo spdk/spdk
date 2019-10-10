@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df605cd9_fcd16a24",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-10T19:34:18Z",
+      "side": 1,
+      "message": "You didn\u0027t add a comment like you have for the other two.",
+      "revId": "23f55e94b0b8a627319af12ce16afb5a089f2699",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
