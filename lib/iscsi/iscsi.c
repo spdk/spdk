@@ -4621,9 +4621,20 @@ iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	int I_bit;
 	struct spdk_iscsi_sess *sess;
 	struct iscsi_bhs_scsi_req *reqh;
+	uint32_t crc32c;
 
 	if (pdu == NULL) {
 		return -1;
+	}
+
+	/* check data digest */
+	if (conn->data_digest && pdu->data_segment_len != 0) {
+		crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
+		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
+		if (rc == 0) {
+			SPDK_ERRLOG("data digest error (%s)\n", conn->initiator_name);
+			return SPDK_ISCSI_CONNECTION_FATAL;
+		}
 	}
 
 	opcode = pdu->bhs.opcode;
@@ -4887,16 +4898,6 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 
 	spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->id, pdu->data_valid_bytes,
 			  (uintptr_t)pdu, pdu->bhs.opcode);
-
-	/* check data digest */
-	if (conn->data_digest && data_len != 0) {
-		crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
-		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
-		if (rc == 0) {
-			SPDK_ERRLOG("data digest error (%s)\n", conn->initiator_name);
-			goto error;
-		}
-	}
 
 	if (conn->is_logged_out) {
 		SPDK_ERRLOG("pdu received after logout\n");
