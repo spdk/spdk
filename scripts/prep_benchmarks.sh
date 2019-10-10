@@ -18,10 +18,10 @@ function configure_performance() {
 	echo "Done"
 
 	echo -n "Moving all interrupts off of core 0..."
-	count=$(expr $(nproc) / 4)
+	count=$(($(nproc) / 4))
 	cpumask="e"
 	for ((i=1; i<$count; i++)); do
-		if [ $(expr $i % 8) -eq 0 ]; then
+		if [ $((i % 8)) -eq 0 ]; then
 			cpumask=",$cpumask"
 		fi
 		cpumask="f$cpumask"
