@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "630dc311_f27305c2",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-10T18:15:37Z",
+      "side": 1,
+      "message": "It will work, resubmitted I/Os will all go through the nvme_qpair_resubmit_request path.",
+      "parentUuid": "34a2e3b3_377f7b56",
+      "revId": "bcaaf3aaf048d223928fb45bafad630d80809295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58d762a1_9ce94a65",
         "filename": "lib/nvme/nvme_qpair.c",
         "patchSetId": 2
@@ -69,6 +87,24 @@
       "revId": "bcaaf3aaf048d223928fb45bafad630d80809295",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa86c27a_23f40d2b",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 691,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-10T18:15:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0de1261c_f4ef9d4a",
+      "revId": "bcaaf3aaf048d223928fb45bafad630d80809295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
