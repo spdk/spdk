@@ -4650,6 +4650,15 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 		}
 	}
 
+	if (conn->header_digest) {
+		crc32c = spdk_iscsi_pdu_calc_header_digest(pdu);
+		rc = MATCH_DIGEST_WORD(pdu->header_digest, crc32c);
+		if (rc == 0) {
+			SPDK_ERRLOG("header digest error (%s)\n", conn->initiator_name);
+			goto error;
+		}
+	}
+
 	data_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
 
 	if (data_len != 0 && pdu->data_buf == NULL) {
@@ -4713,15 +4722,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 	spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->id, pdu->data_valid_bytes,
 			  (uintptr_t)pdu, pdu->bhs.opcode);
 
-	/* check digest */
-	if (conn->header_digest) {
-		crc32c = spdk_iscsi_pdu_calc_header_digest(pdu);
-		rc = MATCH_DIGEST_WORD(pdu->header_digest, crc32c);
-		if (rc == 0) {
-			SPDK_ERRLOG("header digest error (%s)\n", conn->initiator_name);
-			goto error;
-		}
-	}
+	/* check data digest */
 	if (conn->data_digest && data_len != 0) {
 		crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
 		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
