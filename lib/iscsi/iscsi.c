@@ -2146,6 +2146,28 @@ iscsi_op_login_rsp_handle(struct spdk_iscsi_conn *conn,
 }
 
 static int
+iscsi_pdu_hdr_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	uint32_t data_len;
+
+	if (conn->full_feature && conn->sess != NULL &&
+	    conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	data_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
+
+	/* During login processing, use the 8KB default FirstBurstLength as
+	 *  our maximum data segment length value.
+	 */
+	if (data_len > SPDK_ISCSI_FIRST_BURST_LENGTH) {
+		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+	}
+
+	return 0;
+}
+
+static int
 iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	int rc;
@@ -2154,16 +2176,9 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	int alloc_len;
 	int cid;
 
-	if (conn->full_feature && conn->sess != NULL &&
-	    conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
-		return SPDK_ISCSI_CONNECTION_FATAL;
-	}
-
-	/* During login processing, use the 8KB default FirstBurstLength as
-	 *  our maximum data segment length value.
-	 */
-	if (pdu->data_segment_len > SPDK_ISCSI_FIRST_BURST_LENGTH) {
-		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+	rc = iscsi_pdu_hdr_op_login(conn, pdu);
+	if (rc != 0 || pdu->is_rejected) {
+		return rc;
 	}
 
 	rsp_pdu = spdk_get_pdu();
