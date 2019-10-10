@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffab3733_e1bd2a6b",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-10T17:30:05Z",
+      "side": 1,
+      "message": "another idea:\n\nwhat about removing this resubmit flag, and instead do something like:\n\nif (!STAILQ_EMPTY(\u0026qpair-\u003equeued_req) \u0026\u0026 req-\u003enum_children \u003d\u003d 0) {\n  /* This request has no children which means it will be sent to the transport.\n   *.Since there are already requests queued for the transport, put this one\n   * at the end of the STAILQ.\n   */\n  STAILQ_INSERT_TAIL(\u0026qpair-\u003equeued_req, req, stailq);\n  return 0;\n}",
+      "revId": "bcaaf3aaf048d223928fb45bafad630d80809295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
