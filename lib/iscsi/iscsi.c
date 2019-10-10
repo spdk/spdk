@@ -3279,7 +3279,6 @@ iscsi_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	int32_t remaining_size;
 
 	TAILQ_INIT(&task->subtask_list);
-	task->scsi.dxfer_dir = SPDK_SCSI_DIR_FROM_DEV;
 	task->parent = NULL;
 	task->scsi.offset = 0;
 	task->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, task->scsi.transfer_len);
@@ -3350,13 +3349,14 @@ iscsi_op_scsi_write(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 }
 
 static int
-iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_task	*task;
 	struct spdk_scsi_dev	*dev;
 	uint8_t *cdb;
 	uint64_t lun;
 	uint32_t task_tag;
+	uint32_t data_len;
 	uint32_t transfer_len;
 	int R_bit, W_bit;
 	int lun_i;
@@ -3373,6 +3373,7 @@ iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	W_bit = reqh->write_bit;
 	lun = from_be64(&reqh->lun);
 	task_tag = from_be32(&reqh->itt);
+	data_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
 	transfer_len = from_be32(&reqh->expected_data_xfer_len);
 	cdb = reqh->cdb;
 
@@ -3412,7 +3413,7 @@ iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	/* no bi-directional support */
 	if (R_bit) {
-		return iscsi_op_scsi_read(conn, task);
+		task->scsi.dxfer_dir = SPDK_SCSI_DIR_FROM_DEV;
 	} else if (W_bit) {
 		task->scsi.dxfer_dir = SPDK_SCSI_DIR_TO_DEV;
 
@@ -3438,13 +3439,11 @@ iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		}
 
 		/* check the ImmediateData and also pdu->data_segment_len */
-		if ((!conn->sess->ImmediateData && (pdu->data_segment_len > 0)) ||
-		    (pdu->data_segment_len > conn->sess->FirstBurstLength)) {
+		if ((!conn->sess->ImmediateData && (data_len > 0)) ||
+		    (data_len > conn->sess->FirstBurstLength)) {
 			spdk_iscsi_task_put(task);
 			return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 		}
-
-		return iscsi_op_scsi_write(conn, task);
 	} else {
 		/* neither R nor W bit set */
 		task->scsi.dxfer_dir = SPDK_SCSI_DIR_NONE;
@@ -3455,8 +3454,44 @@ iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		}
 	}
 
-	iscsi_queue_task(conn, task);
+	pdu->task = task;
 	return 0;
+}
+
+static int
+iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	struct spdk_iscsi_task *task;
+	int rc;
+
+	rc = iscsi_pdu_hdr_op_scsi(conn, pdu);
+	if (rc != 0 || pdu->is_rejected || pdu->task == NULL) {
+		return rc;
+	}
+
+	task = pdu->task;
+
+	if (spdk_scsi_dev_get_lun(conn->dev, task->lun_id) == NULL) {
+		spdk_scsi_task_process_null_lun(&task->scsi);
+		spdk_iscsi_task_cpl(&task->scsi);
+		return 0;
+	}
+
+	switch (task->scsi.dxfer_dir) {
+	case SPDK_SCSI_DIR_FROM_DEV:
+		return iscsi_op_scsi_read(conn, task);
+	case SPDK_SCSI_DIR_TO_DEV:
+		return iscsi_op_scsi_write(conn, task);
+	case SPDK_SCSI_DIR_NONE:
+		iscsi_queue_task(conn, task);
+		return 0;
+	default:
+		assert(false);
+		spdk_iscsi_task_put(task);
+		break;
+	}
+
+	return SPDK_ISCSI_CONNECTION_FATAL;
 }
 
 static void
