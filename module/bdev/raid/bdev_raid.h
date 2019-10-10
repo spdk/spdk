@@ -90,6 +90,9 @@ struct raid_base_bdev_info {
  * related to bdev_io for a raid bdev
  */
 struct raid_bdev_io {
+	/* The raid bdev associated with this IO */
+	struct raid_bdev *raid_bdev;
+
 	/* WaitQ entry, used only in waitq logic */
 	struct spdk_bdev_io_wait_entry	waitq_entry;
 
