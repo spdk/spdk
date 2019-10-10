@@ -1,6 +1,4 @@
 #
-#  BSD LICENSE
-#
 #  Copyright (c) Intel Corporation.
 #  All rights reserved.
 #
@@ -31,18 +29,18 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += nvme_fuzz
-DIRS-y += iscsi_fuzz
+APP = iscsi_fuzz
 
-ifeq ($(OS),Linux)
-DIRS-$(CONFIG_VIRTIO) += vhost_fuzz
-endif
-.PHONY: all clean $(DIRS-y)
+CFLAGS += -I$(SPDK_ROOT_DIR)/test/app/fuzz/common
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+C_SRCS := iscsi_fuzz.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+SPDK_LIB_LIST += $(SOCK_MODULES_LIST)
+SPDK_LIB_LIST += conf event json jsonrpc log iscsi scsi bdev notify rpc sock thread trace util
+
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
