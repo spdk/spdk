@@ -2447,6 +2447,21 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 }
 
 static int
+iscsi_pdu_hdr_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	struct iscsi_bhs_logout_req *reqh;
+
+	reqh = (struct iscsi_bhs_logout_req *)&pdu->bhs;
+
+	if (reqh->reason != 0 && conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
+		SPDK_ERRLOG("only logout with close the session reason can be in discovery session");
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	return 0;
+}
+
+static int
 iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_pdu *rsp_pdu;
@@ -2457,6 +2472,12 @@ iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	struct iscsi_bhs_logout_req *reqh;
 	struct iscsi_bhs_logout_resp *rsph;
 	uint16_t cid;
+	int rc;
+
+	rc = iscsi_pdu_hdr_op_logout(conn, pdu);
+	if (rc != 0 || pdu->is_rejected) {
+		return rc;
+	}
 
 	reqh = (struct iscsi_bhs_logout_req *)&pdu->bhs;
 
@@ -2468,11 +2489,6 @@ iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "reason=%d, ITT=%x, cid=%d\n",
 		      reqh->reason, task_tag, cid);
-
-	if (reqh->reason != 0 && conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
-		SPDK_ERRLOG("only logout with close the session reason can be in discovery session");
-		return SPDK_ISCSI_CONNECTION_FATAL;
-	}
 
 	if (conn->sess != NULL) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
