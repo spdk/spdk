@@ -71,6 +71,29 @@
     },
     {
       "key": {
+        "uuid": "73317823_79ead55e",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-10T08:10:15Z",
+      "side": 1,
+      "message": "I had to manually create ocssd_md file before I could start a VM with ocssd emualted backend.\nI think it would be good to also create a matching ocssd_md",
+      "range": {
+        "startLine": 50,
+        "startChar": 3,
+        "endLine": 50,
+        "endChar": 34
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1ace0eb3_851ccb71",
         "filename": "scripts/vagrant/create_nvme_img.sh",
         "patchSetId": 16
