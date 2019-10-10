@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b52f8c0c_a1718659",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-10T22:49:07Z",
+      "side": 1,
+      "message": "Thank you for pointing out my mistake.",
+      "parentUuid": "0cdc89f5_807f8dba",
+      "revId": "07e2d4f9708e4d680bf83f908ef1d9f0f788b3f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5f1e5566_17a16d4e",
         "filename": "lib/iscsi/iscsi.c",
         "patchSetId": 2
@@ -65,6 +83,24 @@
       "writtenOn": "2019-10-10T19:59:37Z",
       "side": 1,
       "message": "For my own education, how is this change related to checking data_segment_len?",
+      "revId": "07e2d4f9708e4d680bf83f908ef1d9f0f788b3f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce50c036_77d6dd43",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3872,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-10T22:49:07Z",
+      "side": 1,
+      "message": "I may have to separate this change but DGET24(reqh-\u003edata_segment_len) is already copied to pdu-\u003edata_segment_len at the line 4776. spdk_iscsi_execute() is called after spdk_iscsi_read_pdu(). So we can use pdu-\u003edata_segment_len when handling PDU payload.",
+      "parentUuid": "0df26349_2fc94557",
       "revId": "07e2d4f9708e4d680bf83f908ef1d9f0f788b3f1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
