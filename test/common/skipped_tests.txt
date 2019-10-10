@@ -45,6 +45,7 @@ iscsi_tgt_pmem
 iscsi_tgt_ext4test
 iscsi_tgt_digests
 iscsi_tgt_multiconnection
+iscsi_tgt_fuzz
 nvmf_fuzz
 nvmf_multiconnection
 nvmf_initiator_timeout

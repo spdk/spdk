@@ -78,6 +78,9 @@ if [ $SPDK_TEST_NVMF -eq 1 ]; then
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
+	if [ "$TEST_TYPE" == "posix" ]; then
+		run_test "iscsi_tgt_fuzz" ./test/iscsi_tgt/fuzz/fuzz.sh
+	fi
 	run_test "iscsi_tgt_multiconnection" ./test/iscsi_tgt/multiconnection/multiconnection.sh
 fi
 
