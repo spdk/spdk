@@ -73,6 +73,7 @@ fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test suite ./test/iscsi_tgt/multiconnection/multiconnection.sh
+	run_test suite ./test/iscsi_tgt/fuzz/fuzz.sh
 fi
 
 if [ $SPDK_TEST_ISCSI_INITIATOR -eq 1 ]; then
