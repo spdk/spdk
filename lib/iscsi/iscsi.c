@@ -2227,6 +2227,20 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 }
 
 static int
+iscsi_pdu_hdr_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	uint32_t data_len;
+
+	data_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
+	if (data_len > spdk_get_max_immediate_data_size()) {
+		SPDK_ERRLOG("data segment len(=%zu) > immediate data len(=%"PRIu32")\n",
+			    pdu->data_segment_len, spdk_get_max_immediate_data_size());
+		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+	}
+	return 0;
+}
+
+static int
 iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct iscsi_param *params = NULL;
@@ -2244,10 +2258,9 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	struct iscsi_bhs_text_req *reqh;
 	struct iscsi_bhs_text_resp *rsph;
 
-	if (pdu->data_segment_len > spdk_get_max_immediate_data_size()) {
-		SPDK_ERRLOG("data segment len(=%zu) > immediate data len(=%"PRIu32")\n",
-			    pdu->data_segment_len, spdk_get_max_immediate_data_size());
-		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+	rc = iscsi_pdu_hdr_op_text(conn, pdu);
+	if (rc != 0 || pdu->is_rejected) {
+		return rc;
 	}
 
 	data_len = 0;
