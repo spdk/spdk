@@ -287,15 +287,14 @@ raid_bdev_destruct(void *ctxt)
  * params:
  * bdev_io - pointer to member disk requested bdev_io
  * success - true if successful, false if unsuccessful
- * cb_arg - callback argument (parent raid bdev_io)
+ * cb_arg - callback argument (parent raid_bdev_io)
  * returns:
  * none
  */
 void
 raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_bdev_io *parent_io = cb_arg;
-	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)parent_io->driver_ctx;
+	struct raid_bdev_io *raid_io = cb_arg;
 
 	spdk_bdev_free_io(bdev_io);
 
@@ -305,6 +304,8 @@ raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *c
 
 	raid_io->base_bdev_io_completed++;
 	if (raid_io->base_bdev_io_completed == raid_io->base_bdev_io_expected) {
+		struct spdk_bdev_io *parent_io = spdk_bdev_io_from_ctx(raid_io);
+
 		spdk_bdev_io_complete(parent_io, raid_io->base_bdev_io_status);
 	}
 }
@@ -370,13 +371,11 @@ _raid_bdev_submit_reset_request(void *_raid_io)
 static void
 raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 {
-	struct spdk_bdev_io		*bdev_io;
 	struct raid_bdev		*raid_bdev;
 	struct raid_bdev_io_channel	*raid_ch;
 	int				ret;
 	uint8_t				i;
 
-	bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	raid_bdev = raid_bdev_io_get_raid_bdev(raid_io);
 	raid_ch = raid_io->raid_ch;
 
@@ -386,7 +385,7 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 		i = raid_io->base_bdev_io_submitted;
 		ret = spdk_bdev_reset(raid_bdev->base_bdev_info[i].desc,
 				      raid_ch->base_channel[i],
-				      raid_bdev_base_io_completion, bdev_io);
+				      raid_bdev_base_io_completion, raid_io);
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
 		} else {

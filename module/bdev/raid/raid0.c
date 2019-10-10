@@ -298,14 +298,14 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 			ret = spdk_bdev_unmap_blocks(raid_bdev->base_bdev_info[disk_idx].desc,
 						     raid_ch->base_channel[disk_idx],
 						     offset_in_disk, nblocks_in_disk,
-						     raid_bdev_base_io_completion, bdev_io);
+						     raid_bdev_base_io_completion, raid_io);
 			break;
 
 		case SPDK_BDEV_IO_TYPE_FLUSH:
 			ret = spdk_bdev_flush_blocks(raid_bdev->base_bdev_info[disk_idx].desc,
 						     raid_ch->base_channel[disk_idx],
 						     offset_in_disk, nblocks_in_disk,
-						     raid_bdev_base_io_completion, bdev_io);
+						     raid_bdev_base_io_completion, raid_io);
 			break;
 
 		default:
