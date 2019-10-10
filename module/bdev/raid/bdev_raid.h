@@ -255,6 +255,12 @@ struct raid_bdev_module {
 	/* RAID level implemented by this module */
 	enum raid_level level;
 
+	/* Handler for R/W requests */
+	void (*submit_rw_request)(struct raid_bdev_io *raid_io);
+
+	/* Handler for requests without payload (flush, unmap) */
+	void (*submit_null_payload_request)(struct raid_bdev_io *raid_io);
+
 	TAILQ_ENTRY(raid_bdev_module) link;
 };
 
@@ -270,10 +276,6 @@ __RAID_MODULE_REGISTER(__LINE__)(void)					\
     raid_bdev_module_list_add(_module);					\
 }
 
-void
-raid0_submit_rw_request(struct raid_bdev_io *raid_io);
-void
-raid0_submit_null_payload_request(struct raid_bdev_io *raid_io);
 void
 raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 void
