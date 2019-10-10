@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0cdc89f5_807f8dba",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-10T19:01:37Z",
+      "side": 1,
+      "message": "Copy/paste error from earlier patch (this patch is not associated with login).",
+      "revId": "07e2d4f9708e4d680bf83f908ef1d9f0f788b3f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
