@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6adffb17_56e04bca",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1685,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-11T04:13:30Z",
+      "side": 1,
+      "message": "When num_wrs \u003e 1, the line 1686 to 1694 was done in nvmf_request_alloc_wrs()? Can we locate the case of num_wrs \u003d\u003d 1 to the similar place?",
+      "revId": "8a60bca2c8e0b73d2b5ee7a3d7eccd97026d525d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
