@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "459daced_69b3e770",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3955,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2019-10-11T14:59:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e1d1df2d_9a22efca",
+      "revId": "206a4847fe424f2784dc48a35f914f5329844a9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3bee566e_39d99ea8",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
@@ -86,6 +104,24 @@
       "revId": "206a4847fe424f2784dc48a35f914f5329844a9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e0c80ee_259b03f3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3963,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2019-10-11T14:59:19Z",
+      "side": 1,
+      "message": "CDW0 is valid in the success case as well. Maybe we should rename the functions and get rid of the _status postfix.",
+      "parentUuid": "ba2b5994_b7f4761e",
+      "revId": "206a4847fe424f2784dc48a35f914f5329844a9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
