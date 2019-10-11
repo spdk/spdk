@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "21330762_24271ee8",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 4465,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-11T05:08:44Z",
+      "side": 1,
+      "message": "By moving the data digest from spdk_iscsi_read_pdu() to this function, I don\u0027t see the actual function change, what\u0027s the difference here?",
+      "revId": "bc1504a66e740ead62c2f4536b325c0c449ee741",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
