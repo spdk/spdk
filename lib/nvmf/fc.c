@@ -2996,6 +2996,10 @@ nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 	while (subsystem) {
 		struct nvmf_fc_add_rem_listener_ctx *ctx;
 
+		if (spdk_nvmf_subsystem_allows_any_listener(subsystem) == false) {
+			goto skip;
+		}
+
 		ctx = calloc(1, sizeof(struct nvmf_fc_add_rem_listener_ctx));
 		if (ctx) {
 			ctx->add_listener = add;
@@ -3006,6 +3010,7 @@ nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 				free(ctx);
 			}
 		}
+skip:
 		subsystem = spdk_nvmf_subsystem_get_next(subsystem);
 	}
 
