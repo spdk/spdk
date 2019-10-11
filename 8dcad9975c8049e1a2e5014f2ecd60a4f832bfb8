@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ffe2594_f5d491fd",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 4746,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-11T07:22:45Z",
+      "side": 1,
+      "message": "Changpeng gave nice suggestion here. https://review.gerrithub.io/c/spdk/spdk/+/471013/2/lib/iscsi/iscsi.c#4746\n\nI\u0027ll work on it after this series.",
+      "range": {
+        "startLine": 4746,
+        "startChar": 1,
+        "endLine": 4746,
+        "endChar": 71
+      },
+      "revId": "8dcad9975c8049e1a2e5014f2ecd60a4f832bfb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
