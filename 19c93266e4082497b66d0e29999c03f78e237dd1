@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b819a0f5_2e8cec61",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 20
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-11T13:51:45Z",
+      "side": 1,
+      "message": "delete: will honor the clear_method option from end of metadata to the end of lvs space. With clear_method none will honor unmap for every deleted lvol_bev.",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 48
+      },
+      "revId": "19c93266e4082497b66d0e29999c03f78e237dd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
