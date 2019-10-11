@@ -181,8 +181,7 @@ struct spdk_iscsi_pdu {
 	uint32_t cmd_sn;
 	uint32_t writev_offset;
 	uint32_t data_buf_len;
-	bool dif_insert_or_strip;
-	struct spdk_dif_ctx dif_ctx;
+	struct spdk_dif_ctx *dif_ctx;
 	TAILQ_ENTRY(spdk_iscsi_pdu)	tailq;
 
 
@@ -414,8 +413,6 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 int spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int iovcnt,
 			  struct spdk_iscsi_pdu *pdu, uint32_t *mapped_length);
 int spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn);
-bool spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
-			    struct spdk_dif_ctx *dif_ctx);
 void spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 				   struct spdk_iscsi_task *task);
 
