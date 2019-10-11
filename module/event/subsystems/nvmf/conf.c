@@ -267,12 +267,32 @@ spdk_nvmf_tgt_parse_listen_ip_addr(char *address,
 }
 
 static int
+spdk_nvmf_tgt_parse_listen_fc_addr(const char *address,
+				   struct spdk_nvme_transport_id *trid)
+{
+	/* transport address format and requirements,
+	 * "nn-0xWWNN:pn-0xWWPN" - size equals 43 bytes and is required to
+	 * contain 'nn' and 'pn'.
+	 */
+	if (strlen(address) != 43 || strncmp(address, "nn-0x", 5) ||
+	    strncmp(&address[21], ":pn-0x", 6)) {
+		SPDK_ERRLOG("Unable to parse fc address '%s'\n", address);
+		return -1;
+	}
+
+	snprintf(trid->traddr, sizeof(trid->traddr), "%s", address);
+
+	return 0;
+}
+
+static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
 	const char *nqn, *mode;
 	size_t i;
 	int lcore;
 	bool allow_any_host;
+	bool allow_any_listener = true;
 	const char *sn;
 	const char *mn;
 	struct spdk_nvmf_subsystem *subsystem;
@@ -443,6 +463,11 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 				free(address_dup);
 				continue;
 			}
+		} else if (trid.trtype == SPDK_NVME_TRANSPORT_FC) {
+			if (spdk_nvmf_tgt_parse_listen_fc_addr(address_dup, &trid)) {
+				free(address_dup);
+				continue;
+			}
 		}
 
 		free(address_dup);
@@ -450,7 +475,10 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &trid, spdk_nvmf_tgt_listen_done, NULL);
 
 		spdk_nvmf_subsystem_add_listener(subsystem, &trid);
+		allow_any_listener = false;
 	}
+
+	spdk_nvmf_subsystem_allow_any_listener(subsystem, allow_any_listener);
 
 	/* Parse Host sections */
 	for (i = 0; ; i++) {
