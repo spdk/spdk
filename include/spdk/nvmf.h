@@ -616,6 +616,29 @@ struct spdk_nvmf_listener *spdk_nvmf_subsystem_get_next_listener(
 const struct spdk_nvme_transport_id *spdk_nvmf_listener_get_trid(
 	struct spdk_nvmf_listener *listener);
 
+/**
+ * Set whether a subsystem should allow any listen address or only addresses in the allowed list.
+ *
+ * \param subsystem Subsystem to allow dynamic listener assignment.
+ * \param allow_any_listener true to allow dynamic listener assignment for
+ * this subsystem, or false to enforce the whitelist configured during
+ * subsystem setup.
+ */
+void spdk_nvmf_subsystem_allow_any_listener(
+	struct spdk_nvmf_subsystem *subsystem,
+	bool allow_any_listener);
+
+/**
+ * Check whether a subsystem allows any listen address or only addresses in the allowed list.
+ *
+ * \param subsystem Subsystem to query.
+ *
+ * \return true if this subsystem allows dynamic management of listen address list,
+ *  or false if only allows addresses in the whitelist configured during subsystem setup.
+ */
+bool spdk_nvmf_subsytem_any_listener_allowed(
+	struct spdk_nvmf_subsystem *subsystem);
+
 /** NVMe-oF target namespace creation options */
 struct spdk_nvmf_ns_opts {
 	/**

@@ -842,6 +842,20 @@ spdk_nvmf_listener_get_trid(struct spdk_nvmf_listener *listener)
 	return &listener->trid;
 }
 
+void
+spdk_nvmf_subsystem_allow_any_listener(struct spdk_nvmf_subsystem *subsystem,
+				       bool allow_any_listener)
+{
+	subsystem->allow_any_listener = allow_any_listener;
+}
+
+bool
+spdk_nvmf_subsytem_any_listener_allowed(struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->allow_any_listener;
+}
+
+
 struct subsystem_update_ns_ctx {
 	struct spdk_nvmf_subsystem *subsystem;
 
