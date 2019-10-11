@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7530e059_ce4fe6b0",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-11T06:43:22Z",
+      "side": 1,
+      "message": "Hi Maciej,\n\nI may not understand correctly but could we keep the original logic even after using linked list?\n\nfor (i \u003d 0; i \u003c nvme_bdev_ctrlr-\u003enum_ns; i++) {\n  uint32_t nsid \u003d i + 1;\n\n  TAILQ_FOREACH_SAFE(bdev, \u0026nvme_bdev_ctrlr-\u003ebdevs, tailq) {\n    if (bdev-\u003eid \u003d\u003d nsid)\n      break;\n  }\n\n  assert(bdev !\u003d NULL);\n\n  if (!bdev-\u003eactive \u0026\u0026 spdk_nvmf_ctrlr_is_active_ns(ctrir, nsid)) {\n    nvme_ctrlr_create_bdev(nvme_bdev_ctrlr, nsid);\n    nvme_bdev_ctrlr-\u003einactive_ns[i] \u003d false;\n  }\n\n  if (bdev-\u003eactive \u0026\u0026 !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {\n    nvme_bdev_ctrlr-\u003einactive_ns[i] \u003d true;\n    spdk_bdev_unregister(\u0026bdev-\u003edisk, NULL, NULL);\n  }\n}",
+      "revId": "699b7a54088f3953e66aea6be6d60ce64a6ca708",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
