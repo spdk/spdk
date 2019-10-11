@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8878bcdd_ec618851",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-11T12:41:37Z",
+      "side": 1,
+      "message": "ANM",
+      "range": {
+        "startLine": 11,
+        "startChar": 20,
+        "endLine": 11,
+        "endChar": 24
+      },
+      "revId": "2e457e13cdf6af294249605c60984ec5e8cf5599",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a34183c0_048dc63d",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1298,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-11T12:41:37Z",
+      "side": 1,
+      "message": "If these don\u0027t do anything maybe they should be removed?",
+      "range": {
+        "startLine": 1286,
+        "startChar": 0,
+        "endLine": 1298,
+        "endChar": 1
+      },
+      "revId": "2e457e13cdf6af294249605c60984ec5e8cf5599",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
