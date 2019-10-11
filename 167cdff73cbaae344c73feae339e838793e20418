@@ -22,6 +22,30 @@
       "revId": "167cdff73cbaae344c73feae339e838793e20418",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0e8251d_553f1047",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1726,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-11T06:03:05Z",
+      "side": 1,
+      "message": "Thanks, corrected",
+      "parentUuid": "412558b3_9f1aa665",
+      "range": {
+        "startLine": 1726,
+        "startChar": 19,
+        "endLine": 1726,
+        "endChar": 33
+      },
+      "revId": "167cdff73cbaae344c73feae339e838793e20418",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
