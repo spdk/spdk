@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e156e208_866c0542",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4746,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-11T04:46:05Z",
+      "side": 1,
+      "message": "line 4746 should be called before spdk_put_pdu(), maybe it\u0027s more clear to move spdk_put_pdu() in each opcode section, what do you think?",
+      "revId": "a9423f596ea70b7dce402ba6d42fc4e13b8043eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
