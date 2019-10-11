@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6edd0309_08a08372",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-11T05:11:35Z",
+      "side": 1,
+      "message": "missing \",\"",
+      "revId": "b16ab231d668edcf8bc6dbbf5037098e0785ad6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
