@@ -4894,6 +4894,13 @@ spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 				}
 			}
 
+			rc = iscsi_pdu_hdr_handle(conn, pdu);
+			if (rc < 0) {
+				SPDK_ERRLOG("Critical error is detected. Close the connection\n");
+				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
+				break;
+			}
+
 			conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD;
 			break;
 		case ISCSI_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
@@ -4978,13 +4985,12 @@ spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 				break;
 			}
 
-			rc = iscsi_pdu_hdr_handle(conn, pdu);
-			if (rc == 0 && !pdu->is_rejected) {
+			if (!pdu->is_rejected) {
 				rc = iscsi_pdu_payload_handle(conn, pdu);
-			}
-			if (rc < 0) {
-				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
-				break;
+				if (rc < 0) {
+					conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
+					break;
+				}
 			}
 			spdk_put_pdu(pdu);
 			conn->pdu_in_progress = NULL;
