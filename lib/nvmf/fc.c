@@ -3003,16 +3003,23 @@ nvmf_fc_adm_add_rem_nport_listener(struct spdk_nvmf_fc_nport *nport, bool add)
 	while (subsystem) {
 		struct nvmf_fc_add_rem_listener_ctx *ctx;
 
-		ctx = calloc(1, sizeof(struct nvmf_fc_add_rem_listener_ctx));
-		if (ctx) {
-			ctx->add_listener = add;
-			spdk_nvmf_fc_create_trid(&ctx->trid, nport->fc_nodename.u.wwn,
-						 nport->fc_portname.u.wwn);
-			if (spdk_nvmf_subsystem_pause(subsystem, nvmf_fc_adm_subsystem_paused_cb, ctx)) {
-				SPDK_ERRLOG("Failed to pause subsystem: %s\n", subsystem->subnqn);
-				free(ctx);
+		if (spdk_nvmf_subsytem_any_listener_allowed(subsystem) == true) {
+			ctx = calloc(1, sizeof(struct nvmf_fc_add_rem_listener_ctx));
+			if (ctx) {
+				ctx->add_listener = add;
+				spdk_nvmf_fc_create_trid(&ctx->trid,
+							 nport->fc_nodename.u.wwn,
+							 nport->fc_portname.u.wwn);
+				if (spdk_nvmf_subsystem_pause(subsystem,
+							      nvmf_fc_adm_subsystem_paused_cb,
+							      ctx)) {
+					SPDK_ERRLOG("Failed to pause subsystem: %s\n",
+						    subsystem->subnqn);
+					free(ctx);
+				}
 			}
 		}
+
 		subsystem = spdk_nvmf_subsystem_get_next(subsystem);
 	}
 

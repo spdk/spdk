@@ -350,6 +350,7 @@ struct spdk_nvmf_subsystem {
 	enum spdk_nvmf_subtype subtype;
 	uint16_t next_cntlid;
 	bool allow_any_host;
+	bool allow_any_listener ;
 
 	struct spdk_nvmf_tgt			*tgt;
 

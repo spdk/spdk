@@ -232,7 +232,7 @@
 # - NQN is required and must be unique.
 # - Between 1 and 255 Listen directives are allowed. This defines
 #   the addresses on which new connections may be accepted. The format
-#   is Listen <type> <address> where type can be RDMA or TCP.
+#   is Listen <type> <address> where type can be RDMA, TCP or FC.
 # - Between 0 and 255 Host directives are allowed. This defines the
 #   NQNs of allowed hosts. If no Host directive is specified, all hosts
 #   are allowed to connect.
@@ -273,3 +273,16 @@
   Namespace Malloc1
   Namespace AIO0
   Namespace AIO1
+
+# Subsystem with FC listen address directive
+# - Listen option allows subsystem access on specific FC ports identified
+#   by WWNN-WWPN. Each subsystem allows 0 - 255 listen directives.
+#   If no listen directive is provided, subsystem can be accessed on all
+#   avialable FC links permitted by FC zoning rules.
+#
+# [Subsystem3]
+  #NQN nqn.2016-06.io.spdk:cnode3
+  #Listen FC "nn-0x20000090fac7ca5c:pn-0x10000090fac7ca5c"
+  #AllowAnyHost Yes
+  #SN SPDK00000000000003
+  #Namespace Malloc4
