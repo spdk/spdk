@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abe5514b_5dc5bfa2",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 783,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-11T02:28:38Z",
+      "side": 1,
+      "message": "Can we check if all data is gone and send again if not? Please see the next comment.",
+      "revId": "95b23d6667fb1b870e2e231aaa6951f2e6968137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd2e5a9c_536f13db",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-11T02:28:38Z",
+      "side": 1,
+      "message": "Will you take care of the case that number of iovs is large?\n\nIf DIF insert/strip is enabled, 32 may not be enough (512 * 32 \u003d 16384).\n\nWe remember the progress in pdu-\u003ewritev_offset and pdu-\u003esgl. \nWe have to repeat nvme_tcp_build_iovs() and spdk_sock_writev_async() until pdu-\u003ewritev_offset is equal to pdu-\u003ehdr-\u003ecommon.plen ?",
+      "range": {
+        "startLine": 838,
+        "startChar": 10,
+        "endLine": 838,
+        "endChar": 29
+      },
+      "revId": "95b23d6667fb1b870e2e231aaa6951f2e6968137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
