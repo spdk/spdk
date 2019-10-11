@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e752d038_0b981341",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-11T12:28:07Z",
+      "side": 1,
+      "message": "change to non-deprecated functions",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 32
+      },
+      "revId": "13a7d5628923b10816fef100c5fdb7c81ace8d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
