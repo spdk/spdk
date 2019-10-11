@@ -232,7 +232,7 @@
 # - NQN is required and must be unique.
 # - Between 1 and 255 Listen directives are allowed. This defines
 #   the addresses on which new connections may be accepted. The format
-#   is Listen <type> <address> where type currently can only be RDMA.
+#   is Listen <type> <address> where type can be RDMA or TCP.
 # - Between 0 and 255 Host directives are allowed. This defines the
 #   NQNs of allowed hosts. If no Host directive is specified, all hosts
 #   are allowed to connect.
