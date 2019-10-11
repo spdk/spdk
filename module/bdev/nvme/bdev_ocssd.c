@@ -1291,6 +1291,11 @@ spdk_bdev_ocssd_create_bdevs(struct nvme_async_probe_ctx *ctx, spdk_bdev_create_
 		return;
 	}
 
+	if (TAILQ_EMPTY(&g_ocssd_config)) {
+		bdev_ocssd_probe_done(ctx, 0);
+		return;
+	}
+
 	TAILQ_FOREACH(config, &g_ocssd_config, tailq) {
 		if (strcmp(config->ctrlr_name, nvme_bdev_ctrlr->name) == 0) {
 			ctx->num_bdevs++;
