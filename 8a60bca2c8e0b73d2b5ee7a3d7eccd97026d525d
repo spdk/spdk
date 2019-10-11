@@ -16,6 +16,24 @@
       "revId": "8a60bca2c8e0b73d2b5ee7a3d7eccd97026d525d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc271672_df7a5167",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1685,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-11T08:58:31Z",
+      "side": 1,
+      "message": "I\u0027ll add a new commit after https://review.gerrithub.io/c/spdk/spdk/+/470472 commit - will add a function to setup WR parameter",
+      "parentUuid": "6adffb17_56e04bca",
+      "revId": "8a60bca2c8e0b73d2b5ee7a3d7eccd97026d525d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
