@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44135183_07307775",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1114,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-11T09:32:15Z",
+      "side": 1,
+      "message": "You should call bdev_ocssd_probe_done(ctx, 0) if g_ocssd_config is empty.",
+      "revId": "14fd3d6f6648a1ea2b0da12dc524d551ad3d9eac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
