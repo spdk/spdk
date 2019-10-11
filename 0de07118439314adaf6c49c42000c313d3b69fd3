@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "36ebb727_f1e36163",
+        "filename": "scripts/prep_benchmarks.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-11T06:56:27Z",
+      "side": 1,
+      "message": "You don\u0027t need a $ sign for variables in arithmetic expression.\n\nWhen you enable SC2004 check then you will probably get a warning about this line.",
+      "range": {
+        "startLine": 24,
+        "startChar": 10,
+        "endLine": 24,
+        "endChar": 11
+      },
+      "revId": "0de07118439314adaf6c49c42000c313d3b69fd3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
