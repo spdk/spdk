@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46a62808_8725a4cd",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3791,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-11T12:03:57Z",
+      "side": 1,
+      "message": "It looks that this addition caused the failure.\nI will investigate this next week",
+      "revId": "03f39b696df48cc8d4f0ed9d42a4d101a053f30a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
