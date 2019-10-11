@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc6f965d_c1ac1688",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1706,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-11T04:11:50Z",
+      "side": 1,
+      "message": "Can we move this before spdk_nvmf_request_get_buffers()? This makes the ordering as same as nvmf_rdma_request_fill_iovs_multi_sgl().\n\nThe following will have to be after nvmf_rdma_fill_wr_sgl() though.\n\n\t\t/* additional WRs have been allocated, flags, opcodes \u0026 links to the next WR already filled */\n\t\tuint32_t i;\n\t\tint j;\n\t\tuint64_t remote_addr_offset \u003d 0;\n\n\t\tfor (i \u003d 0; i \u003c num_wrs; ++i) {\n\t\t\twr-\u003ewr.rdma.rkey \u003d sgl-\u003ekeyed.key;\n\t\t\twr-\u003ewr.rdma.remote_addr \u003d sgl-\u003eaddress + remote_addr_offset;\n\t\t\tfor (j \u003d 0; j \u003c wr-\u003enum_sge; ++j) {\n\t\t\t\tremote_addr_offset +\u003d wr-\u003esg_list[j].length;\n\t\t\t}\n\t\t\twr \u003d wr-\u003enext;",
+      "range": {
+        "startLine": 1705,
+        "startChar": 1,
+        "endLine": 1706,
+        "endChar": 30
+      },
+      "revId": "214b9114aa86c26f9d0670a83ec071a9098d863c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
