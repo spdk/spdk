@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ac1bf2e7_2a2c38b9",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1656,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-11T08:49:51Z",
+      "side": 1,
+      "message": "That makes sense, thanks for pointing this out",
+      "parentUuid": "d4f97a66_f9192c1c",
+      "revId": "89b25b4ea3f84572bebe5af5e6f614d0bfea99f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1ae1107_aca10685",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -39,6 +57,30 @@
       "revId": "89b25b4ea3f84572bebe5af5e6f614d0bfea99f0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b32873ba_8b0842ae",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1658,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-11T08:49:51Z",
+      "side": 1,
+      "message": "Thanks, I removed it",
+      "parentUuid": "a1ae1107_aca10685",
+      "range": {
+        "startLine": 1658,
+        "startChar": 0,
+        "endLine": 1658,
+        "endChar": 24
+      },
+      "revId": "89b25b4ea3f84572bebe5af5e6f614d0bfea99f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
