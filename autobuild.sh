@@ -22,6 +22,12 @@ cd $rootdir
 date -u
 git describe --tags
 
+### Test DPDK 19.08 submodule
+cd dpdk
+git fetch "https://review.gerrithub.io/spdk/dpdk" refs/changes/67/471067/1
+git reset --hard 64a253f60b5fda17034de7828a9f207ab3ffaf9e
+cd ..
+
 if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	# We compile OCF sources ourselves
 	# They don't need to be checked with scanbuild and code coverage is not applicable
