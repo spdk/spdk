@@ -99,6 +99,9 @@ struct spdk_iscsi_task {
 
 	struct spdk_poller *mgmt_poller;
 
+	bool dif_insert_or_strip;
+	struct spdk_dif_ctx dif_ctx;
+
 	TAILQ_ENTRY(spdk_iscsi_task) link;
 
 	TAILQ_HEAD(subtask_list, spdk_iscsi_task) subtask_list;
