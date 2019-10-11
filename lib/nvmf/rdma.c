@@ -1457,6 +1457,23 @@ spdk_nvmf_rdma_request_get_xfer(struct spdk_nvmf_rdma_request *rdma_req)
 	return xfer;
 }
 
+static inline void
+nvmf_rdma_setup_wr(struct ibv_send_wr *wr, struct ibv_send_wr *next,
+		   enum spdk_nvme_data_transfer xfer)
+{
+	if (xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		wr->opcode = IBV_WR_RDMA_WRITE;
+		wr->send_flags = 0;
+		wr->next = next;
+	} else if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+		wr->opcode = IBV_WR_RDMA_READ;
+		wr->send_flags = IBV_SEND_SIGNALED;
+		wr->next = NULL;
+	} else {
+		assert(0);
+	}
+}
+
 static int
 nvmf_request_alloc_wrs(struct spdk_nvmf_rdma_transport *rtransport,
 		       struct spdk_nvmf_rdma_request *rdma_req,
@@ -1473,30 +1490,15 @@ nvmf_request_alloc_wrs(struct spdk_nvmf_rdma_transport *rtransport,
 	current_data_wr = &rdma_req->data;
 
 	for (i = 0; i < num_sgl_descriptors; i++) {
-		if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-			current_data_wr->wr.opcode = IBV_WR_RDMA_WRITE;
-			current_data_wr->wr.send_flags = 0;
-		} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-			current_data_wr->wr.opcode = IBV_WR_RDMA_READ;
-			current_data_wr->wr.send_flags = IBV_SEND_SIGNALED;
-		} else {
-			assert(false);
-		}
-		work_requests[i]->wr.sg_list = work_requests[i]->sgl;
-		work_requests[i]->wr.wr_id = rdma_req->data.wr.wr_id;
+		nvmf_rdma_setup_wr(&current_data_wr->wr, &work_requests[i]->wr, rdma_req->req.xfer);
 		current_data_wr->wr.next = &work_requests[i]->wr;
 		current_data_wr = work_requests[i];
+		current_data_wr->wr.sg_list = current_data_wr->sgl;
+		current_data_wr->wr.wr_id = rdma_req->data.wr.wr_id;
 	}
 
-	if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-		current_data_wr->wr.opcode = IBV_WR_RDMA_WRITE;
-		current_data_wr->wr.next = &rdma_req->rsp.wr;
-		current_data_wr->wr.send_flags = 0;
-	} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-		current_data_wr->wr.opcode = IBV_WR_RDMA_READ;
-		current_data_wr->wr.next = NULL;
-		current_data_wr->wr.send_flags = IBV_SEND_SIGNALED;
-	}
+	nvmf_rdma_setup_wr(&current_data_wr->wr, &rdma_req->rsp.wr, rdma_req->req.xfer);
+
 	return 0;
 }
 
@@ -1508,15 +1510,7 @@ nvmf_rdma_setup_request(struct spdk_nvmf_rdma_request *rdma_req)
 
 	wr->wr.rdma.rkey = sgl->keyed.key;
 	wr->wr.rdma.remote_addr = sgl->address;
-	if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-		wr->opcode = IBV_WR_RDMA_WRITE;
-		wr->next = &rdma_req->rsp.wr;
-		wr->send_flags &= ~IBV_SEND_SIGNALED;
-	} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-		wr->opcode = IBV_WR_RDMA_READ;
-		wr->next = NULL;
-		wr->send_flags |= IBV_SEND_SIGNALED;
-	}
+	nvmf_rdma_setup_wr(wr, &rdma_req->rsp.wr, rdma_req->req.xfer);
 }
 
 /* This function is used in the rare case that we have a buffer split over multiple memory regions. */
