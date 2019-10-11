@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2d2a1ed5_6d52f2a6",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-11T08:11:39Z",
+      "side": 1,
+      "message": "Unsure - passthru bdev which this is the closest to uses config_json",
+      "parentUuid": "0bfffdd0_142601b9",
+      "revId": "0cd6d3aad3ca2ab321711d01835a340e2f3059b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "31b60a1b_85ac2747",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 13
@@ -33,6 +51,24 @@
       "revId": "0cd6d3aad3ca2ab321711d01835a340e2f3059b3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d16dfdae_971921ac",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-11T08:11:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "31b60a1b_85ac2747",
+      "revId": "0cd6d3aad3ca2ab321711d01835a340e2f3059b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
