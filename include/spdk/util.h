@@ -70,7 +70,7 @@ uint64_t spdk_u64log2(uint64_t x);
 static inline uint64_t
 spdk_align64pow2(uint64_t x)
 {
-	return 1u << (1 + spdk_u64log2(x - 1));
+	return 1ULL << (1 + spdk_u64log2(x - 1));
 }
 
 /**
