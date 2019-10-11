@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4f97a66_f9192c1c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1656,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-11T02:42:54Z",
+      "side": 1,
+      "message": "Maybe we can locate nvmf_rdma_setup_wr() just under nvmf_request_alloc_wrs() but the current location is OK to me.",
+      "revId": "89b25b4ea3f84572bebe5af5e6f614d0bfea99f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1ae1107_aca10685",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1658,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-11T02:42:54Z",
+      "side": 1,
+      "message": "This is duplicated with the line 1871.",
+      "range": {
+        "startLine": 1658,
+        "startChar": 0,
+        "endLine": 1658,
+        "endChar": 24
+      },
+      "revId": "89b25b4ea3f84572bebe5af5e6f614d0bfea99f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
