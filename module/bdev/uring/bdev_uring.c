@@ -171,6 +171,7 @@ bdev_uring_writev(struct bdev_uring *uring, struct spdk_io_channel *ch,
 	sqe = io_uring_get_sqe(&group_ch->uring);
 	io_uring_prep_writev(sqe, uring->fd, iov, iovcnt, offset);
 	io_uring_sqe_set_data(sqe, uring_task);
+	uring_task->len = nbytes;
 	uring_task->ch = uring_ch;
 
 	SPDK_DEBUGLOG(SPDK_LOG_URING, "write %d iovs size %lu from off: %#lx\n",
