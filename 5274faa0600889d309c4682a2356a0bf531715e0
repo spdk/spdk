@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35354f6d_77e326ae",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 771,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-13T18:53:41Z",
+      "side": 1,
+      "message": "heh, yeah I guess we don\u0027t say \"raid_strip_size\" :)",
+      "revId": "5274faa0600889d309c4682a2356a0bf531715e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
