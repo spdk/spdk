@@ -1409,12 +1409,14 @@ iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 		}
 
 		rc = spdk_iscsi_execute(conn, pdu);
+		if (rc == 0) {
+			spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
+		}
 		spdk_put_pdu(pdu);
 		if (rc < 0) {
 			return SPDK_ISCSI_CONNECTION_FATAL;
 		}
 
-		spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
 		if (conn->is_stopped) {
 			break;
 		}
