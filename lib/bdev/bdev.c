@@ -1704,7 +1704,9 @@ _spdk_bdev_io_split(void *_bdev_io)
 					bdev_io->child_iov[child_iovpos].iov_len -= iov_len;
 					if (bdev_io->child_iov[child_iovpos].iov_len == 0) {
 						child_iovpos--;
-						iovcnt--;
+						if (--iovcnt == 0) {
+							return;
+						}
 					}
 					to_last_block_bytes -= iov_len;
 				}
@@ -1714,22 +1716,27 @@ _spdk_bdev_io_split(void *_bdev_io)
 			to_next_boundary -= to_next_boundary_bytes / blocklen;
 		}
 
-		bdev_io->u.bdev.split_outstanding++;
+		/* We may have trimmed off the last child IOV for alignment purposes, make sure we
+		 * still have an IO to send.
+		 */
+		if (iovcnt > 0) {
 
-		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-			rc = _spdk_bdev_readv_blocks_with_md(bdev_io->internal.desc,
-							     spdk_io_channel_from_ctx(bdev_io->internal.ch),
-							     iov, iovcnt, md_buf, current_offset,
-							     to_next_boundary,
-							     _spdk_bdev_io_split_done, bdev_io);
-		} else {
-			rc = _spdk_bdev_writev_blocks_with_md(bdev_io->internal.desc,
-							      spdk_io_channel_from_ctx(bdev_io->internal.ch),
-							      iov, iovcnt, md_buf, current_offset,
-							      to_next_boundary,
-							      _spdk_bdev_io_split_done, bdev_io);
+			bdev_io->u.bdev.split_outstanding++;
+
+			if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+				rc = _spdk_bdev_readv_blocks_with_md(bdev_io->internal.desc,
+								     spdk_io_channel_from_ctx(bdev_io->internal.ch),
+								     iov, iovcnt, md_buf, current_offset,
+								     to_next_boundary,
+								     _spdk_bdev_io_split_done, bdev_io);
+			} else {
+				rc = _spdk_bdev_writev_blocks_with_md(bdev_io->internal.desc,
+								      spdk_io_channel_from_ctx(bdev_io->internal.ch),
+								      iov, iovcnt, md_buf, current_offset,
+								      to_next_boundary,
+								      _spdk_bdev_io_split_done, bdev_io);
+			}
 		}
-
 		if (rc == 0) {
 			current_offset += to_next_boundary;
 			remaining -= to_next_boundary;
