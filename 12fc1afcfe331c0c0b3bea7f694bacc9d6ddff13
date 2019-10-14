@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "913076e7_2ec49b24",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-14T04:06:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f4d139f7_a7196edf",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 25
+      },
+      "revId": "12fc1afcfe331c0c0b3bea7f694bacc9d6ddff13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f359fa2e_98e49a96",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 13
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "cdbdf7b8_d8f92497",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-14T04:06:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f359fa2e_98e49a96",
+      "revId": "12fc1afcfe331c0c0b3bea7f694bacc9d6ddff13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "03ed9363_152bacd3",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 13
@@ -53,6 +95,24 @@
       "writtenOn": "2019-10-14T02:09:31Z",
       "side": 1,
       "message": "bdevs is indexed by nsid - 1, you can\u0027t use it directly, you can add a function to get the name.",
+      "revId": "12fc1afcfe331c0c0b3bea7f694bacc9d6ddff13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58eeff93_27cc76ac",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-14T04:06:10Z",
+      "side": 1,
+      "message": "Add a macro to get the name. You can take a look. Thank you for your review.",
+      "parentUuid": "03ed9363_152bacd3",
       "revId": "12fc1afcfe331c0c0b3bea7f694bacc9d6ddff13",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
