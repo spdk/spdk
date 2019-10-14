@@ -36,7 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y = posix
 ifeq ($(OS), Linux)
-DIRS-y += uring
+DIRS-$(CONFIG_ASYNC_NETWORK) += uring
 endif
 DIRS-$(CONFIG_VPP) += vpp
 
