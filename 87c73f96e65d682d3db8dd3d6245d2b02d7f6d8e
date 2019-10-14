@@ -45,6 +45,54 @@
       "revId": "87c73f96e65d682d3db8dd3d6245d2b02d7f6d8e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf2476a0_b75bfc8d",
+        "filename": "module/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-10-14T17:38:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c3a28199_78c94a68",
+      "range": {
+        "startLine": 277,
+        "startChar": 20,
+        "endLine": 277,
+        "endChar": 25
+      },
+      "revId": "87c73f96e65d682d3db8dd3d6245d2b02d7f6d8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc25441a_e4eea7bc",
+        "filename": "module/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-10-14T17:38:15Z",
+      "side": 1,
+      "message": "Thanks for helpful pointers. Resolved in patch set 3",
+      "parentUuid": "e1866c1c_6983ff5e",
+      "range": {
+        "startLine": 277,
+        "startChar": 30,
+        "endLine": 277,
+        "endChar": 50
+      },
+      "revId": "87c73f96e65d682d3db8dd3d6245d2b02d7f6d8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
