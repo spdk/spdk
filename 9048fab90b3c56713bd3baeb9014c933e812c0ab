@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fab4b53a_76b377b2",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1136,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-14T14:48:50Z",
+      "side": 1,
+      "message": "as cache line size",
+      "range": {
+        "startLine": 1136,
+        "startChar": 60,
+        "endLine": 1136,
+        "endChar": 73
+      },
+      "revId": "9048fab90b3c56713bd3baeb9014c933e812c0ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67260891_9b983ce3",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1141,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-14T14:48:50Z",
+      "side": 1,
+      "message": "vbdev_ocf.c:1142:init_vbdev: *ERROR*: Incorrect cache line size \u0027(null)\u0027\n\nIn case of loading this check will always return true, as above.",
+      "range": {
+        "startLine": 1141,
+        "startChar": 1,
+        "endLine": 1141,
+        "endChar": 45
+      },
+      "revId": "9048fab90b3c56713bd3baeb9014c933e812c0ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
