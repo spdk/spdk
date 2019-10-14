@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5971e008_b67930e3",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-14T05:19:31Z",
+      "side": 1,
+      "message": "password is not necessary here, you can remove it.",
+      "revId": "d192643eb172b903e91b3bbdadcc9ec295fced99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a38403d9_8fdc74e9",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-14T05:19:31Z",
+      "side": 1,
+      "message": "opal_bdev is not required too.",
+      "revId": "d192643eb172b903e91b3bbdadcc9ec295fced99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
