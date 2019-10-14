@@ -34,6 +34,24 @@
       "revId": "fb9fa391940df77c4590708a2238fb5b158f18bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f714075_a6eed406",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-14T22:28:01Z",
+      "side": 1,
+      "message": "Thank you Ben. I know now that recv with MSG_PEEK can distinguish the case that send buffer is full and the case of disconnection. recv with MSG_PEEK returns rc \u003c 0 and EAGAIN if send buffer is full or rc \u003d 0 if disconnection.",
+      "parentUuid": "c6f92202_a6f17657",
+      "revId": "fb9fa391940df77c4590708a2238fb5b158f18bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
