@@ -16,6 +16,24 @@
       "revId": "fb9fa391940df77c4590708a2238fb5b158f18bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6f92202_a6f17657",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-14T18:46:52Z",
+      "side": 1,
+      "message": "In that tight loop in iSCSI, it isn\u0027t correct to trigger off of EAGAIN to break out of the loop. The connection could still be up, but the send buffer is just full. Using is_connected, that recv() will begin to return 0 when the connection has actually dropped, which is the correct behavior.",
+      "parentUuid": "bd236708_20ea85d0",
+      "revId": "fb9fa391940df77c4590708a2238fb5b158f18bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
