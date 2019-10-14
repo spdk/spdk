@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5245ea4c_bb2d4cab",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 783,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-14T18:54:10Z",
+      "side": 1,
+      "message": "The write will not complete to the user until all data has been sent, so the user code doesn\u0027t need to deal with partial writes.",
+      "parentUuid": "abe5514b_5dc5bfa2",
+      "revId": "95b23d6667fb1b870e2e231aaa6951f2e6968137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fd2e5a9c_536f13db",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 2
@@ -30,6 +48,30 @@
       "writtenOn": "2019-10-11T02:28:38Z",
       "side": 1,
       "message": "Will you take care of the case that number of iovs is large?\n\nIf DIF insert/strip is enabled, 32 may not be enough (512 * 32 \u003d 16384).\n\nWe remember the progress in pdu-\u003ewritev_offset and pdu-\u003esgl. \nWe have to repeat nvme_tcp_build_iovs() and spdk_sock_writev_async() until pdu-\u003ewritev_offset is equal to pdu-\u003ehdr-\u003ecommon.plen ?",
+      "range": {
+        "startLine": 838,
+        "startChar": 10,
+        "endLine": 838,
+        "endChar": 29
+      },
+      "revId": "95b23d6667fb1b870e2e231aaa6951f2e6968137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "370c0505_43038e49",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-14T18:54:10Z",
+      "side": 1,
+      "message": "I am debating how to handle large numbers of iovs in a single call. I can either 1) allocate a lot of memory in each of the posix_sock_requests to hold the worst case always, 2) allocate a small number and then optionally dynamically allocate a bigger array if needed, or 3) simply hold pointers to the user\u0027s iov array and push the problem up one level.\n\nI originally was thinking maybe #3 would be best, but a lot of the call points of spdk_sock_writev_async end up building the iov on the stack, so it doesn\u0027t work. For #2 I\u0027m concerned about performance. So #1 may just be the best solution.\n\nFor your question about whether the user will ever need to repeat spdk_sock_writev_async, the answer is no. The asynchronous write will not complete until all data passed to it has been successfully sent (or there is a socket error).",
+      "parentUuid": "fd2e5a9c_536f13db",
       "range": {
         "startLine": 838,
         "startChar": 10,
