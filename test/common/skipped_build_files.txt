@@ -29,6 +29,7 @@ module/bdev/nvme/bdev_nvme_cuse_rpc
 # Currently we don't have this plumbed for testing, enable when ready.
 module/bdev/uring/bdev_uring
 module/bdev/uring/bdev_uring_rpc
+module/sock/uring/uring
 
 # Currently not testing blobfs_fuse, enable when ready.
 module/blobfs/bdev/blobfs_fuse
