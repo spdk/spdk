@@ -16,6 +16,24 @@
       "revId": "968cfead34f3a841c06b5442bb12c80bc0d373c3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7baaebc6_6699b767",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1198,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-14T11:01:43Z",
+      "side": 1,
+      "message": "This is for the case when something fails while creating bdevs, but probe_done is set to false. W/o it we won\u0027t return error to upper layer.",
+      "parentUuid": "1f44ab24_54a1d170",
+      "revId": "968cfead34f3a841c06b5442bb12c80bc0d373c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
