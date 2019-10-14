@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f4d139f7_a7196edf",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-14T02:09:31Z",
+      "side": 1,
+      "message": "unused definitions.",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 25
+      },
+      "revId": "12fc1afcfe331c0c0b3bea7f694bacc9d6ddff13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f359fa2e_98e49a96",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-14T02:09:31Z",
+      "side": 1,
+      "message": "you can use struct spdk_vbdev_opal_config cfg instead of a pointer here, then, you can call spdk_vbdev_opal_config_init() inside spdk_vbdev_opal_create().",
+      "revId": "12fc1afcfe331c0c0b3bea7f694bacc9d6ddff13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03ed9363_152bacd3",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-14T02:09:31Z",
+      "side": 1,
+      "message": "bdevs is indexed by nsid - 1, you can\u0027t use it directly, you can add a function to get the name.",
+      "revId": "12fc1afcfe331c0c0b3bea7f694bacc9d6ddff13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
