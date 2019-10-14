@@ -44,6 +44,14 @@ extern pthread_mutex_t g_bdev_nvme_mutex;
 
 #define NVME_MAX_CONTROLLERS 1024
 
+struct nvme_bdev_ns {
+	uint32_t		id;
+	bool			active;
+	struct spdk_nvme_ns	*ns;
+	struct nvme_bdev_ctrlr	*ctrlr;
+	struct nvme_bdev	*bdev;
+};
+
 struct nvme_bdev_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -62,8 +70,8 @@ struct nvme_bdev_ctrlr {
 	 */
 	uint32_t			prchk_flags;
 	uint32_t			num_ns;
-	/** Array of bdevs indexed by nsid - 1 */
-	struct nvme_bdev		*bdevs;
+	/** Array of pointers to namespaces indexed by nsid - 1 */
+	struct nvme_bdev_ns		**namespaces;
 
 	struct spdk_opal_dev		*opal_dev;
 	struct spdk_poller		*opal_poller;
@@ -77,9 +85,7 @@ struct nvme_bdev_ctrlr {
 struct nvme_bdev {
 	struct spdk_bdev	disk;
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
-	uint32_t		id;
-	bool			active;
-	struct spdk_nvme_ns	*ns;
+	struct nvme_bdev_ns	*nvme_ns;
 };
 
 typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
