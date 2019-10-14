@@ -1498,6 +1498,65 @@ bdev_io_split(void)
 	CU_ASSERT(g_io_done == true);
 	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
 
+	/* for this test we will create the following conditions to hit the code path where
+	 * we are trying to send and IO following a split that has no iovs because we had to
+	 * trim them for alignment reasons.
+	 *
+	 * - 16K boundary, our IO will; start at offset 0 with a length of 0x4200
+	 * - our IOVs are 0x212 in size so that we run into the 16K boundary at child IOV
+	 *   position 30 meaning we'll send the IO and loop back to pick up the remaining
+	 *   bytes for the next IO at child IOV index 31. When we go to build the next
+	 *   IO using child IOV index 31 with a length of 0x2e which is also the
+	 *   distance to the last block so when we shorten index 31 by 0x2e, decrement the
+	 *   iovcnt and let the previous completion pick up the split process.  Based on
+	 *   the IO length here of 0x4200 that leaves 2 IOVs and a total length of 1 block.
+	 */
+	bdev->optimal_io_boundary = 32;
+	bdev->split_on_optimal_io_boundary = true;
+	g_io_done = false;
+	int iov_len = 0x212;
+
+	iov[0].iov_base = (void *)(0x10000);
+	iov[0].iov_len = iov_len;
+	for (i = 1; i < BDEV_IO_NUM_CHILD_IOV + 1; i++) {
+		iov[i].iov_base = (void *)((i + 1) * 0x10000);
+		iov[i].iov_len = iov_len;
+	}
+	iov[BDEV_IO_NUM_CHILD_IOV + 1].iov_base = (void *)(BDEV_IO_NUM_CHILD_IOV * 0x10000);
+	iov[BDEV_IO_NUM_CHILD_IOV + 1].iov_len = iov_len;
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 0, BDEV_IO_NUM_CHILD_IOV,
+					   BDEV_IO_NUM_CHILD_IOV - 1);
+	ut_expected_io_set_iov(expected_io, 0, (void *)(0x10000), iov_len);
+	for (i = 1; i < BDEV_IO_NUM_CHILD_IOV - 1; i++) {
+		ut_expected_io_set_iov(expected_io, i, (void *)((i + 1) * 0x10000), iov_len);
+	}
+	ut_expected_io_set_iov(expected_io, BDEV_IO_NUM_CHILD_IOV - 2,
+			       (void *)((BDEV_IO_NUM_CHILD_IOV - 1) * 0x10000), 0x1e4);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, BDEV_IO_NUM_CHILD_IOV,
+					   BDEV_IO_NUM_CHILD_IOV, 2);
+	ut_expected_io_set_iov(expected_io, 0,
+			       (void *)(0x1f01e4), 0x2e);
+	ut_expected_io_set_iov(expected_io, 1,
+			       (void *)(BDEV_IO_NUM_CHILD_IOV * 0x10000), 0x1d2);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_readv_blocks(desc, io_ch, iov, BDEV_IO_NUM_CHILD_IOV + 1, 0,
+				    BDEV_IO_NUM_CHILD_IOV + 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
