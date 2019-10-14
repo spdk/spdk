@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45338c5a_152baa29",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-14T08:29:46Z",
+      "side": 1,
+      "message": "you can rename data to ctx here.",
+      "revId": "8c536a91cf025870a4c26dca5d91759ec56b9015",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55916f08_9ae3f155",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-14T08:29:46Z",
+      "side": 1,
+      "message": "I think asynchronous API should always has a callback function.",
+      "revId": "8c536a91cf025870a4c26dca5d91759ec56b9015",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99b1607b_9a4d6ed2",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-14T08:29:46Z",
+      "side": 1,
+      "message": "you can keep the original spdk_opal_cmd_revert_tper() API and add a new asynchronous API.",
+      "revId": "8c536a91cf025870a4c26dca5d91759ec56b9015",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
