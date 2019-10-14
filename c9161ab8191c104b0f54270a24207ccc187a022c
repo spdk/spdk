@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c97ed5ab_a7301dd1",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 16
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-14T09:36:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5522bebc_46a105e8",
+      "range": {
+        "startLine": 101,
+        "startChar": 49,
+        "endLine": 101,
+        "endChar": 53
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2399a158_6962c418",
         "filename": "scripts/vagrant/Vagrantfile",
         "patchSetId": 16
@@ -36,6 +60,30 @@
       "writtenOn": "2019-10-10T07:56:37Z",
       "side": 1,
       "message": "create_nvme_img.sh allows to create a backend file with any name, but we still enforce the name here.\nCurrently the syntax for adding an emulated backend is:\n--nvme-disks-type\u003dnvme 1\n\nHow about we change it to something like:\n--nvme-disks-type\u003dnvme,X,$PATH\nWhere first param is the type - nvme or ocssd\nSecond param - number of namespaces (defaults to 1)\nThird param - path to backend file\n\nIf no --nvme-disks-type option is given when running create_vbox.sh - default to nvme/1/nvme_disk.img",
+      "range": {
+        "startLine": 138,
+        "startChar": 8,
+        "endLine": 138,
+        "endChar": 44
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1d20d10_bbf29f62",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 16
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-14T09:36:08Z",
+      "side": 1,
+      "message": "--nvme-disks-type\u003dnvme,X,$PATH\nif we make it like this, how can we add ocssd disk ?",
+      "parentUuid": "2399a158_6962c418",
       "range": {
         "startLine": 138,
         "startChar": 8,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "94a92efe_1590241c",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-14T09:36:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c6f2b8e6_be80bd6b",
+      "range": {
+        "startLine": 11,
+        "startChar": 16,
+        "endLine": 11,
+        "endChar": 20
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "73317823_79ead55e",
         "filename": "scripts/vagrant/create_nvme_img.sh",
         "patchSetId": 16
@@ -82,6 +154,30 @@
       "writtenOn": "2019-10-10T08:10:15Z",
       "side": 1,
       "message": "I had to manually create ocssd_md file before I could start a VM with ocssd emualted backend.\nI think it would be good to also create a matching ocssd_md",
+      "range": {
+        "startLine": 50,
+        "startChar": 3,
+        "endLine": 50,
+        "endChar": 34
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "444d820b_fe931f47",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-14T09:36:08Z",
+      "side": 1,
+      "message": "Should I call this script here?:\nscripts/vagrant/create_nvme_img.sh\nOr maybe set some echo with information about this script ?",
+      "parentUuid": "73317823_79ead55e",
       "range": {
         "startLine": 50,
         "startChar": 3,
@@ -111,6 +207,24 @@
     },
     {
       "key": {
+        "uuid": "8d4c3134_0ebc13c1",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-14T09:36:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1ace0eb3_851ccb71",
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6234a803_6acc7593",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 16
@@ -122,6 +236,30 @@
       "writtenOn": "2019-10-10T07:56:37Z",
       "side": 1,
       "message": "Didn\u0027t notice this one before.\nInstead of adding a new option --nvme-disk-type we could modify this one, but keep the current default as-is. Also need to be extra careful, as this would also affect VirtualBox part of the Vagrantfile",
+      "range": {
+        "startLine": 22,
+        "startChar": 9,
+        "endLine": 22,
+        "endChar": 63
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "474f3ce1_c5cbe20a",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-14T09:36:08Z",
+      "side": 1,
+      "message": "I don\u0027t agree with You.\n-b option is used only for put \u0027nvme_disk.img\u0027 name, and if you want few disk then we should parse this, and search in strings what type of disk it is.",
+      "parentUuid": "6234a803_6acc7593",
       "range": {
         "startLine": 22,
         "startChar": 9,
@@ -157,6 +295,30 @@
     },
     {
       "key": {
+        "uuid": "410edd32_0490c44e",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-14T09:36:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d5ab2ddc_88bad622",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 22
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5fdd38dc_8b02bcb6",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 16
@@ -168,6 +330,30 @@
       "writtenOn": "2019-10-10T08:01:25Z",
       "side": 1,
       "message": "Not sure how this is handled, but I noticed that emulated nvmes are not in the same order as they are specfied in the command line.\ne.g: [klateck@GrizzlyPass8 work]$ ./spdk/scripts/vagrant/create_vbox.sh --nvme-disks-type\u003dnvme 1 --nvme-disks-type\u003dnvme 5\n\nResults in 5-namepace nvme being the first emulated device, and 1-namespace nve the second:\n\n```\n[vagrant@fedora30 ~]$ sudo nvme list\nNode             SN                   Model                                    Namespace Usage                      Format           FW Rev\n---------------- -------------------- ---------------------------------------- --------- -------------------------- ---------------- --------\n/dev/nvme0n1     12341                QEMU NVMe Ctrl                           1         214.75  MB / 214.75  MB      4 KiB +  0 B   1.0\n/dev/nvme0n2     12341                QEMU NVMe Ctrl                           2         214.75  MB / 214.75  MB      4 KiB +  0 B   1.0\n/dev/nvme0n3     12341                QEMU NVMe Ctrl                           3         214.75  MB / 214.75  MB      4 KiB +  0 B   1.0\n/dev/nvme0n4     12341                QEMU NVMe Ctrl                           4         214.75  MB / 214.75  MB      4 KiB +  0 B   1.0\n/dev/nvme0n5     12341                QEMU NVMe Ctrl                           5         214.75  MB / 214.75  MB      4 KiB +  0 B   1.0\n/dev/nvme1n1     12340                QEMU NVMe Ctrl                           1           1.07  GB /   1.07  GB      4 KiB +  0 B   1.0\n\n```\n\nIt\u0027s a nitpick, at least for now, but it would be good to have the emulated backends created in correct order.",
+      "range": {
+        "startLine": 74,
+        "startChar": 3,
+        "endLine": 74,
+        "endChar": 21
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2cf76fc3_837b79fb",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-14T09:36:08Z",
+      "side": 1,
+      "message": "Hmm, but why You have six disk when You create only two ?",
+      "parentUuid": "5fdd38dc_8b02bcb6",
       "range": {
         "startLine": 74,
         "startChar": 3,
