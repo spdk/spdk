@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1866c1c_6983ff5e",
+        "filename": "module/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-14T05:59:54Z",
+      "side": 1,
+      "message": "If we have a constant length then we can avoid searching of occurrence of a symbol and check a specific idx of the string like\nif (address[21] !\u003d \u0027:\u0027)\nif (strncmp(address, \"nn-0x\", 5) !\u003d 0 || strncmp(address[22], \"pn-0x\", 5) !\u003d 0)",
+      "range": {
+        "startLine": 277,
+        "startChar": 30,
+        "endLine": 277,
+        "endChar": 50
+      },
+      "revId": "87c73f96e65d682d3db8dd3d6245d2b02d7f6d8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3a28199_78c94a68",
+        "filename": "module/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-14T05:59:54Z",
+      "side": 1,
+      "message": "You commented the length equals 43 bytes, maybe we should use if (strlen(address) !\u003d 43 .. ?",
+      "range": {
+        "startLine": 277,
+        "startChar": 20,
+        "endLine": 277,
+        "endChar": 25
+      },
+      "revId": "87c73f96e65d682d3db8dd3d6245d2b02d7f6d8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
