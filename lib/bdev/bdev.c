@@ -1710,6 +1710,13 @@ _spdk_bdev_io_split(void *_bdev_io)
 				}
 
 				assert(to_last_block_bytes == 0);
+
+				/* If we removed the only IOV we had to send, just return and let the next
+				 * split pick it up.
+				 */
+				if (iovcnt == 0) {
+					return;
+				}
 			}
 			to_next_boundary -= to_next_boundary_bytes / blocklen;
 		}
