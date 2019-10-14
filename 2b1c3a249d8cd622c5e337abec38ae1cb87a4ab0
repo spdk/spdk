@@ -22,6 +22,30 @@
       "revId": "2b1c3a249d8cd622c5e337abec38ae1cb87a4ab0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "366b73b1_655fc991",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-14T08:28:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7767f035_5d94aa43",
+      "range": {
+        "startLine": 92,
+        "startChar": 1,
+        "endLine": 96,
+        "endChar": 0
+      },
+      "revId": "2b1c3a249d8cd622c5e337abec38ae1cb87a4ab0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
