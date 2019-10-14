@@ -291,6 +291,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
 	const char *nqn, *mode;
 	size_t i;
+	int ret = -1;
 	int lcore;
 	bool allow_any_host;
 	bool allow_any_listener = true;
@@ -460,18 +461,16 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 		if (trid.trtype == SPDK_NVME_TRANSPORT_RDMA ||
 		    trid.trtype == SPDK_NVME_TRANSPORT_TCP) {
-			if (spdk_nvmf_tgt_parse_listen_ip_addr(address_dup, &trid)) {
-				free(address_dup);
-				continue;
-			}
+			ret = spdk_nvmf_tgt_parse_listen_ip_addr(address_dup, &trid);
 		} else if (trid.trtype == SPDK_NVME_TRANSPORT_FC) {
-			if (spdk_nvmf_tgt_parse_listen_fc_addr(address_dup, &trid)) {
-				free(address_dup);
-				continue;
-			}
+			ret = spdk_nvmf_tgt_parse_listen_fc_addr(address_dup, &trid);
 		}
 
 		free(address_dup);
+
+		if (ret) {
+			continue;
+		}
 
 		spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &trid, spdk_nvmf_tgt_listen_done, NULL);
 
