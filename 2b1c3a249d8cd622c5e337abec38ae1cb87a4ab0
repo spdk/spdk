@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7767f035_5d94aa43",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-14T08:20:18Z",
+      "side": 1,
+      "message": "please move to the start of the function.",
+      "range": {
+        "startLine": 92,
+        "startChar": 1,
+        "endLine": 96,
+        "endChar": 0
+      },
+      "revId": "2b1c3a249d8cd622c5e337abec38ae1cb87a4ab0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
