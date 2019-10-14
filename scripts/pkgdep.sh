@@ -96,9 +96,10 @@ elif [ -f /etc/debian_version ]; then
 	# Additional dependecies for nvmf performance test script
 	apt-get install -y python3-paramiko
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
-	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
+	zypper install -y gcc gcc-c++ make libaio-devel libopenssl-devel \
 		git-core lcov python-base python-pycodestyle libuuid-devel sg3_utils pciutils \
 		ShellCheck
+	echo "To run unit tests please install cunit"
 	# Additional (optional) dependencies for showing backtrace in logs
 	zypper install libunwind-devel || true
 	# Additional dependencies for NVMe over Fabrics
@@ -112,17 +113,19 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	# Additional dependencies for ISA-L used in compression
 	zypper install -y autoconf automake libtool help2man
 elif [ $(uname -s) = "FreeBSD" ] ; then
-	pkg install -y gmake cunit openssl git devel/astyle bash py27-pycodestyle \
+	pkg install -y gmake openssl git devel/astyle bash py27-pycodestyle \
 		python misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
+	echo "To run unit tests please install cunit"
 	# Additional dependencies for building docs
 	pkg install -y doxygen mscgen graphviz
 	# Additional dependencies for ISA-L used in compression
 	pkg install -y autoconf automake libtool help2man
 elif [ -f /etc/arch-release ]; then
 	# Install main dependencies
-	pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
+	pacman -Sy --needed --noconfirm gcc make libaio openssl \
 		git astyle autopep8 python clang libutil-linux sg3_utils \
 		libiscsi pciutils shellcheck
+	echo "To run unit tests please install cunit"
 
 	# Additional (optional) dependencies for showing backtrace in logs
 	pacman -Sy --needed --noconfirm libunwind
