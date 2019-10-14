@@ -1704,7 +1704,9 @@ _spdk_bdev_io_split(void *_bdev_io)
 					bdev_io->child_iov[child_iovpos].iov_len -= iov_len;
 					if (bdev_io->child_iov[child_iovpos].iov_len == 0) {
 						child_iovpos--;
-						iovcnt--;
+						if (--iovcnt == 0) {
+							return;
+						}
 					}
 					to_last_block_bytes -= iov_len;
 				}
