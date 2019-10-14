@@ -147,6 +147,14 @@ Added `blobfs_detect` RPC method to detect whether a blobfs exists on given bdev
 
 Added `blobfs_create` RPC method to build blobfs on given bdev.
 
+### ocf
+
+Updated OCF submodule to OCF v19.06
+
+Along with update, new cache mode 'write only' was added.
+
+New version of OCF provides fully asynchronous management API.
+
 ## v19.07:
 
 ### ftl

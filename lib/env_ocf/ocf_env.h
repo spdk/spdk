@@ -660,8 +660,8 @@ static inline uint64_t env_secs_to_ticks(uint64_t j)
 
 /* *** STRING OPERATIONS *** */
 
-/* 256 KB is sufficient amount of memory for OCF operations */
-#define ENV_MAX_MEM (256 * 1024)
+/* 512 KB is sufficient amount of memory for OCF operations */
+#define ENV_MAX_MEM (512 * 1024)
 
 static inline int env_memset(void *dest, size_t len, uint8_t value)
 {
@@ -722,9 +722,11 @@ static inline int env_strncpy(char *dest, size_t dmax, const char *src, size_t l
 	if (dmax == 0 || dmax > ENV_MAX_STR) {
 		return 1;
 	}
-	if (len == 0 || len > dmax) {
+	if (len == 0) {
 		return 1;
 	}
+	/* Just copy as many characters as we can instead of return failure */
+	len = min(len, dmax);
 
 	strncpy(dest, src, len);
 	return 0;
