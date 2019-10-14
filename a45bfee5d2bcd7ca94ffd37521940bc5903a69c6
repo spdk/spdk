@@ -16,6 +16,24 @@
       "revId": "a45bfee5d2bcd7ca94ffd37521940bc5903a69c6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d176155a_792d1512",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2019-10-14T21:31:48Z",
+      "side": 1,
+      "message": "I can certainly make this change. However, two comments:\n\n- Can Ben comment on whether he agrees with that or have you guys talked? I just want to avoid another round of changes.\n- Wouldn\u0027t just setting the error.nvme.dw0 to 0 in spdk_bdev_io_init fix the issue? The NVMe spec says:\n\n---------\n1.7.5 reserved\nA keyword referring to bits, bytes, words, fields, and opcode values that are set-aside for future standardization. Their use and interpretation may be specified by future extensions to this or other specifications. A reserved bit, byte, word, field, or register shall be cleared to zero, or in accordance with a future extension to this specification. The recipient is not required to check reserved bits, bytes, words, or fields. Receipt of reserved coded values in defined fields in commands shall be reported as an error. Writing a reserved coded value into a controller register field produces undefined results.\n\n4.6 Completion Queue Entry\nAn entry in the Completion Queue is at least 16 bytes in size. Figure 26 describes the layout of the first 16 bytes of the Completion Queue Entry data structure. The contents of Dword 0 are command specific. If a command uses Dword 0, then the definition of this Dword is contained within the associated command definition. If a command does not use Dword 0, then the field is reserved. Dword 1 is reserved. Dword 2 is defined in Figure 27 and Dword 3 is defined in Figure 28. Any additional I/O Command Set defined in the future may use an alternate Completion Queue entry size or format.\n---------\n\nSo if we initialize it to 0 for every bdev_io and always pass the value to the NVMF layer, regardless of whether we actually set it via the spdk_bdev_io_complete_nvme_status, then we should be okay, no?",
+      "parentUuid": "3a714ba1_491ca390",
+      "revId": "a45bfee5d2bcd7ca94ffd37521940bc5903a69c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
