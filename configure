@@ -88,7 +88,7 @@ function usage()
 	echo "                           example: /usr/src/ocf/"
 	echo " isal                      Build with ISA-L. Enabled by default on x86 and aarch64 architectures."
 	echo "                           No path required."
-	echo " uring                     Build I/O uring bdev."
+	echo " uring                     Build I/O uring bdev or I/O uring socket."
 	echo "                           If an argument is provided, it is considered a directory containing"
 	echo "                           liburing.a and io_uring.h. Otherwise the regular system paths will"
 	echo "                           be searched."
