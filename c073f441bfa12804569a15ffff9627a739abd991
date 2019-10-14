@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8eda0532_0df1a6f3",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 973,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-10-14T08:05:47Z",
+      "side": 1,
+      "message": "Just stop\u0027ing here is not sufficient, if we hit this case then shuting down application will trigger assert in ocf bdev, either because we need some more cleanup here or we need to improve unregister path.\n\nSteps to reproduce:\n- create large devices for backend (`rpc bdev_null_create null0 99999999 512 ; rpc bdev_null_create null0 99999999 512` )\n- create ocf bdev based on them (`rpc bdev_ocf_create ocf0 wt null0 null1`). Expected failure looks like:\n```\nocf0: Not enough free RAM for cache metadata to start cache\nocf0: Available RAM: 17700110336 B\nocf0: Needed RAM: 1520697656473 B\nocf0: Attaching cache device failed\nvbdev_ocf.c: 970:start_cache_cmpl: *ERROR*: Error -1000011 during start cache ocf0, starting rollback\n```\n- CTRL+C to close application\n\nand we get following errors:\n```\nbdev.c:1257:_spdk_bdev_finish_unregister_bdevs_iter: *WARNING*: Unregistering claimed bdev \u0027null0\u0027!\nvbdev_ocf.c:1322:hotremove_cb: *NOTICE*: Deinitializing \u0027ocf0\u0027 because its cache device \u0027null0\u0027 was removed\nspdk_tgt: utils.c:126: vbdev_ocf_mngt_poll: Assertion `vbdev-\u003emngt_ctx.poller !\u003d NULL\u0027 failed.\n```\nErrors look like we need to close the device first, but I am not sure if that is even enough",
+      "range": {
+        "startLine": 973,
+        "startChar": 2,
+        "endLine": 973,
+        "endChar": 42
+      },
+      "revId": "c073f441bfa12804569a15ffff9627a739abd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
