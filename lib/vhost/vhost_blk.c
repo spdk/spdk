@@ -430,13 +430,73 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 }
 
 static void
+submit_inflight_desc(struct spdk_vhost_blk_session *bvsession,
+		     struct spdk_vhost_virtqueue *vq)
+{
+	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
+	struct spdk_vhost_blk_task *task;
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	spdk_vhost_resubmit_info *resubmit = vq->vring_inflight.resubmit_inflight;
+	spdk_vhost_resubmit_desc *resubmit_list = resubmit->resubmit_list;
+	int rc;
+	uint16_t req_idx;
+
+	while (resubmit_list && resubmit->resubmit_num-- > 0) {
+		req_idx = resubmit_list[resubmit->resubmit_num].index;
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Start processing request idx %"PRIu16"======\n",
+			      req_idx);
+
+		if (spdk_unlikely(req_idx >= vq->vring.size)) {
+			SPDK_ERRLOG("%s: request idx '%"PRIu16"' exceeds virtqueue size (%"PRIu16").\n",
+				    bvdev->vdev.name, req_idx, vq->vring.size);
+			vhost_vq_used_ring_enqueue(vsession, vq, req_idx, 0);
+			continue;
+		}
+
+		task = &((struct spdk_vhost_blk_task *)vq->tasks)[req_idx];
+		if (spdk_unlikely(task->used)) {
+			SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
+				    bvdev->vdev.name, req_idx);
+			vhost_vq_used_ring_enqueue(vsession, vq, req_idx, 0);
+			continue;
+		}
+
+		vsession->task_cnt++;
+
+		task->used = true;
+		task->iovcnt = SPDK_COUNTOF(task->iovs);
+		task->status = NULL;
+		task->used_len = 0;
+
+		rc = process_blk_request(task, bvsession, vq);
+		if (rc == 0) {
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Task %p req_idx %d submitted ======\n", task,
+				      req_idx);
+		} else {
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Task %p req_idx %d failed ======\n", task,
+				      req_idx);
+		}
+	}
+
+	free(resubmit->resubmit_list);
+	resubmit->resubmit_list = NULL;
+}
+
+static void
 process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq)
 {
 	struct spdk_vhost_blk_task *task;
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	spdk_vhost_resubmit_info *resubmit = vq->vring_inflight.resubmit_inflight;
 	int rc;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
+	uint16_t vq_idx = vq->vring_idx;
+
+	if (resubmit && resubmit->resubmit_num) {
+		submit_inflight_desc(bvsession, vq);
+		return;
+	}
 
 	reqs_cnt = vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
 	if (!reqs_cnt) {
@@ -453,6 +513,8 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 			vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
 			continue;
 		}
+
+		rte_vhost_set_inflight_desc_split(vsession->vid, vq_idx, reqs[i]);
 
 		task = &((struct spdk_vhost_blk_task *)vq->tasks)[reqs[i]];
 		if (spdk_unlikely(task->used)) {
@@ -1006,6 +1068,19 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		spdk_bdev_close(bvdev->bdev_desc);
 		goto out;
 	}
+
+	/* Test with QEMU 4.0 that it does't support the scsi inflight
+	 * The error is that QEMU shows it support the inflight but
+	 * it does't send the get_inflight_fd and set_inflight_fd.
+	 * which would make the spdk disconnect with QEMU.
+	 * So move this inflight feature to vhost_blk.
+	 */
+#ifndef SPDK_CONFIG_VHOST_INTERNAL_LIB
+	uint64_t protocol_features;
+	rte_vhost_driver_get_protocol_features(vdev->path, &protocol_features);
+	protocol_features |= (1ULL << VHOST_USER_PROTOCOL_F_INFLIGHT_SHMFD);
+	rte_vhost_driver_set_protocol_features(vdev->path, protocol_features);
+#endif
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: using bdev '%s'\n", name, dev_name);
 out:
