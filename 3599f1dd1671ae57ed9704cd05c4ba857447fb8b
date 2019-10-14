@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b353d6d8_886ebf4c",
+        "filename": "doc/lvol.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-14T10:23:04Z",
+      "side": 1,
+      "message": "Ok, sorry.I was wrong.",
+      "parentUuid": "59051726_bc6bbd87",
+      "revId": "3599f1dd1671ae57ed9704cd05c4ba857447fb8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e927d383_0291adaf",
         "filename": "doc/lvol.md",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-11T20:54:07Z",
       "side": 1,
       "message": "I think thsat something like that should be mentioned:\nOptional --clear-method parameter can be passed on deletion to change that behavior to writing zeroes or performing no operation.",
+      "revId": "3599f1dd1671ae57ed9704cd05c4ba857447fb8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9d69f4d_3b6d2e0b",
+        "filename": "doc/lvol.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-14T10:23:04Z",
+      "side": 1,
+      "message": "Sorry. I think you are right.",
+      "parentUuid": "e927d383_0291adaf",
       "revId": "3599f1dd1671ae57ed9704cd05c4ba857447fb8b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
