@@ -1016,18 +1016,20 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	create_ctrlr(ctrlr, name, trid, prchk_flags);
 
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
-	if (!nvme_bdev_ctrlr) {
-		SPDK_ERRLOG("Failed to find new NVMe controller\n");
-		free(name);
-		return;
-	}
+	if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
+		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
+		if (!nvme_bdev_ctrlr) {
+			SPDK_ERRLOG("Failed to find new NVMe controller\n");
+			free(name);
+			return;
+		}
 
-	rc = nvme_ctrlr_create_bdevs(nvme_bdev_ctrlr);
-	if (rc) {
-		SPDK_ERRLOG("Failed to create NVMe bdevs\n");
-		free(name);
-		return;
+		rc = nvme_ctrlr_create_bdevs(nvme_bdev_ctrlr);
+		if (rc) {
+			SPDK_ERRLOG("Failed to create NVMe bdevs\n");
+			free(name);
+			return;
+		}
 	}
 
 	free(name);
