@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a714ba1_491ca390",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-14T21:12:21Z",
+      "side": 1,
+      "message": "So we have a 2 byte hole here between status and but, where we can stick another uint8_t named something like \"extended_status\".\n\nI really think we have to keep track of how the bdev_io status was obtained - i.e. just normal spdk_bdev_io_complete, or complete_nvme_status/complete_scsi_status.\n\nThen if the user calls get_nvme_status, on an I/O that wasn\u0027t completed with spdk_bdev_io_complete_nvme_status(), we know whether or not to use error.nvme.cdw0 for *cdw0.  If the I/O wasn\u0027t completed using spdk_bdev_io_complete_nvme_status(), then error.nvme.cdw0 is invalid.\n\nSo I think spdk_bdev_io_status_extended enum with values SPDK_BDEV_IO_STATUS_EXTENDED_NONE, STATUS_EXTENDED_NVME, STATUS_EXTENDED_SCSI.  You can initialize this new field to STATUS_EXTENDED_NONE in spdk_bdev_io_init() which gets called every time an spdk_bdev_io is allocated.\n\nThis would address Ben\u0027s comment on patch rev 4.",
+      "revId": "a45bfee5d2bcd7ca94ffd37521940bc5903a69c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
