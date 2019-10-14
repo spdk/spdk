@@ -157,5 +157,8 @@ CONFIG_URING=n
 # Path to custom built IO_URING library
 CONFIG_URING_PATH=
 
+# Build with asynchronous network I/O support while using posix
+CONFIG_ASYNC_NETWORK=n
+
 # Build with FUSE support
 CONFIG_FUSE=n
