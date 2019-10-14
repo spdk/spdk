@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d34a0edb_e0ed775f",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:07:57Z",
+      "side": 1,
+      "message": "Is the reset being done twice here ? First time here, then in cuse_nvme_reset_cb.",
+      "range": {
+        "startLine": 410,
+        "startChar": 1,
+        "endLine": 410,
+        "endChar": 43
+      },
+      "revId": "1df87d412dda4cc1af5f2190f11f022c811e6045",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
