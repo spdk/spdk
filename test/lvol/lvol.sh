@@ -73,6 +73,7 @@ function usage() {
                                     803: 'bdev_lvol_rename_nonexistent',
                                     804: 'bdev_lvol_rename_EEXIST',
                                     850: 'clear_method_none',
+                                    851: 'clear_method_unmap',
                                     10000: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
