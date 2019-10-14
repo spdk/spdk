@@ -414,6 +414,7 @@ vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 	struct rte_vhost_vring *vring = &virtqueue->vring;
 	struct vring_used *used = vring->used;
 	uint16_t last_idx = virtqueue->last_used_idx & (vring->size - 1);
+	uint16_t vq_idx = virtqueue->vring_idx;
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
 		      "Queue %td - USED RING: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
@@ -428,9 +429,13 @@ vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 	/* Ensure the used ring is updated before we log it or increment used->idx. */
 	spdk_smp_wmb();
 
+	rte_vhost_set_last_inflight_io_split(vsession->vid, vq_idx, id);
+
 	vhost_log_used_vring_elem(vsession, virtqueue, last_idx);
 	* (volatile uint16_t *) &used->idx = virtqueue->last_used_idx;
 	vhost_log_used_vring_idx(vsession, virtqueue);
+
+	rte_vhost_clr_inflight_desc_split(vsession->vid, vq_idx, virtqueue->last_used_idx, id);
 
 	virtqueue->used_req_cnt++;
 }
@@ -1056,6 +1061,9 @@ vhost_start_device_cb(int vid)
 
 		q->vring_idx = -1;
 		if (rte_vhost_get_vhost_vring(vid, i, &q->vring)) {
+			continue;
+		}
+		if (rte_vhost_get_vhost_ring_inflight(vid, i, &q->vring_inflight)) {
 			continue;
 		}
 		q->vring_idx = i;

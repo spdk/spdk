@@ -417,13 +417,73 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 }
 
 static void
+submit_inflight_desc(struct spdk_vhost_blk_session *bvsession,
+		     struct spdk_vhost_virtqueue *vq)
+{
+	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
+	struct spdk_vhost_blk_task *task;
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	spdk_vhost_resubmit_info *resubmit = vq->vring_inflight.resubmit_inflight;
+	spdk_vhost_resubmit_desc *resubmit_list = resubmit->resubmit_list;
+	int rc;
+	uint16_t i;
+
+	while (resubmit_list && resubmit->resubmit_num > 0) {
+		i = --resubmit->resubmit_num;
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Starting processing request idx %"PRIu16"======\n",
+			      resubmit_list[i].index);
+
+		if (spdk_unlikely(resubmit_list[i].index >= vq->vring.size)) {
+			SPDK_ERRLOG("%s: request idx '%"PRIu16"' exceeds virtqueue size (%"PRIu16").\n",
+				    bvdev->vdev.name, resubmit_list[i].index, vq->vring.size);
+			vhost_vq_used_ring_enqueue(vsession, vq, resubmit_list[i].index, 0);
+			continue;
+		}
+
+		task = &((struct spdk_vhost_blk_task *)vq->tasks)[resubmit_list[i].index];
+		if (spdk_unlikely(task->used)) {
+			SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
+				    bvdev->vdev.name, resubmit_list[i].index);
+			vhost_vq_used_ring_enqueue(vsession, vq, resubmit_list[i].index, 0);
+			continue;
+		}
+
+		vsession->task_cnt++;
+
+		task->used = true;
+		task->iovcnt = SPDK_COUNTOF(task->iovs);
+		task->status = NULL;
+		task->used_len = 0;
+
+		rc = process_blk_request(task, bvsession, vq);
+		if (rc == 0) {
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Task %p req_idx %d submitted ======\n", task,
+				      resubmit_list[i].index);
+		} else {
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Task %p req_idx %d failed ======\n", task,
+				      resubmit_list[i].index);
+		}
+	}
+
+	free(resubmit->resubmit_list);
+	resubmit->resubmit_list = NULL;
+}
+
+static void
 process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq)
 {
 	struct spdk_vhost_blk_task *task;
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	spdk_vhost_resubmit_info *resubmit = vq->vring_inflight.resubmit_inflight;
 	int rc;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
+	uint16_t vq_idx = vq->vring_idx;
+
+	if (resubmit && resubmit->resubmit_num) {
+		submit_inflight_desc(bvsession, vq);
+		return;
+	}
 
 	reqs_cnt = vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
 	if (!reqs_cnt) {
@@ -440,6 +500,8 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 			vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
 			continue;
 		}
+
+		rte_vhost_set_inflight_desc_split(vsession->vid, vq_idx, reqs[i]);
 
 		task = &((struct spdk_vhost_blk_task *)vq->tasks)[reqs[i]];
 		if (spdk_unlikely(task->used)) {

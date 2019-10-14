@@ -100,8 +100,12 @@ struct vhost_poll_group {
 	TAILQ_ENTRY(vhost_poll_group) tailq;
 };
 
+typedef struct rte_vhost_resubmit_desc spdk_vhost_resubmit_desc;
+typedef struct rte_vhost_resubmit_info spdk_vhost_resubmit_info;
+
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
+	struct rte_vhost_ring_inflight vring_inflight;
 	uint16_t last_avail_idx;
 	uint16_t last_used_idx;
 
