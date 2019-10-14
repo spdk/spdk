@@ -1032,7 +1032,7 @@ vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
 	foreach_session_continue(ev_ctx, vsession);
 }
 
-static void
+static int
 _stop_session(struct spdk_vhost_session *vsession)
 {
 	struct spdk_vhost_dev *vdev = vsession->vdev;
@@ -1044,7 +1044,7 @@ _stop_session(struct spdk_vhost_session *vsession)
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vsession->vid);
 		pthread_mutex_unlock(&g_vhost_mutex);
-		return;
+		return rc;
 	}
 
 	for (i = 0; i < vsession->max_queues; i++) {
@@ -1057,29 +1057,34 @@ _stop_session(struct spdk_vhost_session *vsession)
 
 	vhost_session_mem_unregister(vsession);
 	free(vsession->mem);
+
+	return 0;
 }
 
-void
+int
 vhost_stop_device_cb(int vid)
 {
 	struct spdk_vhost_session *vsession;
+	int rc;
 
 	pthread_mutex_lock(&g_vhost_mutex);
 	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
 		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
 		pthread_mutex_unlock(&g_vhost_mutex);
-		return;
+		return -EINVAL;
 	}
 
 	if (!vsession->started) {
 		/* already stopped, nothing to do */
 		pthread_mutex_unlock(&g_vhost_mutex);
-		return;
+		return -EALREADY;
 	}
 
-	_stop_session(vsession);
+	rc = _stop_session(vsession);
 	pthread_mutex_unlock(&g_vhost_mutex);
+
+	return rc;
 }
 
 int
@@ -1319,27 +1324,30 @@ vhost_new_connection_cb(int vid, const char *ifname)
 	return 0;
 }
 
-void
+int
 vhost_destroy_connection_cb(int vid)
 {
 	struct spdk_vhost_session *vsession;
+	int rc = 0;
 
 	pthread_mutex_lock(&g_vhost_mutex);
 	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
 		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
 		pthread_mutex_unlock(&g_vhost_mutex);
-		return;
+		return -EINVAL;
 	}
 
 	if (vsession->started) {
-		_stop_session(vsession);
+		rc = _stop_session(vsession);
 	}
 
 	TAILQ_REMOVE(&vsession->vdev->vsessions, vsession, tailq);
 	free(vsession->name);
 	free(vsession);
 	pthread_mutex_unlock(&g_vhost_mutex);
+
+	return rc;
 }
 
 void
