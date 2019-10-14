@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3dcf237a_db851cb1",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-14T09:32:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "45338c5a_152baa29",
+      "revId": "8c536a91cf025870a4c26dca5d91759ec56b9015",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55916f08_9ae3f155",
         "filename": "include/spdk/opal.h",
         "patchSetId": 10
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "541dafe1_85678cd8",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-14T09:32:37Z",
+      "side": 1,
+      "message": "Thank you for your review. Rename it.",
+      "parentUuid": "55916f08_9ae3f155",
+      "revId": "8c536a91cf025870a4c26dca5d91759ec56b9015",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "99b1607b_9a4d6ed2",
         "filename": "include/spdk/opal.h",
         "patchSetId": 10
@@ -50,6 +86,24 @@
       "revId": "8c536a91cf025870a4c26dca5d91759ec56b9015",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68122e76_3de20216",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-14T09:32:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "99b1607b_9a4d6ed2",
+      "revId": "8c536a91cf025870a4c26dca5d91759ec56b9015",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
