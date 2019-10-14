@@ -22,6 +22,30 @@
       "revId": "19c93266e4082497b66d0e29999c03f78e237dd1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90054bad_2f25786c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 20
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-14T10:19:52Z",
+      "side": 1,
+      "message": "Ok, sorry. I was wrong. You are right.",
+      "parentUuid": "b819a0f5_2e8cec61",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 48
+      },
+      "revId": "19c93266e4082497b66d0e29999c03f78e237dd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
