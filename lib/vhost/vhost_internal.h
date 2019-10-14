@@ -102,6 +102,7 @@ struct vhost_poll_group {
 
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
+	struct rte_vhost_ring_inflight vring_inflight;
 	uint16_t last_avail_idx;
 	uint16_t last_used_idx;
 
@@ -236,6 +237,9 @@ struct spdk_vhost_dev_backend {
 };
 
 void *vhost_gpa_to_vva(struct spdk_vhost_session *vsession, uint64_t addr, uint64_t len);
+
+void vhost_vq_set_inflight_split(struct spdk_vhost_session *vsession,
+				 struct spdk_vhost_virtqueue *virtqueue, uint16_t idx);
 
 uint16_t vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs,
 				 uint16_t reqs_len);
