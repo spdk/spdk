@@ -1704,7 +1704,9 @@ _spdk_bdev_io_split(void *_bdev_io)
 					bdev_io->child_iov[child_iovpos].iov_len -= iov_len;
 					if (bdev_io->child_iov[child_iovpos].iov_len == 0) {
 						child_iovpos--;
-						iovcnt--;
+						if (--iovcnt == 0) {
+							return;
+						}
 					}
 					to_last_block_bytes -= iov_len;
 				}
@@ -1729,7 +1731,6 @@ _spdk_bdev_io_split(void *_bdev_io)
 							      to_next_boundary,
 							      _spdk_bdev_io_split_done, bdev_io);
 		}
-
 		if (rc == 0) {
 			current_offset += to_next_boundary;
 			remaining -= to_next_boundary;
