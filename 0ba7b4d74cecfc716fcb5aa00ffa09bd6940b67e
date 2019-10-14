@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc71b8ef_b5f68e93",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2438,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-14T13:33:37Z",
+      "side": 1,
+      "message": "It seems that we can avoid introducing new fields in spdk_nvme_ctrlr struct since these values are constant. We can use defines instead",
+      "range": {
+        "startLine": 2436,
+        "startChar": 1,
+        "endLine": 2438,
+        "endChar": 64
+      },
+      "revId": "0ba7b4d74cecfc716fcb5aa00ffa09bd6940b67e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
