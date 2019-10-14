@@ -88,6 +88,10 @@ endif
 
 SOCK_MODULES_LIST = sock_posix
 
+ifeq ($(CONFIG_URING),y)
+SOCK_MODULES_LIST += sock_uring
+endif
+
 ifeq ($(CONFIG_VPP),y)
 SYS_LIBS += -Wl,--whole-archive
 ifneq ($(CONFIG_VPP_DIR),)
