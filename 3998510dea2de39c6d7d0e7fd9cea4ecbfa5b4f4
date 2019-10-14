@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe99f796_5e331d82",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-14T09:49:22Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 260,
+        "startChar": 0,
+        "endLine": 260,
+        "endChar": 8
+      },
+      "revId": "3998510dea2de39c6d7d0e7fd9cea4ecbfa5b4f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
