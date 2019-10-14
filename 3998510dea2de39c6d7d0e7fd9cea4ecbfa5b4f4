@@ -22,6 +22,30 @@
       "revId": "3998510dea2de39c6d7d0e7fd9cea4ecbfa5b4f4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ffb26627_3298adc0",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-14T10:08:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fe99f796_5e331d82",
+      "range": {
+        "startLine": 260,
+        "startChar": 0,
+        "endLine": 260,
+        "endChar": 8
+      },
+      "revId": "3998510dea2de39c6d7d0e7fd9cea4ecbfa5b4f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
