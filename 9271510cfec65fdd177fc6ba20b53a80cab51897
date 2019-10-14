@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e2e2f356_4a87cac2",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "I will add patch with some name refactoring but ftl_num_band_lbks and ftl_dev_lbks_in_zone looks very confusing so I decide to change it here.",
+      "parentUuid": "e3364010_30346d6b",
+      "range": {
+        "startLine": 104,
+        "startChar": 29,
+        "endLine": 104,
+        "endChar": 47
+      },
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c3c86013_8778b0c8",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 16
@@ -36,6 +60,30 @@
       "writtenOn": "2019-10-14T09:09:28Z",
       "side": 1,
       "message": "Maybe this value should be cached in dev to avoid function calls?",
+      "range": {
+        "startLine": 310,
+        "startChar": 8,
+        "endLine": 310,
+        "endChar": 86
+      },
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57f5eb7e_b4d677c3",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "This is simple getter - I think it does not introduce any overhead.",
+      "parentUuid": "c3c86013_8778b0c8",
       "range": {
         "startLine": 310,
         "startChar": 8,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "16b13846_c1a5b09b",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "^",
+      "parentUuid": "c724eba9_72b94af8",
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "603f4e04_b221db06",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 16
@@ -79,6 +145,24 @@
       "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9081bdb5_bfb80924",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "603f4e04_b221db06",
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -99,6 +183,24 @@
     },
     {
       "key": {
+        "uuid": "8a112c2c_08a70a3a",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b829dfa3_f8d18088",
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "885ffef4_eceaed74",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 16
@@ -116,6 +218,24 @@
     },
     {
       "key": {
+        "uuid": "389dee9e_20722666",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "885ffef4_eceaed74",
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "631e31fd_5dc26189",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 16
@@ -127,6 +247,30 @@
       "writtenOn": "2019-10-14T09:09:28Z",
       "side": 1,
       "message": "Do some sanity checks for zone_id and pu",
+      "range": {
+        "startLine": 226,
+        "startChar": 0,
+        "endLine": 227,
+        "endChar": 34
+      },
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26cc56bd_627c3e4a",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "zone_id and pu is generated by FTL itself - I think we don\u0027t need to check this.",
+      "parentUuid": "631e31fd_5dc26189",
       "range": {
         "startLine": 226,
         "startChar": 0,
@@ -156,6 +300,24 @@
     },
     {
       "key": {
+        "uuid": "95770c77_d5a88ebb",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "Probably not - but ftl_dev_get_zone_info could take a while so I think we shouldn\u0027t blocking user.",
+      "parentUuid": "d0ec4435_043794a2",
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "87866048_88c319de",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 16
@@ -170,6 +332,24 @@
       "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94e01788_ad4ec92c",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "87866048_88c319de",
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -196,6 +376,30 @@
     },
     {
       "key": {
+        "uuid": "3ca08a7b_616aa8dc",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4df9b45c_30f56108",
+      "range": {
+        "startLine": 133,
+        "startChar": 15,
+        "endLine": 133,
+        "endChar": 22
+      },
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db390d82_e422060f",
         "filename": "mk/spdk.lib.mk",
         "patchSetId": 16
@@ -207,6 +411,24 @@
       "writtenOn": "2019-10-14T09:09:28Z",
       "side": 1,
       "message": "Was this intended?",
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4dc21210_a5a19d30",
+        "filename": "mk/spdk.lib.mk",
+        "patchSetId": 16
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "No - looks like mistake in merge.",
+      "parentUuid": "db390d82_e422060f",
       "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -230,6 +452,24 @@
     },
     {
       "key": {
+        "uuid": "95fb3371_1c14fc5b",
+        "filename": "mk/spdk.lib_deps.mk",
+        "patchSetId": 16
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e77ffb52_03b292ef",
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8557b75e_9a7d7ca3",
         "filename": "module/bdev/ftl/bdev_ftl.c",
         "patchSetId": 16
@@ -241,6 +481,30 @@
       "writtenOn": "2019-10-14T09:09:28Z",
       "side": 1,
       "message": "General in file: Did you mean dependent?",
+      "range": {
+        "startLine": 466,
+        "startChar": 9,
+        "endLine": 466,
+        "endChar": 17
+      },
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71d26f0f_8e6b5ae3",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "Yep",
+      "parentUuid": "8557b75e_9a7d7ca3",
       "range": {
         "startLine": 466,
         "startChar": 9,
@@ -276,6 +540,30 @@
     },
     {
       "key": {
+        "uuid": "8bc22b19_22ee4e73",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 652,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ba149703_c9a90fd0",
+      "range": {
+        "startLine": 649,
+        "startChar": 0,
+        "endLine": 652,
+        "endChar": 42
+      },
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bb5cb5a_b88eaf4e",
         "filename": "scripts/rpc.py",
         "patchSetId": 16
@@ -299,6 +587,30 @@
     },
     {
       "key": {
+        "uuid": "7e254a58_33d4fcd6",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 1477,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9bb5cb5a_b88eaf4e",
+      "range": {
+        "startLine": 1477,
+        "startChar": 73,
+        "endLine": 1477,
+        "endChar": 85
+      },
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "66365ed3_6e6beedf",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 16
@@ -319,6 +631,30 @@
       "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "683f3728_472409a7",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-14T11:13:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "66365ed3_6e6beedf",
+      "range": {
+        "startLine": 707,
+        "startChar": 0,
+        "endLine": 707,
+        "endChar": 35
+      },
+      "revId": "9271510cfec65fdd177fc6ba20b53a80cab51897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
