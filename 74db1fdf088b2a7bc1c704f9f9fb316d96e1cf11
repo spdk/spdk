@@ -1,0 +1,418 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72db2243_4f25b4b4",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "There should be no need to check for this flag on ctrlr, callback assigned to spdk_nvme_io_msg_ctrlr_start() should do that.\nSame when stopping.",
+      "range": {
+        "startLine": 481,
+        "startChar": 1,
+        "endLine": 481,
+        "endChar": 39
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dfe76fc0_e183a6d2",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "\u003e Yes we should ;)\n\u003e Best would be to move it up to line 459 and exit same way as when nvme_ctrlr_process_init() fails.",
+      "range": {
+        "startLine": 486,
+        "startChar": 3,
+        "endLine": 486,
+        "endChar": 36
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "151b5351_a8ed021d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "This might be the time to fix it :)",
+      "range": {
+        "startLine": 184,
+        "startChar": 1,
+        "endLine": 184,
+        "endChar": 74
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87b793a0_2c4949ba",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2465,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "No need to check this opts (see above comment).",
+      "range": {
+        "startLine": 2465,
+        "startChar": 1,
+        "endLine": 2465,
+        "endChar": 39
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a598b92_a8c62696",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2467,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "\u003e nvme_ctrlr_destruct() can be called from multiple places, including error paths in initialization. Since spdk_nvme_cuse_start() is called when ctrlr is attached, lets move stop to spdk_nvme_detach.\n\u003e Right now its possible to call stopping cuse without starting it first.",
+      "range": {
+        "startLine": 2465,
+        "startChar": 0,
+        "endLine": 2467,
+        "endChar": 2
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "700e3871_453f5347",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "\u003e Currently cleanup for session is missing. Have you explored using cuse_lowlevel_main() ? It does creation/loop/cleanup by itself.",
+      "range": {
+        "startLine": 126,
+        "startChar": 0,
+        "endLine": 129,
+        "endChar": 41
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "770c919a_9b6f7ba4",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "This does not belong here, since it cuse property.",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 39
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b040009_0460bf4c",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "Those two need a rename, as they are not cuse related.",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 41
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6832bf06_65cf671c",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "io-\u003edata wasn\u0027t allocated as part of spdk_nvme_io_* interface, so it should not be freed here.",
+      "range": {
+        "startLine": 64,
+        "startChar": 1,
+        "endLine": 64,
+        "endChar": 21
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94413b7f_30630ce7",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "This should take generic void pointer as \u0027io\u0027 and callback then present back this pointer with cb_arg. Similarly there should be no reason to ask for separate cuse_nvme_io_msg_alloc() and spdk_nvme_io_msg_send(). Basically both can be implemented in the same call. For example:\n\nspdk_nvme_io_msg_send(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *io, spdk_nvme_io_msg_fn fn, void *cb_arg)\ntypedef void (*spdk_nvme_io_msg_fn)(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *io, void *cb_arg);\n\nWhere in send we can allocate internal context for ctrlr, nsid and fn/cb_arg. Which would be freed after processing.",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 85
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a17b4f78_5200fea5",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "I don\u0027t see this being used at all, even later in the series. The interface itself doesn\u0027t look like it can use it [spdk_nvme_io_msg_fn() only presents io back].",
+      "range": {
+        "startLine": 88,
+        "startChar": 1,
+        "endLine": 88,
+        "endChar": 15
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42ca11db_a2c71d26",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "With the current approach, each callback knows the qpair to send to from ctrlr. In such case, there is no need to have a qpair field.",
+      "range": {
+        "startLine": 130,
+        "startChar": 0,
+        "endLine": 132,
+        "endChar": 3
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f34b1f8b_715aa096",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "ring and qpair needs to be freed on stop.",
+      "range": {
+        "startLine": 151,
+        "startChar": 0,
+        "endLine": 163,
+        "endChar": 2
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f4c1bf0_69d2242e",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "Checking later in the series, I don\u0027t see those being called anywhere.",
+      "range": {
+        "startLine": 185,
+        "startChar": 0,
+        "endLine": 210,
+        "endChar": 1
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac0a7ad5_78e22181",
+        "filename": "lib/nvme/nvme_io_msg.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "This structure should be split based on what CUSE needs to know about and what this generic nvme_io interface should use. At this time it contains everything.",
+      "range": {
+        "startLine": 48,
+        "startChar": 7,
+        "endLine": 48,
+        "endChar": 24
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "573f28c1_f33d00f7",
+        "filename": "lib/nvme/nvme_io_msg.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "Goes unused, and should since nvme lib should not refer to io_channels.",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 36
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8217e096_71d94efe",
+        "filename": "lib/nvme/nvme_io_msg.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "Unused",
+      "range": {
+        "startLine": 85,
+        "startChar": 0,
+        "endLine": 86,
+        "endChar": 20
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0a4e851_061f22be",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "No changes were done to this function in this patch. Probably should be moved later in the series ?",
+      "range": {
+        "startLine": 320,
+        "startChar": 0,
+        "endLine": 321,
+        "endChar": 83
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

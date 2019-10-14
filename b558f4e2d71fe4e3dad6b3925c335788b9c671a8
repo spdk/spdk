@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4481f171_977bbda5",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "This shouldn\u0027t be inlucded, as there is no such dependency in NVMe lib right now.",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 24
+      },
+      "revId": "b558f4e2d71fe4e3dad6b3925c335788b9c671a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e7a5469_af3348e8",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-14T12:05:16Z",
+      "side": 1,
+      "message": "This ring is not used in this patch, probably should be moved to next patch in series (see comment there).",
+      "range": {
+        "startLine": 151,
+        "startChar": 0,
+        "endLine": 157,
+        "endChar": 2
+      },
+      "revId": "b558f4e2d71fe4e3dad6b3925c335788b9c671a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
