@@ -92,6 +92,9 @@ function usage()
 	echo "                           If an argument is provided, it is considered a directory containing"
 	echo "                           liburing.a and io_uring.h. Otherwise the regular system paths will"
 	echo "                           be searched."
+	echo " async-network             Build Async network I/O while using posix network stack."
+	echo "                           No path required. With this config, it can use liburing or libaio to"
+	echo "                           enable asynchronous read/write on kernel tcp network I/O stack"
 	echo " fuse                      Build FUSE components for mounting a blobfs filesystem."
 	echo "                           No path required."
 	echo " nvme-cuse                 Build NVMe driver with support for CUSE-based character devices."
@@ -358,6 +361,12 @@ for i in "$@"; do
 		--without-uring)
 			CONFIG[URING]=n
 			CONFIG[URING_PATH]=
+			;;
+		 --with-async-network)
+                        CONFIG[ASYNC_NETWORK]=y
+                        ;;
+                --without-async-network)
+                        CONFIG[ASYNC_NETWORK]=n
 			;;
 		--with-fuse)
 			CONFIG[FUSE]=y

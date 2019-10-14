@@ -90,7 +90,9 @@ endif
 SOCK_MODULES_LIST = sock_posix
 
 ifeq ($(OS), Linux)
+ifeq ($(CONFIG_ASYNC_NETWORK),y)
 SOCK_MODULES_LIST += sock_uring
+endif
 endif
 
 ifeq ($(CONFIG_VPP),y)
