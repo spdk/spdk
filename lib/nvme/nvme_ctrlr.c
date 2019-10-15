@@ -379,6 +379,41 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 int
+spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	int rc;
+
+	if (qpair == NULL || nvme_qpair_is_admin_queue(qpair)) {
+		return -EINVAL;
+	}
+
+	ctrlr = qpair->ctrlr;
+
+	if (qpair->ctrlr == NULL) {
+		return -EINVAL;
+	}
+
+	if (ctrlr->is_failed || ctrlr->is_removed || ctrlr->is_resetting) {
+		return -ENXIO;
+	}
+
+	if (!qpair->transport_qp_is_failed) {
+		return 0;
+	}
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+
+	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
+	if (rc) {
+		rc = -EAGAIN;
+	}
+
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	return rc;
+}
+
+int
 spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
