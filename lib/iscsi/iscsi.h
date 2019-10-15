@@ -171,7 +171,7 @@ struct spdk_iscsi_pdu {
 	size_t data_segment_len;
 	int bhs_valid_bytes;
 	int ahs_valid_bytes;
-	int data_valid_bytes;
+	uint32_t data_valid_bytes;
 	int hdigest_valid_bytes;
 	int ddigest_valid_bytes;
 	int ref;
@@ -410,10 +410,9 @@ void spdk_iscsi_auth_groups_info_json(struct spdk_json_write_ctx *w);
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 			      struct spdk_iscsi_task *task);
-int spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
 int spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int iovcnt,
 			  struct spdk_iscsi_pdu *pdu, uint32_t *mapped_length);
-int spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu);
+int spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn);
 bool spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 			    struct spdk_dif_ctx *dif_ctx);
 void spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
@@ -446,7 +445,7 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_op_abort_task_set(struct spdk_iscsi_task *task,
 				  uint8_t function);
 
-static inline int
+static inline uint32_t
 spdk_get_max_immediate_data_size(void)
 {
 	/*

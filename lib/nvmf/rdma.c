@@ -269,11 +269,6 @@ struct spdk_nvmf_rdma_request {
 	uint32_t				num_outstanding_data_wr;
 	uint64_t				receive_tsc;
 
-	struct spdk_dif_ctx			dif_ctx;
-	bool					dif_insert_or_strip;
-	uint32_t				elba_length;
-	uint32_t				orig_length;
-
 	STAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
 };
 
@@ -1627,8 +1622,8 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 	uint32_t remaining_data_block = 0;
 	uint32_t offset = 0;
 
-	if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
-		dif_ctx = &rdma_req->dif_ctx;
+	if (spdk_unlikely(rdma_req->req.dif.dif_insert_or_strip)) {
+		dif_ctx = &rdma_req->req.dif.dif_ctx;
 		remaining_data_block = dif_ctx->block_size - dif_ctx->md_size;
 	}
 
@@ -1830,10 +1825,10 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		/* fill request length and populate iovs */
 		req->length = length;
 
-		if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
-			rdma_req->orig_length = length;
-			length = spdk_dif_get_length_with_md(length, &rdma_req->dif_ctx);
-			rdma_req->elba_length = length;
+		if (spdk_unlikely(req->dif.dif_insert_or_strip)) {
+			req->dif.orig_length = length;
+			length = spdk_dif_get_length_with_md(length, &req->dif.dif_ctx);
+			req->dif.elba_length = length;
 		}
 
 		if (spdk_nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req, length) < 0) {
@@ -1945,10 +1940,7 @@ nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	rdma_req->req.data = NULL;
 	rdma_req->rsp.wr.next = NULL;
 	rdma_req->data.wr.next = NULL;
-	rdma_req->dif_insert_or_strip = false;
-	rdma_req->elba_length = 0;
-	rdma_req->orig_length = 0;
-	memset(&rdma_req->dif_ctx, 0, sizeof(rdma_req->dif_ctx));
+	memset(&rdma_req->req.dif, 0, sizeof(rdma_req->req.dif));
 	rqpair->qd--;
 
 	STAILQ_INSERT_HEAD(&rqpair->resources->free_queue, rdma_req, state_link);
@@ -2014,8 +2006,8 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				break;
 			}
 
-			if (spdk_unlikely(spdk_nvmf_request_get_dif_ctx(&rdma_req->req, &rdma_req->dif_ctx))) {
-				rdma_req->dif_insert_or_strip = true;
+			if (spdk_unlikely(spdk_nvmf_request_get_dif_ctx(&rdma_req->req, &rdma_req->req.dif.dif_ctx))) {
+				rdma_req->req.dif.dif_insert_or_strip = true;
 			}
 
 			/* The next state transition depends on the data transfer needs of this request. */
@@ -2106,14 +2098,14 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_READY_TO_EXECUTE, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
 
-			if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
+			if (spdk_unlikely(rdma_req->req.dif.dif_insert_or_strip)) {
 				if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 					/* generate DIF for write operation */
-					num_blocks = SPDK_CEIL_DIV(rdma_req->elba_length, rdma_req->dif_ctx.block_size);
+					num_blocks = SPDK_CEIL_DIV(rdma_req->req.dif.elba_length, rdma_req->req.dif.dif_ctx.block_size);
 					assert(num_blocks > 0);
 
 					rc = spdk_dif_generate(rdma_req->req.iov, rdma_req->req.iovcnt,
-							       num_blocks, &rdma_req->dif_ctx);
+							       num_blocks, &rdma_req->req.dif.dif_ctx);
 					if (rc != 0) {
 						SPDK_ERRLOG("DIF generation failed\n");
 						rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
@@ -2122,9 +2114,9 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 					}
 				}
 
-				assert(rdma_req->elba_length >= rdma_req->req.length);
+				assert(rdma_req->req.dif.elba_length >= rdma_req->req.length);
 				/* set extended length before IO operation */
-				rdma_req->req.length = rdma_req->elba_length;
+				rdma_req->req.length = rdma_req->req.dif.elba_length;
 			}
 
 			rdma_req->state = RDMA_REQUEST_STATE_EXECUTING;
@@ -2145,17 +2137,17 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			} else {
 				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
 			}
-			if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
+			if (spdk_unlikely(rdma_req->req.dif.dif_insert_or_strip)) {
 				/* restore the original length */
-				rdma_req->req.length = rdma_req->orig_length;
+				rdma_req->req.length = rdma_req->req.dif.orig_length;
 
 				if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 					struct spdk_dif_error error_blk;
 
-					num_blocks = SPDK_CEIL_DIV(rdma_req->elba_length, rdma_req->dif_ctx.block_size);
+					num_blocks = SPDK_CEIL_DIV(rdma_req->req.dif.elba_length, rdma_req->req.dif.dif_ctx.block_size);
 
-					rc = spdk_dif_verify(rdma_req->req.iov, rdma_req->req.iovcnt, num_blocks, &rdma_req->dif_ctx,
-							     &error_blk);
+					rc = spdk_dif_verify(rdma_req->req.iov, rdma_req->req.iovcnt, num_blocks,
+							     &rdma_req->req.dif.dif_ctx, &error_blk);
 					if (rc) {
 						struct spdk_nvme_cpl *rsp = &rdma_req->req.rsp->nvme_cpl;
 
@@ -2830,7 +2822,7 @@ _nvmf_rdma_try_disconnect(void *ctx)
 static inline void
 spdk_nvmf_rdma_start_disconnect(struct spdk_nvmf_rdma_qpair *rqpair)
 {
-	if (__sync_bool_compare_and_swap(&rqpair->disconnect_started, false, true)) {
+	if (!__atomic_test_and_set(&rqpair->disconnect_started, __ATOMIC_RELAXED)) {
 		_nvmf_rdma_try_disconnect(&rqpair->qpair);
 	}
 }

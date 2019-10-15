@@ -9,7 +9,7 @@ rpc_py=$rootdir/scripts/rpc.py
 
 pci_devs=$($rootdir/app/spdk_lspci/spdk_lspci | grep "NVMe disk behind VMD" | awk '{print $1}')
 
-if [ -z $pci_devs ]; then
+if [ -z "$pci_devs" ]; then
         echo "Couldn't find any NVMe device behind a VMD."
         exit 1
 fi
@@ -53,5 +53,8 @@ $rpc_py framework_start_init
 for bdf in $pci_devs; do
 	$rpc_py bdev_nvme_attach_controller -b NVMe_$bdf -t PCIe -a $bdf
 done
+
+trap - SIGINT SIGTERM EXIT
+killprocess $svcpid
 
 timing_exit vmd
