@@ -774,8 +774,6 @@ bdev_aio_initialize(void)
 		rc = create_aio_bdev(name, file, block_size);
 		if (rc) {
 			SPDK_ERRLOG("Unable to create AIO bdev from file %s, err is %s\n", file, spdk_strerror(-rc));
-			i++;
-			continue;
 		}
 
 		i++;
