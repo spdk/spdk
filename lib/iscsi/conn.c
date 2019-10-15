@@ -377,12 +377,6 @@ _iscsi_conn_free(struct spdk_iscsi_conn *conn)
 
 	spdk_iscsi_param_free(conn->params);
 
-	/*
-	 * Each connection pre-allocates its next PDU - make sure these get
-	 *  freed here.
-	 */
-	spdk_put_pdu(conn->pdu_in_progress);
-
 	free_conn(conn);
 }
 

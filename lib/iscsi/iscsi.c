@@ -4599,15 +4599,11 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 
 	do {
 		prev_state = conn->pdu_recv_state;
-		pdu = conn->pdu_in_progress;
+		pdu = &conn->pdu_in_progress;
 
 		switch (conn->pdu_recv_state) {
-			assert(conn->pdu_in_progress == NULL);
-
-			conn->pdu_in_progress = spdk_get_pdu();
-			if (conn->pdu_in_progress == NULL) {
-				return SPDK_ISCSI_CONNECTION_FATAL;
-			}
+			/* we can zero out entirely because this is used for receive. */
+			memset(pdu, 0, sizeof(struct spdk_iscsi_pdu));
 			conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_HDR;
 			break;
 		case ISCSI_PDU_RECV_STATE_AWAIT_PDU_HDR:
@@ -4757,16 +4753,24 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 			rc = iscsi_execute(conn, pdu);
 			if (rc == 0) {
 				spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
-				spdk_put_pdu(pdu);
-				conn->pdu_in_progress = NULL;
+				if (pdu->mobj) {
+					spdk_mempool_put(pdu->mobj->mp, (void *)pdu->mobj);
+				}
+				if (pdu->data && !pdu->data_from_mempool) {
+					free(pdu->data);
+				}
 				return 1;
 			} else {
 				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 			}
 			break;
 		case ISCSI_PDU_RECV_STATE_ERROR:
-			spdk_put_pdu(pdu);
-			conn->pdu_in_progress = NULL;
+			if (pdu->mobj) {
+				spdk_mempool_put(pdu->mobj->mp, (void *)pdu->mobj);
+			}
+			if (pdu->data && !pdu->data_from_mempool) {
+				free(pdu->data);
+			}
 			return SPDK_ISCSI_CONNECTION_FATAL;
 		default:
 			assert(false);
