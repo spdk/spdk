@@ -16,6 +16,24 @@
       "revId": "03f39b696df48cc8d4f0ed9d42a4d101a053f30a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8af0889c_66b26444",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3791,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-15T02:58:05Z",
+      "side": 1,
+      "message": "Critical bug was that pdu-\u003etask was not set in this function.",
+      "parentUuid": "46a62808_8725a4cd",
+      "revId": "03f39b696df48cc8d4f0ed9d42a4d101a053f30a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
