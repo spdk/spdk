@@ -287,13 +287,14 @@ class UINvmeBdev(UIBdev):
         self.get_root().bdev_nvme_detach_controller(name=name)
 
     def ui_command_create(self, name, trtype, traddr,
-                          adrfam=None, trsvcid=None, subnqn=None):
+                          adrfam=None, trsvcid=None, subnqn=None, cuse=None):
         if "rdma" in trtype and None in [adrfam, trsvcid, subnqn]:
             self.shell.log.error("Using RDMA transport type."
                                  "Please provide arguments for adrfam, trsvcid and subnqn.")
         ret_name = self.get_root().create_nvme_bdev(name=name, trtype=trtype,
                                                     traddr=traddr, adrfam=adrfam,
-                                                    trsvcid=trsvcid, subnqn=subnqn)
+                                                    trsvcid=trsvcid, subnqn=subnqn,
+                                                    cuse="false")
         self.shell.log.info(ret_name)
 
     def ui_command_delete_all(self):
