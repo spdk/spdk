@@ -349,6 +349,8 @@ struct spdk_nvme_qpair {
 	uint8_t				in_completion_context : 1;
 	uint8_t				delete_after_completion_context: 1;
 
+	uint8_t				transport_qp_is_failed: 1;
+
 	/*
 	 * Set when no deletion notification is needed. For example, the process
 	 * which allocated this qpair exited unexpectedly.
