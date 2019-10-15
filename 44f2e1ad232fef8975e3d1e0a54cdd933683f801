@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5bd4b0ad_405c6445",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1255,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T05:09:12Z",
+      "side": 1,
+      "message": "should we set ctx-\u003eprobe_done \u003d true here instead?  because once this is called, the probe *is* done\n\nsetting it to true here makes the code simpler I think - because then if bdev_nvme_create_bdevs() fails, probe_done is already set to true, and you don\u0027t have to do that || rc check in the create_bdevs_cb",
+      "revId": "44f2e1ad232fef8975e3d1e0a54cdd933683f801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
