@@ -2216,21 +2216,12 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 }
 
 static int
-iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_hdr_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
-	struct iscsi_param *params = NULL;
-	struct spdk_iscsi_pdu *rsp_pdu;
-	uint8_t *data;
-	uint64_t lun;
 	uint32_t task_tag;
 	uint32_t ExpStatSN;
-	const char *val;
 	int F_bit, C_bit;
-	int data_len;
-	int alloc_len;
-	int rc;
 	struct iscsi_bhs_text_req *reqh;
-	struct iscsi_bhs_text_resp *rsph;
 
 	if (pdu->data_segment_len > spdk_get_max_immediate_data_size()) {
 		SPDK_ERRLOG("data segment len(=%zu) > immediate data len(=%"PRIu32")\n",
@@ -2238,14 +2229,10 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 	}
 
-	data_len = 0;
-	alloc_len = conn->MaxRecvDataSegmentLength;
-
 	reqh = (struct iscsi_bhs_text_req *)&pdu->bhs;
 
 	F_bit = !!(reqh->flags & ISCSI_FLAG_FINAL);
 	C_bit = !!(reqh->flags & ISCSI_TEXT_CONTINUE);
-	lun = from_be64(&reqh->lun);
 	task_tag = from_be32(&reqh->itt);
 	ExpStatSN = from_be32(&reqh->exp_stat_sn);
 
@@ -2286,6 +2273,40 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			    conn->sess->current_text_itt, task_tag);
 		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 	}
+
+	return 0;
+}
+
+static int
+iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	struct iscsi_param *params = NULL;
+	struct spdk_iscsi_pdu *rsp_pdu;
+	uint8_t *data;
+	uint64_t lun;
+	uint32_t task_tag;
+	const char *val;
+	int F_bit, C_bit;
+	int data_len;
+	int alloc_len;
+	int rc;
+	struct iscsi_bhs_text_req *reqh;
+	struct iscsi_bhs_text_resp *rsph;
+
+	rc = iscsi_pdu_hdr_op_text(conn, pdu);
+	if (rc != 0 || pdu->is_rejected) {
+		return rc;
+	}
+
+	data_len = 0;
+	alloc_len = conn->MaxRecvDataSegmentLength;
+
+	reqh = (struct iscsi_bhs_text_req *)&pdu->bhs;
+
+	F_bit = !!(reqh->flags & ISCSI_FLAG_FINAL);
+	C_bit = !!(reqh->flags & ISCSI_TEXT_CONTINUE);
+	lun = from_be64(&reqh->lun);
+	task_tag = from_be32(&reqh->itt);
 
 	/* store incoming parameters */
 	rc = spdk_iscsi_parse_params(&params, pdu->data, pdu->data_segment_len,
