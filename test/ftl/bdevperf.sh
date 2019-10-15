@@ -19,6 +19,7 @@ for (( i=0; i<${#tests[@]}; i++ )) do
 
 	trap 'killprocess $bdevperf_pid; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $bdevperf_pid
+	$rpc_py construct_ftl_bdev -b ftl0 -d nvme0n1
 	$rpc_py bdev_nvme_attach_controller -b nvme0 -a $device -t pcie
 	$rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1
 	$rpc_py bdev_ftl_create -b ftl0 -d nvme0n1
