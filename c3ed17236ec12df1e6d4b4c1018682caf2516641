@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00a4390f_a7068507",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T19:24:05Z",
+      "side": 1,
+      "message": "This patch looks fine, but it isn\u0027t specific to FC at all.\n\nA better commit message would be:\n\nnvmf: optimize listen address parsing code",
+      "revId": "c3ed17236ec12df1e6d4b4c1018682caf2516641",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
