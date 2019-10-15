@@ -116,6 +116,24 @@
       "revId": "19c93266e4082497b66d0e29999c03f78e237dd1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52c1aebd_c287d82a",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T17:54:50Z",
+      "side": 1,
+      "message": "Makes sense.  Maybe just forward declare struct spdk_blob_open_opts and then you won\u0027t have to move as much code.  There are already some other forward declarations like this at lines 86-90 above so it would fit nicely there.",
+      "parentUuid": "948663d7_1a5e69af",
+      "revId": "19c93266e4082497b66d0e29999c03f78e237dd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
