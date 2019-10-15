@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "145553d9_e9ceda2d",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1048,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T23:45:40Z",
+      "side": 1,
+      "message": "Would it be accurate to say:\n\n...but have entered failed state.  Failed state is indicated by spdk_nvme_qpair_process_completions() returning -ENXIO for this pair.",
+      "revId": "2b8204cd1c1db07d8104c3d7e4582b53ca75b3a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6d69689_743f8334",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1052,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T23:45:40Z",
+      "side": 1,
+      "message": "was already enabled \u003d\u003d\u003e was already connected\n\nit\u0027s bogus to call this function with qpair \u003d\u003d NULL - an assert is fine, but I don\u0027t think we need to allow the user to do that?  for example, we don\u0027t call this out for other functions in this file (not sure what is meant by \"ctrlr is NULL - do you mean if qpair-\u003ectrlr is NULL?  that should also never happen and be guarded with an assert instead)\n\n-EAGAIN probably needs to be clarified too.  -EAGAIN literally means \"try this again for some reason\", but here we just say it will return -EAGAIN on failure which indicates otherwise.",
+      "revId": "2b8204cd1c1db07d8104c3d7e4582b53ca75b3a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a03b4f9_ebe93b8c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T23:45:40Z",
+      "side": 1,
+      "message": "I don\u0027t think you have to check this.  An assert would be fine.  We don\u0027t expose the admin qpair to the user, so there\u0027s no way for a user to pass the admin qpair here.",
+      "revId": "2b8204cd1c1db07d8104c3d7e4582b53ca75b3a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "04f66414_80abff77",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1439,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T23:45:40Z",
+      "side": 1,
+      "message": "some of these test cases in this function will need to be removed based on comments from above",
+      "revId": "2b8204cd1c1db07d8104c3d7e4582b53ca75b3a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
