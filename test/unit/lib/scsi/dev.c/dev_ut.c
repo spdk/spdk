@@ -119,7 +119,8 @@ DEFINE_STUB_V(spdk_scsi_lun_append_mgmt_task,
 DEFINE_STUB_V(spdk_scsi_lun_execute_mgmt_task, (struct spdk_scsi_lun *lun));
 
 DEFINE_STUB(spdk_scsi_lun_has_pending_mgmt_tasks, bool,
-	    (const struct spdk_scsi_lun *lun), false);
+	    (const struct spdk_scsi_lun *lun, const struct spdk_scsi_port *initiator_port),
+	    false);
 
 DEFINE_STUB_V(spdk_scsi_lun_append_task,
 	      (struct spdk_scsi_lun *lun, struct spdk_scsi_task *task));
@@ -132,7 +133,8 @@ DEFINE_STUB(_spdk_scsi_lun_allocate_io_channel, int,
 DEFINE_STUB_V(_spdk_scsi_lun_free_io_channel, (struct spdk_scsi_lun *lun));
 
 DEFINE_STUB(spdk_scsi_lun_has_pending_tasks, bool,
-	    (const struct spdk_scsi_lun *lun), false);
+	    (const struct spdk_scsi_lun *lun, const struct spdk_scsi_port *initiator_port),
+	    false);
 
 static void
 dev_destruct_null_dev(void)
