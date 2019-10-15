@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47f33195_d30c7288",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T05:14:46Z",
+      "side": 1,
+      "message": "thanks for the explanation on why you had to defer the io_device_register change\n\nI think the patch will be easier to review if you just merge this patch and the next one.  I know - it\u0027s not often I say that the patches should be bigger instead of smaller!  But a lot of this code added here goes away in the next patch.\n\nPlease update the commit message to reflect the merged patches.",
+      "revId": "d32c25be26cfe00a2f0b4fcfd7f6f49b7b12dc81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
