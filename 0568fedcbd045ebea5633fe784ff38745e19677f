@@ -50,6 +50,57 @@
       "revId": "0568fedcbd045ebea5633fe784ff38745e19677f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6361c05_bac45159",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 2025,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T20:59:43Z",
+      "side": 1,
+      "message": "\"Create opal bdev on specified NVMe controller\"",
+      "revId": "0568fedcbd045ebea5633fe784ff38745e19677f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85b2c732_28e57b04",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 2029,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T20:59:43Z",
+      "side": 1,
+      "message": "locking range length (in blocks)",
+      "revId": "0568fedcbd045ebea5633fe784ff38745e19677f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "690cee84_fe1eb4e7",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 2040,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T20:59:43Z",
+      "side": 1,
+      "message": "above we use \"admin password\" but here it is \"password for admin\" - they should be consistent",
+      "revId": "0568fedcbd045ebea5633fe784ff38745e19677f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
