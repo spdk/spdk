@@ -210,6 +210,8 @@ bdev_nvme_poll_adminq(void *arg)
 {
 	struct spdk_nvme_ctrlr *ctrlr = arg;
 
+	spdk_nvme_io_msg_process(ctrlr);
+
 	return spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 }
 
@@ -1282,6 +1284,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      uint32_t count,
 		      const char *hostnqn,
 		      uint32_t prchk_flags,
+		      bool enable_cuse,
 		      spdk_bdev_create_nvme_fn cb_fn,
 		      void *cb_ctx)
 {
@@ -1322,6 +1325,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->opts, sizeof(ctx->opts));
 	ctx->opts.transport_retry_count = g_opts.retry_count;
+	ctx->opts.enable_cuse_devices = enable_cuse;
 
 	if (hostnqn) {
 		snprintf(ctx->opts.hostnqn, sizeof(ctx->opts.hostnqn), "%s", hostnqn);
@@ -1341,6 +1345,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		free(ctx);
 		return -ENODEV;
 	}
+
 	ctx->poller = spdk_poller_register(bdev_nvme_async_poll, ctx, 1000);
 
 	return 0;
