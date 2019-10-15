@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46e3ec4d_27e02fa5",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4592,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T18:25:10Z",
+      "side": 1,
+      "message": "moving the loop-related code into this file makes sense - I\u0027m just wondering if we need to put it directly into this function?  or can we do:\n\n1) make spdk_iscsi_read_pdu private to this file (named iscsi_read_pdu?)\n2) add spdk_iscsi_handle_incoming_pdus here which calls iscsi_read_pdu in a loop\n\n#2 would look similar then to the iscsi_conn_handle_incoming_pdus that was in conn.c\n\nI guess I like this function just handling at most one PDU, and the loop stuff handled elsewhere.  It avoids having to make sure we also return pdu_recv_loop_cnt.",
+      "revId": "e987016380d4c90ea68dfbc222b5177e6eb23424",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
