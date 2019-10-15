@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "nvme_internal.h"
+#include "nvme_io_msg.h"
 
 #include "spdk/env.h"
 #include "spdk/string.h"
