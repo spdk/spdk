@@ -459,7 +459,11 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	free(dpdk_args);
 
 	if (rc < 0) {
-		fprintf(stderr, "Failed to initialize DPDK\n");
+		if (rte_errno == EALREADY) {
+			fprintf(stderr, "DPDK already initialized\n");
+		} else {
+			fprintf(stderr, "Failed to initialize DPDK\n");
+		}
 		return -rte_errno;
 	}
 
