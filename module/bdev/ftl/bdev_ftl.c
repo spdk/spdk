@@ -85,10 +85,14 @@ struct ftl_bdev_io {
 };
 
 struct ftl_deferred_init {
+	bool				base_initialized;
+
 	struct ftl_bdev_init_opts	opts;
 
 	LIST_ENTRY(ftl_deferred_init)	entry;
 };
+
+static LIST_HEAD(, ftl_deferred_init)	g_deferred_init = LIST_HEAD_INITIALIZER(g_deferred_init);
 
 static int bdev_ftl_initialize(void);
 static void bdev_ftl_finish(void);
@@ -104,7 +108,7 @@ static struct spdk_bdev_module g_ftl_if = {
 	.name		= "ftl",
 	.module_init	= bdev_ftl_initialize,
 	.module_fini	= bdev_ftl_finish,
-	.examine_config = bdev_ftl_examine,
+	.examine_disk	= bdev_ftl_examine,
 	.get_ctx_size	= bdev_ftl_get_ctx_size,
 };
 
@@ -527,6 +531,64 @@ error_dev:
 	init_cb(NULL, init_arg, rc);
 }
 
+static void
+bdev_ftl_defer_free(struct ftl_deferred_init *init)
+{
+	free(init->opts.name);
+	free(init->opts.base_bdev);
+	free(init->opts.cache_bdev);
+	free(init);
+}
+
+static int
+bdev_ftl_defer_init(const struct ftl_bdev_init_opts *opts, bool base_bdev_initialized)
+{
+	struct ftl_deferred_init *init;
+
+	init = calloc(1, sizeof(*init));
+	if (!init) {
+		return -ENOMEM;
+	}
+
+	init->opts = *opts;
+
+	init->opts.name = strdup(opts->name);
+	if (!init->opts.name) {
+		SPDK_ERRLOG("Could not allocate bdev name\n");
+		goto error_name;
+	}
+
+	init->opts.base_bdev = strdup(opts->base_bdev);
+	if (!init->opts.base_bdev) {
+		SPDK_ERRLOG("Could not allocate base bdev name\n");
+		goto error_base;
+	}
+
+	if (opts->cache_bdev) {
+		init->opts.cache_bdev = strdup(opts->cache_bdev);
+		if (!init->opts.cache_bdev) {
+			SPDK_ERRLOG("Could not allocate cache bdev name\n");
+			goto error_cache;
+		}
+	}
+
+	if (base_bdev_initialized) {
+		init->base_initialized = true;
+	}
+
+	LIST_INSERT_HEAD(&g_deferred_init, init, entry);
+
+	return 0;
+
+error_cache:
+	free(init->opts.base_bdev);
+error_base:
+	free(init->opts.name);
+error_name:
+	free(init);
+	return -ENOMEM;
+}
+
 static int
 bdev_ftl_init_dependent_bdev(struct ftl_bdev *ftl_bdev, const char *bdev_name,
 			     struct spdk_bdev_desc **bdev_desc)
@@ -577,7 +639,12 @@ bdev_ftl_create(const struct ftl_bdev_init_opts *bdev_opts,
 	rc = bdev_ftl_init_dependent_bdev(ftl_bdev, bdev_opts->base_bdev,
 					  &ftl_bdev->base_bdev_desc);
 	if (rc) {
-		goto error_name;
+		if (rc == -ENOENT) {
+			if (bdev_ftl_defer_init(bdev_opts, false)) {
+				rc = -ENOMEM;
+			}
+			goto error_name;
+		}
 	}
 
 	if (!spdk_bdev_is_zoned(spdk_bdev_desc_get_bdev(ftl_bdev->base_bdev_desc))) {
@@ -631,12 +698,6 @@ error_bdev:
 	return rc;
 }
 
-static int
-bdev_ftl_initialize(void)
-{
-	return 0;
-}
-
 void
 bdev_ftl_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
@@ -651,6 +712,12 @@ bdev_ftl_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_a
 	cb_fn(cb_arg, -ENODEV);
 }
 
+static int
+bdev_ftl_initialize(void)
+{
+	return 0;
+}
+
 static void
 bdev_ftl_finish(void)
 {
@@ -658,9 +725,47 @@ bdev_ftl_finish(void)
 }
 
 static void
+bdev_ftl_create_defered_cb(const struct ftl_bdev_info *info, void *ctx, int status)
+{
+	struct ftl_deferred_init *opts = ctx;
+
+	if (status) {
+		SPDK_ERRLOG("Failed to initialize FTL bdev '%s'\n", opts->opts.name);
+	}
+
+	bdev_ftl_defer_free(opts);
+
+	spdk_bdev_module_examine_done(&g_ftl_if);
+}
+
+static void
 bdev_ftl_examine(struct spdk_bdev *bdev)
 {
-	/* TODO: Add examine support */
+	struct ftl_deferred_init *opts;
+
+	LIST_FOREACH(opts, &g_deferred_init, entry) {
+		if (!opts->base_initialized) {
+			if (spdk_bdev_get_by_name(opts->opts.base_bdev) != bdev) {
+				continue;
+			}
+			opts->base_initialized = true;
+		}
+
+		if (opts->opts.cache_bdev && spdk_bdev_get_by_name(opts->opts.base_bdev) != bdev) {
+			continue;
+		}
+
+		LIST_REMOVE(opts, entry);
+
+		/* spdk_bdev_module_examine_done will be called by bdev_ftl_create_defered_cb */
+		if (bdev_ftl_create(&opts->opts, bdev_ftl_create_defered_cb, opts)) {
+			SPDK_ERRLOG("Failed to initialize FTL bdev '%s'\n", opts->opts.name);
+			bdev_ftl_defer_free(opts);
+			break;
+		}
+		return;
+	}
+
 	spdk_bdev_module_examine_done(&g_ftl_if);
 }
 

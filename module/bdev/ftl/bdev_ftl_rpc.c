@@ -148,6 +148,8 @@ spdk_rpc_bdev_ftl_create(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_bdev_ftl_create req = {};
 	struct ftl_bdev_init_opts opts = {};
+	struct spdk_json_write_ctx *w;
+
 	int rc;
 
 	spdk_ftl_conf_init_defaults(&req.ftl_conf);
@@ -187,9 +189,15 @@ spdk_rpc_bdev_ftl_create(struct spdk_jsonrpc_request *request,
 
 	rc = bdev_ftl_create(&opts, _spdk_rpc_bdev_ftl_create_cb, request);
 	if (rc) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Failed to create FTL bdev: %s",
-						     spdk_strerror(-rc));
+		if (rc == -ENOENT) {
+			w = spdk_jsonrpc_begin_result(request);
+			spdk_json_write_string_fmt(w, "FTL bdev: %s creation deffered", req.name);
+			spdk_jsonrpc_end_result(request, w);
+		} else {
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							     "Failed to create FTL bdev: %s",
+							     spdk_strerror(-rc));
+		}
 		goto invalid;
 	}
 
