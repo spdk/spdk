@@ -2,6 +2,142 @@
   "comments": [
     {
       "key": {
+        "uuid": "ca40afc8_1b8469d5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-15T23:10:21Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this function just insert the new extent into the extent table right here? Then you don\u0027t need to pass lowest_free_extent to _spdk_blob_insert_cluster - you can just do the _spdk_bs_cluster_to_extent_page() call again but now it will always find the extent page.",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db199284_66cda1b3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-15T23:10:21Z",
+      "side": 1,
+      "message": "This check could fail, couldn\u0027t it? What if the metadata was allocated such that the extent table leaf hasn\u0027t actually be read in yet? Or is this code only executed after a clean shutdown where the used_md_pages bitmask was successfully written out?",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80bd6895_832ffae1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-15T23:10:21Z",
+      "side": 1,
+      "message": "Can you comment here that only runs of 0\u0027s are run-length-encoded? The code makes a lot more sense once you realize that.",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8fffe770_7477f1f1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1564,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-15T23:10:21Z",
+      "side": 1,
+      "message": "I think you need to do similar logic to calculate the number of extents to handle this case.",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef324ca1_a0b3d4f4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1588,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-15T23:10:21Z",
+      "side": 1,
+      "message": "Are we going to use the extent table format for thickly provisioned blobs? It seems that we should be verifying there is sufficient space for metadata here, but that verification needs to happen for both thin and thick provisioning.",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dada5729_5ea6fba9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1622,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-15T23:10:21Z",
+      "side": 1,
+      "message": "lfe is never set. You can skip this optimization, at least for the initial patch, and always search the bit array from 0.",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e52cc09f_e7d3f056",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-15T23:10:21Z",
+      "side": 1,
+      "message": "I don\u0027t understand the meaning of this value. There is only one extent table per blob. Is it the number of extent pages in the table?",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1dd96fa1_b1c6f673",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-15T23:10:21Z",
+      "side": 1,
+      "message": "Maybe this is too tricky, but could you steal the top-most bit here and use it as a flag? The flag would mean that this is encoding a string of 0\u0027s and the value is to be treated as the length. If the flag isn\u0027t set, it\u0027s just a page_idx. That cuts this down to a regular uint32_t that you can stick in an array.",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "90fc532b_2772133c",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 8
@@ -30,6 +166,24 @@
       "writtenOn": "2019-10-15T22:31:08Z",
       "side": 1,
       "message": "maybe cluster_num -\u003e cluster_idx?",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "adfedda2_02488763",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-15T23:10:21Z",
+      "side": 1,
+      "message": "I see elsewhere it already uses cluster_num, so let\u0027s stick with that.",
+      "parentUuid": "1386da3a_cee635bd",
       "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
