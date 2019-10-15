@@ -174,6 +174,7 @@ struct rpc_bdev_nvme_attach_controller {
 	char *hostsvcid;
 	bool prchk_reftag;
 	bool prchk_guard;
+	bool cuse;
 };
 
 static void
@@ -203,7 +204,9 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 	{"hostsvcid", offsetof(struct rpc_bdev_nvme_attach_controller, hostsvcid), spdk_json_decode_string, true},
 
 	{"prchk_reftag", offsetof(struct rpc_bdev_nvme_attach_controller, prchk_reftag), spdk_json_decode_bool, true},
-	{"prchk_guard", offsetof(struct rpc_bdev_nvme_attach_controller, prchk_guard), spdk_json_decode_bool, true}
+	{"prchk_guard", offsetof(struct rpc_bdev_nvme_attach_controller, prchk_guard), spdk_json_decode_bool, true},
+
+	{"cuse", offsetof(struct rpc_bdev_nvme_attach_controller, cuse), spdk_json_decode_bool, true}
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
@@ -318,7 +321,7 @@ spdk_rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	ctx->count = NVME_MAX_BDEVS_PER_RPC;
 	rc = spdk_bdev_nvme_create(&trid, &hostid, ctx->req.name, ctx->names, ctx->count, ctx->req.hostnqn,
-				   prchk_flags, spdk_rpc_bdev_nvme_attach_controller_done, ctx);
+				   prchk_flags, ctx->req.cuse, spdk_rpc_bdev_nvme_attach_controller_done, ctx);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
