@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0fdc1e03_37ae5a7b",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-15T05:21:41Z",
+      "side": 1,
+      "message": "maybe spdk_nvmf_subsystem_allow_any_listener is consistent with others.",
+      "range": {
+        "startLine": 627,
+        "startChar": 5,
+        "endLine": 627,
+        "endChar": 47
+      },
+      "revId": "13087597feb96712cbc35a79fa304fdd9f8eff0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d76f44a3_e640d0fc",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 639,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-15T05:21:41Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_subsytem_any_listener_allowed consistent with spdk_nvmf_subsystem_listener_allowed",
+      "range": {
+        "startLine": 639,
+        "startChar": 5,
+        "endLine": 639,
+        "endChar": 44
+      },
+      "revId": "13087597feb96712cbc35a79fa304fdd9f8eff0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "206e482f_ff143cd9",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3000,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-15T05:21:41Z",
+      "side": 1,
+      "message": "I think that one nest level is increased but simply if (func() \u003d\u003d true) { ctx \u003d ... } may be better than using goto.",
+      "range": {
+        "startLine": 3000,
+        "startChar": 3,
+        "endLine": 3000,
+        "endChar": 13
+      },
+      "revId": "13087597feb96712cbc35a79fa304fdd9f8eff0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
