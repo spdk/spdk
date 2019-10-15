@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f61f824a_40ee7751",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1668,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T05:24:32Z",
+      "side": 1,
+      "message": "this new name is better, but suggest changing that in a different patch",
+      "revId": "cc6dee2261d3fd88ff1ddf23df8211b012d91835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "065b0d3c_90fc6d9f",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T05:24:32Z",
+      "side": 1,
+      "message": "this patch is definitely on the right track!\n\nI think to start, just have nvme_namespace point to only one struct nvme_bdev.  This is a nice first patch since it decouples the controller from the bdevs by adding this namespace object in the middle.\n\nThen the general idea is that we will have nvme_basic_namespace, nvme_ocssd_namespace, nvme_zoned_namespace, nvme_keyvalue_interface.  Each of these will include nvme_namespace as its first member.  We will have different functions which allocate each of these structure types, based on the namespace type.\n\nWe will need the namespaces array to be an array of namespace pointers (not namespaces).  Let\u0027s do that in a future patch though.  Because to support these different structure types for each namespace, you can\u0027t allocate the array of objects up front.  Having it as an array of namespace pointers also makes it nice to support controllers with different namespaces of different types (which will be supported in the future by the NVMe spec).",
+      "revId": "cc6dee2261d3fd88ff1ddf23df8211b012d91835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
