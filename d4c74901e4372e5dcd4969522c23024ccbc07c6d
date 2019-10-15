@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f9802fd_63e76b95",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T16:15:05Z",
+      "side": 1,
+      "message": "Should this say cunit-devel instead?  Then it tells the user exactly which package to install.",
+      "revId": "d4c74901e4372e5dcd4969522c23024ccbc07c6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
