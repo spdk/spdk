@@ -504,15 +504,53 @@ spdk_scsi_lun_get_dev(const struct spdk_scsi_lun *lun)
 }
 
 bool
-spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun)
+spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun,
+				     const struct spdk_scsi_port *initiator_port)
 {
-	return scsi_lun_has_pending_mgmt_tasks(lun);
+	struct spdk_scsi_task *task;
+
+	if (initiator_port == NULL) {
+		return scsi_lun_has_pending_mgmt_tasks(lun);
+	}
+
+	TAILQ_FOREACH(task, &lun->pending_mgmt_tasks, scsi_link) {
+		if (task->initiator_port == initiator_port) {
+			return true;
+		}
+	}
+
+	TAILQ_FOREACH(task, &lun->mgmt_tasks, scsi_link) {
+		if (task->initiator_port == initiator_port) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 bool
-spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun)
+spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun,
+				const struct spdk_scsi_port *initiator_port)
 {
-	return scsi_lun_has_pending_tasks(lun);
+	struct spdk_scsi_task *task;
+
+	if (initiator_port == NULL) {
+		return scsi_lun_has_pending_tasks(lun);
+	}
+
+	TAILQ_FOREACH(task, &lun->pending_tasks, scsi_link) {
+		if (task->initiator_port == initiator_port) {
+			return true;
+		}
+	}
+
+	TAILQ_FOREACH(task, &lun->tasks, scsi_link) {
+		if (task->initiator_port == initiator_port) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 bool

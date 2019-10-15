@@ -425,8 +425,8 @@ spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev)
 
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; ++i) {
 		if (dev->lun[i] &&
-		    (spdk_scsi_lun_has_pending_tasks(dev->lun[i]) ||
-		     spdk_scsi_lun_has_pending_mgmt_tasks(dev->lun[i]))) {
+		    (spdk_scsi_lun_has_pending_tasks(dev->lun[i], NULL) ||
+		     spdk_scsi_lun_has_pending_mgmt_tasks(dev->lun[i], NULL))) {
 			return true;
 		}
 	}
