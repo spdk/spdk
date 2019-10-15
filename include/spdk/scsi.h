@@ -233,10 +233,13 @@ struct spdk_scsi_lun *spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_i
  * Check whether the SCSI device has any pending task.
  *
  * \param dev SCSI device.
+ * \param initiator_port Check tasks only from the initiator if specified, or
+ * all all tasks otherwise.
  *
  * \return true if the SCSI device has any pending task, or false otherwise.
  */
-bool spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev);
+bool spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev,
+				     const struct spdk_scsi_port *initiator_port);
 
 /**
  * Destruct the SCSI decice.
