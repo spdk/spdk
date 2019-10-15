@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "e5b4c899_abfd2edb",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T17:50:17Z",
+      "side": 1,
+      "message": "...only a single system thread executing \u0027spdk_thread_poll()\u0027 on that \u0027spdk_thread\u0027 at any given time.\n\n(remove the \"that\" before spdk_thread_poll)",
+      "revId": "d99bc6bd820d760d93772bc68c967e8a735fb617",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06f17515_8290609a",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T17:50:17Z",
+      "side": 1,
+      "message": "It\u0027s destroyed by spdk_thread_destroy().  spdk_thread_exit() just marks it so it can\u0027t be polled again.\n\nAlso needs a space after the period following spdk_thread_exit().",
+      "revId": "d99bc6bd820d760d93772bc68c967e8a735fb617",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d3fec873_21deac30",
         "filename": "doc/concurrency.md",
         "patchSetId": 2
@@ -19,6 +53,23 @@
         "endLine": 82,
         "endChar": 53
       },
+      "revId": "d99bc6bd820d760d93772bc68c967e8a735fb617",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "389ae8e0_85ab5b4b",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T17:50:17Z",
+      "side": 1,
+      "message": "Nice description!",
       "revId": "d99bc6bd820d760d93772bc68c967e8a735fb617",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
