@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aeb65835_8e7f2cee",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T20:35:27Z",
+      "side": 1,
+      "message": "agree with Paul here - we typically avoid goto statement except in case of error paths\n\nyou may consider something like:\n1) move lines 351-382 to separate function\n2) modify line 345 to set a local \"is_found\" variable to true\n3) after TAILQ_FOREACH, if (!is_found) call your new function",
+      "revId": "58774449f5bcf3e08eb428a8c12b7d3439813142",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
