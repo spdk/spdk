@@ -1393,30 +1393,6 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	iscsi_conn_flush_pdus(conn);
 }
 
-#define GET_PDU_LOOP_COUNT	16
-
-static int
-iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
-{
-	int i, rc;
-
-	/* Read new PDUs from network */
-	for (i = 0; i < GET_PDU_LOOP_COUNT; i++) {
-		rc = spdk_iscsi_read_pdu(conn);
-		if (rc == 0) {
-			break;
-		} else if (rc < 0) {
-			return rc;
-		}
-
-		if (conn->is_stopped) {
-			break;
-		}
-	}
-
-	return i;
-}
-
 static void
 iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 {
@@ -1431,7 +1407,7 @@ iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *s
 	}
 
 	/* Handle incoming PDUs */
-	rc = iscsi_conn_handle_incoming_pdus(conn);
+	rc = spdk_iscsi_handle_incoming_pdus(conn);
 	if (rc < 0) {
 		conn->state = ISCSI_CONN_STATE_EXITING;
 	}
