@@ -339,8 +339,8 @@ void spdk_pause(void)
 void
 spdk_unaffinitize_thread(void)
 {
-	rte_cpuset_t new_cpuset;
-	long num_cores, i;
+	rte_cpuset_t new_cpuset, orig_cpuset;
+	long num_cores, i, orig_num_cores;
 
 	CPU_ZERO(&new_cpuset);
 
@@ -349,6 +349,16 @@ spdk_unaffinitize_thread(void)
 	/* Create a mask containing all CPUs */
 	for (i = 0; i < num_cores; i++) {
 		CPU_SET(i, &new_cpuset);
+	}
+
+	rte_thread_get_affinity(&orig_cpuset);
+	orig_num_cores = CPU_COUNT(&orig_cpuset);
+	if (orig_num_cores < num_cores) {
+		for (i = 0; i < orig_num_cores; i++) {
+			if (CPU_ISSET(i, &orig_cpuset)) {
+				CPU_CLR(i, &new_cpuset);
+			}
+		}
 	}
 
 	rte_thread_set_affinity(&new_cpuset);

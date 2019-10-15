@@ -308,6 +308,12 @@ spdk_sock_is_ipv4(struct spdk_sock *sock)
 	return sock->net_impl->is_ipv4(sock);
 }
 
+bool
+spdk_sock_is_connected(struct spdk_sock *sock)
+{
+	return sock->net_impl->is_connected(sock);
+}
+
 struct spdk_sock_group *
 spdk_sock_group_create(void *ctx)
 {
@@ -357,7 +363,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 		return -1;
 	}
 
-	if (sock->cb_fn != NULL) {
+	if (sock->group_impl != NULL) {
 		/*
 		 * This sock is already part of a sock_group.  Currently we don't
 		 *  support this.
@@ -388,6 +394,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 	rc = group_impl->net_impl->group_impl_add_sock(group_impl, sock);
 	if (rc == 0) {
 		TAILQ_INSERT_TAIL(&group_impl->socks, sock, link);
+		sock->group_impl = group_impl;
 		sock->cb_fn = cb_fn;
 		sock->cb_arg = cb_arg;
 	}
@@ -412,6 +419,8 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 		return -1;
 	}
 
+	assert(group_impl == sock->group_impl);
+
 	rc = sock->net_impl->get_placement_id(sock, &placement_id);
 	if (!rc && (placement_id != 0)) {
 		spdk_sock_map_release(placement_id);
@@ -420,6 +429,7 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 	rc = group_impl->net_impl->group_impl_remove_sock(group_impl, sock);
 	if (rc == 0) {
 		TAILQ_REMOVE(&group_impl->socks, sock, link);
+		sock->group_impl = NULL;
 		sock->cb_fn = NULL;
 		sock->cb_arg = NULL;
 	}

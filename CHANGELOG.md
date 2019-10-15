@@ -81,6 +81,10 @@ Function spdk_blobfs_bdev_detect is added to detect whether blobfs exists on the
 
 Function spdk_blobfs_bdev_create is added to create a blobfs on the given block device.
 
+Function spdk_blobfs_bdev_mount is added to mount a blobfs on the given block device to
+a host path by FUSE. Then, a new thread is created dedicatedly for one mountpoint to handle
+FUSE request by blobfs API.
+
 ### build
 
 Option to build FUSE components into blobfs_bdev module for mounting a blobfs filesystem.
@@ -146,6 +150,10 @@ RPC method.
 Added `blobfs_detect` RPC method to detect whether a blobfs exists on given bdev.
 
 Added `blobfs_create` RPC method to build blobfs on given bdev.
+
+Added `blobfs_mount` RPC method to mount blobfs on given bdev to a host path by FUSE.
+Then on the host path, user can directly do some file operations which will be mapped
+to blobfs.
 
 ## v19.07:
 

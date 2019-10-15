@@ -13,6 +13,7 @@ rpc_py="$rootdir/scripts/rpc.py -s $rpc_server"
 tmp_file=/tmp/blobfs_file
 conf_file=/tmp/blobfs.conf
 bdevname=BlobfsBdev
+mount_dir=/tmp/spdk_tmp_mount
 
 source $rootdir/test/common/autotest_common.sh
 
@@ -21,6 +22,7 @@ function on_error_exit() {
 		killprocess $blobfs_pid
 	fi
 
+	rm -rf $mount_dir
 	rm -f $tmp_file
 	rm -f $conf_file
 	print_backtrace
@@ -73,6 +75,47 @@ function blobfs_create_test() {
 	killprocess $blobfs_pid
 }
 
+function blobfs_fuse_test() {
+	if [ ! -d /usr/include/fuse3 ] && [ ! -d /usr/local/include/fuse3 ]; then
+		echo "libfuse3 is not installed which is required to this test."
+		return 0
+	fi
+
+	# mount blobfs on test dir
+	$rootdir/test/blobfs/fuse/fuse ${conf_file} ${bdevname} $mount_dir &
+	blobfs_pid=$!
+	echo "Process blobfs pid: $blobfs_pid"
+
+	# Currently blobfs fuse APP doesn't support specific path of RPC sock.
+	# So directly use default sock path.
+	waitforlisten $blobfs_pid /var/tmp/spdk.sock
+
+	# check mount status
+	mount || grep $mount_dir
+
+	# create a rand file in mount dir
+	dd if=/dev/urandom of=${mount_dir}/rand_file bs=4k count=32
+
+	umount ${mount_dir}
+	killprocess $blobfs_pid
+
+	# Verify there is no file in mount dir now
+	if [ -f ${mount_dir}/rand_file ]; then
+		false
+	fi
+
+	# use blobfs mount RPC
+	blobfs_start_app
+	$rpc_py blobfs_mount ${bdevname} $mount_dir
+
+	# read and delete the rand file
+	md5sum ${mount_dir}/rand_file
+	rm ${mount_dir}/rand_file
+
+	umount ${mount_dir}
+	killprocess $blobfs_pid
+}
+
 timing_enter blobfs
 
 trap 'on_error_exit;' ERR
@@ -89,6 +132,12 @@ dd if=/dev/zero of=${tmp_file} bs=4k count=1M
 
 blobfs_create_test
 
+# Create dir for FUSE mount
+mkdir -p $mount_dir
+blobfs_fuse_test
+
+
+rm -rf $mount_dir
 rm -f $tmp_file
 report_test_completion "blobfs"
 
