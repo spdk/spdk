@@ -182,10 +182,12 @@ void spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task 
 void spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun);
 void spdk_scsi_lun_append_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 void spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun);
-bool spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun);
+bool spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun,
+		const struct spdk_scsi_port *initiator_port);
 void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 void spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
-bool spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun);
+bool spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun,
+				     const struct spdk_scsi_port *initiator_port);
 int _spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun);
 void _spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun);
 
