@@ -62,6 +62,7 @@ struct ctrlr_entry {
 
 	struct ctrlr_entry			*next;
 	char					name[1024];
+	int					num_resets;
 };
 
 enum entry_type {
@@ -133,6 +134,7 @@ struct ns_worker_ctx {
 		struct {
 			int			num_qpairs;
 			struct spdk_nvme_qpair	**qpair;
+			bool			*failed_qpair;
 			int			last_qpair;
 		} nvme;
 
@@ -184,6 +186,9 @@ struct ns_fn_table {
 
 static int g_outstanding_commands;
 
+/* For basic reset handling. */
+static int g_max_ctrlr_resets = 15;
+
 static bool g_latency_ssd_tracking_enable = false;
 static int g_latency_sw_tracking_level = 0;
 
@@ -234,6 +239,7 @@ static int g_aio_optind; /* Index of first AIO filename in argv */
 
 static inline void
 task_complete(struct perf_task *task);
+static void submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth);
 
 #if HAVE_LIBAIO
 static void
@@ -539,9 +545,39 @@ nvme_check_io(struct ns_worker_ctx *ns_ctx)
 
 	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
 		rc = spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair[i], g_max_completions);
-		if (rc < 0) {
-			fprintf(stderr, "NVMe io qpair process completion error\n");
-			exit(1);
+		if (spdk_unlikely(rc < 0)) {
+			/* This means the qpair failed in the driver and must be reconnected or destroyed. */
+			if (rc == -ENXIO) {
+				ns_ctx->u.nvme.failed_qpair[i] = true;
+			} else {
+				fprintf(stderr, "Received an unknown error processing completions.\n");
+				exit(1);
+			}
+		}
+
+		/* This qpair failed at some point in the past. We need to recover it. */
+		if (spdk_unlikely(ns_ctx->u.nvme.failed_qpair[i])) {
+			rc = spdk_nvme_ctrlr_reconnect_io_qpair(ns_ctx->u.nvme.qpair[i]);
+			/* successful reconnect */
+			if (rc == 0) {
+				ns_ctx->u.nvme.failed_qpair[i] = false;
+				/*
+				 * We probably got error completions while we were failed
+				 * and couldn't resubmit I/O. Restore the old queue depth
+				 * now.
+				 */
+				submit_io(ns_ctx, g_queue_depth - ns_ctx->current_queue_depth);
+			} else if (rc == -ENXIO) {
+				/* This means the controller is failed. Defer to it to restore the qpair. */
+				continue;
+			} else {
+				/*
+				 * We were unable to restore the qpair on this attempt. We don't
+				 * really know why. For naive handling, just keep trying.
+				 * TODO: add a retry limit, and destroy the qpair after x iterations.
+				 */
+				fprintf(stderr, "qpair failed and we were unable to recover it.\n");
+			}
 		}
 	}
 }
@@ -589,6 +625,10 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	if (!ns_ctx->u.nvme.qpair) {
 		return -1;
 	}
+	ns_ctx->u.nvme.failed_qpair = calloc(ns_ctx->u.nvme.num_qpairs, sizeof(bool));
+	if (!ns_ctx->u.nvme.failed_qpair) {
+		return -1;
+	}
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(entry->u.nvme.ctrlr, &opts, sizeof(opts));
 	if (opts.io_queue_requests < entry->num_io_requests) {
@@ -618,6 +658,7 @@ nvme_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	}
 
 	free(ns_ctx->u.nvme.qpair);
+	free(ns_ctx->u.nvme.failed_qpair);
 }
 
 static const struct ns_fn_table nvme_fn_table = {
@@ -1976,6 +2017,7 @@ nvme_poll_ctrlrs(void *arg)
 {
 	struct ctrlr_entry *entry;
 	int oldstate;
+	int rc;
 
 	spdk_unaffinitize_thread();
 
@@ -1985,7 +2027,23 @@ nvme_poll_ctrlrs(void *arg)
 		entry = g_controllers;
 		while (entry) {
 			if (entry->trtype != SPDK_NVME_TRANSPORT_PCIE) {
-				spdk_nvme_ctrlr_process_admin_completions(entry->ctrlr);
+				rc = spdk_nvme_ctrlr_process_admin_completions(entry->ctrlr);
+				/* This controller has encountered a failure at the transport level. reset it. */
+				if (rc == -ENXIO) {
+					fprintf(stderr, "A controller has encountered a failure and is being reset.\n");
+					rc = spdk_nvme_ctrlr_reset(entry->ctrlr);
+					if (rc != 0) {
+						entry->num_resets++;
+						fprintf(stderr, "Unable to reset the controller.\n");
+
+						if (entry->num_resets > g_max_ctrlr_resets) {
+							fprintf(stderr, "Controller cannot be recovered. Exiting.\n");
+							exit(1);
+						}
+					} else {
+						fprintf(stderr, "Controller properly reset.\n");
+					}
+				}
 			}
 			entry = entry->next;
 		}
