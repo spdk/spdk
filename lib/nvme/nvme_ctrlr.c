@@ -962,14 +962,14 @@ nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
-	if (ctrlr->is_resetting || ctrlr->is_failed) {
+	if (ctrlr->is_resetting || ctrlr->is_removed) {
 		/*
-		 * Controller is already resetting or has failed.  Return
+		 * Controller is already resetting or has been removed. Return
 		 *  immediately since there is no need to kick off another
 		 *  reset in these cases.
 		 */
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-		return 0;
+		return ctrlr->is_resetting ? 0 : -ENXIO;
 	}
 
 	ctrlr->is_resetting = true;
@@ -1034,12 +1034,14 @@ out:
 int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
+	int rc;
+
+	rc = nvme_ctrlr_reset(ctrlr);
 	if (nvme_ctrlr_reset(ctrlr) != 0) {
 		nvme_ctrlr_fail(ctrlr, false);
-		return -1;
 	}
 
-	return 0;
+	return rc;
 }
 
 static void
