@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "08d4290e_3768a9ba",
+        "filename": "include/spdk_internal/sock.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-10-15T20:57:04Z",
+      "side": 1,
+      "message": "As far I understand, implementation of the function in POSIX case, it supports till 64 elements in iov vector.\nI think the number should be either reported by socke implementation interface, or be defined in the \".h\" file.",
+      "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4159edc3_1d819cd4",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-10-15T20:57:04Z",
+      "side": 1,
+      "message": "What\u0027s a reason for default 64\"? Is there any correlation between this number and max number in SGL list (16 as far I remember) ?",
+      "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "566ca9c6_261e3920",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 6
@@ -19,6 +53,91 @@
         "endLine": 61,
         "endChar": 34
       },
+      "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8639ea31_c66a9ce5",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-10-15T20:57:04Z",
+      "side": 1,
+      "message": "Don\u0027t we need to free \"sock\" in any case, despite errors in socket closing ?",
+      "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa535b0a_5171bf92",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-10-15T20:57:04Z",
+      "side": 1,
+      "message": "spdk_posix_sock_flush can return an error. Shouldn\u0027t the error be reported like (iovcnt \u003e POSIX_MAX_IOV) error in the beginning of function ?",
+      "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88197db8_0639d217",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-10-15T20:57:04Z",
+      "side": 1,
+      "message": "\"close\" can return an error. Usually, there is no need to check this error. But in this file, return code of \"close\" function is checked. I think, the new code should follow the same code style.\n\nIn similar checking above (if (group_impl \u003d\u003d NULL) {) , an error is  reported to log. It would be nice to see the same behaviour here.",
+      "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "904c12cb_a697bc2e",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 887,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-10-15T20:57:04Z",
+      "side": 1,
+      "message": "The piece of code is inside of the declaration block",
+      "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "745ae1e6_e8e8fd1a",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 892,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-10-15T20:57:04Z",
+      "side": 1,
+      "message": "If any of spdk_posix_sock_flush calls returns an error, should  spdk_posix_sock_group_impl_poll also return an error ?",
       "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
