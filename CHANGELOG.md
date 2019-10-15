@@ -73,6 +73,10 @@ function has been deprecated.
 The new create function can cowork with spdk_bdev_open_ext function, which provides callback
 function that will be called by asynchronous event such as bdev removal.
 
+### DPDK
+
+Updated DPDK submodule to DPDK 19.08.
+
 ### blobfs_bdev
 
 A new blobfs module `bdev` has been added to simplify the operations of blobfs on bdev.
