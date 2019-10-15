@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40ed1004_74568c39",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1030,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T23:36:30Z",
+      "side": 1,
+      "message": "should we just always nvme_ctrlr_fail() if rc !\u003d 0?  if was_failed \u003d\u003d false, then we won\u0027t fail it here but will immediately after returning to spdk_nvme_ctrlr_reset",
+      "revId": "f2cae2b50029d58308a922b73b85d5b01d07eefa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7451cf31_875f0c11",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1047,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T23:36:30Z",
+      "side": 1,
+      "message": "If you take my comment from above, then the only way rc !\u003d 0 and we didn\u0027t call nvme_ctrlr_fail is at line 973, when ctrlr-\u003eis_removed \u003d\u003d true.  But in that case, haven\u0027t we already called nvme_ctrlr_fail() when the device was removed?\n\nSo I\u0027m just wondering if you need this check here at all.  Which then means nvme_ctrlr_reset becomes spdk_nvme_ctrlr_reset and this function goes away.",
+      "revId": "f2cae2b50029d58308a922b73b85d5b01d07eefa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
