@@ -50,6 +50,10 @@ DEFINE_STUB(spdk_nvme_ctrlr_is_ocssd_supported, bool, (struct spdk_nvme_ctrlr *c
 DEFINE_STUB(spdk_nvme_ns_get_extended_sector_size, uint32_t, (struct spdk_nvme_ns *ns), 4096);
 DEFINE_STUB(spdk_nvme_ns_is_active, bool, (struct spdk_nvme_ns *ns), true);
 DEFINE_STUB_V(spdk_opal_close, (struct spdk_opal_dev *dev));
+DEFINE_STUB(spdk_bdev_push_media_events, int, (struct spdk_bdev *bdev,
+		const struct spdk_bdev_media_event *events,
+		size_t num_events), 0);
+DEFINE_STUB_V(spdk_bdev_notify_media_management, (struct spdk_bdev *bdev));
 
 struct nvme_request {
 	spdk_nvme_cmd_cb cb_fn;
