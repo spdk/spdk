@@ -90,7 +90,8 @@ DEFINE_STUB(spdk_scsi_dev_get_lun, struct spdk_scsi_lun *,
 	    (struct spdk_scsi_dev *dev, int lun_id), NULL);
 
 DEFINE_STUB(spdk_scsi_dev_has_pending_tasks, bool,
-	    (const struct spdk_scsi_dev *dev), true);
+	    (const struct spdk_scsi_dev *dev, const struct spdk_scsi_port *initiator_port),
+	    true);
 
 DEFINE_STUB(spdk_scsi_lun_open, int,
 	    (struct spdk_scsi_lun *lun, spdk_scsi_lun_remove_cb_t hotremove_cb,

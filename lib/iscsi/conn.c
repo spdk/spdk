@@ -658,7 +658,8 @@ _iscsi_conn_check_pending_tasks(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 
-	if (conn->dev != NULL && spdk_scsi_dev_has_pending_tasks(conn->dev)) {
+	if (conn->dev != NULL &&
+	    spdk_scsi_dev_has_pending_tasks(conn->dev, conn->initiator_port)) {
 		return 1;
 	}
 
@@ -683,7 +684,8 @@ spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 		iscsi_conn_cleanup_backend(conn);
 	}
 
-	if (conn->dev != NULL && spdk_scsi_dev_has_pending_tasks(conn->dev)) {
+	if (conn->dev != NULL &&
+	    spdk_scsi_dev_has_pending_tasks(conn->dev, conn->initiator_port)) {
 		conn->shutdown_timer = spdk_poller_register(_iscsi_conn_check_pending_tasks, conn, 1000);
 	} else {
 		_iscsi_conn_destruct(conn);
