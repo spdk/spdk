@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "69b37a06_0dcee5c3",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-15T14:59:51Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4481f171_977bbda5",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 24
+      },
+      "revId": "b558f4e2d71fe4e3dad6b3925c335788b9c671a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e7a5469_af3348e8",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 13
@@ -36,6 +60,30 @@
       "writtenOn": "2019-10-14T12:05:16Z",
       "side": 1,
       "message": "This ring is not used in this patch, probably should be moved to next patch in series (see comment there).",
+      "range": {
+        "startLine": 151,
+        "startChar": 0,
+        "endLine": 157,
+        "endChar": 2
+      },
+      "revId": "b558f4e2d71fe4e3dad6b3925c335788b9c671a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e01a7f74_021d8057",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-15T14:59:51Z",
+      "side": 1,
+      "message": "There\u0027s one ring per controller now, so this global structure can be removed.",
+      "parentUuid": "4e7a5469_af3348e8",
       "range": {
         "startLine": 151,
         "startChar": 0,
