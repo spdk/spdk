@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60d441ad_6d8c3a06",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2086,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-10-15T20:06:08Z",
+      "side": 1,
+      "message": "Hi, \n\nCould you elaborate the error handling logic implemented here? As far I see in the code, NVME_TCP_PDU_RECV_STATE_ERROR can be an indication of \"Fatal Error\". \nIn case of fatal error, controller should send C2HTermReq PDU to host and wait for 30 sec for closing connection by host.\nIs this check take into account 30 sec timeout for graceful connection shutdown?",
+      "revId": "5ab518bb6a14ccda3d54832609c8a9961a5df25a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
