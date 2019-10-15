@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "8e628f67_9ec9ceaa",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1714,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-15T00:25:58Z",
+      "side": 1,
+      "message": "It may be nice to add if (iovcnt \u003d\u003d 0) {return;} in the end of this if block because it is possible only in this if block.\nThen commenting just \"make sure we still have an IO to send\" may be enough.",
+      "revId": "319a2d6fa1b538a0e0d5bc3fcf7d3192b3c50bc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9167b6cd_2a69f5e9",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 1
