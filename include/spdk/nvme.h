@@ -1177,6 +1177,15 @@ int32_t spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		uint32_t max_completions);
 
 /**
+ * Process IO message sent to controller from external module.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return number of processed external IO messages.
+ */
+int spdk_nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Send the given admin command to the NVMe controller.
  *
  * This is a low level interface for submitting admin commands directly. Prefer
