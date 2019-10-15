@@ -16,6 +16,24 @@
       "revId": "86330ae964bd49edb39c9a64b11bfd98ef94377a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc03d570_9402c3cb",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-15T07:27:20Z",
+      "side": 1,
+      "message": "Thanks for your reply but, this cause the same fail.",
+      "parentUuid": "93fcb77c_c0b50198",
+      "revId": "86330ae964bd49edb39c9a64b11bfd98ef94377a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
