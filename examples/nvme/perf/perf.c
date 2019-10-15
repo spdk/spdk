@@ -62,6 +62,7 @@ struct ctrlr_entry {
 
 	struct ctrlr_entry			*next;
 	char					name[1024];
+	int					num_resets;
 };
 
 enum entry_type {
@@ -134,6 +135,7 @@ struct ns_worker_ctx {
 			int			num_qpairs;
 			struct spdk_nvme_qpair	**qpair;
 			int			last_qpair;
+			bool			failed_state;
 		} nvme;
 
 #if HAVE_LIBAIO
@@ -183,6 +185,9 @@ struct ns_fn_table {
 };
 
 static int g_outstanding_commands;
+
+/* For basic reset handling. */
+static int g_max_ctrlr_resets = 15;
 
 static bool g_latency_ssd_tracking_enable = false;
 static int g_latency_sw_tracking_level = 0;
@@ -234,6 +239,7 @@ static int g_aio_optind; /* Index of first AIO filename in argv */
 
 static inline void
 task_complete(struct perf_task *task);
+static void submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth);
 
 #if HAVE_LIBAIO
 static void
@@ -539,9 +545,19 @@ nvme_check_io(struct ns_worker_ctx *ns_ctx)
 
 	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
 		rc = spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair[i], g_max_completions);
-		if (rc < 0) {
-			fprintf(stderr, "NVMe io qpair process completion error\n");
-			exit(1);
+		if (rc < 0 || ns_ctx->u.nvme.failed_state) {
+			ns_ctx->u.nvme.failed_state = true;
+			rc = spdk_nvme_ctrlr_reconnect_io_qpair(ns_ctx->u.nvme.qpair[i]);
+			if (rc == 0) {
+				ns_ctx->u.nvme.failed_state = false;
+				submit_io(ns_ctx, g_queue_depth - ns_ctx->current_queue_depth);
+				return;
+			}
+
+			if (rc != -ENXIO) {
+				fprintf(stderr, "qpair failed and we were unable to recover it.\n");
+				exit(1);
+			}
 		}
 	}
 }
@@ -1976,6 +1992,7 @@ nvme_poll_ctrlrs(void *arg)
 {
 	struct ctrlr_entry *entry;
 	int oldstate;
+	int rc;
 
 	spdk_unaffinitize_thread();
 
@@ -1985,7 +2002,23 @@ nvme_poll_ctrlrs(void *arg)
 		entry = g_controllers;
 		while (entry) {
 			if (entry->trtype != SPDK_NVME_TRANSPORT_PCIE) {
-				spdk_nvme_ctrlr_process_admin_completions(entry->ctrlr);
+				rc = spdk_nvme_ctrlr_process_admin_completions(entry->ctrlr);
+				/* This controller has encountered a failure at the transport level. reset it. */
+				if (rc == -ENXIO) {
+					fprintf(stderr, "A controller has encountered a failure and is being reset.\n");
+					rc = spdk_nvme_ctrlr_reset(entry->ctrlr);
+					if (rc != 0) {
+						entry->num_resets++;
+						fprintf(stderr, "Unable to reset the controller.\n");
+
+						if (entry->num_resets > g_max_ctrlr_resets) {
+							fprintf(stderr, "Controller cannot be recovered. Exiting.\n");
+							exit(1);
+						}
+					} else {
+						fprintf(stderr, "Controller properly reset.\n");
+					}
+				}
 			}
 			entry = entry->next;
 		}
