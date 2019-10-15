@@ -168,12 +168,6 @@ nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 	return 0;
 }
 
-int
-nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
-{
-	return 0;
-}
-
 void
 nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
@@ -1424,6 +1418,55 @@ test_alloc_io_qpair_wrr_2(void)
 	cleanup_qpairs(&ctrlr);
 }
 
+bool g_connect_qpair_called = false;
+int g_connect_qpair_return_code = 0;
+int nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	g_connect_qpair_called = true;
+	return g_connect_qpair_return_code;
+}
+
+static void
+test_spdk_nvme_ctrlr_reconnect_io_qpair(void)
+{
+	struct spdk_nvme_ctrlr	ctrlr = {};
+	struct spdk_nvme_qpair	qpair = {};
+	int rc;
+
+	/* Various states of controller disconnect. all -ENXIO */
+	qpair.id = 1;
+	qpair.ctrlr = &ctrlr;
+	ctrlr.is_removed = 1;
+	ctrlr.is_failed = 0;
+	ctrlr.is_resetting = 0;
+	rc = spdk_nvme_ctrlr_reconnect_io_qpair(&qpair);
+	CU_ASSERT(rc = -ENXIO)
+
+	ctrlr.is_removed = 0;
+	ctrlr.is_failed = 1;
+	rc = spdk_nvme_ctrlr_reconnect_io_qpair(&qpair);
+	CU_ASSERT(rc = -ENXIO)
+
+	ctrlr.is_failed = 0;
+	ctrlr.is_resetting = 1;
+	rc = spdk_nvme_ctrlr_reconnect_io_qpair(&qpair);
+	CU_ASSERT(rc = -ENXIO)
+
+	/* qpair not failed. Make sure we don't call down to the transport 0 */
+	ctrlr.is_resetting = 0;
+	qpair.transport_qp_is_failed = false;
+	g_connect_qpair_called = false;
+	rc = spdk_nvme_ctrlr_reconnect_io_qpair(&qpair);
+	CU_ASSERT(g_connect_qpair_called == false);
+	CU_ASSERT(rc == 0)
+
+	/* transport qpair is failed. make sure we call down to the transport 0 */
+	qpair.transport_qp_is_failed = true;
+	rc = spdk_nvme_ctrlr_reconnect_io_qpair(&qpair);
+	CU_ASSERT(g_connect_qpair_called == true);
+	CU_ASSERT(rc == 0)
+}
+
 static void
 test_nvme_ctrlr_fail(void)
 {
@@ -1885,6 +1928,8 @@ int main(int argc, char **argv)
 #endif
 		|| CU_add_test(suite, "test nvme ctrlr function test_nvme_ctrlr_test_active_ns",
 			       test_nvme_ctrlr_test_active_ns) == NULL
+		|| CU_add_test(suite, "test_spdk_nvme_ctrlr_reconnect_io_qpair",
+			       test_spdk_nvme_ctrlr_reconnect_io_qpair) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
