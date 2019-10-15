@@ -899,9 +899,19 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 }
 
 static void
+bdev_nvme_handle_aer(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+		     const union spdk_nvme_async_event_completion *event)
+{
+	if ((event->bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
+	    (event->bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
+		nvme_ctrlr_update_ns_bdevs(nvme_bdev_ctrlr);
+	}
+}
+
+static void
 aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr		= arg;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr	= arg;
 	union spdk_nvme_async_event_completion	event;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
@@ -910,9 +920,10 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	}
 
 	event.raw = cpl->cdw0;
-	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
-	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
-		nvme_ctrlr_update_ns_bdevs(nvme_bdev_ctrlr);
+	if (!spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		bdev_nvme_handle_aer(nvme_bdev_ctrlr, &event);
+	} else {
+		spdk_bdev_ocssd_handle_aer(nvme_bdev_ctrlr, &event);
 	}
 }
 
