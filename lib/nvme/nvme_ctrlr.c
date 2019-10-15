@@ -959,20 +959,23 @@ nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	int rc = 0;
 	struct spdk_nvme_qpair	*qpair;
 	struct nvme_request	*req, *tmp;
+	bool			was_failed;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
-	if (ctrlr->is_resetting || ctrlr->is_failed) {
+	if (ctrlr->is_resetting || ctrlr->is_removed) {
 		/*
-		 * Controller is already resetting or has failed.  Return
+		 * Controller is already resetting or has been removed. Return
 		 *  immediately since there is no need to kick off another
 		 *  reset in these cases.
 		 */
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-		return 0;
+		return ctrlr->is_resetting ? 0 : -ENXIO;
 	}
 
+	was_failed = ctrlr->is_failed;
 	ctrlr->is_resetting = true;
+	ctrlr->is_failed = false;
 
 	SPDK_NOTICELOG("resetting controller\n");
 
@@ -1024,6 +1027,10 @@ nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 out:
+	if (rc && was_failed) {
+		/* return the ctrlr to its original failed state. */
+		nvme_ctrlr_fail(ctrlr, false);
+	}
 	ctrlr->is_resetting = false;
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -1034,12 +1041,14 @@ out:
 int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (nvme_ctrlr_reset(ctrlr) != 0) {
+	int rc;
+
+	rc = nvme_ctrlr_reset(ctrlr);
+	if (rc != 0) {
 		nvme_ctrlr_fail(ctrlr, false);
-		return -1;
 	}
 
-	return 0;
+	return rc;
 }
 
 static void
