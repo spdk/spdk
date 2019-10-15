@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1b6298f_dceae926",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-15T09:47:08Z",
+      "side": 1,
+      "message": "From tests:\n22:41:46 vbdev_ocf.c: In function ‘init_vbdev’:\n22:41:46 vbdev_ocf.c:1140:39: error: comparison of integer expressions of different signedness: ‘ocf_cache_line_size_t’ {aka ‘enum \u003canonymous\u003e’} and ‘int’ [-Werror\u003dsign-compare]\n22:41:46   if (vbdev-\u003ecfg.cache.cache_line_size \u003d\u003d -1) {\n22:41:46                                        ^~\n22:41:46 cc1: all warnings being treated as errors\n22:41:46 make[3]: *** [/var/jenkins/workspace/NVMe_tests/nvme_phy_autotest/spdk/mk/spdk.common.mk:365: vbdev_ocf.o] Error 1\n22:41:46 make[2]: *** [/var/jenkins/workspace/NVMe_tests/nvme_phy_autotest/spdk/mk/spdk.subdirs.mk:44: ocf] Error 2\n22:41:46 make[1]: *** [/var/jenkins/workspace/NVMe_tests/nvme_phy_autotest/spdk/mk/spdk.subdirs.mk:44: bdev] Error 2\n22:41:46 make: *** [/var/jenkins/workspace/NVMe_tests/nvme_phy_autotest/spdk/mk/spdk.subdirs.mk:44: module] Error 2",
+      "range": {
+        "startLine": 1140,
+        "startChar": 5,
+        "endLine": 1140,
+        "endChar": 43
+      },
+      "revId": "78abd64f1e9fa4fce352f1e302d08d8c364c4783",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
