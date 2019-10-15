@@ -250,7 +250,8 @@ process_removed_devs(struct spdk_vhost_scsi_session *svsession)
 		state = &svsession->scsi_dev_state[i];
 		dev = state->dev;
 
-		if (dev && state->status == VHOST_SCSI_DEV_REMOVING && !spdk_scsi_dev_has_pending_tasks(dev)) {
+		if (dev && state->status == VHOST_SCSI_DEV_REMOVING &&
+		    !spdk_scsi_dev_has_pending_tasks(dev, NULL)) {
 			/* detach the device from this session */
 			spdk_scsi_dev_free_io_channels(dev);
 			state->dev = NULL;

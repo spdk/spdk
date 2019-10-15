@@ -419,14 +419,15 @@ spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 }
 
 bool
-spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev)
+spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev,
+				const struct spdk_scsi_port *initiator_port)
 {
 	int i;
 
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; ++i) {
 		if (dev->lun[i] &&
-		    (spdk_scsi_lun_has_pending_tasks(dev->lun[i], NULL) ||
-		     spdk_scsi_lun_has_pending_mgmt_tasks(dev->lun[i], NULL))) {
+		    (spdk_scsi_lun_has_pending_tasks(dev->lun[i], initiator_port) ||
+		     spdk_scsi_lun_has_pending_mgmt_tasks(dev->lun[i], initiator_port))) {
 			return true;
 		}
 	}

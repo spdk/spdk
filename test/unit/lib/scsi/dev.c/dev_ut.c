@@ -53,6 +53,9 @@ static struct spdk_bdev g_bdevs[] = {
 	{"malloc1"},
 };
 
+static struct spdk_scsi_port *g_initiator_port_with_pending_tasks = NULL;
+static struct spdk_scsi_port *g_initiator_port_with_pending_mgmt_tasks = NULL;
+
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
@@ -118,10 +121,6 @@ DEFINE_STUB_V(spdk_scsi_lun_append_mgmt_task,
 
 DEFINE_STUB_V(spdk_scsi_lun_execute_mgmt_task, (struct spdk_scsi_lun *lun));
 
-DEFINE_STUB(spdk_scsi_lun_has_pending_mgmt_tasks, bool,
-	    (const struct spdk_scsi_lun *lun, const struct spdk_scsi_port *initiator_port),
-	    false);
-
 DEFINE_STUB_V(spdk_scsi_lun_append_task,
 	      (struct spdk_scsi_lun *lun, struct spdk_scsi_task *task));
 
@@ -132,9 +131,19 @@ DEFINE_STUB(_spdk_scsi_lun_allocate_io_channel, int,
 
 DEFINE_STUB_V(_spdk_scsi_lun_free_io_channel, (struct spdk_scsi_lun *lun));
 
-DEFINE_STUB(spdk_scsi_lun_has_pending_tasks, bool,
-	    (const struct spdk_scsi_lun *lun, const struct spdk_scsi_port *initiator_port),
-	    false);
+bool
+spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun,
+				     const struct spdk_scsi_port *initiator_port)
+{
+	return (g_initiator_port_with_pending_mgmt_tasks == initiator_port);
+}
+
+bool
+spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun,
+				const struct spdk_scsi_port *initiator_port)
+{
+	return (g_initiator_port_with_pending_tasks == initiator_port);
+}
 
 static void
 dev_destruct_null_dev(void)
@@ -603,6 +612,33 @@ dev_add_lun_success2(void)
 	spdk_scsi_dev_destruct(&dev, NULL, NULL);
 }
 
+static void
+dev_check_pending_tasks(void)
+{
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
+	struct spdk_scsi_port initiator_port = {};
+
+	g_initiator_port_with_pending_tasks = NULL;
+	g_initiator_port_with_pending_mgmt_tasks = NULL;
+
+	CU_ASSERT(spdk_scsi_dev_has_pending_tasks(&dev, NULL) == false);
+
+	dev.lun[SPDK_SCSI_DEV_MAX_LUN - 1] = &lun;
+
+	CU_ASSERT(spdk_scsi_dev_has_pending_tasks(&dev, NULL) == true);
+	CU_ASSERT(spdk_scsi_dev_has_pending_tasks(&dev, &initiator_port) == false);
+
+	g_initiator_port_with_pending_tasks = &initiator_port;
+	CU_ASSERT(spdk_scsi_dev_has_pending_tasks(&dev, NULL) == true);
+	CU_ASSERT(spdk_scsi_dev_has_pending_tasks(&dev, &initiator_port) == true);
+
+	g_initiator_port_with_pending_tasks = NULL;
+	g_initiator_port_with_pending_mgmt_tasks = &initiator_port;
+	CU_ASSERT(spdk_scsi_dev_has_pending_tasks(&dev, NULL) == true);
+	CU_ASSERT(spdk_scsi_dev_has_pending_tasks(&dev, &initiator_port) == true);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -666,6 +702,8 @@ main(int argc, char **argv)
 			       dev_add_lun_success1) == NULL
 		|| CU_add_test(suite, "dev add lun - success 2",
 			       dev_add_lun_success2) == NULL
+		|| CU_add_test(suite, "dev check pending tasks",
+			       dev_check_pending_tasks) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
