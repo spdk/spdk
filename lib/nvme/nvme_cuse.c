@@ -248,6 +248,289 @@ nvme_reset(fuse_req_t req, int cmd, void *arg,
 	}
 }
 
+/*****************************************************************************
+ * Namespace IO requests
+ */
+
+static void
+cuse_nvme_submit_io_write_done(void *ref, const struct spdk_nvme_cpl *cpl)
+{
+	struct cuse_io_ctx *ctx = (struct cuse_io_ctx *)ref;
+
+	fuse_reply_ioctl_iov(ctx->req, 0, NULL, 0);
+
+	cuse_io_ctx_free(ctx);
+}
+
+static void
+cuse_nvme_submit_io_write_cb(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *arg)
+{
+	int rc;
+	struct cuse_io_ctx *ctx = arg;
+	struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+
+	rc = spdk_nvme_ns_cmd_write(ns, ctrlr->external_io_msgs_qpair, ctx->data,
+				    ctx->lba, /* LBA start */
+				    ctx->lba_count, /* number of LBAs */
+				    cuse_nvme_submit_io_write_done, ctx, 0);
+
+	if (rc != 0) {
+		SPDK_ERRLOG("write failed: rc = %d\n", rc);
+		fuse_reply_err(ctx->req, EINVAL);
+		cuse_io_ctx_free(ctx);
+		return;
+	}
+}
+
+static void
+cuse_nvme_submit_io_write(fuse_req_t req, int cmd, void *arg,
+			  struct fuse_file_info *fi, unsigned flags,
+			  const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+{
+	const struct nvme_user_io *user_io = in_buf;
+	struct cuse_io_ctx *ctx;
+	struct spdk_nvme_ns *ns;
+	uint32_t block_size;
+	int rc;
+	struct cuse_device *cuse_device = fuse_req_userdata(req);
+
+	ctx = (struct cuse_io_ctx *)calloc(1, sizeof(struct cuse_io_ctx));
+	if (!ctx) {
+		SPDK_ERRLOG("Cannot allocate memory for context\n");
+		fuse_reply_err(req, ENOMEM);
+		return;
+	}
+
+	ctx->req = req;
+
+	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
+	block_size = spdk_nvme_ns_get_sector_size(ns);
+
+	ctx->lba = user_io->slba;
+	ctx->lba_count = user_io->nblocks + 1;
+	ctx->data_len = ctx->lba_count * block_size;
+
+	ctx->data = spdk_nvme_ctrlr_alloc_cmb_io_buffer(cuse_device->ctrlr, ctx->data_len);
+	if (ctx->data == NULL) {
+		ctx->data = spdk_zmalloc(ctx->data_len, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
+					 SPDK_MALLOC_DMA);
+	}
+	if (ctx->data == NULL) {
+		SPDK_ERRLOG("Write buffer allocation failed\n");
+		fuse_reply_err(ctx->req, ENOMEM);
+		free(ctx);
+		return;
+	}
+
+	memcpy(ctx->data, in_buf + sizeof(*user_io), ctx->data_len);
+
+	rc = spdk_nvme_io_msg_send(cuse_device->ctrlr, cuse_device->nsid, cuse_nvme_submit_io_write_cb,
+				   ctx);
+	if (rc < 0) {
+		SPDK_ERRLOG("Cannot send write io\n");
+		fuse_reply_err(ctx->req, ENOMEM);
+		cuse_io_ctx_free(ctx);
+	}
+}
+
+static void
+cuse_nvme_submit_io_read_done(void *ref, const struct spdk_nvme_cpl *cpl)
+{
+	struct cuse_io_ctx *ctx = (struct cuse_io_ctx *)ref;
+	struct iovec iov;
+
+	iov.iov_base = ctx->data;
+	iov.iov_len = ctx->data_len;
+
+	fuse_reply_ioctl_iov(ctx->req, 0, &iov, 1);
+
+	cuse_io_ctx_free(ctx);
+}
+
+static void
+cuse_nvme_submit_io_read_cb(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *arg)
+{
+	int rc;
+	struct cuse_io_ctx *ctx = arg;
+	struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+
+	rc = spdk_nvme_ns_cmd_read(ns, ctrlr->external_io_msgs_qpair, ctx->data,
+				   ctx->lba, /* LBA start */
+				   ctx->lba_count, /* number of LBAs */
+				   cuse_nvme_submit_io_read_done, ctx, 0);
+
+	if (rc != 0) {
+		SPDK_ERRLOG("read failed: rc = %d\n", rc);
+		fuse_reply_err(ctx->req, EINVAL);
+		cuse_io_ctx_free(ctx);
+		return;
+	}
+}
+
+static void
+cuse_nvme_submit_io_read(fuse_req_t req, int cmd, void *arg,
+			 struct fuse_file_info *fi, unsigned flags,
+			 const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+{
+	int rc;
+	struct cuse_io_ctx *ctx;
+	const struct nvme_user_io *user_io = in_buf;
+	struct cuse_device *cuse_device = fuse_req_userdata(req);
+	struct spdk_nvme_ns *ns;
+	uint32_t block_size;
+
+	ctx = (struct cuse_io_ctx *)calloc(1, sizeof(struct cuse_io_ctx));
+	if (!ctx) {
+		SPDK_ERRLOG("Cannot allocate memory for context\n");
+		fuse_reply_err(req, ENOMEM);
+		return;
+	}
+
+	ctx->req = req;
+	ctx->lba = user_io->slba;
+	ctx->lba_count = user_io->nblocks;
+
+	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
+	block_size = spdk_nvme_ns_get_sector_size(ns);
+
+	ctx->data_len = ctx->lba_count * block_size;
+	ctx->data = spdk_nvme_ctrlr_alloc_cmb_io_buffer(cuse_device->ctrlr, ctx->data_len);
+	if (ctx->data == NULL) {
+		ctx->data = spdk_zmalloc(ctx->data_len, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
+					 SPDK_MALLOC_DMA);
+	}
+	if (ctx->data == NULL) {
+		SPDK_ERRLOG("Read buffer allocation failed\n");
+		fuse_reply_err(ctx->req, ENOMEM);
+		free(ctx);
+		return;
+	}
+
+	rc = spdk_nvme_io_msg_send(cuse_device->ctrlr, cuse_device->nsid, cuse_nvme_submit_io_read_cb, ctx);
+	if (rc < 0) {
+		SPDK_ERRLOG("Cannot send read io\n");
+		fuse_reply_err(ctx->req, ENOMEM);
+		cuse_io_ctx_free(ctx);
+	}
+}
+
+
+static void
+nvme_submit_io(fuse_req_t req, int cmd, void *arg,
+	       struct fuse_file_info *fi, unsigned flags,
+	       const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+{
+	const struct nvme_user_io *user_io;
+	struct iovec in_iov[2], out_iov;
+
+	in_iov[0].iov_base = (void *)arg;
+	in_iov[0].iov_len = sizeof(*user_io);
+	if (in_bufsz == 0) {
+		fuse_reply_ioctl_retry(req, in_iov, 1, NULL, 0);
+		return;
+	}
+
+	user_io = in_buf;
+
+	switch (user_io->opcode) {
+	case SPDK_NVME_OPC_READ:
+		out_iov.iov_base = (void *)user_io->addr;
+		out_iov.iov_len = (user_io->nblocks + 1) * 512;
+		if (out_bufsz == 0) {
+			fuse_reply_ioctl_retry(req, in_iov, 1, &out_iov, 1);
+			return;
+		}
+
+		cuse_nvme_submit_io_read(req, cmd, arg, fi, flags, in_buf,
+					 in_bufsz, out_bufsz);
+		break;
+	case SPDK_NVME_OPC_WRITE:
+		in_iov[1].iov_base = (void *)user_io->addr;
+		in_iov[1].iov_len = (user_io->nblocks + 1) * 512;
+		if (in_bufsz == sizeof(*user_io)) {
+			fuse_reply_ioctl_retry(req, in_iov, 2, NULL, 0);
+			return;
+		}
+
+		cuse_nvme_submit_io_write(req, cmd, arg, fi, flags, in_buf,
+					  in_bufsz, out_bufsz);
+
+		break;
+	default:
+		SPDK_ERRLOG("SUBMIT_IO: opc:%d not valid\n", user_io->opcode);
+		fuse_reply_err(req, EINVAL);
+		return;
+	}
+
+}
+
+/*****************************************************************************
+ * Other namespace IOCTLs
+ */
+static void
+blkgetsize64(fuse_req_t req, int cmd, void *arg,
+	     struct fuse_file_info *fi, unsigned flags,
+	     const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+{
+	uint64_t size;
+	struct spdk_nvme_ns *ns;
+	struct cuse_device *cuse_device = fuse_req_userdata(req);
+
+	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, size);
+
+	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
+	size = spdk_nvme_ns_get_num_sectors(ns);
+	fuse_reply_ioctl(req, 0, &size, sizeof(size));
+}
+
+static void
+blkpbszget(fuse_req_t req, int cmd, void *arg,
+	   struct fuse_file_info *fi, unsigned flags,
+	   const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+{
+	int pbsz;
+	struct spdk_nvme_ns *ns;
+	struct cuse_device *cuse_device = fuse_req_userdata(req);
+
+	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, pbsz);
+
+	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
+	pbsz = spdk_nvme_ns_get_sector_size(ns);
+	fuse_reply_ioctl(req, 0, &pbsz, sizeof(pbsz));
+}
+
+static void
+blkgetsize(fuse_req_t req, int cmd, void *arg,
+	   struct fuse_file_info *fi, unsigned flags,
+	   const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+{
+	long size;
+	struct spdk_nvme_ns *ns;
+	struct cuse_device *cuse_device = fuse_req_userdata(req);
+
+	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, size);
+
+	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
+
+	/* return size in 512 bytes blocks */
+	size = spdk_nvme_ns_get_num_sectors(ns) * 512 / spdk_nvme_ns_get_sector_size(ns);
+	fuse_reply_ioctl(req, 0, &size, sizeof(size));
+}
+
+static void
+getid(fuse_req_t req, int cmd, void *arg,
+      struct fuse_file_info *fi, unsigned flags,
+      const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+{
+	uint32_t nsid;
+	struct cuse_device *cuse_device = fuse_req_userdata(req);
+
+	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, nsid);
+
+	nsid = cuse_device->nsid;
+	fuse_reply_ioctl(req, nsid, NULL, 0);
+}
+
 static void
 cuse_ioctl(fuse_req_t req, int cmd, void *arg,
 	   struct fuse_file_info *fi, unsigned flags,
@@ -265,6 +548,28 @@ cuse_ioctl(fuse_req_t req, int cmd, void *arg,
 
 	case NVME_IOCTL_RESET:
 		nvme_reset(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
+		break;
+
+	case NVME_IOCTL_SUBMIT_IO:
+		nvme_submit_io(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
+		break;
+
+	case NVME_IOCTL_ID:
+		getid(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
+		break;
+
+	case BLKPBSZGET:
+		blkpbszget(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
+		break;
+
+	case BLKGETSIZE:
+		/* Returns the device size as a number of 512-byte blocks (returns pointer to long) */
+		blkgetsize(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
+		break;
+
+	case BLKGETSIZE64:
+		/* Returns the device size in sectors (returns pointer to uint64_t) */
+		blkgetsize64(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
 	default:
