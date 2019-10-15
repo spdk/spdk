@@ -281,11 +281,13 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			break;
 		case RDMA_CM_EVENT_DISCONNECTED:
 		case RDMA_CM_EVENT_DEVICE_REMOVAL:
+			rqpair->qpair.transport_qp_is_failed = true;
 			break;
 		case RDMA_CM_EVENT_MULTICAST_JOIN:
 		case RDMA_CM_EVENT_MULTICAST_ERROR:
 			break;
 		case RDMA_CM_EVENT_ADDR_CHANGE:
+			rqpair->qpair.transport_qp_is_failed = true;
 			break;
 		case RDMA_CM_EVENT_TIMEWAIT_EXIT:
 			break;
@@ -1020,8 +1022,10 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 
+	rqpair->qpair.transport_qp_is_failed = false;
 	rc = nvme_fabric_qpair_connect(&rqpair->qpair, rqpair->num_entries);
 	if (rc < 0) {
+		rqpair->qpair.transport_qp_is_failed = true;
 		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
 		return -1;
 	}
@@ -1458,6 +1462,7 @@ nvme_rdma_qpair_disconnect(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
 
+	qpair->transport_qp_is_failed = true;
 	nvme_rdma_unregister_mem(rqpair);
 	nvme_rdma_unregister_reqs(rqpair);
 	nvme_rdma_unregister_rsps(rqpair);
@@ -1838,6 +1843,10 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	}
 	nvme_rdma_qpair_process_cm_event(rqpair);
 
+	if (spdk_unlikely(qpair->transport_qp_is_failed)) {
+		goto fail;
+	}
+
 	cq = rqpair->cq;
 
 	reaped = 0;
@@ -1848,7 +1857,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		if (rc < 0) {
 			SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
 				    errno, spdk_strerror(errno));
-			return -1;
+			goto fail;
 		} else if (rc == 0) {
 			/* Ran out of completions */
 			break;
@@ -1858,7 +1867,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 			if (wc[i].status) {
 				SPDK_ERRLOG("CQ error on Queue Pair %p, Response Index %lu (%d): %s\n",
 					    qpair, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
-				return -1;
+				goto fail;
 			}
 
 			switch (wc[i].opcode) {
@@ -1869,12 +1878,12 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 
 				if (wc[i].byte_len < sizeof(struct spdk_nvme_cpl)) {
 					SPDK_ERRLOG("recv length %u less than expected response size\n", wc[i].byte_len);
-					return -1;
+					goto fail;
 				}
 
 				if (nvme_rdma_recv(rqpair, wc[i].wr_id)) {
 					SPDK_ERRLOG("nvme_rdma_recv processing failure\n");
-					return -1;
+					goto fail;
 				}
 				break;
 
@@ -1890,7 +1899,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 
 			default:
 				SPDK_ERRLOG("Received an unexpected opcode on the CQ: %d\n", wc[i].opcode);
-				return -1;
+				goto fail;
 			}
 		}
 	} while (reaped < max_completions);
@@ -1900,6 +1909,10 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	}
 
 	return reaped;
+
+fail:
+	nvme_rdma_qpair_disconnect(qpair);
+	return -ENXIO;
 }
 
 uint32_t
