@@ -21,10 +21,10 @@ trap "json_kill; exit 1" SIGINT SIGTERM EXIT
 $rootdir/app/spdk_tgt/spdk_tgt -c $ftl_bdev_conf  & svcpid=$!
 waitforlisten $svcpid
 
-$rpc_py bdev_nvme_attach_controller -b nvme0 -a $device -t pcie
-$rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1 -n 1
 # Create new bdev from json configuration
 $rootdir/scripts/gen_ftl.sh -n ftl0 -d nvme0n1 | $rpc_py load_subsystem_config
+$rpc_py bdev_nvme_attach_controller -b nvme0 -a $device -t pcie
+$rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1 -n 1
 
 uuid=$($rpc_py bdev_get_bdevs | jq -r ".[] | select(.name==\"ftl0\").uuid")
 
