@@ -40,6 +40,7 @@
 
 #include <rte_config.h>
 #include <rte_eal.h>
+#include <rte_errno.h>
 
 #define SPDK_ENV_DPDK_DEFAULT_NAME		"spdk"
 #define SPDK_ENV_DPDK_DEFAULT_SHM_ID		-1
@@ -458,7 +459,11 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	free(dpdk_args);
 
 	if (rc < 0) {
-		fprintf(stderr, "Failed to initialize DPDK\n");
+		if (rte_errno == EALREADY) {
+			fprintf(stderr, "DPDK already initialized\n");
+		} else {
+			fprintf(stderr, "Failed to initialize DPDK\n");
+		}
 		return -rc;
 	}
 
