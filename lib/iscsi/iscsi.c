@@ -4586,8 +4586,8 @@ iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	return rc;
 }
 
-int
-spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
+static int
+iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 {
 	enum iscsi_pdu_recv_state prev_state;
 	struct spdk_iscsi_pdu *pdu;
@@ -4778,6 +4778,30 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 	} while (prev_state != conn->pdu_recv_state);
 
 	return 0;
+}
+
+#define GET_PDU_LOOP_COUNT	16
+
+int
+spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
+{
+	int i, rc;
+
+	/* Read new PDUs from network */
+	for (i = 0; i < GET_PDU_LOOP_COUNT; i++) {
+		rc = iscsi_read_pdu(conn);
+		if (rc == 0) {
+			break;
+		} else if (rc < 0) {
+			return rc;
+		}
+
+		if (conn->is_stopped) {
+			break;
+		}
+	}
+
+	return i;
 }
 
 bool
