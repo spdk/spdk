@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d46d17f9_5d8be1e1",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 5511,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T20:52:33Z",
+      "side": 1,
+      "message": "Instead of using lower-case L, should we use r instead?  I think that makes the names a bit clearer - otherwise \"l\" looks a lot like the \"1\".",
+      "revId": "0568fedcbd045ebea5633fe784ff38745e19677f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5f577f1_fe0937f5",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 5534,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T20:52:33Z",
+      "side": 1,
+      "message": "bdev_opal_delete",
+      "revId": "0568fedcbd045ebea5633fe784ff38745e19677f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5e80172_a98b4895",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T20:52:33Z",
+      "side": 1,
+      "message": "Hi Chunyang,\n\nI\u0027m not sure I understand this here.  If I create one opal bdevs from NVMe controller with locking range ID 1, this will print the name of that opal boded.  If I then create a second one, won\u0027t this print both the first bdev name and the new one?  I think it should only print the new one.\n\n-Jim",
+      "revId": "0568fedcbd045ebea5633fe784ff38745e19677f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
