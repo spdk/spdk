@@ -22,6 +22,30 @@
       "revId": "742acca19c6074af2bfac4217d2fec2732d237d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aecddc77_61debeab",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T00:47:46Z",
+      "side": 1,
+      "message": "I agree.  There are some XOR/NAND functions but they are different on Linux and FreeBSD.  Ziye and I think this solution is best, since it avoids Linux/FreeBSD ifdefs.",
+      "parentUuid": "d0b28931_1e3b7a59",
+      "range": {
+        "startLine": 357,
+        "startChar": 2,
+        "endLine": 361,
+        "endChar": 3
+      },
+      "revId": "742acca19c6074af2bfac4217d2fec2732d237d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
