@@ -62,6 +62,21 @@ scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 }
 
 static bool
+scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun)
+{
+	return !TAILQ_EMPTY(&lun->pending_mgmt_tasks) ||
+	       !TAILQ_EMPTY(&lun->mgmt_tasks);
+}
+
+/* This check includes both pending and submitted (outstanding) tasks. */
+static bool
+scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun)
+{
+	return !TAILQ_EMPTY(&lun->pending_tasks) ||
+	       !TAILQ_EMPTY(&lun->tasks);
+}
+
+static bool
 scsi_lun_has_outstanding_tasks(struct spdk_scsi_lun *lun)
 {
 	return !TAILQ_EMPTY(&lun->tasks);
@@ -206,7 +221,7 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 {
 	struct spdk_scsi_task *task, *task_tmp;
 
-	if (spdk_scsi_lun_has_pending_mgmt_tasks(lun)) {
+	if (scsi_lun_has_pending_mgmt_tasks(lun)) {
 		/* Pending IO tasks will wait for completion of existing mgmt tasks.
 		 */
 		return;
@@ -277,8 +292,8 @@ scsi_lun_check_pending_tasks(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
-	if (spdk_scsi_lun_has_pending_tasks(lun) ||
-	    spdk_scsi_lun_has_pending_mgmt_tasks(lun)) {
+	if (scsi_lun_has_pending_tasks(lun) ||
+	    scsi_lun_has_pending_mgmt_tasks(lun)) {
 		return -1;
 	}
 	spdk_poller_unregister(&lun->hotremove_poller);
@@ -292,8 +307,8 @@ _scsi_lun_hot_remove(void *arg1)
 {
 	struct spdk_scsi_lun *lun = arg1;
 
-	if (spdk_scsi_lun_has_pending_tasks(lun) ||
-	    spdk_scsi_lun_has_pending_mgmt_tasks(lun)) {
+	if (scsi_lun_has_pending_tasks(lun) ||
+	    scsi_lun_has_pending_mgmt_tasks(lun)) {
 		lun->hotremove_poller = spdk_poller_register(scsi_lun_check_pending_tasks,
 					lun, 10);
 	} else {
@@ -491,16 +506,13 @@ spdk_scsi_lun_get_dev(const struct spdk_scsi_lun *lun)
 bool
 spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun)
 {
-	return !TAILQ_EMPTY(&lun->pending_mgmt_tasks) ||
-	       !TAILQ_EMPTY(&lun->mgmt_tasks);
+	return scsi_lun_has_pending_mgmt_tasks(lun);
 }
 
-/* This check includes both pending and submitted (outstanding) tasks. */
 bool
 spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun)
 {
-	return !TAILQ_EMPTY(&lun->pending_tasks) ||
-	       !TAILQ_EMPTY(&lun->tasks);
+	return scsi_lun_has_pending_tasks(lun);
 }
 
 bool
