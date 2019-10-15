@@ -48,11 +48,11 @@ struct ftl_bdev_info {
 
 struct ftl_bdev_init_opts {
 	/* Bdev's name */
-	const char				*name;
+	char					*name;
 	/* Base bdev's name */
-	const char				*base_bdev;
+	char					*base_bdev;
 	/* Write buffer bdev's name */
-	const char				*cache_bdev;
+	char					*cache_bdev;
 	/* Bdev's mode */
 	uint32_t				mode;
 	/* UUID if device is restored from SSD */
