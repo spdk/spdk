@@ -16,6 +16,24 @@
       "revId": "44f2e1ad232fef8975e3d1e0a54cdd933683f801",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58a43ce8_4bf57e81",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1255,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-15T11:15:58Z",
+      "side": 1,
+      "message": "If we set is here we will free ctx after creating bdevs and will try to use ctx in lines 1276 and 1281 after it was freed previously.",
+      "parentUuid": "5bd4b0ad_405c6445",
+      "revId": "44f2e1ad232fef8975e3d1e0a54cdd933683f801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
