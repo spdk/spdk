@@ -1042,6 +1042,23 @@ struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *c
 		size_t opts_size);
 
 /**
+ * Attempt to reconnect the given qpair.
+ *
+ * This function is intended to be called on qpairs that have already been connected,
+ * but have since entered a failed state as indicated by a return value of -ENXIO from
+ * either spdk_nvme_qpair_process_completions or one of the spdk_nvme_ns_cmd_read* functions.
+ *
+ * \param qpair The qpair to reconnect.
+ *
+ * \return 0 on success, or if the qpair was already connected,
+ * -EAGAIN if the driver was unable to reconnect during this call,
+ * but the controller is still valid and this operation can be retried.
+ * -ENXIO if the controller is failed or removed. In this case, a call to this function will
+ * not succeed until a controller level reset occurs. See spdk_nvme_ctrlr_reset for details.
+ */
+int spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair);
+
+/**
  * Free an I/O queue pair that was allocated by spdk_nvme_ctrlr_alloc_io_qpair().
  *
  * \param qpair I/O queue pair to free.
