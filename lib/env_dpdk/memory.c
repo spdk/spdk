@@ -739,7 +739,7 @@ spdk_mem_map_init(void)
 	g_mem_reg_map = spdk_mem_map_alloc(0, NULL, NULL);
 	if (g_mem_reg_map == NULL) {
 		DEBUG_PRINT("memory registration map allocation failed\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	/*
@@ -1348,7 +1348,7 @@ spdk_vtophys_init(void)
 	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, &vtophys_map_ops, NULL);
 	if (g_vtophys_map == NULL) {
 		DEBUG_PRINT("vtophys map allocation failed\n");
-		return -1;
+		return -ENOMEM;
 	}
 	return 0;
 }
