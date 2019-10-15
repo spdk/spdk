@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09bc2370_dc9a17d1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T05:32:08Z",
+      "side": 1,
+      "message": "I don\u0027t think this is really true.  Previously we only allocated a total of 32MB max of sendbuf space for all connections.  Meaning if MaxConnections was 128, we\u0027d have 256KB of sendbuf space per connection.  Now it will be 2MB instead.\n\nThat being said, 32MB was way too low.  I think your patch is fine - I\u0027d just suggest updating the commit message.",
+      "revId": "123eb00b290176b4046ee11fdad3cb79f5a517ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
