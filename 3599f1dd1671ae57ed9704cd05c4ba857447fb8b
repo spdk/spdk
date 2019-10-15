@@ -69,6 +69,40 @@
       "revId": "3599f1dd1671ae57ed9704cd05c4ba857447fb8b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68e4ae78_a4068117",
+        "filename": "module/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T00:25:11Z",
+      "side": 1,
+      "message": "I\u0027m thinking we should just remove this completely.  Then if the user specifies clear_method, it will go through the normal error path for unknown parameters rather than keeping special handling, error message, etc.\n\nThe other option is to leave it here, but if the user specifies it, print a message that it is being ignored, but don\u0027t fail the RPC.  Then we could remove all of the clear_method on create handling in 20.01.\n\nPersonally I\u0027d prefer the former but am OK either way.",
+      "revId": "3599f1dd1671ae57ed9704cd05c4ba857447fb8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02bed69d_8b06b48c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1273,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T00:25:11Z",
+      "side": 1,
+      "message": "Should we just remove it?\n\nI\u0027m not sure there\u0027s any value in leaving it here.  If the user specifies it, they\u0027ll get an error that it\u0027s an unknown option (which is about the same as this error message).",
+      "revId": "3599f1dd1671ae57ed9704cd05c4ba857447fb8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
