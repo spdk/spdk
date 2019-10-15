@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7f7b340_b0b307e8",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1969,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T23:39:29Z",
+      "side": 1,
+      "message": "should we abort reqs here?  this seems to be inconsistent with PCIe and TCP - but maybe I\u0027m reading it incorrectly",
+      "revId": "dbdc0d7b78deb81891d3b0e464bfe3106c5bcfd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
