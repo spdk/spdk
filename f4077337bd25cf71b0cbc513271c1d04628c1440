@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "566ca9c6_261e3920",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-15T01:45:02Z",
+      "side": 1,
+      "message": "As you suggested in the slack iscsi channel, will you make this configurable by the user of sock?",
+      "range": {
+        "startLine": 61,
+        "startChar": 21,
+        "endLine": 61,
+        "endChar": 34
+      },
+      "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
