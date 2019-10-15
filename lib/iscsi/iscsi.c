@@ -2147,6 +2147,7 @@ static int
 iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	int rc;
+	struct iscsi_bhs_login_req *reqh;
 	struct spdk_iscsi_pdu *rsp_pdu;
 	struct iscsi_param *params = NULL;
 	int alloc_len;
@@ -2156,6 +2157,9 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	    conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
+
+	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
+	pdu->cmd_sn = from_be32(&reqh->cmd_sn);
 
 	/* During login processing, use the 8KB default FirstBurstLength as
 	 *  our maximum data segment length value.
@@ -2218,7 +2222,6 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint8_t *data;
 	uint64_t lun;
 	uint32_t task_tag;
-	uint32_t CmdSN;
 	uint32_t ExpStatSN;
 	const char *val;
 	int F_bit, C_bit;
@@ -2243,8 +2246,6 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	C_bit = !!(reqh->flags & ISCSI_TEXT_CONTINUE);
 	lun = from_be64(&reqh->lun);
 	task_tag = from_be32(&reqh->itt);
-	CmdSN = from_be32(&reqh->cmd_sn);
-	pdu->cmd_sn = CmdSN;
 	ExpStatSN = from_be32(&reqh->exp_stat_sn);
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "I=%d, F=%d, C=%d, ITT=%x, TTT=%x\n",
@@ -2252,7 +2253,7 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 		      "CmdSN=%u, ExpStatSN=%u, StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
-		      CmdSN, ExpStatSN, conn->StatSN, conn->sess->ExpCmdSN,
+		      pdu->cmd_sn, ExpStatSN, conn->StatSN, conn->sess->ExpCmdSN,
 		      conn->sess->MaxCmdSN);
 
 	if (ExpStatSN != conn->StatSN) {
@@ -2422,7 +2423,6 @@ iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_pdu *rsp_pdu;
 	uint32_t task_tag;
-	uint32_t CmdSN;
 	uint32_t ExpStatSN;
 	int response;
 	struct iscsi_bhs_logout_req *reqh;
@@ -2433,8 +2433,6 @@ iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	cid = from_be16(&reqh->cid);
 	task_tag = from_be32(&reqh->itt);
-	CmdSN = from_be32(&reqh->cmd_sn);
-	pdu->cmd_sn = CmdSN;
 	ExpStatSN = from_be32(&reqh->exp_stat_sn);
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "reason=%d, ITT=%x, cid=%d\n",
@@ -2448,16 +2446,16 @@ iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	if (conn->sess != NULL) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "CmdSN=%u, ExpStatSN=%u, StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
-			      CmdSN, ExpStatSN, conn->StatSN,
+			      pdu->cmd_sn, ExpStatSN, conn->StatSN,
 			      conn->sess->ExpCmdSN, conn->sess->MaxCmdSN);
 
-		if (CmdSN != conn->sess->ExpCmdSN) {
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CmdSN(%u) might have dropped\n", CmdSN);
+		if (pdu->cmd_sn != conn->sess->ExpCmdSN) {
+			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CmdSN(%u) might have dropped\n", pdu->cmd_sn);
 			/* ignore error */
 		}
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CmdSN=%u, ExpStatSN=%u, StatSN=%u\n",
-			      CmdSN, ExpStatSN, conn->StatSN);
+			      pdu->cmd_sn, ExpStatSN, conn->StatSN);
 	}
 
 	if (ExpStatSN != conn->StatSN) {
@@ -2500,8 +2498,8 @@ iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	} else {
 		to_be32(&rsph->stat_sn, conn->StatSN);
 		conn->StatSN++;
-		to_be32(&rsph->exp_cmd_sn, CmdSN);
-		to_be32(&rsph->max_cmd_sn, CmdSN);
+		to_be32(&rsph->exp_cmd_sn, pdu->cmd_sn);
+		to_be32(&rsph->max_cmd_sn, pdu->cmd_sn);
 	}
 
 	rsph->time_2_wait = 0;
@@ -3833,7 +3831,6 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint64_t lun;
 	uint32_t task_tag;
 	uint32_t transfer_tag;
-	uint32_t CmdSN;
 	int I_bit;
 	int data_len;
 
@@ -3857,14 +3854,12 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	lun = from_be64(&reqh->lun);
 	task_tag = from_be32(&reqh->itt);
 	transfer_tag = from_be32(&reqh->ttt);
-	CmdSN = from_be32(&reqh->cmd_sn);
-	pdu->cmd_sn = CmdSN;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "I=%d, ITT=%x, TTT=%x\n",
 		      I_bit, task_tag, transfer_tag);
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "CmdSN=%u, StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
-		      CmdSN, conn->StatSN, conn->sess->ExpCmdSN,
+		      pdu->cmd_sn, conn->StatSN, conn->sess->ExpCmdSN,
 		      conn->sess->MaxCmdSN);
 
 	if (transfer_tag != 0xFFFFFFFF && transfer_tag != (uint32_t)conn->id) {
@@ -4447,57 +4442,25 @@ remove_acked_pdu(struct spdk_iscsi_conn *conn, uint32_t ExpStatSN)
 }
 
 static int
-iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_update_cmdsn(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	int opcode;
-	int rc;
-	struct spdk_iscsi_pdu *rsp_pdu = NULL;
 	uint32_t ExpStatSN;
 	int I_bit;
 	struct spdk_iscsi_sess *sess;
 	struct iscsi_bhs_scsi_req *reqh;
-
-	if (pdu == NULL) {
-		return -1;
-	}
-
-	opcode = pdu->bhs.opcode;
-	reqh = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
-	pdu->cmd_sn = from_be32(&reqh->cmd_sn);
-
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "opcode %x\n", opcode);
-
-	if (opcode == ISCSI_OP_LOGIN) {
-		rc = iscsi_op_login(conn, pdu);
-		if (rc < 0) {
-			SPDK_ERRLOG("iscsi_op_login() failed\n");
-		}
-		return rc;
-	}
-
-	/* connection in login phase but receive non-login opcode
-	 * return response code 0x020b to initiator.
-	 * */
-	if (!conn->full_feature && conn->state == ISCSI_CONN_STATE_RUNNING) {
-		rsp_pdu = spdk_get_pdu();
-		if (rsp_pdu == NULL) {
-			return SPDK_ISCSI_CONNECTION_FATAL;
-		}
-		init_login_reject_response(pdu, rsp_pdu);
-		spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
-		SPDK_ERRLOG("Received opcode %d in login phase\n", opcode);
-		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
-	} else if (conn->state == ISCSI_CONN_STATE_INVALID) {
-		SPDK_ERRLOG("before Full Feature\n");
-		iscsi_pdu_dump(pdu);
-		return SPDK_ISCSI_CONNECTION_FATAL;
-	}
 
 	sess = conn->sess;
 	if (!sess) {
 		SPDK_ERRLOG("Connection has no associated session!\n");
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
+
+	opcode = pdu->bhs.opcode;
+	reqh = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
+
+	pdu->cmd_sn = from_be32(&reqh->cmd_sn);
+
 	I_bit = reqh->immediate;
 	if (I_bit == 0) {
 		if (SN32_LT(pdu->cmd_sn, sess->ExpCmdSN) ||
@@ -4541,6 +4504,55 @@ iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	if (!I_bit && opcode != ISCSI_OP_SCSI_DATAOUT) {
 		sess->ExpCmdSN++;
+	}
+
+	return 0;
+}
+
+static int
+iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	int opcode;
+	int rc;
+	struct spdk_iscsi_pdu *rsp_pdu = NULL;
+
+	if (pdu == NULL) {
+		return -1;
+	}
+
+	opcode = pdu->bhs.opcode;
+
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "opcode %x\n", opcode);
+
+	if (opcode == ISCSI_OP_LOGIN) {
+		rc = iscsi_op_login(conn, pdu);
+		if (rc < 0) {
+			SPDK_ERRLOG("iscsi_op_login() failed\n");
+		}
+		return rc;
+	}
+
+	/* connection in login phase but receive non-login opcode
+	 * return response code 0x020b to initiator.
+	 * */
+	if (!conn->full_feature && conn->state == ISCSI_CONN_STATE_RUNNING) {
+		rsp_pdu = spdk_get_pdu();
+		if (rsp_pdu == NULL) {
+			return SPDK_ISCSI_CONNECTION_FATAL;
+		}
+		init_login_reject_response(pdu, rsp_pdu);
+		spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
+		SPDK_ERRLOG("Received opcode %d in login phase\n", opcode);
+		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+	} else if (conn->state == ISCSI_CONN_STATE_INVALID) {
+		SPDK_ERRLOG("before Full Feature\n");
+		iscsi_pdu_dump(pdu);
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	rc = iscsi_update_cmdsn(conn, pdu);
+	if (rc != 0) {
+		return rc;
 	}
 
 	switch (opcode) {
