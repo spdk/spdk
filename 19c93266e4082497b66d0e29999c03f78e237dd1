@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "559b8c4b_ed68c6f1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 20
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T00:34:34Z",
+      "side": 1,
+      "message": "this is kind of a nit, but the clear_method is when you are deleting a blob also, not just an lvol - so this isn\u0027t specific to lvol\n\nso I would just title this as:\n\nblob, lvol: add clear_method when deleting a blob or lvol\n\n(Note: the directory is lib/blob not lib/blobstore, you can omit the \"lib\" part)",
+      "revId": "19c93266e4082497b66d0e29999c03f78e237dd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b819a0f5_2e8cec61",
         "filename": "/COMMIT_MSG",
         "patchSetId": 20
@@ -43,6 +60,23 @@
         "endLine": 20,
         "endChar": 48
       },
+      "revId": "19c93266e4082497b66d0e29999c03f78e237dd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56105fc2_09fc2d27",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-15T00:34:34Z",
+      "side": 1,
+      "message": "it would be better to put this immediately after the spdk_bs_delete_blob declaration",
       "revId": "19c93266e4082497b66d0e29999c03f78e237dd1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
