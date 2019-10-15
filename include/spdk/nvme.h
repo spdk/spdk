@@ -1079,7 +1079,9 @@ int spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair);
  * \param cb_fn Callback function invoked when the I/O command completes.
  * \param cb_arg Argument passed to callback function.
  *
- * \return 0 on success, negated errno on failure.
+ * \return 0 if successfully submitted, -ENOMEN if resources could not be
+ * allocated for this request, -ENXIO if the admin qpair is failed at the
+ * transport layer.
  */
 
 int spdk_nvme_ctrlr_io_cmd_raw_no_payload_build(struct spdk_nvme_ctrlr *ctrlr,
@@ -1109,7 +1111,8 @@ int spdk_nvme_ctrlr_io_cmd_raw_no_payload_build(struct spdk_nvme_ctrlr *ctrlr,
  * \param cb_fn Callback function invoked when the I/O command completes.
  * \param cb_arg Argument passed to callback function.
  *
- * \return 0 on success, negated errno on failure.
+  * \return 0 if successfully submitted, negated errno if resources could not be
+ * allocated for this request, -ENXIO if the admin qpair is failed at the transport layer.
  */
 int spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
 			       struct spdk_nvme_qpair *qpair,
@@ -1141,7 +1144,8 @@ int spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
  * \param cb_fn Callback function invoked when the I/O command completes.
  * \param cb_arg Argument passed to callback function.
  *
- * \return 0 on success, negated errno on failure.
+ * \return 0 if successfully submitted, negated errno if resources could not be
+ * allocated for this request, -ENXIO if the admin qpair is failed at the transport layer.
  */
 int spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 				       struct spdk_nvme_qpair *qpair,
@@ -1171,7 +1175,8 @@ int spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
  * \param max_completions Limit the number of completions to be processed in one
  * call, or 0 for unlimited.
  *
- * \return number of completions processed (may be 0) or negated on error.
+ * \return number of completions processed (may be 0) or negated on error. -ENXIO
+ * in the special case that the qpair is failed at the transport layer.
  */
 int32_t spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		uint32_t max_completions);
@@ -1199,7 +1204,8 @@ int32_t spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
  * \param cb_fn Callback function invoked when the admin command completes.
  * \param cb_arg Argument passed to callback function.
  *
- * \return 0 on success, negated errno on failure.
+ * \return 0 if successfully submitted, negated errno if resources could not be
+ * allocated for this request, -ENXIO if the admin qpair is failed at the transport layer.
  */
 int spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
 				  struct spdk_nvme_cmd *cmd,
@@ -1220,7 +1226,8 @@ int spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
  *
  * \param ctrlr Opaque handle to NVMe controller.
  *
- * \return number of completions processed (may be 0) or negated on error.
+ * \return number of completions processed (may be 0) or negated on error. -ENXIO
+ * in the special case that the qpair is failed at the transport layer.
  */
 int32_t spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr);
 
@@ -1271,7 +1278,7 @@ struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint3
  * \param cb_arg Argument to pass to the callback function.
  *
  * \return 0 if successfully submitted, negated errno if resources could not be
- * allocated for this request.
+ * allocated for this request, -ENXIO if the admin qpair is failed at the transport layer.
  */
 int spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr,
 				     uint8_t log_page, uint32_t nsid,
@@ -1291,7 +1298,8 @@ int spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr,
  * \param cb_fn Callback function to invoke when the abort has completed.
  * \param cb_arg Argument to pass to the callback function.
  *
- * \return 0 if successfully submitted, negated errno value otherwise.
+ * \return 0 if successfully submitted, negated errno if resources could not be
+ * allocated for this request, -ENXIO if the admin qpair is failed at the transport layer.
  */
 int spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr,
 			      struct spdk_nvme_qpair *qpair,
@@ -1320,7 +1328,7 @@ int spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr,
  * \param cb_arg Argument to pass to the callback function.
  *
  * \return 0 if successfully submitted, negated errno if resources could not be
- * allocated for this request.
+ * allocated for this request, -ENXIO if the admin qpair is failed at the transport layer.
  */
 int spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr,
 				    uint8_t feature, uint32_t cdw11, uint32_t cdw12,
@@ -1347,7 +1355,7 @@ int spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr,
  * \param cb_arg Argument to pass to the callback function.
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated
- * for this request.
+ * for this request, -ENXIO if the admin qpair is failed at the transport layer.
  */
 int spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr,
 				    uint8_t feature, uint32_t cdw11,
@@ -1367,7 +1375,7 @@ int spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr,
  * \param ns_id The namespace identifier.
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated
- * for this request
+ * for this request, -ENXIO if the admin qpair is failed at the transport layer.
  *
  * This function is thread safe and can be called at any point while the controller
  * is attached to the SPDK NVMe driver.
@@ -1394,8 +1402,8 @@ int spdk_nvme_ctrlr_cmd_get_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t fe
  * \param cb_arg Argument to pass to the callback function.
  * \param ns_id The namespace identifier.
  *
- * \return 0 if successfully submitted, ENOMEM if resources could not be allocated
- * for this request.
+ * \return 0 if successfully submitted, -ENOMEM if resources could not be allocated
+ * for this request, -ENXIO if the admin qpair is failed at the transport layer.
  *
  * This function is thread safe and can be called at any point while the controller
  * is attached to the SPDK NVMe driver.
@@ -1868,8 +1876,10 @@ typedef int (*spdk_nvme_req_next_sge_cb)(void *cb_arg, void **address, uint32_t 
  * \param io_flags Set flags, defined by the SPDK_NVME_IO_FLAGS_* entries in
  * spdk/nvme_spec.h, for this I/O.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
 			   uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
@@ -1893,8 +1903,10 @@ int spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
  * \param next_sge_fn Callback function to iterate each scattered payload memory
  * segment.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			    uint64_t lba, uint32_t lba_count,
@@ -1924,8 +1936,10 @@ int spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpa
  * \param apptag_mask application tag mask.
  * \param apptag application tag to use end-to-end protection information.
  *
- * \return 0 if successfully submitted, ENOMEM if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				    uint64_t lba, uint32_t lba_count,
@@ -1955,8 +1969,10 @@ int spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qp
  * \param apptag_mask Application tag mask.
  * \param apptag Application tag to use end-to-end protection information.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				   void *payload, void *metadata,
@@ -1980,8 +1996,10 @@ int spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpa
  * \param io_flags Set flags, defined by the SPDK_NVME_IO_FLAGS_* entries in
  * spdk/nvme_spec.h, for this I/O.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				  uint64_t lba, uint32_t lba_count,
@@ -2002,8 +2020,10 @@ int spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
  * \param cb_fn Callback function to invoke when the I/O is completed.
  * \param cb_arg Argument to pass to the callback function.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_write_uncorrectable(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		uint64_t lba, uint32_t lba_count,
@@ -2025,8 +2045,10 @@ int spdk_nvme_ns_cmd_write_uncorrectable(struct spdk_nvme_ns *ns, struct spdk_nv
  * \param cb_arg Argument to pass to the callback function.
  * \param io_flags Set flags, defined in nvme_spec.h, for this I/O.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
 			  uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
@@ -2050,8 +2072,10 @@ int spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair
  * \param next_sge_fn Callback function to iterate each scattered payload memory
  * segment.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			   uint64_t lba, uint32_t lba_count,
@@ -2077,8 +2101,10 @@ int spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
  * \param apptag_mask application tag mask.
  * \param apptag application tag to use end-to-end protection information.
  *
- * \return 0 if successfully submitted, ENOMEM if an nvme_request
- *	     structure cannot be allocated for the I/O request
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  *
  * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
  * The user must ensure that only one thread submits I/O on a given qpair at any given time.
@@ -2106,8 +2132,10 @@ int spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpa
  * \param apptag_mask Application tag mask.
  * \param apptag Application tag to use end-to-end protection information.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				  void *payload, void *metadata,
@@ -2162,7 +2190,7 @@ int spdk_nvme_ns_cmd_dataset_management(struct spdk_nvme_ns *ns, struct spdk_nvm
  * \param cb_arg Argument to pass to the callback function.
  *
  * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * cannot be allocated for the I/O request, -ENXIO if the qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_flush(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			   spdk_nvme_cmd_cb cb_fn, void *cb_arg);
@@ -2184,7 +2212,7 @@ int spdk_nvme_ns_cmd_flush(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
  * \param cb_arg Argument to pass to the callback function.
  *
  * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * cannot be allocated for the I/O request, -ENXIO if the qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_reservation_register(struct spdk_nvme_ns *ns,
 		struct spdk_nvme_qpair *qpair,
@@ -2211,7 +2239,7 @@ int spdk_nvme_ns_cmd_reservation_register(struct spdk_nvme_ns *ns,
  * \param cb_arg Argument to pass to the callback function.
  *
  * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * cannot be allocated for the I/O request, -ENXIO if the qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_reservation_release(struct spdk_nvme_ns *ns,
 		struct spdk_nvme_qpair *qpair,
@@ -2238,7 +2266,7 @@ int spdk_nvme_ns_cmd_reservation_release(struct spdk_nvme_ns *ns,
  * \param cb_arg Argument to pass to the callback function.
  *
  * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * cannot be allocated for the I/O request, -ENXIO if the qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_reservation_acquire(struct spdk_nvme_ns *ns,
 		struct spdk_nvme_qpair *qpair,
@@ -2263,7 +2291,7 @@ int spdk_nvme_ns_cmd_reservation_acquire(struct spdk_nvme_ns *ns,
  * \param cb_arg Argument to pass to the callback function.
  *
  * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * cannot be allocated for the I/O request, -ENXIO if the qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 					struct spdk_nvme_qpair *qpair,
@@ -2286,8 +2314,10 @@ int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
  * \param cb_arg Argument to pass to the callback function.
  * \param io_flags Set flags, defined in nvme_spec.h, for this I/O.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
 			     uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
@@ -2311,8 +2341,10 @@ int spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qp
  * \param next_sge_fn Callback function to iterate each scattered payload memory
  * segment.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			      uint64_t lba, uint32_t lba_count,
@@ -2340,8 +2372,10 @@ int spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
  * \param apptag_mask Application tag mask.
  * \param apptag Application tag to use end-to-end protection information.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				     void *payload, void *metadata,
