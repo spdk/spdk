@@ -123,11 +123,9 @@ waitforio /var/tmp/bdevperf.sock Nvme1n1
 # Kill the target half way through
 killprocess $nvmfpid
 
-# Verify bdevperf exits successfully
+# Verify bdevperf exits
 sleep 1
-# TODO: Right now the NVMe-oF initiator will not correctly detect broken connections
-# and so it will never shut down. Just kill it.
-kill -9 $perfpid || true
+wait $perfpid || true
 timing_exit test3
 
 rm -f ./local-job0-0-verify.state
