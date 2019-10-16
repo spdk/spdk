@@ -16,6 +16,24 @@
       "revId": "82a452fdc9a7b466aa218f9c2ed4dccd5c32084f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ca4d777_014b7c05",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T22:13:22Z",
+      "side": 1,
+      "message": "That makes a lot of sense. I will try the reset app. It looks like it has some of the same mechanics as perf so it shouldn\u0027t be hard to use a similar mechanism there.",
+      "parentUuid": "67e2fcf4_99481855",
+      "revId": "82a452fdc9a7b466aa218f9c2ed4dccd5c32084f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
