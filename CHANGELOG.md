@@ -155,6 +155,14 @@ Added `blobfs_mount` RPC method to mount blobfs on given bdev to a host path by 
 Then on the host path, user can directly do some file operations which will be mapped
 to blobfs.
 
+### ocf
+
+Updated OCF submodule to OCF v19.06
+
+Along with update, new cache mode 'write only' was added.
+
+New version of OCF provides fully asynchronous management API.
+
 ## v19.07:
 
 ### ftl
