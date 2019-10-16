@@ -16,6 +16,24 @@
       "revId": "aba1e3664e5c2c32620547c62746999d02093d8e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08c4311d_abcbe31e",
+        "filename": "test/nvmf/target/shutdown.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T19:53:07Z",
+      "side": 1,
+      "message": "That was actually something that I was playing with that doesn\u0027t work. bdevperf doesn\u0027t actually handle the error codes from the driver in the way I would expect. I think I will make this a todo for later.",
+      "parentUuid": "eb0eb754_7a891d8e",
+      "revId": "aba1e3664e5c2c32620547c62746999d02093d8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
