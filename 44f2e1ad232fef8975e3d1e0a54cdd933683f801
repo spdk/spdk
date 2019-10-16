@@ -34,6 +34,24 @@
       "revId": "44f2e1ad232fef8975e3d1e0a54cdd933683f801",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59f6aa62_b5229340",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1255,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T23:59:58Z",
+      "side": 1,
+      "message": "it won\u0027t use it at line 1276 - we\u0027ve already dereferenced ctx before getting here\nthink of it like this:\n\nstruct spdk_nvme_probe_ctx *probe_ctx \u003d ctx-\u003eprobe_ctx;\n\nspdk_nvme_probe_poll_async(probe_ctx);\n\nI\u0027m not saying you should make those changes, just that line 1276 doesn\u0027t matter.\n\nAnd for 1281, just move that code here - once the probe is done, you can unregister the poller - you don\u0027t need to wait to unwind back to bdev_nvme_async_poll",
+      "parentUuid": "58a43ce8_4bf57e81",
+      "revId": "44f2e1ad232fef8975e3d1e0a54cdd933683f801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
