@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ada7a640_523256f3",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T17:26:49Z",
+      "side": 1,
+      "message": "let\u0027s have this return opal_bdev as a pointer, so that you don\u0027t have to add this get_latest_bdev() function.  See previous patch for more comments on how I\u0027d suggest to do it",
+      "revId": "aebb7c90dca8add79fa2b52a04d06f9520c8b53a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
