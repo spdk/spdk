@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3165486_863d69a0",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1049,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T21:17:02Z",
+      "side": 1,
+      "message": "I think this should be spdk_nvme_ns_cmd_* functions.  It\u0027s not just reads, could be writes or any other kind of IO command.",
+      "revId": "331026731740d6fdec8063653f47b0313c388848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
