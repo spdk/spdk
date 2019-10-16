@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0e3af01d_7b3bf89f",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-16T12:48:42Z",
+      "side": 1,
+      "message": "Yeah, you can call spdk_bdev_desc_get_bdev.  I agree we should use it whenever we need spdk_bdev.",
+      "parentUuid": "e8b7d36b_a5ac631a",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 73
+      },
+      "revId": "1e4f948655d42c282ea6cd31c51c9e863edb4f77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "15362b6c_b067a4ba",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 16
