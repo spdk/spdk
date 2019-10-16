@@ -20,7 +20,7 @@ dd if=/dev/urandom of=$testdir/test.pattern bs=1M count=1
 
 cd $testdir
 $rootdir/examples/blob/cli/blobcli -c $testdir/blobcli.conf -b Nvme0n1 -T $testdir/test.bs > $testdir/btest.out
-cd -
+cd - || exit
 
 # the tool leaves some trailing whitespaces that we need to strip out
 sed -i 's/[[:space:]]*$//' $testdir/btest.out
