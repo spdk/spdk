@@ -1,0 +1,118 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba4fd683_b0c1cf49",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-16T06:17:41Z",
+      "side": 1,
+      "message": "extra line",
+      "revId": "780ecd1cb9c53aedfbda3d9f82a2277ed066a820",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1aaf923_5d56238f",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1936,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-16T06:17:41Z",
+      "side": 1,
+      "message": "return 0 or remove line 1933.",
+      "revId": "780ecd1cb9c53aedfbda3d9f82a2277ed066a820",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc21f92d_c1680678",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 2102,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-16T06:17:41Z",
+      "side": 1,
+      "message": "if (dev-\u003erevert_cb_fn \u003d\u003d NULL) {\n    return -EFAULT;\n}",
+      "revId": "780ecd1cb9c53aedfbda3d9f82a2277ed066a820",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "139bf476_8419cd90",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 2111,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-16T06:17:41Z",
+      "side": 1,
+      "message": "return dev-\u003erevert_cb_fn(dev, dev-\u003ectx, ret);",
+      "range": {
+        "startLine": 2107,
+        "startChar": 2,
+        "endLine": 2111,
+        "endChar": 3
+      },
+      "revId": "780ecd1cb9c53aedfbda3d9f82a2277ed066a820",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a0f9f27_95ddbc12",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 2121,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-16T06:17:41Z",
+      "side": 1,
+      "message": "return dev-\u003erevert_cb_fn(dev, dev-\u003ectx, ret);",
+      "range": {
+        "startLine": 2117,
+        "startChar": 2,
+        "endLine": 2121,
+        "endChar": 3
+      },
+      "revId": "780ecd1cb9c53aedfbda3d9f82a2277ed066a820",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e939b434_68cc87c8",
+        "filename": "lib/nvme/nvme_opal_internal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-16T06:17:41Z",
+      "side": 1,
+      "message": "extra spaces between in line 304.",
+      "revId": "780ecd1cb9c53aedfbda3d9f82a2277ed066a820",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
