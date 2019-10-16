@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5d204ff7_10340908",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3695,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-10-16T05:35:39Z",
+      "side": 1,
+      "message": "reset cmd don\u0027t execute the spdk_bdev_io_submit(). It is executed immediately.",
+      "parentUuid": "3738ec4e_34ae2bca",
+      "range": {
+        "startLine": 3695,
+        "startChar": 5,
+        "endLine": 3695,
+        "endChar": 45
+      },
+      "revId": "218295e1e7342adba948d5fbb8578632af203fc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0f7bc270_61bae7f0",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-10-08T08:36:09Z",
       "side": 1,
       "message": "Will you explain why this check is necessary? If bdev_io is not in bdev_ch-\u003eio_submitted, is it a bug?",
+      "range": {
+        "startLine": 3696,
+        "startChar": 5,
+        "endLine": 3696,
+        "endChar": 41
+      },
+      "revId": "218295e1e7342adba948d5fbb8578632af203fc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8fa6f621_c0d91b15",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3696,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-10-16T05:35:39Z",
+      "side": 1,
+      "message": "Yes, I think I should change it to assert().",
+      "parentUuid": "0f7bc270_61bae7f0",
       "range": {
         "startLine": 3696,
         "startChar": 5,
