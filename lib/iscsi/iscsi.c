@@ -1926,7 +1926,7 @@ iscsi_op_login_store_incoming_params(struct spdk_iscsi_conn *conn,
 static int
 iscsi_op_login_rsp_handle_csg_bit(struct spdk_iscsi_conn *conn,
 				  struct spdk_iscsi_pdu *rsp_pdu,
-				  struct iscsi_param *params, int alloc_len)
+				  struct iscsi_param *params)
 {
 	const char *auth_method;
 	int rc;
@@ -1948,7 +1948,7 @@ iscsi_op_login_rsp_handle_csg_bit(struct spdk_iscsi_conn *conn,
 			conn->authenticated = true;
 		} else {
 			rc = iscsi_auth_params(conn, params, auth_method,
-					       rsp_pdu->data, alloc_len,
+					       rsp_pdu->data, rsp_pdu->data_buf_len,
 					       rsp_pdu->data_segment_len);
 			if (rc < 0) {
 				SPDK_ERRLOG("iscsi_auth_params() failed\n");
@@ -2119,15 +2119,15 @@ iscsi_op_login_rsp_handle_t_bit(struct spdk_iscsi_conn *conn,
  */
 static int
 iscsi_op_login_rsp_handle(struct spdk_iscsi_conn *conn,
-			  struct spdk_iscsi_pdu *rsp_pdu, struct iscsi_param **params,
-			  int alloc_len)
+			  struct spdk_iscsi_pdu *rsp_pdu, struct iscsi_param **params)
 {
 	int rc;
 	struct iscsi_bhs_login_rsp *rsph;
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 
 	/* negotiate parameters */
-	rc = spdk_iscsi_negotiate_params(conn, params, rsp_pdu->data, alloc_len,
+	rc = spdk_iscsi_negotiate_params(conn, params, rsp_pdu->data,
+					 rsp_pdu->data_buf_len,
 					 rsp_pdu->data_segment_len);
 	if (rc < 0) {
 		/*
@@ -2144,8 +2144,7 @@ iscsi_op_login_rsp_handle(struct spdk_iscsi_conn *conn,
 	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "Negotiated Params", rsp_pdu->data, rc);
 
 	/* handle the CSG bit case */
-	rc = iscsi_op_login_rsp_handle_csg_bit(conn, rsp_pdu, *params,
-					       alloc_len);
+	rc = iscsi_op_login_rsp_handle_csg_bit(conn, rsp_pdu, *params);
 	if (rc < 0) {
 		return rc;
 	}
@@ -2206,7 +2205,7 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		}
 	}
 
-	rc = iscsi_op_login_rsp_handle(conn, rsp_pdu, &params, rsp_pdu->data_buf_len);
+	rc = iscsi_op_login_rsp_handle(conn, rsp_pdu, &params);
 	if (rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE) {
 		iscsi_op_login_response(conn, rsp_pdu, params);
 		return rc;
