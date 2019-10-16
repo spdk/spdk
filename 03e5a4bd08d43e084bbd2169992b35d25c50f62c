@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7cb04c3a_94991c86",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T16:20:30Z",
+      "side": 1,
+      "message": "remove spaces before and after ++\n\ncfg-\u003eopal_base-\u003enum_of_part++;",
+      "revId": "03e5a4bd08d43e084bbd2169992b35d25c50f62c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
