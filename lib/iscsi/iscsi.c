@@ -1785,8 +1785,7 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
  */
 static int
 iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
-			struct spdk_iscsi_pdu *pdu, struct spdk_iscsi_pdu *rsp_pdu,
-			int *cid)
+			struct spdk_iscsi_pdu *pdu, struct spdk_iscsi_pdu *rsp_pdu)
 {
 	struct iscsi_bhs_login_req *reqh;
 	struct iscsi_bhs_login_rsp *rsph;
@@ -1827,7 +1826,6 @@ iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 	rsph->tsih = reqh->tsih;
 	rsph->itt = reqh->itt;
 	rsp_pdu->cmd_sn = from_be32(&reqh->cmd_sn);
-	*cid = from_be16(&reqh->cid);
 
 	if (rsph->tsih) {
 		rsph->stat_sn = reqh->exp_stat_sn;
@@ -2173,6 +2171,7 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
 	pdu->cmd_sn = from_be32(&reqh->cmd_sn);
+	cid = from_be16(&reqh->cid);
 
 	/* During login processing, use the 8KB default FirstBurstLength as
 	 *  our maximum data segment length value.
@@ -2185,7 +2184,7 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	if (rsp_pdu == NULL) {
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
-	rc = iscsi_op_login_rsp_init(conn, pdu, rsp_pdu, &cid);
+	rc = iscsi_op_login_rsp_init(conn, pdu, rsp_pdu);
 	if (rc < 0) {
 		iscsi_op_login_response(conn, rsp_pdu, NULL);
 		return rc;
