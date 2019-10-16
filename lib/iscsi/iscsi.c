@@ -2194,7 +2194,7 @@ iscsi_pdu_hdr_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 }
 
 static int
-iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_payload_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	int rc;
 	struct iscsi_bhs_login_req *reqh;
@@ -2307,7 +2307,7 @@ iscsi_pdu_hdr_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 }
 
 static int
-iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct iscsi_param *params = NULL;
 	struct spdk_iscsi_pdu *rsp_pdu;
@@ -3298,7 +3298,7 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 }
 
 static int
-iscsi_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
+iscsi_pdu_payload_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 {
 	int32_t remaining_size;
 
@@ -3322,7 +3322,7 @@ iscsi_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 }
 
 static int
-iscsi_op_scsi_write(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
+iscsi_pdu_payload_op_scsi_write(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 {
 	struct spdk_iscsi_pdu *pdu;
 	struct iscsi_bhs_scsi_req *reqh;
@@ -3483,7 +3483,7 @@ iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 }
 
 static int
-iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_payload_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_task *task;
 
@@ -3501,9 +3501,9 @@ iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	switch (task->scsi.dxfer_dir) {
 	case SPDK_SCSI_DIR_FROM_DEV:
-		return iscsi_op_scsi_read(conn, task);
+		return iscsi_pdu_payload_op_scsi_read(conn, task);
 	case SPDK_SCSI_DIR_TO_DEV:
-		return iscsi_op_scsi_write(conn, task);
+		return iscsi_pdu_payload_op_scsi_write(conn, task);
 	case SPDK_SCSI_DIR_NONE:
 		iscsi_queue_task(conn, task);
 		return 0;
@@ -3968,7 +3968,7 @@ iscsi_pdu_hdr_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu
 }
 
 static int
-iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_payload_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_pdu *rsp_pdu;
 	struct iscsi_bhs_nop_out *reqh;
@@ -4485,7 +4485,7 @@ reject_return:
 }
 
 static int
-iscsi_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_payload_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_task	*task, *subtask;
 	struct iscsi_bhs_data_out *reqh;
@@ -4764,23 +4764,23 @@ iscsi_pdu_payload_handle(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pd
 
 	switch (opcode) {
 	case ISCSI_OP_LOGIN:
-		rc = iscsi_op_login(conn, pdu);
+		rc = iscsi_pdu_payload_op_login(conn, pdu);
 		break;
 	case ISCSI_OP_NOPOUT:
-		rc = iscsi_op_nopout(conn, pdu);
+		rc = iscsi_pdu_payload_op_nopout(conn, pdu);
 		break;
 	case ISCSI_OP_SCSI:
-		rc = iscsi_op_scsi(conn, pdu);
+		rc = iscsi_pdu_payload_op_scsi(conn, pdu);
 		break;
 	case ISCSI_OP_TASK:
 		break;
 	case ISCSI_OP_TEXT:
-		rc = iscsi_op_text(conn, pdu);
+		rc = iscsi_pdu_payload_op_text(conn, pdu);
 		break;
 	case ISCSI_OP_LOGOUT:
 		break;
 	case ISCSI_OP_SCSI_DATAOUT:
-		rc = iscsi_op_data(conn, pdu);
+		rc = iscsi_pdu_payload_op_data(conn, pdu);
 		break;
 	case ISCSI_OP_SNACK:
 		break;
