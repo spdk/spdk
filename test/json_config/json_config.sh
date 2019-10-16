@@ -45,13 +45,11 @@ function tgt_check_notification_types() {
 	timing_enter $FUNCNAME
 
 	local ret=0
-	local enabled_types="
-		bdev_register
-		bdev_unregister
-	"
+	local enabled_types="bdev_register
+		bdev_unregister	"
 
 	get_types=$(tgt_rpc notify_get_types | jq -r '.[]')
-	if [ "$(echo $enabled_types)" != "$(echo $get_types)" ]; then
+	if [ "$enabled_types" != "$get_types" ]; then
 		echo "ERROR: expected types:" $enabled_types ", but got:" $get_types
 		ret=1
 	fi
