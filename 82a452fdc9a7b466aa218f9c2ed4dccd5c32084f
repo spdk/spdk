@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67e2fcf4_99481855",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T21:26:54Z",
+      "side": 1,
+      "message": "This is probably ok - but it means we\u0027re referencing another cache line per controller in the hot I/O path - I\u0027m concerned this could impact 10M+ IOPs tests.\n\nIs this the best place to demonstrate how this works?  I\u0027m wondering if the test/nvme/reset app would be a better place to demonstrate it.  I just don\u0027t want nvme/perf to become the place where we demonstrate how to use the SPDK NVMe driver - too many bells and whistles and it could impact overall efficiency.",
+      "revId": "82a452fdc9a7b466aa218f9c2ed4dccd5c32084f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
