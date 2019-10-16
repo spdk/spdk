@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e42dff2d_4cf6ff46",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1030,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T17:06:26Z",
+      "side": 1,
+      "message": "True. We don\u0027t call this function internally now that we aren\u0027t going to handle multiple resets within the driver.",
+      "parentUuid": "40ed1004_74568c39",
+      "revId": "f2cae2b50029d58308a922b73b85d5b01d07eefa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7451cf31_875f0c11",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 2
@@ -33,6 +51,24 @@
       "revId": "f2cae2b50029d58308a922b73b85d5b01d07eefa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "930ab891_80b50669",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1047,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T17:06:26Z",
+      "side": 1,
+      "message": "Yeah, that\u0027s a good point. I had separated out spdk_nvme_ctrlr_reset when we weren\u0027t going to fail the ctrlr after every reset. I\u0027ll merge them back together.",
+      "parentUuid": "7451cf31_875f0c11",
+      "revId": "f2cae2b50029d58308a922b73b85d5b01d07eefa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
