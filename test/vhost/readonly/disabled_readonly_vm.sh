@@ -16,7 +16,7 @@ function error()
 	trap - ERR
 	set +e
 	umount "$test_folder_name"
-	rm -rf "$testdir/$test_folder_name"
+	rm -rf "${testdir:?}/${test_folder_name:?}"
 	exit 1
 }
 
@@ -45,4 +45,4 @@ mount /dev/$disk_name"1" $test_folder_name
 echo "INFO: Creating a test file $test_file_name"
 truncate -s "200M" $test_folder_name/$test_file_name
 umount "$test_folder_name"
-rm -rf "$testdir/$test_folder_name"
+rm -rf "${testdir:?}/${test_folder_name:?}"
