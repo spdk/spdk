@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08fd923a_b9c2760e",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-16T13:10:30Z",
+      "side": 1,
+      "message": "I don\u0027t think we need this forward declaration.",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 96
+      },
+      "revId": "51599d5340ce70cb933498b6edb02dedeacdc421",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de0a238a_521a7373",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-16T13:10:30Z",
+      "side": 1,
+      "message": "Let\u0027s call this zone_shift.",
+      "range": {
+        "startLine": 87,
+        "startChar": 33,
+        "endLine": 87,
+        "endChar": 46
+      },
+      "revId": "51599d5340ce70cb933498b6edb02dedeacdc421",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c129a6e_a76b5833",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-16T13:10:30Z",
+      "side": 1,
+      "message": "Let\u0027s wrap this not to exceed the 100 characters limit.",
+      "range": {
+        "startLine": 211,
+        "startChar": 0,
+        "endLine": 212,
+        "endChar": 4
+      },
+      "revId": "51599d5340ce70cb933498b6edb02dedeacdc421",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63f2c325_e257592e",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-16T13:10:30Z",
+      "side": 1,
+      "message": "Should probably be a %u.",
+      "range": {
+        "startLine": 238,
+        "startChar": 45,
+        "endLine": 238,
+        "endChar": 47
+      },
+      "revId": "51599d5340ce70cb933498b6edb02dedeacdc421",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
