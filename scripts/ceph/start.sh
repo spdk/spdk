@@ -63,7 +63,7 @@ echo -e "\t[mon.a]" >> "$ceph_conf"
 echo -e "\tmon addr = ${mon_ip}:12046" >> "$ceph_conf"
 
 # create mon
-rm -rf ${mon_dir}/*
+rm -rf "${mon_dir:?}/"*
 mkdir -p ${mon_dir}
 mkdir -p ${pid_dir}
 
