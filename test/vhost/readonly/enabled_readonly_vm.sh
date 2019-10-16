@@ -14,7 +14,7 @@ function error()
 	echo -e "ERROR: $*"
 	echo "==========="
 	umount "$test_folder_name"
-	rm -rf "$testdir/$test_folder_name"
+	rm -rf "${testdir:?}/${test_folder_name:?}"
 	exit 1
 }
 
@@ -61,7 +61,7 @@ if ! rm $testdir/$test_file_name; then
 fi
 
 umount "$test_folder_name"
-rm -rf "$testdir/$test_folder_name"
+rm -rf "${testdir:?}/${test_folder_name:?}"
 echo "INFO: Trying to create file system on a readonly disk"
 if mkfs.ext4 -F /dev/$disk_name"1"; then
 	error "Created file system on a readonly disk!"
