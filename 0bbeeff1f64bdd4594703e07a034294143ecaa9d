@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1297c961_f1206b6b",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-16T09:31:18Z",
+      "side": 1,
+      "message": "As CI shows, reset needs to be considered too. Calling stop and start during reset would resolve failures in this patch.\n\nIssue in following series is that stop is killing the CUSE pthreads and stopping fuse sessions.\nHow about adding two other functions to nvme_io_msg interface that only get called during reset (interfaces do not assign any callback for them) ?\n- First one would clean up external_io_msgs_qpair/external_io_msgs, and abort any requests pending on external_io_msgs\n- second one would reinstate both structures",
+      "range": {
+        "startLine": 72,
+        "startChar": 2,
+        "endLine": 72,
+        "endChar": 29
+      },
+      "revId": "0bbeeff1f64bdd4594703e07a034294143ecaa9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45efc7df_21b11247",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-16T09:31:18Z",
+      "side": 1,
+      "message": "Please check if g_io_producers is empty before allocating the ring/qpair. Same in stop.",
+      "range": {
+        "startLine": 135,
+        "startChar": 0,
+        "endLine": 135,
+        "endChar": 28
+      },
+      "revId": "0bbeeff1f64bdd4594703e07a034294143ecaa9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ceb6cce_703b3b27",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-16T09:31:18Z",
+      "side": 1,
+      "message": "We might want to consider what happens to requests pending when stop is issued. Do we inform the original submitter, that particular io_msg will not complete due to stop being called ?",
+      "range": {
+        "startLine": 163,
+        "startChar": 0,
+        "endLine": 163,
+        "endChar": 27
+      },
+      "revId": "0bbeeff1f64bdd4594703e07a034294143ecaa9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
