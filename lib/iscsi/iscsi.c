@@ -2471,7 +2471,7 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 }
 
 static int
-iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_hdr_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_pdu *rsp_pdu;
 	uint32_t task_tag;
@@ -4745,7 +4745,7 @@ iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		break;
 
 	case ISCSI_OP_LOGOUT:
-		rc = iscsi_op_logout(conn, pdu);
+		rc = iscsi_pdu_hdr_op_logout(conn, pdu);
 		break;
 
 	case ISCSI_OP_SCSI_DATAOUT:
