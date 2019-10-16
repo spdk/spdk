@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "187b833a_7685bf62",
+        "filename": "include/spdk_internal/sock.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-16T20:26:26Z",
+      "side": 1,
+      "message": "I just added a call to make the maximum number configurable.",
+      "parentUuid": "08d4290e_3768a9ba",
+      "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4159edc3_1d819cd4",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-15T20:57:04Z",
       "side": 1,
       "message": "What\u0027s a reason for default 64\"? Is there any correlation between this number and max number in SGL list (16 as far I remember) ?",
+      "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48355579_909f7b4e",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-16T20:26:26Z",
+      "side": 1,
+      "message": "64 seems to give good performance. That\u0027s about it though, and I didn\u0027t really test a large range of numbers. In the next patch this is now configurable.",
+      "parentUuid": "4159edc3_1d819cd4",
       "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -59,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "31e1c168_33fa00b9",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-16T20:26:26Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "566ca9c6_261e3920",
+      "range": {
+        "startLine": 61,
+        "startChar": 21,
+        "endLine": 61,
+        "endChar": 34
+      },
+      "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8639ea31_c66a9ce5",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 6
@@ -76,6 +136,24 @@
     },
     {
       "key": {
+        "uuid": "da66c9aa_984b6483",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-16T20:26:26Z",
+      "side": 1,
+      "message": "I don\u0027t really know what to do if the socket fails to close. Maybe you\u0027re right and that it\u0027s best to just free the data structure and move on.",
+      "parentUuid": "8639ea31_c66a9ce5",
+      "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "aa535b0a_5171bf92",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 6
@@ -87,6 +165,24 @@
       "writtenOn": "2019-10-15T20:57:04Z",
       "side": 1,
       "message": "spdk_posix_sock_flush can return an error. Shouldn\u0027t the error be reported like (iovcnt \u003e POSIX_MAX_IOV) error in the beginning of function ?",
+      "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81cd18ba_93fc4810",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-16T20:26:26Z",
+      "side": 1,
+      "message": "Yep I\u0027ll fix this",
+      "parentUuid": "aa535b0a_5171bf92",
       "revId": "f4077337bd25cf71b0cbc513271c1d04628c1440",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
