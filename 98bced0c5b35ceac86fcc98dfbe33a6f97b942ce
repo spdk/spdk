@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "446a980c_bf38a759",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-16T20:50:56Z",
+      "side": 1,
+      "message": "what the rule meant was this:\n\ncd $testdir \u0026\u0026 $rootdir/examples/blob/cli/blobcli ...\n\nThat way you don\u0027t need the cd $testdir/cd - around the line, and if the command fails you are still in the right directory.",
+      "revId": "98bced0c5b35ceac86fcc98dfbe33a6f97b942ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
