@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea51cbdc_8e37fb9e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T00:06:38Z",
+      "side": 1,
+      "message": "Is this failed_state needed?  I guess this is for the case where another core set failed_state \u003d true.  But if we don\u0027t check failed_state here, rc \u003c 0 should still get us to do what is needed.\n\nMaybe I\u0027m missing a race condition here.  If so, let\u0027s add a comment explaining it so it\u0027s clear to readers why it\u0027s needed.",
+      "revId": "a13a68138971e42c623ef7f10fcbfdd76b754ae2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e96b56c1_c8fd76ed",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T00:06:38Z",
+      "side": 1,
+      "message": "I don\u0027t think we should return here.  In the case where we are looping through multiple qpairs, this may return before all of the qpairs have been processed.  An else if (rc !\u003d -ENXIO) would probably be better.",
+      "revId": "a13a68138971e42c623ef7f10fcbfdd76b754ae2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ab9930b_c3ccf813",
+        "filename": "test/nvmf/host/target_disconnect.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T00:06:38Z",
+      "side": 1,
+      "message": "I\u0027m not following the || true \u0026 at the end of this.  Does the || true really do anything?  I think running fio_nvme in the background means that even if it eventually exits with failure, it doesn\u0027t result in this script exiting with failure.  I\u0027m also thinking that calling fio_nvme as a function, having the || true, and then the \u0026 at the end will probably confuse others too.  I just tested on my system, and sleep 5 || true \u0026 operates completely different between zsh and bash.  With zsh, sleep 5 runs in the foreground for 5 seconds, then true runs in the background which of course exits immediately.  For bash, all of (sleep 5 || true) runs in the background.\n\nBut then there\u0027s no || true below at line 46.  So maybe I\u0027m not understanding why it was put here.",
+      "revId": "a13a68138971e42c623ef7f10fcbfdd76b754ae2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
