@@ -955,7 +955,7 @@ error:
 }
 
 int
-nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
+spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
 	struct spdk_nvme_qpair	*qpair;
@@ -1031,21 +1031,13 @@ nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 out:
 	ctrlr->is_resetting = false;
+	if (rc) {
+		nvme_ctrlr_fail(ctrlr, false);
+	}
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return rc;
-}
-
-int
-spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
-{
-	if (nvme_ctrlr_reset(ctrlr) != 0) {
-		nvme_ctrlr_fail(ctrlr, false);
-		return -1;
-	}
-
-	return 0;
 }
 
 static void
