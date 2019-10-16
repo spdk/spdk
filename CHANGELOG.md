@@ -135,6 +135,27 @@ Added `arbitration_burst` option for arbitration feature, and added three
 
 Added `spdk_nvme_ns_cmd_write_uncorrectable`.
 
+Added new error handling and reporting functionality. This includes several
+new API functions to facilitate applications recovering when a qpair or
+controller fails.
+
+`spdk_nvme_ctrlr_reconnect_io_qpair` - Reconnects a failed I/O qpair.
+`spdk_nvme_ctrlr_set_trid` - Sets the trid of an existing controller. Can be used to
+change the trid for failover cases.
+`spdk_nvme_ctrlr_is_failed` - Returns the failed state of a controller.
+`spdk_nvme_ctrlr_fail` - Forces a controller into a failed state.
+
+Modified the return behavior of several API functions to better indicate to
+applications when a qpair is failed. This list of functions includes:
+
+`spdk_nvme_qpair_process_completions`
+`spdk_nvme_ns_cmd_*`
+`spdk_nvme_ctrlr_process_admin_completions`
+`spdk_nvme_ctrlr_cmd_*`
+
+These functions now return -ENXIO when the qpair or controller on which they
+operate is failed.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
