@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6fe461b_f4aaa7d0",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-16T13:46:14Z",
+      "side": 1,
+      "message": "Can this state ever be reached? If not, is there a point in checking it?",
+      "range": {
+        "startLine": 519,
+        "startChar": 5,
+        "endLine": 519,
+        "endChar": 58
+      },
+      "revId": "56f250a571901ef1ec5098c686a77dbc89a43ae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
