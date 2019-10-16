@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30d31923_9dd2762f",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-16T07:48:15Z",
+      "side": 1,
+      "message": "Even though shellcheck reports error on line 23, isn\u0027t the potential issue on line 21 ?\nThe idea being that first directory change didn\u0027t succeed, then script proceeds like it did.\nMoving || exit here, resolves this issue.",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 11
+      },
+      "revId": "c3f5bb2b3aa2276ad55615ce0a36cdebc102b9c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
