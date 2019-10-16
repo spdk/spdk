@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "997203f6_dc8572d2",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-16T14:16:13Z",
+      "side": 1,
+      "message": "Can\u0027t we use bdev_io.u.bdev.offset_blocks for that?",
+      "range": {
+        "startLine": 104,
+        "startChar": 10,
+        "endLine": 104,
+        "endChar": 16
+      },
+      "revId": "a4c44d52f3439756581e8ee1809cf4bfa0422811",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0106e54_65b8a149",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-16T14:16:13Z",
+      "side": 1,
+      "message": "Let\u0027s set move this down to line 518, so that we fill in whole io_ctx in one place.",
+      "range": {
+        "startLine": 482,
+        "startChar": 0,
+        "endLine": 484,
+        "endChar": 21
+      },
+      "revId": "a4c44d52f3439756581e8ee1809cf4bfa0422811",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ccea6db7_504375b6",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-16T14:16:13Z",
+      "side": 1,
+      "message": "Let\u0027s merge this condition with the one on lines 503-506. It\u0027s easier to read\nif (is_append) {\n ...\n} else {\n ...\n}",
+      "range": {
+        "startLine": 514,
+        "startChar": 0,
+        "endLine": 516,
+        "endChar": 2
+      },
+      "revId": "a4c44d52f3439756581e8ee1809cf4bfa0422811",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
