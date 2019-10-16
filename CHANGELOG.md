@@ -114,6 +114,27 @@ Added `arbitration_burst` option for arbitration feature, and added three
 
 Added `spdk_nvme_ns_cmd_write_uncorrectable`.
 
+New error handling and reporting functionality has been added for qpairs in the NVMe driver. Two new API
+functions have been added to facilitate applications recovering from these new qpair errors.
+
+`spdk_nvme_ctrlr_reconnect_io_qpair` takes a single qpair as an argument. If the qpair is able to be
+reconnected, or the qpair was already connected when the function was called, it returns 0. If the controller
+to which the qpair belongs is failed, removed, or resetting, it returns -ENXIO, otherwise, it returns -EAGAIN
+indicating that the reconnect failed for some reason, but the application can retry.
+
+`spdk_nvme_ctrlr_set_trid` Allows a user to update the TRID for an NVMe controller. It takes two arguments, a
+controller and a trid structure. In order for the new TRID to be set, the controller must be failed, and the
+new trid must have the same transport type and subnqn as the original TRID. A successful call to
+`spdk_nvme_ctrlr_set_trid` should be followed by a call to `spdk_nvme_ctrlr_reset`.
+
+When a qpair in the driver fails at the transport layer in some incorrectable way, the transport
+specific portions of that qpair are destroyed and subsequent calls to
+`spdk_nvme_qpair_process_completions` or the `spdk_nvme_ns_cmd_*` family of functions or their admin
+counterparts, `spdk_nvme_ctrlr_process_admin_completions` and `spdk_nvme_ctrlr_cmd_*`, will return -ENXIO
+until the qpair is restored to a functional state. If the admin qpair is failed, the application should
+call `spdk_nvme_ctrlr_reset` to reconnect all qpairs on the controller. Otherwise, the new API function
+`spdk_nvme_qpair_reconnect` should be used.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
