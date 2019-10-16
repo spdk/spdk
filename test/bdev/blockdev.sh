@@ -124,7 +124,7 @@ if [ -d /usr/src/fio ]; then
 
 	timing_enter fio_rw_verify
 	# Generate the fio config file given the list of all unclaimed bdevs
-	fio_config_gen $testdir/bdev.fio verify
+	fio_config_gen $testdir/bdev.fio verify AIO
 	for b in $(echo $bdevs | jq -r '.name'); do
 		fio_config_add_job $testdir/bdev.fio $b
 	done
@@ -137,7 +137,7 @@ if [ -d /usr/src/fio ]; then
 
 	timing_enter fio_trim
 	# Generate the fio config file given the list of all unclaimed bdevs that support unmap
-	fio_config_gen $testdir/bdev.fio trim
+	fio_config_gen $testdir/bdev.fio trim AIO
 	for b in $(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name'); do
 		fio_config_add_job $testdir/bdev.fio $b
 	done

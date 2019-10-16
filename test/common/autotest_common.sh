@@ -725,6 +725,7 @@ function fio_config_gen()
 {
 	local config_file=$1
 	local workload=$2
+	local bdev_type=$3
 
 	if [ -e "$config_file" ]; then
 		echo "Configuration File Already Exists!: $config_file"
@@ -756,6 +757,10 @@ EOL
 		echo "rw=trimwrite" >> $config_file
 	else
 		echo "rw=$workload" >> $config_file
+	fi
+
+	if [ "$bdev_type" == "AIO" ]; then
+		echo "serialize_overlap=1" >> $config_file
 	fi
 }
 
