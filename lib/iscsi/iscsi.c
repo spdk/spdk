@@ -3898,13 +3898,9 @@ void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
 }
 
 static int
-iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_hdr_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
-	struct spdk_iscsi_pdu *rsp_pdu;
 	struct iscsi_bhs_nop_out *reqh;
-	struct iscsi_bhs_nop_in *rsph;
-	uint8_t *data;
-	uint64_t lun;
 	uint32_t task_tag;
 	uint32_t transfer_tag;
 	int I_bit;
@@ -3915,19 +3911,14 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 
-	if (pdu->data_segment_len > SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
-		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
-	}
-
 	reqh = (struct iscsi_bhs_nop_out *)&pdu->bhs;
 	I_bit = reqh->immediate;
 
-	data_len = pdu->data_segment_len;
-	if (data_len > conn->MaxRecvDataSegmentLength) {
-		data_len = conn->MaxRecvDataSegmentLength;
+	data_len = ISCSI_ALIGN(DGET24(reqh->data_segment_len));
+	if (data_len > SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 	}
 
-	lun = from_be64(&reqh->lun);
 	task_tag = from_be32(&reqh->itt);
 	transfer_tag = from_be32(&reqh->ttt);
 
@@ -3946,6 +3937,43 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		 */
 	}
 
+	if (task_tag == 0xfffffffU && I_bit == 0) {
+		SPDK_ERRLOG("got NOPOUT ITT=0xffffffff, I=0\n");
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+
+	return 0;
+}
+
+static int
+iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_nop_out *reqh;
+	struct iscsi_bhs_nop_in *rsph;
+	uint8_t *data;
+	uint64_t lun;
+	uint32_t task_tag;
+	int I_bit;
+	int data_len;
+	int rc;
+
+	rc = iscsi_pdu_hdr_op_nopout(conn, pdu);
+	if (rc != 0 || pdu->is_rejected) {
+		return rc;
+	}
+
+	reqh = (struct iscsi_bhs_nop_out *)&pdu->bhs;
+	I_bit = reqh->immediate;
+
+	data_len = pdu->data_segment_len;
+	if (data_len > conn->MaxRecvDataSegmentLength) {
+		data_len = conn->MaxRecvDataSegmentLength;
+	}
+
+	lun = from_be64(&reqh->lun);
+	task_tag = from_be32(&reqh->itt);
+
 	/*
 	 * We don't actually check to see if this is a response to the NOP-In
 	 * that we sent.  Our goal is to just verify that the initiator is
@@ -3955,13 +3983,9 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	conn->nop_outstanding = false;
 
 	if (task_tag == 0xffffffffU) {
-		if (I_bit == 1) {
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got NOPOUT ITT=0xffffffff\n");
-			return 0;
-		} else {
-			SPDK_ERRLOG("got NOPOUT ITT=0xffffffff, I=0\n");
-			return SPDK_ISCSI_CONNECTION_FATAL;
-		}
+		assert(I_bit == 1);
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got NOPOUT ITT=0xffffffff\n");
+		return 0;
 	}
 
 	data = calloc(1, data_len);
@@ -3976,8 +4000,6 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		memcpy(data, pdu->data, data_len);
 	}
 
-	transfer_tag = 0xffffffffU;
-
 	/* response PDU */
 	rsp_pdu = spdk_get_pdu();
 	if (rsp_pdu == NULL) {
@@ -3991,7 +4013,7 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	DSET24(rsph->data_segment_len, data_len);
 	to_be64(&rsph->lun, lun);
 	to_be32(&rsph->itt, task_tag);
-	to_be32(&rsph->ttt, transfer_tag);
+	to_be32(&rsph->ttt, 0xffffffffU);
 
 	to_be32(&rsph->stat_sn, conn->StatSN);
 	conn->StatSN++;
