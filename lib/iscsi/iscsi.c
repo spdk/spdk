@@ -1789,11 +1789,10 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 static int
 iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 			struct spdk_iscsi_pdu *pdu, struct spdk_iscsi_pdu *rsp_pdu,
-			struct iscsi_param **params, int *alloc_len, int *cid)
+			int *alloc_len, int *cid)
 {
 	struct iscsi_bhs_login_req *reqh;
 	struct iscsi_bhs_login_rsp *rsph;
-	int rc;
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	rsph->opcode = ISCSI_OP_LOGIN_RSP;
@@ -1891,7 +1890,21 @@ iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	}
 
-	/* store incoming parameters */
+	return 0;
+}
+
+static int
+iscsi_op_login_store_incoming_params(struct spdk_iscsi_conn *conn,
+				     struct spdk_iscsi_pdu *pdu, struct spdk_iscsi_pdu *rsp_pdu,
+				     struct iscsi_param **params)
+{
+	struct iscsi_bhs_login_req *reqh;
+	struct iscsi_bhs_login_rsp *rsph;
+	int rc;
+
+	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+
 	rc = spdk_iscsi_parse_params(params, pdu->data,
 				     pdu->data_segment_len, ISCSI_BHS_LOGIN_GET_CBIT(reqh->flags),
 				     &conn->partial_text_parameter);
@@ -1901,6 +1914,7 @@ iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 		rsph->status_detail = ISCSI_LOGIN_INITIATOR_ERROR;
 		return SPDK_ISCSI_LOGIN_ERROR_PARAMETER;
 	}
+
 	return 0;
 }
 
@@ -2174,10 +2188,15 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	if (rsp_pdu == NULL) {
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
-	rc = iscsi_op_login_rsp_init(conn, pdu, rsp_pdu, &params,
-				     &alloc_len, &cid);
-	if (rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE || rc == SPDK_ISCSI_LOGIN_ERROR_PARAMETER) {
-		iscsi_op_login_response(conn, rsp_pdu, params);
+	rc = iscsi_op_login_rsp_init(conn, pdu, rsp_pdu, &alloc_len, &cid);
+	if (rc < 0) {
+		iscsi_op_login_response(conn, rsp_pdu, NULL);
+		return rc;
+	}
+
+	rc = iscsi_op_login_store_incoming_params(conn, pdu, rsp_pdu, &params);
+	if (rc < 0) {
+		iscsi_op_login_response(conn, rsp_pdu, NULL);
 		return rc;
 	}
 
