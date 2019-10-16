@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c7f838e5_415fb11a",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T19:53:21Z",
+      "side": 1,
+      "message": "I am going to update the channgelog for the whole reset handling path at the end of this series.",
+      "parentUuid": "2f11ca33_36a08de7",
+      "revId": "69ecd80e95bf0da9a312ee70ebcf331bdaa8a269",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "212f90eb_12360493",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "e039e98d_b48cef1e",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T19:53:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "212f90eb_12360493",
+      "revId": "69ecd80e95bf0da9a312ee70ebcf331bdaa8a269",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a320746_19422d8d",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 3
@@ -50,6 +86,24 @@
       "revId": "69ecd80e95bf0da9a312ee70ebcf331bdaa8a269",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de91195f_cc70ccb5",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 708,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T19:53:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a320746_19422d8d",
+      "revId": "69ecd80e95bf0da9a312ee70ebcf331bdaa8a269",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
