@@ -4326,7 +4326,7 @@ reject_return:
 
 /* This function is used to handle the snack request from the initiator */
 static int
-iscsi_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_hdr_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct iscsi_bhs_snack_req *reqh;
 	struct spdk_iscsi_task *task;
@@ -4753,7 +4753,7 @@ iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		break;
 
 	case ISCSI_OP_SNACK:
-		rc = iscsi_op_snack(conn, pdu);
+		rc = iscsi_pdu_hdr_op_snack(conn, pdu);
 		break;
 
 	default:
