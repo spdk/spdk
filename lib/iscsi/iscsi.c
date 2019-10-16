@@ -3755,7 +3755,7 @@ spdk_iscsi_op_abort_task_set(struct spdk_iscsi_task *task, uint8_t function)
 }
 
 static int
-iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_hdr_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct iscsi_bhs_task_req *reqh;
 	uint64_t lun;
@@ -4726,7 +4726,7 @@ iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		rc = iscsi_op_scsi(conn, pdu);
 		break;
 	case ISCSI_OP_TASK:
-		rc = iscsi_op_task(conn, pdu);
+		rc = iscsi_pdu_hdr_op_task(conn, pdu);
 		break;
 
 	case ISCSI_OP_TEXT:
