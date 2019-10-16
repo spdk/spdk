@@ -260,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "4cd2834e_613a2328",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-16T12:24:42Z",
+      "side": 1,
+      "message": "\u003e \u003e Currently cleanup for session is missing. Have you explored using cuse_lowlevel_main() ? It does creation/loop/cleanup by itself.",
+      "parentUuid": "700e3871_453f5347",
+      "range": {
+        "startLine": 126,
+        "startChar": 0,
+        "endLine": 129,
+        "endChar": 41
+      },
+      "revId": "74db1fdf088b2a7bc1c704f9f9fb316d96e1cf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "770c919a_9b6f7ba4",
         "filename": "lib/nvme/nvme_io_msg.c",
         "patchSetId": 18
