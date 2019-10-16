@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25a8964c_f551e75d",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-16T13:36:09Z",
+      "side": 1,
+      "message": "You could just return the result of this function call.",
+      "range": {
+        "startLine": 308,
+        "startChar": 0,
+        "endLine": 312,
+        "endChar": 11
+      },
+      "revId": "a65251344e60696bc0c843c98bcb93ed5bdcebf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
