@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "9d7a51a8_e680a997",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-16T20:45:40Z",
+      "side": 1,
+      "message": "As I have it, I actually think I should use the hard-coded DEFAULT_MAX_IOV here instead, since that\u0027s the biggest unit that spdk_posix_sock_flush will use to pass to writev.\n\nI don\u0027t know how to make the flush size configurable here, because spdk_posix_sock_flush is allocating the iov on the stack, so it can\u0027t be variable size.",
+      "parentUuid": "0486bdcf_95d5998b",
+      "range": {
+        "startLine": 618,
+        "startChar": 27,
+        "endLine": 618,
+        "endChar": 43
+      },
+      "revId": "76963ae3c1fb5e6c518c05aec89c3a93def728d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0d74160d_1dccf6de",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 7
