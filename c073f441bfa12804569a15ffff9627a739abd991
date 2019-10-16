@@ -22,6 +22,30 @@
       "revId": "c073f441bfa12804569a15ffff9627a739abd991",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be9edf4a_1f6248af",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 973,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-16T13:49:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8eda0532_0df1a6f3",
+      "range": {
+        "startLine": 973,
+        "startChar": 2,
+        "endLine": 973,
+        "endChar": 42
+      },
+      "revId": "c073f441bfa12804569a15ffff9627a739abd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
