@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8b7d36b_a5ac631a",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-16T06:55:51Z",
+      "side": 1,
+      "message": "Not sure if we need keep both of them -\u003e there is API to get bdev from bdev_desc?",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 73
+      },
+      "revId": "1e4f948655d42c282ea6cd31c51c9e863edb4f77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15362b6c_b067a4ba",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-16T06:55:51Z",
+      "side": 1,
+      "message": "Maybe add some comment that we are extending blckcnt to be aligned with zone size.",
+      "revId": "1e4f948655d42c282ea6cd31c51c9e863edb4f77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
