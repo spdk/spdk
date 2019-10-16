@@ -279,7 +279,12 @@ iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 	data_len += ISCSI_BHS_LEN;
 
 	if (total_ahs_len != 0) {
-		memcpy(data + data_len, pdu->ahs, (4 * total_ahs_len));
+		if ((4 * total_ahs_len) < ISCSI_AHS_LEN) {
+			memcpy(data + data_len, pdu->ahs, (4 * total_ahs_len));
+		} else {
+			memcpy(data + data_len, pdu->ahs, ISCSI_AHS_LEN);
+			memset(data + data_len + ISCSI_AHS_LEN, 0, (4 * total_ahs_len) - ISCSI_AHS_LEN);
+		}
 		data_len += (4 * total_ahs_len);
 	}
 
