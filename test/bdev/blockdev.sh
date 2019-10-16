@@ -56,6 +56,12 @@ timing_enter bdev
 # Create a file to be used as an AIO backend
 dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
 
+# Add fio configuration for the AIO backend
+cat > $testdir/bdev.fio << EOL
+verify_backlog=1024
+serialize_overlap=1
+EOL
+
 cp $testdir/bdev.conf.in $testdir/bdev.conf
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev.conf
 
