@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 import sys
 import argparse
-import configshell_fb
-from os import getuid
-from rpc.client import JSONRPCException
 from configshell_fb import ConfigShell, shell, ExecutionError
-from spdkcli import UIRoot
-import rpc.client
 from pyparsing import (alphanums, Optional, Suppress, Word, Regex,
                        removeQuotes, dblQuotedString, OneOrMore)
+from rpc.client import JSONRPCException, JSONRPCClient
+from spdkcli import UIRoot
 
 
 def add_quotes_to_shell(spdk_shell):
@@ -49,7 +46,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        client = rpc.client.JSONRPCClient(args.server_addr, port=args.port)
+        client = JSONRPCClient(args.server_addr, port=args.port)
     except JSONRPCException as e:
         spdk_shell.log.error("%s. SPDK not running?" % e)
         sys.exit(1)
@@ -62,7 +59,7 @@ def main():
         except BaseException:
             pass
 
-        if len(args.commands) > 0:
+        if args.commands:
             try:
                 spdk_shell.interactive = False
                 spdk_shell.run_cmdline(" ".join(args.commands))
@@ -73,14 +70,13 @@ def main():
 
         spdk_shell.con.display("SPDK CLI v0.1")
         spdk_shell.con.display("")
-        while not spdk_shell._exit:
-            try:
-                spdk_shell.run_interactive()
-            except (JSONRPCException, ExecutionError) as e:
-                spdk_shell.log.error("%s" % e)
-            except BrokenPipeError as e:
-                spdk_shell.log.error("Lost connection with SPDK: %s" % e)
-                break
+
+        try:
+            spdk_shell.run_interactive()
+        except (JSONRPCException, ExecutionError) as e:
+            spdk_shell.log.error("%s" % e)
+        except BrokenPipeError as e:
+            spdk_shell.log.error("Lost connection with SPDK: %s" % e)
 
 
 if __name__ == "__main__":
