@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7a1ea87_2174dc77",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-16T12:36:37Z",
+      "side": 1,
+      "message": "There is no need to keep ctrlr and nsid in cuse related structure, since callback (like cuse_nvme_admin_cb()) will have those fields in arguments.",
+      "range": {
+        "startLine": 108,
+        "startChar": 0,
+        "endLine": 109,
+        "endChar": 18
+      },
+      "revId": "8dae4d32f564ea45f5709b5d3ebe5b5c8d84c78a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
