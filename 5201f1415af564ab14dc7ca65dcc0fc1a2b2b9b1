@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1278eb21_6f82a973",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T21:14:43Z",
+      "side": 1,
+      "message": "Also update the comments for all of the functions that will return -ENXIO to the user.",
+      "revId": "5201f1415af564ab14dc7ca65dcc0fc1a2b2b9b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e230b657_92b2a234",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1357,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T21:14:43Z",
+      "side": 1,
+      "message": "-ENOMEM (I saw you changed one of these below too so should change this one too)",
+      "revId": "5201f1415af564ab14dc7ca65dcc0fc1a2b2b9b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07ebdfff_cad54f2d",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1377,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T21:14:43Z",
+      "side": 1,
+      "message": "-ENOMEM",
+      "revId": "5201f1415af564ab14dc7ca65dcc0fc1a2b2b9b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
