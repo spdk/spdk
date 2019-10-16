@@ -681,6 +681,7 @@ vmd_dev_init(struct vmd_pci_device *dev)
 	dev->pci.addr.func = 0;
 	dev->pci.id.vendor_id = dev->header->common.vendor_id;
 	dev->pci.id.device_id = dev->header->common.device_id;
+	dev->pci.type = "vmd_device";
 	dev->pci.map_bar = vmd_dev_map_bar;
 	dev->pci.unmap_bar = vmd_dev_unmap_bar;
 	dev->pci.cfg_read = vmd_dev_cfg_read;
@@ -935,6 +936,8 @@ vmd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	spdk_pci_device_cfg_write32(pci_dev, cmd_reg, 4);
 
 	spdk_pci_addr_fmt(bdf, sizeof(bdf), &pci_dev->addr);
+	pci_dev->type = "vmd";
+
 	SPDK_DEBUGLOG(SPDK_LOG_VMD, "Found a VMD[ %d ] at %s\n", vmd_c->count, bdf);
 
 	/* map vmd bars */
