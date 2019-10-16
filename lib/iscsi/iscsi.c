@@ -1632,8 +1632,7 @@ iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 static int
 iscsi_op_login_set_target_info(struct spdk_iscsi_conn *conn,
 			       struct spdk_iscsi_pdu *rsp_pdu,
-			       enum session_type session_type,
-			       int alloc_len)
+			       enum session_type session_type)
 {
 	char buf[MAX_TMPBUF];
 	const char *val;
@@ -1676,20 +1675,20 @@ iscsi_op_login_set_target_info(struct spdk_iscsi_conn *conn,
 			rsp_pdu->data_segment_len = iscsi_append_param(conn,
 						    "TargetAlias",
 						    rsp_pdu->data,
-						    alloc_len,
+						    rsp_pdu->data_buf_len,
 						    rsp_pdu->data_segment_len);
 		}
 		if (session_type == SESSION_TYPE_DISCOVERY) {
 			rsp_pdu->data_segment_len = iscsi_append_param(conn,
 						    "TargetAddress",
 						    rsp_pdu->data,
-						    alloc_len,
+						    rsp_pdu->data_buf_len,
 						    rsp_pdu->data_segment_len);
 		}
 		rsp_pdu->data_segment_len = iscsi_append_param(conn,
 					    "TargetPortalGroupTag",
 					    rsp_pdu->data,
-					    alloc_len,
+					    rsp_pdu->data_buf_len,
 					    rsp_pdu->data_segment_len);
 	}
 
@@ -1707,8 +1706,7 @@ iscsi_op_login_set_target_info(struct spdk_iscsi_conn *conn,
 static int
 iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 			  struct spdk_iscsi_pdu *rsp_pdu,
-			  struct iscsi_param *params,
-			  int alloc_len, int cid)
+			  struct iscsi_param *params, int cid)
 {
 	enum session_type session_type;
 	char initiator_port_name[MAX_INITIATOR_PORT_NAME];
@@ -1775,8 +1773,7 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 		}
 	}
 
-	return iscsi_op_login_set_target_info(conn, rsp_pdu, session_type,
-					      alloc_len);
+	return iscsi_op_login_set_target_info(conn, rsp_pdu, session_type);
 }
 
 /*
@@ -2202,8 +2199,7 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	if (conn->state == ISCSI_CONN_STATE_INVALID) {
-		rc = iscsi_op_login_phase_none(conn, rsp_pdu, params,
-					       rsp_pdu->data_buf_len, cid);
+		rc = iscsi_op_login_phase_none(conn, rsp_pdu, params, cid);
 		if (rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE || rc == SPDK_ISCSI_LOGIN_ERROR_PARAMETER) {
 			iscsi_op_login_response(conn, rsp_pdu, params);
 			return rc;
