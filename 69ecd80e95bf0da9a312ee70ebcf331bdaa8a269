@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f11ca33_36a08de7",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T00:14:38Z",
+      "side": 1,
+      "message": "We usually capitalize API.",
+      "revId": "69ecd80e95bf0da9a312ee70ebcf331bdaa8a269",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "212f90eb_12360493",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T00:14:38Z",
+      "side": 1,
+      "message": "EPERM should be a bit more specific.  I don\u0027t think we talk about a ctrlr state anywhere so this may not be clear to the reader.\n\nMaybe specifically call out here what it means for a controller to be failed (just leave out the word \"state\").  Then here you can say -EPERM is the ctrlr is not failed.",
+      "revId": "69ecd80e95bf0da9a312ee70ebcf331bdaa8a269",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a320746_19422d8d",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 708,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T00:14:38Z",
+      "side": 1,
+      "message": "I think \"set\" rather than \"update\" is probably better.\n\nThere are a lot of cases where we change some value on an object - and we usually use the word \"set\" to describe that.  The only cases I can find in include/spdk today where we use update in the function name are all around crc32.  So spdk_nvme_ctrlr_set_trid() is a bit more consistent I think.\n\nThe comments above this should also probably be updated.",
+      "revId": "69ecd80e95bf0da9a312ee70ebcf331bdaa8a269",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
