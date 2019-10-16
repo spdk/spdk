@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "318f4a20_ff04a1a0",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1048,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T19:53:01Z",
+      "side": 1,
+      "message": "Yes, or from any of the family of spdk_nvme_ns_cmd* functions.",
+      "parentUuid": "145553d9_e9ceda2d",
+      "revId": "2b8204cd1c1db07d8104c3d7e4582b53ca75b3a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f6d69689_743f8334",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 2
@@ -33,6 +51,24 @@
       "revId": "2b8204cd1c1db07d8104c3d7e4582b53ca75b3a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea43861b_bb074ff4",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1052,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T19:53:01Z",
+      "side": 1,
+      "message": "I was following the conventions of spdk_nvme_ctrlr_free_io_qpair when checking the qpair against NULL. I agree it\u0027s bogus and nobody should try to do it. I\u0027m fine making it an assert. Same for the other two.\nClarified -EAGAIN return value.",
+      "parentUuid": "f6d69689_743f8334",
+      "revId": "2b8204cd1c1db07d8104c3d7e4582b53ca75b3a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -67,6 +103,24 @@
       "revId": "2b8204cd1c1db07d8104c3d7e4582b53ca75b3a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "18efc947_81a3bbd8",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1439,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T19:53:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "04f66414_80abff77",
+      "revId": "2b8204cd1c1db07d8104c3d7e4582b53ca75b3a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
