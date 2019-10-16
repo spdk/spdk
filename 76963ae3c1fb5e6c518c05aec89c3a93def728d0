@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39011839_81013306",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-16T09:40:12Z",
+      "side": 1,
+      "message": "I\u0027m not sure which is better, per sock pool or per sock_group pool yet.",
+      "revId": "76963ae3c1fb5e6c518c05aec89c3a93def728d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0486bdcf_95d5998b",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-16T09:40:12Z",
+      "side": 1,
+      "message": "can we use another variable to decide if flush starts? If we use DIF insert/strip, we will have to increase sock-\u003emax_iovcnt to cover max IO size but that value may be too large to use flush condition. I may be wrong.",
+      "range": {
+        "startLine": 618,
+        "startChar": 27,
+        "endLine": 618,
+        "endChar": 43
+      },
+      "revId": "76963ae3c1fb5e6c518c05aec89c3a93def728d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d74160d_1dccf6de",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 936,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-16T09:40:12Z",
+      "side": 1,
+      "message": "Is it likely that any closed socket here is got in the next epoll_wait()? Should we swap flush and epoll_wait?",
+      "revId": "76963ae3c1fb5e6c518c05aec89c3a93def728d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
