@@ -725,6 +725,8 @@ function fio_config_gen()
 {
 	local config_file=$1
 	local workload=$2
+	local bdev_type=$3
+	local fio_dir="/usr/src/fio"
 
 	if [ -e "$config_file" ]; then
 		echo "Configuration File Already Exists!: $config_file"
@@ -752,6 +754,13 @@ EOL
 		echo "verify=sha1" >> $config_file
 		echo "verify_backlog=1024" >> $config_file
 		echo "rw=randwrite" >> $config_file
+
+		if [ "$bdev_type" == "AIO" ]; then
+			retval=$(echo "$($fio_dir/fio --version | cut -d'-' -f2) >= 3.0" | bc)
+			if [ $retval -eq 1 ]; then
+				echo "serialize_overlap=1" >> $config_file
+			fi
+		fi
 	elif [ "$workload" == "trim" ]; then
 		echo "rw=trimwrite" >> $config_file
 	else
