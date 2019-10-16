@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "07940706_4b89f8bc",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1460,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T20:04:26Z",
+      "side": 1,
+      "message": "In terms of being inconsistent with TCP and PCIe -\n\nIn TCP it looks like we don\u0027t do anything when we get a cq error for TCP. we simply return -1 from the ctrlr. So in that case, this transport_qp_is_failed flag will never get set. I should probably add this functionality to that transport as well\n\nThere is actually no error path in nvme_pcie_qpair_process_completions so we don\u0027t have to worry about being consistent with error paths in that case.",
+      "revId": "dbdc0d7b78deb81891d3b0e464bfe3106c5bcfd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f7f7b340_b0b307e8",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 2
