@@ -2156,13 +2156,12 @@ iscsi_op_login_rsp_handle(struct spdk_iscsi_conn *conn,
 }
 
 static int
-iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_hdr_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	int rc;
 	struct iscsi_bhs_login_req *reqh;
 	struct spdk_iscsi_pdu *rsp_pdu;
-	struct iscsi_param *params = NULL;
-	int cid;
+	uint32_t data_len;
 
 	if (conn->full_feature && conn->sess != NULL &&
 	    conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
@@ -2171,12 +2170,12 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
 	pdu->cmd_sn = from_be32(&reqh->cmd_sn);
-	cid = from_be16(&reqh->cid);
 
 	/* During login processing, use the 8KB default FirstBurstLength as
 	 *  our maximum data segment length value.
 	 */
-	if (pdu->data_segment_len > SPDK_ISCSI_FIRST_BURST_LENGTH) {
+	data_len = ISCSI_ALIGN(DGET24(reqh->data_segment_len));
+	if (data_len > SPDK_ISCSI_FIRST_BURST_LENGTH) {
 		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 	}
 
@@ -2189,6 +2188,29 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		iscsi_op_login_response(conn, rsp_pdu, NULL);
 		return rc;
 	}
+
+	conn->login_rsp_pdu = rsp_pdu;
+	return 0;
+}
+
+static int
+iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	int rc;
+	struct iscsi_bhs_login_req *reqh;
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_param *params = NULL;
+	int cid;
+
+	rc = iscsi_pdu_hdr_op_login(conn, pdu);
+	if (rc != 0 || pdu->is_rejected || conn->login_rsp_pdu == NULL) {
+		return rc;
+	}
+
+	rsp_pdu = conn->login_rsp_pdu;
+
+	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
+	cid = from_be16(&reqh->cid);
 
 	rc = iscsi_op_login_store_incoming_params(conn, pdu, rsp_pdu, &params);
 	if (rc < 0) {
