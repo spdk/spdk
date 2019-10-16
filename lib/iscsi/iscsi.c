@@ -2202,9 +2202,8 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	struct iscsi_param *params = NULL;
 	int cid;
 
-	rc = iscsi_pdu_hdr_op_login(conn, pdu);
-	if (rc != 0 || pdu->is_rejected || conn->login_rsp_pdu == NULL) {
-		return rc;
+	if (conn->login_rsp_pdu == NULL) {
+		return 0;
 	}
 
 	rsp_pdu = conn->login_rsp_pdu;
@@ -2322,11 +2321,6 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	int rc;
 	struct iscsi_bhs_text_req *reqh;
 	struct iscsi_bhs_text_resp *rsph;
-
-	rc = iscsi_pdu_hdr_op_text(conn, pdu);
-	if (rc != 0 || pdu->is_rejected) {
-		return rc;
-	}
 
 	data_len = 0;
 	alloc_len = conn->MaxRecvDataSegmentLength;
@@ -3492,11 +3486,9 @@ static int
 iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_task *task;
-	int rc;
 
-	rc = iscsi_pdu_hdr_op_scsi(conn, pdu);
-	if (rc != 0 || pdu->is_rejected || pdu->task == NULL) {
-		return rc;
+	if (pdu->task == NULL) {
+		return 0;
 	}
 
 	task = pdu->task;
@@ -3986,12 +3978,6 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint32_t task_tag;
 	int I_bit;
 	int data_len;
-	int rc;
-
-	rc = iscsi_pdu_hdr_op_nopout(conn, pdu);
-	if (rc != 0 || pdu->is_rejected) {
-		return rc;
-	}
 
 	reqh = (struct iscsi_bhs_nop_out *)&pdu->bhs;
 	I_bit = reqh->immediate;
@@ -4509,9 +4495,8 @@ iscsi_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	int F_bit;
 	int rc;
 
-	rc = iscsi_pdu_hdr_op_data(conn, pdu);
-	if (rc != 0 || pdu->is_rejected || pdu->task == NULL) {
-		return rc;
+	if (pdu->task == NULL) {
+		return 0;
 	}
 
 	subtask = pdu->task;
@@ -4683,7 +4668,7 @@ iscsi_update_cmdsn(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 }
 
 static int
-iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_hdr_handle(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	int opcode;
 	int rc;
@@ -4698,11 +4683,7 @@ iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "opcode %x\n", opcode);
 
 	if (opcode == ISCSI_OP_LOGIN) {
-		rc = iscsi_op_login(conn, pdu);
-		if (rc < 0) {
-			SPDK_ERRLOG("iscsi_op_login() failed\n");
-		}
-		return rc;
+		return iscsi_pdu_hdr_op_login(conn, pdu);
 	}
 
 	/* connection in login phase but receive non-login opcode
@@ -4730,18 +4711,18 @@ iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	switch (opcode) {
 	case ISCSI_OP_NOPOUT:
-		rc = iscsi_op_nopout(conn, pdu);
+		rc = iscsi_pdu_hdr_op_nopout(conn, pdu);
 		break;
 
 	case ISCSI_OP_SCSI:
-		rc = iscsi_op_scsi(conn, pdu);
+		rc = iscsi_pdu_hdr_op_scsi(conn, pdu);
 		break;
 	case ISCSI_OP_TASK:
 		rc = iscsi_pdu_hdr_op_task(conn, pdu);
 		break;
 
 	case ISCSI_OP_TEXT:
-		rc = iscsi_op_text(conn, pdu);
+		rc = iscsi_pdu_hdr_op_text(conn, pdu);
 		break;
 
 	case ISCSI_OP_LOGOUT:
@@ -4749,7 +4730,7 @@ iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		break;
 
 	case ISCSI_OP_SCSI_DATAOUT:
-		rc = iscsi_op_data(conn, pdu);
+		rc = iscsi_pdu_hdr_op_data(conn, pdu);
 		break;
 
 	case ISCSI_OP_SNACK:
@@ -4762,7 +4743,54 @@ iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	if (rc < 0) {
-		SPDK_ERRLOG("processing PDU (opcode=%x) failed on %s(%s)\n",
+		SPDK_ERRLOG("processing PDU header (opcode=%x) failed on %s(%s)\n",
+			    opcode,
+			    conn->target_port != NULL ? spdk_scsi_port_get_name(conn->target_port) : "NULL",
+			    conn->initiator_port != NULL ? spdk_scsi_port_get_name(conn->initiator_port) : "NULL");
+	}
+
+	return rc;
+}
+
+static int
+iscsi_pdu_payload_handle(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	int opcode;
+	int rc = 0;
+
+	opcode = pdu->bhs.opcode;
+
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "opcode %x\n", opcode);
+
+	switch (opcode) {
+	case ISCSI_OP_LOGIN:
+		rc = iscsi_op_login(conn, pdu);
+		break;
+	case ISCSI_OP_NOPOUT:
+		rc = iscsi_op_nopout(conn, pdu);
+		break;
+	case ISCSI_OP_SCSI:
+		rc = iscsi_op_scsi(conn, pdu);
+		break;
+	case ISCSI_OP_TASK:
+		break;
+	case ISCSI_OP_TEXT:
+		rc = iscsi_op_text(conn, pdu);
+		break;
+	case ISCSI_OP_LOGOUT:
+		break;
+	case ISCSI_OP_SCSI_DATAOUT:
+		rc = iscsi_op_data(conn, pdu);
+		break;
+	case ISCSI_OP_SNACK:
+		break;
+	default:
+		SPDK_ERRLOG("unsupported opcode %x\n", opcode);
+		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+	}
+
+	if (rc < 0) {
+		SPDK_ERRLOG("processing PDU payload (opcode=%x) failed on %s(%s)\n",
 			    opcode,
 			    conn->target_port != NULL ? spdk_scsi_port_get_name(conn->target_port) : "NULL",
 			    conn->initiator_port != NULL ? spdk_scsi_port_get_name(conn->initiator_port) : "NULL");
@@ -4940,7 +4968,10 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				break;
 			}
 
-			rc = iscsi_execute(conn, pdu);
+			rc = iscsi_pdu_hdr_handle(conn, pdu);
+			if (rc == 0 && !pdu->is_rejected) {
+				rc = iscsi_pdu_payload_handle(conn, pdu);
+			}
 			if (rc == 0) {
 				spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
 				spdk_put_pdu(pdu);
