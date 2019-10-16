@@ -356,7 +356,6 @@ spdk_nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 
 	tcp_req = TAILQ_FIRST(&tqpair->state_queue[TCP_REQUEST_STATE_FREE]);
 	if (!tcp_req) {
-		SPDK_ERRLOG("Cannot allocate tcp_req on tqpair=%p\n", tqpair);
 		return NULL;
 	}
 
@@ -1363,9 +1362,8 @@ spdk_nvmf_tcp_capsule_cmd_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 
 	tcp_req = spdk_nvmf_tcp_req_get(tqpair);
 	if (!tcp_req) {
-		SPDK_ERRLOG("Cannot allocate tcp_req\n");
-		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
-		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+		/* This is fine. Just sit in this state and try again on the next
+		 * loop. */
 		return;
 	}
 
@@ -1534,6 +1532,7 @@ spdk_nvmf_tcp_pdu_c2h_data_complete(void *cb_arg)
 		}
 	}
 
+	assert(tqpair->c2h_data_pdu_cnt > 0);
 	tqpair->c2h_data_pdu_cnt--;
 	spdk_nvmf_tcp_handle_pending_c2h_data_queue(tqpair);
 }
@@ -2388,7 +2387,7 @@ spdk_nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 		STAILQ_REMOVE_HEAD(&tqpair->queued_c2h_data_tcp_req, link);
 	}
 
-	tqpair->c2h_data_pdu_cnt += 1;
+	tqpair->c2h_data_pdu_cnt++;
 	spdk_nvmf_tcp_qpair_write_pdu(tqpair, rsp_pdu, spdk_nvmf_tcp_pdu_c2h_data_complete, tcp_req);
 }
 
