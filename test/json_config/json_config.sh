@@ -51,7 +51,7 @@ function tgt_check_notification_types() {
 	"
 
 	get_types=$(tgt_rpc notify_get_types | jq -r '.[]')
-	if [ "$(echo $enabled_types)" != "$(echo $get_types)" ]; then
+	if [ "${enabled_types//[$' \t\n\r']/}" != "${get_types//[$' \t\n\r']/}" ]; then
 		echo "ERROR: expected types:" $enabled_types ", but got:" $get_types
 		ret=1
 	fi
