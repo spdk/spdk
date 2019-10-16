@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a94f31e_6d52b181",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-16T08:17:51Z",
+      "side": 1,
+      "message": "I think this should use examine_disk, since we\u0027re issuing I/Os during initialization",
+      "revId": "4d33f669c29ea4eee0f42d403b5be3245f840a0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d4d99ff_1c52a94c",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 751,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-16T08:17:51Z",
+      "side": 1,
+      "message": "If you\u0027re removing the entry, shouldn\u0027t this be LIST_FOREACH_SAFE?",
+      "revId": "4d33f669c29ea4eee0f42d403b5be3245f840a0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "354be8bb_537b0d9f",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-16T08:17:51Z",
+      "side": 1,
+      "message": "Don\u0027t you need a cache_initialized variable as well? I think this flow should handle the case of either (or both) cache and base bdev being missing on creation and receiving an examine call in different orders",
+      "revId": "4d33f669c29ea4eee0f42d403b5be3245f840a0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
