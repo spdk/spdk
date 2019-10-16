@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "17ae1d84_e5183c2a",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T17:31:24Z",
+      "side": 1,
+      "message": "thinking about this more - we should add the namespace ID to the interface - it\u0027s OK that for now, if user specifies some namespace other than 1, that we fail the creation process\n\notherwise we will need to change the RPCs later which breaks API",
+      "revId": "03e5a4bd08d43e084bbd2169992b35d25c50f62c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7cb04c3a_94991c86",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 18
