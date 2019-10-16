@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "c03811f9_43593ec4",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T17:33:17Z",
+      "side": 1,
+      "message": "let\u0027s add namespace id here - you can just fail it if it is set to anything but 1 - but it\u0027s important to have the namespace ID as part of the interface now rather than later",
+      "revId": "aebb7c90dca8add79fa2b52a04d06f9520c8b53a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ada7a640_523256f3",
         "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
         "patchSetId": 18
@@ -13,6 +30,24 @@
       "writtenOn": "2019-10-16T17:26:49Z",
       "side": 1,
       "message": "let\u0027s have this return opal_bdev as a pointer, so that you don\u0027t have to add this get_latest_bdev() function.  See previous patch for more comments on how I\u0027d suggest to do it",
+      "revId": "aebb7c90dca8add79fa2b52a04d06f9520c8b53a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f69b3e21_2ff8b736",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-16T17:33:17Z",
+      "side": 1,
+      "message": "actually instead, just build the name here - you always know that if this is successful, the name of the bdev will be:\n\n%sn%dr%d, ctrlr_name, ns_id, locking_range\n\nThis is similar to how create_compress_bdev does it",
+      "parentUuid": "ada7a640_523256f3",
       "revId": "aebb7c90dca8add79fa2b52a04d06f9520c8b53a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
