@@ -499,7 +499,7 @@ int spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem
 /**
  * Check whether a subsystem should allow any host or only hosts in the allowed list.
  *
- * \param subsystem Subsystem to modify.
+ * \param subsystem Subsystem to query.
  *
  * \return true if any host is allowed to connect to this subsystem, or false if
  * connecting hosts must be in the whitelist configured with spdk_nvmf_subsystem_add_host().
