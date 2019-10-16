@@ -18,7 +18,7 @@ $rootdir/scripts/gen_nvme.sh > $testdir/blobcli.conf
 # generate random data file for import/export diff
 dd if=/dev/urandom of=$testdir/test.pattern bs=1M count=1
 
-cd $testdir
+cd $testdir || exit
 $rootdir/examples/blob/cli/blobcli -c $testdir/blobcli.conf -b Nvme0n1 -T $testdir/test.bs > $testdir/btest.out
 cd -
 
