@@ -103,6 +103,7 @@ struct spdk_iscsi_conn {
 	enum iscsi_connection_state	state;
 	int				login_phase;
 	bool				is_logged_out;
+	struct spdk_iscsi_pdu		*login_rsp_pdu;
 
 	uint64_t	last_flush;
 	uint64_t	last_fill;
