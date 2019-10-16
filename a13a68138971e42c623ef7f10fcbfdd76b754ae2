@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7bec11bd_c8fe8501",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T19:52:50Z",
+      "side": 1,
+      "message": "It actually wasn\u0027t meant to handle a race condition. I was being a little lazy with the failed_state variable. It was supposed to track when a qpair enters the failed state. But we need one for each qpair. I\u0027ve revamped it, and added comments for each case that we encounter.",
+      "parentUuid": "ea51cbdc_8e37fb9e",
+      "revId": "a13a68138971e42c623ef7f10fcbfdd76b754ae2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e96b56c1_c8fd76ed",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "1ead72e6_29216e5e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T19:52:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e96b56c1_c8fd76ed",
+      "revId": "a13a68138971e42c623ef7f10fcbfdd76b754ae2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ab9930b_c3ccf813",
         "filename": "test/nvmf/host/target_disconnect.sh",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2019-10-16T00:06:38Z",
       "side": 1,
       "message": "I\u0027m not following the || true \u0026 at the end of this.  Does the || true really do anything?  I think running fio_nvme in the background means that even if it eventually exits with failure, it doesn\u0027t result in this script exiting with failure.  I\u0027m also thinking that calling fio_nvme as a function, having the || true, and then the \u0026 at the end will probably confuse others too.  I just tested on my system, and sleep 5 || true \u0026 operates completely different between zsh and bash.  With zsh, sleep 5 runs in the foreground for 5 seconds, then true runs in the background which of course exits immediately.  For bash, all of (sleep 5 || true) runs in the background.\n\nBut then there\u0027s no || true below at line 46.  So maybe I\u0027m not understanding why it was put here.",
+      "revId": "a13a68138971e42c623ef7f10fcbfdd76b754ae2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72088816_b17b3f6b",
+        "filename": "test/nvmf/host/target_disconnect.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-16T19:52:50Z",
+      "side": 1,
+      "message": "Ah, you\u0027re right. I knew fio was supposed to fail because it will get the error codes from the driver, and I was seeing stack traces locally. In an earlier version of the test, FIO was the only thing running, so I assumed that it was causing the test to execute early. But now that I have perf in there after, I see that execution continues after fio fails.\n\nThe reason perf doesn\u0027t have || true is because it is expected to exit successfully. Since that one isn\u0027t run in a function, the script does fail when perf exits with an error.",
+      "parentUuid": "5ab9930b_c3ccf813",
       "revId": "a13a68138971e42c623ef7f10fcbfdd76b754ae2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
