@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/log.h"
+#include "spdk/env.h"
 #include "spdk/vmd.h"
 
 struct spdk_pci_addr g_probe_addr;
@@ -68,8 +69,11 @@ parse_args(int argc, char **argv)
 int main(int argc, char **argv)
 {
 	struct spdk_env_opts opts;
-	int rc = parse_args(argc, argv);
+	struct spdk_pci_device *pci_device;
+	char addr_buf[128];
+	int rc;
 
+	rc = parse_args(argc, argv);
 	if (rc != 0) {
 		return rc;
 	}
@@ -83,9 +87,21 @@ int main(int argc, char **argv)
 	}
 
 	rc = spdk_vmd_init();
-
 	if (rc) {
 		SPDK_ERRLOG("No VMD Controllers found\n");
+	}
+
+	for (pci_device = spdk_pci_get_first_device(); pci_device != NULL;
+	     pci_device = spdk_pci_get_next_device(pci_device)) {
+		if (strcmp(spdk_pci_device_get_type(pci_device), "vmd") == 0) {
+			rc = spdk_pci_addr_fmt(addr_buf, sizeof(addr_buf), &pci_device->addr);
+			if (rc != 0) {
+				fprintf(stderr, "Failed to format VMD's PCI address\n");
+				continue;
+			}
+
+			printf("%s\n", addr_buf);
+		}
 	}
 
 	return rc;
