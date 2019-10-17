@@ -273,7 +273,8 @@ void ftl_io_advance(struct ftl_io *io, size_t lbk_cnt);
 size_t ftl_iovec_num_lbks(struct iovec *iov, size_t iov_cnt);
 void *ftl_io_iovec_addr(struct ftl_io *io);
 size_t ftl_io_iovec_len_left(struct ftl_io *io);
-struct ftl_io *ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
+struct ftl_io *ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_addr addr,
+			       struct ftl_band *band,
 			       struct ftl_rwb_batch *entry, ftl_io_fn cb);
 struct ftl_io *ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_io_fn cb);
 struct ftl_io *ftl_io_user_init(struct spdk_io_channel *ioch, uint64_t lba, size_t lbk_cnt,
