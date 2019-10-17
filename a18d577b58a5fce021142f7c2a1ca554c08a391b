@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0dc6c69_d4e9f018",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-17T07:47:07Z",
+      "side": 1,
+      "message": "With this flag enabled, compilation of use is turned on.\nYet no tests enable this flag when creating NVMe controller. This needs to be added.",
+      "range": {
+        "startLine": 42,
+        "startChar": 4,
+        "endLine": 42,
+        "endChar": 23
+      },
+      "revId": "a18d577b58a5fce021142f7c2a1ca554c08a391b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ccb74a68_49949441",
+        "filename": "test/nvmf/target/nvme_cli.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-17T07:47:07Z",
+      "side": 1,
+      "message": "Please fix shellcheck error",
+      "range": {
+        "startLine": 62,
+        "startChar": 61,
+        "endLine": 62,
+        "endChar": 63
+      },
+      "revId": "a18d577b58a5fce021142f7c2a1ca554c08a391b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
