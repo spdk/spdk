@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "99c9e599_297d9bc8",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-17T08:11:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "997203f6_dc8572d2",
+      "range": {
+        "startLine": 104,
+        "startChar": 10,
+        "endLine": 104,
+        "endChar": 16
+      },
+      "revId": "a4c44d52f3439756581e8ee1809cf4bfa0422811",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0106e54_65b8a149",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 17
@@ -36,6 +60,30 @@
       "writtenOn": "2019-10-16T14:16:13Z",
       "side": 1,
       "message": "Let\u0027s set move this down to line 518, so that we fill in whole io_ctx in one place.",
+      "range": {
+        "startLine": 482,
+        "startChar": 0,
+        "endLine": 484,
+        "endChar": 21
+      },
+      "revId": "a4c44d52f3439756581e8ee1809cf4bfa0422811",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a44d86d_526ea1c2",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-17T08:11:34Z",
+      "side": 1,
+      "message": "Removed the offset, so this no longer seems necessary",
+      "parentUuid": "e0106e54_65b8a149",
       "range": {
         "startLine": 482,
         "startChar": 0,
@@ -68,6 +116,30 @@
       "revId": "a4c44d52f3439756581e8ee1809cf4bfa0422811",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d25412c2_2691311c",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-17T08:11:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ccea6db7_504375b6",
+      "range": {
+        "startLine": 514,
+        "startChar": 0,
+        "endLine": 516,
+        "endChar": 2
+      },
+      "revId": "a4c44d52f3439756581e8ee1809cf4bfa0422811",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
