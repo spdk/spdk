@@ -77,6 +77,12 @@ enum ftl_trace_source {
 #define FTL_TRACE_ERASE_SUBMISSION(src)		FTL_TPOINT_ID(19, src)
 #define FTL_TRACE_ERASE_COMPLETION(src)		FTL_TPOINT_ID(20, src)
 
+#define FTL_TRACE_MD_APPEND_SUBMISSION(src)	FTL_TPOINT_ID(21, src)
+#define FTL_TRACE_MD_APPEND_COMPLETION(src)	FTL_TPOINT_ID(22, src)
+
+#define FTL_TRACE_APPEND_SUBMISSION(src)	FTL_TPOINT_ID(23, src)
+#define FTL_TRACE_APPEND_COMPLETION(src)	FTL_TPOINT_ID(24, src)
+
 SPDK_TRACE_REGISTER_FN(ftl_trace_func, "ftl", TRACE_GROUP_FTL)
 {
 	const char source[] = { 'i', 'u' };
@@ -269,6 +275,9 @@ ftl_trace_completion(struct spdk_ftl_dev *dev, const struct ftl_io *io,
 		case FTL_IO_WRITE:
 			tpoint_id = FTL_TRACE_MD_WRITE_COMPLETION(source);
 			break;
+		case FTL_IO_APPEND:
+			tpoint_id = FTL_TRACE_MD_APPEND_COMPLETION(source);
+			break;
 		default:
 			assert(0);
 		}
@@ -289,6 +298,9 @@ ftl_trace_completion(struct spdk_ftl_dev *dev, const struct ftl_io *io,
 			break;
 		case FTL_IO_WRITE:
 			tpoint_id = FTL_TRACE_WRITE_COMPLETION(source);
+			break;
+		case FTL_IO_APPEND:
+			tpoint_id = FTL_TRACE_APPEND_COMPLETION(source);
 			break;
 		case FTL_IO_ERASE:
 			tpoint_id = FTL_TRACE_ERASE_COMPLETION(source);
@@ -318,6 +330,9 @@ ftl_trace_submission(struct spdk_ftl_dev *dev, const struct ftl_io *io, struct f
 		case FTL_IO_WRITE:
 			tpoint_id = FTL_TRACE_MD_WRITE_SUBMISSION(source);
 			break;
+		case FTL_IO_APPEND:
+			tpoint_id = FTL_TRACE_MD_APPEND_SUBMISSION(source);
+			break;
 		default:
 			assert(0);
 		}
@@ -328,6 +343,9 @@ ftl_trace_submission(struct spdk_ftl_dev *dev, const struct ftl_io *io, struct f
 			break;
 		case FTL_IO_WRITE:
 			tpoint_id = FTL_TRACE_WRITE_SUBMISSION(source);
+			break;
+		case FTL_IO_APPEND:
+			tpoint_id = FTL_TRACE_APPEND_SUBMISSION(source);
 			break;
 		case FTL_IO_ERASE:
 			tpoint_id = FTL_TRACE_ERASE_SUBMISSION(source);
