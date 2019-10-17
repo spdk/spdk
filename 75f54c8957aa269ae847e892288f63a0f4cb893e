@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "45d5dc83_e1710edc",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-17T13:27:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "46a58465_8c5cba10",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 7
+      },
+      "revId": "75f54c8957aa269ae847e892288f63a0f4cb893e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6c02254a_f86b93bd",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 3
@@ -45,6 +69,30 @@
       "revId": "75f54c8957aa269ae847e892288f63a0f4cb893e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02bafc9f_a9c9c4bb",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-17T13:27:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6c02254a_f86b93bd",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 6
+      },
+      "revId": "75f54c8957aa269ae847e892288f63a0f4cb893e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "9a4763f6_f8054ae6",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-17T13:27:41Z",
+      "side": 1,
+      "message": "retcode_fio1 and retcode_fio2 will be assigned to 1 if fio command finishes with error otherwise retocde_fio1 and retcode_fio2 remain assigned to 0.",
+      "parentUuid": "be9a864b_b617ee1b",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 44
+      },
+      "revId": "75f54c8957aa269ae847e892288f63a0f4cb893e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b7eeabd0_03559cd9",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 3
@@ -91,6 +163,30 @@
       "revId": "75f54c8957aa269ae847e892288f63a0f4cb893e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0c2f6298_c173bfdb",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-17T13:27:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b7eeabd0_03559cd9",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 45
+      },
+      "revId": "75f54c8957aa269ae847e892288f63a0f4cb893e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

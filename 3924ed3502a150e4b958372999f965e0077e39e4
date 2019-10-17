@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "5f3601a9_5038024f",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-17T13:27:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aff93f59_877370d2",
+      "range": {
+        "startLine": 10,
+        "startChar": 4,
+        "endLine": 10,
+        "endChar": 47
+      },
+      "revId": "3924ed3502a150e4b958372999f965e0077e39e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a970753_40cbced3",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 2
