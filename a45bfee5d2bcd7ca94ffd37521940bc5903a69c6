@@ -34,6 +34,24 @@
       "revId": "a45bfee5d2bcd7ca94ffd37521940bc5903a69c6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef442a5c_ec2b526b",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-17T17:24:12Z",
+      "side": 1,
+      "message": "Jim and I talked it over and we\u0027d like to propose the following solution:\n\n1. Leave the cdw0 inside the error union as you have it.\n2. Set cdw0 to 0 inside spdk_bdev_io_init and _spdk_bdev_ch_retry_io()\n3. Always return cdw0 in spdk_bdev_io_get_nvme_status. It will be 0 if it isn\u0027t valid.\n\nThe key is also zeroing it in _spdk_bdev_ch_retry_io() - we were worried about bdev_ios getting re-used after a failure and then having junk in cdw0 even though they succeeded the second time.",
+      "parentUuid": "d176155a_792d1512",
+      "revId": "a45bfee5d2bcd7ca94ffd37521940bc5903a69c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
