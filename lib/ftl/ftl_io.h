@@ -81,6 +81,7 @@ enum ftl_io_type {
 	FTL_IO_READ,
 	FTL_IO_WRITE,
 	FTL_IO_ERASE,
+	FTL_IO_APPEND,
 };
 
 struct ftl_io_init_opts {
@@ -235,6 +236,12 @@ struct ftl_md_io {
 	/* Callback's context */
 	void					*cb_ctx;
 };
+
+static inline bool
+ftl_io_type_append(const struct ftl_io *io)
+{
+	return io->type == FTL_IO_APPEND;
+}
 
 static inline bool
 ftl_io_mode_physical(const struct ftl_io *io)
