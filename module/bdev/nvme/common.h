@@ -49,7 +49,7 @@ struct nvme_bdev_ns {
 	bool			active;
 	struct spdk_nvme_ns	*ns;
 	struct nvme_bdev_ctrlr	*ctrlr;
-	struct nvme_bdev	*bdev;
+	TAILQ_HEAD(, nvme_bdev)	bdevs;
 };
 
 struct nvme_bdev_ctrlr {
@@ -84,8 +84,9 @@ struct nvme_bdev_ctrlr {
 
 struct nvme_bdev {
 	struct spdk_bdev	disk;
-	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	struct nvme_bdev_ns	*nvme_ns;
+	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
+	TAILQ_ENTRY(nvme_bdev)	tailq;
 };
 
 typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
