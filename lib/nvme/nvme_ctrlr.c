@@ -629,6 +629,12 @@ nvme_ctrlr_set_supported_features(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_set_arbitration_feature(ctrlr);
 }
 
+bool
+spdk_nvme_ctrlr_is_failed(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->is_failed;
+}
+
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
@@ -641,6 +647,14 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 	}
 	ctrlr->is_failed = true;
 	SPDK_ERRLOG("ctrlr %s in failed state.\n", ctrlr->trid.traddr);
+}
+
+void
+spdk_nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr)
+{
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	nvme_ctrlr_fail(ctrlr, false);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 static void
