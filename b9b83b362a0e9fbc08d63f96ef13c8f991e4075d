@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "52976f21_fa2b1719",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-17T05:07:01Z",
+      "side": 1,
+      "message": "Do we need the number of blocks that the opal device has?",
+      "revId": "b9b83b362a0e9fbc08d63f96ef13c8f991e4075d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "09771604_ad857dd4",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 20
@@ -13,6 +30,40 @@
       "writtenOn": "2019-10-17T04:38:02Z",
       "side": 1,
       "message": "I know returning char * makes printing the name easier in the next patch, but returning errno values here was better.  It allows us to give the user a more meaningful error message when the RPC fails.  Could we go back to the errno values you were using in the last version?  And then just construct the name manually in the RPC code as suggested in one of the previous reviews.",
+      "revId": "b9b83b362a0e9fbc08d63f96ef13c8f991e4075d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe7d6b7d_9851e30e",
+        "filename": "module/bdev/nvme/vbdev_opal.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-17T05:07:01Z",
+      "side": 1,
+      "message": "extra new line.",
+      "revId": "b9b83b362a0e9fbc08d63f96ef13c8f991e4075d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "04288f0a_d01007d3",
+        "filename": "module/bdev/nvme/vbdev_opal.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-17T05:07:01Z",
+      "side": 1,
+      "message": "extra new line.",
       "revId": "b9b83b362a0e9fbc08d63f96ef13c8f991e4075d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
