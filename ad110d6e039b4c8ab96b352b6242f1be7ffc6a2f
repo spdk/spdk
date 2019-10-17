@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81f8475b_6a12fd53",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T01:05:04Z",
+      "side": 1,
+      "message": "If spdk_sock_writev_async is called only once from TCP transport, this 32 is expected to increase max_io_size / 512 if DIF insert/strip is enabled.",
+      "range": {
+        "startLine": 834,
+        "startChar": 36,
+        "endLine": 834,
+        "endChar": 38
+      },
+      "revId": "ad110d6e039b4c8ab96b352b6242f1be7ffc6a2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
