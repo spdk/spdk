@@ -16,6 +16,29 @@
       "revId": "331026731740d6fdec8063653f47b0313c388848",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55e13cd9_16c1b7dc",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-17T12:37:48Z",
+      "side": 1,
+      "message": "I might be wrong, but I think the following can happen:\n1. The user calls spdk_nvme_qpair_process_completions\n2. spdk_nvme_qpair_process_completions calls nvme_transport_qpair_process_completions\n3. nvme_transport_qpair_process_completions detects an error whether in rdma_cm event or in poll_cq\n4. nvme_transport_qpair_process_completions return -ENXIA\n5. spdk_nvme_qpair_process_completions checks the return value, fails the controller and return -ENXIA to the user\n6. The user checks the return value and makes attempt to reconnect the qpair\n7. spdk_nvme_ctrlr_reconnect_io_qpair checks ctrlr-\u003eis_failed and doesn\u0027t reconnect\n\nMaybe we should remove this check? Or do not fail the controller on step 5?",
+      "range": {
+        "startLine": 392,
+        "startChar": 12,
+        "endLine": 392,
+        "endChar": 21
+      },
+      "revId": "331026731740d6fdec8063653f47b0313c388848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
