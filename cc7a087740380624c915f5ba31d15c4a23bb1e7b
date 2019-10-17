@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "d2a0cfc5_12567410",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-17T09:16:55Z",
+      "side": 1,
+      "message": "I\u0027m not calling ftl_reloc_prep() anymore in ftl_reloc() so we need to keep high prio band active when some additional work is needed.",
+      "parentUuid": "fde76ee5_c2491de1",
+      "range": {
+        "startLine": 564,
+        "startChar": 0,
+        "endLine": 566,
+        "endChar": 3
+      },
+      "revId": "cc7a087740380624c915f5ba31d15c4a23bb1e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5e978369_151e12d9",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -214,6 +238,30 @@
       "side": 1,
       "message": "I\u0027m not sure what do you mean. I\u0027m under the impression that once we call ftl_reloc_release on an empty band breloc-\u003enum_lbks must equal 0. If that\u0027s the case, this condition is redundant and should be changed into an assertion.",
       "parentUuid": "f4214ba2_c1b8d8cf",
+      "range": {
+        "startLine": 585,
+        "startChar": 5,
+        "endLine": 585,
+        "endChar": 26
+      },
+      "revId": "cc7a087740380624c915f5ba31d15c4a23bb1e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00ac0130_62218446",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-17T09:16:55Z",
+      "side": 1,
+      "message": "You can get ftl_reloc_add() during relocation - for example you got two ANM events on same band.",
+      "parentUuid": "b8ff1445_93791bb0",
       "range": {
         "startLine": 585,
         "startChar": 5,
