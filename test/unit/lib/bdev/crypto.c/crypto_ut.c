@@ -375,7 +375,7 @@ test_error_paths(void)
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	g_enqueue_mock = g_dequeue_mock = ut_rte_crypto_op_bulk_alloc = 1;
 
-	/* test failure of spdk_mempool_get_bulk(), will result in success becuase it
+	/* test failure of spdk_mempool_get_bulk(), will result in success because it
 	 * will get queued.
 	 */
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
@@ -693,7 +693,7 @@ test_reset(void)
 {
 	/* TODO: There are a few different ways to do this given that
 	 * the code uses spdk_for_each_channel() to implement reset
-	 * handling. SUbmitting w/o UT for this function for now and
+	 * handling. Submitting w/o UT for this function for now and
 	 * will follow up with something shortly.
 	 */
 }
