@@ -16,6 +16,24 @@
       "revId": "4da5d69cd6b93d69c930e5f889e6c423b42364b9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac64f3c8_2e82bc21",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-17T20:50:25Z",
+      "side": 1,
+      "message": "Ah thanks for your comment. Taking a closer look at this function, this line is actually unreachable because of the way NVME_TRANSPORT_CALL is implemented. I\u0027ll have to set the state after this function returns.",
+      "parentUuid": "d384f22a_d6283a8f",
+      "revId": "4da5d69cd6b93d69c930e5f889e6c423b42364b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
