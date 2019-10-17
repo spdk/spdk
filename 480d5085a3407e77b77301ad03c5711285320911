@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a1c9d3d_092b3c0b",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 665,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-17T07:45:06Z",
+      "side": 1,
+      "message": "how about rename to spdk_vbdev_opal_enable_new_user() here?",
+      "revId": "480d5085a3407e77b77301ad03c5711285320911",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
