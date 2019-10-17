@@ -16,6 +16,24 @@
       "revId": "5ab518bb6a14ccda3d54832609c8a9961a5df25a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da92832b_190eb352",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2086,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-17T21:03:07Z",
+      "side": 1,
+      "message": "It enters this state if there was some error parsing the TCP stream. It first send a C2H termination request. It\u0027s waiting for one of two things to happen:\n\n1) The client closes the connection, in which case this case catches it.\n2) The client takes too long, in which case there is a separate timer running that will close the connection on the server side.",
+      "parentUuid": "60d441ad_6d8c3a06",
+      "revId": "5ab518bb6a14ccda3d54832609c8a9961a5df25a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
