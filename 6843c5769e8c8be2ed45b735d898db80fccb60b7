@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2a7af777_b51126a2",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 999,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-17T11:56:15Z",
+      "side": 1,
+      "message": "No, this function is called from bdev_ocssd_create_bdev which checks whether nvme_bdev_ctrlr supports OCSSD. If it does, all of its bdevs are instances of ocssd_bdev.",
+      "parentUuid": "efd8e2c4_5822be4b",
+      "range": {
+        "startLine": 999,
+        "startChar": 0,
+        "endLine": 999,
+        "endChar": 73
+      },
+      "revId": "6843c5769e8c8be2ed45b735d898db80fccb60b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "89e59b90_0cffc955",
         "filename": "scripts/rpc.py",
         "patchSetId": 8
@@ -45,6 +69,30 @@
       "revId": "6843c5769e8c8be2ed45b735d898db80fccb60b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d76606d6_dbcdcdd2",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 2004,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-17T11:56:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "89e59b90_0cffc955",
+      "range": {
+        "startLine": 2004,
+        "startChar": 84,
+        "endLine": 2004,
+        "endChar": 87
+      },
+      "revId": "6843c5769e8c8be2ed45b735d898db80fccb60b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
