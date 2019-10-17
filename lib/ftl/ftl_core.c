@@ -171,6 +171,11 @@ ftl_io_cmpl_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	ftl_trace_completion(io->dev, io, FTL_TRACE_COMPLETION_DISK);
 
+	if (ftl_io_type_append(io)) {
+		assert(io->parent);
+		io->parent->addr.offset = spdk_bdev_io_get_append_location(bdev_io);
+	}
+
 	ftl_io_dec_req(io);
 	if (ftl_io_done(io)) {
 		ftl_io_complete(io);
@@ -1485,7 +1490,7 @@ ftl_io_init_child_write(struct ftl_io *parent, struct ftl_addr addr,
 		.band		= parent->band,
 		.size		= sizeof(struct ftl_io),
 		.flags		= 0,
-		.type		= FTL_IO_WRITE,
+		.type		= parent->type,
 		.lbk_cnt	= dev->xfer_size,
 		.cb_fn		= cb,
 		.data		= data,
@@ -1514,6 +1519,11 @@ ftl_io_child_write_cb(struct ftl_io *io, void *ctx, int status)
 	zone->busy = false;
 	zone->write_offset += io->lbk_cnt;
 
+	if (status) {
+		ftl_write_fail(io, status);
+		return;
+	}
+
 	/* If some other write on the same band failed the write pointer would already be freed */
 	if (spdk_likely(wptr)) {
 		wptr->num_outstanding--;
@@ -1538,6 +1548,10 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 	}
 
 	/* Split IO to child requests and release zone immediately after child is completed */
+	if (!(io->flags & FTL_IO_MD)) {
+		assert(io->rwb_batch);
+	}
+
 	child = ftl_io_init_child_write(io, addr, ftl_io_iovec_addr(io),
 					ftl_io_get_md(io), ftl_io_child_write_cb);
 	if (!child) {
@@ -1546,10 +1560,18 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 
 	wptr->num_outstanding++;
 
-	rc = spdk_bdev_write_blocks(dev->base_bdev_desc, ioch->base_ioch,
-				    ftl_io_iovec_addr(child),
-				    addr.offset,
-				    lbk_cnt, ftl_io_cmpl_cb, child);
+	if (ftl_io_type_append(child)) {
+		rc = spdk_bdev_zone_append(dev->base_bdev_desc, ioch->base_ioch,
+					   ftl_io_iovec_addr(child),
+					   ftl_zone_id_from_addr(dev, addr),
+					   lbk_cnt, ftl_io_cmpl_cb, child);
+	} else {
+		rc = spdk_bdev_write_blocks(dev->base_bdev_desc, ioch->base_ioch,
+					    ftl_io_iovec_addr(child),
+					    addr.offset,
+					    lbk_cnt, ftl_io_cmpl_cb, child);
+	}
+
 	if (rc) {
 		wptr->num_outstanding--;
 		ftl_io_fail(child, rc);
@@ -1578,7 +1600,7 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 	while (io->iov_pos < io->iov_cnt) {
 		/* There are no guarantees of the order of completion of NVMe IO submission queue */
 		/* so wait until zone is not busy before submitting another write */
-		if (wptr->zone->busy) {
+		if (!ftl_io_type_append(io) && wptr->zone->busy) {
 			TAILQ_INSERT_TAIL(&wptr->pending_queue, io, retry_entry);
 			rc = -EAGAIN;
 			break;
