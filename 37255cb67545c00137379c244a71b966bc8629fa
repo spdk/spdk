@@ -33,6 +33,24 @@
       "revId": "37255cb67545c00137379c244a71b966bc8629fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44e6ce54_ea3b3a31",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 700,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-17T21:45:35Z",
+      "side": 1,
+      "message": "Should we also open up an API to allow the application to fail a controller? I\u0027m thinking about the case where your path is currently working, but you want to switch over for some other reason than a failure? Like maybe your original port came back online and you want to migrate back from the failed port.",
+      "parentUuid": "f5d6ca87_855c90d9",
+      "revId": "37255cb67545c00137379c244a71b966bc8629fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
