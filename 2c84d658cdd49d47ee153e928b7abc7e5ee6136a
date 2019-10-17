@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d1319d2_868f4bd9",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-17T12:09:28Z",
+      "side": 1,
+      "message": "I\u0027m not sure that it is correct to inform UL with dnr\u003d0. In the case of resubmission such requests will be rejected in _nvme_qpair_submit_request since the controller is still in failed state. Could you correct me if I\u0027m wrong?",
+      "range": {
+        "startLine": 432,
+        "startChar": 32,
+        "endLine": 432,
+        "endChar": 34
+      },
+      "revId": "2c84d658cdd49d47ee153e928b7abc7e5ee6136a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
