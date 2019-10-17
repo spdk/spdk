@@ -39,6 +39,7 @@
 #include "ftl/ftl_io.c"
 
 DEFINE_STUB(ftl_trace_alloc_id, uint64_t, (struct spdk_ftl_dev *dev), 0);
+DEFINE_STUB(spdk_bdev_io_get_append_location, uint64_t, (struct spdk_bdev_io *bdev_io), 0);
 DEFINE_STUB_V(ftl_band_acquire_lba_map, (struct ftl_band *band));
 DEFINE_STUB_V(ftl_band_release_lba_map, (struct ftl_band *band));
 
