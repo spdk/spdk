@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c1dc7d0_3d9a1917",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-17T18:07:17Z",
+      "side": 1,
+      "message": "you need to check opal_vbdev_name \u003d\u003d NULL here too\n\nbut then it\u0027s better to just do it after the if/else, so you don\u0027t have to check it in two places",
+      "revId": "9d305e7173c77fa2b30eee7955dc3a70c3ced48c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
