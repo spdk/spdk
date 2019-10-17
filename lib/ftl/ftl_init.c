@@ -987,6 +987,10 @@ ftl_dev_base_bdev_init(struct spdk_ftl_dev *dev)
 	dev->num_bands = block_cnt / (ftl_dev_num_punits(dev) * ftl_blocks_in_zone(dev));
 	dev->addr_len = spdk_u64log2(block_cnt) + 1;
 
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZONE_APPEND)) {
+		dev->mode |= SPDK_FTL_MODE_APPEND;
+	}
+
 	return 0;
 }
 
