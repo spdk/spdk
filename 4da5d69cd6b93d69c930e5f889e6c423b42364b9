@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d384f22a_d6283a8f",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-17T20:43:07Z",
+      "side": 1,
+      "message": "do we know that it\u0027s connected here?\n\nI think you may need to save the return value of NVME_TRANSPORT_CALL.  If it returns success, set state to CONNECTED, otherwise set state back to DISABLED.",
+      "revId": "4da5d69cd6b93d69c930e5f889e6c423b42364b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
