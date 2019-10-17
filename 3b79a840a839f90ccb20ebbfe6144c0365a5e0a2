@@ -1,0 +1,222 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3a32bd3_d8c24072",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1707,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T02:00:35Z",
+      "side": 1,
+      "message": "Returning here is nice.",
+      "revId": "3b79a840a839f90ccb20ebbfe6144c0365a5e0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e79ba6da_64feec14",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1517,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T02:00:35Z",
+      "side": 1,
+      "message": "I think this iov_len is not necessary, and simply using the number 0x212 will be easy to read because 0x1e4, 0x2e, 0x1d2 are all numbers.",
+      "range": {
+        "startLine": 1517,
+        "startChar": 1,
+        "endLine": 1517,
+        "endChar": 21
+      },
+      "revId": "3b79a840a839f90ccb20ebbfe6144c0365a5e0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1519836f_0e4be779",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1521,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T02:00:35Z",
+      "side": 1,
+      "message": "Is iov[BDEV_IO_NUM_CHILD_IOV] used?\nThe following passes BDEV_IO_NUM_CHILD_IOV + 1 iovs to spdk_bdev_readv_blocks(), but it may be OK if we pass BDEV_IO_NUM_CHILD_IOV iovs.\nBesides iov[BDEV_IO_NUM_CHILD_IOV - 1].iov_len should be shortened to 0x1d2?",
+      "revId": "3b79a840a839f90ccb20ebbfe6144c0365a5e0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "612f09c2_1cb1543f",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1527,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T02:00:35Z",
+      "side": 1,
+      "message": "Is iov[BDEV_IO_NUM_CHILD_IOV + 1] used? The following passes BDEV_IO_NUM_CHILD_IOV + 1 iovs to spdk_bdev_readv_blocks().",
+      "range": {
+        "startLine": 1525,
+        "startChar": 0,
+        "endLine": 1527,
+        "endChar": 0
+      },
+      "revId": "3b79a840a839f90ccb20ebbfe6144c0365a5e0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0be3c25c_f7fdcbd8",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1530,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T02:00:35Z",
+      "side": 1,
+      "message": "Can we use iov[0].iov_base and iov[0].iov_len instead? Using iov if possible is more intuitive.",
+      "range": {
+        "startLine": 1530,
+        "startChar": 40,
+        "endLine": 1530,
+        "endChar": 66
+      },
+      "revId": "3b79a840a839f90ccb20ebbfe6144c0365a5e0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e9cffad_d6975e64",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1531,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T02:00:35Z",
+      "side": 1,
+      "message": "this should be BDEV_IO_NUM_CHILD_IOV - 2? It looks that expected_iov[BDEV_IO_NUM_CHILD_IOV - 2] is set twice.",
+      "range": {
+        "startLine": 1531,
+        "startChar": 16,
+        "endLine": 1531,
+        "endChar": 42
+      },
+      "revId": "3b79a840a839f90ccb20ebbfe6144c0365a5e0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7870aa69_580cb442",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1532,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T02:00:35Z",
+      "side": 1,
+      "message": "Can we use iov[i].iov_base and iov[i].iov_len instead? Using iov if possible is more intuitive.",
+      "range": {
+        "startLine": 1532,
+        "startChar": 41,
+        "endLine": 1532,
+        "endChar": 77
+      },
+      "revId": "3b79a840a839f90ccb20ebbfe6144c0365a5e0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac5eace9_636a55cb",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1535,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T02:00:35Z",
+      "side": 1,
+      "message": "Can we use iov[BDEV_IO_NUM_CHILD_IOV - 2].iov_base here too?",
+      "range": {
+        "startLine": 1535,
+        "startChar": 10,
+        "endLine": 1535,
+        "endChar": 57
+      },
+      "revId": "3b79a840a839f90ccb20ebbfe6144c0365a5e0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55e59ecd_4a0bc9a3",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T02:00:35Z",
+      "side": 1,
+      "message": "Is this iov[BDEV_IO_NUM_CHILD_IOV - 2].iov_len - 0x1e4?",
+      "range": {
+        "startLine": 1541,
+        "startChar": 30,
+        "endLine": 1541,
+        "endChar": 34
+      },
+      "revId": "3b79a840a839f90ccb20ebbfe6144c0365a5e0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "002f7a70_8d228cea",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T02:00:35Z",
+      "side": 1,
+      "message": "Is this (void *)((uintptr_t)iov[BDEV_IO_NUM_CHILD_IOV - 2].iov_base + 0x1e4) ?",
+      "range": {
+        "startLine": 1541,
+        "startChar": 10,
+        "endLine": 1541,
+        "endChar": 28
+      },
+      "revId": "3b79a840a839f90ccb20ebbfe6144c0365a5e0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
