@@ -66,6 +66,30 @@
     },
     {
       "key": {
+        "uuid": "ef4ba056_cd02c764",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T00:50:59Z",
+      "side": 1,
+      "message": "Thank you, I think I understand now. It\u0027s nice that each sock_req can hold many iovs and each flush sends up to DEFAULT_MAX_IOV.",
+      "parentUuid": "9d7a51a8_e680a997",
+      "range": {
+        "startLine": 618,
+        "startChar": 27,
+        "endLine": 618,
+        "endChar": 43
+      },
+      "revId": "76963ae3c1fb5e6c518c05aec89c3a93def728d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0d74160d_1dccf6de",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 7
@@ -77,6 +101,24 @@
       "writtenOn": "2019-10-16T09:40:12Z",
       "side": 1,
       "message": "Is it likely that any closed socket here is got in the next epoll_wait()? Should we swap flush and epoll_wait?",
+      "revId": "76963ae3c1fb5e6c518c05aec89c3a93def728d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1080d3bf_e5d61f6f",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 936,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T00:50:59Z",
+      "side": 1,
+      "message": "Thank you. This comment was very confusing and wrong, but your updated patch looks fine.\nI understand that in your updated patch:\n- the sock array is used to remember socks whose buffer has no empty space, and they are polled first.\n- it is possible that the same sock is added to the sock array twice if sock_flush() returns negative and epoll_wait() returns.",
+      "parentUuid": "0d74160d_1dccf6de",
       "revId": "76963ae3c1fb5e6c518c05aec89c3a93def728d0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
