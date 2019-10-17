@@ -22,6 +22,30 @@
       "revId": "6dcdba118f2988eda5028911856b62e4f15b3b78",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1fafdff5_70644c99",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 922,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-17T11:49:36Z",
+      "side": 1,
+      "message": "I couldn\u0027t find any information on how this works exactly. I was under the impression that it works like a queue and by reading the log you pop the items from its head. This is how QEMU\u0027s emulation works and this is how the ANMs were handled until now.",
+      "parentUuid": "80ebae87_b05c7a18",
+      "range": {
+        "startLine": 919,
+        "startChar": 0,
+        "endLine": 922,
+        "endChar": 2
+      },
+      "revId": "6dcdba118f2988eda5028911856b62e4f15b3b78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
