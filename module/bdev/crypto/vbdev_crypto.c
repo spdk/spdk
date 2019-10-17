@@ -186,6 +186,7 @@ struct crypto_bdev_io {
 	struct vbdev_crypto *crypto_bdev;		/* the crypto node struct associated with this IO */
 	struct spdk_bdev_io *orig_io;			/* the original IO */
 	struct spdk_bdev_io *read_io;			/* the read IO we issued */
+	int8_t bdev_io_status;				/* the status we'll report back on the bdev IO */
 
 	/* Used for the single contiguous buffer that serves as the crypto destination target for writes */
 	uint64_t cry_num_blocks;			/* num of blocks for the contiguous buffer */
@@ -452,7 +453,7 @@ _crypto_operation_complete(struct spdk_bdev_io *bdev_io)
 		/* Complete the original IO and then free the one that we created
 		 * as a result of issuing an IO via submit_request.
 		 */
-		if (bdev_io->internal.status != SPDK_BDEV_IO_STATUS_FAILED) {
+		if (io_ctx->bdev_io_status != SPDK_BDEV_IO_STATUS_FAILED) {
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		} else {
 			SPDK_ERRLOG("Issue with decryption on bdev_io %p\n", bdev_io);
@@ -462,7 +463,7 @@ _crypto_operation_complete(struct spdk_bdev_io *bdev_io)
 
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 
-		if (bdev_io->internal.status != SPDK_BDEV_IO_STATUS_FAILED) {
+		if (io_ctx->bdev_io_status != SPDK_BDEV_IO_STATUS_FAILED) {
 			/* Write the encrypted data. */
 			rc = spdk_bdev_writev_blocks(crypto_bdev->base_desc, crypto_ch->base_ch,
 						     &io_ctx->cry_iov, 1, io_ctx->cry_offset_blocks,
@@ -517,6 +518,7 @@ crypto_dev_poller(void *args)
 		 */
 		bdev_io = (struct spdk_bdev_io *)dequeued_ops[i]->sym->m_src->userdata;
 		assert(bdev_io != NULL);
+		io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
 
 		if (dequeued_ops[i]->status != RTE_CRYPTO_OP_STATUS_SUCCESS) {
 			SPDK_ERRLOG("error with op %d status %u\n", i,
@@ -525,10 +527,9 @@ crypto_dev_poller(void *args)
 			 * rest of the crypto ops for this bdev_io though so they
 			 * aren't left hanging.
 			 */
-			bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+			io_ctx->bdev_io_status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
 
-		io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
 		assert(io_ctx->cryop_cnt_remaining > 0);
 
 		/* Return the associated src and dst mbufs by collecting them into
@@ -992,6 +993,7 @@ vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 	io_ctx->crypto_bdev = crypto_bdev;
 	io_ctx->crypto_ch = crypto_ch;
 	io_ctx->orig_io = bdev_io;
+	io_ctx->bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
