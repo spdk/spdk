@@ -432,6 +432,12 @@ ftl_num_blocks_in_band(const struct spdk_ftl_dev *dev)
 }
 
 static inline uint64_t
+ftl_zone_id_from_addr(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
+{
+	return addr.offset -= (addr.offset % ftl_num_blocks_in_zone(dev));
+}
+
+static inline uint64_t
 ftl_addr_zone_num(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
 {
 	return addr.offset / ftl_num_blocks_in_zone(dev);
