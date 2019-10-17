@@ -1345,12 +1345,22 @@ ftl_write_fail(struct ftl_io *io, int status)
 }
 
 static void
+ftl_update_rwb_stats(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry)
+{
+	if (!ftl_rwb_entry_internal(entry)) {
+		dev->stats.write_user++;
+	}
+	dev->stats.write_total++;
+}
+
+static void
 ftl_write_cb(struct ftl_io *io, void *arg, int status)
 {
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_rwb_batch *batch = io->rwb_batch;
 	struct ftl_rwb_entry *entry;
 	struct ftl_band *band;
+	struct ftl_addr prev_addr, addr = io->addr;
 
 	if (status) {
 		ftl_write_fail(io, status);
@@ -1358,9 +1368,11 @@ ftl_write_cb(struct ftl_io *io, void *arg, int status)
 	}
 
 	assert(io->lbk_cnt == dev->xfer_size);
+	assert(!(io->flags & FTL_IO_MD));
+
 	ftl_rwb_foreach(entry, batch) {
 		band = entry->band;
-		if (!(io->flags & FTL_IO_MD) && !(entry->flags & FTL_IO_PAD)) {
+		if (!(entry->flags & FTL_IO_PAD)) {
 			/* Verify that the LBA is set for user lbks */
 			assert(entry->lba != FTL_LBA_INVALID);
 		}
@@ -1370,21 +1382,32 @@ ftl_write_cb(struct ftl_io *io, void *arg, int status)
 			band->num_reloc_blocks--;
 		}
 
+		entry->addr = addr;
+		if (entry->lba != FTL_LBA_INVALID) {
+			pthread_spin_lock(&entry->lock);
+			prev_addr = ftl_l2p_get(dev, entry->lba);
+
+			/* If the l2p was updated in the meantime, don't update band's metadata */
+			if (ftl_addr_cached(prev_addr) && prev_addr.cache_offset == entry->pos) {
+				/* Setting entry's cache bit needs to be done after metadata */
+				/* within the band is updated to make sure that writes */
+				/* invalidating the entry clear the metadata as well */
+				ftl_band_set_addr(io->band, entry->lba, entry->addr);
+				ftl_rwb_entry_set_valid(entry);
+			}
+			pthread_spin_unlock(&entry->lock);
+		}
+
+		ftl_update_rwb_stats(dev, entry);
+
 		SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write addr:%lu, lba:%lu\n",
 			      entry->addr.offset, entry->lba);
+
+		addr = ftl_band_next_addr(io->band, addr, 1);
 	}
 
 	ftl_process_flush(dev, batch);
 	ftl_rwb_batch_release(batch);
-}
-
-static void
-ftl_update_rwb_stats(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry)
-{
-	if (!ftl_rwb_entry_internal(entry)) {
-		dev->stats.write_user++;
-	}
-	dev->stats.write_total++;
 }
 
 static void
@@ -1554,6 +1577,8 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 	int			rc = 0;
 
 	assert(io->lbk_cnt % dev->xfer_size == 0);
+	/* Only one child write make sense in case of user write */
+	assert((io->flags & FTL_IO_MD) || io->iov_cnt == 1);
 
 	while (io->iov_pos < io->iov_cnt) {
 		/* There are no guarantees of the order of completion of NVMe IO submission queue */
@@ -1615,7 +1640,6 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	struct ftl_rwb_batch	*batch;
 	struct ftl_rwb_entry	*entry;
 	struct ftl_io		*io;
-	struct ftl_addr		addr, prev_addr;
 
 	if (spdk_unlikely(!TAILQ_EMPTY(&wptr->pending_queue))) {
 		io = TAILQ_FIRST(&wptr->pending_queue);
@@ -1640,6 +1664,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	}
 
 	batch = ftl_rwb_pop(dev->rwb);
+
 	if (!batch) {
 		/* If there are queued flush requests we need to pad the RWB to */
 		/* force out remaining entries */
@@ -1650,12 +1675,11 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 		return 0;
 	}
 
-	io = ftl_io_rwb_init(dev, wptr->band, batch, ftl_write_cb);
+	io = ftl_io_rwb_init(dev, wptr->addr, wptr->band, batch, ftl_write_cb);
 	if (!io) {
 		goto error;
 	}
 
-	addr = wptr->addr;
 	ftl_rwb_foreach(entry, batch) {
 		/* Update band's relocation stats if the IO comes from reloc */
 		if (entry->flags & FTL_IO_WEAK) {
@@ -1665,26 +1689,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 			}
 		}
 
-		entry->addr = addr;
-		if (entry->lba != FTL_LBA_INVALID) {
-			pthread_spin_lock(&entry->lock);
-			prev_addr = ftl_l2p_get(dev, entry->lba);
-
-			/* If the l2p was updated in the meantime, don't update band's metadata */
-			if (ftl_addr_cached(prev_addr) && prev_addr.cache_offset == entry->pos) {
-				/* Setting entry's cache bit needs to be done after metadata */
-				/* within the band is updated to make sure that writes */
-				/* invalidating the entry clear the metadata as well */
-				ftl_band_set_addr(wptr->band, entry->lba, entry->addr);
-				ftl_rwb_entry_set_valid(entry);
-			}
-			pthread_spin_unlock(&entry->lock);
-		}
-
 		ftl_trace_rwb_pop(dev, entry);
-		ftl_update_rwb_stats(dev, entry);
-
-		addr = ftl_band_next_addr(wptr->band, addr, 1);
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write addr:%lx\n", wptr->addr.offset);
