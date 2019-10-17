@@ -106,8 +106,8 @@ static pthread_mutex_t g_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
  */
 #define NUM_MBUFS		32768
 #define POOL_CACHE_SIZE		256
-#define NUM_SESSIONS		1024
-#define SESS_MEMPOOL_CACHE_SIZE 256
+#define NUM_SESSIONS		2
+#define SESS_MEMPOOL_CACHE_SIZE 0
 
 /* This is the max number of IOs we can supply to any crypto device QP at one time.
  * It can vary between drivers.
@@ -325,7 +325,6 @@ vbdev_crypto_init_crypto_drivers(void)
 	struct vbdev_dev *tmp_dev;
 	unsigned int max_sess_size = 0, sess_size;
 	uint16_t num_lcores = rte_lcore_count();
-	uint32_t cache_size;
 
 	/* Only the first call, via RPC or module init should init the crypto drivers. */
 	if (g_session_mp != NULL) {
@@ -359,10 +358,10 @@ vbdev_crypto_init_crypto_drivers(void)
 		}
 	}
 
-	cache_size = spdk_min(RTE_MEMPOOL_CACHE_MAX_SIZE, NUM_SESSIONS / 2 / num_lcores);
 #if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
-	g_session_mp_priv = rte_mempool_create("session_mp_priv", NUM_SESSIONS, max_sess_size, cache_size,
-					       0, NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
+	g_session_mp_priv = rte_mempool_create("session_mp_priv", NUM_SESSIONS, max_sess_size,
+					       SESS_MEMPOOL_CACHE_SIZE, 0, NULL, NULL, NULL,
+					       NULL, SOCKET_ID_ANY, 0);
 	if (g_session_mp_priv == NULL) {
 		SPDK_ERRLOG("Cannot create private session pool max size 0x%x\n", max_sess_size);
 		return -ENOMEM;
@@ -370,10 +369,11 @@ vbdev_crypto_init_crypto_drivers(void)
 
 	g_session_mp = rte_cryptodev_sym_session_pool_create(
 			       "session_mp",
-			       NUM_SESSIONS, 0, cache_size, 0,
+			       NUM_SESSIONS, 0, SESS_MEMPOOL_CACHE_SIZE, 0,
 			       SOCKET_ID_ANY);
 #else
-	g_session_mp = rte_mempool_create("session_mp", NUM_SESSIONS, max_sess_size, cache_size,
+	g_session_mp = rte_mempool_create("session_mp", NUM_SESSIONS, max_sess_size,
+					  SESS_MEMPOOL_CACHE_SIZE,
 					  0, NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
 #endif
 	if (g_session_mp == NULL) {
