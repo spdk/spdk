@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "10e0ee32_14cb126b",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-17T08:31:52Z",
+      "side": 1,
+      "message": "It should be removed in this patch, as you\u0027re not using it anymore. You can reorder this and the subsequent patches.",
+      "parentUuid": "5a179f60_af1eb73c",
+      "range": {
+        "startLine": 145,
+        "startChar": 1,
+        "endLine": 145,
+        "endChar": 36
+      },
+      "revId": "048f0883ad908064c14480d163d49f3a1fc7d768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5d9cfa0a_8a81f5ca",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 1
@@ -178,6 +202,30 @@
       "side": 1,
       "message": "I\u0027m removing it in next commit with spdk_ftl_punit_range.",
       "parentUuid": "d78fb643_8e5a72b1",
+      "range": {
+        "startLine": 494,
+        "startChar": 0,
+        "endLine": 501,
+        "endChar": 1
+      },
+      "revId": "048f0883ad908064c14480d163d49f3a1fc7d768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc4ac423_40c22648",
+        "filename": "module/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-17T08:31:52Z",
+      "side": 1,
+      "message": "Let\u0027s reorder those two patches.",
+      "parentUuid": "5e3823df_eeec352f",
       "range": {
         "startLine": 494,
         "startChar": 0,
