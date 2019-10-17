@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80ebae87_b05c7a18",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 922,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-17T10:49:25Z",
+      "side": 1,
+      "message": "If this was the case, shouldn\u0027t the get log page call on line 940 be sent with a non-zero offset?",
+      "range": {
+        "startLine": 919,
+        "startChar": 0,
+        "endLine": 922,
+        "endChar": 2
+      },
+      "revId": "6dcdba118f2988eda5028911856b62e4f15b3b78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
