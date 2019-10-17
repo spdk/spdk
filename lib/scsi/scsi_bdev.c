@@ -1166,9 +1166,25 @@ bdev_scsi_task_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 	struct spdk_scsi_task *task = cb_arg;
 	int sc, sk, asc, ascq;
 
+	spdk_bdev_io_get_scsi_status(bdev_io, &sc, &sk, &asc, &ascq);
+
+	spdk_bdev_free_io(bdev_io);
+
+	spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
+	spdk_scsi_lun_complete_task(task->lun, task);
+}
+
+static void
+bdev_scsi_read_task_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
+				 void *cb_arg)
+{
+	struct spdk_scsi_task *task = cb_arg;
+	int sc, sk, asc, ascq;
+
 	task->bdev_io = bdev_io;
 
 	spdk_bdev_io_get_scsi_status(bdev_io, &sc, &sk, &asc, &ascq);
+
 	spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
 	spdk_scsi_lun_complete_task(task->lun, task);
 }
@@ -1354,7 +1370,7 @@ bdev_scsi_readwrite(struct spdk_scsi_task *task,
 	if (is_read) {
 		rc = spdk_bdev_readv_blocks(bdev_desc, bdev_ch, task->iovs, task->iovcnt,
 					    offset_blocks, num_blocks,
-					    bdev_scsi_task_complete_cmd, task);
+					    bdev_scsi_read_task_complete_cmd, task);
 	} else {
 		rc = spdk_bdev_writev_blocks(bdev_desc, bdev_ch, task->iovs, task->iovcnt,
 					     offset_blocks, num_blocks,

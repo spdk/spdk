@@ -60,11 +60,7 @@ spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_ty
 	return false;
 }
 
-void
-spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
-{
-	CU_ASSERT(0);
-}
+DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 
 DEFINE_STUB(spdk_bdev_get_name, const char *,
 	    (const struct spdk_bdev *bdev), "test");
