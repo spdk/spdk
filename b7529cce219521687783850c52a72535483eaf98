@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2952218d_0fd98855",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-17T07:34:27Z",
+      "side": 1,
+      "message": "Since none of the other arguments is used here, passing fuse_req_t req without allocation of ctx should be fine.\nBesides it does not look like ctx was freed later.",
+      "range": {
+        "startLine": 235,
+        "startChar": 0,
+        "endLine": 236,
+        "endChar": 16
+      },
+      "revId": "b7529cce219521687783850c52a72535483eaf98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
