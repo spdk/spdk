@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3fd54c4_9e5ca33e",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-17T20:49:23Z",
+      "side": 1,
+      "message": "we have nvme_qpair_state_equals() - presumably so that we always use that function/macro to access qpair-\u003estate?\n\nbut then here we access qpair-\u003estate directly\n\nI also wonder if qpair-\u003estate \u003e\u003d ENABLING would be clearer",
+      "revId": "a8dd75b507a49c1f5fe93e0322d73cdc76eb016b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "553dafde_abaeab9f",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-17T20:49:23Z",
+      "side": 1,
+      "message": "(random place to put my comment)\n\nYou seem to have some good tests that showed these bugs.  Can we get those added to the test pool?  Or can we write unit tests that exhibit similar behavior?\n\nThis is getting really complicated, and without detailed unit tests I\u0027m pretty sure we\u0027ll break all this again in the near future.",
+      "revId": "a8dd75b507a49c1f5fe93e0322d73cdc76eb016b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
