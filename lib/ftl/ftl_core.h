@@ -327,6 +327,12 @@ ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
 }
 
 static inline uint64_t
+ftl_addr_get_zone_slba(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
+{
+	return addr.offset -= (addr.offset % ftl_get_num_blocks_in_zone(dev));
+}
+
+static inline uint64_t
 ftl_addr_get_band(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
 {
 	return addr.offset / ftl_get_num_blocks_in_band(dev);
@@ -500,6 +506,12 @@ ftl_nv_cache_unpack_lba(uint64_t in_lba, uint64_t *out_lba, unsigned int *phase)
 	if (!ftl_nv_cache_phase_is_valid(*phase) || *out_lba == FTL_NV_CACHE_LBA_INVALID) {
 		*out_lba = FTL_LBA_INVALID;
 	}
+}
+
+static inline bool
+ftl_is_append_supported(const struct spdk_ftl_dev *dev)
+{
+	return dev->conf.use_append;
 }
 
 #endif /* FTL_CORE_H */
