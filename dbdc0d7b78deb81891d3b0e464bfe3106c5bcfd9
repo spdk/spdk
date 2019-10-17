@@ -51,6 +51,24 @@
       "revId": "dbdc0d7b78deb81891d3b0e464bfe3106c5bcfd9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "477f5cba_7275d2f0",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1969,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-17T16:52:22Z",
+      "side": 1,
+      "message": "After reading Alexey\u0027s comment on later patch, we can\u0027t abort reqs here.  The qpair is disconnected, but if we abort reqs with dnr\u003d0, it tells upper layer it should retry the I/O which is pointless.\n\nMaybe there is some kind of cleanup that has to happen at the rdma transport layer, but we can\u0027t abort these I/O all the way back up to the UL.",
+      "parentUuid": "37f488e4_379aec8f",
+      "revId": "dbdc0d7b78deb81891d3b0e464bfe3106c5bcfd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
