@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09771604_ad857dd4",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-17T04:38:02Z",
+      "side": 1,
+      "message": "I know returning char * makes printing the name easier in the next patch, but returning errno values here was better.  It allows us to give the user a more meaningful error message when the RPC fails.  Could we go back to the errno values you were using in the last version?  And then just construct the name manually in the RPC code as suggested in one of the previous reviews.",
+      "revId": "b9b83b362a0e9fbc08d63f96ef13c8f991e4075d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
