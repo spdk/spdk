@@ -22,6 +22,30 @@
       "revId": "2c84d658cdd49d47ee153e928b7abc7e5ee6136a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b032147b_ca7479ea",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-17T16:50:05Z",
+      "side": 1,
+      "message": "Alexey is right.  We need to wait to abort the requests until qpair gets re-enabled after a reconnect or a controller reset.",
+      "parentUuid": "1d1319d2_868f4bd9",
+      "range": {
+        "startLine": 432,
+        "startChar": 32,
+        "endLine": 432,
+        "endChar": 34
+      },
+      "revId": "2c84d658cdd49d47ee153e928b7abc7e5ee6136a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
