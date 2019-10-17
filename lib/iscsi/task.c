@@ -87,3 +87,23 @@ spdk_iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent
 
 	return task;
 }
+
+void
+spdk_iscsi_task_associate_secondary(struct spdk_iscsi_task *primary,
+				    struct spdk_iscsi_task *secondary)
+{
+	assert(secondary->parent == NULL);
+
+	primary->scsi.ref++;
+	secondary->parent = primary;
+}
+
+void
+spdk_iscsi_task_dissociate_secondary(struct spdk_iscsi_task *primary,
+				     struct spdk_iscsi_task *secondary)
+{
+	assert(secondary->parent == primary);
+
+	primary->scsi.ref--;
+	secondary->parent = NULL;
+}
