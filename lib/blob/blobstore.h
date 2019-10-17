@@ -52,9 +52,6 @@
 #define SPDK_BLOB_OPTS_DEFAULT_CHANNEL_OPS 512
 #define SPDK_BLOB_BLOBID_HIGH_BIT (1ULL << 32)
 
-/* Set to low amount on purpose for testing */
-#define SPDK_EXTENTS_PER_ET 10
-
 struct spdk_xattr {
 	uint32_t	index;
 	uint16_t	value_len;
@@ -355,6 +352,9 @@ struct spdk_blob_md_page {
 SPDK_STATIC_ASSERT(SPDK_BS_PAGE_SIZE == sizeof(struct spdk_blob_md_page), "Invalid md page size");
 
 #define SPDK_BS_MAX_DESC_SIZE sizeof(((struct spdk_blob_md_page*)0)->descriptors)
+
+#define SPDK_EXTENTS_PER_ET_MAX ((SPDK_BS_MAX_DESC_SIZE - sizeof(struct spdk_blob_md_descriptor_extent)) / sizeof(uint32_t))
+#define SPDK_EXTENTS_PER_ET (spdk_align64pow2(SPDK_EXTENTS_PER_ET_MAX + 1) >> 1u)
 
 #define SPDK_BS_SUPER_BLOCK_SIG "SPDKBLOB"
 
