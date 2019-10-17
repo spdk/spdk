@@ -389,7 +389,7 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 		vbdev_opal_free_bdev(opal_bdev);
 		return -EINVAL;
 	}
-	base_bdev_name = nvme_ctrlr->namespaces[nsid - 1]->bdev->disk.name;
+	base_bdev_name = ((struct nvme_bdev_ns_standard *)nvme_ctrlr->namespaces[nsid - 1])->disk.name;
 
 	/* traverse base list to see if part_base is already create for this base bdev */
 	TAILQ_FOREACH(opal_part_base, &g_opal_base, tailq) {
