@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a912974f_727b6cd8",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-17T23:08:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b3fd54c4_9e5ca33e",
+      "revId": "a8dd75b507a49c1f5fe93e0322d73cdc76eb016b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "553dafde_abaeab9f",
         "filename": "lib/nvme/nvme_qpair.c",
         "patchSetId": 8
@@ -33,6 +51,24 @@
       "revId": "a8dd75b507a49c1f5fe93e0322d73cdc76eb016b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4887f58_0eebad81",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-17T23:08:55Z",
+      "side": 1,
+      "message": "I have added unit tests a few patches up because the behavior of the public API that calls this function changes over the next couple patches and I don\u0027t want to have to modify the unit tests as we go up through this series.",
+      "parentUuid": "553dafde_abaeab9f",
+      "revId": "a8dd75b507a49c1f5fe93e0322d73cdc76eb016b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
