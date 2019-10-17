@@ -85,7 +85,7 @@ static pthread_mutex_t g_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
  * of the poller. It is mainly a performance knob as it effectively determines how
  * much work the poller has to do.  However even that can vary between crypto drivers
  * as the AESNI_MB driver for example does all the crypto work on dequeue whereas the
- * QAT drvier just dequeues what has been completed already.
+ * QAT driver just dequeues what has been completed already.
  */
 #define MAX_DEQUEUE_BURST_SIZE	64
 
@@ -101,7 +101,7 @@ static pthread_mutex_t g_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
 
 /* The number of MBUFS we need must be a power of two and to support other small IOs
  * in addition to the limits mentioned above, we go to the next power of two. It is
- * big number because it is one mempool for source and desitnation mbufs. It may
+ * big number because it is one mempool for source and destination mbufs. It may
  * need to be bigger to support multiple crypto drivers at once.
  */
 #define NUM_MBUFS		32768
@@ -189,7 +189,7 @@ struct crypto_bdev_io {
 	struct spdk_bdev_io *orig_io;			/* the original IO */
 	struct spdk_bdev_io *read_io;			/* the read IO we issued */
 
-	/* Used for the single contigous buffer that serves as the crypto destination target for writes */
+	/* Used for the single contiguos buffer that serves as the crypto destination target for writes */
 	uint64_t cry_num_blocks;			/* num of blocks for the contiguous buffer */
 	uint64_t cry_offset_blocks;			/* block offset on media */
 	struct iovec cry_iov;				/* iov representing contig write buffer */
@@ -253,7 +253,7 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 #endif
 	};
 
-	/* Pre-setup all pottential qpairs now and assign them in the channel
+	/* Pre-setup all potential qpairs now and assign them in the channel
 	 * callback. If we were to create them there, we'd have to stop the
 	 * entire device affecting all other threads that might be using it
 	 * even on other queue pairs.
@@ -452,7 +452,7 @@ _crypto_operation_complete(struct spdk_bdev_io *bdev_io)
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 
 		/* Complete the original IO and then free the one that we created
-		 * as a result of issuing an IO via submit_reqeust.
+		 * as a result of issuing an IO via submit_request.
 		 */
 		if (bdev_io->internal.status != SPDK_BDEV_IO_STATUS_FAILED) {
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
@@ -677,7 +677,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	 * of crypto operations is straightforward. We build both the op, the mbuf and the
 	 * dst_mbuf in our local arrays by looping through the length of the bdev IO and
 	 * picking off LBA sized blocks of memory from the IOVs as we walk through them. Each
-	 * LBA sized chunck of memory will correspond 1:1 to a crypto operation and a single
+	 * LBA sized chunk of memory will correspond 1:1 to a crypto operation and a single
 	 * mbuf per crypto operation.
 	 */
 	total_remaining = total_length;
@@ -1113,7 +1113,7 @@ vbdev_crypto_get_io_channel(void *ctx)
 	struct vbdev_crypto *crypto_bdev = (struct vbdev_crypto *)ctx;
 
 	/* The IO channel code will allocate a channel for us which consists of
-	 * the SPDK cahnnel structure plus the size of our crypto_io_channel struct
+	 * the SPDK channel structure plus the size of our crypto_io_channel struct
 	 * that we passed in when we registered our IO device. It will then call
 	 * our channel create callback to populate any elements that we need to
 	 * update.
@@ -1185,7 +1185,7 @@ crypto_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	pthread_mutex_unlock(&g_device_qp_lock);
 	assert(crypto_ch->device_qp);
 
-	/* We use this queue to track outstanding IO in our lyaer. */
+	/* We use this queue to track outstanding IO in our layer. */
 	TAILQ_INIT(&crypto_ch->pending_cry_ios);
 
 	return 0;
@@ -1321,7 +1321,7 @@ create_crypto_disk(const char *bdev_name, const char *vbdev_name,
 	return rc;
 }
 
-/* Called at driver init time, parses config file to preapre for examine calls,
+/* Called at driver init time, parses config file to prepare for examine calls,
  * also fully initializes the crypto drivers.
  */
 static int
