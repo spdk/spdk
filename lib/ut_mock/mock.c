@@ -42,4 +42,9 @@ DEFINE_WRAPPER(pthread_mutex_init, int,
 DEFINE_WRAPPER(pthread_mutexattr_init, int,
 	       (pthread_mutexattr_t *attr), (attr))
 
+DEFINE_WRAPPER(recvmsg, ssize_t, (int sockfd, struct msghdr *msg, int flags), (sockfd, msg, flags))
+
+DEFINE_WRAPPER(sendmsg, ssize_t, (int sockfd, const struct msghdr *msg, int flags), (sockfd, msg,
+		flags))
+
 DEFINE_WRAPPER(writev, ssize_t, (int fd, const struct iovec *iov, int iovcnt), (fd, iov, iovcnt))
