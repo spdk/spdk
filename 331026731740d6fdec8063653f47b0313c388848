@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "48d99622_4162b64b",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1049,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-17T20:25:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c3165486_863d69a0",
+      "revId": "331026731740d6fdec8063653f47b0313c388848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55e13cd9_16c1b7dc",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 3
@@ -39,6 +57,30 @@
       "revId": "331026731740d6fdec8063653f47b0313c388848",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1cb86230_3f5024fa",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-17T20:25:29Z",
+      "side": 1,
+      "message": "I changed the code in process completions to only fail the controller if we get an error on the admin qpair. That should close this gap.\n\nThanks!",
+      "parentUuid": "55e13cd9_16c1b7dc",
+      "range": {
+        "startLine": 392,
+        "startChar": 12,
+        "endLine": 392,
+        "endChar": 21
+      },
+      "revId": "331026731740d6fdec8063653f47b0313c388848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
