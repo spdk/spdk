@@ -710,6 +710,31 @@ int spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr);
 int spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Fail the given NVMe controller.
+ *
+ * This function gives the application the opportunity to fail a controller
+ * at will. When a controller is failed, any calls to process completions or
+ * submit I/O on qpairs associated with that controller will fail with an error
+ * code of -ENXIO.
+ * The controller can only be taken from the failed state by
+ * calling spdk_nvme_ctrlr_reset. After the controller has been successfully
+ * reset, any I/O pending when the controller was moved to failed will be
+ * aborted back to the application and can be resubmitted. I/O can then resume.
+ *
+ * \param ctrlr Opaque handle to an NVMe controller.
+ */
+void spdk_nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * This function returns the failed status of a given controller.
+ *
+ * \param ctrlr Opaque handle to an NVMe controller.
+ *
+ * \return True if the controller is failed, false otherwise.
+ */
+bool spdk_nvme_ctrlr_is_failed(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Get the identify controller data as defined by the NVMe specification.
  *
  * This function is thread safe and can be called at any point while the controller
