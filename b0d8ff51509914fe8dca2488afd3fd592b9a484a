@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bac28d02_9d2d437e",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-17T04:40:13Z",
+      "side": 1,
+      "message": "See comment on previous review.  It is better to return rc here, since then you can print a more meaningful error message if it fails.\n\nSee module/bdev/compress/vbdev_compress_rpc.c for how it builds the bdev string name manually for the RPC response.",
+      "revId": "b0d8ff51509914fe8dca2488afd3fd592b9a484a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
