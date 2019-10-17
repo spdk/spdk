@@ -93,6 +93,9 @@ struct spdk_ftl_conf {
 	/* Allow for partial recovery from open bands instead of returning error */
 	bool					allow_open_bands;
 
+	/* Use append instead of write */
+	bool					use_append;
+
 	struct {
 		/* Maximum number of concurrent requests */
 		size_t				max_request_cnt;
