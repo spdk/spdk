@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc2055a8_598900d2",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T06:53:16Z",
+      "side": 1,
+      "message": "Adding a comment like \"Fix static analyzer error by ensuring 4 * total_ahs_len ls not larger than ISCSI_AHS_LEN\" may be better.",
+      "revId": "13a1f7642931f741a40206c3490bf3f8726d655b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
