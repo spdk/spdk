@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "191910d6_1e76b109",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 859,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-17T08:08:17Z",
+      "side": 1,
+      "message": "Please use the\n/*\n *\n */\nformat for the comments.",
+      "range": {
+        "startLine": 858,
+        "startChar": 0,
+        "endLine": 859,
+        "endChar": 17
+      },
+      "revId": "7d265333c3ece8969651af45db7d4dfa44e5a5ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

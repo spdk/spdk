@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "fde76ee5_c2491de1",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-17T08:08:17Z",
+      "side": 1,
+      "message": "This change doesn\u0027t just rearrange stuff, but changes the logic. Before we always releeased the LBA map and decremented the num_active counter, now we\u0027re not doing it for the high_prio bands with num_lbks \u003e 0. Should we be doing that? If we should, please move this change to a separate patch.",
+      "parentUuid": "f51cdac4_92397cfe",
+      "range": {
+        "startLine": 564,
+        "startChar": 0,
+        "endLine": 566,
+        "endChar": 3
+      },
+      "revId": "cc7a087740380624c915f5ba31d15c4a23bb1e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5e978369_151e12d9",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -166,6 +190,30 @@
       "side": 1,
       "message": "breloc-\u003enum_lbks is set during ftl_reloc_add()",
       "parentUuid": "50999ce3_600d469b",
+      "range": {
+        "startLine": 585,
+        "startChar": 5,
+        "endLine": 585,
+        "endChar": 26
+      },
+      "revId": "cc7a087740380624c915f5ba31d15c4a23bb1e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8ff1445_93791bb0",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-17T08:08:17Z",
+      "side": 1,
+      "message": "I\u0027m not sure what do you mean. I\u0027m under the impression that once we call ftl_reloc_release on an empty band breloc-\u003enum_lbks must equal 0. If that\u0027s the case, this condition is redundant and should be changed into an assertion.",
+      "parentUuid": "f4214ba2_c1b8d8cf",
       "range": {
         "startLine": 585,
         "startChar": 5,
