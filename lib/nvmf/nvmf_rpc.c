@@ -1702,8 +1702,7 @@ spdk_rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	transport = spdk_nvmf_transport_create(trtype, &ctx->opts);
-
+	transport = spdk_nvmf_transport_create(tgt, trtype, &ctx->opts);
 	if (!transport) {
 		SPDK_ERRLOG("Transport type '%s' create failed\n", ctx->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,

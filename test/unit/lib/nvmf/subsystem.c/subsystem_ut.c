@@ -82,7 +82,8 @@ spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 static struct spdk_nvmf_transport g_transport = {};
 
 struct spdk_nvmf_transport *
-spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
+spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt,
+			   enum spdk_nvme_transport_type type,
 			   struct spdk_nvmf_transport_opts *tprt_opts)
 {
 	if (type == SPDK_NVME_TRANSPORT_RDMA) {
