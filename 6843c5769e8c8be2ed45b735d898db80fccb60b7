@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "efd8e2c4_5822be4b",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 999,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-17T09:17:01Z",
+      "side": 1,
+      "message": "Is it possible for the nvme_bdev to not be an instance of ocssd_bdev here?",
+      "range": {
+        "startLine": 999,
+        "startChar": 0,
+        "endLine": 999,
+        "endChar": 73
+      },
+      "revId": "6843c5769e8c8be2ed45b735d898db80fccb60b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89e59b90_0cffc955",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 2004,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-17T09:17:01Z",
+      "side": 1,
+      "message": "Maybe add info that BEGIN and END is inclusive",
+      "range": {
+        "startLine": 2004,
+        "startChar": 84,
+        "endLine": 2004,
+        "endChar": 87
+      },
+      "revId": "6843c5769e8c8be2ed45b735d898db80fccb60b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
