@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a03bc1cf_2ac99702",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-17T02:39:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c03811f9_43593ec4",
+      "revId": "aebb7c90dca8add79fa2b52a04d06f9520c8b53a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ada7a640_523256f3",
         "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
         "patchSetId": 18
@@ -51,6 +69,24 @@
       "revId": "aebb7c90dca8add79fa2b52a04d06f9520c8b53a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1907e2ff_0125511a",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-17T02:39:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f69b3e21_2ff8b736",
+      "revId": "aebb7c90dca8add79fa2b52a04d06f9520c8b53a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
