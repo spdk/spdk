@@ -122,6 +122,24 @@
       "revId": "76963ae3c1fb5e6c518c05aec89c3a93def728d0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d88fbafa_434a78a6",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 936,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-17T17:49:40Z",
+      "side": 1,
+      "message": "Yes, that\u0027s how I\u0027ve implemented it. But I don\u0027t think I made the right choice. We ultimately want the user to close the socket, so I thought if I put it in this array they\u0027d do a recv and get an error and close it. But that\u0027s not necessarily the case. The user may only be writing to this socket, in which case they\u0027ll just ignore it in this array and it\u0027ll be stuck. Instead, I think if the flush fails I\u0027ll abort all pending requests with an error. That will trigger the user to then close the socket.",
+      "parentUuid": "1080d3bf_e5d61f6f",
+      "revId": "76963ae3c1fb5e6c518c05aec89c3a93def728d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
