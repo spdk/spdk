@@ -587,6 +587,8 @@ nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 static int
 nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 {
+	int i;
+
 	rqpair->rdma_reqs = calloc(rqpair->num_entries, sizeof(struct spdk_nvme_rdma_req));
 	if (rqpair->rdma_reqs == NULL) {
 		SPDK_ERRLOG("Failed to allocate rdma_reqs\n");
@@ -597,6 +599,33 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 	if (!rqpair->cmds) {
 		SPDK_ERRLOG("Failed to allocate RDMA cmds\n");
 		goto fail;
+	}
+
+
+	TAILQ_INIT(&rqpair->free_reqs);
+	TAILQ_INIT(&rqpair->outstanding_reqs);
+	for (i = 0; i < rqpair->num_entries; i++) {
+		struct spdk_nvme_rdma_req	*rdma_req;
+		struct spdk_nvmf_cmd		*cmd;
+
+		rdma_req = &rqpair->rdma_reqs[i];
+		cmd = &rqpair->cmds[i];
+
+		rdma_req->id = i;
+
+		/* The first RDMA sgl element will always point
+		 * at this data structure. Depending on whether
+		 * an NVMe-oF SGL is required, the length of
+		 * this element may change. */
+		rdma_req->send_sgl[0].addr = (uint64_t)cmd;
+		rdma_req->send_wr.wr_id = (uint64_t)rdma_req;
+		rdma_req->send_wr.next = NULL;
+		rdma_req->send_wr.opcode = IBV_WR_SEND;
+		rdma_req->send_wr.send_flags = IBV_SEND_SIGNALED;
+		rdma_req->send_wr.sg_list = rdma_req->send_sgl;
+		rdma_req->send_wr.imm_data = 0;
+
+		TAILQ_INSERT_TAIL(&rqpair->free_reqs, rdma_req, link);
 	}
 
 	return 0;
@@ -617,32 +646,8 @@ nvme_rdma_register_reqs(struct nvme_rdma_qpair *rqpair)
 		goto fail;
 	}
 
-	TAILQ_INIT(&rqpair->free_reqs);
-	TAILQ_INIT(&rqpair->outstanding_reqs);
 	for (i = 0; i < rqpair->num_entries; i++) {
-		struct spdk_nvme_rdma_req	*rdma_req;
-		struct spdk_nvmf_cmd		*cmd;
-
-		rdma_req = &rqpair->rdma_reqs[i];
-		cmd = &rqpair->cmds[i];
-
-		rdma_req->id = i;
-
-		/* The first RDMA sgl element will always point
-		 * at this data structure. Depending on whether
-		 * an NVMe-oF SGL is required, the length of
-		 * this element may change. */
-		rdma_req->send_sgl[0].addr = (uint64_t)cmd;
-		rdma_req->send_sgl[0].lkey = rqpair->cmd_mr->lkey;
-
-		rdma_req->send_wr.wr_id = (uint64_t)rdma_req;
-		rdma_req->send_wr.next = NULL;
-		rdma_req->send_wr.opcode = IBV_WR_SEND;
-		rdma_req->send_wr.send_flags = IBV_SEND_SIGNALED;
-		rdma_req->send_wr.sg_list = rdma_req->send_sgl;
-		rdma_req->send_wr.imm_data = 0;
-
-		TAILQ_INSERT_TAIL(&rqpair->free_reqs, rdma_req, link);
+		rqpair->rdma_reqs[i].send_sgl[0].lkey = rqpair->cmd_mr->lkey;
 	}
 
 	return 0;
