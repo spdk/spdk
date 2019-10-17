@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "7f91ae8e_bc2e300f",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-17T18:11:11Z",
+      "side": 1,
+      "message": "examine is listed as a TODO below - will we automatically surface locked ranges as OPAL bdevs in the future?  meaning if we create some Opal bdevs now, reboot the application, and we find the Opal SSD again, does the user have to recreate the opal bdevs again?\n\nif we think we will automatically create the opal bdevs again, then we can\u0027t let the user create their own bdev_name; otherwise we won\u0027t have this information when we examine the SSD again later and will have to create a different name\n\nI guess I\u0027d like to understand more about differences between create an opal bdev and unlocking an opal bdev.  At the start, we have to both create and unlock.  But later if application is restarted, we should not need to create, only unlock.\n\nWhat do you think?",
+      "revId": "9d305e7173c77fa2b30eee7955dc3a70c3ced48c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5c1dc7d0_3d9a1917",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 22
