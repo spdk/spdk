@@ -32,6 +32,18 @@ spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
 }
 
 void
+spdk_iscsi_task_associate_secondary(struct spdk_iscsi_task *primary,
+				    struct spdk_iscsi_task *secondary)
+{
+}
+
+void
+spdk_iscsi_task_dissociate_secondary(struct spdk_iscsi_task *primary,
+				     struct spdk_iscsi_task *secondary)
+{
+}
+
+void
 spdk_scsi_task_put(struct spdk_scsi_task *task)
 {
 	free(task);

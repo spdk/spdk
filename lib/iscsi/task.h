@@ -174,6 +174,12 @@ struct spdk_iscsi_task *spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
 		struct spdk_iscsi_task *parent,
 		spdk_scsi_task_cpl cpl_fn);
 
+void spdk_iscsi_task_associate_secondary(struct spdk_iscsi_task *primary,
+		struct spdk_iscsi_task *secondary);
+
+void spdk_iscsi_task_dissociate_secondary(struct spdk_iscsi_task *primary,
+		struct spdk_iscsi_task *secondary);
+
 static inline struct spdk_iscsi_task *
 spdk_iscsi_task_from_scsi_task(struct spdk_scsi_task *task)
 {
