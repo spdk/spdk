@@ -34,4 +34,6 @@ LDFLAGS += \
 	-Wl,--wrap,calloc \
 	-Wl,--wrap,pthread_mutexattr_init \
 	-Wl,--wrap,pthread_mutex_init \
+	-Wl,--wrap,recvmsg \
+	-Wl,--wrap,sendmsg \
 	-Wl,--wrap,writev
