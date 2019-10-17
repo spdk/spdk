@@ -48,7 +48,7 @@ struct nvme_namespace {
 	uint32_t		id;
 	bool			active;
 	struct nvme_bdev_ctrlr	*ctrlr;
-	struct nvme_bdev	*bdev;
+	TAILQ_HEAD(, nvme_bdev)	bdevs;
 };
 
 struct nvme_bdev_ctrlr {
@@ -85,6 +85,7 @@ struct nvme_bdev {
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	struct spdk_nvme_ns	*ns;
 	struct nvme_namespace	*nvme_ns;
+	TAILQ_ENTRY(nvme_bdev)	tailq;
 };
 
 typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
