@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18f0305a_12654114",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1720,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-17T01:18:52Z",
+      "side": 1,
+      "message": "if iovcnt is zero, to_next_boundary is ensured to be also zero. So I think we should return here if iovcnt is zero.\nPlease add assert(to_next_boudary \u003d\u003d 0) inside of the if (iovcnt \u003d\u003d 0) block if needed.",
+      "revId": "30b7ec8b87485dbcf25ef197e6f901d300a3355d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
