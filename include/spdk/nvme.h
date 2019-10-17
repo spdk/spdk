@@ -710,6 +710,26 @@ int spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr);
 int spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Fail the given NVMe controller.
+ *
+ * This function gives the application the opporunity to fail a controller
+ * at will. The controller can then be taken from the failed state by
+ * calling spdk_nvme_ctrlr_reset.
+ *
+ * \param ctrlr Opaque handle to an NVMe controller.
+ */
+void spdk_nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * This function returns the failed status of a given controller.
+ *
+ * \param ctrlr Opaque handle to an NVMe controller.
+ *
+ * \return True if the controller is failed, false otherwise.
+ */
+bool spdk_nvme_ctrlr_is_failed(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Get the identify controller data as defined by the NVMe specification.
  *
  * This function is thread safe and can be called at any point while the controller
