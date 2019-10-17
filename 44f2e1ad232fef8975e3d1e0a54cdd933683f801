@@ -52,6 +52,24 @@
       "revId": "44f2e1ad232fef8975e3d1e0a54cdd933683f801",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a07bc6fd_4b27d5a0",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1255,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-17T09:06:56Z",
+      "side": 1,
+      "message": "Actually when we move spdk_poller_unregister call we can simplify this code a lot. Please check next patch set :)",
+      "parentUuid": "59f6aa62_b5229340",
+      "revId": "44f2e1ad232fef8975e3d1e0a54cdd933683f801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
