@@ -258,6 +258,7 @@ bdev_nvme_destruct(void *ctx)
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	nvme_bdev_ctrlr->ref--;
+	TAILQ_REMOVE(&nvme_disk->nvme_ns->bdevs, nvme_disk, tailq);
 	free(nvme_disk->disk.name);
 	free(nvme_disk);
 	if (nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct) {
@@ -801,7 +802,7 @@ nvme_ctrlr_create_bdev(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev
 		return rc;
 	}
 
-	nvme_ns->bdev = bdev;
+	TAILQ_INSERT_TAIL(&nvme_ns->bdevs, bdev, tailq);
 
 	return 0;
 }
@@ -937,7 +938,12 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 static void
 nvme_ctrlr_deactivate_namespace(struct nvme_bdev_ns *ns)
 {
-	spdk_bdev_unregister(&ns->bdev->disk, NULL, NULL);
+	struct nvme_bdev *bdev, *tmp;
+
+	TAILQ_FOREACH_SAFE(bdev, &ns->bdevs, tailq, tmp) {
+		spdk_bdev_unregister(&bdev->disk, NULL, NULL);
+	}
+
 	ns->active = false;
 }
 
@@ -957,6 +963,8 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 			SPDK_NOTICELOG("NSID %u to be added\n", nsid);
 			ns->id = nsid;
 			ns->ctrlr = nvme_bdev_ctrlr;
+
+			TAILQ_INIT(&ns->bdevs);
 
 			rc = nvme_ctrlr_create_bdev(nvme_bdev_ctrlr, ns);
 			if (rc) {
@@ -1114,6 +1122,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t i;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_bdev_ns *ns;
+	struct nvme_bdev *nvme_bdev, *tmp;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
@@ -1131,7 +1140,9 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 				if (ns->active) {
 					assert(ns->id == nsid);
 					ns->active = false;
-					spdk_bdev_unregister(&ns->bdev->disk, NULL, NULL);
+					TAILQ_FOREACH_SAFE(nvme_bdev, &ns->bdevs, tailq, tmp) {
+						spdk_bdev_unregister(&nvme_bdev->disk, NULL, NULL);
+					}
 				}
 			}
 
@@ -1262,6 +1273,7 @@ bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx, spdk_bdev_create_nvme_f
 {
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	struct nvme_bdev_ns	*ns;
+	struct nvme_bdev	*nvme_bdev, *tmp;
 	uint32_t		i, nsid;
 	size_t			j;
 
@@ -1282,14 +1294,16 @@ bdev_nvme_create_bdevs(struct nvme_async_probe_ctx *ctx, spdk_bdev_create_nvme_f
 			continue;
 		}
 		assert(ns->id == nsid);
-		if (j < ctx->count) {
-			ctx->names[j] = ns->bdev->disk.name;
-			j++;
-		} else {
-			SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %du. Unable to return all names of created bdevs\n",
-				    ctx->count);
-			cb_fn(cb_arg, 0, -ERANGE);
-			return;
+		TAILQ_FOREACH_SAFE(nvme_bdev, &ns->bdevs, tailq, tmp) {
+			if (j < ctx->count) {
+				ctx->names[j] = nvme_bdev->disk.name;
+				j++;
+			} else {
+				SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %du. Unable to return all names of created bdevs\n",
+					    ctx->count);
+				cb_fn(cb_arg, 0, -ERANGE);
+				return;
+			}
 		}
 	}
 
@@ -1690,6 +1704,8 @@ nvme_ctrlr_create_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
 		ns->id = nsid;
 		ns->ctrlr = nvme_bdev_ctrlr;
+
+		TAILQ_INIT(&ns->bdevs);
 
 		rc = nvme_ctrlr_create_bdev(nvme_bdev_ctrlr, ns);
 		if (rc == 0) {

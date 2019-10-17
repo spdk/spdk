@@ -347,6 +347,7 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 	struct spdk_bdev_part *part_bdev;
 	SPDK_BDEV_PART_TAILQ *part_tailq;
 	struct spdk_vbdev_opal_config *cfg;
+	struct nvme_bdev *nvme_bdev;
 
 	if (nsid != NSID_SUPPORTED) {
 		SPDK_ERRLOG("nsid %d not supported", nsid);
@@ -389,7 +390,10 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 		vbdev_opal_free_bdev(opal_bdev);
 		return -EINVAL;
 	}
-	base_bdev_name = nvme_ctrlr->namespaces[nsid - 1]->bdev->disk.name;
+
+	nvme_bdev = TAILQ_FIRST(&nvme_ctrlr->namespaces[nsid - 1]->bdevs);
+	assert(nvme_bdev != NULL);
+	base_bdev_name = nvme_bdev->disk.name;
 
 	/* traverse base list to see if part_base is already create for this base bdev */
 	TAILQ_FOREACH(opal_part_base, &g_opal_base, tailq) {
