@@ -326,9 +326,10 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 }
 
 struct ftl_io *
-ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
+ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_addr addr, struct ftl_band *band,
 		struct ftl_rwb_batch *batch, ftl_io_fn cb)
 {
+	struct ftl_io *io;
 	struct ftl_io_init_opts opts = {
 		.dev		= dev,
 		.io		= NULL,
@@ -343,7 +344,14 @@ ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
 		.md		= ftl_rwb_batch_get_md(batch),
 	};
 
-	return ftl_io_init_internal(&opts);
+	io = ftl_io_init_internal(&opts);
+	if (!io) {
+		return NULL;
+	}
+
+	io->addr = addr;
+
+	return io;
 }
 
 struct ftl_io *
