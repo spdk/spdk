@@ -16,6 +16,24 @@
       "revId": "05d8aef392eeabddde3a697a47c632cde3259c20",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d43e277b_42335291",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-17T08:24:13Z",
+      "side": 0,
+      "message": "I think maybe it is not necessary to print so many logs. This method is also tested a lot later.",
+      "parentUuid": "8f55cef8_07c3d415",
+      "revId": "05d8aef392eeabddde3a697a47c632cde3259c20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
