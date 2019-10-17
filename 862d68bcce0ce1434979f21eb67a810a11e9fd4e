@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f68c07f_4cb46275",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 807,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-17T22:02:03Z",
+      "side": 1,
+      "message": "I am sure that it will not be safe to use iovs with local variable, since you use the async API. The stack may be abused. I faced this issue before, to you need to store a place not in the stack.",
+      "range": {
+        "startLine": 807,
+        "startChar": 7,
+        "endLine": 807,
+        "endChar": 23
+      },
+      "revId": "862d68bcce0ce1434979f21eb67a810a11e9fd4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
