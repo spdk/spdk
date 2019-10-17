@@ -651,6 +651,15 @@ bdev_ftl_create_bdev(const struct ftl_bdev_init_opts *bdev_opts,
 		goto error_cache;
 	}
 
+	if (bdev_opts->mode & SPDK_FTL_MODE_APPEND) {
+		if (!spdk_bdev_io_type_supported(spdk_bdev_desc_get_bdev(ftl_bdev->base_bdev_desc),
+						 SPDK_BDEV_IO_TYPE_ZONE_APPEND)) {
+			SPDK_ERRLOG("Bdev dosen't support zone append: %s\n", bdev_opts->base_bdev);
+			rc = -EINVAL;
+			goto error_cache;
+		}
+	}
+
 	if (bdev_opts->cache_bdev) {
 		rc = bdev_ftl_init_dependent_bdev(ftl_bdev, bdev_opts->cache_bdev,
 						  &ftl_bdev->cache_bdev_desc);

@@ -981,6 +981,12 @@ ftl_dev_init_base_bdev(struct spdk_ftl_dev *dev)
 		return -1;
 	}
 
+	if (dev->use_append && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZONE_APPEND)) {
+		SPDK_ERRLOG("Bdev dosen't support append: %s\n",
+			    spdk_bdev_get_name(bdev));
+		return -1;
+	}
+
 	dev->num_bands = block_cnt / (ftl_get_num_punits(dev) * ftl_get_num_blocks_in_zone(dev));
 	dev->addr_len = spdk_u64log2(block_cnt) + 1;
 
@@ -1094,6 +1100,7 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 	dev->init_ctx.thread = spdk_get_thread();
 	dev->base_bdev_desc = opts.base_bdev_desc;
 	dev->limit = SPDK_FTL_LIMIT_MAX;
+	dev->use_append = opts.mode & SPDK_FTL_MODE_APPEND;
 
 	dev->name = strdup(opts.name);
 	if (!dev->name) {
