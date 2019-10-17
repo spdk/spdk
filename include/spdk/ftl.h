@@ -65,6 +65,8 @@ struct spdk_ftl_limit {
 enum spdk_ftl_mode {
 	/* Create new device */
 	SPDK_FTL_MODE_CREATE = (1 << 0),
+	/* Use append to write data */
+	SPDK_FTL_MODE_APPEND = (1 << 1),
 };
 
 struct spdk_ftl_conf {
