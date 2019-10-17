@@ -49,7 +49,6 @@ struct nvme_bdev_ns {
 	bool			active;
 	struct spdk_nvme_ns	*ns;
 	struct nvme_bdev_ctrlr	*ctrlr;
-	struct nvme_bdev	*bdev;
 };
 
 struct nvme_bdev_ctrlr {
@@ -80,12 +79,6 @@ struct nvme_bdev_ctrlr {
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;
-};
-
-struct nvme_bdev {
-	struct spdk_bdev	disk;
-	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
-	struct nvme_bdev_ns	*nvme_ns;
 };
 
 typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);

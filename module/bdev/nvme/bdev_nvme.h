@@ -48,6 +48,11 @@ enum spdk_bdev_timeout_action {
 	SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT,
 };
 
+struct nvme_bdev_ns_standard    {
+	struct nvme_bdev_ns	base;
+	struct spdk_bdev	disk;
+};
+
 struct spdk_bdev_nvme_opts {
 	enum spdk_bdev_timeout_action action_on_timeout;
 	uint64_t timeout_us;
