@@ -1672,7 +1672,7 @@ nvme_ctrlr_create_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	struct nvme_bdev_ns	*ns;
 	int			rc;
-	int			bdev_created = 0;
+	int			bdevs_created = 0;
 	uint32_t		nsid;
 
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(nvme_bdev_ctrlr->ctrlr);
@@ -1684,14 +1684,14 @@ nvme_ctrlr_create_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		rc = nvme_ctrlr_create_bdev(nvme_bdev_ctrlr, ns);
 		if (rc == 0) {
 			ns->active = true;
-			bdev_created++;
+			bdevs_created++;
 		} else {
 			memset(ns, 0, sizeof(*ns));
 			SPDK_NOTICELOG("Failed to create bdev for namespace %u of %s\n", nsid, nvme_bdev_ctrlr->name);
 		}
 	}
 
-	if (bdev_created == 0) {
+	if (bdevs_created == 0) {
 		SPDK_NOTICELOG("No bdev is created for NVMe controller %s\n", nvme_bdev_ctrlr->name);
 	}
 }
