@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44cd9e1c_2f15c898",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T13:04:51Z",
+      "side": 1,
+      "message": "Let\u0027s call it a lock now.",
+      "range": {
+        "startLine": 77,
+        "startChar": 20,
+        "endLine": 77,
+        "endChar": 24
+      },
+      "revId": "501afc54129e608b560fc3d976b0cd08af3ab508",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ea33ea5_01227fdf",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 745,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T13:04:51Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you free the spin locks that were created previously? Also should we free them during bdev\u0027s deletion?",
+      "range": {
+        "startLine": 744,
+        "startChar": 0,
+        "endLine": 745,
+        "endChar": 13
+      },
+      "revId": "501afc54129e608b560fc3d976b0cd08af3ab508",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
