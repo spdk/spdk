@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "fe865687_fbab3b40",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T15:52:50Z",
+      "side": 1,
+      "message": "\u003e On gcc (GCC) 9.1.1 20190503\n\u003e nvme_cuse.c: In function ‘cuse_nvme_admin_done_cb’:\n\u003e nvme_cuse.c:115:22: warning: assignment discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]\n\u003e   115 |  out_iov[0].iov_base \u003d \u0026cpl-\u003ecdw0;",
+      "parentUuid": "1d6b2846_3dadc19c",
+      "range": {
+        "startLine": 115,
+        "startChar": 1,
+        "endLine": 115,
+        "endChar": 34
+      },
+      "revId": "33c5326026432db1b31a5ac2526a14128f4efab6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "82b89764_bbd570ad",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 17
@@ -304,6 +328,30 @@
       "revId": "33c5326026432db1b31a5ac2526a14128f4efab6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "921bccec_9364d582",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T15:52:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "696bf636_c5569cbd",
+      "range": {
+        "startLine": 213,
+        "startChar": 0,
+        "endLine": 216,
+        "endChar": 2
+      },
+      "revId": "33c5326026432db1b31a5ac2526a14128f4efab6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {

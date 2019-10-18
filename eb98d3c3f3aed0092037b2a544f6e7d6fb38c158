@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80a1ae81_4469ae04",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T15:52:50Z",
+      "side": 1,
+      "message": "Free ctx on failure, cuse_io_ctx_free(ctx);",
+      "revId": "eb98d3c3f3aed0092037b2a544f6e7d6fb38c158",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "844005f9_82e15367",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T15:52:50Z",
+      "side": 1,
+      "message": "return was called just a line before",
+      "range": {
+        "startLine": 195,
+        "startChar": 2,
+        "endLine": 195,
+        "endChar": 8
+      },
+      "revId": "eb98d3c3f3aed0092037b2a544f6e7d6fb38c158",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
