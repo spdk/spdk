@@ -47,6 +47,7 @@ extern pthread_mutex_t g_bdev_nvme_mutex;
 struct nvme_bdev_ns {
 	uint32_t		id;
 	struct spdk_nvme_ns	*ns;
+	bool			creation_in_progress;
 	struct nvme_bdev_ctrlr	*ctrlr;
 	TAILQ_HEAD(, nvme_bdev)	bdevs;
 };
