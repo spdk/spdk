@@ -1635,7 +1635,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 		return NULL;
 	}
 
-	rc = _nvme_pcie_ctrlr_create_io_qpair(ctrlr, qpair, qid);
+	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
 
 	if (rc != 0) {
 		SPDK_ERRLOG("I/O queue creation failed\n");

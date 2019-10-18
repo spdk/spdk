@@ -1439,7 +1439,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA responses allocated\n");
 
-	rc = nvme_rdma_qpair_connect(rqpair);
+	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
 	if (rc < 0) {
 		nvme_rdma_qpair_destroy(qpair);
 		return NULL;
