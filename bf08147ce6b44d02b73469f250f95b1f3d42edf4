@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "7e769dfb_a9ec0f76",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T16:32:43Z",
+      "side": 1,
+      "message": "missing space",
+      "range": {
+        "startLine": 166,
+        "startChar": 16,
+        "endLine": 166,
+        "endChar": 19
+      },
+      "revId": "bf08147ce6b44d02b73469f250f95b1f3d42edf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0d0b4eca_846a9b13",
         "filename": "test/nvme/spdk_nvme_cli.sh",
         "patchSetId": 25
