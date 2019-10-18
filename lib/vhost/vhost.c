@@ -524,11 +524,6 @@ vhost_session_find_by_vid(int vid)
 	return NULL;
 }
 
-#define SHIFT_2MB	21
-#define SIZE_2MB	(1ULL << SHIFT_2MB)
-#define FLOOR_2MB(x)	(((uintptr_t)x) / SIZE_2MB) << SHIFT_2MB
-#define CEIL_2MB(x)	((((uintptr_t)x) + SIZE_2MB - 1) / SIZE_2MB) << SHIFT_2MB
-
 static void
 vhost_session_mem_register(struct rte_vhost_memory *mem)
 {
@@ -542,7 +537,7 @@ vhost_session_mem_register(struct rte_vhost_memory *mem)
 		start = FLOOR_2MB(region->mmap_addr);
 		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
 		if (start == previous_start) {
-			start += (size_t) SIZE_2MB;
+			start += (size_t) VALUE_2MB;
 		}
 		previous_start = start;
 		len = end - start;
@@ -570,7 +565,7 @@ vhost_session_mem_unregister(struct rte_vhost_memory *mem)
 		start = FLOOR_2MB(region->mmap_addr);
 		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
 		if (start == previous_start) {
-			start += (size_t) SIZE_2MB;
+			start += (size_t) VALUE_2MB;
 		}
 		previous_start = start;
 		len = end - start;
