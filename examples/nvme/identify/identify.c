@@ -194,6 +194,8 @@ static void
 get_features(struct spdk_nvme_ctrlr *ctrlr)
 {
 	size_t i;
+	uint32_t num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
+	bool ocssd = false;
 
 	uint8_t features_to_get[] = {
 		SPDK_NVME_FEAT_ARBITRATION,
@@ -204,11 +206,17 @@ get_features(struct spdk_nvme_ctrlr *ctrlr)
 		SPDK_OCSSD_FEAT_MEDIA_FEEDBACK,
 	};
 
+	for (i = 0; i < num_ns; i++) {
+		if (spdk_nvme_ctrlr_is_ocssd_ns(ctrlr, i + 1)) {
+			ocssd = true;
+			break;
+		}
+	}
+
 	/* Submit several GET FEATURES commands and wait for them to complete */
 	outstanding_commands = 0;
 	for (i = 0; i < SPDK_COUNTOF(features_to_get); i++) {
-		if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr) &&
-		    features_to_get[i] == SPDK_OCSSD_FEAT_MEDIA_FEEDBACK) {
+		if (!ocssd && features_to_get[i] == SPDK_OCSSD_FEAT_MEDIA_FEEDBACK) {
 			continue;
 		}
 		if (get_feature(ctrlr, features_to_get[i]) == 0) {
@@ -770,7 +778,7 @@ print_namespace(struct spdk_nvme_ns *ns)
 		       i, 1 << nsdata->lbaf[i].lbads, nsdata->lbaf[i].ms);
 	printf("\n");
 
-	if (spdk_nvme_ctrlr_is_ocssd_supported(spdk_nvme_ns_get_ctrlr(ns))) {
+	if (spdk_nvme_ctrlr_is_ocssd_ns(spdk_nvme_ns_get_ctrlr(ns), spdk_nvme_ns_get_id(ns))) {
 		get_ocssd_geometry(ns, &geometry_data);
 		print_ocssd_geometry(&geometry_data);
 		get_ocssd_chunk_info_log_page(ns);
