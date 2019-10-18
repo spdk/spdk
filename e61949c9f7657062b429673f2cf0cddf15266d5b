@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eff71099_9077654e",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T12:58:38Z",
+      "side": 1,
+      "message": "I don\u0027t think we need this case - it\u0027s no different than what\u0027s on lines 346-348.",
+      "range": {
+        "startLine": 337,
+        "startChar": 1,
+        "endLine": 341,
+        "endChar": 2
+      },
+      "revId": "e61949c9f7657062b429673f2cf0cddf15266d5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
