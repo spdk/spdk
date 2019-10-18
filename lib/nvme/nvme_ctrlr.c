@@ -769,8 +769,6 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "enable controller by writing CC.EN = 1";
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
 		return "wait for CSTS.RDY = 1";
-	case NVME_CTRLR_STATE_ENABLE_ADMIN_QUEUE:
-		return "enable admin queue";
 	case NVME_CTRLR_STATE_IDENTIFY:
 		return "identify controller";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
@@ -2101,6 +2099,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t ready_timeout_in_ms;
 	int rc = 0;
 
+	nvme_ctrlr_enable_admin_queue(ctrlr);
 	/*
 	 * May need to avoid accessing any register on the target controller
 	 * for a while. Return early without touching the FSM.
@@ -2232,16 +2231,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			 * The controller has been enabled.
 			 *  Perform the rest of initialization serially.
 			 */
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_ADMIN_QUEUE,
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY,
 					     ctrlr->opts.admin_timeout_ms);
 			return 0;
 		}
-		break;
-
-	case NVME_CTRLR_STATE_ENABLE_ADMIN_QUEUE:
-		nvme_ctrlr_enable_admin_queue(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY,
-				     ctrlr->opts.admin_timeout_ms);
 		break;
 
 	case NVME_CTRLR_STATE_IDENTIFY:
