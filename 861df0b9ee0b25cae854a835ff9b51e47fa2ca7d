@@ -16,6 +16,24 @@
       "revId": "861df0b9ee0b25cae854a835ff9b51e47fa2ca7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ca920c3_5873d997",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-18T15:36:43Z",
+      "side": 1,
+      "message": "I went through the rest of this patch series, and didn\u0027t see any cases where this special \"vmd\" type was used.  Can we revert this part, and just use \"vmd\" for the type at line 684?",
+      "parentUuid": "91a82451_c76c0464",
+      "revId": "861df0b9ee0b25cae854a835ff9b51e47fa2ca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
