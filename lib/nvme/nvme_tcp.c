@@ -277,67 +277,7 @@ int
 nvme_tcp_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		    bool direct_connect)
 {
-	struct spdk_nvme_ctrlr_opts discovery_opts;
-	struct spdk_nvme_ctrlr *discovery_ctrlr;
-	union spdk_nvme_cc_register cc;
-	int rc;
-	struct nvme_completion_poll_status status;
-
-	if (strcmp(probe_ctx->trid.subnqn, SPDK_NVMF_DISCOVERY_NQN) != 0) {
-		/* Not a discovery controller - connect directly. */
-		rc = nvme_ctrlr_probe(&probe_ctx->trid, probe_ctx, NULL);
-		return rc;
-	}
-
-	spdk_nvme_ctrlr_get_default_ctrlr_opts(&discovery_opts, sizeof(discovery_opts));
-	/* For discovery_ctrlr set the timeout to 0 */
-	discovery_opts.keep_alive_timeout_ms = 0;
-
-	discovery_ctrlr = nvme_tcp_ctrlr_construct(&probe_ctx->trid, &discovery_opts, NULL);
-	if (discovery_ctrlr == NULL) {
-		return -1;
-	}
-
-	/* TODO: this should be using the normal NVMe controller initialization process */
-	cc.raw = 0;
-	cc.bits.en = 1;
-	cc.bits.iosqes = 6; /* SQ entry size == 64 == 2^6 */
-	cc.bits.iocqes = 4; /* CQ entry size == 16 == 2^4 */
-	rc = nvme_transport_ctrlr_set_reg_4(discovery_ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
-					    cc.raw);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to set cc\n");
-		nvme_ctrlr_destruct(discovery_ctrlr);
-		return -1;
-	}
-
-	/* get the cdata info */
-	status.done = false;
-	rc = nvme_ctrlr_cmd_identify(discovery_ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
-				     &discovery_ctrlr->cdata, sizeof(discovery_ctrlr->cdata),
-				     nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to identify cdata\n");
-		return rc;
-	}
-
-	if (spdk_nvme_wait_for_completion(discovery_ctrlr->adminq, &status)) {
-		SPDK_ERRLOG("nvme_identify_controller failed!\n");
-		return -ENXIO;
-	}
-
-	/* Direct attach through spdk_nvme_connect() API */
-	if (direct_connect == true) {
-		/* Set the ready state to skip the normal init process */
-		discovery_ctrlr->state = NVME_CTRLR_STATE_READY;
-		nvme_ctrlr_connected(probe_ctx, discovery_ctrlr);
-		nvme_ctrlr_add_process(discovery_ctrlr, 0);
-		return 0;
-	}
-
-	rc = nvme_fabric_ctrlr_discover(discovery_ctrlr, probe_ctx);
-	nvme_ctrlr_destruct(discovery_ctrlr);
-	return rc;
+	return nvme_fabric_ctrlr_scan(probe_ctx, direct_connect);
 }
 
 int
