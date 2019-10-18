@@ -50,6 +50,8 @@ extern "C" {
 
 #define _2MB_OFFSET(ptr)	(((uintptr_t)(ptr)) &  (VALUE_2MB - 1))
 #define _2MB_PAGE(ptr)		((ptr) & ~(0x200000 - 1))
+#define FLOOR_2MB(x)		(((uintptr_t)x) / VALUE_2MB) << SHIFT_2MB
+#define CEIL_2MB(x)		((((uintptr_t)x) + VALUE_2MB - 1) / VALUE_2MB) << SHIFT_2MB
 
 #ifdef __cplusplus
 }
