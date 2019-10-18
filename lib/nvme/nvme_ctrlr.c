@@ -769,8 +769,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "enable controller by writing CC.EN = 1";
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
 		return "wait for CSTS.RDY = 1";
-	case NVME_CTRLR_STATE_ENABLE_ADMIN_QUEUE:
-		return "enable admin queue";
+	case NVME_CTRLR_STATE_RESET_ADMIN_QUEUE:
+		return "reset admin queue";
 	case NVME_CTRLR_STATE_IDENTIFY:
 		return "identify controller";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
@@ -1006,6 +1006,7 @@ nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	/* Set the state back to INIT to cause a full hardware reset. */
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 
+	nvme_qpair_enable(ctrlr->adminq);
 	while (ctrlr->state != NVME_CTRLR_STATE_READY) {
 		if (nvme_ctrlr_process_init(ctrlr) != 0) {
 			SPDK_ERRLOG("controller reinitialization failed\n");
@@ -2083,13 +2084,6 @@ nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr)
 	return devhandle;
 }
 
-static void
-nvme_ctrlr_enable_admin_queue(struct spdk_nvme_ctrlr *ctrlr)
-{
-	nvme_transport_qpair_reset(ctrlr->adminq);
-	nvme_qpair_enable(ctrlr->adminq);
-}
-
 /**
  * This function will be called repeatedly during initialization until the controller is ready.
  */
@@ -2232,14 +2226,14 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			 * The controller has been enabled.
 			 *  Perform the rest of initialization serially.
 			 */
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_ADMIN_QUEUE,
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_RESET_ADMIN_QUEUE,
 					     ctrlr->opts.admin_timeout_ms);
 			return 0;
 		}
 		break;
 
-	case NVME_CTRLR_STATE_ENABLE_ADMIN_QUEUE:
-		nvme_ctrlr_enable_admin_queue(ctrlr);
+	case NVME_CTRLR_STATE_RESET_ADMIN_QUEUE:
+		nvme_transport_qpair_reset(ctrlr->adminq);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY,
 				     ctrlr->opts.admin_timeout_ms);
 		break;
