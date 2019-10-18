@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ff24788_af98199b",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2205,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-18T07:40:08Z",
+      "side": 1,
+      "message": "Can we return the login response pdu in function iscsi_pdu_hdr_op_login() ? Then we don\u0027t need to save it to connection data structure.",
+      "revId": "deeaf890b3bbd51f42bae26b6e5300531ab80151",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
