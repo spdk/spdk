@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bd9e36f4_8997fcfa",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 5600,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-18T09:40:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5dac73f7_0d894507",
+      "revId": "b61cb33c38c24b1558f5992d499614c9858a3039",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d5528722_5862236e",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 18
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "97a92dd0_27298346",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-18T09:40:09Z",
+      "side": 1,
+      "message": "Cool. Thank you for your reviews.",
+      "parentUuid": "d5528722_5862236e",
+      "revId": "b61cb33c38c24b1558f5992d499614c9858a3039",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "971bb9f7_bd92fe94",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 18
@@ -50,6 +86,24 @@
       "revId": "b61cb33c38c24b1558f5992d499614c9858a3039",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b569723_e74c597e",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-18T09:40:09Z",
+      "side": 1,
+      "message": "Just remove checking. Thank you for the info.",
+      "parentUuid": "971bb9f7_bd92fe94",
+      "revId": "b61cb33c38c24b1558f5992d499614c9858a3039",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -73,6 +127,30 @@
       "revId": "b61cb33c38c24b1558f5992d499614c9858a3039",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86c71b78_db3f2cf5",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 2032,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-18T09:40:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eb407229_6558fad3",
+      "range": {
+        "startLine": 2032,
+        "startChar": 28,
+        "endLine": 2032,
+        "endChar": 43
+      },
+      "revId": "b61cb33c38c24b1558f5992d499614c9858a3039",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
