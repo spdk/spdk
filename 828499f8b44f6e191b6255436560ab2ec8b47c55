@@ -1,0 +1,141 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92d58056_796b22f7",
+        "filename": "module/bdev/uring/bdev_uring_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T05:15:14Z",
+      "side": 1,
+      "message": "create",
+      "range": {
+        "startLine": 41,
+        "startChar": 11,
+        "endLine": 41,
+        "endChar": 20
+      },
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db7ec923_a0a9d069",
+        "filename": "module/bdev/uring/bdev_uring_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T05:15:14Z",
+      "side": 1,
+      "message": "create",
+      "range": {
+        "startLine": 48,
+        "startChar": 9,
+        "endLine": 48,
+        "endChar": 18
+      },
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c53a06ce_a53c93ac",
+        "filename": "module/bdev/uring/bdev_uring_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T05:15:14Z",
+      "side": 1,
+      "message": "create",
+      "range": {
+        "startLine": 55,
+        "startChar": 49,
+        "endLine": 55,
+        "endChar": 58
+      },
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e97ae7a_13620ced",
+        "filename": "module/bdev/uring/bdev_uring_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T05:15:14Z",
+      "side": 1,
+      "message": "Please be consistent about the ordering \"name\" and \"filename\", It looks that rpc.py use the reverse ordering, \"filename\" then \"name\".",
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b85847e1_e99d3678",
+        "filename": "module/bdev/uring/bdev_uring_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T05:15:14Z",
+      "side": 1,
+      "message": "I think for the normal case, add return between delete_uring_bdev_() and the goto label cleanup, and call free_rpc_delete_uring() in the end of the callback _spdk_rpc_bdev_uring_delete_cb().",
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "833f354c_0c17f625",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T05:15:14Z",
+      "side": 1,
+      "message": "swap the line 335 and 336?",
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c1375bc_4403bd87",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T05:15:14Z",
+      "side": 1,
+      "message": "Swap the line 327 and 328?",
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
