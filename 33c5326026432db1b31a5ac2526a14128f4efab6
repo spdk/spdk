@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a26c1225_0d827dd4",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T10:24:26Z",
+      "side": 1,
+      "message": "This looks unused in this and following patch.",
+      "range": {
+        "startLine": 82,
+        "startChar": 1,
+        "endLine": 82,
+        "endChar": 35
+      },
+      "revId": "33c5326026432db1b31a5ac2526a14128f4efab6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d6b2846_3dadc19c",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T10:24:26Z",
+      "side": 1,
+      "message": "On gcc (GCC) 9.1.1 20190503\nnvme_cuse.c: In function ‘cuse_nvme_admin_done_cb’:\nnvme_cuse.c:115:22: warning: assignment discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]\n  115 |  out_iov[0].iov_base \u003d \u0026cpl-\u003ecdw0;",
+      "range": {
+        "startLine": 115,
+        "startChar": 1,
+        "endLine": 115,
+        "endChar": 34
+      },
+      "revId": "33c5326026432db1b31a5ac2526a14128f4efab6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00affb17_83f62f63",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T10:24:26Z",
+      "side": 1,
+      "message": "Please check for allocation failure",
+      "range": {
+        "startLine": 179,
+        "startChar": 8,
+        "endLine": 179,
+        "endChar": 68
+      },
+      "revId": "33c5326026432db1b31a5ac2526a14128f4efab6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c38c10b_6bf4569c",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T10:24:26Z",
+      "side": 1,
+      "message": "Please check for allocation failure",
+      "range": {
+        "startLine": 194,
+        "startChar": 15,
+        "endLine": 194,
+        "endChar": 26
+      },
+      "revId": "33c5326026432db1b31a5ac2526a14128f4efab6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c79d014_9878c2c0",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T10:24:26Z",
+      "side": 1,
+      "message": "Please check return code",
+      "range": {
+        "startLine": 204,
+        "startChar": 1,
+        "endLine": 204,
+        "endChar": 22
+      },
+      "revId": "33c5326026432db1b31a5ac2526a14128f4efab6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a91730b_5351b7b9",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T10:24:26Z",
+      "side": 1,
+      "message": "This can be an assert here. Moving this check to nvme_reset() and replying with failure would allow to skip doing send over ring.",
+      "range": {
+        "startLine": 213,
+        "startChar": 0,
+        "endLine": 216,
+        "endChar": 2
+      },
+      "revId": "33c5326026432db1b31a5ac2526a14128f4efab6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ce12733_8619e0e0",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T10:24:26Z",
+      "side": 1,
+      "message": "Please check return code",
+      "range": {
+        "startLine": 234,
+        "startChar": 1,
+        "endLine": 234,
+        "endChar": 22
+      },
+      "revId": "33c5326026432db1b31a5ac2526a14128f4efab6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
