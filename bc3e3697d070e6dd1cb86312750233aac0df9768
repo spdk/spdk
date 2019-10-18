@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0f97839_736196d2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 21
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T09:53:55Z",
+      "side": 1,
+      "message": "parallel",
+      "range": {
+        "startLine": 9,
+        "startChar": 19,
+        "endLine": 9,
+        "endChar": 28
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4545901d_edfb024e",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 2127,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T09:53:55Z",
+      "side": 1,
+      "message": "What is the point for doing that? If we got the zone from the addr, then the addr has to be within that zone so we should be able to jest do addr.offset \u003c zone-\u003ewrite_offset.",
+      "range": {
+        "startLine": 2127,
+        "startChar": 1,
+        "endLine": 2127,
+        "endChar": 63
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f62e2c8_926893d8",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T09:53:55Z",
+      "side": 1,
+      "message": "Why did you move this? Please restore it back to its original place.",
+      "range": {
+        "startLine": 301,
+        "startChar": 0,
+        "endLine": 398,
+        "endChar": 0
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be225a5c_ef277c9f",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T09:53:55Z",
+      "side": 1,
+      "message": "Let\u0027s call this ftl_get_num_blocks.",
+      "range": {
+        "startLine": 405,
+        "startChar": 0,
+        "endLine": 405,
+        "endChar": 13
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc553566_92242c90",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T09:53:55Z",
+      "side": 1,
+      "message": "Let\u0027s call these three ftl_addr_get_(zone|band|punit).",
+      "range": {
+        "startLine": 435,
+        "startChar": 0,
+        "endLine": 435,
+        "endChar": 17
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20e301b3_eca1ba1a",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T09:53:55Z",
+      "side": 1,
+      "message": "Unnecessary space.",
+      "range": {
+        "startLine": 443,
+        "startChar": 62,
+        "endLine": 443,
+        "endChar": 63
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5bcc549a_900032f1",
+        "filename": "lib/ftl/ftl_debug.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T09:53:55Z",
+      "side": 1,
+      "message": "Replace with PRIu64.",
+      "range": {
+        "startLine": 56,
+        "startChar": 24,
+        "endLine": 56,
+        "endChar": 26
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e6943e7_fa6421b2",
+        "filename": "test/unit/lib/ftl/ftl_band.c/ftl_band_ut.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T09:53:55Z",
+      "side": 1,
+      "message": "What is the point of this assertion?",
+      "range": {
+        "startLine": 64,
+        "startChar": 1,
+        "endLine": 64,
+        "endChar": 53
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e843d9bc_e85fb777",
+        "filename": "test/unit/lib/ftl/ftl_band.c/ftl_band_ut.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T09:53:55Z",
+      "side": 1,
+      "message": "Let\u0027s merge these together.",
+      "range": {
+        "startLine": 250,
+        "startChar": 0,
+        "endLine": 251,
+        "endChar": 20
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9693e6f9_c0fb2e7c",
+        "filename": "test/unit/lib/ftl/ftl_band.c/ftl_band_ut.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T09:53:55Z",
+      "side": 1,
+      "message": "Same with all these below.",
+      "range": {
+        "startLine": 257,
+        "startChar": 0,
+        "endLine": 258,
+        "endChar": 35
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
