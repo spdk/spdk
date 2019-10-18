@@ -435,7 +435,7 @@ enum nvme_ctrlr_state {
 	/**
 	 * Enable the Admin queue of the controller.
 	 */
-	NVME_CTRLR_STATE_ENABLE_ADMIN_QUEUE,
+	NVME_CTRLR_STATE_RESET_ADMIN_QUEUE,
 
 	/**
 	 * Identify Controller command will be sent to then controller.
