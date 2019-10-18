@@ -43,6 +43,9 @@
 #define PCI_OFFSET_OF(object, member)  ((uint32_t)&((object*)0)->member)
 #define TWOS_COMPLEMENT(value) (~(value) + 1)
 
+#define VMD_UPPER_BASE_SIGNATURE  0xFFFFFFEF
+#define VMD_UPPER_LIMIT_SIGNATURE 0xFFFFFFED
+
 /*
  *  BAR assignment constants
  */
@@ -378,7 +381,53 @@ union express_root_control_register {
 		uint16_t Rsvd : 11;
 	} bit_field;
 	uint16_t as_uint16_t;
-} express_root_control_register;
+};
+
+union express_link_capability_register {
+	struct {
+		uint32_t maximum_link_speed : 4;
+		uint32_t maximum_link_width : 6;
+		uint32_t active_state_pms_support : 2;
+		uint32_t l0_exit_latency : 3;
+		uint32_t l1_exit_latency : 3;
+		uint32_t clock_power_management : 1;
+		uint32_t surprise_down_error_reporting_capable : 1;
+		uint32_t data_link_layer_active_reporting_capable : 1;
+		uint32_t link_bandwidth_notification_capability : 1;
+		uint32_t aspm_optionality_compliance : 1;
+		uint32_t rsvd : 1;
+		uint32_t port_number : 8;
+	} bit_field;
+	uint32_t as_uint32_t;
+};
+
+union express_link_control_register {
+	struct {
+		uint16_t active_state_pm_control : 2;
+		uint16_t rsvd1 : 1;
+		uint16_t read_completion_boundary : 1;
+		uint16_t link_disable : 1;
+		uint16_t retrain_link : 1;
+		uint16_t common_clock_config : 1;
+		uint16_t extended_synch : 1;
+		uint16_t enable_clock_power_management : 1;
+		uint16_t rsvd2 : 7;
+	} bit_field;
+	uint16_t as_uint16_t;
+};
+
+union express_link_status_register {
+	struct {
+		uint16_t link_speed : 4;
+		uint16_t link_width : 6;
+		uint16_t undefined : 1;
+		uint16_t link_training : 1;
+		uint16_t slot_clock_config : 1;
+		uint16_t data_link_layer_active : 1;
+		uint16_t asvd : 2;
+	} bit_field;
+	uint16_t as_uint16_t;
+};
 
 struct pci_express_cap {
 	uint8_t capid;
@@ -387,9 +436,9 @@ struct pci_express_cap {
 	uint32_t device_cap;
 	uint16_t device_control;
 	uint16_t device_status;
-	uint32_t link_cap;
-	uint16_t link_control;
-	uint16_t link_status;
+	union express_link_capability_register link_cap;
+	union express_link_control_register link_control;
+	union express_link_status_register link_status;
 	union express_slot_capabilities_register slot_cap;
 	union express_slot_control_register slot_control;
 	union express_slot_status_register slot_status;

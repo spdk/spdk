@@ -67,6 +67,65 @@ int spdk_vmd_init(void);
  */
 int spdk_vmd_pci_device_list(struct spdk_pci_addr vmd_addr, struct spdk_pci_device *nvme_list);
 
+/** State of the LEDs */
+enum spdk_vmd_led_state {
+	SPDK_VMD_LED_STATE_OFF,
+	SPDK_VMD_LED_STATE_IDENTIFY,
+	SPDK_VMD_LED_STATE_FAULT,
+	SPDK_VMD_LED_STATE_REBUILD,
+	SPDK_VMD_LED_STATE_UNKNOWN,
+};
+
+/**
+ * Sets the state of the LED on specified PCI device.  The device needs to be behind VMD.
+ *
+ * \param pci_device PCI device
+ * \param state LED state to set
+ *
+ * \return 0 on success, negative errno otherwise
+ */
+int spdk_vmd_set_led_state(struct spdk_pci_device *pci_device, enum spdk_vmd_led_state state);
+
+/**
+ * Retrieves the state of the LED on specified PCI device.  The device needs to be behind VMD.
+ *
+ * \param pci_device PCI device
+ * \param state current LED state
+ *
+ * \return 0 on success, negative errno otherwise
+ */
+int spdk_vmd_get_led_state(struct spdk_pci_device *pci_device, enum spdk_vmd_led_state *state);
+
+/*
+ * Detects hot plug events for the inputted vmd address and returns the address, if any of
+ * a device that was hot plugged.
+ * An application can begin sending I/O to an inserted SSD by invoking the NVMe driver for the SSD
+ * using the spdk pci address returned to enumerate the nvme SSD.
+ *
+ * \param vmd_device - Opaque vmd device returned by one of the vmd_get_adapter_by_** functions.
+ * \param out_addr - returns the pci BDF address of a pci device that was hot plugged
+ * \param is_inserted - true if device is inserted and hotplug event occured,
+ *          false if device is removed or no hot plug event.
+ *          caller must check both return value and is_inserted = 0 to determine if hot removal.
+ *
+ * \return true if hot plug detected, false otherwise. If true is returned, out_addr has the
+ *      pci address of the device hot inserted or removed
+ */
+bool  spdk_vmd_hotplug_handler(void *vmd_device, struct spdk_pci_addr *out_addr, bool *is_inserted);
+
+/*
+ * Returns the number of vmd adapters enumerated. Values < 0 indicate vmd is uninitialized.
+ */
+int  spdk_vmd_get_count(void);
+
+/*
+ * Returns an opaue vmd object for the adapter index.
+ * \param index - index of the vmd adapter (0 to number of vmd adapter in system -1)
+ */
+void *spdk_vmd_get_adapter_by_index(int index);
+
+void *spdk_vmd_get_adapter_by_addr(struct spdk_pci_addr *addr);
+
 #ifdef __cplusplus
 }
 #endif

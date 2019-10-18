@@ -119,8 +119,7 @@ struct vmd_hot_plug {
 	uint32_t reserved_bus_count : 4;
 	uint32_t max_hotplug_bus_number : 8;
 	uint32_t next_bus_number : 8;
-	uint32_t addr_size;
-	uint64_t physical_addr;
+	struct pci_bars bar;
 	union express_slot_status_register slot_status;
 	struct pci_mem_mgr mem[ADDR_ELEM_COUNT];
 	uint8_t bus_numbers[RESERVED_HOTPLUG_BUSES];
@@ -152,7 +151,9 @@ struct vmd_adapter {
 	uint32_t is_ready : 1;
 	uint32_t processing_hp : 1;
 	uint32_t max_payload_size: 3;
-	uint32_t rsv : 6;
+	uint32_t root_port_updated : 1;
+	uint32_t scan_completed : 1;
+	uint32_t rsv : 4;
 
 	/* end devices attached to vmd adapters */
 	struct vmd_pci_device *target[MAX_VMD_TARGET];
@@ -185,17 +186,23 @@ vmd_hp_enable_hotplug(struct vmd_hot_plug *hp)
 
 }
 
-static inline struct vmd_hot_plug *
-vmd_new_hotplug(struct vmd_pci_bus *newBus, uint8_t reservedBuses)
-{
-	return NULL;
-}
-
 static inline uint8_t
 vmd_hp_get_next_bus_number(struct vmd_hot_plug *hp)
 {
 	assert(false);
 	return 0;
 }
+
+struct vmd_pci_device *vmd_find_device(const struct spdk_pci_addr *addr);
+
+uint8_t vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridge);
+
+void *spdk_vmd_get_adapter_by_addr(struct spdk_pci_addr *addr);
+
+bool vmd_bus_add_device(struct vmd_pci_bus *bus, struct vmd_pci_device *device);
+
+void vmd_pcibus_remove_device(struct vmd_pci_bus *bus, struct vmd_pci_device *device);
+
+bool  vmd_hotplug_handler(void *vmdhp, struct spdk_pci_addr *addr);
 
 #endif /* VMD_H */
