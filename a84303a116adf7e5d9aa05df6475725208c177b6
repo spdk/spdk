@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22fc2212_5e248131",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 969,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-10-18T11:06:30Z",
+      "side": 1,
+      "message": "free nvme_bdev_ctrlr-\u003einactive_ns",
+      "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
