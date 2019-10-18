@@ -1727,7 +1727,7 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		return NULL;
 	}
 
-	rc = nvme_tcp_qpair_connect(tqpair);
+	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
 	if (rc < 0) {
 		nvme_tcp_qpair_destroy(qpair);
 		return NULL;
