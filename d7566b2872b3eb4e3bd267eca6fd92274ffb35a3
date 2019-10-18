@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f25434e6_ef794ecb",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "6f9f4a7c_af28dc43",
+      "range": {
+        "startLine": 86,
+        "startChar": 20,
+        "endLine": 86,
+        "endChar": 26
+      },
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "15f2f162_f31a04f5",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-10-18T05:39:14Z",
       "side": 1,
       "message": "Is it possible to allocate struct zone_io_operation statically?",
+      "range": {
+        "startLine": 93,
+        "startChar": 1,
+        "endLine": 93,
+        "endChar": 11
+      },
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da0a5370_17c4d1ac",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "change to no-static.",
+      "parentUuid": "15f2f162_f31a04f5",
       "range": {
         "startLine": 93,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "66c1e0f8_f0dcd7db",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "6a5b3fad_d2612945",
+      "range": {
+        "startLine": 94,
+        "startChar": 1,
+        "endLine": 94,
+        "endChar": 10
+      },
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "79e3c61c_f0f65edb",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 2
@@ -82,6 +154,30 @@
       "writtenOn": "2019-10-18T05:39:14Z",
       "side": 1,
       "message": "Maybe SPDK_CU_ASSERT_FATAL?",
+      "range": {
+        "startLine": 122,
+        "startChar": 1,
+        "endLine": 122,
+        "endChar": 10
+      },
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91e3fcae_d26cdbf2",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "79e3c61c_f0f65edb",
       "range": {
         "startLine": 122,
         "startChar": 1,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "6af5fbba_6e92e541",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "8ed8ef51_99799ad2",
+      "range": {
+        "startLine": 127,
+        "startChar": 0,
+        "endLine": 129,
+        "endChar": 0
+      },
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "24732534_c2d85007",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 2
@@ -128,6 +248,24 @@
       "writtenOn": "2019-10-18T05:39:14Z",
       "side": 1,
       "message": "If g_zone_op is allocated statically, this assert is not necessary.",
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ddb65cc_a616be41",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "use no-static, keep this.",
+      "parentUuid": "24732534_c2d85007",
       "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -151,6 +289,24 @@
     },
     {
       "key": {
+        "uuid": "3b0356da_af2d3b5a",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "c355e1a7_d1a5af2c",
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b58790d4_d96505bd",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 2
@@ -162,6 +318,30 @@
       "writtenOn": "2019-10-18T05:39:14Z",
       "side": 1,
       "message": "unnecessary space",
+      "range": {
+        "startLine": 212,
+        "startChar": 18,
+        "endLine": 212,
+        "endChar": 19
+      },
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4bb1c77_4bd0aec6",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "b58790d4_d96505bd",
       "range": {
         "startLine": 212,
         "startChar": 18,
@@ -197,6 +377,30 @@
     },
     {
       "key": {
+        "uuid": "04fc0b7f_6e4d8cd3",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "83026cb3_570cf114",
+      "range": {
+        "startLine": 217,
+        "startChar": 7,
+        "endLine": 217,
+        "endChar": 8
+      },
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d86684df_86b1becb",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 2
@@ -208,6 +412,30 @@
       "writtenOn": "2019-10-18T05:39:14Z",
       "side": 1,
       "message": "You can use\n struct spdk_bdev bdev \u003d {};\ninstead.",
+      "range": {
+        "startLine": 226,
+        "startChar": 1,
+        "endLine": 226,
+        "endChar": 32
+      },
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "287eb7f0_0731d0b7",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "d86684df_86b1becb",
       "range": {
         "startLine": 226,
         "startChar": 1,
@@ -237,6 +465,24 @@
     },
     {
       "key": {
+        "uuid": "f3292421_8415901e",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "fb95b057_1d387807",
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "60befdda_d2690165",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 2
@@ -248,6 +494,24 @@
       "writtenOn": "2019-10-18T05:39:14Z",
       "side": 1,
       "message": "Please remove this empty line.",
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19841f2e_a6fd088d",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "60befdda_d2690165",
       "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -271,6 +535,24 @@
     },
     {
       "key": {
+        "uuid": "b511c105_273a7668",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "97e271bd_8764e6d5",
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0395eab7_f8e00694",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 2
@@ -288,6 +570,24 @@
     },
     {
       "key": {
+        "uuid": "d8634b93_5707476f",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "0395eab7_f8e00694",
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "49e83700_6b37153d",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 2
@@ -299,6 +599,30 @@
       "writtenOn": "2019-10-18T05:39:14Z",
       "side": 1,
       "message": "unnecessary space.",
+      "range": {
+        "startLine": 308,
+        "startChar": 42,
+        "endLine": 308,
+        "endChar": 43
+      },
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76ab9785_8e10fef9",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "49e83700_6b37153d",
       "range": {
         "startLine": 308,
         "startChar": 42,
@@ -334,6 +658,30 @@
     },
     {
       "key": {
+        "uuid": "48117e6e_58a0e51e",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "b0b19017_56f70c12",
+      "range": {
+        "startLine": 309,
+        "startChar": 44,
+        "endLine": 309,
+        "endChar": 45
+      },
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c035d1a3_7f9478e5",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 2
@@ -345,6 +693,30 @@
       "writtenOn": "2019-10-18T05:39:14Z",
       "side": 1,
       "message": "unnecessary space",
+      "range": {
+        "startLine": 329,
+        "startChar": 41,
+        "endLine": 329,
+        "endChar": 42
+      },
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "387c9b4a_76cbf34e",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "c035d1a3_7f9478e5",
       "range": {
         "startLine": 329,
         "startChar": 41,
@@ -380,6 +752,30 @@
     },
     {
       "key": {
+        "uuid": "3b2d04e3_1bab7fd6",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "32f5c72f_31d2d265",
+      "range": {
+        "startLine": 330,
+        "startChar": 45,
+        "endLine": 330,
+        "endChar": 46
+      },
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "841fd118_6e782c6e",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 2
@@ -391,6 +787,30 @@
       "writtenOn": "2019-10-18T05:39:14Z",
       "side": 1,
       "message": "ditto",
+      "range": {
+        "startLine": 331,
+        "startChar": 43,
+        "endLine": 331,
+        "endChar": 44
+      },
+      "revId": "d7566b2872b3eb4e3bd267eca6fd92274ffb35a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f57be4b9_ebc0f81d",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T06:19:02Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "841fd118_6e782c6e",
       "range": {
         "startLine": 331,
         "startChar": 43,
