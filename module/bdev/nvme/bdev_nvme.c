@@ -928,6 +928,16 @@ nvme_ctrlr_create_namespaces_cb(void *cb_arg, struct nvme_namespace *ns, int rc)
 }
 
 static void
+nvme_ctrlr_init_ns_type(struct nvme_namespace *ns)
+{
+	if (spdk_nvme_ctrlr_is_ocssd_ns(ns->ctrlr->ctrlr, ns->id)) {
+		assert(false);
+	} else {
+		ns->init_fn = nvme_ctrlr_init_ns;
+	}
+}
+
+static void
 nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
@@ -962,7 +972,9 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 			ns->id = nsid;
 			ns->ctrlr = nvme_bdev_ctrlr;
 
-			nvme_ctrlr_init_ns(nvme_bdev_ctrlr, ns, nvme_ctrlr_create_namespaces_cb, ctx);
+			nvme_ctrlr_init_ns_type(ns);
+
+			ns->init_fn(nvme_bdev_ctrlr, ns, nvme_ctrlr_create_namespaces_cb, ctx);
 		}
 
 		if (ns->active && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
@@ -1349,11 +1361,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	if (spdk_nvme_ctrlr_is_ocssd_ns(ctrlr, 0)) {
-		create_namespaces_cb(ctx, 0, 0);
-	} else {
-		bdev_nvme_create_namespaces(ctx, create_namespaces_cb, ctx);
-	}
+	bdev_nvme_create_namespaces(ctx, create_namespaces_cb, ctx);
 }
 
 static int
@@ -1752,9 +1760,11 @@ nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 
 		TAILQ_INIT(&ns->bdevs);
 
+		nvme_ctrlr_init_ns_type(ns);
+
 		assert(ctx != NULL);
 
-		nvme_ctrlr_init_ns(nvme_bdev_ctrlr, ns, nvme_ctrlr_create_namespaces_cb, ctx);
+		ns->init_fn(nvme_bdev_ctrlr, ns, nvme_ctrlr_create_namespaces_cb, ctx);
 	}
 }
 
