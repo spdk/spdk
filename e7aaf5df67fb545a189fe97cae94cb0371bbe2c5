@@ -1,0 +1,251 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34b61267_ac1db44e",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T10:25:56Z",
+      "side": 1,
+      "message": "This is unnecessary.",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 26
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58a11f4f_17d620b8",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T10:25:56Z",
+      "side": 1,
+      "message": "If you did:\ninit-\u003eopts.mode \u003d opts-\u003emode;\ninit-\u003eopts.uuid \u003d opts-\u003euuid;\ninit-\u003eopts.ftl_conf \u003d opts-\u003eftl_conf;\n\nwe could get rid of all those gotos and just call bdev_ftl_defer_free.",
+      "range": {
+        "startLine": 560,
+        "startChar": 1,
+        "endLine": 560,
+        "endChar": 20
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09bf2278_65975a80",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T10:25:56Z",
+      "side": 1,
+      "message": "Aren\u0027t we returning an error if base_bdev isn\u0027t available yet? This is not how it should work, as it\u0027ll prevent the config from loading. I think we should move the check from line 602-609 to this function:\n\nif (spdk_bdev_get_by_name(bdev_opts-\u003ebase-bdev) \u003d\u003d NULL || (bdev_opts-\u003ecache_bdev !\u003d NULL \u0026\u0026 spdk_bdev_get_by_name(bdev_opts-\u003ecache_bdev) \u003d\u003d NULL)) {\n  rc \u003d bdev_ftl_defer_init(bdev_opts);\n  goto error_name;\n}",
+      "range": {
+        "startLine": 649,
+        "startChar": 2,
+        "endLine": 649,
+        "endChar": 18
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da69ed3d_d1768c08",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T10:25:56Z",
+      "side": 1,
+      "message": "It\u0027s a good change, but it has nothing to do with this patch.",
+      "range": {
+        "startLine": 654,
+        "startChar": 8,
+        "endLine": 654,
+        "endChar": 14
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d84f66a5_98705225",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T10:25:56Z",
+      "side": 1,
+      "message": "Let\u0027s keep it in its original place.",
+      "range": {
+        "startLine": 720,
+        "startChar": 0,
+        "endLine": 725,
+        "endChar": 0
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8bcb2a67_1a7a26ea",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T10:25:56Z",
+      "side": 1,
+      "message": "This is unnecessary. We can just check both spdk_bdev_get_by_name(opts-\u003eopts.base_bdev) !\u003d NULL \u0026\u0026 spdk_bdev_get_by_name(opts-\u003ecache_bdev).",
+      "range": {
+        "startLine": 752,
+        "startChar": 2,
+        "endLine": 752,
+        "endChar": 30
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9bfcbb9_267673dc",
+        "filename": "module/bdev/ftl/bdev_ftl.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T10:25:56Z",
+      "side": 1,
+      "message": "Please keep those parameters const and just cast it away when freeing it in bdev_ftl_defer_free.",
+      "range": {
+        "startLine": 51,
+        "startChar": 1,
+        "endLine": 51,
+        "endChar": 10
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eff7b715_c745f8cf",
+        "filename": "module/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T10:25:56Z",
+      "side": 1,
+      "message": "Unnecessary newline.",
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9341cc00_b34bbb4a",
+        "filename": "module/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T10:25:56Z",
+      "side": 1,
+      "message": "I think we should return 0 and treat this case as if the bdev was created. This is how other bdevs handle this (passthru, zone_block, ocssd).",
+      "range": {
+        "startLine": 192,
+        "startChar": 0,
+        "endLine": 196,
+        "endChar": 3
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e4cf012_31a0408f",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T10:25:56Z",
+      "side": 1,
+      "message": "This isn\u0027t a good place to test this type of things. Please create appropriate test inside json.sh.",
+      "range": {
+        "startLine": 22,
+        "startChar": 1,
+        "endLine": 22,
+        "endChar": 46
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98c507a8_e69b35fa",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T10:25:56Z",
+      "side": 1,
+      "message": "Now that examine_disk is supported, we can generate a proper config for all this. Please make changes to the gen_ftl_* functions to be able to generate this configuration.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 37
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
