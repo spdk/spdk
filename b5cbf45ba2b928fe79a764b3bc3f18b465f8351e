@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7faf933a_056b171b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-18T13:29:30Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we set qpair to NVME_QPAIR_CONNECTED/NVME_QPAIR_ENABLED during initial creation? Or it is assumed to be done in nvme_qpair_check_enabled()?",
+      "range": {
+        "startLine": 361,
+        "startChar": 9,
+        "endLine": 361,
+        "endChar": 45
+      },
+      "revId": "b5cbf45ba2b928fe79a764b3bc3f18b465f8351e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
