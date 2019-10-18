@@ -240,6 +240,7 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 	discovery_opts.keep_alive_timeout_ms = 0;
 
 	discovery_ctrlr = nvme_transport_ctrlr_construct(&probe_ctx->trid, &discovery_opts, NULL);
+	nvme_qpair_set_state(discovery_ctrlr->adminq, NVME_QPAIR_ENABLED);
 	if (discovery_ctrlr == NULL) {
 		return -1;
 	}
