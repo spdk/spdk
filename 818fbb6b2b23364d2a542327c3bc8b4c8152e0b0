@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a7e112f_a2ee657d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T12:26:58Z",
+      "side": 1,
+      "message": "Please add info about those three modes to changelog/commit msg.",
+      "range": {
+        "startLine": 217,
+        "startChar": 77,
+        "endLine": 217,
+        "endChar": 93
+      },
+      "revId": "818fbb6b2b23364d2a542327c3bc8b4c8152e0b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
