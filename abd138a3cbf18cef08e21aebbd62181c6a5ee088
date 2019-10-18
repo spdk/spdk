@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "ab564bde_23f292f0",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T09:23:48Z",
+      "side": 1,
+      "message": "Hi Chunyang,\n\nWill you see split bdev? Its cfg has tailq instance?",
+      "parentUuid": "9e89416b_e7766aae",
+      "range": {
+        "startLine": 48,
+        "startChar": 1,
+        "endLine": 48,
+        "endChar": 36
+      },
+      "revId": "abd138a3cbf18cef08e21aebbd62181c6a5ee088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a2344bb0_3a304bdd",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 24
