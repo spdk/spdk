@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91a82451_c76c0464",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-18T15:34:09Z",
+      "side": 1,
+      "message": "I was thinking that this type member would only signify which module created the spdk_pci_device structure.  So it would only be \"pci\" or \"vmd\".\n\nI need to look through the rest of this patch series first to understand how you\u0027ll use this special \"vmd\" device type, where the device was actually created by the \"normal\" PCI driver but overwritten here.  Marking -1 for now but will come back once I review the rest of the series.",
+      "revId": "861df0b9ee0b25cae854a835ff9b51e47fa2ca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
