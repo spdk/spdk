@@ -35,7 +35,7 @@
 #include "nvme_internal.h"
 
 bool
-spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
+spdk_nvme_ctrlr_is_ocssd_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	if (ctrlr->quirks & NVME_QUIRK_OCSSD) {
 		/* TODO: There isn't a standardized way to identify Open-Channel SSD
@@ -47,7 +47,7 @@ spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
 		 * Here check nsdata->vs[0] of the first namespace.
 		 */
 		if (ctrlr->cdata.vid == SPDK_PCI_VID_CNEXLABS) {
-			if (ctrlr->num_ns && ctrlr->nsdata[0].vendor_specific[0] == 0x1) {
+			if (ctrlr->num_ns && ctrlr->nsdata[nsid - 1].vendor_specific[0] == 0x1) {
 				return true;
 			}
 		}

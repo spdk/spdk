@@ -1269,7 +1269,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
+	if (spdk_nvme_ctrlr_is_ocssd_ns(ctrlr, 0)) {
 		create_namespaces_cb(ctx, 0, 0);
 	} else {
 		bdev_nvme_create_namespaces(ctx, create_namespaces_cb, ctx);
@@ -2172,7 +2172,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 
-		if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		if (spdk_nvme_ctrlr_is_ocssd_ns(nvme_bdev_ctrlr->ctrlr, 0)) {
 			continue;
 		}
 

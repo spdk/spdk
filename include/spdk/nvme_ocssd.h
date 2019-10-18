@@ -54,7 +54,7 @@ extern "C" {
  *
  * \return true if support OpenChannel
  */
-bool spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr);
+bool spdk_nvme_ctrlr_is_ocssd_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
 
 /**
  * \brief Identify geometry of the given namespace.
