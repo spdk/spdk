@@ -1,0 +1,1406 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5216b205_e0f95e83",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Why did you add it here? If anything the mode should be a part of the init_opts and not conf.",
+      "range": {
+        "startLine": 108,
+        "startChar": 0,
+        "endLine": 109,
+        "endChar": 27
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f62e062_8b885e08",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "on a given zone bdev.",
+      "range": {
+        "startLine": 154,
+        "startChar": 22,
+        "endLine": 154,
+        "endChar": 41
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "489d07c6_39f990cb",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "The definition of this structure has a lot in common with the spdk_bdev_zone_info. Please add spdk_bdev_zone_info here and removes duplicated fields (in a separate patch).",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 15
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02a9dce6_a7beb5d8",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Can we add this field in a separate patch?",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 22
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e3fcb2b_63f980f0",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s wrap this with spdk_unlikely.",
+      "range": {
+        "startLine": 168,
+        "startChar": 5,
+        "endLine": 168,
+        "endChar": 13
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "157eee89_e000c401",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s initialize it inside the function body not in the declaration.",
+      "range": {
+        "startLine": 345,
+        "startChar": 29,
+        "endLine": 345,
+        "endChar": 80
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "499cd292_185db17c",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "We don\u0027t need this field, let\u0027s just pass the result of ftl_block_offset_from_addr directly to spdk_bdev_zone_management.",
+      "range": {
+        "startLine": 347,
+        "startChar": 10,
+        "endLine": 347,
+        "endChar": 17
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51396e8f_6f7e9470",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1526,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Use spdk_nvme_ns_write_with_md if child-\u003emd !\u003d NULL.",
+      "range": {
+        "startLine": 1526,
+        "startChar": 6,
+        "endLine": 1526,
+        "endChar": 28
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42ad111d_c79a137d",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2176,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s return 0 here and 1 in case dev-\u003eretry_queue isn\u0027t empty.",
+      "range": {
+        "startLine": 2176,
+        "startChar": 8,
+        "endLine": 2176,
+        "endChar": 10
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ed14656_ce4f2bf0",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "This is unnecessary, remove this.",
+      "range": {
+        "startLine": 141,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 22
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9bc67ffd_a8540786",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "I don\u0027t think this is correct. dev-\u003enum_bands holds the number of non-empty bands. Let\u0027s say the first band has 0 valid blocks. In this case, when we\u0027re iterating through the bands, we\u0027ll never reach the last one.\n\nI think we should rely on the blockcnt of the base_bdev and its zone_size.",
+      "range": {
+        "startLine": 304,
+        "startChar": 1,
+        "endLine": 304,
+        "endChar": 23
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "683613e6_d09eeaf4",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s call this ftl_num_blocks_in_zone.",
+      "range": {
+        "startLine": 320,
+        "startChar": 0,
+        "endLine": 320,
+        "endChar": 18
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6c6e2cf_b9c4cd54",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s call this ftl_num_blocks_in_band.",
+      "range": {
+        "startLine": 326,
+        "startChar": 0,
+        "endLine": 326,
+        "endChar": 18
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8790a93f_c49d630d",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Why did you move this?",
+      "range": {
+        "startLine": 331,
+        "startChar": 0,
+        "endLine": 335,
+        "endChar": 1
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aed04721_bc75b716",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Should probably be an uint64_t.",
+      "range": {
+        "startLine": 359,
+        "startChar": 1,
+        "endLine": 359,
+        "endChar": 8
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ec91e60_fa22d109",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Alignment.",
+      "range": {
+        "startLine": 55,
+        "startChar": 29,
+        "endLine": 55,
+        "endChar": 30
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "839be0ea_75a4068c",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s call this FTL_ZONE_INFO_COUNT.",
+      "range": {
+        "startLine": 55,
+        "startChar": 8,
+        "endLine": 55,
+        "endChar": 30
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "249dd19a_3d94f87a",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "I think it\u0027d make more sense to create an ftl_create_ctx that would additionally keep spdk_ftl_dev_init_opts. Allocate it at the beginning of spdk_ftl_dev_init and use it as a context for all asynchronous initialization.",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 22
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b8e0de2_0194ac8f",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Get rid of those newlines.",
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "145f770f_c28dafe8",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "This is unnecessary.",
+      "range": {
+        "startLine": 64,
+        "startChar": 1,
+        "endLine": 64,
+        "endChar": 21
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74c2baca_dc5908b0",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s just move the definitions up to where they\u0027re needed. If there are some circular dependencies, add the necessary declaration before function definition.",
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68954be1_a0345996",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s move it down so that ftl_mode_init can be called without the need for forward declaration.",
+      "range": {
+        "startLine": 178,
+        "startChar": 0,
+        "endLine": 180,
+        "endChar": 45
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d9cbb95c_77b3e7bc",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "If you\u0027re always allocating the same number of zones, let\u0027s just define it as an array:\nstruct ftl_zone_info {\n...\nspdk_bdev_zone_info info[FTL_NUM_ZONES_TO_READ];\n};",
+      "range": {
+        "startLine": 189,
+        "startChar": 0,
+        "endLine": 189,
+        "endChar": 65
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a75d8dc2_9a1d3577",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Use PRIu64.",
+      "range": {
+        "startLine": 219,
+        "startChar": 54,
+        "endLine": 219,
+        "endChar": 56
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b187efbe_a2ba050c",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s just mark the zone as offline for now.",
+      "range": {
+        "startLine": 235,
+        "startChar": 2,
+        "endLine": 237,
+        "endChar": 0
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6859628f_a4fef423",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "This should be calculated inside _ftl_dev_get_zone_info (otherwise what\u0027s the point of that function?).",
+      "range": {
+        "startLine": 254,
+        "startChar": 1,
+        "endLine": 254,
+        "endChar": 63
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae7dfe25_d172ad2b",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s add an error log here.",
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a372e4ec_fc64dbc2",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Rename to ftl_dev_init_zones.",
+      "range": {
+        "startLine": 276,
+        "startChar": 0,
+        "endLine": 276,
+        "endChar": 21
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c7c7da9_28b2bdb6",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "The alignments here are unnecessary.",
+      "range": {
+        "startLine": 295,
+        "startChar": 0,
+        "endLine": 297,
+        "endChar": 17
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2116b873_3c9ed020",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Double semicolon.",
+      "range": {
+        "startLine": 867,
+        "startChar": 23,
+        "endLine": 867,
+        "endChar": 24
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9f15505_d62c51fe",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Just do that inline, there\u0027s no point for this function.",
+      "range": {
+        "startLine": 864,
+        "startChar": 0,
+        "endLine": 874,
+        "endChar": 1
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "535449c3_49b60cdc",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 877,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s rename this to ftl_dev_init_state.",
+      "range": {
+        "startLine": 877,
+        "startChar": 0,
+        "endLine": 877,
+        "endChar": 13
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85aafe4c_3c4ce167",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 880,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s inline this as well.",
+      "range": {
+        "startLine": 880,
+        "startChar": 1,
+        "endLine": 880,
+        "endChar": 23
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b34a1c3_120d0941",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 961,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Rename to ftl_dev_init_base_bdev to be consistent with other functions here.",
+      "range": {
+        "startLine": 961,
+        "startChar": 0,
+        "endLine": 961,
+        "endChar": 22
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5bf4126c_fc27e6ed",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 984,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "This is very vague, let\u0027s rephrase it so that it says what exactly is wrong.",
+      "range": {
+        "startLine": 984,
+        "startChar": 14,
+        "endLine": 984,
+        "endChar": 37
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54df4fb4_f4033edb",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "We\u0027ll return -ENOMEM in this case, which doesn\u0027t make sense. Let\u0027s add a return code variable and set proper status in each of the gotos.",
+      "range": {
+        "startLine": 1011,
+        "startChar": 2,
+        "endLine": 1011,
+        "endChar": 17
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34469426_35321db6",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1021,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "This shouldn\u0027t be set here.",
+      "range": {
+        "startLine": 1021,
+        "startChar": 1,
+        "endLine": 1021,
+        "endChar": 23
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0d7199d_c14cbdb2",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1079,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "This should be done after ftl_dev_get_zone_info was called.",
+      "range": {
+        "startLine": 1076,
+        "startChar": 0,
+        "endLine": 1079,
+        "endChar": 2
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7e13594_1140ddc5",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1082,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "This log needs to be changed.",
+      "range": {
+        "startLine": 1082,
+        "startChar": 15,
+        "endLine": 1082,
+        "endChar": 60
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce7dd28a_54e1a1e2",
+        "filename": "mk/spdk.lib_deps.mk",
+        "patchSetId": 18
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Should probably still be under ifeq ($(OS), Linux) as I don\u0027t think the FTL will work under anything other than Linux currently.",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 43
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07691015_998e403a",
+        "filename": "module/bdev/Makefile",
+        "patchSetId": 18
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "I think this should be left under ifeq ($(OS),Linux).",
+      "range": {
+        "startLine": 37,
+        "startChar": 72,
+        "endLine": 37,
+        "endChar": 75
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ff2b3af_b640538d",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Do we actually need this list? I think we should be able to utilize bdev\u0027s spdk_bdev_get_by_name.",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 95,
+        "endChar": 79
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81e3f47e_0fb3bf94",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s call this bdev_ftl_base_bdev_remove_cb.",
+      "range": {
+        "startLine": 466,
+        "startChar": 0,
+        "endLine": 466,
+        "endChar": 34
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fed4aa23_36633f72",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s call this bdev_ftl_init_base_dev",
+      "range": {
+        "startLine": 539,
+        "startChar": 0,
+        "endLine": 539,
+        "endChar": 28
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c85d414_9bdbdae3",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "I think ENODEV would make more sense here.",
+      "range": {
+        "startLine": 547,
+        "startChar": 10,
+        "endLine": 547,
+        "endChar": 16
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a009d542_c120d251",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "I don\u0027t think this code makes sense here, it should probably be EINVAL.",
+      "range": {
+        "startLine": 593,
+        "startChar": 8,
+        "endLine": 593,
+        "endChar": 14
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ad68e31_f645e7bc",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "No need for additional goto, ftl_bdev-\u003ecache_bdev_desc won\u0027t get initialized until we\u0027re done with base_bdev_desc initialization.",
+      "range": {
+        "startLine": 631,
+        "startChar": 0,
+        "endLine": 631,
+        "endChar": 11
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed357202_0d1de90f",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 674,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "If we\u0027re not supporting it, what\u0027s the point of registering examine callback?",
+      "range": {
+        "startLine": 674,
+        "startChar": 1,
+        "endLine": 674,
+        "endChar": 32
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d586e9f_59293a20",
+        "filename": "module/bdev/ftl/bdev_ftl.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Why did you change the name of this function?",
+      "range": {
+        "startLine": 66,
+        "startChar": 4,
+        "endLine": 66,
+        "endChar": 19
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d90f758_9f47bd09",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "The -n 1 is the defualt, so you can omit that.",
+      "range": {
+        "startLine": 23,
+        "startChar": 47,
+        "endLine": 23,
+        "endChar": 51
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf6858bf_992d02d4",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "This needs to be replaced with a gen_config once we support examine_disk.",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 37
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9f24fda_a5c7eac9",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "This is unnecessary. I think all of these delete RPCs are not needed, the bdevs will be deleted during spdk_tgt\u0027s termination.",
+      "range": {
+        "startLine": 30,
+        "startChar": 1,
+        "endLine": 30,
+        "endChar": 42
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48be70c7_4f1c6972",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "This is repeated multiple times. It should probably be a part of the gen_ftl_conf.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 50
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ed4715a_7b6c75d0",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "I don\u0027t think you can rely on the fact that FTL bdev is always going to be second.",
+      "range": {
+        "startLine": 29,
+        "startChar": 41,
+        "endLine": 29,
+        "endChar": 42
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6f39a71_f63c86df",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "This is redundant, OCSSD bdev gets deleted by delete_nvme_controller.",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 33
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1998e758_9feade88",
+        "filename": "test/unit/lib/ftl/common/utils.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s call this base_bdev_geometry.",
+      "range": {
+        "startLine": 39,
+        "startChar": 7,
+        "endLine": 39,
+        "endChar": 16
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "154befc2_38123c6d",
+        "filename": "test/unit/lib/ftl/common/utils.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Let\u0027s rename this to blockcnt.",
+      "range": {
+        "startLine": 43,
+        "startChar": 8,
+        "endLine": 43,
+        "endChar": 16
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49708b9c_0d9b9921",
+        "filename": "test/unit/lib/ftl/common/utils.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Just pass const struct test_geo *.",
+      "range": {
+        "startLine": 54,
+        "startChar": 18,
+        "endLine": 55,
+        "endChar": 19
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65be9eb5_fbea038d",
+        "filename": "test/unit/lib/ftl/common/utils.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Rewrite it to \ndev_size / (zone_size * optimal_open_zones)",
+      "range": {
+        "startLine": 67,
+        "startChar": 18,
+        "endLine": 67,
+        "endChar": 59
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6322cbb_284cb288",
+        "filename": "test/unit/lib/ftl/ftl_band.c/ftl_band_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Can we make this part of the utils? I figure these will need to be defined by most of the unit tests.",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 0
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "441dd806_cb5164ff",
+        "filename": "test/unit/lib/ftl/ftl_ppa/ftl_ppa_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "I don\u0027t think the FTL can handle 64 bit address (we need one bit to indicate the data being in the rwb). If the tests are passing, then something\u0027s wrong either with the tests or with libftl.",
+      "range": {
+        "startLine": 84,
+        "startChar": 19,
+        "endLine": 84,
+        "endChar": 21
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "291552e7_211b1f07",
+        "filename": "test/unit/lib/ftl/ftl_wptr/ftl_wptr_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 1,
+      "message": "Move these to common utils.",
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3be5f16c_f3d7d716",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-18T08:59:52Z",
+      "side": 0,
+      "message": "The removal of this functions isn\u0027t related to this patch.",
+      "range": {
+        "startLine": 159,
+        "startChar": 0,
+        "endLine": 181,
+        "endChar": 55
+      },
+      "revId": "65e67ee286fb49d2e5595c0ecdc5f0115b7f9841",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
