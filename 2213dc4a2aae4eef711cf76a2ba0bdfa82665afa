@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35a0717a_15eea5a9",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-18T17:05:53Z",
+      "side": 1,
+      "message": "do we need one of these in lib/vmd/vmd.c also?\n\noh - I see you add this in the next patch\n\nwe should probably merge these two patches - otherwise if this patch gets merged and the next one doesn\u0027t, we have the possibility where spdk_pci_device_get_type() doesn\u0027t return valid values\n\nor alternatively, have this patch just return hardcoded \"pci\" from spdk_pci_device_get_type() and add the type member and this change in the next patch",
+      "revId": "2213dc4a2aae4eef711cf76a2ba0bdfa82665afa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
