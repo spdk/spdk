@@ -69,6 +69,12 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 void
+nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
+{
+	qpair->is_enabled = true;
+}
+
+void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
 	memset(opts, 0, sizeof(*opts));
