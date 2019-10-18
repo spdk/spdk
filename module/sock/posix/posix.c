@@ -71,6 +71,7 @@ struct spdk_posix_sock {
 	struct spdk_posix_sock_request		*req_mem;
 	TAILQ_HEAD(, spdk_posix_sock_request)	free_reqs;
 	TAILQ_HEAD(, spdk_posix_sock_request)	queued_reqs;
+	TAILQ_HEAD(, spdk_posix_sock_request)	pending_reqs;
 	int					queued_iovcnt;
 	struct {
 		uint8_t		in_cb		: 1;
@@ -143,12 +144,19 @@ spdk_posix_sock_request_queue(struct spdk_posix_sock *sock, struct spdk_posix_so
 }
 
 static inline void
-spdk_posix_sock_request_put(struct spdk_posix_sock *sock,
-			    struct spdk_posix_sock_request *req)
+spdk_posix_sock_request_pend(struct spdk_posix_sock *sock, struct spdk_posix_sock_request *req)
 {
 	TAILQ_REMOVE(&sock->queued_reqs, req, link);
 	assert(sock->queued_iovcnt >= req->iovcnt);
 	sock->queued_iovcnt -= req->iovcnt;
+	TAILQ_INSERT_TAIL(&sock->pending_reqs, req, link);
+}
+
+static inline void
+spdk_posix_sock_request_put(struct spdk_posix_sock *sock,
+			    struct spdk_posix_sock_request *req)
+{
+	TAILQ_REMOVE(&sock->pending_reqs, req, link);
 	TAILQ_INSERT_HEAD(&sock->free_reqs, req, link);
 }
 
@@ -281,7 +289,7 @@ _posix_sock_alloc_requests(struct spdk_posix_sock *sock, uint32_t num_reqs, int 
 		return 0;
 	}
 
-	if (!TAILQ_EMPTY(&sock->queued_reqs)) {
+	if (!TAILQ_EMPTY(&sock->queued_reqs) || !TAILQ_EMPTY(&sock->pending_reqs)) {
 		return -EAGAIN;
 	}
 
@@ -296,6 +304,7 @@ _posix_sock_alloc_requests(struct spdk_posix_sock *sock, uint32_t num_reqs, int 
 	sock->num_reqs = num_reqs;
 	TAILQ_INIT(&sock->free_reqs);
 	TAILQ_INIT(&sock->queued_reqs);
+	TAILQ_INIT(&sock->pending_reqs);
 
 	for (i = 0; i < sock->num_reqs; i++) {
 		req = (struct spdk_posix_sock_request *)buf;
@@ -947,8 +956,11 @@ spdk_posix_sock_flush(struct spdk_posix_sock *sock)
 			rc -= len;
 		}
 
-		/* Handled a full request. Maybe capture cb_fn onto stack first? */
+		/* Handled a full request. */
 		req->offset = 0;
+		spdk_posix_sock_request_pend(sock, req);
+
+		/* The write isn't currently asynchronous, so it's already done. */
 		cb_fn = req->cb_fn;
 		cb_arg = req->cb_arg;
 		spdk_posix_sock_request_put(sock, req);
