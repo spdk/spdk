@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6dc429c_c0599292",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 5484,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T06:05:35Z",
+      "side": 1,
+      "message": "bdev_name is missing here?",
+      "revId": "f6b614f1a6eebd77d21963bc2698ff9023c4503e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0eda7938_9c25cf40",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 5485,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T06:05:35Z",
+      "side": 1,
+      "message": "We can add ### Response or ### Result here?\n  Name of created OPAL virtual bdev.",
+      "revId": "f6b614f1a6eebd77d21963bc2698ff9023c4503e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6012bec6_66dcf462",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T06:05:35Z",
+      "side": 1,
+      "message": "bdev_name is missing in jsonrpc.md.",
+      "range": {
+        "startLine": 66,
+        "startChar": 2,
+        "endLine": 66,
+        "endChar": 14
+      },
+      "revId": "f6b614f1a6eebd77d21963bc2698ff9023c4503e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f98315e_9672fbb6",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 2027,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T06:05:35Z",
+      "side": 1,
+      "message": "maybe we can add required\u003dTrue except for --bdev-name.",
+      "revId": "f6b614f1a6eebd77d21963bc2698ff9023c4503e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34164739_3db21734",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 2028,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T06:05:35Z",
+      "side": 1,
+      "message": "Please not to use undersocre. should be --nvme-ctrlr-name.",
+      "revId": "f6b614f1a6eebd77d21963bc2698ff9023c4503e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
