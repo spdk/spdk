@@ -879,6 +879,18 @@ uint32_t spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr);
 uint32_t spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid);
 
 /**
+ * Get the number of active namespaces.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the number of the active namespaces, 0 if there are no active namespaces.
+ */
+uint32_t spdk_nvme_ctrlr_get_active_ns_count(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Determine if a particular log page is supported by the given NVMe controller.
  *
  * This function is thread safe and can be called at any point while the controller
