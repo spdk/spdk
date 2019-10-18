@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29326af2_c88c39ee",
+        "filename": "lib/nvme/Makefile",
+        "patchSetId": 19
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-18T13:49:20Z",
+      "side": 1,
+      "message": "Add comment.",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 5
+      },
+      "revId": "f4f4abac06f766e332804f4116c969a8abde3320",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
