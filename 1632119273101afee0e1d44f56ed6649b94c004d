@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa79a4f0_8320bcb8",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1261,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-18T15:21:20Z",
+      "side": 1,
+      "message": "do you need to free the ctx here?\n\n(note: previous patch I recommended calling create_bdevs_cb() directly here - and if you do that, you won\u0027t need to make a change here since you free the ctx in create_bdevs_cb() already)",
+      "revId": "1632119273101afee0e1d44f56ed6649b94c004d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
