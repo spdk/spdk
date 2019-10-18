@@ -46,6 +46,7 @@ extern pthread_mutex_t g_bdev_nvme_mutex;
 
 struct nvme_namespace {
 	uint32_t		id;
+	bool			creation_in_progress;
 	struct nvme_bdev_ctrlr	*ctrlr;
 	TAILQ_HEAD(, nvme_bdev)	bdevs;
 };
