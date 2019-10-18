@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eaf33cb9_099d348f",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2204,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-18T20:24:23Z",
+      "side": 1,
+      "message": "lines 2204 to 2207 should be removed in this patch - not the next one",
+      "revId": "864e5377f8c1f36417bc444e12586b42523a7f61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
