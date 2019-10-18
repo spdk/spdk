@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5dac73f7_0d894507",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 5600,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T06:36:28Z",
+      "side": 1,
+      "message": "Please add explanation about provide response contents here.",
+      "revId": "b61cb33c38c24b1558f5992d499614c9858a3039",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5528722_5862236e",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T06:36:28Z",
+      "side": 1,
+      "message": "Maybe\n\nif (rc \u003d\u003d -EAGAIN) {\n  return -1;\n}\nspdk_poller_unregister(\u0026nvme_ctrlr-\u003eopal_poller);\nnvme_ctrlr-\u003eopal_poller \u003d NULL;\nif (rc \u003d\u003d 0) {\n  return 1;\n} else {\n  return rc;\n}\n\nis a little simpler.",
+      "revId": "b61cb33c38c24b1558f5992d499614c9858a3039",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "971bb9f7_bd92fe94",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T06:36:28Z",
+      "side": 1,
+      "message": "Other cases believe poller_register succeed always. So if adding check, assert() may match other cases.",
+      "revId": "b61cb33c38c24b1558f5992d499614c9858a3039",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb407229_6558fad3",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 2032,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T06:36:28Z",
+      "side": 1,
+      "message": "Please use not underscore _ but hyphen - throughout.",
+      "range": {
+        "startLine": 2032,
+        "startChar": 28,
+        "endLine": 2032,
+        "endChar": 43
+      },
+      "revId": "b61cb33c38c24b1558f5992d499614c9858a3039",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
