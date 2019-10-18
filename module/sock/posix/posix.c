@@ -600,6 +600,8 @@ spdk_posix_sock_close(struct spdk_sock *_sock)
 static int
 spdk_posix_sock_flush(struct spdk_posix_sock *sock)
 {
+	struct msghdr msg = {};
+	int flags;
 	struct iovec iovs[DEFAULT_MAX_IOV];
 	int iovcnt;
 	struct spdk_posix_sock_request *req;
@@ -646,7 +648,10 @@ spdk_posix_sock_flush(struct spdk_posix_sock *sock)
 	}
 
 	/* Perform the vectored write */
-	rc = writev(sock->fd, iovs, iovcnt);
+	msg.msg_iov = iovs;
+	msg.msg_iovlen = iovcnt;
+	flags = 0;
+	rc = sendmsg(sock->fd, &msg, flags);
 	if (rc <= 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return 0;
