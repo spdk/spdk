@@ -519,6 +519,10 @@ _sock_flush(struct spdk_sock *sock)
 
 		/* Handled a full request. */
 		req->internal.offset = 0;
+		spdk_sock_request_pend(sock, req);
+
+		/* The writev syscall above isn't currently asynchronous,
+		 * so it's already done. */
 		retval = spdk_sock_request_put(sock, req, 0);
 
 		if (rc == 0 || retval) {
