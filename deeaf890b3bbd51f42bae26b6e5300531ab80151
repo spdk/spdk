@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "9da5fc92_71cd1cba",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2177,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-18T23:25:43Z",
+      "side": 1,
+      "message": "can we use pdu-\u003edata_segment_len here?",
+      "revId": "deeaf890b3bbd51f42bae26b6e5300531ab80151",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4ff24788_af98199b",
         "filename": "lib/iscsi/iscsi.c",
         "patchSetId": 7
