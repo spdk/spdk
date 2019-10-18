@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d0b4eca_846a9b13",
+        "filename": "test/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T16:19:39Z",
+      "side": 1,
+      "message": "Please trap it just in case.",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 22,
+        "endChar": 28
+      },
+      "revId": "bf08147ce6b44d02b73469f250f95b1f3d42edf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1d4130b_aa21712e",
+        "filename": "test/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T16:19:39Z",
+      "side": 1,
+      "message": "This no longer is bdf since we iterate over ctrlrs",
+      "range": {
+        "startLine": 33,
+        "startChar": 5,
+        "endLine": 33,
+        "endChar": 9
+      },
+      "revId": "bf08147ce6b44d02b73469f250f95b1f3d42edf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9329405_cfd74e3f",
+        "filename": "test/nvmf/target/nvme_cli.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T16:19:39Z",
+      "side": 1,
+      "message": "Those tests do not look like they use character devices, are you sure they should be included ?",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 3
+      },
+      "revId": "bf08147ce6b44d02b73469f250f95b1f3d42edf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
