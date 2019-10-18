@@ -179,6 +179,7 @@ spdk_sock_connect(const char *ip, int port)
 		if (sock != NULL) {
 			sock->net_impl = impl;
 			TAILQ_INIT(&sock->queued_reqs);
+			TAILQ_INIT(&sock->pending_reqs);
 			return sock;
 		}
 	}
@@ -214,6 +215,7 @@ spdk_sock_accept(struct spdk_sock *sock)
 	if (new_sock != NULL) {
 		new_sock->net_impl = sock->net_impl;
 		TAILQ_INIT(&new_sock->queued_reqs);
+		TAILQ_INIT(&new_sock->pending_reqs);
 	}
 
 	return new_sock;
