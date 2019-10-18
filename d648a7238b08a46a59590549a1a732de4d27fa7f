@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9965e427_fa81dd48",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T13:57:43Z",
+      "side": 1,
+      "message": "I think it is \u0027contiguous\u0027, isn\u0027t it ?",
+      "range": {
+        "startLine": 192,
+        "startChar": 24,
+        "endLine": 192,
+        "endChar": 34
+      },
+      "revId": "d648a7238b08a46a59590549a1a732de4d27fa7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
