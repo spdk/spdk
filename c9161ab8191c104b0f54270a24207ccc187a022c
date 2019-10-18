@@ -238,6 +238,54 @@
     },
     {
       "key": {
+        "uuid": "eeea178e_0bdc6312",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-18T10:32:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4b7737f2_4c58dc3d",
+      "range": {
+        "startLine": 50,
+        "startChar": 3,
+        "endLine": 50,
+        "endChar": 34
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10f2449c_b99b788f",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-18T10:32:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4b7737f2_4c58dc3d",
+      "range": {
+        "startLine": 50,
+        "startChar": 3,
+        "endLine": 50,
+        "endChar": 34
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1ace0eb3_851ccb71",
         "filename": "scripts/vagrant/create_nvme_img.sh",
         "patchSetId": 16
@@ -332,6 +380,30 @@
       "side": 1,
       "message": "That\u0027s exactly what I mean.\n\nJust using \"-b\" allows you to run an emulation with a single, one namespace NVMe disk.\nSo it\u0027s the same as --nvme-disk-type\u003dnvme,1.\n\nThat\u0027s a duplicate. IMO you should move all of the functionality you have for --nvme-disk-type into option -b, and leave it\u0027s defaults as they are (single one namespace NVMe disk)",
       "parentUuid": "474f3ce1_c5cbe20a",
+      "range": {
+        "startLine": 22,
+        "startChar": 9,
+        "endLine": 22,
+        "endChar": 63
+      },
+      "revId": "c9161ab8191c104b0f54270a24207ccc187a022c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a55fa8c_9b645599",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-18T10:32:19Z",
+      "side": 1,
+      "message": "Hmm, but in Vagrantfile there are different operations on this two parameters.",
+      "parentUuid": "04847e96_b892f4d9",
       "range": {
         "startLine": 22,
         "startChar": 9,
