@@ -738,7 +738,7 @@ nvme_ctrlr_init_ns(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns 
 	const struct spdk_nvme_ns_data *nsdata;
 	int			rc;
 
-	nvme_bdev_ns->type = nvme_bdev_ns_type_standard;
+	assert(nvme_bdev_ns->type == nvme_bdev_ns_type_standard);
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
@@ -985,6 +985,17 @@ nvme_ctrlr_get_ns_struct_size(struct nvme_bdev_ctrlr *ctrlr, uint32_t nsid)
 }
 
 static void
+nvme_ctrlr_init_ns_type(struct nvme_bdev_ns *ns)
+{
+	if (spdk_nvme_ctrlr_is_ocssd_ns(ns->ctrlr->ctrlr, ns->id)) {
+		assert(false);
+	} else {
+		ns->type = nvme_bdev_ns_type_standard;
+		ns->init_fn = nvme_ctrlr_init_ns;
+	}
+}
+
+static void
 nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
@@ -1020,7 +1031,9 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 			ctx->cb_fn = NULL;
 			ctx->cb_arg = NULL;
 
-			nvme_ctrlr_init_ns(nvme_bdev_ctrlr, ns, nvme_ctrlr_create_namespaces_cb, ctx);
+			nvme_ctrlr_init_ns_type(ns);
+
+			ns->init_fn(nvme_bdev_ctrlr, ns, nvme_ctrlr_create_namespaces_cb, ctx);
 		}
 
 		if (ns && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
@@ -1389,11 +1402,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
-		create_namespaces_cb(ctx, 0, 0);
-	} else {
-		bdev_nvme_create_namespaces(ctx, create_namespaces_cb, ctx);
-	}
+	bdev_nvme_create_namespaces(ctx, create_namespaces_cb, ctx);
 }
 
 static int
@@ -1798,7 +1807,9 @@ nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	num_ns = spdk_nvme_ctrlr_get_num_ns(nvme_bdev_ctrlr->ctrlr);
 
 	for (nsid = 1; nsid < num_ns + 1; nsid++) {
-		if (nvme_bdev_ctrlr->namespaces[nsid - 1] == NULL) {
+		ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
+
+		if (ns == NULL) {
 			continue;
 		}
 
@@ -1814,8 +1825,10 @@ nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 		ctx->cb_fn = cb_fn;
 		ctx->cb_arg = cb_arg;
 
-		nvme_ctrlr_init_ns(nvme_bdev_ctrlr, nvme_bdev_ctrlr->namespaces[nsid - 1],
-				   nvme_ctrlr_create_namespaces_cb, ctx);
+		nvme_ctrlr_init_ns_type(ns);
+
+		ns->init_fn(nvme_bdev_ctrlr, ns, nvme_ctrlr_create_namespaces_cb,
+			    ctx);
 	}
 }
 
