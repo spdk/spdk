@@ -16,6 +16,24 @@
       "revId": "fa635ad2a25f85616552e768757e1a36d373d901",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92439175_45e8f711",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 3970,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T09:35:22Z",
+      "side": 1,
+      "message": "Thank you Changpeng, this is my careless mistake. I can’t update the patch now but will do later. Please skip this for now.",
+      "parentUuid": "fc10a287_5bd5083c",
+      "revId": "fa635ad2a25f85616552e768757e1a36d373d901",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
