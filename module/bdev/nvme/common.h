@@ -44,10 +44,18 @@ extern pthread_mutex_t g_bdev_nvme_mutex;
 
 #define NVME_MAX_CONTROLLERS 1024
 
+struct nvme_namespace;
+
+typedef void (*spdk_bdev_init_namespaces_fn)(void *ctx, struct nvme_namespace *ns, int rc);
+typedef void (*spdk_bdev_create_namespaces_fn)(void *ctx, int rc);
+typedef void (*spdk_bdev_init_ns_fn)(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+				     struct nvme_namespace *nvme_ns, spdk_bdev_init_namespaces_fn cb_fn, void *cb_arg);
+
 struct nvme_namespace {
 	uint32_t		id;
 	bool			active;
 	struct nvme_bdev_ctrlr	*ctrlr;
+	spdk_bdev_init_ns_fn	init_fn;
 	TAILQ_HEAD(, nvme_bdev)	bdevs;
 };
 
