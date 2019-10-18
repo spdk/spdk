@@ -16,6 +16,24 @@
       "revId": "deeaf890b3bbd51f42bae26b6e5300531ab80151",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07d7678c_43135a8b",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2205,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T07:54:33Z",
+      "side": 1,
+      "message": "Thank you Changpeng.\n\nWill you check the patches?\nhttps://review.gerrithub.io/c/spdk/spdk/+/471015/15\nhttps://review.gerrithub.io/c/spdk/spdk/+/471562/6\nhttps://review.gerrithub.io/c/spdk/spdk/+/470413/21\n\niscsi_op_login() (renamed to iscsi_pdu_payload_op_login()) and iscsi_pdu_hdr_op_login() will be separated, and so we have to make connection to hold the created pdu.\n\nThis is the same idea as pdu-\u003etask.\n\n-Shuhei",
+      "parentUuid": "4ff24788_af98199b",
+      "revId": "deeaf890b3bbd51f42bae26b6e5300531ab80151",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
