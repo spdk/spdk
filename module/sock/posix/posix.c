@@ -548,17 +548,39 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 	return &new_sock->base;
 }
 
+static void
+_spdk_posix_sock_abort_requests(struct spdk_posix_sock *sock)
+{
+	struct spdk_posix_sock_request *req, *tmp;
+	spdk_sock_op_cb cb_fn;
+	void *cb_arg;
+
+	TAILQ_FOREACH_SAFE(req, &sock->queued_reqs, link, tmp) {
+		spdk_posix_sock_request_pend(sock, req);
+	}
+
+	TAILQ_FOREACH_SAFE(req, &sock->pending_reqs, link, tmp) {
+		cb_fn = req->cb_fn;
+		cb_arg = req->cb_arg;
+		spdk_posix_sock_request_put(sock, req);
+		cb_fn(cb_arg, -ECANCELED);
+	}
+
+	assert(TAILQ_EMPTY(&sock->queued_reqs));
+	assert(TAILQ_EMPTY(&sock->pending_reqs));
+}
+
 static int
 spdk_posix_sock_close(struct spdk_sock *_sock)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 
+	_spdk_posix_sock_abort_requests(sock);
+
 	/* If the socket fails to close, the best choice is to
 	 * leak it but continue to free the rest of the sock
 	 * memory. */
 	close(sock->fd);
-
-	assert(TAILQ_EMPTY(&sock->queued_reqs));
 
 	free(sock->req_mem);
 	free(sock);
@@ -597,7 +619,7 @@ spdk_posix_sock_writev_async(struct spdk_sock *_sock, struct iovec *iov, int iov
 			     spdk_sock_op_cb cb_fn, void *cb_arg)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
-	struct spdk_posix_sock_request *req, *tmp;
+	struct spdk_posix_sock_request *req;
 	int rc;
 
 	assert(cb_fn != NULL);
@@ -628,12 +650,7 @@ spdk_posix_sock_writev_async(struct spdk_sock *_sock, struct iovec *iov, int iov
 	if (sock->queued_iovcnt > DEFAULT_MAX_IOV) {
 		rc = spdk_posix_sock_flush(sock);
 		if (rc) {
-			TAILQ_FOREACH_SAFE(req, &sock->queued_reqs, link, tmp) {
-				cb_fn = req->cb_fn;
-				cb_arg = req->cb_arg;
-				spdk_posix_sock_request_put(sock, req);
-				cb_fn(cb_arg, -rc);
-			}
+			_spdk_posix_sock_abort_requests(sock);
 		}
 	}
 }
@@ -812,20 +829,11 @@ spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, stru
 {
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
-	struct spdk_posix_sock_request *req, *tmp;
-	spdk_sock_op_cb cb_fn;
-	void *cb_arg;
 	int rc;
 
 	assert(_sock->group_impl == _group);
 
-	TAILQ_FOREACH_SAFE(req, &sock->queued_reqs, link, tmp) {
-		cb_fn = req->cb_fn;
-		cb_arg = req->cb_arg;
-		spdk_posix_sock_request_put(sock, req);
-		cb_fn(cb_arg, -ECANCELED);
-
-	}
+	_spdk_posix_sock_abort_requests(sock);
 
 #if defined(__linux__)
 	struct epoll_event event;
@@ -957,10 +965,7 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	struct spdk_sock *_sock, *tmp;
 	struct spdk_posix_sock *sock;
-	struct spdk_posix_sock_request *req, *rtmp;
 	int num_events, i, rc;
-	spdk_sock_op_cb cb_fn;
-	void *cb_arg;
 #if defined(__linux__)
 	struct epoll_event events[MAX_EVENTS_PER_POLL];
 #elif defined(__FreeBSD__)
@@ -973,12 +978,7 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 
 		rc = spdk_posix_sock_flush(sock);
 		if (rc) {
-			TAILQ_FOREACH_SAFE(req, &sock->queued_reqs, link, rtmp) {
-				cb_fn = req->cb_fn;
-				cb_arg = req->cb_arg;
-				spdk_posix_sock_request_put(sock, req);
-				cb_fn(cb_arg, -rc);
-			}
+			_spdk_posix_sock_abort_requests(sock);
 		}
 	}
 
