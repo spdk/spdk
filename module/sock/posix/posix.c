@@ -516,6 +516,9 @@ _sock_flush(struct spdk_sock *sock)
 
 		/* Handled a full request. */
 		req->offset = 0;
+		spdk_sock_request_pend(sock, req);
+
+		/* The write isn't currently asynchronous, so it's already done. */
 		spdk_sock_request_put(sock, req, 0);
 
 		if (rc == 0) {
