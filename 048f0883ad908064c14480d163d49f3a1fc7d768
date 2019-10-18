@@ -235,6 +235,30 @@
       "revId": "048f0883ad908064c14480d163d49f3a1fc7d768",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6a77c84_36fd8afe",
+        "filename": "module/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-18T08:04:27Z",
+      "side": 1,
+      "message": "I prefer to keep this sequence. I will get tons of conflicts in unit test when i try to do it.",
+      "parentUuid": "dc4ac423_40c22648",
+      "range": {
+        "startLine": 494,
+        "startChar": 0,
+        "endLine": 501,
+        "endChar": 1
+      },
+      "revId": "048f0883ad908064c14480d163d49f3a1fc7d768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }

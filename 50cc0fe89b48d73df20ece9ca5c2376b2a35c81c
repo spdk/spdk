@@ -22,6 +22,30 @@
       "revId": "50cc0fe89b48d73df20ece9ca5c2376b2a35c81c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb541c0a_263e3d4b",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-18T08:04:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "59bdf6af_ccf688b7",
+      "range": {
+        "startLine": 33,
+        "startChar": 8,
+        "endLine": 33,
+        "endChar": 27
+      },
+      "revId": "50cc0fe89b48d73df20ece9ca5c2376b2a35c81c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
