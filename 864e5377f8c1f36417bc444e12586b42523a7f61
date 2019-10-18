@@ -16,6 +16,24 @@
       "revId": "864e5377f8c1f36417bc444e12586b42523a7f61",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe168a36_163f08c5",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2204,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T21:03:17Z",
+      "side": 1,
+      "message": "Thank you. My mistake but I’m glad if you allow it. Because to rebase it without touching previous patches, I have to be in firewall by going to any our office today including next after patch’s mistake.",
+      "parentUuid": "eaf33cb9_099d348f",
+      "revId": "864e5377f8c1f36417bc444e12586b42523a7f61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
