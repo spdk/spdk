@@ -2770,6 +2770,20 @@ spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_
 	return 0;
 }
 
+uint32_t
+spdk_nvme_ctrlr_get_active_ns_num(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint32_t ns_num = 0;
+	uint32_t nsid;
+
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+		ns_num++;
+	}
+
+	return ns_num;
+}
+
 struct spdk_nvme_ns *
 spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
