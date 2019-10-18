@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f80f38d8_021e3bd9",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T07:30:54Z",
+      "side": 1,
+      "message": "hi shuhei,\n    this API only appear iovs[0].\nYes, we can remove this. \nAt the beginning, I just want to keep this for having a question.",
+      "parentUuid": "6b13f086_c5f7c4be",
+      "revId": "ebffe1b23eb6976d5a04bf471f1d648822b2ad92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "402d39ee_fe41dfbb",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 3
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "05b3ac29_d296e1d8",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T07:30:54Z",
+      "side": 1,
+      "message": "remove all iov[].\ndone.",
+      "parentUuid": "402d39ee_fe41dfbb",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 0
+      },
+      "revId": "ebffe1b23eb6976d5a04bf471f1d648822b2ad92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0930bf51_948e1ddc",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 3
@@ -53,6 +95,30 @@
       "writtenOn": "2019-10-18T07:11:40Z",
       "side": 1,
       "message": "Just bdev_io-\u003eu.bdev.iovcnt \u003d 0; will be enough.",
+      "range": {
+        "startLine": 136,
+        "startChar": 2,
+        "endLine": 137,
+        "endChar": 50
+      },
+      "revId": "ebffe1b23eb6976d5a04bf471f1d648822b2ad92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "beddebf5_99d42a9a",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-18T07:30:54Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "0930bf51_948e1ddc",
       "range": {
         "startLine": 136,
         "startChar": 2,
