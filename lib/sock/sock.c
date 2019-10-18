@@ -181,7 +181,7 @@ _sock_alloc_requests(struct spdk_sock *sock, uint32_t num_reqs, int iovcnt)
 		return 0;
 	}
 
-	if (!TAILQ_EMPTY(&sock->queued_reqs)) {
+	if (!TAILQ_EMPTY(&sock->queued_reqs) || !TAILQ_EMPTY(&sock->pending_reqs)) {
 		return -EAGAIN;
 	}
 
@@ -196,6 +196,7 @@ _sock_alloc_requests(struct spdk_sock *sock, uint32_t num_reqs, int iovcnt)
 	sock->num_reqs = num_reqs;
 	TAILQ_INIT(&sock->free_reqs);
 	TAILQ_INIT(&sock->queued_reqs);
+	TAILQ_INIT(&sock->pending_reqs);
 
 	for (i = 0; i < sock->num_reqs; i++) {
 		req = (struct spdk_sock_request *)buf;

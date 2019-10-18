@@ -62,6 +62,7 @@ flush(void)
 
 	/* Set up data structures */
 	TAILQ_INIT(&sock->queued_reqs);
+	TAILQ_INIT(&sock->pending_reqs);
 	TAILQ_INIT(&sock->free_reqs);
 	sock->group_impl = &group.base;
 
