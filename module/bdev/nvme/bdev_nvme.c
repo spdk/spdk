@@ -124,7 +124,8 @@ static struct spdk_poller *g_hotplug_poller;
 static struct spdk_nvme_probe_ctx *g_hotplug_probe_ctx;
 static char *g_nvme_hostnqn = NULL;
 
-static void nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+static void nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+		spdk_bdev_create_namespaces_fn cb_fn, void *cb_arg);
 static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
 static int bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
@@ -145,8 +146,8 @@ static int bdev_nvme_io_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel
 static int bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
-static int nvme_ctrlr_create_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-				       struct nvme_bdev_ns *nvme_ns);
+static void nvme_ctrlr_create_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+					struct nvme_bdev_ns *nvme_ns, spdk_bdev_create_namespace_fn cb_fn, void *cb_arg);
 
 struct spdk_nvme_qpair *
 spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
@@ -728,8 +729,9 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.get_spin_time		= bdev_nvme_get_spin_time,
 };
 
-static int
-nvme_ctrlr_create_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *nvme_ns)
+static void
+nvme_ctrlr_create_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *nvme_ns,
+			    spdk_bdev_create_namespace_fn cb_fn, void *cb_arg)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
 	struct nvme_bdev	*bdev;
@@ -744,13 +746,15 @@ nvme_ctrlr_create_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nvme_ns->id);
 	if (!ns) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Invalid NS %d\n", nvme_ns->id);
-		return -EINVAL;
+		cb_fn(cb_arg, nvme_ns, -EINVAL);
+		return;
 	}
 
 	bdev = calloc(1, sizeof(*bdev));
 	if (!bdev) {
 		SPDK_ERRLOG("bdev calloc() failed\n");
-		return -ENOMEM;
+		cb_fn(cb_arg, nvme_ns, -ENOMEM);
+		return;
 	}
 
 	bdev->nvme_bdev_ctrlr = nvme_bdev_ctrlr;
@@ -762,7 +766,8 @@ nvme_ctrlr_create_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme
 	if (!bdev->disk.name) {
 		nvme_bdev_ctrlr->ref--;
 		free(bdev);
-		return -ENOMEM;
+		cb_fn(cb_arg, nvme_ns, -ENOMEM);
+		return;
 	}
 	bdev->disk.product_name = "NVMe disk";
 
@@ -799,12 +804,13 @@ nvme_ctrlr_create_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme
 		free(bdev->disk.name);
 		nvme_bdev_ctrlr->ref--;
 		free(bdev);
-		return rc;
+		cb_fn(cb_arg, nvme_ns, rc);
+		return;
 	}
 
 	TAILQ_INSERT_TAIL(&nvme_ns->bdevs, bdev, tailq);
 
-	return 0;
+	cb_fn(cb_arg, nvme_ns, 0);
 }
 
 
@@ -948,13 +954,51 @@ nvme_ctrlr_deactivate_namespace(struct nvme_bdev_ns *ns)
 	ns = NULL;
 }
 
+struct init_ns_ctx {
+	struct nvme_bdev_ctrlr *ctrlr;
+	struct nvme_bdev_ns *ns;
+	spdk_bdev_create_namespaces_fn cb_fn;
+	void *cb_arg;
+};
+
+static void
+nvme_ctrlr_create_namespaces_cb(void *cb_arg, struct nvme_bdev_ns *ns, int rc)
+{
+	struct init_ns_ctx *ctx = cb_arg;
+	struct nvme_bdev_ctrlr *ctrlr = ns->ctrlr;
+	uint32_t num_ns;
+	uint32_t i;
+
+	if (rc) {
+		SPDK_NOTICELOG("Failed to create bdev for namespace %u of %s\n", ns->id, ctrlr->name);
+		free(ns);
+		ns = NULL;
+	}
+
+	ns->creation_in_progress = false;
+
+	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr->ctrlr);
+
+	for (i = 0; i < num_ns; i++) {
+		if (ctrlr->namespaces[i] && ctrlr->namespaces[i]->creation_in_progress) {
+			free(ctx);
+			return;
+		}
+	}
+
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_arg, 0);
+	}
+	free(ctx);
+}
+
 static void
 nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
 	struct nvme_bdev_ns	*ns;
+	struct init_ns_ctx	*ctx;
 	uint32_t		i;
-	int			rc;
 
 	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
 		uint32_t	nsid = i + 1;
@@ -973,11 +1017,16 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 
 			TAILQ_INIT(&ns->bdevs);
 
-			rc = nvme_ctrlr_create_namespace(nvme_bdev_ctrlr, ns);
-			if (rc) {
-				free(ns);
-				ns = NULL;
+			ctx = calloc(1, sizeof(*ctx));
+			if (!ctx) {
+				return;
 			}
+
+			ctx->ctrlr = nvme_bdev_ctrlr;
+			ctx->cb_fn = NULL;
+			ctx->cb_arg = NULL;
+
+			nvme_ctrlr_create_namespace(nvme_bdev_ctrlr, ns, nvme_ctrlr_create_namespaces_cb, ctx);
 		}
 
 		if (ns && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
@@ -1103,7 +1152,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	nvme_ctrlr_create_namespaces(nvme_bdev_ctrlr);
+	nvme_ctrlr_create_namespaces(nvme_bdev_ctrlr, NULL, NULL);
 
 	free(name);
 }
@@ -1258,20 +1307,25 @@ create_namespaces_cb(void *cb_arg, size_t count, int rc)
 	free(ctx);
 }
 
+struct create_ns_ctx {
+	struct nvme_bdev_ctrlr *ctrlr;
+	struct nvme_async_probe_ctx *probe_ctx;
+	spdk_bdev_create_nvme_fn cb_fn;
+	void *cb_arg;
+};
+
 static void
-bdev_nvme_create_namespaces(struct nvme_async_probe_ctx *ctx, spdk_bdev_create_nvme_fn cb_fn,
-			    void *cb_arg)
+bdev_nvme_create_namespaces_cb(void *cb_arg, int rc)
 {
-	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
+	struct create_ns_ctx	*ctx = cb_arg;
 	struct nvme_bdev_ns	*ns;
 	struct nvme_bdev	*nvme_bdev, *tmp;
 	uint32_t		i, nsid;
 	size_t			j;
 
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
-	assert(nvme_bdev_ctrlr != NULL);
-
-	nvme_ctrlr_create_namespaces(nvme_bdev_ctrlr);
+	if (rc) {
+		ctx->cb_fn(ctx->cb_arg, 0, rc);
+	}
 
 	/*
 	 * Report the new bdevs that were created in this call.
@@ -1279,27 +1333,53 @@ bdev_nvme_create_namespaces(struct nvme_async_probe_ctx *ctx, spdk_bdev_create_n
 	 * since at least one bdev is created per namespace.
 	 */
 	j = 0;
-	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
+	for (i = 0; i < ctx->ctrlr->num_ns; i++) {
 		nsid = i + 1;
-		ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
+		ns = ctx->ctrlr->namespaces[i];
 		if (!ns) {
 			continue;
 		}
 		assert(ns->id == nsid);
 		TAILQ_FOREACH_SAFE(nvme_bdev, &ns->bdevs, tailq, tmp) {
-			if (j < ctx->count) {
-				ctx->names[j] = nvme_bdev->disk.name;
+			if (j < ctx->probe_ctx->count) {
+				ctx->probe_ctx->names[j] = nvme_bdev->disk.name;
 				j++;
 			} else {
 				SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %du. Unable to return all names of created bdevs\n",
-					    ctx->count);
-				cb_fn(cb_arg, 0, -ERANGE);
+					    ctx->probe_ctx->count);
+				ctx->cb_fn(ctx->cb_arg, 0, -ERANGE);
+				free(ctx);
 				return;
 			}
 		}
 	}
 
-	cb_fn(cb_arg, j, 0);
+	ctx->cb_fn(ctx->cb_arg, j, 0);
+	free(ctx);
+}
+
+static void
+bdev_nvme_create_namespaces(struct nvme_async_probe_ctx *probe_ctx, spdk_bdev_create_nvme_fn cb_fn,
+			    void *cb_arg)
+{
+	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
+	struct create_ns_ctx	*ctx;
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&probe_ctx->trid);
+	assert(nvme_bdev_ctrlr != NULL);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(cb_arg, 0, -ENOMEM);
+		return;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	ctx->ctrlr = nvme_bdev_ctrlr;
+	ctx->probe_ctx = probe_ctx;
+
+	nvme_ctrlr_create_namespaces(nvme_bdev_ctrlr, bdev_nvme_create_namespaces_cb, ctx);
 }
 
 static void
@@ -1611,7 +1691,7 @@ bdev_nvme_library_init(void)
 				goto end;
 			}
 
-			nvme_ctrlr_create_namespaces(nvme_bdev_ctrlr);
+			nvme_ctrlr_create_namespaces(nvme_bdev_ctrlr, NULL, NULL);
 		} else {
 			local_nvme_num++;
 		}
@@ -1684,17 +1764,35 @@ bdev_nvme_library_fini(void)
 }
 
 static void
-nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+			     spdk_bdev_create_namespaces_fn cb_fn, void *cb_arg)
 {
 	struct nvme_bdev_ns	*ns;
-	int			rc;
-	int			bdevs_created = 0;
+	struct init_ns_ctx	*ctx;
 	uint32_t		nsid;
+	uint32_t		ns_count;
+	uint32_t		active_ns_count;
 
+	active_ns_count = spdk_nvme_ctrlr_get_active_ns_count(nvme_bdev_ctrlr->ctrlr);
+
+	if (active_ns_count == 0) {
+		if (cb_fn) {
+			cb_fn(cb_arg, 0);
+		}
+		return;
+	}
+
+	/* Allocate namespaces in one loop, then init namespace in separate loop.
+	 * We cannot do this in the same loop because namespaces that are created
+	 * synchronously will call callback before we allocate all ns structures and we won't
+	 * know (in callback function) if we already finished */
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(nvme_bdev_ctrlr->ctrlr);
 	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(nvme_bdev_ctrlr->ctrlr, nsid)) {
 		ns = calloc(1, sizeof(struct nvme_bdev_ns));
 		if (!ns) {
+			if (cb_fn) {
+				cb_fn(cb_arg, -ENOMEM);
+			}
 			SPDK_ERRLOG("Failed to allocate memory for namespace %u of %s\n", nsid, nvme_bdev_ctrlr->name);
 			return;
 		}
@@ -1702,21 +1800,32 @@ nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		nvme_bdev_ctrlr->namespaces[nsid - 1] = ns;
 		ns->id = nsid;
 		ns->ctrlr = nvme_bdev_ctrlr;
+		ns->creation_in_progress = true;
 
 		TAILQ_INIT(&ns->bdevs);
-
-		rc = nvme_ctrlr_create_namespace(nvme_bdev_ctrlr, ns);
-		if (rc == 0) {
-			bdevs_created++;
-		} else {
-			free(ns);
-			ns = NULL;
-			SPDK_NOTICELOG("Failed to create bdev for namespace %u of %s\n", nsid, nvme_bdev_ctrlr->name);
-		}
 	}
 
-	if (bdevs_created == 0) {
-		SPDK_NOTICELOG("No bdev is created for NVMe controller %s\n", nvme_bdev_ctrlr->name);
+	ns_count = spdk_nvme_ctrlr_get_num_ns(nvme_bdev_ctrlr->ctrlr);
+
+	for (nsid = 1; nsid < ns_count + 1; nsid++) {
+		if (nvme_bdev_ctrlr->namespaces[nsid - 1] == NULL) {
+			continue;
+		}
+
+		ctx = calloc(1, sizeof(*ctx));
+		if (!ctx) {
+			if (cb_fn) {
+				cb_fn(cb_arg, -ENOMEM);
+			}
+			return;
+		}
+
+		ctx->ctrlr = nvme_bdev_ctrlr;
+		ctx->cb_fn = cb_fn;
+		ctx->cb_arg = cb_arg;
+
+		nvme_ctrlr_create_namespace(nvme_bdev_ctrlr, nvme_bdev_ctrlr->namespaces[nsid - 1],
+					    nvme_ctrlr_create_namespaces_cb, ctx);
 	}
 }
 

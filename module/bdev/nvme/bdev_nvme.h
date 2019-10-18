@@ -61,6 +61,10 @@ struct spdk_bdev_nvme_opts {
 	uint32_t io_queue_requests;
 };
 
+typedef void (*spdk_bdev_create_namespaces_fn)(void *ctx, int rc);
+typedef void (*spdk_bdev_create_namespace_fn)(void *ctx, struct nvme_bdev_ns *ns, int rc);
+
+
 struct spdk_nvme_qpair *spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
 void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
