@@ -548,6 +548,109 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 	return &new_sock->base;
 }
 
+static int
+spdk_posix_sock_flush(struct spdk_posix_sock *sock)
+{
+	struct iovec iovs[DEFAULT_MAX_IOV];
+	int iovcnt;
+	struct spdk_posix_sock_request *req;
+	int i;
+	ssize_t rc;
+	unsigned int offset;
+	size_t len;
+	spdk_sock_op_cb cb_fn;
+	void *cb_arg;
+
+	/* Gather an iov */
+	iovcnt = 0;
+	req = TAILQ_FIRST(&sock->queued_reqs);
+	while (req) {
+		offset = req->offset;
+
+		for (i = 0; i < req->iovcnt; i++) {
+			/* Consume any offset first */
+			if (offset >= req->iov[i].iov_len) {
+				offset -= req->iov[i].iov_len;
+				continue;
+			}
+
+			iovs[iovcnt].iov_base = req->iov[i].iov_base + offset;
+			iovs[iovcnt].iov_len = req->iov[i].iov_len - offset;
+			iovcnt++;
+
+			offset = 0;
+
+			if (iovcnt >= DEFAULT_MAX_IOV) {
+				break;
+			}
+		}
+
+		if (iovcnt >= DEFAULT_MAX_IOV) {
+			break;
+		}
+
+		req = TAILQ_NEXT(req, link);
+	}
+
+	if (iovcnt == 0) {
+		return 0;
+	}
+
+	/* Perform the vectored write */
+	rc = writev(sock->fd, iovs, iovcnt);
+	if (rc <= 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			return 0;
+		}
+		return rc;
+	}
+
+	/* Consume the requests that were actually written */
+	req = TAILQ_FIRST(&sock->queued_reqs);
+	while (req) {
+		offset = req->offset;
+
+		for (i = 0; i < req->iovcnt; i++) {
+			/* Advance by the offset first */
+			if (offset >= req->iov[i].iov_len) {
+				offset -= req->iov[i].iov_len;
+				continue;
+			}
+
+			/* Calculate the remaining length of this element */
+			len = req->iov[i].iov_len - offset;
+
+			if (len > (size_t)rc) {
+				/* This element was partially sent. */
+				req->offset += rc;
+				return 0;
+			}
+
+			offset = 0;
+			req->offset += len;
+			rc -= len;
+		}
+
+		/* Handled a full request. */
+		req->offset = 0;
+		spdk_posix_sock_request_pend(sock, req);
+
+		/* The write isn't currently asynchronous, so it's already done. */
+		cb_fn = req->cb_fn;
+		cb_arg = req->cb_arg;
+		spdk_posix_sock_request_put(sock, req);
+		cb_fn(cb_arg, 0);
+
+		if (rc == 0) {
+			break;
+		}
+
+		req = TAILQ_FIRST(&sock->queued_reqs);
+	}
+
+	return 0;
+}
+
 static void
 _spdk_posix_sock_abort_requests(struct spdk_posix_sock *sock)
 {
@@ -611,8 +714,6 @@ spdk_posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 
 	return writev(sock->fd, iov, iovcnt);
 }
-
-static int spdk_posix_sock_flush(struct spdk_posix_sock *sock);
 
 static void
 spdk_posix_sock_writev_async(struct spdk_sock *_sock, struct iovec *iov, int iovcnt,
@@ -853,109 +954,6 @@ spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, stru
 	}
 #endif
 	return rc;
-}
-
-static int
-spdk_posix_sock_flush(struct spdk_posix_sock *sock)
-{
-	struct iovec iovs[DEFAULT_MAX_IOV];
-	int iovcnt;
-	struct spdk_posix_sock_request *req;
-	int i;
-	ssize_t rc;
-	unsigned int offset;
-	size_t len;
-	spdk_sock_op_cb cb_fn;
-	void *cb_arg;
-
-	/* Gather an iov */
-	iovcnt = 0;
-	req = TAILQ_FIRST(&sock->queued_reqs);
-	while (req) {
-		offset = req->offset;
-
-		for (i = 0; i < req->iovcnt; i++) {
-			/* Consume any offset first */
-			if (offset >= req->iov[i].iov_len) {
-				offset -= req->iov[i].iov_len;
-				continue;
-			}
-
-			iovs[iovcnt].iov_base = req->iov[i].iov_base + offset;
-			iovs[iovcnt].iov_len = req->iov[i].iov_len - offset;
-			iovcnt++;
-
-			offset = 0;
-
-			if (iovcnt >= DEFAULT_MAX_IOV) {
-				break;
-			}
-		}
-
-		if (iovcnt >= DEFAULT_MAX_IOV) {
-			break;
-		}
-
-		req = TAILQ_NEXT(req, link);
-	}
-
-	if (iovcnt == 0) {
-		return 0;
-	}
-
-	/* Perform the vectored write */
-	rc = writev(sock->fd, iovs, iovcnt);
-	if (rc <= 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			return 0;
-		}
-		return rc;
-	}
-
-	/* Consume the requests that were actually written */
-	req = TAILQ_FIRST(&sock->queued_reqs);
-	while (req) {
-		offset = req->offset;
-
-		for (i = 0; i < req->iovcnt; i++) {
-			/* Advance by the offset first */
-			if (offset >= req->iov[i].iov_len) {
-				offset -= req->iov[i].iov_len;
-				continue;
-			}
-
-			/* Calculate the remaining length of this element */
-			len = req->iov[i].iov_len - offset;
-
-			if (len > (size_t)rc) {
-				/* This element was partially sent. */
-				req->offset += rc;
-				return 0;
-			}
-
-			offset = 0;
-			req->offset += len;
-			rc -= len;
-		}
-
-		/* Handled a full request. */
-		req->offset = 0;
-		spdk_posix_sock_request_pend(sock, req);
-
-		/* The write isn't currently asynchronous, so it's already done. */
-		cb_fn = req->cb_fn;
-		cb_arg = req->cb_arg;
-		spdk_posix_sock_request_put(sock, req);
-		cb_fn(cb_arg, 0);
-
-		if (rc == 0) {
-			break;
-		}
-
-		req = TAILQ_FIRST(&sock->queued_reqs);
-	}
-
-	return 0;
 }
 
 static int
