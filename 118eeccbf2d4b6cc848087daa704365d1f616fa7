@@ -1,0 +1,257 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4cfcc355_2032c9ab",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:36:08Z",
+      "side": 1,
+      "message": "Not needed.",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 24
+      },
+      "revId": "118eeccbf2d4b6cc848087daa704365d1f616fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1da17e44_c0e5090f",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:36:08Z",
+      "side": 1,
+      "message": "Those two are not used here I think.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 0
+      },
+      "revId": "118eeccbf2d4b6cc848087daa704365d1f616fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8247728_a79e95f6",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:36:08Z",
+      "side": 1,
+      "message": "Is this needed ?",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 24
+      },
+      "revId": "118eeccbf2d4b6cc848087daa704365d1f616fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "175e3aab_627809b5",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:36:08Z",
+      "side": 1,
+      "message": "Please remove those includes.",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 0
+      },
+      "revId": "118eeccbf2d4b6cc848087daa704365d1f616fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91e895b2_df6239d1",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:36:08Z",
+      "side": 1,
+      "message": "Is this only used to keep g_controllers_found at start time of the cuse ctrlr device ? I don\u0027t see it being used except in the name. Maybe just use the g_controllers_found in the name, but do not keep idx field.",
+      "range": {
+        "startLine": 67,
+        "startChar": 1,
+        "endLine": 67,
+        "endChar": 16
+      },
+      "revId": "118eeccbf2d4b6cc848087daa704365d1f616fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9397a82b_3491a1d9",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:36:08Z",
+      "side": 1,
+      "message": "Originally this function was exposed to the spdk_nvme_io_msg interface as callback, to allow dynamic start/stop of namespaces. Currently it is just used within CUSE. If so, the list does not need to be search - we can just pass cuse_device of the controller.",
+      "range": {
+        "startLine": 141,
+        "startChar": 0,
+        "endLine": 150,
+        "endChar": 2
+      },
+      "revId": "118eeccbf2d4b6cc848087daa704365d1f616fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b87fd4d7_2bcd4ded",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:36:08Z",
+      "side": 1,
+      "message": "This allocation can fail, please handle this.",
+      "range": {
+        "startLine": 152,
+        "startChar": 1,
+        "endLine": 152,
+        "endChar": 73
+      },
+      "revId": "118eeccbf2d4b6cc848087daa704365d1f616fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be2e0291_5a2cd2bb",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:36:08Z",
+      "side": 1,
+      "message": "Please return with error code here.",
+      "range": {
+        "startLine": 161,
+        "startChar": 2,
+        "endLine": 161,
+        "endChar": 41
+      },
+      "revId": "118eeccbf2d4b6cc848087daa704365d1f616fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2044695a_41d38fb7",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:36:08Z",
+      "side": 1,
+      "message": "Please handle allocation failure",
+      "range": {
+        "startLine": 178,
+        "startChar": 1,
+        "endLine": 178,
+        "endChar": 76
+      },
+      "revId": "118eeccbf2d4b6cc848087daa704365d1f616fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db4ebd9f_71721841",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:36:08Z",
+      "side": 1,
+      "message": "Please return with error code",
+      "range": {
+        "startLine": 185,
+        "startChar": 0,
+        "endLine": 187,
+        "endChar": 2
+      },
+      "revId": "118eeccbf2d4b6cc848087daa704365d1f616fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84266487_526ddc13",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:36:08Z",
+      "side": 1,
+      "message": "Check return code, potentially fail and clean up.",
+      "range": {
+        "startLine": 197,
+        "startChar": 2,
+        "endLine": 197,
+        "endChar": 39
+      },
+      "revId": "118eeccbf2d4b6cc848087daa704365d1f616fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
