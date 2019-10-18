@@ -22,6 +22,30 @@
       "revId": "65e67ee286fb49d2e5595c0ecdc5f0115b7f9841",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "598765fa_381bfe6b",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-18T13:50:02Z",
+      "side": 0,
+      "message": "Yep, this could be done separately but it was easier to remove this in this patch.",
+      "parentUuid": "3be5f16c_f3d7d716",
+      "range": {
+        "startLine": 159,
+        "startChar": 0,
+        "endLine": 181,
+        "endChar": 55
+      },
+      "revId": "65e67ee286fb49d2e5595c0ecdc5f0115b7f9841",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
