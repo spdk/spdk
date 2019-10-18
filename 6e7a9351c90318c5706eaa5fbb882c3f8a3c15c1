@@ -70,6 +70,30 @@
       "revId": "6e7a9351c90318c5706eaa5fbb882c3f8a3c15c1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4018077a_d06f2c04",
+        "filename": "test/unit/lib/ftl/ftl_band.c/ftl_band_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-18T08:05:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "41f2fad9_acc128d6",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 14
+      },
+      "revId": "6e7a9351c90318c5706eaa5fbb882c3f8a3c15c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
