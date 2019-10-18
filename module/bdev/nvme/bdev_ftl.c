@@ -1023,7 +1023,7 @@ bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb, void *c
 		return -ENODEV;
 	}
 
-	if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
+	if (!spdk_nvme_ctrlr_is_ocssd_ns(ctrlr, 1)) {
 		spdk_nvme_detach(ctrlr);
 		return -EPERM;
 	}
