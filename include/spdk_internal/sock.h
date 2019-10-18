@@ -58,6 +58,7 @@ struct spdk_sock {
 
 	int				max_iovcnt;
 	TAILQ_HEAD(, spdk_sock_request)	queued_reqs;
+	TAILQ_HEAD(, spdk_sock_request)	pending_reqs;
 	int				queued_iovcnt;
 
 	struct {
@@ -127,15 +128,22 @@ spdk_sock_request_queue(struct spdk_sock *sock, struct spdk_sock_request *req)
 	sock->queued_iovcnt += req->iovcnt;
 }
 
+static inline void
+spdk_sock_request_pend(struct spdk_sock *sock, struct spdk_sock_request *req)
+{
+	TAILQ_REMOVE(&sock->queued_reqs, req, internal.link);
+	assert(sock->queued_iovcnt >= req->iovcnt);
+	sock->queued_iovcnt -= req->iovcnt;
+	TAILQ_INSERT_TAIL(&sock->pending_reqs, req, internal.link);
+}
+
 static inline int
 spdk_sock_request_put(struct spdk_sock *sock, struct spdk_sock_request *req, int err)
 {
 	bool closed;
 	int rc = 0;
 
-	TAILQ_REMOVE(&sock->queued_reqs, req, internal.link);
-	assert(sock->queued_iovcnt >= req->iovcnt);
-	sock->queued_iovcnt -= req->iovcnt;
+	TAILQ_REMOVE(&sock->pending_reqs, req, internal.link);
 
 	closed = sock->flags.closed;
 	sock->cb_cnt++;
@@ -162,6 +170,15 @@ spdk_sock_abort_requests(struct spdk_sock *sock)
 	closed = sock->flags.closed;
 	sock->cb_cnt++;
 
+	req = TAILQ_FIRST(&sock->pending_reqs);
+	while (req) {
+		TAILQ_REMOVE(&sock->pending_reqs, req, internal.link);
+
+		req->cb_fn(req->cb_arg, -ECANCELED);
+
+		req = TAILQ_FIRST(&sock->pending_reqs);
+	}
+
 	req = TAILQ_FIRST(&sock->queued_reqs);
 	while (req) {
 		TAILQ_REMOVE(&sock->queued_reqs, req, internal.link);
@@ -177,6 +194,7 @@ spdk_sock_abort_requests(struct spdk_sock *sock)
 	sock->cb_cnt--;
 
 	assert(TAILQ_EMPTY(&sock->queued_reqs));
+	assert(TAILQ_EMPTY(&sock->pending_reqs));
 
 	if (sock->cb_cnt == 0 && !closed && sock->flags.closed) {
 		/* The user closed the socket in response to a callback above. */
