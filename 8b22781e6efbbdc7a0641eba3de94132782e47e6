@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d4c29b7_354c4d10",
+        "filename": "test/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:52:06Z",
+      "side": 1,
+      "message": "As noted during our discussion offline, this needs to be replaced by spdk_tgt when running with CUSE tests enabled. stub does not poll any queues by itself and depend on whatever secondary process to do that.\nSince this test is supposed to verify against unmodified nvme-cli, an app needs to poll the queues. Easiest way to accomplish that is to use bdev_nvme.\n\nThen spdk_tgt can be configured via RPC to enable cuse on particular NVMe device.",
+      "range": {
+        "startLine": 23,
+        "startChar": 1,
+        "endLine": 23,
+        "endChar": 33
+      },
+      "revId": "8b22781e6efbbdc7a0641eba3de94132782e47e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
