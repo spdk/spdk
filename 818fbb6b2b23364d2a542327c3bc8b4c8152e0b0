@@ -22,6 +22,30 @@
       "revId": "818fbb6b2b23364d2a542327c3bc8b4c8152e0b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "909dd849_1dee18e5",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-18T14:13:52Z",
+      "side": 1,
+      "message": "Only \"WO\" cache mode is new, others are probably missed in previous updates around cache modes. WO is also mentioned both in changelog and commit message, so should I also add information about new-old wa, wi modes?",
+      "parentUuid": "6a7e112f_a2ee657d",
+      "range": {
+        "startLine": 217,
+        "startChar": 77,
+        "endLine": 217,
+        "endChar": 93
+      },
+      "revId": "818fbb6b2b23364d2a542327c3bc8b4c8152e0b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
