@@ -62,6 +62,7 @@ flush(void)
 
 	/* Set up data structures */
 	TAILQ_INIT(&sock->queued_reqs);
+	TAILQ_INIT(&sock->pending_reqs);
 	sock->group_impl = &group.base;
 
 	req1 = calloc(1, sizeof(struct spdk_sock_request) + 2 * sizeof(struct iovec));
