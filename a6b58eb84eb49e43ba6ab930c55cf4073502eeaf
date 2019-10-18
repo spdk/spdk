@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4b601ed_3590b58c",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2084,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T06:16:41Z",
+      "side": 1,
+      "message": "this goto is not needed.",
+      "range": {
+        "startLine": 2084,
+        "startChar": 0,
+        "endLine": 2084,
+        "endChar": 11
+      },
+      "revId": "a6b58eb84eb49e43ba6ab930c55cf4073502eeaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4c5da79_e4047f4d",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2165,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T06:16:41Z",
+      "side": 1,
+      "message": "unlock is necessary here?",
+      "revId": "a6b58eb84eb49e43ba6ab930c55cf4073502eeaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3b167d7_47e3c77a",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2171,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T06:16:41Z",
+      "side": 1,
+      "message": "unlock is necessary here?",
+      "revId": "a6b58eb84eb49e43ba6ab930c55cf4073502eeaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
