@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1d3c3535_44deea92",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2084,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-18T09:05:23Z",
+      "side": 1,
+      "message": "Thanks for your review. removed.",
+      "parentUuid": "e4b601ed_3590b58c",
+      "range": {
+        "startLine": 2084,
+        "startChar": 0,
+        "endLine": 2084,
+        "endChar": 11
+      },
+      "revId": "a6b58eb84eb49e43ba6ab930c55cf4073502eeaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e4c5da79_e4047f4d",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 17
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "c3a62b58_4b89149a",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2165,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-18T09:05:23Z",
+      "side": 1,
+      "message": "Yes, you are right. Better use goto here too. Thank you for your review.",
+      "parentUuid": "e4c5da79_e4047f4d",
+      "revId": "a6b58eb84eb49e43ba6ab930c55cf4073502eeaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e3b167d7_47e3c77a",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 17
@@ -56,6 +98,24 @@
       "revId": "a6b58eb84eb49e43ba6ab930c55cf4073502eeaf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "498fb8bb_f9b6d2bc",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2171,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-18T09:05:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3b167d7_47e3c77a",
+      "revId": "a6b58eb84eb49e43ba6ab930c55cf4073502eeaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
