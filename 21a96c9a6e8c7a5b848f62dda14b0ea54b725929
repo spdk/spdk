@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b00aef2_65d12b6c",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T15:52:13Z",
+      "side": 1,
+      "message": "Unlock the mutex",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 17
+      },
+      "revId": "21a96c9a6e8c7a5b848f62dda14b0ea54b725929",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a8f1e030_0cd2f1ea",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T15:52:13Z",
+      "side": 1,
+      "message": "Please use SPDK_ERRLOG",
+      "range": {
+        "startLine": 133,
+        "startChar": 2,
+        "endLine": 133,
+        "endChar": 8
+      },
+      "revId": "21a96c9a6e8c7a5b848f62dda14b0ea54b725929",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6989b5b3_1f59e62f",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T15:52:13Z",
+      "side": 1,
+      "message": "Free the ring",
+      "range": {
+        "startLine": 134,
+        "startChar": 0,
+        "endLine": 134,
+        "endChar": 12
+      },
+      "revId": "21a96c9a6e8c7a5b848f62dda14b0ea54b725929",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6573ab98_a2858f5b",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T15:52:13Z",
+      "side": 1,
+      "message": "ctrlr_start can fail, but return is not handled here.",
+      "range": {
+        "startLine": 142,
+        "startChar": 3,
+        "endLine": 142,
+        "endChar": 39
+      },
+      "revId": "21a96c9a6e8c7a5b848f62dda14b0ea54b725929",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b72649e_5163c38d",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T15:52:13Z",
+      "side": 1,
+      "message": "Maybe lets change ctrlr_stop() return to void instead of an int. There is not much more recourse one can do if stop fails.",
+      "range": {
+        "startLine": 160,
+        "startChar": 3,
+        "endLine": 160,
+        "endChar": 38
+      },
+      "revId": "21a96c9a6e8c7a5b848f62dda14b0ea54b725929",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
