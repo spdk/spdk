@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b13f086_c5f7c4be",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T07:11:40Z",
+      "side": 1,
+      "message": "Sorry if we use only a single iov entry, we don\u0027t need g_io_iov? We can use spdk_bdev_io::iov directly?",
+      "revId": "ebffe1b23eb6976d5a04bf471f1d648822b2ad92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "402d39ee_fe41dfbb",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T07:11:40Z",
+      "side": 1,
+      "message": "Sorry I was wrong, if we fill magic number to bdev_io-\u003eiov, we can do it directly without using g_io_iov.",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 0
+      },
+      "revId": "ebffe1b23eb6976d5a04bf471f1d648822b2ad92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0930bf51_948e1ddc",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T07:11:40Z",
+      "side": 1,
+      "message": "Just bdev_io-\u003eu.bdev.iovcnt \u003d 0; will be enough.",
+      "range": {
+        "startLine": 136,
+        "startChar": 2,
+        "endLine": 137,
+        "endChar": 50
+      },
+      "revId": "ebffe1b23eb6976d5a04bf471f1d648822b2ad92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
