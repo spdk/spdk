@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee8eb08f_2a1db664",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:16:46Z",
+      "side": 1,
+      "message": "Please rephrase it to be more up to date.\n\"\nIn order to add new IO procuder, use SPDK_NVME_IO_MSG_REGISTER that will assign callbacks for the external module.\n\nExternal module should implement callbacks that will be called on NVMe controller attach/desets up callbacks to be performed on NVMe controller attach and detach. \nspdk_nvme_io_msg_send() is used to send IO to NVMe driver thread context, where passed function will be called. Allowing the external module to issue IO as needed.\n\nNVMe driver users should poll spdk_nvme_io_msg_process() to move forward, sending IO from external module and process their completions.\n\"",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 64
+      },
+      "revId": "2e182e608571bf294c82e8c989365780ad05bd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "172127ab_db0e416b",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1180,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:16:46Z",
+      "side": 1,
+      "message": "Better description is needed. \nMention that this will process requests from the ring, send IO to an allocated qpair or admin commands in its context. That separate admin poll is needed to process admin cmds. Describe which threads can poll it, etc.",
+      "range": {
+        "startLine": 1180,
+        "startChar": 3,
+        "endLine": 1180,
+        "endChar": 62
+      },
+      "revId": "2e182e608571bf294c82e8c989365780ad05bd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af06fd36_b38d6e1b",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1186,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:16:46Z",
+      "side": 1,
+      "message": "This interface might need better name, since \"spdk_nvme_io_msg\" seems generic and non descriptive. Although cannot come up with better one :/",
+      "range": {
+        "startLine": 1186,
+        "startChar": 9,
+        "endLine": 1186,
+        "endChar": 20
+      },
+      "revId": "2e182e608571bf294c82e8c989365780ad05bd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d26c8494_3b72d674",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:16:46Z",
+      "side": 1,
+      "message": "Please remove those.",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 22
+      },
+      "revId": "2e182e608571bf294c82e8c989365780ad05bd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "694e3a3f_1a70928b",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:16:46Z",
+      "side": 1,
+      "message": "Please rename from CUSE",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 41
+      },
+      "revId": "2e182e608571bf294c82e8c989365780ad05bd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e802749c_210be51c",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:16:46Z",
+      "side": 1,
+      "message": "This allocation can fail, please check that.",
+      "range": {
+        "startLine": 70,
+        "startChar": 1,
+        "endLine": 70,
+        "endChar": 76
+      },
+      "revId": "2e182e608571bf294c82e8c989365780ad05bd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed65dacc_84d31cb1",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:16:46Z",
+      "side": 1,
+      "message": "Can this be at the top of the file ?",
+      "range": {
+        "startLine": 120,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 41
+      },
+      "revId": "2e182e608571bf294c82e8c989365780ad05bd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0226cde6_04eeba3c",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:16:46Z",
+      "side": 1,
+      "message": "This does not initialize IO msgs, only the ring/qpair and starts all registered producers.",
+      "range": {
+        "startLine": 134,
+        "startChar": 24,
+        "endLine": 134,
+        "endChar": 31
+      },
+      "revId": "2e182e608571bf294c82e8c989365780ad05bd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c90a9dd_412120eb",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:16:46Z",
+      "side": 1,
+      "message": "If reset failed, this qpair won\u0027t be allocated. Please check if it is there.",
+      "range": {
+        "startLine": 173,
+        "startChar": 1,
+        "endLine": 173,
+        "endChar": 62
+      },
+      "revId": "2e182e608571bf294c82e8c989365780ad05bd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16bd25c0_17167778",
+        "filename": "lib/nvme/nvme_io_msg.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T08:16:46Z",
+      "side": 1,
+      "message": "Please remove those references, as they are unused and pollute includes.",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 24
+      },
+      "revId": "2e182e608571bf294c82e8c989365780ad05bd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
