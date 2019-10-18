@@ -86,9 +86,9 @@ flush(void)
 	req2->cb_arg = &cb_arg2;
 
 	/* Simple test - a request with a 2 element iovec
-	 * that gets submitted in a single writev. */
+	 * that gets submitted in a single sendmsg. */
 	spdk_posix_sock_request_queue(&sock, req1);
-	MOCK_SET(writev, 64);
+	MOCK_SET(sendmsg, 64);
 	cb_arg1 = false;
 	rc = spdk_posix_sock_flush(&sock);
 	CU_ASSERT(rc == 0);
@@ -101,7 +101,7 @@ flush(void)
 	/* Two requests, where both can fully send. */
 	spdk_posix_sock_request_queue(&sock, req1);
 	spdk_posix_sock_request_queue(&sock, req2);
-	MOCK_SET(writev, 128);
+	MOCK_SET(sendmsg, 128);
 	cb_arg1 = false;
 	cb_arg2 = false;
 	rc = spdk_posix_sock_flush(&sock);
@@ -118,7 +118,7 @@ flush(void)
 	/* Two requests. Only first one can send */
 	spdk_posix_sock_request_queue(&sock, req1);
 	spdk_posix_sock_request_queue(&sock, req2);
-	MOCK_SET(writev, 64);
+	MOCK_SET(sendmsg, 64);
 	cb_arg1 = false;
 	cb_arg2 = false;
 	rc = spdk_posix_sock_flush(&sock);
@@ -134,7 +134,7 @@ flush(void)
 
 	/* One request. Partial send. */
 	spdk_posix_sock_request_queue(&sock, req1);
-	MOCK_SET(writev, 10);
+	MOCK_SET(sendmsg, 10);
 	cb_arg1 = false;
 	rc = spdk_posix_sock_flush(&sock);
 	CU_ASSERT(rc == 0);
@@ -143,7 +143,7 @@ flush(void)
 	CU_ASSERT(TAILQ_EMPTY(&sock.free_reqs));
 
 	/* Do a second flush that partial sends again. */
-	MOCK_SET(writev, 24);
+	MOCK_SET(sendmsg, 24);
 	cb_arg1 = false;
 	rc = spdk_posix_sock_flush(&sock);
 	CU_ASSERT(rc == 0);
@@ -152,7 +152,7 @@ flush(void)
 	CU_ASSERT(TAILQ_EMPTY(&sock.free_reqs));
 
 	/* Flush the rest of the data */
-	MOCK_SET(writev, 30);
+	MOCK_SET(sendmsg, 30);
 	cb_arg1 = false;
 	rc = spdk_posix_sock_flush(&sock);
 	CU_ASSERT(rc == 0);
