@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8af8825_496512a9",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T07:46:14Z",
+      "side": 1,
+      "message": "Can we have instance of struct bdev_part_tailq here? Very small structure and code is simplified.",
+      "range": {
+        "startLine": 48,
+        "startChar": 1,
+        "endLine": 48,
+        "endChar": 36
+      },
+      "revId": "abd138a3cbf18cef08e21aebbd62181c6a5ee088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2344bb0_3a304bdd",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T07:46:14Z",
+      "side": 1,
+      "message": "It\u0027s nice if this function provides all information to create opal vbdev.",
+      "revId": "abd138a3cbf18cef08e21aebbd62181c6a5ee088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "77542f42_47a981ae",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T07:46:14Z",
+      "side": 1,
+      "message": "We may be able to use cfg-\u003eopal_base !\u003d NULL here.",
+      "range": {
+        "startLine": 357,
+        "startChar": 6,
+        "endLine": 357,
+        "endChar": 21
+      },
+      "revId": "abd138a3cbf18cef08e21aebbd62181c6a5ee088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
