@@ -69,6 +69,12 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 void
+nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
+{
+	qpair->is_enabled = true;
+}
+
+void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
 	memset(opts, 0, sizeof(*opts));
@@ -722,11 +728,14 @@ test_nvme_ctrlr_probe(void)
 {
 	int rc = 0;
 	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_qpair qpair = {};
 	const struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvme_probe_ctx probe_ctx = {};
 	void *devhandle = NULL;
 	void *cb_ctx = NULL;
 	struct spdk_nvme_ctrlr *dummy = NULL;
+
+	ctrlr.adminq = &qpair;
 
 	TAILQ_INIT(&probe_ctx.init_ctrlrs);
 	nvme_driver_init();
