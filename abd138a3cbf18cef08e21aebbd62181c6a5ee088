@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9e89416b_e7766aae",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-18T08:54:02Z",
+      "side": 1,
+      "message": "Thank you for your review. This has to be aligned to what spdk_bdev_part_base tailq. I don\u0027t quite understand your proposal. Could you be more specific?",
+      "parentUuid": "d8af8825_496512a9",
+      "range": {
+        "startLine": 48,
+        "startChar": 1,
+        "endLine": 48,
+        "endChar": 36
+      },
+      "revId": "abd138a3cbf18cef08e21aebbd62181c6a5ee088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a2344bb0_3a304bdd",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 24
@@ -39,6 +63,24 @@
       "revId": "abd138a3cbf18cef08e21aebbd62181c6a5ee088",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b482aeca_b60cb9e3",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-18T08:54:02Z",
+      "side": 1,
+      "message": "Thank you for your review. I don\u0027t think we need other info for now. When we need it, we can add it then.",
+      "parentUuid": "a2344bb0_3a304bdd",
+      "revId": "abd138a3cbf18cef08e21aebbd62181c6a5ee088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -62,6 +104,30 @@
       "revId": "abd138a3cbf18cef08e21aebbd62181c6a5ee088",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ec6b348_465836d8",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-18T08:54:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "77542f42_47a981ae",
+      "range": {
+        "startLine": 357,
+        "startChar": 6,
+        "endLine": 357,
+        "endChar": 21
+      },
+      "revId": "abd138a3cbf18cef08e21aebbd62181c6a5ee088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
