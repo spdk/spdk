@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "6726a01d_f5245ad4",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-18T09:30:47Z",
+      "side": 1,
+      "message": "Can we do the same as spdk_vbdev_split_config?",
+      "parentUuid": "ab564bde_23f292f0",
+      "range": {
+        "startLine": 48,
+        "startChar": 1,
+        "endLine": 48,
+        "endChar": 36
+      },
+      "revId": "abd138a3cbf18cef08e21aebbd62181c6a5ee088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a2344bb0_3a304bdd",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 24
