@@ -22,6 +22,30 @@
       "revId": "b7529cce219521687783850c52a72535483eaf98",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "416d6f33_079a34f6",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-18T13:49:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2952218d_0fd98855",
+      "range": {
+        "startLine": 235,
+        "startChar": 0,
+        "endLine": 236,
+        "endChar": 16
+      },
+      "revId": "b7529cce219521687783850c52a72535483eaf98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
