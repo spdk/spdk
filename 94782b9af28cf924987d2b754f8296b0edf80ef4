@@ -1,0 +1,303 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79cdbdcd_a44d52d2",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:42:01Z",
+      "side": 1,
+      "message": "This goes unused here",
+      "range": {
+        "startLine": 257,
+        "startChar": 0,
+        "endLine": 260,
+        "endChar": 45
+      },
+      "revId": "94782b9af28cf924987d2b754f8296b0edf80ef4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "288eaef1_965eefa8",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:42:01Z",
+      "side": 1,
+      "message": "There is no special handling added for ENOMEM here, if it occurs the request would never get processed.\nPlease just check for RC!\u003d0.",
+      "range": {
+        "startLine": 267,
+        "startChar": 23,
+        "endLine": 267,
+        "endChar": 29
+      },
+      "revId": "94782b9af28cf924987d2b754f8296b0edf80ef4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "197c9452_7a483e7b",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:42:01Z",
+      "side": 1,
+      "message": "Check for allocation failure",
+      "range": {
+        "startLine": 286,
+        "startChar": 7,
+        "endLine": 286,
+        "endChar": 67
+      },
+      "revId": "94782b9af28cf924987d2b754f8296b0edf80ef4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9dd241b4_e402127d",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:42:01Z",
+      "side": 1,
+      "message": "ctx-\u003edata was not allocated, so this function should not free it",
+      "range": {
+        "startLine": 305,
+        "startChar": 2,
+        "endLine": 305,
+        "endChar": 24
+      },
+      "revId": "94782b9af28cf924987d2b754f8296b0edf80ef4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3190e88_3ff8a496",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:42:01Z",
+      "side": 1,
+      "message": "check return code",
+      "range": {
+        "startLine": 311,
+        "startChar": 1,
+        "endLine": 311,
+        "endChar": 22
+      },
+      "revId": "94782b9af28cf924987d2b754f8296b0edf80ef4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8222b65_2023cf45",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:42:01Z",
+      "side": 1,
+      "message": "This will free the ctx-\u003edata, which was not allocated.",
+      "range": {
+        "startLine": 346,
+        "startChar": 2,
+        "endLine": 346,
+        "endChar": 24
+      },
+      "revId": "94782b9af28cf924987d2b754f8296b0edf80ef4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73bfd690_ea0204d5",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:42:01Z",
+      "side": 1,
+      "message": "This allocation can be done in cuse_nvme_submit_io_read(), ahead of passing the msg through the ring.",
+      "range": {
+        "startLine": 337,
+        "startChar": 0,
+        "endLine": 348,
+        "endChar": 2
+      },
+      "revId": "94782b9af28cf924987d2b754f8296b0edf80ef4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ebebc54a_5ad21df7",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:42:01Z",
+      "side": 1,
+      "message": "There is no special handling added for ENOMEM here, if it occurs the request would never get processed.\nPlease just check for RC!\u003d0.",
+      "range": {
+        "startLine": 355,
+        "startChar": 16,
+        "endLine": 355,
+        "endChar": 29
+      },
+      "revId": "94782b9af28cf924987d2b754f8296b0edf80ef4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13c17120_6779cda7",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:42:01Z",
+      "side": 1,
+      "message": "Check allocation failure",
+      "range": {
+        "startLine": 372,
+        "startChar": 7,
+        "endLine": 372,
+        "endChar": 67
+      },
+      "revId": "94782b9af28cf924987d2b754f8296b0edf80ef4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8db7d1f1_54623151",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:42:01Z",
+      "side": 1,
+      "message": "check return code",
+      "range": {
+        "startLine": 379,
+        "startChar": 1,
+        "endLine": 379,
+        "endChar": 22
+      },
+      "revId": "94782b9af28cf924987d2b754f8296b0edf80ef4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76758d22_ca23a587",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:42:01Z",
+      "side": 1,
+      "message": "Fallback to default ?",
+      "range": {
+        "startLine": 412,
+        "startChar": 0,
+        "endLine": 415,
+        "endChar": 8
+      },
+      "revId": "94782b9af28cf924987d2b754f8296b0edf80ef4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48eea039_64c18e48",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:42:01Z",
+      "side": 1,
+      "message": "Don\u0027t think there is need to add it, if it goes unused. Just go straight to default.",
+      "range": {
+        "startLine": 510,
+        "startChar": 0,
+        "endLine": 513,
+        "endChar": 0
+      },
+      "revId": "94782b9af28cf924987d2b754f8296b0edf80ef4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03935954_93949f22",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-18T11:42:01Z",
+      "side": 1,
+      "message": "Fallback to default",
+      "range": {
+        "startLine": 526,
+        "startChar": 0,
+        "endLine": 530,
+        "endChar": 8
+      },
+      "revId": "94782b9af28cf924987d2b754f8296b0edf80ef4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
