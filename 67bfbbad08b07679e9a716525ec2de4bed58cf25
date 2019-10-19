@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70faf461_453cd027",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-19T20:55:53Z",
+      "side": 1,
+      "message": "I\u0027m not sure this is the place to do it.  We call this function many times during initialization or reset.  We probably should do it in NVME_CTRLR_STATE_INIT state instead.",
+      "revId": "67bfbbad08b07679e9a716525ec2de4bed58cf25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05723176_04ffaf96",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-19T20:55:53Z",
+      "side": 1,
+      "message": "should this comment be updated?",
+      "revId": "67bfbbad08b07679e9a716525ec2de4bed58cf25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
