@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e23e79f6_6e2b06f1",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1000,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-19T21:00:08Z",
+      "side": 1,
+      "message": "let\u0027s consider moving these nvme_qpair_set_state calls into nvme_transport_ctrlr_connect_qpair itself - then we don\u0027t have to duplicate them here and down below\n\nugh - no, you can\u0027t because of how NVME_TRANSPORT_CALL is implemented - it would be nice to fix NVME_TRANSPORT_CALL so we could do something like this but this code is fine for now",
+      "revId": "7d7010aafe5cdf07badb85c26de0cd9d8066c51c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
