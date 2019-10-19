@@ -86,6 +86,29 @@
       "revId": "5201f1415af564ab14dc7ca65dcc0fc1a2b2b9b1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "822e8d5e_7be4b7b0",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1879,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-19T11:03:50Z",
+      "side": 1,
+      "message": "A minor comment - can we use \\retval to enumerate all possible return values?",
+      "range": {
+        "startLine": 1879,
+        "startChar": 4,
+        "endLine": 1879,
+        "endChar": 12
+      },
+      "revId": "5201f1415af564ab14dc7ca65dcc0fc1a2b2b9b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
