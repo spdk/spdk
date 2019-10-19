@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fad6a31b_45bb1744",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-19T21:02:47Z",
+      "side": 1,
+      "message": "can you explain what wasn\u0027t identical?  I don\u0027t see any differences between the two but want to make sure I\u0027m not missing something\n\nif they really are the same, we should just say here that they were identical instead of \"almost identical\"",
+      "revId": "5c9ef0b60c69bf46315f826f08ef34e8e7a054a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
