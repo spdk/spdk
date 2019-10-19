@@ -1,0 +1,595 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7715f3e1_4f7f4839",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "may use *tab* here to align all the definitions like below",
+      "range": {
+        "startLine": 55,
+        "startChar": 22,
+        "endLine": 55,
+        "endChar": 26
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73c2a3a7_f263fb06",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "remove additional tab and also for below",
+      "range": {
+        "startLine": 66,
+        "startChar": 5,
+        "endLine": 66,
+        "endChar": 6
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b73ad0bc_e33a2a6b",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "Add one more tab for the alignment. May check other ares in this file.",
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eaab7c04_4ad9636f",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "May consider to have a consistent prefix for the functions like\n\nspdk_iscsi_fuzz_",
+      "range": {
+        "startLine": 123,
+        "startChar": 4,
+        "endLine": 123,
+        "endChar": 14
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7160d75a_c16799ca",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "may just rename as spdk_iscsi_fuzz_reject",
+      "range": {
+        "startLine": 339,
+        "startChar": 0,
+        "endLine": 339,
+        "endChar": 13
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "632dd42b_8a5b2175",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "Is this to avoid the duplicate of existing function? May just rename as spdk_iscsi_fuzz_execute",
+      "range": {
+        "startLine": 456,
+        "startChar": 0,
+        "endLine": 456,
+        "endChar": 19
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6227bd5_beb57ff2",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "may rename as spdk_fuzz_get_pdu",
+      "range": {
+        "startLine": 479,
+        "startChar": 12,
+        "endLine": 479,
+        "endChar": 25
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fbcff38_b975da1a",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "remove additional new line",
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75c7034d_f211240f",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "remove additional newline",
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "516c6508_f256c1d1",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "may check other areas to remove additional newline",
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "862865c6_ab329294",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "false. Please check other g_run",
+      "range": {
+        "startLine": 599,
+        "startChar": 11,
+        "endLine": 599,
+        "endChar": 12
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27f92247_dcd4bc42",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 616,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "remove extra space here",
+      "range": {
+        "startLine": 616,
+        "startChar": 25,
+        "endLine": 616,
+        "endChar": 26
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6bd6b2ca_3641915b",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "may just rename as spdk_fuzz_put_pdu",
+      "range": {
+        "startLine": 642,
+        "startChar": 2,
+        "endLine": 642,
+        "endChar": 15
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d533abe_d8921d89",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "false",
+      "range": {
+        "startLine": 828,
+        "startChar": 10,
+        "endLine": 828,
+        "endChar": 11
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd1cca93_7a29df9f",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 836,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "false",
+      "range": {
+        "startLine": 836,
+        "startChar": 12,
+        "endLine": 836,
+        "endChar": 13
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b125efe1_ff5677b3",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 844,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "this function seems that only return 0? Shall we return other value for example above timeout case?",
+      "range": {
+        "startLine": 844,
+        "startChar": 1,
+        "endLine": 844,
+        "endChar": 9
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7b95bca_4d906b3b",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 895,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "end_iscsi_fuzz",
+      "range": {
+        "startLine": 895,
+        "startChar": 37,
+        "endLine": 895,
+        "endChar": 45
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67add988_ef094fc6",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 897,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "should we call \"goto out\" here to exit the running?",
+      "range": {
+        "startLine": 897,
+        "startChar": 2,
+        "endLine": 897,
+        "endChar": 26
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2abf4d19_6105d43b",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "This function\u0027s return value is not checked.",
+      "range": {
+        "startLine": 900,
+        "startChar": 1,
+        "endLine": 900,
+        "endChar": 20
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fd3f1ab_7890f980",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 944,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "shall we check \u003c\u003d 0",
+      "range": {
+        "startLine": 944,
+        "startChar": 6,
+        "endLine": 944,
+        "endChar": 20
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "341a4e34_ed7abcfd",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "Looks like it will be just NULL when this application starts? Should we move this logic to the iscsi_fuzz_parse()?",
+      "range": {
+        "startLine": 967,
+        "startChar": 1,
+        "endLine": 967,
+        "endChar": 18
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35dde1ba_67afdbaf",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 982,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "begin_iscsi_fuzz ?",
+      "range": {
+        "startLine": 982,
+        "startChar": 28,
+        "endLine": 982,
+        "endChar": 38
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "501de54b_2419512e",
+        "filename": "test/fuzz/autofuzz_iscsi.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "may just name it as iscsi_fuzz.json",
+      "range": {
+        "startLine": 70,
+        "startChar": 31,
+        "endLine": 70,
+        "endChar": 37
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28445b0c_40877f08",
+        "filename": "test/fuzz/autofuzz_iscsi.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "delete this newline",
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "994f6dbe_c0f5952f",
+        "filename": "test/iscsi_tgt/fuzz/fuzz.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "is this due to there will be two FIO jobs?",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 34
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73b10e3a_1422d0a2",
+        "filename": "test/iscsi_tgt/fuzz/fuzz.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "maybe just name it as iscsi_fuzz.json",
+      "range": {
+        "startLine": 59,
+        "startChar": 31,
+        "endLine": 59,
+        "endChar": 37
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92042943_677baf9c",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-19T07:45:48Z",
+      "side": 1,
+      "message": "Add a newline is preferred",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 44
+      },
+      "revId": "b816838e41365146ab39a68e00d2a9be84ad3b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
