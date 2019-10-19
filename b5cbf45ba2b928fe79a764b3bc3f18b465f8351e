@@ -22,6 +22,30 @@
       "revId": "b5cbf45ba2b928fe79a764b3bc3f18b465f8351e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fbcd0528_0c34ba6f",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-19T12:15:04Z",
+      "side": 1,
+      "message": "Connected should be done here. Good catch. Enabled will be handled in check_enabled. Based on this comment and your other one, I have modified the check_enabled to only move the qpair to enabled once it\u0027s in the connected state.",
+      "parentUuid": "7faf933a_056b171b",
+      "range": {
+        "startLine": 361,
+        "startChar": 9,
+        "endLine": 361,
+        "endChar": 45
+      },
+      "revId": "b5cbf45ba2b928fe79a764b3bc3f18b465f8351e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
