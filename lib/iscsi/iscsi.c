@@ -2915,6 +2915,7 @@ iscsi_send_datain(struct spdk_iscsi_conn *conn,
 	uint32_t transfer_tag;
 	int F_bit, U_bit, O_bit, S_bit;
 	struct spdk_iscsi_task *primary;
+	struct spdk_scsi_lun *lun_dev;
 
 	primary = spdk_iscsi_task_get_primary(task);
 
@@ -2994,6 +2995,14 @@ iscsi_send_datain(struct spdk_iscsi_conn *conn,
 
 	if (F_bit && S_bit) {
 		to_be32(&rsph->res_cnt, residual_len);
+	}
+
+	lun_dev = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
+	if (spdk_likely(lun_dev != NULL)) {
+		if (spdk_unlikely(spdk_scsi_lun_get_dif_ctx(lun_dev, task->scsi.cdb, offset,
+				  &rsp_pdu->dif_ctx))) {
+			rsp_pdu->dif_insert_or_strip = true;
+		}
 	}
 
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
@@ -3441,6 +3450,10 @@ iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		    (pdu->data_segment_len > conn->sess->FirstBurstLength)) {
 			spdk_iscsi_task_put(task);
 			return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+		}
+
+		if (spdk_unlikely(spdk_scsi_lun_get_dif_ctx(task->scsi.lun, cdb, 0, &pdu->dif_ctx))) {
+			pdu->dif_insert_or_strip = true;
 		}
 	} else {
 		/* neither R nor W bit set */
@@ -4471,6 +4484,11 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return 0;
 	}
 
+	if (spdk_unlikely(spdk_scsi_lun_get_dif_ctx(lun_dev, subtask->scsi.cdb, buffer_offset,
+			  &pdu->dif_ctx))) {
+		pdu->dif_insert_or_strip = true;
+	}
+
 	pdu->task = subtask;
 	return 0;
 
@@ -4871,10 +4889,6 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				pdu->data_buf = pdu->mobj->buf;
 				pdu->data = pdu->mobj->buf;
 				pdu->data_from_mempool = true;
-
-				if (spdk_unlikely(spdk_iscsi_get_dif_ctx(conn, pdu, &pdu->dif_ctx))) {
-					pdu->dif_insert_or_strip = true;
-				}
 			}
 
 			/* copy the actual data into local buffer */
@@ -4978,84 +4992,6 @@ spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 	}
 
 	return i;
-}
-
-bool
-spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
-		       struct spdk_dif_ctx *dif_ctx)
-{
-	struct iscsi_bhs *bhs;
-	uint32_t data_offset = 0;
-	uint8_t *cdb = NULL;
-	uint64_t lun;
-	int lun_id = 0;
-	struct spdk_scsi_lun *lun_dev;
-
-	/* connection is not in full feature phase but non-login opcode
-	 * was received.
-	 */
-	if ((!conn->full_feature && conn->state == ISCSI_CONN_STATE_RUNNING) ||
-	    conn->state == ISCSI_CONN_STATE_INVALID) {
-		return false;
-	}
-
-	/* SCSI Command is allowed only in normal session */
-	if (conn->sess == NULL ||
-	    conn->sess->session_type != SESSION_TYPE_NORMAL) {
-		return false;
-	}
-
-	bhs = &pdu->bhs;
-
-	switch (bhs->opcode) {
-	case ISCSI_OP_SCSI: {
-		struct iscsi_bhs_scsi_req *sbhs;
-
-		sbhs = (struct iscsi_bhs_scsi_req *)bhs;
-		data_offset = 0;
-		cdb = sbhs->cdb;
-		lun = from_be64(&sbhs->lun);
-		lun_id = spdk_scsi_lun_id_fmt_to_int(lun);
-		break;
-	}
-	case ISCSI_OP_SCSI_DATAOUT: {
-		struct iscsi_bhs_data_out *dbhs;
-		struct spdk_iscsi_task *task;
-		int transfer_tag;
-
-		dbhs = (struct iscsi_bhs_data_out *)bhs;
-		data_offset = from_be32(&dbhs->buffer_offset);
-		transfer_tag = from_be32(&dbhs->ttt);
-		task = get_transfer_task(conn, transfer_tag);
-		if (task == NULL) {
-			return false;
-		}
-		cdb = task->scsi.cdb;
-		lun_id = task->lun_id;
-		break;
-	}
-	case ISCSI_OP_SCSI_DATAIN: {
-		struct iscsi_bhs_data_in *dbhs;
-		struct spdk_iscsi_task *task;
-
-		dbhs = (struct iscsi_bhs_data_in *)bhs;
-		data_offset = from_be32(&dbhs->buffer_offset);
-		task = pdu->task;
-		assert(task != NULL);
-		cdb = task->scsi.cdb;
-		lun_id = task->lun_id;
-		break;
-	}
-	default:
-		return false;
-	}
-
-	lun_dev = spdk_scsi_dev_get_lun(conn->dev, lun_id);
-	if (lun_dev == NULL) {
-		return false;
-	}
-
-	return spdk_scsi_lun_get_dif_ctx(lun_dev, cdb, data_offset, dif_ctx);
 }
 
 bool spdk_iscsi_is_deferred_free_pdu(struct spdk_iscsi_pdu *pdu)
