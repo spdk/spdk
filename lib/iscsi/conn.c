@@ -1395,14 +1395,13 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	uint32_t crc32c;
 	int rc;
 
-	if (spdk_unlikely(spdk_iscsi_get_dif_ctx(conn, pdu, &pdu->dif_ctx))) {
+	if (spdk_unlikely(pdu->dif_insert_or_strip)) {
 		rc = iscsi_dif_verify(pdu, &pdu->dif_ctx);
 		if (rc != 0) {
 			spdk_iscsi_conn_free_pdu(conn, pdu);
 			conn->state = ISCSI_CONN_STATE_EXITING;
 			return;
 		}
-		pdu->dif_insert_or_strip = true;
 	}
 
 	if (pdu->bhs.opcode != ISCSI_OP_LOGIN_RSP) {
