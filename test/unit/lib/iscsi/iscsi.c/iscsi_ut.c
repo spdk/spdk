@@ -121,6 +121,10 @@ DEFINE_STUB(spdk_scsi_lun_id_int_to_fmt, uint64_t, (int lun_id), 0);
 
 DEFINE_STUB(spdk_scsi_lun_id_fmt_to_int, int, (uint64_t lun_fmt), 0);
 
+DEFINE_STUB(spdk_scsi_lun_get_dif_ctx, bool,
+	    (struct spdk_scsi_lun *lun, uint8_t *cdb, uint32_t data_offset,
+	     struct spdk_dif_ctx *dif_ctx), false);
+
 static void
 op_login_check_target_test(void)
 {
@@ -347,6 +351,8 @@ underflow_for_read_transfer_test(void)
 	struct spdk_iscsi_sess sess;
 	struct spdk_iscsi_conn conn;
 	struct spdk_iscsi_task task;
+	struct spdk_scsi_dev dev;
+	struct spdk_scsi_lun lun;
 	struct spdk_iscsi_pdu *pdu;
 	struct iscsi_bhs_scsi_req *scsi_req;
 	struct iscsi_bhs_data_in *datah;
@@ -355,11 +361,16 @@ underflow_for_read_transfer_test(void)
 	memset(&sess, 0, sizeof(sess));
 	memset(&conn, 0, sizeof(conn));
 	memset(&task, 0, sizeof(task));
+	memset(&dev, 0, sizeof(dev));
+	memset(&lun, 0, sizeof(lun));
 
 	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 
 	conn.sess = &sess;
 	conn.MaxRecvDataSegmentLength = 8192;
+
+	dev.lun[0] = &lun;
+	conn.dev = &dev;
 
 	pdu = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(pdu != NULL);
@@ -409,6 +420,8 @@ underflow_for_zero_read_transfer_test(void)
 	struct spdk_iscsi_sess sess;
 	struct spdk_iscsi_conn conn;
 	struct spdk_iscsi_task task;
+	struct spdk_scsi_dev dev;
+	struct spdk_scsi_lun lun;
 	struct spdk_iscsi_pdu *pdu;
 	struct iscsi_bhs_scsi_req *scsi_req;
 	struct iscsi_bhs_scsi_resp *resph;
@@ -417,11 +430,16 @@ underflow_for_zero_read_transfer_test(void)
 	memset(&sess, 0, sizeof(sess));
 	memset(&conn, 0, sizeof(conn));
 	memset(&task, 0, sizeof(task));
+	memset(&dev, 0, sizeof(dev));
+	memset(&lun, 0, sizeof(lun));
 
 	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 
 	conn.sess = &sess;
 	conn.MaxRecvDataSegmentLength = 8192;
+
+	dev.lun[0] = &lun;
+	conn.dev = &dev;
 
 	pdu = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(pdu != NULL);
@@ -472,6 +490,8 @@ underflow_for_request_sense_test(void)
 	struct spdk_iscsi_sess sess;
 	struct spdk_iscsi_conn conn;
 	struct spdk_iscsi_task task;
+	struct spdk_scsi_dev dev;
+	struct spdk_scsi_lun lun;
 	struct spdk_iscsi_pdu *pdu1, *pdu2;
 	struct iscsi_bhs_scsi_req *scsi_req;
 	struct iscsi_bhs_data_in *datah;
@@ -481,11 +501,16 @@ underflow_for_request_sense_test(void)
 	memset(&sess, 0, sizeof(sess));
 	memset(&conn, 0, sizeof(conn));
 	memset(&task, 0, sizeof(task));
+	memset(&dev, 0, sizeof(dev));
+	memset(&lun, 0, sizeof(lun));
 
 	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 
 	conn.sess = &sess;
 	conn.MaxRecvDataSegmentLength = 8192;
+
+	dev.lun[0] = &lun;
+	conn.dev = &dev;
 
 	pdu1 = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(pdu1 != NULL);
@@ -562,6 +587,8 @@ underflow_for_check_condition_test(void)
 	struct spdk_iscsi_sess sess;
 	struct spdk_iscsi_conn conn;
 	struct spdk_iscsi_task task;
+	struct spdk_scsi_dev dev;
+	struct spdk_scsi_lun lun;
 	struct spdk_iscsi_pdu *pdu;
 	struct iscsi_bhs_scsi_req *scsi_req;
 	struct iscsi_bhs_scsi_resp *resph;
@@ -570,11 +597,16 @@ underflow_for_check_condition_test(void)
 	memset(&sess, 0, sizeof(sess));
 	memset(&conn, 0, sizeof(conn));
 	memset(&task, 0, sizeof(task));
+	memset(&dev, 0, sizeof(dev));
+	memset(&lun, 0, sizeof(lun));
 
 	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 
 	conn.sess = &sess;
 	conn.MaxRecvDataSegmentLength = 8192;
+
+	dev.lun[0] = &lun;
+	conn.dev = &dev;
 
 	pdu = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(pdu != NULL);
