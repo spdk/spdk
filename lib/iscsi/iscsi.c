@@ -3374,7 +3374,7 @@ iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	W_bit = reqh->write_bit;
 	lun = from_be64(&reqh->lun);
 	task_tag = from_be32(&reqh->itt);
-	data_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
+	data_len = pdu->data_segment_len;
 	transfer_len = from_be32(&reqh->expected_data_xfer_len);
 	cdb = reqh->cdb;
 
@@ -4715,6 +4715,8 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				}
 			}
 
+			pdu->data_segment_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
+
 			/* AHS */
 			ahs_len = pdu->bhs.total_ahs_len * 4;
 			assert(ahs_len <= ISCSI_AHS_LEN);
@@ -4763,7 +4765,7 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 			conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD;
 			break;
 		case ISCSI_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
-			data_len = ISCSI_ALIGN(DGET24(pdu->bhs.data_segment_len));
+			data_len = pdu->data_segment_len;
 
 			if (data_len != 0 && pdu->data_buf == NULL) {
 				if (data_len <= spdk_get_max_immediate_data_size()) {
@@ -4785,7 +4787,6 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 				pdu->data_buf = pdu->mobj->buf;
 				pdu->data = pdu->mobj->buf;
 				pdu->data_from_mempool = true;
-				pdu->data_segment_len = data_len;
 
 				if (spdk_unlikely(spdk_iscsi_get_dif_ctx(conn, pdu, &pdu->dif_ctx))) {
 					pdu->dif_insert_or_strip = true;
