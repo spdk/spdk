@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb82c68e_e3d1087d",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4550,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-21T17:14:55Z",
+      "side": 1,
+      "message": "is this check needed?  maybe it should be an assert?\n\nI\u0027m just not sure why iscsi_pdu_hdr_op_data() wouldn\u0027t already find this case.  If lun_dev is NULL there, pdu-\u003etask does not get set, so this function would return at line 4507.  Is there a case where the lun could become NULL in this function after that point?",
+      "revId": "e114ef1ab07a70f5edb2e7609508c116e5512aa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
