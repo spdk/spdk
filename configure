@@ -94,6 +94,8 @@ function usage()
 	echo "                           be searched."
 	echo " fuse                      Build FUSE components for mounting a blobfs filesystem."
 	echo "                           No path required."
+	echo " cuse                      Use cuse for NVMe character devices."
+	echo "                           No path required."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -363,6 +365,12 @@ for i in "$@"; do
 		--without-fuse)
 			CONFIG[FUSE]=n
 			;;
+		--with-cuse)
+			CONFIG[CUSE]=y
+			;;
+		--without-cuse)
+			CONFIG[CUSE]=n
+			;;
 		--)
 			break
 			;;
@@ -606,6 +614,15 @@ if [[ "${CONFIG[VPP]}" = "y" ]]; then
 	if ! echo -e '#include <vnet/session/application_interface.h>\nint main(void) { return 0; }\n' \
 		| ${BUILD_CMD[@]} ${VPP_CFLAGS} -lvppinfra -lsvm -lvlibmemoryclient - 2>/dev/null; then
 		echo --with-vpp requires installed vpp.
+		echo Please install then re-run this script.
+		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[CUSE]}" = "y" ]]; then
+	if ! echo -e '#define FUSE_USE_VERSION 31\n#include <fuse/cuse_lowlevel.h>\n#include <fuse/fuse_lowlevel.h>\n#include <fuse/fuse_opt.h>\nint main(void) { return 0; }\n' \
+		| ${BUILD_CMD[@]} -lfuse -D_FILE_OFFSET_BITS=64 - 2>/dev/null; then
+		echo --with-cuse requires libfuse.
 		echo Please install then re-run this script.
 		exit 1
 	fi
