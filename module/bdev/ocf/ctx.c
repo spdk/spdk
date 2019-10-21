@@ -532,7 +532,7 @@ vbdev_ocf_ctx_init(void)
 {
 	int ret;
 
-	ret = ocf_ctx_init(&vbdev_ocf_ctx, &vbdev_ocf_ctx_cfg);
+	ret = ocf_ctx_create(&vbdev_ocf_ctx, &vbdev_ocf_ctx_cfg);
 	if (ret < 0) {
 		return ret;
 	}
@@ -543,7 +543,7 @@ vbdev_ocf_ctx_init(void)
 void
 vbdev_ocf_ctx_cleanup(void)
 {
-	ocf_ctx_exit(vbdev_ocf_ctx);
+	ocf_ctx_put(vbdev_ocf_ctx);
 	vbdev_ocf_ctx = NULL;
 }
 

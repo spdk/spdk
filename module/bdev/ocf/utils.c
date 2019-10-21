@@ -41,7 +41,8 @@ static char *cache_modes[ocf_cache_mode_max] = {
 	[ocf_cache_mode_wb] = "wb",
 	[ocf_cache_mode_wa] = "wa",
 	[ocf_cache_mode_pt] = "pt",
-	[ocf_cache_mode_wi] = "wi"
+	[ocf_cache_mode_wi] = "wi",
+	[ocf_cache_mode_wo] = "wo",
 };
 
 ocf_cache_mode_t

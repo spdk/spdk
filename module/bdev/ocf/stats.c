@@ -40,28 +40,12 @@ vbdev_ocf_stats_get(ocf_cache_t cache, ocf_core_id_t core_id, struct vbdev_ocf_s
 	int status;
 	ocf_core_t core;
 
-	if (cache == NULL) {
-		assert(false);
-		return -EFAULT;
-	}
-
-	status = ocf_mngt_cache_read_lock(cache);
-	if (status) {
-		return status;
-	}
-
 	status = ocf_core_get(cache, core_id, &core);
 	if (status) {
 		return status;
 	}
 
-	status = ocf_stats_collect_core(core, &stats->usage, &stats->reqs, &stats->blocks, &stats->errors);
-	ocf_mngt_cache_read_unlock(cache);
-	if (status) {
-		return status;
-	}
-
-	return 0;
+	return ocf_stats_collect_core(core, &stats->usage, &stats->reqs, &stats->blocks, &stats->errors);
 }
 
 #define WJSON_STAT(w, stats, group, field, units) \
