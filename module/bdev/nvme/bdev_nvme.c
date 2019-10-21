@@ -935,6 +935,16 @@ nvme_ctrlr_create_namespaces_cb(void *cb_arg, struct nvme_namespace *ns, int rc)
 	free(ctx);
 }
 
+static size_t
+nvme_ctrlr_get_ns_struct_size(struct nvme_bdev_ctrlr *ctrlr, uint32_t nsid)
+{
+	if (spdk_nvme_ctrlr_is_ocssd_ns(ctrlr->ctrlr, nsid)) {
+		assert(false);
+	} else {
+		return sizeof(struct nvme_namespace);
+	}
+}
+
 static void
 nvme_ctrlr_init_ns_type(struct nvme_namespace *ns)
 {
@@ -979,6 +989,7 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
 	struct nvme_namespace	*ns;
+	size_t			struct_size;
 	uint32_t		i;
 	int			rc;
 
@@ -989,7 +1000,8 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		if (!ns && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
 			SPDK_NOTICELOG("NSID %u to be added\n", nsid);
 
-			nvme_bdev_ctrlr->namespaces[i] = calloc(1, sizeof(struct nvme_namespace));
+			struct_size = nvme_ctrlr_get_ns_struct_size(nvme_bdev_ctrlr, nsid);
+			nvme_bdev_ctrlr->namespaces[i] = calloc(1, struct_size);
 			if (!nvme_bdev_ctrlr->namespaces[i]) {
 				SPDK_ERRLOG("Failed to allocate memory for namespace %u of %s\n", nsid, nvme_bdev_ctrlr->name);
 				return;
@@ -1732,6 +1744,7 @@ static void
 nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			     spdk_bdev_create_namespaces_fn cb_fn, void *cb_arg)
 {
+	size_t			struct_size;
 	uint32_t		nsid;
 	uint32_t		active_ns_num;
 	int			rc = 0;
@@ -1748,7 +1761,10 @@ nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	 * know (in callback function) if we already finished */
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(nvme_bdev_ctrlr->ctrlr);
 	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(nvme_bdev_ctrlr->ctrlr, nsid)) {
-		nvme_bdev_ctrlr->namespaces[nsid - 1] = calloc(1, sizeof(struct nvme_namespace));
+
+		struct_size = nvme_ctrlr_get_ns_struct_size(nvme_bdev_ctrlr, nsid);
+
+		nvme_bdev_ctrlr->namespaces[nsid - 1] = calloc(1, struct_size);
 		if (!nvme_bdev_ctrlr->namespaces[nsid - 1]) {
 			SPDK_ERRLOG("Failed to allocate memory for namespace %u of %s\n", nsid, nvme_bdev_ctrlr->name);
 			goto error;
