@@ -264,7 +264,7 @@ test_next_xfer_addr(void)
 	CU_ASSERT_EQUAL(result.offset, expect.offset);
 
 	/* Remove one zone and verify it's skipped properly */
-	g_band->zone_buf[1].state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+	g_band->zone_buf[1].info.state = SPDK_BDEV_ZONE_STATE_OFFLINE;
 	CIRCLEQ_REMOVE(&g_band->zones, &g_band->zone_buf[1], circleq);
 	g_band->num_zones--;
 	expect = addr_from_punit(2);
