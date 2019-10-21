@@ -927,6 +927,16 @@ nvme_ctrlr_create_namespaces_cb(void *cb_arg, struct nvme_namespace *ns, int rc)
 	}
 }
 
+static size_t
+nvme_ctrlr_get_ns_struct_size(struct nvme_bdev_ctrlr *ctrlr, uint32_t nsid)
+{
+	if (spdk_nvme_ctrlr_is_ocssd_ns(ctrlr->ctrlr, nsid)) {
+		assert(false);
+	} else {
+		return sizeof(struct nvme_namespace);
+	}
+}
+
 static void
 nvme_ctrlr_init_ns_type(struct nvme_namespace *ns)
 {
@@ -941,8 +951,11 @@ static int
 nvme_ctrlr_create_namespace(struct nvme_bdev_ctrlr *ctrlr, uint32_t nsid, struct init_ns_ctx	*ctx)
 {
 	struct nvme_namespace	*ns;
+	size_t			struct_size;
 
-	ns = calloc(1, sizeof(struct nvme_namespace));
+	struct_size = nvme_ctrlr_get_ns_struct_size(ctrlr, nsid);
+
+	ns = calloc(1, struct_size);
 	if (!ns) {
 		return -ENOMEM;
 	}
