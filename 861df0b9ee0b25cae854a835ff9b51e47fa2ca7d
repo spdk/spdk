@@ -34,6 +34,24 @@
       "revId": "861df0b9ee0b25cae854a835ff9b51e47fa2ca7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d56098fd_ca3694b5",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-21T07:36:06Z",
+      "side": 1,
+      "message": "I was trying to have a consistent way of distinguishing between the VMD itself and devices behind it (spdk_lspci.c needs it). But I guess it\u0027ll rarely be needed, so I can keep using the old method and not override the type here.",
+      "parentUuid": "0ca920c3_5873d997",
+      "revId": "861df0b9ee0b25cae854a835ff9b51e47fa2ca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
