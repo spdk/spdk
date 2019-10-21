@@ -2,6 +2,16 @@
 
 ## v19.10: (Upcoming Release)
 
+### bdev opal
+
+EXPERIMENTAL: New virtual bdev module OPAL bdev has been added to support management of
+OPAL supported NVMe drives. Users can build OPAL virtual bdev on an NVMe base bdev but
+now it only supports namespace=1. Admin can use admin password to init and set the size for OPAL
+bdev and assign to a user. A user can then use user password to lock or unlock this bdev.
+If the bdev is unlocked, it is used as a normal NVMe bdev. If it is locked, all IOs will
+be denied. The number of OPAL virtual bdev built on top of NVMe is not infinite.
+It is constrained by the hardware. This feature is considered experimental.
+
 ### bdev zone
 
 Added new public header for zoned bdev. Zoned bdev is an extension
