@@ -35,7 +35,7 @@ create_test_list
 
 src=$(readlink -f $(dirname $0))
 out=$PWD
-cd $src
+cd $src || exit
 
 ./scripts/setup.sh status
 

@@ -47,7 +47,7 @@ timing_exit restart_cinder
 # In this tests is checked if spdk can correctly cooperate with openstack spdk driver
 timing_enter tempest_tests
 current_dir=$(pwd)
-cd /opt/stack/tempest
+cd /opt/stack/tempest || exit
 tox -e all -- tempest.api.compute.volumes.test_attach_volume.AttachVolumeTestJSON.test_attach_detach_volume
 tox -e all -- tempest.api.compute.volumes.test_attach_volume.AttachVolumeTestJSON.test_list_get_volume_attachments
 tox -e all -- tempest.api.compute.volumes.test_volume_snapshots.VolumesSnapshotsTestJSON.test_volume_snapshot_create_get_list_delete
@@ -64,7 +64,7 @@ tox -e all -- tempest.api.volume.test_volumes_snapshots.VolumesSnapshotTestJSON.
 tox -e all -- tempest.api.volume.test_volumes_snapshots.VolumesSnapshotTestJSON.test_volume_from_snapshot
 tox -e all -- tempest.api.volume.test_volumes_snapshots.VolumesSnapshotTestJSON.test_volume_from_snapshot_no_size
 tox -e all -- tempest.api.volume.test_volumes_snapshots_list.VolumesSnapshotListTestJSON.test_snapshot_list_param_limit
-cd $current_dir
+cd $current_dir || exit
 timing_exit tempest_tests
 
 timing_enter test_cleanup

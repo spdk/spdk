@@ -52,7 +52,7 @@ if $bad_transport; then
 fi
 
 timing_enter make
-cd $rootdir
+cd $rootdir || exit
 ./configure $config_params
 $MAKE $MAKEFLAGS
 timing_exit make
