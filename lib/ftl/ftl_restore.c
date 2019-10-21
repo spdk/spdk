@@ -1087,7 +1087,7 @@ ftl_pad_zone_pad_finish(struct ftl_restore_band *rband, bool direct_access)
 	}
 
 	for (i = 0; i < rband->band->num_zones; ++i) {
-		if (rband->band->zone_buf[i].state != SPDK_BDEV_ZONE_STATE_CLOSED) {
+		if (rband->band->zone_buf[i].info.state != SPDK_BDEV_ZONE_STATE_CLOSED) {
 			num_pad_zones++;
 		}
 	}
@@ -1168,7 +1168,7 @@ ftl_pad_zone_cb(struct ftl_io *io, void *arg, int status)
 	offset = io->addr.offset % ftl_get_num_blocks_in_zone(restore->dev);
 	if (offset + io->lbk_cnt == ftl_get_num_blocks_in_zone(restore->dev)) {
 		zone = ftl_band_zone_from_addr(band, io->addr);
-		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
+		zone->info.state = SPDK_BDEV_ZONE_STATE_CLOSED;
 	} else {
 		struct ftl_addr addr = io->addr;
 		addr.offset += io->lbk_cnt;
@@ -1216,12 +1216,11 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 	}
 
 	for (i = 0; i < band->num_zones; ++i) {
-		if (band->zone_buf[i].state == SPDK_BDEV_ZONE_STATE_CLOSED) {
+		if (band->zone_buf[i].info.state == SPDK_BDEV_ZONE_STATE_CLOSED) {
 			continue;
 		}
 
-		addr = band->zone_buf[i].start_addr;
-		addr.offset = band->zone_buf[i].write_offset;
+		addr.offset = band->zone_buf[i].info.write_pointer;
 
 		buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * dev->xfer_size, 0, NULL);
 		if (spdk_unlikely(!buffer)) {
