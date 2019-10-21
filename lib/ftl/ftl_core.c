@@ -358,8 +358,8 @@ ftl_submit_erase(struct ftl_io *io)
 	for (i = 0; i < io->lbk_cnt; ++i) {
 		if (i != 0) {
 			zone = ftl_band_next_zone(band, ftl_band_zone_from_addr(band, addr));
-			assert(zone->state == SPDK_BDEV_ZONE_STATE_CLOSED);
-			addr = zone->start_addr;
+			assert(zone->info.state == SPDK_BDEV_ZONE_STATE_CLOSED);
+			addr.offset = zone->info.zone_id;
 		}
 
 		assert(addr.offset % ftl_get_num_blocks_in_zone(dev) == 0);
@@ -484,7 +484,7 @@ ftl_wptr_init(struct ftl_band *band)
 	wptr->dev = dev;
 	wptr->band = band;
 	wptr->zone = CIRCLEQ_FIRST(&band->zones);
-	wptr->addr = wptr->zone->start_addr;
+	wptr->addr.offset = wptr->zone->info.zone_id;
 	TAILQ_INIT(&wptr->pending_queue);
 
 	return wptr;
@@ -620,7 +620,7 @@ ftl_wptr_ready(struct ftl_wptr *wptr)
 
 	if (spdk_unlikely(!ftl_zone_is_writable(wptr->zone))) {
 		/* Erasing band may fail after it was assigned to wptr. */
-		if (spdk_unlikely(wptr->zone->state == SPDK_BDEV_ZONE_STATE_OFFLINE)) {
+		if (spdk_unlikely(wptr->zone->info.state == SPDK_BDEV_ZONE_STATE_OFFLINE)) {
 			ftl_wptr_advance(wptr, wptr->dev->xfer_size);
 		}
 		return 0;
@@ -1521,7 +1521,7 @@ ftl_io_child_write_cb(struct ftl_io *io, void *ctx, int status)
 	wptr = ftl_wptr_from_band(io->band);
 
 	zone->busy = false;
-	zone->write_offset += io->lbk_cnt;
+	zone->info.write_pointer += io->lbk_cnt;
 
 	/* If some other write on the same band failed the write pointer would already be freed */
 	if (spdk_likely(wptr)) {
@@ -2150,7 +2150,7 @@ ftl_addr_is_written(struct ftl_band *band, struct ftl_addr addr)
 {
 	struct ftl_zone *zone = ftl_band_zone_from_addr(band, addr);
 
-	return addr.offset < zone->write_offset;
+	return addr.offset < zone->info.write_pointer;
 }
 
 static void
