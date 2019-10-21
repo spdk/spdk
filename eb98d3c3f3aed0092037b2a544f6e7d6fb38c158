@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fff02fd9_cf3a4431",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-21T17:36:48Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "80a1ae81_4469ae04",
+      "revId": "eb98d3c3f3aed0092037b2a544f6e7d6fb38c158",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "844005f9_82e15367",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 18
@@ -39,6 +57,30 @@
       "revId": "eb98d3c3f3aed0092037b2a544f6e7d6fb38c158",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e651f2e5_27c4fbad",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-21T17:36:48Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "844005f9_82e15367",
+      "range": {
+        "startLine": 195,
+        "startChar": 2,
+        "endLine": 195,
+        "endChar": 8
+      },
+      "revId": "eb98d3c3f3aed0092037b2a544f6e7d6fb38c158",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
