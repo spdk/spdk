@@ -235,7 +235,7 @@ _ftl_band_set_closed(struct ftl_band *band)
 	if (spdk_likely(band->num_zones)) {
 		LIST_INSERT_HEAD(&dev->shut_bands, band, list_entry);
 		CIRCLEQ_FOREACH(zone, &band->zones, circleq) {
-			zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
+			zone->info.state = SPDK_BDEV_ZONE_STATE_CLOSED;
 		}
 	} else {
 		LIST_REMOVE(band, list_entry);
@@ -405,7 +405,7 @@ ftl_band_tail_md_addr(struct ftl_band *band)
 	}
 
 	addr.offset = (num_req / band->num_zones) * xfer_size;
-	addr.offset += zone->start_addr.offset;
+	addr.offset += zone->info.zone_id;
 
 	return addr;
 }
@@ -413,11 +413,15 @@ ftl_band_tail_md_addr(struct ftl_band *band)
 struct ftl_addr
 ftl_band_head_md_addr(struct ftl_band *band)
 {
+	struct ftl_addr addr;
+
 	if (spdk_unlikely(!band->num_zones)) {
 		return ftl_to_addr(FTL_ADDR_INVALID);
 	}
 
-	return CIRCLEQ_FIRST(&band->zones)->start_addr;
+	addr.offset = CIRCLEQ_FIRST(&band->zones)->info.zone_id;
+
+	return addr;
 }
 
 void
@@ -549,7 +553,7 @@ ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_
 	struct ftl_zone *_zone;
 	size_t _num_zones = 0;
 	CIRCLEQ_FOREACH(_zone, &band->zones, circleq) {
-		if (spdk_likely(_zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE)) {
+		if (spdk_likely(_zone->info.state != SPDK_BDEV_ZONE_STATE_OFFLINE)) {
 			_num_zones++;
 		}
 	}
@@ -588,7 +592,7 @@ ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_
 		}
 	}
 
-	addr.offset = zone->start_addr.offset + offset;
+	addr.offset = zone->info.zone_id + offset;
 	return addr;
 }
 
@@ -1033,7 +1037,7 @@ ftl_erase_fail(struct ftl_io *io, int status)
 		    ftl_addr2str(io->addr, buf, sizeof(buf)), status);
 
 	zone = ftl_band_zone_from_addr(band, io->addr);
-	zone->state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+	zone->info.state = SPDK_BDEV_ZONE_STATE_OFFLINE;
 	ftl_band_remove_zone(band, zone);
 	band->tail_md_addr = ftl_band_tail_md_addr(band);
 }
@@ -1048,8 +1052,8 @@ ftl_band_erase_cb(struct ftl_io *io, void *ctx, int status)
 		return;
 	}
 	zone = ftl_band_zone_from_addr(io->band, io->addr);
-	zone->state = SPDK_BDEV_ZONE_STATE_EMPTY;
-	zone->write_offset = zone->start_addr.offset;
+	zone->info.state = SPDK_BDEV_ZONE_STATE_EMPTY;
+	zone->info.write_pointer = zone->info.zone_id;
 }
 
 int
@@ -1065,7 +1069,7 @@ ftl_band_erase(struct ftl_band *band)
 	ftl_band_set_state(band, FTL_BAND_STATE_PREP);
 
 	CIRCLEQ_FOREACH(zone, &band->zones, circleq) {
-		if (zone->state == SPDK_BDEV_ZONE_STATE_EMPTY) {
+		if (zone->info.state == SPDK_BDEV_ZONE_STATE_EMPTY) {
 			continue;
 		}
 
@@ -1075,7 +1079,7 @@ ftl_band_erase(struct ftl_band *band)
 			break;
 		}
 
-		io->addr = zone->start_addr;
+		io->addr.offset = zone->info.zone_id;
 		rc = ftl_io_erase(io);
 		if (rc) {
 			assert(0);
@@ -1112,11 +1116,11 @@ ftl_band_next_operational_zone(struct ftl_band *band, struct ftl_zone *zone)
 
 	/* Erasing band may fail after it was assigned to wptr. */
 	/* In such a case zone is no longer in band->zones queue. */
-	if (spdk_likely(zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE)) {
+	if (spdk_likely(zone->info.state != SPDK_BDEV_ZONE_STATE_OFFLINE)) {
 		result = ftl_band_next_zone(band, zone);
 	} else {
 		CIRCLEQ_FOREACH_REVERSE(entry, &band->zones, circleq) {
-			if (entry->start_addr.offset > zone->start_addr.offset) {
+			if (entry->info.zone_id > zone->info.zone_id) {
 				result = entry;
 			} else {
 				if (!result) {
