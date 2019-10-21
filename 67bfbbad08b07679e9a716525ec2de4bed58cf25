@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "67b472f3_165c10aa",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2103,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-21T17:20:27Z",
+      "side": 1,
+      "message": "In regards to the first part of your comment, would it make things more clear if I did the following?\n/* The first time this function is called we need to enable the admin qpair */\nif(!nvme_qpair_state_equals(ctrlr-\u003eadmin_qp, NVME_QPAIR_ENABLED)) {\n  nvme_qpair_set_state(ctrlr-\u003eadmin_qp, NVME_QPAIR_ENABLED);\n}\n\npart 2:\nIn the current implementation, there are two distinct paths that this goes down. One for initialization, and one for reset.\n\nIn the initialization path, we never actually call nvme_transport_ctrlr_connect_qpair. So admin_qp.is_enabled \u003d\u003d 0. When we call nvme_ctrlr_get_cc, we get the following (simplified) call stack on fabrics controllers:\nnvme_fabric_ctrlr_get_reg_4 -\u003e nvme_ctrlr_submit_admin_request -\u003e _nvme_qpair_submit_request -\u003e\nnvme_qpair_check_enabled - On master, this function only checks that the qpair is not enabled and that the ctrlr is not resetting. So it enables the admin qpair at that point.\n\nIn the reset case, it works entirely by accident.\nWhen we connect the admin qpair in the reset case, we go through the nvme_transport_ctrlr_connect_qpair function which sets the qpair-\u003eis_connecting flag. It then attempts to clear that flag after the transport specific call, but that code is unreachable (I recently made a change to that line of code, but it has been that way since resets were enabled). So the qpair.is_connecting flag remains set for the duration of its existence. In this case, we get the same call stack as above, but instead of enabling the qpair, we bypass it with this check in _nvme_qpair_submit_request:\n\t} else if (req-\u003ecmd.opc \u003d\u003d SPDK_NVME_OPC_FABRIC \u0026\u0026 qpair-\u003eis_connecting) {\n\t\t/* Always allow fabrics commands through - these get\n\t\t * the controller out of reset state.\n\t\t */\n\t\trc \u003d nvme_transport_qpair_submit_request(qpair, req);\n\t}\nSo it works on master, but kind of by accident and it\u0027s really messy. I think the simpler case is to try to unify everything around a coherent state machine.\ndisabled-\u003econnecting-\u003econnected-\u003eenabling-\u003eenabled.\nI have managed to do that for the most part with a couple of exceptions, e.g. discovery controllers.",
+      "parentUuid": "bc7e84eb_0d134ca9",
+      "revId": "67bfbbad08b07679e9a716525ec2de4bed58cf25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "05723176_04ffaf96",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 6
