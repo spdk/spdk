@@ -9,6 +9,20 @@ Added new parameter `cdw0` to `spdk_bdev_io_complete_nvme_status()` and
 the NVMe completion queue DW0 entry. This allows vendor specific IO commands
 to return commmand specific completion info back to the initiator.
 
+### bdev opal
+
+EXPERIMENTAL: A new opal bdev has been added to support management of
+NVMe self-encrypting drives through the Opal specification. Users can
+create opal bdevs from an NVMe namespace bdev, if the controller
+containing that namespace supports Opal. Currently this is only
+supported for namespace ID=1. The following RPCs have been added to
+support Opal: `bdev_nvme_opal_init`, `bdev_nvme_opal_revert`,
+`bdev_opal_create`, `bdev_opal_delete`, `bdev_opal_get_info`,
+`bdev_opal_new_user`, `bdev_opal_set_lock_state`.
+It does not yet support recreating the opal bdevs after application restart.
+This bdev module should be considered very experimental, and the RPCs may
+change significantly in future releases.
+
 ### bdev zone
 
 Added new public header for zoned bdev. Zoned bdev is an extension
