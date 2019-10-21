@@ -73,6 +73,8 @@ if [ -s /etc/redhat-release ]; then
 	fi
 	# Additional dependencies for ISA-L used in compression
 	yum install -y autoconf automake libtool help2man
+	# Additional dependencies for FUSE and CUSE
+	yum install -y fuse-devel
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
@@ -93,6 +95,8 @@ elif [ -f /etc/debian_version ]; then
 		"Note: Some SPDK CLI dependencies could not be installed."
 	# Additional dependencies for ISA-L used in compression
 	apt-get install -y autoconf automake libtool help2man
+	# Additional dependencies for FUSE and CUSE
+	apt-get install -y libfuse-dev
 	# Additional dependecies for nvmf performance test script
 	apt-get install -y python3-paramiko
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
@@ -111,6 +115,8 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	zypper install -y doxygen mscgen graphviz
 	# Additional dependencies for ISA-L used in compression
 	zypper install -y autoconf automake libtool help2man
+	# Additional dependencies for FUSE and CUSE
+	zypper install -y fuse-devel
 elif [ $(uname -s) = "FreeBSD" ] ; then
 	pkg install -y gmake cunit openssl git devel/astyle bash py27-pycodestyle \
 		python misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
@@ -139,6 +145,9 @@ elif [ -f /etc/arch-release ]; then
 
 	# Additional dependencies for ISA-L used in compression
 	pacman -Sy --needed --noconfirm autoconf automake libtool help2man
+
+	# Additional dependencies for FUSE and CUSE
+	pacman -Sy --needed --noconfirm fuse2
 
 	#fakeroot needed to instal via makepkg
 	pacman -Sy --needed --noconfirm fakeroot
