@@ -40,3 +40,18 @@ def blobfs_mount(client, bdev_name, mountpoint):
         'mountpoint': mountpoint
     }
     return client.call('blobfs_mount', params)
+
+
+def blobfs_set_cache_size(client, size_in_mb):
+    """Set cache size for the blobstore filesystem.
+
+    Args:
+        size_in_mb: Cache size in megabytes
+
+    Returns:
+        True if cache size is set successfully; False if failed to set.
+    """
+    params = {
+        'size_in_mb': size_in_mb
+    }
+    return client.call('blobfs_set_cache_size', params)
