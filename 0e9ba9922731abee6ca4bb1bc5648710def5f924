@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9db9c102_85fd8381",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-21T05:25:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1ddb186e_751e700d",
+      "range": {
+        "startLine": 496,
+        "startChar": 1,
+        "endLine": 499,
+        "endChar": 11
+      },
+      "revId": "0e9ba9922731abee6ca4bb1bc5648710def5f924",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a5910a1_43a4afe2",
         "filename": "module/bdev/nvme/vbdev_opal.h",
         "patchSetId": 27
@@ -45,6 +69,30 @@
       "revId": "0e9ba9922731abee6ca4bb1bc5648710def5f924",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "634ff25a_e66fb94e",
+        "filename": "module/bdev/nvme/vbdev_opal.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-21T05:25:54Z",
+      "side": 1,
+      "message": "hi Changpeng, thanks for the review. The users can know the bdev name by the return value of bdev_opal_create RPC commands.",
+      "parentUuid": "9a5910a1_43a4afe2",
+      "range": {
+        "startLine": 43,
+        "startChar": 29,
+        "endLine": 43,
+        "endChar": 50
+      },
+      "revId": "0e9ba9922731abee6ca4bb1bc5648710def5f924",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
