@@ -1710,6 +1710,69 @@ pdu_hdr_op_text_test(void)
 	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
 }
 
+static void
+check_logout_response(uint8_t response, uint32_t stat_sn, uint32_t exp_cmd_sn,
+		      uint32_t max_cmd_sn)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_logout_resp *logout_rsph;
+
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	logout_rsph = (struct iscsi_bhs_logout_resp *)&rsp_pdu->bhs;
+	CU_ASSERT(logout_rsph->response == response);
+	CU_ASSERT(from_be32(&logout_rsph->stat_sn) == stat_sn);
+	CU_ASSERT(from_be32(&logout_rsph->exp_cmd_sn) == exp_cmd_sn);
+	CU_ASSERT(from_be32(&logout_rsph->max_cmd_sn) == max_cmd_sn);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+}
+
+static void
+pdu_hdr_op_logout_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct iscsi_bhs_logout_req *logout_reqh;
+	int rc;
+
+	logout_reqh = (struct iscsi_bhs_logout_req *)&pdu.bhs;
+
+	/* case 1 - error case */
+	logout_reqh->reason = 1;
+	conn.sess = &sess;
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_logout(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 2 - normal case */
+	conn.sess = NULL;
+	conn.StatSN = 1234;
+	to_be32(&logout_reqh->exp_stat_sn, 1234);
+	pdu.cmd_sn = 5678;
+
+	rc = iscsi_pdu_hdr_op_logout(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_logout_response(0, 1234, 5678, 5678);
+	CU_ASSERT(conn.StatSN == 1235);
+
+	/* case 3 - normal case */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	sess.ExpCmdSN = 5679;
+	sess.connections = 1;
+	conn.sess = &sess;
+	conn.id = 1;
+
+	rc = iscsi_pdu_hdr_op_logout(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_logout_response(1, 1235, 5679, 1);
+	CU_ASSERT(conn.StatSN == 1236);
+	CU_ASSERT(sess.MaxCmdSN == 1);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1751,6 +1814,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "build_iovs_with_md_test", build_iovs_with_md_test) == NULL
 		|| CU_add_test(suite, "pdu_hdr_op_login_test", pdu_hdr_op_login_test) == NULL
 		|| CU_add_test(suite, "pdu_hdr_op_text_test", pdu_hdr_op_text_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_logout_test", pdu_hdr_op_logout_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
