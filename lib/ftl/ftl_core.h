@@ -229,7 +229,6 @@ struct spdk_ftl_dev {
 
 	/* Threads */
 	struct ftl_thread			core_thread;
-	struct ftl_thread			read_thread;
 
 	/* Devices' list */
 	STAILQ_ENTRY(spdk_ftl_dev)		stailq;
@@ -299,12 +298,6 @@ static inline struct spdk_thread *
 ftl_get_core_thread(const struct spdk_ftl_dev *dev)
 {
 	return dev->core_thread.thread;
-}
-
-static inline struct spdk_thread *
-ftl_get_read_thread(const struct spdk_ftl_dev *dev)
-{
-	return dev->read_thread.thread;
 }
 
 static inline size_t
