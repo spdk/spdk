@@ -12,6 +12,10 @@ optimization for aarch64.
 `spdk_thread_send_msg` now returns int indicating if the message was successfully
 sent.
 
+### blobfs
+
+Added boolean return value for function spdk_fs_set_cache_size to indicate its operation result.
+
 ## v19.10:
 
 ### rpc
