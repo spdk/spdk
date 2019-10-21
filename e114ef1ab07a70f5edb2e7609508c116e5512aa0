@@ -16,6 +16,24 @@
       "revId": "e114ef1ab07a70f5edb2e7609508c116e5512aa0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "297e6c13_e91150ff",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4550,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-21T19:29:33Z",
+      "side": 1,
+      "message": "Hi Jim, Yes, it’s necessary because the later patch will insert data buffer allocation between pdu_hdr_handle and pdu_payload_handle, and if buffet allocation fails, lun hotplug may be inserted after pdu_hdr_handle and pdu_payload_handle",
+      "parentUuid": "fb82c68e_e3d1087d",
+      "revId": "e114ef1ab07a70f5edb2e7609508c116e5512aa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
