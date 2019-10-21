@@ -16,6 +16,8 @@ sent.
 
 Added boolean return value for function spdk_fs_set_cache_size to indicate its operation result.
 
+Added `blobfs_set_cache_size` RPC method to set cache size for blobstore filesystem.
+
 ## v19.10:
 
 ### rpc

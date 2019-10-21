@@ -6174,6 +6174,47 @@ Example response:
   "id": 1,
   "result": "true"
 }
+~~
+
+## blobfs_set_cache_size {#rpc_blobfs_set_cache_size}
+
+Set cache pool size for blobfs filesystems.  This RPC is only permitted when the cache pool is not already initialized.
+
+The cache pool is initialized when the first blobfs filesystem is initialized or loaded.  It is freed when the all initialized or loaded filesystems are unloaded.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+size_in_mb              | Required | number      | Cache size in megabytes
+
+### Response
+
+True if cache size is set successfully; False if failed to set.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "blobfs_set_cache_size",
+  "params": {
+    "size_in_mb": 512,
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
 ~~~
 
 # Miscellaneous RPC commands
