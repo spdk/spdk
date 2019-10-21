@@ -107,7 +107,7 @@ def bdev_ocf_create(client, name, mode, cache_bdev_name, core_bdev_name):
 
     Args:
         name: name of constructed OCF bdev
-        mode: OCF cache mode: {'wb', 'wt', 'pt'}
+        mode: OCF cache mode: {'wb', 'wt', 'pt', 'wa', 'wi', 'wo'}
         cache_bdev_name: name of underlying cache bdev
         core_bdev_name: name of underlying core bdev
 
