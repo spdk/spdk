@@ -171,7 +171,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 
 	if [ $SPDK_TEST_NVME -eq 1 ]; then
 		run_test suite test/nvme/nvme.sh
-		if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
+		if [[ $SPDK_TEST_NVME_CLI -eq 1 || $SPDK_TEST_NVME_CUSE -eq 1 ]]; then
 			run_test suite test/nvme/spdk_nvme_cli.sh
 		fi
 		# Only test hotplug without ASAN enabled. Since if it is
