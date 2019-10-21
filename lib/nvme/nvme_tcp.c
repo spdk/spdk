@@ -321,10 +321,7 @@ nvme_tcp_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		return rc;
 	}
 
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(discovery_ctrlr->adminq, 0);
-	}
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+	if (spdk_nvme_wait_for_completion(discovery_ctrlr->adminq, &status)) {
 		SPDK_ERRLOG("nvme_identify_controller failed!\n");
 		return -ENXIO;
 	}
@@ -340,7 +337,6 @@ nvme_tcp_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 
 	rc = nvme_fabric_ctrlr_discover(discovery_ctrlr, probe_ctx);
 	nvme_ctrlr_destruct(discovery_ctrlr);
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "leave\n");
 	return rc;
 }
 
