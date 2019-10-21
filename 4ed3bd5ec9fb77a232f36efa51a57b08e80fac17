@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb735637_dee6322f",
+        "filename": "lib/vhost/rte_vhost_compat.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-21T03:33:42Z",
+      "side": 1,
+      "message": "get_config/set_config are used for vhost-blk target, and they don\u0027t need to be included with #SPDK_CONFIG_VHOST_INTERNAL_LIB macro, this macro should be only for vhost-nvme.",
+      "range": {
+        "startLine": 88,
+        "startChar": 1,
+        "endLine": 89,
+        "endChar": 26
+      },
+      "revId": "4ed3bd5ec9fb77a232f36efa51a57b08e80fac17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
