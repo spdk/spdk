@@ -822,18 +822,16 @@ ftl_dev_get_zone_info_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 		addr.offset = init_ctx->info[i].zone_id;
 		band = &dev->bands[ftl_addr_get_band(dev, addr)];
 		zone = &band->zone_buf[ftl_addr_get_pu(dev, addr)];
-		zone->state = init_ctx->info[i].state;
-		zone->start_addr = addr;
-		zone->write_offset = init_ctx->info[i].write_pointer;
+		zone->info = init_ctx->info[i];
 
 		/* TODO: add support for zone capacity less than zone size */
-		if (init_ctx->info[i].capacity != ftl_get_num_blocks_in_zone(dev)) {
-			zone->state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+		if (zone->info.capacity != ftl_get_num_blocks_in_zone(dev)) {
+			zone->info.state = SPDK_BDEV_ZONE_STATE_OFFLINE;
 			SPDK_ERRLOG("Zone capacity is not equal zone size for "
 				    "zone id: %"PRIu64"\n", init_ctx->zone_id);
 		}
 
-		if (zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE) {
+		if (zone->info.state != SPDK_BDEV_ZONE_STATE_OFFLINE) {
 			band->num_zones++;
 			CIRCLEQ_INSERT_TAIL(&band->zones, zone, circleq);
 		}
