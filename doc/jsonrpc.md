@@ -5806,6 +5806,46 @@ Example response:
   "id": 1,
   "result": "true"
 }
+~~
+
+## blobfs_set_cache_size {#rpc_blobfs_set_cache_size}
+
+Set cache size for the blobstore filesystem.  This RPC only takes effect when
+cache pool of blobfs is not initialized or already freed.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+size_in_mb              | Required | number      | Cache size in megabytes
+
+### Response
+
+True if cache size is set successfully; False if failed to set.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "blobfs_set_cache_size",
+  "params": {
+    "size_in_mb": 512,
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
 ~~~
 
 # Miscellaneous RPC commands
