@@ -3382,7 +3382,6 @@ iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint8_t *cdb;
 	uint64_t lun;
 	uint32_t task_tag;
-	uint32_t data_len;
 	uint32_t transfer_len;
 	int R_bit, W_bit;
 	int lun_i;
@@ -3399,7 +3398,6 @@ iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	W_bit = reqh->write_bit;
 	lun = from_be64(&reqh->lun);
 	task_tag = from_be32(&reqh->itt);
-	data_len = pdu->data_segment_len;
 	transfer_len = from_be32(&reqh->expected_data_xfer_len);
 	cdb = reqh->cdb;
 
@@ -3465,8 +3463,8 @@ iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		}
 
 		/* check the ImmediateData and also pdu->data_segment_len */
-		if ((!conn->sess->ImmediateData && (data_len > 0)) ||
-		    (data_len > conn->sess->FirstBurstLength)) {
+		if ((!conn->sess->ImmediateData && (pdu->data_segment_len > 0)) ||
+		    (pdu->data_segment_len > conn->sess->FirstBurstLength)) {
 			spdk_iscsi_task_put(task);
 			return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 		}
