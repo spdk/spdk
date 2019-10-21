@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f227ec15_1b35a771",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-21T14:56:55Z",
+      "side": 1,
+      "message": "\u0027asynchronous\u0027 ;)\nIf there will be any other updates to the patch, please fix this too.",
+      "range": {
+        "startLine": 7,
+        "startChar": 18,
+        "endLine": 7,
+        "endChar": 30
+      },
+      "revId": "a82b7fcc3e56306328fa72a135890ab53987671d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
