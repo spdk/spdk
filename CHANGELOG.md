@@ -7,6 +7,10 @@
 Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and
 optimization for aarch64.
 
+### blobfs
+
+Add boolean return value for function spdk_fs_set_cache_size to indicate its operation result.
+
 ## v19.10:
 
 ### rpc

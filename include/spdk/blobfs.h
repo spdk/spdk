@@ -364,8 +364,10 @@ int64_t spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
  * Set cache size for the blobstore filesystem.
  *
  * \param size_in_mb Cache size in megabytes.
+ *
+ * \return 0 on success, negative errno on failure.
  */
-void spdk_fs_set_cache_size(uint64_t size_in_mb);
+int spdk_fs_set_cache_size(uint64_t size_in_mb);
 
 /**
  * Obtain the cache size.
