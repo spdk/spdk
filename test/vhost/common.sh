@@ -32,7 +32,7 @@ function vhosttestinit()
 		if [[ ! -f $VM_IMAGE ]]; then
 			echo "VM image not found at $VM_IMAGE"
 			echo "Download to $HOME? [yn]"
-			read download
+			read -r download
 			if [ "$download" = "y" ]; then
 				curl https://dqtibwqq6s6ux.cloudfront.net/download/test_resources/vhost_vm_image.tar.gz | tar xz -C $HOME
 			fi

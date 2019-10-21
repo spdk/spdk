@@ -12,7 +12,7 @@ function at_ftl_exit() {
 	PCI_WHITELIST="$device" PCI_BLACKLIST="" DRIVER_OVERRIDE="$ocssd_original_dirver" ./scripts/setup.sh
 }
 
-read device _ <<< "$OCSSD_PCI_DEVICES"
+read -r device _ <<< "$OCSSD_PCI_DEVICES"
 
 if [[ -z "$device" ]]; then
 	echo "OCSSD device list is empty."
