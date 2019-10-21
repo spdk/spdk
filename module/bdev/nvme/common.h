@@ -53,7 +53,6 @@ typedef void (*spdk_bdev_init_ns_fn)(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 
 struct nvme_namespace {
 	uint32_t		id;
-	bool			active;
 	struct nvme_bdev_ctrlr	*ctrlr;
 	spdk_bdev_init_ns_fn	init_fn;
 	TAILQ_HEAD(, nvme_bdev)	bdevs;
