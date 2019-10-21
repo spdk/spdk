@@ -6174,6 +6174,48 @@ Example response:
   "id": 1,
   "result": "true"
 }
+~~
+
+## blobfs_set_cache_size {#rpc_blobfs_set_cache_size}
+
+Set cache size for the blobstore filesystem.  This RPC is only permitted when cache pool is not initialized.
+
+Cache pool of blobfs will be initialized when first one blobfs is initialized or loaded. It will be freed when
+last one blobfs is unloaded.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+size_in_mb              | Required | number      | Cache size in megabytes
+
+### Response
+
+True if cache size is set successfully; False if failed to set.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "blobfs_set_cache_size",
+  "params": {
+    "size_in_mb": 512,
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
 ~~~
 
 # Miscellaneous RPC commands
