@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4630873a_1305b4b5",
+        "filename": "configure",
+        "patchSetId": 26
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-21T18:51:19Z",
+      "side": 1,
+      "message": "\u003e Please move it to better place (rather than between isa-l\u0027s). Maybe just below fuse ?\n\u003e Add --without-cuse too.",
+      "parentUuid": "ebabcc42_fa4ccd2f",
+      "range": {
+        "startLine": 346,
+        "startChar": 0,
+        "endLine": 348,
+        "endChar": 5
+      },
+      "revId": "039b0a9317b7b382097844ec54084d536f265dbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d447b09d_78b41ef9",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 26
