@@ -46,6 +46,30 @@
       "revId": "818fbb6b2b23364d2a542327c3bc8b4c8152e0b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05701a31_a7a58e95",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-21T12:33:59Z",
+      "side": 1,
+      "message": "Even if available in OCF before, this is first time it is available through RPC in SPDK.\nThis change might be missed by users of this interface, if not included in the Changelog.\nVery short info is fine.",
+      "parentUuid": "909dd849_1dee18e5",
+      "range": {
+        "startLine": 217,
+        "startChar": 77,
+        "endLine": 217,
+        "endChar": 93
+      },
+      "revId": "818fbb6b2b23364d2a542327c3bc8b4c8152e0b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
