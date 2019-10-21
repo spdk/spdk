@@ -2097,6 +2097,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('mountpoint', help='Mountpoint path in host to mount blobfs. Example: /mnt/.')
     p.set_defaults(func=blobfs_mount)
 
+    def blobfs_set_cache_size(args):
+        print(rpc.blobfs.blobfs_set_cache_size(args.client,
+                                               size_in_mb=args.size_in_mb))
+
+    p = subparsers.add_parser('blobfs_set_cache_size', help='Set cache size for blobfs')
+    p.add_argument('size_in_mb', help='Cache size for blobfs in megabytes.', type=int)
+    p.set_defaults(func=blobfs_set_cache_size)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)

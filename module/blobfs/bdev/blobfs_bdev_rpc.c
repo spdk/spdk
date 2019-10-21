@@ -50,6 +50,49 @@
 
 #define MIN_CLUSTER_SZ (1024 * 1024)
 
+struct rpc_blobfs_set_cache_size {
+	uint64_t size_in_mb;
+};
+
+static const struct spdk_json_object_decoder rpc_blobfs_set_cache_size_decoders[] = {
+	{"size_in_mb", offsetof(struct rpc_blobfs_set_cache_size, size_in_mb), spdk_json_decode_uint64},
+};
+
+static void
+spdk_rpc_blobfs_set_cache_size(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct rpc_blobfs_set_cache_size req;
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_blobfs_set_cache_size_decoders,
+				    SPDK_COUNTOF(rpc_blobfs_set_cache_size_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "spdk_json_decode_object failed");
+
+		return;
+	}
+
+	if (req.size_in_mb == 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "spdk_json_decode_object failed");
+
+		return;
+	}
+
+	rc = spdk_fs_set_cache_size(req.size_in_mb);
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_bool(w, rc == 0);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+SPDK_RPC_REGISTER("blobfs_set_cache_size", spdk_rpc_blobfs_set_cache_size,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
 struct rpc_blobfs_detect {
 	char *bdev_name;
 
