@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6c1124bd_a327e644",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "34b61267_ac1db44e",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 26
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58a11f4f_17d620b8",
         "filename": "module/bdev/ftl/bdev_ftl.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-10-18T10:25:56Z",
       "side": 1,
       "message": "If you did:\ninit-\u003eopts.mode \u003d opts-\u003emode;\ninit-\u003eopts.uuid \u003d opts-\u003euuid;\ninit-\u003eopts.ftl_conf \u003d opts-\u003eftl_conf;\n\nwe could get rid of all those gotos and just call bdev_ftl_defer_free.",
+      "range": {
+        "startLine": 560,
+        "startChar": 1,
+        "endLine": 560,
+        "endChar": 20
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50fc94ce_7479d835",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "I\u0027m aware of this - I just want to avoid coping by hand parameters so in case this struct will be growing it could be beneficial.",
+      "parentUuid": "58a11f4f_17d620b8",
       "range": {
         "startLine": 560,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "c4e358c7_69c86c52",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "I think we need to have some special handling for deferred case.",
+      "parentUuid": "09bf2278_65975a80",
+      "range": {
+        "startLine": 649,
+        "startChar": 2,
+        "endLine": 649,
+        "endChar": 18
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "da69ed3d_d1768c08",
         "filename": "module/bdev/ftl/bdev_ftl.c",
         "patchSetId": 2
@@ -82,6 +154,30 @@
       "writtenOn": "2019-10-18T10:25:56Z",
       "side": 1,
       "message": "It\u0027s a good change, but it has nothing to do with this patch.",
+      "range": {
+        "startLine": 654,
+        "startChar": 8,
+        "endLine": 654,
+        "endChar": 14
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41f04a91_8fd79fb9",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "I\u0027ve change this in previous patches.",
+      "parentUuid": "da69ed3d_d1768c08",
       "range": {
         "startLine": 654,
         "startChar": 8,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "b109e55a_15208b49",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "I just want to keep init and finish close each other, but maybe this patch is not the best place for this change.",
+      "parentUuid": "d84f66a5_98705225",
+      "range": {
+        "startLine": 720,
+        "startChar": 0,
+        "endLine": 725,
+        "endChar": 0
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8bcb2a67_1a7a26ea",
         "filename": "module/bdev/ftl/bdev_ftl.c",
         "patchSetId": 2
@@ -137,6 +257,30 @@
       "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4604e7fd_d4b1f3f0",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8bcb2a67_1a7a26ea",
+      "range": {
+        "startLine": 752,
+        "startChar": 2,
+        "endLine": 752,
+        "endChar": 30
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "9646dd43_3d2f1979",
+        "filename": "module/bdev/ftl/bdev_ftl.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c9bfcbb9_267673dc",
+      "range": {
+        "startLine": 51,
+        "startChar": 1,
+        "endLine": 51,
+        "endChar": 10
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eff7b715_c745f8cf",
         "filename": "module/bdev/ftl/bdev_ftl_rpc.c",
         "patchSetId": 2
@@ -180,6 +348,24 @@
     },
     {
       "key": {
+        "uuid": "8a3987f7_232d7fd0",
+        "filename": "module/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eff7b715_c745f8cf",
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9341cc00_b34bbb4a",
         "filename": "module/bdev/ftl/bdev_ftl_rpc.c",
         "patchSetId": 2
@@ -191,6 +377,30 @@
       "writtenOn": "2019-10-18T10:25:56Z",
       "side": 1,
       "message": "I think we should return 0 and treat this case as if the bdev was created. This is how other bdevs handle this (passthru, zone_block, ocssd).",
+      "range": {
+        "startLine": 192,
+        "startChar": 0,
+        "endLine": 196,
+        "endChar": 3
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be2462f8_9d129447",
+        "filename": "module/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "I need special handling when initialization was deferred - uuid is not generated so we probably should inform user about this?",
+      "parentUuid": "9341cc00_b34bbb4a",
       "range": {
         "startLine": 192,
         "startChar": 0,
@@ -226,6 +436,30 @@
     },
     {
       "key": {
+        "uuid": "f748b781_4bc3db80",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2e4cf012_31a0408f",
+      "range": {
+        "startLine": 22,
+        "startChar": 1,
+        "endLine": 22,
+        "endChar": 46
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98c507a8_e69b35fa",
         "filename": "test/ftl/bdevperf.sh",
         "patchSetId": 2
@@ -237,6 +471,30 @@
       "writtenOn": "2019-10-18T10:25:56Z",
       "side": 1,
       "message": "Now that examine_disk is supported, we can generate a proper config for all this. Please make changes to the gen_ftl_* functions to be able to generate this configuration.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 37
+      },
+      "revId": "e7aaf5df67fb545a189fe97cae94cb0371bbe2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4671e5d2_22fff70d",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "I think this is subject for separate patch.",
+      "parentUuid": "98c507a8_e69b35fa",
       "range": {
         "startLine": 23,
         "startChar": 0,

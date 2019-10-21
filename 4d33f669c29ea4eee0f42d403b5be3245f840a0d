@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e59c15ed_660bf19c",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8a94f31e_6d52b181",
+      "revId": "4d33f669c29ea4eee0f42d403b5be3245f840a0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d4d99ff_1c52a94c",
         "filename": "module/bdev/ftl/bdev_ftl.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-16T08:17:51Z",
       "side": 1,
       "message": "If you\u0027re removing the entry, shouldn\u0027t this be LIST_FOREACH_SAFE?",
+      "revId": "4d33f669c29ea4eee0f42d403b5be3245f840a0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f47cd85_f64ed65d",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 751,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "You could use LIST_FOREACH_SAFE when you want to iterate more after remove - in this case there is break/return from loop so it is safe.",
+      "parentUuid": "5d4d99ff_1c52a94c",
       "revId": "4d33f669c29ea4eee0f42d403b5be3245f840a0d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -50,6 +86,24 @@
       "revId": "4d33f669c29ea4eee0f42d403b5be3245f840a0d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "365770d0_a810bb5a",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-21T11:05:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "354be8bb_537b0d9f",
+      "revId": "4d33f669c29ea4eee0f42d403b5be3245f840a0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
