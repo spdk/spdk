@@ -995,14 +995,44 @@ nvme_ctrlr_init_ns_type(struct nvme_bdev_ns *ns)
 	}
 }
 
+static int
+nvme_ctrlr_create_namespace(struct nvme_bdev_ctrlr *ctrlr, uint32_t nsid,
+			    spdk_bdev_create_namespaces_fn cb_fn, void *cb_arg)
+{
+	struct nvme_bdev_ns *ns;
+	struct init_ns_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return -ENOMEM;
+	}
+
+	ns = ctrlr->namespaces[nsid - 1];
+
+	assert(ns != NULL);
+
+	ns->id = nsid;
+	ns->ctrlr = ctrlr;
+
+	ctx->ctrlr = ctrlr;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	nvme_ctrlr_init_ns_type(ns);
+
+	ns->init_fn(ctrlr, ns, nvme_ctrlr_create_namespaces_cb, ctx);
+
+	return 0;
+}
+
 static void
 nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
 	struct nvme_bdev_ns	*ns;
-	struct init_ns_ctx	*ctx;
 	size_t			struct_size;
 	uint32_t		i;
+	int			rc;
 
 	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
 		uint32_t	nsid = i + 1;
@@ -1012,28 +1042,18 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 			SPDK_NOTICELOG("NSID %u to be added\n", nsid);
 			struct_size = nvme_ctrlr_get_ns_struct_size(nvme_bdev_ctrlr, nsid);
 			void *tmp = calloc(1, struct_size);
-			ns = tmp;
-			if (!ns) {
+			if (!tmp) {
 				SPDK_ERRLOG("Failed to allocate memory for namespace %u of %s\n", nsid, nvme_bdev_ctrlr->name);
 				return;
 			}
 
-			nvme_bdev_ctrlr->namespaces[i] = ns;
-			ns->id = nsid;
-			ns->ctrlr = nvme_bdev_ctrlr;
+			ns = tmp;
 
-			ctx = calloc(1, sizeof(*ctx));
-			if (!ctx) {
+			rc = nvme_ctrlr_create_namespace(nvme_bdev_ctrlr, i + 1, NULL, NULL);
+			if (rc) {
+				free(tmp);
 				return;
 			}
-
-			ctx->ctrlr = nvme_bdev_ctrlr;
-			ctx->cb_fn = NULL;
-			ctx->cb_arg = NULL;
-
-			nvme_ctrlr_init_ns_type(ns);
-
-			ns->init_fn(nvme_bdev_ctrlr, ns, nvme_ctrlr_create_namespaces_cb, ctx);
 		}
 
 		if (ns && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
@@ -1765,19 +1785,17 @@ nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			     spdk_bdev_create_namespaces_fn cb_fn, void *cb_arg)
 {
 	struct nvme_bdev_ns	*ns;
-	struct init_ns_ctx	*ctx;
 	size_t			struct_size;
+	void			*tmp;
 	uint32_t		nsid;
 	uint32_t		num_ns;
 	uint32_t		active_ns_num;
+	int			rc = 0;
 
 	active_ns_num = spdk_nvme_ctrlr_get_active_ns_num(nvme_bdev_ctrlr->ctrlr);
 
 	if (active_ns_num == 0) {
-		if (cb_fn) {
-			cb_fn(cb_arg, 0);
-		}
-		return;
+		goto error;
 	}
 
 	/* Allocate namespaces in one loop, then init namespace in separate loop.
@@ -1787,21 +1805,14 @@ nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(nvme_bdev_ctrlr->ctrlr);
 	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(nvme_bdev_ctrlr->ctrlr, nsid)) {
 		struct_size = nvme_ctrlr_get_ns_struct_size(nvme_bdev_ctrlr, nsid);
-		void *tmp = calloc(1, struct_size);
-		ns = tmp;
-		if (!ns) {
-			if (cb_fn) {
-				cb_fn(cb_arg, -ENOMEM);
-			}
+		tmp = calloc(1, struct_size);
+		nvme_bdev_ctrlr->namespaces[nsid - 1] = tmp;
+		if (!nvme_bdev_ctrlr->namespaces[nsid - 1]) {
 			SPDK_ERRLOG("Failed to allocate memory for namespace %u of %s\n", nsid, nvme_bdev_ctrlr->name);
-			return;
+			goto error;
 		}
 
-		nvme_bdev_ctrlr->namespaces[nsid - 1] = ns;
-		ns->id = nsid;
-		ns->ctrlr = nvme_bdev_ctrlr;
-		ns->creation_in_progress = true;
-
+		nvme_bdev_ctrlr->namespaces[nsid - 1]->creation_in_progress = true;
 	}
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(nvme_bdev_ctrlr->ctrlr);
@@ -1812,22 +1823,17 @@ nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			continue;
 		}
 
-		ctx = calloc(1, sizeof(*ctx));
-		if (!ctx) {
-			if (cb_fn) {
-				cb_fn(cb_arg, -ENOMEM);
-			}
-			return;
+		rc = nvme_ctrlr_create_namespace(nvme_bdev_ctrlr, nsid, cb_fn, cb_arg);
+		if (rc) {
+			goto error;
 		}
+	}
 
-		ctx->ctrlr = nvme_bdev_ctrlr;
-		ctx->cb_fn = cb_fn;
-		ctx->cb_arg = cb_arg;
+	return;
 
-		nvme_ctrlr_init_ns_type(ns);
-
-		ns->init_fn(nvme_bdev_ctrlr, ns, nvme_ctrlr_create_namespaces_cb,
-			    ctx);
+error:
+	if (cb_fn) {
+		cb_fn(cb_arg, rc);
 	}
 }
 
