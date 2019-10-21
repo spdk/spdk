@@ -1542,6 +1542,104 @@ build_iovs_with_md_test(void)
 	free(data);
 }
 
+static void
+check_iscsi_reject(struct spdk_iscsi_pdu *pdu, uint8_t reason)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_reject *reject_bhs;
+
+	CU_ASSERT(pdu->is_rejected == true);
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	reject_bhs = (struct iscsi_bhs_reject *)&rsp_pdu->bhs;
+	CU_ASSERT(reject_bhs->reason == reason);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+	pdu->is_rejected = false;
+}
+
+static void
+check_login_response(uint8_t status_class, uint8_t status_detail)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_login_rsp *login_rsph;
+
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	login_rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+	CU_ASSERT(login_rsph->status_class == status_class);
+	CU_ASSERT(login_rsph->status_detail == status_detail);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+}
+
+static void
+pdu_hdr_op_login_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct iscsi_bhs_login_req *login_reqh;
+	int rc;
+
+	login_reqh = (struct iscsi_bhs_login_req *)&pdu.bhs;
+
+	/* case 1 - error case */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+	conn.full_feature = true;
+	conn.sess = &sess;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 2 - error case */
+	sess.session_type = SESSION_TYPE_INVALID;
+	conn.full_feature = false;
+	conn.sess = NULL;
+	pdu.data_segment_len = SPDK_ISCSI_FIRST_BURST_LENGTH + 1;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* case 3 - error case */
+	pdu.data_segment_len = SPDK_ISCSI_FIRST_BURST_LENGTH;
+	login_reqh->flags |= ISCSI_LOGIN_TRANSIT;
+	login_reqh->flags |= ISCSI_LOGIN_CONTINUE;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE);
+	check_login_response(ISCSI_CLASS_INITIATOR_ERROR, ISCSI_LOGIN_INITIATOR_ERROR);
+
+	/* case 4 - error case */
+	login_reqh->flags = 0;
+	login_reqh->version_min = ISCSI_VERSION + 1;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE);
+	check_login_response(ISCSI_CLASS_INITIATOR_ERROR, ISCSI_LOGIN_UNSUPPORTED_VERSION);
+
+	/* case 5 - error case */
+	login_reqh->version_min = ISCSI_VERSION;
+	login_reqh->flags |= ISCSI_LOGIN_TRANSIT;
+	login_reqh->flags |= ISCSI_NSG_RESERVED_CODE;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE);
+	check_login_response(ISCSI_CLASS_INITIATOR_ERROR, ISCSI_LOGIN_INITIATOR_ERROR);
+
+	/* case 6 - normal case */
+	login_reqh->flags = 0;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(conn.login_rsp_pdu != NULL);
+
+	spdk_put_pdu(conn.login_rsp_pdu);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1581,6 +1679,7 @@ main(int argc, char **argv)
 			       abort_queued_datain_tasks_test) == NULL
 		|| CU_add_test(suite, "build_iovs_test", build_iovs_test) == NULL
 		|| CU_add_test(suite, "build_iovs_with_md_test", build_iovs_with_md_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_login_test", pdu_hdr_op_login_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
