@@ -50,17 +50,10 @@ struct spdk_ftl_dev;
 struct ftl_lba_map_request;
 
 struct ftl_zone {
-	/* Zone state */
-	enum spdk_bdev_zone_state		state;
+	struct spdk_bdev_zone_info		info;
 
 	/* Indicates that there is inflight write */
 	bool					busy;
-
-	/* Current logical block's offset */
-	uint64_t				write_offset;
-
-	/* First logical block of a zone */
-	struct ftl_addr				start_addr;
 
 	CIRCLEQ_ENTRY(ftl_zone)			circleq;
 };
@@ -236,7 +229,7 @@ ftl_band_empty(const struct ftl_band *band)
 static inline struct ftl_zone *
 ftl_band_next_zone(struct ftl_band *band, struct ftl_zone *zone)
 {
-	assert(zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE);
+	assert(zone->info.state != SPDK_BDEV_ZONE_STATE_OFFLINE);
 	return CIRCLEQ_LOOP_NEXT(&band->zones, zone, circleq);
 }
 
@@ -283,8 +276,8 @@ ftl_band_zone_is_first(struct ftl_band *band, struct ftl_zone *zone)
 static inline int
 ftl_zone_is_writable(const struct ftl_zone *zone)
 {
-	return (zone->state == SPDK_BDEV_ZONE_STATE_OPEN ||
-		zone->state == SPDK_BDEV_ZONE_STATE_EMPTY) &&
+	return (zone->info.state == SPDK_BDEV_ZONE_STATE_OPEN ||
+		zone->info.state == SPDK_BDEV_ZONE_STATE_EMPTY) &&
 	       !zone->busy;
 }
 
