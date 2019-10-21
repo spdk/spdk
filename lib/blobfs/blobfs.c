@@ -1971,10 +1971,19 @@ spdk_fs_free_thread_ctx(struct spdk_fs_thread_ctx *ctx)
 	free(ctx);
 }
 
-void
+int
 spdk_fs_set_cache_size(uint64_t size_in_mb)
 {
+	/* setting g_fs_cache_size is only permitted if cache pool
+	 * is already freed or hasn't been initialized
+	 */
+	if (g_cache_pool != NULL) {
+		return -EPERM;
+	}
+
 	g_fs_cache_size = size_in_mb * 1024 * 1024;
+
+	return 0;
 }
 
 uint64_t

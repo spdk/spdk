@@ -77,6 +77,10 @@ function has been deprecated.
 The new create function can cowork with spdk_bdev_open_ext function, which provides callback
 function that will be called by asynchronous event such as bdev removal.
 
+### blobfs
+
+Add boolean return value for function spdk_fs_set_cache_size to indicate its operation result.
+
 ### DPDK
 
 Updated DPDK submodule to DPDK 19.08.
