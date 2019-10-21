@@ -34,6 +34,24 @@
       "revId": "5c9ef0b60c69bf46315f826f08ef34e8e7a054a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "645378e5_049a65c4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-21T16:51:39Z",
+      "side": 1,
+      "message": "To make it easier on the reviewers, I\u0027d suggest doing one patch to make TCP the same as RDMA, and then this patch can just say they are identical.",
+      "parentUuid": "11c1d5d3_a1c05183",
+      "revId": "5c9ef0b60c69bf46315f826f08ef34e8e7a054a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
