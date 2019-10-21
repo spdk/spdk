@@ -46,7 +46,6 @@ extern pthread_mutex_t g_bdev_nvme_mutex;
 
 struct nvme_bdev_ns {
 	uint32_t		id;
-	bool			active;
 	struct spdk_nvme_ns	*ns;
 	struct nvme_bdev_ctrlr	*ctrlr;
 };

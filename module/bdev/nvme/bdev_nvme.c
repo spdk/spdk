@@ -927,7 +927,8 @@ nvme_ctrlr_deactivate_namespace(struct nvme_bdev_ns *ns)
 {
 	spdk_bdev_unregister(&((struct nvme_bdev_ns_standard *)ns)->disk, NULL, NULL);
 
-	ns->active = false;
+	free(ns);
+	ns = NULL;
 }
 
 static void
@@ -942,20 +943,26 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		uint32_t	nsid = i + 1;
 
 		ns = nvme_bdev_ctrlr->namespaces[i];
-		if (!ns->active && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+		if (!ns && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
 			SPDK_NOTICELOG("NSID %u to be added\n", nsid);
+			void *tmp = calloc(1, sizeof(struct nvme_bdev_ns_standard));
+			ns = tmp;
+			if (!ns) {
+				return;
+			}
+
+			nvme_bdev_ctrlr->namespaces[i] = ns;
 			ns->id = nsid;
 			ns->ctrlr = nvme_bdev_ctrlr;
 
 			rc = nvme_ctrlr_init_ns(nvme_bdev_ctrlr, ns);
 			if (rc) {
-				memset(ns, 0, sizeof(*ns));
-			} else {
-				ns->active = true;
+				free(ns);
+				ns = NULL;
 			}
 		}
 
-		if (ns->active && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+		if (ns && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
 			SPDK_NOTICELOG("NSID %u is removed\n", nsid);
 			nvme_ctrlr_deactivate_namespace(ns);
 		}
@@ -988,7 +995,6 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	     uint32_t prchk_flags)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
-	uint32_t i;
 
 	nvme_bdev_ctrlr = calloc(1, sizeof(*nvme_bdev_ctrlr));
 	if (nvme_bdev_ctrlr == NULL) {
@@ -1001,20 +1007,6 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		SPDK_ERRLOG("Failed to allocate block namespaces pointer\n");
 		free(nvme_bdev_ctrlr);
 		return -ENOMEM;
-	}
-
-	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
-		void *tmp = calloc(1, sizeof(struct nvme_bdev_ns_standard));
-		nvme_bdev_ctrlr->namespaces[i] = tmp;
-		if (nvme_bdev_ctrlr->namespaces[i] == NULL) {
-			SPDK_ERRLOG("Failed to allocate block namespace struct\n");
-			for (; i > 0; i--) {
-				free(nvme_bdev_ctrlr->namespaces[i - 1]);
-			}
-			free(nvme_bdev_ctrlr->namespaces);
-			free(nvme_bdev_ctrlr);
-			return -ENOMEM;
-		}
 	}
 
 	nvme_bdev_ctrlr->adminq_timer_poller = NULL;
@@ -1118,9 +1110,8 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 				uint32_t	nsid = i + 1;
 
 				ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
-				if (ns->active) {
+				if (ns) {
 					assert(ns->id == nsid);
-					ns->active = false;
 					spdk_bdev_unregister(&((struct nvme_bdev_ns_standard *)ns)->disk, NULL, NULL);
 				}
 			}
@@ -1269,7 +1260,7 @@ bdev_nvme_create_namespaces(struct nvme_async_probe_ctx *ctx, spdk_bdev_create_n
 	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
 		nsid = i + 1;
 		ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
-		if (!ns->active) {
+		if (!ns) {
 			continue;
 		}
 		assert(ns->id == nsid);
@@ -1678,16 +1669,23 @@ nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(nvme_bdev_ctrlr->ctrlr);
 	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(nvme_bdev_ctrlr->ctrlr, nsid)) {
-		ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
+		void *tmp = calloc(1, sizeof(struct nvme_bdev_ns_standard));
+		ns = tmp;
+		if (!ns) {
+			SPDK_ERRLOG("Failed to allocate memory for namespace %u of %s\n", nsid, nvme_bdev_ctrlr->name);
+			return;
+		}
+
+		nvme_bdev_ctrlr->namespaces[nsid - 1] = ns;
 		ns->id = nsid;
 		ns->ctrlr = nvme_bdev_ctrlr;
 
 		rc = nvme_ctrlr_init_ns(nvme_bdev_ctrlr, ns);
 		if (rc == 0) {
-			ns->active = true;
 			bdevs_created++;
 		} else {
-			memset(ns, 0, sizeof(*ns));
+			free(ns);
+			ns = NULL;
 			SPDK_NOTICELOG("Failed to create bdev for namespace %u of %s\n", nsid, nvme_bdev_ctrlr->name);
 		}
 	}
