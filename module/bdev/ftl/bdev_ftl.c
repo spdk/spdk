@@ -592,7 +592,7 @@ bdev_ftl_create_bdev(const struct ftl_bdev_init_opts *bdev_opts,
 	opts.conf = &bdev_opts->ftl_conf;
 
 	/* TODO: set threads based on config */
-	opts.core_thread = opts.read_thread = spdk_get_thread();
+	opts.core_thread = spdk_get_thread();
 
 	rc = spdk_ftl_dev_init(&opts, bdev_ftl_create_cb, ftl_bdev);
 	if (rc) {

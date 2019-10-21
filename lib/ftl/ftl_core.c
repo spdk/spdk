@@ -396,23 +396,13 @@ ftl_check_core_thread(const struct spdk_ftl_dev *dev)
 	return dev->core_thread.thread == spdk_get_thread();
 }
 
-static bool
-ftl_check_read_thread(const struct spdk_ftl_dev *dev)
-{
-	return dev->read_thread.thread == spdk_get_thread();
-}
-
 struct spdk_io_channel *
 ftl_get_io_channel(const struct spdk_ftl_dev *dev)
 {
 	if (ftl_check_core_thread(dev)) {
 		return dev->core_thread.ioch;
 	}
-	if (ftl_check_read_thread(dev)) {
-		return dev->read_thread.ioch;
-	}
 
-	assert(0);
 	return NULL;
 }
 
@@ -2037,10 +2027,10 @@ ftl_io_read(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
 
-	if (ftl_check_read_thread(dev)) {
+	if (ftl_check_core_thread(dev)) {
 		ftl_io_call_foreach_child(io, ftl_io_read_leaf);
 	} else {
-		spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_io_read, io);
+		spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_read, io);
 	}
 }
 
@@ -2247,27 +2237,6 @@ ftl_process_retry_queue(struct spdk_ftl_dev *dev)
 }
 
 int
-ftl_task_read(void *ctx)
-{
-	struct ftl_thread *thread = ctx;
-	struct spdk_ftl_dev *dev = thread->dev;
-
-	if (dev->halt) {
-		if (ftl_shutdown_complete(dev)) {
-			spdk_poller_unregister(&thread->poller);
-			return 0;
-		}
-	}
-
-	if (!TAILQ_EMPTY(&dev->retry_queue)) {
-		ftl_process_retry_queue(dev);
-		return 1;
-	}
-
-	return 0;
-}
-
-int
 ftl_task_core(void *ctx)
 {
 	struct ftl_thread *thread = ctx;
@@ -2282,6 +2251,11 @@ ftl_task_core(void *ctx)
 
 	ftl_process_writes(dev);
 	ftl_process_relocs(dev);
+
+	if (!TAILQ_EMPTY(&dev->retry_queue)) {
+		ftl_process_retry_queue(dev);
+		return 1;
+	}
 
 	return 0;
 }
