@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc51fa3d_edd81782",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-21T17:57:44Z",
+      "side": 1,
+      "message": "could we instead call this before we start calling nvme_ctrlr_process_init()?\n\nso for example, in nvme_ctrlr_init(), enable it right after nvme_ctrlr_set_state(NVME_CTRLR_STATE_INIT) and before the while loop\n\nI\u0027m not sure where this should be done for the initial probe though\n\nI guess it would be OK to check the qpair state and set it here.  But I\u0027m not sure just checking !ENABLED is correct - I think I would still be confused why we can automatically move it to ENABLED state no matter what state it was in currently.",
+      "revId": "f23f99d83168e25419cef05e06cc47946fe327dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
