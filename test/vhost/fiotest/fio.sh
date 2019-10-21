@@ -206,7 +206,7 @@ for vm_num in $used_vms; do
 done
 
 if $dry_run; then
-	read -p "Enter to kill evething" xx
+	read -r -p "Enter to kill evething" xx
 	sleep 3
 	at_app_exit
 	exit 0
