@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9faaf923_727390f7",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-21T17:43:48Z",
+      "side": 1,
+      "message": "how does this \"int\" return value differ from the \"rc\" value passed to the spdk_opal_revert_cb?",
+      "revId": "8a41085914c9a05776b90d41d91974c7151e6665",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7eeb8f91_0762f36c",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2100,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-21T17:43:48Z",
+      "side": 1,
+      "message": "it might be better to just require the caller to specify a revert_cb_fn when calling spdk_opal_cmd_revert_tper_async; then here you can just assert()",
+      "revId": "8a41085914c9a05776b90d41d91974c7151e6665",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "756b537e_e8c22506",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-21T17:43:48Z",
+      "side": 1,
+      "message": "this seems confusing to me - we pass the error code to the revert_cb_fn, but then this revert_cb_fn can return a status code back here which we then return back to the spdk_opal_revert_poll() caller?\n\nit seems to me this should only have two valid return values: -EAGAIN and 0, and dev-\u003erevert_cb_fn should return void; then here you just call dev-\u003erevert_cb_fn() and return 0.",
+      "revId": "8a41085914c9a05776b90d41d91974c7151e6665",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f1f38b4_ce1a283c",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2628,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-21T17:43:48Z",
+      "side": 1,
+      "message": "can this just be a static function?  I don\u0027t see where this called outside of this file\n\nwe should not add function declarations in header files unless they are needed - if the function is only called and needed from one file, just declare it static and keep it in the .c file\n\nSo then this function definitions needs to move just before it is used (before spdk_opal_close) so you can avoid a forward declaration in this file",
+      "revId": "8a41085914c9a05776b90d41d91974c7151e6665",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
