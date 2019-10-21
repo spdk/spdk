@@ -812,15 +812,12 @@ ftl_dev_get_zone_info_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 		addr.offset = info->info[i].zone_id;
 		band = &dev->bands[ftl_addr_band_id(dev, addr)];
 		zone = &band->zone_buf[ftl_addr_pu_id(dev, addr)];
-		zone->state = info->info[i].state;
-		zone->start_addr = addr;
-		zone->write_offset = info->info[i].write_pointer;
-		zone->capacity = info->info[i].capacity;
+		zone->info = info->info[i];
 
 		/* TODO: add support for zone capacity less than zone size */
-		assert(zone->capacity == ftl_num_blocks_in_zone(dev));
+		assert(zone->info.capacity == ftl_num_blocks_in_zone(dev));
 
-		if (zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE) {
+		if (zone->info.state != SPDK_BDEV_ZONE_STATE_OFFLINE) {
 			band->num_zones++;
 			CIRCLEQ_INSERT_TAIL(&band->zones, zone, circleq);
 		}
