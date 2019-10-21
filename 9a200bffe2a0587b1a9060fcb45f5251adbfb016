@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86ab0b0f_2121803e",
+        "filename": "dpdk",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-21T18:25:31Z",
+      "side": 1,
+      "message": "dpdk submodule shouldn\u0027t change here",
+      "revId": "9a200bffe2a0587b1a9060fcb45f5251adbfb016",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
