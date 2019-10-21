@@ -117,8 +117,6 @@ struct spdk_ftl_dev_init_opts {
 
 	/* Thread responsible for core tasks execution */
 	struct spdk_thread			*core_thread;
-	/* Thread responsible for read requests */
-	struct spdk_thread			*read_thread;
 
 	/* Device's config */
 	const struct spdk_ftl_conf		*conf;

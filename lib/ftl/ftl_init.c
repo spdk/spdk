@@ -492,7 +492,7 @@ ftl_init_bands_state(struct spdk_ftl_dev *dev)
 }
 
 static void
-_ftl_dev_init_thread(void *ctx)
+_ftl_dev_init_core_thread(void *ctx)
 {
 	struct ftl_thread *thread = ctx;
 	struct spdk_ftl_dev *dev = thread->dev;
@@ -507,35 +507,20 @@ _ftl_dev_init_thread(void *ctx)
 }
 
 static int
-ftl_dev_init_thread(struct spdk_ftl_dev *dev, struct ftl_thread *thread,
-		    struct spdk_thread *spdk_thread, spdk_poller_fn fn, uint64_t period_us)
+ftl_dev_init_core_thread(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_init_opts *opts)
 {
+	struct ftl_thread *thread = &dev->core_thread;
+
+	if (!opts->core_thread) {
+		return -1;
+	}
+
 	thread->dev = dev;
-	thread->poller_fn = fn;
-	thread->thread = spdk_thread;
-	thread->period_us = period_us;
+	thread->poller_fn = ftl_task_core;
+	thread->thread = opts->core_thread;
+	thread->period_us = 0;
 
-	spdk_thread_send_msg(spdk_thread, _ftl_dev_init_thread, thread);
-	return 0;
-}
-
-static int
-ftl_dev_init_threads(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_init_opts *opts)
-{
-	if (!opts->core_thread || !opts->read_thread) {
-		return -1;
-	}
-
-	if (ftl_dev_init_thread(dev, &dev->core_thread, opts->core_thread, ftl_task_core, 0)) {
-		SPDK_ERRLOG("Unable to initialize core thread\n");
-		return -1;
-	}
-
-	if (ftl_dev_init_thread(dev, &dev->read_thread, opts->read_thread, ftl_task_read, 0)) {
-		SPDK_ERRLOG("Unable to initialize read thread\n");
-		return -1;
-	}
-
+	spdk_thread_send_msg(opts->core_thread, _ftl_dev_init_core_thread, thread);
 	return 0;
 }
 
@@ -834,8 +819,8 @@ ftl_dev_init_state(struct ftl_dev_init_ctx *init_ctx)
 
 	ftl_dev_update_bands(dev);
 
-	if (ftl_dev_init_threads(dev, &init_ctx->opts)) {
-		SPDK_ERRLOG("Unable to initialize device threads\n");
+	if (ftl_dev_init_core_thread(dev, &init_ctx->opts)) {
+		SPDK_ERRLOG("Unable to initialize device thread\n");
 		goto fail;
 	}
 
@@ -1131,9 +1116,6 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	if (dev->core_thread.thread) {
 		ftl_dev_free_thread(dev, &dev->core_thread);
 	}
-	if (dev->read_thread.thread) {
-		ftl_dev_free_thread(dev, &dev->read_thread);
-	}
 
 	if (dev->bands) {
 		for (i = 0; i < ftl_get_num_bands(dev); ++i) {
@@ -1322,7 +1304,7 @@ ftl_halt_poller(void *ctx)
 {
 	struct spdk_ftl_dev *dev = ctx;
 
-	if (!dev->core_thread.poller && !dev->read_thread.poller) {
+	if (!dev->core_thread.poller) {
 		spdk_poller_unregister(&dev->fini_ctx.poller);
 
 		if (ftl_dev_has_nv_cache(dev)) {
