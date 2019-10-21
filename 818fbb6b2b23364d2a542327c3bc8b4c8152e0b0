@@ -94,6 +94,30 @@
       "revId": "818fbb6b2b23364d2a542327c3bc8b4c8152e0b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7870dcd7_1343414c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-21T14:48:01Z",
+      "side": 1,
+      "message": "Thank you !",
+      "parentUuid": "14d05157_88cb447e",
+      "range": {
+        "startLine": 217,
+        "startChar": 77,
+        "endLine": 217,
+        "endChar": 93
+      },
+      "revId": "818fbb6b2b23364d2a542327c3bc8b4c8152e0b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
