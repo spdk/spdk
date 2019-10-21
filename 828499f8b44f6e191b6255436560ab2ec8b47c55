@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0c8bbea3_a252ff10",
+        "filename": "module/bdev/uring/bdev_uring_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-21T15:29:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "92d58056_796b22f7",
+      "range": {
+        "startLine": 41,
+        "startChar": 11,
+        "endLine": 41,
+        "endChar": 20
+      },
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db7ec923_a0a9d069",
         "filename": "module/bdev/uring/bdev_uring_rpc.c",
         "patchSetId": 2
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "4828f2f1_d81308c6",
+        "filename": "module/bdev/uring/bdev_uring_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-21T15:29:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "db7ec923_a0a9d069",
+      "range": {
+        "startLine": 48,
+        "startChar": 9,
+        "endLine": 48,
+        "endChar": 18
+      },
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c53a06ce_a53c93ac",
         "filename": "module/bdev/uring/bdev_uring_rpc.c",
         "patchSetId": 2
@@ -68,6 +116,30 @@
       "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11c0e538_69359648",
+        "filename": "module/bdev/uring/bdev_uring_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-21T15:29:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c53a06ce_a53c93ac",
+      "range": {
+        "startLine": 55,
+        "startChar": 49,
+        "endLine": 55,
+        "endChar": 58
+      },
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -105,6 +177,24 @@
     },
     {
       "key": {
+        "uuid": "1c0175a6_cbf4efe4",
+        "filename": "module/bdev/uring/bdev_uring_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-21T15:29:30Z",
+      "side": 1,
+      "message": "Shuhei,\nThe req object is not passed to the callback function _spdk_rpc_bdev_uring_delete_cb(). I looked at several bdev delete functions and they do the same thing. Take a look at the delete functions in the aio, compress or iscsi bdev",
+      "parentUuid": "b85847e1_e99d3678",
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "833f354c_0c17f625",
         "filename": "scripts/rpc.py",
         "patchSetId": 2
@@ -122,6 +212,24 @@
     },
     {
       "key": {
+        "uuid": "2eed41e5_8632feb8",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-21T15:29:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "833f354c_0c17f625",
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c1375bc_4403bd87",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 2
@@ -136,6 +244,24 @@
       "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6865e57e_e9065536",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-21T15:29:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8c1375bc_4403bd87",
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
