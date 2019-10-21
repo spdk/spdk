@@ -243,7 +243,7 @@ if hash shellcheck 2>/dev/null; then
 	SHCK_EXCLUDE="SC1083,SC2002,SC2004,\
 SC2010,SC2012,SC2016,SC2034,SC2045,SC2046,SC2068,SC2086,SC2089,SC2090,\
 SC2097,SC2098,SC2119,SC2120,SC2121,SC2124,SC2126,SC2128,\
-SC2129,SC2140,SC2142,SC2143,SC2154,SC2155,SC2162"
+SC2129,SC2140,SC2142,SC2143,SC2154,SC2155"
 	# SPDK fails some error checks which have been deprecated in later versions of shellcheck.
 	# We will not try to fix these error checks, but instead just leave the error types here
 	# so that we can still run with older versions of shellcheck.
@@ -255,13 +255,14 @@ SC2129,SC2140,SC2142,SC2143,SC2154,SC2155,SC2162"
 	# SC2001: See if you can use ${variable//search/replace} instead.
 	# SC2148: Add shebang to the top of your script.
 	# SC2153: Possible Misspelling: MYVARIABLE may not be assigned, but MY_VARIABLE is.
+	# SC2162: read without -r will mangle backslashes
 	# SC2164: Use cd ... || exit in case cd fails.
 	# SC2174: When used with -p, -m only applies to the deepest directory.
 	# SC2206: Quote to prevent word splitting/globbing,
 	#         or split robustly with mapfile or read -a.
 	# SC2207: Prefer mapfile or read -a to split command output (or quote to avoid splitting).
 	# SC2223: This default assignment may cause DoS due to globbing. Quote it.
-	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1090,SC1091,SC2148,SC2153,SC2164,\
+	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1090,SC1091,SC2148,SC2153,SC2162,SC2164,\
 SC2174,SC2001,SC2206,SC2207,SC2223"
 
 	SHCK_FORMAT="diff"
