@@ -62,7 +62,7 @@ function tgt_check_notifications() {
         local event_line event ev_type ev_ctx
         local rc=""
 
-        while read event_line; do
+        while read -r event_line; do
                 # remove ID
                 event="${event_line%:*}"
 
