@@ -209,6 +209,8 @@ Added `blobfs_mount` RPC method to mount blobfs on given bdev to a host path by 
 Then on the host path, user can directly do some file operations which will be mapped
 to blobfs.
 
+Added `blobfs_set_cache_size` RPC method to set cache size for the blobstore filesystem.
+
 ### ocf
 
 Updated OCF submodule to OCF v19.06
@@ -216,8 +218,6 @@ Updated OCF submodule to OCF v19.06
 Along with update, new cache mode 'write only' was added.
 
 New cache modes added to use via RPC, wi - write invalidate and wa - write around.
-
-New version of OCF provides fully asynchronous management API.
 
 ## v19.07:
 
