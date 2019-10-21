@@ -992,6 +992,16 @@ nvme_ctrlr_create_namespaces_cb(void *cb_arg, struct nvme_bdev_ns *ns, int rc)
 	free(ctx);
 }
 
+static size_t
+nvme_ctrlr_get_ns_struct_size(struct nvme_bdev_ctrlr *ctrlr, uint32_t nsid)
+{
+	if (spdk_nvme_ctrlr_is_ocssd_ns(ctrlr->ctrlr, nsid)) {
+		assert(false);
+	} else {
+		return sizeof(struct nvme_bdev_ns);
+	}
+}
+
 static void
 nvme_ctrlr_init_ns_type(struct nvme_bdev_ns *ns)
 {
@@ -1008,6 +1018,7 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
 	struct nvme_bdev_ns	*ns;
 	struct init_ns_ctx	*ctx;
+	size_t			struct_size;
 	uint32_t		i;
 
 	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
@@ -1016,8 +1027,11 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		ns = nvme_bdev_ctrlr->namespaces[i];
 		if (!ns && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
 			SPDK_NOTICELOG("NSID %u to be added\n", nsid);
-			ns = calloc(1, sizeof(struct nvme_bdev_ns));
+			struct_size = nvme_ctrlr_get_ns_struct_size(nvme_bdev_ctrlr, nsid);
+			void *tmp = calloc(1, struct_size);
+			ns = tmp;
 			if (!ns) {
+				SPDK_ERRLOG("Failed to allocate memory for namespace %u of %s\n", nsid, nvme_bdev_ctrlr->name);
 				return;
 			}
 
@@ -1776,6 +1790,7 @@ nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 {
 	struct nvme_bdev_ns	*ns;
 	struct init_ns_ctx	*ctx;
+	size_t			struct_size;
 	uint32_t		nsid;
 	uint32_t		ns_count;
 	uint32_t		active_ns_count;
@@ -1795,7 +1810,9 @@ nvme_ctrlr_create_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	 * know (in callback function) if we already finished */
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(nvme_bdev_ctrlr->ctrlr);
 	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(nvme_bdev_ctrlr->ctrlr, nsid)) {
-		ns = calloc(1, sizeof(struct nvme_bdev_ns));
+		struct_size = nvme_ctrlr_get_ns_struct_size(nvme_bdev_ctrlr, nsid);
+		void *tmp = calloc(1, struct_size);
+		ns = tmp;
 		if (!ns) {
 			if (cb_fn) {
 				cb_fn(cb_arg, -ENOMEM);
