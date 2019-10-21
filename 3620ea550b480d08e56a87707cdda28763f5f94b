@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "853e9d50_c6b8f547",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-21T08:35:44Z",
+      "side": 1,
+      "message": "Thanks Hailiang.\n\nSince we added the _fuzz_ into the function name, it looks like there is no need to end with xxx1 as the function name? Same for other functions.\n\nThanks, Gang",
+      "range": {
+        "startLine": 121,
+        "startChar": 5,
+        "endLine": 121,
+        "endChar": 23
+      },
+      "revId": "3620ea550b480d08e56a87707cdda28763f5f94b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
