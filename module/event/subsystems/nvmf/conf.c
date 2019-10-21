@@ -280,6 +280,8 @@ spdk_nvmf_tgt_parse_listen_fc_addr(const char *address,
 		return -1;
 	}
 
+	trid->adrfam = SPDK_NVMF_ADRFAM_FC;
+	snprintf(trid->trsvcid, sizeof(trid->trsvcid), "none");
 	snprintf(trid->traddr, sizeof(trid->traddr), "%s", address);
 
 	return 0;
