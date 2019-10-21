@@ -2483,12 +2483,12 @@ iscsi_pdu_hdr_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "reason=%d, ITT=%x, cid=%d\n",
 		      reqh->reason, task_tag, cid);
 
-	if (reqh->reason != 0 && conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
-		SPDK_ERRLOG("only logout with close the session reason can be in discovery session");
-		return SPDK_ISCSI_CONNECTION_FATAL;
-	}
-
 	if (conn->sess != NULL) {
+		if (reqh->reason != 0 && conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
+			SPDK_ERRLOG("only logout with close the session reason can be in discovery session\n");
+			return SPDK_ISCSI_CONNECTION_FATAL;
+		}
+
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "CmdSN=%u, ExpStatSN=%u, StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
 			      pdu->cmd_sn, ExpStatSN, conn->StatSN,
