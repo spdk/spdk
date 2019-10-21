@@ -1649,6 +1649,84 @@ pdu_hdr_op_login_test(void)
 	spdk_put_pdu(conn.login_rsp_pdu);
 }
 
+static void
+pdu_hdr_op_text_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_text_req *text_reqh;
+	struct iscsi_bhs_reject *reject_bhs;
+	int rc;
+
+	text_reqh = (struct iscsi_bhs_text_req *)&pdu.bhs;
+
+	conn.sess = &sess;
+
+	/* case 1 - error case */
+	pdu.data_segment_len = spdk_get_max_immediate_data_size() + 1;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.is_rejected == true);
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	reject_bhs = (struct iscsi_bhs_reject *)&rsp_pdu->bhs;
+	CU_ASSERT(reject_bhs->reason == ISCSI_REASON_PROTOCOL_ERROR);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+	pdu.is_rejected = false;
+
+	/* case 2 - error case */
+	pdu.data_segment_len = spdk_get_max_immediate_data_size();
+	text_reqh->flags |= ISCSI_FLAG_FINAL;
+	text_reqh->flags |= ISCSI_TEXT_CONTINUE;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == -1);
+
+	/* case 3 - normal case */
+	text_reqh->flags = 0;
+	to_be32(&text_reqh->exp_stat_sn, 1234);
+	to_be32(&conn.StatSN, 4321);
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(conn.StatSN == 1234);
+
+	/* case 4 - normal case */
+	text_reqh->flags = 0;
+	to_be32(&text_reqh->itt, 5678);
+	sess.current_text_itt = 5678;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+
+	/* case 5 - normal case */
+	sess.current_text_itt = 0xffffffffU;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(sess.current_text_itt == 5678);
+
+	/* case 6 - error case */
+	sess.current_text_itt = 5679;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.is_rejected == true);
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	reject_bhs = (struct iscsi_bhs_reject *)&rsp_pdu->bhs;
+	CU_ASSERT(reject_bhs->reason == ISCSI_REASON_PROTOCOL_ERROR);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+	pdu.is_rejected = false;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1689,6 +1767,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "build_iovs_test", build_iovs_test) == NULL
 		|| CU_add_test(suite, "build_iovs_with_md_test", build_iovs_with_md_test) == NULL
 		|| CU_add_test(suite, "pdu_hdr_op_login_test", pdu_hdr_op_login_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_text_test", pdu_hdr_op_text_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
