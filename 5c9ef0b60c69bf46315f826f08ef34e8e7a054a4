@@ -16,6 +16,24 @@
       "revId": "5c9ef0b60c69bf46315f826f08ef34e8e7a054a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11c1d5d3_a1c05183",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-21T15:46:13Z",
+      "side": 1,
+      "message": "There was a small difference in the wait they implemented waiting for the identify completion.\n\nRDMA:\n\tif (spdk_nvme_wait_for_completion(discovery_ctrlr-\u003eadminq, \u0026status)) {\n\t\tSPDK_ERRLOG(\"nvme_identify_controller failed!\\n\");\n\t\treturn -ENXIO;\n\t}\n\nTCP:\n\twhile (status.done \u003d\u003d false) {\n\t\tspdk_nvme_qpair_process_completions(discovery_ctrlr-\u003eadminq, 0);\n\t}\n\tif (spdk_nvme_cpl_is_error(\u0026status.cpl)) {\n\t\tSPDK_ERRLOG(\"nvme_identify_controller failed!\\n\");\n\t\treturn -ENXIO;\n\t}\n\nPretty small difference. If you feel it\u0027s confusing I can change the commit message.",
+      "parentUuid": "fad6a31b_45bb1744",
+      "revId": "5c9ef0b60c69bf46315f826f08ef34e8e7a054a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
