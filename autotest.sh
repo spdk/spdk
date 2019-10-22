@@ -134,6 +134,10 @@ if [[ $SPDK_TEST_CRYPTO -eq 1 || $SPDK_TEST_REDUCE -eq 1 ]]; then
 	fi
 fi
 
+# Revert existing OPAL to factory settings that may have been left from earlier failed tests.
+# This ensures we won't hit any unexpected failures due to NVMe SSDs being locked.
+opal_revert_cleanup
+
 #####################
 # Unit Tests
 #####################
@@ -259,6 +263,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
         if [ $SPDK_TEST_REDUCE -eq 1 ]; then
                 run_test suite ./test/compress/compress.sh
         fi
+
+	if [ $SPDK_TEST_OPAL -eq 1 ]; then
+		run_test suite ./test/nvme/nvme_opal.sh
+	fi
 fi
 
 timing_enter cleanup
