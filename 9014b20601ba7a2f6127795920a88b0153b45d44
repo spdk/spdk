@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2e4ca5b7_53205a7a",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-22T14:15:51Z",
+      "side": 1,
+      "message": "This name is consistent with the OCSSD 2.0 specification, so I don\u0027t see a reason to change it.",
+      "parentUuid": "cc7503de_f7ee5473",
+      "revId": "9014b20601ba7a2f6127795920a88b0153b45d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7fc77855_e56e925f",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 28
@@ -39,6 +57,30 @@
       "revId": "9014b20601ba7a2f6127795920a88b0153b45d44",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c95d7ce2_6a1b04aa",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-22T14:15:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7fc77855_e56e925f",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 27
+      },
+      "revId": "9014b20601ba7a2f6127795920a88b0153b45d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -82,6 +124,30 @@
     },
     {
       "key": {
+        "uuid": "f6384fdf_8ef0e193",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-22T14:15:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "56910c09_ca0f33b6",
+      "range": {
+        "startLine": 266,
+        "startChar": 57,
+        "endLine": 266,
+        "endChar": 64
+      },
+      "revId": "9014b20601ba7a2f6127795920a88b0153b45d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4abb7dc_1fc84038",
         "filename": "test/unit/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut.c",
         "patchSetId": 28
@@ -102,6 +168,30 @@
       "revId": "9014b20601ba7a2f6127795920a88b0153b45d44",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0120cf0_a4f4f981",
+        "filename": "test/unit/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 597,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-22T14:15:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4abb7dc_1fc84038",
+      "range": {
+        "startLine": 596,
+        "startChar": 0,
+        "endLine": 597,
+        "endChar": 13
+      },
+      "revId": "9014b20601ba7a2f6127795920a88b0153b45d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
