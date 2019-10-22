@@ -2185,7 +2185,7 @@ iscsi_pdu_hdr_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	rc = iscsi_op_login_rsp_init(conn, pdu, rsp_pdu);
 	if (rc < 0) {
 		iscsi_op_login_response(conn, rsp_pdu, NULL);
-		return rc;
+		return 0;
 	}
 
 	conn->login_rsp_pdu = rsp_pdu;
