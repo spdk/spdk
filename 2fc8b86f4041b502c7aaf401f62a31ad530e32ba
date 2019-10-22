@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e31b4d52_b18bd5da",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2998,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T03:06:52Z",
+      "side": 1,
+      "message": "lun_dev !\u003d NULL would be clearer, maybe also use spdk_likely() around it to match the spdk_unlikely you added on the next line",
+      "revId": "2fc8b86f4041b502c7aaf401f62a31ad530e32ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
