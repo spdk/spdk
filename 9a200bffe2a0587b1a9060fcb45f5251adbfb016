@@ -16,6 +16,24 @@
       "revId": "9a200bffe2a0587b1a9060fcb45f5251adbfb016",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2461f95_6e70e49d",
+        "filename": "dpdk",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-22T02:03:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "86ab0b0f_2121803e",
+      "revId": "9a200bffe2a0587b1a9060fcb45f5251adbfb016",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
