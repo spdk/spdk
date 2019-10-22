@@ -2460,6 +2460,9 @@ spdk_nvmf_tcp_pdu_set_buf_from_req(struct spdk_nvmf_tcp_qpair *tqpair,
 		nvme_tcp_pdu_set_data_buf(pdu, tcp_req->req.iov, tcp_req->req.iovcnt,
 					  0, tcp_req->req.length);
 		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
+		if (tqpair->pdu_recv_buf.remain_size) {
+			spdk_nvmf_tcp_sock_process(tqpair);
+		}
 	}
 }
 
