@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b28e292f_477c31ad",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-22T04:25:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0a04234d_e55aa183",
+      "range": {
+        "startLine": 132,
+        "startChar": 19,
+        "endLine": 132,
+        "endChar": 34
+      },
+      "revId": "4577e20fc357df0f5dba436903c7452272460d96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7ab00571_a3cd4ee3",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 28
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "69518a57_988a4196",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-22T04:25:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7ab00571_a3cd4ee3",
+      "revId": "4577e20fc357df0f5dba436903c7452272460d96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "12b54c9b_43d14ee8",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 28
@@ -53,6 +95,30 @@
       "writtenOn": "2019-10-21T22:47:33Z",
       "side": 1,
       "message": "I think in this function, the error handling is not consistent. Sometimes, we directly free()? Sometime, we call vbdev_opal_free_bdev(); some times, we use goto. So can we use go to directly which will be more clear?",
+      "range": {
+        "startLine": 346,
+        "startChar": 2,
+        "endLine": 346,
+        "endChar": 34
+      },
+      "revId": "4577e20fc357df0f5dba436903c7452272460d96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2013e513_7f76b5d8",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-22T04:25:00Z",
+      "side": 1,
+      "message": "Hi Ziye, thanks for your review. This is because we allocate more and more things when the function goes further. And after line 393, the previous allocated structure may not be freed although we hit an failure because some other structure might be using that. I think I will keep it this way for now. Thank you.",
+      "parentUuid": "12b54c9b_43d14ee8",
       "range": {
         "startLine": 346,
         "startChar": 2,
