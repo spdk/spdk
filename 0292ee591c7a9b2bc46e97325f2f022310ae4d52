@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e343e07a_4b326a9b",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-22T18:37:40Z",
+      "side": 1,
+      "message": "How about rewording this to \"function reconnects the qpair\"",
+      "range": {
+        "startLine": 122,
+        "startChar": 0,
+        "endLine": 122,
+        "endChar": 31
+      },
+      "revId": "0292ee591c7a9b2bc46e97325f2f022310ae4d52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "abe63353_48021fab",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-22T18:37:40Z",
+      "side": 1,
+      "message": "How about rewording this to \"in a failed state\"",
+      "range": {
+        "startLine": 123,
+        "startChar": 74,
+        "endLine": 123,
+        "endChar": 80
+      },
+      "revId": "0292ee591c7a9b2bc46e97325f2f022310ae4d52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "100a603e_bd50e193",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-22T18:37:40Z",
+      "side": 1,
+      "message": "Add \"is\"",
+      "range": {
+        "startLine": 124,
+        "startChar": 11,
+        "endLine": 124,
+        "endChar": 12
+      },
+      "revId": "0292ee591c7a9b2bc46e97325f2f022310ae4d52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c45aba2d_f894a525",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-22T18:37:40Z",
+      "side": 1,
+      "message": "How about rewording to \"has been removed\"",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 124,
+        "endChar": 7
+      },
+      "revId": "0292ee591c7a9b2bc46e97325f2f022310ae4d52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d8cd8cc_285fd8f3",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-22T18:37:40Z",
+      "side": 1,
+      "message": "Capitalize \"TRID\" to stay consistent",
+      "range": {
+        "startLine": 129,
+        "startChar": 54,
+        "endLine": 129,
+        "endChar": 58
+      },
+      "revId": "0292ee591c7a9b2bc46e97325f2f022310ae4d52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad4c07b1_b8905f33",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-22T18:37:40Z",
+      "side": 1,
+      "message": "How about rewording this to \"be in a failed state\"",
+      "range": {
+        "startLine": 129,
+        "startChar": 33,
+        "endLine": 129,
+        "endChar": 40
+      },
+      "revId": "0292ee591c7a9b2bc46e97325f2f022310ae4d52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47d3833f_e2dac8dc",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-22T18:37:40Z",
+      "side": 1,
+      "message": "How about rewording this to \"To determine whether a controller has failed call\"",
+      "range": {
+        "startLine": 130,
+        "startChar": 49,
+        "endLine": 131,
+        "endChar": 28
+      },
+      "revId": "0292ee591c7a9b2bc46e97325f2f022310ae4d52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ff03903_221c813e",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-10-22T18:37:40Z",
+      "side": 1,
+      "message": "How about rewording this to \"in a failed state\"",
+      "range": {
+        "startLine": 140,
+        "startChar": 40,
+        "endLine": 140,
+        "endChar": 46
+      },
+      "revId": "0292ee591c7a9b2bc46e97325f2f022310ae4d52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
