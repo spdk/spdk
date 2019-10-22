@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "99d2d094_ddccf0f9",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T22:00:38Z",
+      "side": 1,
+      "message": "I think in general, this is probably too verbose.  Just give the high level description of the new functions as a group, and the names of the functions that were added.  People can go to include/spdk/nvme.h for more details.",
+      "revId": "0292ee591c7a9b2bc46e97325f2f022310ae4d52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e343e07a_4b326a9b",
         "filename": "CHANGELOG.md",
         "patchSetId": 12
@@ -19,6 +36,23 @@
         "endLine": 122,
         "endChar": 31
       },
+      "revId": "0292ee591c7a9b2bc46e97325f2f022310ae4d52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87b6300b_36339488",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T22:00:38Z",
+      "side": 1,
+      "message": "Also consider using active voice here.  For example:\n\nReturns 0 if the qpair is reconnected or was already connected.",
       "revId": "0292ee591c7a9b2bc46e97325f2f022310ae4d52",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
