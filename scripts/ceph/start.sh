@@ -66,6 +66,7 @@ echo -e "\tmon addr = ${mon_ip}:12046" >> "$ceph_conf"
 rm -rf ${mon_dir}/*
 mkdir -p ${mon_dir}
 mkdir -p ${pid_dir}
+rm -f /etc/ceph/ceph.client.admin.keyring
 
 ceph-authtool --create-keyring --gen-key --name=mon. ${base_dir}/keyring --cap mon 'allow *'
 ceph-authtool --gen-key --name=client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *' ${base_dir}/keyring
@@ -79,6 +80,8 @@ cp ${base_dir}/keyring ${mon_dir}/keyring
 cp $ceph_conf /etc/ceph/ceph.conf
 
 cp ${base_dir}/keyring /etc/ceph/keyring
+cp ${base_dir}/keyring /etc/ceph/ceph.client.admin.keyring
+chmod a+r /etc/ceph/ceph.client.admin.keyring
 
 ceph-run sh -c "ulimit -n 16384 && ulimit -c unlimited && exec ceph-mon -c ${ceph_conf} -i a --keyring=${base_dir}/keyring --pid-file=${base_dir}/pid/root@$(hostname).pid --mon-data=${mon_dir}" || true
 
