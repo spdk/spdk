@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62f6c429_527936cb",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-22T09:05:56Z",
+      "side": 1,
+      "message": "Looks like no union needed as only one member? Same for below",
+      "range": {
+        "startLine": 89,
+        "startChar": 1,
+        "endLine": 91,
+        "endChar": 7
+      },
+      "revId": "5363fbae6831a8c3327ff10fbdd7f13a0d9499f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f5f008e_b4da6494",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-22T09:05:56Z",
+      "side": 1,
+      "message": "Please add a tab to align this",
+      "range": {
+        "startLine": 118,
+        "startChar": 33,
+        "endLine": 118,
+        "endChar": 38
+      },
+      "revId": "5363fbae6831a8c3327ff10fbdd7f13a0d9499f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81508fc3_76a4ee4b",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-22T09:05:56Z",
+      "side": 1,
+      "message": "This is just default case here? For any type of opcode?",
+      "range": {
+        "startLine": 541,
+        "startChar": 0,
+        "endLine": 542,
+        "endChar": 9
+      },
+      "revId": "5363fbae6831a8c3327ff10fbdd7f13a0d9499f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92e768bb_2ca92892",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-22T09:05:56Z",
+      "side": 1,
+      "message": "look like you can directly return after setting false to g_run here",
+      "range": {
+        "startLine": 594,
+        "startChar": 3,
+        "endLine": 594,
+        "endChar": 17
+      },
+      "revId": "5363fbae6831a8c3327ff10fbdd7f13a0d9499f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22e24117_e8b0e150",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-22T09:05:56Z",
+      "side": 1,
+      "message": "I am not sure why we call put pdu here after you get and removed from the list? Could you give more information here. Thanks.",
+      "range": {
+        "startLine": 644,
+        "startChar": 2,
+        "endLine": 644,
+        "endChar": 25
+      },
+      "revId": "5363fbae6831a8c3327ff10fbdd7f13a0d9499f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91e10d88_0867bcd3",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 944,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-22T09:05:56Z",
+      "side": 1,
+      "message": "should you check g_json_file !\u003d NULL as in the usage function it is saying \"this parameter is valid only when -j is not specified? Or either way, need to update the usage function",
+      "range": {
+        "startLine": 944,
+        "startChar": 2,
+        "endLine": 944,
+        "endChar": 38
+      },
+      "revId": "5363fbae6831a8c3327ff10fbdd7f13a0d9499f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "332a682f_551a7d53",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-22T09:05:56Z",
+      "side": 1,
+      "message": "May us %d, MAX_EUNRIME_S instead of having a hard coded value here.",
+      "range": {
+        "startLine": 946,
+        "startChar": 71,
+        "endLine": 946,
+        "endChar": 76
+      },
+      "revId": "5363fbae6831a8c3327ff10fbdd7f13a0d9499f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
