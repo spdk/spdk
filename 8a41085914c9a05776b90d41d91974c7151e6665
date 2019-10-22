@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "35bff1a2_2bba4988",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-22T04:25:44Z",
+      "side": 1,
+      "message": "Hi Jim, thanks for your review. The \"int\" return value here is to let the caller know whether it receive a final result. If it return with -EAGAIN, there is no final result and need to continue calling this.\nIf we get a final result, no matter an error or success, the return code will be put also in spdk_opal_revert_cb as the rc. And in the revert_cb, the rc will be captured.",
+      "parentUuid": "9faaf923_727390f7",
+      "revId": "8a41085914c9a05776b90d41d91974c7151e6665",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7eeb8f91_0762f36c",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 20
@@ -33,6 +51,24 @@
       "revId": "8a41085914c9a05776b90d41d91974c7151e6665",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8a2bafe_ae39becc",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2100,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-22T04:25:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7eeb8f91_0762f36c",
+      "revId": "8a41085914c9a05776b90d41d91974c7151e6665",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "714f2f4c_93b849e5",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2109,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-22T04:25:44Z",
+      "side": 1,
+      "message": "Hi Jim, thanks for your review. I think you are right. Two return value seems redundant here. I will make dev-\u003erevert_cb_fn return void. Thank you.",
+      "parentUuid": "756b537e_e8c22506",
+      "revId": "8a41085914c9a05776b90d41d91974c7151e6665",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f1f38b4_ce1a283c",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 20
@@ -67,6 +121,24 @@
       "revId": "8a41085914c9a05776b90d41d91974c7151e6665",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3425c029_a1a523aa",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2628,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-22T04:25:44Z",
+      "side": 1,
+      "message": "This is also needed when deleting an opal bdev. Please check this patch https://review.gerrithub.io/c/spdk/spdk/+/468917/20. Thank you for your review.",
+      "parentUuid": "9f1f38b4_ce1a283c",
+      "revId": "8a41085914c9a05776b90d41d91974c7151e6665",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
