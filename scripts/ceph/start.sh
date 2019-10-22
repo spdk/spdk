@@ -80,6 +80,9 @@ cp $ceph_conf /etc/ceph/ceph.conf
 
 cp ${base_dir}/keyring /etc/ceph/keyring
 
+cp ${base_dir}/keyring /etc/ceph/ceph.client.admin.keyring
+chmod a+r /etc/ceph/ceph.client.admin.keyring
+
 ceph-run sh -c "ulimit -n 16384 && ulimit -c unlimited && exec ceph-mon -c ${ceph_conf} -i a --keyring=${base_dir}/keyring --pid-file=${base_dir}/pid/root@$(hostname).pid --mon-data=${mon_dir}" || true
 
 # create osd
