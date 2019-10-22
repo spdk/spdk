@@ -93,6 +93,30 @@
       "revId": "705f3dd06aefd4e54dbec18b9ad6eb1563d6860d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53ae14a3_598e36ae",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-22T14:03:59Z",
+      "side": 1,
+      "message": "Yeah, I was trying to preserve the original behavior of this function in this patch before fixing it later.",
+      "parentUuid": "dea07385_106dd5d3",
+      "range": {
+        "startLine": 414,
+        "startChar": 37,
+        "endLine": 414,
+        "endChar": 55
+      },
+      "revId": "705f3dd06aefd4e54dbec18b9ad6eb1563d6860d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
