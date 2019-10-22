@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "643c9b54_a33c6402",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2462,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-22T05:40:18Z",
+      "side": 1,
+      "message": "Directly call after the set_recv_state should solve your issue.\nspdk_nvmf_tcp_sock_process(tqpair);",
+      "revId": "f19e9fa428feea05f20e2be21dba765318105035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
