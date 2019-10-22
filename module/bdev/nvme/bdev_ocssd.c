@@ -87,12 +87,17 @@ struct ocssd_bdev {
 };
 
 struct bdev_ocssd_ns {
-	struct spdk_ocssd_geometry_data	geometry;
-	struct bdev_ocssd_lba_offsets	lba_offsets;
+	struct spdk_ocssd_geometry_data			geometry;
+	struct bdev_ocssd_lba_offsets			lba_offsets;
+	bool						chunk_notify_pending;
+	uint64_t					chunk_notify_count;
+#define CHUNK_NOTIFICATION_ENTRY_COUNT 64
+	struct spdk_ocssd_chunk_notification_entry	chunk[CHUNK_NOTIFICATION_ENTRY_COUNT];
 };
 
 struct ocssd_bdev_ctrlr {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
+	struct spdk_poller	*mm_poller;
 };
 
 static struct bdev_ocssd_ns *
@@ -298,6 +303,22 @@ bdev_ocssd_to_disk_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
 	       (chk << offsets->chk) |
 	       (pu  << offsets->pu)  |
 	       (grp << offsets->grp);
+}
+
+static bool
+bdev_ocssd_lba_in_range(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
+{
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_bdev(ocssd_bdev);
+	const struct spdk_ocssd_geometry_data *geometry = &ocssd_ns->geometry;
+	const struct bdev_ocssd_lba_offsets *offsets = &ocssd_ns->lba_offsets;
+	const struct bdev_ocssd_range *range = &ocssd_bdev->range;
+	uint64_t pu, grp, punit;
+
+	pu  = (lba >> offsets->pu)  & ((1 << geometry->lbaf.pu_len)  - 1);
+	grp = (lba >> offsets->grp) & ((1 << geometry->lbaf.grp_len) - 1);
+	punit = grp * geometry->num_pu + pu;
+
+	return punit >= range->begin && punit <= range->end;
 }
 
 static void
@@ -769,6 +790,133 @@ bdev_ocssd_get_io_channel(void *ctx)
 	return spdk_get_io_channel(nvme_bdev->nvme_bdev_ctrlr->ocssd_ctrlr);
 }
 
+static void
+bdev_ocssd_chunk_notification_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_bdev_ns *nvme_ns = ctx;
+	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
+	struct spdk_bdev_media_event event;
+	struct spdk_ocssd_chunk_notification_entry *chunk_entry;
+	struct nvme_bdev *nvme_bdev;
+	struct ocssd_bdev *ocssd_bdev;
+	size_t chunk_id, num_blocks, lba;
+	int rc;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("Failed to retrieve chunk notification log\n");
+		return;
+	}
+
+	for (chunk_id = 0; chunk_id < CHUNK_NOTIFICATION_ENTRY_COUNT; ++chunk_id) {
+		chunk_entry = &ocssd_ns->chunk[chunk_id];
+		if (chunk_entry->nc <= ocssd_ns->chunk_notify_count) {
+			break;
+		}
+
+		ocssd_ns->chunk_notify_count = chunk_entry->nc;
+		if (chunk_entry->mask.lblk) {
+			num_blocks = chunk_entry->nlb;
+		} else if (chunk_entry->mask.chunk) {
+			num_blocks = ocssd_ns->geometry.clba;
+		} else if (chunk_entry->mask.pu) {
+			num_blocks = ocssd_ns->geometry.clba * ocssd_ns->geometry.num_chk;
+		} else {
+			SPDK_WARNLOG("Invalid chunk notification mask\n");
+			continue;
+		}
+
+		TAILQ_FOREACH(nvme_bdev, &nvme_ns->bdevs, tailq) {
+			ocssd_bdev = SPDK_CONTAINEROF(nvme_bdev, struct ocssd_bdev, nvme_bdev);
+			if (bdev_ocssd_lba_in_range(ocssd_bdev, chunk_entry->lba)) {
+				break;
+			}
+		}
+
+		if (nvme_bdev == NULL) {
+			SPDK_INFOLOG(SPDK_LOG_BDEV_OCSSD, "Dropping media management event\n");
+			continue;
+		}
+
+		lba = bdev_ocssd_from_disk_lba(ocssd_bdev, chunk_entry->lba);
+		while (num_blocks > 0 && lba < nvme_bdev->disk.blockcnt) {
+			event.offset = lba;
+			event.num_blocks = spdk_min(num_blocks, ocssd_ns->geometry.clba);
+
+			rc = spdk_bdev_push_media_events(&nvme_bdev->disk, &event, 1);
+			if (spdk_unlikely(rc < 0)) {
+				SPDK_DEBUGLOG(SPDK_LOG_BDEV_OCSSD, "Failed to push media event: %s\n",
+					      spdk_strerror(-rc));
+				break;
+			}
+
+			/* Jump to the next chunk on the same parallel unit */
+			lba += ocssd_ns->geometry.clba * bdev_ocssd_num_parallel_units(ocssd_bdev);
+			num_blocks -= event.num_blocks;
+		}
+	}
+
+	/* If at least one notification has been processed send out media event */
+	if (chunk_id > 0) {
+		TAILQ_FOREACH(nvme_bdev, &nvme_ns->bdevs, tailq) {
+			spdk_bdev_notify_media_management(&nvme_bdev->disk);
+		}
+	}
+
+	/* If we filled the full array of events, there may be more still pending.  Set the pending
+	 * flag back to true so that we try to get more events again next time the poller runs.
+	 */
+	if (chunk_id == CHUNK_NOTIFICATION_ENTRY_COUNT) {
+		ocssd_ns->chunk_notify_pending = true;
+	}
+}
+
+static int
+bdev_ocssd_poll_mm(void *ctx)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = ctx;
+	struct bdev_ocssd_ns *ocssd_ns;
+	uint32_t nsid;
+	int rc;
+
+	for (nsid = 0; nsid < nvme_bdev_ctrlr->num_ns; ++nsid) {
+		ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_bdev_ctrlr->namespaces[nsid]);
+
+		if (ocssd_ns->chunk_notify_pending) {
+			ocssd_ns->chunk_notify_pending = false;
+
+			rc = spdk_nvme_ctrlr_cmd_get_log_page(nvme_bdev_ctrlr->ctrlr,
+							      SPDK_OCSSD_LOG_CHUNK_NOTIFICATION,
+							      nsid + 1, ocssd_ns->chunk,
+							      sizeof(ocssd_ns->chunk[0]) *
+							      CHUNK_NOTIFICATION_ENTRY_COUNT,
+							      0, bdev_ocssd_chunk_notification_cb,
+							      nvme_bdev_ctrlr->namespaces[nsid]);
+			if (spdk_unlikely(rc != 0)) {
+				SPDK_ERRLOG("Failed to get chunk notification log page: %s\n",
+					    spdk_strerror(-rc));
+			}
+		}
+	}
+
+	return 0;
+}
+
+void
+bdev_ocssd_handle_chunk_notification(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+{
+	struct bdev_ocssd_ns *ocssd_ns;
+	uint32_t nsid;
+
+	for (nsid = 0; nsid < nvme_bdev_ctrlr->num_ns; ++nsid) {
+		if (nvme_bdev_ctrlr->namespaces[nsid] == NULL) {
+			continue;
+		}
+
+		ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_bdev_ctrlr->namespaces[nsid]);
+		ocssd_ns->chunk_notify_pending = true;
+	}
+}
+
 static struct spdk_bdev_fn_table ocssdlib_fn_table = {
 	.destruct		= bdev_ocssd_destruct,
 	.submit_request		= bdev_ocssd_submit_request,
@@ -1070,6 +1218,7 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 	nvme_bdev->disk.max_open_zones = geometry->maxoc;
 	nvme_bdev->disk.optimal_open_zones = bdev_ocssd_num_parallel_units(ocssd_bdev);
 	nvme_bdev->disk.write_unit_size = geometry->ws_opt;
+	nvme_bdev->disk.media_events = true;
 
 	if (geometry->maxocpu != 0 && geometry->maxocpu != geometry->maxoc) {
 		SPDK_WARNLOG("Maximum open chunks per PU is not zero. Reducing the maximum "
@@ -1163,6 +1312,7 @@ bdev_ocssd_geometry_cb(void *_ctx, const struct spdk_nvme_cpl *cpl)
 					    ocssd_ns->geometry.lbaf.chk_len;
 		ocssd_ns->lba_offsets.grp = ocssd_ns->lba_offsets.pu +
 					    ocssd_ns->geometry.lbaf.pu_len;
+		ocssd_ns->chunk_notify_pending = true;
 	}
 
 	nvme_ctrlr_populate_namespace_done(ctx->nvme_ctx, nvme_ns, rc);
@@ -1279,6 +1429,13 @@ bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		return -ENOMEM;
 	}
 
+	ocssd_ctrlr->mm_poller = spdk_poller_register(bdev_ocssd_poll_mm, nvme_bdev_ctrlr,
+				 10000ULL);
+	if (!ocssd_ctrlr->mm_poller) {
+		free(ocssd_ctrlr);
+		return -ENOMEM;
+	}
+
 	spdk_io_device_register(ocssd_ctrlr, bdev_ocssd_create_ioch_cb, bdev_ocssd_destroy_ioch_cb,
 				sizeof(struct bdev_ocssd_io_channel), nvme_bdev_ctrlr->name);
 
@@ -1291,6 +1448,7 @@ bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 void
 bdev_ocssd_fini_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
+	spdk_poller_unregister(&nvme_bdev_ctrlr->ocssd_ctrlr->mm_poller);
 	spdk_io_device_unregister(nvme_bdev_ctrlr->ocssd_ctrlr, NULL);
 	free(nvme_bdev_ctrlr->ocssd_ctrlr);
 	nvme_bdev_ctrlr->ocssd_ctrlr = NULL;
