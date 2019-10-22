@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dfdb9636_a710281d",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2998,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T23:53:13Z",
+      "side": 1,
+      "message": "this should be spdk_likely?",
+      "revId": "a56615b183739680661a71973204fcec9ebc8cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
