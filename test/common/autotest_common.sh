@@ -62,6 +62,7 @@ export RUN_NIGHTLY_FAILING
 : ${SPDK_TEST_OCF=0}; export SPDK_TEST_OCF
 : ${SPDK_TEST_FTL_EXTENDED=0}; export SPDK_TEST_FTL_EXTENDED
 : ${SPDK_TEST_VMD=0}; export SPDK_TEST_VMD
+: ${SPDK_TEST_OPAL=0}; export SPDK_TEST_OPAL
 : ${SPDK_AUTOTEST_X=true}; export SPDK_AUTOTEST_X
 
 # Export PYTHONPATH with addition of RPC framework. New scripts can be created
@@ -875,6 +876,23 @@ function get_nvme_name_from_bdf {
 	done
 
 	printf '%s\n' "${blkname[@]}"
+}
+
+function opal_revert_cleanup {
+	$rootdir/app/spdk_tgt/spdk_tgt &
+	spdk_tgt_pid=$!
+	waitforlisten $spdk_tgt_pid
+
+	# ignore the result
+	set +e
+	# OPAL test only runs on the first NVMe device
+	# So we just revert the first one here
+	bdf=$($rootdir/scripts/gen_nvme.sh --json | jq -r '.config[].params | select(.name=="Nvme0").traddr')
+	$rootdir/scripts/rpc.py bdev_nvme_attach_controller -b "nvme0" -t "pcie" -a $bdf
+	$rootdir/scripts/rpc.py bdev_nvme_opal_revert -b nvme0 -p test
+	set -e
+
+	killprocess $spdk_tgt_pid
 }
 
 set -o errtrace
