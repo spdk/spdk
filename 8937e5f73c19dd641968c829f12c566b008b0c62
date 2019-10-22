@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "097d5206_8ab17020",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T14:36:11Z",
+      "side": 1,
+      "message": "We should fail here and return -ENOMEM if the strdup failed.\n\nYou used to fail here in rev28 (which I added +2).  Why did you change it?  Please - when you have a +2 from reviewers, you should not change other parts of the code.  If you find other things you want to change, create a separate patch for it.  When additional changes are made that the original reviewer did not ask for, it means we have to wait again for another revision.",
+      "revId": "8937e5f73c19dd641968c829f12c566b008b0c62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0db3abe8_06c8e1f1",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T14:36:11Z",
+      "side": 1,
+      "message": "Gang is right.  We should check NULL here - not just assert.",
+      "revId": "8937e5f73c19dd641968c829f12c566b008b0c62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
