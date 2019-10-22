@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc7503de_f7ee5473",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T09:32:30Z",
+      "side": 1,
+      "message": "I prefer ppa format. If you want to use lba call it bdev_ocssd_disk_lba_offsets / bdev_ocssd_disk_lba_format",
+      "revId": "9014b20601ba7a2f6127795920a88b0153b45d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7fc77855_e56e925f",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T09:32:30Z",
+      "side": 1,
+      "message": "Please correct alligmnet",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 27
+      },
+      "revId": "9014b20601ba7a2f6127795920a88b0153b45d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0689018_4163e005",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T09:32:30Z",
+      "side": 1,
+      "message": "This should be named bdev_ocssd_block_offset_to_disk_lba or bdev_ocssd_offset_to_disk_lba. PPA name will be probably more descriptive.",
+      "revId": "9014b20601ba7a2f6127795920a88b0153b45d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56910c09_ca0f33b6",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T09:32:30Z",
+      "side": 1,
+      "message": "command",
+      "range": {
+        "startLine": 266,
+        "startChar": 57,
+        "endLine": 266,
+        "endChar": 64
+      },
+      "revId": "9014b20601ba7a2f6127795920a88b0153b45d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4abb7dc_1fc84038",
+        "filename": "test/unit/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 597,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T09:32:30Z",
+      "side": 1,
+      "message": "Let\u0027s test non power two geometry like num_pu \u003d 3, num_grp \u003d 3",
+      "range": {
+        "startLine": 596,
+        "startChar": 0,
+        "endLine": 597,
+        "endChar": 13
+      },
+      "revId": "9014b20601ba7a2f6127795920a88b0153b45d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
