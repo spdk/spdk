@@ -16,6 +16,97 @@
       "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "395284de_0e7d5ccc",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T07:37:21Z",
+      "side": 1,
+      "message": "You could use spdk_nvme_cpl_is_success(cpl)",
+      "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99184a89_866b5869",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T07:37:21Z",
+      "side": 1,
+      "message": "Isn\u0027t it redundant to line 110?",
+      "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "adbb2d6d_4b18454e",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T07:37:21Z",
+      "side": 1,
+      "message": "If this is false do we ever call bdev_ocssd_probe_done?",
+      "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "686d6849_441392f8",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T07:37:21Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you pass rc to bdev_ocssd_probe_done?",
+      "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42beb45f_2fc57a48",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T07:37:21Z",
+      "side": 1,
+      "message": "Looks like similar things - could you please add some comment describing difference between this two callbacks.",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 113,
+        "endChar": 21
+      },
+      "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
