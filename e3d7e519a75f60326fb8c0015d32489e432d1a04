@@ -1,0 +1,124 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dcea8121_6643b2a0",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T08:41:10Z",
+      "side": 1,
+      "message": "Maybe add some getter for nvme_bdev_ctrlr-\u003eocssd_ctrlr-\u003ens[] - it is used in several places.",
+      "revId": "e3d7e519a75f60326fb8c0015d32489e432d1a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0fa5a954_9be2c144",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T08:41:10Z",
+      "side": 1,
+      "message": "This check is done in spdk_bdev_register()",
+      "revId": "e3d7e519a75f60326fb8c0015d32489e432d1a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e12f7751_6821f0e6",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T08:41:10Z",
+      "side": 1,
+      "message": "You will return success in case spdk_bdev_register failed.",
+      "revId": "e3d7e519a75f60326fb8c0015d32489e432d1a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e03f406_0e5ed76f",
+        "filename": "module/bdev/nvme/bdev_ocssd_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T08:41:10Z",
+      "side": 1,
+      "message": "This is not needed.",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 0
+      },
+      "revId": "e3d7e519a75f60326fb8c0015d32489e432d1a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40c5da0b_21e9d10c",
+        "filename": "module/bdev/nvme/bdev_ocssd_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T08:41:10Z",
+      "side": 1,
+      "message": "You can pass just request as completion context and call free_rpc_create_ocssd_bdev in this function.",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 2
+      },
+      "revId": "e3d7e519a75f60326fb8c0015d32489e432d1a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f3ceb86_7eec0f83",
+        "filename": "module/bdev/nvme/bdev_ocssd_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T08:41:10Z",
+      "side": 1,
+      "message": "You can pass just request as completion context and call free_rpc_create_ocssd_bdev in this function.",
+      "range": {
+        "startLine": 167,
+        "startChar": 0,
+        "endLine": 172,
+        "endChar": 2
+      },
+      "revId": "e3d7e519a75f60326fb8c0015d32489e432d1a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
