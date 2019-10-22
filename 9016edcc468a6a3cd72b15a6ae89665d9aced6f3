@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d34d344e_13d846e5",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-22T13:49:16Z",
+      "side": 1,
+      "message": "Thank you for your review. Considering consistent style, just use assert for these cases.",
+      "parentUuid": "bbb68a58_541f4909",
+      "range": {
+        "startLine": 389,
+        "startChar": 2,
+        "endLine": 389,
+        "endChar": 33
+      },
+      "revId": "9016edcc468a6a3cd72b15a6ae89665d9aced6f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a467b0c_c7fb9b77",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 29
@@ -45,6 +69,30 @@
       "revId": "9016edcc468a6a3cd72b15a6ae89665d9aced6f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b064b481_8e216765",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-22T13:49:16Z",
+      "side": 1,
+      "message": "Hi Gang, thanks for your review. After we find or create a base, we start create part. But if creating part failed, we don\u0027t free base right after because some other parts might be using base. So we don\u0027t free related structure here. Thank you.",
+      "parentUuid": "9a467b0c_c7fb9b77",
+      "range": {
+        "startLine": 397,
+        "startChar": 2,
+        "endLine": 397,
+        "endChar": 34
+      },
+      "revId": "9016edcc468a6a3cd72b15a6ae89665d9aced6f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
