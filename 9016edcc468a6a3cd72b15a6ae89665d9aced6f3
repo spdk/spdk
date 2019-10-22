@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbb68a58_541f4909",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-22T09:39:47Z",
+      "side": 1,
+      "message": "shall we check whether this is NULL where I saw it checked above?",
+      "range": {
+        "startLine": 389,
+        "startChar": 2,
+        "endLine": 389,
+        "endChar": 33
+      },
+      "revId": "9016edcc468a6a3cd72b15a6ae89665d9aced6f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a467b0c_c7fb9b77",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-22T09:39:47Z",
+      "side": 1,
+      "message": "Do you need to free the part_tailq and opal_part_base here if cfg-\u003eopal_base \u003d\u003d NULL from above code logic? Same for below goto err cases?",
+      "range": {
+        "startLine": 397,
+        "startChar": 2,
+        "endLine": 397,
+        "endChar": 34
+      },
+      "revId": "9016edcc468a6a3cd72b15a6ae89665d9aced6f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
