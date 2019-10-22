@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4582b4c5_ff456f11",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1897,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-22T04:13:14Z",
+      "side": 1,
+      "message": "how about adding \"mgmt\" in the function name?",
+      "revId": "54c64c19cd863f07e23c371575042f663f814d3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
