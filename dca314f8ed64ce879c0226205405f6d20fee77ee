@@ -22,6 +22,30 @@
       "revId": "dca314f8ed64ce879c0226205405f6d20fee77ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6d8eb9a_3669a22b",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2446,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-22T23:09:16Z",
+      "side": 1,
+      "message": "reported by Jim. When the buffer allocated, the data is read into the tmp buffer. And next time, there is no data in event to wakeup. So if there is data in, we should handle this case",
+      "parentUuid": "a3785f8d_2d3f10b3",
+      "range": {
+        "startLine": 2446,
+        "startChar": 0,
+        "endLine": 2446,
+        "endChar": 34
+      },
+      "revId": "dca314f8ed64ce879c0226205405f6d20fee77ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
