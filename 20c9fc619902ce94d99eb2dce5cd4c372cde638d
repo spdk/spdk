@@ -22,6 +22,30 @@
       "revId": "20c9fc619902ce94d99eb2dce5cd4c372cde638d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "395397b5_1f108e02",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 889,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-22T07:02:35Z",
+      "side": 1,
+      "message": "Since only P4800x can support this feature, you can just use iter_pci_dev_id() to get the P4800x device here.",
+      "parentUuid": "28541edb_f366ded8",
+      "range": {
+        "startLine": 889,
+        "startChar": 1,
+        "endLine": 889,
+        "endChar": 47
+      },
+      "revId": "20c9fc619902ce94d99eb2dce5cd4c372cde638d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
