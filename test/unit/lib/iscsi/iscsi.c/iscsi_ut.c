@@ -1874,6 +1874,100 @@ pdu_hdr_op_scsi_test(void)
 	check_scsi_task(&pdu, SPDK_SCSI_DIR_NONE);
 }
 
+static void
+check_iscsi_task_mgmt_response(uint8_t response, uint32_t task_tag, uint32_t stat_sn,
+			       uint32_t exp_cmd_sn, uint32_t max_cmd_sn)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_task_resp *rsph;
+
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	rsph = (struct iscsi_bhs_task_resp *)&rsp_pdu->bhs;
+	CU_ASSERT(rsph->response == response);
+	CU_ASSERT(from_be32(&rsph->itt) == task_tag);
+	CU_ASSERT(from_be32(&rsph->exp_cmd_sn) == exp_cmd_sn);
+	CU_ASSERT(from_be32(&rsph->max_cmd_sn) == max_cmd_sn);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+}
+
+static void
+pdu_hdr_op_task_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
+	struct iscsi_bhs_task_req *task_reqh;
+	int rc;
+
+	task_reqh = (struct iscsi_bhs_task_req *)&pdu.bhs;
+
+	conn.sess = &sess;
+	conn.dev = &dev;
+
+	/* case 1 - error case */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 2 - error case */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	task_reqh->immediate = 0;
+	to_be32(&task_reqh->itt, 1234);
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_LUN_NOT_EXIST, 1234, 0, 0, 1);
+
+	/* case 3 - error case */
+	dev.lun[0] = &lun;
+	task_reqh->flags = 0;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_REJECTED, 1234, 0, 0, 2);
+
+	/* case 4 - error case */
+	task_reqh->flags = ISCSI_TASK_FUNC_CLEAR_TASK_SET;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 3);
+
+	/* case 5 - error case */
+	task_reqh->flags = ISCSI_TASK_FUNC_CLEAR_ACA;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 4);
+
+	/* case 6 - error case */
+	task_reqh->flags = ISCSI_TASK_FUNC_TARGET_WARM_RESET;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 5);
+
+	/* case 7 - error case */
+	task_reqh->flags = ISCSI_TASK_FUNC_TARGET_COLD_RESET;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 6);
+
+	/* case 8 - error case */
+	task_reqh->flags = ISCSI_TASK_FUNC_TASK_REASSIGN;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 7);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1917,6 +2011,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "pdu_hdr_op_text_test", pdu_hdr_op_text_test) == NULL
 		|| CU_add_test(suite, "pdu_hdr_op_logout_test", pdu_hdr_op_logout_test) == NULL
 		|| CU_add_test(suite, "pdu_hdr_op_scsi_test", pdu_hdr_op_scsi_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_task_test", pdu_hdr_op_task_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
