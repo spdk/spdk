@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c6a7a3e9_1604fa92",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 969,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-22T13:34:52Z",
+      "side": 1,
+      "message": "No longer necessary after latest rebase.",
+      "parentUuid": "22fc2212_5e248131",
+      "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "395284de_0e7d5ccc",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 24
@@ -33,6 +51,24 @@
       "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7689a621_06c7461c",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-22T13:34:52Z",
+      "side": 1,
+      "message": "No longer necessary, see latest patchset.",
+      "parentUuid": "395284de_0e7d5ccc",
+      "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "2d7cf426_fdf63c55",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-22T13:34:52Z",
+      "side": 1,
+      "message": "No longer necessary, see latest patchset.",
+      "parentUuid": "99184a89_866b5869",
+      "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "adbb2d6d_4b18454e",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 24
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "a049d589_740fc3dd",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-22T13:34:52Z",
+      "side": 1,
+      "message": "No longer necessary, see latest patchset.",
+      "parentUuid": "adbb2d6d_4b18454e",
+      "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "686d6849_441392f8",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 24
@@ -84,6 +156,24 @@
       "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02807c61_3dad2521",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-22T13:34:52Z",
+      "side": 1,
+      "message": "No longer necessary, see latest patchset.",
+      "parentUuid": "686d6849_441392f8",
+      "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -107,6 +197,30 @@
       "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab01aa20_26a5e44f",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-22T13:34:52Z",
+      "side": 1,
+      "message": "No longer necessary, see latest patchset.",
+      "parentUuid": "42beb45f_2fc57a48",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 113,
+        "endChar": 21
+      },
+      "revId": "a84303a116adf7e5d9aa05df6475725208c177b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
