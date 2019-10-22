@@ -14,7 +14,7 @@
 
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
-TAILQ_HEAD(, spdk_iscsi_pdu) g_write_pdu_list;
+TAILQ_HEAD(, spdk_iscsi_pdu) g_write_pdu_list = TAILQ_HEAD_INITIALIZER(g_write_pdu_list);
 
 struct spdk_iscsi_task *
 spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
