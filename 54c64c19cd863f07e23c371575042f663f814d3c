@@ -16,6 +16,24 @@
       "revId": "54c64c19cd863f07e23c371575042f663f814d3c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "565fb309_7f81771d",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1897,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-22T22:20:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4582b4c5_ff456f11",
+      "revId": "54c64c19cd863f07e23c371575042f663f814d3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
