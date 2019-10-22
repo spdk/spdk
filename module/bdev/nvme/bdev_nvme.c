@@ -1031,6 +1031,20 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 
 }
 
+static bool
+nvme_ctrlr_is_ocssd_supported(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+{
+	uint32_t nsid;
+
+	for (nsid = 0; nsid < nvme_bdev_ctrlr->num_ns; ++nsid) {
+		if (spdk_nvme_ctrlr_is_ocssd_ns(nvme_bdev_ctrlr->ctrlr, nsid + 1)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static void
 aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -2311,7 +2325,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 
-		if (spdk_nvme_ctrlr_is_ocssd_ns(nvme_bdev_ctrlr->ctrlr, 1)) {
+		if (nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr)) {
 			continue;
 		}
 
