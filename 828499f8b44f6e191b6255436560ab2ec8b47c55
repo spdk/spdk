@@ -195,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "9f367c56_9a71c7e9",
+        "filename": "module/bdev/uring/bdev_uring_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-22T21:52:06Z",
+      "side": 1,
+      "message": "Hi John, Thank you for your correction. I got it.",
+      "parentUuid": "1c0175a6_cbf4efe4",
+      "revId": "828499f8b44f6e191b6255436560ab2ec8b47c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "833f354c_0c17f625",
         "filename": "scripts/rpc.py",
         "patchSetId": 2
