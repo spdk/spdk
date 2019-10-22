@@ -626,6 +626,53 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 					return -EINVAL;
 				}
 			}
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
+			struct spdk_blob_md_descriptor_extent	*desc_extent;
+			unsigned int				i;
+			unsigned int				cluster_count = blob->active.num_clusters;
+
+			if (blob->disable_extent_pages == true) {
+				/* This means that Extent RLE is present in MD,
+				 * both should never be at the same time. */
+				return -EINVAL;
+			}
+
+			desc_extent = (struct spdk_blob_md_descriptor_extent *)desc;
+
+			if (desc_extent->length == 0 ||
+			    (desc_extent->length % sizeof(desc_extent->cluster_idx[0]) != 0)) {
+				return -EINVAL;
+			}
+
+			for (i = 0; i < desc_extent->length / sizeof(desc_extent->cluster_idx[0]); i++) {
+				if (desc_extent->cluster_idx[i] != 0) {
+					if (!spdk_bit_array_get(blob->bs->used_clusters, desc_extent->cluster_idx[i])) {
+						return -EINVAL;
+					}
+				}
+				cluster_count++;
+			}
+
+			if (cluster_count == 0) {
+				return -EINVAL;
+			}
+			tmp = realloc(blob->active.clusters, cluster_count * sizeof(*blob->active.clusters));
+			if (tmp == NULL) {
+				return -ENOMEM;
+			}
+			blob->active.clusters = tmp;
+			blob->active.cluster_array_size = cluster_count;
+
+			for (i = 0; i < desc_extent->length / sizeof(desc_extent->cluster_idx[0]); i++) {
+				if (desc_extent->cluster_idx[i] != 0) {
+					blob->active.clusters[blob->active.num_clusters++] = _spdk_bs_cluster_to_lba(blob->bs,
+							desc_extent->cluster_idx[i]);
+				} else if (spdk_blob_is_thin_provisioned(blob)) {
+					blob->active.clusters[blob->active.num_clusters++] = 0;
+				} else {
+					return -EINVAL;
+				}
+			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {
 			int rc;
 
@@ -964,6 +1011,39 @@ _spdk_blob_serialize_extents_rle(const struct spdk_blob *blob,
 	}
 
 	return 0;
+}
+
+__attribute__((unused)) static void
+_spdk_blob_serialize_extent(const struct spdk_blob *blob,
+			    uint64_t cluster, struct spdk_blob_md_page *page)
+{
+	struct spdk_blob_md_descriptor_extent *desc_extent;
+	uint64_t i, extent_idx;
+	uint64_t lba, lba_per_cluster;
+	uint64_t start_cluster = (cluster / SPDK_EXTENTS_PER_EP) * SPDK_EXTENTS_PER_EP;
+	uint64_t end_cluster = spdk_min(start_cluster + SPDK_EXTENTS_PER_EP, blob->active.num_clusters);
+
+	desc_extent = (struct spdk_blob_md_descriptor_extent *) page->descriptors;
+	desc_extent->type = SPDK_MD_DESCRIPTOR_TYPE_EXTENT;
+
+	lba_per_cluster = _spdk_bs_cluster_to_lba(blob->bs, 1);
+
+	lba = blob->active.clusters[start_cluster];
+	extent_idx = 0;
+
+	for (i = start_cluster + 1; i < end_cluster; i++) {
+		desc_extent->cluster_idx[extent_idx] = lba / lba_per_cluster;
+		extent_idx++;
+
+		lba = blob->active.clusters[i];
+	}
+
+	desc_extent->cluster_idx[extent_idx] = lba / lba_per_cluster;
+	extent_idx++;
+
+	desc_extent->length = sizeof(desc_extent->cluster_idx[0]) * extent_idx;
+
+	return;
 }
 
 static void
@@ -3307,6 +3387,8 @@ _spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct 
 			if (cluster_count == 0) {
 				return -EINVAL;
 			}
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
+			/* Skip this item */
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {
 			/* Skip this item */
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR_INTERNAL) {
@@ -3332,14 +3414,18 @@ _spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct 
 static bool _spdk_bs_load_cur_md_page_valid(struct spdk_bs_load_ctx *ctx)
 {
 	uint32_t crc;
+	struct spdk_blob_md_descriptor *desc = (struct spdk_blob_md_descriptor *)ctx->page->descriptors;
 
 	crc = _spdk_blob_md_page_calc_crc(ctx->page);
 	if (crc != ctx->page->crc) {
 		return false;
 	}
 
+	/* First page of a sequence should match the blobid.
+	 * With exception of EXTENT pages, which runs are of lenth 1. */
 	if (ctx->page->sequence_num == 0 &&
-	    _spdk_bs_page_to_blobid(ctx->cur_page) != ctx->page->id) {
+	    _spdk_bs_page_to_blobid(ctx->cur_page) != ctx->page->id &&
+	    desc->type != SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
 		return false;
 	}
 	return true;
@@ -3402,7 +3488,12 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		if (ctx->page->sequence_num == 0 || ctx->in_page_chain == true) {
 			spdk_bit_array_set(ctx->bs->used_md_pages, page_num);
 			if (ctx->page->sequence_num == 0) {
-				spdk_bit_array_set(ctx->bs->used_blobids, page_num);
+				/* Should used_blobids be set for extent descriptors too ?
+				 * They should have valid blobids in them. */
+				struct spdk_blob_md_descriptor *desc = (struct spdk_blob_md_descriptor *)ctx->page->descriptors;
+				if (desc->type != SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
+					spdk_bit_array_set(ctx->bs->used_blobids, page_num);
+				}
 			}
 			if (_spdk_bs_load_replay_md_parse_page(ctx->page, ctx->bs)) {
 				_spdk_bs_load_ctx_fail(seq, ctx, -EILSEQ);
@@ -3724,6 +3815,21 @@ _spdk_bs_dump_print_md_page(struct spdk_bs_dump_ctx *ctx)
 					fprintf(ctx->fp, "Unallocated Extent - ");
 				}
 				fprintf(ctx->fp, " Length: %" PRIu32, desc_extent_rle->extents[i].length);
+				fprintf(ctx->fp, "\n");
+			}
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
+			struct spdk_blob_md_descriptor_extent	*desc_extent;
+			unsigned int				i;
+
+			desc_extent = (struct spdk_blob_md_descriptor_extent *)desc;
+
+			for (i = 0; i < desc_extent->length / sizeof(desc_extent->cluster_idx[0]); i++) {
+				if (desc_extent->cluster_idx[i] != 0) {
+					fprintf(ctx->fp, "Allocated Extent - Start: %" PRIu32,
+						desc_extent->cluster_idx[i]);
+				} else {
+					fprintf(ctx->fp, "Unallocated Extent");
+				}
 				fprintf(ctx->fp, "\n");
 			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {

@@ -263,6 +263,7 @@ struct spdk_bs_md_mask {
 #define SPDK_MD_DESCRIPTOR_TYPE_FLAGS 3
 #define SPDK_MD_DESCRIPTOR_TYPE_XATTR_INTERNAL 4
 #define SPDK_MD_DESCRIPTOR_TYPE_EXTENT_TABLE 5
+#define SPDK_MD_DESCRIPTOR_TYPE_EXTENT 6
 
 struct spdk_blob_md_descriptor_xattr {
 	uint8_t		type;
@@ -296,6 +297,13 @@ struct spdk_blob_md_descriptor_extent_table {
 		uint32_t	extent_idx;
 		uint32_t	num_pages; /* In units of pages */
 	} extent_page[0];
+};
+
+struct spdk_blob_md_descriptor_extent {
+	uint8_t		type;
+	uint32_t	length;
+
+	uint32_t        cluster_idx[0];
 };
 
 #define SPDK_BLOB_THIN_PROV (1ULL << 0)
