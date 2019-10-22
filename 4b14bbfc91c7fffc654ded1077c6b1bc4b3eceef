@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "42af2f0c_64dee3b5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-22T13:45:08Z",
+      "side": 1,
+      "message": "There are two paths where _spdk_bs_allocate_cluster() is called.\n1) Resize path that claims the cluster and inserts lba for it. update_map argument is set to true in this case.\n2) Cluster allocation due to IO from any thread. Here update_map is set to false. Page for extent_page is claimed here, but entry in extent_table is only updated later. _spdk_blob_insert_cluster() called again later on MD thread through _spdk_blob_insert_cluster_on_md_thread().\n\nThe second path requires to pass the found lowest_free_extent through all the cluster allocation path.",
+      "parentUuid": "ca40afc8_1b8469d5",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "db199284_66cda1b3",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-15T23:10:21Z",
       "side": 1,
       "message": "This check could fail, couldn\u0027t it? What if the metadata was allocated such that the extent table leaf hasn\u0027t actually be read in yet? Or is this code only executed after a clean shutdown where the used_md_pages bitmask was successfully written out?",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea51f3be_a55dbbe5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-22T13:45:08Z",
+      "side": 1,
+      "message": "I don\u0027t think this could fail usually. This is being done on fresh load, after potential recovery.",
+      "parentUuid": "db199284_66cda1b3",
       "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "ea9660b0_4a867925",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-22T13:45:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "80bd6895_832ffae1",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8fffe770_7477f1f1",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 8
@@ -64,6 +118,24 @@
       "writtenOn": "2019-10-15T23:10:21Z",
       "side": 1,
       "message": "I think you need to do similar logic to calculate the number of extents to handle this case.",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9efe9ad2_e441b1f4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1564,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-22T13:45:08Z",
+      "side": 1,
+      "message": "Calculation of et_sz and num_et below should handle it. Value of num_et is based on num_cluster result here.\nWhen blob was resized to be larger then smaller without syncing (assuming difference was enough to warrant new ET entry), then num_et contains number of entries based on min(cluster_array_size,sz)/SPDK_EXTENTS_PER_ET.",
+      "parentUuid": "8fffe770_7477f1f1",
       "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "35c2bfa6_f9839c4e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1588,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-22T13:45:08Z",
+      "side": 1,
+      "message": "Yes, the idea is that both blob types would use same extents/extent_table formats. Will add the check here as well.",
+      "parentUuid": "ef324ca1_a0b3d4f4",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dada5729_5ea6fba9",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 8
@@ -98,6 +188,24 @@
       "writtenOn": "2019-10-15T23:10:21Z",
       "side": 1,
       "message": "lfe is never set. You can skip this optimization, at least for the initial patch, and always search the bit array from 0.",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7ef92c4_d6c7647e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1622,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-22T13:45:08Z",
+      "side": 1,
+      "message": "It was set to 0 at very top of the function. I\u0027ll move it down here to be more clear.\nPassing lfe is not an optimization, just that change in _spdk_bs_allocate_cluster() actually requires it. Please see comment above comparing resize/allocate cluster paths for more in-depth explanation.",
+      "parentUuid": "dada5729_5ea6fba9",
       "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "a79e7228_b2120af3",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-22T13:45:08Z",
+      "side": 1,
+      "message": "You are right, the name is not clear enough. It signifies maximum number of entries in Extent Table (thus number of extent pages). It basically mimics the num_clusters above. I\u0027ll change it to num_extent_pages.",
+      "parentUuid": "e52cc09f_e7d3f056",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1dd96fa1_b1c6f673",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 8
@@ -132,6 +258,24 @@
       "writtenOn": "2019-10-15T23:10:21Z",
       "side": 1,
       "message": "Maybe this is too tricky, but could you steal the top-most bit here and use it as a flag? The flag would mean that this is encoding a string of 0\u0027s and the value is to be treated as the length. If the flag isn\u0027t set, it\u0027s just a page_idx. That cuts this down to a regular uint32_t that you can stick in an array.",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "837c2bcd_faf4fec3",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-22T13:45:08Z",
+      "side": 1,
+      "message": "I\u0027ll explore this option, in patch that is after this one - just so the change is more clear.",
+      "parentUuid": "1dd96fa1_b1c6f673",
       "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -190,6 +334,24 @@
     },
     {
       "key": {
+        "uuid": "6397b3ac_f2929d9f",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-22T13:45:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "adfedda2_02488763",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f6a1a0be_18116238",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 8
@@ -204,6 +366,24 @@
       "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cdae96d_6fe6dbc3",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-22T13:45:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f6a1a0be_18116238",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
