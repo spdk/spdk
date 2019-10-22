@@ -2012,6 +2012,98 @@ pdu_hdr_op_nopout_test(void)
 	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
 }
 
+static void
+pdu_hdr_op_data_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct spdk_iscsi_task primary = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
+	struct iscsi_bhs_data_out *data_reqh;
+	int rc;
+
+	data_reqh = (struct iscsi_bhs_data_out *)&pdu.bhs;
+
+	conn.sess = &sess;
+	conn.dev = &dev;
+
+	/* case 1 - error case */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 2 - error case */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH + 1;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* case 3 - error case */
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_INVALID_PDU_FIELD);
+
+	/* case 4 - error case */
+	primary.desired_data_transfer_length = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - 1;
+	conn.pending_r2t = 1;
+	conn.outstanding_r2t_tasks[0] = &primary;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 5 - error case */
+	primary.desired_data_transfer_length = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	to_be32(&data_reqh->itt, 1);
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_INVALID_PDU_FIELD);
+
+	/* case 6 - error case */
+	to_be32(&data_reqh->itt, 0);
+	to_be32(&data_reqh->data_sn, 1);
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* case 7 - error case */
+	to_be32(&data_reqh->data_sn, 0);
+	to_be32(&data_reqh->buffer_offset, 4096);
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 8 - error case */
+	to_be32(&data_reqh->buffer_offset, 0);
+	sess.MaxBurstLength = pdu.data_segment_len - 1;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 10 - error case */
+	sess.MaxBurstLength = pdu.data_segment_len;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.task == NULL);
+
+	/* case 11 - normal case */
+	dev.lun[0] = &lun;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.task != NULL);
+	spdk_iscsi_task_put(pdu.task);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2057,6 +2149,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "pdu_hdr_op_scsi_test", pdu_hdr_op_scsi_test) == NULL
 		|| CU_add_test(suite, "pdu_hdr_op_task_test", pdu_hdr_op_task_test) == NULL
 		|| CU_add_test(suite, "pdu_hdr_op_nopout_test", pdu_hdr_op_nopout_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_data_test", pdu_hdr_op_data_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
