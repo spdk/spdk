@@ -282,8 +282,6 @@ maxburstlength_test(void)
 	TAILQ_INIT(&conn.write_pdu_list);
 	TAILQ_INIT(&conn.active_r2t_tasks);
 
-	TAILQ_INIT(&g_write_pdu_list);
-
 	req_pdu->bhs.opcode = ISCSI_OP_SCSI;
 	req_pdu->data_segment_len = 0;
 
@@ -354,8 +352,6 @@ underflow_for_read_transfer_test(void)
 	struct iscsi_bhs_data_in *datah;
 	uint32_t residual_count = 0;
 
-	TAILQ_INIT(&g_write_pdu_list);
-
 	memset(&sess, 0, sizeof(sess));
 	memset(&conn, 0, sizeof(conn));
 	memset(&task, 0, sizeof(task));
@@ -417,8 +413,6 @@ underflow_for_zero_read_transfer_test(void)
 	struct iscsi_bhs_scsi_req *scsi_req;
 	struct iscsi_bhs_scsi_resp *resph;
 	uint32_t residual_count = 0, data_segment_len;
-
-	TAILQ_INIT(&g_write_pdu_list);
 
 	memset(&sess, 0, sizeof(sess));
 	memset(&conn, 0, sizeof(conn));
@@ -483,8 +477,6 @@ underflow_for_request_sense_test(void)
 	struct iscsi_bhs_data_in *datah;
 	struct iscsi_bhs_scsi_resp *resph;
 	uint32_t residual_count = 0, data_segment_len;
-
-	TAILQ_INIT(&g_write_pdu_list);
 
 	memset(&sess, 0, sizeof(sess));
 	memset(&conn, 0, sizeof(conn));
@@ -574,8 +566,6 @@ underflow_for_check_condition_test(void)
 	struct iscsi_bhs_scsi_req *scsi_req;
 	struct iscsi_bhs_scsi_resp *resph;
 	uint32_t data_segment_len;
-
-	TAILQ_INIT(&g_write_pdu_list);
 
 	memset(&sess, 0, sizeof(sess));
 	memset(&conn, 0, sizeof(conn));
