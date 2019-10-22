@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a5369c6_d112ffa2",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1026,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-22T06:28:47Z",
+      "side": 1,
+      "message": "It seems we need to add `continue` here since DISABLED state will be overwritten by CONNECTED on line 1028",
+      "range": {
+        "startLine": 1026,
+        "startChar": 4,
+        "endLine": 1026,
+        "endChar": 12
+      },
+      "revId": "705f3dd06aefd4e54dbec18b9ad6eb1563d6860d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e159f66_d5bdcfb6",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-22T06:28:47Z",
+      "side": 1,
+      "message": "I think we should not handle qpair in DISABLED state here since it means that such qpair is not connected and we can\u0027t change its state to ENABLED. In a normal controller reset flow all qpairs will have CONNECTED state, maybe we should change the condition to\nif (nvme_qpair_state_equals(qpair, NVME_QPAIR_CONNECTED) \u0026\u0026 !qpair-\u003ectrlr-\u003eis_resetting) ?",
+      "range": {
+        "startLine": 414,
+        "startChar": 37,
+        "endLine": 414,
+        "endChar": 55
+      },
+      "revId": "705f3dd06aefd4e54dbec18b9ad6eb1563d6860d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
