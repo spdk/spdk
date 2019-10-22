@@ -62,4 +62,6 @@ void bdev_ocssd_destroy_io_channel(struct nvme_io_channel *ioch);
 int bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 void bdev_ocssd_fini_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 
+void bdev_ocssd_handle_chunk_notification(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+
 #endif /* SPDK_BDEV_OCSSD_H */
