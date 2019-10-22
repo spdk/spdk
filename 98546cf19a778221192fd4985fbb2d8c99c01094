@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8c924ffc_f39a47d9",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T23:02:27Z",
+      "side": 1,
+      "message": "Can we instead do:\n\n(cd $testdir \u0026\u0026 $rootdir/examples...)\n\nThen you can remove the cd - completely.  I think that\u0027s what the rule SC2013 text is trying to recommend.",
+      "revId": "98546cf19a778221192fd4985fbb2d8c99c01094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
