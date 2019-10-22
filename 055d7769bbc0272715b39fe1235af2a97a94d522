@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2cce883_82b6c07a",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 27
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T20:00:34Z",
+      "side": 1,
+      "message": "How hard would it be if we made this a new RPC, rather than a new parameter on this existing one?\n\nMy main concern is that this requires CONFIG_NVME_CUSE which is disabled by default.  We don\u0027t have any way to filter RPCs today based on what\u0027s actually available in the application.  And even if we add that in the future, we probably would never add it for specific arguments in an RPC.\n\nSo the idea is that user first attaches the controller, then can run a separate RPC to enable cuse.  In the help for that RPC, we can say that it requires --nvme-cuse when configuring (or something along those lines).",
+      "revId": "055d7769bbc0272715b39fe1235af2a97a94d522",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
