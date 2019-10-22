@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "df43bf1d_5fbfb289",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 1057,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-22T23:51:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "49b37992_adaf6319",
+      "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fcc2f86b_5c895382",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 11
@@ -33,6 +51,24 @@
       "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b25ae7ed_f0fc6c70",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-22T23:51:11Z",
+      "side": 1,
+      "message": "I definitely agree with this idea. There should be more information passed back with error codes in several places in the driver.",
+      "parentUuid": "fcc2f86b_5c895382",
+      "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "3d6c1d22_b4797dbc",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1443,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-22T23:51:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d45fda58_b0b43a45",
+      "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "877f0a8c_24708d26",
         "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
         "patchSetId": 11
@@ -67,6 +121,24 @@
       "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b87dbf5_5469ad16",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1448,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-22T23:51:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "877f0a8c_24708d26",
+      "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "b164f523_073b544f",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1453,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-22T23:51:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1e062006_70558bb5",
+      "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "57a59401_1ac13c45",
         "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
         "patchSetId": 11
@@ -101,6 +191,24 @@
       "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26e2011c_9f134aa9",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1455,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-22T23:51:11Z",
+      "side": 1,
+      "message": "I was just putting the expected return code next to the examples. But that\u0027s kind of dumb since I assert it like 2 lines later. removed.",
+      "parentUuid": "57a59401_1ac13c45",
+      "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
