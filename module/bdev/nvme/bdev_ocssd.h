@@ -58,4 +58,8 @@ void bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme
 int bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 void bdev_ocssd_fini_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 
+int bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+void bdev_ocssd_fini_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+void bdev_ocssd_handle_chunk_notification(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+
 #endif /* SPDK_BDEV_OCSSD_H */

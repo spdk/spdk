@@ -1107,6 +1107,10 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
 	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
 		nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, NULL);
+	} else if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_VENDOR) &&
+		   (event.bits.log_page_identifier == SPDK_OCSSD_LOG_CHUNK_NOTIFICATION) &&
+		   spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		bdev_ocssd_handle_chunk_notification(nvme_bdev_ctrlr);
 	}
 }
 
