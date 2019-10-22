@@ -1968,6 +1968,50 @@ pdu_hdr_op_task_test(void)
 	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 7);
 }
 
+static void
+pdu_hdr_op_nopout_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct iscsi_bhs_nop_out *nopout_reqh;
+	int rc;
+
+	nopout_reqh = (struct iscsi_bhs_nop_out *)&pdu.bhs;
+
+	conn.sess = &sess;
+
+	/* case 1 - error case */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_nopout(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 2 - error case */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH + 1;
+
+	rc = iscsi_pdu_hdr_op_nopout(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* case 3 - normal case */
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	conn.id = 1234;
+	to_be32(&nopout_reqh->ttt, 1235);
+	to_be32(&nopout_reqh->itt, 0xffffffffU);
+	nopout_reqh->immediate = 1;
+
+	rc = iscsi_pdu_hdr_op_nopout(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+
+	/* case 4 - error case */
+	nopout_reqh->immediate = 0;
+
+	rc = iscsi_pdu_hdr_op_nopout(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2012,6 +2056,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "pdu_hdr_op_logout_test", pdu_hdr_op_logout_test) == NULL
 		|| CU_add_test(suite, "pdu_hdr_op_scsi_test", pdu_hdr_op_scsi_test) == NULL
 		|| CU_add_test(suite, "pdu_hdr_op_task_test", pdu_hdr_op_task_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_nopout_test", pdu_hdr_op_nopout_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
