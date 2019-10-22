@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49b37992_adaf6319",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 1057,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T21:35:23Z",
+      "side": 1,
+      "message": "How about we return -ENODEV if ctrlr-\u003eis_removed?  This indicates a call to this function will not succeed until a controller level reset occurs, but a controller level reset isn\u0027t possible if the device has been removed.",
+      "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fcc2f86b_5c895382",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T21:35:23Z",
+      "side": 1,
+      "message": "I think this is probably fine, but probably the various ctrlr_connect_qpair functions should return more meaningful error codes than just -1.  I think the main case we\u0027re interested in is when we literally can\u0027t connect.  But there are other error cases that probably should return something other than -EAGAIN, because they indicate some kind of bad condition that is unlikely to result in future success.",
+      "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d45fda58_b0b43a45",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1443,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T21:35:23Z",
+      "side": 1,
+      "message": "\u003d\u003d",
+      "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "877f0a8c_24708d26",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1448,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T21:35:23Z",
+      "side": 1,
+      "message": "\u003d\u003d",
+      "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e062006_70558bb5",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1453,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T21:35:23Z",
+      "side": 1,
+      "message": "\u003d\u003d",
+      "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57a59401_1ac13c45",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1455,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T21:35:23Z",
+      "side": 1,
+      "message": "\"transport 0\"?  I don\u0027t understand what \"0\" means here",
+      "revId": "ebb1917473413f64f3bbbf9e941654aa86bf2a7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
