@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "865bcddb_b25a27c5",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-22T14:16:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "adb06d4b_26dbbce8",
+      "revId": "1b08820628f9e404bdb5c05241717828cd969072",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f623b144_69b219ab",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 23
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "e905fcd0_edb801b1",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-22T14:16:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f623b144_69b219ab",
+      "revId": "1b08820628f9e404bdb5c05241717828cd969072",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eb4e95c8_44f8b28b",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 23
@@ -50,6 +86,24 @@
       "revId": "1b08820628f9e404bdb5c05241717828cd969072",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e977ba1a_937253c7",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-22T14:16:29Z",
+      "side": 1,
+      "message": "What is the problem with supporting both? It allows for using standard tools for issuing unmap commands (e.g. blkdiscard w/ nbd).",
+      "parentUuid": "eb4e95c8_44f8b28b",
+      "revId": "1b08820628f9e404bdb5c05241717828cd969072",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
