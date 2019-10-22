@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c7344ec_ab3fdec3",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T11:25:43Z",
+      "side": 1,
+      "message": "Let\u0027s assert here.",
+      "revId": "c6ec33934da9161b80721f29f39d566227026d83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e6f38f9_b6863acb",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T11:25:43Z",
+      "side": 1,
+      "message": "You exceed 100 lines, check format doesn\u0027t find it?",
+      "revId": "c6ec33934da9161b80721f29f39d566227026d83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e84594cf_993724c9",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T11:25:43Z",
+      "side": 1,
+      "message": "Please add SPDK_ERRLOG similar like you are doing in all other places in this module.",
+      "revId": "c6ec33934da9161b80721f29f39d566227026d83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8fddabd_bbcfd18e",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-22T11:25:43Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "c6ec33934da9161b80721f29f39d566227026d83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
