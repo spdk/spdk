@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc17cf44_6e888e8f",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 979,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:14:31Z",
+      "side": 1,
+      "message": "I\u0027m curious - did you consider just keeping this io qpair allocated?  And let the active_io_qpair logic below handle this qpair (if it is allocated)",
+      "revId": "ae281277b2bed4b2514974a71327e0eb2cdd848a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a718c3c_ab2fde20",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:14:31Z",
+      "side": 1,
+      "message": "is this lock required?  I guess I\u0027m not sure that taking a mutex here really prevents a thread from getting preempted\n\nit\u0027s also not clear if we should have just one lock - what if we have 24 SSDs in a system, they will all be sharing this lock",
+      "revId": "ae281277b2bed4b2514974a71327e0eb2cdd848a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b214e75_e325c707",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:14:31Z",
+      "side": 1,
+      "message": "can we use MP_SC?  there should only be one (single) consumer of the ring I thought",
+      "revId": "ae281277b2bed4b2514974a71327e0eb2cdd848a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ff28a1e_fe0b511e",
+        "filename": "lib/nvme/nvme_io_msg.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:14:31Z",
+      "side": 1,
+      "message": "we should remove spdk_ prefix from all functions declared in this file\n\nwe only use the spdk_ prefix for functions in the public API (i.e. include/spdk/nvme.h)",
+      "revId": "ae281277b2bed4b2514974a71327e0eb2cdd848a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d910b90_fb6eb4be",
+        "filename": "lib/nvme/nvme_io_msg.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:14:31Z",
+      "side": 1,
+      "message": "SPDK_NVME_IO_MSG_H_",
+      "revId": "ae281277b2bed4b2514974a71327e0eb2cdd848a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
