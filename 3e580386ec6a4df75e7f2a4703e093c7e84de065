@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "a9381a7f_7ab0c0ad",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:56:01Z",
+      "side": 1,
+      "message": "A couple of nits:\n\n1) we usually reserve the _cb suffix for the completion callback function\n2) the \"done\" function here has a _cb suffix, but at least some of the other \"done\" functions in the next patch don\u0027t have the _cb\n\nwhat if we picked a naming convention like this:\n\ncuse_nvme_admin_cmd\ncuse_nvme_admin_cmd_execute\ncuse_nvme_admin_cmd_cb",
+      "revId": "3e580386ec6a4df75e7f2a4703e093c7e84de065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e1cb0dec_5b857f60",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 25
