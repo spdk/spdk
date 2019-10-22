@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df0d2260_6ec443f2",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:47:53Z",
+      "side": 1,
+      "message": "cuse_nvme_submit_io",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81510107_903ab09e",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:47:53Z",
+      "side": 1,
+      "message": "let\u0027s add cuse_ prefixes here\n\nit\u0027s highly doubtful we would ever have a conflict with these names, but adding the cuse_ prefix makes it clear that these functions are defined and used only for cuse",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0297124a_d5d766d6",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:47:53Z",
+      "side": 1,
+      "message": "I think we can avoid these -\u003ensid checks by having separate ioctl functions for controllers and namespaces - see comment below",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1772e7b6_bb0a0c50",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:47:53Z",
+      "side": 1,
+      "message": "add cuse_",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef07264e_f13189cb",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:47:53Z",
+      "side": 1,
+      "message": "add cuse_",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f2939c1_1c0a0617",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:47:53Z",
+      "side": 1,
+      "message": "add cuse_",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "941e6c33_10dc2696",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:47:53Z",
+      "side": 1,
+      "message": "should we have different ioctl functions for ctrlr devices vs. namespace devices?\n\nfor example, some ioctls like BLKGETSIZE aren\u0027t valid for ctrlr - only namespace\n\nI know that nvme-cli probably won\u0027t try to send a namespace IOCTL to a controller device (or vice versa) but I think it would still be good to enforce it better via separate ioctl functions",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
