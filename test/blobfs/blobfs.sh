@@ -14,6 +14,7 @@ tmp_file=/tmp/blobfs_file
 conf_file=/tmp/blobfs.conf
 bdevname=BlobfsBdev
 mount_dir=/tmp/spdk_tmp_mount
+test_cache_size=512
 
 source $rootdir/test/common/autotest_common.sh
 
@@ -35,6 +36,11 @@ function blobfs_start_app {
 
 	echo "Process blobfs pid: $blobfs_pid"
 	waitforlisten $blobfs_pid $rpc_server
+
+	result=$($rpc_py blobfs_set_cache_size ${test_cache_size})
+	if [ "${result}" != "True" ]; then
+		false
+	fi
 }
 
 function blobfs_detect_test() {
