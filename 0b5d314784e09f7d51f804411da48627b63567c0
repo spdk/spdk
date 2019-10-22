@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ea977b1_c053a402",
+        "filename": "configure",
+        "patchSetId": 31
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:39:54Z",
+      "side": 1,
+      "message": "Build nvme driver with support for CUSE-based character devices.\n\nwe should name this nvme-cuse I think (not that we\u0027ll ever do CUSE for any other kind of device, but you never know...)",
+      "revId": "0b5d314784e09f7d51f804411da48627b63567c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2167991a_a4e3bdfb",
+        "filename": "configure",
+        "patchSetId": 31
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:39:54Z",
+      "side": 1,
+      "message": "Should we specify fuse 2.9 or greater?  I think that\u0027s when cuse support was added",
+      "revId": "0b5d314784e09f7d51f804411da48627b63567c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81372e43_de42355e",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:39:54Z",
+      "side": 1,
+      "message": "I\u0027m ok with this for now - but we should consider putting some kind of index into spdk_nvme_ctrlr itself that the main driver generates for us here - we could even use an spdk_bit_array so that we reuse indices as SSDs come and go - let\u0027s worry about this later",
+      "revId": "0b5d314784e09f7d51f804411da48627b63567c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c6eea49_0d685747",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:39:54Z",
+      "side": 1,
+      "message": "I\u0027m thinking of ways to avoid the spdk/ part here...\n\na couple of ideas:\n1) what if we allow the user to pass the cuse prefix?  this would allow people to just put the devices in /dev if they want... but this requires no conflicts with existing kernel nvme devices which leads me to...\n2) have some kind of overall \"cuse\" initialization function - i.e. one you call when the app first starts that is different from this function here; in this case the user could specify both the prefix as well as a starting index; meaning spdk_nvme_cuse_initialize(NULL, 128) means the first controller would be put at /dev/nvme128;  spdk_nvme_cuse_initialize(\"spdk/\", 0) means the first controller would be put at /dev/spdk/nvme0\n\ntalk it over - let me know what you think",
+      "revId": "0b5d314784e09f7d51f804411da48627b63567c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8ea65b0_56b9f889",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 31
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-22T19:39:54Z",
+      "side": 1,
+      "message": "can we require fuse3 instead?\n\nI\u0027m mostly concerned about conflicts with requiring fuse3 for the blobfs FUSE module (see test/blobfs/fuse/Makefile).",
+      "revId": "0b5d314784e09f7d51f804411da48627b63567c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
