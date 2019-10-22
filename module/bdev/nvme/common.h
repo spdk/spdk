@@ -58,6 +58,8 @@ struct nvme_namespace {
 	TAILQ_HEAD(, nvme_bdev)	bdevs;
 };
 
+struct ocssd_bdev_ctrlr;
+
 struct nvme_bdev_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -82,6 +84,8 @@ struct nvme_bdev_ctrlr {
 	struct spdk_opal_dev		*opal_dev;
 
 	struct spdk_poller		*adminq_timer_poller;
+
+	struct ocssd_bdev_ctrlr		*ocssd_ctrlr;
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;
