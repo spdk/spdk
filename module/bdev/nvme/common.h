@@ -66,6 +66,8 @@ struct nvme_bdev_ns {
 	void			*type_ctx;
 };
 
+struct ocssd_bdev_ctrlr;
+
 struct nvme_bdev_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -93,6 +95,7 @@ struct nvme_bdev_ctrlr {
 
 	struct spdk_poller		*adminq_timer_poller;
 
+	struct ocssd_bdev_ctrlr		*ocssd_ctrlr;
 	/**
 	 * Temporary workaround to distinguish between controllers managed by
 	 * bdev_ocssd and those used by bdev_ftl.  Once bdev_ftl becomes a
