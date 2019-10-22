@@ -45,6 +45,30 @@
       "revId": "705f3dd06aefd4e54dbec18b9ad6eb1563d6860d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dea07385_106dd5d3",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-22T06:45:50Z",
+      "side": 1,
+      "message": "I see that you fixed it in https://review.gerrithub.io/c/spdk/spdk/+/470256, so this comment is no longer relevant",
+      "parentUuid": "8e159f66_d5bdcfb6",
+      "range": {
+        "startLine": 414,
+        "startChar": 37,
+        "endLine": 414,
+        "endChar": 55
+      },
+      "revId": "705f3dd06aefd4e54dbec18b9ad6eb1563d6860d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
