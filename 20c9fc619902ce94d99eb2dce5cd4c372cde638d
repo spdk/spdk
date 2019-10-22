@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28541edb_f366ded8",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 889,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-22T06:05:03Z",
+      "side": 1,
+      "message": "Hi reviewers, I have a question here. iter_pci_class_code is not known here because we don\u0027t have ./scripts/common.sh. However, in OPAL test machine, we have only one optane SSD so far as I know. So shall I just use gen_nvme.sh and get nvme0 here or I source the common.sh at the top of this test script and loop for all potential NVMe drive? Or any other suggestions? Thank you.",
+      "range": {
+        "startLine": 889,
+        "startChar": 1,
+        "endLine": 889,
+        "endChar": 47
+      },
+      "revId": "20c9fc619902ce94d99eb2dce5cd4c372cde638d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
