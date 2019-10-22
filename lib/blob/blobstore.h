@@ -273,6 +273,11 @@ struct spdk_bs_md_mask {
  * are run-lenght encoded, non-zero values are unallocated pages.
  * It is part of serialized metadata chain for a blob. */
 #define SPDK_MD_DESCRIPTOR_TYPE_EXTENT_TABLE 5
+/* EXTENT descriptor holds array of LBA that point to begining of
+ * allocated clusters. The array is run-lenght encoded,
+ * with 0's being unallocated clusters. It is NOT part of
+ * serialized metadata chain for a blob. */
+#define SPDK_MD_DESCRIPTOR_TYPE_EXTENT 6
 
 struct spdk_blob_md_descriptor_xattr {
 	uint8_t		type;
@@ -306,6 +311,13 @@ struct spdk_blob_md_descriptor_extent_table {
 		uint32_t	extent_idx;
 		uint32_t	num_pages; /* In units of pages */
 	} extent_page[0];
+};
+
+struct spdk_blob_md_descriptor_extent {
+	uint8_t		type;
+	uint32_t	length;
+
+	uint32_t        cluster_idx[0];
 };
 
 #define SPDK_BLOB_THIN_PROV (1ULL << 0)
