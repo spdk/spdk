@@ -54,4 +54,8 @@ void bdev_ocssd_init_ns(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_nam
 			spdk_bdev_init_namespaces_fn cb_fn, void *cb_arg);
 size_t bdev_ocssd_get_ns_struct_size(void);
 
+int bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+void bdev_ocssd_fini_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+void bdev_ocssd_handle_chunk_notification(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+
 #endif /* SPDK_BDEV_OCSSD_H */
