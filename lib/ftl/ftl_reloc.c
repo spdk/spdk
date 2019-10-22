@@ -669,10 +669,7 @@ ftl_reloc_add_active_queue(struct ftl_band_reloc *breloc)
 struct ftl_reloc *
 ftl_reloc_init(struct spdk_ftl_dev *dev)
 {
-#define POOL_NAME_LEN 128
 	struct ftl_reloc *reloc;
-	char pool_name[POOL_NAME_LEN];
-	int rc;
 	size_t i;
 
 	reloc = calloc(1, sizeof(*reloc));
@@ -700,11 +697,6 @@ ftl_reloc_init(struct spdk_ftl_dev *dev)
 		if (ftl_band_reloc_init(reloc, &reloc->brelocs[i], &dev->bands[i])) {
 			goto error;
 		}
-	}
-
-	rc = snprintf(pool_name, sizeof(pool_name), "%s-%s", dev->name, "reloc-io-pool");
-	if (rc < 0 || rc >= POOL_NAME_LEN) {
-		goto error;
 	}
 
 	TAILQ_INIT(&reloc->pending_queue);
