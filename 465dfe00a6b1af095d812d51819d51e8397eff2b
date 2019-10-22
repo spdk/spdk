@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b059408c_5ca08521",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-22T17:09:51Z",
+      "side": 1,
+      "message": "We only use fuse-devel, and its already part of pkgdep.sh. No need to include those two here.",
+      "range": {
+        "startLine": 491,
+        "startChar": 0,
+        "endLine": 492,
+        "endChar": 18
+      },
+      "revId": "465dfe00a6b1af095d812d51819d51e8397eff2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

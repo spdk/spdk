@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "745a6558_7e2f1b27",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-22T17:09:51Z",
+      "side": 1,
+      "message": "controller with nsid is",
+      "range": {
+        "startLine": 25,
+        "startChar": 42,
+        "endLine": 26,
+        "endChar": 16
+      },
+      "revId": "f6310a69819754f3c082d3dd01e17b7db1ab750b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
