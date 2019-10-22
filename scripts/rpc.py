@@ -214,7 +214,7 @@ if __name__ == "__main__":
     p = subparsers.add_parser('bdev_ocf_create', aliases=['construct_ocf_bdev'],
                               help='Add an OCF block device')
     p.add_argument('name', help='Name of resulting OCF bdev')
-    p.add_argument('mode', help='OCF cache mode', choices=['wb', 'wt', 'pt', 'wa', 'wi', 'wo'])
+    p.add_argument('mode', help='OCF cache mode', choices=['wb', 'wt', 'pt'])
     p.add_argument('cache_bdev_name', help='Name of underlying cache bdev')
     p.add_argument('core_bdev_name', help='Name of unerlying core bdev')
     p.set_defaults(func=bdev_ocf_create)
@@ -1418,6 +1418,29 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Delete existing raid bdev')
     p.add_argument('name', help='raid bdev name')
     p.set_defaults(func=bdev_raid_delete)
+
+    # linear
+    def bdev_linear_create(args):
+        base_bdevs = []
+        for u in args.base_bdevs.strip().split(" "):
+            base_bdevs.append(u)
+
+        rpc.bdev.bdev_linear_create(args.client,
+                                    name=args.name,
+                                    base_bdevs=base_bdevs)
+    p = subparsers.add_parser('bdev_linear_create',
+                              help='Create new linear bdev')
+    p.add_argument('-n', '--name', help='linear bdev name', required=True)
+    p.add_argument('-b', '--base-bdevs', help='base bdevs name, whitespace separated list in quotes', required=True)
+    p.set_defaults(func=bdev_linear_create)
+
+    def bdev_linear_delete(args):
+        rpc.bdev.bdev_linear_delete(args.client,
+                                    name=args.name)
+    p = subparsers.add_parser('bdev_linear_delete',
+                              help='Delete existing linear bdev')
+    p.add_argument('name', help='linear bdev name')
+    p.set_defaults(func=bdev_linear_delete)
 
     # split
     def bdev_split_create(args):

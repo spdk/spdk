@@ -107,7 +107,7 @@ def bdev_ocf_create(client, name, mode, cache_bdev_name, core_bdev_name):
 
     Args:
         name: name of constructed OCF bdev
-        mode: OCF cache mode: {'wb', 'wt', 'pt', 'wa', 'wi', 'wo'}
+        mode: OCF cache mode: {'wb', 'wt', 'pt'}
         cache_bdev_name: name of underlying cache bdev
         core_bdev_name: name of underlying core bdev
 
@@ -865,3 +865,13 @@ def bdev_nvme_apply_firmware(client, bdev_name, filename):
         'bdev_name': bdev_name,
     }
     return client.call('bdev_nvme_apply_firmware', params)
+
+
+def bdev_linear_create(client, name, base_bdevs):
+    params = {'name': name, 'base_bdevs': base_bdevs}
+    return client.call('bdev_linear_create', params)
+
+
+def bdev_linear_delete(client, name):
+    params = {'name': name}
+    return client.call('bdev_linear_delete', params)
