@@ -285,6 +285,30 @@
     },
     {
       "key": {
+        "uuid": "3e6d8343_9e9f54f1",
+        "filename": "module/bdev/nvme/bdev_ocssd_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-23T07:47:05Z",
+      "side": 1,
+      "message": "The rest of the bdev are doing it in different way, but ok, let\u0027s keep this memory allocated during async call.",
+      "parentUuid": "0fc54a86_bf70487e",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 2
+      },
+      "revId": "e3d7e519a75f60326fb8c0015d32489e432d1a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f3ceb86_7eec0f83",
         "filename": "module/bdev/nvme/bdev_ocssd_rpc.c",
         "patchSetId": 9
