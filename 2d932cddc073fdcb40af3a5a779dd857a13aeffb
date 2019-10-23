@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "d66a25df_52e71a63",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-23T06:53:11Z",
+      "side": 1,
+      "message": "Can we use timed poller to wait for nvme_bdeV_ctrlr-\u003eopal_poller is unregistered? Or can we register callback to be called when nvme_bdev_ctrlr-\u003eopal_poller is unregistered?\n\nYour idea is that spdk_thread_poll is called recursively? I don\u0027t think it is acceptable.",
+      "parentUuid": "ac857b86_92070a1b",
+      "revId": "2d932cddc073fdcb40af3a5a779dd857a13aeffb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "49e9699e_e74a19d1",
         "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
         "patchSetId": 22
