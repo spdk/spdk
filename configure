@@ -86,7 +86,7 @@ function usage()
 	echo "                           If argument is file, interpret it as compiled OCF lib"
 	echo "                           If no argument is specified, OCF git submodule is used by default"
 	echo "                           example: /usr/src/ocf/"
-	echo " isal                      Build with ISA-L. Enabled by default on x86 architecture."
+	echo " isal                      Build with ISA-L. Enabled by default on x86 and aarch64 architectures."
 	echo "                           No path required."
 	echo " uring                     Build I/O uring bdev."
 	echo "                           If an argument is provided, it is considered a directory containing"
@@ -395,9 +395,9 @@ else
 	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS)
 fi
 
-# Detect architecture and force no ISA-L if non-x86 archtecture
+# Detect architecture and force no ISA-L if non-x86 or non-aarch64 architecture
 if [[ "${CONFIG[ISAL]}" = "y" ]]; then
-	if [[ $arch != x86_64* ]]; then
+	if [[ $arch != x86_64* ]] && [[ $arch != aarch64* ]]; then
 		echo "Notice: ISA-L disabled due to CPU incompatiblity."
 		CONFIG[ISAL]=n
 	fi
