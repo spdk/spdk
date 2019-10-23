@@ -49,6 +49,7 @@ struct rpc_nvme_cuse_register {
 	char *traddr;
 	char *trsvcid;
 	char *subnqn;
+	char *dev_path;
 };
 
 static void
@@ -59,6 +60,7 @@ free_rpc_nvme_cuse_register(struct rpc_nvme_cuse_register *req)
 	free(req->traddr);
 	free(req->trsvcid);
 	free(req->subnqn);
+	free(req->dev_path);
 }
 
 static const struct spdk_json_object_decoder rpc_nvme_cuse_register_decoders[] = {
@@ -68,6 +70,7 @@ static const struct spdk_json_object_decoder rpc_nvme_cuse_register_decoders[] =
 	{"adrfam", offsetof(struct rpc_nvme_cuse_register, adrfam), spdk_json_decode_string, true},
 	{"trsvcid", offsetof(struct rpc_nvme_cuse_register, trsvcid), spdk_json_decode_string, true},
 	{"subnqn", offsetof(struct rpc_nvme_cuse_register, subnqn), spdk_json_decode_string, true},
+	{"dev_path", offsetof(struct rpc_nvme_cuse_register, dev_path), spdk_json_decode_string, true},
 };
 
 static void
@@ -129,7 +132,7 @@ spdk_rpc_nvme_cuse_register(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = nvme_cuse_register(ctrlr);
+	rc = nvme_cuse_register(ctrlr, req.dev_path);
 	if (rc) {
 		SPDK_ERRLOG("Failed to register CUSE devices\n");
 		spdk_jsonrpc_send_error_response(request, -rc, spdk_strerror(rc));
