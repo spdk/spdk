@@ -16,6 +16,24 @@
       "revId": "0de58b9495a8a314f686ac5a31455da6781d800b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32c88e49_c6c319ac",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2549,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-23T23:07:52Z",
+      "side": 1,
+      "message": "For long term solution if we want to support zero copy API per Shuhei\u0027s purpose: \n\nI suggest the following code in spdk_nvmf_tcp_poll_group_poll function, and Jim\u0027s approach can also work. But we do want to make it too confused with if else. \n \nTAILQ_FOREACH_SAFE(tqpair, \u0026tgroup-\u003eqpairs, link, tqpair_tmp) {\n\t\t\tif (spdk_unlikely(tqpair-\u003epdu_recv_buf.remain_size)) {\n\t\t\t\tspdk_nvmf_tcp_sock_cb(tqpair, NULL, tqpair-\u003esock);\n\t\t\t}\n\t\t}",
+      "parentUuid": "4af9f126_0066ec7b",
+      "revId": "0de58b9495a8a314f686ac5a31455da6781d800b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
