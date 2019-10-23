@@ -411,6 +411,21 @@ To remove an NVMe controller use the bdev_nvme_detach_controller command.
 
 This command will remove NVMe bdev named Nvme0.
 
+## NVMe bdev character device {#bdev_config_nvme_cuse}
+
+Example commands
+
+`rpc.py bdev_nvme_cuse_register -n Nvme0 -p spdk/nvme0`
+
+This command will register /dev/spdk/nvme0 character device associated with Nvme0
+controller. If there are namespaces created on Nvme0 controller, for each namespace
+device /dev/spdk/nvme0nX is created.
+
+Cuse devices are removed from system, when NVMe controller is detached or unregistered
+with command:
+
+`rpc.py bdev_nvme_cuse_unregister -n Nvme0`
+
 # Logical volumes {#bdev_ug_logical_volumes}
 
 The Logical Volumes library is a flexible storage space management system. It allows

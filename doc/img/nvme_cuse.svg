@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="193.94mm" height="139.71mm" version="1.1" viewBox="0 0 193.94 139.71" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <title>NVMe CUSE</title>
+ <defs>
+  <marker id="marker9353" overflow="visible" orient="auto">
+   <path transform="matrix(-.8 0 0 -.8 -10 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker7156" overflow="visible" orient="auto">
+   <path transform="matrix(.8 0 0 .8 10 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker4572" overflow="visible" orient="auto">
+   <path transform="matrix(-.8 0 0 -.8 -10 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker4436" overflow="visible" orient="auto">
+   <path transform="matrix(-.8 0 0 -.8 -10 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker4324" overflow="visible" orient="auto">
+   <path transform="matrix(.8 0 0 .8 10 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker2300" overflow="visible" orient="auto">
+   <path transform="matrix(-.8 0 0 -.8 -10 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker2110" overflow="visible" orient="auto">
+   <path transform="matrix(-.8 0 0 -.8 -10 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker2028" overflow="visible" orient="auto">
+   <path transform="matrix(-.8 0 0 -.8 -10 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker1219" overflow="visible" orient="auto">
+   <path transform="matrix(.8 0 0 .8 10 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="Arrow1Lstart" overflow="visible" orient="auto">
+   <path transform="matrix(.8 0 0 .8 10 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker1127" overflow="visible" orient="auto">
+   <path transform="matrix(-.8 0 0 -.8 -10 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="Arrow1Lend" overflow="visible" orient="auto">
+   <path transform="matrix(-.8 0 0 -.8 -10 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+ </defs>
+ <metadata>
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title>NVMe CUSE</dc:title>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g transform="translate(-2.1066 -22.189)">
+  <rect x="11.906" y="134.85" width="72.004" height="20.6" ry="3.7798" fill="none" stroke="#000" stroke-width=".5"/>
+  <text x="14.363094" y="149.02231" fill="#000000" font-family="sans-serif" font-size="10.583px" letter-spacing="0px" stroke-width=".26458" word-spacing="0px" style="line-height:1.25" xml:space="preserve"><tspan x="14.363094" y="149.02231" font-family="sans-serif" font-size="3.5278px" stroke-width=".26458" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal">/dev/spdk/nvme0</tspan></text>
+  <text x="47.625" y="149.02231" fill="#000000" font-family="sans-serif" font-size="10.583px" letter-spacing="0px" stroke-width=".26458" word-spacing="0px" style="line-height:1.25" xml:space="preserve"><tspan x="47.625" y="149.02231" font-family="sans-serif" font-size="3.5278px" stroke-width=".26458" writing-mode="lr" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal">/dev/spdk/nvme0n1</tspan></text>
+  <g stroke="#000">
+   <rect x="12.095" y="35.818" width="71.249" height="88.446" ry="4.3467" fill="none" stroke-width=".5"/>
+   <rect x="133.43" y="33.929" width="62.366" height="76.351" ry="4.7247" fill="none" stroke-width=".5"/>
+   <g fill="#fff" stroke-width=".26458">
+    <rect x="14.174" y="91.57" width="64.256" height="24.568"/>
+    <g fill-opacity=".9798">
+     <rect x="46.302" y="100.64" width="26.62" height="11.061"/>
+    </g>
+   </g>
+   <g transform="translate(-.53932 -.16291)">
+    <path d="m63.878 111.98v32.884" fill="none" marker-end="url(#marker1127)" marker-start="url(#Arrow1Lstart)" stroke-width=".26458px"/>
+    <g stroke-width=".265">
+     <path d="m34.585 115.57v28.726" fill="none" marker-end="url(#Arrow1Lend)" marker-start="url(#marker1219)"/>
+     <rect x="136.26" y="39.031" width="54.996" height="58.586" fill="#fff"/>
+     <rect x="153.84" y="52.26" width="34.018" height="11.906" ry="5.8544" fill="none"/>
+    </g>
+    <path d="m112.45 24.479v137.58" fill="none" stroke-dasharray="1.5874999, 1.5874999" stroke-width=".26458"/>
+   </g>
+   <g fill="#fff" stroke-width=".265">
+    <rect x="89.58" y="54.339" width="38.365" height="8.8824"/>
+   </g>
+  </g>
+  <g font-family="sans-serif" font-size="4.2333px" letter-spacing="0px" stroke-width=".26458" word-spacing="0px">
+   <text x="93.54911" y="59.800339" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="93.54911" y="59.800339" stroke-width=".26458">io_msg queue</tspan></text>
+   <text x="11.906249" y="27.31399" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="11.906249" y="27.31399" stroke-width=".26458">CUSE threads</tspan></text>
+   <text x="165.36458" y="27.502975" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="165.36458" y="27.502975" stroke-width=".26458">SPDK threads</tspan></text>
+  </g>
+  <g stroke="#000">
+   <rect x="17.009" y="47.914" width="29.482" height="13.04" ry="6.5201" fill="#fff" stroke-width=".265"/>
+   <rect x="49.921" y="68.161" width="28.915" height="13.04" ry="6.5201" fill="#fff" stroke-width=".265"/>
+   <g fill="none">
+    <path d="m32.506 61.143v30.427" marker-start="url(#marker7156)" stroke-width=".26458px"/>
+    <path d="m63.689 81.176 0.18899 19.277" marker-start="url(#marker4324)" stroke-width=".265"/>
+    <g stroke-width=".26458px">
+     <path d="m46.113 54.339h43.467" marker-end="url(#marker2028)"/>
+     <path d="m64.284 67.972c0.02768-6.3997-1.3229-5.2917 25.135-5.2917" marker-end="url(#marker2110)"/>
+     <path d="m127.78 56.066h25.135" marker-end="url(#marker2300)"/>
+    </g>
+   </g>
+  </g>
+  <g stroke-width=".26458">
+   <g transform="translate(-.25341)" font-family="sans-serif" font-size="4.2333px" letter-spacing="0px" word-spacing="0px">
+    <text x="138.90625" y="44.889877" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="138.90625" y="44.889877" stroke-width=".26458">NVMe</tspan></text>
+    <text x="16.063986" y="97.050598" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="16.063986" y="97.050598" stroke-width=".26458">CUSE ctrlr</tspan></text>
+    <text x="48.380947" y="106.12202" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="48.380947" y="106.12202" stroke-width=".26458">CUSE ns</tspan></text>
+    <text x="51.420551" y="75.799461" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="51.420551" y="75.799461" stroke-width=".26458">ioctl pthread</tspan></text>
+    <text x="18.906757" y="55.833015" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="18.906757" y="55.833015" stroke-width=".26458">ioctl pthread</tspan></text>
+   </g>
+   <path d="m160.86 85.17c0.38097 13.154-7.1538 11.542-82.052 10.936" fill="none" marker-end="url(#marker4572)" stroke="#000" stroke-dasharray="0.79374995, 0.79374995"/>
+   <path d="m179.38 85.17c0.37797 22.25-6.5765 20.83-106.08 20.641" fill="none" marker-end="url(#marker4436)" stroke="#000" stroke-dasharray="0.79374995, 0.79374995"/>
+  </g>
+  <g font-family="sans-serif" font-size="4.2333px" letter-spacing="0px" stroke-width=".26458" word-spacing="0px">
+   <text x="13.229166" y="139.7619" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="13.229166" y="139.7619" stroke-width=".26458">Kernel</tspan></text>
+   <text x="14.552083" y="41.488094" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="14.552083" y="41.488094" stroke-width=".26458">CUSE</tspan></text>
+   <text x="161.73709" y="59.415913" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="161.73709" y="59.415913" stroke-width=".26458">io poller</tspan></text>
+  </g>
+  <g fill="none" stroke="#000">
+   <path d="m111.91 127.5h-109.8" stroke-dasharray="1.58749992, 1.58749992" stroke-width=".26458"/>
+   <rect x="153.3" y="71.941" width="34.018" height="13.229" ry="6.6146" stroke-width=".265"/>
+   <path d="m170.12 64.003v7.9375" marker-end="url(#marker9353)" stroke-width=".265"/>
+  </g>
+  <g font-family="sans-serif" font-size="4.2333px" letter-spacing="0px" stroke-width=".26458" word-spacing="0px">
+   <text x="159.72221" y="79.76664" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="159.72221" y="79.76664" stroke-width=".26458">io execute</tspan></text>
+   <text x="172.34003" y="68.59539" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="172.34003" y="68.59539" font-family="sans-serif" font-size="2.8222px" stroke-width=".26458" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal">fn(arg)</tspan></text>
+   <text x="53.046707" y="52.192699" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="53.046707" y="52.192699" font-family="sans-serif" font-size="2.8222px" stroke-width=".26458" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal">nvme_io_msg send()</tspan></text>
+   <text x="53.102341" y="60.250244" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="53.102341" y="60.250244" font-family="sans-serif" font-size="2.8222px" stroke-width=".26458" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal">nvme_io_msg send()</tspan></text>
+   <text x="120.79763" y="50.70586" font-size="12px" stroke-width="1" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan x="120.79763" y="50.70586" font-family="sans-serif" font-size="2.8222px" stroke-width=".26458" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal">spdk_nvme_io_msg process()</tspan></text>
+  </g>
+ </g>
+</svg>
