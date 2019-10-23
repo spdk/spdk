@@ -113,7 +113,7 @@ ssh_vm 'echo ready'
 timing_exit wait_for_vm
 
 timing_enter copy_repo
-(cd "$rootdir"; tar -cf - .) | (ssh_vm 'tar -xf -')
+(cd "$rootdir" || exit; tar -cf - .) | (ssh_vm 'tar -xf -')
 timing_exit copy_repo
 
 devices_initialization
