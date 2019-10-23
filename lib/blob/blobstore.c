@@ -164,6 +164,7 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 {
 	opts->num_clusters = 0;
 	opts->thin_provision = false;
+	opts->clear_method = BLOB_CLEAR_WITH_DEFAULT;
 	_spdk_blob_xattrs_init(&opts->xattrs);
 }
 
@@ -2725,6 +2726,14 @@ _spdk_blob_set_thin_provision(struct spdk_blob *blob)
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 }
 
+static void
+_spdk_blob_set_clear_method(struct spdk_blob *blob, enum blob_clear_method clear_method)
+{
+	_spdk_blob_verify_md_op(blob);
+	blob->md_ro_flags |= (clear_method << SPDK_BLOB_CLEAR_METHOD_SHIFT);
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+}
+
 static void _spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno);
 
 static void
@@ -4358,6 +4367,8 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 		_spdk_blob_set_thin_provision(blob);
 	}
 
+	_spdk_blob_set_clear_method(blob, opts->clear_method);
+
 	rc = _spdk_blob_resize(blob, opts->num_clusters);
 	if (rc < 0) {
 		_spdk_blob_free(blob);
@@ -4592,6 +4603,8 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 
 	/* set clone blob as thin provisioned */
 	_spdk_blob_set_thin_provision(origblob);
+
+	_spdk_blob_set_clear_method(origblob, origblob->clear_method);
 
 	_spdk_bs_blob_list_add(newblob);
 
