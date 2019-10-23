@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "0a9344d1_74e75c35",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1044,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T17:32:47Z",
+      "side": 1,
+      "message": "I\u0027d really prefer to avoid this extra step if possible.  Letting it get handled by the existing active_io_qpair logic would simplify the code.",
+      "revId": "66105f78f1cae5214ca5e722b598c4f49bd954c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cccaf946_93e5a335",
         "filename": "lib/nvme/nvme_io_msg.c",
         "patchSetId": 16
