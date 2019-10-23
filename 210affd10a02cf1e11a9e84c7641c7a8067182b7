@@ -190,6 +190,24 @@
     },
     {
       "key": {
+        "uuid": "8c7520c8_96c7f0c7",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-23T15:12:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5583c8a3_45e8357d",
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70a043d5_7892ce85",
         "filename": "lib/vmd/led.c",
         "patchSetId": 3
@@ -261,6 +279,24 @@
     },
     {
       "key": {
+        "uuid": "b651bdc9_4de18bc4",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-23T15:12:13Z",
+      "side": 1,
+      "message": "Yeah it was supposed to squash the fact that it was set, but never used. However, since I\u0027m caching the slot_control register value, we don\u0027t really need it anymore.",
+      "parentUuid": "8754857d_751d3a0b",
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0b6bb331_fa66a308",
         "filename": "lib/vmd/led.c",
         "patchSetId": 3
@@ -272,6 +308,24 @@
       "writtenOn": "2019-10-23T14:19:47Z",
       "side": 1,
       "message": "oh - is this what the unused is supposed to squash?  that you set slot_control here but never read that value?  I guess I don\u0027t understand why we\u0027re doing this either - is this to ensure the write is flushed from internal write buffers?  if so, a write barrier might be better",
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "734af746_357ae0c0",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-23T15:12:13Z",
+      "side": 1,
+      "message": "Yeah, that is the reason. To be honest, I haven\u0027t dedicated enough time to fully understand why we need to do this, but it seems that the writes to the VMD\u0027s PCI config space are posted writes, which mans that we need to issue a read to the address we\u0027ve just written before issuing another write to that address space. All writes to the config registers inside vmd.c are doing this. I agree, we should do something about this (at the very least create a function for register writes and not do this each time manually), but I think it\u0027s out of scope of this patch and I\u0027d like to fix this with a later patch. Are you OK with that?",
+      "parentUuid": "0b6bb331_fa66a308",
       "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -292,6 +346,24 @@
       "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39bf9871_778da532",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-23T15:12:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "13259acb_8f16988a",
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -380,6 +452,24 @@
       "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a50b760e_60d192c2",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-23T15:12:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "53ccc0c9_dade7b76",
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
