@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60b61453_0c83a625",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T15:54:59Z",
+      "side": 1,
+      "message": "Add \u003d\u003e Create",
+      "revId": "0197778770f0cd3fec48d1b666a6f430d3174563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2161e688_6aa22531",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T15:54:59Z",
+      "side": 1,
+      "message": "I really think this should say \"Delete a uring bdev\".",
+      "revId": "0197778770f0cd3fec48d1b666a6f430d3174563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f650e881_1a5823ac",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T15:54:59Z",
+      "side": 1,
+      "message": "Construct \u003d\u003e Create\n\nWe should try to use consistent wording.  For example, the RPC name has \"create\", the help in rpc.py used \"Add\" and here \"Construct\" is used.  It\u0027s better to just use \"create\" in all three places.",
+      "revId": "0197778770f0cd3fec48d1b666a6f430d3174563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "826393b4_0d0c01c8",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T15:54:59Z",
+      "side": 1,
+      "message": "Remove \u003d\u003e Delete\n\nSimilar comment as above - consistency in use of words.",
+      "revId": "0197778770f0cd3fec48d1b666a6f430d3174563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
