@@ -101,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "3b474a08_7db1c6c7",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-23T07:00:23Z",
+      "side": 1,
+      "message": "I disagree. I think this is descriptive enough - you pass an LBA and get \"disk LBA\" which means an address in a format that the SSD understands.",
+      "parentUuid": "b0689018_4163e005",
+      "revId": "9014b20601ba7a2f6127795920a88b0153b45d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "56910c09_ca0f33b6",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 28
