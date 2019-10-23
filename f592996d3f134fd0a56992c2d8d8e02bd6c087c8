@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd0cda1b_be79326b",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-23T13:52:18Z",
+      "side": 1,
+      "message": "Hi,\nCan you please help me understand the flow of those UT ? It looks to me that the bdev_zone.c functions are not actually tested properly.\n\nLet take test_bdev_zone_get_info as an example.\n1) Call start_operation() which allocates the buffers.\n2) Function under test spdk_bdev_get_zone_info() is called. Which does:\n2a) Calls spdk_bdev_get_io() stub in this file, that allocates the bdev_io AND sets fields like bdev_io-\u003eu.zone_mgmt.zone_id to expected ones.\n2b) Then function under test sets same fields again.\n2c) spdk_bdev_io_init() and spdk_bdev_io_submit() are empty stubs\n3) Asserts check the bdev_io for same fields as set in 2a stub and 2b function under test\n4) zone_io_opeation_check() checks same fields once again.\n\nAll of the above results in two things:\n- stubs set the values that are verified [2a]- which can make UT miss if implementation stops working\n- verification of the values occurs multiple times, in generic zone_io_opeation_check() and particular test [3\u00264]- just single place is fine\n\nPlease let me know if I misunderstood.",
+      "range": {
+        "startLine": 287,
+        "startChar": 0,
+        "endLine": 287,
+        "endChar": 23
+      },
+      "revId": "f592996d3f134fd0a56992c2d8d8e02bd6c087c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "105a50b3_2733d83d",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-23T13:52:18Z",
+      "side": 1,
+      "message": "Above comment applies to those four tests.",
+      "range": {
+        "startLine": 399,
+        "startChar": 0,
+        "endLine": 402,
+        "endChar": 98
+      },
+      "revId": "f592996d3f134fd0a56992c2d8d8e02bd6c087c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
