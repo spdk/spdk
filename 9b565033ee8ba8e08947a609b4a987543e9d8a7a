@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "30543717_d4e2886d",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-23T07:31:25Z",
+      "side": 1,
+      "message": "Hi Shuhei, thank you for writing this. And truly this looks good. I will take a try. But I don\u0027t quite understand why my implementation is not good. Could you give me some hints? thank you!",
+      "parentUuid": "5a7472b2_81b7b139",
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1ae8cab0_fefabd9d",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 23

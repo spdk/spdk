@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "60f83b0f_8164eeb2",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-23T07:31:25Z",
+      "side": 1,
+      "message": "Hi Shuhei, thanks for your review. My idea here is I register an opal_poller to periodically receive to see if I get the response. When I get the response, no matter correct or wrong, the poller will be unregistered and is set to NULL. \nHowever, if before I get the response, the process is killed and bdev_nvme_ctrlr_destruct is called, we need to wait for the response here using spdk_thread_poll until we get a response and poller is unregistered and set to NULL.",
+      "parentUuid": "d66a25df_52e71a63",
+      "revId": "2d932cddc073fdcb40af3a5a779dd857a13aeffb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "49e9699e_e74a19d1",
         "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
         "patchSetId": 22
