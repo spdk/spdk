@@ -156,6 +156,14 @@ applications when a qpair is failed. This list of functions includes:
 These functions now return -ENXIO when the qpair or controller on which they
 operate is failed.
 
+Added NVMe IO message producer support to allow sending IO requests from external module
+to the NVMe device. NVMe driver users should poll `spdk_nvme_io_msg_process()` to move
+forward, sending IO from external module and process their completions.
+
+Added NVMe character device support to allow to create NVMe device nodes in Linux
+kernel for controller as well as for namespace and process ioctl requests as usual
+from linux environment.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
