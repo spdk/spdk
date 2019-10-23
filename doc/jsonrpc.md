@@ -1512,6 +1512,7 @@ hostaddr                | Optional | string      | NVMe-oF host address: ip addr
 hostsvcid               | Optional | string      | NVMe-oF host trsvcid: port number
 prchk_reftag            | Optional | bool        | Enable checking of PI reference tag for I/O processing
 prchk_guard             | Optional | bool        | Enable checking of PI guard for I/O processing
+cuse                    | Optional | bool        | Enable NVMe character device support
 
 ### Example
 
