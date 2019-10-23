@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "3e4001a6_99caa036",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-23T07:52:58Z",
+      "side": 1,
+      "message": "Hi Chunyang,\n\nSPDK reactor is the main event scheduler.\nSPDK reactor has one or more SPDK threads.\nSPDK reactor has the main busy loop and calls spdk_thread_poll() of each SPDK thread in the busy loop.\nEach registered poller is called in spdk_thread_poll().\n\nSo spdk_thread_poll() is expected to be called in the lowest layer.\n\nPlease see lib/event/reactor.c\nPlease see Ben\u0027s presentation as a reference.\nhttps://dqtibwqq6s6ux.cloudfront.net/download/events/2019-summit/4+SPDK+-+Flexible+and+Dynamic+Resource+Use+with+SPDK.pdf\n\n\nOn the other hand, for general OS kernel, we must not call process scheduler freely.",
+      "parentUuid": "30543717_d4e2886d",
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1ae8cab0_fefabd9d",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 23
