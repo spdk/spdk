@@ -455,8 +455,8 @@ nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 }
 
 static int
-nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
-	       struct ns_entry *entry, uint64_t offset_in_ios)
+cuse_nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+		    struct ns_entry *entry, uint64_t offset_in_ios)
 {
 	uint64_t lba;
 	int rc;
@@ -622,7 +622,7 @@ nvme_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 
 static const struct ns_fn_table nvme_fn_table = {
 	.setup_payload		= nvme_setup_payload,
-	.submit_io		= nvme_submit_io,
+	.submit_io		= cuse_nvme_submit_io,
 	.check_io		= nvme_check_io,
 	.verify_io		= nvme_verify_io,
 	.init_ns_worker_ctx	= nvme_init_ns_worker_ctx,
