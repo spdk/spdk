@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "631187e8_d1fbb08d",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-23T06:49:14Z",
+      "side": 1,
+      "message": "If we are in debug mode what is wrong is to catch such disk behavior. We could also get corrupted data from nvme driver.",
+      "parentUuid": "fb943834_e254a5f4",
+      "revId": "c6ec33934da9161b80721f29f39d566227026d83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e6f38f9_b6863acb",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 22
