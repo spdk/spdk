@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5913f27b_32d50af4",
+        "filename": "examples/vmd/led/led.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T14:25:47Z",
+      "side": 1,
+      "message": "we try to list the options in alphabetical order when using getopt\n\nso:  dhr:s:",
+      "revId": "fdceba45cbcba4bc119b00afd5337d81f11183d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec870c5e_d33b7dbe",
+        "filename": "examples/vmd/led/led.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T14:25:47Z",
+      "side": 1,
+      "message": "you may want to check some of the other apps for how we handle the case where user specifies this flag with a non-debug build (since it won\u0027t do anything in that case)",
+      "revId": "fdceba45cbcba4bc119b00afd5337d81f11183d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
