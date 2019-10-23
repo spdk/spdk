@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5996fe38_c4db983d",
+        "filename": "autotest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T22:00:21Z",
+      "side": 1,
+      "message": "This comment doesn\u0027t provide any value.  It\u0027s basically just a copy of the function name opal_revert_cleanup.\n\nIt would be more useful for the comment to say something like:\n\n# Revert any existing OPAL settings that may have been left from earlier failed tests.\n# This ensures we won\u0027t hit any unexpected failures due to NVMe SSDs being locked.",
+      "revId": "938cef5ebf46be2b05e9aaba132ee7aa1fe3e4d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb99a2b3_e3c72723",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 881,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T22:00:21Z",
+      "side": 1,
+      "message": "This is OK.  It might be nice to have a test app (written in C) that does all of this just by running the application.  Could be useful for other people who are doing testing with Opal.",
+      "revId": "938cef5ebf46be2b05e9aaba132ee7aa1fe3e4d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
