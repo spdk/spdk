@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "acf1d756_9b998d74",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T20:56:33Z",
+      "side": 1,
+      "message": "nvme_cleanup_ns_worker_ctx()\n\nthen you can remove cleanup_ns_worker_ctx() function",
+      "revId": "bb0c6416e70a29a1252a6147a49872862e8bc99a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b20d0f39_b8c8f0b1",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 878,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T20:56:33Z",
+      "side": 1,
+      "message": "Let\u0027s add an assert(false) here.  This should never happen since you already checked the trids from the command line.  But I\u0027m ok leaving the trtype check and just adding the assert(false).  (If this was core library code, I\u0027d say assert trtype !\u003d TRANSPORT_PCIE, but for this test application the extra check is fine.)",
+      "revId": "bb0c6416e70a29a1252a6147a49872862e8bc99a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
