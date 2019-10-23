@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c52495e_d14c8cef",
+        "filename": "lib/nvme/nvme_cuse_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T20:21:47Z",
+      "side": 1,
+      "message": "I was thinking that this would not be part of the per-device RPCs.  It\u0027s a bit cumbersome to require the rpc.py caller to make sure it doesn\u0027t reuse the same index for multiple controllers.\n\nI think you just need some kind of cuse initialization function, as suggested in my earlier review.  SPDK bdev nvme driver can call it when it first loads.  For now, it can pass NULL for the prefix, and 128 for an index (you need the index still).  Then cuse can just generate the prefixes automatically.\n\nWhich reminds me, we need an API to get the cuse name for any given controller, and we\u0027ll want to return that when calling bdev_nvme_get_controllers",
+      "revId": "f447a863c55d7465a07203eedcaae3c05ae4dbd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
