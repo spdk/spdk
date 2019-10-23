@@ -3982,10 +3982,12 @@ blob_flags(void)
 	spdk_blob_id blobid_invalid, blobid_data_ro, blobid_md_ro;
 	struct spdk_blob *blob_invalid, *blob_data_ro, *blob_md_ro;
 	struct spdk_bs_opts opts;
+	struct spdk_blob_opts blob_opts;
 	int rc;
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
+	spdk_blob_opts_init(&blob_opts);
 
 	/* Initialize a new blob store */
 	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
@@ -4006,7 +4008,8 @@ blob_flags(void)
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid_data_ro = g_blobid;
 
-	spdk_bs_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	blob_opts.clear_method = BLOB_CLEAR_WITH_WRITE_ZEROES;
+	spdk_bs_create_blob_ext(g_bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
@@ -4029,6 +4032,7 @@ blob_flags(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob_md_ro = g_blob;
+	CU_ASSERT((blob_md_ro->md_ro_flags & SPDK_BLOB_MD_RO_FLAGS_MASK) == BLOB_CLEAR_WITH_WRITE_ZEROES);
 
 	/* Change the size of blob_data_ro to check if flags are serialized
 	 * when blob has non zero number of extents */
