@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef64782b_f21c89aa",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T20:03:39Z",
+      "side": 1,
+      "message": "I\u0027m not sure I fully understand this comment.  Does it mean that if ctrlr-\u003eis_resetting is set, that IO messaging is already started?  I don\u0027t think that\u0027s true, but I\u0027m struggling to understand an alternative meaning.",
+      "revId": "bb6d3f1a74408e38670670aa592690a6bb29d67e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
