@@ -119,6 +119,24 @@
     },
     {
       "key": {
+        "uuid": "cca8e7d5_dba7133a",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-23T07:53:01Z",
+      "side": 1,
+      "message": "I think something like bdev_ocssd_disk_lba_from_offset will be more descriptive, but I will not insist on it.",
+      "parentUuid": "3b474a08_7db1c6c7",
+      "revId": "9014b20601ba7a2f6127795920a88b0153b45d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "56910c09_ca0f33b6",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 28
