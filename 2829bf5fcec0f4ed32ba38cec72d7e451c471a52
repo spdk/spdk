@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "e0f7a205_cdfc528e",
+        "filename": "configure",
+        "patchSetId": 40
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T20:02:39Z",
+      "side": 1,
+      "message": "Previous comment indicated this was done, but I don\u0027t see it here.\n\nThis should say:\n\n\"Build nvme driver with support for CUSE-based character devices.\"",
+      "revId": "2829bf5fcec0f4ed32ba38cec72d7e451c471a52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8993688e_52a55f13",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 40

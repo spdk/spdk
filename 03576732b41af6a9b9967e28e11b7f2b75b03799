@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "682ba22c_1ba40fa2",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T20:02:39Z",
+      "side": 1,
+      "message": "I think 472210 should be merged with this patch.  Or alternatively, put some stripped down version of 472210 before this patch.\n\nIt avoids marking these functions as unused.  We never do this in SPDK, so I knew there was some later patch that would start using these, but others are going to struggle with this too when they review.",
+      "revId": "03576732b41af6a9b9967e28e11b7f2b75b03799",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
