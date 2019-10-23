@@ -51,7 +51,6 @@ DEPDIRS-vmd := log
 
 DEPDIRS-conf := log util
 DEPDIRS-json := log util
-DEPDIRS-nvme := log sock util
 DEPDIRS-reduce := log util
 DEPDIRS-thread := log util
 
@@ -62,6 +61,12 @@ DEPDIRS-virtio := log util json thread
 
 DEPDIRS-lvol := log util blob
 DEPDIRS-rpc := log util json jsonrpc
+
+DEPDIRS-nvme := log sock util
+
+ifeq ($(CONFIG_C),y)
+DEPDIRS-nvme += $(JSON_LIBS)
+endif
 
 DEPDIRS-log_rpc := log $(JSON_LIBS)
 DEPDIRS-net := log util $(JSON_LIBS)
