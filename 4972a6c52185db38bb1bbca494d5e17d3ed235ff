@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "019bcf6d_fba14d46",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 758,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-23T08:17:01Z",
+      "side": 1,
+      "message": "Thanks for the suggestion. Will add the comment here to describe it clearly.",
+      "parentUuid": "cdb8a6a3_d7317199",
+      "revId": "4972a6c52185db38bb1bbca494d5e17d3ed235ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ebf49655_dda4d6eb",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 5
