@@ -70,6 +70,30 @@
       "revId": "dca314f8ed64ce879c0226205405f6d20fee77ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d615c12b_597e9b14",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2446,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-23T17:42:52Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nSo can you accept if we extract the case for NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD for a seperate function.",
+      "parentUuid": "b619bc62_65915e7c",
+      "range": {
+        "startLine": 2446,
+        "startChar": 0,
+        "endLine": 2446,
+        "endChar": 34
+      },
+      "revId": "dca314f8ed64ce879c0226205405f6d20fee77ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
