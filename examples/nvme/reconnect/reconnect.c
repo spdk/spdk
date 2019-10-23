@@ -46,6 +46,7 @@
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr			*ctrlr;
 	enum spdk_nvme_transport_type		trtype;
+	struct spdk_nvme_transport_id		*failover_trid;
 	struct ctrlr_entry			*next;
 	char					name[1024];
 	int					num_resets;
@@ -113,10 +114,14 @@ static int g_dpdk_mem;
 static bool g_warn;
 static uint32_t g_keep_alive_timeout_in_ms = 0;
 
+static int g_num_trids = 0;
+static int g_num_failover_trids = 0;
+
 static const char *g_core_mask;
 
 struct trid_entry {
 	struct spdk_nvme_transport_id	trid;
+	struct spdk_nvme_transport_id	failover_trid;
 	TAILQ_ENTRY(trid_entry)		tailq;
 };
 
@@ -368,6 +373,8 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 		exit(1);
 	}
 
+	entry->failover_trid = &trid_entry->failover_trid;
+
 	build_nvme_name(entry->name, sizeof(entry->name), ctrlr);
 
 	entry->ctrlr = ctrlr;
@@ -576,6 +583,11 @@ static void usage(char *program_name)
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)\n");
 	printf("\t[-r Transport ID for NVMeoF]\n");
+	printf("\t[-f failover Transport ID for NVMe-oF]\n");
+	printf("\t Rules: The number of -f TRIDs must be <= the number of -r TRIDs.");
+	printf("\t  -f TRIDs will be assigned to -r TRIDs in order until all -f TRIDs");
+	printf("\t  have been assigned. The subnqn and trtype must be consistent between");
+	printf("\t  the -r TRID and its assigned -f TRID.");
 	printf("\t Format: 'key:value [key:value] ...'\n");
 	printf("\t Keys:\n");
 	printf("\t  trtype      Transport type (e.g. RDMA)\n");
@@ -610,6 +622,40 @@ unregister_trids(void)
 }
 
 static int
+add_failover_trid(const char *trid_str)
+{
+	struct trid_entry *trid_entry;
+	struct spdk_nvme_transport_id *trid;
+	int i;
+
+	if (g_num_failover_trids >= g_num_trids) {
+		fprintf(stderr, "You must specify a transport ID for every failover transport ID.\n");
+		return -EINVAL;
+	}
+
+	trid_entry = TAILQ_FIRST(&g_trid_list);
+	for (i = 0; i < g_num_failover_trids; i++) {
+		trid_entry = TAILQ_NEXT(trid_entry, tailq);
+		assert(trid_entry != NULL);
+	}
+
+	trid = &trid_entry->failover_trid;
+	if (spdk_nvme_transport_id_parse(trid, trid_str)) {
+		fprintf(stderr, "Invalid transport ID format '%s'\n", trid_str);
+		return -EADDRNOTAVAIL;
+	}
+
+	if (trid_entry->trid.trtype != trid->trtype) {
+		fprintf(stderr, "Failover transport types must equal the original transport type.\n");
+		memset(trid, 0, sizeof(struct spdk_nvme_transport_id));
+		return -EINVAL;
+	}
+
+	g_num_failover_trids++;
+	return 0;
+}
+
+static int
 add_trid(const char *trid_str)
 {
 	struct trid_entry *trid_entry;
@@ -629,6 +675,7 @@ add_trid(const char *trid_str)
 		return 1;
 	}
 
+	g_num_trids++;
 	TAILQ_INSERT_TAIL(&g_trid_list, trid_entry, tailq);
 	return 0;
 }
@@ -652,7 +699,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:m:o:q:r:k:s:t:w:GM:T:")) != -1) {
+	while ((op = getopt(argc, argv, "c:m:o:q:r:f:k:s:t:w:GM:T:")) != -1) {
 		switch (op) {
 		case 'm':
 		case 'o':
@@ -696,6 +743,12 @@ parse_args(int argc, char **argv)
 			break;
 		case 'r':
 			if (add_trid(optarg)) {
+				usage(argv[0]);
+				return 1;
+			}
+			break;
+		case 'f':
+			if (add_failover_trid(optarg)) {
 				usage(argv[0]);
 				return 1;
 			}
@@ -975,9 +1028,10 @@ associate_workers_with_ns(void)
 static void *
 nvme_poll_ctrlrs(void *arg)
 {
-	struct ctrlr_entry *entry;
-	int oldstate;
-	int rc;
+	struct ctrlr_entry			*entry;
+	const struct spdk_nvme_transport_id	*old_trid;
+	int					oldstate;
+	int					rc;
 
 	spdk_unaffinitize_thread();
 
@@ -990,6 +1044,16 @@ nvme_poll_ctrlrs(void *arg)
 			/* This controller has encountered a failure at the transport level. reset it. */
 			if (rc == -ENXIO) {
 				fprintf(stderr, "A controller has encountered a failure and is being reset.\n");
+				if (entry->num_resets == 0 && entry->failover_trid->trtype != 0) {
+					fprintf(stderr, "Resorting to new failover address %s\n", entry->failover_trid->traddr);
+					spdk_nvme_ctrlr_fail(entry->ctrlr);
+					old_trid = spdk_nvme_ctrlr_get_transport_id(entry->ctrlr);
+					snprintf(entry->failover_trid->subnqn, SPDK_NVMF_NQN_MAX_LEN + 1, "%s", old_trid->subnqn);
+					rc = spdk_nvme_ctrlr_set_trid(entry->ctrlr, entry->failover_trid);
+					if (rc != 0) {
+						fprintf(stderr, "Unable to fail over to back up trid.\n");
+					}
+				}
 				rc = spdk_nvme_ctrlr_reset(entry->ctrlr);
 				if (rc != 0) {
 					entry->num_resets++;

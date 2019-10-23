@@ -183,6 +183,7 @@ function nvmftestinit()
 	if [ "$TEST_TRANSPORT" == "rdma" ]; then
 		RDMA_IP_LIST=$(get_available_rdma_ips)
 		NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
+		NVMF_SECOND_TARGET_IP=$(echo "$RDMA_IP_LIST" | tail -n +2 | head -n 1)
 		if [ -z $NVMF_FIRST_TARGET_IP ]; then
 			echo "no NIC for nvmf test"
 			exit 0
