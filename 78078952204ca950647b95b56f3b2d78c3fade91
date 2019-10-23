@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a68d4038_ded4d7eb",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 901,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:31:44Z",
+      "side": 1,
+      "message": "Would it be possible to embed this hp structure into the vmd-specific portion of vmd_pci_device instead?\n\nthen we avoid the extra memory allocation - I know it seems minor but if most devices are going to have one of these structures it\u0027s nicer to just include the memory in that structure directly\n\nthen you could change this to something like:\n\nvmd_dev_initialize_hotplug(new_bus, new_dev);\n\nwhere vmd_new_hotplug is basically renamed to vmd_dev_initialize_hotplug\n\nthen you probably just need some kind of bit in new_dev to denote that it supports hotplug (since you can no longer just check if -\u003ehp is NULL)",
+      "revId": "78078952204ca950647b95b56f3b2d78c3fade91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
