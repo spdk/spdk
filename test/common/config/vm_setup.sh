@@ -282,8 +282,15 @@ function install_nvmecli()
         else
             echo "nvme-cli already checked out. Skipping"
         fi
+	if [ ! -d "/usr/local/src/nvme-cli" ]; then
+            git clone "https://review.gerrithub.io/spdk/nvme-cli" "nvme-cli-cuse"
+            git -C ./nvme-cli-cuse checkout nvme-cuse
+            make -C ./nvme-cli-cuse
+            sudo mv ./nvme-cli-cuse /usr/local/src/nvme-cli
+	fi
     fi
 }
+
 
 function install_libiscsi()
 {
@@ -477,7 +484,9 @@ if $INSTALL; then
         rpm-build \
         iptables \
         clang-analyzer \
-        bc
+        bc \
+        kernel-modules-extra \
+        systemd-devel
 
     elif [ $PACKAGEMNG == 'apt-get' ]; then
         echo "Package perl-open is not available at Ubuntu repositories" >&2
