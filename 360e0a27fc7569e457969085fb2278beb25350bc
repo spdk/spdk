@@ -34,6 +34,24 @@
       "revId": "360e0a27fc7569e457969085fb2278beb25350bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa753c40_3b3217a2",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T14:28:58Z",
+      "side": 1,
+      "message": "I think this is probably OK for now.  If we find other types of devices in the future, we can add a more sophisticated mechanism to support other dev/vendor IDs.",
+      "parentUuid": "4b15f4fd_2e9ebf4b",
+      "revId": "360e0a27fc7569e457969085fb2278beb25350bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
