@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3a71701_8b5e7b21",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:15:19Z",
+      "side": 1,
+      "message": "Ah - saving the cached value this way kind of hides what I noticed earlier.  Tricky.  :-)\n\nI think it would still be good to add a comment here describing that there\u0027s some behavior that requires reading the MMIO register and there\u0027s a TODO to look into it further.  Otherwise someone could change the right side of this assignment to just \"slot_control\" and think it\u0027s an optimization.",
+      "revId": "8281f0b71fdab04aa2402f88b97e469bc2bee5b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
