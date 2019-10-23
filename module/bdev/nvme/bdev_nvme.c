@@ -226,7 +226,13 @@ bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	assert(nvme_bdev_ctrlr->destruct);
 	if (nvme_bdev_ctrlr->opal_dev) {
+		if (nvme_bdev_ctrlr->opal_poller != NULL) {
+			spdk_poller_unregister(&nvme_bdev_ctrlr->opal_poller);
+			/* wait until we get the result */
+			while (spdk_opal_revert_poll(nvme_bdev_ctrlr->opal_dev) == -EAGAIN);
+		}
 		spdk_opal_close(nvme_bdev_ctrlr->opal_dev);
+		nvme_bdev_ctrlr->opal_dev = NULL;
 	}
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
