@@ -57,7 +57,7 @@ def bdev_nvme_get_controllers(client, name=None):
     return client.call('bdev_nvme_get_controllers', params)
 
 
-def nvme_cuse_register(client, trtype, traddr, adrfam=None, trsvcid=None, subnqn=None):
+def nvme_cuse_register(client, trtype, traddr, adrfam=None, trsvcid=None, subnqn=None, dev_path):
     """Register CUSE devices on NVMe controller.
 
     Args:
@@ -66,9 +66,11 @@ def nvme_cuse_register(client, trtype, traddr, adrfam=None, trsvcid=None, subnqn
         adrfam: address family ("IPv4", "IPv6", "IB", or "FC") (optional for PCIe)
         trsvcid: transport service ID (port number for IP-based addresses; optional for PCIe)
         subnqn: subsystem NQN to connect to (optional)
+        dev_path: CUSE dev path with dev prefix
     """
     params = {'trtype': trtype,
-              'traddr': traddr}
+              'traddr': traddr,
+              'dev_path': dev_path}
 
     if adrfam:
         params['adrfam'] = adrfam

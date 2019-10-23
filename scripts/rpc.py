@@ -436,7 +436,8 @@ if __name__ == "__main__":
                                     traddr=args.traddr,
                                     adrfam=args.adrfam,
                                     trsvcid=args.trsvcid,
-                                    subnqn=args.subnqn)
+                                    subnqn=args.subnqn,
+                                    dev_path=args.dev_path)
 
     p = subparsers.add_parser('nvme_cuse_register',
                               help='Register CUSE devices on NVMe controller')
@@ -449,6 +450,8 @@ if __name__ == "__main__":
     p.add_argument('-s', '--trsvcid',
                    help='NVMe-oF target trsvcid: e.g., a port number')
     p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
+    p.add_argument('-p', '--dev_path',
+                   help='CUSE dev path including prefix: e.g. spdk/nvme will result: /dev/spdk/nvme0n1', required=True)
     p.set_defaults(func=nvme_cuse_register)
 
     def bdev_rbd_create(args):
