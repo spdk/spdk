@@ -410,6 +410,7 @@ struct spdk_blob_xattr_opts {
 struct spdk_blob_opts {
 	uint64_t  num_clusters;
 	bool	thin_provision;
+	enum blob_clear_method clear_method;
 	struct spdk_blob_xattr_opts xattrs;
 };
 
