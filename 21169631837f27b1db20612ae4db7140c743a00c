@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "255385fe_94b0db58",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 1185,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T19:52:26Z",
+      "side": 1,
+      "message": "I think we\u0027ll need to clarify what is meant by \"external module\".  In the primary use case (CUSE), this could be confusing, since people might think of the NVMe driver as a module, and in that case the IO message is being sent from the same module, not an external (different) one.\n\nTomek Z - could you take a look at clarifying the text around this?  Feel free to say that this is intended for things like CUSE, for handling messages from non-polled mode threads, etc.",
+      "revId": "21169631837f27b1db20612ae4db7140c743a00c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d389aec3_7fc17046",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T19:52:26Z",
+      "side": 1,
+      "message": "but I think DPDK talks about using a spinlock here - not a mutex, that\u0027s why I don\u0027t think this really works\n\nI\u0027m still not 100% sure we need to worry about the preemption.  Worst case, a second thread has to wait until the first thread wakes back up to finish its enqueue.  But realistically, a thread gets scheduled for several milliseconds at a time - meaning if one of our threads wakes up due to an incoming CUSE IOCTL, it\u0027s going to enqueue the operation almost immediately and wouldn\u0027t get preempted.\n\nAnd if we do need the lock, I think it can be moved down further, immediately before the spdk_ring_enqueue.",
+      "revId": "21169631837f27b1db20612ae4db7140c743a00c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "909413f1_b3171472",
         "filename": "lib/nvme/nvme_io_msg.c",
         "patchSetId": 19
@@ -13,6 +47,30 @@
       "writtenOn": "2019-10-23T19:02:04Z",
       "side": 1,
       "message": "messaging",
+      "range": {
+        "startLine": 116,
+        "startChar": 41,
+        "endLine": 116,
+        "endChar": 51
+      },
+      "revId": "21169631837f27b1db20612ae4db7140c743a00c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a55c2ea_3864671c",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T19:52:26Z",
+      "side": 1,
+      "message": "I\u0027m not sure I fully understand this comment.  Does it mean that if ctrlr-\u003eis_resetting is set, that IO messaging is already started?  I don\u0027t think that\u0027s true, but I\u0027m struggling to understand an alternative meaning.",
+      "parentUuid": "909413f1_b3171472",
       "range": {
         "startLine": 116,
         "startChar": 41,
