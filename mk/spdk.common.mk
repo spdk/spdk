@@ -225,6 +225,10 @@ ifeq ($(CONFIG_LOG_BACKTRACE),y)
 SYS_LIBS += -lunwind
 endif
 
+ifeq ($(CONFIG_NVME_CUSE),y)
+SYS_LIBS += -lfuse3
+endif
+
 MAKEFLAGS += --no-print-directory
 
 C_SRCS += $(C_SRCS-y)
