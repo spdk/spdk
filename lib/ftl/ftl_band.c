@@ -474,12 +474,6 @@ ftl_band_set_addr(struct ftl_band *band, uint64_t lba, struct ftl_ppa ppa)
 }
 
 size_t
-ftl_band_age(const struct ftl_band *band)
-{
-	return (size_t)(band->dev->seq - band->seq);
-}
-
-size_t
 ftl_band_num_usable_lbks(const struct ftl_band *band)
 {
 	return band->num_chunks * ftl_dev_lbks_in_chunk(band->dev);

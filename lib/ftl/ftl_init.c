@@ -66,25 +66,25 @@ static STAILQ_HEAD(, spdk_ftl_dev)	g_ftl_queue = STAILQ_HEAD_INITIALIZER(g_ftl_q
 static pthread_mutex_t			g_ftl_queue_lock = PTHREAD_MUTEX_INITIALIZER;
 static const struct spdk_ftl_conf	g_default_conf = {
 	.limits = {
-		/* 5 free bands  / 0 % host writes */
-		[SPDK_FTL_LIMIT_CRIT]  = { .thld = 5,  .limit = 0 },
-		/* 10 free bands / 5 % host writes */
-		[SPDK_FTL_LIMIT_HIGH]  = { .thld = 10, .limit = 5 },
-		/* 20 free bands / 40 % host writes */
-		[SPDK_FTL_LIMIT_LOW]   = { .thld = 20, .limit = 40 },
-		/* 40 free bands / 100 % host writes - defrag starts running */
-		[SPDK_FTL_LIMIT_START] = { .thld = 40, .limit = 100 },
+		/* 1 free bands  / 0 % host writes */
+		[SPDK_FTL_LIMIT_CRIT]  = { .thld = 1,  .limit = 0 },
+		/* 3 free bands / 12 % host writes */
+		[SPDK_FTL_LIMIT_HIGH]  = { .thld = 3, .limit = 12 },
+		/* 7 free bands / 45 % host writes */
+		[SPDK_FTL_LIMIT_LOW]   = { .thld = 7, .limit = 45 },
+		/* 10 free bands / 75 % host writes - defrag starts running */
+		[SPDK_FTL_LIMIT_START] = { .thld = 10, .limit = 75 },
 	},
 	/* 10 percent valid lbks */
 	.invalid_thld = 10,
-	/* 20% spare lbks */
-	.lba_rsvd = 20,
+	/* 15% spare lbks */
+	.lba_rsvd = 15,
 	/* 6M write buffer */
 	.rwb_size = 6 * 1024 * 1024,
 	/* 90% band fill threshold */
 	.band_thld = 90,
-	/* Max 32 IO depth per band relocate */
-	.max_reloc_qdepth = 32,
+	/* Max 256 IO depth per band relocate */
+	.max_reloc_qdepth = 256,
 	/* Max 3 active band relocates */
 	.max_active_relocs = 3,
 	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */

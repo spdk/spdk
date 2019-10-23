@@ -829,6 +829,8 @@ ftl_apply_limits(struct spdk_ftl_dev *dev)
 		if (dev->num_free <= limit->thld) {
 			rwb_limit[FTL_RWB_TYPE_USER] =
 				(limit->limit * ftl_rwb_entry_cnt(dev->rwb)) / 100;
+			rwb_limit[FTL_RWB_TYPE_INTERNAL] =
+				ftl_rwb_entry_cnt(dev->rwb) - rwb_limit[FTL_RWB_TYPE_USER];
 			stats->limits[i]++;
 			dev->limit = i;
 			goto apply;
@@ -837,6 +839,10 @@ ftl_apply_limits(struct spdk_ftl_dev *dev)
 
 	/* Clear the limits, since we don't need to apply them anymore */
 	rwb_limit[FTL_RWB_TYPE_USER] = ftl_rwb_entry_cnt(dev->rwb);
+
+	/* Internal limits need to be set to a non-zero, but low value */
+	limit = ftl_get_limit(dev, SPDK_FTL_LIMIT_START);
+	rwb_limit[FTL_RWB_TYPE_INTERNAL] = ((100 - limit->limit) * ftl_rwb_entry_cnt(dev->rwb)) / 100;
 apply:
 	ftl_trace_limits(dev, rwb_limit, dev->num_free);
 	ftl_rwb_set_limits(dev->rwb, rwb_limit);
@@ -1817,7 +1823,7 @@ ftl_band_calc_merit(struct ftl_band *band, size_t *threshold_valid)
 
 	/* Add one to avoid division by 0 */
 	vld_ratio = (double)invalid / (double)(valid + 1);
-	return vld_ratio * ftl_band_age(band);
+	return vld_ratio;
 }
 
 static bool
