@@ -22,6 +22,30 @@
       "revId": "d648a7238b08a46a59590549a1a732de4d27fa7f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80e64fd9_f0e4b077",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-23T21:03:56Z",
+      "side": 1,
+      "message": "good lord, a typo fixing a typo :)",
+      "parentUuid": "9965e427_fa81dd48",
+      "range": {
+        "startLine": 192,
+        "startChar": 24,
+        "endLine": 192,
+        "endChar": 34
+      },
+      "revId": "d648a7238b08a46a59590549a1a732de4d27fa7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
