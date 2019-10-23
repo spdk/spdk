@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "5117004d_70c65b1b",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-23T07:09:06Z",
+      "side": 1,
+      "message": "Probably we don\u0027t need this bool array to store failed states. We can iterate qpairs as usual, call spdk_nvme_qpair_process_completions and check return value like this:\n\nrc \u003d spdk_nvme_qpair_process_completions(ns_ctx-\u003eqpair[i], g_max_completions);\nif (spdk_unlikely(rc \u003c 0)) {\n\t/* This means the qpair failed in the driver and must be reconnected or destroyed. */\n\tif (rc \u003d\u003d -ENXIO) {\n\t\trc \u003d spdk_nvme_ctrlr_reconnect_io_qpair(ns_ctx-\u003eqpair[i]);\n\t\tif (rc \u003d\u003d 0 || rc \u003d\u003d -ENXIO) {\n\t\t\tcontinue\n\t\t} else {\n\t\t\t/*\n\t\t\t * We were unable to restore the qpair on this attempt. We don\u0027t\n\t\t\t * really know why. For naive handling, just keep trying.\n\t\t\t * TODO: add a retry limit, and destroy the qpair after x iterations.\n\t\t\t */\n\t\t\tfprintf(stderr, \"qpair failed and we were unable to recover it.\\n\");\n\t\t}\n\t} else {\n\t\tfprintf(stderr, \"Received an unknown error processing completions.\\n\");\n\t\texit(1);\n\t}\n}\n\nIf we failed to reconnect the qpair then the next call spdk_nvme_qpair_process_completions will return -ENXIO again and we will repeat the reconnection.\nAs far as I remember, this bool array was the main reason why you didn\u0027t modify perf example. So if we get rid of this then we can return to modifying perf)",
+      "range": {
+        "startLine": 292,
+        "startChar": 12,
+        "endLine": 292,
+        "endChar": 35
+      },
+      "revId": "9cbd243563824f851350532dc63c86f33a84b863",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d7a0e9f6_bedb2f28",
         "filename": "examples/nvme/reconnect/reconnect.c",
         "patchSetId": 10
