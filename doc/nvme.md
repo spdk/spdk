@@ -9,6 +9,7 @@
 * @ref nvme_fabrics_host
 * @ref nvme_multi_process
 * @ref nvme_hotplug
+* @ref nvme_cuse
 
 # Introduction {#nvme_intro}
 
@@ -266,3 +267,49 @@ This means I/O in flight during a hot remove will complete with an appropriate e
 code and will not crash the application.
 
 @sa spdk_nvme_probe
+
+# External IO message queue
+
+IO message queue provides safe mechanism to pass messages from producer to SPDK in
+terms of:
+
+ - module separation,
+ - thread safeness (there's no requirement about producers threads in affinity,
+   preemptness, et c.),
+ - message consumption on SPDK thread is not locking.
+
+Producer puts message for specified NVMe controller and namespace. Message contains
+pointer to the function which should be executed on SPDK thread in a safe way.
+
+
+## NVMe Character Devices {#nvme_cuse}
+
+![NVMe character devices processing diagram](nvme_cuse.svg)
+
+For each controller as well as namespace, character devices are created in a
+locations:
+~~~{.sh}
+    /dev/'defined_path'/nvmeX
+    /dev/'defined_path'/nvmeXnY
+    ...
+~~~
+
+Devices are polled by threads to handle ioctl requests. Each request is decoded and
+proper IO message is created based on received information.
+
+Some ioctls, like providing information about e.g. sector size can be processed
+in cuse thread started with NVMe attachement, however, for most of operations, like
+e.g. read/write, it must be used IO message mechanism to grant that these operations
+are executed on SPDK thread.
+
+### Enabling cuse support for NVMe
+
+1) Compilation.
+
+Cuse support is disabled by default. To enable support for NVMe devices SPDK
+must be compiled with "./configure --with-cuse".
+
+2) Attach controller with rpc.py script.
+~~~{.sh}
+rpc.py bdev_nvme_attach_controller -b Nvme0 -t PCIe -a 0000:00:0c.0 --cuse
+~~~
