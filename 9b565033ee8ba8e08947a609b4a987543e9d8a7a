@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "18cc4e71_3312dbdb",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 23
+      },
+      "lineNbr": 5607,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-23T08:22:02Z",
+      "side": 1,
+      "message": "insert a space between of and OPAL.",
+      "range": {
+        "startLine": 5607,
+        "startChar": 33,
+        "endLine": 5607,
+        "endChar": 39
+      },
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5a7472b2_81b7b139",
         "filename": "module/bdev/nvme/bdev_nvme.c",
         "patchSetId": 23
@@ -73,6 +96,29 @@
     },
     {
       "key": {
+        "uuid": "c119a1a4_5e75af25",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-23T08:22:02Z",
+      "side": 1,
+      "message": "moving this to around the line 264 may be better because closer to the location that locking_range_id is used.",
+      "range": {
+        "startLine": 250,
+        "startChar": 1,
+        "endLine": 250,
+        "endChar": 48
+      },
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1ae8cab0_fefabd9d",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 23
@@ -112,6 +158,29 @@
         "startChar": 1,
         "endLine": 299,
         "endChar": 28
+      },
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e7cdbc5_ed07acad",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-23T08:22:02Z",
+      "side": 1,
+      "message": "connecting each word by using underscore will be better. read_lock_enabled. The followings are same.",
+      "range": {
+        "startLine": 305,
+        "startChar": 32,
+        "endLine": 305,
+        "endChar": 49
       },
       "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
