@@ -1066,6 +1066,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	spdk_blob_opts_init(&opts);
 	opts.thin_provision = thin_provision;
 	opts.num_clusters = num_clusters;
+	opts.clear_method = lvol->clear_method;
 	opts.xattrs.count = SPDK_COUNTOF(xattr_names);
 	opts.xattrs.names = xattr_names;
 	opts.xattrs.ctx = lvol;
