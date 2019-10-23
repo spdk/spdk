@@ -96,6 +96,24 @@
     },
     {
       "key": {
+        "uuid": "542f3fd1_94295610",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-23T09:30:30Z",
+      "side": 1,
+      "message": "Hi Shuhei, this is not working. The thread exit before poller unregistered and nvme detattach\nthread.c: 218:_free_thread: *WARNING*: poller 0x606000000560 still registered at thread exit\nthread.c: 218:_free_thread: *WARNING*: poller 0x6060000004a0 still registered at thread exit\nthread.c: 180:spdk_thread_lib_fini: *ERROR*: io_device nvme0 not unregistered\nDevice 0000:b3:00.0 is still attached at shutdown!\n\nI still think we have to wait in the bdev_nvme_ctrlr_destruct. What do you think?",
+      "parentUuid": "5a4b5e74_752a66ac",
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c119a1a4_5e75af25",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 23
