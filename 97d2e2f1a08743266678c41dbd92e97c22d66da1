@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "87bd3428_b3f41417",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-23T08:31:23Z",
+      "side": 1,
+      "message": "If you have chance to rebase this patch, moving this to around the line 646 may be better because closer to the location that it is used.",
+      "range": {
+        "startLine": 629,
+        "startChar": 1,
+        "endLine": 629,
+        "endChar": 52
+      },
+      "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e2cd18e9_b695b646",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 7
@@ -18,6 +41,29 @@
         "startChar": 25,
         "endLine": 636,
         "endChar": 34
+      },
+      "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6424afff_d19b17d3",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-23T08:31:23Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 676,
+        "startChar": 1,
+        "endLine": 676,
+        "endChar": 52
       },
       "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
