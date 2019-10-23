@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01381208_3d7b2e62",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T21:04:59Z",
+      "side": 1,
+      "message": "Sets the trid of an existing controller.  Can be used to change the trid for failover cases.",
+      "revId": "b227cfda9991dc7f94e35e321fc0aad0d8b3a848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
