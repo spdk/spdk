@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b32a7aed_b7515dc7",
+        "filename": "configure",
+        "patchSetId": 37
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T17:35:36Z",
+      "side": 1,
+      "message": "Sorry - I wasn\u0027t clear with my previous comment.  I\u0027d suggest changing the text here to read:\n\n\"Build name driver with support for CUSE-based character devices.\"",
+      "revId": "957f7ae6839a822414cdd6cb5912c0db8a949e8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
