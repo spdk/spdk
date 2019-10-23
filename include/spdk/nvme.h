@@ -1201,7 +1201,7 @@ int32_t spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
  *
  * \return number of processed external IO messages.
  */
-int spdk_nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr);
+int nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Send the given admin command to the NVMe controller.
