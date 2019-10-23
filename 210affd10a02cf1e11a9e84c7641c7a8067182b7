@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "cece3e16_d115d5c6",
+        "filename": "include/spdk/vmd.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T14:19:47Z",
+      "side": 1,
+      "message": "I\u0027ll admit - I always do a double space.  I learned it when I took my first typing class (I don\u0027t want to tell you how many years ago, let\u0027s just say I didn\u0027t use a computer for it).  The norm now is to just use one space but two spaces is fine and you\u0027ll see tons of comments written by me over the last 5 years that have two spaces.",
+      "parentUuid": "e044a4cb_3f12e2de",
+      "range": {
+        "startLine": 108,
+        "startChar": 58,
+        "endLine": 108,
+        "endChar": 60
+      },
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "588aa2e3_5596611f",
         "filename": "lib/vmd/led.c",
         "patchSetId": 3
@@ -125,6 +149,41 @@
       "side": 1,
       "message": "Why? We\u0027re already inside the vmd/ directory, so what\u0027s the advantage of having an additional \"vmd_\" prefix? Many libraries within SPDK don\u0027t do this (e.g. event, nvmf, blob, etc.).",
       "parentUuid": "588aa2e3_5596611f",
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ffaec1e_57c138d1",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T14:19:47Z",
+      "side": 1,
+      "message": "Then there\u0027s nvme, where we do prepend with nvme_.\n\nBut in general I agree - I\u0027d prefer to leave off the vmd_ prefix of the file name.",
+      "parentUuid": "bbff4b1f_9e318765",
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5583c8a3_45e8357d",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T14:19:47Z",
+      "side": 1,
+      "message": "Total nit, but the second column title is one character out of alignment with the second column data",
       "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -184,6 +243,58 @@
     },
     {
       "key": {
+        "uuid": "8754857d_751d3a0b",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T14:19:47Z",
+      "side": 1,
+      "message": "I don\u0027t follow why we need the __attribute__((unused)).  I\u0027m sure you have a good reason, I just need you to explain it to me.  :-)",
+      "parentUuid": "d7ebb99e_732d873c",
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b6bb331_fa66a308",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T14:19:47Z",
+      "side": 1,
+      "message": "oh - is this what the unused is supposed to squash?  that you set slot_control here but never read that value?  I guess I don\u0027t understand why we\u0027re doing this either - is this to ensure the write is flushed from internal write buffers?  if so, a write barrier might be better",
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13259acb_8f16988a",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T14:19:47Z",
+      "side": 1,
+      "message": "can we cache this slot_control value in host memory?  it\u0027s relatively expensive to do an MMIO read - we can read it once when creating the vmd_device structure, and then update both the slot_control MMIO as well as our cached value whenever it is updated - then here you can just use the cached value and avoid the extra MMIO read hit",
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cc6c91de_e7bf6170",
         "filename": "lib/vmd/led.c",
         "patchSetId": 3
@@ -225,6 +336,47 @@
         "endLine": 103,
         "endChar": 8
       },
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e98b8da_919113da",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T14:19:47Z",
+      "side": 1,
+      "message": "Maybe say something like \"If the BDF of the spdk_pci_device identifies...\"\n\nBut it probably is OK as-is - the code is clearly getting the BDF from the pci_device.",
+      "parentUuid": "d63ebf2a_a64496ad",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 103,
+        "endChar": 8
+      },
+      "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "53ccc0c9_dade7b76",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T14:19:47Z",
+      "side": 1,
+      "message": "should we assert here that the pci_device passed in is behind a vmd device?  is that assertion valid?  or do an SPDK_ERRLOG and return NULL if the pci_device isn\u0027t behind vmd\n\nmaybe add that in other functions here where that makes sense",
       "revId": "210affd10a02cf1e11a9e84c7641c7a8067182b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
