@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d089010_a08ec72d",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2557,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T22:52:40Z",
+      "side": 0,
+      "message": "I removed this comment because spdk_nvmf_tcp_req_parse_sgl doesn\u0027t always get a data buffer (i.e. incapsule data case).",
+      "revId": "6d972badff184f9bcda41017f715f04a67f00b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

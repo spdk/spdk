@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4af9f126_0066ec7b",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2549,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T22:52:40Z",
+      "side": 1,
+      "message": "Note: this patch fixes a real problem that I found while working on the Seastar sock implementation.  We don\u0027t have a CI test yet that hits this same problem, but the problem is not limited to Seastar.",
+      "revId": "0de58b9495a8a314f686ac5a31455da6781d800b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
