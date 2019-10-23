@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "78ec7d67_c4585488",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1615,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-23T06:20:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b209eded_d27f93fb",
+      "revId": "2d932cddc073fdcb40af3a5a779dd857a13aeffb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "140d259a_4775e3d2",
         "filename": "module/bdev/nvme/bdev_nvme.c",
         "patchSetId": 22
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "ac857b86_92070a1b",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-23T06:20:34Z",
+      "side": 1,
+      "message": "Hi Changpeng, thanks for your review. If opal_poller isn\u0027t NULL, then it means we haven\u0027t got the result yet. The poller is still needed and we can\u0027t unregister. The poller will be assigned to NULL if we get a result and the poller is unregistered. I use this to track the state.",
+      "parentUuid": "140d259a_4775e3d2",
+      "revId": "2d932cddc073fdcb40af3a5a779dd857a13aeffb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "49e9699e_e74a19d1",
         "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
         "patchSetId": 22
@@ -47,6 +83,24 @@
       "writtenOn": "2019-10-23T01:31:46Z",
       "side": 1,
       "message": "you can check if the controller has vbdev associated with it or not, only do the revert if there is no vbdev built on it.",
+      "revId": "2d932cddc073fdcb40af3a5a779dd857a13aeffb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8828b19_0c788aca",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-23T06:20:34Z",
+      "side": 1,
+      "message": "Hi Changpeng, thanks for your review. Here is the trick thing. The admin actually can still do the revert if there is vbdev on top of it. I am not thinking clearly the logic here. I think we can implement this logic after we are clear about the recovery process when target restart. For now, I want to keep it as TODO if it is OK with you. Thank you.",
+      "parentUuid": "49e9699e_e74a19d1",
       "revId": "2d932cddc073fdcb40af3a5a779dd857a13aeffb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
