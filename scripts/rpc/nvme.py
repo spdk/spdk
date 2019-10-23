@@ -55,3 +55,33 @@ def bdev_nvme_get_controllers(client, name=None):
     if name:
         params['name'] = name
     return client.call('bdev_nvme_get_controllers', params)
+
+
+def bdev_nvme_opal_init(client, nvme_ctrlr_name, password):
+    """Init nvme opal. Take ownership and activate
+
+    Args:
+        nvme_ctrlr_name: name of nvme ctrlr
+        password: password to init opal
+    """
+    params = {
+        'nvme_ctrlr_name': nvme_ctrlr_name,
+        'password': password,
+    }
+
+    return client.call('bdev_nvme_opal_init', params)
+
+
+def bdev_nvme_opal_revert(client, nvme_ctrlr_name, password):
+    """Revert opal to default factory settings. Erase all data.
+
+    Args:
+        nvme_ctrlr_name: name of nvme ctrlr
+        password: password
+    """
+    params = {
+        'nvme_ctrlr_name': nvme_ctrlr_name,
+        'password': password,
+    }
+
+    return client.call('bdev_nvme_opal_revert', params)
