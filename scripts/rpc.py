@@ -430,6 +430,27 @@ if __name__ == "__main__":
     p.add_argument('name', help="Name of the controller")
     p.set_defaults(func=bdev_nvme_detach_controller)
 
+    def nvme_cuse_register(args):
+        rpc.nvme.nvme_cuse_register(args.client,
+                                    trtype=args.trtype,
+                                    traddr=args.traddr,
+                                    adrfam=args.adrfam,
+                                    trsvcid=args.trsvcid,
+                                    subnqn=args.subnqn)
+
+    p = subparsers.add_parser('nvme_cuse_register',
+                              help='Register CUSE devices on NVMe controller')
+    p.add_argument('-t', '--trtype',
+                   help='NVMe-oF target trtype: e.g., rdma, pcie', required=True)
+    p.add_argument('-a', '--traddr',
+                   help='NVMe-oF target address: e.g., an ip address or BDF', required=True)
+    p.add_argument('-f', '--adrfam',
+                   help='NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
+    p.add_argument('-s', '--trsvcid',
+                   help='NVMe-oF target trsvcid: e.g., a port number')
+    p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
+    p.set_defaults(func=nvme_cuse_register)
+
     def bdev_rbd_create(args):
         config = None
         if args.config:
