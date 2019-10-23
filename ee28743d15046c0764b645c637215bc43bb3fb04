@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "63634996_04d64f47",
+        "filename": "autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:10:58Z",
+      "side": 1,
+      "message": "Wouldn\u0027t our scripts catch a cd $src error since we do set -e?\n\nI feel like we should add SC2164 to the list of checks that we explicitly ignore.",
+      "revId": "ee28743d15046c0764b645c637215bc43bb3fb04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
