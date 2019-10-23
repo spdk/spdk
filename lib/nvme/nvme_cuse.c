@@ -40,6 +40,7 @@
 
 #include "nvme_internal.h"
 #include "nvme_io_msg.h"
+#include "nvme_cuse.h"
 
 struct cuse_device {
 	char				dev_name[128];
@@ -703,7 +704,7 @@ cuse_nvme_ctrlr_stop(struct cuse_device *ctrlr_device)
 	free(ctrlr_device);
 }
 
-__attribute__((unused)) static int
+static int
 nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t i, nsid;
@@ -747,7 +748,7 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-__attribute__((unused)) static void
+static void
 nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct cuse_device *ctrlr_device;
@@ -766,6 +767,36 @@ nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr)
 	cuse_nvme_ctrlr_stop(ctrlr_device);
 }
 
-__attribute__((unused)) static struct nvme_io_msg_producer cuse_nvme_io_msg_producer = {
+static struct nvme_io_msg_producer cuse_nvme_io_msg_producer = {
 	.name = "cuse",
 };
+
+int
+nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc;
+
+	rc = nvme_io_msg_ctrlr_start(ctrlr);
+	if (rc) {
+		return rc;
+	}
+
+	rc = nvme_cuse_start(ctrlr);
+	if (rc) {
+		return rc;
+	}
+
+	nvme_io_msg_register(&cuse_nvme_io_msg_producer);
+
+	return 0;
+}
+
+void
+nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr)
+{
+	nvme_io_msg_unregister(&cuse_nvme_io_msg_producer);
+
+	nvme_cuse_stop(ctrlr);
+
+	nvme_io_msg_ctrlr_stop(ctrlr, false);
+}
