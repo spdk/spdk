@@ -41,6 +41,10 @@ C_SRCS = $(APP:%=%.c)
 SPDK_LIB_LIST = $(SOCK_MODULES_LIST)
 SPDK_LIB_LIST += nvme thread util log sock vmd
 
+ifeq ($(CONFIG_NVME_CUSE),y)
+SPDK_LIB_LIST += rpc jsonrpc json
+endif
+
 ifeq ($(CONFIG_RDMA),y)
 SYS_LIBS += -libverbs -lrdmacm
 endif
