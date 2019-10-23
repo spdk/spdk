@@ -16,6 +16,24 @@
       "revId": "bb6d3f1a74408e38670670aa592690a6bb29d67e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7814a95f_30ed6d83",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T20:13:05Z",
+      "side": 1,
+      "message": "Oh - I think I get it now.  If there are already producers registered, then it indicates we\u0027ve already started messaging and don\u0027t need to do all of the code below?\n\nBut I really think this can be done more simply.  Keep a ref count here of how many times this was called on the controller.  First time it is called, you init the mutex, create the ring and alloc the io qpair.  Subsequent times, just bump up the refcount.\n\nThen do the reverse on ctrlr stop.\n\nYou can even add asserts - i.e. if the refcount is 0, then the external_io_msgs should be NULL.\n\nThen I don\u0027t think you need the g_io_producers or any of the nvme_io_msg_register/unregister stuff.",
+      "parentUuid": "ef64782b_f21c89aa",
+      "revId": "bb6d3f1a74408e38670670aa592690a6bb29d67e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
