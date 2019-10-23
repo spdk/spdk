@@ -960,6 +960,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	int rc = 0;
 	struct spdk_nvme_qpair	*qpair;
 	struct nvme_request	*req, *tmp;
+	bool restore_external_io_qpair = 0;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
@@ -975,6 +976,12 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->is_resetting = true;
 	ctrlr->is_failed = false;
+
+	if (ctrlr->external_io_msgs_qpair) {
+		spdk_nvme_ctrlr_free_io_qpair(ctrlr->external_io_msgs_qpair);
+		restore_external_io_qpair = 1;
+		ctrlr->external_io_msgs_qpair = NULL;
+	}
 
 	SPDK_NOTICELOG("resetting controller\n");
 
@@ -1034,7 +1041,10 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 out:
 	if (rc) {
 		nvme_ctrlr_fail(ctrlr, false);
+	} else if (restore_external_io_qpair) {
+		ctrlr->external_io_msgs_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
 	}
+
 	ctrlr->is_resetting = false;
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
