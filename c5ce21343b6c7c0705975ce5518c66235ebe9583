@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c81a2014_d5e0ec6f",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-23T20:40:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0f35bee9_da5895ca",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fcb7433a_7fbe62fa",
         "filename": "examples/nvme/reconnect/reconnect.c",
         "patchSetId": 11
@@ -33,6 +51,24 @@
       "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ae3988d_f9ccc4f1",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-23T20:40:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fcb7433a_7fbe62fa",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "c6fccc48_5d633572",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-23T20:40:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1eded511_7c342179",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b274dd84_544e1840",
         "filename": "examples/nvme/reconnect/reconnect.c",
         "patchSetId": 11
@@ -67,6 +121,24 @@
       "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c38a7b02_59254319",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-23T20:40:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b274dd84_544e1840",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "0a458f36_679411fd",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-23T20:40:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4d6291b5_658c6372",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e493f621_1aa91574",
         "filename": "examples/nvme/reconnect/reconnect.c",
         "patchSetId": 11
@@ -98,6 +188,24 @@
       "writtenOn": "2019-10-23T18:49:21Z",
       "side": 1,
       "message": "should we do something like create one qpair per core per controller?  then it really tests the logic where each core is doing its own I/O processing and reconnect logic independent from whatever core does the reset",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a693f97_118a5174",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-23T20:40:51Z",
+      "side": 1,
+      "message": "Right now we are creating one qpair per core per namespace. I think that is just as good or better than doing one queue per controller per core. In the case where the controller has a single namespace, it\u0027s the same. In the multi-namespace case, We still get independent reset handling on each core and we just have more qpairs on each core.\n\nAlthough I did need to specify the core mask in the target_disconnect test.",
+      "parentUuid": "e493f621_1aa91574",
       "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "d5764153_4fd83844",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-23T20:40:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "28c68557_95e49e5f",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f883e0a_4c738237",
         "filename": "examples/nvme/reconnect/reconnect.c",
         "patchSetId": 11
@@ -135,6 +261,24 @@
       "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f51a9b0_c1d71f60",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 636,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-23T20:40:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0f883e0a_4c738237",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "966c648c_96152056",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-23T20:40:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "688dfb64_3d24081e",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a8ecf025_ffdea292",
         "filename": "examples/nvme/reconnect/reconnect.c",
         "patchSetId": 11
@@ -169,6 +331,24 @@
       "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3f8e93b_f0d7e9af",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-23T20:40:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a8ecf025_ffdea292",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "a22cee92_40ce82b7",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-23T20:40:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0193ef16_6bfede97",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd5ffe23_57cd4266",
         "filename": "examples/nvme/reconnect/reconnect.c",
         "patchSetId": 11
@@ -203,6 +401,24 @@
       "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3483aedb_bf2f3d1a",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1008,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-23T20:40:51Z",
+      "side": 1,
+      "message": "Probably not. I don\u0027t see this as being applicable to pcie since that transport doesn\u0027t actually have a failure path in its process_completions implementation.",
+      "parentUuid": "cd5ffe23_57cd4266",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
