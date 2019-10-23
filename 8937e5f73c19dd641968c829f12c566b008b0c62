@@ -82,6 +82,30 @@
     },
     {
       "key": {
+        "uuid": "df30bb80_ced12180",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 502,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-23T05:44:50Z",
+      "side": 1,
+      "message": "I\u0027m sorry that I was wrong. nvme_ctrlr-\u003eopal_bdev is pointer for struct spdk_opal_bdev. Please ignore this.",
+      "parentUuid": "5652de4e_128cacc6",
+      "range": {
+        "startLine": 502,
+        "startChar": 40,
+        "endLine": 502,
+        "endChar": 60
+      },
+      "revId": "8937e5f73c19dd641968c829f12c566b008b0c62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fb8e8a87_6e65835f",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 30
@@ -93,6 +117,30 @@
       "writtenOn": "2019-10-23T05:40:08Z",
       "side": 1,
       "message": "ditto",
+      "range": {
+        "startLine": 510,
+        "startChar": 40,
+        "endLine": 510,
+        "endChar": 60
+      },
+      "revId": "8937e5f73c19dd641968c829f12c566b008b0c62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09280451_8ae6bacf",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 510,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-23T05:44:50Z",
+      "side": 1,
+      "message": "ditto.",
+      "parentUuid": "fb8e8a87_6e65835f",
       "range": {
         "startLine": 510,
         "startChar": 40,
