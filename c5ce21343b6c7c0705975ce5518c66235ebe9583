@@ -1,0 +1,208 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f35bee9_da5895ca",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:49:21Z",
+      "side": 1,
+      "message": "remove dif_ctx",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fcb7433a_7fbe62fa",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:49:21Z",
+      "side": 1,
+      "message": "remove",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1eded511_7c342179",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:49:21Z",
+      "side": 1,
+      "message": "can you scrub this for any other globals that we can remove?  for example, I don\u0027t think no_pci is useful here, also g_no_shn_notification",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b274dd84_544e1840",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:49:21Z",
+      "side": 1,
+      "message": "remove pattern - this isn\u0027t needed for this example app",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d6291b5_658c6372",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:49:21Z",
+      "side": 1,
+      "message": "remove this 196-198",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e493f621_1aa91574",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:49:21Z",
+      "side": 1,
+      "message": "should we do something like create one qpair per core per controller?  then it really tests the logic where each core is doing its own I/O processing and reconnect logic independent from whatever core does the reset",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28c68557_95e49e5f",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:49:21Z",
+      "side": 1,
+      "message": "let\u0027s remove everything related to min_tsc/max_tsc - I don\u0027t think it\u0027s needed for this app",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f883e0a_4c738237",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 636,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:49:21Z",
+      "side": 1,
+      "message": "let\u0027s remove -N",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "688dfb64_3d24081e",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:49:21Z",
+      "side": 1,
+      "message": "let\u0027s remove -V",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a8ecf025_ffdea292",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:49:21Z",
+      "side": 1,
+      "message": "I think we can remove this ns: handling.  For perf, we use this to say \"only run I/O to this specific namespace\".  But I\u0027m not sure we need that kind of granularity for this test application.",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0193ef16_6bfede97",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:49:21Z",
+      "side": 1,
+      "message": "let\u0027s remove g_shm_id - reconnect by definition won\u0027t work with multi process",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd5ffe23_57cd4266",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1008,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:49:21Z",
+      "side": 1,
+      "message": "should we even allow running this app with PCIE controllers?",
+      "revId": "c5ce21343b6c7c0705975ce5518c66235ebe9583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
