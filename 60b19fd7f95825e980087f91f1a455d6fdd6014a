@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e964858_3fc6d144",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T17:41:54Z",
+      "side": 1,
+      "message": "Ack your previous reply.  So NVME_IOCTL_ADMIN_CMD can be handled for both controllers and namespaces.  But a lot of these are obviously invalid if sent to controllers (hence you fail the IOCTL in those cases).  It would be cleaner to have two ioctl functions - one for controllers and one for namespaces.  It is OK for both ioctl functions to have a case statement for NVME_IOCTL_ADMIN_CMD (or any others that could be sent to both controller and namespace devices).",
+      "revId": "60b19fd7f95825e980087f91f1a455d6fdd6014a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
