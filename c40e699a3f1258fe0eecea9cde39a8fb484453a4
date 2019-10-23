@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "965d429f_8e72cfc1",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-23T14:41:23Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "44887e09_967f2cbd",
+      "range": {
+        "startLine": 279,
+        "startChar": 27,
+        "endLine": 279,
+        "endChar": 33
+      },
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "efd38ace_37ee879d",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 26
@@ -45,6 +69,30 @@
       "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75b178e2_a5c10748",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-23T14:41:23Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "efd38ace_37ee879d",
+      "range": {
+        "startLine": 331,
+        "startChar": 27,
+        "endLine": 331,
+        "endChar": 33
+      },
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "de161328_469ed85e",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-23T14:41:23Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a1e50be9_e4a51a21",
+      "range": {
+        "startLine": 364,
+        "startChar": 27,
+        "endLine": 364,
+        "endChar": 33
+      },
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b9e3e95e_288c5018",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 26
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "d7df9d06_d3ddd2e7",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-23T14:41:23Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b9e3e95e_288c5018",
+      "range": {
+        "startLine": 412,
+        "startChar": 27,
+        "endLine": 412,
+        "endChar": 33
+      },
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "df0d2260_6ec443f2",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 26
@@ -108,6 +204,24 @@
       "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f86ef06e_bc112395",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-23T14:41:23Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "df0d2260_6ec443f2",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -128,6 +242,24 @@
     },
     {
       "key": {
+        "uuid": "22b0a33f_b429e9f6",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-23T14:41:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "81510107_903ab09e",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0297124a_d5d766d6",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 26
@@ -139,6 +271,24 @@
       "writtenOn": "2019-10-22T19:47:53Z",
       "side": 1,
       "message": "I think we can avoid these -\u003ensid checks by having separate ioctl functions for controllers and namespaces - see comment below",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea9a6a5a_d4c64bdf",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-23T14:41:23Z",
+      "side": 1,
+      "message": "See below.",
+      "parentUuid": "0297124a_d5d766d6",
       "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -162,6 +312,24 @@
     },
     {
       "key": {
+        "uuid": "4987ac5c_54e3827a",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-23T14:41:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1772e7b6_bb0a0c50",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef07264e_f13189cb",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 26
@@ -176,6 +344,24 @@
       "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "abc4f755_dd737024",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-23T14:41:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef07264e_f13189cb",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -196,6 +382,24 @@
     },
     {
       "key": {
+        "uuid": "c2e2b0d4_661e850a",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-23T14:41:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2f2939c1_1c0a0617",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "941e6c33_10dc2696",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 26
@@ -207,6 +411,24 @@
       "writtenOn": "2019-10-22T19:47:53Z",
       "side": 1,
       "message": "should we have different ioctl functions for ctrlr devices vs. namespace devices?\n\nfor example, some ioctls like BLKGETSIZE aren\u0027t valid for ctrlr - only namespace\n\nI know that nvme-cli probably won\u0027t try to send a namespace IOCTL to a controller device (or vice versa) but I think it would still be good to enforce it better via separate ioctl functions",
+      "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "abecea4e_4959b78d",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-23T14:41:23Z",
+      "side": 1,
+      "message": "I\u0027ve observed that in some cases (e.g. in nvme list command) nvme-cli tries to send admin command to the namespace.",
+      "parentUuid": "941e6c33_10dc2696",
       "revId": "c40e699a3f1258fe0eecea9cde39a8fb484453a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
