@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49c68be6_e9dc6877",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T17:29:53Z",
+      "side": 1,
+      "message": "I still have the same question on this - whether we considered keeping this io qpair allocated, and let the active_io_qpair logic below handle this qpair.",
+      "revId": "66105f78f1cae5214ca5e722b598c4f49bd954c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cccaf946_93e5a335",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T17:29:53Z",
+      "side": 1,
+      "message": "I\u0027m still not sure about this lock protecting against preemptive producers.",
+      "revId": "66105f78f1cae5214ca5e722b598c4f49bd954c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
