@@ -33,6 +33,7 @@
 
 #include "spdk/nvmf_spec.h"
 #include "nvme_internal.h"
+#include "nvme_io_msg.h"
 
 #define SPDK_NVME_DRIVER_NAME "spdk_nvme_driver"
 
@@ -68,6 +69,7 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_proc_put_ref(ctrlr);
 
 	if (nvme_ctrlr_get_ref_count(ctrlr) == 0) {
+		nvme_io_msg_ctrlr_stop(ctrlr, true);
 		if (nvme_ctrlr_shared(ctrlr)) {
 			TAILQ_REMOVE(&g_spdk_nvme_driver->shared_attached_ctrlrs, ctrlr, tailq);
 		} else {
