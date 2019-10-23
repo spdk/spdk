@@ -33,6 +33,24 @@
       "revId": "a3d5457da4b9c884109f2b14b97830943e8a16f9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3e101c1_989aa397",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2575,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T22:44:24Z",
+      "side": 1,
+      "message": "instead I did this:\n\nif (\u0026tcp_req-\u003ereq \u003d\u003d STAILQ_FIRST(...)) {\n  STAILQ_REMOVE_HEAD(...);\n}\n\nthat worked in my Seastar test.",
+      "parentUuid": "d4ab8df6_5b5e2391",
+      "revId": "a3d5457da4b9c884109f2b14b97830943e8a16f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
