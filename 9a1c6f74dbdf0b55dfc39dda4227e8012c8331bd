@@ -16,6 +16,24 @@
       "revId": "9a1c6f74dbdf0b55dfc39dda4227e8012c8331bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3fedc295_0bf25768",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1108,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-23T20:38:23Z",
+      "side": 1,
+      "message": "You bring up a really good point. I don\u0027t think we *NEED* the coordination from this function, but I think it\u0027s better safe than sorry (since we\u0027re out of the data path). Where we do absolutely need it though is in spdk_nvme_ctrlr_fail so I added it there.",
+      "parentUuid": "9bf048a4_bbfbcf41",
+      "revId": "9a1c6f74dbdf0b55dfc39dda4227e8012c8331bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
