@@ -22,6 +22,30 @@
       "revId": "69dbe26077bb6ef55015faf40adbf2d44e059f60",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b185e6ca_b31f97a4",
+        "filename": "isa-l",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1015600
+      },
+      "writtenOn": "2019-10-23T05:47:25Z",
+      "side": 1,
+      "message": "Yes. For I have no access right to update the isa-l fork in spdk. Would you update it?",
+      "parentUuid": "70045338_e26f2e3b",
+      "range": {
+        "startLine": 1,
+        "startChar": 18,
+        "endLine": 1,
+        "endChar": 32
+      },
+      "revId": "69dbe26077bb6ef55015faf40adbf2d44e059f60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
