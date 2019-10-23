@@ -104,6 +104,24 @@
       "revId": "1b08820628f9e404bdb5c05241717828cd969072",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08fd79f3_3ed247ca",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-23T06:45:01Z",
+      "side": 1,
+      "message": "Ok, but this unmap has hard constrains - offset_blocks must be align to zone and num_blocks must be equal to zone_size so user must be aware that is using zone dev. I\u0027m just not sure if we got real use case for this.",
+      "parentUuid": "e977ba1a_937253c7",
+      "revId": "1b08820628f9e404bdb5c05241717828cd969072",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
