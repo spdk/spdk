@@ -41,12 +41,12 @@ timing_enter rocksdb
 
 timing_enter db_bench_build
 
-pushd $DB_BENCH_DIR
+pushd $DB_BENCH_DIR || exit
 if [ -z "$SKIP_GIT_CLEAN" ]; then
 	git clean -x -f -d
 fi
 $MAKE db_bench $MAKEFLAGS $MAKECONFIG DEBUG_LEVEL=0 SPDK_DIR=$rootdir
-popd
+popd || exit
 
 timing_exit db_bench_build
 
@@ -75,7 +75,7 @@ else
 	NUM_KEYS=20000000
 fi
 
-cd $RESULTS_DIR
+cd $RESULTS_DIR || exit
 cp $testdir/common_flags.txt insert_flags.txt
 echo "--benchmarks=fillseq" >> insert_flags.txt
 echo "--threads=1" >> insert_flags.txt
