@@ -46,6 +46,30 @@
       "revId": "dca314f8ed64ce879c0226205405f6d20fee77ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b619bc62_65915e7c",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2446,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T17:12:30Z",
+      "side": 1,
+      "message": "I am concerned that now spdk_nvmf_tcp_sock_process can be called recursively with this patch.\nFor example:\n\nspdk_nvmf_tcp_sock_cb\nspdk_nvmf_tcp_sock_process\nspdk_nvmf_tcp_pdu_payload_handle\nspdk_nvmf_tcp_capsule_cmd_payload_handle\nspdk_nvmf_tcp_req_process\nspdk_nvmf_tcp_pdu_set_buf_from_req\nspdk_nvmf_tcp_sock_process\n\nI am not convinced that spdk_nvmf_tcp_sock_process() is meant to handle recursion.  It also leads to potential problems in the future.  These types of problems would be very subtle.",
+      "parentUuid": "b6d8eb9a_3669a22b",
+      "range": {
+        "startLine": 2446,
+        "startChar": 0,
+        "endLine": 2446,
+        "endChar": 34
+      },
+      "revId": "dca314f8ed64ce879c0226205405f6d20fee77ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
