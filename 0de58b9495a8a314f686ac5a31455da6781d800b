@@ -34,6 +34,47 @@
       "revId": "0de58b9495a8a314f686ac5a31455da6781d800b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87d70eae_6663b66c",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2549,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-23T23:39:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "32c88e49_c6c319ac",
+      "revId": "0de58b9495a8a314f686ac5a31455da6781d800b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a448372c_091f3dcd",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2576,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-23T23:39:23Z",
+      "side": 1,
+      "message": "I do not agree with this.\nFor the incapsule data, it can not be in the first of queue, we should just use:\nSTAILQ_REMOVE(\u0026group-\u003epending_buf_queue, buf_link);",
+      "range": {
+        "startLine": 2574,
+        "startChar": 3,
+        "endLine": 2576,
+        "endChar": 4
+      },
+      "revId": "0de58b9495a8a314f686ac5a31455da6781d800b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
