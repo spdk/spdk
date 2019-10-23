@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "721fd3b3_1abe6a8d",
+        "filename": "configure",
+        "patchSetId": 42
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T21:25:56Z",
+      "side": 1,
+      "message": "name \u003d\u003e nvme\n\nSorry - this is my fault.  You copied exactly what I had in my review, and it had this typo because \"nvme\" got autocorrected to \"name\" without me realizing.",
+      "revId": "8045a028f13a28043510181cfe76341772226964",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
