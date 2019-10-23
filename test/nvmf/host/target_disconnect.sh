@@ -22,27 +22,47 @@ function disconnect_init()
 	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $1 -s $NVMF_PORT
 }
 
 timing_enter target_disconnect
 
 nvmftestinit
 
-disconnect_init
+disconnect_init $NVMF_FIRST_TARGET_IP
 
 # If perf doesn't shut down, this test will time out.
-$rootdir/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 20 -c 0xF -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" &
+$rootdir/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
+-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" &
 perfpid=$!
 
-sleep 5
+sleep 2
 kill -9 $nvmfpid
 
 sleep 2
-disconnect_init
+disconnect_init $NVMF_FIRST_TARGET_IP
 
 wait $perfpid
 sync
+
+if [ -n "$NVMF_SECOND_TARGET_IP" ]; then
+	timing_enter failover_test
+
+	$rootdir/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
+	-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT alt_traddr:$NVMF_SECOND_TARGET_IP" &
+	perfpid=$!
+
+	sleep 2
+	kill -9 $nvmfpid
+
+	sleep 2
+	disconnect_init $NVMF_SECOND_TARGET_IP
+
+	wait $perfpid
+	sync
+
+	timing_exit failover_test
+fi
 
 trap - SIGINT SIGTERM EXIT
 rm -f $PLUGIN_DIR/example_config_extended.fio || true

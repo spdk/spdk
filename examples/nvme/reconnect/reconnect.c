@@ -48,6 +48,7 @@ struct ctrlr_entry {
 	enum spdk_nvme_transport_type		trtype;
 	struct ctrlr_entry			*next;
 	char					name[1024];
+	char					*failover_traddr;
 	int					num_resets;
 };
 
@@ -117,6 +118,7 @@ static const char *g_core_mask;
 
 struct trid_entry {
 	struct spdk_nvme_transport_id	trid;
+	char				failover_traddr[SPDK_NVMF_TRADDR_MAX_LEN];
 	TAILQ_ENTRY(trid_entry)		tailq;
 };
 
@@ -368,6 +370,8 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 		exit(1);
 	}
 
+	entry->failover_traddr = trid_entry->failover_traddr;
+
 	build_nvme_name(entry->name, sizeof(entry->name), ctrlr);
 
 	entry->ctrlr = ctrlr;
@@ -583,6 +587,7 @@ static void usage(char *program_name)
 	printf("\t  traddr      Transport address (e.g. 192.168.100.8 for RDMA)\n");
 	printf("\t  trsvcid     Transport service identifier (e.g. 4420)\n");
 	printf("\t  subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
+	printf("\t  alt_traddr  (Optional) Alternative Transport address for failover.\n");
 	printf("\t Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420' for NVMeoF\n");
 	printf("\t[-k keep alive timeout period in millisecond]\n");
 	printf("\t[-s DPDK huge memory size in MB.]\n");
@@ -614,6 +619,8 @@ add_trid(const char *trid_str)
 {
 	struct trid_entry *trid_entry;
 	struct spdk_nvme_transport_id *trid;
+	char *alt_traddr;
+	int len;
 
 	trid_entry = calloc(1, sizeof(*trid_entry));
 	if (trid_entry == NULL) {
@@ -627,6 +634,19 @@ add_trid(const char *trid_str)
 		fprintf(stderr, "Invalid transport ID format '%s'\n", trid_str);
 		free(trid_entry);
 		return 1;
+	}
+
+	alt_traddr = strcasestr(trid_str, "alt_traddr:");
+	if (alt_traddr) {
+		alt_traddr += 11;
+		len = strcspn(alt_traddr, " \t\n");
+		if (len > SPDK_NVMF_TRADDR_MAX_LEN) {
+			fprintf(stderr, "The failover traddr %s is too long.\n", alt_traddr);
+			return -1;
+		}
+		snprintf(trid_entry->failover_traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1, "%s", alt_traddr);
+	} else {
+		snprintf(trid_entry->failover_traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1, "%s", trid_entry->trid.traddr);
 	}
 
 	TAILQ_INSERT_TAIL(&g_trid_list, trid_entry, tailq);
@@ -699,7 +719,7 @@ parse_args(int argc, char **argv)
 				usage(argv[0]);
 				return 1;
 			}
-			break;
+			break;;
 		case 'w':
 			workload_type = optarg;
 			break;
@@ -975,9 +995,12 @@ associate_workers_with_ns(void)
 static void *
 nvme_poll_ctrlrs(void *arg)
 {
-	struct ctrlr_entry *entry;
-	int oldstate;
-	int rc;
+	struct ctrlr_entry			*entry;
+	struct spdk_nvme_transport_id		new_trid;
+	const struct spdk_nvme_transport_id	*old_trid;
+	int					oldstate;
+	int					rc;
+
 
 	spdk_unaffinitize_thread();
 
@@ -989,7 +1012,22 @@ nvme_poll_ctrlrs(void *arg)
 			rc = spdk_nvme_ctrlr_process_admin_completions(entry->ctrlr);
 			/* This controller has encountered a failure at the transport level. reset it. */
 			if (rc == -ENXIO) {
-				fprintf(stderr, "A controller has encountered a failure and is being reset.\n");
+				if (entry->num_resets == 0) {
+					old_trid = spdk_nvme_ctrlr_get_transport_id(entry->ctrlr);
+					fprintf(stderr, "A controller has encountered a failure and is being reset.\n");
+					if (entry->num_resets == 0 &&
+					    strncmp(old_trid->traddr, entry->failover_traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1)) {
+						fprintf(stderr, "Resorting to new failover address %s\n", entry->failover_traddr);
+						spdk_nvme_ctrlr_fail(entry->ctrlr);
+						new_trid = *old_trid;
+						snprintf(new_trid.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1, "%s", entry->failover_traddr);
+						rc = spdk_nvme_ctrlr_set_trid(entry->ctrlr, &new_trid);
+						if (rc != 0) {
+							fprintf(stderr, "Unable to fail over to back up trid.\n");
+						}
+					}
+				}
+
 				rc = spdk_nvme_ctrlr_reset(entry->ctrlr);
 				if (rc != 0) {
 					entry->num_resets++;
