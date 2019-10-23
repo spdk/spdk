@@ -7,6 +7,8 @@
 Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and
 optimization for aarch64.
 
+ISA-L is enabled on aarch64 by default in addition to x86.
+
 ### thread
 
 `spdk_thread_send_msg` now returns int indicating if the message was successfully
@@ -245,6 +247,13 @@ Along with update, new cache mode 'write only' was added.
 New cache modes added to use via RPC, wi - write invalidate and wa - write around.
 
 New version of OCF provides fully asynchronous management API.
+
+### isa-l
+
+Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and
+optimization for aarch64.
+
+In addition to x64, ISA-L is enabled on aarch64 by default.
 
 ## v19.07:
 
