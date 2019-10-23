@@ -274,7 +274,10 @@ struct spdk_blob_md_descriptor_extent_rle {
 
 #define SPDK_BLOB_READ_ONLY (1ULL << 0)
 #define SPDK_BLOB_DATA_RO_FLAGS_MASK	SPDK_BLOB_READ_ONLY
-#define SPDK_BLOB_MD_RO_FLAGS_MASK	0
+
+#define SPDK_BLOB_CLEAR_METHOD_SHIFT 0
+#define SPDK_BLOB_CLEAR_METHOD (3ULL << SPDK_BLOB_CLEAR_METHOD_SHIFT)
+#define SPDK_BLOB_MD_RO_FLAGS_MASK	SPDK_BLOB_CLEAR_METHOD
 
 struct spdk_blob_md_descriptor_flags {
 	uint8_t		type;
