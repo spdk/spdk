@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a7472b2_81b7b139",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-23T07:18:57Z",
+      "side": 1,
+      "message": "Hi Chunyang,\n\nThe following is possible?\n\nstatic void\nbdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)\n{\n\tif (nvme_bdev_ctrlr-\u003eopal_bdev) {\n\t\tif (nvme_bdev_ctrlr-\u003eopal_poller !\u003d NULL) {\n\t\t\treturn;\n\t\t}\n\t}\n\n\tpthread_mutex_lock(\u0026g_bdev_nvme_mutex);\n\tTAILQ_REMOVE(\u0026g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);\n\tpthread_mutex_unlock(\u0026g_bdev_nvme_mutex);\n\tspdk_io_device_unregister(nvme_bdev_ctrlr-\u003ectrlr, bdev_nvme_unregister_cb);\n\tspdk_poller_unregister(\u0026nvme_bdev_ctrlr-\u003eadminq_timer_poller);\n\tfree(nvme_bdev_ctrlr-\u003ename);\n\tfree(nvme_bdev_ctrlr-\u003ebdevs);\n\tfree(nvme_bdev_ctrlr);\n}\n\nstatic int\nvbdev_opal_recv_poll(void *arg)\n{\n\tstruct nvme_bdev_ctrlr *nvme_ctrlr \u003d arg;\n\tint rc;\n\n\trc \u003d spdk_opal_revert_poll(nvme_ctrlr-\u003eopal_dev);\n\tif (rc \u003d\u003d -EAGAIN) {\n\t\treturn -1;\n\t}\n\n\tspdk_poller_unregister(\u0026nvme_ctrlr-\u003eopal_poller);\n\n\tif (nvme_ctrlr-\u003edestruct) {\n\t\tbdev_nvme_ctrlr_destruct(nvme_ctrlr);\n\t}\n}",
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ae8cab0_fefabd9d",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 589,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-23T07:18:57Z",
+      "side": 1,
+      "message": "this is duplicated. spdk_poller_unregister() set NULL to nvme_ctrlr-\u003eopal_poller.",
+      "range": {
+        "startLine": 589,
+        "startChar": 0,
+        "endLine": 589,
+        "endChar": 32
+      },
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
