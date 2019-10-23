@@ -372,7 +372,11 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 
 	cfg = &opal_bdev->cfg;
 	cfg->nvme_ctrlr_name = strdup(nvme_ctrlr_name);
-	assert(cfg->nvme_ctrlr_name != NULL);
+	if (!cfg->nvme_ctrlr_name) {
+		SPDK_ERRLOG("allocation for base_bdev_name failed\n");
+		free(opal_bdev);
+		return -ENOMEM;
+	}
 
 	cfg->locking_range_id = locking_range_id;
 	cfg->range_start = range_start;
@@ -427,7 +431,13 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 		}
 		opal_part_base->num_of_part = 0;
 		opal_part_base->nvme_ctrlr_name = strdup(cfg->nvme_ctrlr_name);
-		assert(opal_part_base->nvme_ctrlr_name != NULL);
+		free(opal_part_base->nvme_ctrlr_name);
+		opal_part_base->nvme_ctrlr_name = NULL;
+		if (opal_part_base->nvme_ctrlr_name == NULL) {
+			vbdev_opal_free_bdev(opal_bdev);
+			spdk_bdev_part_base_free(opal_part_base->part_base);
+			return -ENOMEM;
+		}
 
 		cfg->opal_base = opal_part_base;
 		TAILQ_INSERT_TAIL(&g_opal_base, opal_part_base, tailq);
