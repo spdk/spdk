@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d78e7824_02495287",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2557,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T22:35:16Z",
+      "side": 1,
+      "message": "let\u0027s remove this comment - is kind of confusing for the case we are considering here",
+      "revId": "a3d5457da4b9c884109f2b14b97830943e8a16f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4ab8df6_5b5e2391",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2575,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T22:35:16Z",
+      "side": 1,
+      "message": "We can\u0027t always do this now.  This req may not be on the pending_buf_queue now.\n\nBut I tried putting a check around this, only remove it if !req-\u003ehas_incapsule_data.  That did not work.\n\nI think we need to go with a solution based on what\u0027s in my Seastar patch instead.",
+      "revId": "a3d5457da4b9c884109f2b14b97830943e8a16f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
