@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "023076ef_be4727cb",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 5684,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T21:47:21Z",
+      "side": 1,
+      "message": "This enables a new user to the specified opal bdev so that the user can lock/unlock the bdev.\n\nI\u0027m not sure what the second sentence means though.  \"Recalling this for the same opal bdev...\"  Does this mean that it overwrites any previous user_id/password specified by a previous call to bdev_opal_nvme_user?",
+      "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0bb8e96b_e551eb1e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 5725,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T21:47:21Z",
+      "side": 1,
+      "message": "how about bdev_opal_set_lock_state?",
+      "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "87bd3428_b3f41417",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 7
@@ -48,6 +82,30 @@
     },
     {
       "key": {
+        "uuid": "d57cf8cb_3240f07c",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 636,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T21:47:21Z",
+      "side": 1,
+      "message": "I agree.  lower case would be better here.  Or use strcasecmp.",
+      "parentUuid": "e2cd18e9_b695b646",
+      "range": {
+        "startLine": 636,
+        "startChar": 25,
+        "endLine": 636,
+        "endChar": 34
+      },
+      "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6424afff_d19b17d3",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 7
@@ -65,6 +123,108 @@
         "endLine": 676,
         "endChar": 52
       },
+      "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7ed22f5_76360f5e",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 698,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T21:47:21Z",
+      "side": 1,
+      "message": "if first one failed, should we still do the second one?  the rc +\u003d is not standard for SPDK",
+      "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d0afd0a_3c77fcca",
+        "filename": "module/bdev/nvme/vbdev_opal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T21:47:21Z",
+      "side": 1,
+      "message": "spdk_vbdev_opal_set_lock_state",
+      "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97d011d9_0af371d4",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 2081,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T21:47:21Z",
+      "side": 1,
+      "message": "who can set lock state for this bdev",
+      "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05915eec_bc3f8932",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 2082,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T21:47:21Z",
+      "side": 1,
+      "message": "\"opal bdev\" is fine (you can remove \"virtual\")",
+      "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5906401_e1b2b86f",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 2084,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T21:47:21Z",
+      "side": 1,
+      "message": "ID for new user\n\n(it is obvious from rest of the help here that this user is being added to the opal bdev)",
+      "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d68e4202_946e9eb2",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 2088,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T21:47:21Z",
+      "side": 1,
+      "message": "bdev_opal_set_lock_state\n\nthis needs to be changed in a lot of places - I won\u0027t comment on all of them, please go through the patch carefully",
       "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
