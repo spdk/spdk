@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c16f3840_3377c1cc",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T22:05:55Z",
+      "side": 1,
+      "message": "EXPERIMENTAL: A new opal bdev has been added to support management of\nNVMe self-encrypting SSDs through the Opal specification.  Users can\ncreate opal bdevs from a nvme namespace bdev, if the controller\ncontaining that namespace supports Opal.  Currently this is only\nsupported for namespace ID\u003d1.  The following RPCs have been added to\nsupport Opal: \u003clist RPCs here\u003e.  It does not yet support recreating the\nopal bdevs after application restart.  This bdev module should be\nconsidered very experimental, and the RPCs may change significantly\nin future releases.",
+      "revId": "8ee501b7504505b6ebdeccc610342ee0723b9e94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
