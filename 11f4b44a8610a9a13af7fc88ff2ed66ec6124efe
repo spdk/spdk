@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4fe48da2_0ab467ec",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T20:48:29Z",
+      "side": 1,
+      "message": "I\u0027d like to create a special branch in our spdk/nvme-cli repo for this.  I can help with that.",
+      "revId": "11f4b44a8610a9a13af7fc88ff2ed66ec6124efe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34ff765e_b6fa7d7d",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T20:48:29Z",
+      "side": 1,
+      "message": "extra newline added",
+      "revId": "11f4b44a8610a9a13af7fc88ff2ed66ec6124efe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c344a02_fe8cd65a",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T20:48:29Z",
+      "side": 1,
+      "message": "I\u0027m just curious - what utility does systemd-devel have that\u0027s required to build nvme-cli?",
+      "revId": "11f4b44a8610a9a13af7fc88ff2ed66ec6124efe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
