@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b209eded_d27f93fb",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1615,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-23T01:31:46Z",
+      "side": 1,
+      "message": "it\u0027s better to move this change as a separate patch.",
+      "revId": "2d932cddc073fdcb40af3a5a779dd857a13aeffb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "140d259a_4775e3d2",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-23T01:31:46Z",
+      "side": 1,
+      "message": "if opal_poller isn\u0027t NULL, just unregister it here.",
+      "revId": "2d932cddc073fdcb40af3a5a779dd857a13aeffb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49e9699e_e74a19d1",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-23T01:31:46Z",
+      "side": 1,
+      "message": "you can check if the controller has vbdev associated with it or not, only do the revert if there is no vbdev built on it.",
+      "revId": "2d932cddc073fdcb40af3a5a779dd857a13aeffb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
