@@ -953,6 +953,8 @@ _spdk_blob_load_snapshot_cpl(void *cb_arg, struct spdk_blob *snapshot, int bserr
 	_spdk_blob_load_final(ctx, bserrno);
 }
 
+static void _spdk_blob_update_clear_method(struct spdk_blob *blob);
+
 static void
 _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
@@ -1009,6 +1011,12 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		_spdk_blob_load_final(ctx, rc);
 		return;
 	}
+	ctx->seq = seq;
+
+	/* Check the clear_method stored in metadata vs what may have been passed
+	 * via spdk_bs_open_blob_ext() and update accordingly.
+	 */
+	_spdk_blob_update_clear_method(blob);
 
 	if (spdk_blob_is_thin_provisioned(blob)) {
 		rc = _spdk_blob_get_xattr_value(blob, BLOB_SNAPSHOT, &value, &len, true);
@@ -6321,6 +6329,27 @@ spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
 {
 	assert(blob != NULL);
 	return !!(blob->invalid_flags & SPDK_BLOB_THIN_PROV);
+}
+
+static void
+_spdk_blob_update_clear_method(struct spdk_blob *blob)
+{
+	enum blob_clear_method stored_cm;
+
+	assert(blob != NULL);
+
+	/* If BLOB_CLEAR_WITH_DEFAULT was passed in, use the setting stored
+	 * in metadata previously.  If something other than the default was
+	 * specified, ignore stored value and used what was passed in.
+	 */
+	stored_cm = ((blob->md_ro_flags & SPDK_BLOB_CLEAR_METHOD) >> SPDK_BLOB_CLEAR_METHOD_SHIFT);
+
+	if (blob->clear_method == BLOB_CLEAR_WITH_DEFAULT) {
+		blob->clear_method = stored_cm;
+	} else if (blob->clear_method != stored_cm) {
+		SPDK_WARNLOG("Using passed in clear method 0x%x instead of stored value of 0x%x\n",
+			     blob->clear_method, stored_cm);
+	}
 }
 
 spdk_blob_id
