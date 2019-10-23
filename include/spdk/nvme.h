@@ -1177,6 +1177,26 @@ int32_t spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		uint32_t max_completions);
 
 /**
+ * Process IO message sent to controller from external module.
+ *
+ * This call process requests from the ring, send IO to an allocated qpair or
+ * admin commands in its context. This call is non-blocking and intended to be
+ * polled by SPDK thread to provide safe environment for NVMe request
+ * completition sent by external module to controller.
+ *
+ * The caller must ensure that each controller is polled by only one thread at
+ * a time.
+ *
+ * This function may be called at any point while the controller is attached to
+ * the SPDK NVMe driver.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return number of processed external IO messages.
+ */
+int spdk_nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Send the given admin command to the NVMe controller.
  *
  * This is a low level interface for submitting admin commands directly. Prefer
