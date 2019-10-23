@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "3a90feac_0d5db6e0",
+        "filename": "configure",
+        "patchSetId": 31
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-23T14:25:50Z",
+      "side": 1,
+      "message": "To consolidate with blobfs we have updated to fuse3 and changed the message accordingly.",
+      "parentUuid": "2167991a_a4e3bdfb",
+      "revId": "0b5d314784e09f7d51f804411da48627b63567c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81372e43_de42355e",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 31
@@ -84,6 +102,24 @@
       "revId": "0b5d314784e09f7d51f804411da48627b63567c0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f8a1d68_85d0bd81",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 31
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-23T14:25:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e8ea65b0_56b9f889",
+      "revId": "0b5d314784e09f7d51f804411da48627b63567c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
