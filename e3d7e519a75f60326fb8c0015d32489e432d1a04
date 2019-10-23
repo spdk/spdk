@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "44764aef_bfddb030",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-23T06:35:58Z",
+      "side": 1,
+      "message": "I don\u0027t think keeping redundant checks is so good idea. Do other bdevs have such checks?",
+      "parentUuid": "83f8b88b_2e06fd11",
+      "revId": "e3d7e519a75f60326fb8c0015d32489e432d1a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e12f7751_6821f0e6",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 9
@@ -189,6 +207,30 @@
       "side": 1,
       "message": "What is the advantage of doing that? It only makes the code more complicated, as you have to make sure you\u0027re strduping all of the input parameter strings. Usually you\u0027d expect all of the input parameters to be usable until you call the completion routine. Most of the other RPCs behave in the same way it\u0027s implemented here, so I really don\u0027t see a point of changing this.",
       "parentUuid": "40c5da0b_21e9d10c",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 2
+      },
+      "revId": "e3d7e519a75f60326fb8c0015d32489e432d1a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "239b168a_84040c26",
+        "filename": "module/bdev/nvme/bdev_ocssd_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-23T06:35:58Z",
+      "side": 1,
+      "message": "In my opinion creating special context is more complex than simply create local variable. Most of the other RPCs behave in way I am proposing.",
+      "parentUuid": "a000dd80_08336f04",
       "range": {
         "startLine": 93,
         "startChar": 0,
