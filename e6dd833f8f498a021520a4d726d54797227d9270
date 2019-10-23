@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07075241_4ef5afbf",
+        "filename": "lib/vmd/vmd.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T18:24:14Z",
+      "side": 1,
+      "message": "can we change this to new_bus?\n\nwe normally don\u0027t use camelCase in SPDK (I figure while you\u0027re modifying this line to remove the parameter, changing the name used here would be good too)",
+      "revId": "e6dd833f8f498a021520a4d726d54797227d9270",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
