@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2cd18e9_b695b646",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 636,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-23T08:07:26Z",
+      "side": 1,
+      "message": "JSON RPC is case sensitive but I don\u0027t see upper cases often in SPDK JSON RPCs.\n\nreadwrite, readonly, rwlock are acceptable instead?",
+      "range": {
+        "startLine": 636,
+        "startChar": 25,
+        "endLine": 636,
+        "endChar": 34
+      },
+      "revId": "97d2e2f1a08743266678c41dbd92e97c22d66da1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
