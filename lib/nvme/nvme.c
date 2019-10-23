@@ -882,6 +882,12 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 			 * it as an invalid key.
 			 */
 			continue;
+		} else if (strcasecmp(key, "alt_traddr") == 0) {
+			/*
+			 * Used by applications for enabling transport ID failover.
+			 * Please see the case above for more information on custom parameters.
+			 */
+			continue;
 		} else {
 			SPDK_ERRLOG("Unknown transport ID key '%s'\n", key);
 		}
