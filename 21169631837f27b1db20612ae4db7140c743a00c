@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "909413f1_b3171472",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-23T19:02:04Z",
+      "side": 1,
+      "message": "messaging",
+      "range": {
+        "startLine": 116,
+        "startChar": 41,
+        "endLine": 116,
+        "endChar": 51
+      },
+      "revId": "21169631837f27b1db20612ae4db7140c743a00c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
