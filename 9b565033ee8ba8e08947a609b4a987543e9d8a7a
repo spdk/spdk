@@ -114,6 +114,23 @@
     },
     {
       "key": {
+        "uuid": "28cfed34_7fc83887",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-23T14:16:46Z",
+      "side": 1,
+      "message": "Shuhei is right.  You cannot call spdk_thread_poll() here.\n\nI think you need to do something like:\n\n1) move lines 240-247 into a new function like \"bdev_nvme_free_ctrlr_resources\"\n2) if opal_bdev \u003d\u003d NULL call this new function\n2) if opal_bdev !\u003d NULL, start a poller with 1ms expiration - meaning this poller will run every 1ms\n3) when the poller function executes, check opal_bdev again - if it is NULL, unregister the poller and call your new function",
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c119a1a4_5e75af25",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 23
