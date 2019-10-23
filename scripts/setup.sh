@@ -561,7 +561,7 @@ function status_linux {
 		fi
 		device=$(cat /sys/bus/pci/devices/$bdf/device)
 		vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
-		if [ "$driver" = "nvme" -a -d /sys/bus/pci/devices/$bdf/nvme ]; then
+		if [ "$driver" = "nvme" ] && [ -d /sys/bus/pci/devices/$bdf/nvme ]; then
 			name="\t"$(ls /sys/bus/pci/devices/$bdf/nvme);
 		else
 			name="-";
