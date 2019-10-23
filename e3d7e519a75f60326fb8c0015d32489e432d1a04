@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "20e592ac_639445bd",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-23T06:57:48Z",
+      "side": 1,
+      "message": "I don\u0027t really understand the problem. It\u0027s a simple check on a non-critical path. What\u0027s the point of performing whole initialization (which is pretty complex) only to find out at the end that there\u0027s already a bdev with that name. I think checking this early avoids it, so it makes perfect sense to me.",
+      "parentUuid": "44764aef_bfddb030",
+      "revId": "e3d7e519a75f60326fb8c0015d32489e432d1a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e12f7751_6821f0e6",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 9
@@ -231,6 +249,30 @@
       "side": 1,
       "message": "In my opinion creating special context is more complex than simply create local variable. Most of the other RPCs behave in way I am proposing.",
       "parentUuid": "a000dd80_08336f04",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 2
+      },
+      "revId": "e3d7e519a75f60326fb8c0015d32489e432d1a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fc54a86_bf70487e",
+        "filename": "module/bdev/nvme/bdev_ocssd_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-23T06:57:48Z",
+      "side": 1,
+      "message": "Have a look at any of bdev_nvme\u0027s RPCs. They all work in the same way it\u0027s implemented here.",
+      "parentUuid": "239b168a_84040c26",
       "range": {
         "startLine": 93,
         "startChar": 0,
