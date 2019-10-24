@@ -2521,6 +2521,9 @@ struct spdk_nvme_rdma_hooks {
  */
 void spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
 
+int spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path);
+void spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
+
 #ifdef __cplusplus
 }
 #endif
