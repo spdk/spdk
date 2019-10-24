@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0701b6a1_ced34f98",
+        "filename": "autotest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-24T08:30:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5996fe38_c4db983d",
+      "revId": "938cef5ebf46be2b05e9aaba132ee7aa1fe3e4d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eb99a2b3_e3c72723",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-23T22:00:21Z",
       "side": 1,
       "message": "This is OK.  It might be nice to have a test app (written in C) that does all of this just by running the application.  Could be useful for other people who are doing testing with Opal.",
+      "revId": "938cef5ebf46be2b05e9aaba132ee7aa1fe3e4d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "132864f9_2e293288",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 881,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-24T08:30:47Z",
+      "side": 1,
+      "message": "Thank you Jim. Are you talking about an application just do this revert clean up?",
+      "parentUuid": "eb99a2b3_e3c72723",
       "revId": "938cef5ebf46be2b05e9aaba132ee7aa1fe3e4d4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
