@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "efd5cb98_89bb4f43",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 55
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T23:45:59Z",
+      "side": 1,
+      "message": "remove trailing whitespace",
+      "revId": "160b90a18d706be5b1ab0f177a679194c425e87e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
