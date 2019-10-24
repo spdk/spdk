@@ -2546,7 +2546,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 
 			assert(tcp_req->req.xfer != SPDK_NVME_DATA_NONE);
 
-			if (&tcp_req->req != STAILQ_FIRST(&group->pending_buf_queue)) {
+			if (!tcp_req->has_incapsule_data && (&tcp_req->req != STAILQ_FIRST(&group->pending_buf_queue))) {
 				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
 					      "Not the first element to wait for the buf for tcp_req(%p) on tqpair=%p\n",
 					      tcp_req, tqpair);
@@ -2554,7 +2554,6 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				break;
 			}
 
-			/* Try to get a data buffer */
 			rc = spdk_nvmf_tcp_req_parse_sgl(tcp_req, transport, group);
 			if (rc < 0) {
 				STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
@@ -2572,7 +2571,9 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				break;
 			}
 
-			STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
+			if (&tcp_req->req == STAILQ_FIRST(&group->pending_buf_queue)) {
+				STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
+			}
 
 			/* If data is transferring from host to controller, we need to do a transfer from the host. */
 			if (tcp_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
