@@ -30,9 +30,12 @@ function pci_can_use() {
 
 # This function will ignore PCI PCI_WHITELIST and PCI_BLACKLIST
 function iter_all_pci_class_code() {
-	local class="$(printf %02x $((0x$1)))"
-	local subclass="$(printf %02x $((0x$2)))"
-	local progif="$(printf %02x $((0x$3)))"
+	local class
+	local subclass
+	local progif
+	class="$(printf %02x $((0x$1)))"
+	subclass="$(printf %02x $((0x$2)))"
+	progif="$(printf %02x $((0x$3)))"
 
 	if hash lspci &>/dev/null; then
 		if [ "$progif" != "00" ]; then
@@ -57,8 +60,10 @@ function iter_all_pci_class_code() {
 
 # This function will ignore PCI PCI_WHITELIST and PCI_BLACKLIST
 function iter_all_pci_dev_id() {
-	local ven_id="$(printf %04x $((0x$1)))"
-	local dev_id="$(printf %04x $((0x$2)))"
+	local ven_id
+	local dev_id
+	ven_id="$(printf %04x $((0x$1)))"
+	dev_id="$(printf %04x $((0x$2)))"
 
 	if hash lspci &>/dev/null; then
 		lspci -mm -n -D | awk -v ven="\"$ven_id\"" -v dev="\"${dev_id}\"" -F " " \
