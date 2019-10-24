@@ -182,8 +182,8 @@ struct ftl_band {
 	STAILQ_ENTRY(ftl_band)			prio_stailq;
 };
 
-uint64_t	ftl_band_lbkoff_from_addr(struct ftl_band *band, struct ftl_addr addr);
-struct ftl_addr ftl_band_addr_from_lbkoff(struct ftl_band *band, uint64_t lbkoff);
+uint64_t	ftl_band_block_offset_from_addr(struct ftl_band *band, struct ftl_addr addr);
+struct ftl_addr ftl_band_addr_from_block_offset(struct ftl_band *band, uint64_t block_off);
 void		ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state);
 size_t		ftl_band_age(const struct ftl_band *band);
 void		ftl_band_acquire_lba_map(struct ftl_band *band);
@@ -194,12 +194,12 @@ int		ftl_band_read_lba_map(struct ftl_band *band,
 				      size_t offset, size_t lba_cnt,
 				      ftl_io_fn cb_fn, void *cb_ctx);
 struct ftl_addr ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr,
-					size_t num_lbks);
+					size_t num_blocks);
 struct ftl_addr ftl_band_next_addr(struct ftl_band *band, struct ftl_addr addr,
 				   size_t offset);
-size_t		ftl_band_num_usable_lbks(const struct ftl_band *band);
-size_t		ftl_band_user_lbks_left(const struct ftl_band *band, size_t offset);
-size_t		ftl_band_user_lbks(const struct ftl_band *band);
+size_t		ftl_band_num_usable_blocks(const struct ftl_band *band);
+size_t		ftl_band_user_blocks_left(const struct ftl_band *band, size_t offset);
+size_t		ftl_band_user_blocks(const struct ftl_band *band);
 void		ftl_band_set_addr(struct ftl_band *band, uint64_t lba,
 				  struct ftl_addr addr);
 struct ftl_band *ftl_band_from_addr(struct spdk_ftl_dev *dev, struct ftl_addr addr);
@@ -247,12 +247,12 @@ ftl_band_state_changing(struct ftl_band *band)
 }
 
 static inline int
-ftl_band_lbkoff_valid(struct ftl_band *band, size_t lbkoff)
+ftl_band_block_offset_valid(struct ftl_band *band, size_t block_off)
 {
 	struct ftl_lba_map *lba_map = &band->lba_map;
 
 	pthread_spin_lock(&lba_map->lock);
-	if (spdk_bit_array_get(lba_map->vld, lbkoff)) {
+	if (spdk_bit_array_get(lba_map->vld, block_off)) {
 		pthread_spin_unlock(&lba_map->lock);
 		return 1;
 	}
