@@ -162,6 +162,12 @@ struct spdk_opal_locking_range_info {
 	bool write_locked;
 };
 
+enum spdk_opal_dev_state {
+	OPAL_DEV_STATE_DEFAULT,     /* default factory setting */
+	OPAL_DEV_STATE_ENABLED,     /* after taking ownership and activating, opal is enabled */
+	OPAL_DEV_STATE_BUSY,        /* wait for opal response from ctrlr */
+};
+
 struct spdk_opal_dev;
 
 typedef void (*spdk_opal_revert_cb)(struct spdk_opal_dev *dev, void *ctx, int rc);
@@ -228,5 +234,6 @@ struct spdk_opal_locking_range_info *spdk_opal_get_locking_range_info(struct spd
 void spdk_opal_free_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_locking_range id);
 
 uint8_t spdk_opal_get_max_locking_ranges(struct spdk_opal_dev *dev);
+enum spdk_opal_dev_state spdk_opal_get_dev_state(struct spdk_opal_dev *dev);
 
 #endif
