@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5809d76b_34dbd9d0",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-24T08:40:23Z",
+      "side": 1,
+      "message": "Done. Will change the function name to be more clear.",
+      "parentUuid": "03e6b770_dd8b99a2",
+      "range": {
+        "startLine": 80,
+        "startChar": 2,
+        "endLine": 81,
+        "endChar": 15
+      },
+      "revId": "080749ec6744a8d7c2d5ac4dd2d970ef6b272aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "03d48715_e10b801c",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 24
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-20T14:03:04Z",
       "side": 1,
       "message": "bc update to vm_setup.sh was merged recently: https://review.gerrithub.io/#/c/spdk/spdk/+/453998/\nSo I still suggest using it instead of awk for simple operations.\n\nIt should already be installed on testing servers, if you happen to see any which I have missed let me know",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 64
+      },
+      "revId": "080749ec6744a8d7c2d5ac4dd2d970ef6b272aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "069ca847_423a55bc",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-24T08:40:23Z",
+      "side": 1,
+      "message": "Done. Thanks.",
+      "parentUuid": "03d48715_e10b801c",
       "range": {
         "startLine": 87,
         "startChar": 0,
@@ -107,6 +155,30 @@
       "side": 1,
       "message": "Quoting from https://review.gerrithub.io/c/spdk/spdk/+/453603 (\"test/qos: bring back qos testing.\"):\n\n\u003e Patch Set 8: Code-Review-2\n\u003e \n\u003e The iSCSI bdev on our test machines can barely reach the hardcoded QoS limit and we can\u0027t fix it by increasing the allowed QoS deviation. We can still end up not running the test if the device happens to be to slow, which in my opinion is much worse than not running it at all. That\u0027s because instead of knowing you don\u0027t run any QoS tests, you might think you run them, but in reality you don\u0027t - because the test is being skipped all the time.\n\u003e \n\u003e We should always avoid scenarios where we end up skipping the test. In this case it would be fairly simple - instead of setting an arbitrary QoS limit, we could set a limit that\u0027s a % of the actual disk performance. Then we don\u0027t have to check if the disk is fast enough and the test is always run. Please see this patch:\n\u003e \n\u003e https://review.gerrithub.io/c/spdk/spdk/+/451887 test/qos: set qos limits to a % of the maximum disk performance\n\nPlease refactor this code not to skip the tests.",
       "parentUuid": "451d3f8d_53db1340",
+      "range": {
+        "startLine": 242,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 2
+      },
+      "revId": "080749ec6744a8d7c2d5ac4dd2d970ef6b272aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "782a4a39_a45e9893",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-24T08:40:23Z",
+      "side": 1,
+      "message": "This test case could also run in VM so it still exist the possibility that in VM, without QoS, the IOPS and bandwidth is pretty low. In this case, no need to run the QoS related testing.",
+      "parentUuid": "090a494a_f7c9ed4e",
       "range": {
         "startLine": 242,
         "startChar": 0,
