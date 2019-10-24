@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b427e9eb_a5a6135f",
+        "filename": "doc/nvme.md",
+        "patchSetId": 53
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T19:51:49Z",
+      "side": 1,
+      "message": "I think we have to talk here in terms of non-polled mode threads.  Think of someone who is coming into SPDK for the first time.  When they read this section, they might be confused why you would ever use this?  Why not just use the spdk_nvme_ns_cmd_* APIs directly?\n\nI would even maybe suggest we remove this External IO message queue section completely, at least for now.  Let\u0027s just focus on the NVMe CUSE part.  That\u0027s what is most visible.  I don\u0027t think it\u0027s really important for new nvme users to understand details about these external IO message queues.",
+      "revId": "a6cf6b4f9f46c78b9d56b6b1eed47bfd0ccaca3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96fb8dd3_454cfb48",
+        "filename": "doc/nvme.md",
+        "patchSetId": 53
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T19:51:49Z",
+      "side": 1,
+      "message": "I think this whole section needs to be looked at based on recent changes in this patch set.",
+      "revId": "a6cf6b4f9f46c78b9d56b6b1eed47bfd0ccaca3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9973e61_eca45961",
+        "filename": "doc/nvme.md",
+        "patchSetId": 53
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T19:51:49Z",
+      "side": 1,
+      "message": "--with-nvme_cuse",
+      "revId": "a6cf6b4f9f46c78b9d56b6b1eed47bfd0ccaca3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d30aceb_c87bc50b",
+        "filename": "doc/nvme.md",
+        "patchSetId": 53
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T19:51:49Z",
+      "side": 1,
+      "message": "this is different now",
+      "revId": "a6cf6b4f9f46c78b9d56b6b1eed47bfd0ccaca3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
