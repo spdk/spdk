@@ -149,6 +149,24 @@
     },
     {
       "key": {
+        "uuid": "6bfd1f30_b58adf78",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-24T01:37:00Z",
+      "side": 1,
+      "message": "I still think you should just unregister the poller here, and you can check the exception when start the controller next time.\n\nFor your cases, what if the users\u0027 thread already exit without call the revert poller, this is lower driver, the layer should not responsible for upper layer\u0027s behavior.",
+      "parentUuid": "591186cf_e2b2e130",
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c119a1a4_5e75af25",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 23
