@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "410d7b39_310005a5",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-24T21:25:21Z",
+      "side": 1,
+      "message": "Good point. I still have to do one snprintf though. If I use a custom object like  I do here, then I have to copy the TRADDR, if I use a stored object, I have to copy the subnqn later (either during the reset, or in register_ctrlr) because it\u0027s possible that the user didn\u0027t specify an nqn in which case at this point, the trid will default to the discovery nqn.",
+      "parentUuid": "47763334_b3709713",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b40cbb90_25e2d5bc",
         "filename": "examples/nvme/reconnect/reconnect.c",
         "patchSetId": 3
@@ -33,6 +51,24 @@
       "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da0d9e66_e47ddecc",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-24T21:25:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b40cbb90_25e2d5bc",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "0db9bf1e_d419bea9",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-24T21:25:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a78eb0e_ecfe3212",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d7a86640_017b79d1",
         "filename": "examples/nvme/reconnect/reconnect.c",
         "patchSetId": 3
@@ -67,6 +121,24 @@
       "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ba8ad6a_4fd25f23",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1018,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-24T21:25:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d7a86640_017b79d1",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "31216576_a48c4aa8",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-24T21:25:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ecf1b268_4177c103",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4001c6f_a22fd0b8",
         "filename": "test/nvmf/host/target_disconnect.sh",
         "patchSetId": 3
@@ -101,6 +191,24 @@
       "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eefd4857_c05e13cd",
+        "filename": "test/nvmf/host/target_disconnect.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-24T21:25:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a4001c6f_a22fd0b8",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "652cf2bf_04a057af",
+        "filename": "test/nvmf/host/target_disconnect.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-24T21:25:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a4d0c6ca_8a6cc2fb",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "12bb6485_e1434cc0",
         "filename": "test/nvmf/host/target_disconnect.sh",
         "patchSetId": 3
@@ -132,6 +258,41 @@
       "writtenOn": "2019-10-24T20:43:33Z",
       "side": 1,
       "message": "reconnectpid",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56d9c4ed_4eeceec5",
+        "filename": "test/nvmf/host/target_disconnect.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-24T21:25:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "12bb6485_e1434cc0",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40a8216d_eece9a79",
+        "filename": "test/nvmf/host/target_disconnect.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-24T21:25:21Z",
+      "side": 1,
+      "message": "done",
       "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
