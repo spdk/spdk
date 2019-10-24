@@ -34,6 +34,24 @@
       "revId": "e9100e873e6628827a7a01365e2c4292f76f86b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "078ffc5b_5a918a20",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-24T07:12:21Z",
+      "side": 1,
+      "message": "Hi Shuhei, thanks for your review. Let me answer the questions.\n(1) Under worst case, a drive can take 7-8 minutes for revert operation (that is based on our test, maybe some drives can take longer). If we shutdown the target right after the revert is triggered, it will take 7-8 minutes to wait here for the worst case.\n(2) As far as I can see, if bdev_nvme_ctrlr_destruct is called, and the opal_poller hasn\u0027t been unregistered yet, this is the only way.",
+      "parentUuid": "c5691254_f2999fe2",
+      "revId": "e9100e873e6628827a7a01365e2c4292f76f86b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
