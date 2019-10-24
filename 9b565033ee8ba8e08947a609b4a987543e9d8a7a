@@ -131,6 +131,24 @@
     },
     {
       "key": {
+        "uuid": "591186cf_e2b2e130",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-24T00:25:30Z",
+      "side": 1,
+      "message": "Thank you Jim. I was not elaborated. Please try Jim\u0027s solution.\n\nI think 2) may need to call spdk_opal_close(nvme_bdev_ctrlr-\u003eopal_dev) before starting the poller.",
+      "parentUuid": "28cfed34_7fc83887",
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c119a1a4_5e75af25",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 23
