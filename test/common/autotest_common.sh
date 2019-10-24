@@ -459,7 +459,8 @@ function killprocess() {
 		if [ "$(ps --no-headers -o comm= $1)" = "sudo" ]; then
 			# kill the child process, which is the actual app
 			# (assume $1 has just one child)
-			local child="$(pgrep -P $1)"
+			local child
+			child="$(pgrep -P $1)"
 			echo "killing process with pid $child"
 			kill $child
 		else
@@ -556,7 +557,8 @@ function kill_stub() {
 
 function run_test() {
 	xtrace_disable
-	local test_type="$(echo $1 | tr '[:lower:]' '[:upper:]')"
+	local test_type
+	test_type="$(echo $1 | tr '[:lower:]' '[:upper:]')"
 	shift
 	echo "************************************"
 	echo "START TEST $test_type $*"
@@ -803,7 +805,8 @@ function fio_bdev()
 	local bdev_plugin="$rootdir/examples/bdev/fio_plugin/fio_plugin"
 
 	# Preload AddressSanitizer library to fio if fio_plugin was compiled with it
-	local asan_lib=$(ldd $bdev_plugin | grep libasan | awk '{print $3}')
+	local asan_lib
+	asan_lib=$(ldd $bdev_plugin | grep libasan | awk '{print $3}')
 
 	LD_PRELOAD="$asan_lib $bdev_plugin" "$fio_dir"/fio "$@"
 }
@@ -823,9 +826,12 @@ function fio_nvme()
 function get_lvs_free_mb()
 {
 	local lvs_uuid=$1
-	local lvs_info=$($rpc_py bdev_lvol_get_lvstores)
-	local fc=$(jq ".[] | select(.uuid==\"$lvs_uuid\") .free_clusters" <<< "$lvs_info")
-	local cs=$(jq ".[] | select(.uuid==\"$lvs_uuid\") .cluster_size" <<< "$lvs_info")
+	local lvs_info
+	local fc
+	local cs
+	lvs_info=$($rpc_py bdev_lvol_get_lvstores)
+	fc=$(jq ".[] | select(.uuid==\"$lvs_uuid\") .free_clusters" <<< "$lvs_info")
+	cs=$(jq ".[] | select(.uuid==\"$lvs_uuid\") .cluster_size" <<< "$lvs_info")
 
 	# Change to MB's
 	free_mb=$((fc*cs/1024/1024))
@@ -835,9 +841,12 @@ function get_lvs_free_mb()
 function get_bdev_size()
 {
 	local bdev_name=$1
-	local bdev_info=$($rpc_py bdev_get_bdevs -b $bdev_name)
-	local bs=$(jq ".[] .block_size" <<< "$bdev_info")
-	local nb=$(jq ".[] .num_blocks" <<< "$bdev_info")
+	local bdev_info
+	local bs
+	local nb
+	bdev_info=$($rpc_py bdev_get_bdevs -b $bdev_name)
+	bs=$(jq ".[] .block_size" <<< "$bdev_info")
+	nb=$(jq ".[] .num_blocks" <<< "$bdev_info")
 
 	# Change to MB's
 	bdev_size=$((bs*nb/1024/1024))

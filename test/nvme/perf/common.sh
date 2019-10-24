@@ -28,8 +28,10 @@ NOIOSCALING=false
 
 function is_bdf_not_mounted() {
 	local bdf=$1
-	local blkname=$(ls -l /sys/block/ | grep $bdf | awk '{print $9}')
-	local mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
+	local blkname
+	local mountpoints
+	blkname=$(ls -l /sys/block/ | grep $bdf | awk '{print $9}')
+	mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
 	return $mountpoints
 }
 
@@ -52,16 +54,19 @@ function get_numa_node(){
 	local disks=$2
 	if [ "$plugin" = "nvme" ]; then
 		for bdf in $disks; do
-			local driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
+			local driver
+			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 			# Use this check to ommit blacklisted devices ( not binded to driver with setup.sh script )
 			if [ "$driver" = "vfio-pci" ] || [ "$driver" = "uio_pci_generic" ]; then
 				cat /sys/bus/pci/devices/$bdf/numa_node
 			fi
 		done
 	elif [ "$plugin" = "bdev" ] || [ "$plugin" = "bdevperf" ]; then
-		local bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
+		local bdevs
+		bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
 		for name in $disks; do
-			local bdev_bdf=$(jq -r ".[] | select(.name==\"$name\").driver_specific.nvme.pci_address" <<< $bdevs)
+			local bdev_bdf
+			bdev_bdf=$(jq -r ".[] | select(.name==\"$name\").driver_specific.nvme.pci_address" <<< $bdevs)
 			cat /sys/bus/pci/devices/$bdev_bdf/numa_node
 		done
 	else
@@ -84,13 +89,15 @@ function get_disks(){
 			fi
 		done
 	elif [ "$plugin" = "bdev" ] || [ "$plugin" = "bdevperf" ]; then
-		local bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
+		local bdevs
+		bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
 		jq -r '.[].name' <<< $bdevs
 	else
 		# Only target not mounted NVMes
 		for bdf in $(iter_pci_class_code 01 08 02); do
 			if is_bdf_not_mounted $bdf; then
-				local blkname=$(ls -l /sys/block/ | grep $bdf | awk '{print $9}')
+				local blkname
+				blkname=$(ls -l /sys/block/ | grep $bdf | awk '{print $9}')
 				echo $blkname
 			fi
 		done
@@ -123,7 +130,8 @@ function create_fio_config(){
 	local no_cores=${#cores[@]}
 	local filename=""
 
-	local cores_numa=($(get_cores_numa_node "$5"))
+	local cores_numa
+	cores_numa=($(get_cores_numa_node "$5"))
 	local disks_per_core=$(($disk_no/$no_cores))
 	local disks_per_core_mod=$(($disk_no%$no_cores))
 
@@ -202,7 +210,8 @@ function preconditioning(){
 	# We only want to target NVMes not bound to nvme driver.
 	# If they're still bound to nvme that means they were skipped by
 	# setup.sh on purpose.
-	local nvme_list=$(get_disks nvme)
+	local nvme_list
+	nvme_list=$(get_disks nvme)
 	for nvme in $nvme_list; do
 		dev_name='trtype=PCIe traddr='${nvme//:/.}' ns=1'
 		filename+=$(printf %s":" "$dev_name")
