@@ -16,6 +16,24 @@
       "revId": "4a83e5a3a59a0521c3d837aeb8fa772bbdfe12b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4122e8b_46430e45",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-24T08:31:26Z",
+      "side": 1,
+      "message": "Thank you for your review. Done.",
+      "parentUuid": "290f817b_4ffe769c",
+      "revId": "4a83e5a3a59a0521c3d837aeb8fa772bbdfe12b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
