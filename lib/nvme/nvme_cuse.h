@@ -36,7 +36,7 @@
 
 #include "spdk/nvme.h"
 
-int nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr);
+int nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path);
 void nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
 
 #endif /* __NVME_CUSE_H__ */
