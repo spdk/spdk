@@ -2584,6 +2584,25 @@ struct spdk_nvme_rdma_hooks {
  */
 void spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
 
+/**
+ * Get name of cuse device associated with NVMe controller.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return Pointer to the name of device.
+ */
+char *spdk_nvme_cuse_get_ctrlr_name(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Get name of cuse device associated with NVMe namespace.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ * \param nsid Namespace id.
+ *
+ * \return Pointer to the name of device.
+ */
+char *spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
+
 #ifdef __cplusplus
 }
 #endif
