@@ -48,7 +48,6 @@ struct cuse_device {
 	struct spdk_nvme_ctrlr		*ctrlr;		/**< NVMe controller */
 	uint32_t			nsid;		/**< NVMe name space id, or 0 */
 
-	uint32_t			idx;
 	pthread_t			tid;
 	struct fuse_session		*session;
 
@@ -59,7 +58,6 @@ struct cuse_device {
 };
 
 static TAILQ_HEAD(, cuse_device) g_ctrlr_ctx_head = TAILQ_HEAD_INITIALIZER(g_ctrlr_ctx_head);
-static int g_controllers_found = 0;
 
 struct cuse_io_ctx {
 	struct spdk_nvme_cmd	nvme_cmd;
@@ -660,7 +658,7 @@ end:
  */
 
 static int
-cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid)
+cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid, const char *dev_path)
 {
 	struct cuse_device *ns_device;
 
@@ -672,10 +670,9 @@ cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid)
 
 	ns_device->ctrlr = ctrlr_device->ctrlr;
 	ns_device->ctrlr_device = ctrlr_device;
-	ns_device->idx = nsid;
 	ns_device->nsid = nsid;
-	snprintf(ns_device->dev_name, sizeof(ns_device->dev_name), "spdk/nvme%dn%d",
-		 ctrlr_device->idx, ns_device->idx);
+	snprintf(ns_device->dev_name, sizeof(ns_device->dev_name), "%sn%d",
+		 dev_path, ns_device->nsid);
 
 	if (pthread_create(&ns_device->tid, NULL, cuse_thread, ns_device)) {
 		SPDK_ERRLOG("pthread_create failed\n");
@@ -708,7 +705,7 @@ cuse_nvme_ctrlr_stop(struct cuse_device *ctrlr_device)
 }
 
 static int
-nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
+nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 {
 	uint32_t i, nsid;
 	struct cuse_device *ctrlr_device;
@@ -723,9 +720,7 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 
 	TAILQ_INIT(&ctrlr_device->ns_devices);
 	ctrlr_device->ctrlr = ctrlr;
-	ctrlr_device->idx = g_controllers_found++;
-	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name),
-		 "spdk/nvme%d", ctrlr_device->idx);
+	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "%s", dev_path);
 
 	if (pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device)) {
 		SPDK_ERRLOG("pthread_create failed\n");
@@ -741,7 +736,7 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 			continue;
 		}
 
-		if (cuse_nvme_ns_start(ctrlr_device, nsid) < 0) {
+		if (cuse_nvme_ns_start(ctrlr_device, nsid, dev_path) < 0) {
 			SPDK_ERRLOG("Cannot start CUSE namespace device.");
 			cuse_nvme_ctrlr_stop(ctrlr_device);
 			return -1;
@@ -775,16 +770,20 @@ static struct nvme_io_msg_producer cuse_nvme_io_msg_producer = {
 };
 
 int
-nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr)
+spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 {
 	int rc;
+
+	if (dev_path == NULL) {
+		return -EINVAL;
+	}
 
 	rc = nvme_io_msg_ctrlr_start(ctrlr, &cuse_nvme_io_msg_producer);
 	if (rc) {
 		return rc;
 	}
 
-	rc = nvme_cuse_start(ctrlr);
+	rc = nvme_cuse_start(ctrlr, dev_path);
 	if (rc) {
 		nvme_io_msg_ctrlr_stop(ctrlr, &cuse_nvme_io_msg_producer, false);
 	}
@@ -793,7 +792,7 @@ nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 void
-nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr)
+spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr)
 {
 	nvme_cuse_stop(ctrlr);
 

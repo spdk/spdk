@@ -2603,6 +2603,9 @@ char *spdk_nvme_cuse_get_ctrlr_name(struct spdk_nvme_ctrlr *ctrlr);
  */
 char *spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
 
+int spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path);
+void spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
+
 #ifdef __cplusplus
 }
 #endif

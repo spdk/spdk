@@ -480,6 +480,30 @@ def bdev_nvme_detach_controller(client, name):
     return client.call('bdev_nvme_detach_controller', params)
 
 
+def bdev_nvme_cuse_register(client, name, dev_path):
+    """Register CUSE devices on NVMe controller.
+
+    Args:
+        name: Name of the operating NVMe controller
+        dev_path: CUSE dev path with dev prefix
+    """
+    params = {'name': name,
+              'dev_path': dev_path}
+
+    return client.call('bdev_nvme_cuse_register', params)
+
+
+def bdev_nvme_cuse_unregister(client, name):
+    """Unregister CUSE devices on NVMe controller.
+
+    Args:
+        name: Name of the operating NVMe controller
+    """
+    params = {'name': name}
+
+    return client.call('bdev_nvme_cuse_unregister', params)
+
+
 @deprecated_alias('construct_rbd_bdev')
 def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=None, config=None):
     """Create a Ceph RBD block device.
