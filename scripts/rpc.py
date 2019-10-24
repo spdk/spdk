@@ -430,6 +430,29 @@ if __name__ == "__main__":
     p.add_argument('name', help="Name of the controller")
     p.set_defaults(func=bdev_nvme_detach_controller)
 
+    def bdev_nvme_cuse_register(args):
+        rpc.bdev.bdev_nvme_cuse_register(args.client,
+                                         name=args.name,
+                                         dev_path=args.dev_path)
+
+    p = subparsers.add_parser('bdev_nvme_cuse_register',
+                              help='Register CUSE devices on NVMe controller')
+    p.add_argument('-n', '--name',
+                   help='Name of the NVMe controller. Example: Nvme0', required=True)
+    p.add_argument('-p', '--dev_path',
+                   help='CUSE dev path including prefix: e.g. spdk/nvme will result: /dev/spdk/nvme0n1', required=True)
+    p.set_defaults(func=bdev_nvme_cuse_register)
+
+    def bdev_nvme_cuse_unregister(args):
+        rpc.bdev.bdev_nvme_cuse_unregister(args.client,
+                                           name=args.name)
+
+    p = subparsers.add_parser('bdev_nvme_cuse_unregister',
+                              help='Unregister CUSE devices on NVMe controller')
+    p.add_argument('-n', '--name',
+                   help='Name of the NVMe controller. Example: Nvme0', required=True)
+    p.set_defaults(func=bdev_nvme_cuse_unregister)
+
     def bdev_rbd_create(args):
         config = None
         if args.config:
