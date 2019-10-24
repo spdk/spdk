@@ -34,6 +34,24 @@
       "revId": "ee28743d15046c0764b645c637215bc43bb3fb04",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d9627369_6b1c345f",
+        "filename": "autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T17:32:16Z",
+      "side": 1,
+      "message": "I think we should explicitly ignore.",
+      "parentUuid": "834e3709_d13277e3",
+      "revId": "ee28743d15046c0764b645c637215bc43bb3fb04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
