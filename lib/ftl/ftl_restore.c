@@ -190,7 +190,7 @@ ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
 	}
 
 	/* Allocate buffer capable of holding head mds of all bands */
-	restore->md_buf = spdk_dma_zmalloc(ftl_get_num_bands(dev) * ftl_head_md_num_lbks(dev) *
+	restore->md_buf = spdk_dma_zmalloc(ftl_get_num_bands(dev) * ftl_head_md_num_blocks(dev) *
 					   FTL_BLOCK_SIZE, 0, NULL);
 	if (!restore->md_buf) {
 		goto error;
@@ -338,7 +338,7 @@ ftl_restore_head_md(void *ctx)
 		rband = &restore->bands[i];
 		lba_map = &rband->band->lba_map;
 
-		lba_map->dma_buf = restore->md_buf + i * ftl_head_md_num_lbks(dev) * FTL_BLOCK_SIZE;
+		lba_map->dma_buf = restore->md_buf + i * ftl_head_md_num_blocks(dev) * FTL_BLOCK_SIZE;
 
 		if (ftl_band_read_head_md(rband->band, ftl_restore_head_cb, rband)) {
 			if (spdk_likely(rband->band->num_zones)) {
@@ -402,7 +402,7 @@ ftl_restore_l2p(struct ftl_band *band)
 			ftl_invalidate_addr(dev, addr);
 		}
 
-		addr = ftl_band_addr_from_lbkoff(band, i);
+		addr = ftl_band_addr_from_block_offset(band, i);
 
 		ftl_band_set_addr(band, lba, addr);
 		ftl_l2p_set(dev, lba, addr);
@@ -700,7 +700,7 @@ ftl_nv_cache_alloc_io(struct ftl_nv_cache_block *block, uint64_t lba)
 		.io		= NULL,
 		.flags		= FTL_IO_BYPASS_CACHE,
 		.type		= FTL_IO_WRITE,
-		.lbk_cnt	= 1,
+		.num_blocks	= 1,
 		.cb_fn		= ftl_nv_cache_write_cb,
 		.cb_ctx		= block,
 		.data		= block->buf,
@@ -1129,7 +1129,7 @@ ftl_restore_init_pad_io(struct ftl_restore_band *rband, void *buffer,
 		.size		= sizeof(struct ftl_io),
 		.flags		= flags,
 		.type		= FTL_IO_WRITE,
-		.lbk_cnt	= dev->xfer_size,
+		.num_blocks	= dev->xfer_size,
 		.cb_fn		= ftl_pad_zone_cb,
 		.cb_ctx		= rband,
 		.data		= buffer,
@@ -1166,12 +1166,12 @@ ftl_pad_zone_cb(struct ftl_io *io, void *arg, int status)
 	}
 
 	offset = io->addr.offset % ftl_get_num_blocks_in_zone(restore->dev);
-	if (offset + io->lbk_cnt == ftl_get_num_blocks_in_zone(restore->dev)) {
+	if (offset + io->num_blocks == ftl_get_num_blocks_in_zone(restore->dev)) {
 		zone = ftl_band_zone_from_addr(band, io->addr);
 		zone->info.state = SPDK_BDEV_ZONE_STATE_CLOSED;
 	} else {
 		struct ftl_addr addr = io->addr;
-		addr.offset += io->lbk_cnt;
+		addr.offset += io->num_blocks;
 		new_io = ftl_restore_init_pad_io(rband, io->iov[0].iov_base, addr);
 		if (spdk_unlikely(!new_io)) {
 			restore->pad_status = -ENOMEM;
