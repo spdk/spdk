@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cbce3678_70e236fd",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T19:42:19Z",
+      "side": 1,
+      "message": "spdk/nvme0?",
+      "revId": "5c419c604a41a5652258cd4c702eb9ce5566db4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
