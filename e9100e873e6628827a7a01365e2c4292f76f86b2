@@ -88,6 +88,24 @@
       "revId": "e9100e873e6628827a7a01365e2c4292f76f86b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65bddd1b_b464a561",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-24T10:34:19Z",
+      "side": 1,
+      "message": "Hi Chunyang, Changpeng,\n\nChunyang said opal_dev is not bdev, so can we wait its revert completion before exiting opal bdev module? Then we can avoid this busy loop?",
+      "parentUuid": "50f566f5_c943aee9",
+      "revId": "e9100e873e6628827a7a01365e2c4292f76f86b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
