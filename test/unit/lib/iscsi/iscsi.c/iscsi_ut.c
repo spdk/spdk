@@ -1510,6 +1510,698 @@ build_iovs_with_md_test(void)
 	free(data);
 }
 
+static void
+check_iscsi_reject(struct spdk_iscsi_pdu *pdu, uint8_t reason)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_reject *reject_bhs;
+
+	CU_ASSERT(pdu->is_rejected == true);
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	reject_bhs = (struct iscsi_bhs_reject *)&rsp_pdu->bhs;
+	CU_ASSERT(reject_bhs->reason == reason);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+	pdu->is_rejected = false;
+}
+
+static void
+check_login_response(uint8_t status_class, uint8_t status_detail)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_login_rsp *login_rsph;
+
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	login_rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+	CU_ASSERT(login_rsph->status_class == status_class);
+	CU_ASSERT(login_rsph->status_detail == status_detail);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+}
+
+static void
+pdu_hdr_op_login_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct iscsi_bhs_login_req *login_reqh;
+	int rc;
+
+	login_reqh = (struct iscsi_bhs_login_req *)&pdu.bhs;
+
+	/* Case 1 - On discovery session, target only accepts text requests with the
+	 * SendTargets key and logout request with reason "close the session".
+	 */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+	conn.full_feature = true;
+	conn.sess = &sess;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* Case 2 - Data segment length is limited to be not more than 8KB, the default
+	 * FirstBurstLength, for login request.
+	 */
+	sess.session_type = SESSION_TYPE_INVALID;
+	conn.full_feature = false;
+	conn.sess = NULL;
+	pdu.data_segment_len = SPDK_ISCSI_FIRST_BURST_LENGTH + 1;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* Case 3 - PDU pool is empty */
+	pdu.data_segment_len = SPDK_ISCSI_FIRST_BURST_LENGTH;
+	g_pdu_pool_is_empty = true;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* Case 4 - A login request with the C bit set to 1 must have the T bit set to 0. */
+	g_pdu_pool_is_empty = false;
+	login_reqh->flags |= ISCSI_LOGIN_TRANSIT;
+	login_reqh->flags |= ISCSI_LOGIN_CONTINUE;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE);
+	check_login_response(ISCSI_CLASS_INITIATOR_ERROR, ISCSI_LOGIN_INITIATOR_ERROR);
+
+	/* Case 5 - Both version-min and version-max must be set to 0x00. */
+	login_reqh->flags = 0;
+	login_reqh->version_min = ISCSI_VERSION + 1;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE);
+	check_login_response(ISCSI_CLASS_INITIATOR_ERROR, ISCSI_LOGIN_UNSUPPORTED_VERSION);
+
+	/* Case 6 - T bit is set to 1 correctly but invalid stage code is set to NSG. */
+	login_reqh->version_min = ISCSI_VERSION;
+	login_reqh->flags |= ISCSI_LOGIN_TRANSIT;
+	login_reqh->flags |= ISCSI_NSG_RESERVED_CODE;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE);
+	check_login_response(ISCSI_CLASS_INITIATOR_ERROR, ISCSI_LOGIN_INITIATOR_ERROR);
+
+	/* Case 7 - Login request is correct.  Login response is initialized and set to
+	 * the current connection.
+	 */
+	login_reqh->flags = 0;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(conn.login_rsp_pdu != NULL);
+
+	spdk_put_pdu(conn.login_rsp_pdu);
+}
+
+static void
+pdu_hdr_op_text_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct iscsi_bhs_text_req *text_reqh;
+	int rc;
+
+	text_reqh = (struct iscsi_bhs_text_req *)&pdu.bhs;
+
+	conn.sess = &sess;
+
+	/* Case 1 - Data segment length for text request must not be more than
+	 * FirstBurstLength plus extra space to account for digests.
+	 */
+	pdu.data_segment_len = spdk_get_max_immediate_data_size() + 1;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* Case 2 - A text request with the C bit set to 1 must have the F bit set to 0. */
+	pdu.data_segment_len = spdk_get_max_immediate_data_size();
+	text_reqh->flags |= ISCSI_FLAG_FINAL;
+	text_reqh->flags |= ISCSI_TEXT_CONTINUE;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == -1);
+
+	/* Case 3 - ExpStatSN of the text request is expected to match StatSN of the current
+	 * connection.  But StarPort iSCSI initiator didn't follow the expectation.  In this
+	 * case we overwrite StatSN by ExpStatSN and processes the request as correct.
+	 */
+	text_reqh->flags = 0;
+	to_be32(&text_reqh->exp_stat_sn, 1234);
+	to_be32(&conn.StatSN, 4321);
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(conn.StatSN == 1234);
+
+	/* Case 4 - Text request is the first in the sequence of text requests and responses,
+	 * and so its ITT is hold to the current connection.
+	 */
+	sess.current_text_itt = 0xffffffffU;
+	to_be32(&text_reqh->itt, 5678);
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(sess.current_text_itt == 5678);
+
+	/* Case 5 - If text request is sent as part of a sequence of text requests and responses,
+	 * its ITT must be the same for all the text requests.  But it was not.  */
+	sess.current_text_itt = 5679;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* Case 6 - Different from case 5, its ITT matches the value saved in the connection. */
+	text_reqh->flags = 0;
+	sess.current_text_itt = 5678;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+}
+
+static void
+check_logout_response(uint8_t response, uint32_t stat_sn, uint32_t exp_cmd_sn,
+		      uint32_t max_cmd_sn)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_logout_resp *logout_rsph;
+
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	logout_rsph = (struct iscsi_bhs_logout_resp *)&rsp_pdu->bhs;
+	CU_ASSERT(logout_rsph->response == response);
+	CU_ASSERT(from_be32(&logout_rsph->stat_sn) == stat_sn);
+	CU_ASSERT(from_be32(&logout_rsph->exp_cmd_sn) == exp_cmd_sn);
+	CU_ASSERT(from_be32(&logout_rsph->max_cmd_sn) == max_cmd_sn);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+}
+
+static void
+pdu_hdr_op_logout_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct iscsi_bhs_logout_req *logout_reqh;
+	int rc;
+
+	logout_reqh = (struct iscsi_bhs_logout_req *)&pdu.bhs;
+
+	/* Case 1 - Target can accept logout request only with the reason "close the session"
+	 * on discovery session.
+	 */
+	logout_reqh->reason = 1;
+	conn.sess = &sess;
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_logout(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* Case 2 - Session is not established yet but connection was closed successfully. */
+	conn.sess = NULL;
+	conn.StatSN = 1234;
+	to_be32(&logout_reqh->exp_stat_sn, 1234);
+	pdu.cmd_sn = 5678;
+
+	rc = iscsi_pdu_hdr_op_logout(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_logout_response(0, 1234, 5678, 5678);
+	CU_ASSERT(conn.StatSN == 1235);
+
+	/* Case 3 - Session type is normal but CID was not found. Hence connection or session
+	 * was not closed.
+	 */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	sess.ExpCmdSN = 5679;
+	sess.connections = 1;
+	conn.sess = &sess;
+	conn.id = 1;
+
+	rc = iscsi_pdu_hdr_op_logout(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_logout_response(1, 1235, 5679, 1);
+	CU_ASSERT(conn.StatSN == 1236);
+	CU_ASSERT(sess.MaxCmdSN == 1);
+
+	/* Case 4 - Session type is normal and CID was found.  Connection or session was closed
+	 * successfully.
+	 */
+	to_be16(&logout_reqh->cid, 1);
+
+	rc = iscsi_pdu_hdr_op_logout(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_logout_response(0, 1236, 5679, 2);
+	CU_ASSERT(conn.StatSN == 1237);
+	CU_ASSERT(sess.MaxCmdSN == 2);
+
+	/* Case 5 - PDU pool is empty. */
+	g_pdu_pool_is_empty = true;
+
+	rc = iscsi_pdu_hdr_op_logout(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	g_pdu_pool_is_empty = false;
+}
+
+static void
+check_scsi_task(struct spdk_iscsi_pdu *pdu, enum spdk_scsi_data_dir dir)
+{
+	struct spdk_iscsi_task *task;
+
+	task = pdu->task;
+	CU_ASSERT(task != NULL);
+	CU_ASSERT(task->pdu == pdu);
+	CU_ASSERT(task->scsi.dxfer_dir == dir);
+
+	spdk_iscsi_task_put(task);
+	pdu->task = NULL;
+}
+
+static void
+pdu_hdr_op_scsi_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
+	struct iscsi_bhs_scsi_req *scsi_reqh;
+	int rc;
+
+	scsi_reqh = (struct iscsi_bhs_scsi_req *)&pdu.bhs;
+
+	conn.sess = &sess;
+	conn.dev = &dev;
+
+	/* Case 1 - SCSI command is acceptable only on normal session. */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* Case 2 - Task pool is empty. */
+	g_task_pool_is_empty = true;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	g_task_pool_is_empty = false;
+
+	/* Case 3 - bidirectional operations (both R and W flags are set to 1) are not supported. */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	scsi_reqh->read_bit = 1;
+	scsi_reqh->write_bit = 1;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* Case 4 - LUN is hot-removed, and return immediately. */
+	scsi_reqh->write_bit = 0;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.task == NULL);
+
+	/* Case 5 - SCSI read command PDU is correct, and the configured iSCSI task is set to the PDU. */
+	dev.lun[0] = &lun;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_scsi_task(&pdu, SPDK_SCSI_DIR_FROM_DEV);
+
+	/* Case 6 - For SCSI write command PDU, its data segment length must not be more than
+	 * FirstBurstLength plus extra space to account for digests.
+	 */
+	scsi_reqh->read_bit = 0;
+	scsi_reqh->write_bit = 1;
+	pdu.data_segment_len = spdk_get_max_immediate_data_size() + 1;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* Case 7 - For SCSI write command PDU, its data segment length must not be more than
+	 * Expected Data Transfer Length (EDTL).
+	 */
+	pdu.data_segment_len = spdk_get_max_immediate_data_size();
+	to_be32(&scsi_reqh->expected_data_xfer_len, pdu.data_segment_len - 1);
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* Case 8 - If ImmediateData is not enabled for the session, SCSI write command PDU
+	 * cannot have data segment.
+	 */
+	to_be32(&scsi_reqh->expected_data_xfer_len, pdu.data_segment_len);
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* Case 9 - For SCSI write command PDU, its data segment length must not be more
+	 * than FirstBurstLength.
+	 */
+	sess.ImmediateData = true;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* Case 10 - SCSI write command PDU is correct, and the configured iSCSI task is set to the PDU. */
+	sess.FirstBurstLength = pdu.data_segment_len;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_scsi_task(&pdu, SPDK_SCSI_DIR_TO_DEV);
+
+	/* Case 11 - R and W must not both be 0 when EDTL is not 0. */
+	scsi_reqh->write_bit = 0;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_INVALID_PDU_FIELD);
+
+	/* Case 11 - R and W are both 0 and EDTL is also 0, and hence SCSI command PDU is accepted. */
+	to_be32(&scsi_reqh->expected_data_xfer_len, 0);
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_scsi_task(&pdu, SPDK_SCSI_DIR_NONE);
+}
+
+static void
+check_iscsi_task_mgmt_response(uint8_t response, uint32_t task_tag, uint32_t stat_sn,
+			       uint32_t exp_cmd_sn, uint32_t max_cmd_sn)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_task_resp *rsph;
+
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	rsph = (struct iscsi_bhs_task_resp *)&rsp_pdu->bhs;
+	CU_ASSERT(rsph->response == response);
+	CU_ASSERT(from_be32(&rsph->itt) == task_tag);
+	CU_ASSERT(from_be32(&rsph->exp_cmd_sn) == exp_cmd_sn);
+	CU_ASSERT(from_be32(&rsph->max_cmd_sn) == max_cmd_sn);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+}
+
+static void
+pdu_hdr_op_task_mgmt_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
+	struct iscsi_bhs_task_req *task_reqh;
+	int rc;
+
+	/* TBD: This test covers only error paths before creating iSCSI task for now.
+	 * Testing iSCSI task creation in iscsi_pdu_hdr_op_task() by UT is not simple
+	 * and do it separately later.
+	 */
+
+	task_reqh = (struct iscsi_bhs_task_req *)&pdu.bhs;
+
+	conn.sess = &sess;
+	conn.dev = &dev;
+
+	/* Case 1 - Task Management Function request PDU is acceptable only on normal session. */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* Case 2 - LUN is hot removed.  "LUN does not exist" response is sent. */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	task_reqh->immediate = 0;
+	to_be32(&task_reqh->itt, 1234);
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_LUN_NOT_EXIST, 1234, 0, 0, 1);
+
+	/* Case 3 - Unassigned function is specified.  "Function rejected" response is sent. */
+	dev.lun[0] = &lun;
+	task_reqh->flags = 0;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_REJECTED, 1234, 0, 0, 2);
+
+	/* Case 4 - CLEAR TASK SET is not supported.  "Task management function not supported"
+	 * response is sent.
+	 */
+	task_reqh->flags = ISCSI_TASK_FUNC_CLEAR_TASK_SET;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 3);
+
+	/* Case 5 - CLEAR ACA is not supported.  "Task management function not supported" is sent. */
+	task_reqh->flags = ISCSI_TASK_FUNC_CLEAR_ACA;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 4);
+
+	/* Case 6 - TARGET WARM RESET is not supported.  "Task management function not supported
+	 * is sent.
+	 */
+	task_reqh->flags = ISCSI_TASK_FUNC_TARGET_WARM_RESET;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 5);
+
+	/* Case 7 - TARGET COLD RESET is not supported. "Task management function not supported
+	 * is sent.
+	 */
+	task_reqh->flags = ISCSI_TASK_FUNC_TARGET_COLD_RESET;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 6);
+
+	/* Case 8 - TASK REASSIGN is not supported. "Task management function not supported" is sent. */
+	task_reqh->flags = ISCSI_TASK_FUNC_TASK_REASSIGN;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 7);
+}
+
+static void
+pdu_hdr_op_nopout_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct iscsi_bhs_nop_out *nopout_reqh;
+	int rc;
+
+	nopout_reqh = (struct iscsi_bhs_nop_out *)&pdu.bhs;
+
+	conn.sess = &sess;
+
+	/* Case 1 - NOP-Out PDU is acceptable only on normal session. */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_nopout(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* Case 2 - The length of the reflected ping data is limited to MaxRecvDataSegmentLength. */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH + 1;
+
+	rc = iscsi_pdu_hdr_op_nopout(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* Case 3 - If Initiator Task Tag contains 0xffffffff, the I bit must be set
+	 * to 1 and Target Transfer Tag should be copied from NOP-In PDU.  This case
+	 * satisfies the former but doesn't satisfy the latter, but ignore the error
+	 * for now.
+	 */
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	conn.id = 1234;
+	to_be32(&nopout_reqh->ttt, 1235);
+	to_be32(&nopout_reqh->itt, 0xffffffffU);
+	nopout_reqh->immediate = 1;
+
+	rc = iscsi_pdu_hdr_op_nopout(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+
+	/* Case 4 - This case doesn't satisfy the above former. This error is not ignored. */
+	nopout_reqh->immediate = 0;
+
+	rc = iscsi_pdu_hdr_op_nopout(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+}
+
+static void
+check_iscsi_r2t(struct spdk_iscsi_task *task, uint32_t len)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_r2t *rsph;
+
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	rsph = (struct iscsi_bhs_r2t *)&rsp_pdu->bhs;
+	CU_ASSERT(rsph->opcode == ISCSI_OP_R2T);
+	CU_ASSERT(from_be64(&rsph->lun) == spdk_scsi_lun_id_int_to_fmt(task->lun_id));
+	CU_ASSERT(from_be32(&rsph->buffer_offset) == task->next_r2t_offset);
+	CU_ASSERT(from_be32(&rsph->desired_xfer_len) == len);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+}
+
+static void
+pdu_hdr_op_data_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct spdk_iscsi_task primary = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
+	struct iscsi_bhs_data_out *data_reqh;
+	int rc;
+
+	data_reqh = (struct iscsi_bhs_data_out *)&pdu.bhs;
+
+	conn.sess = &sess;
+	conn.dev = &dev;
+
+	/* Case 1 - SCSI Data-Out PDU is acceptable only on normal session. */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* Case 2 - Data segment length must not be more than MaxRecvDataSegmentLength. */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH + 1;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* Case 3 - R2T task whose Target Transfer Tag matches is not found. */
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_INVALID_PDU_FIELD);
+
+	/* Case 4 - R2T task whose Target Transfer Tag matches is found but data segment length
+	 * is more than Desired Data Transfer Length of the R2T.
+	 */
+	primary.desired_data_transfer_length = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - 1;
+	conn.pending_r2t = 1;
+	conn.outstanding_r2t_tasks[0] = &primary;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* Case 5 - Initiator task tag doesn't match tag of R2T task. */
+	primary.desired_data_transfer_length = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	to_be32(&data_reqh->itt, 1);
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_INVALID_PDU_FIELD);
+
+	/* Case 6 - DataSN doesn't match the Data-Out PDU number within the current
+	 * output sequence.
+	 */
+	to_be32(&data_reqh->itt, 0);
+	to_be32(&data_reqh->data_sn, 1);
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* Case 7 - Output sequence must be in increasing buffer offset and must not
+	 * be overlaid but they are not satisfied.
+	 */
+	to_be32(&data_reqh->data_sn, 0);
+	to_be32(&data_reqh->buffer_offset, 4096);
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* Case 8 - Data segment length must not exceed MaxBurstLength. */
+	to_be32(&data_reqh->buffer_offset, 0);
+	sess.MaxBurstLength = pdu.data_segment_len - 1;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* Case 9 - LUN is hot removed. */
+	sess.MaxBurstLength = pdu.data_segment_len * 4;
+	to_be32(&data_reqh->data_sn, primary.r2t_datasn);
+	to_be32(&data_reqh->buffer_offset, primary.next_expected_r2t_offset);
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.task == NULL);
+
+	/* Case 10 - SCSI Data-Out PDU is correct and processed. Created task is held
+	 * to the PDU, but its F bit is 0 and hence R2T is not sent.
+	 */
+	dev.lun[0] = &lun;
+	to_be32(&data_reqh->data_sn, primary.r2t_datasn);
+	to_be32(&data_reqh->buffer_offset, primary.next_expected_r2t_offset);
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.task != NULL);
+	spdk_iscsi_task_put(pdu.task);
+	pdu.task = NULL;
+
+	/* Case 11 - SCSI Data-Out PDU is correct and processed. Created task is held
+	 * to the PDU, and Its F bit is 1 and hence R2T is sent.
+	 */
+	data_reqh->flags |= ISCSI_FLAG_FINAL;
+	to_be32(&data_reqh->data_sn, primary.r2t_datasn);
+	to_be32(&data_reqh->buffer_offset, primary.next_expected_r2t_offset);
+	primary.scsi.transfer_len = pdu.data_segment_len * 5;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.task != NULL);
+	check_iscsi_r2t(pdu.task, pdu.data_segment_len * 4);
+	spdk_iscsi_task_put(pdu.task);
+
+	/* Case 12 - Task pool is empty. */
+	to_be32(&data_reqh->data_sn, primary.r2t_datasn);
+	to_be32(&data_reqh->buffer_offset, primary.next_expected_r2t_offset);
+	g_task_pool_is_empty = true;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	g_task_pool_is_empty = false;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1549,6 +2241,13 @@ main(int argc, char **argv)
 			       abort_queued_datain_tasks_test) == NULL
 		|| CU_add_test(suite, "build_iovs_test", build_iovs_test) == NULL
 		|| CU_add_test(suite, "build_iovs_with_md_test", build_iovs_with_md_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_login_test", pdu_hdr_op_login_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_text_test", pdu_hdr_op_text_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_logout_test", pdu_hdr_op_logout_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_scsi_test", pdu_hdr_op_scsi_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_task_mgmt_test", pdu_hdr_op_task_mgmt_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_nopout_test", pdu_hdr_op_nopout_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_data_test", pdu_hdr_op_data_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
