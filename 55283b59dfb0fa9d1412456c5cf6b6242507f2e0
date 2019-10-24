@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a428dcab_fd515ec6",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T15:54:17Z",
+      "side": 1,
+      "message": "I was thinking of a comment that would describe to the \"casual\" reader why this is needed.  For example:\n\n/* Process io messages that were passed from non-polled mode threads to this ctrlr.  This is used as part of\n * nvme cuse support for surfacing /dev nodes that can be used by standard Linux management applications like\n * nvme-cli.\n */",
+      "revId": "55283b59dfb0fa9d1412456c5cf6b6242507f2e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
