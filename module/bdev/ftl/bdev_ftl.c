@@ -489,13 +489,13 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 	ftl_bdev->dev = dev;
 	ftl_bdev->bdev.product_name = "FTL disk";
 	ftl_bdev->bdev.write_cache = 0;
-	ftl_bdev->bdev.blocklen = attrs.lbk_size;
-	ftl_bdev->bdev.blockcnt = attrs.lbk_cnt;
+	ftl_bdev->bdev.blocklen = attrs.block_size;
+	ftl_bdev->bdev.blockcnt = attrs.num_blocks;
 	ftl_bdev->bdev.uuid = attrs.uuid;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "Creating bdev %s:\n", ftl_bdev->bdev.name);
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "\tblock_len:\t%zu\n", attrs.lbk_size);
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "\tblock_cnt:\t%"PRIu64"\n", attrs.lbk_cnt);
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "\tblock_len:\t%zu\n", attrs.block_size);
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "\tnum_blocks:\t%"PRIu64"\n", attrs.num_blocks);
 
 	ftl_bdev->bdev.ctxt = ftl_bdev;
 	ftl_bdev->bdev.fn_table = &ftl_fn_table;

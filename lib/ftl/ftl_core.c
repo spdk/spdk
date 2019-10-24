@@ -259,7 +259,7 @@ ftl_md_write_cb(struct ftl_io *io, void *arg, int status)
 	if (band->state == FTL_BAND_STATE_CLOSED) {
 		if (ftl_dev_has_nv_cache(dev)) {
 			pthread_spin_lock(&nv_cache->lock);
-			nv_cache->num_available += ftl_band_user_lbks(band);
+			nv_cache->num_available += ftl_band_user_blocks(band);
 
 			if (spdk_unlikely(nv_cache->num_available > nv_cache->num_data_blocks)) {
 				nv_cache->num_available = nv_cache->num_data_blocks;
@@ -289,7 +289,7 @@ static int
 ftl_read_next_physical_addr(struct ftl_io *io, struct ftl_addr *addr)
 {
 	struct spdk_ftl_dev *dev = io->dev;
-	size_t lbk_cnt, max_lbks;
+	size_t num_blocks, max_blocks;
 
 	assert(ftl_io_mode_physical(io));
 	assert(io->iov_pos < io->iov_cnt);
@@ -305,15 +305,15 @@ ftl_read_next_physical_addr(struct ftl_io *io, struct ftl_addr *addr)
 	/* Metadata has to be read in the way it's written (jumping across */
 	/* the zones in xfer_size increments) */
 	if (io->flags & FTL_IO_MD) {
-		max_lbks = dev->xfer_size - (addr->offset % dev->xfer_size);
-		lbk_cnt = spdk_min(ftl_io_iovec_len_left(io), max_lbks);
+		max_blocks = dev->xfer_size - (addr->offset % dev->xfer_size);
+		num_blocks = spdk_min(ftl_io_iovec_len_left(io), max_blocks);
 		assert(addr->offset / dev->xfer_size ==
-		       (addr->offset + lbk_cnt - 1) / dev->xfer_size);
+		       (addr->offset + num_blocks - 1) / dev->xfer_size);
 	} else {
-		lbk_cnt = ftl_io_iovec_len_left(io);
+		num_blocks = ftl_io_iovec_len_left(io);
 	}
 
-	return lbk_cnt;
+	return num_blocks;
 }
 
 static int
@@ -355,7 +355,7 @@ ftl_submit_erase(struct ftl_io *io)
 
 	ioch = spdk_io_channel_get_ctx(ftl_get_io_channel(dev));
 
-	for (i = 0; i < io->lbk_cnt; ++i) {
+	for (i = 0; i < io->num_blocks; ++i) {
 		if (i != 0) {
 			zone = ftl_band_next_zone(band, ftl_band_zone_from_addr(band, addr));
 			assert(zone->info.state == SPDK_BDEV_ZONE_STATE_CLOSED);
@@ -583,7 +583,7 @@ ftl_wptr_advance(struct ftl_wptr *wptr, size_t xfer_size)
 	}
 
 	wptr->offset += xfer_size;
-	next_thld = (ftl_band_num_usable_lbks(band) * conf->band_thld) / 100;
+	next_thld = (ftl_band_num_usable_blocks(band) * conf->band_thld) / 100;
 
 	if (ftl_band_full(band, wptr->offset)) {
 		ftl_band_set_state(band, FTL_BAND_STATE_FULL);
@@ -606,9 +606,9 @@ ftl_wptr_advance(struct ftl_wptr *wptr, size_t xfer_size)
 }
 
 static size_t
-ftl_wptr_user_lbks_left(const struct ftl_wptr *wptr)
+ftl_wptr_user_blocks_left(const struct ftl_wptr *wptr)
 {
-	return ftl_band_user_lbks_left(wptr->band, wptr->offset);
+	return ftl_band_user_blocks_left(wptr->band, wptr->offset);
 }
 
 static int
@@ -783,7 +783,7 @@ ftl_wptr_pad_band(struct ftl_wptr *wptr)
 	size_t size = ftl_rwb_num_pending(dev->rwb);
 	size_t blocks_left, rwb_size, pad_size;
 
-	blocks_left = ftl_wptr_user_lbks_left(wptr);
+	blocks_left = ftl_wptr_user_blocks_left(wptr);
 	assert(size <= blocks_left);
 	assert(blocks_left % dev->xfer_size == 0);
 	rwb_size = ftl_rwb_size(dev->rwb) - size;
@@ -860,7 +860,7 @@ ftl_invalidate_addr_unlocked(struct spdk_ftl_dev *dev, struct ftl_addr addr)
 	struct ftl_lba_map *lba_map = &band->lba_map;
 	uint64_t offset;
 
-	offset = ftl_band_lbkoff_from_addr(band, addr);
+	offset = ftl_band_block_off_from_addr(band, addr);
 
 	/* The bit might be already cleared if two writes are scheduled to the */
 	/* same LBA at the same time */
@@ -982,17 +982,17 @@ ftl_submit_read(struct ftl_io *io)
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_io_channel *ioch;
 	struct ftl_addr addr;
-	int rc = 0, lbk_cnt;
+	int rc = 0, num_blocks;
 
 	ioch = spdk_io_channel_get_ctx(io->ioch);
 
 	assert(LIST_EMPTY(&io->children));
 
-	while (io->pos < io->lbk_cnt) {
+	while (io->pos < io->num_blocks) {
 		if (ftl_io_mode_physical(io)) {
-			lbk_cnt = rc = ftl_read_next_physical_addr(io, &addr);
+			num_blocks = rc = ftl_read_next_physical_addr(io, &addr);
 		} else {
-			lbk_cnt = rc = ftl_read_next_logical_addr(io, &addr);
+			num_blocks = rc = ftl_read_next_logical_addr(io, &addr);
 		}
 
 		/* We might need to retry the read from scratch (e.g. */
@@ -1011,13 +1011,13 @@ ftl_submit_read(struct ftl_io *io)
 			continue;
 		}
 
-		assert(lbk_cnt > 0);
+		assert(num_blocks > 0);
 
-		ftl_trace_submission(dev, io, addr, lbk_cnt);
+		ftl_trace_submission(dev, io, addr, num_blocks);
 		rc = spdk_bdev_read_blocks(dev->base_bdev_desc, ioch->base_ioch,
 					   ftl_io_iovec_addr(io),
 					   addr.offset,
-					   lbk_cnt, ftl_io_cmpl_cb, io);
+					   num_blocks, ftl_io_cmpl_cb, io);
 		if (spdk_unlikely(rc)) {
 			if (rc == -ENOMEM) {
 				ftl_add_to_retry_queue(io);
@@ -1028,7 +1028,7 @@ ftl_submit_read(struct ftl_io *io)
 		}
 
 		ftl_io_inc_req(io);
-		ftl_io_advance(io, lbk_cnt);
+		ftl_io_advance(io, num_blocks);
 	}
 
 	/* If we didn't have to read anything from the device, */
@@ -1104,7 +1104,7 @@ ftl_nv_cache_wrap(void *ctx)
 }
 
 static uint64_t
-ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_lbks, unsigned int *phase)
+ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_blocks, unsigned int *phase)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
 	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
@@ -1117,18 +1117,18 @@ ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_lbks, unsigned i
 		goto out;
 	}
 
-	num_available = spdk_min(nv_cache->num_available, *num_lbks);
+	num_available = spdk_min(nv_cache->num_available, *num_blocks);
 	num_available = spdk_min(num_available, dev->conf.nv_cache.max_request_cnt);
 
 	if (spdk_unlikely(nv_cache->current_addr + num_available > cache_size)) {
-		*num_lbks = cache_size - nv_cache->current_addr;
+		*num_blocks = cache_size - nv_cache->current_addr;
 	} else {
-		*num_lbks = num_available;
+		*num_blocks = num_available;
 	}
 
 	cache_addr = nv_cache->current_addr;
-	nv_cache->current_addr += *num_lbks;
-	nv_cache->num_available -= *num_lbks;
+	nv_cache->current_addr += *num_blocks;
+	nv_cache->num_available -= *num_blocks;
 	*phase = nv_cache->phase;
 
 	if (nv_cache->current_addr == spdk_bdev_get_num_blocks(bdev)) {
@@ -1143,13 +1143,13 @@ out:
 }
 
 static struct ftl_io *
-ftl_alloc_io_nv_cache(struct ftl_io *parent, size_t num_lbks)
+ftl_alloc_io_nv_cache(struct ftl_io *parent, size_t num_blocks)
 {
 	struct ftl_io_init_opts opts = {
 		.dev		= parent->dev,
 		.parent		= parent,
 		.data		= ftl_io_iovec_addr(parent),
-		.lbk_cnt	= num_lbks,
+		.num_blocks	= num_blocks,
 		.flags		= parent->flags | FTL_IO_CACHE,
 	};
 
@@ -1191,20 +1191,20 @@ ftl_submit_nv_cache(void *ctx)
 
 	rc = spdk_bdev_write_blocks_with_md(nv_cache->bdev_desc, ioch->cache_ioch,
 					    ftl_io_iovec_addr(io), io->md, io->addr.offset,
-					    io->lbk_cnt, ftl_nv_cache_submit_cb, io);
+					    io->num_blocks, ftl_nv_cache_submit_cb, io);
 	if (rc == -ENOMEM) {
 		spdk_thread_send_msg(thread, ftl_submit_nv_cache, io);
 		return;
 	} else if (rc) {
 		SPDK_ERRLOG("Write to persistent cache failed: %s (%"PRIu64", %"PRIu64")\n",
-			    spdk_strerror(-rc), io->addr.offset, io->lbk_cnt);
+			    spdk_strerror(-rc), io->addr.offset, io->num_blocks);
 		spdk_mempool_put(nv_cache->md_pool, io->md);
 		io->status = -EIO;
 		ftl_io_complete(io);
 		return;
 	}
 
-	ftl_io_advance(io, io->lbk_cnt);
+	ftl_io_advance(io, io->num_blocks);
 	ftl_io_inc_req(io);
 }
 
@@ -1213,13 +1213,13 @@ ftl_nv_cache_fill_md(struct ftl_io *io, unsigned int phase)
 {
 	struct spdk_bdev *bdev;
 	struct ftl_nv_cache *nv_cache = &io->dev->nv_cache;
-	uint64_t lbk_off, lba;
+	uint64_t block_off, lba;
 	void *md_buf = io->md;
 
 	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
 
-	for (lbk_off = 0; lbk_off < io->lbk_cnt; ++lbk_off) {
-		lba = ftl_nv_cache_pack_lba(ftl_io_get_lba(io, lbk_off), phase);
+	for (block_off = 0; block_off < io->num_blocks; ++block_off) {
+		lba = ftl_nv_cache_pack_lba(ftl_io_get_lba(io, block_off), phase);
 		memcpy(md_buf, &lba, sizeof(lba));
 		md_buf += spdk_bdev_get_md_size(bdev);
 	}
@@ -1232,14 +1232,14 @@ _ftl_write_nv_cache(void *ctx)
 	struct spdk_ftl_dev *dev = io->dev;
 	struct spdk_thread *thread;
 	unsigned int phase;
-	uint64_t num_lbks;
+	uint64_t num_blocks;
 
 	thread = spdk_io_channel_get_thread(io->ioch);
 
-	while (io->pos < io->lbk_cnt) {
-		num_lbks = ftl_io_iovec_len_left(io);
+	while (io->pos < io->num_blocks) {
+		num_blocks = ftl_io_iovec_len_left(io);
 
-		child = ftl_alloc_io_nv_cache(io, num_lbks);
+		child = ftl_alloc_io_nv_cache(io, num_blocks);
 		if (spdk_unlikely(!child)) {
 			spdk_thread_send_msg(thread, _ftl_write_nv_cache, io);
 			return;
@@ -1253,7 +1253,7 @@ _ftl_write_nv_cache(void *ctx)
 		}
 
 		/* Reserve area on the write buffer cache */
-		child->addr.offset = ftl_reserve_nv_cache(&dev->nv_cache, &num_lbks, &phase);
+		child->addr.offset = ftl_reserve_nv_cache(&dev->nv_cache, &num_blocks, &phase);
 		if (child->addr.offset == FTL_LBA_INVALID) {
 			spdk_mempool_put(dev->nv_cache.md_pool, child->md);
 			ftl_io_free(child);
@@ -1262,8 +1262,8 @@ _ftl_write_nv_cache(void *ctx)
 		}
 
 		/* Shrink the IO if there isn't enough room in the cache to fill the whole iovec */
-		if (spdk_unlikely(num_lbks != ftl_io_iovec_len_left(io))) {
-			ftl_io_shrink_iovec(child, num_lbks);
+		if (spdk_unlikely(num_blocks != ftl_io_iovec_len_left(io))) {
+			ftl_io_shrink_iovec(child, num_blocks);
 		}
 
 		ftl_nv_cache_fill_md(child, phase);
@@ -1373,13 +1373,13 @@ ftl_write_cb(struct ftl_io *io, void *arg, int status)
 		return;
 	}
 
-	assert(io->lbk_cnt == dev->xfer_size);
+	assert(io->num_blocks == dev->xfer_size);
 	assert(!(io->flags & FTL_IO_MD));
 
 	ftl_rwb_foreach(entry, batch) {
 		band = entry->band;
 		if (!(entry->flags & FTL_IO_PAD)) {
-			/* Verify that the LBA is set for user lbks */
+			/* Verify that the LBA is set for user blocks */
 			assert(entry->lba != FTL_LBA_INVALID);
 		}
 
@@ -1495,7 +1495,7 @@ ftl_io_init_child_write(struct ftl_io *parent, struct ftl_addr addr,
 		.size		= sizeof(struct ftl_io),
 		.flags		= 0,
 		.type		= parent->type,
-		.lbk_cnt	= dev->xfer_size,
+		.num_blocks	= dev->xfer_size,
 		.cb_fn		= cb,
 		.data		= data,
 		.md		= md,
@@ -1521,7 +1521,7 @@ ftl_io_child_write_cb(struct ftl_io *io, void *ctx, int status)
 	wptr = ftl_wptr_from_band(io->band);
 
 	zone->busy = false;
-	zone->info.write_pointer += io->lbk_cnt;
+	zone->info.write_pointer += io->num_blocks;
 
 	/* If some other write on the same band failed the write pointer would already be freed */
 	if (spdk_likely(wptr)) {
@@ -1530,7 +1530,7 @@ ftl_io_child_write_cb(struct ftl_io *io, void *ctx, int status)
 }
 
 static int
-ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
+ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int num_blocks)
 {
 	struct spdk_ftl_dev	*dev = io->dev;
 	struct ftl_io_channel	*ioch;
@@ -1561,12 +1561,12 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 		rc = spdk_bdev_zone_append(dev->base_bdev_desc, ioch->base_ioch,
 					   ftl_io_iovec_addr(child),
 					   ftl_addr_get_zone_slba(dev, addr),
-					   lbk_cnt, ftl_io_cmpl_cb, child);
+					   num_blocks, ftl_io_cmpl_cb, child);
 	} else {
 		rc = spdk_bdev_write_blocks(dev->base_bdev_desc, ioch->base_ioch,
 					    ftl_io_iovec_addr(child),
 					    addr.offset,
-					    lbk_cnt, ftl_io_cmpl_cb, child);
+					    num_blocks, ftl_io_cmpl_cb, child);
 	}
 
 	if (rc) {
@@ -1579,7 +1579,7 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 	}
 
 	ftl_io_inc_req(child);
-	ftl_io_advance(child, lbk_cnt);
+	ftl_io_advance(child, num_blocks);
 
 	return 0;
 }
@@ -1590,7 +1590,7 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 	struct spdk_ftl_dev	*dev = io->dev;
 	int			rc = 0;
 
-	assert(io->lbk_cnt % dev->xfer_size == 0);
+	assert(io->num_blocks % dev->xfer_size == 0);
 	/* Only one child write make sense in case of user write */
 	assert((io->flags & FTL_IO_MD) || io->iov_cnt == 1);
 
@@ -1774,7 +1774,7 @@ ftl_rwb_fill(struct ftl_io *io)
 	struct ftl_addr addr = { .cached = 1 };
 	int flags = ftl_rwb_flags_from_io(io);
 
-	while (io->pos < io->lbk_cnt) {
+	while (io->pos < io->num_blocks) {
 		if (ftl_io_current_lba(io) == FTL_LBA_INVALID) {
 			ftl_io_advance(io, 1);
 			continue;
@@ -1836,8 +1836,8 @@ ftl_band_calc_merit(struct ftl_band *band, size_t *threshold_valid)
 	size_t usable, valid, invalid;
 	double vld_ratio;
 
-	/* If the band doesn't have any usable lbks it's of no use */
-	usable = ftl_band_num_usable_lbks(band);
+	/* If the band doesn't have any usable blocks it's of no use */
+	usable = ftl_band_num_usable_blocks(band);
 	if (usable == 0) {
 		return 0.0;
 	}
@@ -1861,7 +1861,7 @@ ftl_band_needs_defrag(struct ftl_band *band, struct spdk_ftl_dev *dev)
 		return true;
 	}
 
-	thld_vld = (ftl_band_num_usable_lbks(band) * conf->invalid_thld) / 100;
+	thld_vld = (ftl_band_num_usable_blocks(band) * conf->invalid_thld) / 100;
 
 	return band->merit > ftl_band_calc_merit(band, &thld_vld);
 }
@@ -1914,8 +1914,8 @@ void
 spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attrs)
 {
 	attrs->uuid = dev->uuid;
-	attrs->lbk_cnt = dev->num_lbas;
-	attrs->lbk_size = FTL_BLOCK_SIZE;
+	attrs->num_blocks = dev->num_lbas;
+	attrs->block_size = FTL_BLOCK_SIZE;
 	attrs->cache_bdev_desc = dev->nv_cache.bdev_desc;
 	attrs->num_zones = ftl_get_num_zones(dev);
 	attrs->zone_size = ftl_get_num_blocks_in_zone(dev);
@@ -1990,7 +1990,7 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 		return -EINVAL;
 	}
 
-	if (lba_cnt != ftl_iovec_num_lbks(iov, iov_cnt)) {
+	if (lba_cnt != ftl_iovec_num_blocks(iov, iov_cnt)) {
 		return -EINVAL;
 	}
 
@@ -2054,7 +2054,7 @@ spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba
 		return -EINVAL;
 	}
 
-	if (lba_cnt != ftl_iovec_num_lbks(iov, iov_cnt)) {
+	if (lba_cnt != ftl_iovec_num_blocks(iov, iov_cnt)) {
 		return -EINVAL;
 	}
 

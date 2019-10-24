@@ -81,7 +81,7 @@ addr_from_punit(uint64_t punit)
 }
 
 static void
-test_band_lbkoff_from_addr_base(void)
+test_band_block_off_from_addr_base(void)
 {
 	struct ftl_addr addr;
 	uint64_t offset, i, flat_lun = 0;
@@ -91,7 +91,7 @@ test_band_lbkoff_from_addr_base(void)
 		addr = addr_from_punit(i);
 		addr.offset += TEST_BAND_IDX * ftl_get_num_blocks_in_band(g_dev);
 
-		offset = ftl_band_lbkoff_from_addr(g_band, addr);
+		offset = ftl_band_block_off_from_addr(g_band, addr);
 		CU_ASSERT_EQUAL(offset, flat_lun * ftl_get_num_blocks_in_zone(g_dev));
 		flat_lun++;
 	}
@@ -99,7 +99,7 @@ test_band_lbkoff_from_addr_base(void)
 }
 
 static void
-test_band_lbkoff_from_addr_offset(void)
+test_band_block_off_from_addr_offset(void)
 {
 	struct ftl_addr addr;
 	uint64_t offset, expect, i, j;
@@ -110,7 +110,7 @@ test_band_lbkoff_from_addr_offset(void)
 			addr = addr_from_punit(i);
 			addr.offset += TEST_BAND_IDX * ftl_get_num_blocks_in_band(g_dev) + j;
 
-			offset = ftl_band_lbkoff_from_addr(g_band, addr);
+			offset = ftl_band_block_off_from_addr(g_band, addr);
 
 			expect = test_offset_from_addr(addr, g_band);
 			CU_ASSERT_EQUAL(offset, expect);
@@ -120,7 +120,7 @@ test_band_lbkoff_from_addr_offset(void)
 }
 
 static void
-test_band_addr_from_lbkoff(void)
+test_band_addr_from_block_off(void)
 {
 	struct ftl_addr addr, expect;
 	uint64_t offset, i, j;
@@ -131,8 +131,8 @@ test_band_addr_from_lbkoff(void)
 			expect = addr_from_punit(i);
 			expect.offset += TEST_BAND_IDX * ftl_get_num_blocks_in_band(g_dev) + j;
 
-			offset = ftl_band_lbkoff_from_addr(g_band, expect);
-			addr = ftl_band_addr_from_lbkoff(g_band, offset);
+			offset = ftl_band_block_off_from_addr(g_band, expect);
+			addr = ftl_band_addr_from_block_off(g_band, offset);
 
 			CU_ASSERT_EQUAL(addr.offset, expect.offset);
 		}
@@ -214,7 +214,7 @@ test_next_xfer_addr(void)
 	struct ftl_addr addr, result, expect;
 
 	setup_band();
-	/* Verify simple one lbk incremention */
+	/* Verify simple one block incremention */
 	addr = addr_from_punit(0);
 	addr.offset += TEST_BAND_IDX * ftl_get_num_blocks_in_band(g_dev);
 	expect = addr;
@@ -296,12 +296,12 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "test_band_lbkoff_from_addr_base",
-			    test_band_lbkoff_from_addr_base) == NULL
-		|| CU_add_test(suite, "test_band_lbkoff_from_addr_offset",
-			       test_band_lbkoff_from_addr_offset) == NULL
-		|| CU_add_test(suite, "test_band_addr_from_lbkoff",
-			       test_band_addr_from_lbkoff) == NULL
+		CU_add_test(suite, "test_band_block_off_from_addr_base",
+			    test_band_block_off_from_addr_base) == NULL
+		|| CU_add_test(suite, "test_band_block_off_from_addr_offset",
+			       test_band_block_off_from_addr_offset) == NULL
+		|| CU_add_test(suite, "test_band_addr_from_block_off",
+			       test_band_addr_from_block_off) == NULL
 		|| CU_add_test(suite, "test_band_set_addr",
 			       test_band_set_addr) == NULL
 		|| CU_add_test(suite, "test_invalidate_addr",

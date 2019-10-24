@@ -72,7 +72,7 @@ ftl_band_validate_md(struct ftl_band *band)
 			continue;
 		}
 
-		addr_md = ftl_band_addr_from_lbkoff(band, i);
+		addr_md = ftl_band_addr_from_block_off(band, i);
 		addr_l2p = ftl_l2p_get(dev, lba_map->map[i]);
 
 		if (addr_l2p.cached) {
@@ -116,7 +116,7 @@ ftl_dev_dump_bands(struct spdk_ftl_dev *dev)
 		ftl_debug(" Band %3zu: %8zu / %zu \tnum_zones: %zu \twr_cnt: %"PRIu64"\tmerit:"
 			  "%10.3f\tstate: %s\n",
 			  i + 1, dev->bands[i].lba_map.num_vld,
-			  ftl_band_user_lbks(&dev->bands[i]),
+			  ftl_band_user_blocks(&dev->bands[i]),
 			  dev->bands[i].num_zones,
 			  dev->bands[i].wr_cnt,
 			  dev->bands[i].merit,

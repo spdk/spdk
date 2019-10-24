@@ -81,7 +81,7 @@ struct spdk_ftl_conf {
 	/* IO pool size per user thread */
 	size_t					user_io_pool_size;
 
-	/* Lowest percentage of invalid lbks for a band to be defragged */
+	/* Lowest percentage of invalid blocks for a band to be defragged */
 	size_t					invalid_thld;
 
 	/* User writes limits */
@@ -133,9 +133,9 @@ struct spdk_ftl_attrs {
 	/* Device's UUID */
 	struct spdk_uuid			uuid;
 	/* Number of logical blocks */
-	uint64_t				lbk_cnt;
+	uint64_t				num_blocks;
 	/* Logical block size */
-	size_t					lbk_size;
+	size_t					block_size;
 	/* Write buffer cache */
 	struct spdk_bdev_desc			*cache_bdev_desc;
 	/* Number of zones per parallel unit in the underlying device (including any offline ones) */

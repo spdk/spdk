@@ -75,9 +75,9 @@ static const struct spdk_ftl_conf	g_default_conf = {
 		/* 40 free bands / 100 % host writes - defrag starts running */
 		[SPDK_FTL_LIMIT_START] = { .thld = 40, .limit = 100 },
 	},
-	/* 10 percent valid lbks */
+	/* 10 percent valid blocks */
 	.invalid_thld = 10,
-	/* 20% spare lbks */
+	/* 20% spare blocks */
 	.lba_rsvd = 20,
 	/* 6M write buffer */
 	.rwb_size = 6 * 1024 * 1024,
@@ -632,7 +632,7 @@ ftl_setup_initial_state(struct spdk_ftl_dev *dev)
 
 	dev->num_lbas = 0;
 	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
-		dev->num_lbas += ftl_band_num_usable_lbks(&dev->bands[i]);
+		dev->num_lbas += ftl_band_num_usable_blocks(&dev->bands[i]);
 	}
 
 	dev->num_lbas = (dev->num_lbas * (100 - conf->lba_rsvd)) / 100;
@@ -954,7 +954,7 @@ static int
 ftl_dev_init_base_bdev(struct spdk_ftl_dev *dev)
 {
 	uint32_t block_size;
-	uint64_t block_cnt;
+	uint64_t num_blocks;
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(dev->base_bdev_desc);
 
 	if (!spdk_bdev_is_zoned(bdev)) {
@@ -972,8 +972,8 @@ ftl_dev_init_base_bdev(struct spdk_ftl_dev *dev)
 		return -1;
 	}
 
-	block_cnt = spdk_bdev_get_num_blocks(bdev);
-	if (block_cnt % ftl_get_num_punits(dev)) {
+	num_blocks = spdk_bdev_get_num_blocks(bdev);
+	if (num_blocks % ftl_get_num_punits(dev)) {
 		SPDK_ERRLOG("Unsupported geometry. Base bdev block count must be multiple "
 			    "of optimal number of zones.\n");
 		return -1;
@@ -985,8 +985,8 @@ ftl_dev_init_base_bdev(struct spdk_ftl_dev *dev)
 		return -1;
 	}
 
-	dev->num_bands = block_cnt / (ftl_get_num_punits(dev) * ftl_get_num_blocks_in_zone(dev));
-	dev->addr_len = spdk_u64log2(block_cnt) + 1;
+	dev->num_bands = num_blocks / (ftl_get_num_punits(dev) * ftl_get_num_blocks_in_zone(dev));
+	dev->addr_len = spdk_u64log2(num_blocks) + 1;
 
 	return 0;
 }

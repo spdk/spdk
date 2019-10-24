@@ -66,8 +66,8 @@ struct __attribute__((packed)) ftl_md_hdr {
 struct __attribute__((packed)) ftl_tail_md {
 	struct ftl_md_hdr	hdr;
 
-	/* Max number of lbks */
-	uint64_t		num_lbks;
+	/* Max number of blocks */
+	uint64_t		num_blocks;
 
 	uint8_t			reserved[4059];
 };
@@ -87,43 +87,43 @@ struct __attribute__((packed)) ftl_head_md {
 };
 
 size_t
-ftl_tail_md_hdr_num_lbks(void)
+ftl_tail_md_hdr_num_blocks(void)
 {
 	return spdk_divide_round_up(sizeof(struct ftl_tail_md), FTL_BLOCK_SIZE);
 }
 
 size_t
-ftl_vld_map_num_lbks(const struct spdk_ftl_dev *dev)
+ftl_vld_map_num_blocks(const struct spdk_ftl_dev *dev)
 {
 	return spdk_divide_round_up(ftl_vld_map_size(dev), FTL_BLOCK_SIZE);
 }
 
 size_t
-ftl_lba_map_num_lbks(const struct spdk_ftl_dev *dev)
+ftl_lba_map_num_blocks(const struct spdk_ftl_dev *dev)
 {
 	return spdk_divide_round_up(ftl_get_num_blocks_in_band(dev) * sizeof(uint64_t), FTL_BLOCK_SIZE);
 }
 
 size_t
-ftl_head_md_num_lbks(const struct spdk_ftl_dev *dev)
+ftl_head_md_num_blocks(const struct spdk_ftl_dev *dev)
 {
 	return dev->xfer_size;
 }
 
 size_t
-ftl_tail_md_num_lbks(const struct spdk_ftl_dev *dev)
+ftl_tail_md_num_blocks(const struct spdk_ftl_dev *dev)
 {
-	return spdk_divide_round_up(ftl_tail_md_hdr_num_lbks() +
-				    ftl_vld_map_num_lbks(dev) +
-				    ftl_lba_map_num_lbks(dev),
+	return spdk_divide_round_up(ftl_tail_md_hdr_num_blocks() +
+				    ftl_vld_map_num_blocks(dev) +
+				    ftl_lba_map_num_blocks(dev),
 				    dev->xfer_size) * dev->xfer_size;
 }
 
 static uint64_t
 ftl_band_tail_md_offset(const struct ftl_band *band)
 {
-	return ftl_band_num_usable_lbks(band) -
-	       ftl_tail_md_num_lbks(band->dev);
+	return ftl_band_num_usable_blocks(band) -
+	       ftl_tail_md_num_blocks(band->dev);
 }
 
 int
@@ -284,17 +284,17 @@ ftl_pack_tail_md(struct ftl_band *band)
 	struct ftl_tail_md *tail = lba_map->dma_buf;
 	void *vld_offset;
 
-	vld_offset = (char *)tail + ftl_tail_md_hdr_num_lbks() * FTL_BLOCK_SIZE;
+	vld_offset = (char *)tail + ftl_tail_md_hdr_num_blocks() * FTL_BLOCK_SIZE;
 
 	/* Clear out the buffer */
-	memset(tail, 0, ftl_tail_md_hdr_num_lbks() * FTL_BLOCK_SIZE);
-	tail->num_lbks = ftl_get_num_blocks_in_band(dev);
+	memset(tail, 0, ftl_tail_md_hdr_num_blocks() * FTL_BLOCK_SIZE);
+	tail->num_blocks = ftl_get_num_blocks_in_band(dev);
 
 	pthread_spin_lock(&lba_map->lock);
 	spdk_bit_array_store_mask(lba_map->vld, vld_offset);
 	pthread_spin_unlock(&lba_map->lock);
 
-	ftl_set_md_hdr(band, &tail->hdr, ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE);
+	ftl_set_md_hdr(band, &tail->hdr, ftl_tail_md_num_blocks(dev) * FTL_BLOCK_SIZE);
 
 	return FTL_MD_SUCCESS;
 }
@@ -326,9 +326,9 @@ ftl_unpack_tail_md(struct ftl_band *band)
 	struct ftl_tail_md *tail = lba_map->dma_buf;
 	int rc;
 
-	vld_offset = (char *)tail + ftl_tail_md_hdr_num_lbks() * FTL_BLOCK_SIZE;
+	vld_offset = (char *)tail + ftl_tail_md_hdr_num_blocks() * FTL_BLOCK_SIZE;
 
-	rc = ftl_md_hdr_vld(dev, &tail->hdr, ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE);
+	rc = ftl_md_hdr_vld(dev, &tail->hdr, ftl_tail_md_num_blocks(dev) * FTL_BLOCK_SIZE);
 	if (rc) {
 		return rc;
 	}
@@ -343,7 +343,7 @@ ftl_unpack_tail_md(struct ftl_band *band)
 		return FTL_MD_NO_MD;
 	}
 
-	if (tail->num_lbks != ftl_get_num_blocks_in_band(dev)) {
+	if (tail->num_blocks != ftl_get_num_blocks_in_band(dev)) {
 		return FTL_MD_INVALID_SIZE;
 	}
 
@@ -460,7 +460,7 @@ ftl_band_set_addr(struct ftl_band *band, uint64_t lba, struct ftl_addr addr)
 
 	assert(lba != FTL_LBA_INVALID);
 
-	offset = ftl_band_lbkoff_from_addr(band, addr);
+	offset = ftl_band_block_off_from_addr(band, addr);
 	pthread_spin_lock(&lba_map->lock);
 
 	lba_map->num_vld++;
@@ -477,18 +477,18 @@ ftl_band_age(const struct ftl_band *band)
 }
 
 size_t
-ftl_band_num_usable_lbks(const struct ftl_band *band)
+ftl_band_num_usable_blocks(const struct ftl_band *band)
 {
 	return band->num_zones * ftl_get_num_blocks_in_zone(band->dev);
 }
 
 size_t
-ftl_band_user_lbks_left(const struct ftl_band *band, size_t offset)
+ftl_band_user_blocks_left(const struct ftl_band *band, size_t offset)
 {
 	size_t tail_md_offset = ftl_band_tail_md_offset(band);
 
-	if (spdk_unlikely(offset <= ftl_head_md_num_lbks(band->dev))) {
-		return ftl_band_user_lbks(band);
+	if (spdk_unlikely(offset <= ftl_head_md_num_blocks(band->dev))) {
+		return ftl_band_user_blocks(band);
 	}
 
 	if (spdk_unlikely(offset > tail_md_offset)) {
@@ -499,11 +499,11 @@ ftl_band_user_lbks_left(const struct ftl_band *band, size_t offset)
 }
 
 size_t
-ftl_band_user_lbks(const struct ftl_band *band)
+ftl_band_user_blocks(const struct ftl_band *band)
 {
-	return ftl_band_num_usable_lbks(band) -
-	       ftl_head_md_num_lbks(band->dev) -
-	       ftl_tail_md_num_lbks(band->dev);
+	return ftl_band_num_usable_blocks(band) -
+	       ftl_head_md_num_blocks(band->dev) -
+	       ftl_tail_md_num_blocks(band->dev);
 }
 
 struct ftl_band *
@@ -525,7 +525,7 @@ ftl_band_zone_from_addr(struct ftl_band *band, struct ftl_addr addr)
 }
 
 uint64_t
-ftl_band_lbkoff_from_addr(struct ftl_band *band, struct ftl_addr addr)
+ftl_band_block_off_from_addr(struct ftl_band *band, struct ftl_addr addr)
 {
 	assert(ftl_addr_get_band(band->dev, addr) == band->id);
 	assert(ftl_addr_get_pu(band->dev, addr) < ftl_get_num_punits(band->dev));
@@ -533,7 +533,7 @@ ftl_band_lbkoff_from_addr(struct ftl_band *band, struct ftl_addr addr)
 }
 
 struct ftl_addr
-ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_lbks)
+ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_blocks)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_zone *zone;
@@ -544,7 +544,7 @@ ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_
 
 	zone = ftl_band_zone_from_addr(band, addr);
 
-	num_lbks += (offset % dev->xfer_size);
+	num_blocks += (offset % dev->xfer_size);
 	offset  -= (offset % dev->xfer_size);
 
 #if defined(DEBUG)
@@ -559,17 +559,17 @@ ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_
 	assert(band->num_zones == _num_zones);
 #endif
 	assert(band->num_zones != 0);
-	num_stripes = (num_lbks / dev->xfer_size) / band->num_zones;
+	num_stripes = (num_blocks / dev->xfer_size) / band->num_zones;
 	offset += num_stripes * dev->xfer_size;
-	num_lbks -= num_stripes * dev->xfer_size * band->num_zones;
+	num_blocks -= num_stripes * dev->xfer_size * band->num_zones;
 
 	if (offset > ftl_get_num_blocks_in_zone(dev)) {
 		return ftl_to_addr(FTL_ADDR_INVALID);
 	}
 
-	num_xfers = num_lbks / dev->xfer_size;
+	num_xfers = num_blocks / dev->xfer_size;
 	for (size_t i = 0; i < num_xfers; ++i) {
-		/* When the last zone is reached the lbk part of the address */
+		/* When the last zone is reached the block part of the address */
 		/* needs to be increased by xfer_size */
 		if (ftl_band_zone_is_last(band, zone)) {
 			offset += dev->xfer_size;
@@ -581,11 +581,11 @@ ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_
 		zone = ftl_band_next_operational_zone(band, zone);
 		assert(zone);
 
-		num_lbks -= dev->xfer_size;
+		num_blocks -= dev->xfer_size;
 	}
 
-	if (num_lbks) {
-		offset += num_lbks;
+	if (num_blocks) {
+		offset += num_blocks;
 		if (offset > ftl_get_num_blocks_in_zone(dev)) {
 			return ftl_to_addr(FTL_ADDR_INVALID);
 		}
@@ -620,19 +620,19 @@ ftl_xfer_offset_from_addr(struct ftl_band *band, struct ftl_addr addr)
 }
 
 struct ftl_addr
-ftl_band_addr_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
+ftl_band_addr_from_block_off(struct ftl_band *band, uint64_t block_off)
 {
 	struct ftl_addr addr = { .offset = 0 };
 
-	addr.offset = lbkoff + band->id * ftl_get_num_blocks_in_band(band->dev);
+	addr.offset = block_off + band->id * ftl_get_num_blocks_in_band(band->dev);
 	return addr;
 }
 
 struct ftl_addr
 ftl_band_next_addr(struct ftl_band *band, struct ftl_addr addr, size_t offset)
 {
-	uint64_t lbkoff = ftl_band_lbkoff_from_addr(band, addr);
-	return ftl_band_addr_from_lbkoff(band, lbkoff + offset);
+	uint64_t block_off = ftl_band_block_off_from_addr(band, addr);
+	return ftl_band_addr_from_block_off(band, block_off + offset);
 }
 
 void
@@ -660,9 +660,9 @@ ftl_band_alloc_lba_map(struct ftl_band *band)
 	memset(lba_map->dma_buf, 0, ftl_lba_map_pool_elem_size(band->dev));
 
 	lba_map->map = (uint64_t *)((char *)lba_map->dma_buf + FTL_BLOCK_SIZE *
-				    (ftl_tail_md_hdr_num_lbks() + ftl_vld_map_num_lbks(dev)));
+				    (ftl_tail_md_hdr_num_blocks() + ftl_vld_map_num_blocks(dev)));
 
-	lba_map->segments = (char *)lba_map->dma_buf + ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE;
+	lba_map->segments = (char *)lba_map->dma_buf + ftl_tail_md_num_blocks(dev) * FTL_BLOCK_SIZE;
 
 	ftl_band_acquire_lba_map(band);
 	return 0;
@@ -698,7 +698,7 @@ ftl_read_md_cb(struct ftl_io *io, void *arg, int status)
 
 static struct ftl_md_io *
 ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_addr addr,
-		    struct ftl_band *band, size_t lbk_cnt, void *buf,
+		    struct ftl_band *band, size_t num_blocks, void *buf,
 		    ftl_io_fn fn, ftl_md_pack_fn pack_fn, ftl_io_fn cb_fn, void *cb_ctx)
 {
 	struct ftl_md_io *io;
@@ -710,7 +710,7 @@ ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_addr addr,
 		.size		= sizeof(*io),
 		.flags		= FTL_IO_MD | FTL_IO_PHYSICAL_MODE,
 		.type		= FTL_IO_READ,
-		.lbk_cnt	= lbk_cnt,
+		.num_blocks	= num_blocks,
 		.cb_fn		= fn,
 		.data		= buf,
 	};
@@ -730,7 +730,7 @@ ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_addr addr,
 
 static struct ftl_io *
 ftl_io_init_md_write(struct spdk_ftl_dev *dev, struct ftl_band *band,
-		     void *data, size_t lbk_cnt, ftl_io_fn cb)
+		     void *data, size_t num_blocks, ftl_io_fn cb)
 {
 	struct ftl_io_init_opts opts = {
 		.dev		= dev,
@@ -740,7 +740,7 @@ ftl_io_init_md_write(struct spdk_ftl_dev *dev, struct ftl_band *band,
 		.size		= sizeof(struct ftl_io),
 		.flags		= FTL_IO_MD | FTL_IO_PHYSICAL_MODE,
 		.type		= FTL_IO_WRITE,
-		.lbk_cnt	= lbk_cnt,
+		.num_blocks	= num_blocks,
 		.cb_fn		= cb,
 		.data		= data,
 		.md		= NULL,
@@ -750,13 +750,13 @@ ftl_io_init_md_write(struct spdk_ftl_dev *dev, struct ftl_band *band,
 }
 
 static int
-ftl_band_write_md(struct ftl_band *band, size_t lbk_cnt,
+ftl_band_write_md(struct ftl_band *band, size_t num_blocks,
 		  ftl_md_pack_fn md_fn, ftl_io_fn cb)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_io *io;
 
-	io = ftl_io_init_md_write(dev, band, band->lba_map.dma_buf, lbk_cnt, cb);
+	io = ftl_io_init_md_write(dev, band, band->lba_map.dma_buf, num_blocks, cb);
 	if (!io) {
 		return -ENOMEM;
 	}
@@ -779,14 +779,14 @@ ftl_band_md_clear(struct ftl_band *band)
 int
 ftl_band_write_head_md(struct ftl_band *band, ftl_io_fn cb)
 {
-	return ftl_band_write_md(band, ftl_head_md_num_lbks(band->dev),
+	return ftl_band_write_md(band, ftl_head_md_num_blocks(band->dev),
 				 ftl_pack_head_md, cb);
 }
 
 int
 ftl_band_write_tail_md(struct ftl_band *band, ftl_io_fn cb)
 {
-	return ftl_band_write_md(band, ftl_tail_md_num_lbks(band->dev),
+	return ftl_band_write_md(band, ftl_tail_md_num_blocks(band->dev),
 				 ftl_pack_tail_md, cb);
 }
 
@@ -794,13 +794,13 @@ static struct ftl_addr
 ftl_band_lba_map_addr(struct ftl_band *band, size_t offset)
 {
 	return ftl_band_next_xfer_addr(band, band->tail_md_addr,
-				       ftl_tail_md_hdr_num_lbks() +
-				       ftl_vld_map_num_lbks(band->dev) +
+				       ftl_tail_md_hdr_num_blocks() +
+				       ftl_vld_map_num_blocks(band->dev) +
 				       offset);
 }
 
 static int
-ftl_band_read_md(struct ftl_band *band, size_t lbk_cnt, struct ftl_addr start_addr,
+ftl_band_read_md(struct ftl_band *band, size_t num_blocks, struct ftl_addr start_addr,
 		 void *buf, ftl_io_fn fn, ftl_md_pack_fn pack_fn, ftl_io_fn cb_fn, void *cb_ctx)
 {
 	struct spdk_ftl_dev *dev = band->dev;
@@ -810,7 +810,7 @@ ftl_band_read_md(struct ftl_band *band, size_t lbk_cnt, struct ftl_addr start_ad
 		return -ENOENT;
 	}
 
-	io = ftl_io_init_md_read(dev, start_addr, band, lbk_cnt, buf, fn, pack_fn, cb_fn, cb_ctx);
+	io = ftl_io_init_md_read(dev, start_addr, band, num_blocks, buf, fn, pack_fn, cb_fn, cb_ctx);
 	if (!io) {
 		return -ENOMEM;
 	}
@@ -822,7 +822,7 @@ ftl_band_read_md(struct ftl_band *band, size_t lbk_cnt, struct ftl_addr start_ad
 int
 ftl_band_read_tail_md(struct ftl_band *band, struct ftl_addr addr, ftl_io_fn cb_fn, void *cb_ctx)
 {
-	return ftl_band_read_md(band, ftl_tail_md_num_lbks(band->dev), addr, band->lba_map.dma_buf,
+	return ftl_band_read_md(band, ftl_tail_md_num_blocks(band->dev), addr, band->lba_map.dma_buf,
 				ftl_read_md_cb, ftl_unpack_tail_md, cb_fn, cb_ctx);
 }
 
@@ -887,7 +887,7 @@ ftl_lba_map_offset_from_addr(struct ftl_band *band, struct ftl_addr addr)
 	struct ftl_addr start_addr = ftl_band_lba_map_addr(band, 0);
 
 	offset =  ftl_xfer_offset_from_addr(band, addr) - ftl_xfer_offset_from_addr(band, start_addr);
-	assert(offset < ftl_lba_map_num_lbks(band->dev));
+	assert(offset < ftl_lba_map_num_blocks(band->dev));
 
 	return offset;
 }
@@ -896,17 +896,17 @@ static void
 ftl_read_lba_map_cb(struct ftl_io *io, void *arg, int status)
 {
 	struct ftl_lba_map *lba_map = &io->band->lba_map;
-	uint64_t lbk_off;
+	uint64_t block_off;
 
-	lbk_off = ftl_lba_map_offset_from_addr(io->band, io->addr);
-	assert(lbk_off + io->lbk_cnt <= ftl_lba_map_num_lbks(io->dev));
+	block_off = ftl_lba_map_offset_from_addr(io->band, io->addr);
+	assert(block_off + io->num_blocks <= ftl_lba_map_num_blocks(io->dev));
 
 	if (!status) {
-		ftl_lba_map_set_segment_state(lba_map, lbk_off, io->lbk_cnt,
+		ftl_lba_map_set_segment_state(lba_map, block_off, io->num_blocks,
 					      FTL_LBA_MAP_SEG_CACHED);
 	}
 
-	ftl_process_lba_map_requests(io->dev, lba_map, lbk_off, io->lbk_cnt, status);
+	ftl_process_lba_map_requests(io->dev, lba_map, block_off, io->num_blocks, status);
 }
 
 static struct ftl_lba_map_request *
@@ -953,46 +953,46 @@ int
 ftl_band_read_lba_map(struct ftl_band *band, size_t offset, size_t lba_cnt,
 		      ftl_io_fn cb_fn, void *cb_ctx)
 {
-	size_t lbk_cnt, lbk_off, num_read, num_segments;
+	size_t num_blocks, block_off, num_read, num_segments;
 	struct ftl_lba_map *lba_map = &band->lba_map;
 	struct ftl_lba_map_request *request;
 	int rc = 0;
 
-	lbk_off = offset / FTL_NUM_LBA_IN_BLOCK;
+	block_off = offset / FTL_NUM_LBA_IN_BLOCK;
 	num_segments = spdk_divide_round_up(offset + lba_cnt, FTL_NUM_LBA_IN_BLOCK);
-	lbk_cnt = num_segments - lbk_off;
-	assert(lbk_off + lbk_cnt <= ftl_lba_map_num_lbks(band->dev));
+	num_blocks = num_segments - block_off;
+	assert(block_off + num_blocks <= ftl_lba_map_num_blocks(band->dev));
 
-	request = ftl_lba_map_alloc_request(band, lbk_off, lbk_cnt, cb_fn, cb_ctx);
+	request = ftl_lba_map_alloc_request(band, block_off, num_blocks, cb_fn, cb_ctx);
 	if (!request) {
 		return -ENOMEM;
 	}
 
-	while (lbk_cnt) {
-		if (lba_map->segments[lbk_off] != FTL_LBA_MAP_SEG_CLEAR) {
-			if (lba_map->segments[lbk_off] == FTL_LBA_MAP_SEG_CACHED) {
-				ftl_lba_map_request_segment_done(request, lbk_off, 1);
+	while (num_blocks) {
+		if (lba_map->segments[block_off] != FTL_LBA_MAP_SEG_CLEAR) {
+			if (lba_map->segments[block_off] == FTL_LBA_MAP_SEG_CACHED) {
+				ftl_lba_map_request_segment_done(request, block_off, 1);
 			}
-			lbk_cnt--;
-			lbk_off++;
+			num_blocks--;
+			block_off++;
 			continue;
 		}
 
-		num_read = ftl_lba_map_num_clear_segments(lba_map, lbk_off, lbk_cnt);
-		ftl_lba_map_set_segment_state(lba_map, lbk_off, num_read,
+		num_read = ftl_lba_map_num_clear_segments(lba_map, block_off, num_blocks);
+		ftl_lba_map_set_segment_state(lba_map, block_off, num_read,
 					      FTL_LBA_MAP_SEG_PENDING);
 
-		rc = ftl_band_read_md(band, num_read, ftl_band_lba_map_addr(band, lbk_off),
-				      (char *)band->lba_map.map + lbk_off * FTL_BLOCK_SIZE,
+		rc = ftl_band_read_md(band, num_read, ftl_band_lba_map_addr(band, block_off),
+				      (char *)band->lba_map.map + block_off * FTL_BLOCK_SIZE,
 				      ftl_read_lba_map_cb, NULL, cb_fn, cb_ctx);
 		if (rc) {
 			ftl_lba_map_request_free(band->dev, request);
 			return rc;
 		}
 
-		assert(lbk_cnt >= num_read);
-		lbk_cnt -= num_read;
-		lbk_off += num_read;
+		assert(num_blocks >= num_read);
+		num_blocks -= num_read;
+		block_off += num_read;
 	}
 
 	if (request->num_pending) {
@@ -1009,7 +1009,7 @@ int
 ftl_band_read_head_md(struct ftl_band *band, ftl_io_fn cb_fn, void *cb_ctx)
 {
 	return ftl_band_read_md(band,
-				ftl_head_md_num_lbks(band->dev),
+				ftl_head_md_num_blocks(band->dev),
 				ftl_band_head_md_addr(band),
 				band->lba_map.dma_buf,
 				ftl_read_md_cb,
@@ -1140,7 +1140,7 @@ ftl_band_clear_lba_map(struct ftl_band *band)
 	size_t num_segments;
 
 	spdk_bit_array_clear_mask(lba_map->vld);
-	memset(lba_map->map, 0, ftl_lba_map_num_lbks(band->dev) * FTL_BLOCK_SIZE);
+	memset(lba_map->map, 0, ftl_lba_map_num_blocks(band->dev) * FTL_BLOCK_SIZE);
 
 	/* For open band all lba map segments are already cached */
 	assert(band->state == FTL_BAND_STATE_PREP);
@@ -1154,6 +1154,6 @@ size_t
 ftl_lba_map_pool_elem_size(struct spdk_ftl_dev *dev)
 {
 	/* Map pool element holds the whole tail md + segments map */
-	return ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE +
+	return ftl_tail_md_num_blocks(dev) * FTL_BLOCK_SIZE +
 	       spdk_divide_round_up(ftl_get_num_blocks_in_band(dev), FTL_NUM_LBA_IN_BLOCK);
 }
