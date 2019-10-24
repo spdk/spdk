@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "974c5bc4_7e49ab2e",
+        "filename": "doc/nvme.md",
+        "patchSetId": 54
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T21:01:44Z",
+      "side": 1,
+      "message": "Let\u0027s do another round on this prior to release.  Doc changes are fine after code freeze.  My main concerns are:\n\n1) How to appropriately explain the external IO message queue; even consider omitting that section completely\n2) I think for the enabling section, we should only talk about --with-nvme-cuse in this doc.  We should probably to the bdev nvme section in the bdev users guide to describe how to enable CUSE.  The bdev nvme section could also refer back to here for details on the CUSE diagram (i.e. don\u0027t put it in both).",
+      "revId": "99e7f2aa2e6908960ff8221a15d3fbe5d617c810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
