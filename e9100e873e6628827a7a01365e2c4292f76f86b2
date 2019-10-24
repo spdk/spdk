@@ -70,6 +70,24 @@
       "revId": "e9100e873e6628827a7a01365e2c4292f76f86b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50f566f5_c943aee9",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-24T09:21:31Z",
+      "side": 1,
+      "message": "For normal cases this should work, but I\u0027m not confident for waiting the revert action here, leaving the revert status as it is maybe better.",
+      "parentUuid": "eaa1166a_b8a94b0c",
+      "revId": "e9100e873e6628827a7a01365e2c4292f76f86b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
