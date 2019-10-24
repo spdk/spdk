@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78515ede_b53a33c3",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-10-24T08:47:00Z",
+      "side": 1,
+      "message": "change back to \"awk\" as \"bc\" is not on centos7 and ubuntu16. Failure from \"bc\" patch as below:\n\nhttps://dqtibwqq6s6ux.cloudfront.net/public_build/autotest-per-patch_47672.html",
+      "range": {
+        "startLine": 87,
+        "startChar": 39,
+        "endLine": 87,
+        "endChar": 42
+      },
+      "revId": "dedc1a44648e0140a4e4816c3bf060b0377c5047",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
