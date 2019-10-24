@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "101b8636_bd5e0e31",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-24T11:37:31Z",
+      "side": 1,
+      "message": "Please correct alignment.",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 2
+      },
+      "revId": "3bef792e087e5fbad46eac26c26e7d508db1746d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe74e4cd_b92f2aac",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-24T11:37:31Z",
+      "side": 1,
+      "message": "I think format should be like:\n/*\n * Text\n */",
+      "range": {
+        "startLine": 718,
+        "startChar": 2,
+        "endLine": 720,
+        "endChar": 5
+      },
+      "revId": "3bef792e087e5fbad46eac26c26e7d508db1746d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
