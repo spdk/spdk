@@ -34,6 +34,24 @@
       "revId": "bb6d3f1a74408e38670670aa592690a6bb29d67e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1f40e38_ac7b2a55",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-24T09:44:22Z",
+      "side": 1,
+      "message": "Hi Jim,\nI\u0027ve removed register/unregister functions. We still think we need producers list instead of refcount. Refcount is unsafe - e.g. when somebody will call stop function two times for the same producer then we do refcount-- twice and can free queue and qpair despite another producer still running. With list we won\u0027t have this issue.",
+      "parentUuid": "7814a95f_30ed6d83",
+      "revId": "bb6d3f1a74408e38670670aa592690a6bb29d67e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
