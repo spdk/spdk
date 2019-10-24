@@ -190,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "9fbd9cc5_ea0144cc",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-24T05:51:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c119a1a4_5e75af25",
+      "range": {
+        "startLine": 250,
+        "startChar": 1,
+        "endLine": 250,
+        "endChar": 48
+      },
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1ae8cab0_fefabd9d",
         "filename": "module/bdev/nvme/vbdev_opal.c",
         "patchSetId": 23
@@ -236,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "037986f3_2bd1c3fb",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-24T05:51:22Z",
+      "side": 1,
+      "message": "Not really. Removed.",
+      "parentUuid": "bd584d01_3505ea47",
+      "range": {
+        "startLine": 299,
+        "startChar": 1,
+        "endLine": 299,
+        "endChar": 28
+      },
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e7cdbc5_ed07acad",
         "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
         "patchSetId": 23
@@ -256,6 +304,30 @@
       "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d215090f_d9ca4dbf",
+        "filename": "module/bdev/nvme/vbdev_opal_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-24T05:51:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7e7cdbc5_ed07acad",
+      "range": {
+        "startLine": 305,
+        "startChar": 32,
+        "endLine": 305,
+        "endChar": 49
+      },
+      "revId": "9b565033ee8ba8e08947a609b4a987543e9d8a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
