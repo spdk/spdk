@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a8fde5e1_af11c3f6",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-24T09:34:11Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "cd0cda1b_be79326b",
+      "range": {
+        "startLine": 287,
+        "startChar": 0,
+        "endLine": 287,
+        "endChar": 23
+      },
+      "revId": "f592996d3f134fd0a56992c2d8d8e02bd6c087c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "105a50b3_2733d83d",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2019-10-23T13:52:18Z",
       "side": 1,
       "message": "Above comment applies to those four tests.",
+      "range": {
+        "startLine": 399,
+        "startChar": 0,
+        "endLine": 402,
+        "endChar": 98
+      },
+      "revId": "f592996d3f134fd0a56992c2d8d8e02bd6c087c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d8b0ddb_3336625d",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-10-24T09:34:11Z",
+      "side": 1,
+      "message": "thanks Tomasz,\n    you are insightful, change a lot. \nhope that can meet you idea.",
+      "parentUuid": "105a50b3_2733d83d",
       "range": {
         "startLine": 399,
         "startChar": 0,
