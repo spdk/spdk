@@ -16,6 +16,24 @@
       "revId": "e9100e873e6628827a7a01365e2c4292f76f86b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd716457_1ef0a25b",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-24T07:07:38Z",
+      "side": 1,
+      "message": "If this is not avoidable, for example a comment \"we have to wait for completion of reverting here, and it may take 6 or 7 minutes as worst case.\".",
+      "parentUuid": "c5691254_f2999fe2",
+      "revId": "e9100e873e6628827a7a01365e2c4292f76f86b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
