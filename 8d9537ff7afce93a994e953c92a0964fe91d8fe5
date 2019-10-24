@@ -16,6 +16,24 @@
       "revId": "8d9537ff7afce93a994e953c92a0964fe91d8fe5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3336405_9db2cb34",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T15:49:19Z",
+      "side": 1,
+      "message": "I just had a long IM conversation with Tomek about this.  I feel very strongly about this subject.  :-)\n\nWe should not be in the business of trying to work around programming errors.  There are literally hundreds (maybe thousands) of places in SPDK where we do not try to guard against programming errors.  For example, in the NVMe driver, we don\u0027t check if the user accidentally passes NULL for the qpair or namespace for any of the nvme IO commands.  Adding all kinds of checks just slows everything down.  Put the responsibility on the user to do the right thing.\n\nConsider our bdev layer.  We allow people to create their own bdev modules that may never be upstreamed.  There are many different ways that someone who writes a bdev module could make some kind of error.  We don\u0027t try to guess what kinds of errors they might make and add code in bdev.c to try to guard against them.\n\nAlso adding this kind of logic means we need to test it.  So we need to write tests that create two io_producers, have the \"good\" one start, then have the \"bad\" one start and then stop twice.  We really don\u0027t want to be writing these kinds of tests.\n\nPlease take some time to think about what I\u0027m saying here.  This is very important.  We should focus on bounds and input checking where it\u0027s critical (RPCs, network/virtio frontends) but not add it in between C modules.  This is similar to how the kernel does it - if you write your own kernel module and start passing garbage or making function calls that aren\u0027t appropriate, it will crash your kernel.",
+      "parentUuid": "0910065b_aba009db",
+      "revId": "8d9537ff7afce93a994e953c92a0964fe91d8fe5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
