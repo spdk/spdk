@@ -210,6 +210,9 @@ bdev_nvme_poll_adminq(void *arg)
 {
 	struct spdk_nvme_ctrlr *ctrlr = arg;
 
+	/* Poll NVMe IO message ring with admin queue for IO producers */
+	spdk_nvme_io_msg_process(ctrlr);
+
 	return spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 }
 
