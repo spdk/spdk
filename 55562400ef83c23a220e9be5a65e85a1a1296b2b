@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "794cf78d_06397c6f",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-24T14:50:06Z",
+      "side": 1,
+      "message": "Failure from CI is due to trailing whitespace, not a false positive.",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 50
+      },
+      "revId": "55562400ef83c23a220e9be5a65e85a1a1296b2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
