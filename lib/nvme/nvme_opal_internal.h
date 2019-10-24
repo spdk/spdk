@@ -276,6 +276,12 @@ struct spdk_opal_header {
 	struct spdk_opal_data_subpacket sub_packet;
 };
 
+enum spdk_opal_dev_state {
+	OPAL_DEV_STATE_DEFAULT,     /* default factory setting */
+	OPAL_DEV_STATE_ENABLED,     /* after taking ownership and activating, opal is enabled */
+	OPAL_DEV_STATE_BUSY,        /* wait for opal response from ctrlr */
+};
+
 struct spdk_opal_dev {
 	bool supported;
 	void *dev_handler;
@@ -289,6 +295,8 @@ struct spdk_opal_dev {
 	size_t cmd_pos;
 	uint8_t cmd[IO_BUFFER_LENGTH];
 	uint8_t resp[IO_BUFFER_LENGTH];
+
+	enum spdk_opal_dev_state state;
 
 	struct spdk_opal_resp_parsed parsed_resp;
 	size_t prev_d_len;
