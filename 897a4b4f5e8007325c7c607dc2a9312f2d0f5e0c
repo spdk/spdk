@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ad3a82a6_703d3ced",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-24T11:52:04Z",
+      "side": 1,
+      "message": "Maybe zone_block_reab_cb?",
+      "revId": "897a4b4f5e8007325c7c607dc2a9312f2d0f5e0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a81c7e5_a8e1303c",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-24T11:52:04Z",
+      "side": 1,
+      "message": "exceed 100 lines",
+      "revId": "897a4b4f5e8007325c7c607dc2a9312f2d0f5e0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
