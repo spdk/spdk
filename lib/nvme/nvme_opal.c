@@ -63,6 +63,23 @@ opal_send_cmd(struct spdk_opal_dev *dev)
 }
 
 static int
+opal_response_clean(struct spdk_opal_dev *dev)
+{
+	void *response = dev->resp;
+	int ret = 0;
+
+	ret = spdk_nvme_ctrlr_security_receive(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
+					       0, response, IO_BUFFER_LENGTH);
+	if (ret) {
+		SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
+		return ret;
+	}
+
+	memset(response, 0, IO_BUFFER_LENGTH);
+	return 0;
+}
+
+static int
 opal_recv_cmd(struct spdk_opal_dev *dev)
 {
 	void *response = dev->resp;
@@ -103,6 +120,11 @@ static int
 opal_send_recv(struct spdk_opal_dev *dev, spdk_opal_cb cb, void *data)
 {
 	int ret;
+
+	ret = opal_response_clean(dev);
+	if (ret) {
+		return ret;
+	}
 
 	ret = opal_send_cmd(dev);
 	if (ret) {
