@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a97e15c_ad97fd45",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-24T16:48:56Z",
+      "side": 1,
+      "message": "there\u0027s no longer a cm option on lvol delete",
+      "revId": "d60b11f44e577c980604b36fc5a229ab655c8945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "721c41ff_ce94da95",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 3405,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-24T16:48:56Z",
+      "side": 1,
+      "message": "just to avoid confuion can we remove the cm from lvolstore here? It\u0027s not relevant to this test. This test just makes sure that cm as passed in on lvol create is honored when the lvols are deleted by lvolstore delete.",
+      "revId": "d60b11f44e577c980604b36fc5a229ab655c8945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f55f03e0_476495b8",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 3424,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-24T16:48:56Z",
+      "side": 1,
+      "message": "no longer a cm option on delete",
+      "revId": "d60b11f44e577c980604b36fc5a229ab655c8945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
