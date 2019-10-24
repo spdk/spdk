@@ -55,12 +55,13 @@ function vhosttestfini()
 
 function message()
 {
+	local verbose_out
 	if ! $SPDK_VHOST_VERBOSE; then
-		local verbose_out=""
+		verbose_out=""
 	elif [[ ${FUNCNAME[2]} == "source" ]]; then
-		local verbose_out=" (file $(basename ${BASH_SOURCE[1]}):${BASH_LINENO[1]})"
+		verbose_out=" (file $(basename ${BASH_SOURCE[1]}):${BASH_LINENO[1]})"
 	else
-		local verbose_out=" (function ${FUNCNAME[2]}:${BASH_LINENO[1]})"
+		verbose_out=" (function ${FUNCNAME[2]}:${BASH_LINENO[1]})"
 	fi
 
 	local msg_type="$1"
@@ -124,7 +125,8 @@ function vhost_run()
 		shift
 	fi
 
-	local vhost_dir="$(get_vhost_dir $vhost_name)"
+	local vhost_dir
+	vhost_dir="$(get_vhost_dir $vhost_name)"
 	local vhost_app="$rootdir/app/vhost/vhost"
 	local vhost_log_file="$vhost_dir/vhost.log"
 	local vhost_pid_file="$vhost_dir/vhost.pid"
@@ -166,7 +168,8 @@ function vhost_load_config()
 {
 	local vhost_num="$1"
 	local vhost_json_conf="$2"
-	local vhost_dir="$(get_vhost_dir $vhost_num)"
+	local vhost_dir
+	vhost_dir="$(get_vhost_dir $vhost_num)"
 
 	$rootdir/scripts/rpc.py -s $vhost_dir/rpc.sock load_config < "$vhost_json_conf"
 }
@@ -181,7 +184,8 @@ function vhost_kill()
 		return 0
 	fi
 
-	local vhost_dir="$(get_vhost_dir $vhost_name)"
+	local vhost_dir
+	vhost_dir="$(get_vhost_dir $vhost_name)"
 	local vhost_pid_file="$vhost_dir/vhost.pid"
 
 	if [[ ! -r $vhost_pid_file ]]; then
@@ -190,7 +194,8 @@ function vhost_kill()
 	fi
 
 	timing_enter vhost_kill
-	local vhost_pid="$(cat $vhost_pid_file)"
+	local vhost_pid
+	vhost_pid="$(cat $vhost_pid_file)"
 	notice "killing vhost (PID $vhost_pid) app"
 
 	if kill -INT $vhost_pid > /dev/null; then
@@ -263,7 +268,8 @@ function vm_sshpass()
 {
 	vm_num_is_valid $1 || return 1
 
-	local ssh_cmd="sshpass -p $2 ssh \
+	local ssh_cmd
+	ssh_cmd="sshpass -p $2 ssh \
 		-o UserKnownHostsFile=/dev/null \
 		-o StrictHostKeyChecking=no \
 		-o User=root \
@@ -353,7 +359,8 @@ function vm_is_running()
 		return 1
 	fi
 
-	local vm_pid="$(cat $vm_dir/qemu.pid)"
+	local vm_pid
+	vm_pid="$(cat $vm_dir/qemu.pid)"
 
 	if /bin/kill -0 $vm_pid; then
 		return 0
@@ -429,7 +436,8 @@ function vm_kill()
 		return 0
 	fi
 
-	local vm_pid="$(cat $vm_dir/qemu.pid)"
+	local vm_pid
+	vm_pid="$(cat $vm_dir/qemu.pid)"
 
 	notice "Killing virtual machine $vm_dir (pid=$vm_pid)"
 	# First kill should fail, second one must fail
@@ -447,7 +455,8 @@ function vm_kill()
 #
 function vm_list_all()
 {
-	local vms="$(shopt -s nullglob; echo $VM_DIR/[0-9]*)"
+	local vms
+	vms="$(shopt -s nullglob; echo $VM_DIR/[0-9]*)"
 	if [[ -n "$vms" ]]; then
 		basename --multiple $vms
 	fi
@@ -469,11 +478,13 @@ function vm_kill_all()
 #
 function vm_shutdown_all()
 {
-	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
+	local shell_restore_x
+	shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	# XXX: temporally disable to debug shutdown issue
 	# set +x
 
-	local vms=$(vm_list_all)
+	local vms
+	vms=$(vm_list_all)
 	local vm
 
 	for vm in $vms; do
@@ -510,7 +521,8 @@ function vm_shutdown_all()
 
 function vm_setup()
 {
-	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
+	local shell_restore_x
+	shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	local OPTIND optchar vm_num
 
 	local os=""
@@ -525,24 +537,25 @@ function vm_setup()
 	local force_vm=""
 	local guest_memory=1024
 	local queue_number=""
-	local vhost_dir="$(get_vhost_dir 0)"
+	local vhost_dir
+	vhost_dir="$(get_vhost_dir 0)"
 	while getopts ':-:' optchar; do
 		case "$optchar" in
 			-)
 			case "$OPTARG" in
-				os=*) local os="${OPTARG#*=}" ;;
-				os-mode=*) local os_mode="${OPTARG#*=}" ;;
-				qemu-args=*) local qemu_args="${qemu_args} ${OPTARG#*=}" ;;
-				disk-type=*) local disk_type_g="${OPTARG#*=}" ;;
-				read-only=*) local read_only="${OPTARG#*=}" ;;
-				disks=*) local disks="${OPTARG#*=}" ;;
-				raw-cache=*) local raw_cache=",cache${OPTARG#*=}" ;;
-				force=*) local force_vm=${OPTARG#*=} ;;
-				memory=*) local guest_memory=${OPTARG#*=} ;;
-				queue_num=*) local queue_number=${OPTARG#*=} ;;
-				incoming=*) local vm_incoming="${OPTARG#*=}" ;;
-				migrate-to=*) local vm_migrate_to="${OPTARG#*=}" ;;
-				vhost-name=*) local vhost_dir="$(get_vhost_dir ${OPTARG#*=})" ;;
+				os=*) os="${OPTARG#*=}" ;;
+				os-mode=*) os_mode="${OPTARG#*=}" ;;
+				qemu-args=*) qemu_args="${qemu_args} ${OPTARG#*=}" ;;
+				disk-type=*) disk_type_g="${OPTARG#*=}" ;;
+				read-only=*) read_only="${OPTARG#*=}" ;;
+				disks=*) disks="${OPTARG#*=}" ;;
+				raw-cache=*) raw_cache=",cache${OPTARG#*=}" ;;
+				force=*) force_vm=${OPTARG#*=} ;;
+				memory=*) guest_memory=${OPTARG#*=} ;;
+				queue_num=*) queue_number=${OPTARG#*=} ;;
+				incoming=*) vm_incoming="${OPTARG#*=}" ;;
+				migrate-to=*) vm_migrate_to="${OPTARG#*=}" ;;
+				vhost-name=*) vhost_dir="$(get_vhost_dir ${OPTARG#*=})" ;;
 				spdk-boot=*) local boot_from="${OPTARG#*=}" ;;
 				*)
 					error "unknown argument $OPTARG"
@@ -709,7 +722,8 @@ function vm_setup()
 
 				if [[ -n $disk ]]; then
 					[[ ! -b $disk ]] && touch $disk
-					local raw_disk=$(readlink -f $disk)
+					local raw_disk
+					raw_disk=$(readlink -f $disk)
 				fi
 
 				# Create disk file if it not exist or it is smaller than 1G
@@ -897,13 +911,15 @@ function vm_wait_for_boot()
 {
 	assert_number $1
 
-	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
+	local shell_restore_x
+	shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
 
 	local all_booted=false
 	local timeout_time=$1
 	[[ $timeout_time -lt 10 ]] && timeout_time=10
-	local timeout_time=$(date -d "+$timeout_time seconds" +%s)
+	local timeout_time
+	timeout_time=$(date -d "+$timeout_time seconds" +%s)
 
 	notice "Waiting for VMs to boot"
 	shift
@@ -917,7 +933,8 @@ function vm_wait_for_boot()
 	fi
 
 	for vm in $vms_to_check; do
-		local vm_num=$(basename $vm)
+		local vm_num
+		vm_num=$(basename $vm)
 		local i=0
 		notice "waiting for VM$vm_num ($vm)"
 		while ! vm_os_booted $vm_num; do
@@ -945,7 +962,8 @@ function vm_wait_for_boot()
 		notice "VM$vm_num ready"
 		#Change Timeout for stopping services to prevent lengthy powerdowns
 		#Check that remote system is not Cygwin in case of Windows VMs
-		local vm_os=$(vm_exec $vm_num "uname -o")
+		local vm_os
+		vm_os=$(vm_exec $vm_num "uname -o")
 		if [[ "$vm_os" != "Cygwin" ]]; then
 			vm_exec $vm_num "echo 'DefaultTimeoutStopSec=10' >> /etc/systemd/system.conf; systemctl daemon-reexec"
 		fi
@@ -1066,7 +1084,8 @@ function run_fio()
 		return 1
 	fi
 
-	local job_fname=$(basename "$job_file")
+	local job_fname
+	job_fname=$(basename "$job_file")
 	# prepare job file for each VM
 	for vm in ${vms[@]}; do
 		local vm_num=${vm%%:*}

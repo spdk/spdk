@@ -11,17 +11,22 @@ iscsitestinit $1 $2
 
 function run_fio() {
 	local bdev_name=$1
-	local iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	local iostats
+	local start_io_count
+	local start_bytes_read
+	local end_io_count
+	local end_bytes_read
 	local run_time=5
 
-	local start_io_count=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
-	local start_bytes_read=$(jq -r '.bdevs[0].bytes_read' <<< "$iostats")
+	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	start_io_count=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
+	start_bytes_read=$(jq -r '.bdevs[0].bytes_read' <<< "$iostats")
 
 	$fio_py -p iscsi -i 1024 -d 128 -t randread -r $run_time
 
 	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
-	local end_io_count=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
-	local end_bytes_read=$(jq -r '.bdevs[0].bytes_read' <<< "$iostats")
+	end_io_count=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
+	end_bytes_read=$(jq -r '.bdevs[0].bytes_read' <<< "$iostats")
 
 	IOPS_RESULT=$(((end_io_count-start_io_count)/$run_time))
 	BANDWIDTH_RESULT=$(((end_bytes_read-start_bytes_read)/$run_time))

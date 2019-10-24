@@ -79,8 +79,10 @@ function check_for_driver {
 
 function pci_dev_echo() {
 	local bdf="$1"
-	local vendor="$(cat /sys/bus/pci/devices/$bdf/vendor)"
-	local device="$(cat /sys/bus/pci/devices/$bdf/device)"
+	local vendor
+	local device
+	vendor="$(cat /sys/bus/pci/devices/$bdf/vendor)"
+	device="$(cat /sys/bus/pci/devices/$bdf/device)"
 	shift
 	echo "$bdf (${vendor#0x} ${device#0x}): $*"
 }
@@ -118,7 +120,8 @@ function linux_bind_driver() {
 
 function linux_unbind_driver() {
 	local bdf="$1"
-	local ven_dev_id=$(lspci -n -s $bdf | cut -d' ' -f3 | sed 's/:/ /')
+	local ven_dev_id
+	ven_dev_id=$(lspci -n -s $bdf | cut -d' ' -f3 | sed 's/:/ /')
 	local old_driver_name="no driver"
 
 	if [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
