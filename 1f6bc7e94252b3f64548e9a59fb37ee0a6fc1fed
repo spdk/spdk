@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b994b01a_b7d3c14e",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2575,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T03:58:51Z",
+      "side": 1,
+      "message": "Yes - this is correct here.  My version was working but was not correct.  I missed that all requests go onto the pending_buf_queue, not just those that might need a buffer.",
+      "revId": "1f6bc7e94252b3f64548e9a59fb37ee0a6fc1fed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
