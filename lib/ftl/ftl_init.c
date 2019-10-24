@@ -75,9 +75,9 @@ static const struct spdk_ftl_conf	g_default_conf = {
 		/* 40 free bands / 100 % host writes - defrag starts running */
 		[SPDK_FTL_LIMIT_START] = { .thld = 40, .limit = 100 },
 	},
-	/* 10 percent valid lbks */
+	/* 10 percent valid blocks */
 	.invalid_thld = 10,
-	/* 20% spare lbks */
+	/* 20% spare blocks */
 	.lba_rsvd = 20,
 	/* 6M write buffer */
 	.rwb_size = 6 * 1024 * 1024,
@@ -642,7 +642,7 @@ ftl_setup_initial_state(struct spdk_ftl_dev *dev)
 
 	dev->num_lbas = 0;
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
-		dev->num_lbas += ftl_band_num_usable_lbks(&dev->bands[i]);
+		dev->num_lbas += ftl_band_num_usable_blocks(&dev->bands[i]);
 	}
 
 	dev->num_lbas = (dev->num_lbas * (100 - conf->lba_rsvd)) / 100;
