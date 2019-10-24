@@ -16,6 +16,24 @@
       "revId": "f447a863c55d7465a07203eedcaae3c05ae4dbd9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afc3ebbe_120168d8",
+        "filename": "lib/nvme/nvme_cuse_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-24T14:03:46Z",
+      "side": 1,
+      "message": "We agree that providing dev_path might be cumbersome, but only to some extent. Providing full path to each particular controller has its advantages:\n- user already provides required nvme controller name in attach RPC, it can be reused in this cuse call\n- if needed, the prefix can still be applied for all RPC calls by just appending it to ctrlr name\n- on name conflict with kernel devices, user can immediately retry with any name\n\nThe problems with cuse initialization setting prefix and starting index are:\n- starting index can still encounter name conflicts with kernel devices\n- to allow user to resolve name conflicts, an rpc for changing prefix/index would have to be exposed\n- changing starting index in run-time, makes book keeping of previous references harder\n\nFor reasons above we\u0027d prefer leaving current implementation.\n\nAs suggested, we are currently adding API to provide cuse device names in bdev_nvme_get_controllers and get_bdevs RPC.",
+      "parentUuid": "9c52495e_d14c8cef",
+      "revId": "f447a863c55d7465a07203eedcaae3c05ae4dbd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
