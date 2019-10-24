@@ -10,7 +10,8 @@ if [ -z "${DEPENDENCY_DIR}" ]; then
 fi
 
 function ssh_vm() {
-	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
+	local shell_restore_x
+	shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
 	sshpass -p "$password" ssh -o PubkeyAuthentication=no \
 	-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 10022 root@localhost "$@"
