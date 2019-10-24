@@ -43,7 +43,7 @@ struct ftl_band;
 struct ftl_reloc	*ftl_reloc_init(struct spdk_ftl_dev *dev);
 void			ftl_reloc_free(struct ftl_reloc *reloc);
 void			ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band,
-				      size_t offset, size_t num_lbks, int prio, bool is_defrag);
+				      size_t offset, size_t num_blocks, int prio, bool is_defrag);
 void			ftl_reloc(struct ftl_reloc *reloc);
 void			ftl_reloc_halt(struct ftl_reloc *reloc);
 void			ftl_reloc_resume(struct ftl_reloc *reloc);
