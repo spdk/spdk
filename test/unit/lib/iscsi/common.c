@@ -16,12 +16,19 @@ SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
 TAILQ_HEAD(, spdk_iscsi_pdu) g_write_pdu_list = TAILQ_HEAD_INITIALIZER(g_write_pdu_list);
 
+static bool g_task_pool_is_empty = false;
+static bool g_pdu_pool_is_empty = false;
+
 struct spdk_iscsi_task *
 spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
 		    struct spdk_iscsi_task *parent,
 		    spdk_scsi_task_cpl cpl_fn)
 {
 	struct spdk_iscsi_task *task;
+
+	if (g_task_pool_is_empty) {
+		return NULL;
+	}
 
 	task = calloc(1, sizeof(*task));
 	if (!task) {
@@ -62,6 +69,10 @@ struct spdk_iscsi_pdu *
 spdk_get_pdu(void)
 {
 	struct spdk_iscsi_pdu *pdu;
+
+	if (g_pdu_pool_is_empty) {
+		return NULL;
+	}
 
 	pdu = malloc(sizeof(*pdu));
 	if (!pdu) {
