@@ -16,6 +16,24 @@
       "revId": "78078952204ca950647b95b56f3b2d78c3fade91",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f417e1d8_d563112e",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 901,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-24T08:21:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a68d4038_ded4d7eb",
+      "revId": "78078952204ca950647b95b56f3b2d78c3fade91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
