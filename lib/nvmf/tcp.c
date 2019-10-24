@@ -2546,7 +2546,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 
 			assert(tcp_req->req.xfer != SPDK_NVME_DATA_NONE);
 
-			if (&tcp_req->req != STAILQ_FIRST(&group->pending_buf_queue)) {
+			if (!tcp_req->has_incapsule_data && (&tcp_req->req != STAILQ_FIRST(&group->pending_buf_queue))) {
 				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
 					      "Not the first element to wait for the buf for tcp_req(%p) on tqpair=%p\n",
 					      tcp_req, tqpair);
