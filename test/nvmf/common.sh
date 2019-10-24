@@ -258,7 +258,8 @@ function check_ip_is_soft_roce()
 
 function nvme_connect()
 {
-	local init_count=$(nvme list | wc -l)
+	local init_count
+	init_count=$(nvme list | wc -l)
 
 	if ! nvme connect $@; then return $?; fi
 
