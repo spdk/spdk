@@ -6,7 +6,8 @@ function get_chunk_size() {
 }
 
 function has_separate_md() {
-	local md_type=$($rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:$1" | \
+	local md_type
+	md_type=$($rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:$1" | \
 		grep 'Metadata Transferred' | cut -d: -f2)
 	if [[ "$md_type" =~ Separate ]]; then
 		return 0
@@ -22,14 +23,16 @@ function create_nv_cache_bdev() {
 	local num_punits=$4
 
 	local bytes_to_mb=$((1024 * 1024))
-	local chunk_size=$(get_chunk_size $ocssd_bdf)
+	local chunk_size
+	chunk_size=$(get_chunk_size $ocssd_bdf)
 
 	# We need at least 2 bands worth of data + 1 block
 	local size=$((2 * 4096 * $chunk_size * $num_punits + 1))
 	# Round the size up to the nearest megabyte
-	local size=$((($size + $bytes_to_mb) / $bytes_to_mb))
+	size=$((($size + $bytes_to_mb) / $bytes_to_mb))
 
 	# Create NVMe bdev on specified device and split it so that it has the desired size
-	local nvc_bdev=$($rootdir/scripts/rpc.py bdev_nvme_attach_controller -b $name -t PCIe -a $cache_bdf)
+	local nvc_bdev
+	nvc_bdev=$($rootdir/scripts/rpc.py bdev_nvme_attach_controller -b $name -t PCIe -a $cache_bdf)
 	$rootdir/scripts/rpc.py bdev_split_create $nvc_bdev -s $size 1
 }

@@ -57,7 +57,8 @@ function vm_sshpass()
 {
 	vm_num_is_valid $1 || return 1
 
-	local ssh_cmd="sshpass -p $2 ssh \
+	local ssh_cmd
+	ssh_cmd="sshpass -p $2 ssh \
 		-o UserKnownHostsFile=/dev/null \
 		-o StrictHostKeyChecking=no \
 		-o User=root \
