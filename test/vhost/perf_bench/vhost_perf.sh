@@ -95,7 +95,8 @@ function cleanup_split_cfg()
 
 function cleanup_parted_config()
 {
-	local disks=$(ls /dev/nvme*n1 | sort --version-sort)
+	local disks
+	disks=$(ls /dev/nvme*n1 | sort --version-sort)
 	for disk in $disks; do
 		parted -s $disk rm 1
 	done
