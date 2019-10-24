@@ -1542,6 +1542,568 @@ build_iovs_with_md_test(void)
 	free(data);
 }
 
+static void
+check_iscsi_reject(struct spdk_iscsi_pdu *pdu, uint8_t reason)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_reject *reject_bhs;
+
+	CU_ASSERT(pdu->is_rejected == true);
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	reject_bhs = (struct iscsi_bhs_reject *)&rsp_pdu->bhs;
+	CU_ASSERT(reject_bhs->reason == reason);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+	pdu->is_rejected = false;
+}
+
+static void
+check_login_response(uint8_t status_class, uint8_t status_detail)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_login_rsp *login_rsph;
+
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	login_rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+	CU_ASSERT(login_rsph->status_class == status_class);
+	CU_ASSERT(login_rsph->status_detail == status_detail);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+}
+
+static void
+pdu_hdr_op_login_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct iscsi_bhs_login_req *login_reqh;
+	int rc;
+
+	login_reqh = (struct iscsi_bhs_login_req *)&pdu.bhs;
+
+	/* case 1 - error case */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+	conn.full_feature = true;
+	conn.sess = &sess;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 2 - error case */
+	sess.session_type = SESSION_TYPE_INVALID;
+	conn.full_feature = false;
+	conn.sess = NULL;
+	pdu.data_segment_len = SPDK_ISCSI_FIRST_BURST_LENGTH + 1;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* case 3 - error case */
+	pdu.data_segment_len = SPDK_ISCSI_FIRST_BURST_LENGTH;
+	login_reqh->flags |= ISCSI_LOGIN_TRANSIT;
+	login_reqh->flags |= ISCSI_LOGIN_CONTINUE;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE);
+	check_login_response(ISCSI_CLASS_INITIATOR_ERROR, ISCSI_LOGIN_INITIATOR_ERROR);
+
+	/* case 4 - error case */
+	login_reqh->flags = 0;
+	login_reqh->version_min = ISCSI_VERSION + 1;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE);
+	check_login_response(ISCSI_CLASS_INITIATOR_ERROR, ISCSI_LOGIN_UNSUPPORTED_VERSION);
+
+	/* case 5 - error case */
+	login_reqh->version_min = ISCSI_VERSION;
+	login_reqh->flags |= ISCSI_LOGIN_TRANSIT;
+	login_reqh->flags |= ISCSI_NSG_RESERVED_CODE;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE);
+	check_login_response(ISCSI_CLASS_INITIATOR_ERROR, ISCSI_LOGIN_INITIATOR_ERROR);
+
+	/* case 6 - normal case */
+	login_reqh->flags = 0;
+
+	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(conn.login_rsp_pdu != NULL);
+
+	spdk_put_pdu(conn.login_rsp_pdu);
+}
+
+static void
+pdu_hdr_op_text_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct iscsi_bhs_text_req *text_reqh;
+	int rc;
+
+	text_reqh = (struct iscsi_bhs_text_req *)&pdu.bhs;
+
+	conn.sess = &sess;
+
+	/* case 1 - error case */
+	pdu.data_segment_len = spdk_get_max_immediate_data_size() + 1;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* case 2 - error case */
+	pdu.data_segment_len = spdk_get_max_immediate_data_size();
+	text_reqh->flags |= ISCSI_FLAG_FINAL;
+	text_reqh->flags |= ISCSI_TEXT_CONTINUE;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == -1);
+
+	/* case 3 - normal case */
+	text_reqh->flags = 0;
+	to_be32(&text_reqh->exp_stat_sn, 1234);
+	to_be32(&conn.StatSN, 4321);
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(conn.StatSN == 1234);
+
+	/* case 4 - normal case */
+	text_reqh->flags = 0;
+	to_be32(&text_reqh->itt, 5678);
+	sess.current_text_itt = 5678;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+
+	/* case 5 - normal case */
+	sess.current_text_itt = 0xffffffffU;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(sess.current_text_itt == 5678);
+
+	/* case 6 - error case */
+	sess.current_text_itt = 5679;
+
+	rc = iscsi_pdu_hdr_op_text(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+}
+
+static void
+check_logout_response(uint8_t response, uint32_t stat_sn, uint32_t exp_cmd_sn,
+		      uint32_t max_cmd_sn)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_logout_resp *logout_rsph;
+
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	logout_rsph = (struct iscsi_bhs_logout_resp *)&rsp_pdu->bhs;
+	CU_ASSERT(logout_rsph->response == response);
+	CU_ASSERT(from_be32(&logout_rsph->stat_sn) == stat_sn);
+	CU_ASSERT(from_be32(&logout_rsph->exp_cmd_sn) == exp_cmd_sn);
+	CU_ASSERT(from_be32(&logout_rsph->max_cmd_sn) == max_cmd_sn);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+}
+
+static void
+pdu_hdr_op_logout_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct iscsi_bhs_logout_req *logout_reqh;
+	int rc;
+
+	logout_reqh = (struct iscsi_bhs_logout_req *)&pdu.bhs;
+
+	/* case 1 - error case */
+	logout_reqh->reason = 1;
+	conn.sess = &sess;
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_logout(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 2 - normal case */
+	conn.sess = NULL;
+	conn.StatSN = 1234;
+	to_be32(&logout_reqh->exp_stat_sn, 1234);
+	pdu.cmd_sn = 5678;
+
+	rc = iscsi_pdu_hdr_op_logout(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_logout_response(0, 1234, 5678, 5678);
+	CU_ASSERT(conn.StatSN == 1235);
+
+	/* case 3 - normal case */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	sess.ExpCmdSN = 5679;
+	sess.connections = 1;
+	conn.sess = &sess;
+	conn.id = 1;
+
+	rc = iscsi_pdu_hdr_op_logout(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_logout_response(1, 1235, 5679, 1);
+	CU_ASSERT(conn.StatSN == 1236);
+	CU_ASSERT(sess.MaxCmdSN == 1);
+}
+
+static void
+check_scsi_task(struct spdk_iscsi_pdu *pdu, enum spdk_scsi_data_dir dir)
+{
+	struct spdk_iscsi_task *task;
+
+	task = pdu->task;
+	CU_ASSERT(task != NULL);
+	CU_ASSERT(task->pdu == pdu);
+	CU_ASSERT(task->scsi.dxfer_dir == dir);
+
+	spdk_iscsi_task_put(task);
+	pdu->task = NULL;
+}
+
+static void
+pdu_hdr_op_scsi_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
+	struct iscsi_bhs_scsi_req *scsi_reqh;
+	int rc;
+
+	scsi_reqh = (struct iscsi_bhs_scsi_req *)&pdu.bhs;
+
+	conn.sess = &sess;
+	conn.dev = &dev;
+
+	/* case 1 - error case */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 2 - error case */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	scsi_reqh->read_bit = 1;
+	scsi_reqh->write_bit = 1;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 3 - error case */
+	scsi_reqh->write_bit = 0;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.task == NULL);
+
+	/* case 4 - normal case */
+	dev.lun[0] = &lun;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_scsi_task(&pdu, SPDK_SCSI_DIR_FROM_DEV);
+
+	/* casd 5 - error case */
+	scsi_reqh->read_bit = 0;
+	scsi_reqh->write_bit = 1;
+	pdu.data_segment_len = spdk_get_max_immediate_data_size() + 1;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* case 6 - error case */
+	pdu.data_segment_len = spdk_get_max_immediate_data_size();
+	to_be32(&scsi_reqh->expected_data_xfer_len, pdu.data_segment_len - 1);
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* case 7 - error case */
+	to_be32(&scsi_reqh->expected_data_xfer_len, pdu.data_segment_len);
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* case 8 - error case */
+	sess.ImmediateData = true;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* case 9 - normal case */
+	sess.FirstBurstLength = pdu.data_segment_len;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_scsi_task(&pdu, SPDK_SCSI_DIR_TO_DEV);
+
+	/* case 10 - error case */
+	scsi_reqh->write_bit = 0;
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_INVALID_PDU_FIELD);
+
+	/* case 11 - normal case */
+	to_be32(&scsi_reqh->expected_data_xfer_len, 0);
+
+	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_scsi_task(&pdu, SPDK_SCSI_DIR_NONE);
+}
+
+static void
+check_iscsi_task_mgmt_response(uint8_t response, uint32_t task_tag, uint32_t stat_sn,
+			       uint32_t exp_cmd_sn, uint32_t max_cmd_sn)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_task_resp *rsph;
+
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	CU_ASSERT(rsp_pdu != NULL);
+	rsph = (struct iscsi_bhs_task_resp *)&rsp_pdu->bhs;
+	CU_ASSERT(rsph->response == response);
+	CU_ASSERT(from_be32(&rsph->itt) == task_tag);
+	CU_ASSERT(from_be32(&rsph->exp_cmd_sn) == exp_cmd_sn);
+	CU_ASSERT(from_be32(&rsph->max_cmd_sn) == max_cmd_sn);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	spdk_put_pdu(rsp_pdu);
+}
+
+static void
+pdu_hdr_op_task_mgmt_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
+	struct iscsi_bhs_task_req *task_reqh;
+	int rc;
+
+	task_reqh = (struct iscsi_bhs_task_req *)&pdu.bhs;
+
+	conn.sess = &sess;
+	conn.dev = &dev;
+
+	/* case 1 - error case */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 2 - error case */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	task_reqh->immediate = 0;
+	to_be32(&task_reqh->itt, 1234);
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_LUN_NOT_EXIST, 1234, 0, 0, 1);
+
+	/* case 3 - error case */
+	dev.lun[0] = &lun;
+	task_reqh->flags = 0;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_REJECTED, 1234, 0, 0, 2);
+
+	/* case 4 - error case */
+	task_reqh->flags = ISCSI_TASK_FUNC_CLEAR_TASK_SET;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 3);
+
+	/* case 5 - error case */
+	task_reqh->flags = ISCSI_TASK_FUNC_CLEAR_ACA;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 4);
+
+	/* case 6 - error case */
+	task_reqh->flags = ISCSI_TASK_FUNC_TARGET_WARM_RESET;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 5);
+
+	/* case 7 - error case */
+	task_reqh->flags = ISCSI_TASK_FUNC_TARGET_COLD_RESET;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 6);
+
+	/* case 8 - error case */
+	task_reqh->flags = ISCSI_TASK_FUNC_TASK_REASSIGN;
+
+	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_FUNC_NOT_SUPPORTED, 1234, 0, 0, 7);
+}
+
+static void
+pdu_hdr_op_nopout_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct iscsi_bhs_nop_out *nopout_reqh;
+	int rc;
+
+	nopout_reqh = (struct iscsi_bhs_nop_out *)&pdu.bhs;
+
+	conn.sess = &sess;
+
+	/* case 1 - error case */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_nopout(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 2 - error case */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH + 1;
+
+	rc = iscsi_pdu_hdr_op_nopout(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* case 3 - normal case */
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	conn.id = 1234;
+	to_be32(&nopout_reqh->ttt, 1235);
+	to_be32(&nopout_reqh->itt, 0xffffffffU);
+	nopout_reqh->immediate = 1;
+
+	rc = iscsi_pdu_hdr_op_nopout(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+
+	/* case 4 - error case */
+	nopout_reqh->immediate = 0;
+
+	rc = iscsi_pdu_hdr_op_nopout(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+}
+
+static void
+pdu_hdr_op_data_test(void)
+{
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct spdk_iscsi_task primary = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
+	struct iscsi_bhs_data_out *data_reqh;
+	int rc;
+
+	data_reqh = (struct iscsi_bhs_data_out *)&pdu.bhs;
+
+	conn.sess = &sess;
+	conn.dev = &dev;
+
+	/* case 1 - error case */
+	sess.session_type = SESSION_TYPE_DISCOVERY;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 2 - error case */
+	sess.session_type = SESSION_TYPE_NORMAL;
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH + 1;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* case 3 - error case */
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_INVALID_PDU_FIELD);
+
+	/* case 4 - error case */
+	primary.desired_data_transfer_length = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - 1;
+	conn.pending_r2t = 1;
+	conn.outstanding_r2t_tasks[0] = &primary;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 5 - error case */
+	primary.desired_data_transfer_length = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	to_be32(&data_reqh->itt, 1);
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_INVALID_PDU_FIELD);
+
+	/* case 6 - error case */
+	to_be32(&data_reqh->itt, 0);
+	to_be32(&data_reqh->data_sn, 1);
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_iscsi_reject(&pdu, ISCSI_REASON_PROTOCOL_ERROR);
+
+	/* case 7 - error case */
+	to_be32(&data_reqh->data_sn, 0);
+	to_be32(&data_reqh->buffer_offset, 4096);
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 8 - error case */
+	to_be32(&data_reqh->buffer_offset, 0);
+	sess.MaxBurstLength = pdu.data_segment_len - 1;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	/* case 10 - error case */
+	sess.MaxBurstLength = pdu.data_segment_len;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.task == NULL);
+
+	/* case 11 - normal case */
+	dev.lun[0] = &lun;
+
+	rc = iscsi_pdu_hdr_op_data(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.task != NULL);
+	spdk_iscsi_task_put(pdu.task);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1581,6 +2143,13 @@ main(int argc, char **argv)
 			       abort_queued_datain_tasks_test) == NULL
 		|| CU_add_test(suite, "build_iovs_test", build_iovs_test) == NULL
 		|| CU_add_test(suite, "build_iovs_with_md_test", build_iovs_with_md_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_login_test", pdu_hdr_op_login_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_text_test", pdu_hdr_op_text_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_logout_test", pdu_hdr_op_logout_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_scsi_test", pdu_hdr_op_scsi_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_task_mgmt_test", pdu_hdr_op_task_mgmt_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_nopout_test", pdu_hdr_op_nopout_test) == NULL
+		|| CU_add_test(suite, "pdu_hdr_op_data_test", pdu_hdr_op_data_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
