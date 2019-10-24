@@ -68,7 +68,7 @@ struct ftl_reloc_move {
 	struct ftl_addr				addr;
 
 	/* Number of logical blocks */
-	size_t					lbk_cnt;
+	size_t					block_cnt;
 
 	/* Data buffer */
 	void					*data;
@@ -87,7 +87,7 @@ struct ftl_band_reloc {
 	struct ftl_band				*band;
 
 	/* Number of logical blocks to be relocated */
-	size_t					num_lbks;
+	size_t					num_blocks;
 
 	/* Bitmap of logical blocks to be relocated */
 	struct spdk_bit_array			*reloc_map;
@@ -170,21 +170,21 @@ ftl_reloc_iter_zone_offset(struct ftl_band_reloc *breloc)
 static size_t
 ftl_reloc_iter_zone_done(struct ftl_band_reloc *breloc)
 {
-	size_t num_lbks = ftl_num_blocks_in_zone(breloc->parent->dev);
+	size_t num_blocks = ftl_num_blocks_in_zone(breloc->parent->dev);
 
-	return ftl_reloc_iter_zone_offset(breloc) == num_lbks;
+	return ftl_reloc_iter_zone_offset(breloc) == num_blocks;
 }
 
 static void
-ftl_reloc_clr_lbk(struct ftl_band_reloc *breloc, size_t lbkoff)
+ftl_reloc_clr_block(struct ftl_band_reloc *breloc, size_t blockoff)
 {
-	if (!spdk_bit_array_get(breloc->reloc_map, lbkoff)) {
+	if (!spdk_bit_array_get(breloc->reloc_map, blockoff)) {
 		return;
 	}
 
-	spdk_bit_array_clear(breloc->reloc_map, lbkoff);
-	assert(breloc->num_lbks);
-	breloc->num_lbks--;
+	spdk_bit_array_clear(breloc->reloc_map, blockoff);
+	assert(breloc->num_blocks);
+	breloc->num_blocks--;
 }
 
 static void
@@ -205,8 +205,8 @@ ftl_reloc_read_lba_map(struct ftl_band_reloc *breloc, struct ftl_reloc_move *mov
 	struct ftl_band *band = breloc->band;
 
 	breloc->num_outstanding++;
-	return ftl_band_read_lba_map(band, ftl_band_lbkoff_from_addr(band, move->addr),
-				     move->lbk_cnt, ftl_reloc_read_lba_map_cb, move);
+	return ftl_band_read_lba_map(band, ftl_band_blockoff_from_addr(band, move->addr),
+				     move->block_cnt, ftl_reloc_read_lba_map_cb, move);
 }
 
 static void
@@ -264,10 +264,10 @@ ftl_reloc_write_cb(struct ftl_io *io, void *arg, int status)
 		return;
 	}
 
-	for (i = 0; i < move->lbk_cnt; ++i) {
+	for (i = 0; i < move->block_cnt; ++i) {
 		addr.offset = move->addr.offset + i;
-		size_t lbkoff = ftl_band_lbkoff_from_addr(breloc->band, addr);
-		ftl_reloc_clr_lbk(breloc, lbkoff);
+		size_t blockoff = ftl_band_blockoff_from_addr(breloc->band, addr);
+		ftl_reloc_clr_block(breloc, blockoff);
 	}
 
 	ftl_reloc_free_move(breloc, move);
@@ -304,7 +304,7 @@ ftl_reloc_iter_reset(struct ftl_band_reloc *breloc)
 }
 
 static size_t
-ftl_reloc_iter_lbkoff(struct ftl_band_reloc *breloc)
+ftl_reloc_iter_blockoff(struct ftl_band_reloc *breloc)
 {
 	size_t zone_offset = breloc->iter.zone_current * ftl_num_blocks_in_zone(breloc->parent->dev);
 
@@ -320,21 +320,21 @@ ftl_reloc_iter_next_zone(struct ftl_band_reloc *breloc)
 }
 
 static int
-ftl_reloc_lbk_valid(struct ftl_band_reloc *breloc, size_t lbkoff)
+ftl_reloc_block_valid(struct ftl_band_reloc *breloc, size_t blockoff)
 {
-	struct ftl_addr addr = ftl_band_addr_from_lbkoff(breloc->band, lbkoff);
+	struct ftl_addr addr = ftl_band_addr_from_blockoff(breloc->band, blockoff);
 
 	return ftl_addr_is_written(breloc->band, addr) &&
-	       spdk_bit_array_get(breloc->reloc_map, lbkoff) &&
-	       ftl_band_lbkoff_valid(breloc->band, lbkoff);
+	       spdk_bit_array_get(breloc->reloc_map, blockoff) &&
+	       ftl_band_blockoff_valid(breloc->band, blockoff);
 }
 
 static int
-ftl_reloc_iter_next(struct ftl_band_reloc *breloc, size_t *lbkoff)
+ftl_reloc_iter_next(struct ftl_band_reloc *breloc, size_t *blockoff)
 {
 	size_t zone = breloc->iter.zone_current;
 
-	*lbkoff = ftl_reloc_iter_lbkoff(breloc);
+	*blockoff = ftl_reloc_iter_blockoff(breloc);
 
 	if (ftl_reloc_iter_zone_done(breloc)) {
 		return 0;
@@ -342,8 +342,8 @@ ftl_reloc_iter_next(struct ftl_band_reloc *breloc, size_t *lbkoff)
 
 	breloc->iter.zone_offset[zone]++;
 
-	if (!ftl_reloc_lbk_valid(breloc, *lbkoff)) {
-		ftl_reloc_clr_lbk(breloc, *lbkoff);
+	if (!ftl_reloc_block_valid(breloc, *blockoff)) {
+		ftl_reloc_clr_block(breloc, *blockoff);
 		return 0;
 	}
 
@@ -351,12 +351,12 @@ ftl_reloc_iter_next(struct ftl_band_reloc *breloc, size_t *lbkoff)
 }
 
 static int
-ftl_reloc_first_valid_lbk(struct ftl_band_reloc *breloc, size_t *lbkoff)
+ftl_reloc_first_valid_block(struct ftl_band_reloc *breloc, size_t *blockoff)
 {
-	size_t i, num_lbks = ftl_num_blocks_in_zone(breloc->parent->dev);
+	size_t i, num_blocks = ftl_num_blocks_in_zone(breloc->parent->dev);
 
-	for (i = ftl_reloc_iter_zone_offset(breloc); i < num_lbks; ++i) {
-		if (ftl_reloc_iter_next(breloc, lbkoff)) {
+	for (i = ftl_reloc_iter_zone_offset(breloc); i < num_blocks; ++i) {
+		if (ftl_reloc_iter_next(breloc, blockoff)) {
 			return 1;
 		}
 	}
@@ -369,10 +369,10 @@ ftl_reloc_iter_done(struct ftl_band_reloc *breloc)
 {
 	size_t i;
 	size_t num_zones = ftl_dev_num_punits(breloc->band->dev);
-	size_t num_lbks = ftl_num_blocks_in_zone(breloc->parent->dev);
+	size_t num_blocks = ftl_num_blocks_in_zone(breloc->parent->dev);
 
 	for (i = 0; i < num_zones; ++i) {
-		if (breloc->iter.zone_offset[i] != num_lbks) {
+		if (breloc->iter.zone_offset[i] != num_blocks) {
 			return 0;
 		}
 	}
@@ -381,49 +381,49 @@ ftl_reloc_iter_done(struct ftl_band_reloc *breloc)
 }
 
 static size_t
-ftl_reloc_find_valid_lbks(struct ftl_band_reloc *breloc,
-			  size_t num_lbk, struct ftl_addr *addr)
+ftl_reloc_find_valid_blocks(struct ftl_band_reloc *breloc,
+			    size_t num_block, struct ftl_addr *addr)
 {
-	size_t lbkoff, lbk_cnt = 0;
+	size_t blockoff, block_cnt = 0;
 
-	if (!ftl_reloc_first_valid_lbk(breloc, &lbkoff)) {
+	if (!ftl_reloc_first_valid_block(breloc, &blockoff)) {
 		return 0;
 	}
 
-	*addr = ftl_band_addr_from_lbkoff(breloc->band, lbkoff);
+	*addr = ftl_band_addr_from_blockoff(breloc->band, blockoff);
 
-	for (lbk_cnt = 1; lbk_cnt < num_lbk; lbk_cnt++) {
-		if (!ftl_reloc_iter_next(breloc, &lbkoff)) {
+	for (block_cnt = 1; block_cnt < num_block; block_cnt++) {
+		if (!ftl_reloc_iter_next(breloc, &blockoff)) {
 			break;
 		}
 	}
 
-	return lbk_cnt;
+	return block_cnt;
 }
 
 static size_t
-ftl_reloc_next_lbks(struct ftl_band_reloc *breloc, struct ftl_addr *addr)
+ftl_reloc_next_blocks(struct ftl_band_reloc *breloc, struct ftl_addr *addr)
 {
-	size_t i, lbk_cnt = 0;
+	size_t i, block_cnt = 0;
 	struct spdk_ftl_dev *dev = breloc->parent->dev;
 
 	for (i = 0; i < ftl_dev_num_punits(dev); ++i) {
-		lbk_cnt = ftl_reloc_find_valid_lbks(breloc, breloc->parent->xfer_size, addr);
+		block_cnt = ftl_reloc_find_valid_blocks(breloc, breloc->parent->xfer_size, addr);
 		ftl_reloc_iter_next_zone(breloc);
 
-		if (lbk_cnt || ftl_reloc_iter_done(breloc)) {
+		if (block_cnt || ftl_reloc_iter_done(breloc)) {
 			break;
 		}
 	}
 
-	return lbk_cnt;
+	return block_cnt;
 }
 
 static struct ftl_io *
 ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move,
 		  ftl_io_fn fn, enum ftl_io_type io_type, int flags)
 {
-	size_t lbkoff, i;
+	size_t blockoff, i;
 	struct ftl_addr addr = move->addr;
 	struct ftl_io *io = NULL;
 	struct ftl_io_init_opts opts = {
@@ -432,7 +432,7 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move,
 		.size		= sizeof(*io),
 		.flags		= flags | FTL_IO_INTERNAL | FTL_IO_PPA_MODE,
 		.type		= io_type,
-		.lbk_cnt	= move->lbk_cnt,
+		.block_cnt	= move->block_cnt,
 		.data		= move->data,
 		.cb_fn		= fn,
 	};
@@ -446,15 +446,15 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move,
 	io->addr = move->addr;
 
 	if (flags & FTL_IO_VECTOR_LBA) {
-		for (i = 0; i < io->lbk_cnt; ++i, ++addr.offset) {
-			lbkoff = ftl_band_lbkoff_from_addr(breloc->band, addr);
+		for (i = 0; i < io->block_cnt; ++i, ++addr.offset) {
+			blockoff = ftl_band_blockoff_from_addr(breloc->band, addr);
 
-			if (!ftl_band_lbkoff_valid(breloc->band, lbkoff)) {
+			if (!ftl_band_blockoff_valid(breloc->band, blockoff)) {
 				io->lba.vector[i] = FTL_LBA_INVALID;
 				continue;
 			}
 
-			io->lba.vector[i] = breloc->band->lba_map.map[lbkoff];
+			io->lba.vector[i] = breloc->band->lba_map.map[blockoff];
 		}
 	}
 
@@ -487,15 +487,15 @@ ftl_reloc_read(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move)
 {
 	struct ftl_addr addr = {};
 
-	move->lbk_cnt = ftl_reloc_next_lbks(breloc, &addr);
+	move->block_cnt = ftl_reloc_next_blocks(breloc, &addr);
 	move->breloc = breloc;
 	move->addr = addr;
 
-	if (!move->lbk_cnt) {
+	if (!move->block_cnt) {
 		return 0;
 	}
 
-	move->data = spdk_dma_malloc(FTL_BLOCK_SIZE * move->lbk_cnt, 4096, NULL);
+	move->data = spdk_dma_malloc(FTL_BLOCK_SIZE * move->block_cnt, 4096, NULL);
 	if (!move->data) {
 		return -1;
 	}
@@ -566,7 +566,7 @@ ftl_reloc_release(struct ftl_band_reloc *breloc)
 
 	if (breloc->state == FTL_BAND_RELOC_STATE_HIGH_PRIO) {
 		/* High prio band must be relocated as a whole and ANM events will be ignored */
-		assert(breloc->num_lbks == 0 && ftl_band_empty(band));
+		assert(breloc->num_blocks == 0 && ftl_band_empty(band));
 		TAILQ_REMOVE(&reloc->prio_queue, breloc, entry);
 		band->high_prio = 0;
 		breloc->state = FTL_BAND_RELOC_STATE_INACTIVE;
@@ -576,7 +576,7 @@ ftl_reloc_release(struct ftl_band_reloc *breloc)
 		breloc->state = FTL_BAND_RELOC_STATE_INACTIVE;
 
 		/* If we got ANM event during relocation put such band back to pending queue */
-		if (breloc->num_lbks != 0) {
+		if (breloc->num_blocks != 0) {
 			breloc->state = FTL_BAND_RELOC_STATE_PENDING;
 			TAILQ_INSERT_TAIL(&reloc->pending_queue, breloc, entry);
 			return;
@@ -789,7 +789,7 @@ ftl_reloc(struct ftl_reloc *reloc)
 
 void
 ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
-	      size_t num_lbks, int prio, bool is_defrag)
+	      size_t num_blocks, int prio, bool is_defrag)
 {
 	struct ftl_band_reloc *breloc = &reloc->brelocs[band->id];
 	size_t i;
@@ -812,17 +812,17 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 	}
 	pthread_spin_unlock(&band->lba_map.lock);
 
-	for (i = offset; i < offset + num_lbks; ++i) {
+	for (i = offset; i < offset + num_blocks; ++i) {
 		if (spdk_bit_array_get(breloc->reloc_map, i)) {
 			continue;
 		}
 		spdk_bit_array_set(breloc->reloc_map, i);
-		breloc->num_lbks++;
+		breloc->num_blocks++;
 	}
 
 	/* If the band is coming from the defrag process, mark it appropriately */
 	if (is_defrag) {
-		assert(offset == 0 && num_lbks == ftl_num_blocks_in_band(band->dev));
+		assert(offset == 0 && num_blocks == ftl_num_blocks_in_band(band->dev));
 		reloc->num_defrag_bands++;
 		breloc->defrag = true;
 	}
