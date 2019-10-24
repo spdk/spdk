@@ -104,7 +104,7 @@ test_md_unpack_fail(void)
 	/* check crc */
 	ftl_pack_tail_md(band);
 	/* flip last bit of lba_map */
-	*((char *)lba_map->dma_buf + ftl_tail_md_num_lbks(band->dev) * FTL_BLOCK_SIZE - 1) ^= 0x1;
+	*((char *)lba_map->dma_buf + ftl_tail_md_num_blocks(band->dev) * FTL_BLOCK_SIZE - 1) ^= 0x1;
 	CU_ASSERT_EQUAL(ftl_unpack_tail_md(band), FTL_MD_INVALID_CRC);
 
 	/* check invalid version */
