@@ -105,8 +105,10 @@ function migration_tc2_configure_vhost()
 	vhost_run 0 "-m 0x1 -s 512 -u"
 	vhost_run 1 "-m 0x2 -s 512 -u"
 
-	local rdma_ip_list=$(get_available_rdma_ips)
-	local nvmf_target_ip=$(echo "$rdma_ip_list" | head -n 1)
+	local rdma_ip_list
+	local nvmf_target_ip
+	rdma_ip_list=$(get_available_rdma_ips)
+	nvmf_target_ip=$(echo "$rdma_ip_list" | head -n 1)
 
 	if [[ -z "$nvmf_target_ip" ]]; then
 		fail "no NIC for nvmf target"
