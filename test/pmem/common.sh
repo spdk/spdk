@@ -79,7 +79,8 @@ function vhost_start()
 function vhost_kill()
 {
 	local vhost_pid_file="$testdir/vhost.pid"
-	local vhost_pid="$(cat $vhost_pid_file)"
+	local vhost_pid
+	vhost_pid="$(cat $vhost_pid_file)"
 
 	if [[ ! -f $vhost_pid_file ]]; then
 		echo -e "ERROR: No vhost pid file found!"
