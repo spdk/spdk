@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47763334_b3709713",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T20:43:33Z",
+      "side": 1,
+      "message": "would it be simpler to just add trid_entry-\u003efailover_trid (or trid_entry-\u003ealt_trid).\n\nThen just:\n\ntrid_entry-\u003efailover_trid \u003d trid_entry-\u003etrid;\n\nthen below you can remove the else statement, and just overwrite trid_entry-\u003efailover_trid.traddr if the user specified an alt_traddr.\n\nthen later you don\u0027t have to do the snprintf at all - you already have the new trid; you can also use spdk_nvme_transport_id_compare to compare trid and failover_trid to see if they are the same",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b40cbb90_25e2d5bc",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T20:43:33Z",
+      "side": 1,
+      "message": "+\u003d strlen(\"alt_traddr:\");",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a78eb0e_ecfe3212",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T20:43:33Z",
+      "side": 1,
+      "message": "extra semicolon added",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7a86640_017b79d1",
+        "filename": "examples/nvme/reconnect/reconnect.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1018,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T20:43:33Z",
+      "side": 1,
+      "message": "we already know entry-\u003enum_resets \u003d\u003d 0 from line 1015",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecf1b268_4177c103",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T20:43:33Z",
+      "side": 1,
+      "message": "The \"See above for details.\" may be confusing.  I think you\u0027re referring to the description just above for ns and how it\u0027s used with nvme/perf.  But it could also be construed as details about transport ID failover itself.",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a4001c6f_a22fd0b8",
+        "filename": "test/nvmf/host/target_disconnect.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T20:43:33Z",
+      "side": 1,
+      "message": "reconnectpid?",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a4d0c6ca_8a6cc2fb",
+        "filename": "test/nvmf/host/target_disconnect.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T20:43:33Z",
+      "side": 1,
+      "message": "reconnectpid",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12bb6485_e1434cc0",
+        "filename": "test/nvmf/host/target_disconnect.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-24T20:43:33Z",
+      "side": 1,
+      "message": "reconnectpid",
+      "revId": "f5c6a47d1b7904eb49673620e2cb60c4384eccb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
