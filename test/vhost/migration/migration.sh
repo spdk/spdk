@@ -67,7 +67,8 @@ function vm_monitor_send()
 	local vm_num=$1
 	local cmd_result_file="$2"
 	local vm_dir="$VM_DIR/$1"
-	local vm_monitor_port=$(cat $vm_dir/monitor_port)
+	local vm_monitor_port
+	vm_monitor_port=$(cat $vm_dir/monitor_port)
 
 	[[ -n "$vm_monitor_port" ]] || fail "No monitor port!"
 
@@ -79,9 +80,12 @@ function vm_monitor_send()
 function vm_migrate()
 {
 	local from_vm_dir="$VM_DIR/$1"
-	local target_vm_dir="$(readlink -e $from_vm_dir/vm_migrate_to)"
-	local target_vm="$(basename $target_vm_dir)"
-	local target_vm_migration_port="$(cat $target_vm_dir/migration_port)"
+	local target_vm_dir
+	local target_vm
+	local target_vm_migration_port
+	target_vm_dir="$(readlink -e $from_vm_dir/vm_migrate_to)"
+	target_vm="$(basename $target_vm_dir)"
+	target_vm_migration_port="$(cat $target_vm_dir/migration_port)"
 	if [[ -n "$2" ]]; then
 		local target_ip=$2
 	else
@@ -123,7 +127,8 @@ function vm_migrate()
 
 function is_fio_running()
 {
-	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
+	local shell_restore_x
+	shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
 
 	if vm_exec $1 'kill -0 $(cat /root/fio.pid)'; then
