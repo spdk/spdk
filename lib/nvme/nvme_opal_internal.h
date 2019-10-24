@@ -52,6 +52,8 @@
 
 #define SPDK_DTAERROR_NO_METHOD_STATUS	0x89
 
+typedef int (*spdk_opal_cb)(struct spdk_opal_dev *dev, void *ctx);
+
 enum opal_token_type {
 	OPAL_DTA_TOKENID_BYTESTRING	= 0xE0,
 	OPAL_DTA_TOKENID_SINT		= 0xE1,
@@ -276,6 +278,11 @@ struct spdk_opal_header {
 	struct spdk_opal_data_subpacket sub_packet;
 };
 
+struct opal_step {
+	int (*opal_async_fn)(struct spdk_opal_dev *dev, void *data);
+	void *data;
+};
+
 struct spdk_opal_dev {
 	bool supported;
 	void *dev_handler;
@@ -290,19 +297,29 @@ struct spdk_opal_dev {
 	uint8_t cmd[IO_BUFFER_LENGTH];
 	uint8_t resp[IO_BUFFER_LENGTH];
 
+	enum spdk_opal_dev_state state;
+
 	struct spdk_opal_resp_parsed parsed_resp;
 	size_t prev_d_len;
 	void *prev_data;
+	uint8_t *key;   /* free as soon as it is not needed */
 
 	struct spdk_opal_info *opal_info;
+
+	struct opal_step *steps_fn;
+	uint8_t step_index;
+	uint8_t step_num;
 
 	uint64_t timeout;   /* seconds */
 	uint8_t max_ranges; /* max locking range number */
 	struct spdk_opal_locking_range_info *locking_range_info[OPAL_MAX_LRS];
 
 	pthread_mutex_t mutex_lock; /* some structs are accessed by current thread only */
-	spdk_opal_revert_cb revert_cb_fn;
-	void *ctx;  /* user context data */
+	spdk_opal_cb cb_fn; /* use internally */
+	void *ctx;  /* internal context data */
+
+	spdk_opal_user_callback user_cb; /* call back specified by user */
+	void *user_ctx;  /* user context data */
 };
 
 #endif

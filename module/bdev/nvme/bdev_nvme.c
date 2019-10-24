@@ -238,11 +238,10 @@ bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	assert(nvme_bdev_ctrlr->destruct);
 	if (nvme_bdev_ctrlr->opal_dev) {
-		if (nvme_bdev_ctrlr->opal_poller != NULL) {
-			spdk_poller_unregister(&nvme_bdev_ctrlr->opal_poller);
-			/* wait until we get the result */
-			while (spdk_opal_revert_poll(nvme_bdev_ctrlr->opal_dev) == -EAGAIN);
+		if (spdk_opal_get_dev_state(nvme_bdev_ctrlr->opal_dev) == OPAL_DEV_STATE_BUSY) {
+			spdk_nvme_ctrlr_reset(nvme_bdev_ctrlr->ctrlr);  /* abort outstanding commands */
 		}
+		spdk_opal_flush_response_buffer(nvme_bdev_ctrlr->opal_dev);
 		spdk_opal_close(nvme_bdev_ctrlr->opal_dev);
 		nvme_bdev_ctrlr->opal_dev = NULL;
 	}
@@ -1020,6 +1019,20 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	}
 }
 
+static void
+opal_init_cb(struct spdk_opal_dev *dev, void *ctx, int rc)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = ctx;
+
+	if (rc) {
+		SPDK_ERRLOG("Opal init failure\n");
+		return;
+	}
+
+	SPDK_NOTICELOG("%s Opal %s\n", nvme_bdev_ctrlr->name,
+		       spdk_opal_supported(dev) ? "supported" : "not supported");
+}
+
 static int
 create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	     const char *name,
@@ -1085,7 +1098,8 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 
 	if (spdk_nvme_ctrlr_get_flags(nvme_bdev_ctrlr->ctrlr) &
 	    SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
-		nvme_bdev_ctrlr->opal_dev = spdk_opal_init_dev(nvme_bdev_ctrlr->ctrlr);
+		nvme_bdev_ctrlr->opal_dev = spdk_opal_init_dev_async(nvme_bdev_ctrlr->ctrlr, opal_init_cb,
+					    nvme_bdev_ctrlr);
 		if (nvme_bdev_ctrlr->opal_dev == NULL) {
 			SPDK_ERRLOG("Failed to initialize Opal\n");
 			return -ENOMEM;
