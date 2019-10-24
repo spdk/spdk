@@ -1358,6 +1358,58 @@ int spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr,
 				     spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
+ * Receive security protocol data from controller.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
+ * commands submitted through this function.
+ *
+ * \param ctrlr NVMe controller to use for security receive command submission.
+ * \param secp Security Protocol that is used.
+ * \param spsp Security Protocol Specific field.
+ * \param nssf NVMe Security Specific field. Indicate RPMB target when using Security
+ * Protocol EAh.
+ * \param payload The pointer to the payload buffer.
+ * \param size The size of payload buffer.
+ * \param cb_fn Callback function to invoke when the security receive is done.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errno if resources could not be allocated
+ * for this request.
+ */
+int spdk_nvme_ctrlr_cmd_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
+		uint16_t spsp, uint8_t nssf, void *payload,
+		uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * Send security protocol data to controller.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
+ * commands submitted through this function.
+ *
+ * \param ctrlr NVMe controller to use for security send command submission.
+ * \param secp Security Protocol that is used.
+ * \param spsp Security Protocol Specific field.
+ * \param nssf NVMe Security Specific field. Indicate RPMB target when using Security
+ * Protocol EAh.
+ * \param payload The pointer to the payload buffer.
+ * \param size The size of payload buffer.
+ * \param cb_fn Callback function to invoke when the security send is done.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errno if resources could not be allocated
+ * for this request.
+ */
+int spdk_nvme_ctrlr_cmd_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
+				      uint16_t spsp, uint8_t nssf, void *payload,
+				      uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
  * Abort a specific previously-submitted NVMe command.
  *
  * \sa spdk_nvme_ctrlr_register_timeout_callback()
@@ -1494,9 +1546,6 @@ int spdk_nvme_ctrlr_cmd_set_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t fe
  *
  * This function is thread safe and can be called at any point after spdk_nvme_probe().
  *
- * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
- * commands submitted through this function.
- *
  * \param ctrlr NVMe controller to use for security receive command submission.
  * \param secp Security Protocol that is used.
  * \param spsp Security Protocol Specific field.
@@ -1515,9 +1564,6 @@ int spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp
  * Send security protocol data to controller.
  *
  * This function is thread safe and can be called at any point after spdk_nvme_probe().
- *
- * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
- * commands submitted through this function.
  *
  * \param ctrlr NVMe controller to use for security send command submission.
  * \param secp Security Protocol that is used.

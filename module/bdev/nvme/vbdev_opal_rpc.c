@@ -56,6 +56,17 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_opal_init_decoders[] 
 };
 
 static void
+vbdev_opal_init_cb(struct spdk_opal_dev *dev, void *ctx, int rc)
+{
+	if (rc) {
+		SPDK_ERRLOG("Opal init failure\n");
+		return;
+	}
+
+	SPDK_NOTICELOG("OPAL init success\n");
+}
+
+static void
 spdk_rpc_bdev_nvme_opal_init(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
@@ -63,6 +74,7 @@ spdk_rpc_bdev_nvme_opal_init(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	struct nvme_bdev_ctrlr *nvme_ctrlr;
 	int rc;
+	enum spdk_opal_dev_state state;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_opal_init_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_opal_init_decoders),
@@ -72,39 +84,40 @@ spdk_rpc_bdev_nvme_opal_init(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	/* check if opal supported */
 	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(req.nvme_ctrlr_name);
-	if (nvme_ctrlr == NULL || nvme_ctrlr->opal_dev == NULL ||
-	    !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
-		SPDK_ERRLOG("%s not support opal\n", req.nvme_ctrlr_name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("device %s not found\n", req.nvme_ctrlr_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		goto out;
 	}
 
-	/* take ownership */
-	rc = spdk_opal_cmd_take_ownership(nvme_ctrlr->opal_dev, req.password);
-	if (rc) {
-		SPDK_ERRLOG("Take ownership failure: %d\n", rc);
-		switch (rc) {
-		case -EBUSY:
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							 "SP Busy, try again later");
-			break;
-		case -EACCES:
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							 "This drive is already enabled");
-			break;
-		default:
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
-		}
+	/* check if opal supported */
+	if (nvme_ctrlr->opal_dev == NULL || !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
+		SPDK_NOTICELOG("%s not support opal\n", req.nvme_ctrlr_name);
+		w = spdk_jsonrpc_begin_result(request);
+		spdk_json_write_bool(w, false);
+		spdk_jsonrpc_end_result(request, w);
 		goto out;
 	}
 
-	/* activate locking SP */
-	rc = spdk_opal_cmd_activate_locking_sp(nvme_ctrlr->opal_dev, req.password);
+	state = spdk_opal_get_dev_state(nvme_ctrlr->opal_dev);
+	if (state == OPAL_DEV_STATE_BUSY) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "SP Busy, try again later");
+		goto out;
+	}
+
+	if (state == OPAL_DEV_STATE_ENABLED) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "This drive is already enabled");
+		goto out;
+	}
+
+	/* take ownership */
+	rc = spdk_vbdev_opal_init_async(nvme_ctrlr->opal_dev, req.password, vbdev_opal_init_cb, NULL);
 	if (rc) {
-		SPDK_ERRLOG("Activate locking SP failure: %d\n", rc);
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "bdev_nvme_opal_init failed\n");
 		goto out;
 	}
 
@@ -155,6 +168,7 @@ spdk_rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	struct nvme_bdev_ctrlr *nvme_ctrlr;
 	int rc;
+	enum spdk_opal_dev_state state;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_opal_revert_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_opal_revert_decoders),
@@ -164,16 +178,36 @@ spdk_rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	/* check if opal supported */
 	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(req.nvme_ctrlr_name);
-	if (nvme_ctrlr == NULL || nvme_ctrlr->opal_dev == NULL ||
-	    !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
-		SPDK_ERRLOG("%s not support opal\n", req.nvme_ctrlr_name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("device %s not found\n", req.nvme_ctrlr_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		goto out;
 	}
 
-	/* TODO: delete all opal vbdev before revert TPer */
+	/* check if opal supported */
+	if (nvme_ctrlr->opal_dev == NULL || !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
+		SPDK_NOTICELOG("%s not support opal\n", req.nvme_ctrlr_name);
+		w = spdk_jsonrpc_begin_result(request);
+		spdk_json_write_bool(w, false);
+		spdk_jsonrpc_end_result(request, w);
+		goto out;
+	}
+
+	state = spdk_opal_get_dev_state(nvme_ctrlr->opal_dev);
+	if (state == OPAL_DEV_STATE_BUSY) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "SP Busy, try again later");
+		goto out;
+	}
+
+	if (state == OPAL_DEV_STATE_DEFAULT) {
+		/* no need for revert */
+		w = spdk_jsonrpc_begin_result(request);
+		spdk_json_write_bool(w, false);
+		spdk_jsonrpc_end_result(request, w);
+		goto out;
+	}
 
 	rc = spdk_vbdev_opal_revert_tper(nvme_ctrlr, req.password, revert_tper_done,
 					 nvme_ctrlr);
@@ -191,6 +225,121 @@ out:
 	free_rpc_bdev_nvme_opal_revert(&req);
 }
 SPDK_RPC_REGISTER("bdev_nvme_opal_revert", spdk_rpc_bdev_nvme_opal_revert, SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_opal_recovery {
+	char *nvme_ctrlr_name;
+	uint32_t nsid;
+	char *password;
+};
+
+static void
+free_rpc_bdev_opal_recovery(struct rpc_bdev_opal_recovery *req)
+{
+	free(req->nvme_ctrlr_name);
+	free(req->password);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_opal_recovery_decoders[] = {
+	{"nvme_ctrlr_name", offsetof(struct rpc_bdev_opal_recovery, nvme_ctrlr_name), spdk_json_decode_string},
+	{"nsid", offsetof(struct rpc_bdev_opal_recovery, nsid), spdk_json_decode_uint32},
+	{"password", offsetof(struct rpc_bdev_opal_recovery, password), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_bdev_opal_recovery(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_bdev_opal_recovery req = {};
+	struct spdk_json_write_ctx *w;
+	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	int rc;
+	enum spdk_opal_dev_state state;
+	int max_range_num;
+	int i;
+	struct spdk_opal_locking_range_info *info;
+	char *opal_bdev_name;
+
+	if (spdk_json_decode_object(params, rpc_bdev_opal_recovery_decoders,
+				    SPDK_COUNTOF(rpc_bdev_opal_recovery_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto out;
+	}
+
+	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(req.nvme_ctrlr_name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("%s not found\n", req.nvme_ctrlr_name);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto out;
+	}
+
+	/* check if opal supported */
+	if (nvme_ctrlr->opal_dev == NULL || !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
+		SPDK_ERRLOG("%s not support opal\n", req.nvme_ctrlr_name);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto out;
+	}
+
+	state = spdk_opal_get_dev_state(nvme_ctrlr->opal_dev);
+	if (state == OPAL_DEV_STATE_BUSY) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "SP Busy, try again later");
+		goto out;
+	}
+
+	if (state == OPAL_DEV_STATE_DEFAULT) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Not initialized. No need for recovery");
+		goto out;
+	}
+
+	if (state == OPAL_DEV_STATE_ENABLED) {
+		w = spdk_jsonrpc_begin_result(request);
+		spdk_json_write_array_begin(w);
+		rc = spdk_opal_cmd_get_max_ranges(nvme_ctrlr->opal_dev, req.password);
+		if (rc) {
+			SPDK_ERRLOG("Get max locking range number failure: %d\n", rc);
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+			goto out;
+		}
+
+		max_range_num = spdk_opal_get_max_locking_ranges(nvme_ctrlr->opal_dev);
+		for (i = 0; i < max_range_num; i++) {
+			rc = spdk_opal_cmd_get_locking_range_info(nvme_ctrlr->opal_dev,
+					req.password, OPAL_ADMIN1, i);
+			if (rc) {
+				SPDK_ERRLOG("Get locking range info failure: %d\n", rc);
+				spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+				goto out;
+			}
+
+			info = spdk_opal_get_locking_range_info(nvme_ctrlr->opal_dev, i);
+			if (info->range_length == 0 && info->range_start == 0) {
+				continue;   /* uninitialized, no need to recovery */
+			}
+
+			/* recreate opal bdev */
+			rc = spdk_vbdev_opal_create(req.nvme_ctrlr_name, req.nsid, i, info->range_start,
+						    info->range_length, req.password);
+			if (rc != 0) {
+				spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+								     "Failed to create opal vbdev from '%s': %s",
+								     req.nvme_ctrlr_name, spdk_strerror(-rc));
+				goto out;
+			}
+			opal_bdev_name = spdk_sprintf_alloc("%sn%dr%d", req.nvme_ctrlr_name, req.nsid, i);
+			spdk_json_write_string(w, opal_bdev_name);
+			free(opal_bdev_name);
+		}
+		spdk_json_write_array_end(w);
+		spdk_jsonrpc_end_result(request, w);
+	}
+
+out:
+	free_rpc_bdev_opal_recovery(&req);
+}
+SPDK_RPC_REGISTER("bdev_opal_recovery", spdk_rpc_bdev_opal_recovery, SPDK_RPC_RUNTIME)
 
 struct rpc_bdev_opal_create {
 	char *nvme_ctrlr_name;

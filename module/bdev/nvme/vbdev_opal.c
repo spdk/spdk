@@ -235,6 +235,7 @@ spdk_vbdev_opal_get_info_from_bdev(const char *opal_bdev_name, const char *passw
 	struct nvme_bdev_ctrlr *nvme_ctrlr;
 	int locking_range_id;
 	int rc;
+	enum spdk_opal_dev_state state;
 
 	TAILQ_FOREACH(vbdev, &g_opal_vbdev, tailq) {
 		if (strcmp(vbdev->name, opal_bdev_name) == 0) {
@@ -250,6 +251,17 @@ spdk_vbdev_opal_get_info_from_bdev(const char *opal_bdev_name, const char *passw
 	nvme_ctrlr = vbdev->nvme_ctrlr;
 	if (nvme_ctrlr == NULL) {
 		SPDK_ERRLOG("can't find nvme_ctrlr of %s\n", vbdev->name);
+		return NULL;
+	}
+
+	state = spdk_opal_get_dev_state(nvme_ctrlr->opal_dev);
+	if (state == OPAL_DEV_STATE_BUSY) {
+		SPDK_ERRLOG("SP Busy, try again later");
+		return NULL;
+	}
+
+	if (state == OPAL_DEV_STATE_DEFAULT) {
+		SPDK_ERRLOG("This drive is not initialized. Can't build opal bdev on it");
 		return NULL;
 	}
 
@@ -348,6 +360,7 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 	SPDK_BDEV_PART_TAILQ *part_tailq;
 	struct spdk_vbdev_opal_config *cfg;
 	struct nvme_bdev *nvme_bdev;
+	enum spdk_opal_dev_state state;
 
 	if (nsid != NSID_SUPPORTED) {
 		SPDK_ERRLOG("nsid %d not supported", nsid);
@@ -363,6 +376,17 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 	if (nvme_ctrlr->opal_dev == NULL) {
 		SPDK_ERRLOG("Opal not supported\n");
 		return -ENODEV;
+	}
+
+	state = spdk_opal_get_dev_state(nvme_ctrlr->opal_dev);
+	if (state == OPAL_DEV_STATE_BUSY) {
+		SPDK_ERRLOG("SP Busy, try again later");
+		return -EBUSY;
+	}
+
+	if (state == OPAL_DEV_STATE_DEFAULT) {
+		SPDK_ERRLOG("This drive is not initialized. Can't build opal bdev on it");
+		return -EINVAL;
 	}
 
 	opal_bdev = calloc(1, sizeof(struct opal_vbdev));
@@ -532,6 +556,7 @@ spdk_vbdev_opal_destruct(const char *bdev_name, const char *password)
 	int locking_range_id;
 	int rc;
 	struct opal_vbdev *opal_bdev;
+	enum spdk_opal_dev_state state;
 
 	TAILQ_FOREACH(opal_bdev, &g_opal_vbdev, tailq) {
 		if (strcmp(opal_bdev->name, bdev_name) == 0) {
@@ -552,6 +577,12 @@ spdk_vbdev_opal_destruct(const char *bdev_name, const char *password)
 	if (nvme_ctrlr == NULL) {
 		SPDK_ERRLOG("can't find nvme_ctrlr of %s\n", bdev_name);
 		return -ENODEV;
+	}
+
+	state = spdk_opal_get_dev_state(nvme_ctrlr->opal_dev);
+	if (state == OPAL_DEV_STATE_BUSY) {
+		SPDK_ERRLOG("SP Busy, try again later");
+		return -EBUSY;
 	}
 
 	/* secure erase locking range */
@@ -581,40 +612,88 @@ err:
 static void
 vbdev_opal_examine(struct spdk_bdev *bdev)
 {
-	/* TODO */
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	enum spdk_opal_dev_state state;
+
+	if (strcmp(bdev->product_name, "NVMe disk") != 0) {
+		goto end;
+	}
+
+	ctrlr = spdk_bdev_nvme_get_ctrlr(bdev);
+	nvme_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
+	if (nvme_ctrlr->opal_dev == NULL || spdk_opal_supported(nvme_ctrlr->opal_dev) == false) {
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_OPAL, "%s not support Opal\n", nvme_ctrlr->name);
+		goto end;
+	}
+
+	state = spdk_opal_get_dev_state(nvme_ctrlr->opal_dev);
+	assert(state != OPAL_DEV_STATE_BUSY);
+
+	if (state == OPAL_DEV_STATE_DEFAULT) {
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_OPAL, "Opal not enabled on %s\n", nvme_ctrlr->name);
+		goto end;
+	}
+
+	if (state == OPAL_DEV_STATE_ENABLED) {
+		SPDK_NOTICELOG("Opal already enabled on %s. Run bdev_opal_recovery to rebuild Opal bdev\n",
+			       nvme_ctrlr->name);
+	}
+
+end:
 	spdk_bdev_module_examine_done(&opal_if);
 }
 
-static int
-vbdev_opal_recv_poll(void *arg)
+int
+spdk_vbdev_opal_init_async(struct spdk_opal_dev *opal_dev, const char *password,
+			   spdk_opal_user_callback cb_fn, void *cb_ctx)
 {
-	struct nvme_bdev_ctrlr *nvme_ctrlr = arg;
-	int rc;
+	enum spdk_opal_dev_state state;
 
-	rc = spdk_opal_revert_poll(nvme_ctrlr->opal_dev);
-	if (rc == -EAGAIN) {
-		return -1;
+	state = spdk_opal_get_dev_state(opal_dev);
+	if (state == OPAL_DEV_STATE_BUSY) {
+		return -EBUSY;
 	}
 
-	/* receive end */
-	spdk_poller_unregister(&nvme_ctrlr->opal_poller);
-	nvme_ctrlr->opal_poller = NULL;
-	return 1;
+	if (state == OPAL_DEV_STATE_ENABLED) {
+		return 0;
+	}
+
+	return spdk_opal_cmd_init_async(opal_dev, password, cb_fn, cb_ctx);
 }
 
 int
 spdk_vbdev_opal_revert_tper(struct nvme_bdev_ctrlr *nvme_ctrlr, const char *password,
-			    spdk_opal_revert_cb cb_fn, void *cb_ctx)
+			    spdk_opal_user_callback cb_fn, void *cb_ctx)
 {
 	int rc;
+	struct vbdev_opal_part_base *opal_base;
+	SPDK_BDEV_PART_TAILQ *part_tailq;
+	struct spdk_bdev_part *part;
+	char *bdev_name;
+
+	/* destruct all opal vbdev on this ctrlr before revert TPer */
+	TAILQ_FOREACH(opal_base, &g_opal_base, tailq) {
+		if (strcmp(opal_base->nvme_ctrlr_name, nvme_ctrlr->name) == 0) { /* get part_base */
+			part_tailq = spdk_bdev_part_base_get_tailq(opal_base->part_base);
+			TAILQ_FOREACH(part, part_tailq, tailq) {    /* destruct each part */
+				bdev_name = spdk_bdev_part_get_bdev(part)->name;
+				rc = spdk_vbdev_opal_destruct(bdev_name, password);
+				if (rc) {
+					SPDK_ERRLOG("Destruct %s failure. Revert tper failure\n", bdev_name);
+					return rc;
+				}
+			}
+			break;
+		}
+	}
 
 	rc = spdk_opal_cmd_revert_tper_async(nvme_ctrlr->opal_dev, password, cb_fn, cb_ctx);
 	if (rc) {
 		SPDK_ERRLOG("%s revert tper failure: %d\n", nvme_ctrlr->name, rc);
-		return rc;
 	}
-	nvme_ctrlr->opal_poller = spdk_poller_register(vbdev_opal_recv_poll, nvme_ctrlr, 50);
-	return 0;
+
+	return rc;
 }
 
 int
@@ -626,6 +705,7 @@ spdk_vbdev_opal_set_lock_state(const char *bdev_name, uint16_t user_id, const ch
 	int rc;
 	enum spdk_opal_lock_state state_flag;
 	struct opal_vbdev *opal_bdev;
+	enum spdk_opal_dev_state state;
 
 	TAILQ_FOREACH(opal_bdev, &g_opal_vbdev, tailq) {
 		if (strcmp(opal_bdev->name, bdev_name) == 0) {
@@ -642,6 +722,12 @@ spdk_vbdev_opal_set_lock_state(const char *bdev_name, uint16_t user_id, const ch
 	if (nvme_ctrlr == NULL) {
 		SPDK_ERRLOG("can't find nvme_ctrlr of %s\n", opal_bdev->name);
 		return -ENODEV;
+	}
+
+	state = spdk_opal_get_dev_state(nvme_ctrlr->opal_dev);
+	if (state == OPAL_DEV_STATE_BUSY) {
+		SPDK_ERRLOG("SP Busy, try again later");
+		return -EBUSY;
 	}
 
 	if (strcasecmp(lock_state, "READWRITE") == 0) {
@@ -673,6 +759,7 @@ spdk_vbdev_opal_enable_new_user(const char *bdev_name, const char *admin_passwor
 	int locking_range_id;
 	int rc;
 	struct opal_vbdev *opal_bdev;
+	enum spdk_opal_dev_state state;
 
 	TAILQ_FOREACH(opal_bdev, &g_opal_vbdev, tailq) {
 		if (strcmp(opal_bdev->name, bdev_name) == 0) {
@@ -689,6 +776,12 @@ spdk_vbdev_opal_enable_new_user(const char *bdev_name, const char *admin_passwor
 	if (nvme_ctrlr == NULL) {
 		SPDK_ERRLOG("can't find nvme_ctrlr of %s\n", opal_bdev->name);
 		return -ENODEV;
+	}
+
+	state = spdk_opal_get_dev_state(nvme_ctrlr->opal_dev);
+	if (state == OPAL_DEV_STATE_BUSY) {
+		SPDK_ERRLOG("SP Busy, try again later");
+		return -EBUSY;
 	}
 
 	rc = spdk_opal_cmd_enable_user(nvme_ctrlr->opal_dev, user_id, admin_password);
