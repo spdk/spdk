@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "0ded7a42_4e754159",
+        "filename": "lib/vmd/led.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-10-24T05:42:25Z",
+      "side": 1,
+      "message": "typo for Indicator",
+      "revId": "8281f0b71fdab04aa2402f88b97e469bc2bee5b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d3a71701_8b5e7b21",
         "filename": "lib/vmd/led.c",
         "patchSetId": 6
