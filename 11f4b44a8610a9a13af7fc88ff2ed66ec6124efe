@@ -50,6 +50,24 @@
       "revId": "11f4b44a8610a9a13af7fc88ff2ed66ec6124efe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22ae4baf_31357979",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-24T08:08:22Z",
+      "side": 1,
+      "message": "Yes, newest nvme-cli requires systemd-devel to build.",
+      "parentUuid": "1c344a02_fe8cd65a",
+      "revId": "11f4b44a8610a9a13af7fc88ff2ed66ec6124efe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
