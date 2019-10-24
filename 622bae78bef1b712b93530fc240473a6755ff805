@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b998007_e606414a",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-24T11:41:05Z",
+      "side": 1,
+      "message": "Please add newline between those two.",
+      "range": {
+        "startLine": 140,
+        "startChar": 4,
+        "endLine": 141,
+        "endChar": 34
+      },
+      "revId": "622bae78bef1b712b93530fc240473a6755ff805",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
