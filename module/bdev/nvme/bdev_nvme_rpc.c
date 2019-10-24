@@ -36,6 +36,8 @@
 #include "bdev_nvme.h"
 #include "common.h"
 
+#include "spdk/config.h"
+
 #include "spdk/string.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
@@ -344,6 +346,15 @@ spdk_rpc_dump_nvme_controller_info(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "name", nvme_bdev_ctrlr->name);
+
+#ifdef SPDK_CONFIG_NVME_CUSE
+	char *cuse_device;
+
+	cuse_device = spdk_nvme_cuse_get_ctrlr_name(nvme_bdev_ctrlr->ctrlr);
+	if (cuse_device) {
+		spdk_json_write_named_string(w, "cuse_device", cuse_device);
+	}
+#endif
 
 	spdk_json_write_named_object_begin(w, "trid");
 	nvme_bdev_dump_trid_json(trid, w);
