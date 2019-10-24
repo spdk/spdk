@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45408cc2_112161cf",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-24T11:47:55Z",
+      "side": 1,
+      "message": "Is there any reason to you are adding _ prefix? Could we call just zone_block_write_cb?",
+      "revId": "7a8fadf8c541209d32ebdde8b4d891ec1685b44a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
