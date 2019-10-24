@@ -1488,11 +1488,20 @@ cli_start(void *arg1)
 	}
 }
 
+struct cli_context_t *cli_context = NULL;
+
+
+static void
+blobcli_shutdown(void)
+{
+	cli_context->action = CLI_SHELL_EXIT;
+}
+
+
 int
 main(int argc, char **argv)
 {
 	struct spdk_app_opts opts = {};
-	struct cli_context_t *cli_context = NULL;
 	bool cmd_chosen;
 	int rc = 0;
 
@@ -1559,6 +1568,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&opts);
 	opts.name = "blobcli";
 	opts.config_file = cli_context->config_file;
+	opts.shutdown_cb = blobcli_shutdown;
 
 	cli_context->app_started = true;
 	rc = spdk_app_start(&opts, cli_start, cli_context);
