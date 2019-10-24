@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/util.h"
+#include "spdk/queue.h"
 #include "spdk_cunit.h"
 
 #include <rte_config.h>
