@@ -57,7 +57,7 @@ DEFINE_STUB_V(ftl_io_fail, (struct ftl_io *io, int status));
 DEFINE_STUB_V(ftl_trace_completion, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
 				     enum ftl_trace_completion completion));
 DEFINE_STUB_V(ftl_reloc_add, (struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
-			      size_t num_lbks, int prio, bool defrag));
+			      size_t num_blocks, int prio, bool defrag));
 DEFINE_STUB_V(ftl_trace_write_band, (struct spdk_ftl_dev *dev, const struct ftl_band *band));
 DEFINE_STUB_V(ftl_trace_submission, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
 				     struct ftl_addr addr, size_t addr_cnt));
@@ -74,7 +74,7 @@ DEFINE_STUB(spdk_bdev_zone_management, int, (struct spdk_bdev_desc *desc,
 DEFINE_STUB(spdk_bdev_io_get_append_location, uint64_t, (struct spdk_bdev_io *bdev_io), 0);
 
 struct ftl_io *
-ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_io_fn cb)
+ftl_io_erase_init(struct ftl_band *band, size_t num_blocks, ftl_io_fn cb)
 {
 	struct ftl_io *io;
 
@@ -84,15 +84,15 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_io_fn cb)
 	io->dev = band->dev;
 	io->band = band;
 	io->cb_fn = cb;
-	io->lbk_cnt = 1;
+	io->num_blocks = 1;
 
 	return io;
 }
 
 void
-ftl_io_advance(struct ftl_io *io, size_t lbk_cnt)
+ftl_io_advance(struct ftl_io *io, size_t num_blocks)
 {
-	io->pos += lbk_cnt;
+	io->pos += num_blocks;
 }
 
 void
@@ -139,7 +139,7 @@ test_wptr(void)
 	struct ftl_band *band;
 	struct ftl_io io = { 0 };
 	size_t xfer_size;
-	size_t zone, lbk, offset, i;
+	size_t zone, block, offset, i;
 	int rc;
 
 	setup_wptr_test(&dev, &g_geo);
@@ -154,7 +154,7 @@ test_wptr(void)
 		io.band = band;
 		io.dev = dev;
 
-		for (lbk = 0, offset = 0; lbk < ftl_get_num_blocks_in_zone(dev) / xfer_size; ++lbk) {
+		for (block = 0, offset = 0; block < ftl_get_num_blocks_in_zone(dev) / xfer_size; ++block) {
 			for (zone = 0; zone < band->num_zones; ++zone) {
 				CU_ASSERT_EQUAL(wptr->offset, offset);
 				ftl_wptr_advance(wptr, xfer_size);

@@ -224,7 +224,7 @@ ftl_trace_lba_io_init(struct spdk_ftl_dev *dev, const struct ftl_io *io)
 		}
 	}
 
-	spdk_trace_record(tpoint_id, io->trace, io->lbk_cnt, 0, ftl_io_get_lba(io, 0));
+	spdk_trace_record(tpoint_id, io->trace, io->num_blocks, 0, ftl_io_get_lba(io, 0));
 }
 
 void
