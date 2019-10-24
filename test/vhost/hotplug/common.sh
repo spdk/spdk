@@ -199,7 +199,8 @@ function check_disks() {
 
 function get_traddr() {
     local nvme_name=$1
-    local nvme="$( $rootdir/scripts/gen_nvme.sh )"
+    local nvme
+    nvme="$( $rootdir/scripts/gen_nvme.sh )"
     while read -r line; do
         if [[ $line == *"TransportID"* ]] && [[ $line == *$nvme_name* ]]; then
             local word_array=($line)
