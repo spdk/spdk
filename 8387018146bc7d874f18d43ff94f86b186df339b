@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1dc0a571_eeeabff1",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-24T16:52:51Z",
+      "side": 1,
+      "message": "nvme_ctrlr_name",
+      "range": {
+        "startLine": 376,
+        "startChar": 30,
+        "endLine": 376,
+        "endChar": 44
+      },
+      "revId": "8387018146bc7d874f18d43ff94f86b186df339b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
