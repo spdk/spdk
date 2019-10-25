@@ -15,6 +15,7 @@ disk_split=""
 x=""
 scsi_hot_remove_test=0
 blk_hot_remove_test=0
+readonly=""
 
 
 function usage() {
@@ -36,6 +37,7 @@ function usage() {
     echo "                          OS - VM os disk path (optional)"
     echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
     echo "    --scsi-hotremove-test Run scsi hotremove tests"
+    echo "    --readonly            Use readonly for fio"
     exit 0
 }
 
@@ -50,6 +52,7 @@ while getopts 'xh-:' optchar; do
             vm=*) vms+=("${OPTARG#*=}") ;;
             scsi-hotremove-test) scsi_hot_remove_test=1 ;;
             blk-hotremove-test) blk_hot_remove_test=1 ;;
+            readonly) readonly="--readonly" ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
