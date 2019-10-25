@@ -815,15 +815,23 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 
 	/* If any didn't get submitted, queue them for the poller to de-queue later. */
 	if (num_enqueued_ops < cryop_cnt) {
-		for (crypto_index = num_enqueued_ops; crypto_index < burst; crypto_index++) {
-			op_to_queue = calloc(1, sizeof(struct vbdev_crypto_op));
-			op_to_queue->cdev_id = cdev_id;
-			op_to_queue->qp = crypto_ch->device_qp->qp;
-			op_to_queue->crypto_op = crypto_ops[crypto_index];
-			op_to_queue->bdev_io = bdev_io;
-			TAILQ_INSERT_TAIL(&crypto_ch->queued_crypto_ops,
-					  op_to_queue,
-					  link);
+		/* If the last op touched by the cryptoDevAPI had busy status, queue it up
+		 * for retry later, set the bdev status to failed.
+		 */
+		if (crypto_ops[num_enqueued_ops]->status != RTE_CRYPTO_OP_STATUS_NOT_PROCESSED) {
+			io_ctx->bdev_io_status = SPDK_BDEV_IO_STATUS_FAILED;
+		} else {
+			/* queue them up */
+			for (crypto_index = num_enqueued_ops; crypto_index < burst; crypto_index++) {
+				op_to_queue = calloc(1, sizeof(struct vbdev_crypto_op));
+				op_to_queue->cdev_id = cdev_id;
+				op_to_queue->qp = crypto_ch->device_qp->qp;
+				op_to_queue->crypto_op = crypto_ops[crypto_index];
+				op_to_queue->bdev_io = bdev_io;
+				TAILQ_INSERT_TAIL(&crypto_ch->queued_crypto_ops,
+						  op_to_queue,
+						  link);
+			}
 		}
 
 	}
