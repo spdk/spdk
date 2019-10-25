@@ -121,6 +121,7 @@ static pthread_mutex_t g_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
 /* Common for suported devices. */
 #define IV_OFFSET            (sizeof(struct rte_crypto_op) + \
 				sizeof(struct rte_crypto_sym_op))
+#define QUEUED_OP_OFFSET (IV_OFFSET + AES_CBC_IV_LENGTH)
 
 static void _complete_internal_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 static void _complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
@@ -165,6 +166,16 @@ static struct rte_mempool *g_session_mp_priv = NULL;
 static struct spdk_mempool *g_mbuf_mp = NULL;		/* mbuf mempool */
 static struct rte_mempool *g_crypto_op_mp = NULL;	/* crypto operations, must be rte* mempool */
 
+/* For queueing up crypto operations that we can't submit for some reason */
+struct vbdev_crypto_op {
+	uint8_t					cdev_id;
+	uint8_t					qp;
+	struct rte_crypto_op			*crypto_op;
+	struct spdk_bdev_io			*bdev_io;
+	TAILQ_ENTRY(vbdev_crypto_op)		link;
+};
+#define QUEUED_OP_LENGTH (sizeof(struct vbdev_crypto_op))
+
 /* The crypto vbdev channel struct. It is allocated and freed on my behalf by the io channel code.
  * We store things in here that are needed on per thread basis like the base_channel for this thread,
  * and the poller for this thread.
@@ -175,6 +186,7 @@ struct crypto_io_channel {
 	struct device_qp		*device_qp;		/* unique device/qp combination for this channel */
 	TAILQ_HEAD(, spdk_bdev_io)	pending_cry_ios;	/* outstanding operations to the crypto device */
 	struct spdk_io_channel_iter	*iter;			/* used with for_each_channel in reset */
+	TAILQ_HEAD(, vbdev_crypto_op)	queued_crypto_ops;	/* queued for re-submission to CryptoDev */
 };
 
 /* This is the crypto per IO context that the bdev layer allocates for us opaquely and attaches to
@@ -187,7 +199,7 @@ struct crypto_bdev_io {
 	struct spdk_bdev_io *orig_io;			/* the original IO */
 	struct spdk_bdev_io *read_io;			/* the read IO we issued */
 	int8_t bdev_io_status;				/* the status we'll report back on the bdev IO */
-
+	bool on_pending_list;
 	/* Used for the single contiguous buffer that serves as the crypto destination target for writes */
 	uint64_t cry_num_blocks;			/* num of blocks for the contiguous buffer */
 	uint64_t cry_offset_blocks;			/* block offset on media */
@@ -390,12 +402,16 @@ vbdev_crypto_init_crypto_drivers(void)
 		goto error_create_mbuf;
 	}
 
+	/* We use per op private data to store the IV and our own struct
+	 * for queueing ops.
+	 */
 	g_crypto_op_mp = rte_crypto_op_pool_create("op_mp",
 			 RTE_CRYPTO_OP_TYPE_SYMMETRIC,
 			 NUM_MBUFS,
 			 POOL_CACHE_SIZE,
-			 AES_CBC_IV_LENGTH,
+			 AES_CBC_IV_LENGTH + QUEUED_OP_LENGTH,
 			 rte_socket_id());
+
 	if (g_crypto_op_mp == NULL) {
 		SPDK_ERRLOG("Cannot create op pool\n");
 		rc = -ENOMEM;
@@ -485,6 +501,9 @@ _crypto_operation_complete(struct spdk_bdev_io *bdev_io)
 	}
 }
 
+static int _crypto_operation(struct spdk_bdev_io *bdev_io,
+			     enum rte_crypto_cipher_operation crypto_op);
+
 /* This is the poller for the crypto device. It uses a single API to dequeue whatever is ready at
  * the device. Then we need to decide if what we've got so far (including previous poller
  * runs) totals up to one or more complete bdev_ios and if so continue with the bdev_io
@@ -495,12 +514,13 @@ crypto_dev_poller(void *args)
 {
 	struct crypto_io_channel *crypto_ch = args;
 	uint8_t cdev_id = crypto_ch->device_qp->device->cdev_id;
-	int i, num_dequeued_ops;
+	int i, num_dequeued_ops, num_enqueued_ops;
 	struct spdk_bdev_io *bdev_io = NULL;
 	struct crypto_bdev_io *io_ctx = NULL;
 	struct rte_crypto_op *dequeued_ops[MAX_DEQUEUE_BURST_SIZE];
 	struct rte_crypto_op *mbufs_to_free[2 * MAX_DEQUEUE_BURST_SIZE];
 	int num_mbufs = 0;
+	struct vbdev_crypto_op *op_to_resubmit;
 
 	/* Each run of the poller will get just what the device has available
 	 * at the moment we call it, we don't check again after draining the
@@ -567,6 +587,29 @@ crypto_dev_poller(void *args)
 				      num_mbufs);
 	}
 
+	/* Check if there are any pending crypto ops to process */
+	while (!TAILQ_EMPTY(&crypto_ch->queued_crypto_ops)) {
+		op_to_resubmit = TAILQ_FIRST(&crypto_ch->queued_crypto_ops);
+		io_ctx = (struct crypto_bdev_io *)op_to_resubmit->bdev_io->driver_ctx;
+		num_enqueued_ops = rte_cryptodev_enqueue_burst(op_to_resubmit->cdev_id,
+				   op_to_resubmit->qp,
+				   &op_to_resubmit->crypto_op,
+				   1);
+		if (num_enqueued_ops == 1) {
+			/* Make sure we don't put this on twice as one bdev_io is made up
+			 * of many crypto ops.
+			 */
+			if (io_ctx->on_pending_list == false) {
+				TAILQ_INSERT_TAIL(&crypto_ch->pending_cry_ios, op_to_resubmit->bdev_io, module_link);
+				io_ctx->on_pending_list = true;
+			}
+			TAILQ_REMOVE(&crypto_ch->queued_crypto_ops, op_to_resubmit, link);
+		} else {
+			/* if we couldn't get one, just break and try again later. */
+			break;
+		}
+	}
+
 	/* If the channel iter is not NULL, we need to continue to poll
 	 * until the pending list is empty, then we can move on to the
 	 * next channel.
@@ -592,19 +635,18 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	uint32_t crypto_len = io_ctx->crypto_bdev->crypto_bdev.blocklen;
 	uint64_t total_length = bdev_io->u.bdev.num_blocks * crypto_len;
 	int rc;
-	uint32_t enqueued = 0;
 	uint32_t iov_index = 0;
 	uint32_t allocated = 0;
 	uint8_t *current_iov = NULL;
 	uint64_t total_remaining = 0;
 	uint64_t updated_length, current_iov_remaining = 0;
-	int completed = 0;
-	int crypto_index = 0;
+	uint32_t crypto_index = 0;
 	uint32_t en_offset = 0;
 	struct rte_crypto_op *crypto_ops[MAX_ENQUEUE_ARRAY_SIZE];
 	struct rte_mbuf *src_mbufs[MAX_ENQUEUE_ARRAY_SIZE];
 	struct rte_mbuf *dst_mbufs[MAX_ENQUEUE_ARRAY_SIZE];
 	int burst;
+	struct vbdev_crypto_op *op_to_queue;
 
 	assert((bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen) <= CRYPTO_MAX_IO);
 
@@ -771,30 +813,33 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	/* Enqueue everything we've got but limit by the max number of descriptors we
 	 * configured the crypto device for.
 	 */
-	do {
-		burst = spdk_min((cryop_cnt - enqueued), CRYPTO_QP_DESCRIPTORS);
-		num_enqueued_ops = rte_cryptodev_enqueue_burst(cdev_id, crypto_ch->device_qp->qp,
-				   &crypto_ops[enqueued],
-				   burst);
-		enqueued += num_enqueued_ops;
+	burst = spdk_min(cryop_cnt, CRYPTO_QP_DESCRIPTORS);
+	num_enqueued_ops = rte_cryptodev_enqueue_burst(cdev_id, crypto_ch->device_qp->qp,
+			   &crypto_ops[0],
+			   burst);
 
-		/* Dequeue all inline if the device is full. We don't defer anything simply
-		 * because of the complexity involved as we're building 1 or more crypto
-		 * ops per IO. Dequeue will free up space for more enqueue.
-		 */
-		if (enqueued < cryop_cnt) {
-
-			/* Dequeue everything, this may include ops that were already
-			 * in the device before this submission....
-			 */
-			do {
-				completed = crypto_dev_poller(crypto_ch);
-			} while (completed > 0);
+	/* If any didn't get submitted, queue them for the poller to de-queue later. */
+	if (num_enqueued_ops < cryop_cnt) {
+		for (crypto_index = num_enqueued_ops; crypto_index < cryop_cnt; crypto_index++) {
+			op_to_queue = (struct vbdev_crypto_op *)rte_crypto_op_ctod_offset(crypto_ops[crypto_index],
+					uint8_t *,
+					QUEUED_OP_OFFSET);
+			op_to_queue->cdev_id = cdev_id;
+			op_to_queue->qp = crypto_ch->device_qp->qp;
+			op_to_queue->crypto_op = crypto_ops[crypto_index];
+			op_to_queue->bdev_io = bdev_io;
+			TAILQ_INSERT_TAIL(&crypto_ch->queued_crypto_ops,
+					  op_to_queue,
+					  link);
 		}
-	} while (enqueued < cryop_cnt);
 
-	/* Add this bdev_io to our outstanding list. */
-	TAILQ_INSERT_TAIL(&crypto_ch->pending_cry_ios, bdev_io, module_link);
+	}
+
+	/* Add this bdev_io to our outstanding list if any of its crypto ops made it. */
+	if (num_enqueued_ops > 0) {
+		TAILQ_INSERT_TAIL(&crypto_ch->pending_cry_ios, bdev_io, module_link);
+		io_ctx->on_pending_list = true;
+	}
 
 	return rc;
 
@@ -1187,6 +1232,9 @@ crypto_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 
 	/* We use this queue to track outstanding IO in our layer. */
 	TAILQ_INIT(&crypto_ch->pending_cry_ios);
+
+	/* We use this to queue up crypto ops when the device is busy. */
+	TAILQ_INIT(&crypto_ch->queued_crypto_ops);
 
 	return 0;
 }
