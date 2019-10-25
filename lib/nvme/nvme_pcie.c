@@ -1806,10 +1806,9 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 				       req->payload_size, qpair->ctrlr->page_size);
 	if (rc) {
 		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-		return rc;
 	}
 
-	return 0;
+	return rc;
 }
 
 /**
