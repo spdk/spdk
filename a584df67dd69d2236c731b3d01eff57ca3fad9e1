@@ -284,6 +284,30 @@
     },
     {
       "key": {
+        "uuid": "8f10b3de_df201a46",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-25T06:57:49Z",
+      "side": 1,
+      "message": "As we agree offline I will move this initialization inside function body.",
+      "parentUuid": "fa2cb717_76274ba4",
+      "range": {
+        "startLine": 345,
+        "startChar": 29,
+        "endLine": 345,
+        "endChar": 80
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "499cd292_185db17c",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 18
