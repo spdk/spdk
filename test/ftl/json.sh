@@ -3,20 +3,22 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
+source $testdir/common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
 
-
 device=$1
-FTL_BDEV_CONF=$testdir/config/ftl.json
+ftl_bdev_conf=$testdir/config/ftl.conf
+gen_ftl_nvme_conf > $ftl_bdev_conf
 
 json_kill() {
 	killprocess $svcpid
+	rm -f $ftl_bdev_conf
 }
 
 trap "json_kill; exit 1" SIGINT SIGTERM EXIT
 
-$rootdir/app/spdk_tgt/spdk_tgt & svcpid=$!
+$rootdir/app/spdk_tgt/spdk_tgt -c $ftl_bdev_conf  & svcpid=$!
 waitforlisten $svcpid
 
 # Create new bdev from json configuration
@@ -27,16 +29,12 @@ $rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1 -n 1
 waitforbdev ftl0
 uuid=$($rpc_py bdev_get_bdevs | jq -r ".[] | select(.name==\"ftl0\").uuid")
 
-$rpc_py bdev_ftl_delete -b nvme0
+$rpc_py bdev_ftl_delete -b ftl0
 
 # Restore bdev from json configuration
-$rootdir/scripts/gen_ftl.sh -j -a $device -n nvme0 -u $uuid | $rpc_py load_subsystem_config
-$rpc_py bdev_ftl_delete -b nvme0
-# Create new bdev from RPC
-$rpc_py bdev_ftl_create -b nvme1 -a $device
-$rpc_py bdev_ftl_delete -b nvme1
-
-# TODO: add negative test cases
+$rootdir/scripts/gen_ftl.sh -n ftl0 -d nvme0n1 -u $uuid | $rpc_py load_subsystem_config
+$rpc_py bdev_ftl_delete -b ftl0
+$rpc_py bdev_nvme_detach_controller nvme0
 
 trap - SIGINT SIGTERM EXIT
 json_kill
