@@ -59,6 +59,7 @@ spdk_vbdev_bs_adapter_create(const char *bdev_name, const char *vbdev_name)
 void
 spdk_vbdev_bs_adapter_delete(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
+	cb_fn(cb_arg, 0);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vbdev_bs_adapter", SPDK_LOG_VBDEV_BS_ADAPTER)
