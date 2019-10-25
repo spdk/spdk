@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "285791d8_5025afea",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-25T03:16:07Z",
+      "side": 1,
+      "message": "duplicated",
+      "range": {
+        "startLine": 94,
+        "startChar": 29,
+        "endLine": 94,
+        "endChar": 33
+      },
+      "revId": "13d98a4e4db89f25419cf0f51de16d0a02c40b28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a323af9f_4edb81f3",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-25T03:16:07Z",
+      "side": 1,
+      "message": "Unnecessary?",
+      "range": {
+        "startLine": 133,
+        "startChar": 3,
+        "endLine": 133,
+        "endChar": 8
+      },
+      "revId": "13d98a4e4db89f25419cf0f51de16d0a02c40b28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea231cf2_55b947d6",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-25T03:16:07Z",
+      "side": 1,
+      "message": "Submitting",
+      "range": {
+        "startLine": 696,
+        "startChar": 14,
+        "endLine": 696,
+        "endChar": 25
+      },
+      "revId": "13d98a4e4db89f25419cf0f51de16d0a02c40b28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
