@@ -581,6 +581,30 @@ def bdev_rbd_delete(client, name):
     params = {'name': name}
     return client.call('bdev_rbd_delete', params)
 
+def bdev_bs_adapter_create(client, name, base_bdev):
+    """Creates an adapter device with 512B block size on top of existing bdev.
+
+    Args:
+        name: Adapter device name
+        base_bdev: Base bdev name
+
+    Returns:
+        Name of created block device.
+    """
+    params = {'name': name,
+              'base_bdev': base_bdev}
+
+    return client.call('bdev_bs_adapter_create', params)
+
+
+def bdev_bs_adapter_delete(client, name):
+    """Remove adapter bdev from the system.
+
+    Args:
+        name: name of adapter bdev to delete
+    """
+    params = {'name': name}
+    return client.call('bdev_bs_adapter_delete', params)
 
 @deprecated_alias('construct_error_bdev')
 def bdev_error_create(client, base_name):
