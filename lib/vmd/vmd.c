@@ -869,7 +869,7 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 			new_bus->self = new_dev;
 			new_dev->bus_object = new_bus;
 
-			if (slot_cap.bit_field.hotplug_capable &&
+			if (slot_cap.bit_field.hotplug_capable && new_dev->pcie_cap != NULL &&
 			    new_dev->pcie_cap->express_cap_register.bit_field.slot_implemented) {
 				new_bus->hotplug_buses = vmd_get_hotplug_bus_numbers(new_dev);
 				new_bus->subordinate_bus += new_bus->hotplug_buses;
