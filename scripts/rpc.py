@@ -1540,21 +1540,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
         print_dict(rpc.bdev.bdev_ftl_create(args.client,
                                             name=args.name,
-                                            trtype=args.trtype,
-                                            traddr=args.traddr,
+                                            base_bdev=args.base_bdev,
                                             uuid=args.uuid,
                                             cache=args.cache,
                                             allow_open_bands=args.allow_open_bands,
                                             overprovisioning=args.overprovisioning,
                                             **arg_limits))
 
-    p = subparsers.add_parser('bdev_ftl_create', aliases=['construct_ftl_bdev'],
-                              help='Add FTL bdev')
+    p = subparsers.add_parser('bdev_ftl_create', aliases=['construct_ftl_bdev'], help='Add FTL bdev')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
-    p.add_argument('-t', '--trtype',
-                   help='NVMe target trtype: e.g., pcie', default='pcie')
-    p.add_argument('-a', '--traddr',
-                   help='NVMe target address: e.g., an ip address or BDF', required=True)
+    p.add_argument('-d', '--base_bdev', help='Name of zoned bdev used as underlying device',
+                   required=True)
     p.add_argument('-u', '--uuid', help='UUID of restored bdev (not applicable when creating new '
                    'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d (optional)')
     p.add_argument('-c', '--cache', help='Name of the bdev to be used as a write buffer cache (optional)')
