@@ -98,7 +98,6 @@ struct ftl_deferred_init {
 typedef void (*bdev_ftl_finish_fn)(void);
 
 static LIST_HEAD(, ftl_bdev)		g_ftl_bdevs = LIST_HEAD_INITIALIZER(g_ftl_bdevs);
-static bdev_ftl_finish_fn		g_finish_cb;
 static size_t				g_num_conf_bdevs;
 static size_t				g_num_init_bdevs;
 static pthread_mutex_t			g_ftl_bdev_lock;
@@ -117,7 +116,7 @@ bdev_ftl_get_ctx_size(void)
 static struct spdk_bdev_module g_ftl_if = {
 	.name		= "ftl",
 	.async_init	= true,
-	.async_fini	= true,
+	.async_fini	= false,
 	.module_init	= bdev_ftl_initialize,
 	.module_fini	= bdev_ftl_finish,
 	.examine_disk	= bdev_ftl_examine,
@@ -184,11 +183,9 @@ static void
 bdev_ftl_free_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 {
 	struct ftl_bdev *ftl_bdev = ctx;
-	bool finish_done;
 
 	pthread_mutex_lock(&g_ftl_bdev_lock);
 	LIST_REMOVE(ftl_bdev, list_entry);
-	finish_done = LIST_EMPTY(&g_ftl_bdevs);
 	pthread_mutex_unlock(&g_ftl_bdev_lock);
 
 	spdk_io_device_unregister(ftl_bdev, NULL);
@@ -203,10 +200,6 @@ bdev_ftl_free_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 	spdk_bdev_destruct_done(&ftl_bdev->bdev, status);
 	free(ftl_bdev->bdev.name);
 	free(ftl_bdev);
-
-	if (finish_done && g_finish_cb) {
-		g_finish_cb();
-	}
 }
 
 static int
@@ -893,7 +886,6 @@ out:
 static int
 bdev_ftl_initialize(void)
 {
-	struct ftl_module_init_opts ftl_opts = {};
 	pthread_mutexattr_t attr;
 	int rc = 0;
 
@@ -914,14 +906,8 @@ bdev_ftl_initialize(void)
 		goto error;
 	}
 
-	/* TODO: retrieve this from config */
-	ftl_opts.anm_thread = spdk_get_thread();
-	rc = spdk_ftl_module_init(&ftl_opts, bdev_ftl_initialize_cb, NULL);
+	bdev_ftl_initialize_cb(NULL, rc);
 
-	if (rc) {
-		bdev_ftl_initialize_cb(NULL, rc);
-
-	}
 error:
 	pthread_mutexattr_destroy(&attr);
 	return rc;
@@ -1003,38 +989,9 @@ bdev_ftl_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_a
 }
 
 static void
-bdev_ftl_ftl_module_fini_cb(void *ctx, int status)
-{
-	if (status) {
-		SPDK_ERRLOG("Failed to deinitialize FTL module\n");
-		assert(0);
-	}
-
-	spdk_bdev_module_finish_done();
-}
-
-static void
-bdev_ftl_finish_cb(void)
-{
-	if (spdk_ftl_module_fini(bdev_ftl_ftl_module_fini_cb, NULL)) {
-		SPDK_ERRLOG("Failed to deinitialize FTL module\n");
-		assert(0);
-	}
-}
-
-static void
 bdev_ftl_finish(void)
 {
-	pthread_mutex_lock(&g_ftl_bdev_lock);
 
-	if (LIST_EMPTY(&g_ftl_bdevs)) {
-		pthread_mutex_unlock(&g_ftl_bdev_lock);
-		bdev_ftl_finish_cb();
-		return;
-	}
-
-	g_finish_cb = bdev_ftl_finish_cb;
-	pthread_mutex_unlock(&g_ftl_bdev_lock);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev_ftl", SPDK_LOG_BDEV_FTL)
