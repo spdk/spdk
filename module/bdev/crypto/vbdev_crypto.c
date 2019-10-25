@@ -622,7 +622,7 @@ crypto_dev_poller(void *args)
 static int
 _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation crypto_op)
 {
-	uint16_t num_enqueued_ops = 0;
+	uint16_t num_enqueued_ops = 0, index_to_check;
 	uint32_t cryop_cnt = bdev_io->u.bdev.num_blocks;
 	struct crypto_bdev_io *io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
 	struct crypto_io_channel *crypto_ch = io_ctx->crypto_ch;
@@ -815,15 +815,27 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 
 	/* If any didn't get submitted, queue them for the poller to de-queue later. */
 	if (num_enqueued_ops < cryop_cnt) {
-		for (crypto_index = num_enqueued_ops; crypto_index < burst; crypto_index++) {
-			op_to_queue = calloc(1, sizeof(struct vbdev_crypto_op));
-			op_to_queue->cdev_id = cdev_id;
-			op_to_queue->qp = crypto_ch->device_qp->qp;
-			op_to_queue->crypto_op = crypto_ops[crypto_index];
-			op_to_queue->bdev_io = bdev_io;
-			TAILQ_INSERT_TAIL(&crypto_ch->queued_crypto_ops,
-					  op_to_queue,
-					  link);
+		/* check the last one that didn't make it, if it wasn't because of busy
+		 * then we need to fail the bdev_io. We do so by setting the internal status
+		 * here and setting the crypto remaining count to 1. This will for completion
+		 * of the bdev_io in the poller.
+		 */
+		index_to_check = (cryop_cnt == 1) ? 0 : num_enqueued_ops;
+		if (crypto_ops[index_to_check]->status != RTE_CRYPTO_OP_STATUS_NOT_PROCESSED) {
+			io_ctx->cryop_cnt_remaining = 1;
+			io_ctx->bdev_io_status = SPDK_BDEV_IO_STATUS_FAILED;
+		} else {
+			/* queue them up */
+			for (crypto_index = num_enqueued_ops; crypto_index < burst; crypto_index++) {
+				op_to_queue = calloc(1, sizeof(struct vbdev_crypto_op));
+				op_to_queue->cdev_id = cdev_id;
+				op_to_queue->qp = crypto_ch->device_qp->qp;
+				op_to_queue->crypto_op = crypto_ops[crypto_index];
+				op_to_queue->bdev_io = bdev_io;
+				TAILQ_INSERT_TAIL(&crypto_ch->queued_crypto_ops,
+						  op_to_queue,
+						  link);
+			}
 		}
 
 	}
