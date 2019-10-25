@@ -17,13 +17,15 @@ done
 shift $((OPTIND -1))
 
 device=$1
+ftl_bdev_conf=$testdir/config/ftl.conf
+gen_ftl_nvme_conf > $ftl_bdev_conf
 
 restore_kill() {
 	rm -f $testdir/config/ftl.json
 	rm -f $testdir/testfile.md5
 	rm -f $testdir/testfile2.md5
+	rm -f $ftl_bdev_conf
 
-	$rpc_py bdev_ftl_delete -b nvme0 || true
 	killprocess $svcpid || true
 	rmmod nbd || true
 }
@@ -38,14 +40,16 @@ pu_count=$((num_group * num_pu))
 # Write one band worth of data + one extra chunk
 data_size=$((chunk_size * (pu_count + 1)))
 
-$rootdir/app/spdk_tgt/spdk_tgt & svcpid=$!
+$rootdir/app/spdk_tgt/spdk_tgt -c $ftl_bdev_conf & svcpid=$!
 waitforlisten $svcpid
 
 if [ -n "$nv_cache" ]; then
 	nvc_bdev=$(create_nv_cache_bdev nvc0 $device $nv_cache $pu_count)
 fi
 
-ftl_construct_args="bdev_ftl_create -b nvme0 -a $device -o"
+$rpc_py bdev_nvme_attach_controller -b nvme0 -a $device -t pcie
+$rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1 -n 1
+ftl_construct_args="bdev_ftl_create -b ftl0 -d nvme0n1 -o"
 
 [ -n "$nvc_bdev" ] && ftl_construct_args+=" -c $nvc_bdev"
 [ -n "$uuid" ]     && ftl_construct_args+=" -u $uuid"
@@ -54,7 +58,7 @@ $rpc_py $ftl_construct_args
 
 # Load the nbd driver
 modprobe nbd
-$rpc_py nbd_start_disk nvme0 /dev/nbd0
+$rpc_py nbd_start_disk ftl0 /dev/nbd0
 waitfornbd nbd0
 
 $rpc_py save_config > $testdir/config/ftl.json
@@ -68,7 +72,7 @@ $rpc_py nbd_stop_disk /dev/nbd0
 kill -9 $svcpid
 rm -f /dev/shm/spdk_tgt_trace.pid$svcpid
 
-$rootdir/app/spdk_tgt/spdk_tgt -L ftl_init & svcpid=$!
+$rootdir/app/spdk_tgt/spdk_tgt -c $ftl_bdev_conf -L ftl_init & svcpid=$!
 waitforlisten $svcpid
 
 $rpc_py load_config < $testdir/config/ftl.json
