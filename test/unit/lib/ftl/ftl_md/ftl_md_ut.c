@@ -39,22 +39,20 @@
 #include "ftl/ftl_band.c"
 #include "../common/utils.c"
 
-static struct spdk_ocssd_geometry_data g_geo = {
-	.num_grp	= 4,
-	.num_pu		= 3,
-	.num_chk	= 1500,
-	.clba		= 100,
-	.ws_opt		= 16,
-	.ws_min		= 4,
+struct base_bdev_geometry g_geo = {
+	.write_unit_size    = 16,
+	.optimal_open_zones = 12,
+	.zone_size	    = 100,
+	.blockcnt	    = 1500 * 100 * 12,
 };
 
 static void
-setup_band(struct ftl_band **band, const struct spdk_ocssd_geometry_data *geo)
+setup_band(struct ftl_band **band, const struct base_bdev_geometry *geo)
 {
 	int rc;
 	struct spdk_ftl_dev *dev;
 
-	dev = test_init_ftl_dev(geo);
+	dev = test_init_ftl_dev(&g_geo);
 	*band = test_init_ftl_band(dev, 0);
 	rc = ftl_band_alloc_lba_map(*band);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
@@ -122,7 +120,7 @@ test_md_unpack_fail(void)
 
 	/* check invalid size */
 	ftl_pack_tail_md(band);
-	band->dev->geo.clba--;
+	g_geo.zone_size--;
 	CU_ASSERT_EQUAL(ftl_unpack_tail_md(band), FTL_MD_INVALID_SIZE);
 
 	cleanup_band(band);
