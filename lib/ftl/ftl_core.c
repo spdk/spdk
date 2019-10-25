@@ -2040,22 +2040,10 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 	return 0;
 }
 
-static void
-_ftl_io_read(void *arg)
-{
-	ftl_io_read((struct ftl_io *)arg);
-}
-
 void
 ftl_io_read(struct ftl_io *io)
 {
-	struct spdk_ftl_dev *dev = io->dev;
-
-	if (ftl_check_core_thread(dev)) {
-		ftl_io_call_foreach_child(io, ftl_submit_read);
-	} else {
-		spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_read, io);
-	}
+	ftl_io_call_foreach_child(io, ftl_submit_read);
 }
 
 int
