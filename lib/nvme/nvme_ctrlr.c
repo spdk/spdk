@@ -425,6 +425,24 @@ out:
 	return rc;
 }
 
+/*
+ * This internal function will attempt to take the controller
+ * lock before calling disconnect on a controller qpair.
+ * Functions already holding the controller lock should
+ * call nvme_transport_ctrlr_disconnect_qpair directly.
+ */
+void
+nvme_ctrlr_disconnect_qpair(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+
+	assert(ctrlr != NULL);
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+}
+
 int
 spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 {
