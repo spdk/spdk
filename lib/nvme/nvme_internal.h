@@ -858,10 +858,11 @@ int	nvme_ctrlr_get_vs(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_vs_register
 int	nvme_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_register *cmbsz);
 void	nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap,
 			    const union spdk_nvme_vs_register *vs);
-int	nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
-			struct spdk_nvme_ctrlr *ctrlr,
-			enum spdk_nvme_qprio qprio,
-			uint32_t num_requests);
+void nvme_ctrlr_disconnect_qpair(struct spdk_nvme_qpair *qpair);
+int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
+		    struct spdk_nvme_ctrlr *ctrlr,
+		    enum spdk_nvme_qprio qprio,
+		    uint32_t num_requests);
 void	nvme_qpair_deinit(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_complete_error_reqs(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
