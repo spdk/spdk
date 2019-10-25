@@ -1911,7 +1911,11 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	return reaped;
 
 fail:
-	nvme_rdma_qpair_disconnect(qpair);
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvme_rdma_qpair_disconnect(qpair);
+	} else {
+		nvme_ctrlr_disconnect_qpair(qpair);
+	}
 	return -ENXIO;
 }
 
