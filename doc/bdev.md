@@ -347,14 +347,13 @@ OCF bdev can be used to enable caching for any underlying bdev.
 
 Below is an example command for creating OCF bdev:
 
-`rpc.py bdev_ocf_create Cache1 wt Malloc0 Nvme0n1`
+`rpc.py bdev_ocf_create Cache1 wt 4096 Malloc0 Nvme0n1`
 
 This command will create new OCF bdev `Cache1` having bdev `Malloc0` as caching-device
-and `Nvme0n1` as core-device and initial cache mode `Write-Through`.
+and `Nvme0n1` as core-device, cache line size 4kiB and initial cache mode `Write-Through`.
 `Malloc0` will be used as cache for `Nvme0n1`, so  data written to `Cache1` will be present
 on `Nvme0n1` eventually.
-By default, OCF will be configured with cache line size equal 4KiB
-and non-volatile metadata will be disabled.
+By default, OCF will be configured with non-volatile metadata will be disabled.
 
 To remove `Cache1`:
 
