@@ -818,27 +818,46 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 			   &crypto_ops[0],
 			   burst);
 
-	/* If any didn't get submitted, queue them for the poller to de-queue later. */
-	if (num_enqueued_ops < cryop_cnt) {
-		for (crypto_index = num_enqueued_ops; crypto_index < burst; crypto_index++) {
-			op_to_queue = (struct vbdev_crypto_op *)rte_crypto_op_ctod_offset(crypto_ops[crypto_index],
-					uint8_t *,
-					QUEUED_OP_OFFSET);
-			op_to_queue->cdev_id = cdev_id;
-			op_to_queue->qp = crypto_ch->device_qp->qp;
-			op_to_queue->crypto_op = crypto_ops[crypto_index];
-			op_to_queue->bdev_io = bdev_io;
-			TAILQ_INSERT_TAIL(&crypto_ch->queued_crypto_ops,
-					  op_to_queue,
-					  link);
-		}
-
-	}
-
 	/* Add this bdev_io to our outstanding list if any of its crypto ops made it. */
 	if (num_enqueued_ops > 0) {
 		TAILQ_INSERT_TAIL(&crypto_ch->pending_cry_ios, bdev_io, module_link);
 		io_ctx->on_pending_list = true;
+	}
+
+	/* We were unable to enqueue everything but did get some, so need to decide what
+	 * to do based on the status of the last op.
+	 */
+	if (num_enqueued_ops < cryop_cnt) {
+		switch (crypto_ops[num_enqueued_ops]->status) {
+		case RTE_CRYPTO_OP_STATUS_NOT_PROCESSED:
+			/* Queue them up on a linked list to be resubmitted via the poller. */
+			for (crypto_index = num_enqueued_ops; crypto_index < burst; crypto_index++) {
+				op_to_queue = (struct vbdev_crypto_op *)rte_crypto_op_ctod_offset(crypto_ops[crypto_index],
+						uint8_t *, QUEUED_OP_OFFSET);
+				op_to_queue->cdev_id = cdev_id;
+				op_to_queue->qp = crypto_ch->device_qp->qp;
+				op_to_queue->crypto_op = crypto_ops[crypto_index];
+				op_to_queue->bdev_io = bdev_io;
+				TAILQ_INSERT_TAIL(&crypto_ch->queued_crypto_ops,
+						  op_to_queue,
+						  link);
+			}
+			break;
+		default:
+			/* For all other statuses, set the io_ctx bdev_io status so that
+			 * the poller will pick the failure up for the overall bdev status.
+			 */
+			io_ctx->bdev_io_status = SPDK_BDEV_IO_STATUS_FAILED;
+			if (num_enqueued_ops == 0) {
+				/* If nothing was enqueued, but the last one wasn't because of
+				 * busy, fail it now as the poller won't know anything about it.
+				 */
+				_crypto_operation_complete(bdev_io);
+				rc = -EINVAL;
+				goto error_attach_session;
+			}
+			break;
+		}
 	}
 
 	return rc;
