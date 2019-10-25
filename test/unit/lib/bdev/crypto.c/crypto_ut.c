@@ -55,6 +55,7 @@ bool ut_rte_cryptodev_info_get_mocked = false;
  * mock them straight away. We use defines to redirect them into
  * our custom functions.
  */
+static bool g_resubmit_test = false;
 #define rte_cryptodev_enqueue_burst mock_rte_cryptodev_enqueue_burst
 static inline uint16_t
 mock_rte_cryptodev_enqueue_burst(uint8_t dev_id, uint16_t qp_id,
@@ -69,38 +70,29 @@ mock_rte_cryptodev_enqueue_burst(uint8_t dev_id, uint16_t qp_id,
 		 * enqueued operations for assertion in dev_full test.
 		 */
 		g_test_dev_full_ops[i] = *ops++;
+		if (g_resubmit_test == true) {
+			CU_ASSERT(g_test_dev_full_ops[i] == (void *)0xDEADBEEF);
+		}
 	}
 
 	return g_enqueue_mock;
 }
 
-/* This is pretty ugly but in order to complete an IO via the
- * poller in the submit path, we need to first call to this func
- * to return the dequeued value and also decrement it.  On the subsequent
- * call it needs to return 0 to indicate to the caller that there are
- * no more IOs to drain.
- */
-int g_test_overflow = 0;
 #define rte_cryptodev_dequeue_burst mock_rte_cryptodev_dequeue_burst
 static inline uint16_t
 mock_rte_cryptodev_dequeue_burst(uint8_t dev_id, uint16_t qp_id,
 				 struct rte_crypto_op **ops, uint16_t nb_ops)
 {
+	int i;
+
 	CU_ASSERT(nb_ops > 0);
 
-	/* A crypto device can be full on enqueue, the driver is designed to drain
-	 * the device at the time by calling the poller until it's empty, then
-	 * submitting the remaining crypto ops.
-	 */
-	if (g_test_overflow) {
-		if (g_dequeue_mock == 0) {
-			return 0;
-		}
-		*ops = g_test_crypto_ops[g_enqueue_mock];
+	for (i = 0; i < g_dequeue_mock; i++) {
+		*ops = g_test_crypto_ops[i];
 		(*ops)->status = RTE_CRYPTO_OP_STATUS_SUCCESS;
-		g_dequeue_mock -= 1;
 	}
-	return (g_dequeue_mock + 1);
+
+	return g_dequeue_mock;
 }
 
 /* Instead of allocating real memory, assign the allocations to our
@@ -322,6 +314,7 @@ test_setup(void)
 	g_test_config = calloc(1, sizeof(struct rte_config));
 	g_test_config->lcore_count = 1;
 	TAILQ_INIT(&g_crypto_ch->pending_cry_ios);
+	TAILQ_INIT(&g_crypto_ch->queued_crypto_ops);
 
 	/* Allocate a real mbuf pool so we can test error paths */
 	g_mbuf_mp = spdk_mempool_create("mbuf_mp", NUM_MBUFS, sizeof(struct rte_mbuf),
@@ -544,45 +537,54 @@ test_large_rw(void)
 static void
 test_dev_full(void)
 {
-	unsigned block_len = 512;
-	unsigned num_blocks = 2;
-	unsigned io_len = block_len * num_blocks;
-	unsigned i;
+	struct vbdev_crypto_op *queued_op;
 
-	g_test_overflow = 1;
-
-	/* Multi block size read, multi-element */
+	/* Two element block size read */
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	g_bdev_io->u.bdev.iovcnt = 1;
-	g_bdev_io->u.bdev.num_blocks = num_blocks;
-	g_bdev_io->u.bdev.iovs[0].iov_len = io_len;
-	g_bdev_io->u.bdev.iovs[0].iov_base = &test_dev_full;
-	g_crypto_bdev.crypto_bdev.blocklen = block_len;
+	g_bdev_io->u.bdev.num_blocks = 2;
+	g_bdev_io->u.bdev.iovs[0].iov_len = 512;
+	g_bdev_io->u.bdev.iovs[0].iov_base = (void *)0xDEADBEEF;
+	g_bdev_io->u.bdev.iovs[1].iov_len = 512;
+	g_bdev_io->u.bdev.iovs[1].iov_base = (void *)0xFEEDBEEF;
+	g_crypto_bdev.crypto_bdev.blocklen = 512;
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	g_enqueue_mock = g_dequeue_mock = 1;
-	ut_rte_crypto_op_bulk_alloc = num_blocks;
+	ut_rte_crypto_op_bulk_alloc = 2;
+
+	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_crypto_ops) == true);
 
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_io_ctx->cryop_cnt_remaining == 2);
+	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->buf_addr == (void *)0xDEADBEEF);
+	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->data_len == 512);
+	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->next == NULL);
+	CU_ASSERT(g_test_crypto_ops[0]->sym->cipher.data.length == 512);
+	CU_ASSERT(g_test_crypto_ops[0]->sym->cipher.data.offset == 0);
+	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->userdata == g_bdev_io);
+	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst == NULL);
 
-	/* this test only completes one of the 2 IOs (in the drain path) */
-	CU_ASSERT(g_io_ctx->cryop_cnt_remaining == 1);
-
-	for (i = 0; i < num_blocks; i++) {
-		/* One of the src_mbufs was freed because of the device full condition so
-		 * we can't assert its value here.
-		 */
-		CU_ASSERT(g_test_dev_full_ops[i]->sym->cipher.data.length == block_len);
-		CU_ASSERT(g_test_dev_full_ops[i]->sym->cipher.data.offset == 0);
-		CU_ASSERT(g_test_dev_full_ops[i]->sym->m_src == g_test_dev_full_ops[i]->sym->m_src);
-		CU_ASSERT(g_test_dev_full_ops[i]->sym->m_dst == NULL);
+	/* make sure one got queued and confirm its values */
+	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_crypto_ops) == false);
+	while (!TAILQ_EMPTY(&g_crypto_ch->queued_crypto_ops)) {
+		queued_op = TAILQ_FIRST(&g_crypto_ch->queued_crypto_ops);
+		TAILQ_REMOVE(&g_crypto_ch->queued_crypto_ops, queued_op, link);
+		CU_ASSERT(queued_op->bdev_io == g_bdev_io);
+		CU_ASSERT(queued_op->crypto_op == g_test_crypto_ops[1]);
+		CU_ASSERT(queued_op->crypto_op->sym->m_src->buf_addr == (void *)0xFEEDBEEF);
+		CU_ASSERT(queued_op->crypto_op->sym->m_src->data_len == 512);
+		CU_ASSERT(queued_op->crypto_op->sym->m_src->next == NULL);
+		CU_ASSERT(queued_op->crypto_op->sym->cipher.data.length == 512);
+		CU_ASSERT(queued_op->crypto_op->sym->cipher.data.offset == 0);
+		CU_ASSERT(queued_op->crypto_op->sym->m_src->userdata == g_bdev_io);
+		CU_ASSERT(queued_op->crypto_op->sym->m_dst == NULL);
+		free(queued_op);
 	}
+	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_crypto_ops) == true);
 
-	/* Only one of the 2 blocks in the test was freed on completion by design, so
-	 * we need to free th other one here.
-	 */
 	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_src);
-	g_test_overflow = 0;
+	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[1]->sym->m_src);
 }
 
 static void
@@ -886,6 +888,43 @@ test_supported_io(void)
 	CU_ASSERT(rc == false);
 }
 
+static void
+test_poller(void)
+{
+	int rc;
+	struct rte_mbuf *src_mbufs[1];
+	struct vbdev_crypto_op *op_to_resubmit;
+
+	/* test regular 1 op to dequeue and complete */
+	g_dequeue_mock = g_enqueue_mock = 1;
+	spdk_mempool_get_bulk(g_mbuf_mp, (void **)&src_mbufs[0], 1);
+	g_test_crypto_ops[0]->sym->m_src = src_mbufs[0];
+	g_test_crypto_ops[0]->sym->m_src->userdata = g_bdev_io;
+	g_test_crypto_ops[0]->sym->m_dst = NULL;
+	g_io_ctx->cryop_cnt_remaining = 1;
+	g_bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
+	rc = crypto_dev_poller(g_crypto_ch);
+	CU_ASSERT(rc == 1);
+
+	/* We have nothing dequeued but have some to resubmit */
+	g_dequeue_mock = 0;
+	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_crypto_ops) == true);
+
+	/* add an op to the queued list. */
+	g_resubmit_test = true;
+	op_to_resubmit = calloc(1, sizeof(struct vbdev_crypto_op));
+	op_to_resubmit->crypto_op = (void *)0xDEADBEEF;
+	op_to_resubmit->bdev_io = g_bdev_io;
+	TAILQ_INSERT_TAIL(&g_crypto_ch->queued_crypto_ops,
+			  op_to_resubmit,
+			  link);
+	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_crypto_ops) == false);
+	rc = crypto_dev_poller(g_crypto_ch);
+	g_resubmit_test = false;
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_crypto_ops) == true);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -923,7 +962,9 @@ main(int argc, char **argv)
 	    CU_add_test(suite, "test_supported_io",
 			test_supported_io) == NULL ||
 	    CU_add_test(suite, "test_reset",
-			test_reset) == NULL
+			test_reset) == NULL ||
+	    CU_add_test(suite, "test_poller",
+			test_poller) == NULL
 	   ) {
 		CU_cleanup_registry();
 		return CU_get_error();
