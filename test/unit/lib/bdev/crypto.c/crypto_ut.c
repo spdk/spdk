@@ -538,6 +538,7 @@ static void
 test_dev_full(void)
 {
 	struct vbdev_crypto_op *queued_op;
+	struct crypto_bdev_io *io_ctx;
 
 	/* Two element block size read */
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
@@ -551,7 +552,7 @@ test_dev_full(void)
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	g_enqueue_mock = g_dequeue_mock = 1;
 	ut_rte_crypto_op_bulk_alloc = 2;
-
+	g_test_crypto_ops[1]->status = RTE_CRYPTO_OP_STATUS_NOT_PROCESSED;
 	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_crypto_ops) == true);
 
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
@@ -581,7 +582,23 @@ test_dev_full(void)
 		CU_ASSERT(queued_op->crypto_op->sym->m_dst == NULL);
 	}
 	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_crypto_ops) == true);
+	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_src);
+	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[1]->sym->m_src);
 
+	/* Non-busy reason for enqueue failure */
+	g_test_crypto_ops[1]->status = RTE_CRYPTO_OP_STATUS_ERROR;
+	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
+	io_ctx = (struct crypto_bdev_io *)g_bdev_io->driver_ctx;
+	CU_ASSERT(io_ctx->bdev_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_src);
+	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[1]->sym->m_src);
+
+	/* Non-busy reason for enqueue failure, all were rejected. */
+	g_enqueue_mock = 0;
+	g_test_crypto_ops[0]->status = RTE_CRYPTO_OP_STATUS_ERROR;
+	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
+	io_ctx = (struct crypto_bdev_io *)g_bdev_io->driver_ctx;
+	CU_ASSERT(io_ctx->bdev_io_status == SPDK_BDEV_IO_STATUS_FAILED);
 	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_src);
 	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[1]->sym->m_src);
 }
