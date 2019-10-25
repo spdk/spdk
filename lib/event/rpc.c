@@ -61,6 +61,11 @@ spdk_rpc_initialize(const char *listen_addr)
 		return;
 	}
 
+	if (!spdk_rpc_verify_methods()) {
+		spdk_app_stop(-EINVAL);
+		return;
+	}
+
 	/* Listen on the requested address */
 	rc = spdk_rpc_listen(listen_addr);
 	if (rc != 0) {
