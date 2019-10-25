@@ -533,6 +533,26 @@ if __name__ == "__main__":
     p.add_argument('name', help='rbd bdev name')
     p.set_defaults(func=bdev_rbd_delete)
 
+    def bdev_bs_adapter_create(args):
+        print_json(rpc.bdev.bdev_bs_adapter_create(args.client,
+                                                   name=args.name,
+                                                   base_bdev=args.base_bdev))
+
+    p = subparsers.add_parser('bdev_bs_adapter_create',
+                              help='Add virtual device with 512B block size on top of 4KiB bdev')
+    p.add_argument('-b', '--name', help="Name of the block size adapter device", required=True)
+    p.add_argument('-n', '--base-bdev', help='Name of underlying bdev', required=True)
+    p.set_defaults(func=bdev_bs_adapter_create)
+
+    def bdev_bs_adapter_delete(args):
+        rpc.bdev.bdev_bs_adapter_delete(args.client,
+                                        name=args.name)
+
+    p = subparsers.add_parser('bdev_bs_adapter_delete',
+                              help='Delete a legacy (512B) sector size bdev')
+    p.add_argument('name', help='Block size adapter bdev name')
+    p.set_defaults(func=bdev_bs_adapter_delete)
+
     def bdev_delay_create(args):
         print_json(rpc.bdev.bdev_delay_create(args.client,
                                               base_bdev_name=args.base_bdev_name,
