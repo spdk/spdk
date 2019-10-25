@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1ef49d1_cf77dea2",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1914,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-25T16:50:57Z",
+      "side": 1,
+      "message": "You need a brief comment here to explain why you handle the admin queue differently.",
+      "revId": "54dd230a0046b418af526dfb135e3af8dad1831f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
