@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "ef5bb02a_75030e29",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-10-25T11:52:17Z",
+      "side": 1,
+      "message": "Please do \"nsid \u003d 1; spdk_nvme_ctrlr_is_ocssd_ns + 1; ++nsid\" or use different variable name, because it is misleading in next line where you check if namespace with specific nsid if ocssd ns.",
+      "range": {
+        "startLine": 124,
+        "startChar": 2,
+        "endLine": 124,
+        "endChar": 58
+      },
+      "revId": "622bae78bef1b712b93530fc240473a6755ff805",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9b998007_e606414a",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 14
