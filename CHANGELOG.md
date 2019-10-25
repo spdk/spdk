@@ -1,5 +1,12 @@
 # Changelog
 
+## v19.10.1: (Upcoming Release)
+
+### thread
+
+`spdk_thread_send_msg` now returns int indicating if the message was successfully
+sent.
+
 ## v19.10:
 
 ### rpc
