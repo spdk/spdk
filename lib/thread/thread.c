@@ -648,17 +648,14 @@ spdk_thread_get_stats(struct spdk_thread_stats *stats)
 	return 0;
 }
 
-void
+int
 spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx)
 {
 	struct spdk_thread *local_thread;
 	struct spdk_msg *msg;
 	int rc;
 
-	if (!thread) {
-		assert(false);
-		return;
-	}
+	assert(thread != NULL);
 
 	local_thread = _get_thread();
 
@@ -675,8 +672,8 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 	if (msg == NULL) {
 		msg = spdk_mempool_get(g_spdk_msg_mempool);
 		if (!msg) {
-			assert(false);
-			return;
+			SPDK_ERRLOG("msg could not be allocated\n");
+			return -ENOMEM;
 		}
 	}
 
@@ -685,10 +682,12 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 
 	rc = spdk_ring_enqueue(thread->messages, (void **)&msg, 1, NULL);
 	if (rc != 1) {
-		assert(false);
+		SPDK_ERRLOG("msg could not be enqueued\n");
 		spdk_mempool_put(g_spdk_msg_mempool, msg);
-		return;
+		return -EIO;
 	}
+
+	return 0;
 }
 
 struct spdk_poller *
@@ -1200,6 +1199,7 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
 	struct spdk_io_channel_iter *i;
+	int rc;
 
 	i = calloc(1, sizeof(*i));
 	if (!i) {
@@ -1223,7 +1223,8 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 				i->cur_thread = thread;
 				i->ch = ch;
 				pthread_mutex_unlock(&g_devlist_mutex);
-				spdk_thread_send_msg(thread, _call_channel, i);
+				rc = spdk_thread_send_msg(thread, _call_channel, i);
+				assert(rc == 0);
 				return;
 			}
 		}
@@ -1231,7 +1232,8 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
+	rc = spdk_thread_send_msg(i->orig_thread, _call_completion, i);
+	assert(rc == 0);
 }
 
 void

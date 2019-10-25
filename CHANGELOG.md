@@ -2,6 +2,11 @@
 
 ## v20.01: (Upcoming Release)
 
+### thread
+
+`spdk_thread_send_msg` now returns int indicating if the message was successfully
+sent.
+
 ## v19.10:
 
 ### bdev
