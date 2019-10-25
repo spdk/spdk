@@ -43,6 +43,18 @@ extern "C" {
 #endif
 
 /**
+ * Verify correctness of registered RPC methods and aliases.
+ *
+ * Incorrect registrations include:
+ * - multiple RPC methods registered with the same name
+ * - RPC alias registered with a method that does not exist
+ * - RPC alias registered that points to another alias
+ *
+ * \return true if registrations are all correct, false otherwise
+ */
+bool spdk_rpc_verify_methods(void);
+
+/**
  * Start listening for RPC connections.
  *
  * \param listen_addr Listening address.

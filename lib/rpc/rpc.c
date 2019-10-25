@@ -51,6 +51,7 @@ static int g_rpc_lock_fd = -1;
 
 static struct spdk_jsonrpc_server *g_jsonrpc_server = NULL;
 static uint32_t g_rpc_state;
+static bool g_rpcs_correct = true;
 
 struct spdk_rpc_method {
 	const char *name;
@@ -249,7 +250,8 @@ spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func, uint3
 
 	m = _get_rpc_method_raw(method);
 	if (m != NULL) {
-		SPDK_ERRLOG("duplicate RPC %s registered - ignoring...\n", method);
+		SPDK_ERRLOG("duplicate RPC %s registered...\n", method);
+		g_rpcs_correct = false;
 		return;
 	}
 
@@ -275,11 +277,13 @@ spdk_rpc_register_alias_deprecated(const char *method, const char *alias)
 	if (base == NULL) {
 		SPDK_ERRLOG("cannot create alias %s - method %s does not exist\n",
 			    alias, method);
+		g_rpcs_correct = false;
 		return;
 	}
 
 	if (base->is_alias_of != NULL) {
 		SPDK_ERRLOG("cannot create alias %s of alias %s\n", alias, method);
+		g_rpcs_correct = false;
 		return;
 	}
 
@@ -295,6 +299,12 @@ spdk_rpc_register_alias_deprecated(const char *method, const char *alias)
 
 	/* TODO: use a hash table or sorted list */
 	SLIST_INSERT_HEAD(&g_rpc_methods, m, slist);
+}
+
+bool
+spdk_rpc_verify_methods(void)
+{
+	return g_rpcs_correct;
 }
 
 int
