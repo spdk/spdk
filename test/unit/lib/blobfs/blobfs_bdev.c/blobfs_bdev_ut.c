@@ -145,10 +145,11 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 {
 }
 
-void
+int
 spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx)
 {
 	fn(ctx);
+	return 0;
 }
 
 struct spdk_thread *
