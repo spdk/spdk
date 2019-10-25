@@ -88,8 +88,7 @@ mock_rte_cryptodev_dequeue_burst(uint8_t dev_id, uint16_t qp_id,
 	CU_ASSERT(nb_ops > 0);
 
 	for (i = 0; i < g_dequeue_mock; i++) {
-		*ops = g_test_crypto_ops[i];
-		(*ops)->status = RTE_CRYPTO_OP_STATUS_SUCCESS;
+		*ops++ = g_test_crypto_ops[i];
 	}
 
 	return g_dequeue_mock;
@@ -906,7 +905,7 @@ static void
 test_poller(void)
 {
 	int rc;
-	struct rte_mbuf *src_mbufs[1];
+	struct rte_mbuf *src_mbufs[2];
 	struct vbdev_crypto_op *op_to_resubmit;
 
 	/* test regular 1 op to dequeue and complete */
@@ -937,6 +936,23 @@ test_poller(void)
 	g_resubmit_test = false;
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_crypto_ops) == true);
+
+	/* 2 to dequeue but 2nd one failed */
+	g_dequeue_mock = g_enqueue_mock = 2;
+	g_io_ctx->cryop_cnt_remaining = 2;
+	spdk_mempool_get_bulk(g_mbuf_mp, (void **)&src_mbufs[0], 2);
+	g_test_crypto_ops[0]->sym->m_src = src_mbufs[0];
+	g_test_crypto_ops[0]->sym->m_src->userdata = g_bdev_io;
+	g_test_crypto_ops[0]->sym->m_dst = NULL;
+	g_test_crypto_ops[0]->status =  RTE_CRYPTO_OP_STATUS_SUCCESS;
+	g_test_crypto_ops[1]->sym->m_src = src_mbufs[1];
+	g_test_crypto_ops[1]->sym->m_src->userdata = g_bdev_io;
+	g_test_crypto_ops[1]->sym->m_dst = NULL;
+	g_test_crypto_ops[1]->status = RTE_CRYPTO_OP_STATUS_NOT_PROCESSED;
+	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	rc = crypto_dev_poller(g_crypto_ch);
+	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(rc == 2);
 }
 
 int
