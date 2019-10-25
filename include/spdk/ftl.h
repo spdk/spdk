@@ -148,37 +148,8 @@ struct spdk_ftl_attrs {
 	struct spdk_ftl_conf			conf;
 };
 
-struct ftl_module_init_opts {
-	/* Thread on which to poll for ANM events */
-	struct spdk_thread			*anm_thread;
-};
-
 typedef void (*spdk_ftl_fn)(void *, int);
 typedef void (*spdk_ftl_init_fn)(struct spdk_ftl_dev *, void *, int);
-
-/**
- * Initialize the FTL module.
- *
- * \param opts module configuration
- * \param cb callback function to call when the module is initialized
- * \param cb_arg callback's argument
- *
- * \return 0 if successfully started initialization, negative values if
- * resources could not be allocated.
- */
-int spdk_ftl_module_init(const struct ftl_module_init_opts *opts, spdk_ftl_fn cb, void *cb_arg);
-
-/**
- * Deinitialize the FTL module. All FTL devices have to be unregistered prior to
- * calling this function.
- *
- * \param cb callback function to call when the deinitialization is completed
- * \param cb_arg callback's argument
- *
- * \return 0 if successfully scheduled deinitialization, negative errno
- * otherwise.
- */
-int spdk_ftl_module_fini(spdk_ftl_fn cb, void *cb_arg);
 
 /**
  * Initialize the FTL on given NVMe device and parallel unit range.
