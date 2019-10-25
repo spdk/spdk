@@ -55,7 +55,7 @@ SYS_LIBS += -libverbs -lrdmacm
 endif
 
 ifeq ($(OS),Linux)
-BLOCKDEV_MODULES_LIST += ftl
+BLOCKDEV_MODULES_LIST += bdev_ftl ftl
 BLOCKDEV_MODULES_LIST += bdev_aio
 SYS_LIBS += -laio
 ifeq ($(CONFIG_VIRTIO),y)
