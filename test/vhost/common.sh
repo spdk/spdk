@@ -598,7 +598,7 @@ function vm_setup()
 		error "'--incoming' and '--migrate-to' cannot be used together"
 		return 1
 	elif [[ -n "$vm_incoming" ]]; then
-		if [[ -n "$os_mode" || -n "$os_img" ]]; then
+		if [[ -n "$os_mode" || -n "$os" ]]; then
 			error "'--incoming' can't be used together with '--os' nor '--os-mode'"
 			return 1
 		fi
