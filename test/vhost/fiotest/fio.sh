@@ -15,6 +15,7 @@ reuse_vms=false
 vms=()
 used_vms=""
 x=""
+readonly=""
 
 function usage()
 {
@@ -39,6 +40,7 @@ function usage()
 	echo "                          NUM - VM number (mandatory)"
 	echo "                          OS - VM os disk path (optional)"
 	echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
+	echo "    --readonly            Use readonly for fio"
 	exit 0
 }
 
@@ -55,6 +57,7 @@ while getopts 'xh-:' optchar; do
 			no-shutdown) no_shutdown=true ;;
 			test-type=*) test_type="${OPTARG#*=}" ;;
 			vm=*) vms+=("${OPTARG#*=}") ;;
+			readonly) readonly="--readonly" ;;
 			*) usage $0 "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
