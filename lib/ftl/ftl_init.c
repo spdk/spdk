@@ -1283,18 +1283,4 @@ spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_arg
 	return _spdk_ftl_dev_free(dev, cb_fn, cb_arg, spdk_get_thread());
 }
 
-int
-spdk_ftl_module_init(const struct ftl_module_init_opts *opts, spdk_ftl_fn cb, void *cb_arg)
-{
-	cb(cb_arg, 0);
-	return 0;
-}
-
-int
-spdk_ftl_module_fini(spdk_ftl_fn cb, void *cb_arg)
-{
-	cb(cb_arg, 0);
-	return 0;
-}
-
 SPDK_LOG_REGISTER_COMPONENT("ftl_init", SPDK_LOG_FTL_INIT)
