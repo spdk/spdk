@@ -1004,7 +1004,8 @@ ftl_submit_read(struct ftl_io *io)
 					   addr.offset,
 					   lbk_cnt, ftl_io_cmpl_cb, io);
 		if (spdk_unlikely(rc)) {
-			if (rc == -ENOMEM) {
+			/* Only internal IO should be handled by FTL retry queue */
+			if (rc == -ENOMEM && (io->flags & FTL_IO_INTERNAL)) {
 				ftl_add_to_retry_queue(io);
 			} else {
 				ftl_io_fail(io, rc);
@@ -1998,7 +1999,10 @@ ftl_io_read_leaf(struct ftl_io *io)
 
 	rc = ftl_submit_read(io);
 	if (rc == -ENOMEM) {
-		/* ENOMEM means that the request was put on a pending queue */
+		/*
+		 * ENOMEM means that the request was put on a retry queue in case internal IO or
+		 * will be handled by BDEV retry queue in case user IO
+		 */
 		return 0;
 	}
 
