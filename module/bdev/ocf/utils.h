@@ -38,6 +38,7 @@
 #include "vbdev_ocf.h"
 
 ocf_cache_mode_t ocf_get_cache_mode(const char *cache_mode);
+ocf_cache_line_size_t ocf_get_cache_line_size(const char *cache_line_size);
 const char *ocf_get_cache_modename(ocf_cache_mode_t mode);
 
 /* Initiate management operation

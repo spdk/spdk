@@ -726,6 +726,8 @@ vbdev_ocf_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_named_string(w, "name", vbdev->name);
 	spdk_json_write_named_string(w, "mode",
 				     ocf_get_cache_modename(ocf_cache_get_mode(vbdev->ocf_cache)));
+	spdk_json_write_named_uint32(w, "line_size",
+				     ocf_cache_get_line_size(vbdev->ocf_cache));
 	spdk_json_write_named_string(w, "cache_bdev_name", vbdev->cache.name);
 	spdk_json_write_named_string(w, "core_bdev_name", vbdev->core.name);
 	spdk_json_write_object_end(w);
@@ -1112,8 +1114,7 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 	 * metadata support */
 	cfg->cache.metadata_volatile = false;
 
-	/* TODO [cache line size]: make cache line size configurable
-	 * Using standard 4KiB for now */
+	/* Using standard 4KiB for now */
 	cfg->cache.cache_line_size = ocf_cache_line_size_4;
 
 	/* This are suggested values that
@@ -1121,8 +1122,6 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 	cfg->cache.backfill.max_queue_size = 65536;
 	cfg->cache.backfill.queue_unblock_size = 60000;
 
-	/* TODO [cache line size] */
-	cfg->device.cache_line_size = ocf_cache_line_size_4;
 	cfg->device.force = true;
 	cfg->device.perform_test = false;
 	cfg->device.discard_on_start = false;
@@ -1157,6 +1156,7 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 static int
 init_vbdev(const char *vbdev_name,
 	   const char *cache_mode_name,
+	   const char *cache_line_size,
 	   const char *cache_name,
 	   const char *core_name,
 	   bool loadq)
@@ -1187,11 +1187,32 @@ init_vbdev(const char *vbdev_name,
 		rc = -EINVAL;
 		goto error_free;
 	}
-	if (vbdev->cfg.cache.cache_mode < 0) {
+	if (vbdev->cfg.cache.cache_mode == ocf_cache_mode_none) {
 		SPDK_ERRLOG("Incorrect cache mode '%s'\n", cache_mode_name);
 		rc = -EINVAL;
 		goto error_free;
 	}
+
+	if (cache_line_size) {
+		vbdev->cfg.cache.cache_line_size
+			= ocf_get_cache_line_size(cache_line_size);
+	} else {
+		vbdev->cfg.cache.cache_line_size = 0;
+	}
+
+	if (vbdev->cfg.cache.cache_line_size == ocf_cache_line_size_inf) {
+		SPDK_ERRLOG("Incorrect cache line size '%s'\n", cache_line_size);
+		rc = -EINVAL;
+		goto error_free;
+	}
+
+	/* In load path it's ok to not specify cache line size */
+	if (!loadq && vbdev->cfg.cache.cache_line_size == 0) {
+		SPDK_ERRLOG("No cache line size specified\n");
+		rc = -EINVAL;
+		goto error_free;
+	}
+
 
 	vbdev->name = strdup(vbdev_name);
 	if (!vbdev->name) {
@@ -1225,7 +1246,7 @@ error_free:
 static int
 vbdev_ocf_init(void)
 {
-	const char *vbdev_name, *modename, *cache_name, *core_name;
+	const char *vbdev_name, *modename, *linesize, *cache_name, *core_name;
 	struct spdk_conf_section *sp;
 	int status;
 
@@ -1264,19 +1285,25 @@ vbdev_ocf_init(void)
 			continue;
 		}
 
-		cache_name = spdk_conf_section_get_nmval(sp, "OCF", i, 2);
+		linesize = spdk_conf_section_get_nmval(sp, "OCF", i, 2);
+		if (!linesize) {
+			SPDK_ERRLOG("No linesize specified for OCF vbdev '%s'\n", vbdev_name);
+			continue;
+		}
+
+		cache_name = spdk_conf_section_get_nmval(sp, "OCF", i, 3);
 		if (!cache_name) {
 			SPDK_ERRLOG("No cache device specified for OCF vbdev '%s'\n", vbdev_name);
 			continue;
 		}
 
-		core_name = spdk_conf_section_get_nmval(sp, "OCF", i, 3);
+		core_name = spdk_conf_section_get_nmval(sp, "OCF", i, 4);
 		if (!core_name) {
 			SPDK_ERRLOG("No core devices specified for OCF vbdev '%s'\n", vbdev_name);
 			continue;
 		}
 
-		status = init_vbdev(vbdev_name, modename, cache_name, core_name, false);
+		status = init_vbdev(vbdev_name, modename, linesize, cache_name, core_name, false);
 		if (status) {
 			SPDK_ERRLOG("Config initialization failed with code: %d\n", status);
 		}
@@ -1407,6 +1434,7 @@ attach_base_bdevs(struct vbdev_ocf *vbdev,
 void
 vbdev_ocf_construct(const char *vbdev_name,
 		    const char *cache_mode_name,
+		    const char *cache_line_size,
 		    const char *cache_name,
 		    const char *core_name,
 		    bool loadq,
@@ -1418,7 +1446,8 @@ vbdev_ocf_construct(const char *vbdev_name,
 	struct spdk_bdev *core_bdev = spdk_bdev_get_by_name(core_name);
 	struct vbdev_ocf *vbdev;
 
-	rc = init_vbdev(vbdev_name, cache_mode_name, cache_name, core_name, loadq);
+	rc = init_vbdev(vbdev_name, cache_mode_name, cache_line_size,
+			cache_name, core_name, loadq);
 	if (rc) {
 		cb(rc, NULL, cb_arg);
 		return;
@@ -1551,8 +1580,8 @@ metadata_probe_cores_construct(void *priv, int error, unsigned int num_cores)
 		core_name = ocf_uuid_to_str(&ctx->core_uuids[i]);
 		vbdev_name = core_name + strlen(core_name) + 1;
 		ctx->refcnt++;
-		vbdev_ocf_construct(vbdev_name, NULL, ctx->base.bdev->name, core_name, true,
-				    metadata_probe_construct_cb, ctx);
+		vbdev_ocf_construct(vbdev_name, NULL, NULL, ctx->base.bdev->name, core_name,
+				    true, metadata_probe_construct_cb, ctx);
 	}
 
 	examine_ctx_put(ctx);
