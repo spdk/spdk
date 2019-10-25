@@ -215,6 +215,8 @@ New cache modes added to use via RPC, wi - write invalidate and wa - write aroun
 
 New version of OCF provides fully asynchronous management API.
 
+Add configuration parameter for setting cache line size.
+
 ## v19.07:
 
 ### ftl
