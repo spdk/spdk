@@ -42,6 +42,24 @@
 
 static struct spdk_ftl_dev *g_dev;
 
+DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *, (struct spdk_bdev_desc *desc), NULL);
+
+uint64_t
+spdk_bdev_get_zone_size(const struct spdk_bdev *bdev)
+{
+	if (g_dev->addr_len > 32) {
+		return 1ULL << 32;
+	}
+
+	return 1024;
+}
+
+uint32_t
+spdk_bdev_get_optimal_open_zones(const struct spdk_bdev *bdev)
+{
+	return 100;
+}
+
 static struct spdk_ftl_dev *
 test_alloc_dev(size_t size)
 {
@@ -51,9 +69,24 @@ test_alloc_dev(size_t size)
 
 	dev->num_lbas = L2P_TABLE_SIZE;
 	dev->l2p = calloc(L2P_TABLE_SIZE, size);
-	dev->geo.num_grp = 1;
 
 	return dev;
+}
+
+static int
+setup_l2p_32bit(void)
+{
+	g_dev = test_alloc_dev(sizeof(uint32_t));
+	g_dev->addr_len = 24;
+	return 0;
+}
+
+static int
+setup_l2p_64bit(void)
+{
+	g_dev = test_alloc_dev(sizeof(uint64_t));
+	g_dev->addr_len = 63;
+	return 0;
 }
 
 static void
@@ -67,40 +100,6 @@ clean_l2p(void)
 		l2p_elem_size = sizeof(uint64_t);
 	}
 	memset(g_dev->l2p, 0, g_dev->num_lbas * l2p_elem_size);
-}
-
-static int
-setup_l2p_32bit(void)
-{
-	g_dev = test_alloc_dev(sizeof(uint32_t));
-	g_dev->ppaf.lbk_offset	= 0;
-	g_dev->ppaf.lbk_mask	= (1 << 8) - 1;
-	g_dev->ppaf.chk_offset	= 8;
-	g_dev->ppaf.chk_mask	= (1 << 4) - 1;
-	g_dev->ppaf.pu_offset	= g_dev->ppaf.chk_offset + 4;
-	g_dev->ppaf.pu_mask	= (1 << 3) - 1;
-	g_dev->ppaf.grp_offset	= g_dev->ppaf.pu_offset + 3;
-	g_dev->ppaf.grp_mask	= (1 << 2) - 1;
-	g_dev->addr_len		= g_dev->ppaf.grp_offset + 2;
-
-	return 0;
-}
-
-static int
-setup_l2p_64bit(void)
-{
-	g_dev = test_alloc_dev(sizeof(uint64_t));
-	g_dev->ppaf.lbk_offset	= 0;
-	g_dev->ppaf.lbk_mask	= (1UL << 31) - 1;
-	g_dev->ppaf.chk_offset	= 31;
-	g_dev->ppaf.chk_mask	= (1 << 4) - 1;
-	g_dev->ppaf.pu_offset	= g_dev->ppaf.chk_offset + 4;
-	g_dev->ppaf.pu_mask	= (1 << 3) - 1;
-	g_dev->ppaf.grp_offset	= g_dev->ppaf.pu_offset + 3;
-	g_dev->ppaf.grp_mask	= (1 << 2) - 1;
-	g_dev->addr_len		= g_dev->ppaf.grp_offset + 2;
-
-	return 0;
 }
 
 static int
@@ -158,8 +157,8 @@ test_addr_pack64(void)
 	orig.pu = 2;
 
 	/* Check valid address transformation */
-	addr.addr = ftl_addr_addr_pack(g_dev, orig);
-	addr = ftl_addr_addr_unpack(g_dev, addr.addr);
+	addr.addr = ftl_block_offset_from_addr(g_dev, orig);
+	addr = ftl_addr_from_block_offset(g_dev, addr.addr);
 	CU_ASSERT_FALSE(ftl_addr_invalid(addr));
 	CU_ASSERT_EQUAL(addr.addr, orig.addr);
 
@@ -167,43 +166,20 @@ test_addr_pack64(void)
 	orig.zone_id = 0x6;
 	orig.pu = 0x4;
 
-	addr.addr = ftl_addr_addr_pack(g_dev, orig);
-	addr = ftl_addr_addr_unpack(g_dev, addr.addr);
+	addr.addr = ftl_block_offset_from_addr(g_dev, orig);
+	addr = ftl_addr_from_block_offset(g_dev, addr.addr);
 	CU_ASSERT_FALSE(ftl_addr_invalid(addr));
 	CU_ASSERT_EQUAL(addr.addr, orig.addr);
 
-	/* Check maximum valid address for addrf */
-	orig.offset = 0x7fffffff;
+	/* Check maximum valid address */
+	orig.offset = 0xffffffff;
 	orig.zone_id = 0xf;
 	orig.pu = 0x7;
 
-	addr.addr = ftl_addr_addr_pack(g_dev, orig);
-	addr = ftl_addr_addr_unpack(g_dev, addr.addr);
+	addr.addr = ftl_block_offset_from_addr(g_dev, orig);
+	addr = ftl_addr_from_block_offset(g_dev, addr.addr);
 	CU_ASSERT_FALSE(ftl_addr_invalid(addr));
 	CU_ASSERT_EQUAL(addr.addr, orig.addr);
-	clean_l2p();
-}
-
-static void
-test_addr_trans(void)
-{
-	struct ftl_addr addr = {}, orig = {};
-	size_t i;
-
-	for (i = 0; i < L2P_TABLE_SIZE; ++i) {
-		addr.offset = i % (g_dev->ppaf.lbk_mask + 1);
-		addr.zone_id = i % (g_dev->ppaf.chk_mask + 1);
-		addr.pu = i % (g_dev->ppaf.pu_mask + 1);
-		ftl_l2p_set(g_dev, i, addr);
-	}
-
-	for (i = 0; i < L2P_TABLE_SIZE; ++i) {
-		orig.offset = i % (g_dev->ppaf.lbk_mask + 1);
-		orig.zone_id = i % (g_dev->ppaf.chk_mask + 1);
-		orig.pu = i % (g_dev->ppaf.pu_mask + 1);
-		addr = ftl_l2p_get(g_dev, i);
-		CU_ASSERT_EQUAL(addr.addr, orig.addr);
-	}
 	clean_l2p();
 }
 
@@ -285,14 +261,10 @@ main(int argc, char **argv)
 			    test_addr_pack32) == NULL
 		|| CU_add_test(suite32, "test_addr32_invalid",
 			       test_addr_invalid) == NULL
-		|| CU_add_test(suite32, "test_addr32_trans",
-			       test_addr_trans) == NULL
 		|| CU_add_test(suite32, "test_addr32_cached",
 			       test_addr_cached) == NULL
 		|| CU_add_test(suite64, "test_addr64_invalid",
 			       test_addr_invalid) == NULL
-		|| CU_add_test(suite64, "test_addr64_trans",
-			       test_addr_trans) == NULL
 		|| CU_add_test(suite64, "test_addr64_cached",
 			       test_addr_cached) == NULL
 		|| CU_add_test(suite64, "test_addr64_pack",
