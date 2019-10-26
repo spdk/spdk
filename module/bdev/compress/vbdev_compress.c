@@ -681,8 +681,10 @@ comp_dev_poller(void *args)
 		 */
 		rte_comp_op_free(deq_ops[i]);
 
-		/* Check if there are any pending comp ops to process */
-		while (!TAILQ_EMPTY(&comp_bdev->queued_comp_ops)) {
+		/* Check if there are any pending comp ops to process, only pull one
+		 * at a time off as _compress_operation() may re-queue the op.
+		 */
+		if (!TAILQ_EMPTY(&comp_bdev->queued_comp_ops)) {
 			op_to_resubmit = TAILQ_FIRST(&comp_bdev->queued_comp_ops);
 			rc = _compress_operation(op_to_resubmit->backing_dev,
 						 op_to_resubmit->src_iovs,
@@ -695,7 +697,6 @@ comp_dev_poller(void *args)
 				TAILQ_REMOVE(&comp_bdev->queued_comp_ops, op_to_resubmit, link);
 				free(op_to_resubmit);
 			}
-			break;
 		}
 	}
 	return 0;
