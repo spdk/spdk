@@ -435,7 +435,9 @@ _get_mbuf_array(struct rte_mbuf *mbuf_array[UT_MBUFS_PER_OP_BOUND_TEST],
 }
 
 #define FAKE_ENQUEUE_SUCCESS 255
-static uint16_t ut_enqueue_value = 0;
+#define FAKE_ENQUEUE_ERROR 128
+#define FAKE_ENQUEUE_BUSY 64
+static uint16_t ut_enqueue_value = FAKE_ENQUEUE_SUCCESS;
 static struct rte_comp_op ut_expected_op;
 uint16_t
 rte_compressdev_enqueue_burst(uint8_t dev_id, uint16_t qp_id, struct rte_comp_op **ops,
@@ -446,13 +448,23 @@ rte_compressdev_enqueue_burst(uint8_t dev_id, uint16_t qp_id, struct rte_comp_op
 	struct rte_mbuf *exp_mbuf[UT_MBUFS_PER_OP_BOUND_TEST];
 	int i, num_src_mbufs = UT_MBUFS_PER_OP;
 
-	if (ut_enqueue_value == 0) {
+	switch (ut_enqueue_value) {
+	case FAKE_ENQUEUE_BUSY:
+		op->status = RTE_COMP_OP_STATUS_NOT_PROCESSED;
 		return 0;
+		break;
+	case FAKE_ENQUEUE_SUCCESS:
+		op->status = RTE_COMP_OP_STATUS_SUCCESS;
+		return 1;
+		break;
+	case FAKE_ENQUEUE_ERROR:
+		op->status = RTE_COMP_OP_STATUS_ERROR;
+		return 0;
+		break;
+	default:
+		break;
 	}
 
-	if (ut_enqueue_value == FAKE_ENQUEUE_SUCCESS) {
-		return 1;
-	}
 	/* by design the compress module will never send more than 1 op at a time */
 	CU_ASSERT(op->private_xform == ut_expected_op.private_xform);
 
@@ -656,8 +668,8 @@ test_compress_operation(void)
 	CU_ASSERT(rc == 0);
 	ut_rte_pktmbuf_alloc_bulk = 0;
 
-	/* test enqueue failure */
-	ut_enqueue_value = 0;
+	/* test enqueue failure busy */
+	ut_enqueue_value = FAKE_ENQUEUE_BUSY;
 	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
 	rc = _compress_operation(&g_comp_bdev.backing_dev, &src_iovs[0], src_iovcnt,
 				 &dst_iovs[0], dst_iovcnt, true, &cb_arg);
@@ -670,6 +682,15 @@ test_compress_operation(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
 	CU_ASSERT(rc == 0);
 	ut_enqueue_value = 1;
+
+	/* test enqueue failure error */
+	ut_enqueue_value = FAKE_ENQUEUE_ERROR;
+	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
+	rc = _compress_operation(&g_comp_bdev.backing_dev, &src_iovs[0], src_iovcnt,
+				 &dst_iovs[0], dst_iovcnt, true, &cb_arg);
+	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
+	CU_ASSERT(rc == -EINVAL);
+	ut_enqueue_value = FAKE_ENQUEUE_SUCCESS;
 
 	/* test success with 3 vector iovec */
 	ut_expected_op.private_xform = &g_decomp_xform;

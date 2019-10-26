@@ -450,6 +450,7 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	int i;
 	int src_mbuf_total = src_iovcnt;
 	int dst_mbuf_total = dst_iovcnt;
+	bool device_error = false;
 
 	assert(src_iovcnt < MAX_MBUFS_PER_OP);
 
@@ -601,11 +602,14 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	/* We always expect 1 got queued, if 0 then we need to queue it up. */
 	if (rc == 1) {
 		return 0;
-	} else {
+	} else if (comp_op->status == RTE_COMP_OP_STATUS_NOT_PROCESSED) {
 		/* we free mbufs differently depending on whether they were chained or not */
 		rte_pktmbuf_free(comp_op->m_src);
 		rte_pktmbuf_free(comp_op->m_dst);
 		goto error_enqueue;
+	} else {
+		device_error = true;
+		goto error_src_dst;
 	}
 
 	/* Error cleanup paths. */
@@ -621,6 +625,15 @@ error_get_src:
 error_enqueue:
 	rte_comp_op_free(comp_op);
 error_get_op:
+
+	if (device_error == true) {
+		/* There was an error sending the op to the device, most
+		 * likely with the parameters.
+		 */
+		SPDK_ERRLOG("Compression API returned 0x%x\n", comp_op->status);
+		return -EINVAL;
+	}
+
 	op_to_queue = calloc(1, sizeof(struct vbdev_comp_op));
 	if (op_to_queue == NULL) {
 		SPDK_ERRLOG("unable to allocate operation for queueing.\n");
