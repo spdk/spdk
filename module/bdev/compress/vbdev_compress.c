@@ -450,6 +450,7 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	int i;
 	int src_mbuf_total = src_iovcnt;
 	int dst_mbuf_total = dst_iovcnt;
+	bool device_error = false;
 
 	assert(src_iovcnt < MAX_MBUFS_PER_OP);
 
@@ -602,10 +603,14 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	if (rc == 1) {
 		return 0;
 	} else {
-		/* we free mbufs differently depending on whether they were chained or not */
-		rte_pktmbuf_free(comp_op->m_src);
-		rte_pktmbuf_free(comp_op->m_dst);
-		goto error_enqueue;
+		if (comp_op->status == RTE_COMP_OP_STATUS_NOT_PROCESSED) {
+			/* we free mbufs differently depending on whether they were chained or not */
+			rte_pktmbuf_free(comp_op->m_src);
+			rte_pktmbuf_free(comp_op->m_dst);
+			goto error_enqueue;
+		} else {
+			device_error = true;
+		}
 	}
 
 	/* Error cleanup paths. */
@@ -621,22 +626,31 @@ error_get_src:
 error_enqueue:
 	rte_comp_op_free(comp_op);
 error_get_op:
-	op_to_queue = calloc(1, sizeof(struct vbdev_comp_op));
-	if (op_to_queue == NULL) {
-		SPDK_ERRLOG("unable to allocate operation for queueing.\n");
-		return -ENOMEM;
+
+	if (device_error == false) {
+		op_to_queue = calloc(1, sizeof(struct vbdev_comp_op));
+		if (op_to_queue == NULL) {
+			SPDK_ERRLOG("unable to allocate operation for queueing.\n");
+			return -ENOMEM;
+		}
+		op_to_queue->backing_dev = backing_dev;
+		op_to_queue->src_iovs = src_iovs;
+		op_to_queue->src_iovcnt = src_iovcnt;
+		op_to_queue->dst_iovs = dst_iovs;
+		op_to_queue->dst_iovcnt = dst_iovcnt;
+		op_to_queue->compress = compress;
+		op_to_queue->cb_arg = cb_arg;
+		TAILQ_INSERT_TAIL(&comp_bdev->queued_comp_ops,
+				  op_to_queue,
+				  link);
+		return 0;
+	} else {
+		/* There was an error sending the op to the device, most
+		 * likely with the parameters.
+		 */
+		SPDK_ERRLOG("Compression API returned 0x%x\n", comp_op->status);
+		return -EINVAL;
 	}
-	op_to_queue->backing_dev = backing_dev;
-	op_to_queue->src_iovs = src_iovs;
-	op_to_queue->src_iovcnt = src_iovcnt;
-	op_to_queue->dst_iovs = dst_iovs;
-	op_to_queue->dst_iovcnt = dst_iovcnt;
-	op_to_queue->compress = compress;
-	op_to_queue->cb_arg = cb_arg;
-	TAILQ_INSERT_TAIL(&comp_bdev->queued_comp_ops,
-			  op_to_queue,
-			  link);
-	return 0;
 }
 
 /* Poller for the DPDK compression driver. */
