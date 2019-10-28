@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0814938a_59abcb69",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 819,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-28T00:48:43Z",
+      "side": 1,
+      "message": "It looks that calloc failure here is not recoverable. I don\u0027t find any API to dequeue specific crypto_op.\nCould we keep the current polling and add the next patch?",
+      "range": {
+        "startLine": 819,
+        "startChar": 17,
+        "endLine": 819,
+        "endChar": 23
+      },
+      "revId": "8421ead1cfbae2ce3367405e75e0879dfad08710",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
