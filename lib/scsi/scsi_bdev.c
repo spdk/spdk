@@ -1350,9 +1350,14 @@ bdev_scsi_readwrite(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		      is_read ? "Read" : "Write", offset_blocks, num_blocks);
 
 	if (is_read) {
-		rc = spdk_bdev_readv_blocks(bdev_desc, bdev_ch, task->iovs, task->iovcnt,
-					    offset_blocks, num_blocks,
-					    bdev_scsi_read_task_complete_cmd, task);
+		if (task->zcopy) {
+			rc = spdk_bdev_zcopy_start(bdev_desc, bdev_ch, offset_blocks, num_blocks,
+						   true, bdev_scsi_read_task_complete_cmd, task);
+		} else {
+			rc = spdk_bdev_readv_blocks(bdev_desc, bdev_ch, task->iovs, task->iovcnt,
+						    offset_blocks, num_blocks,
+						    bdev_scsi_read_task_complete_cmd, task);
+		}
 	} else {
 		rc = spdk_bdev_writev_blocks(bdev_desc, bdev_ch, task->iovs, task->iovcnt,
 					     offset_blocks, num_blocks,
