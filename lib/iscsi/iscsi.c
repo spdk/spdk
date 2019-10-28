@@ -3298,6 +3298,7 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 			}
 			task->current_datain_offset = task->scsi.length;
 			conn->data_in_cnt++;
+			task->scsi.zcopy = true;
 			iscsi_queue_task(conn, task);
 			continue;
 		}
@@ -3326,6 +3327,7 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 				return 0;
 			}
 
+			task->scsi.zcopy = true;
 			iscsi_queue_task(conn, subtask);
 		}
 		if (task->current_datain_offset == task->scsi.transfer_len) {
@@ -3350,6 +3352,7 @@ iscsi_pdu_payload_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_t
 	task->current_datain_offset = 0;
 
 	if (remaining_size == 0) {
+		task->scsi.zcopy = true;
 		iscsi_queue_task(conn, task);
 		return 0;
 	}
