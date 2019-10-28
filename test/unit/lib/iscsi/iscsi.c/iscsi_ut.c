@@ -2234,6 +2234,54 @@ pdu_hdr_op_data_test(void)
 	g_task_pool_is_empty = false;
 }
 
+static void
+pdu_get_data_buf_test(void)
+{
+	struct spdk_mobj mobj = {};
+	struct spdk_iscsi_pdu pdu = {};
+	uint32_t data_len;
+	int rc;
+
+	MOCK_SET(spdk_mempool_get, NULL);
+
+	/* Immediate data pool is used but is empty. */
+	data_len = spdk_get_max_immediate_data_size();
+
+	rc = iscsi_pdu_get_data_buf(&pdu, data_len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.data_buf == NULL);
+
+	/* Data out pool is used but is empty. */
+	data_len = spdk_get_max_immediate_data_size() + 1;
+
+	rc = iscsi_pdu_get_data_buf(&pdu, data_len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.data_buf == NULL);
+
+	data_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+
+	rc = iscsi_pdu_get_data_buf(&pdu, data_len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.data_buf == NULL);
+
+	/* data_len exceeds MaxRecvDataSegmentLength. */
+	data_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH + 1;
+
+	rc = iscsi_pdu_get_data_buf(&pdu, data_len);
+	CU_ASSERT(rc == -1);
+
+	/* Data buffer is allocated correctly from data out pool. */
+	data_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	mobj.buf = (void *)0xDEADBEEF;
+	MOCK_SET(spdk_mempool_get, (void *)&mobj);
+
+	rc = iscsi_pdu_get_data_buf(&pdu, data_len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.data_buf == mobj.buf);
+	CU_ASSERT(pdu.data == mobj.buf);
+	CU_ASSERT(pdu.data_from_mempool == true);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2280,6 +2328,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "pdu_hdr_op_task_mgmt_test", pdu_hdr_op_task_mgmt_test) == NULL
 		|| CU_add_test(suite, "pdu_hdr_op_nopout_test", pdu_hdr_op_nopout_test) == NULL
 		|| CU_add_test(suite, "pdu_hdr_op_data_test", pdu_hdr_op_data_test) == NULL
+		|| CU_add_test(suite, "pdu_get_data_buf_test", pdu_get_data_buf_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
