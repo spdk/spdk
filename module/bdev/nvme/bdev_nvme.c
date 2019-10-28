@@ -108,7 +108,6 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.low_priority_weight = 0,
 	.medium_priority_weight = 0,
 	.high_priority_weight = 0,
-	.nvme_adminq_poll_period_us = 1000000ULL,
 	.nvme_ioq_poll_period_us = 0,
 	.io_queue_requests = 0,
 };
@@ -207,12 +206,29 @@ bdev_nvme_poll(void *arg)
 	return num_completions;
 }
 
+#define ADMINQ_POLL_ONCE_PER_LOOP_NUMBERS  50
+
 static int
 bdev_nvme_poll_adminq(void *arg)
 {
-	struct spdk_nvme_ctrlr *ctrlr = arg;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = arg;
+	int32_t num_completions;
 
-	return spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	if (nvme_bdev_ctrlr->adminq_poll_wait > 0) {
+		nvme_bdev_ctrlr->adminq_poll_wait--;
+		return 0;
+	}
+
+	num_completions = spdk_nvme_ctrlr_process_admin_completions(nvme_bdev_ctrlr->ctrlr);
+	if (num_completions == 0) {
+		nvme_bdev_ctrlr->adminq_poll_wait += ADMINQ_POLL_ONCE_PER_LOOP_NUMBERS;
+	} else if (num_completions > 0) {
+		if (nvme_bdev_ctrlr->adminq_poll_wait > -ADMINQ_POLL_ONCE_PER_LOOP_NUMBERS) {
+			nvme_bdev_ctrlr->adminq_poll_wait--;
+		}
+	}
+
+	return num_completions;
 }
 
 static int
@@ -1091,8 +1107,8 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 				sizeof(struct nvme_io_channel),
 				name);
 
-	nvme_bdev_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, ctrlr,
-					       g_opts.nvme_adminq_poll_period_us);
+	nvme_bdev_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, nvme_bdev_ctrlr,
+					       0);
 
 	TAILQ_INSERT_TAIL(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
 
@@ -1569,11 +1585,6 @@ bdev_nvme_library_init(void)
 				g_opts.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT;
 			}
 		}
-	}
-
-	intval = spdk_conf_section_get_intval(sp, "AdminPollRate");
-	if (intval > 0) {
-		g_opts.nvme_adminq_poll_period_us = intval;
 	}
 
 	intval = spdk_conf_section_get_intval(sp, "IOPollRate");
@@ -2271,7 +2282,6 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 	fprintf(fp, "\n"
 		"# Set how often the admin queue is polled for asynchronous events.\n"
 		"# Units in microseconds.\n");
-	fprintf(fp, "AdminPollRate %"PRIu64"\n", g_opts.nvme_adminq_poll_period_us);
 	fprintf(fp, "IOPollRate %" PRIu64"\n", g_opts.nvme_ioq_poll_period_us);
 	fprintf(fp, "\n"
 		"# Disable handling of hotplug (runtime insert and remove) events,\n"
@@ -2316,7 +2326,6 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint32(w, "low_priority_weight", g_opts.low_priority_weight);
 	spdk_json_write_named_uint32(w, "medium_priority_weight", g_opts.medium_priority_weight);
 	spdk_json_write_named_uint32(w, "high_priority_weight", g_opts.high_priority_weight);
-	spdk_json_write_named_uint64(w, "nvme_adminq_poll_period_us", g_opts.nvme_adminq_poll_period_us);
 	spdk_json_write_named_uint64(w, "nvme_ioq_poll_period_us", g_opts.nvme_ioq_poll_period_us);
 	spdk_json_write_named_uint32(w, "io_queue_requests", g_opts.io_queue_requests);
 	spdk_json_write_object_end(w);
