@@ -14,7 +14,7 @@ ceph_conf=${base_dir}/ceph.conf
 mnt_dir=${base_dir}/mnt
 dev_backend=/dev/ceph
 image=/var/tmp/ceph_raw.img
-dev=/dev/loop200
+dev=/dev/loop200p2
 
 umount $dev || true
 losetup -d $dev_backend || true
