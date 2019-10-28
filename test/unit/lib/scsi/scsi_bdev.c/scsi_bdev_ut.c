@@ -965,34 +965,35 @@ static void
 get_dif_ctx_test(void)
 {
 	struct spdk_bdev bdev = {};
+	struct spdk_scsi_task task = {};
 	struct spdk_dif_ctx dif_ctx = {};
 	uint8_t cdb[16];
-	uint32_t data_offset;
 	bool ret;
 
 	cdb[0] = SPDK_SBC_READ_6;
 	cdb[1] = 0x12;
 	cdb[2] = 0x34;
 	cdb[3] = 0x50;
-	data_offset = 0x6 * 512;
+	task.cdb = cdb;
+	task.offset = 0x6 * 512;
 
-	ret = spdk_scsi_bdev_get_dif_ctx(&bdev, cdb, data_offset, &dif_ctx);
+	ret = spdk_scsi_bdev_get_dif_ctx(&bdev, &task, &dif_ctx);
 	CU_ASSERT(ret == true);
 	CU_ASSERT(dif_ctx.init_ref_tag + dif_ctx.ref_tag_offset == 0x123456);
 
 	cdb[0] = SPDK_SBC_WRITE_12;
 	to_be32(&cdb[2], 0x12345670);
-	data_offset = 0x8 * 512;
+	task.offset = 0x8 * 512;
 
-	ret = spdk_scsi_bdev_get_dif_ctx(&bdev, cdb, data_offset, &dif_ctx);
+	ret = spdk_scsi_bdev_get_dif_ctx(&bdev, &task, &dif_ctx);
 	CU_ASSERT(ret == true);
 	CU_ASSERT(dif_ctx.init_ref_tag + dif_ctx.ref_tag_offset == 0x12345678);
 
 	cdb[0] = SPDK_SBC_WRITE_16;
 	to_be64(&cdb[2], 0x0000000012345670);
-	data_offset = 0x8 * 512;
+	task.offset = 0x8 * 512;
 
-	ret = spdk_scsi_bdev_get_dif_ctx(&bdev, cdb, data_offset, &dif_ctx);
+	ret = spdk_scsi_bdev_get_dif_ctx(&bdev, &task, &dif_ctx);
 	CU_ASSERT(ret == true);
 	CU_ASSERT(dif_ctx.init_ref_tag + dif_ctx.ref_tag_offset == 0x12345678);
 }
