@@ -765,10 +765,6 @@ nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr)
 	cuse_nvme_ctrlr_stop(ctrlr_device);
 }
 
-static struct nvme_io_msg_producer cuse_nvme_io_msg_producer = {
-	.name = "cuse",
-};
-
 int
 spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 {
@@ -778,14 +774,14 @@ spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 		return -EINVAL;
 	}
 
-	rc = nvme_io_msg_ctrlr_start(ctrlr, &cuse_nvme_io_msg_producer);
+	rc = nvme_io_msg_ctrlr_start(ctrlr);
 	if (rc) {
 		return rc;
 	}
 
 	rc = nvme_cuse_start(ctrlr, dev_path);
 	if (rc) {
-		nvme_io_msg_ctrlr_stop(ctrlr, &cuse_nvme_io_msg_producer, false);
+		nvme_io_msg_ctrlr_stop(ctrlr, false);
 	}
 
 	return rc;
@@ -796,7 +792,7 @@ spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr)
 {
 	nvme_cuse_stop(ctrlr);
 
-	nvme_io_msg_ctrlr_stop(ctrlr, &cuse_nvme_io_msg_producer, false);
+	nvme_io_msg_ctrlr_stop(ctrlr, false);
 }
 
 char *
