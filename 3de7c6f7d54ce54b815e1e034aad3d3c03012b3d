@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cde5d04d_1c698d13",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-28T13:00:40Z",
+      "side": 1,
+      "message": "This is not related to current commit and also affects  (or may affect) other tests which use discover_bdevs().\nI suggest adding this as an option / parameter for the function call.",
+      "range": {
+        "startLine": 657,
+        "startChar": 36,
+        "endLine": 657,
+        "endChar": 40
+      },
+      "revId": "3de7c6f7d54ce54b815e1e034aad3d3c03012b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
