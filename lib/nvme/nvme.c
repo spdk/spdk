@@ -460,7 +460,7 @@ nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr,
 		return 0;
 	}
 
-	STAILQ_INIT(&ctrlr->io_producers);
+	ctrlr->external_io_producers_refcnt = 0;
 
 	/*
 	 * Controller has been initialized.
