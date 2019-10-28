@@ -226,7 +226,6 @@ vm_wait_for_boot 300 $used_vms
 
 fio_disks=""
 for vm_num in $used_vms; do
-    vm_dir=$VM_DIR/$vm_num
     qemu_mask_param="VM_${vm_num}_qemu_mask"
 
     host_name="VM-$vm_num-${!qemu_mask_param}"
