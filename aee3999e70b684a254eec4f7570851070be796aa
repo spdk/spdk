@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "aab400e3_a97d1579",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1015303
+      },
+      "writtenOn": "2019-10-28T12:59:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "731cb665_c1eb79e1",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 64
+      },
+      "revId": "aee3999e70b684a254eec4f7570851070be796aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58694305_d02e56c1",
         "filename": "module/bdev/ocf/utils.c",
         "patchSetId": 9
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "6799b094_e6e993e8",
+        "filename": "module/bdev/ocf/utils.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1015303
+      },
+      "writtenOn": "2019-10-28T12:59:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "58694305_d02e56c1",
+      "range": {
+        "startLine": 70,
+        "startChar": 1,
+        "endLine": 70,
+        "endChar": 73
+      },
+      "revId": "aee3999e70b684a254eec4f7570851070be796aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ecbf23ff_1e79b5a7",
         "filename": "test/ocf/integrity/fio-linesizes.sh",
         "patchSetId": 9
@@ -68,6 +116,30 @@
       "revId": "aee3999e70b684a254eec4f7570851070be796aa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf3a8ea4_3b0c54c9",
+        "filename": "test/ocf/integrity/fio-linesizes.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1015303
+      },
+      "writtenOn": "2019-10-28T12:59:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ecbf23ff_1e79b5a7",
+      "range": {
+        "startLine": 35,
+        "startChar": 11,
+        "endLine": 35,
+        "endChar": 55
+      },
+      "revId": "aee3999e70b684a254eec4f7570851070be796aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
