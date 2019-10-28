@@ -376,6 +376,32 @@ spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 }
 
 static int
+iscsi_pdu_get_data_buf(struct spdk_iscsi_pdu *pdu, uint32_t data_len)
+{
+	struct spdk_mempool *pool;
+
+	if (data_len <= spdk_get_max_immediate_data_size()) {
+		pool = g_spdk_iscsi.pdu_immediate_data_pool;
+		pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(spdk_get_max_immediate_data_size());
+	} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+		pool = g_spdk_iscsi.pdu_data_out_pool;
+		pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+	} else {
+		SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
+			    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+		return -1;
+	}
+	pdu->mobj = spdk_mempool_get(pool);
+	if (pdu->mobj == NULL) {
+		return 0;
+	}
+	pdu->data_buf = pdu->mobj->buf;
+	pdu->data = pdu->mobj->buf;
+	pdu->data_from_mempool = true;
+	return 0;
+}
+
+static int
 iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 			     struct spdk_iscsi_pdu *pdu,
 			     uint32_t segment_len)
@@ -4801,7 +4827,6 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 {
 	enum iscsi_pdu_recv_state prev_state;
 	struct spdk_iscsi_pdu *pdu;
-	struct spdk_mempool *pool;
 	uint32_t crc32c;
 	int ahs_len;
 	uint32_t data_len;
@@ -4896,25 +4921,15 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 			data_len = pdu->data_segment_len;
 
 			if (data_len != 0 && pdu->data_buf == NULL) {
-				if (data_len <= spdk_get_max_immediate_data_size()) {
-					pool = g_spdk_iscsi.pdu_immediate_data_pool;
-					pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(spdk_get_max_immediate_data_size());
-				} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
-					pool = g_spdk_iscsi.pdu_data_out_pool;
-					pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
-				} else {
-					SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
-						    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+				rc = iscsi_pdu_get_data_buf(pdu, data_len);
+				if (rc < 0) {
 					conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 					break;
 				}
-				pdu->mobj = spdk_mempool_get(pool);
-				if (pdu->mobj == NULL) {
+
+				if (pdu->data_buf == NULL) {
 					return 0;
 				}
-				pdu->data_buf = pdu->mobj->buf;
-				pdu->data = pdu->mobj->buf;
-				pdu->data_from_mempool = true;
 			}
 
 			/* copy the actual data into local buffer */
