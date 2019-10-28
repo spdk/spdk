@@ -122,7 +122,7 @@ DEFINE_STUB(spdk_scsi_lun_id_int_to_fmt, uint64_t, (int lun_id), 0);
 DEFINE_STUB(spdk_scsi_lun_id_fmt_to_int, int, (uint64_t lun_fmt), 0);
 
 DEFINE_STUB(spdk_scsi_lun_get_dif_ctx, bool,
-	    (struct spdk_scsi_lun *lun, uint8_t *cdb, uint32_t data_offset,
+	    (struct spdk_scsi_lun *lun, struct spdk_scsi_task *task,
 	     struct spdk_dif_ctx *dif_ctx), false);
 
 static void
