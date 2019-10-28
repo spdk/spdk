@@ -16,7 +16,7 @@ dev_backend=/dev/ceph
 image=/var/tmp/ceph_raw.img
 dev=/dev/loop200
 
-umount $dev || true
+umount ${dev}p2 || true
 losetup -d $dev_backend || true
 
 # partition osd
