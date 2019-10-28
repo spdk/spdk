@@ -2992,6 +2992,7 @@ iscsi_send_datain(struct spdk_iscsi_conn *conn,
 		offset += primary->scsi.data_transferred;
 	}
 	to_be32(&rsph->buffer_offset, (uint32_t)offset);
+	task->scsi.offset = offset;
 
 	if (F_bit && S_bit) {
 		to_be32(&rsph->res_cnt, residual_len);
@@ -2999,7 +3000,7 @@ iscsi_send_datain(struct spdk_iscsi_conn *conn,
 
 	lun_dev = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
 	if (spdk_likely(lun_dev != NULL)) {
-		if (spdk_unlikely(spdk_scsi_lun_get_dif_ctx(lun_dev, task->scsi.cdb, offset,
+		if (spdk_unlikely(spdk_scsi_lun_get_dif_ctx(lun_dev, &task->scsi,
 				  &rsp_pdu->dif_ctx))) {
 			rsp_pdu->dif_insert_or_strip = true;
 		}
@@ -3452,7 +3453,7 @@ iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 		}
 
-		if (spdk_unlikely(spdk_scsi_lun_get_dif_ctx(task->scsi.lun, cdb, 0, &pdu->dif_ctx))) {
+		if (spdk_unlikely(spdk_scsi_lun_get_dif_ctx(task->scsi.lun, &task->scsi, &pdu->dif_ctx))) {
 			pdu->dif_insert_or_strip = true;
 		}
 	} else {
@@ -4484,8 +4485,7 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return 0;
 	}
 
-	if (spdk_unlikely(spdk_scsi_lun_get_dif_ctx(lun_dev, subtask->scsi.cdb, buffer_offset,
-			  &pdu->dif_ctx))) {
+	if (spdk_unlikely(spdk_scsi_lun_get_dif_ctx(lun_dev, &subtask->scsi, &pdu->dif_ctx))) {
 		pdu->dif_insert_or_strip = true;
 	}
 
