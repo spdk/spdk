@@ -107,16 +107,10 @@ spdk_nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
-nvme_io_msg_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr, struct nvme_io_msg_producer *io_msg_producer)
+nvme_io_msg_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (io_msg_producer == NULL) {
-		SPDK_ERRLOG("io_msg_producer cannot be NULL\n");
-		return -EINVAL;
-	}
-
-	if (!STAILQ_EMPTY(&ctrlr->io_producers) || ctrlr->is_resetting) {
-		/* There are registered producers - IO messaging already started */
-		STAILQ_INSERT_TAIL(&ctrlr->io_producers, io_msg_producer, link);
+	if (ctrlr->external_io_producers_refcnt > 0) {
+		ctrlr->external_io_producers_refcnt++;
 		return 0;
 	}
 
@@ -138,28 +132,25 @@ nvme_io_msg_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr, struct nvme_io_msg_produc
 		return -1;
 	}
 
-	STAILQ_INSERT_TAIL(&ctrlr->io_producers, io_msg_producer, link);
-
+	ctrlr->external_io_producers_refcnt = 1;
 	return 0;
 }
 
 void
-nvme_io_msg_ctrlr_stop(struct spdk_nvme_ctrlr *ctrlr, struct nvme_io_msg_producer *io_msg_producer,
-		       bool shutdown)
+nvme_io_msg_ctrlr_stop(struct spdk_nvme_ctrlr *ctrlr, bool shutdown)
 {
-	if (STAILQ_EMPTY(&ctrlr->io_producers) && shutdown) {
-		/* Shutdown path with no producers registered = io msg ctrlr not started */
+	if (ctrlr->external_io_producers_refcnt == 0) {
+		/* No producers registered */
 		return;
 	}
 
-	if (io_msg_producer != NULL) {
-		STAILQ_REMOVE(&ctrlr->io_producers, io_msg_producer, nvme_io_msg_producer, link);
-	}
-
-	if (!STAILQ_EMPTY(&ctrlr->io_producers) && !shutdown) {
+	ctrlr->external_io_producers_refcnt--;
+	if (ctrlr->external_io_producers_refcnt > 0 && !shutdown) {
 		/* There are still some registered producers */
 		return;
 	}
+
+	ctrlr->external_io_producers_refcnt = 0;
 
 	assert(ctrlr->external_io_msgs);
 	spdk_ring_free(ctrlr->external_io_msgs);
