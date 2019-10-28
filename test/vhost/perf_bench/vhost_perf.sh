@@ -321,7 +321,6 @@ fi
 # Run FIO
 fio_disks=""
 for vm_num in $used_vms; do
-	vm_dir=$VM_DIR/$vm_num
 	host_name="VM-$vm_num"
 	vm_exec $vm_num "hostname $host_name"
 	vm_start_fio_server $fio_bin $vm_num
