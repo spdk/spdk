@@ -358,6 +358,11 @@ struct spdk_iscsi_globals {
 #define ISCSI_NSG_RESERVED_CODE			2
 #define ISCSI_FULL_FEATURE_PHASE		3
 
+/* logout reason */
+#define ISCSI_LOGOUT_REASON_CLOSE_SESSION		0
+#define ISCSI_LOGOUT_REASON_CLOSE_CONNECTION		1
+#define ISCSI_LOGOUT_REASON_REMOVE_CONN_FOR_RECOVERY	2
+
 enum spdk_error_codes {
 	SPDK_ISCSI_CONNECTION_FATAL	= -1,
 	SPDK_PDU_FATAL		= -2,

@@ -2484,8 +2484,11 @@ iscsi_pdu_hdr_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu
 		      reqh->reason, task_tag, cid);
 
 	if (conn->sess != NULL) {
-		if (reqh->reason != 0 && conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
-			SPDK_ERRLOG("only logout with close the session reason can be in discovery session\n");
+		if (conn->sess->session_type == SESSION_TYPE_DISCOVERY &&
+		    reqh->reason != ISCSI_LOGOUT_REASON_CLOSE_SESSION) {
+			SPDK_ERRLOG("Target can accept logout only with reason \"close the session\" "
+				    "on discovery session. %d is not acceptable reason.\n",
+				    reqh->reason);
 			return SPDK_ISCSI_CONNECTION_FATAL;
 		}
 
