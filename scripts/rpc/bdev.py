@@ -351,7 +351,7 @@ def bdev_uring_delete(client, name):
 def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry_count=None,
                           arbitration_burst=None, low_priority_weight=None,
                           medium_priority_weight=None, high_priority_weight=None,
-                          nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None, io_queue_requests=None):
+                          nvme_ioq_poll_period_us=None, io_queue_requests=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
@@ -362,7 +362,6 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry
         low_prioity_weight: The number of commands that may be executed from the low priority queue at one time (optional)
         medium_prioity_weight: The number of commands that may be executed from the medium priority queue at one time (optional)
         high_prioity_weight: The number of commands that may be executed from the high priority queue at one time (optional)
-        nvme_adminq_poll_period_us: How often the admin queue is polled for asynchronous events in microseconds (optional)
         nvme_ioq_poll_period_us: How often to poll I/O queues for completions in microseconds (optional)
         io_queue_requests: The number of requests allocated for each NVMe I/O queue. Default: 512 (optional)
     """
@@ -388,9 +387,6 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry
 
     if high_priority_weight:
         params['high_priority_weight'] = high_priority_weight
-
-    if nvme_adminq_poll_period_us:
-        params['nvme_adminq_poll_period_us'] = nvme_adminq_poll_period_us
 
     if nvme_ioq_poll_period_us:
         params['nvme_ioq_poll_period_us'] = nvme_ioq_poll_period_us

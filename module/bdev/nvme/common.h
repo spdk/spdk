@@ -97,6 +97,8 @@ struct nvme_bdev_ctrlr {
 
 	struct spdk_poller		*adminq_timer_poller;
 
+	int8_t				adminq_poll_wait;
+
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;
 };
