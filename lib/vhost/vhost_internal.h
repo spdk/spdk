@@ -388,7 +388,6 @@ void vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession)
 void vhost_dev_install_rte_compat_hooks(struct spdk_vhost_dev *vdev);
 
 struct vhost_poll_group *vhost_get_poll_group(struct spdk_cpuset *cpumask);
-void vhost_put_poll_group(struct vhost_poll_group *pg);
 
 int remove_vhost_controller(struct spdk_vhost_dev *vdev);
 
