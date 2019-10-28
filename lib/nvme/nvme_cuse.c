@@ -42,6 +42,9 @@
 #include "nvme_io_msg.h"
 #include "nvme_cuse.h"
 
+static char g_device_prefix[128];
+static uint32_t g_device_counter;
+
 struct cuse_device {
 	char				dev_name[128];
 
@@ -617,14 +620,25 @@ static void *
 cuse_thread(void *arg)
 {
 	struct cuse_device *cuse_device = arg;
+
+	spdk_unaffinitize_thread();
+
+	SPDK_NOTICELOG("fuse session for device %s created\n", cuse_device->dev_name);
+
+	fuse_session_loop(cuse_device->session);
+	cuse_lowlevel_teardown(cuse_device->session);
+	pthread_exit(NULL);
+}
+
+static int
+cuse_nvme_start_thread(struct cuse_device *cuse_device)
+{
 	char *cuse_argv[] = { "cuse", "-f" };
 	int cuse_argc = SPDK_COUNTOF(cuse_argv);
 	char devname_arg[128 + 8];
 	const char *dev_info_argv[] = { devname_arg };
 	struct cuse_info ci;
 	int multithreaded;
-
-	spdk_unaffinitize_thread();
 
 	snprintf(devname_arg, sizeof(devname_arg), "DEVNAME=%s", cuse_device->dev_name);
 
@@ -642,20 +656,26 @@ cuse_thread(void *arg)
 	}
 	if (!cuse_device->session) {
 		SPDK_ERRLOG("Cannot create cuse session\n");
-		goto end;
+		return -1;
 	}
 
-	SPDK_NOTICELOG("fuse session for device %s created\n", cuse_device->dev_name);
-	fuse_session_loop(cuse_device->session);
-
-end:
-	cuse_lowlevel_teardown(cuse_device->session);
-	pthread_exit(NULL);
+	if (pthread_create(&cuse_device->tid, NULL, cuse_thread, cuse_device)) {
+		SPDK_ERRLOG("pthread_create failed\n");
+		cuse_lowlevel_teardown(cuse_device->session);
+		return -1;
+	}
 }
+
 
 /*****************************************************************************
  * CUSE devices management
  */
+void
+spdk_nvme_cuse_initialize(char *device_prefix, uint32_t first_device_id)
+{
+	snprintf(g_device_prefix, sizeof(g_device_prefix), "%s", device_prefix);
+	g_device_counter = first_device_id;
+}
 
 static int
 cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid, const char *dev_path)
@@ -674,8 +694,7 @@ cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid, const char *
 	snprintf(ns_device->dev_name, sizeof(ns_device->dev_name), "%sn%d",
 		 dev_path, ns_device->nsid);
 
-	if (pthread_create(&ns_device->tid, NULL, cuse_thread, ns_device)) {
-		SPDK_ERRLOG("pthread_create failed\n");
+	if (cuse_nvme_start_thread(ns_device)) {
 		free(ns_device);
 		return -1;
 	}
@@ -720,13 +739,19 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 
 	TAILQ_INIT(&ctrlr_device->ns_devices);
 	ctrlr_device->ctrlr = ctrlr;
-	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "%s", dev_path);
 
-	if (pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device)) {
-		SPDK_ERRLOG("pthread_create failed\n");
+	if (dev_path) {
+		snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "%s", dev_path);
+	} else {
+		snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "%snvme%d",
+			 g_device_prefix, g_device_counter);
+	}
+
+	if (cuse_nvme_start_thread(ctrlr_device)) {
 		free(ctrlr_device);
 		return -1;
 	}
+
 	TAILQ_INSERT_TAIL(&g_ctrlr_ctx_head, ctrlr_device, tailq);
 
 	/* Start all active namespaces */
