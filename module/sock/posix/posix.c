@@ -206,6 +206,33 @@ spdk_posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 	return 0;
 }
 
+static struct spdk_posix_sock *
+_spdk_posix_sock_alloc(int fd)
+{
+	struct spdk_posix_sock *sock;
+	int rc;
+
+	sock = calloc(1, sizeof(*sock));
+	if (sock == NULL) {
+		SPDK_ERRLOG("sock allocation failed\n");
+		return NULL;
+	}
+
+	sock->fd = fd;
+
+	rc = spdk_posix_sock_set_recvbuf(&sock->base, SO_RCVBUF_SIZE);
+	if (rc) {
+		/* Not fatal */
+	}
+
+	rc = spdk_posix_sock_set_sendbuf(&sock->base, SO_SNDBUF_SIZE);
+	if (rc) {
+		/* Not fatal */
+	}
+
+	return sock;
+}
+
 static struct spdk_sock *
 spdk_posix_sock_create(const char *ip, int port, enum spdk_posix_sock_create_type type)
 {
@@ -330,23 +357,11 @@ retry:
 		return NULL;
 	}
 
-	sock = calloc(1, sizeof(*sock));
+	sock = _spdk_posix_sock_alloc(fd);
 	if (sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
 		close(fd);
 		return NULL;
-	}
-
-	sock->fd = fd;
-
-	rc = spdk_posix_sock_set_recvbuf(&sock->base, SO_RCVBUF_SIZE);
-	if (rc) {
-		/* Not fatal */
-	}
-
-	rc = spdk_posix_sock_set_sendbuf(&sock->base, SO_SNDBUF_SIZE);
-	if (rc) {
-		/* Not fatal */
 	}
 
 	return &sock->base;
@@ -394,23 +409,10 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 		return NULL;
 	}
 
-	new_sock = calloc(1, sizeof(*sock));
+	new_sock = _spdk_posix_sock_alloc(fd);
 	if (new_sock == NULL) {
-		SPDK_ERRLOG("sock allocation failed\n");
 		close(fd);
 		return NULL;
-	}
-
-	new_sock->fd = fd;
-
-	rc = spdk_posix_sock_set_recvbuf(&new_sock->base, SO_RCVBUF_SIZE);
-	if (rc) {
-		/* Not fatal */
-	}
-
-	rc = spdk_posix_sock_set_sendbuf(&new_sock->base, SO_SNDBUF_SIZE);
-	if (rc) {
-		/* Not fatal */
 	}
 
 	return &new_sock->base;
