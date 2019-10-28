@@ -2008,15 +2008,19 @@ spdk_bdev_scsi_reset(struct spdk_scsi_task *task)
 }
 
 bool
-spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb,
-			   uint32_t data_offset, struct spdk_dif_ctx *dif_ctx)
+spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
+			   struct spdk_dif_ctx *dif_ctx)
 {
-	uint32_t ref_tag = 0, dif_check_flags = 0;
+	uint32_t ref_tag = 0, dif_check_flags = 0, data_offset;
+	uint8_t *cdb;
 	int rc;
 
 	if (spdk_likely(spdk_bdev_get_md_size(bdev) == 0)) {
 		return false;
 	}
+
+	cdb = task->cdb;
+	data_offset = task->offset;
 
 	/* We use lower 32 bits of LBA as Reference. Tag */
 	switch (cdb[0]) {

@@ -576,8 +576,8 @@ spdk_scsi_lun_is_removing(const struct spdk_scsi_lun *lun)
 }
 
 bool
-spdk_scsi_lun_get_dif_ctx(struct spdk_scsi_lun *lun, uint8_t *cdb,
-			  uint32_t data_offset, struct spdk_dif_ctx *dif_ctx)
+spdk_scsi_lun_get_dif_ctx(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task,
+			  struct spdk_dif_ctx *dif_ctx)
 {
-	return spdk_scsi_bdev_get_dif_ctx(lun->bdev, cdb, data_offset, dif_ctx);
+	return spdk_scsi_bdev_get_dif_ctx(lun->bdev, task, dif_ctx);
 }
