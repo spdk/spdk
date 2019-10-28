@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "872f3fb9_a5aab4bb",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-10-28T07:47:56Z",
+      "side": 1,
+      "message": "You can use spdk_nvme_cpl_is_success().",
+      "revId": "c5ed93dcc2116f5fac8380876c75d85d9cfc0df4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
