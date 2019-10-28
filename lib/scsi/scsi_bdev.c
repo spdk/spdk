@@ -1190,6 +1190,24 @@ bdev_scsi_read_task_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 static void
+bdev_scsi_zcopy_read_task_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
+				       void *cb_arg)
+{
+	struct spdk_scsi_task *task = cb_arg;
+	struct iovec *iov = NULL;
+	int iovcnt = 0;
+
+	assert(success == true);
+
+	spdk_bdev_io_get_iovec(bdev_io, &iov, &iovcnt);
+	assert(iov != NULL);
+
+	spdk_scsi_task_set_data(task, iov->iov_base, iov->iov_len);
+
+	bdev_scsi_read_task_complete_cmd(bdev_io, true, task);
+}
+
+static void
 bdev_scsi_task_complete_reset(struct spdk_bdev_io *bdev_io, bool success,
 			      void *cb_arg)
 {
@@ -1350,9 +1368,14 @@ bdev_scsi_readwrite(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		      is_read ? "Read" : "Write", offset_blocks, num_blocks);
 
 	if (is_read) {
-		rc = spdk_bdev_readv_blocks(bdev_desc, bdev_ch, task->iovs, task->iovcnt,
-					    offset_blocks, num_blocks,
-					    bdev_scsi_read_task_complete_cmd, task);
+		if (task->zcopy) {
+			rc = spdk_bdev_zcopy_start(bdev_desc, bdev_ch, offset_blocks, num_blocks,
+						   true, bdev_scsi_zcopy_read_task_complete_cmd, task);
+		} else {
+			rc = spdk_bdev_readv_blocks(bdev_desc, bdev_ch, task->iovs, task->iovcnt,
+						    offset_blocks, num_blocks,
+						    bdev_scsi_read_task_complete_cmd, task);
+		}
 	} else {
 		rc = spdk_bdev_writev_blocks(bdev_desc, bdev_ch, task->iovs, task->iovcnt,
 					     offset_blocks, num_blocks,

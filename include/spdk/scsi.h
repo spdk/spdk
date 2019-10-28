@@ -133,6 +133,7 @@ struct spdk_scsi_task {
 	struct iovec iov;
 	struct iovec *iovs;
 	uint16_t iovcnt;
+	bool zcopy;
 
 	uint8_t sense_data[32];
 	size_t sense_data_len;
