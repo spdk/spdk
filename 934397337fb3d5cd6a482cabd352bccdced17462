@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1520c37b_f4868210",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-28T23:40:51Z",
+      "side": 1,
+      "message": "can you put these on individual lines? Or even better yet don\u0027t set their initial values here, use a test_setup() function setup in main() as done in many others (for example https://github.com/spdk/spdk/blob/master/test/unit/lib/bdev/compress.c/compress_ut.c )",
+      "revId": "934397337fb3d5cd6a482cabd352bccdced17462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8bd823b6_9edcd5d2",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-28T23:40:51Z",
+      "side": 1,
+      "message": "there are spaces before the ; on a few of these line endings",
+      "revId": "934397337fb3d5cd6a482cabd352bccdced17462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "335e7dcf_b52e4ded",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-28T23:40:51Z",
+      "side": 1,
+      "message": "We typically (maybe always) use SPDK_CU_ASSERT_FATAL() to confirm allocations in UT code",
+      "revId": "934397337fb3d5cd6a482cabd352bccdced17462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
