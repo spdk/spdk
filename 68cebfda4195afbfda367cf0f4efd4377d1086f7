@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e4b5625_5c08880c",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-28T22:43:33Z",
+      "side": 1,
+      "message": "opal_flush_response_buffer() might be a more intuitive name",
+      "revId": "68cebfda4195afbfda367cf0f4efd4377d1086f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "883da1c7_79a81ec6",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-28T22:43:33Z",
+      "side": 1,
+      "message": "so this function is only called once on startup?",
+      "revId": "68cebfda4195afbfda367cf0f4efd4377d1086f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
