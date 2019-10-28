@@ -89,7 +89,7 @@ function nbd_rpc_data_verify() {
 	nbd_start_disks $rpc_server "${bdev_list[*]}" "${nbd_list[*]}"
 	count=$(nbd_get_count $rpc_server)
 	if [ $count -ne ${#nbd_list[@]} ]; then
-		return -1
+		return 1
 	fi
 
 	nbd_dd_data_verify "${nbd_list[*]}" "write"
@@ -98,7 +98,7 @@ function nbd_rpc_data_verify() {
 	nbd_stop_disks $rpc_server "${nbd_list[*]}"
 	count=$(nbd_get_count $rpc_server)
 	if [ $count -ne 0 ]; then
-		return -1
+		return 1
 	fi
 
 	return 0
@@ -116,7 +116,7 @@ function nbd_rpc_start_stop_verify() {
 
 	count=$(nbd_get_count $rpc_server)
 	if [ $count -ne 0 ]; then
-		return -1
+		return 1
 	fi
 
 	return 0

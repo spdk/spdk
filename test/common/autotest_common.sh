@@ -655,7 +655,7 @@ function discover_bdevs()
 
 	if [ ! -e $config_file ]; then
 		echo "Invalid Configuration File: $config_file"
-		return -1
+		return 1
 	fi
 
 	# Start the bdev service to query for the list of available
@@ -737,7 +737,7 @@ function fio_config_gen()
 
 	if [ -e "$config_file" ]; then
 		echo "Configuration File Already Exists!: $config_file"
-		return -1
+		return 1
 	fi
 
 	if [ -z "$workload" ]; then
@@ -784,12 +784,12 @@ function fio_config_add_job()
 
 	if [ ! -e "$config_file" ]; then
 		echo "Configuration File Doesn't Exist: $config_file"
-		return -1
+		return 1
 	fi
 
 	if [ -z "$filename" ]; then
 		echo "No filename provided"
-		return -1
+		return 1
 	fi
 
 	echo "[job_$filename]" >> $config_file

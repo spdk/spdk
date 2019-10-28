@@ -90,7 +90,7 @@ function raid_function_test() {
 		nbd_start_disks $rpc_server $raid_bdev $nbd
 		count=$(nbd_get_count $rpc_server)
 		if [ $count -ne 1 ]; then
-			return -1
+			return 1
 		fi
 
 		raid_unmap_data_verify $nbd $rpc_server
@@ -98,7 +98,7 @@ function raid_function_test() {
 		nbd_stop_disks $rpc_server $nbd
 		count=$(nbd_get_count $rpc_server)
 		if [ $count -ne 0 ]; then
-			return -1
+			return 1
 		fi
 
 		killprocess $raid_pid
