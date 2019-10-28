@@ -38,7 +38,16 @@
 #include "spdk/util.h"
 
 static void
-scsi_task_free_data(struct spdk_scsi_task *task);
+scsi_task_free_data(struct spdk_scsi_task *task)
+{
+	if (task->alloc_len != 0) {
+		spdk_dma_free(task->iov.iov_base);
+		task->alloc_len = 0;
+	}
+
+	task->iov.iov_base = NULL;
+	task->iov.iov_len = 0;
+}
 
 void
 spdk_scsi_task_put(struct spdk_scsi_task *task)
@@ -83,18 +92,6 @@ spdk_scsi_task_construct(struct spdk_scsi_task *task,
 	assert(task->iov.iov_base == NULL);
 	task->iovs = &task->iov;
 	task->iovcnt = 1;
-}
-
-static void
-scsi_task_free_data(struct spdk_scsi_task *task)
-{
-	if (task->alloc_len != 0) {
-		spdk_dma_free(task->iov.iov_base);
-		task->alloc_len = 0;
-	}
-
-	task->iov.iov_base = NULL;
-	task->iov.iov_len = 0;
 }
 
 static void *
