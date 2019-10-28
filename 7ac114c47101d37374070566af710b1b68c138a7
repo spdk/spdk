@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24c4d7de_cb7b3e8c",
+        "filename": "scripts/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-28T12:59:46Z",
+      "side": 1,
+      "message": "I\u0027m OK with the fixes (although I think this check makes much more sense for export than local), but please change the code so that all variable declarations are grouped, preferably at very top of the function.\nLike this:\n\nlocal a\nlocal b\n\nb\u003d$(xyz)\na\u003d$(abc)\n\nApplies to all code changes in this patch.",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 34
+      },
+      "revId": "7ac114c47101d37374070566af710b1b68c138a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
