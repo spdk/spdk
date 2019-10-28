@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e439e549_7d02af87",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-10-28T08:34:37Z",
+      "side": 1,
+      "message": "there should be a async mode rmdir function, then let sync mode rmdir depend on async mode rmdir function",
+      "range": {
+        "startLine": 606,
+        "startChar": 0,
+        "endLine": 606,
+        "endChar": 96
+      },
+      "revId": "369271203d6d4a27ddb138247d8f73ce2a42d1bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
