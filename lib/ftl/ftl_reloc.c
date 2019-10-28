@@ -71,6 +71,8 @@ struct ftl_reloc_move {
 
 	/* IO associated with move */
 	struct ftl_io				*io;
+
+	STAILQ_ENTRY(ftl_reloc_move)		entry;
 };
 
 struct ftl_band_reloc {
@@ -106,7 +108,7 @@ struct ftl_band_reloc {
 	struct ftl_reloc_move			*moves;
 
 	/* Move queue */
-	struct spdk_ring			*move_queue;
+	STAILQ_HEAD(, ftl_reloc_move)		move_queue;
 
 	TAILQ_ENTRY(ftl_band_reloc)		entry;
 };
@@ -188,7 +190,7 @@ ftl_reloc_read_lba_map_cb(struct ftl_io *io, void *arg, int status)
 	breloc->num_outstanding--;
 	assert(status == 0);
 	move->state = FTL_RELOC_STATE_WRITE;
-	spdk_ring_enqueue(breloc->move_queue, (void **)&move, 1, NULL);
+	STAILQ_INSERT_TAIL(&breloc->move_queue, move, entry);
 }
 
 static int
@@ -225,7 +227,7 @@ ftl_reloc_prep(struct ftl_band_reloc *breloc)
 	for (i = 0; i < reloc->max_qdepth; ++i) {
 		move = &breloc->moves[i];
 		move->state = FTL_RELOC_STATE_READ;
-		spdk_ring_enqueue(breloc->move_queue, (void **)&move, 1, NULL);
+		STAILQ_INSERT_TAIL(&breloc->move_queue, move, entry);
 	}
 }
 
@@ -236,7 +238,6 @@ ftl_reloc_free_move(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move)
 	spdk_dma_free(move->data);
 	memset(move, 0, sizeof(*move));
 	move->state = FTL_RELOC_STATE_READ;
-	spdk_ring_enqueue(breloc->move_queue, (void **)&move, 1, NULL);
 }
 
 static void
@@ -262,6 +263,7 @@ ftl_reloc_write_cb(struct ftl_io *io, void *arg, int status)
 	}
 
 	ftl_reloc_free_move(breloc, move);
+	STAILQ_INSERT_TAIL(&breloc->move_queue, move, entry);
 }
 
 static void
@@ -283,7 +285,7 @@ ftl_reloc_read_cb(struct ftl_io *io, void *arg, int status)
 
 	move->state = FTL_RELOC_STATE_READ_LBA_MAP;
 	move->io = NULL;
-	spdk_ring_enqueue(breloc->move_queue, (void **)&move, 1, NULL);
+	STAILQ_INSERT_TAIL(&breloc->move_queue, move, entry);
 }
 
 static void
@@ -507,12 +509,14 @@ static void
 ftl_reloc_process_moves(struct ftl_band_reloc *breloc)
 {
 	int rc = 0;
-	size_t i, num_moves;
+	size_t i, num_moves = 0;
 	struct ftl_reloc_move *moves[FTL_RELOC_MAX_MOVES] = {0};
-	struct ftl_reloc *reloc = breloc->parent;
 	struct ftl_reloc_move *move;
 
-	num_moves = spdk_ring_dequeue(breloc->move_queue, (void **)moves, reloc->max_qdepth);
+	while (!STAILQ_EMPTY(&breloc->move_queue)) {
+		moves[num_moves++] = STAILQ_FIRST(&breloc->move_queue);
+		STAILQ_REMOVE_HEAD(&breloc->move_queue, entry);
+	}
 
 	for (i = 0; i < num_moves; ++i) {
 		move = moves[i];
@@ -542,7 +546,7 @@ ftl_reloc_process_moves(struct ftl_band_reloc *breloc)
 static bool
 ftl_reloc_done(struct ftl_band_reloc *breloc)
 {
-	return !breloc->num_outstanding && !spdk_ring_count(breloc->move_queue);
+	return !breloc->num_outstanding && STAILQ_EMPTY(&breloc->move_queue);
 }
 
 static void
@@ -611,13 +615,7 @@ ftl_band_reloc_init(struct ftl_reloc *reloc, struct ftl_band_reloc *breloc,
 		return -1;
 	}
 
-	breloc->move_queue = spdk_ring_create(SPDK_RING_TYPE_MP_SC,
-					      reloc->max_qdepth * 2,
-					      SPDK_ENV_SOCKET_ID_ANY);
-	if (!breloc->move_queue) {
-		SPDK_ERRLOG("Failed to initialize reloc write queue");
-		return -1;
-	}
+	STAILQ_INIT(&breloc->move_queue);
 
 	breloc->moves = calloc(reloc->max_qdepth, sizeof(*breloc->moves));
 	if (!breloc->moves) {
@@ -630,9 +628,8 @@ ftl_band_reloc_init(struct ftl_reloc *reloc, struct ftl_band_reloc *breloc,
 static void
 ftl_band_reloc_free(struct ftl_band_reloc *breloc)
 {
-	struct ftl_reloc *reloc;
-	struct ftl_reloc_move *moves[FTL_RELOC_MAX_MOVES] = {};
-	size_t i, num_moves;
+	struct ftl_reloc *reloc __attribute__((unused));
+	struct ftl_reloc_move *move;
 
 	if (!breloc) {
 		return;
@@ -644,13 +641,11 @@ ftl_band_reloc_free(struct ftl_band_reloc *breloc)
 	/* Drain write queue if there is active band relocation during shutdown */
 	if (breloc->active) {
 		assert(reloc->halt);
-		num_moves = spdk_ring_dequeue(breloc->move_queue, (void **)&moves, reloc->max_qdepth);
-		for (i = 0; i < num_moves; ++i) {
-			ftl_reloc_free_move(breloc, moves[i]);
+		STAILQ_FOREACH(move, &breloc->move_queue, entry) {
+			ftl_reloc_free_move(breloc, move);
 		}
 	}
 
-	spdk_ring_free(breloc->move_queue);
 	spdk_bit_array_free(&breloc->reloc_map);
 	free(breloc->iter.zone_offset);
 	free(breloc->moves);
