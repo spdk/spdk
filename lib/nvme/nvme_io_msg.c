@@ -107,56 +107,43 @@ spdk_nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
-nvme_io_msg_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr, struct nvme_io_msg_producer *io_msg_producer)
+nvme_io_msg_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (io_msg_producer == NULL) {
-		SPDK_ERRLOG("io_msg_producer cannot be NULL\n");
-		return -EINVAL;
+	if (ctrlr->external_io_producers_refcnt == 1) {
+		pthread_mutex_init(&ctrlr->external_io_msgs_lock, NULL);
+
+		/**
+		 * Initialize ring and qpair for controller
+		 */
+		ctrlr->external_io_msgs = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
+		if (!ctrlr->external_io_msgs) {
+			SPDK_ERRLOG("Unable to allocate memory for message ring\n");
+			return -ENOMEM;
+		}
+
+		ctrlr->external_io_msgs_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+		if (ctrlr->external_io_msgs_qpair == NULL) {
+			SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
+			spdk_ring_free(ctrlr->external_io_msgs);
+			return -1;
+		}
 	}
-
-	if (!STAILQ_EMPTY(&ctrlr->io_producers) || ctrlr->is_resetting) {
-		/* There are registered producers - IO messaging already started */
-		STAILQ_INSERT_TAIL(&ctrlr->io_producers, io_msg_producer, link);
-		return 0;
-	}
-
-	pthread_mutex_init(&ctrlr->external_io_msgs_lock, NULL);
-
-	/**
-	 * Initialize ring and qpair for controller
-	 */
-	ctrlr->external_io_msgs = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
-	if (!ctrlr->external_io_msgs) {
-		SPDK_ERRLOG("Unable to allocate memory for message ring\n");
-		return -ENOMEM;
-	}
-
-	ctrlr->external_io_msgs_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
-	if (ctrlr->external_io_msgs_qpair == NULL) {
-		SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
-		spdk_ring_free(ctrlr->external_io_msgs);
-		return -1;
-	}
-
-	STAILQ_INSERT_TAIL(&ctrlr->io_producers, io_msg_producer, link);
+	ctrlr->external_io_producers_refcnt++;
 
 	return 0;
 }
 
 void
-nvme_io_msg_ctrlr_stop(struct spdk_nvme_ctrlr *ctrlr, struct nvme_io_msg_producer *io_msg_producer,
-		       bool shutdown)
+nvme_io_msg_ctrlr_stop(struct spdk_nvme_ctrlr *ctrlr, bool shutdown)
 {
-	if (STAILQ_EMPTY(&ctrlr->io_producers) && shutdown) {
+	if (ctrlr->external_io_producers_refcnt == 0 && shutdown) {
 		/* Shutdown path with no producers registered = io msg ctrlr not started */
 		return;
 	}
 
-	if (io_msg_producer != NULL) {
-		STAILQ_REMOVE(&ctrlr->io_producers, io_msg_producer, nvme_io_msg_producer, link);
-	}
+	ctrlr->external_io_producers_refcnt--;
 
-	if (!STAILQ_EMPTY(&ctrlr->io_producers) && !shutdown) {
+	if (ctrlr->external_io_producers_refcnt > 0 && !shutdown) {
 		/* There are still some registered producers */
 		return;
 	}
