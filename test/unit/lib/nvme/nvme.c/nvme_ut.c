@@ -60,8 +60,7 @@ DEFINE_STUB(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr *,
 	    (const struct spdk_nvme_transport_id *trid,
 	     const struct spdk_nvme_ctrlr_opts *opts,
 	     void *devhandle), NULL);
-DEFINE_STUB_V(nvme_io_msg_ctrlr_stop, (struct spdk_nvme_ctrlr *ctrlr,
-				       struct nvme_io_msg_producer *io_msg_producer, bool shutdown));
+DEFINE_STUB_V(nvme_io_msg_ctrlr_stop, (struct spdk_nvme_ctrlr *ctrlr, bool shutdown));
 
 static bool ut_destruct_called = false;
 void

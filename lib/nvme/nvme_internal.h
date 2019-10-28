@@ -718,8 +718,7 @@ struct spdk_nvme_ctrlr {
 	struct spdk_nvme_qpair		*external_io_msgs_qpair;
 	pthread_mutex_t			external_io_msgs_lock;
 	struct spdk_ring		*external_io_msgs;
-
-	STAILQ_HEAD(, nvme_io_msg_producer) io_producers;
+	uint32_t			external_io_producers_refcnt;
 };
 
 struct spdk_nvme_probe_ctx {
