@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a0a2d6e_8baa1ba5",
+        "filename": "scripts/vagrant/local.conf",
+        "patchSetId": 18
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-28T14:41:15Z",
+      "side": 1,
+      "message": "The commit message says \"Add possibility to reinstall devstack on required branch\" but changes in this file do not look related.\nPlease either split the changes into separate commits or update your commit message.",
+      "revId": "372d6c1fd418f7183755c8b194acf4963fb78fef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ddaf5aa2_838b5235",
+        "filename": "test/openstack/install_devstack.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-28T14:41:15Z",
+      "side": 1,
+      "message": "mixed tabs/spaces indent",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 8
+      },
+      "revId": "372d6c1fd418f7183755c8b194acf4963fb78fef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
