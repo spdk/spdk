@@ -529,14 +529,13 @@ void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun_desc *desc);
  * Get DIF context for SCSI LUN and SCSI command.
  *
  * \param lun Logical unit.
- * \param cdb SCSI CDB.
- * \param data_offset Byte offset in the payload.
+ * \param task SCSI task which has the payload.
  * \param dif_ctx Output parameter which will contain initialized DIF context.
  *
  * \return true on success or false otherwise.
  */
-bool spdk_scsi_lun_get_dif_ctx(struct spdk_scsi_lun *lun, uint8_t *cdb,
-			       uint32_t data_offset, struct spdk_dif_ctx *dif_ctx);
+bool spdk_scsi_lun_get_dif_ctx(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task,
+			       struct spdk_dif_ctx *dif_ctx);
 
 /**
  * Set iSCSI Initiator port TransportID
