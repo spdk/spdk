@@ -325,7 +325,7 @@ def bdev_aio_delete(client, name):
 def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry_count=None,
                           arbitration_burst=None, low_priority_weight=None,
                           medium_priority_weight=None, high_priority_weight=None,
-                          nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None, io_queue_requests=None):
+                          nvme_ioq_poll_period_us=None, io_queue_requests=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
@@ -362,9 +362,6 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry
 
     if high_priority_weight:
         params['high_priority_weight'] = high_priority_weight
-
-    if nvme_adminq_poll_period_us:
-        params['nvme_adminq_poll_period_us'] = nvme_adminq_poll_period_us
 
     if nvme_ioq_poll_period_us:
         params['nvme_ioq_poll_period_us'] = nvme_ioq_poll_period_us
