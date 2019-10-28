@@ -1286,13 +1286,10 @@ _bytes_to_blocks(uint32_t block_size, uint64_t offset_bytes, uint64_t *offset_bl
 }
 
 static int
-bdev_scsi_readwrite(struct spdk_scsi_task *task,
+bdev_scsi_readwrite(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
+		    struct spdk_io_channel *bdev_ch, struct spdk_scsi_task *task,
 		    uint64_t lba, uint32_t xfer_len, bool is_read)
 {
-	struct spdk_scsi_lun *lun = task->lun;
-	struct spdk_bdev *bdev = lun->bdev;
-	struct spdk_bdev_desc *bdev_desc = lun->bdev_desc;
-	struct spdk_io_channel *bdev_ch = lun->io_channel;
 	uint64_t bdev_num_blocks, offset_blocks, num_blocks;
 	uint32_t max_xfer_len, block_size;
 	int rc;
@@ -1585,27 +1582,31 @@ bdev_scsi_process_block(struct spdk_scsi_task *task)
 		if (xfer_len == 0) {
 			xfer_len = 256;
 		}
-		return bdev_scsi_readwrite(task, lba, xfer_len,
+		return bdev_scsi_readwrite(bdev, lun->bdev_desc, lun->io_channel,
+					   task, lba, xfer_len,
 					   cdb[0] == SPDK_SBC_READ_6);
 
 	case SPDK_SBC_READ_10:
 	case SPDK_SBC_WRITE_10:
 		lba = from_be32(&cdb[2]);
 		xfer_len = from_be16(&cdb[7]);
-		return bdev_scsi_readwrite(task, lba, xfer_len,
+		return bdev_scsi_readwrite(bdev, lun->bdev_desc, lun->io_channel,
+					   task, lba, xfer_len,
 					   cdb[0] == SPDK_SBC_READ_10);
 
 	case SPDK_SBC_READ_12:
 	case SPDK_SBC_WRITE_12:
 		lba = from_be32(&cdb[2]);
 		xfer_len = from_be32(&cdb[6]);
-		return bdev_scsi_readwrite(task, lba, xfer_len,
+		return bdev_scsi_readwrite(bdev, lun->bdev_desc, lun->io_channel,
+					   task, lba, xfer_len,
 					   cdb[0] == SPDK_SBC_READ_12);
 	case SPDK_SBC_READ_16:
 	case SPDK_SBC_WRITE_16:
 		lba = from_be64(&cdb[2]);
 		xfer_len = from_be32(&cdb[10]);
-		return bdev_scsi_readwrite(task, lba, xfer_len,
+		return bdev_scsi_readwrite(bdev, lun->bdev_desc, lun->io_channel,
+					   task, lba, xfer_len,
 					   cdb[0] == SPDK_SBC_READ_16);
 
 	case SPDK_SBC_READ_CAPACITY_10: {
