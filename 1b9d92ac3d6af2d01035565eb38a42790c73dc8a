@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03544363_ec8936cb",
+        "filename": "autopackage.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-28T23:20:27Z",
+      "side": 1,
+      "message": "OK, I\u0027ll ask the stupid question... why does this cd work if we are sitting in the dpdk subdir from the prev if block?",
+      "revId": "1b9d92ac3d6af2d01035565eb38a42790c73dc8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
