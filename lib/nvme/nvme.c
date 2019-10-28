@@ -69,7 +69,7 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_proc_put_ref(ctrlr);
 
 	if (nvme_ctrlr_get_ref_count(ctrlr) == 0) {
-		nvme_io_msg_ctrlr_stop(ctrlr, NULL, true);
+		nvme_io_msg_ctrlr_stop(ctrlr, true);
 		if (nvme_ctrlr_shared(ctrlr)) {
 			TAILQ_REMOVE(&g_spdk_nvme_driver->shared_attached_ctrlrs, ctrlr, tailq);
 		} else {
@@ -460,7 +460,7 @@ nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr,
 		return 0;
 	}
 
-	STAILQ_INIT(&ctrlr->io_producers);
+	ctrlr->external_io_producers_refcnt = 0;
 
 	/*
 	 * Controller has been initialized.

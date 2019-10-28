@@ -50,17 +50,10 @@ struct spdk_nvme_io_msg {
 	void			*arg;
 };
 
-struct nvme_io_msg_producer {
-	const char *name;
-	STAILQ_ENTRY(nvme_io_msg_producer) link;
-};
-
 int nvme_io_msg_send(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme_io_msg_fn fn,
 		     void *arg);
 
-int nvme_io_msg_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr,
-			    struct nvme_io_msg_producer *io_msg_producer);
-void nvme_io_msg_ctrlr_stop(struct spdk_nvme_ctrlr *ctrlr,
-			    struct nvme_io_msg_producer *io_msg_producer, bool shutdown);
+int nvme_io_msg_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr);
+void nvme_io_msg_ctrlr_stop(struct spdk_nvme_ctrlr *ctrlr, bool shutdown);
 
 #endif /* SPDK_NVME_IO_MSG_H_ */
