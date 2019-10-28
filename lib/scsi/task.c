@@ -36,6 +36,7 @@
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
+#include "spdk/bdev.h"
 
 static void
 scsi_task_put_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
@@ -53,6 +54,7 @@ scsi_task_put_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	task->iov.iov_base = NULL;
 	task->iov.iov_len = 0;
+	task->zcopy = false;
 
 	task->free_fn(task);
 }
@@ -69,7 +71,11 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 	if (task->ref == 0) {
 		struct spdk_bdev_io *bdev_io = task->bdev_io;
 
-		scsi_task_put_cb(bdev_io, true, task);
+		if (task->zcopy && bdev_io) {
+			spdk_bdev_zcopy_end(bdev_io, false, scsi_task_put_cb, task);
+		} else {
+			scsi_task_put_cb(bdev_io, true, task);
+		}
 	}
 }
 
