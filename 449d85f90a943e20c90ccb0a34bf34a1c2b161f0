@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04a8c037_45416fd0",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1557,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-28T18:28:27Z",
+      "side": 1,
+      "message": "might be good to add a note about which error (ie, discovery with null session here, the next one is, data_seg_length \u003e 8K etc. It gets a bit harder to follow after these first couple",
+      "revId": "449d85f90a943e20c90ccb0a34bf34a1c2b161f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72cc1797_60f965d7",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1564,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-28T18:28:27Z",
+      "side": 1,
+      "message": "every coverage increase is good so this is not a -1 comment, but any reason why this condition wasn\u0027t covered here?\n   2182           4 :         if (rsp_pdu \u003d\u003d NULL) {\n    2183           0 :                 return SPDK_ISCSI_CONNECTION_FATAL;\n    2184             :         }",
+      "revId": "449d85f90a943e20c90ccb0a34bf34a1c2b161f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d33a9c2e_7100671c",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1663,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-28T18:28:27Z",
+      "side": 1,
+      "message": "this all looks great but again a few words on each error case to help line it up with the functional code under test would be good",
+      "revId": "449d85f90a943e20c90ccb0a34bf34a1c2b161f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96129e35_61cd24d1",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1714,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-28T18:28:27Z",
+      "side": 1,
+      "message": "same question on the login test, any reason why this wasn\u0027t covered?\n   2521           2 :         rsp_pdu \u003d spdk_get_pdu();\n    2522           2 :         if (rsp_pdu \u003d\u003d NULL) {\n    2523           0 :                 return SPDK_ISCSI_CONNECTION_FATAL;\n    2524             :         }",
+      "revId": "449d85f90a943e20c90ccb0a34bf34a1c2b161f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "603b278a_726a4646",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1865,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-28T18:28:27Z",
+      "side": 1,
+      "message": "same question here but I\u0027ll stop pasting snippets in :) There are a few uncovered paths, just wanted to make sure that wasn\u0027t an oversight.",
+      "revId": "449d85f90a943e20c90ccb0a34bf34a1c2b161f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
