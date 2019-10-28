@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "731cb665_c1eb79e1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-28T11:57:33Z",
+      "side": 1,
+      "message": "Probably information about new parameter should be also added to change log.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 64
+      },
+      "revId": "aee3999e70b684a254eec4f7570851070be796aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58694305_d02e56c1",
+        "filename": "module/bdev/ocf/utils.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-28T11:57:33Z",
+      "side": 1,
+      "message": "We have 19.06 already on master :)",
+      "range": {
+        "startLine": 70,
+        "startChar": 1,
+        "endLine": 70,
+        "endChar": 73
+      },
+      "revId": "aee3999e70b684a254eec4f7570851070be796aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecbf23ff_1e79b5a7",
+        "filename": "test/ocf/integrity/fio-linesizes.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-10-28T11:57:33Z",
+      "side": 1,
+      "message": "You have changed filenames of bdevs in config, so probably this test will not pass. Please also consider add this new test as a separate patch.",
+      "range": {
+        "startLine": 35,
+        "startChar": 11,
+        "endLine": 35,
+        "endChar": 55
+      },
+      "revId": "aee3999e70b684a254eec4f7570851070be796aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
