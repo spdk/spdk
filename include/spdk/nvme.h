@@ -2585,7 +2585,29 @@ char *spdk_nvme_cuse_get_ctrlr_name(struct spdk_nvme_ctrlr *ctrlr);
  */
 char *spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
 
+/**
+ * Create a character device at the path specified (Experimental)
+ *
+ * The character device can handle ioctls and is compatible with a standard
+ * Linux kernel NVMe device. Tools such as nvme-cli can be used to configure
+ * SPDK devices through this interface.
+ *
+ * The user is expected to be polling the admin qpair for this controller periodically
+ * for the CUSE device to function.
+ *
+ * \param ctrlr Opaque handle to the NVMe controller.
+ * \param dev_path The path at which the device should appear. Ex. /dev/spdk/nvme0n1
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
 int spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path);
+
+/**
+ * Remove a previously created character device (Experimental)
+ *
+ * \param ctrlr Opaque handle to the NVMe controller.
+ *
+ */
 void spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
 
 #ifdef __cplusplus
