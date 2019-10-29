@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ab13164_978116ed",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-29T13:41:40Z",
+      "side": 1,
+      "message": "Are you moving the pthread_create, till after the sessions is started to handle the errors during their setup ? [Such as name conflicts]\nThis might be a good change, but it belongs to separate patch. Besides that, looking at contents of pthreads. Error should be checked from fuse_session_loop() and handled by stopping cuse on whole controller.",
+      "range": {
+        "startLine": 662,
+        "startChar": 5,
+        "endLine": 662,
+        "endChar": 19
+      },
+      "revId": "2c47a32ff74d0d22a5156282fa11e225fa842cfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e016bf7e_b89ae558",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 677,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-29T13:41:40Z",
+      "side": 1,
+      "message": "Probably some parts of this patch is still in progress, since increasing this value is missing ?\nHow about using bitmask interface to keep track of free entries ?",
+      "range": {
+        "startLine": 677,
+        "startChar": 0,
+        "endLine": 677,
+        "endChar": 36
+      },
+      "revId": "2c47a32ff74d0d22a5156282fa11e225fa842cfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
