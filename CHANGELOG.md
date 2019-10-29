@@ -9,19 +9,26 @@ Added new parameter `cdw0` to `spdk_bdev_io_complete_nvme_status()` and
 the NVMe completion queue DW0 entry. This allows vendor specific IO commands
 to return commmand specific completion info back to the initiator.
 
-### bdev opal
+Added `spdk_bdev_get_write_unit_size()` function for retrieving required number
+of logical blocks for write operation.
 
-EXPERIMENTAL: A new opal bdev has been added to support management of
-NVMe self-encrypting drives through the Opal specification. Users can
-create opal bdevs from an NVMe namespace bdev, if the controller
-containing that namespace supports Opal. Currently this is only
-supported for namespace ID=1. The following RPCs have been added to
-support Opal: `bdev_nvme_opal_init`, `bdev_nvme_opal_revert`,
-`bdev_opal_create`, `bdev_opal_delete`, `bdev_opal_get_info`,
-`bdev_opal_new_user`, `bdev_opal_set_lock_state`.
-It does not yet support recreating the opal bdevs after application restart.
-This bdev module should be considered very experimental, and the RPCs may
-change significantly in future releases.
+New zone-related fields were added to the result of the `get_bdevs` RPC call:
+ - `zoned`: indicates whether the device is zoned or a regular
+   block device
+ - `zone_size`: number of blocks in a single zone
+ - `max_open_zones`: maximum number of open zones
+ - `optimal_open_zones`: optimal number of open zones
+The `zoned` field is a boolean and is always present, while the rest is only available for zoned
+bdevs.
+
+A new spdk_bdev_open_ext function has been added and spdk_bdev_open function has been deprecated.
+The new open function introduces requirement to provide callback function that will be called by
+asynchronous event such as bdev removal. spdk_bdev_open_ext function takes bdev name as
+an argument instead of bdev structure to avoid a race condition that can happen when the bdev
+is being removed between a call to get its structure based on a name and actually openning it.
+
+New 'resize' event has been added to notify about change of block count property of block device.
+Event is delivered only if block device was opened with spdk_bdev_open_ext function.
 
 ### bdev zone
 
@@ -37,88 +44,36 @@ Added `spdk_bdev_zone_management()` API for changing zone state.
 appending data to a zone.
 Added `spdk_bdev_io_get_append location()` function for retrieving append location for I/O.
 
-### bdev
+### bdev opal
 
-Added `spdk_bdev_get_write_unit_size()` function for retrieving required number
-of logical blocks for write operation.
+EXPERIMENTAL: A new opal bdev has been added to support management of
+NVMe self-encrypting drives through the Opal specification. Users can
+create opal bdevs from an NVMe namespace bdev, if the controller
+containing that namespace supports Opal. Currently this is only
+supported for namespace ID=1. The following RPCs have been added to
+support Opal: `bdev_nvme_opal_init`, `bdev_nvme_opal_revert`,
+`bdev_opal_create`, `bdev_opal_delete`, `bdev_opal_get_info`,
+`bdev_opal_new_user`, `bdev_opal_set_lock_state`.
+It does not yet support recreating the opal bdevs after application restart.
+This bdev module should be considered very experimental, and the RPCs may
+change significantly in future releases.
 
-New zone-related fields were added to the result of the `get_bdevs` RPC call:
- - `zoned`: indicates whether the device is zoned or a regular
-   block device
- - `zone_size`: number of blocks in a single zone
- - `max_open_zones`: maximum number of open zones
- - `optimal_open_zones`: optimal number of open zones
-The `zoned` field is a boolean and is always present, while the rest is only available for zoned
-bdevs.
+### delay bdev
 
-### nvmf
+The `bdev_delay_update_latency` has been added to allow users to update
+a latency value for a given delay bdev.
 
-The `spdk_nvmf_tgt_create` function now accepts an object of type `spdk_nvmf_target_opts`
-as its only parameter. This new structure contains the max_subsystems parameter previously
-passed into that function.
+### compress bdev
 
-A new public API function `spdk_nvmf_get_tgt` has been added which allows users to
-retrieve a pointer to an `spdk_nvmf_tgt` object by supplying its name. In the special
-case where an RPC or application only creates a single target, this function can accept
-a null name parameter and will return the only available target.
+A new RPC `bdev_compress_get_orphans` has been added to list compress bdevs
+that were not loaded due to a missing pm metadata file. In this state they
+can only be deleted.
 
-The majority of the NVMe-oF RPCs now accept an optional tgt_name parameter. This will
-allow those RPCs to work with applications that create more than one target.
+### null bdev
 
-Three new NVMe-oF RPCs have been added `nvmf_create_target`, `nvmf_delete_target`, and
-`nvmf_get_targets`. These new RPCs provide a basic interface for managing multiple target
-objects. In SPDK the target object defines a unique discovery service. As of this release,
-these RPCs are not intended to be used with the in-tree SPDK target applications, spdk_tgt and
-nvmf_tgt, which use a single, global target structure. As such, they are not included in scripts/rpc.py
+Metadata support has been added to Null bdev module.
 
-Three new header functions have also been added to help deal with multiple targets.
-`spdk_nvmf_tgt_get_name` takes a target pointer as an argument and returns its human readable name.
-`spdk_nvmf_get_first_target` takes no arguments and returns the first target in the global list.
-`spdk_nvmf_get_next_tgt` takes a target pointer as an argument and returns the next one in the global list.
-
-The `spdk_nvmf_tgt_accept` takes additional argument allowing to pass arbitrary context
-information to the `new_qpair` callback. This will simplify the code when having multiple
-nvmf targets or when retrieving the context information from globals is not suitable.
-
-### bdev
-
-A new spdk_bdev_open_ext function has been added and spdk_bdev_open function has been deprecated.
-The new open function introduces requirement to provide callback function that will be called by
-asynchronous event such as bdev removal. spdk_bdev_open_ext function takes bdev name as
-an argument instead of bdev structure to avoid a race condition that can happen when the bdev
-is being removed between a call to get its structure based on a name and actually openning it.
-
-New 'resize' event has been added to notify about change of block count property of block device.
-Event is delivered only if block device was opened with spdk_bdev_open_ext function.
-
-### blobstore
-
-A new spdk_bdev_create_bs_dev_from_desc function has been added and spdk_bdev_create_bs_dev
-function has been deprecated.
-The new create function can cowork with spdk_bdev_open_ext function, which provides callback
-function that will be called by asynchronous event such as bdev removal.
-
-### DPDK
-
-Updated DPDK submodule to DPDK 19.08.
-
-### blobfs_bdev
-
-A new blobfs module `bdev` has been added to simplify the operations of blobfs on bdev.
-
-Function spdk_blobfs_bdev_detect is added to detect whether blobfs exists on the given block device.
-
-Function spdk_blobfs_bdev_create is added to create a blobfs on the given block device.
-
-Function spdk_blobfs_bdev_mount is added to mount a blobfs on the given block device to
-a host path by FUSE. Then, a new thread is created dedicatedly for one mountpoint to handle
-FUSE request by blobfs API.
-
-### build
-
-Option to build FUSE components into blobfs_bdev module for mounting a blobfs filesystem.
-It requires the installation of libfuse3. By default, it is disabled. And it will be
-enabled if run `./configure` with `--with-fuse` option.
+Protection information support has been added to Null bdev module.
 
 ### nvme
 
@@ -156,6 +111,60 @@ applications when a qpair is failed. This list of functions includes:
 These functions now return -ENXIO when the qpair or controller on which they
 operate is failed.
 
+### nvmf
+
+The `spdk_nvmf_tgt_create` function now accepts an object of type `spdk_nvmf_target_opts`
+as its only parameter. This new structure contains the max_subsystems parameter previously
+passed into that function.
+
+A new public API function `spdk_nvmf_get_tgt` has been added which allows users to
+retrieve a pointer to an `spdk_nvmf_tgt` object by supplying its name. In the special
+case where an RPC or application only creates a single target, this function can accept
+a null name parameter and will return the only available target.
+
+The majority of the NVMe-oF RPCs now accept an optional tgt_name parameter. This will
+allow those RPCs to work with applications that create more than one target.
+
+Three new NVMe-oF RPCs have been added `nvmf_create_target`, `nvmf_delete_target`, and
+`nvmf_get_targets`. These new RPCs provide a basic interface for managing multiple target
+objects. In SPDK the target object defines a unique discovery service. As of this release,
+these RPCs are not intended to be used with the in-tree SPDK target applications, spdk_tgt and
+nvmf_tgt, which use a single, global target structure. As such, they are not included in scripts/rpc.py
+
+Three new header functions have also been added to help deal with multiple targets.
+`spdk_nvmf_tgt_get_name` takes a target pointer as an argument and returns its human readable name.
+`spdk_nvmf_get_first_target` takes no arguments and returns the first target in the global list.
+`spdk_nvmf_get_next_tgt` takes a target pointer as an argument and returns the next one in the global list.
+
+The `spdk_nvmf_tgt_accept` takes additional argument allowing to pass arbitrary context
+information to the `new_qpair` callback. This will simplify the code when having multiple
+nvmf targets or when retrieving the context information from globals is not suitable.
+
+### blobstore
+
+A new spdk_bdev_create_bs_dev_from_desc function has been added and spdk_bdev_create_bs_dev
+function has been deprecated.
+The new create function can cowork with spdk_bdev_open_ext function, which provides callback
+function that will be called by asynchronous event such as bdev removal.
+
+### blobfs_bdev
+
+A new blobfs module `bdev` has been added to simplify the operations of blobfs on bdev.
+
+Function spdk_blobfs_bdev_detect is added to detect whether blobfs exists on the given block device.
+
+Function spdk_blobfs_bdev_create is added to create a blobfs on the given block device.
+
+Function spdk_blobfs_bdev_mount is added to mount a blobfs on the given block device to
+a host path by FUSE. Then, a new thread is created dedicatedly for one mountpoint to handle
+FUSE request by blobfs API.
+
+### build
+
+Option to build FUSE components into blobfs_bdev module for mounting a blobfs filesystem.
+It requires the installation of libfuse3. By default, it is disabled. And it will be
+enabled if run `./configure` with `--with-fuse` option.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
@@ -165,27 +174,24 @@ An new RPC `iscsi_portal_group_set_auth` has been added to set CHAP authenticati
 for discovery sessions specific for the existing iSCSI portal group. This RPC overwrites
 the setting by the global parameters for the iSCSI portal group.
 
-### delay bdev
-
-The `bdev_delay_update_latency` has been added to allow users to update
-a latency value for a given delay bdev.
-
-### compress bdev
-
-A new RPC `bdev_compress_get_orphans` has been added to list compress bdevs
-that were not loaded due to a missing pm metadata file. In this state they
-can only be deleted.
-
-### null bdev
-
-Metadata support has been added to Null bdev module.
-
-Protection information support has been added to Null bdev module.
-
 ### event
 
 start_subsystem_init RPC no longer stops the application on error during
 initialization.
+
+### DPDK
+
+Updated DPDK submodule to DPDK 19.08.
+
+### ocf
+
+Updated OCF submodule to OCF v19.06
+
+Along with update, new cache mode 'write only' was added.
+
+New cache modes added to use via RPC, wi - write invalidate and wa - write around.
+
+New version of OCF provides fully asynchronous management API.
 
 ### rpc
 
@@ -204,16 +210,6 @@ Added `blobfs_create` RPC method to build blobfs on given bdev.
 Added `blobfs_mount` RPC method to mount blobfs on given bdev to a host path by FUSE.
 Then on the host path, user can directly do some file operations which will be mapped
 to blobfs.
-
-### ocf
-
-Updated OCF submodule to OCF v19.06
-
-Along with update, new cache mode 'write only' was added.
-
-New cache modes added to use via RPC, wi - write invalidate and wa - write around.
-
-New version of OCF provides fully asynchronous management API.
 
 ## v19.07:
 
