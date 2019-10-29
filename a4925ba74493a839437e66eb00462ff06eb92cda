@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff2043a3_1b96e0d6",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1105,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-29T22:05:30Z",
+      "side": 0,
+      "message": "So I mostly followed the patch (even w/o too much history or context) but I\u0027m not seeing how this removal is related. Can you elaborate?",
+      "revId": "a4925ba74493a839437e66eb00462ff06eb92cda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
