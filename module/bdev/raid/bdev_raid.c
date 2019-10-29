@@ -272,6 +272,9 @@ raid_bdev_destruct(void *ctxt)
 
 	if (g_shutdown_started) {
 		TAILQ_REMOVE(&g_raid_bdev_configured_list, raid_bdev, state_link);
+		if (raid_bdev->module->stop != NULL) {
+			raid_bdev->module->stop(raid_bdev);
+		}
 		raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
 		TAILQ_INSERT_TAIL(&g_raid_bdev_offline_list, raid_bdev, state_link);
 	}
@@ -1301,7 +1304,6 @@ static int
 raid_bdev_configure(struct raid_bdev *raid_bdev)
 {
 	uint32_t		blocklen;
-	uint64_t		min_blockcnt;
 	struct spdk_bdev	*raid_bdev_gen;
 	int rc = 0;
 	uint8_t i;
@@ -1310,13 +1312,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	assert(raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs);
 
 	blocklen = raid_bdev->base_bdev_info[0].bdev->blocklen;
-	min_blockcnt = raid_bdev->base_bdev_info[0].bdev->blockcnt;
 	for (i = 1; i < raid_bdev->num_base_bdevs; i++) {
-		/* Calculate minimum block count from all base bdevs */
-		if (raid_bdev->base_bdev_info[i].bdev->blockcnt < min_blockcnt) {
-			min_blockcnt = raid_bdev->base_bdev_info[i].bdev->blockcnt;
-		}
-
 		/* Check blocklen for all base bdevs that it should be same */
 		if (blocklen != raid_bdev->base_bdev_info[i].bdev->blocklen) {
 			/*
@@ -1337,36 +1333,25 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 
 	raid_bdev_gen = &raid_bdev->bdev;
 	raid_bdev_gen->blocklen = blocklen;
-	if (raid_bdev->num_base_bdevs > 1) {
-		raid_bdev_gen->optimal_io_boundary = raid_bdev->strip_size;
-		raid_bdev_gen->split_on_optimal_io_boundary = true;
-	} else {
-		/* Do not need to split reads/writes on single bdev RAID modules. */
-		raid_bdev_gen->optimal_io_boundary = 0;
-		raid_bdev_gen->split_on_optimal_io_boundary = false;
+
+	rc = raid_bdev->module->start(raid_bdev);
+	if (rc != 0) {
+		SPDK_ERRLOG("raid module startup callback failed\n");
+		return rc;
 	}
-
-	/*
-	 * RAID bdev logic is for striping so take the minimum block count based
-	 * approach where total block count of raid bdev is the number of base
-	 * bdev times the minimum block count of any base bdev
-	 */
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "min blockcount %lu,  numbasedev %u, strip size shift %u\n",
-		      min_blockcnt,
-		      raid_bdev->num_base_bdevs, raid_bdev->strip_size_shift);
-	raid_bdev_gen->blockcnt = ((min_blockcnt >> raid_bdev->strip_size_shift) <<
-				   raid_bdev->strip_size_shift)  * raid_bdev->num_base_bdevs;
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "io device register %p\n", raid_bdev);
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "blockcnt %lu, blocklen %u\n", raid_bdev_gen->blockcnt,
-		      raid_bdev_gen->blocklen);
-
 	raid_bdev->state = RAID_BDEV_STATE_ONLINE;
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "io device register %p\n", raid_bdev);
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "blockcnt %lu, blocklen %u\n",
+		      raid_bdev_gen->blockcnt, raid_bdev_gen->blocklen);
 	spdk_io_device_register(raid_bdev, raid_bdev_create_cb, raid_bdev_destroy_cb,
 				sizeof(struct raid_bdev_io_channel),
 				raid_bdev->bdev.name);
 	rc = spdk_bdev_register(raid_bdev_gen);
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to register raid bdev and stay at configuring state\n");
+		if (raid_bdev->module->stop != NULL) {
+			raid_bdev->module->stop(raid_bdev);
+		}
 		spdk_io_device_unregister(raid_bdev, NULL);
 		raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 		return rc;
@@ -1405,6 +1390,9 @@ raid_bdev_deconfigure(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn,
 
 	assert(raid_bdev->num_base_bdevs == raid_bdev->num_base_bdevs_discovered);
 	TAILQ_REMOVE(&g_raid_bdev_configured_list, raid_bdev, state_link);
+	if (raid_bdev->module->stop != NULL) {
+		raid_bdev->module->stop(raid_bdev);
+	}
 	raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
 	assert(raid_bdev->num_base_bdevs_discovered);
 	TAILQ_INSERT_TAIL(&g_raid_bdev_offline_list, raid_bdev, state_link);
