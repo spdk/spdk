@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8db8f8e0_e8a382a6",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 780,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-29T02:14:10Z",
+      "side": 1,
+      "message": "We can get this by checking the drive\u0027s info. If locking_enabled is true for this drive, it means this drive has been initialized already and thus we set the drive to OPAL_ENABLED.",
+      "parentUuid": "58ed635a_77e9de98",
+      "revId": "0db85f44cd5463c6f9fd3f1e4a83c9c30c83d952",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b922de0_36437094",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "0db85f44cd5463c6f9fd3f1e4a83c9c30c83d952",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "431e5a19_e82a70fc",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2066,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-29T02:14:10Z",
+      "side": 1,
+      "message": "Yes, that is correct. I forgot it. Thanks for your notice.",
+      "parentUuid": "6b922de0_36437094",
+      "revId": "0db85f44cd5463c6f9fd3f1e4a83c9c30c83d952",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "848d4e8a_617a3453",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2138,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-29T02:14:10Z",
+      "side": 1,
+      "message": "Because it gets receive error here. So we assume the revert process is not finished, the drive is still in OPAL_ENABLED state.",
+      "parentUuid": "7bb7318e_137d9d3c",
+      "revId": "0db85f44cd5463c6f9fd3f1e4a83c9c30c83d952",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e22a9298_a77e6141",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2019-10-28T22:05:29Z",
       "side": 1,
       "message": "Does this state change mean revert completion? This case is from BUSY to DEFAULT?",
+      "revId": "0db85f44cd5463c6f9fd3f1e4a83c9c30c83d952",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef49f493_0084a326",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2146,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-29T02:14:10Z",
+      "side": 1,
+      "message": "Yes, your understanding is correct.",
+      "parentUuid": "e22a9298_a77e6141",
       "revId": "0db85f44cd5463c6f9fd3f1e4a83c9c30c83d952",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
