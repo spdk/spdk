@@ -244,7 +244,12 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *completion)
 static void
 check_io(struct ns_worker_ctx *ns_ctx)
 {
-	spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
+	int rc;
+
+	rc = spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
+	if (rc == -ENXIO) {
+		spdk_nvme_ctrlr_reconnect_io_qpair(ns_ctx->qpair);
+	}
 }
 
 static void

@@ -1091,6 +1091,8 @@ struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *c
  * This function is intended to be called on qpairs that have already been connected,
  * but have since entered a failed state as indicated by a return value of -ENXIO from
  * either spdk_nvme_qpair_process_completions or one of the spdk_nvme_ns_cmd_* functions.
+ * This function touches qpair sensitive state so it must only be called from the same
+ * thread as spdk_nvme_qpair_process_completions and the spdk_nvme_ns_cmd_* functions.
  *
  * \param qpair The qpair to reconnect.
  *
