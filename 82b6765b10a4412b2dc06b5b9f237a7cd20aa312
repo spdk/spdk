@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5488e15a_6e5956c3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-29T13:48:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "74b0d0b7_d5de72bb",
+      "range": {
+        "startLine": 9,
+        "startChar": 60,
+        "endLine": 9,
+        "endChar": 85
+      },
+      "revId": "82b6765b10a4412b2dc06b5b9f237a7cd20aa312",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5bf362f3_00653bee",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "82b6765b10a4412b2dc06b5b9f237a7cd20aa312",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62200976_e9f0ce45",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-29T13:48:33Z",
+      "side": 1,
+      "message": "You right, that will be overkill.\nThere were problems with python too and I will add this to python in line 73.",
+      "parentUuid": "5bf362f3_00653bee",
+      "range": {
+        "startLine": 59,
+        "startChar": 49,
+        "endLine": 59,
+        "endChar": 61
+      },
+      "revId": "82b6765b10a4412b2dc06b5b9f237a7cd20aa312",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
