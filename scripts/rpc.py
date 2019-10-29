@@ -329,11 +329,13 @@ if __name__ == "__main__":
     def bdev_uring_create(args):
         print_json(rpc.bdev.bdev_uring_create(args.client,
                                               filename=args.filename,
-                                              name=args.name))
+                                              name=args.name,
+                                              block_size=args.block_size))
 
     p = subparsers.add_parser('bdev_uring_create', help='Create a bdev with io_uring backend')
     p.add_argument('filename', help='Path to device or file (ex: /dev/nvme0n1)')
     p.add_argument('name', help='bdev name')
+    p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?', default=0)
     p.set_defaults(func=bdev_uring_create)
 
     def bdev_uring_delete(args):
