@@ -37,6 +37,8 @@
 
 #include "spdk/stdinc.h"
 
+struct spdk_iscsi_conn;
+
 enum iscsi_param_type {
 	ISPT_INVALID = -1,
 	ISPT_NOTSPECIFIED = 0,
@@ -80,5 +82,13 @@ spdk_iscsi_param_get_val(struct iscsi_param *params, const char *key);
 int
 spdk_iscsi_param_eq_val(struct iscsi_param *params, const char *key,
 			const char *val);
+
+int spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
+				struct iscsi_param **params_p, uint8_t *data,
+				int alloc_len, int data_len);
+int spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn);
+
+int spdk_iscsi_conn_params_init(struct iscsi_param **params);
+int spdk_iscsi_sess_params_init(struct iscsi_param **params);
 
 #endif /* SPDK_ISCSI_PARAM_H */
