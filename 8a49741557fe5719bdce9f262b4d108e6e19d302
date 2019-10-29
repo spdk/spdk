@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e286364_309c003b",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-10-29T17:42:09Z",
+      "side": 1,
+      "message": "maybe it would be better to stop introducing conf files now that both bdevperf and bdevio have the -z parameter",
+      "revId": "8a49741557fe5719bdce9f262b4d108e6e19d302",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
