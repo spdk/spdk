@@ -167,12 +167,6 @@ DEFINE_STUB(spdk_nvmf_transport_req_complete,
 	    (struct spdk_nvmf_request *req),
 	    0);
 
-DEFINE_STUB(spdk_nvmf_request_get_buffers,
-	    int,
-	    (struct spdk_nvmf_request *req, struct spdk_nvmf_transport_poll_group *group,
-	     struct spdk_nvmf_transport *transport, uint32_t length),
-	    0);
-
 DEFINE_STUB_V(spdk_nvmf_request_free_buffers,
 	      (struct spdk_nvmf_request *req, struct spdk_nvmf_transport_poll_group *group,
 	       struct spdk_nvmf_transport *transport));
@@ -193,6 +187,21 @@ DEFINE_STUB(spdk_sock_set_priority,
 	    0);
 
 DEFINE_STUB_V(spdk_nvmf_ns_reservation_request, (void *ctx));
+
+
+
+int
+spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
+			      struct spdk_nvmf_transport_poll_group *group,
+			      struct spdk_nvmf_transport *transport,
+			      uint32_t length)
+{
+	req->iovcnt = 1;
+	req->iov[0].iov_base = (void *)0xDEADBEEF;
+
+	return 0;
+}
+
 
 struct spdk_trace_histories *g_trace_histories;
 
@@ -576,6 +585,116 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 		     &tcp_req, state_link);
 }
 
+
+static void
+nvmf_tcp_incapsule_test(void)
+{
+	struct spdk_nvmf_tcp_transport *ttransport;
+	struct spdk_nvmf_tcp_qpair tqpair = {};
+	struct nvme_tcp_pdu pdu = {};
+	struct spdk_nvmf_tcp_req tcp_req = {};
+	struct spdk_nvmf_tcp_req tcp_req2 = {};
+	union nvme_tcp_pdu_hdr	hdr = {};
+
+	struct spdk_nvme_tcp_cmd	*capsule_data;
+	struct spdk_nvmf_capsule_cmd *nvmf_capsule_data;
+	struct spdk_nvme_sgl_descriptor		*sgl;
+
+	struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_transport_poll_group *group;
+	struct spdk_nvmf_tcp_poll_group		*tcp_group;
+	struct spdk_thread *thread;
+	struct spdk_nvmf_transport_opts opts;
+	struct spdk_sock_group grp = {};
+	int i;
+
+	thread = spdk_thread_create(NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	spdk_set_thread(thread);
+
+	/* create tcp poll group */
+	memset(&opts, 0, sizeof(opts));
+	opts.max_queue_depth = UT_MAX_QUEUE_DEPTH;
+	opts.max_qpairs_per_ctrlr = UT_MAX_QPAIRS_PER_CTRLR;
+	opts.in_capsule_data_size = UT_IN_CAPSULE_DATA_SIZE;
+	opts.max_io_size = UT_MAX_IO_SIZE;
+	opts.io_unit_size = UT_IO_UNIT_SIZE;
+	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
+	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
+	transport = spdk_nvmf_tcp_create(&opts);
+	CU_ASSERT_PTR_NOT_NULL(transport);
+	transport->opts = opts;
+	MOCK_SET(spdk_sock_group_create, &grp);
+	group = spdk_nvmf_tcp_poll_group_create(transport);
+	MOCK_CLEAR_P(spdk_sock_group_create);
+	SPDK_CU_ASSERT_FATAL(group);
+	group->transport = transport;
+
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+	tcp_group = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
+	STAILQ_INIT(&group->pending_buf_queue);
+	tqpair.group = tcp_group;
+
+	/* init tqpair , add pdu to pdu_in_progress and waitting to buff */
+	pdu.hdr = &pdu.hdr_mem;
+	for (i = TCP_REQUEST_STATE_FREE; i < TCP_REQUEST_NUM_STATES; i++) {
+		TAILQ_INIT(&tqpair.state_queue[i]);
+	}
+
+	TAILQ_INIT(&tqpair.free_queue);
+	TAILQ_INIT(&tqpair.send_queue);
+	STAILQ_INIT(&tqpair.queued_c2h_data_tcp_req);
+
+	/* init a null tcp_req into tqpair TCP_REQUEST_STATE_FREE queue */
+	tcp_req.req.qpair = &tqpair.qpair;
+	tcp_req.req.cmd = (union nvmf_h2c_msg *)&tcp_req.cmd;
+
+	TAILQ_INSERT_TAIL(&tqpair.state_queue[TCP_REQUEST_STATE_FREE], &tcp_req, state_link);
+	tqpair.state_cntr[TCP_REQUEST_STATE_FREE]++;
+	tqpair.qpair.transport = &ttransport->transport;
+	tqpair.pdu_in_progress.hdr = &hdr;
+	tcp_req.req.qpair = &tqpair.qpair;
+
+	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH;
+
+	/* init pdu , make pdu need sgl buff */
+	capsule_data = &pdu.hdr->capsule_cmd;
+	nvmf_capsule_data = (struct spdk_nvmf_capsule_cmd *)&pdu.hdr->capsule_cmd.ccsqe;
+	sgl = &capsule_data->ccsqe.dptr.sgl1;
+
+	pdu.hdr->common.pdu_type = 4;
+	pdu.hdr->common.hlen = 72;
+	pdu.hdr->common.plen = 1096;
+
+	capsule_data->common.pdu_type = 4;
+	capsule_data->common.hlen = 72;
+	capsule_data->common.plen = 1096;
+	capsule_data->ccsqe.opc = 127;
+
+	sgl->unkeyed.length  = 1024;
+	sgl->unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_TRANSPORT;
+	sgl->generic.type = SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK;
+
+	nvmf_capsule_data->fctype = 1;
+	tqpair.pdu_in_progress = pdu;
+
+	/* insert tcp_req2 to pending_buf_queue , And this req takes precedence over the next req. */
+	STAILQ_INSERT_TAIL(&group->pending_buf_queue, &tcp_req2.req, buf_link);
+
+	/* process tqpair pdu psh req . but this time we still remain req in pending_buff . */
+	spdk_nvmf_tcp_pdu_psh_handle(&tqpair);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
+
+	spdk_nvmf_tcp_poll_group_destroy(group);
+	spdk_nvmf_tcp_destroy(transport);
+	spdk_thread_exit(thread);
+	spdk_thread_destroy(thread);
+
+}
+
+
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -596,7 +715,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "nvmf_tcp_destroy", test_nvmf_tcp_destroy) == NULL ||
 		CU_add_test(suite, "nvmf_tcp_poll_group_create", test_nvmf_tcp_poll_group_create) == NULL ||
 		CU_add_test(suite, "nvmf_tcp_send_c2h_data", test_nvmf_tcp_send_c2h_data) == NULL ||
-		CU_add_test(suite, "nvmf_tcp_h2c_data_hdr_handle", test_nvmf_tcp_h2c_data_hdr_handle) == NULL
+		CU_add_test(suite, "nvmf_tcp_h2c_data_hdr_handle", test_nvmf_tcp_h2c_data_hdr_handle) == NULL	||
+		CU_add_test(suite, "nvmf_tcp_incapsule_test", nvmf_tcp_incapsule_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
