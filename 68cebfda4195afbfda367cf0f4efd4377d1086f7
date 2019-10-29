@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a1109a96_7bdccea0",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-29T02:41:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9e4b5625_5c08880c",
+      "revId": "68cebfda4195afbfda367cf0f4efd4377d1086f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "883da1c7_79a81ec6",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "68cebfda4195afbfda367cf0f4efd4377d1086f7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33fa343e_4fbd9df8",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-29T02:41:44Z",
+      "side": 1,
+      "message": "Hi Paul, thanks for your review. In fact, opal_send_recv is called for every Opal command. Once we construct the Opal command, we will need to call opal_send_recv and this function will call nvme security send/receive command.",
+      "parentUuid": "883da1c7_79a81ec6",
+      "revId": "68cebfda4195afbfda367cf0f4efd4377d1086f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
