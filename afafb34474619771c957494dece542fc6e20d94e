@@ -22,6 +22,30 @@
       "revId": "afafb34474619771c957494dece542fc6e20d94e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7acf97f9_4e72952f",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-29T18:26:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fab2b62f_97500138",
+      "range": {
+        "startLine": 52,
+        "startChar": 61,
+        "endLine": 52,
+        "endChar": 68
+      },
+      "revId": "afafb34474619771c957494dece542fc6e20d94e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
