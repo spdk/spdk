@@ -22,6 +22,29 @@
       "revId": "369271203d6d4a27ddb138247d8f73ce2a42d1bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c06146fc_1393e599",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 941,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-10-29T02:18:30Z",
+      "side": 1,
+      "message": "If one directory is created by mkdir, will it be persisted later before unload fs?",
+      "range": {
+        "startLine": 941,
+        "startChar": 0,
+        "endLine": 941,
+        "endChar": 13
+      },
+      "revId": "369271203d6d4a27ddb138247d8f73ce2a42d1bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
