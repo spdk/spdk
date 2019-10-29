@@ -118,7 +118,9 @@ $testdir/err_injection/err_injection
 timing_exit err_injection
 
 timing_enter startup
-$testdir/startup/startup -t 1000000
+if [ $(uname) = Linux ]; then
+	$testdir/startup/startup -t 1000000
+fi
 timing_exit startup
 
 timing_enter overhead
