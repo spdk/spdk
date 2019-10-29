@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5b3ec57_cfd0c461",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2127,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-29T05:12:58Z",
+      "side": 1,
+      "message": "What state is possible when this function is called? Only OPAL_ENABLED?",
+      "revId": "a82550c369bb07b33e06f31dd073d884aea03330",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e596524_7bfc9d6c",
+        "filename": "lib/nvme/nvme_opal_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-29T05:12:58Z",
+      "side": 1,
+      "message": "OPAL_DEV_STATE_DEFAULT/ENABLED/BUSY are kind even if they are longer?\nFor OPAL_BUSY, if OPAL_BUSY is only during async reverting, OPAL_DEV_STATE_IN_REVERT may be more meaningful?",
+      "revId": "a82550c369bb07b33e06f31dd073d884aea03330",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
