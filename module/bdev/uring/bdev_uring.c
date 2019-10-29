@@ -410,10 +410,10 @@ bdev_uring_group_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 struct spdk_bdev *
-create_uring_bdev(const char *name, const char *filename)
+create_uring_bdev(const char *name, const char *filename, uint32_t block_size)
 {
 	struct bdev_uring *uring;
-	uint32_t block_size;
+	uint32_t detected_block_size;
 	uint64_t bdev_size;
 	int rc;
 
@@ -444,10 +444,25 @@ create_uring_bdev(const char *name, const char *filename)
 
 	uring->bdev.write_cache = 1;
 
-	block_size = spdk_fd_get_blocklen(uring->fd);
+	detected_block_size = spdk_fd_get_blocklen(uring->fd);
 	if (block_size == 0) {
-		SPDK_ERRLOG("Block size could not be auto-detected\n");
-		goto error_return;
+		/* User did not specify block size - use autodetected block size. */
+		if (detected_block_size == 0) {
+			SPDK_ERRLOG("Block size could not be auto-detected\n");
+			goto error_return;
+		}
+		block_size = detected_block_size;
+	} else {
+		if (block_size < detected_block_size) {
+			SPDK_ERRLOG("Specified block size %" PRIu32 " is smaller than "
+				    "auto-detected block size %" PRIu32 "\n",
+				    block_size, detected_block_size);
+			goto error_return;
+		} else if (detected_block_size != 0 && block_size != detected_block_size) {
+			SPDK_WARNLOG("Specified block size %" PRIu32 " does not match "
+				     "auto-detected block size %" PRIu32 "\n",
+				     block_size, detected_block_size);
+		}
 	}
 
 	if (block_size < 512) {
@@ -548,6 +563,9 @@ bdev_uring_init(void)
 	while (true) {
 		const char *file;
 		const char *name;
+		const char *block_size_str;
+		uint32_t block_size = 0;
+		long int tmp;
 
 		file = spdk_conf_section_get_nmval(sp, "URING", i, 0);
 		if (!file) {
@@ -561,7 +579,18 @@ bdev_uring_init(void)
 			continue;
 		}
 
-		bdev = create_uring_bdev(name, file);
+		block_size_str = spdk_conf_section_get_nmval(sp, "URING", i, 2);
+		if (block_size_str) {
+			tmp = spdk_strtol(block_size_str, 10);
+			if (tmp < 0) {
+				SPDK_ERRLOG("Invalid block size for URING bdev with file %s\n", file);
+				i++;
+				continue;
+			}
+			block_size = (uint32_t)tmp;
+		}
+
+		bdev = create_uring_bdev(name, file, block_size);
 		if (!bdev) {
 			SPDK_ERRLOG("Unable to create URING bdev from file %s\n", file);
 			i++;
