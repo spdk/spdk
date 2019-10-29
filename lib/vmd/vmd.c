@@ -73,6 +73,7 @@ static void
 vmd_align_base_addrs(struct vmd_adapter *vmd, uint32_t alignment)
 {
 	uint32_t pad;
+
 	/*
 	 *  Device is not in hot plug path, align the base address remaining from membar 1.
 	 */
@@ -860,6 +861,7 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 			} else {
 				SPDK_DEBUGLOG(SPDK_LOG_VMD, "Removing failed device:%p\n", new_dev);
 				TAILQ_REMOVE(&bus->dev_list, new_dev, tailq);
+				free(new_dev);
 				if (dev_cnt) {
 					dev_cnt--;
 				}
@@ -972,12 +974,13 @@ vmd_scan_pcibus(struct vmd_pci_bus *bus)
 	return dev_cnt;
 }
 
-
 static int
 vmd_map_bars(struct vmd_adapter *vmd, struct spdk_pci_device *dev)
 {
-	int rc = spdk_pci_device_map_bar(dev, 0, (void **)&vmd->cfg_vaddr,
-					 &vmd->cfgbar, &vmd->cfgbar_size);
+	int rc;
+
+	rc = spdk_pci_device_map_bar(dev, 0, (void **)&vmd->cfg_vaddr,
+				     &vmd->cfgbar, &vmd->cfgbar_size);
 	if (rc == 0) {
 		rc = spdk_pci_device_map_bar(dev, 2, (void **)&vmd->mem_vaddr,
 					     &vmd->membar, &vmd->membar_size);
