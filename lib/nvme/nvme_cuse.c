@@ -110,20 +110,6 @@ cuse_nvme_admin_cmd_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
-cuse_nvme_admin_cmd_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *arg)
-{
-	int rc;
-	struct cuse_io_ctx *ctx = arg;
-
-	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &ctx->nvme_cmd, ctx->data, ctx->data_len,
-					   cuse_nvme_admin_cmd_cb, (void *)ctx);
-	if (rc < 0) {
-		fuse_reply_err(ctx->req, EINVAL);
-		cuse_io_ctx_free(ctx);
-	}
-}
-
-static void
 cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 		    struct fuse_file_info *fi, unsigned flags,
 		    const void *in_buf, size_t in_bufsz, size_t out_bufsz)
@@ -131,7 +117,7 @@ cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 	struct nvme_admin_cmd *admin_cmd;
 	struct iovec in_iov, out_iov[2];
 	struct cuse_io_ctx *ctx;
-	int rv;
+	int rc;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
 
 	in_iov.iov_base = (void *)arg;
@@ -202,10 +188,12 @@ cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 		return;
 	}
 
-	rv = nvme_io_msg_send(cuse_device->ctrlr, 0, cuse_nvme_admin_cmd_execute, ctx);
-	if (rv) {
-		SPDK_ERRLOG("Cannot send io msg to the controller\n");
-		fuse_reply_err(req, -rv);
+	int rc;
+
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(cuse_device->ctrlr, &ctx->nvme_cmd, ctx->data, ctx->data_len,
+					   cuse_nvme_admin_cmd_cb, (void *)ctx);
+	if (rc < 0) {
+		fuse_reply_err(ctx->req, EINVAL);
 		cuse_io_ctx_free(ctx);
 		return;
 	}
