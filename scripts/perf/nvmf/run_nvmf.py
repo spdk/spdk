@@ -567,8 +567,8 @@ class SPDKTarget(Target):
 
 
 class KernelInitiator(Initiator):
-    def __init__(self, name, username, password, mode, nic_ips, ip, transport, **kwargs):
-        super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport, fio_dir)
+    def __init__(self, name, username, password, mode, nic_ips, ip, transport, nvmecli_dir, fio_dir, **kwargs):
+        super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport, nvmecli_dir, fio_dir)
 
     def __del__(self):
         self.ssh_connection.close()
@@ -601,8 +601,9 @@ class KernelInitiator(Initiator):
 
 
 class SPDKInitiator(Initiator):
-    def __init__(self, name, username, password, mode, nic_ips, ip, num_cores=None, transport="rdma", **kwargs):
-        super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport, fio_dir)
+    def __init__(self, name, username, password, mode, nic_ips, ip, num_cores=None, transport="rdma", nvmecli_dir=None,
+                 workspace="/tmp/spdk", fio_dir=None, **kwargs):
+        super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport, nvmecli_dir, workspace, fio_dir)
         if num_cores:
             self.num_cores = num_cores
 
