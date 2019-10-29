@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f74d1f82_5eb8c9c8",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-29T12:33:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3bb6074_b1f00f3a",
+      "range": {
+        "startLine": 51,
+        "startChar": 3,
+        "endLine": 51,
+        "endChar": 38
+      },
+      "revId": "58d700752b87403469c08a9078fd4e1fa830bb33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64636ef2_5cb25b8b",
         "filename": "scripts/vagrant/create_nvme_img.sh",
         "patchSetId": 23
@@ -39,6 +63,24 @@
       "revId": "58d700752b87403469c08a9078fd4e1fa830bb33",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8d7b08e_097cf956",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-29T12:33:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "64636ef2_5cb25b8b",
+      "revId": "58d700752b87403469c08a9078fd4e1fa830bb33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -62,6 +104,30 @@
       "revId": "58d700752b87403469c08a9078fd4e1fa830bb33",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c5c2668_387ffb27",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-29T12:33:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0360313e_13bba6c8",
+      "range": {
+        "startLine": 22,
+        "startChar": 41,
+        "endLine": 22,
+        "endChar": 66
+      },
+      "revId": "58d700752b87403469c08a9078fd4e1fa830bb33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
