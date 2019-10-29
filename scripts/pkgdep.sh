@@ -56,25 +56,25 @@ if [ -s /etc/redhat-release ]; then
 
 	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
 		git astyle python-pycodestyle lcov python libuuid-devel \
-		sg3_utils libiscsi-devel pciutils ShellCheck
+		sg3_utils libiscsi-devel pciutils ShellCheck --allowerasing
 	# Additional (optional) dependencies for showing backtrace in logs
-	yum install -y libunwind-devel || true
+	yum install -y libunwind-devel --allowerasing || true
 	# Additional dependencies for NVMe over Fabrics
-	yum install -y libibverbs-devel librdmacm-devel
+	yum install -y libibverbs-devel librdmacm-devel --allowerasing
 	# Additional dependencies for DPDK
-	yum install -y numactl-devel nasm
+	yum install -y numactl-devel nasm --allowerasing
 	# Additional dependencies for building docs
-	yum install -y doxygen mscgen graphviz
+	yum install -y doxygen mscgen graphviz --allowerasing
 	# Additional dependencies for building pmem based backends
-	yum install -y libpmemblk-devel || true
+	yum install -y libpmemblk-devel --allowerasing || true
 	# Additional dependencies for SPDK CLI - not available in rhel and centos
 	if ! echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7'; then
-		yum install -y python3-configshell python3-pexpect
+		yum install -y python3-configshell python3-pexpect --allowerasing
 	fi
 	# Additional dependencies for ISA-L used in compression
-	yum install -y autoconf automake libtool help2man
+	yum install -y autoconf automake libtool help2man --allowerasing
 	# Additional dependencies for FUSE and CUSE
-	yum install -y fuse3-devel
+	yum install -y fuse3-devel --allowerasing
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
