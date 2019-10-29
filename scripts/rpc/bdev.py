@@ -323,9 +323,11 @@ def bdev_aio_delete(client, name):
 
 def bdev_uring_create(client, filename, name):
     """Create a bdev with Linux io_uring backend.
+
     Args:
-        name: name of bdev
         filename: path to device or file (ex: /dev/nvme0n1)
+        name: name of bdev
+
     Returns:
         Name of created bdev.
     """
