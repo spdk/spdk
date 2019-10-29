@@ -16,6 +16,24 @@
       "revId": "1b9d92ac3d6af2d01035565eb38a42790c73dc8a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "477ab0e2_daabb6cf",
+        "filename": "autopackage.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-29T14:20:01Z",
+      "side": 1,
+      "message": "when you do the cd on the same line with \u0026\u0026, it only does the cd for that one command. So the whole script didn\u0027t actually change directory at all (that\u0027s what shellcheck was complaining about)",
+      "parentUuid": "03544363_ec8936cb",
+      "revId": "1b9d92ac3d6af2d01035565eb38a42790c73dc8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
