@@ -145,7 +145,7 @@ DEPDIRS-app_rpc := log util thread event $(JSON_LIBS)
 # the SPDK event subsystem code.
 DEPDIRS-event_copy := copy event
 DEPDIRS-event_net := sock net event
-DEPDIRS-event_vmd := vmd conf $(JSON_LIBS) event
+DEPDIRS-event_vmd := vmd conf $(JSON_LIBS) event log thread
 
 DEPDIRS-event_bdev := bdev event event_copy event_vmd
 
