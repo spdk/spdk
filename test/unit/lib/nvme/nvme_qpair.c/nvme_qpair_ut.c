@@ -243,18 +243,18 @@ static void test_nvme_qpair_process_completions(void)
 	ctrlr.is_removed = false;
 	ctrlr.is_resetting = true;
 	rc = spdk_nvme_qpair_process_completions(&qpair, 0);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -ENXIO);
 	CU_ASSERT(g_called_transport_process_completions == false);
 	/* We also need to make sure we didn't abort the requests. */
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.queued_req));
 	CU_ASSERT(g_num_cb_passed == 0);
 	CU_ASSERT(g_num_cb_failed == 0);
 
-	/* The case where we aren't resetting, but are enablign the qpair is the same as above. */
+	/* The case where we aren't resetting, but are enabling the qpair is the same as above. */
 	ctrlr.is_resetting = false;
 	qpair.state = NVME_QPAIR_ENABLING;
 	rc = spdk_nvme_qpair_process_completions(&qpair, 0);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -ENXIO);
 	CU_ASSERT(g_called_transport_process_completions == false);
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.queued_req));
 	CU_ASSERT(g_num_cb_passed == 0);
