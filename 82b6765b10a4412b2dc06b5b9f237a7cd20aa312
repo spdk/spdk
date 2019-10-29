@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74b0d0b7_d5de72bb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-29T11:53:15Z",
+      "side": 1,
+      "message": "It\u0027s not F30 specific. Seen the same problem with F28 and F29. It\u0027s just a generic problem with upgrading a package.",
+      "range": {
+        "startLine": 9,
+        "startChar": 60,
+        "endLine": 9,
+        "endChar": 85
+      },
+      "revId": "82b6765b10a4412b2dc06b5b9f237a7cd20aa312",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5bf362f3_00653bee",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-29T11:53:15Z",
+      "side": 1,
+      "message": "Move it closer to the \"-y\" option so that we have options grouped, instead of adding an option after packages.\nAlso - it\u0027s quite an overkill to add that everywhere. If I remember correctly most common problems are with upgrading openssl-devel. I\u0027ve never seen problems with other packages. --allowerasing on line 57 should suffice.",
+      "range": {
+        "startLine": 59,
+        "startChar": 49,
+        "endLine": 59,
+        "endChar": 61
+      },
+      "revId": "82b6765b10a4412b2dc06b5b9f237a7cd20aa312",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
