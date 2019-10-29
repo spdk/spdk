@@ -340,8 +340,44 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 	}
 }
 
+static int raid0_start(struct raid_bdev *raid_bdev)
+{
+	uint64_t min_blockcnt;
+	uint8_t i;
+
+	min_blockcnt = raid_bdev->base_bdev_info[0].bdev->blockcnt;
+	for (i = 1; i < raid_bdev->num_base_bdevs; i++) {
+		/* Calculate minimum block count from all base bdevs */
+		if (raid_bdev->base_bdev_info[i].bdev->blockcnt < min_blockcnt) {
+			min_blockcnt = raid_bdev->base_bdev_info[i].bdev->blockcnt;
+		}
+	}
+
+	/*
+	 * Take the minimum block count based approach where total block count
+	 * of raid bdev is the number of base bdev times the minimum block count
+	 * of any base bdev.
+	 */
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID0, "min blockcount %lu,  numbasedev %u, strip size shift %u\n",
+		      min_blockcnt, raid_bdev->num_base_bdevs, raid_bdev->strip_size_shift);
+	raid_bdev->bdev.blockcnt = ((min_blockcnt >> raid_bdev->strip_size_shift) <<
+				    raid_bdev->strip_size_shift)  * raid_bdev->num_base_bdevs;
+
+	if (raid_bdev->num_base_bdevs > 1) {
+		raid_bdev->bdev.optimal_io_boundary = raid_bdev->strip_size;
+		raid_bdev->bdev.split_on_optimal_io_boundary = true;
+	} else {
+		/* Do not need to split reads/writes on single bdev RAID modules. */
+		raid_bdev->bdev.optimal_io_boundary = 0;
+		raid_bdev->bdev.split_on_optimal_io_boundary = false;
+	}
+
+	return 0;
+}
+
 static struct raid_bdev_module g_raid0_module = {
 	.level = RAID0,
+	.start = raid0_start,
 	.submit_rw_request = raid0_submit_rw_request,
 	.submit_null_payload_request = raid0_submit_null_payload_request,
 };
