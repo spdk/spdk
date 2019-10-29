@@ -57,6 +57,8 @@ spdk_vmd_subsystem_init(void)
 static void
 spdk_vmd_subsystem_fini(void)
 {
+	spdk_vmd_fini();
+
 	spdk_subsystem_fini_next();
 }
 

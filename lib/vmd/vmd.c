@@ -1111,4 +1111,8 @@ spdk_vmd_init(void)
 	return spdk_pci_enumerate(spdk_pci_vmd_get_driver(), vmd_enum_cb, &g_vmd_container);
 }
 
+void
+spdk_vmd_fini(void)
+{}
+
 SPDK_LOG_REGISTER_COMPONENT("vmd", SPDK_LOG_VMD)

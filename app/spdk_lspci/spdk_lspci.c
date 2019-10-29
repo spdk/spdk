@@ -117,5 +117,7 @@ main(int argc, char **argv)
 		dev = spdk_pci_get_next_device(dev);
 	}
 
+	spdk_vmd_fini();
+
 	return 0;
 }

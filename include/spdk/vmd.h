@@ -57,6 +57,11 @@ extern "C" {
  */
 int spdk_vmd_init(void);
 
+/**
+ * Free any resources allocated by the VMD library.
+ */
+void spdk_vmd_fini(void);
+
 /*
  * Returns a list of nvme devices found on the given vmd pci BDF.
  *

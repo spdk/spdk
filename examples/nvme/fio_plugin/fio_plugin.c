@@ -55,6 +55,7 @@
 #define NVME_IO_ALIGN		4096
 
 static bool g_spdk_env_initialized;
+static bool g_vmd_initialized;
 static int g_spdk_enable_sgl = 0;
 static uint32_t g_spdk_sge_size = 4096;
 static uint32_t g_spdk_pract_flag;
@@ -440,8 +441,12 @@ static int spdk_fio_setup(struct thread_data *td)
 			SPDK_ERRLOG("Unable to spawn a thread to poll admin queues. They won't be polled.\n");
 		}
 
-		if (fio_options->enable_vmd && spdk_vmd_init()) {
-			SPDK_ERRLOG("Failed to initialize VMD. Some NVMe devices can be unavailable.\n");
+		if (fio_options->enable_vmd) {
+			if (spdk_vmd_init()) {
+				SPDK_ERRLOG("Failed to initialize VMD. Some NVMe devices can be unavailable.\n");
+			} else {
+				g_vmd_initialized = true;
+			}
 		}
 	}
 
@@ -956,6 +961,12 @@ static void spdk_fio_cleanup(struct thread_data *td)
 		}
 		g_ctrlr = NULL;
 	}
+
+	if (g_vmd_initialized) {
+		g_vmd_initialized = false;
+		spdk_vmd_fini();
+	}
+
 	pthread_mutex_unlock(&g_mutex);
 	if (!g_ctrlr) {
 		if (pthread_cancel(g_ctrlr_thread_id) == 0) {
