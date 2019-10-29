@@ -35,6 +35,8 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/likely.h"
+#include "spdk/thread.h"
+#include "spdk/env.h"
 
 static unsigned char *device_type[] = {
 	"PCI Express Endpoint",
@@ -57,6 +59,7 @@ static unsigned char *device_type[] = {
 struct vmd_container {
 	uint32_t count;
 	struct vmd_adapter vmd[MAX_VMD_SUPPORTED];
+	struct spdk_poller *hotplug_poller;
 };
 
 static struct vmd_container g_vmd_container;
@@ -467,6 +470,24 @@ vmd_init_hotplug(struct vmd_pci_device *dev, struct vmd_pci_bus *bus)
 		      bus->self->header->one.mem_base, bus->self->header->one.mem_limit);
 }
 
+static bool
+vmd_bus_device_present(struct vmd_pci_bus *bus, uint32_t devfn)
+{
+	volatile struct pci_header *header;
+
+	header = (volatile struct pci_header *)(bus->vmd->cfg_vaddr +
+						CONFIG_OFFSET_ADDR(bus->bus_number, devfn, 0, 0));
+	if (!vmd_is_valid_cfg_addr(bus, (uint64_t)header)) {
+		return false;
+	}
+
+	if (header->common.vendor_id == PCI_INVALID_VENDORID || header->common.vendor_id == 0x0) {
+		return false;
+	}
+
+	return true;
+}
+
 static struct vmd_pci_device *
 vmd_alloc_dev(struct vmd_pci_bus *bus, uint32_t devfn)
 {
@@ -475,15 +496,19 @@ vmd_alloc_dev(struct vmd_pci_bus *bus, uint32_t devfn)
 	uint8_t header_type;
 	uint32_t rev_class;
 
-	header = (struct pci_header * volatile)(bus->vmd->cfg_vaddr +
-						CONFIG_OFFSET_ADDR(bus->bus_number, devfn, 0, 0));
-	if (!vmd_is_valid_cfg_addr(bus, (uint64_t)header)) {
+	/* Make sure we're not creating two devices on the same dev/fn */
+	TAILQ_FOREACH(dev, &bus->dev_list, tailq) {
+		if (dev->devfn == devfn) {
+			return NULL;
+		}
+	}
+
+	if (!vmd_bus_device_present(bus, devfn)) {
 		return NULL;
 	}
 
-	if (header->common.vendor_id == PCI_INVALID_VENDORID || header->common.vendor_id == 0x0) {
-		return NULL;
-	}
+	header = (struct pci_header * volatile)(bus->vmd->cfg_vaddr +
+						CONFIG_OFFSET_ADDR(bus->bus_number, devfn, 0, 0));
 
 	SPDK_DEBUGLOG(SPDK_LOG_VMD, "PCI device found: %04x:%04x ***\n",
 		      header->common.vendor_id, header->common.device_id);
@@ -724,7 +749,13 @@ vmd_dev_cfg_write(struct spdk_pci_device *_dev,  void *value,
 static void
 vmd_dev_detach(struct spdk_pci_device *dev)
 {
-	return;
+	struct vmd_pci_device *vmd_device = (struct vmd_pci_device *)dev;
+	struct vmd_pci_bus *bus = vmd_device->bus;
+
+	spdk_pci_unhook_device(dev);
+
+	TAILQ_REMOVE(&bus->dev_list, vmd_device, tailq);
+	free(dev);
 }
 
 static void
@@ -1105,14 +1136,125 @@ spdk_vmd_pci_device_list(struct spdk_pci_addr vmd_addr, struct spdk_pci_device *
 	return cnt;
 }
 
+static void
+vmd_clear_hotplug_status(struct vmd_pci_bus *bus)
+{
+	struct vmd_pci_device *device = bus->self;
+	uint16_t slot_status, link_status;
+
+	slot_status = device->pcie_cap->slot_status.as_uint16_t;
+	device->pcie_cap->slot_status.as_uint16_t = slot_status;
+	slot_status = device->pcie_cap->slot_status.as_uint16_t;
+
+	link_status = device->pcie_cap->link_status.as_uint16_t;
+	device->pcie_cap->link_status.as_uint16_t = link_status;
+	link_status = device->pcie_cap->link_status.as_uint16_t;
+}
+
+static void
+vmd_bus_handle_hotplug(struct vmd_pci_bus *bus)
+{
+	uint8_t num_devices, sleep_count;
+
+	for (sleep_count = 0; sleep_count < 20; ++sleep_count) {
+		/* Scan until a new device is found */
+		num_devices = vmd_scan_single_bus(bus, bus->self);
+		if (num_devices > 0) {
+			break;
+		}
+
+		spdk_delay_us(200000);
+	}
+
+	if (num_devices == 0) {
+		SPDK_ERRLOG("Timed out while scanning for hotplugged devices\n");
+	}
+}
+
+static void
+vmd_bus_handle_hotremove(struct vmd_pci_bus *bus)
+{
+	struct vmd_pci_device *device, *tmpdev;
+
+	TAILQ_FOREACH_SAFE(device, &bus->dev_list, tailq, tmpdev) {
+		if (!vmd_bus_device_present(bus, device->devfn)) {
+			device->pci.internal.pending_removal = true;
+
+			/* If the device isn't attached, remove it immediately */
+			if (!device->pci.internal.attached) {
+				vmd_dev_detach(&device->pci);
+			}
+		}
+	}
+}
+
+static int
+vmd_hotplug_monitor(void *ctx)
+{
+	struct vmd_pci_bus *bus;
+	struct vmd_pci_device *device;
+	int num_hotplugs = 0;
+	uint32_t i;
+
+	for (i = 0; i < g_vmd_container.count; ++i) {
+		TAILQ_FOREACH(bus, &g_vmd_container.vmd[i].bus_list, tailq) {
+			device = bus->self;
+			if (device == NULL || !device->hotplug_capable) {
+				continue;
+			}
+
+			if (device->pcie_cap->slot_status.bit_field.datalink_state_changed != 1) {
+				continue;
+			}
+
+			if (device->pcie_cap->link_status.bit_field.datalink_layer_active == 1) {
+				SPDK_DEBUGLOG(SPDK_LOG_VMD, "Device hotplug detected on bus "
+					      "%"PRIu32"\n", bus->bus_number);
+				vmd_bus_handle_hotplug(bus);
+			} else {
+				SPDK_DEBUGLOG(SPDK_LOG_VMD, "Device hotremove detected on bus "
+					      "%"PRIu32"\n", bus->bus_number);
+				vmd_bus_handle_hotremove(bus);
+			}
+
+			vmd_clear_hotplug_status(bus);
+			num_hotplugs++;
+		}
+	}
+
+	return num_hotplugs;
+}
+
 int
 spdk_vmd_init(void)
 {
-	return spdk_pci_enumerate(spdk_pci_vmd_get_driver(), vmd_enum_cb, &g_vmd_container);
+	int rc;
+
+	rc = spdk_pci_enumerate(spdk_pci_vmd_get_driver(), vmd_enum_cb, &g_vmd_container);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("Failed to enumerate VMD devices\n");
+		return rc;
+	}
+
+	if (spdk_get_thread() == NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_VMD, "Couldn't get thread to use as hotplug monitor\n");
+		return 0;
+	}
+
+	g_vmd_container.hotplug_poller = spdk_poller_register(vmd_hotplug_monitor, NULL,
+					 1000000ULL);
+	if (g_vmd_container.hotplug_poller == NULL) {
+		SPDK_ERRLOG("Failed to register hotplug monitor\n");
+		return -ENOMEM;
+	}
+
+	return 0;
 }
 
 void
 spdk_vmd_fini(void)
-{}
+{
+	spdk_poller_unregister(&g_vmd_container.hotplug_poller);
+}
 
 SPDK_LOG_REGISTER_COMPONENT("vmd", SPDK_LOG_VMD)
