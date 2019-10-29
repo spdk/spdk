@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fab2b62f_97500138",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-10-29T14:10:08Z",
+      "side": 1,
+      "message": "typo ?",
+      "range": {
+        "startLine": 52,
+        "startChar": 61,
+        "endLine": 52,
+        "endChar": 68
+      },
+      "revId": "afafb34474619771c957494dece542fc6e20d94e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
