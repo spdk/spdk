@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5786591d_1c11809a",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2127,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-29T09:45:49Z",
+      "side": 1,
+      "message": "This should be in OPAL_BUSY state. Because this is only called after revert_async is called. I will add an assert here.",
+      "parentUuid": "d5b3ec57_cfd0c461",
+      "revId": "a82550c369bb07b33e06f31dd073d884aea03330",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2e596524_7bfc9d6c",
         "filename": "lib/nvme/nvme_opal_internal.h",
         "patchSetId": 2
@@ -33,6 +51,24 @@
       "revId": "a82550c369bb07b33e06f31dd073d884aea03330",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f29b048_c604e59c",
+        "filename": "lib/nvme/nvme_opal_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-10-29T09:45:49Z",
+      "side": 1,
+      "message": "I think \"busy\" will also be useful if we need more async functions in the future. Anyway, thank you for your suggestions.",
+      "parentUuid": "2e596524_7bfc9d6c",
+      "revId": "a82550c369bb07b33e06f31dd073d884aea03330",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
