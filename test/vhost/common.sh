@@ -116,6 +116,8 @@ function vhost_run()
 		return 1
 	fi
 
+	shift
+
 	local vhost_dir="$(get_vhost_dir $vhost_name)"
 	local vhost_app="$rootdir/app/vhost/vhost"
 	local vhost_log_file="$vhost_dir/vhost.log"
@@ -131,7 +133,7 @@ function vhost_run()
 		return 1
 	fi
 
-	local cmd="$vhost_app -r $vhost_dir/rpc.sock $2"
+	local cmd="$vhost_app -r $vhost_dir/rpc.sock $@"
 
 	notice "Loging to:   $vhost_log_file"
 	notice "Socket:      $vhost_socket"
