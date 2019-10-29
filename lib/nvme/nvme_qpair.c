@@ -458,7 +458,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		 * qpair is not enabled, likely because a controller reset is
 		 *  in progress.
 		 */
-		return 0;
+		return -ENXIO;
 	}
 
 	/* error injection for those queued error requests */
