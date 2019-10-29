@@ -198,26 +198,11 @@ cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 }
 
 static void
-cuse_nvme_reset_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *arg)
-{
-	int rc;
-	fuse_req_t req = arg;
-
-	rc = spdk_nvme_ctrlr_reset(ctrlr);
-	if (rc) {
-		fuse_reply_err(req, rc);
-		return;
-	}
-
-	fuse_reply_ioctl_iov(req, 0, NULL, 0);
-}
-
-static void
 cuse_nvme_reset(fuse_req_t req, int cmd, void *arg,
 		struct fuse_file_info *fi, unsigned flags,
 		const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
-	int rv;
+	int rc;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
 
 	if (cuse_device->nsid) {
@@ -226,11 +211,13 @@ cuse_nvme_reset(fuse_req_t req, int cmd, void *arg,
 		return;
 	}
 
-	rv = nvme_io_msg_send(cuse_device->ctrlr, cuse_device->nsid, cuse_nvme_reset_execute, (void *)req);
-	if (rv) {
-		SPDK_ERRLOG("Cannot send reset\n");
-		fuse_reply_err(req, EINVAL);
+	rc = spdk_nvme_ctrlr_reset(cuse_device->ctrlr);
+	if (rc) {
+		fuse_reply_err(req, rc);
+		return;
 	}
+
+	fuse_reply_ioctl_iov(req, 0, NULL, 0);
 }
 
 /*****************************************************************************
