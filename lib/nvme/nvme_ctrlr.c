@@ -412,13 +412,18 @@ spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair)
 		goto out;
 	}
 
+	/* We have to confirm that any old memory is cleaned up. */
+	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
+
 	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
 	if (rc) {
 		nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
+		qpair->transport_qp_is_failed = true;
 		rc = -EAGAIN;
 		goto out;
 	}
 	nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+	qpair->transport_qp_is_failed = false;
 
 out:
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -1073,7 +1078,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	/* Disable all queues before disabling the controller hardware. */
 	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 		nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
-		nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
+		qpair->transport_qp_is_failed = true;
 	}
 	nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_DISABLED);
 	nvme_qpair_complete_error_reqs(ctrlr->adminq);
@@ -1102,7 +1107,14 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
-	if (rc == 0) {
+	/*
+	 * For PCIe controllers, the memory locations of the tranpsort qpair
+	 * don't change when the controller is reset. They simply need to be
+	 * re-enabled with admin commands to the controller. For fabric
+	 * controllers we need to disconnect and reconnect the qpair on its
+	 * own thread outside of the context of the reset.
+	 */
+	if (rc == 0 && ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 			if (nvme_transport_ctrlr_connect_qpair(ctrlr, qpair) != 0) {
@@ -1111,6 +1123,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 				continue;
 			}
 			nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+			qpair->transport_qp_is_failed = false;
 		}
 	}
 
