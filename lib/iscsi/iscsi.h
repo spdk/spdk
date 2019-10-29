@@ -422,20 +422,12 @@ int spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 				   struct spdk_iscsi_task *task);
 
-int spdk_iscsi_conn_params_init(struct iscsi_param **params);
-int spdk_iscsi_sess_params_init(struct iscsi_param **params);
-
 void spdk_free_sess(struct spdk_iscsi_sess *sess);
 void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 				  struct spdk_scsi_lun *lun,
 				  struct spdk_iscsi_pdu *pdu);
 void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t CmdSN);
 bool spdk_iscsi_is_deferred_free_pdu(struct spdk_iscsi_pdu *pdu);
-
-int spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
-				struct iscsi_param **params_p, uint8_t *data,
-				int alloc_len, int data_len);
-int spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn);
 
 void spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task);
 void spdk_iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task);
