@@ -21,14 +21,14 @@ New zone-related fields were added to the result of the `get_bdevs` RPC call:
 The `zoned` field is a boolean and is always present, while the rest is only available for zoned
 bdevs.
 
-A new spdk_bdev_open_ext function has been added and spdk_bdev_open function has been deprecated.
+A new `spdk_bdev_open_ext` function has been added and `spdk_bdev_open` function has been deprecated.
 The new open function introduces requirement to provide callback function that will be called by
-asynchronous event such as bdev removal. spdk_bdev_open_ext function takes bdev name as
+asynchronous event such as bdev removal. `spdk_bdev_open_ext` function takes bdev name as
 an argument instead of bdev structure to avoid a race condition that can happen when the bdev
 is being removed between a call to get its structure based on a name and actually openning it.
 
 New 'resize' event has been added to notify about change of block count property of block device.
-Event is delivered only if block device was opened with spdk_bdev_open_ext function.
+Event is delivered only if block device was opened with `spdk_bdev_open_ext` function.
 
 ### bdev zone
 
@@ -43,6 +43,7 @@ Added `spdk_bdev_zone_management()` API for changing zone state.
 `spdk_bdev_zone_append()` and `spdk_bdev_zone_append_with_md()` APIs were added for
 appending data to a zone.
 Added `spdk_bdev_io_get_append location()` function for retrieving append location for I/O.
+Added `spdk_bdev_is_zoned()` function for checking if bdev supports zoned namespace semantics.
 
 ### bdev opal
 
@@ -142,20 +143,20 @@ nvmf targets or when retrieving the context information from globals is not suit
 
 ### blobstore
 
-A new spdk_bdev_create_bs_dev_from_desc function has been added and spdk_bdev_create_bs_dev
+A new `spdk_bdev_create_bs_dev_from_desc` function has been added and `spdk_bdev_create_bs_dev`
 function has been deprecated.
-The new create function can cowork with spdk_bdev_open_ext function, which provides callback
+The new create function can cowork with `spdk_bdev_open_ext` function, which provides callback
 function that will be called by asynchronous event such as bdev removal.
 
 ### blobfs_bdev
 
 A new blobfs module `bdev` has been added to simplify the operations of blobfs on bdev.
 
-Function spdk_blobfs_bdev_detect is added to detect whether blobfs exists on the given block device.
+Function `spdk_blobfs_bdev_detect` is added to detect whether blobfs exists on the given block device.
 
-Function spdk_blobfs_bdev_create is added to create a blobfs on the given block device.
+Function `spdk_blobfs_bdev_create` is added to create a blobfs on the given block device.
 
-Function spdk_blobfs_bdev_mount is added to mount a blobfs on the given block device to
+Function `spdk_blobfs_bdev_mount` is added to mount a blobfs on the given block device to
 a host path by FUSE. Then, a new thread is created dedicatedly for one mountpoint to handle
 FUSE request by blobfs API.
 
@@ -174,9 +175,18 @@ An new RPC `iscsi_portal_group_set_auth` has been added to set CHAP authenticati
 for discovery sessions specific for the existing iSCSI portal group. This RPC overwrites
 the setting by the global parameters for the iSCSI portal group.
 
+### socket
+
+Added `spdk_sock_is_connected` to check whether the socket is currently connected.
+`spdk_sock_group_poll` now returns number of events on success.
+
+### env
+
+Added `spdk_pci_device_unclaim()` function to cleanup pci claim file.
+
 ### event
 
-start_subsystem_init RPC no longer stops the application on error during
+`framework_start_init` RPC no longer stops the application on error during
 initialization.
 
 ### DPDK
