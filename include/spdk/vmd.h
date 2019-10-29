@@ -96,6 +96,14 @@ int spdk_vmd_set_led_state(struct spdk_pci_device *pci_device, enum spdk_vmd_led
  */
 int spdk_vmd_get_led_state(struct spdk_pci_device *pci_device, enum spdk_vmd_led_state *state);
 
+/**
+ * Checks for hotplug/hotremove events of the devices behind the VMD.  Needs to be called
+ * periodically to detect them.
+ *
+ * \return number of hotplug events detected or negative errno in case of errors
+ */
+int spdk_vmd_hotplug_monitor(void);
+
 #ifdef __cplusplus
 }
 #endif
