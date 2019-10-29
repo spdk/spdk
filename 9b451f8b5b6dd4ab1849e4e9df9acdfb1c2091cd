@@ -1,0 +1,153 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01a5fcd6_24cde456",
+        "filename": "doc/img/nvme_cuse.svg",
+        "patchSetId": 56
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-29T12:56:08Z",
+      "side": 1,
+      "message": "Couple of things on the image:\n1) On the right, please specify name of the function. \u0027io_poller\u0027 -\u003e \u0027spdk_nvme_io_msg_process()\u0027\n2) Since this focuses on single controller and namespace, lets reduce # of ctrlr boxes in the background to single one (same with ns and io_msg_queue).\n3) replace \u0027ioctl thread\u0027 with \u0027pthread\u0027 since this is only interface for CUSE\n4) \u0027io_msg send\u0027 -\u003e \u0027nvme_io_msg_send()\u0027\n5) Make the separation between Kernel/CUSE thread/SPDK thread at 90 degree angles ;)",
+      "revId": "9b451f8b5b6dd4ab1849e4e9df9acdfb1c2091cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b91764e_fe700de0",
+        "filename": "doc/nvme.md",
+        "patchSetId": 56
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-29T12:56:08Z",
+      "side": 1,
+      "message": "That is not up to date.\nAs of this moment dev_path in nvme_cuse_start is path (after /dev/) itself and part naming the controller:\n/dev/\u0027dev_path\u0027\n/dev/\u0027dev_path\u0027nY",
+      "range": {
+        "startLine": 278,
+        "startChar": 0,
+        "endLine": 279,
+        "endChar": 31
+      },
+      "revId": "9b451f8b5b6dd4ab1849e4e9df9acdfb1c2091cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c9e7b03_30a70d3f",
+        "filename": "doc/nvme.md",
+        "patchSetId": 56
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-29T12:56:08Z",
+      "side": 1,
+      "message": "\u0027Requests from CUSE are handled by pthreads when controller and namespaces are created. Those pass the I/O or admin commands via a ring to thread that process them using spdk_nvme_io_msg_process().\u0027",
+      "range": {
+        "startLine": 283,
+        "startChar": 0,
+        "endLine": 284,
+        "endChar": 59
+      },
+      "revId": "9b451f8b5b6dd4ab1849e4e9df9acdfb1c2091cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "392c9a36_4f8968b6",
+        "filename": "doc/nvme.md",
+        "patchSetId": 56
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-29T12:56:08Z",
+      "side": 1,
+      "message": "\u0027Ioctls that request information attained when attaching NVMe controller receive immediate response, without passing them through the ring.\u0027",
+      "range": {
+        "startLine": 286,
+        "startChar": 0,
+        "endLine": 287,
+        "endChar": 45
+      },
+      "revId": "9b451f8b5b6dd4ab1849e4e9df9acdfb1c2091cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "542432d3_0cc8377e",
+        "filename": "doc/nvme.md",
+        "patchSetId": 56
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-29T12:56:08Z",
+      "side": 1,
+      "message": "Most of the time it is true, but in context of only NVMe library - its just any thread/framework that does the polling of qpairs on usual.",
+      "range": {
+        "startLine": 289,
+        "startChar": 16,
+        "endLine": 289,
+        "endChar": 27
+      },
+      "revId": "9b451f8b5b6dd4ab1849e4e9df9acdfb1c2091cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3328a6ee_2160babd",
+        "filename": "doc/nvme.md",
+        "patchSetId": 56
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-29T12:56:08Z",
+      "side": 1,
+      "message": "This will be mentioned in previous paragraph, so probably this part can be skipped.",
+      "range": {
+        "startLine": 287,
+        "startChar": 47,
+        "endLine": 289,
+        "endChar": 28
+      },
+      "revId": "9b451f8b5b6dd4ab1849e4e9df9acdfb1c2091cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5858db9_a8c2788f",
+        "filename": "doc/nvme.md",
+        "patchSetId": 56
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-10-29T12:56:08Z",
+      "side": 1,
+      "message": "Please add a note that this interface reserves a qpair for sending down the I/O for each controller",
+      "revId": "9b451f8b5b6dd4ab1849e4e9df9acdfb1c2091cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
