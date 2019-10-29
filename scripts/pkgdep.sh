@@ -54,7 +54,7 @@ if [ -s /etc/redhat-release ]; then
 		fi
 	fi
 
-	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
+	yum install -y --allowerasing gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
 		git astyle python-pycodestyle lcov python libuuid-devel \
 		sg3_utils libiscsi-devel pciutils ShellCheck
 	# Additional (optional) dependencies for showing backtrace in logs
@@ -69,7 +69,7 @@ if [ -s /etc/redhat-release ]; then
 	yum install -y libpmemblk-devel || true
 	# Additional dependencies for SPDK CLI - not available in rhel and centos
 	if ! echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7'; then
-		yum install -y python3-configshell python3-pexpect
+		yum install -y --allowerasing python3-configshell python3-pexpect
 	fi
 	# Additional dependencies for ISA-L used in compression
 	yum install -y autoconf automake libtool help2man
