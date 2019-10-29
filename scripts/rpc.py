@@ -332,8 +332,8 @@ if __name__ == "__main__":
                                               name=args.name))
 
     p = subparsers.add_parser('bdev_uring_create', help='Create a bdev with io_uring backend')
-    p.add_argument('name', help='bdev name')
     p.add_argument('filename', help='Path to device or file (ex: /dev/nvme0n1)')
+    p.add_argument('name', help='bdev name')
     p.set_defaults(func=bdev_uring_create)
 
     def bdev_uring_delete(args):
