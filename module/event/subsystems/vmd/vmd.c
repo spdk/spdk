@@ -33,16 +33,46 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/conf.h"
+#include "spdk/thread.h"
+#include "spdk/likely.h"
 
 #include "spdk/vmd.h"
 
 #include "spdk_internal/event.h"
 #include "event_vmd.h"
 
+static struct spdk_poller *g_hotplug_poller;
+
+static int
+vmd_hotplug_monitor(void *ctx)
+{
+	return spdk_vmd_hotplug_monitor();
+}
+
 int
 vmd_subsystem_init(void)
 {
-	return spdk_vmd_init();
+	int rc;
+
+	/* If the poller is registered, the initialization already took place */
+	if (g_hotplug_poller != NULL) {
+		SPDK_ERRLOG("The initialization has already been performed\n");
+		return -EBUSY;
+	}
+
+	rc = spdk_vmd_init();
+	if (spdk_likely(rc != 0)) {
+		SPDK_ERRLOG("Failed to initialize the VMD library\n");
+		return rc;
+	}
+
+	g_hotplug_poller = spdk_poller_register(vmd_hotplug_monitor, NULL, 1000000ULL);
+	if (g_hotplug_poller == NULL) {
+		SPDK_ERRLOG("Failed to register hotplug monitor poller\n");
+		return -ENOMEM;
+	}
+
+	return 0;
 }
 
 static void
@@ -64,6 +94,8 @@ spdk_vmd_subsystem_init(void)
 static void
 spdk_vmd_subsystem_fini(void)
 {
+	spdk_poller_unregister(&g_hotplug_poller);
+
 	spdk_subsystem_fini_next();
 }
 
