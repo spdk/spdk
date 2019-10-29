@@ -253,6 +253,21 @@ struct raid_bdev_module {
 	/* RAID level implemented by this module */
 	enum raid_level level;
 
+	/*
+	 * Called when the raid is starting, right before changing the state to
+	 * online and registering the bdev. Parameters of the bdev like blockcnt
+	 * should be set here.
+	 *
+	 * Non-zero return value will abort the startup process.
+	 */
+	int (*start)(struct raid_bdev *raid_bdev);
+
+	/*
+	 * Called when the raid is stopping, right before changing the state to
+	 * offline and unregistering the bdev. Optional.
+	 */
+	void (*stop)(struct raid_bdev *raid_bdev);
+
 	/* Handler for R/W requests */
 	void (*submit_rw_request)(struct raid_bdev_io *raid_io);
 
