@@ -39,6 +39,6 @@ APP = lsvmd
 
 C_SRCS := lsvmd.c
 
-SPDK_LIB_LIST = vmd log
+SPDK_LIB_LIST = vmd log thread util
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
