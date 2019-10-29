@@ -32,6 +32,7 @@ display_help() {
 	echo "                                  (test VM qcow image, fio binary, ssh keys)"
 	echo "  --vhost-vm-dir=<path>           directory where to put vhost dependencies in VM"
 	echo "  --qemu-emulator=<path>          directory path with emulator, default: ${SPDK_QEMU_EMULATOR}"
+	echo "  --vagrantfiles-dir=<path>       directory to put vagrantfile"
 	echo "  -r dry-run"
 	echo "  -l use a local copy of spdk, don't try to rsync from the host."
 	echo "  -d deploy a test vm by provisioning all prerequisites for spdk autotest"
@@ -68,6 +69,7 @@ OPTIND=1
 NVME_DISKS_TYPE=""
 NVME_DISKS_NAMESPACES=""
 NVME_FILE=""
+VAGRANTFILE_DIR=""
 
 while getopts ":b:n:s:x:p:vrldh-:" opt; do
 	case "${opt}" in
@@ -76,6 +78,7 @@ while getopts ":b:n:s:x:p:vrldh-:" opt; do
 			vhost-host-dir=*) VHOST_HOST_DIR="${OPTARG#*=}" ;;
 			vhost-vm-dir=*) VHOST_VM_DIR="${OPTARG#*=}" ;;
 			qemu-emulator=*) SPDK_QEMU_EMULATOR="${OPTARG#*=}" ;;
+			vagrantfiles-dir=*) VAGRANTFILE_DIR="${OPTARG#*=}" ;;
 			*) echo "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
@@ -246,16 +249,19 @@ if [ ${DRY_RUN} = 1 ]; then
 	printenv NVME_FILE
 	printenv SPDK_DIR
 fi
+if [ -z "$VAGRANTFILE_DIR" ]; then
+	VAGRANTFILE_DIR="${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
+fi
 
-if [ -d "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}" ]; then
-	echo "Error: ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER} already exists!"
+if [ -d "${VAGRANTFILE_DIR}" ]; then
+	echo "Error: ${VAGRANTFILE_DIR} already exists!"
 	exit 1
 fi
 
 if [ ${DRY_RUN} != 1 ]; then
-	mkdir -vp "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
-	cp ${DIR}/Vagrantfile ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}
-	pushd "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
+	mkdir -vp "${VAGRANTFILE_DIR}"
+	cp ${DIR}/Vagrantfile ${VAGRANTFILE_DIR}
+	pushd "${VAGRANTFILE_DIR}"
 	if [ -n "${http_proxy}" ]; then
 		export http_proxy
 		export https_proxy
@@ -276,8 +282,8 @@ EOF
 	echo ""
 	echo "  SUCCESS!"
 	echo ""
-	echo "  cd to ${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER} and type \"vagrant ssh\" to use."
+	echo "  cd to ${VAGRANTFILE_DIR} and type \"vagrant ssh\" to use."
 	echo "  Use vagrant \"suspend\" and vagrant \"resume\" to stop and start."
-	echo "  Use vagrant \"destroy\" followed by \"rm -rf ${SPDK_VAGRANT_DISTRO}\" to destroy all trace of vm."
+	echo "  Use vagrant \"destroy\" followed by \"rm -rf ${VAGRANTFILE_DIR}\" to destroy all trace of vm."
 	echo ""
 fi
