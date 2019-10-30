@@ -283,11 +283,12 @@ locations:
 ~~~
 
 Requests from CUSE are handled by pthreads when controller and namespaces are created.
-Those pass the I/O or admin commands via a ring to a thread that processes them using
-spdk_nvme_io_msg_process().
+During the handling of CUSE requests, operations may be forwarded to an internal NVMe
+queue pair. The user must poll this internal queue pair periodically by polling
+the admin qpair for the associated NVMe controller.
 
 Ioctls that request information attained when attaching NVMe controller receive an
-immediate response, without passing them through the ring.
+immediate response, without passing them to the internal queue pair.
 
 This interface reserves one qpair for sending down the I/O for each controller.
 
