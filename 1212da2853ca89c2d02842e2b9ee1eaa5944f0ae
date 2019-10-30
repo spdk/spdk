@@ -16,6 +16,40 @@
       "revId": "1212da2853ca89c2d02842e2b9ee1eaa5944f0ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d4ce6c7_56baabdd",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-30T04:42:23Z",
+      "side": 1,
+      "message": "I think overall this patch looks OK.  But I\u0027d like us to look at the qpair state and this transport_qp_is_failed member again.  If I\u0027m reading this correctly, transport_qp_is_failed \u003d\u003d true when nvme_qpair state \u003c CONNECTED.  I think over time this is going to get more confusing with different qpair data members representing state.",
+      "revId": "1212da2853ca89c2d02842e2b9ee1eaa5944f0ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6238f85_48c8e7ca",
+        "filename": "test/nvme/reset/reset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-30T04:42:23Z",
+      "side": 1,
+      "message": "This could break applications that depend on the reset to reconnect existing qpairs.  I\u0027m not sure how many people that might affect.  Best practice is to delete the qpairs before the reset like we do in the bdev module.  But not everyone might do that.\n\nBut...are we sure we can\u0027t reproduce this same problem with 19.07?  I know the reconnect app uses some APIs that weren\u0027t available in 19.07, but I don\u0027t understand why you still couldn\u0027t hit a problem where we kill the target, have one core continuing to poll its qpair, and another core do a reset.\n\nIf we can reproduce this with 19.07, then we know that no one will care if we change this behavior here.",
+      "revId": "1212da2853ca89c2d02842e2b9ee1eaa5944f0ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
