@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b7c295cb_c66d9b92",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-30T18:19:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d91fc2b_f6fd843d",
+      "revId": "1212da2853ca89c2d02842e2b9ee1eaa5944f0ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7d4ce6c7_56baabdd",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "a26982c3_f2e252b9",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-30T18:19:36Z",
+      "side": 1,
+      "message": "I definitely agree about consolidating the state into a single variable. I tried getting rid of transport_qp_is_failed during my last patch series, but it was a little more difficult than I thought since it actually switches value somewhere between CONNECTING and CONNECTED (for fabrics controllers). Maybe now that the dust is settled I will have better line of sight on consolidating it more.",
+      "parentUuid": "7d4ce6c7_56baabdd",
+      "revId": "1212da2853ca89c2d02842e2b9ee1eaa5944f0ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e6238f85_48c8e7ca",
         "filename": "test/nvme/reset/reset.c",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2019-10-30T04:42:23Z",
       "side": 1,
       "message": "This could break applications that depend on the reset to reconnect existing qpairs.  I\u0027m not sure how many people that might affect.  Best practice is to delete the qpairs before the reset like we do in the bdev module.  But not everyone might do that.\n\nBut...are we sure we can\u0027t reproduce this same problem with 19.07?  I know the reconnect app uses some APIs that weren\u0027t available in 19.07, but I don\u0027t understand why you still couldn\u0027t hit a problem where we kill the target, have one core continuing to poll its qpair, and another core do a reset.\n\nIf we can reproduce this with 19.07, then we know that no one will care if we change this behavior here.",
+      "revId": "1212da2853ca89c2d02842e2b9ee1eaa5944f0ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26105f5f_4edbeaa4",
+        "filename": "test/nvme/reset/reset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-30T18:19:36Z",
+      "side": 1,
+      "message": "This will be difficult to reproduce on 19.07. fabric controller resets with active I/O qpairs didn\u0027t work at that point in time. They weren\u0027t enabled until https://review.gerrithub.io/c/spdk/spdk/+/469935 was merged.\nBut my understanding is that handling reconnects with I/O qpairs has been working for some time on NVMe-PCIe controllers. In that case, the disconnect function doesn\u0027t do anything and the I/O qpairs still need to be connected after the reset. My worry is that I\u0027m breaking that use case, not the fabrics reset use case.",
+      "parentUuid": "e6238f85_48c8e7ca",
       "revId": "1212da2853ca89c2d02842e2b9ee1eaa5944f0ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true

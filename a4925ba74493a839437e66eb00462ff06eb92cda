@@ -16,6 +16,24 @@
       "revId": "a4925ba74493a839437e66eb00462ff06eb92cda",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "512fa989_4d51a633",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1105,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-10-30T18:19:36Z",
+      "side": 0,
+      "message": "Since I had to remove the disconnect above, I can\u0027t call connect here. Calling connect without first calling disconnect would result in several pointers getting overwritten in fabrics qpairs. \n\nThis is not the case with PCIe though because disconnect doesn\u0027t actually do anything in that transport. But we have to support all of the transports at this level. The main problem with removing this portion of the code is that it creates a small change in the way we do resets on nvme_pcie controllers. I posted a little bit more about that on github issue 1014.",
+      "parentUuid": "ff2043a3_1b96e0d6",
+      "revId": "a4925ba74493a839437e66eb00462ff06eb92cda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
