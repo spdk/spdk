@@ -84,6 +84,8 @@ struct adapter_io_channel {
 struct adapter_io {
 	/* bdev IO was issued to */
 	struct bdev_adapter *bdev_adapter;
+	/* Indicates whether the buffer was reallocated and needs to be copied */
+	bool copy_buffer;
 };
 
 static int
@@ -167,15 +169,153 @@ adapter_destruct(void *ctx)
 }
 
 static void
+_copy_iovs(void *buf, struct spdk_bdev_io *destination_io)
+{
+	size_t buf_len = destination_io->u.bdev.num_blocks * 512;
+	struct iovec *iovs = destination_io->u.bdev.iovs;
+	int iovcnt = destination_io->u.bdev.iovcnt;
+	size_t len;
+	int i;
+
+	for (i = 0; i < iovcnt; i++) {
+		len = spdk_min(iovs[i].iov_len, buf_len);
+		memcpy(iovs[i].iov_base, buf, len);
+		buf += len;
+		buf_len -= len;
+	}
+}
+
+static void
+_adapter_complete_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	struct adapter_io *io_ctx = (struct adapter_io *)orig_io->driver_ctx;
+	struct bdev_adapter *bdev_node = SPDK_CONTAINEROF(orig_io->bdev, struct bdev_adapter, bdev);
+	uint64_t lba = orig_io->u.bdev.offset_blocks;
+	uint64_t start_buf_offset = (lba % bdev_node->block_size_scaling) * 512;
+	void *buf = ((uint8_t*)bdev_io->u.bdev.iovs[0].iov_base) + start_buf_offset;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+
+	if (io_ctx->copy_buffer) {
+		assert(bdev_io->u.bdev.iovcnt == 1);
+		_copy_iovs(buf, orig_io);
+	}
+
+	/* Complete the original IO and then free the one that we created here
+	 * as a result of issuing an IO via submit_reqeust.
+	 */
+	spdk_bdev_io_complete(orig_io, status);
+	spdk_bdev_free_io(bdev_io);
+}
+
+static int
+adapter_read(struct bdev_adapter *bdev_node, struct adapter_io_channel *ch,
+		struct spdk_bdev_io *bdev_io)
+{
+	struct adapter_io *io_ctx = (struct adapter_io *)bdev_io->driver_ctx;
+	uint64_t len = bdev_io->u.bdev.num_blocks;
+	uint64_t lba = bdev_io->u.bdev.offset_blocks;
+	uint64_t physical_lba = lba / bdev_node->block_size_scaling;
+	uint64_t physical_len = len / bdev_node->block_size_scaling;
+	bool slba_unaligned = false, elba_unaligned = false;
+	void *iovs = bdev_io->u.bdev.iovs;
+	uint64_t iovcnt = bdev_io->u.bdev.iovcnt;
+	int rc = 0;
+
+	if (lba > bdev_node->bdev.blockcnt || (lba + len) > bdev_node->bdev.blockcnt) {
+		SPDK_ERRLOG("Read exceeds device capacity (lba 0x%lx, len 0x%lx)\n", lba, len);
+		return -EINVAL;
+	}
+
+	/* Check if the first block starts on unaligned 4k offset - if it does recalculate physical
+	 * starting LBA and extend the read length by 1 sector.
+	 */
+	if (lba % bdev_node->block_size_scaling) {
+		slba_unaligned = true;
+		physical_len++;
+	}
+
+	/* Check if the last block ends on unaligned 4k offset - if it does extend read length by one
+	 * sector, but only if the request crossed at least one 4k sector boundary
+	 */
+	if ((lba + len) % bdev_node->block_size_scaling) {
+		if (((lba + len) / bdev_node->block_size_scaling) != physical_lba || !slba_unaligned) {
+			elba_unaligned = true;
+			physical_len++;
+		}
+	}
+
+	if (slba_unaligned || elba_unaligned) {
+		iovs = NULL;
+		iovcnt = 0;
+		io_ctx->copy_buffer = true;
+	}
+	rc = spdk_bdev_readv_blocks(bdev_node->base_desc, ch->base_ch, iovs,
+				    iovcnt, physical_lba,
+				    physical_len, _adapter_complete_read,
+				    bdev_io);
+
+	return rc;
+}
+
+static void
+bdev_io_get_buf_cb(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io, bool success)
+{
+	struct bdev_adapter *bdev_node = SPDK_CONTAINEROF(bdev_io->bdev, struct bdev_adapter, bdev);
+	struct adapter_io_channel *dev_ch = spdk_io_channel_get_ctx(ioch);
+	int rc;
+
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		return;
+	}
+
+	rc = adapter_read(bdev_node, dev_ch, bdev_io);
+	if (rc != 0) {
+		if (rc == -ENOMEM) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		} else {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+}
+
+static void
 adapter_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	int rc = 0;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		spdk_bdev_io_get_buf(bdev_io, bdev_io_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		break;
+	default:
+		SPDK_ERRLOG("vbdev_adapter: unknown I/O type %u\n", bdev_io->type);
+		rc = -ENOTSUP;
+		break;
+	}
+
+	if (rc != 0) {
+		if (rc == -ENOMEM) {
+			SPDK_WARNLOG("ENOMEM, start to queue io for vbdev.\n");
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		} else {
+			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
 }
 
 static bool
 adapter_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
-	return false;
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		return true;
+	default:
+		return false;
+	}
 }
 
 static struct spdk_io_channel *
@@ -305,6 +445,12 @@ adapter_register(struct spdk_bdev *base_bdev)
 
 		if (base_bdev->blocklen == 512) {
 			SPDK_ERRLOG("Base bdev %s already has 512B sector size\n", base_bdev->name);
+			rc = -EINVAL;
+			goto free_config;
+		}
+
+		if (spdk_bdev_is_zoned(base_bdev)) {
+			SPDK_ERRLOG("Base bdev %s can't be zoned\n", base_bdev->name);
 			rc = -EINVAL;
 			goto free_config;
 		}

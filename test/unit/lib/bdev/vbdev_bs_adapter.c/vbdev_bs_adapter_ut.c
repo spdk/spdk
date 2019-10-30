@@ -51,6 +51,8 @@ uint8_t g_json_decode_obj_construct;
 uint8_t g_rpc_err;
 uint32_t g_rpc_req_size = 0;
 void *g_rpc_req = NULL;
+uint8_t *g_backend_buf = NULL;
+uint64_t g_backend_blocks;
 
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
@@ -73,6 +75,25 @@ DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
 					struct spdk_json_write_ctx *w));
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc),
 	    (void *)1);
+
+
+static void
+init_test_globals(uint64_t blocks)
+{
+	g_backend_blocks = blocks;
+	g_backend_buf = calloc(blocks, 512);
+	for (uint64_t i = 0; i < blocks; i++) {
+		memset(g_backend_buf + i * 512, (uint8_t)i, 512);
+	}
+}
+
+
+static void
+free_test_globals(void)
+{
+	free(g_backend_buf);
+	g_backend_buf = NULL;
+}
 
 int
 spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
@@ -110,10 +131,22 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 }
 
+void
+spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
+{
+	cb((void*)bdev_io->internal.ch, bdev_io, true);
+}
+
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
 	return bdev->name;
+}
+
+bool
+spdk_bdev_is_zoned(const struct spdk_bdev *bdev)
+{
+	return bdev->zoned;
 }
 
 int
@@ -213,6 +246,49 @@ free_test_req(struct rpc_construct_vbdev *r)
 	g_rpc_req = NULL;
 }
 
+int
+spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			       struct iovec *iov, int iovcnt,
+			       uint64_t offset_blocks, uint64_t num_blocks,
+			       spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev_io *child_io;
+	struct iovec *iovs;
+	uint64_t block_scaling = (BLOCK_SIZE / 512);
+
+	child_io = calloc(1, sizeof(struct spdk_bdev_io));
+	SPDK_CU_ASSERT_FATAL(child_io != NULL);
+
+	if (!iov) {
+		child_io->u.bdev.iovs = &child_io->iov;
+		child_io->u.bdev.iovcnt = 1;
+		iovs = child_io->u.bdev.iovs;
+
+		child_io->internal.buf = calloc(num_blocks, BLOCK_SIZE);
+		SPDK_CU_ASSERT_FATAL(child_io->internal.buf != NULL);
+		iovs[0].iov_base = child_io->internal.buf;
+		iovs[0].iov_len = num_blocks * BLOCK_SIZE;
+	} else {
+		child_io->u.bdev.iovs = iov;
+		child_io->u.bdev.iovcnt = iovcnt;
+		iovs = iov;
+	}
+
+	if (offset_blocks * block_scaling < g_backend_blocks) {
+		memcpy(iovs[0].iov_base, g_backend_buf + offset_blocks * block_scaling, BLOCK_SIZE * num_blocks);
+	}
+
+	cb(child_io, true, cb_arg);
+
+	return 0;
+}
+
+void
+spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
+{
+	free(bdev_io->internal.buf);
+	free(bdev_io);
+}
 
 static void
 verify_adapter_config(struct rpc_construct_vbdev *r, bool presence)
@@ -407,6 +483,61 @@ send_delete_vbdev(char *name, bool success)
 }
 
 static void
+bdev_io_initialize(struct spdk_bdev_io *bdev_io, struct spdk_io_channel *ch, struct spdk_bdev *bdev,
+		   uint64_t lba, uint64_t blocks, int16_t iotype)
+{
+	bdev_io->bdev = bdev;
+	SPDK_CU_ASSERT_FATAL(bdev_io->bdev != NULL);
+	bdev_io->u.bdev.offset_blocks = lba;
+	bdev_io->u.bdev.num_blocks = blocks;
+	bdev_io->type = iotype;
+	bdev_io->internal.ch = (void*)ch;
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_UNMAP || bdev_io->type == SPDK_BDEV_IO_TYPE_FLUSH) {
+		return;
+	}
+
+	bdev_io->u.bdev.iovcnt = 1;
+	bdev_io->u.bdev.iovs = calloc(1, sizeof(struct iovec));
+	SPDK_CU_ASSERT_FATAL(bdev_io->u.bdev.iovs != NULL);
+	bdev_io->u.bdev.iovs->iov_base = calloc(1, bdev_io->u.bdev.num_blocks * 512);
+	SPDK_CU_ASSERT_FATAL(bdev_io->u.bdev.iovs->iov_base != NULL);
+	bdev_io->u.bdev.iovs->iov_len = bdev_io->u.bdev.num_blocks * 512;
+}
+
+static void
+bdev_io_cleanup(struct spdk_bdev_io *bdev_io)
+{
+	if (bdev_io->u.bdev.iovs) {
+		free(bdev_io->u.bdev.iovs->iov_base);
+		free(bdev_io->u.bdev.iovs);
+	}
+	free(bdev_io);
+}
+
+static void
+send_read(struct bdev_adapter *bdev, struct spdk_io_channel *ch, uint64_t lba,
+	       uint64_t blocks, bool success)
+{
+	struct spdk_bdev_io *bdev_io;
+
+	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct adapter_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	bdev_io_initialize(bdev_io, ch, &bdev->bdev, lba, blocks, SPDK_BDEV_IO_TYPE_READ);
+
+	g_io_comp_status = !success;
+	adapter_submit_request(ch, bdev_io);
+
+	CU_ASSERT(g_io_comp_status == success);
+	if (success) {
+		for (uint64_t i = 0; i < blocks; i++) {
+			CU_ASSERT(((uint8_t*)bdev_io->u.bdev.iovs[0].iov_base)[512 * i] == (uint8_t)(lba + i));
+		}
+	}
+	bdev_io_cleanup(bdev_io);
+}
+
+static void
 test_adapter_create(void)
 {
 	struct spdk_bdev *bdev;
@@ -470,6 +601,99 @@ test_adapter_create_invalid(void)
 	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_list));
 }
 
+static struct bdev_adapter *
+create_and_get_vbdev(char *vdev_name, char *name, bool create_bdev)
+{
+	struct bdev_adapter *bdev = NULL;
+	send_create_vbdev(vdev_name, name, true, true);
+
+	TAILQ_FOREACH(bdev, &g_bdev_nodes, link) {
+		if (strcmp(bdev->bdev.name, vdev_name) == 0) {
+			break;
+		}
+	}
+
+	return bdev;
+}
+
+static void
+test_adapter_read(void)
+{
+	struct spdk_io_channel *ch;
+	struct bdev_adapter *bdev;
+	char *name = "Nvme0n1";
+	uint64_t blocks = 256;
+	uint64_t lba, len;
+
+	init_test_globals(blocks);
+	CU_ASSERT(adapter_init() == 0);
+
+	/* Create adapter dev */
+	bdev = create_and_get_vbdev("adapter_dev1", name, true);
+	CU_ASSERT(bdev != NULL);
+
+	ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct adapter_io_channel));
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	/* Send an aligned 4k request */
+	lba = 0;
+	len = 8;
+	send_read(bdev, ch, lba, len, true);
+
+	/* Send an unaligned 4k request */
+	lba = 1;
+	len = 8;
+	send_read(bdev, ch, lba, len, true);
+
+	/* Send a 512B request */
+	lba = 2;
+	len = 1;
+	send_read(bdev, ch, lba, len, true);
+
+	/* Send a 1024B request spanning two 4k blocks */
+	lba = 7;
+	len = 2;
+	send_read(bdev, ch, lba, len, true);
+
+	/* Send a 4608B request spanning two 4k blocks with aligned start lba */
+	lba = 0;
+	len = 9;
+	send_read(bdev, ch, lba, len, true);
+
+	/* Send a 4608B request spanning two 4k blocks with aligned end lba */
+	lba = 7;
+	len = 9;
+	send_read(bdev, ch, lba, len, true);
+
+	/* Send a 5120B request spanning with misaligned start lba and end lba */
+	lba = 7;
+	len = 10;
+	send_read(bdev, ch, lba, len, true);
+
+	/* Send request out of device range */
+	lba = bdev->bdev.blockcnt;
+	len = 1;
+	send_read(bdev, ch, lba, len, false);
+
+	lba = UINT64_MAX;
+	len = 10;
+	send_read(bdev, ch, lba, len, false);
+
+	lba = bdev->bdev.blockcnt - 1;
+	len = 2;
+	send_read(bdev, ch, lba, len, false);
+
+	/* Delete adapter dev */
+	send_delete_vbdev("adapter_dev1", true);
+
+	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
+	free(ch);
+
+	adapter_finish();
+	base_bdevs_cleanup();
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_list));
+	free_test_globals();
+}
 
 int main(int argc, char **argv)
 {
@@ -488,7 +712,8 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "test_adapter_create", test_adapter_create) == NULL ||
-		CU_add_test(suite, "test_adapter_create_invalid", test_adapter_create_invalid) == NULL
+		CU_add_test(suite, "test_adapter_create_invalid", test_adapter_create_invalid) == NULL ||
+		CU_add_test(suite, "test_adapter_read", test_adapter_read) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
