@@ -9,6 +9,7 @@
 * @ref nvme_fabrics_host
 * @ref nvme_multi_process
 * @ref nvme_hotplug
+* @ref nvme_cuse
 
 # Introduction {#nvme_intro}
 
@@ -266,3 +267,31 @@ This means I/O in flight during a hot remove will complete with an appropriate e
 code and will not crash the application.
 
 @sa spdk_nvme_probe
+
+# NVMe Character Devices {#nvme_cuse}
+
+This feature is considered as experimental.
+
+![NVMe character devices processing diagram](nvme_cuse.svg)
+
+For each controller as well as namespace, character devices are created in the
+locations:
+~~~{.sh}
+    /dev/'dev_path'
+    /dev/'dev_path'nY
+    ...
+~~~
+
+Requests from CUSE are handled by pthreads when controller and namespaces are created.
+Those pass the I/O or admin commands via a ring to a thread that processes them using
+spdk_nvme_io_msg_process().
+
+Ioctls that request information attained when attaching NVMe controller receive an
+immediate response, without passing them through the ring.
+
+This interface reserves one qpair for sending down the I/O for each controller.
+
+## Enabling cuse support for NVMe
+
+Cuse support is disabled by default. To enable support for NVMe devices SPDK
+must be compiled with "./configure --with-nvme-cuse".
