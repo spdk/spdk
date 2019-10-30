@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55387a05_db079469",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1647,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-30T22:46:03Z",
+      "side": 1,
+      "message": "oh - I need to remove this - I had some test code in here to verify my new code caught problems and accidentally added a newline when I took it out before pushing this patch",
+      "revId": "99e41d67b2dcfa696124bc1888357dddfe68cf27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
