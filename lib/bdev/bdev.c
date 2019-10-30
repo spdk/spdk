@@ -1510,6 +1510,7 @@ _spdk_bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *
 	if (spdk_likely(TAILQ_EMPTY(&shared_resource->nomem_io))) {
 		bdev_ch->io_outstanding++;
 		shared_resource->io_outstanding++;
+		bdev_io->internal.is_outstanding = true;
 		bdev_io->internal.in_submit_request = true;
 		bdev->fn_table->submit_request(ch, bdev_io);
 		bdev_io->internal.in_submit_request = false;
@@ -1846,12 +1847,14 @@ _spdk_bdev_io_submit(void *ctx)
 
 	bdev_ch->io_outstanding++;
 	shared_resource->io_outstanding++;
+	bdev_io->internal.is_outstanding = true;
 	bdev_io->internal.in_submit_request = true;
 	if (bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else if (bdev_ch->flags & BDEV_CH_QOS_ENABLED) {
 		bdev_ch->io_outstanding--;
 		shared_resource->io_outstanding--;
+		bdev_io->internal.is_outstanding = false;
 		TAILQ_INSERT_TAIL(&bdev->internal.qos->queued, bdev_io, internal.link);
 		_spdk_bdev_qos_io_submit(bdev_ch, bdev->internal.qos);
 	} else {
@@ -1912,6 +1915,7 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.cb = cb;
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 	bdev_io->internal.in_submit_request = false;
+	bdev_io->internal.is_outstanding = false;
 	bdev_io->internal.buf = NULL;
 	bdev_io->internal.io_submit_ch = NULL;
 	bdev_io->internal.orig_iovs = NULL;
@@ -2199,6 +2203,15 @@ _spdk_bdev_abort_buf_io(bdev_io_stailq_t *queue, struct spdk_bdev_channel *ch)
 		bdev_io = STAILQ_FIRST(queue);
 		STAILQ_REMOVE_HEAD(queue, internal.buf_link);
 		if (bdev_io->internal.ch == ch) {
+			/* spdk_bdev_io_complete() assumes that the completed I/O had
+			 *  been submitted to the bdev module.  Since in this case it
+			 *  hadn't, bump io_outstanding ot account for the decrement
+			 *  that spdk_bdev_io_complete() will do.
+			 */
+			if (!bdev_io->internal.is_outstanding) {
+				ch->io_outstanding++;
+				ch->shared_resource->io_outstanding++;
+			}
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		} else {
 			STAILQ_INSERT_TAIL(&tmp, bdev_io, internal.buf_link);

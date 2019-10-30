@@ -585,6 +585,14 @@ struct spdk_bdev_io {
 		 */
 		bool in_submit_request;
 
+		/**
+		 * Set to true if submitted to bdev module and waiting for completion.
+		 *
+		 * This is used to decide whether spdk_bdev_io_complete() can be called directly
+		 * when aborting I/O.
+		 */
+		bool is_outstanding;
+
 		/** Status for the IO */
 		int8_t status;
 
