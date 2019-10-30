@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b85a9ec7_dfcb47f2",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 6107,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-10-30T00:59:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2e0003df_b96833ee",
+      "revId": "07e6051b25f51fb54dce9a18feb30aea6e4d09f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3b64aa7_86fcc1c8",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-10-29T18:06:38Z",
       "side": 1,
       "message": "What RPC does the user say to free the cache pool at run time so that this RPC can be sent again? That\u0027s probably useful to point out here.",
+      "revId": "07e6051b25f51fb54dce9a18feb30aea6e4d09f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3137f02d_e29824c8",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 6108,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-10-30T00:59:06Z",
+      "side": 1,
+      "message": "Yes, it should be pointed out here.",
+      "parentUuid": "f3b64aa7_86fcc1c8",
       "revId": "07e6051b25f51fb54dce9a18feb30aea6e4d09f2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
