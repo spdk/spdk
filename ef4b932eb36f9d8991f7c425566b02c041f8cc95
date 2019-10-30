@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "380dd34f_d88b4bd6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-30T11:25:09Z",
+      "side": 1,
+      "message": "One extract from shellcheck with this rule says:\nIn test/vhost/common.sh line 4:\nTEST_DIR\u003d$(readlink -f $rootdir/..)\n                       ^------^ SC2154: rootdir is referenced but not assigned.\n\nAny idea what should I do?",
+      "parentUuid": "d26cc7e0_03ceaa4b",
+      "range": {
+        "startLine": 7,
+        "startChar": 19,
+        "endLine": 7,
+        "endChar": 62
+      },
+      "revId": "ef4b932eb36f9d8991f7c425566b02c041f8cc95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4ed4400a_57b5bd4e",
         "filename": "/COMMIT_MSG",
         "patchSetId": 2
