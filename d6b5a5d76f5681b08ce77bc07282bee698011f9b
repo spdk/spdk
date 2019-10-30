@@ -22,6 +22,30 @@
       "revId": "d6b5a5d76f5681b08ce77bc07282bee698011f9b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c7cb98e_564905ef",
+        "filename": "module/bdev/nvme/bdev_ocssd.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-10-30T13:17:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "128f920f_6a954aba",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 92
+      },
+      "revId": "d6b5a5d76f5681b08ce77bc07282bee698011f9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
