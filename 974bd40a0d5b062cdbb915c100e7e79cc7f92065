@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6e094c8_a6848554",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2127,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-30T23:26:37Z",
+      "side": 1,
+      "message": "Unit tests will not be so complex, for example to test spdk_opal_revert_poll()\n\n\tdev.resp \u003d \u0026header;\n\tdev.state \u003d OPAL_DEV_STATE_BUSY;\n\n\tsetup spdk_nvme_ctrlr_security_receive() to return non-zero;\n\n\trc \u003d spdk_opal_revert_poll(\u0026dev);\n\tCU_ASSERT(rc \u003d\u003d 0);\n\tCU_ASSERT(dev.state \u003d\u003d OPAL_DEV_STATE_ENABLED);\n\n\tsetup spdk_nvme_ctrlr_security_receive() to return zero;\n\theader.com_packet.outstanding_data \u003d 0;\n\theader.com_packet.min_transfer \u003d 0;\n\n\trc \u003d spdk_opal_revert_poll(\u0026dev);\n\tCU_ASSERT(rc \u003d\u003d 0);\n\tCU_ASSERT(dev.state \u003d\u003d OPAL_DEV_STATE_DEFAULT);\n\n\theader.com_packet.outstanding_data \u003d 1;\n\n\trc spdk_opal_revert_poll(\u0026dev);\n\tCU_ASSERT(rc \u003d\u003d -EAGAIN);\n\tCU_ASSERT(dev.state \u003d\u003d OPAL_DEV_STATE_BUSY);\n\nHow about working on this now as Paul suggests?",
+      "revId": "974bd40a0d5b062cdbb915c100e7e79cc7f92065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
