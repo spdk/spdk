@@ -215,6 +215,10 @@ New cache modes added to use via RPC, wi - write invalidate and wa - write aroun
 
 New version of OCF provides fully asynchronous management API.
 
+### isa-l
+
+Updated ISA-L submodule to commit f3993f5c0b6911.
+
 ## v19.07:
 
 ### ftl
