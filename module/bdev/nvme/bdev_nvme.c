@@ -210,13 +210,6 @@ bdev_nvme_poll_adminq(void *arg)
 {
 	struct spdk_nvme_ctrlr *ctrlr = arg;
 
-	/* Process io messages that were passed from non-polled mode threads
-	 * to this ctrlr. This is used as part of nvme cuse support for surfacing
-	 * /dev nodes that can be used by standard Linux management applications
-	 * like nvme-cli.
-	 */
-	spdk_nvme_io_msg_process(ctrlr);
-
 	return spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 }
 

@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "nvme_internal.h"
+#include "nvme_io_msg.h"
 
 #include "spdk/env.h"
 #include "spdk/string.h"
@@ -2633,13 +2634,29 @@ int32_t
 spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int32_t num_completions;
+	int32_t rc;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+
 	if (ctrlr->keep_alive_interval_ticks) {
 		nvme_ctrlr_keep_alive(ctrlr);
 	}
-	num_completions = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+
+	rc = spdk_nvme_io_msg_process(ctrlr);
+	if (rc < 0) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return rc;
+	}
+	num_completions = rc;
+
+	rc = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	if (rc < 0) {
+		num_completions = rc;
+	} else {
+		num_completions += rc;
+	}
 
 	return num_completions;
 }
