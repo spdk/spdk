@@ -68,7 +68,7 @@ struct vmd_pci_bus {
 	uint32_t  subordinate_bus : 8;
 
 	struct vmd_pci_device *dev_list;     /* list of pci end device attached to this bus */
-	struct vmd_pci_bus *next;            /* link for all buses found during scan */
+	STAILQ_ENTRY(vmd_pci_bus) link;
 };
 
 /*
@@ -163,7 +163,8 @@ struct vmd_adapter {
 	uint32_t  nvme_count : 8;
 	uint32_t  vmd_index  : 8;
 
-	struct vmd_pci_bus vmd_bus, *bus_list;
+	struct vmd_pci_bus vmd_bus;
+	STAILQ_HEAD(, vmd_pci_bus) bus_list; /* the bus list during the scan */
 
 	struct event_fifo *hp_queue;
 };
