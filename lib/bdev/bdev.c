@@ -3789,6 +3789,18 @@ _spdk_bdev_io_complete(void *ctx)
 			bdev_io->internal.ch->stat.bytes_unmapped += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
 			bdev_io->internal.ch->stat.num_unmap_ops++;
 			bdev_io->internal.ch->stat.unmap_latency_ticks += tsc_diff;
+			break;
+		case SPDK_BDEV_IO_TYPE_ZCOPY:
+			if (bdev_io->u.bdev.zcopy.populate) {
+				bdev_io->internal.ch->stat.bytes_read += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+				bdev_io->internal.ch->stat.num_read_ops++;
+				bdev_io->internal.ch->stat.read_latency_ticks += tsc_diff;
+			} else {
+				bdev_io->internal.ch->stat.bytes_written += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+				bdev_io->internal.ch->stat.num_write_ops++;
+				bdev_io->internal.ch->stat.write_latency_ticks += tsc_diff;
+			}
+			break;
 		default:
 			break;
 		}
