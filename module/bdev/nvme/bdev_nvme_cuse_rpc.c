@@ -56,7 +56,7 @@ free_rpc_nvme_cuse_register(struct rpc_nvme_cuse_register *req)
 
 static const struct spdk_json_object_decoder rpc_nvme_cuse_register_decoders[] = {
 	{"name", offsetof(struct rpc_nvme_cuse_register, name), spdk_json_decode_string},
-	{"dev_path", offsetof(struct rpc_nvme_cuse_register, dev_path), spdk_json_decode_string},
+	{"dev_path", offsetof(struct rpc_nvme_cuse_register, dev_path), spdk_json_decode_string, true},
 };
 
 static void
