@@ -58,6 +58,26 @@ struct nvme_io_msg_producer {
 int nvme_io_msg_send(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme_io_msg_fn fn,
 		     void *arg);
 
+/**
+ * Process IO message sent to controller from external module.
+ *
+ * This call process requests from the ring, send IO to an allocated qpair or
+ * admin commands in its context. This call is non-blocking and intended to be
+ * polled by SPDK thread to provide safe environment for NVMe request
+ * completition sent by external module to controller.
+ *
+ * The caller must ensure that each controller is polled by only one thread at
+ * a time.
+ *
+ * This function may be called at any point while the controller is attached to
+ * the SPDK NVMe driver.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return number of processed external IO messages.
+ */
+int spdk_nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr);
+
 int nvme_io_msg_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr,
 			    struct nvme_io_msg_producer *io_msg_producer);
 void nvme_io_msg_ctrlr_stop(struct spdk_nvme_ctrlr *ctrlr,
