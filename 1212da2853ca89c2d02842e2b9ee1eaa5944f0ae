@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d91fc2b_f6fd843d",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-30T00:42:01Z",
+      "side": 1,
+      "message": "Just say:\n\nThis function must only be called from the same thread as spdk_nvme_...\n\nTalking about \"qpair sensitive state\" may cause people to ask what that means.  And we don\u0027t want to explain what that means here.  :-)",
+      "revId": "1212da2853ca89c2d02842e2b9ee1eaa5944f0ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
