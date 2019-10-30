@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "9f011837_3e9d9a82",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-30T13:00:28Z",
+      "side": 1,
+      "message": "Reason is we use global variables, defined in other files.\nIt will not be corrected",
+      "parentUuid": "380dd34f_d88b4bd6",
+      "range": {
+        "startLine": 7,
+        "startChar": 19,
+        "endLine": 7,
+        "endChar": 62
+      },
+      "revId": "ef4b932eb36f9d8991f7c425566b02c041f8cc95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4ed4400a_57b5bd4e",
         "filename": "/COMMIT_MSG",
         "patchSetId": 2
