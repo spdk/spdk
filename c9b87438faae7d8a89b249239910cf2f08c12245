@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3cf85e4_5343716e",
+        "filename": "lib/scsi/task.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-30T07:20:49Z",
+      "side": 1,
+      "message": "this must be false. However still failed even if changing this to false.",
+      "range": {
+        "startLine": 75,
+        "startChar": 32,
+        "endLine": 75,
+        "endChar": 36
+      },
+      "revId": "c9b87438faae7d8a89b249239910cf2f08c12245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
