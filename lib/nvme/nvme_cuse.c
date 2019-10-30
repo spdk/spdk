@@ -45,6 +45,9 @@
 struct cuse_device {
 	char				dev_name[128];
 
+	pthread_mutex_t			mtx;
+	struct spdk_nvme_qpair		*io_qpair;
+
 	struct spdk_nvme_ctrlr		*ctrlr;		/**< NVMe controller */
 	uint32_t			nsid;		/**< NVMe name space id, or 0 */
 
@@ -69,6 +72,8 @@ struct cuse_io_ctx {
 	int			data_len;
 
 	fuse_req_t		req;
+
+	bool			done;
 };
 
 static void
@@ -223,35 +228,10 @@ cuse_nvme_reset(fuse_req_t req, int cmd, void *arg,
 /*****************************************************************************
  * Namespace IO requests
  */
-
 static void
-cuse_nvme_submit_io_write_done(void *ref, const struct spdk_nvme_cpl *cpl)
+cuse_nvme_submit_io_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct cuse_io_ctx *ctx = (struct cuse_io_ctx *)ref;
-
-	fuse_reply_ioctl_iov(ctx->req, 0, NULL, 0);
-
-	cuse_io_ctx_free(ctx);
-}
-
-static void
-cuse_nvme_submit_io_write_cb(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *arg)
-{
-	int rc;
-	struct cuse_io_ctx *ctx = arg;
-	struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-
-	rc = spdk_nvme_ns_cmd_write(ns, ctrlr->external_io_msgs_qpair, ctx->data,
-				    ctx->lba, /* LBA start */
-				    ctx->lba_count, /* number of LBAs */
-				    cuse_nvme_submit_io_write_done, ctx, 0);
-
-	if (rc != 0) {
-		SPDK_ERRLOG("write failed: rc = %d\n", rc);
-		fuse_reply_err(ctx->req, rc);
-		cuse_io_ctx_free(ctx);
-		return;
-	}
+	*(bool *)arg = true;
 }
 
 static void
@@ -259,84 +239,65 @@ cuse_nvme_submit_io_write(fuse_req_t req, int cmd, void *arg,
 			  struct fuse_file_info *fi, unsigned flags,
 			  const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
-	const struct nvme_user_io *user_io = in_buf;
-	struct cuse_io_ctx *ctx;
-	struct spdk_nvme_ns *ns;
-	uint32_t block_size;
-	int rc;
+	const struct nvme_user_io	*user_io = in_buf;
+	struct spdk_nvme_ns		*ns;
+	int				rc;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
+	uint32_t		block_size;
+	uint64_t		lba;
+	uint32_t		lba_count;
+	void			*data;
+	int			data_len;
+	bool			done;
 
-	ctx = (struct cuse_io_ctx *)calloc(1, sizeof(struct cuse_io_ctx));
-	if (!ctx) {
-		SPDK_ERRLOG("Cannot allocate memory for context\n");
-		fuse_reply_err(req, ENOMEM);
+	if (cuse_device->io_qpair == NULL) {
+		fuse_reply_err(req, EINVAL);
 		return;
 	}
-
-	ctx->req = req;
 
 	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
 	block_size = spdk_nvme_ns_get_sector_size(ns);
 
-	ctx->lba = user_io->slba;
-	ctx->lba_count = user_io->nblocks + 1;
-	ctx->data_len = ctx->lba_count * block_size;
+	lba = user_io->slba;
+	lba_count = user_io->nblocks + 1;
+	data_len = lba_count * block_size;
 
-	ctx->data = spdk_nvme_ctrlr_alloc_cmb_io_buffer(cuse_device->ctrlr, ctx->data_len);
-	if (ctx->data == NULL) {
-		ctx->data = spdk_zmalloc(ctx->data_len, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
-					 SPDK_MALLOC_DMA);
+	data = spdk_nvme_ctrlr_alloc_cmb_io_buffer(cuse_device->ctrlr, lba_count * block_size);
+	if (data == NULL) {
+		data = spdk_zmalloc(data_len, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
+				    SPDK_MALLOC_DMA);
 	}
-	if (ctx->data == NULL) {
+	if (data == NULL) {
 		SPDK_ERRLOG("Write buffer allocation failed\n");
-		fuse_reply_err(ctx->req, ENOMEM);
-		free(ctx);
+		fuse_reply_err(req, ENOMEM);
 		return;
 	}
 
-	memcpy(ctx->data, in_buf + sizeof(*user_io), ctx->data_len);
+	memcpy(data, in_buf + sizeof(*user_io), data_len);
 
-	rc = nvme_io_msg_send(cuse_device->ctrlr, cuse_device->nsid, cuse_nvme_submit_io_write_cb,
-			      ctx);
-	if (rc < 0) {
-		SPDK_ERRLOG("Cannot send write io\n");
-		fuse_reply_err(ctx->req, rc);
-		cuse_io_ctx_free(ctx);
-	}
-}
+	pthread_mutex_lock(&cuse_device->ctrlr_device->mtx);
 
-static void
-cuse_nvme_submit_io_read_done(void *ref, const struct spdk_nvme_cpl *cpl)
-{
-	struct cuse_io_ctx *ctx = (struct cuse_io_ctx *)ref;
-	struct iovec iov;
-
-	iov.iov_base = ctx->data;
-	iov.iov_len = ctx->data_len;
-
-	fuse_reply_ioctl_iov(ctx->req, 0, &iov, 1);
-
-	cuse_io_ctx_free(ctx);
-}
-
-static void
-cuse_nvme_submit_io_read_cb(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *arg)
-{
-	int rc;
-	struct cuse_io_ctx *ctx = arg;
-	struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-
-	rc = spdk_nvme_ns_cmd_read(ns, ctrlr->external_io_msgs_qpair, ctx->data,
-				   ctx->lba, /* LBA start */
-				   ctx->lba_count, /* number of LBAs */
-				   cuse_nvme_submit_io_read_done, ctx, 0);
+	done = false;
+	rc = spdk_nvme_ns_cmd_write(ns, cuse_device->io_qpair, data,
+				    lba, /* LBA start */
+				    lba_count, /* number of LBAs */
+				    cuse_nvme_submit_io_done, &done, 0);
 
 	if (rc != 0) {
-		SPDK_ERRLOG("read failed: rc = %d\n", rc);
-		fuse_reply_err(ctx->req, rc);
-		cuse_io_ctx_free(ctx);
+		SPDK_ERRLOG("write failed: rc = %d\n", rc);
+		pthread_mutex_unlock(&cuse_device->ctrlr_device->mtx);
+		fuse_reply_err(req, rc);
 		return;
 	}
+
+	while (!done) {
+		/* TODO: Add some sleeps in here so this doesn't hammer the CPU so hard */
+		spdk_nvme_qpair_process_completions(cuse_device->ctrlr_device->io_qpair, 0);
+	}
+
+	pthread_mutex_unlock(&cuse_device->ctrlr_device->mtx);
+
+	fuse_reply_ioctl_iov(req, 0, NULL, 0);
 }
 
 static void
@@ -344,46 +305,63 @@ cuse_nvme_submit_io_read(fuse_req_t req, int cmd, void *arg,
 			 struct fuse_file_info *fi, unsigned flags,
 			 const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
-	int rc;
-	struct cuse_io_ctx *ctx;
-	const struct nvme_user_io *user_io = in_buf;
+	const struct nvme_user_io	*user_io = in_buf;
+	struct spdk_nvme_ns		*ns;
+	int				rc;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
-	struct spdk_nvme_ns *ns;
-	uint32_t block_size;
+	uint32_t		block_size;
+	uint64_t		lba;
+	uint32_t		lba_count;
+	void			*data;
+	int			data_len;
+	bool			done;
 
-	ctx = (struct cuse_io_ctx *)calloc(1, sizeof(struct cuse_io_ctx));
-	if (!ctx) {
-		SPDK_ERRLOG("Cannot allocate memory for context\n");
-		fuse_reply_err(req, ENOMEM);
+	if (cuse_device->io_qpair == NULL) {
+		fuse_reply_err(req, EINVAL);
 		return;
 	}
 
-	ctx->req = req;
-	ctx->lba = user_io->slba;
-	ctx->lba_count = user_io->nblocks;
+	lba = user_io->slba;
+	lba_count = user_io->nblocks;
 
 	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
 	block_size = spdk_nvme_ns_get_sector_size(ns);
 
-	ctx->data_len = ctx->lba_count * block_size;
-	ctx->data = spdk_nvme_ctrlr_alloc_cmb_io_buffer(cuse_device->ctrlr, ctx->data_len);
-	if (ctx->data == NULL) {
-		ctx->data = spdk_zmalloc(ctx->data_len, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
-					 SPDK_MALLOC_DMA);
+	data_len = lba_count * block_size;
+	data = spdk_nvme_ctrlr_alloc_cmb_io_buffer(cuse_device->ctrlr, data_len);
+	if (data == NULL) {
+		data = spdk_zmalloc(data_len, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
+				    SPDK_MALLOC_DMA);
 	}
-	if (ctx->data == NULL) {
+	if (data == NULL) {
 		SPDK_ERRLOG("Read buffer allocation failed\n");
-		fuse_reply_err(ctx->req, ENOMEM);
-		free(ctx);
+		fuse_reply_err(req, ENOMEM);
 		return;
 	}
 
-	rc = nvme_io_msg_send(cuse_device->ctrlr, cuse_device->nsid, cuse_nvme_submit_io_read_cb, ctx);
-	if (rc < 0) {
-		SPDK_ERRLOG("Cannot send read io\n");
-		fuse_reply_err(ctx->req, rc);
-		cuse_io_ctx_free(ctx);
+	pthread_mutex_lock(&cuse_device->ctrlr_device->mtx);
+
+	done = false;
+	rc = spdk_nvme_ns_cmd_read(ns, cuse_device->io_qpair, data,
+				   lba, /* LBA start */
+				   lba_count, /* number of LBAs */
+				   cuse_nvme_submit_io_done, &done, 0);
+
+	if (rc != 0) {
+		SPDK_ERRLOG("read failed: rc = %d\n", rc);
+		pthread_mutex_unlock(&cuse_device->ctrlr_device->mtx);
+		fuse_reply_err(req, rc);
+		return;
 	}
+
+	while (!done) {
+		/* TODO: Add some sleeps in here so this doesn't hammer the CPU so hard */
+		spdk_nvme_qpair_process_completions(cuse_device->ctrlr_device->io_qpair, 0);
+	}
+
+	pthread_mutex_unlock(&cuse_device->ctrlr_device->mtx);
+
+	fuse_reply_ioctl_iov(req, 0, NULL, 0);
 }
 
 
@@ -662,6 +640,8 @@ cuse_nvme_ctrlr_stop(struct cuse_device *ctrlr_device)
 {
 	struct cuse_device *ns_device, *tmp;
 
+	pthread_mutex_destroy(&ctrlr_device->mtx);
+
 	TAILQ_FOREACH_SAFE(ns_device, &ctrlr_device->ns_devices, tailq, tmp) {
 		fuse_session_exit(ns_device->session);
 		pthread_kill(ns_device->tid, SIGHUP);
@@ -691,9 +671,15 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 		return -ENOMEM;
 	}
 
+	pthread_mutex_init(&ctrlr_device->mtx, NULL);
 	TAILQ_INIT(&ctrlr_device->ns_devices);
 	ctrlr_device->ctrlr = ctrlr;
 	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "%s", dev_path);
+
+	ctrlr_device->io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+	if (ctrlr_device->io_qpair == NULL) {
+		SPDK_ERRLOG("Unable to allocate io_qpair for CUSE device. Read and write commands will not work.\n");
+	}
 
 	if (pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device)) {
 		SPDK_ERRLOG("pthread_create failed\n");
