@@ -112,6 +112,10 @@ applications when a qpair is failed. This list of functions includes:
 These functions now return -ENXIO when the qpair or controller on which they
 operate is failed.
 
+EXPERIMENTAL: Added NVMe character device support to allow to create NVMe device nodes in Linux
+kernel for controller as well as for namespace and process ioctl requests as usual
+from linux environment.
+
 ### nvmf
 
 The `spdk_nvmf_tgt_create` function now accepts an object of type `spdk_nvmf_target_opts`
