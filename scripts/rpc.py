@@ -458,7 +458,8 @@ if __name__ == "__main__":
     p.add_argument('-n', '--name',
                    help='Name of the NVMe controller. Example: Nvme0', required=True)
     p.add_argument('-p', '--dev_path',
-                   help='CUSE dev path including prefix: e.g. spdk/nvme0 will result: /dev/spdk/nvme0n1', required=True)
+                   help="""CUSE dev path including prefix: e.g. spdk/nvme0.
+                   If not provided nvmeN is used, where N starts enumerating from 128 up""", required=False)
     p.set_defaults(func=bdev_nvme_cuse_register)
 
     def bdev_nvme_cuse_unregister(args):
