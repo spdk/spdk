@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4ad614d_f8a58024",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-30T19:29:34Z",
+      "side": 1,
+      "message": "What if we just check if the transport is PCIe and automatically reconnect in that case? Then it keeps the old behavior for PCIe and we get the new behavior for fabrics.",
+      "revId": "8a80347cbbfd7855531ca1e50373ac7d474b9bc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
