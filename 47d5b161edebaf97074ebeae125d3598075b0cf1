@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1de25ded_3ebe1f13",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 37
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-30T19:10:02Z",
+      "side": 1,
+      "message": "Using eval is generally dangerous. The approach I posted doesn\u0027t require that.",
+      "revId": "47d5b161edebaf97074ebeae125d3598075b0cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25af82de_4242f661",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 37
+      },
+      "lineNbr": 2590,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-30T19:10:02Z",
+      "side": 1,
+      "message": "Searching \u0027dir\u0027 for a particular name is fragile. Use the decorator like I suggested.",
+      "revId": "47d5b161edebaf97074ebeae125d3598075b0cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
