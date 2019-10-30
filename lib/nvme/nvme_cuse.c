@@ -42,6 +42,10 @@
 #include "nvme_io_msg.h"
 #include "nvme_cuse.h"
 
+static bool g_cuse_initialized;
+static char g_device_prefix[128 - 15];
+static uint32_t g_device_counter = 128;
+
 struct cuse_device {
 	char				dev_name[128];
 
@@ -656,11 +660,28 @@ end:
 /*****************************************************************************
  * CUSE devices management
  */
+int
+spdk_nvme_cuse_initialize(char *device_prefix, uint32_t first_device_id)
+{
+	if (g_cuse_initialized) {
+		return -1;
+	}
+
+	if (g_device_prefix != NULL) {
+		snprintf(g_device_prefix, sizeof(g_device_prefix), "%s", device_prefix);
+	}
+	g_device_counter = first_device_id;
+
+	g_cuse_initialized = true;
+
+	return 0;
+}
 
 static int
 cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid, const char *dev_path)
 {
 	struct cuse_device *ns_device;
+	int ret;
 
 	ns_device = (struct cuse_device *)calloc(1, sizeof(struct cuse_device));
 	if (!ns_device) {
@@ -671,8 +692,13 @@ cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid, const char *
 	ns_device->ctrlr = ctrlr_device->ctrlr;
 	ns_device->ctrlr_device = ctrlr_device;
 	ns_device->nsid = nsid;
-	snprintf(ns_device->dev_name, sizeof(ns_device->dev_name), "%sn%d",
-		 dev_path, ns_device->nsid);
+	ret = snprintf(ns_device->dev_name, sizeof(ns_device->dev_name), "%sn%d",
+		       dev_path, ns_device->nsid);
+	if (ret < 0) {
+		SPDK_ERRLOG("Insufficient buffer size for device name\n");
+		free(ns_device);
+		return -1;
+	}
 
 	if (pthread_create(&ns_device->tid, NULL, cuse_thread, ns_device)) {
 		SPDK_ERRLOG("pthread_create failed\n");
@@ -712,6 +738,11 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 
 	SPDK_NOTICELOG("Creating cuse device for controller\n");
 
+	if (!g_cuse_initialized) {
+		SPDK_ERRLOG("CUSE not initialized.\n");
+		return -EINVAL;
+	}
+
 	ctrlr_device = (struct cuse_device *)calloc(1, sizeof(struct cuse_device));
 	if (!ctrlr_device) {
 		SPDK_ERRLOG("Cannot allocate memory for ctrlr_device.");
@@ -720,7 +751,14 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 
 	TAILQ_INIT(&ctrlr_device->ns_devices);
 	ctrlr_device->ctrlr = ctrlr;
-	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "%s", dev_path);
+
+	if (dev_path) {
+		snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "%s", dev_path);
+	} else {
+		snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "%snvme%d",
+			 g_device_prefix, g_device_counter);
+		g_device_counter++;
+	}
 
 	if (pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device)) {
 		SPDK_ERRLOG("pthread_create failed\n");
@@ -736,7 +774,7 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 			continue;
 		}
 
-		if (cuse_nvme_ns_start(ctrlr_device, nsid, dev_path) < 0) {
+		if (cuse_nvme_ns_start(ctrlr_device, nsid, ctrlr_device->dev_name) < 0) {
 			SPDK_ERRLOG("Cannot start CUSE namespace device.");
 			cuse_nvme_ctrlr_stop(ctrlr_device);
 			return -1;
@@ -769,10 +807,6 @@ int
 spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 {
 	int rc;
-
-	if (dev_path == NULL) {
-		return -EINVAL;
-	}
 
 	rc = nvme_io_msg_ctrlr_start(ctrlr);
 	if (rc) {
