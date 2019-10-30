@@ -517,67 +517,6 @@ vmd_alloc_dev(struct vmd_pci_bus *bus, uint32_t devfn)
 	return dev;
 }
 
-static void
-vmd_add_bus_to_list(struct vmd_adapter *vmd, struct vmd_pci_bus *bus)
-{
-	struct vmd_pci_bus *blist;
-
-	if (!vmd || !bus) {
-		return;
-	}
-
-	blist = vmd->bus_list;
-	bus->next = NULL;
-	if (blist == NULL) {
-		vmd->bus_list = bus;
-		return;
-	}
-
-	while (blist->next != NULL) {
-		blist = blist->next;
-	}
-
-	blist->next = bus;
-}
-
-static void
-vmd_pcibus_remove_device(struct vmd_pci_bus *bus, struct vmd_pci_device *device)
-{
-	struct vmd_pci_device *list = bus->dev_list;
-
-	if (list == device) {
-		bus->dev_list = NULL;
-	}
-
-	while (list->next != NULL) {
-		if (list->next == device) {
-			list->next = list->next->next;
-			break;
-		}
-		list = list->next;
-	}
-}
-
-static bool
-vmd_bus_add_device(struct vmd_pci_bus *bus, struct vmd_pci_device *device)
-{
-	struct vmd_pci_device *next_dev = bus->dev_list;
-
-	device->next = NULL;
-	if (next_dev == NULL) {
-		bus->dev_list = device;
-		return 1;
-	}
-
-	while (next_dev->next != NULL) {
-		next_dev = next_dev->next;
-	}
-
-	next_dev->next = device;
-
-	return 1;
-}
-
 static struct vmd_pci_bus *
 vmd_create_new_bus(struct vmd_pci_bus *parent, struct vmd_pci_device *bridge, uint8_t bus_number)
 {
@@ -594,6 +533,7 @@ vmd_create_new_bus(struct vmd_pci_bus *parent, struct vmd_pci_device *bridge, ui
 	new_bus->secondary_bus = new_bus->subordinate_bus = bus_number;
 	new_bus->self = bridge;
 	new_bus->vmd = parent->vmd;
+	STAILQ_INIT(&new_bus->dev_list);
 	bridge->subordinate = new_bus;
 
 	bridge->pci.addr.bus = new_bus->bus_number;
@@ -884,7 +824,7 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 			new_dev->header->one.subordinate = new_bus->subordinate_bus;
 
 			vmd_bus_update_bridge_info(new_dev);
-			vmd_add_bus_to_list(bus->vmd, new_bus);
+			STAILQ_INSERT_TAIL(&bus->vmd->bus_list, new_bus, link);
 
 			/* Attach hot plug instance if HP is supported */
 			/* Hot inserted SSDs can be assigned port bus of sub-ordinate + 1 */
@@ -907,7 +847,7 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 			}
 		} else {
 			/* Attach the device to the current bus and assign base addresses */
-			vmd_bus_add_device(bus, new_dev);
+			STAILQ_INSERT_TAIL(&bus->dev_list, new_dev, link);
 			g_end_device_count++;
 			if (vmd_assign_base_addrs(new_dev)) {
 				vmd_setup_msix(new_dev, &bus->vmd->msix_table[0]);
@@ -919,7 +859,7 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 				}
 			} else {
 				SPDK_DEBUGLOG(SPDK_LOG_VMD, "Removing failed device:%p\n", new_dev);
-				vmd_pcibus_remove_device(bus, new_dev);
+				STAILQ_REMOVE(&bus->dev_list, new_dev, vmd_pci_device, link);
 				free(new_dev);
 				if (dev_cnt) {
 					dev_cnt--;
@@ -1003,36 +943,31 @@ vmd_cache_scan_info(struct vmd_pci_device *dev)
 static uint8_t
 vmd_scan_pcibus(struct vmd_pci_bus *bus)
 {
-	struct vmd_pci_bus *bus_entry;
-	struct vmd_pci_device *dev;
+	struct vmd_pci_bus *bus_entry, *bus_entry_tmp;
+	struct vmd_pci_device *dev, *dev_tmp;
 	uint8_t dev_cnt;
 
 	g_end_device_count = 0;
-	vmd_add_bus_to_list(bus->vmd, bus);
+	STAILQ_INSERT_TAIL(&bus->vmd->bus_list, bus, link);
 	bus->vmd->next_bus_number = bus->bus_number + 1;
 	dev_cnt = vmd_scan_single_bus(bus, NULL);
-	bus_entry = bus->vmd->bus_list;
 
 	SPDK_DEBUGLOG(SPDK_LOG_VMD, "VMD scan found %u devices\n", dev_cnt);
 	SPDK_DEBUGLOG(SPDK_LOG_VMD, "VMD scan found %u END DEVICES\n", g_end_device_count);
 
 	SPDK_INFOLOG(SPDK_LOG_VMD, "PCIe devices attached to VMD %04x:%02x:%02x:%x...\n",
-		     bus_entry->vmd->pci.addr.domain, bus_entry->vmd->pci.addr.bus,
-		     bus_entry->vmd->pci.addr.dev, bus_entry->vmd->pci.addr.func);
+		     bus->vmd->pci.addr.domain, bus->vmd->pci.addr.bus,
+		     bus->vmd->pci.addr.dev, bus->vmd->pci.addr.func);
 
-	while (bus_entry != NULL) {
+	STAILQ_FOREACH_SAFE(bus_entry, &bus->vmd->bus_list, link, bus_entry_tmp) {
 		if (bus_entry->self != NULL) {
 			vmd_print_pci_info(bus_entry->self);
 			vmd_cache_scan_info(bus_entry->self);
 		}
 
-		dev = bus_entry->dev_list;
-		while (dev != NULL) {
+		STAILQ_FOREACH_SAFE(dev, &bus->dev_list, link, dev_tmp) {
 			vmd_print_pci_info(dev);
-			dev = dev->next;
 		}
-
-		bus_entry = bus_entry->next;
 	}
 
 	return dev_cnt;
@@ -1076,19 +1011,19 @@ vmd_enumerate_devices(struct vmd_adapter *vmd)
 struct vmd_pci_device *
 vmd_find_device(const struct spdk_pci_addr *addr)
 {
-	struct vmd_pci_bus *bus;
-	struct vmd_pci_device *dev;
+	struct vmd_pci_bus *bus, *bus_tmp;
+	struct vmd_pci_device *dev, *dev_tmp;
 	int i;
 
 	for (i = 0; i < MAX_VMD_TARGET; ++i) {
-		for (bus = g_vmd_container.vmd[i].bus_list; bus != NULL; bus = bus->next) {
+		STAILQ_FOREACH_SAFE(bus, & g_vmd_container.vmd[i].bus_list, link, bus_tmp) {
 			if (bus->self) {
 				if (spdk_pci_addr_compare(&bus->self->pci.addr, addr) == 0) {
 					return bus->self;
 				}
 			}
 
-			for (dev = bus->dev_list; dev != NULL; dev = dev->next) {
+			STAILQ_FOREACH_SAFE(dev, &bus->dev_list, link, dev_tmp) {
 				if (spdk_pci_addr_compare(&dev->pci.addr, addr) == 0) {
 					return dev;
 				}
@@ -1146,8 +1081,8 @@ int
 spdk_vmd_pci_device_list(struct spdk_pci_addr vmd_addr, struct spdk_pci_device *nvme_list)
 {
 	int cnt = 0;
-	struct vmd_pci_bus *bus;
-	struct vmd_pci_device *dev;
+	struct vmd_pci_bus *bus, *bus_tmp;
+	struct vmd_pci_device *dev, *dev_tmp;
 
 	if (!nvme_list) {
 		return -1;
@@ -1155,18 +1090,14 @@ spdk_vmd_pci_device_list(struct spdk_pci_addr vmd_addr, struct spdk_pci_device *
 
 	for (int i = 0; i < MAX_VMD_TARGET; ++i) {
 		if (spdk_pci_addr_compare(&vmd_addr, &g_vmd_container.vmd[i].pci.addr) == 0) {
-			bus = g_vmd_container.vmd[i].bus_list;
-			while (bus != NULL) {
-				dev = bus->dev_list;
-				while (dev != NULL) {
+			STAILQ_FOREACH_SAFE(bus, &g_vmd_container.vmd[i].bus_list, link, bus_tmp) {
+				STAILQ_FOREACH_SAFE(dev, &bus->dev_list, link, dev_tmp) {
 					nvme_list[cnt++] = dev->pci;
 					if (!dev->is_hooked) {
 						vmd_dev_init(dev);
 						dev->is_hooked = 1;
 					}
-					dev = dev->next;
 				}
-				bus = bus->next;
 			}
 		}
 	}
@@ -1177,6 +1108,13 @@ spdk_vmd_pci_device_list(struct spdk_pci_addr vmd_addr, struct spdk_pci_device *
 int
 spdk_vmd_init(void)
 {
+	int i;
+
+	/* initialzie all the list */
+	for (i = 0 ; i < MAX_VMD_SUPPORTED; i++) {
+		STAILQ_INIT(&g_vmd_container.vmd[i].bus_list);
+	}
+
 	return spdk_pci_enumerate(spdk_pci_vmd_get_driver(), vmd_enum_cb, &g_vmd_container);
 }
 
