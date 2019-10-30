@@ -1601,6 +1601,10 @@ bdev_nvme_library_init(void)
 		rc = -1;
 	}
 end:
+#ifdef SPDK_CONFIG_NVME_CUSE
+	spdk_nvme_cuse_initialize("/", 128);
+#endif
+
 	free(probe_ctx);
 	return rc;
 }
