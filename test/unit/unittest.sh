@@ -100,6 +100,7 @@ $valgrind $testdir/lib/nvme/nvme_qpair.c/nvme_qpair_ut
 $valgrind $testdir/lib/nvme/nvme_pcie.c/nvme_pcie_ut
 $valgrind $testdir/lib/nvme/nvme_quirks.c/nvme_quirks_ut
 $valgrind $testdir/lib/nvme/nvme_tcp.c/nvme_tcp_ut
+$valgrind $testdir/lib/nvme/nvme_opal.c/nvme_opal_ut
 if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 	$valgrind $testdir/lib/nvme/nvme_rdma.c/nvme_rdma_ut
 fi
