@@ -2,6 +2,11 @@
 
 ## v20.01: (Upcoming Release)
 
+### isa-l
+
+Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and
+optimization for aarch64.
+
 ## v19.10:
 
 ### bdev
