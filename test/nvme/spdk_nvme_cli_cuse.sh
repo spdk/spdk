@@ -19,6 +19,24 @@ waitforlisten $spdk_tgt_pid
 bdf=$(iter_pci_class_code 01 08 02 | head -1)
 
 $rpc_py bdev_nvme_attach_controller -b Nvme0 -t PCIe -a ${bdf}
+
+# If path is not provided default /dev/nvme128 should be used
+$rpc_py bdev_nvme_cuse_register -n Nvme0
+sleep 1
+if [ ! -c /dev/nvme128 ]; then
+	return 1
+fi
+$rpc_py bdev_nvme_cuse_unregister -n Nvme0
+
+# Next default device should have next id (/dev/nvme129)
+$rpc_py bdev_nvme_cuse_register -n Nvme0
+sleep 1
+if [ ! -c /dev/nvme129 ]; then
+	return 1
+fi
+$rpc_py bdev_nvme_cuse_unregister -n Nvme0
+
+# Use provided optional path (/dev/spdk/nvme0)
 $rpc_py bdev_nvme_cuse_register -n Nvme0 -p spdk/nvme0
 
 sleep 5

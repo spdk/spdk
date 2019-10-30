@@ -2586,6 +2586,16 @@ char *spdk_nvme_cuse_get_ctrlr_name(struct spdk_nvme_ctrlr *ctrlr);
 char *spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
 
 /**
+ * Initialize default prefix and first device id for cuse device (Experimental)
+ *
+ * \param device_prefix Set default device prefix
+ * \param first_device_id First NVMe device ID
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_nvme_cuse_initialize(char *device_prefix, uint32_t first_device_id);
+
+/**
  * Create a character device at the path specified (Experimental)
  *
  * The character device can handle ioctls and is compatible with a standard
@@ -2596,7 +2606,10 @@ char *spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
  * for the CUSE device to function.
  *
  * \param ctrlr Opaque handle to the NVMe controller.
- * \param dev_path The path at which the device should appear. Ex. /dev/spdk/nvme0n1
+ * \param dev_path The path at which the controller device should appear.
+ * \               Ex. 'spdk/nvme0'. If this parameter is NULL, default path is
+ * \               used starting from 'nvme128'. Default path can be changed by
+ * \               spdk_nvme_cuse_initialize().
  *
  * \return 0 on success. Negated errno on failure.
  */
