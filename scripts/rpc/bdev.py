@@ -485,10 +485,12 @@ def bdev_nvme_cuse_register(client, name, dev_path):
 
     Args:
         name: Name of the operating NVMe controller
-        dev_path: CUSE dev path with dev prefix
+        dev_path: CUSE dev path with dev prefix (optional)
     """
-    params = {'name': name,
-              'dev_path': dev_path}
+    params = {'name': name}
+
+    if dev_path:
+        params['dev_path'] = dev_path
 
     return client.call('bdev_nvme_cuse_register', params)
 

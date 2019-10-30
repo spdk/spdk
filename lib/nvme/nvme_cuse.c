@@ -42,6 +42,9 @@
 #include "nvme_io_msg.h"
 #include "nvme_cuse.h"
 
+static char g_device_prefix[128 - 15];
+static uint32_t g_device_counter = 128;
+
 struct cuse_device {
 	char				dev_name[128];
 
@@ -656,6 +659,12 @@ end:
 /*****************************************************************************
  * CUSE devices management
  */
+void
+spdk_nvme_cuse_initialize(char *device_prefix, uint32_t first_device_id)
+{
+	snprintf(g_device_prefix, sizeof(g_device_prefix), "%s", device_prefix);
+	g_device_counter = first_device_id;
+}
 
 static int
 cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid, const char *dev_path)
@@ -720,7 +729,14 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 
 	TAILQ_INIT(&ctrlr_device->ns_devices);
 	ctrlr_device->ctrlr = ctrlr;
-	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "%s", dev_path);
+
+	if (dev_path) {
+		snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "%s", dev_path);
+	} else {
+		snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "%snvme%d",
+			 g_device_prefix, g_device_counter);
+		g_device_counter++;
+	}
 
 	if (pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device)) {
 		SPDK_ERRLOG("pthread_create failed\n");
@@ -736,7 +752,7 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 			continue;
 		}
 
-		if (cuse_nvme_ns_start(ctrlr_device, nsid, dev_path) < 0) {
+		if (cuse_nvme_ns_start(ctrlr_device, nsid, ctrlr_device->dev_name) < 0) {
 			SPDK_ERRLOG("Cannot start CUSE namespace device.");
 			cuse_nvme_ctrlr_stop(ctrlr_device);
 			return -1;
@@ -769,10 +785,6 @@ int
 spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 {
 	int rc;
-
-	if (dev_path == NULL) {
-		return -EINVAL;
-	}
 
 	rc = nvme_io_msg_ctrlr_start(ctrlr);
 	if (rc) {
