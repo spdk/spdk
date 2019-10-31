@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "248c4397_cd55864d",
+        "filename": "module/bdev/raid/raid0.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-10-31T07:38:42Z",
+      "side": 1,
+      "message": "Can we delete this comment?",
+      "range": {
+        "startLine": 159,
+        "startChar": 0,
+        "endLine": 162,
+        "endChar": 0
+      },
+      "revId": "3936df3f2c2353bbb74068e6cda66c9de82f006c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
