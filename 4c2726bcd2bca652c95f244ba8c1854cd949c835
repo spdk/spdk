@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d86b9de8_38d42bff",
+        "filename": "test/unit/lib/nvmf/tcp.c/tcp_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2019-10-31T11:14:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "495e42ad_7f4ec3bb",
+      "range": {
+        "startLine": 596,
+        "startChar": 1,
+        "endLine": 605,
+        "endChar": 33
+      },
+      "revId": "4c2726bcd2bca652c95f244ba8c1854cd949c835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cb41e556_7dcbb785",
         "filename": "test/unit/lib/nvmf/tcp.c/tcp_ut.c",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "4c2726bcd2bca652c95f244ba8c1854cd949c835",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "095f1772_2d3c596f",
+        "filename": "test/unit/lib/nvmf/tcp.c/tcp_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2019-10-31T11:14:43Z",
+      "side": 1,
+      "message": "I\u0027ve already replaced it with two qpair , submit one tcp req first , and make sure it waitting in pending_buff queue . and then submit the other tcp req . Then check the status of req.",
+      "parentUuid": "cb41e556_7dcbb785",
+      "range": {
+        "startLine": 683,
+        "startChar": 36,
+        "endLine": 683,
+        "endChar": 81
+      },
+      "revId": "4c2726bcd2bca652c95f244ba8c1854cd949c835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
