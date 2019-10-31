@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5d35afdc_0857ae8d",
+        "filename": "scripts/vagrant/local.conf",
+        "patchSetId": 18
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-31T09:39:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4a0a2d6e_8baa1ba5",
+      "revId": "372d6c1fd418f7183755c8b194acf4963fb78fef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ddaf5aa2_838b5235",
         "filename": "test/openstack/install_devstack.sh",
         "patchSetId": 18
@@ -39,6 +57,30 @@
       "revId": "372d6c1fd418f7183755c8b194acf4963fb78fef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26a1d2e8_4bdd24da",
+        "filename": "test/openstack/install_devstack.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-10-31T09:39:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ddaf5aa2_838b5235",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 8
+      },
+      "revId": "372d6c1fd418f7183755c8b194acf4963fb78fef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
