@@ -9,6 +9,11 @@ never return EAGAIN, instead queueing internally until the data has all been sen
 simplify many code flows that create pollers to continue attempting to flush writes
 on sockets.
 
+### bdev opal
+
+Add `bdev_opal_recovery` rpc command to recover previous configured Opal bdev built
+on NVMe device when target is restarted.
+
 ### isa-l
 
 Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and
