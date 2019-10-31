@@ -43,9 +43,9 @@ function test_opal_cmds() {
 	$rpc_py bdev_opal_get_info -b nvme0n1r3 -p test
 	$rpc_py bdev_opal_set_lock_state -b nvme0n1r1 -i 0 -p test -l rwlock
 
-	$rpc_py bdev_opal_delete -b nvme0n1r2 -p test
-	$rpc_py bdev_opal_delete -b nvme0n1r3 -p test
-	$rpc_py bdev_opal_delete -b nvme0n1r1 -p test
+	# $rpc_py bdev_opal_delete -b nvme0n1r2 -p test
+	# $rpc_py bdev_opal_delete -b nvme0n1r3 -p test
+	# $rpc_py bdev_opal_delete -b nvme0n1r1 -p test
 
 	$rpc_py bdev_nvme_detach_controller nvme0
 }
@@ -83,6 +83,19 @@ trap 'revert; killprocess $spdk_tgt_pid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_tgt_pid
 opal_init
 test_opal_cmds
+killprocess $spdk_tgt_pid
+
+# test recovery
+result="nvme0n1r1 nvme0n1r2 nvme0n1r3"
+$rootdir/app/spdk_tgt/spdk_tgt &
+spdk_tgt_pid=$!
+trap 'revert; killprocess $spdk_tgt_pid; exit 1' SIGINT SIGTERM EXIT
+waitforlisten $spdk_tgt_pid
+$rpc_py bdev_nvme_attach_controller -b "nvme0" -t "pcie" -a $bdf1
+output=$($rpc_py bdev_opal_recovery -b nvme0 -n 1 -p test)
+if [ "$result" != "$output" ]; then
+	revert; killprocess $spdk_tgt_pid; exit 1
+fi
 killprocess $spdk_tgt_pid
 
 $rootdir/test/bdev/bdevio/bdevio -w &

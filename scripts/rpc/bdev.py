@@ -713,6 +713,26 @@ def bdev_passthru_delete(client, name):
     return client.call('bdev_passthru_delete', params)
 
 
+def bdev_opal_recovery(client, nvme_ctrlr_name, nsid, password):
+    """Restart opal bdevs which have been created on NVMe controller.
+
+    Args:
+        nvme_ctrlr_name: name of the nvme ctrlr
+        nsid: namespace ID of nvme ctrlr
+        password: admin password
+
+    Returns:
+        Names of all the opal bdev created before.
+    """
+    params = {
+        'nvme_ctrlr_name': nvme_ctrlr_name,
+        'nsid': nsid,
+        'password': password,
+    }
+
+    return client.call('bdev_opal_recovery', params)
+
+
 def bdev_opal_create(client, nvme_ctrlr_name, nsid, locking_range_id, range_start, range_length, password):
     """Create opal virtual block devices from a base nvme bdev.
 
