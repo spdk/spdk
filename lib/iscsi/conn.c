@@ -369,18 +369,6 @@ iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 }
 
 static void
-_iscsi_conn_free(struct spdk_iscsi_conn *conn)
-{
-	if (conn == NULL) {
-		return;
-	}
-
-	spdk_iscsi_param_free(conn->params);
-
-	free_conn(conn);
-}
-
-static void
 iscsi_conn_cleanup_backend(struct spdk_iscsi_conn *conn)
 {
 	int rc;
@@ -446,7 +434,8 @@ iscsi_conn_free(struct spdk_iscsi_conn *conn)
 
 end:
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "cleanup free conn\n");
-	_iscsi_conn_free(conn);
+	spdk_iscsi_param_free(conn->params);
+	free_conn(conn);
 
 	pthread_mutex_unlock(&g_conns_mutex);
 }
