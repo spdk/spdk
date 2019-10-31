@@ -537,6 +537,8 @@ static int spdk_fio_io_u_init(struct thread_data *td, struct io_u *io_u)
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_request	*fio_req;
 
+	io_u->engine_data = NULL;
+
 	fio_req = calloc(1, sizeof(*fio_req));
 	if (fio_req == NULL) {
 		return 1;
