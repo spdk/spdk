@@ -137,6 +137,7 @@ ut_init_task(struct spdk_scsi_task *task)
 	task->iovcnt = 1;
 	task->alloc_len = 0;
 	task->dxfer_dir = SPDK_SCSI_DIR_NONE;
+	task->zcopy = false;
 }
 
 void
@@ -220,6 +221,15 @@ spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       struct iovec *iov, int iovcnt,
 		       uint64_t offset_blocks, uint64_t num_blocks,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return _spdk_bdev_io_op(cb, cb_arg);
+}
+
+int
+spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		      uint64_t offset_blocks, uint64_t num_blocks,
+		      bool populate,
+		      spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return _spdk_bdev_io_op(cb, cb_arg);
 }
