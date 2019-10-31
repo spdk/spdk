@@ -63,6 +63,7 @@ spdk_rpc_bdev_nvme_opal_init(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	struct nvme_bdev_ctrlr *nvme_ctrlr;
 	int rc;
+	enum spdk_opal_dev_state state;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_opal_init_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_opal_init_decoders),
@@ -81,22 +82,24 @@ spdk_rpc_bdev_nvme_opal_init(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
+	state = spdk_opal_get_dev_state(nvme_ctrlr->opal_dev);
+	if (state == OPAL_DEV_STATE_BUSY) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "SP Busy, try again later");
+		goto out;
+	}
+
+	if (state == OPAL_DEV_STATE_ENABLED) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "This drive is already enabled");
+		goto out;
+	}
+
 	/* take ownership */
 	rc = spdk_opal_cmd_take_ownership(nvme_ctrlr->opal_dev, req.password);
 	if (rc) {
 		SPDK_ERRLOG("Take ownership failure: %d\n", rc);
-		switch (rc) {
-		case -EBUSY:
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							 "SP Busy, try again later");
-			break;
-		case -EACCES:
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							 "This drive is already enabled");
-			break;
-		default:
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
-		}
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		goto out;
 	}
 
@@ -155,6 +158,7 @@ spdk_rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	struct nvme_bdev_ctrlr *nvme_ctrlr;
 	int rc;
+	enum spdk_opal_dev_state state;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_opal_revert_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_opal_revert_decoders),
@@ -170,6 +174,19 @@ spdk_rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 	    !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
 		SPDK_ERRLOG("%s not support opal\n", req.nvme_ctrlr_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto out;
+	}
+
+	state = spdk_opal_get_dev_state(nvme_ctrlr->opal_dev);
+	if (state == OPAL_DEV_STATE_BUSY) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "SP Busy, try again later");
+		goto out;
+	}
+
+	if (state == OPAL_DEV_STATE_DEFAULT) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "This drive is not initialized. No need to revert");
 		goto out;
 	}
 
