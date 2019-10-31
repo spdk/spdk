@@ -16,6 +16,24 @@
       "revId": "d379ebfcb430bcdc0963612a6a490335f3b43cf9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2174a8b4_1fb8b75b",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T16:20:59Z",
+      "side": 1,
+      "message": "I see all of this code gets removed in next patch, so I guess this is OK.",
+      "parentUuid": "40fa2b87_f81ec200",
+      "revId": "d379ebfcb430bcdc0963612a6a490335f3b43cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
