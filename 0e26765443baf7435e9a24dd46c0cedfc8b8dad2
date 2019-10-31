@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35298042_1eb5ea17",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-10-31T12:32:00Z",
+      "side": 1,
+      "message": "Actually, after our internal call I agree with Tomek.\nThis might be a good option for us, as we frequently update CI systems, but for some users outside of our organization --allowerasing may not be OK. I imagine someone might not want our scripts to interfere that much with their packages.\n\nHow about we add an option to the script which would enable \"--allowerasing\" for yum/apt/pacman commands?\nYou\u0027d then have to:\na) add neccessary option in getopts\nb) create a helper variable for keeping otions, eg: PKG_MGR_OPTS\u003d\"-y\"\nc) modify it if needed to PKG_MGR_OPTS\u003d\"-y --allowerasing\"\nd) yum install ${PKG_MGR_OPTS} (lsit of packages)\n\nTomek. if you look here, what do you think?",
+      "range": {
+        "startLine": 57,
+        "startChar": 16,
+        "endLine": 57,
+        "endChar": 30
+      },
+      "revId": "0e26765443baf7435e9a24dd46c0cedfc8b8dad2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
