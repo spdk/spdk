@@ -100,6 +100,10 @@ DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 DEFINE_STUB(spdk_bdev_get_name, const char *,
 	    (const struct spdk_bdev *bdev), "test");
 
+DEFINE_STUB(spdk_bdev_zcopy_end, int,
+	    (struct spdk_bdev_io *bdev_io, bool commit,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+
 DEFINE_STUB_V(spdk_scsi_dev_queue_mgmt_task,
 	      (struct spdk_scsi_dev *dev, struct spdk_scsi_task *task));
 
