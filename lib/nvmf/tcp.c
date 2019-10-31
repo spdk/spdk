@@ -1365,6 +1365,12 @@ spdk_nvmf_tcp_capsule_cmd_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 
 	tcp_req = spdk_nvmf_tcp_req_get(tqpair);
 	if (!tcp_req) {
+		/* Directly return and make the allocation retry again */
+		if (tqpair->state_cntr[TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST] > 0) {
+			return;
+		}
+
+		/* The host sent more commands than the maximum queue depth. */
 		SPDK_ERRLOG("Cannot allocate tcp_req\n");
 		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
 		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
@@ -2039,6 +2045,13 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			break;
 		/* Wait for the pdu specific header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
+			/* Handle the case if psh is already read but the nvmf tcp is not tied */
+			if (spdk_unlikely((pdu->psh_valid_bytes == pdu->psh_len) &&
+					  (pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD))) {
+				spdk_nvmf_tcp_capsule_cmd_hdr_handle(ttransport, tqpair, pdu);
+				break;
+			}
+
 			if (!tqpair->pdu_recv_buf.remain_size) {
 				rc = nvme_tcp_recv_buf_read(tqpair->sock, &tqpair->pdu_recv_buf);
 				if (rc <= 0) {
