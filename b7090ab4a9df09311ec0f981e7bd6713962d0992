@@ -16,6 +16,41 @@
       "revId": "b7090ab4a9df09311ec0f981e7bd6713962d0992",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "358d24b3_860bdf0c",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1729,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T15:06:54Z",
+      "side": 1,
+      "message": "Note that spdk_nvmf_tcp_qpair_init_mem_resource uses parentheses similar to what I\u0027ve posted here.",
+      "parentUuid": "6e6b2d57_80c46081",
+      "revId": "b7090ab4a9df09311ec0f981e7bd6713962d0992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aeeaccea_6bf9197f",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1740,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T15:06:54Z",
+      "side": 1,
+      "message": "should this part be a different patch?  It seems like this patch is doing two things - it\u0027s making some adjustments to pdu_recv_buf.size, and then also calling spdk_sock_set_recvbuf where it wasn\u0027t before\n\nI\u0027m also confused how this code here coincides with setting of tqpair-\u003epdu_recv_buf.size in spdk_nvmf_tcp_qpair_init_mem_resource.  We allocate the buf there based on the size, but then we change the size here.\n\nI\u0027m sure this all works, but I think it\u0027s getting more confusing...",
+      "revId": "b7090ab4a9df09311ec0f981e7bd6713962d0992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
