@@ -9,6 +9,27 @@ optimization for aarch64.
 
 ## v19.10:
 
+### rpc
+
+Many of SPDK's RPCs were renamed to be more consistent and intuitive in this release.
+The old names will continue to function, but will display a deprecation warning.
+
+Added optional parameters '--arbitration-burst' and '--low/medium/high-priority-weight' to
+'bdev_nvme_set_options' RPC method.
+
+Added optional parameter '--md-size' to 'construct_null_bdev' RPC method.
+
+Added optional parameters '--dif-type' and '--dif-is-head-of-md' to 'construct_null_bdev'
+RPC method.
+
+Added `blobfs_detect` RPC method to detect whether a blobfs exists on given bdev.
+
+Added `blobfs_create` RPC method to build blobfs on given bdev.
+
+Added `blobfs_mount` RPC method to mount blobfs on given bdev to a host path by FUSE.
+Then on the host path, user can directly do some file operations which will be mapped
+to blobfs.
+
 ### bdev
 
 Added new parameter `cdw0` to `spdk_bdev_io_complete_nvme_status()` and
@@ -213,24 +234,6 @@ Along with update, new cache mode 'write only' was added.
 New cache modes added to use via RPC, wi - write invalidate and wa - write around.
 
 New version of OCF provides fully asynchronous management API.
-
-### rpc
-
-Added optional parameters '--arbitration-burst' and '--low/medium/high-priority-weight' to
-'bdev_nvme_set_options' RPC method.
-
-Added optional parameter '--md-size' to 'construct_null_bdev' RPC method.
-
-Added optional parameters '--dif-type' and '--dif-is-head-of-md' to 'construct_null_bdev'
-RPC method.
-
-Added `blobfs_detect` RPC method to detect whether a blobfs exists on given bdev.
-
-Added `blobfs_create` RPC method to build blobfs on given bdev.
-
-Added `blobfs_mount` RPC method to mount blobfs on given bdev to a host path by FUSE.
-Then on the host path, user can directly do some file operations which will be mapped
-to blobfs.
 
 ## v19.07:
 
