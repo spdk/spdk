@@ -2,6 +2,11 @@
 
 ## v20.01: (Upcoming Release)
 
+### bdev opal
+
+Add `bdev_opal_recovery` rpc command to recover previous configured Opal bdev built
+on NVMe device when target is restarted.
+
 ### isa-l
 
 Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and
