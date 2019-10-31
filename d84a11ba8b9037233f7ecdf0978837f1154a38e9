@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82e6778f_76859ed5",
+        "filename": "module/bdev/compress/vbdev_compress.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T23:37:41Z",
+      "side": 1,
+      "message": "you can make this:\n\n} else if (comp_op-\u003estatus \u003d\u003d RTE_XXX) {\n\nwhich avoids the extra indentation and reduces the size of this patch",
+      "revId": "d84a11ba8b9037233f7ecdf0978837f1154a38e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9e92cf0_2fc027db",
+        "filename": "module/bdev/compress/vbdev_compress.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T23:37:41Z",
+      "side": 1,
+      "message": "So this nicely executes through directly to the error_src_dst label to clean everything up.  Would it be good to add an explicit goto error_src_dst instead?  It\u0027s not functionally needed, but makes it more clear that we\u0027re not accidentally relying on falling through to that goto label.  (I had to walk through all of the code above to make sure that the fall through was indeed what you intended.)",
+      "revId": "d84a11ba8b9037233f7ecdf0978837f1154a38e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4739e5d3_6689aab6",
+        "filename": "module/bdev/compress/vbdev_compress.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T23:37:41Z",
+      "side": 1,
+      "message": "if (device_error \u003d\u003d true) {\n  SPDK_ERRLOG();\n  return -EINVAL;\n}\n\nop_to_queue \u003d calloc(...);\n/* the rest */\n\nthen you avoid all of the indentation added on lines 631-646 and reduces the size of the patch considerably",
+      "revId": "d84a11ba8b9037233f7ecdf0978837f1154a38e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
