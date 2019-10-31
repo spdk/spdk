@@ -203,8 +203,6 @@ spdk_rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	/* TODO: delete all opal vbdev before revert TPer */
-
 	rc = spdk_vbdev_opal_revert_tper(nvme_ctrlr, req.password, revert_tper_done,
 					 nvme_ctrlr);
 	if (rc) {
