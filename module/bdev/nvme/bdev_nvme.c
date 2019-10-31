@@ -1030,8 +1030,11 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	if (spdk_nvme_ctrlr_get_flags(nvme_bdev_ctrlr->ctrlr) &
 	    SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
 		nvme_bdev_ctrlr->opal_dev = spdk_opal_init_dev(nvme_bdev_ctrlr->ctrlr);
+		if (nvme_bdev_ctrlr->opal_dev == NULL) {
+			SPDK_ERRLOG("Failed to initialize Opal\n");
+			return -ENOMEM;
+		}
 	}
-
 	return 0;
 }
 
