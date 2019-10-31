@@ -235,6 +235,7 @@ struct spdk_nvmf_tcp_qpair {
 	void					*bufs;
 	struct spdk_nvmf_tcp_req		*req;
 	struct spdk_nvmf_tcp_req		*reqs;
+	uint32_t				expected_free_req_num;
 
 	bool					host_hdgst_enable;
 	bool					host_ddgst_enable;
@@ -359,6 +360,8 @@ spdk_nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 		return NULL;
 	}
 
+	assert(tqpair->expected_free_req_num > 0);
+	tqpair->expected_free_req_num--;
 	memset(&tcp_req->cmd, 0, sizeof(tcp_req->cmd));
 	memset(&tcp_req->rsp, 0, sizeof(tcp_req->rsp));
 	tcp_req->next_expected_r2t_offset = 0;
@@ -992,6 +995,7 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair, uint16
 			return -1;
 		}
 		tqpair->pdu_in_progress.hdr = (union nvme_tcp_pdu_hdr *)tqpair->pdu_recv_buf.buf;
+		tqpair->expected_free_req_num = 1;
 	} else {
 		tqpair->reqs = calloc(size, sizeof(*tqpair->reqs));
 		if (!tqpair->reqs) {
@@ -1038,6 +1042,8 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair, uint16
 		for (i = 0; i < size; i++) {
 			TAILQ_INSERT_TAIL(&tqpair->free_queue, &tqpair->pdu_pool[i], tailq);
 		}
+
+		tqpair->expected_free_req_num += size;
 	}
 
 	return 0;
@@ -1365,6 +1371,10 @@ spdk_nvmf_tcp_capsule_cmd_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 
 	tcp_req = spdk_nvmf_tcp_req_get(tqpair);
 	if (!tcp_req) {
+		if (tqpair->expected_free_req_num > 0) {
+			pdu->wait_for_req = true;
+			return;
+		}
 		SPDK_ERRLOG("Cannot allocate tcp_req\n");
 		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
 		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
@@ -1515,6 +1525,7 @@ spdk_nvmf_tcp_send_capsule_resp_pdu(struct spdk_nvmf_tcp_req *tcp_req,
 		capsule_resp->common.plen += SPDK_NVME_TCP_DIGEST_LEN;
 	}
 
+	tqpair->expected_free_req_num++;
 	spdk_nvmf_tcp_qpair_write_pdu(tqpair, rsp_pdu, spdk_nvmf_tcp_pdu_cmd_complete, tcp_req);
 }
 
@@ -1530,6 +1541,7 @@ spdk_nvmf_tcp_pdu_c2h_data_complete(void *cb_arg)
 	tcp_req->c2h_data_pdu_num--;
 	if (!tcp_req->c2h_data_pdu_num) {
 		if (tqpair->qpair.transport->opts.c2h_success) {
+			tqpair->expected_free_req_num++;
 			nvmf_tcp_request_free(tcp_req);
 		} else {
 			spdk_nvmf_tcp_send_capsule_resp_pdu(tcp_req, tqpair);
@@ -1572,6 +1584,7 @@ spdk_nvmf_tcp_send_r2t_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
 		      "tcp_req(%p) on tqpair(%p), r2t_info: cccid=%u, ttag=%u, r2to=%u, r2tl=%u\n",
 		      tcp_req, tqpair, r2t->cccid, r2t->ttag, r2t->r2to, r2t->r2tl);
+	tqpair->expected_free_req_num++;
 	spdk_nvmf_tcp_qpair_write_pdu(tqpair, rsp_pdu, spdk_nvmf_tcp_pdu_cmd_complete, NULL);
 }
 
@@ -2001,6 +2014,8 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 	struct nvme_tcp_pdu *pdu;
 	enum nvme_tcp_pdu_recv_state prev_state;
 	uint32_t data_len;
+	struct spdk_nvmf_tcp_transport *ttransport = SPDK_CONTAINEROF(tqpair->qpair.transport,
+			struct spdk_nvmf_tcp_transport, transport);
 
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
@@ -2039,6 +2054,15 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			break;
 		/* Wait for the pdu specific header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
+			if (spdk_unlikely(pdu->wait_for_req)) {
+				assert(pdu->hdr->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD);
+				if (tqpair->expected_free_req_num > 0) {
+					pdu->wait_for_req = false;
+					spdk_nvmf_tcp_capsule_cmd_hdr_handle(ttransport, tqpair, pdu);
+				}
+				break;
+			}
+
 			if (!tqpair->pdu_recv_buf.remain_size) {
 				rc = nvme_tcp_recv_buf_read(tqpair->sock, &tqpair->pdu_recv_buf);
 				if (rc <= 0) {
