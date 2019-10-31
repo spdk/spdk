@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "395ddddc_28f2d376",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-31T19:26:41Z",
+      "side": 1,
+      "message": "Name this nvme_bdev_ns",
+      "revId": "5a9a079e94fade1b256c5f830443d93c47862be6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1fd2efd7_46538e1a",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-31T19:26:41Z",
+      "side": 1,
+      "message": "You never need to be able to jump quickly to a namespace in this array by nsid it doesn\u0027t seem. So just make this a TAILQ for simplicity.",
+      "revId": "5a9a079e94fade1b256c5f830443d93c47862be6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f1a588d_3c29a814",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-31T19:26:41Z",
+      "side": 1,
+      "message": "Move this spdk_nvme_ns pointer into the new namespace struct.",
+      "revId": "5a9a079e94fade1b256c5f830443d93c47862be6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
