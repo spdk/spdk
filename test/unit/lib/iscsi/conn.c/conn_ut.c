@@ -326,6 +326,7 @@ propagate_scsi_error_status_for_split_read_tasks(void)
 }
 
 static void
+<<<<<<< HEAD
 recursive_flush_pdus_calls(void)
 {
 	struct spdk_iscsi_pdu pdu1 = {}, pdu2 = {}, pdu3 = {};
@@ -362,6 +363,69 @@ recursive_flush_pdus_calls(void)
 	CU_ASSERT(rc == 0);
 }
 
+static void
+process_non_read_task_completion_test(void)
+{
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_task primary = {};
+	struct spdk_iscsi_task task = {};
+
+	TAILQ_INIT(&conn.active_r2t_tasks);
+
+	primary.bytes_completed = 0;
+	primary.scsi.transfer_len = 4096 * 3;
+	primary.rsp_scsi_status = SPDK_SCSI_STATUS_GOOD;
+	TAILQ_INSERT_TAIL(&conn.active_r2t_tasks, &primary, link);
+
+	/* First subtask which failed. */
+	task.scsi.length = 4096;
+	task.scsi.data_transferred = 4096;
+	task.scsi.status = SPDK_SCSI_STATUS_CHECK_CONDITION;
+
+	process_non_read_task_completion(&conn, &task, &primary);
+	CU_ASSERT(!TAILQ_EMPTY(&conn.active_r2t_tasks));
+	CU_ASSERT(primary.bytes_completed == 4096);
+	CU_ASSERT(primary.scsi.data_transferred == 0);
+	CU_ASSERT(primary.rsp_scsi_status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+
+	/* Second subtask which succeeded. */
+	task.scsi.length = 4096;
+	task.scsi.data_transferred = 4096;
+	task.scsi.status = SPDK_SCSI_STATUS_GOOD;
+
+	process_non_read_task_completion(&conn, &task, &primary);
+	CU_ASSERT(!TAILQ_EMPTY(&conn.active_r2t_tasks));
+	CU_ASSERT(primary.bytes_completed == 4096 * 2);
+	CU_ASSERT(primary.scsi.data_transferred == 4096);
+	CU_ASSERT(primary.rsp_scsi_status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+
+	/* Third and final subtask which succeeded. */
+	task.scsi.length = 4096;
+	task.scsi.data_transferred = 4096;
+	task.scsi.status = SPDK_SCSI_STATUS_GOOD;
+
+	process_non_read_task_completion(&conn, &task, &primary);
+	CU_ASSERT(TAILQ_EMPTY(&conn.active_r2t_tasks));
+	CU_ASSERT(primary.bytes_completed == 4096 * 3);
+	CU_ASSERT(primary.scsi.data_transferred == 4096 * 2);
+	CU_ASSERT(primary.rsp_scsi_status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+
+	/* Tricky case when the last task completed was the initial task. */
+	primary.scsi.length = 4096;
+	primary.bytes_completed = 4096 * 2;
+	primary.scsi.data_transferred = 4096 * 2;
+	primary.scsi.transfer_len = 4096 * 3;
+	primary.scsi.status = SPDK_SCSI_STATUS_GOOD;
+	primary.rsp_scsi_status = SPDK_SCSI_STATUS_GOOD;
+	TAILQ_INSERT_TAIL(&conn.active_r2t_tasks, &primary, link);
+
+	process_non_read_task_completion(&conn, &primary, &primary);
+	CU_ASSERT(TAILQ_EMPTY(&conn.active_r2t_tasks));
+	CU_ASSERT(primary.bytes_completed == 4096 * 3);
+	CU_ASSERT(primary.scsi.data_transferred == 4096 * 2);
+	CU_ASSERT(primary.rsp_scsi_status == SPDK_SCSI_STATUS_GOOD);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -382,7 +446,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "read task split in order", read_task_split_in_order_case) == NULL ||
 		CU_add_test(suite, "propagate_scsi_error_status_for_split_read_tasks",
 			    propagate_scsi_error_status_for_split_read_tasks) == NULL ||
-		CU_add_test(suite, "recursive_flush_pdus_calls", recursive_flush_pdus_calls) == NULL
+		CU_add_test(suite, "recursive_flush_pdus_calls", recursive_flush_pdus_calls) == NULL ||
+		CU_add_test(suite, "process_non_read_task_completion_test",
+			    process_non_read_task_completion_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
