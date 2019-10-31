@@ -2332,6 +2332,10 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	task_tag = from_be32(&reqh->itt);
 
 	/* store incoming parameters */
+	if (pdu->data == NULL) {
+		printf("pdu->data is NULL\n");
+		return -ENOMEM;
+	}
 	rc = spdk_iscsi_parse_params(&params, pdu->data, pdu->data_segment_len,
 				     C_bit, &conn->partial_text_parameter);
 	if (rc < 0) {
