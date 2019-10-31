@@ -3279,6 +3279,13 @@ iscsi_queue_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	spdk_scsi_dev_queue_task(conn->dev, &task->scsi);
 }
 
+static void
+iscsi_queue_read_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
+{
+	task->scsi.zcopy = true;
+	iscsi_queue_task(conn, task);
+}
+
 int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_task *task;
@@ -3298,7 +3305,7 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 			}
 			task->current_datain_offset = task->scsi.length;
 			conn->data_in_cnt++;
-			iscsi_queue_task(conn, task);
+			iscsi_queue_read_task(conn, task);
 			continue;
 		}
 		if (task->current_datain_offset < task->scsi.transfer_len) {
@@ -3326,7 +3333,7 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 				return 0;
 			}
 
-			iscsi_queue_task(conn, subtask);
+			iscsi_queue_read_task(conn, subtask);
 		}
 		if (task->current_datain_offset == task->scsi.transfer_len) {
 			TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
@@ -3350,7 +3357,7 @@ iscsi_pdu_payload_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_t
 	task->current_datain_offset = 0;
 
 	if (remaining_size == 0) {
-		iscsi_queue_task(conn, task);
+		iscsi_queue_read_task(conn, task);
 		return 0;
 	}
 
