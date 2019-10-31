@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c22510b5_dcbec5af",
+        "filename": "module/bdev/nvme/common.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T20:31:40Z",
+      "side": 1,
+      "message": "same here - rename this to nvme_bdev_unregister_cb in a separate patch",
+      "revId": "c3cdb47c8ea6b7e43e0c431452ac1048b62ca19e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c18d6ce_012ae237",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T20:31:40Z",
+      "side": 1,
+      "message": "we should rename this to nvme_bdev_ctrlr_destruct in a separate patch (for consistency with other functions declared in this file)",
+      "revId": "c3cdb47c8ea6b7e43e0c431452ac1048b62ca19e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
