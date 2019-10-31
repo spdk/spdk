@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40fa2b87_f81ec200",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T15:15:32Z",
+      "side": 1,
+      "message": "should these be asserts instead?\n\nit should not be valid to call these functions with vmd or bus \u003d\u003d NULL - if we need to check them for static analysis reasons, it\u0027s more clear to use asserts() - otherwise it indicates people can or should call these functions with NULL parameters",
+      "revId": "d379ebfcb430bcdc0963612a6a490335f3b43cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
