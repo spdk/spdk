@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9b3054c_07ae171c",
+        "filename": "include/spdk/nvme_ocssd.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T20:38:02Z",
+      "side": 1,
+      "message": "I\u0027d rather not add this.  I think we still want a general function where someone can ask \"does this controller support ocssd?\" and changing this function effectively removes that ability\n\nI think what we\u0027re really looking for here is a namespace type.  So spdk_nvme_ns_get_type() would be good.  But we don\u0027t really want to define our own enumeration, since the concept of namespace types is going through the NVMe spec committees and we don\u0027t want to diverge from that.\n\nCan you do me a favor and get registered with nvmexpress.org for spec access?  And you should get on the nvme mailing list.  Lots of good stuff there and then you can keep up on some of the things I\u0027m referring to.  Please let em know once you\u0027ve signed up.  In the meantime I\u0027ll dig up latest on namespace types and we can try to find something to use now that won\u0027t conflict with what\u0027s coming directly from NVMe.",
+      "revId": "c159963fdddb4d7f91629e4e8d22628cde7d15e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
