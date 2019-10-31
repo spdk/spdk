@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "14edfb08_ab33fbe9",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T20:19:19Z",
+      "side": 1,
+      "message": "I suggested leaving this as an array, so that we only change one thing at a time.  So first, add an abstraction between nvme_bdev_ctrlr and the nvme_bdev that gets created for each namespace.  This is a step towards alternate \"nvme_namespace\" types for OCSSD and KV.  We can change this to a TAILQ in the future if necessary.",
+      "parentUuid": "1fd2efd7_46538e1a",
+      "revId": "5a9a079e94fade1b256c5f830443d93c47862be6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8f1a588d_3c29a814",
         "filename": "module/bdev/nvme/common.h",
         "patchSetId": 8
@@ -47,6 +65,24 @@
       "writtenOn": "2019-10-31T19:26:41Z",
       "side": 1,
       "message": "Move this spdk_nvme_ns pointer into the new namespace struct.",
+      "revId": "5a9a079e94fade1b256c5f830443d93c47862be6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da103bf7_1cb900a4",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T20:19:19Z",
+      "side": 1,
+      "message": "Agreed.  OCSSD will likely want that spdk_nvme_ns pointer as well.",
+      "parentUuid": "8f1a588d_3c29a814",
       "revId": "5a9a079e94fade1b256c5f830443d93c47862be6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
