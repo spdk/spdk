@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "652a33e8_97e06335",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T22:22:13Z",
+      "side": 1,
+      "message": "I think we want something more like this:\n\nstruct nvme_bdev_ns {\n};\n\nstruct nvme_bdev_ns_standard {\n  struct nvme_bdev_ns base;\n  struct spdk_bdev    disk;\n  /* some other stuff?  maybe nothing else... */\n};\n\nThen in Konrad\u0027s OCSSD code, he\u0027ll have something like this:\n\nstruct nvme_bdev_ocssd {\n  struct spdk_bdev             disk;\n  TAILQ_ENTRY(nvme_bdev_ocssd) tailq;\n};\n\nstruct nvme_bdev_ns_ocssd {\n  struct nvme_bdev_ns.          base;\n  TAILQ_HEAD(, nvme_bdev_ocssd) bdevs;\n};\n\nSo now in the common layer, we would have the nvme_bdev_ns pointer array.  The common layer can dereference those, without caring about what type of namespace it actually represents.  Eventually we will add function pointers to nvem_bdev_ns, so that we can have different code for \"removing\" a namespace - that looks different for ocssd than it does for a standard namespace.  And the best part is that the common code doesn\u0027t need to understand anything about a namespace being associated with multiple spdk_bdevs - that\u0027s handled by the OCSSD specific code.\n\nThis works well in the future if we add support for KV too.  KV may not even be associated with spdk_bdevs at all.\n\nMaybe share all of this with Konrad and Tomek and we can chat more if there are further questions.  I\u0027ve talked with Ben offline and he\u0027s aligned with this proposal, especially after thinking about the KV and future namespace types.",
+      "revId": "5718fe7dd79f6e4444788a8fa4164f01ea7d4a1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
