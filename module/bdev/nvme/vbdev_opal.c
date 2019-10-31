@@ -608,7 +608,35 @@ err:
 static void
 vbdev_opal_examine(struct spdk_bdev *bdev)
 {
-	/* TODO */
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	enum spdk_opal_dev_state state;
+
+	if (strcmp(bdev->product_name, "NVMe disk") != 0) {
+		goto end;
+	}
+
+	ctrlr = spdk_bdev_nvme_get_ctrlr(bdev);
+	nvme_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
+	if (nvme_ctrlr->opal_dev == NULL || spdk_opal_supported(nvme_ctrlr->opal_dev) == false) {
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_OPAL, "%s not support Opal\n", nvme_ctrlr->name);
+		goto end;
+	}
+
+	state = spdk_opal_get_dev_state(nvme_ctrlr->opal_dev);
+	assert(state != OPAL_DEV_STATE_BUSY);
+
+	if (state == OPAL_DEV_STATE_DEFAULT) {
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_OPAL, "Opal not enabled on %s\n", nvme_ctrlr->name);
+		goto end;
+	}
+
+	if (state == OPAL_DEV_STATE_ENABLED) {
+		SPDK_NOTICELOG("Opal already enabled on %s. Run bdev_opal_recovery to rebuild Opal bdev\n",
+			       nvme_ctrlr->name);
+	}
+
+end:
 	spdk_bdev_module_examine_done(&opal_if);
 }
 
