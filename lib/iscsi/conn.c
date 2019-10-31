@@ -675,12 +675,22 @@ _iscsi_conn_check_pending_tasks(void *arg)
 void
 spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 {
+	struct spdk_iscsi_pdu *pdu;
+
 	/* If a connection is already in exited status, just return */
 	if (conn->state >= ISCSI_CONN_STATE_EXITED) {
 		return;
 	}
 
 	conn->state = ISCSI_CONN_STATE_EXITED;
+
+	pdu = conn->pdu_in_progress;
+	if (pdu) {
+		/* remove the task left in the PDU receive state machine. */
+		if (pdu->task) {
+			spdk_iscsi_task_put(pdu->task);
+		}
+	}
 
 	if (conn->sess != NULL && conn->pending_task_cnt > 0) {
 		iscsi_conn_cleanup_backend(conn);
