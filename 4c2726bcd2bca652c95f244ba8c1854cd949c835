@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "495e42ad_7f4ec3bb",
+        "filename": "test/unit/lib/nvmf/tcp.c/tcp_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-31T05:50:13Z",
+      "side": 1,
+      "message": "For the definition, you use tab and space together. You my just use one type.",
+      "range": {
+        "startLine": 596,
+        "startChar": 1,
+        "endLine": 605,
+        "endChar": 33
+      },
+      "revId": "4c2726bcd2bca652c95f244ba8c1854cd949c835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb41e556_7dcbb785",
+        "filename": "test/unit/lib/nvmf/tcp.c/tcp_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-10-31T05:50:13Z",
+      "side": 1,
+      "message": "What this mean?  And may I ask another question, what is the purpose of tcp_req in your test case? I just see you add it into the STATE_FREE QUEUE. So what\u0027s purpose of tcp_req. And I am confused. If that, you can just use one tcp_req. Since tcp_req has already handled, and it can be re-used.\nSo can you design the following case and still use two tcp_req with two qpairs. And each request is bind to one qpair, i.e., tcp_req_1 -\u003efirst qpair,  tcp_req2 -\u003e second qpair.\n1 Add tcp_req_1 into the group-\u003epending_buf_queue, and the cmd contained in the tcp_req is a write command(it means that it does not have incapsule data) and waits for the buffer;\n2 Then add tcp_req_2 into the group-\u003epending_buf_queue. Then call spdk_nvmf_tcp_req_process. Then you need to check the list of group-\u003epending_buf_queue. Since the tcp_req2 is a write command with incapsule data, so it will get the buffer first, there should be only tcp_req1 is waiting in the queue. This is the test case what I want.",
+      "range": {
+        "startLine": 683,
+        "startChar": 36,
+        "endLine": 683,
+        "endChar": 81
+      },
+      "revId": "4c2726bcd2bca652c95f244ba8c1854cd949c835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
