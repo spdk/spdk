@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "663c9396_a6a61f72",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T22:14:26Z",
+      "side": 1,
+      "message": "I chatted with Ben offline and he agreed we should keep this as an array of pointers rather than changing it to a TAILQ.",
+      "parentUuid": "14edfb08_ab33fbe9",
+      "revId": "5a9a079e94fade1b256c5f830443d93c47862be6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8f1a588d_3c29a814",
         "filename": "module/bdev/nvme/common.h",
         "patchSetId": 8
