@@ -791,6 +791,10 @@ spdk_vbdev_opal_revert_tper(struct nvme_bdev_ctrlr *nvme_ctrlr, const char *pass
 	int rc;
 	struct opal_bdev_ctrlr *opal_ctrlr;
 	enum spdk_opal_dev_state state;
+	struct vbdev_opal_part_base *opal_base;
+	SPDK_BDEV_PART_TAILQ *part_tailq;
+	struct spdk_bdev_part *part;
+	char *bdev_name;
 
 	opal_ctrlr = opal_ctrlr_get_by_nvme_ctrlr_name(nvme_ctrlr->name);
 	if (opal_ctrlr == NULL) {
@@ -807,6 +811,22 @@ spdk_vbdev_opal_revert_tper(struct nvme_bdev_ctrlr *nvme_ctrlr, const char *pass
 	if (state == OPAL_DEV_STATE_DEFAULT) {
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_OPAL, "The drive is in default state.\n");
 		return 0;
+	}
+
+	/* destruct all opal vbdev on this ctrlr before revert TPer */
+	TAILQ_FOREACH(opal_base, &g_opal_base, tailq) {
+		if (strcmp(opal_base->nvme_ctrlr_name, nvme_ctrlr->name) == 0) { /* get part_base */
+			part_tailq = spdk_bdev_part_base_get_tailq(opal_base->part_base);
+			TAILQ_FOREACH(part, part_tailq, tailq) {    /* destruct each part */
+				bdev_name = spdk_bdev_part_get_bdev(part)->name;
+				rc = spdk_vbdev_opal_destruct(bdev_name, password);
+				if (rc) {
+					SPDK_ERRLOG("Destruct %s failure. Revert tper failure\n", bdev_name);
+					return rc;
+				}
+			}
+			break;
+		}
 	}
 
 	rc = spdk_opal_cmd_revert_tper_async(opal_ctrlr->opal_dev, password, cb_fn, cb_ctx);
