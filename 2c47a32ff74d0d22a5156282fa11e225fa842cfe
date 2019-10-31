@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e993db0f_d5a80f0d",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-31T09:44:06Z",
+      "side": 1,
+      "message": "cuse_lowlevel_setup set up signal handlers to allow stop cuse pthreads, so it should be in pthread body. Also device name conflicts are problematic to check while cuse seems to not give clear response on setup/session_loop if tries to reuse already existing devname.\nI will work on error handling in another patch.",
+      "parentUuid": "5ab13164_978116ed",
+      "range": {
+        "startLine": 662,
+        "startChar": 5,
+        "endLine": 662,
+        "endChar": 19
+      },
+      "revId": "2c47a32ff74d0d22a5156282fa11e225fa842cfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e016bf7e_b89ae558",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "2c47a32ff74d0d22a5156282fa11e225fa842cfe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b63aec2_bbe48290",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 677,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-31T09:44:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e016bf7e_b89ae558",
+      "range": {
+        "startLine": 677,
+        "startChar": 0,
+        "endLine": 677,
+        "endChar": 36
+      },
+      "revId": "2c47a32ff74d0d22a5156282fa11e225fa842cfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
