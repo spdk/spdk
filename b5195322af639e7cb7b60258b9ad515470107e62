@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5d471e1a_ab149441",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-31T09:56:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "741ff6dd_e6d8476b",
+      "range": {
+        "startLine": 112,
+        "startChar": 44,
+        "endLine": 112,
+        "endChar": 45
+      },
+      "revId": "b5195322af639e7cb7b60258b9ad515470107e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0aead61c_ed73d01c",
         "filename": "lib/nvme/nvme_io_msg.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-10-29T13:25:12Z",
       "side": 1,
       "message": "This can be made more simple, similar to start above:\nif refcnt \u003e 0 || !shutdown {\n    refcnt--\n    return\n}\nrefcnt \u003d 0\ndestroy the rings/qpair",
+      "range": {
+        "startLine": 139,
+        "startChar": 0,
+        "endLine": 149,
+        "endChar": 2
+      },
+      "revId": "b5195322af639e7cb7b60258b9ad515470107e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c22f6be0_e0d65b63",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-10-31T09:56:12Z",
+      "side": 1,
+      "message": "We should to destroy ring/qpair when refcnt goes from 1-\u003e0. Also we should to not try to destroy it when there\u0027s no references.",
+      "parentUuid": "0aead61c_ed73d01c",
       "range": {
         "startLine": 139,
         "startChar": 0,
