@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52d2f36c_c1f4463b",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1248,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T22:47:54Z",
+      "side": 1,
+      "message": "Hi Artur,\n\nThis patch series is looking really good to me so far.  I have a question here though.  What is the case where raid_bdev_module_find() would return NULL, but raid_bdev_level_to_str would return a string?  I\u0027m just thinking it would all be simpler to just say \"Unsupported raid level X\" in all cases, where X is the level\u0027s integer value.\n\n-Jim",
+      "revId": "b3d8c4d7ab98ef8f2c8520568934d9a3fd3d186a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
