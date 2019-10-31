@@ -57,6 +57,20 @@ extern bool ut_fail_vtophys;
 
 bool fail_next_sge = false;
 
+static int *g_get_uevent = (int *)1024 ;
+
+struct spdk_nvme_ctrlr *g_ctrlr = NULL;
+
+int g_poll_with_event = 1;
+
+bool g_add_new_device = false;
+
+bool g_device_is_removed = false;
+
+bool g_callback_done = false;
+
+char *g_pcie_traddr_str = "";
+
 struct io_request {
 	uint64_t address_offset;
 	bool	invalid_addr;
@@ -66,7 +80,8 @@ struct io_request {
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
-	abort();
+	CU_ASSERT(ctrlr != NULL);
+	ctrlr->is_failed = true;
 }
 
 int
@@ -78,7 +93,32 @@ spdk_uevent_connect(void)
 int
 spdk_get_uevent(int fd, struct spdk_uevent *uevent)
 {
-	abort();
+	snprintf(uevent->traddr, sizeof(uevent->traddr), "%s", g_pcie_traddr_str);
+
+	switch (g_poll_with_event) {
+	case 4:
+		uevent->subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_VFIO;
+		uevent->action = SPDK_NVME_UEVENT_ADD;
+		break;
+	case 3:
+		uevent->subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_UIO;
+		uevent->action = SPDK_NVME_UEVENT_ADD;
+		break;
+	case 2:
+		uevent->subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_UIO;
+		uevent->action = SPDK_NVME_UEVENT_REMOVE;
+		break;
+	case 1:
+		uevent->subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_VFIO;
+		uevent->action = SPDK_NVME_UEVENT_REMOVE;
+		break;
+	default:
+		uevent->subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_VFIO;
+		uevent->action = SPDK_NVME_UEVENT_REMOVE;
+		break;
+	}
+
+	return *g_get_uevent;
 }
 
 struct spdk_pci_id
@@ -105,7 +145,10 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 int
 spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx)
 {
-	abort();
+	g_poll_with_event = 0;
+	g_add_new_device = true;
+
+	return 0;
 }
 
 int
@@ -283,15 +326,57 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 	abort();
 }
 
+struct spdk_nvme_ctrlr_process *
+spdk_nvme_ctrlr_get_current_process(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return (struct spdk_nvme_ctrlr_process *)0x1;
+}
+
+bool
+spdk_pci_device_is_removed(struct spdk_pci_device *dev)
+{
+	return g_device_is_removed;
+}
+
+static void
+callback_exe(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
+{
+	g_poll_with_event = 0;
+
+	if (cb_ctx == NULL) {
+		return;
+	}
+
+	g_callback_done = true;
+
+	if (g_ctrlr == ctrlr) {
+		free(g_ctrlr);
+		g_ctrlr = NULL;
+	}
+}
+
 struct spdk_nvme_ctrlr *
 spdk_nvme_get_ctrlr_by_trid_unsafe(const struct spdk_nvme_transport_id *trid)
 {
-	return NULL;
+	struct spdk_nvme_ctrlr *ctrlr;
+
+	ctrlr = calloc(1, sizeof(*ctrlr));
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	ctrlr->remove_cb = (void *)callback_exe;
+	ctrlr->is_failed = false;
+	g_ctrlr = ctrlr;
+
+	return ctrlr;
 }
 
 union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_csts_register csts = {};
+
+	if (g_device_is_removed) {
+		csts.raw = 0xFFFFFFFFu;
+	}
 
 	return csts;
 }
@@ -799,6 +884,116 @@ test_prp_list_append(void)
 					    (NVME_MAX_PRP_LIST_ENTRIES + 1) * 0x1000, 0x1000) == -EFAULT);
 }
 
+static void
+test_nvme_pcie_hotplug_monitor(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_driver dummy;
+	pthread_mutexattr_t attr;
+	struct spdk_nvme_probe_ctx test_nvme_probe_ctx = {};
+
+	/* Initiate variables and ctrlr */
+	g_device_is_removed = false;
+	dummy.initialized = true;
+	CU_ASSERT(pthread_mutexattr_init(&attr) == 0);
+	CU_ASSERT(pthread_mutex_init(&dummy.lock, &attr) == 0);
+	TAILQ_INIT(&dummy.shared_attached_ctrlrs);
+	g_spdk_nvme_driver = &dummy;
+	test_nvme_probe_ctx.cb_ctx = (void *)callback_exe;
+
+	/* Case *g_get_uevent==4  SPDK_NVME_UEVENT_ADD/ NVME_VFIO */
+	g_poll_with_event = 4;
+	g_get_uevent = &g_poll_with_event;
+	g_pcie_traddr_str = "0000:05:00.0";
+
+	CU_ASSERT(g_add_new_device == false);
+	CU_ASSERT(g_callback_done == false);
+
+	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
+
+	CU_ASSERT(g_add_new_device == true);
+	CU_ASSERT(g_callback_done == false);
+
+	/* Case *g_get_uevent==3  SPDK_NVME_UEVENT_ADD/ NVME_UIO */
+	g_poll_with_event = 3;
+	g_get_uevent = &g_poll_with_event;
+	g_pcie_traddr_str = "0000:04:00.0";
+
+	g_add_new_device = false;
+	g_callback_done = false;
+
+	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
+
+	CU_ASSERT(g_add_new_device == true);
+	CU_ASSERT(g_callback_done == false);
+
+	/* Case *g_get_uevent==2 SPDK_NVME_UEVENT_REMOVE/ NVME_UIO */
+	g_poll_with_event = 2;
+	g_get_uevent = &g_poll_with_event;
+
+	g_add_new_device = false;
+	g_callback_done = false;
+	test_nvme_probe_ctx.cb_ctx = NULL;
+
+	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
+
+	CU_ASSERT(g_add_new_device == false);
+	CU_ASSERT(g_callback_done == false);
+	CU_ASSERT(g_ctrlr != NULL);
+	free(g_ctrlr);
+	g_ctrlr = NULL;
+
+	/* Case *g_get_uevent==1 SPDK_NVME_UEVENT_REMOVE/ NVME_VFIO */
+	g_poll_with_event = 1;
+	g_get_uevent = &g_poll_with_event;
+
+	g_add_new_device = false;
+	g_callback_done = false;
+	test_nvme_probe_ctx.cb_ctx = (void *)callback_exe;
+
+	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
+
+	CU_ASSERT(g_add_new_device == false);
+	CU_ASSERT(g_callback_done == true);
+	CU_ASSERT(g_ctrlr == NULL);
+
+	/* Case *g_get_uevent==0  test only for VFIO hot remove detection  */
+	g_poll_with_event = 0;
+	g_get_uevent = &g_poll_with_event;
+
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	snprintf(ctrlr.trid.traddr, sizeof(ctrlr.trid.traddr), "0000:02:00.0");
+	ctrlr.remove_cb = NULL;
+	ctrlr.is_failed = false;
+	TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->shared_attached_ctrlrs, &ctrlr, tailq);
+
+	/* Negative case of removing */
+	g_device_is_removed = false;
+	g_callback_done = false;
+	ctrlr.is_failed = false;
+
+	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
+
+	CU_ASSERT(ctrlr.is_failed == false);
+	CU_ASSERT(g_callback_done == false);
+
+	/* Positive case of removing */
+	g_device_is_removed = true;
+	ctrlr.remove_cb = (void *)callback_exe;
+
+	CU_ASSERT(ctrlr.is_failed == false);
+	CU_ASSERT(g_callback_done == false);
+
+	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
+
+	CU_ASSERT(ctrlr.is_failed == true);
+	CU_ASSERT(g_callback_done == true);
+
+	pthread_mutex_destroy(&dummy.lock);
+	pthread_mutexattr_destroy(&attr);
+	g_spdk_nvme_driver = &_g_nvme_driver;
+}
+
 static void test_shadow_doorbell_update(void)
 {
 	bool ret;
@@ -827,6 +1022,7 @@ int main(int argc, char **argv)
 	}
 
 	if (CU_add_test(suite, "prp_list_append", test_prp_list_append) == NULL
+	    || CU_add_test(suite, "nvme_pcie_hotplug_monitor", test_nvme_pcie_hotplug_monitor) == NULL
 	    || CU_add_test(suite, "shadow_doorbell_update",
 			   test_shadow_doorbell_update) == NULL) {
 		CU_cleanup_registry();
