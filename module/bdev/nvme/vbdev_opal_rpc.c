@@ -242,6 +242,70 @@ out:
 }
 SPDK_RPC_REGISTER("bdev_nvme_opal_revert", spdk_rpc_bdev_nvme_opal_revert, SPDK_RPC_RUNTIME)
 
+struct rpc_bdev_opal_recovery {
+	char *nvme_ctrlr_name;
+	uint32_t nsid;
+	char *password;
+};
+
+static void
+free_rpc_bdev_opal_recovery(struct rpc_bdev_opal_recovery *req)
+{
+	free(req->nvme_ctrlr_name);
+	free(req->password);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_opal_recovery_decoders[] = {
+	{"nvme_ctrlr_name", offsetof(struct rpc_bdev_opal_recovery, nvme_ctrlr_name), spdk_json_decode_string},
+	{"nsid", offsetof(struct rpc_bdev_opal_recovery, nsid), spdk_json_decode_uint32},
+	{"password", offsetof(struct rpc_bdev_opal_recovery, password), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_bdev_opal_recovery(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_bdev_opal_recovery req = {};
+	struct spdk_json_write_ctx *w;
+	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	int rc = 0;
+	char *opal_bdev_names = NULL;
+
+	if (spdk_json_decode_object(params, rpc_bdev_opal_recovery_decoders,
+				    SPDK_COUNTOF(rpc_bdev_opal_recovery_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto out;
+	}
+
+	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(req.nvme_ctrlr_name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("%s not found\n", req.nvme_ctrlr_name);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto out;
+	}
+
+	opal_bdev_names = spdk_vbdev_opal_recovery(req.nvme_ctrlr_name, req.nsid, req.password, &rc);
+	if (rc != 0) {
+		SPDK_ERRLOG("%s opal recovery failed %d\n", req.nvme_ctrlr_name, rc);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(-rc));
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (opal_bdev_names != NULL) {
+		spdk_json_write_string(w, opal_bdev_names);
+	} else {
+		spdk_json_write_null(w);
+	}
+	spdk_jsonrpc_end_result(request, w);
+
+out:
+	free(opal_bdev_names);
+	free_rpc_bdev_opal_recovery(&req);
+}
+SPDK_RPC_REGISTER("bdev_opal_recovery", spdk_rpc_bdev_opal_recovery, SPDK_RPC_RUNTIME)
+
 struct rpc_bdev_opal_create {
 	char *nvme_ctrlr_name;
 	uint32_t nsid;
