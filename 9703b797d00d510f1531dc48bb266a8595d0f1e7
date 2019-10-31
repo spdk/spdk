@@ -22,6 +22,30 @@
       "revId": "9703b797d00d510f1531dc48bb266a8595d0f1e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35ceb551_f5db1fc3",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-10-31T00:39:37Z",
+      "side": 1,
+      "message": "Hi shuhei,\n\nI checked the uname command user manual. the \"uname\" command is same as \"uname -s\" if with no opinion. But we can use \"uname -s\" for safety.\n\nLiang",
+      "parentUuid": "cf24408f_29a61058",
+      "range": {
+        "startLine": 120,
+        "startChar": 5,
+        "endLine": 120,
+        "endChar": 13
+      },
+      "revId": "9703b797d00d510f1531dc48bb266a8595d0f1e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
