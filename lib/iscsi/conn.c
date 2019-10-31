@@ -1095,6 +1095,50 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 	process_completed_read_subtask_list(conn, primary);
 }
 
+static void
+process_non_read_task_completion(struct spdk_iscsi_conn *conn,
+				 struct spdk_iscsi_task *task,
+				 struct spdk_iscsi_task *primary)
+{
+	primary->bytes_completed += task->scsi.length;
+
+	/* If the status of the subtask is the first failure, remember it as
+	 * the status of the command and set it to the status of the primary
+	 * task later.
+	 *
+	 * If the first failed task is the primary, two copies can be avoided
+	 * but code simplicity is prioritized.
+	 */
+	if (task->scsi.status == SPDK_SCSI_STATUS_GOOD) {
+		if (task != primary) {
+			primary->scsi.data_transferred += task->scsi.data_transferred;
+		}
+	} else if (primary->rsp_scsi_status == SPDK_SCSI_STATUS_GOOD) {
+		iscsi_task_copy_to_rsp_scsi_status(primary, &task->scsi);
+	}
+
+	if (primary->bytes_completed == primary->scsi.transfer_len) {
+		spdk_del_transfer_task(conn, primary->tag);
+		if (primary->rsp_scsi_status != SPDK_SCSI_STATUS_GOOD) {
+			iscsi_task_copy_from_rsp_scsi_status(&primary->scsi, primary);
+		}
+		spdk_iscsi_task_response(conn, primary);
+		/*
+		 * Check if this is the last task completed for an iSCSI write
+		 *  that required child subtasks.  If task != primary, we know
+		 *  for sure that it was part of an iSCSI write with child subtasks.
+		 *  The trickier case is when the last task completed was the initial
+		 *  task - in this case the task will have a smaller length than
+		 *  the overall transfer length.
+		 */
+		if (task != primary || task->scsi.length != task->scsi.transfer_len) {
+			TAILQ_REMOVE(&conn->active_r2t_tasks, primary, link);
+			spdk_iscsi_task_put(primary);
+		}
+	}
+	spdk_iscsi_task_put(task);
+}
+
 void
 spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 {
@@ -1111,43 +1155,7 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 	if (spdk_iscsi_task_is_read(primary)) {
 		process_read_task_completion(conn, task, primary);
 	} else {
-		primary->bytes_completed += task->scsi.length;
-
-		/* If the status of the subtask is the first failure, remember it as
-		 * the status of the command and set it to the status of the primary
-		 * task later.
-		 *
-		 * If the first failed task is the primary, two copies can be avoided
-		 * but code simplicity is prioritized.
-		 */
-		if (task->scsi.status == SPDK_SCSI_STATUS_GOOD) {
-			if (task != primary) {
-				primary->scsi.data_transferred += task->scsi.data_transferred;
-			}
-		} else if (primary->rsp_scsi_status == SPDK_SCSI_STATUS_GOOD) {
-			iscsi_task_copy_to_rsp_scsi_status(primary, &task->scsi);
-		}
-
-		if (primary->bytes_completed == primary->scsi.transfer_len) {
-			spdk_del_transfer_task(conn, primary->tag);
-			if (primary->rsp_scsi_status != SPDK_SCSI_STATUS_GOOD) {
-				iscsi_task_copy_from_rsp_scsi_status(&primary->scsi, primary);
-			}
-			spdk_iscsi_task_response(conn, primary);
-			/*
-			 * Check if this is the last task completed for an iSCSI write
-			 *  that required child subtasks.  If task != primary, we know
-			 *  for sure that it was part of an iSCSI write with child subtasks.
-			 *  The trickier case is when the last task completed was the initial
-			 *  task - in this case the task will have a smaller length than
-			 *  the overall transfer length.
-			 */
-			if (task != primary || task->scsi.length != task->scsi.transfer_len) {
-				TAILQ_REMOVE(&conn->active_r2t_tasks, primary, link);
-				spdk_iscsi_task_put(primary);
-			}
-		}
-		spdk_iscsi_task_put(task);
+		process_non_read_task_completion(conn, task, primary);
 	}
 	if (!task->parent) {
 		spdk_trace_record(TRACE_ISCSI_PDU_COMPLETED, 0, 0, (uintptr_t)pdu, 0);
