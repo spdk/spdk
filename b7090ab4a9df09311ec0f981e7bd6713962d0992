@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e6b2d57_80c46081",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1729,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T15:00:16Z",
+      "side": 1,
+      "message": "It\u0027s not clear to me why we don\u0027t have an extra set of parentheses like this:\n\n((in_capsule + sizeof()) * (BUF_SIZE_FACTOR))",
+      "revId": "b7090ab4a9df09311ec0f981e7bd6713962d0992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
