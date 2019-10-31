@@ -4970,8 +4970,6 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 			}
 			break;
 		case ISCSI_PDU_RECV_STATE_ERROR:
-			spdk_put_pdu(pdu);
-			conn->pdu_in_progress = NULL;
 			return SPDK_ISCSI_CONNECTION_FATAL;
 		default:
 			assert(false);
