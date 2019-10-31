@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7a3c522_4fd5f0e2",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T23:10:50Z",
+      "side": 1,
+      "message": "This is a nit, but it should be:\n\n{\n}\n\nWe don\u0027t have a lot of cases of empty functions in SPDK, but the ones we do have all do this with two lines instead of one.\n\nI\u0027m still marking this +2, but please fix this if you have to rebase.\n\n-Jim",
+      "revId": "7eb2b06c4f070df797365614e8b646b149340c00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
