@@ -975,4 +975,68 @@ spdk_vbdev_opal_enable_new_user(const char *bdev_name, const char *admin_passwor
 	return 0;
 }
 
+char *
+spdk_vbdev_opal_recovery(const char *nvme_ctrlr_name, uint32_t nsid, const char *password,
+			 int *rc)
+{
+	struct opal_bdev_ctrlr *opal_ctrlr;
+	enum spdk_opal_dev_state state;
+	uint8_t max_range_num, i;
+	struct spdk_opal_locking_range_info *info;
+	char *opal_bdev_names = NULL;
+
+	opal_ctrlr = opal_ctrlr_get_by_nvme_ctrlr_name(nvme_ctrlr_name);
+	if (opal_ctrlr == NULL) {
+		SPDK_ERRLOG("Can't find Opal ctrlr for %s. Please use bdev_nvme_opal_discovery first.\n",
+			    nvme_ctrlr_name);
+		*rc = -ENODEV;
+		return NULL;
+	}
+
+	state = spdk_opal_get_dev_state(opal_ctrlr->opal_dev);
+	if (state == OPAL_DEV_STATE_BUSY) {
+		SPDK_ERRLOG("SP Busy, try again later\n");
+		*rc = -EBUSY;
+		return NULL;
+	}
+
+	if (state == OPAL_DEV_STATE_DEFAULT) {
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_OPAL, "The drive is in default state.\n");
+		*rc = -EINVAL;
+		return NULL;
+	}
+
+	*rc = spdk_opal_cmd_get_max_ranges(opal_ctrlr->opal_dev, password);
+	if (*rc != 0) {
+		SPDK_ERRLOG("Get max locking range number failure: %d\n", *rc);
+		return NULL;
+	}
+
+	max_range_num = spdk_opal_get_max_locking_ranges(opal_ctrlr->opal_dev);
+	for (i = 0; i < max_range_num; i++) {
+		*rc = spdk_opal_cmd_get_locking_range_info(opal_ctrlr->opal_dev,
+				password, OPAL_ADMIN1, i);
+		if (*rc != 0) {
+			SPDK_ERRLOG("Get locking range info failure: %d\n", *rc);
+			return NULL;
+		}
+
+		info = spdk_opal_get_locking_range_info(opal_ctrlr->opal_dev, i);
+		if (info->range_length == 0 && info->range_start == 0) {
+			continue;   /* uninitialized, no need to recovery */
+		}
+
+		/* recreate opal bdev */
+		*rc = spdk_vbdev_opal_create(nvme_ctrlr_name, nsid, i, info->range_start,
+					     info->range_length, password, false); /* create from existing locking range info */
+		if (*rc != 0) {
+			SPDK_ERRLOG("Error creating opal vbdev from existing locking range info");
+			return NULL;
+		}
+		opal_bdev_names = spdk_sprintf_append_realloc(opal_bdev_names, "%sn%dr%d ", nvme_ctrlr_name, nsid,
+				  i);
+	}
+	return opal_bdev_names;
+}
+
 SPDK_LOG_REGISTER_COMPONENT("vbdev_opal", SPDK_LOG_VBDEV_OPAL)

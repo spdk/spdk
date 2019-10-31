@@ -40,6 +40,9 @@
 
 int spdk_vbdev_opal_discovery(const char *nvme_ctrlr_name, enum spdk_opal_dev_state *state);
 
+char *spdk_vbdev_opal_recovery(const char *nvme_ctrlr_name, uint32_t nsid, const char *password,
+			       int *status);
+
 int spdk_vbdev_opal_init(const char *nvme_ctrlr_name, char *password);
 
 int spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_range_id,
