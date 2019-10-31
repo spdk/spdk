@@ -22,6 +22,30 @@
       "revId": "13f30a254e655c9174995f7178d3440e049aa9db",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d1599a1_2d74912b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1120,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-10-31T07:20:31Z",
+      "side": 1,
+      "message": "Sorry, I meant \"timeout logic\" instead of \"reconnect logic\"",
+      "parentUuid": "468b1e15_1e9534a3",
+      "range": {
+        "startLine": 1120,
+        "startChar": 7,
+        "endLine": 1120,
+        "endChar": 55
+      },
+      "revId": "13f30a254e655c9174995f7178d3440e049aa9db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
