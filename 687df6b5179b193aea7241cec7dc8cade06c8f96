@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cec42919_89789b57",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1241,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T23:18:20Z",
+      "side": 1,
+      "message": "just an idea - but what if instead we made vmd_hotplug_monitor part of the public API?\n\nthen the caller can decide if and when they want to poll for hotplug events, it also allows someone to use this hotplug functionality who isn\u0027t using the SPDK threading library\n\nI guess then that begs the question whether we need the previous patch at all.  We\u0027d also need to decide with test applications need to do hotplug monitoring.",
+      "revId": "687df6b5179b193aea7241cec7dc8cade06c8f96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
