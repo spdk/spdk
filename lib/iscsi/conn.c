@@ -500,8 +500,8 @@ _iscsi_conn_remove_lun(void *_ctx)
 	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg)) ==
 	       spdk_get_thread());
 
-	/* If a connection is exited, associated LUNs are already closed and just return */
-	if (conn->state >= ISCSI_CONN_STATE_EXITED) {
+	/* If a connection is already in stating status, just return */
+	if (conn->state >= ISCSI_CONN_STATE_EXITING) {
 		return;
 	}
 
