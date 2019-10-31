@@ -315,6 +315,11 @@ spdk_iscsi_parse_params(struct iscsi_param **params, const uint8_t *data,
 	char *p;
 	int i;
 
+	if (data == NULL) {
+		SPDK_ERRLOG("pdu->data is NULL\n");
+		return -1;
+	}
+
 	/* strip the partial text parameters if previous PDU have C enabled */
 	if (partial_parameter && *partial_parameter) {
 		for (i = 0; i < len && data[i] != '\0'; i++) {
