@@ -377,12 +377,6 @@ _iscsi_conn_free(struct spdk_iscsi_conn *conn)
 
 	spdk_iscsi_param_free(conn->params);
 
-	/*
-	 * Each connection pre-allocates its next PDU - make sure these get
-	 *  freed here.
-	 */
-	spdk_put_pdu(conn->pdu_in_progress);
-
 	free_conn(conn);
 }
 
@@ -675,12 +669,28 @@ _iscsi_conn_check_pending_tasks(void *arg)
 void
 spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 {
+	struct spdk_iscsi_pdu *pdu;
+
 	/* If a connection is already in exited status, just return */
 	if (conn->state >= ISCSI_CONN_STATE_EXITED) {
 		return;
 	}
 
 	conn->state = ISCSI_CONN_STATE_EXITED;
+
+	/*
+	 * Each connection pre-allocates its next PDU - make sure these get
+	 *  freed here.
+	 */
+	pdu = conn->pdu_in_progress;
+	if (pdu) {
+		/* remove the task left in the PDU receive state machine. */
+		if (pdu->task) {
+			spdk_iscsi_task_put(pdu->task);
+		}
+		spdk_put_pdu(pdu);
+		conn->pdu_in_progress = NULL;
+	}
 
 	if (conn->sess != NULL && conn->pending_task_cnt > 0) {
 		iscsi_conn_cleanup_backend(conn);
