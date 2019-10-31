@@ -16,6 +16,57 @@
       "revId": "58eb9a5a5ca79b92b87588bbf64313c4d94bfa4a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f77bcbc5_1d86d59a",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 999,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T16:24:19Z",
+      "side": 1,
+      "message": "we don\u0027t need to use SAFE version here\n\nwe should only use SAFE version if the STAILQ can change during iteration - since nothing here adds or removes items from the STAILQ, we should not use the SAFE version",
+      "revId": "58eb9a5a5ca79b92b87588bbf64313c4d94bfa4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4312e7ce_92f143d8",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T16:24:19Z",
+      "side": 1,
+      "message": "SAFE version not needed here",
+      "revId": "58eb9a5a5ca79b92b87588bbf64313c4d94bfa4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c6df3d1_5bd61950",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1132,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-10-31T16:24:19Z",
+      "side": 1,
+      "message": "SAFE version not needed",
+      "revId": "58eb9a5a5ca79b92b87588bbf64313c4d94bfa4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
