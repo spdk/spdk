@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c356a6a5_1acd2b16",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-10-31T19:12:17Z",
+      "side": 1,
+      "message": "Right now bdev_nvme_ctrlr_destruct does not appear to be asynchronous based on its API. It makes me nervous to defer removing it from the global g_nvme_bdev_ctrlrs list. What if someone does a destruct followed immediately by a create for the same device? Searching through the code I do think this is mostly ok for now.",
+      "revId": "f57f1d8e0fc0b82d9c20686f40c04ad204b2da87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
