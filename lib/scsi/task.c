@@ -36,11 +36,12 @@
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
+#include "spdk/bdev.h"
 
 static void
-scsi_task_free(struct spdk_scsi_task *task)
+scsi_task_free(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_bdev_io *bdev_io = task->bdev_io;
+	struct spdk_scsi_task *task = cb_arg;
 
 	if (bdev_io) {
 		spdk_bdev_free_io(bdev_io);
@@ -53,6 +54,7 @@ scsi_task_free(struct spdk_scsi_task *task)
 
 	task->iov.iov_base = NULL;
 	task->iov.iov_len = 0;
+	task->zcopy = false;
 
 	task->free_fn(task);
 }
@@ -67,7 +69,13 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 	task->ref--;
 
 	if (task->ref == 0) {
-		scsi_task_free(task);
+		struct spdk_bdev_io *bdev_io = task->bdev_io;
+
+		if (task->zcopy && bdev_io) {
+			spdk_bdev_zcopy_end(bdev_io, false, scsi_task_free, task);
+		} else {
+			scsi_task_free(bdev_io, true, task);
+		}
 	}
 }
 
