@@ -104,6 +104,7 @@ struct nvme_tcp_pdu {
 	uint8_t						data_digest[SPDK_NVME_TCP_DIGEST_LEN];
 	int32_t						padding_valid_bytes;
 
+	bool						wait_for_req; /* wait for a available tcp req */
 	uint8_t						ch_valid_bytes;
 	uint8_t						psh_valid_bytes;
 	uint8_t						psh_len;
