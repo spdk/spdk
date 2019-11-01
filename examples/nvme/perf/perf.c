@@ -695,7 +695,6 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		       opts.io_queue_size);
 		printf("Consider using lower queue depth or small IO size because "
 		       "IO requests may be queued at the NVMe driver.\n");
-		g_warn = true;
 	}
 	/* For requests which have children requests, parent request itself
 	 * will also occupy 1 entry.
