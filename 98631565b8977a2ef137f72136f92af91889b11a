@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "940ea98a_c3c3fcf7",
+        "filename": "test/unit/lib/nvmf/tcp.c/tcp_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 727,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-01T07:13:23Z",
+      "side": 1,
+      "message": "Can you assert another assert, to check CU_ASSERT(STAILQ_FIRST(\u0026group-\u003epending_buf_queue) \u003d\u003d \u0026tcp_req0.req); \nAnd this will indicate that the tcp_req0.req is still in the queue.  And add comments: since the tcp_req from the qpair has the incapsule data, so even if it is waiting for the buffer, it will handle with the first order.",
+      "range": {
+        "startLine": 727,
+        "startChar": 1,
+        "endLine": 727,
+        "endChar": 75
+      },
+      "revId": "98631565b8977a2ef137f72136f92af91889b11a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
