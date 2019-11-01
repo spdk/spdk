@@ -681,7 +681,7 @@ test_prp_list_append(void)
 
 	/* Non-DWORD-aligned buffer (invalid) */
 	prp_list_prep(&tr, &req, &prp_index);
-	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100001, 0x1000, 0x1000) == -EINVAL);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100001, 0x1000, 0x1000) == -EFAULT);
 
 	/* 512-byte buffer, 4K aligned */
 	prp_list_prep(&tr, &req, &prp_index);
@@ -767,13 +767,13 @@ test_prp_list_append(void)
 	prp_list_prep(&tr, &req, &prp_index);
 	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100800, 0x1000, 0x1000) == 0);
 	CU_ASSERT(prp_index == 2);
-	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x900800, 0x1000, 0x1000) == -EINVAL);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x900800, 0x1000, 0x1000) == -EFAULT);
 	CU_ASSERT(prp_index == 2);
 
 	/* 4K buffer, 4K aligned, but vtophys fails */
 	MOCK_SET(spdk_vtophys, SPDK_VTOPHYS_ERROR);
 	prp_list_prep(&tr, &req, &prp_index);
-	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100000, 0x1000, 0x1000) == -EINVAL);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100000, 0x1000, 0x1000) == -EFAULT);
 	MOCK_CLEAR(spdk_vtophys);
 
 	/* Largest aligned buffer that can be described in NVME_MAX_PRP_LIST_ENTRIES (plus PRP1) */
@@ -791,12 +791,12 @@ test_prp_list_append(void)
 	/* Buffer too large to be described in NVME_MAX_PRP_LIST_ENTRIES */
 	prp_list_prep(&tr, &req, &prp_index);
 	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100000,
-					    (NVME_MAX_PRP_LIST_ENTRIES + 2) * 0x1000, 0x1000) == -EINVAL);
+					    (NVME_MAX_PRP_LIST_ENTRIES + 2) * 0x1000, 0x1000) == -EFAULT);
 
 	/* Non-4K-aligned buffer too large to be described in NVME_MAX_PRP_LIST_ENTRIES */
 	prp_list_prep(&tr, &req, &prp_index);
 	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100800,
-					    (NVME_MAX_PRP_LIST_ENTRIES + 1) * 0x1000, 0x1000) == -EINVAL);
+					    (NVME_MAX_PRP_LIST_ENTRIES + 1) * 0x1000, 0x1000) == -EFAULT);
 }
 
 static void test_shadow_doorbell_update(void)
