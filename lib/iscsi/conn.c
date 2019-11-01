@@ -1253,6 +1253,7 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	uint32_t mapped_length = 0;
 	struct spdk_iscsi_pdu *pdu;
 	int pdu_length;
+	TAILQ_HEAD(, spdk_iscsi_pdu) completed_pdus_list;
 
 	pdu = TAILQ_FIRST(&conn->write_pdu_list);
 
@@ -1297,6 +1298,7 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	 *  partially written, update its writev_offset so that next
 	 *  time only the unwritten portion will be sent to writev().
 	 */
+	TAILQ_INIT(&completed_pdus_list);
 	while (bytes > 0) {
 		pdu_length = iscsi_get_pdu_length(pdu, conn->header_digest,
 						  conn->data_digest);
@@ -1305,23 +1307,28 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 		if (bytes >= pdu_length) {
 			bytes -= pdu_length;
 			TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
-
-			if ((conn->full_feature) &&
-			    (conn->sess->ErrorRecoveryLevel >= 1) &&
-			    spdk_iscsi_is_deferred_free_pdu(pdu)) {
-				SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "stat_sn=%d\n",
-					      from_be32(&pdu->bhs.stat_sn));
-				TAILQ_INSERT_TAIL(&conn->snack_pdu_list, pdu,
-						  tailq);
-			} else {
-				spdk_iscsi_conn_free_pdu(conn, pdu);
-			}
-
+			TAILQ_INSERT_TAIL(&completed_pdus_list, pdu, tailq);
 			pdu = TAILQ_FIRST(&conn->write_pdu_list);
 		} else {
 			pdu->writev_offset += bytes;
 			bytes = 0;
 		}
+	}
+
+	while (!TAILQ_EMPTY(&completed_pdus_list)) {
+		pdu = TAILQ_FIRST(&completed_pdus_list);
+		TAILQ_REMOVE(&completed_pdus_list, pdu, tailq);
+		if ((conn->full_feature) &&
+		    (conn->sess->ErrorRecoveryLevel >= 1) &&
+		    spdk_iscsi_is_deferred_free_pdu(pdu)) {
+			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "stat_sn=%d\n",
+				      from_be32(&pdu->bhs.stat_sn));
+			TAILQ_INSERT_TAIL(&conn->snack_pdu_list, pdu,
+					  tailq);
+		} else {
+			spdk_iscsi_conn_free_pdu(conn, pdu);
+		}
+
 	}
 
 	return TAILQ_EMPTY(&conn->write_pdu_list) ? 0 : 1;
