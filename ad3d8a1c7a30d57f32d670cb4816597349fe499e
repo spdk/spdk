@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "133070bd_48791bc0",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-01T07:45:01Z",
+      "side": 1,
+      "message": "unnecessary empty line",
+      "revId": "ad3d8a1c7a30d57f32d670cb4816597349fe499e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b41bd4f_14e7578d",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-01T07:45:01Z",
+      "side": 1,
+      "message": "The thread which opens the LUN.",
+      "range": {
+        "startLine": 120,
+        "startChar": 5,
+        "endLine": 120,
+        "endChar": 33
+      },
+      "revId": "ad3d8a1c7a30d57f32d670cb4816597349fe499e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
