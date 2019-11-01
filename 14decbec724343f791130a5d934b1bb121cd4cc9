@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3b10110_84619fe1",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-01T23:03:04Z",
+      "side": 1,
+      "message": "Is this minimum value based on the spec?  If so, let\u0027s add a #define for it in include/spdk/nvme.h and use that #define here.\n\nActually looking at the spec, I don\u0027t see a minimum value defined.  So we probably shouldn\u0027t say \"the minimum keep alive value\" - that\u0027s one that we\u0027ve defined internally within SPDK, but it\u0027s not part of the spec.\n\nI\u0027d be curious how we settled on 10 seconds for this.  I don\u0027t see any reason why we shouldn\u0027t let users pick something even smaller if they want.",
+      "revId": "14decbec724343f791130a5d934b1bb121cd4cc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
