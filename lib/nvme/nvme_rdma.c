@@ -356,15 +356,32 @@ static int
 nvme_rdma_validate_cm_event(enum rdma_cm_event_type expected_evt_type,
 			    struct rdma_cm_event *reaped_evt)
 {
-	int rc = 0;
+	int rc = -EBADMSG;
 
-	if (expected_evt_type != reaped_evt->event) {
-		SPDK_ERRLOG("Expected %s but received %s (%d) from CM event channel (status = %d)\n",
-			    nvme_rdma_cm_event_str_get(expected_evt_type),
-			    nvme_rdma_cm_event_str_get(reaped_evt->event), reaped_evt->event,
-			    reaped_evt->status);
-		rc = -EBADMSG;
+	if (expected_evt_type == reaped_evt->event) {
+		return 0;
 	}
+
+	switch (expected_evt_type) {
+	case RDMA_CM_EVENT_ESTABLISHED:
+		/*
+		 * There is an enum ib_cm_rej_reason in the kernel headers that sets 10 as
+		 * IB_CM_REJ_STALE_CONN. I can't find the corresponding userspace but we get
+		 * the same values here.
+		 */
+		if (reaped_evt->event == RDMA_CM_EVENT_REJECTED && reaped_evt->status == 10) {
+			rc = -ESTALE;
+		}
+		break;
+	default:
+		break;
+	}
+
+
+	SPDK_ERRLOG("Expected %s but received %s (%d) from CM event channel (status = %d)\n",
+		    nvme_rdma_cm_event_str_get(expected_evt_type),
+		    nvme_rdma_cm_event_str_get(reaped_evt->event), reaped_evt->event,
+		    reaped_evt->status);
 	return rc;
 }
 
