@@ -218,7 +218,8 @@ static bool g_warn;
 static bool g_header_digest;
 static bool g_data_digest;
 static bool g_no_shn_notification = false;
-static uint32_t g_keep_alive_timeout_in_ms = 0;
+/* Default to the minimum keep alive value */
+static uint32_t g_keep_alive_timeout_in_ms = 10000;
 
 static const char *g_core_mask;
 
@@ -1838,8 +1839,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	/* Set the header and data_digest */
 	opts->header_digest = g_header_digest;
 	opts->data_digest = g_data_digest;
-	opts->keep_alive_timeout_ms = spdk_max(opts->keep_alive_timeout_ms,
-					       g_keep_alive_timeout_in_ms);
+	opts->keep_alive_timeout_ms = g_keep_alive_timeout_in_ms;
 
 	return true;
 }
