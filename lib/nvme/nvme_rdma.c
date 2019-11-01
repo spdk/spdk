@@ -72,6 +72,13 @@
 /* CM event processing timeout */
 #define NVME_RDMA_QPAIR_CM_EVENT_TIMEOUT_US	100000
 
+/*
+ * In the special case of a stale connection we don't expose a mechanism
+ * for the user to retry the connection so we need to handle it internally.
+ */
+#define NVME_RDMA_STALE_CONN_RETRY_MAX		5
+#define NVME_RDMA_STALE_CONN_RETRY_DELAY_US	10000
+
 struct spdk_nvmf_cmd {
 	struct spdk_nvme_cmd cmd;
 	struct spdk_nvme_sgl_descriptor sgl[NVME_RDMA_MAX_SGL_DESCRIPTORS];
@@ -791,12 +798,15 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	}
 
 	ret = nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_ESTABLISHED);
-	if (ret) {
+	if (ret == -ESTALE) {
+		SPDK_NOTICELOG("Received a stale connection notice during connection.\n");
+		return -EAGAIN;
+	} else if (ret) {
 		SPDK_ERRLOG("RDMA connect error\n");
 		return -1;
+	} else {
+		return 0;
 	}
-
-	return 0;
 }
 
 static int
@@ -1023,7 +1033,7 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	rc = nvme_rdma_connect(rqpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to connect the rqpair\n");
-		return -1;
+		return rc;
 	}
 
 	rc = nvme_rdma_register_reqs(rqpair);
@@ -1441,7 +1451,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct nvme_rdma_qpair *rqpair;
 	struct spdk_nvme_qpair *qpair;
-	int rc;
+	int rc, retry_count = 0;
 
 	rqpair = calloc(1, sizeof(struct nvme_rdma_qpair));
 	if (!rqpair) {
@@ -1475,6 +1485,22 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA responses allocated\n");
 
 	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
+
+	/*
+	 * -EAGAIN represents the special case where the target side still thought it was connected.
+	 * Most NICs will fail the first connection attempt, and the NICs will clean up whatever
+	 * state they need to. After that, subsequent connection attempts will succeed.
+	 */
+	if (rc == -EAGAIN) {
+		SPDK_NOTICELOG("Detected stale connection on Target side for qpid: %d\n", rqpair->qpair.id);
+		do {
+			nvme_delay(NVME_RDMA_STALE_CONN_RETRY_DELAY_US);
+			nvme_transport_ctrlr_disconnect_qpair(ctrlr, &rqpair->qpair);
+			rc = nvme_transport_ctrlr_connect_qpair(ctrlr, &rqpair->qpair);
+			retry_count++;
+		} while (rc == -EAGAIN && retry_count < NVME_RDMA_STALE_CONN_RETRY_MAX);
+	}
+
 	if (rc < 0) {
 		nvme_rdma_qpair_destroy(qpair);
 		return NULL;
