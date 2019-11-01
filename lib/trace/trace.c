@@ -91,7 +91,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries)
 	for (i = 1; i < (int)SPDK_COUNTOF(lcore_offsets); i++) {
 		lcore_offsets[i] = spdk_get_trace_history_size(num_entries) + lcore_offsets[i - 1];
 	}
-	histories_size = sizeof(struct spdk_trace_flags) + lcore_offsets[SPDK_TRACE_MAX_LCORE];
+	histories_size = lcore_offsets[SPDK_TRACE_MAX_LCORE];
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
