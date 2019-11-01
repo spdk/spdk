@@ -22,6 +22,30 @@
       "revId": "98631565b8977a2ef137f72136f92af91889b11a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c70cee10_1c915da2",
+        "filename": "test/unit/lib/nvmf/tcp.c/tcp_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 727,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2019-11-01T13:09:31Z",
+      "side": 1,
+      "message": "add two assert to make sure only tcp_req0.req in pending_buff queue.\nand also update the commit message.",
+      "parentUuid": "940ea98a_c3c3fcf7",
+      "range": {
+        "startLine": 727,
+        "startChar": 1,
+        "endLine": 727,
+        "endChar": 75
+      },
+      "revId": "98631565b8977a2ef137f72136f92af91889b11a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
