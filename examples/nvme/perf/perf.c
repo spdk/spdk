@@ -1204,7 +1204,7 @@ print_performance(void)
 	printf("========================================================\n");
 	printf("%*s\n", max_strlen + 60, "Latency(us)");
 	printf("%-*s: %10s %10s %10s %10s %10s\n",
-	       max_strlen + 12, "Device Information", "IOPS", "MiB/s", "Average", "min", "max");
+	       max_strlen + 13, "Device Information", "IOPS", "MiB/s", "Average", "min", "max");
 
 	worker = g_workers;
 	while (worker) {
@@ -1224,7 +1224,7 @@ print_performance(void)
 					max_latency_so_far = max_latency;
 				}
 
-				printf("%-*.*s from core %u: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
+				printf("%-*.*s from core %2u: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
 				       max_strlen, max_strlen, ns_ctx->entry->name, worker->lcore,
 				       io_per_second, mb_per_second,
 				       average_latency, min_latency, max_latency);
@@ -1243,7 +1243,7 @@ print_performance(void)
 		sum_ave_latency = ((double)total_io_tsc / total_io_completed) * 1000 * 1000 / g_tsc_rate;
 		printf("========================================================\n");
 		printf("%-*s: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
-		       max_strlen + 12, "Total", total_io_per_second, total_mb_per_second,
+		       max_strlen + 13, "Total", total_io_per_second, total_mb_per_second,
 		       sum_ave_latency, min_latency_so_far, max_latency_so_far);
 		printf("\n");
 	}
