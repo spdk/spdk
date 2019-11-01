@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48a77977_89f5c609",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-01T21:08:40Z",
+      "side": 1,
+      "message": "Couldn\u0027t you use the count in the state_cntr that already exists? See https://review.gerrithub.io/c/spdk/spdk/+/471750",
+      "revId": "abe4531cc4d1cc56e5c522a1e493d300c140a6a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
