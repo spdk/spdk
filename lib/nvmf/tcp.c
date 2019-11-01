@@ -1652,13 +1652,13 @@ spdk_nvmf_tcp_h2c_term_req_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair,
 }
 
 static void
-spdk_nvmf_tcp_pdu_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair)
+spdk_nvmf_tcp_pdu_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair,
+				 struct spdk_nvmf_tcp_transport *ttransport)
 {
 	int rc = 0;
 	struct nvme_tcp_pdu *pdu;
 	uint32_t crc32c, error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
-	struct spdk_nvmf_tcp_transport *ttransport;
 
 	assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 	pdu = &tqpair->pdu_in_progress;
@@ -1677,7 +1677,6 @@ spdk_nvmf_tcp_pdu_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair)
 		}
 	}
 
-	ttransport = SPDK_CONTAINEROF(tqpair->qpair.transport, struct spdk_nvmf_tcp_transport, transport);
 	switch (pdu->hdr->common.pdu_type) {
 	case SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD:
 		spdk_nvmf_tcp_capsule_cmd_payload_handle(ttransport, tqpair, pdu);
@@ -1770,13 +1769,13 @@ end:
 }
 
 static void
-spdk_nvmf_tcp_pdu_psh_handle(struct spdk_nvmf_tcp_qpair *tqpair)
+spdk_nvmf_tcp_pdu_psh_handle(struct spdk_nvmf_tcp_qpair *tqpair,
+			     struct spdk_nvmf_tcp_transport *ttransport)
 {
 	struct nvme_tcp_pdu *pdu;
 	int rc;
 	uint32_t crc32c, error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
-	struct spdk_nvmf_tcp_transport *ttransport;
 
 	assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH);
 	pdu = &tqpair->pdu_in_progress;
@@ -1797,7 +1796,6 @@ spdk_nvmf_tcp_pdu_psh_handle(struct spdk_nvmf_tcp_qpair *tqpair)
 		}
 	}
 
-	ttransport = SPDK_CONTAINEROF(tqpair->qpair.transport, struct spdk_nvmf_tcp_transport, transport);
 	switch (pdu->hdr->common.pdu_type) {
 	case SPDK_NVME_TCP_PDU_TYPE_IC_REQ:
 		spdk_nvmf_tcp_icreq_handle(ttransport, tqpair, pdu);
@@ -2001,6 +1999,8 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 	struct nvme_tcp_pdu *pdu;
 	enum nvme_tcp_pdu_recv_state prev_state;
 	uint32_t data_len;
+	struct spdk_nvmf_tcp_transport *ttransport = SPDK_CONTAINEROF(tqpair->qpair.transport,
+			struct spdk_nvmf_tcp_transport, transport);
 
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
@@ -2055,7 +2055,7 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			}
 
 			/* All header(ch, psh, head digist) of this PDU has now been read from the socket. */
-			spdk_nvmf_tcp_pdu_psh_handle(tqpair);
+			spdk_nvmf_tcp_pdu_psh_handle(tqpair, ttransport);
 			break;
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
 			/* check whether the data is valid, if not we just return */
@@ -2096,7 +2096,7 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			}
 
 			/* All of this PDU has now been read from the socket. */
-			spdk_nvmf_tcp_pdu_payload_handle(tqpair);
+			spdk_nvmf_tcp_pdu_payload_handle(tqpair, ttransport);
 			break;
 		case NVME_TCP_PDU_RECV_STATE_ERROR:
 			if (!spdk_sock_is_connected(tqpair->sock)) {
