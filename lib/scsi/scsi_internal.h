@@ -117,6 +117,9 @@ struct spdk_scsi_lun {
 	/** Descriptor for opened block device. */
 	struct spdk_bdev_desc *bdev_desc;
 
+	/** The thread which opens this LUN. */
+	struct spdk_thread *thread;
+
 	/** I/O channel for the bdev associated with this LUN. */
 	struct spdk_io_channel *io_channel;
 
