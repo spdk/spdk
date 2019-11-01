@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd452bcb_954e3119",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-01T22:54:34Z",
+      "side": 1,
+      "message": "Can you explain why?  If calloc() fails and io_u-\u003eengine_data does not get set, does this cause some kind of error?",
+      "revId": "ba26bfad133e02ce169bff58e4a0f576733099c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
