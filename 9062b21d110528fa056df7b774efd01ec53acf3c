@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b9a0e62_dbc459d6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-01T22:42:22Z",
+      "side": 1,
+      "message": "should this be two separate patches?\n\nI know the vhost_dir assignment thing was probably found while debugging this SC2153, but functionally removing vhost_dir isn\u0027t related at all to moving SC2153 to the explicit SHCK_EXCLUDE list",
+      "revId": "9062b21d110528fa056df7b774efd01ec53acf3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
