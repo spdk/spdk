@@ -1224,7 +1224,7 @@ print_performance(void)
 					max_latency_so_far = max_latency;
 				}
 
-				printf("%-*.*s from core %u: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
+				printf("%-*.*s from core %2u: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
 				       max_strlen, max_strlen, ns_ctx->entry->name, worker->lcore,
 				       io_per_second, mb_per_second,
 				       average_latency, min_latency, max_latency);
