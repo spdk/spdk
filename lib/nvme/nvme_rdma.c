@@ -353,6 +353,23 @@ nvme_rdma_poll_events(struct nvme_rdma_ctrlr *rctrlr)
 }
 
 static int
+nvme_rdma_validate_cm_event(enum rdma_cm_event_type expected_evt_type,
+			    struct rdma_cm_event *reaped_evt)
+{
+	int rc = -EBADMSG;
+
+	if (expected_evt_type == reaped_evt->event) {
+		return 0;
+	}
+
+	SPDK_ERRLOG("Expected %s but received %s (%d) from CM event channel (status = %d)\n",
+		    nvme_rdma_cm_event_str_get(expected_evt_type),
+		    nvme_rdma_cm_event_str_get(reaped_evt->event), reaped_evt->event,
+		    reaped_evt->status);
+	return rc;
+}
+
+static int
 nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
 			struct rdma_event_channel *channel,
 			enum rdma_cm_event_type evt)
@@ -385,13 +402,7 @@ nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
 		return -EADDRNOTAVAIL;
 	}
 
-	if (rqpair->evt->event != evt) {
-		SPDK_ERRLOG("Expected %s but received %s (%d) from CM event channel (status = %d)\n",
-			    nvme_rdma_cm_event_str_get(evt),
-			    nvme_rdma_cm_event_str_get(rqpair->evt->event), rqpair->evt->event,
-			    rqpair->evt->status);
-		rc = -EBADMSG;
-	}
+	rc = nvme_rdma_validate_cm_event(evt, rqpair->evt);
 
 	rc2 = nvme_rdma_qpair_process_cm_event(rqpair);
 	/* bad message takes precedence over the other error codes from processing the event. */
