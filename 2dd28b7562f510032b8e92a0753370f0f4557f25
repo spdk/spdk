@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a66ebcf4_d192cba4",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1300,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-01T03:15:32Z",
+      "side": 1,
+      "message": "You should insert TAILQ_INIT(\u0026completed_pdus_list) here.",
+      "revId": "2dd28b7562f510032b8e92a0753370f0f4557f25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84e2b09d_d99fb794",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1326,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-01T03:15:32Z",
+      "side": 1,
+      "message": "I think it will be OK to write TAILQ_INSERT_TAIL(\u0026conn-\u003esnack_pdu_list, pdu, tailq) because you shifted a tab.",
+      "range": {
+        "startLine": 1326,
+        "startChar": 7,
+        "endLine": 1326,
+        "endChar": 12
+      },
+      "revId": "2dd28b7562f510032b8e92a0753370f0f4557f25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
