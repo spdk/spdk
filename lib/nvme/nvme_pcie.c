@@ -1734,7 +1734,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 
 	if (spdk_unlikely(((uintptr_t)virt_addr & 3) != 0)) {
 		SPDK_ERRLOG("virt_addr %p not dword aligned\n", virt_addr);
-		return -EINVAL;
+		return -EFAULT;
 	}
 
 	i = *prp_index;
@@ -1747,13 +1747,13 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 		 */
 		if (spdk_unlikely(i > SPDK_COUNTOF(tr->u.prp))) {
 			SPDK_ERRLOG("out of PRP entries\n");
-			return -EINVAL;
+			return -EFAULT;
 		}
 
 		phys_addr = spdk_vtophys(virt_addr, NULL);
 		if (spdk_unlikely(phys_addr == SPDK_VTOPHYS_ERROR)) {
 			SPDK_ERRLOG("vtophys(%p) failed\n", virt_addr);
-			return -EINVAL;
+			return -EFAULT;
 		}
 
 		if (i == 0) {
@@ -1763,7 +1763,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 		} else {
 			if ((phys_addr & page_mask) != 0) {
 				SPDK_ERRLOG("PRP %u not page aligned (%p)\n", i, virt_addr);
-				return -EINVAL;
+				return -EFAULT;
 			}
 
 			SPDK_DEBUGLOG(SPDK_LOG_NVME, "prp[%u] = %p\n", i - 1, (void *)phys_addr);
@@ -1845,7 +1845,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 					      &virt_addr, &remaining_user_sge_len);
 		if (rc) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-			return -1;
+			return -EFAULT;
 		}
 
 		remaining_user_sge_len = spdk_min(remaining_user_sge_len, remaining_transfer_len);
@@ -1853,13 +1853,13 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 		while (remaining_user_sge_len > 0) {
 			if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
 				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-				return -1;
+				return -EFAULT;
 			}
 
 			phys_addr = spdk_vtophys(virt_addr, NULL);
 			if (phys_addr == SPDK_VTOPHYS_ERROR) {
 				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-				return -1;
+				return -EFAULT;
 			}
 
 			length = spdk_min(remaining_user_sge_len, VALUE_2MB - _2MB_OFFSET(virt_addr));
@@ -1929,7 +1929,7 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
 		if (rc) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-			return -1;
+			return -EFAULT;
 		}
 
 		length = spdk_min(remaining_transfer_len, length);

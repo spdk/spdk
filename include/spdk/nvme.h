@@ -1179,6 +1179,8 @@ int spdk_nvme_ctrlr_io_cmd_raw_no_payload_build(struct spdk_nvme_ctrlr *ctrlr,
  * \return 0 if successfully submitted, negated errnos on the following error conditions:
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
 			       struct spdk_nvme_qpair *qpair,
@@ -1213,6 +1215,8 @@ int spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
  * \return 0 if successfully submitted, negated errnos on the following error conditions:
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 				       struct spdk_nvme_qpair *qpair,
@@ -1947,6 +1951,8 @@ typedef int (*spdk_nvme_req_next_sge_cb)(void *cb_arg, void **address, uint32_t 
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
 			   uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
@@ -1974,6 +1980,8 @@ int spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			    uint64_t lba, uint32_t lba_count,
@@ -2007,6 +2015,8 @@ int spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpa
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				    uint64_t lba, uint32_t lba_count,
@@ -2040,6 +2050,8 @@ int spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qp
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				   void *payload, void *metadata,
@@ -2067,6 +2079,8 @@ int spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpa
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				  uint64_t lba, uint32_t lba_count,
@@ -2091,6 +2105,8 @@ int spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_write_uncorrectable(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		uint64_t lba, uint32_t lba_count,
@@ -2116,6 +2132,8 @@ int spdk_nvme_ns_cmd_write_uncorrectable(struct spdk_nvme_ns *ns, struct spdk_nv
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
 			  uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
@@ -2143,6 +2161,8 @@ int spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			   uint64_t lba, uint32_t lba_count,
@@ -2175,6 +2195,8 @@ int spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				   uint64_t lba, uint32_t lba_count,
@@ -2207,6 +2229,8 @@ int spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpa
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				  void *payload, void *metadata,
@@ -2285,6 +2309,8 @@ int spdk_nvme_ns_cmd_flush(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
  * \return 0 if successfully submitted, negated errnos on the following error conditions:
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_reservation_register(struct spdk_nvme_ns *ns,
 		struct spdk_nvme_qpair *qpair,
@@ -2313,6 +2339,8 @@ int spdk_nvme_ns_cmd_reservation_register(struct spdk_nvme_ns *ns,
  * \return 0 if successfully submitted, negated errnos on the following error conditions:
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_reservation_release(struct spdk_nvme_ns *ns,
 		struct spdk_nvme_qpair *qpair,
@@ -2341,6 +2369,8 @@ int spdk_nvme_ns_cmd_reservation_release(struct spdk_nvme_ns *ns,
  * \return 0 if successfully submitted, negated errnos on the following error conditions:
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_reservation_acquire(struct spdk_nvme_ns *ns,
 		struct spdk_nvme_qpair *qpair,
@@ -2367,6 +2397,8 @@ int spdk_nvme_ns_cmd_reservation_acquire(struct spdk_nvme_ns *ns,
  * \return 0 if successfully submitted, negated errnos on the following error conditions:
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 					struct spdk_nvme_qpair *qpair,
@@ -2393,6 +2425,8 @@ int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
 			     uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
@@ -2420,6 +2454,8 @@ int spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qp
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			      uint64_t lba, uint32_t lba_count,
@@ -2451,6 +2487,8 @@ int spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
+ * -EFAULT: Invalid address was specified as part of payload.  cb_fn is also called
+ *          with error status including dnr=1 in this case.
  */
 int spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				     void *payload, void *metadata,
