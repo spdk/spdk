@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "574e5e93_6172e757",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-01T07:38:05Z",
+      "side": 1,
+      "message": "Can we also set another fio plugin\u0027s engine_data.",
+      "range": {
+        "startLine": 537,
+        "startChar": 0,
+        "endLine": 537,
+        "endChar": 18
+      },
+      "revId": "7594f68614e69c843c3adfe02a52b2b7fa2bcc7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
