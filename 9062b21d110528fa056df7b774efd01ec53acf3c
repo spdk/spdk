@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "2891799a_1723ecbe",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-01T22:43:32Z",
+      "side": 1,
+      "message": "move rule SC2153 to permanent exception list\n\n(This is the wording used in a later patch in this series, and I like that one better.)",
+      "revId": "9062b21d110528fa056df7b774efd01ec53acf3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b9a0e62_dbc459d6",
         "filename": "/COMMIT_MSG",
         "patchSetId": 2
