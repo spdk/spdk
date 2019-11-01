@@ -1993,13 +1993,15 @@ nvme_tcp_read_payload_data_from_pdu_recv_buf(struct nvme_tcp_pdu_recv_buf *pdu_r
 	return size;
 }
 
+#define MAX_NVME_TCP_PDU_LOOP_COUNT 32
+
 static int
 spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	int rc = 0;
 	struct nvme_tcp_pdu *pdu;
 	enum nvme_tcp_pdu_recv_state prev_state;
-	uint32_t data_len;
+	uint32_t data_len, current_pdu_num = 0;
 
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
@@ -2051,6 +2053,9 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 
 			/* All header(ch, psh, head digist) of this PDU has now been read from the socket. */
 			spdk_nvmf_tcp_pdu_psh_handle(tqpair);
+			if (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY) {
+				current_pdu_num++;
+			}
 			break;
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
 			/* check whether the data is valid, if not we just return */
@@ -2092,6 +2097,7 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 
 			/* All of this PDU has now been read from the socket. */
 			spdk_nvmf_tcp_pdu_payload_handle(tqpair);
+			current_pdu_num++;
 			break;
 		case NVME_TCP_PDU_RECV_STATE_ERROR:
 			/* Check whether the connection is closed. Each time, we only read 1 byte every time */
@@ -2105,7 +2111,7 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			SPDK_ERRLOG("code should not come to here");
 			break;
 		}
-	} while (tqpair->recv_state != prev_state);
+	} while ((tqpair->recv_state != prev_state) && (current_pdu_num < MAX_NVME_TCP_PDU_LOOP_COUNT));
 
 	return rc;
 }
@@ -2776,6 +2782,7 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_tcp_req *tcp_req;
 	struct spdk_nvmf_tcp_transport *ttransport = SPDK_CONTAINEROF(group->transport,
 			struct spdk_nvmf_tcp_transport, transport);
+	struct spdk_nvmf_tcp_qpair *tqpair, *tqpair_tmp;
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 
@@ -2793,6 +2800,13 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	rc = spdk_sock_group_poll(tgroup->sock_group);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to poll sock_group=%p\n", tgroup->sock_group);
+	} else if (rc == 0) {
+		TAILQ_FOREACH_SAFE(tqpair, &tgroup->qpairs, link, tqpair_tmp) {
+			if (spdk_unlikely(tqpair->pdu_recv_buf.remain_size)) {
+				rc++;
+				spdk_nvmf_tcp_sock_cb(tqpair, NULL, tqpair->sock);
+			}
+		}
 	}
 
 	return rc;
