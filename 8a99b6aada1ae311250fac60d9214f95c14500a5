@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3327230a_3f58dad8",
+        "filename": "module/bdev/merge/bdev_merge.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-01T10:53:04Z",
+      "side": 1,
+      "message": "Hi Jiaqi,\n\nCould you replace this randon function with the equivalent function used in FIO? \nThanks.",
+      "range": {
+        "startLine": 463,
+        "startChar": 31,
+        "endLine": 463,
+        "endChar": 45
+      },
+      "revId": "8a99b6aada1ae311250fac60d9214f95c14500a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
