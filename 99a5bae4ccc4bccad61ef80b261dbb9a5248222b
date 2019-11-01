@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84322a5e_b3fb7110",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-01T23:04:40Z",
+      "side": 1,
+      "message": "you should add this in the previous patch - it avoids adding code in the previous patch that then just gets changed in the next patch here",
+      "revId": "99a5bae4ccc4bccad61ef80b261dbb9a5248222b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
