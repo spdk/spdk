@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3700205e_8989443a",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-01T04:48:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e47b4215_537975a4",
+      "range": {
+        "startLine": 238,
+        "startChar": 13,
+        "endLine": 238,
+        "endChar": 34
+      },
+      "revId": "36d6ef0f01e4e406f0ddddafb1b270e7fa179423",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "caf776e5_01ebd014",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 2
@@ -36,6 +60,24 @@
       "writtenOn": "2019-11-01T04:14:41Z",
       "side": 1,
       "message": "Ben\u0027s patch calls spdk_nvmf_tcp_pdu_psh_handle() repeatedly until succeed.\nIf you can also callspdk_nvmf_tcp_pdu_psh_handle() repeatedly, the following may be OK.\n\n tcp_req \u003d spdk_nvmf_tcp_req_get(tqpair);\n if (!tcp_req) {\n    if (tqpair-\u003eexpected_free_req_num \u003e 0) {\n      return;\n    } else {\n      SPDK_ERRLOG( ... );\n      tqpair-\u003estate \u003d NVME_TCP_QPAIR_STATE_EXITING;\n      spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);\n    }\n\nThen pdu-\u003ewait_for_req can be removed.",
+      "revId": "36d6ef0f01e4e406f0ddddafb1b270e7fa179423",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f808f789_d9f22515",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-01T04:48:09Z",
+      "side": 1,
+      "message": "spdk_nvmf_tcp_pdu_psh_handle cannot be called repeatedly since we will calculate the crc32 of the pdu again, it is redundant when there this connection has enabled digest..",
+      "parentUuid": "caf776e5_01ebd014",
       "revId": "36d6ef0f01e4e406f0ddddafb1b270e7fa179423",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
