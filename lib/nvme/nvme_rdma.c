@@ -785,19 +785,23 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	param.retry_count = 7;
 	param.rnr_retry_count = 7;
 
-	ret = rdma_connect(rqpair->cm_id, &param);
-	if (ret) {
-		SPDK_ERRLOG("nvme rdma connect error\n");
-		return ret;
-	}
+	while (true) {
+		ret = rdma_connect(rqpair->cm_id, &param);
+		if (ret) {
+			SPDK_ERRLOG("nvme rdma connect error\n");
+			return ret;
+		}
 
-	ret = nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_ESTABLISHED);
-	if (ret) {
-		SPDK_ERRLOG("RDMA connect error\n");
-		return -1;
+		ret = nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_ESTABLISHED);
+		if (ret == -ESTALE) {
+			SPDK_NOTICELOG("Received a stale connection event. retrying.\n");
+		} else if (ret) {
+			SPDK_ERRLOG("RDMA connect error\n");
+			return -1;
+		} else {
+			return 0;
+		}
 	}
-
-	return 0;
 }
 
 static int
