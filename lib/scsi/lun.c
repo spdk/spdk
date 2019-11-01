@@ -234,18 +234,34 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 }
 
 static void
+_scsi_lun_remove(void *arg)
+{
+	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
+
+	spdk_bdev_close(lun->bdev_desc);
+
+	spdk_scsi_dev_delete_lun(lun->dev, lun);
+	free(lun);
+}
+
+static void
 scsi_lun_remove(struct spdk_scsi_lun *lun)
 {
 	struct spdk_scsi_pr_registrant *reg, *tmp;
+	struct spdk_thread *thread;
 
 	TAILQ_FOREACH_SAFE(reg, &lun->reg_head, link, tmp) {
 		TAILQ_REMOVE(&lun->reg_head, reg, link);
 		free(reg);
 	}
-	spdk_bdev_close(lun->bdev_desc);
 
-	spdk_scsi_dev_delete_lun(lun->dev, lun);
-	free(lun);
+	thread = spdk_get_thread();
+
+	if (thread != lun->thread) {
+		spdk_thread_send_msg(thread, _scsi_lun_remove, lun);
+	} else {
+		_scsi_lun_remove(lun);
+	}
 }
 
 static int
@@ -374,6 +390,8 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 		free(lun);
 		return NULL;
 	}
+
+	lun->thread = spdk_get_thread();
 
 	TAILQ_INIT(&lun->tasks);
 	TAILQ_INIT(&lun->pending_tasks);
