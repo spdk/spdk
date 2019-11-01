@@ -124,6 +124,9 @@ struct merge_bdev {
 	uint32_t big_buff_size;
 
 	uint64_t slave_offset;
+
+	uint64_t max_blockcnt;
+
 };
 
 
