@@ -791,12 +791,15 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	}
 
 	ret = nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_ESTABLISHED);
-	if (ret) {
+	if (ret == -ESTALE) {
+		SPDK_NOTICELOG("Received a stale connection event. retrying.\n");
+		return -EAGAIN;
+	} else if (ret) {
 		SPDK_ERRLOG("RDMA connect error\n");
 		return -1;
+	} else {
+		return 0;
 	}
-
-	return 0;
 }
 
 static int
@@ -1022,6 +1025,11 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 
 	rc = nvme_rdma_connect(rqpair);
 	if (rc != 0) {
+		if (rc == -EAGAIN) {
+			nvme_transport_ctrlr_disconnect_qpair(ctrlr, &rqpair->qpair);
+			return nvme_transport_ctrlr_connect_qpair(ctrlr, &rqpair->qpair);
+		}
+
 		SPDK_ERRLOG("Unable to connect the rqpair\n");
 		return -1;
 	}
