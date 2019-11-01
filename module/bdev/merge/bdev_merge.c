@@ -376,7 +376,6 @@ merge_bdev_slave_io_completion(struct spdk_bdev_io *bdev_io, bool success, void 
 }
 
 
-static __thread unsigned int seed = 0;
 static bool _test = true;
 
 static void
@@ -460,15 +459,15 @@ merge_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 			merge_bdev->big_buff_iov.iov_base = merge_bdev->big_buff;
 			merge_bdev->big_buff_iov.iov_len = merge_config->slave_strip_size;
 			if (_test) {
-				merge_bdev->slave_offset = rand_r(&seed) % merge_bdev->bdev.blockcnt;
+				merge_bdev->slave_offset = __rand64(&merge_bdev->max_io_rand_state) % merge_bdev->max_blockcnt;
 			}
-			if (merge_bdev->slave_offset + number_block > merge_bdev->bdev.blockcnt) {
-				merge_bdev->slave_offset = (merge_bdev->slave_offset + number_block) % merge_bdev->bdev.blockcnt;
+			if (merge_bdev->slave_offset + number_block > merge_bdev->max_blockcnt) {
+				merge_bdev->slave_offset = (merge_bdev->slave_offset + number_block) % merge_bdev->max_blockcnt;
 			}
 			ret = spdk_bdev_writev_blocks(slave_bdev_config->base_bdev_info.desc,
 						      merge_ch->slave_channel[0],
 						      &merge_bdev->big_buff_iov, 1,
-						      merge_bdev->slave_offset % merge_bdev->bdev.blockcnt, number_block, merge_bdev_slave_io_completion,
+						      merge_bdev->slave_offset % merge_bdev->max_blockcnt, number_block, merge_bdev_slave_io_completion,
 						      bdev_io);
 
 			if (ret != 0) {
@@ -937,7 +936,7 @@ merge_bdev_create(struct merge_config *merge_config)
 	merge_bdev->big_buff = spdk_zmalloc(merge_config->slave_strip_size, 8, NULL, SPDK_ENV_LCORE_ID_ANY,
 					    SPDK_MALLOC_DMA);
 	merge_bdev->big_buff_size = 0;
-
+	__init_rand64(&merge_bdev->max_io_rand_state, getpid());
 	merge_bdev->config = merge_config;
 	merge_bdev->state = MERGE_BDEV_STATE_CONFIGURING;
 	merge_bdev_gen = &merge_bdev->bdev;
@@ -1005,6 +1004,7 @@ merge_bdev_add_base_devices(struct merge_config *merge_config)
 	int			rc = 0, _rc;
 
 	uint64_t		min_blockcnt = UINT64_MAX;
+	uint64_t		max_blockcnt = 0;
 	uint32_t		blocklen = 0;
 
 	TAILQ_FOREACH(mb_config, &merge_config->merge_base_bdev_config_head, link) {
@@ -1016,6 +1016,7 @@ merge_bdev_add_base_devices(struct merge_config *merge_config)
 
 		/* config merge bdev blockcnt */
 		min_blockcnt = min_blockcnt < base_bdev->blockcnt ? min_blockcnt : base_bdev->blockcnt;
+		max_blockcnt = max_blockcnt < base_bdev->blockcnt ?  base_bdev->blockcnt : max_blockcnt;
 
 		/* todo make sure blocklen */
 		blocklen = base_bdev->blocklen;
@@ -1042,6 +1043,7 @@ merge_bdev_add_base_devices(struct merge_config *merge_config)
 					sizeof(struct merge_bdev_io_channel),
 					merge_bdev->bdev.name);
 		merge_bdev->bdev.blockcnt = min_blockcnt;
+		merge_bdev->max_blockcnt = max_blockcnt;
 		merge_bdev->bdev.blocklen = blocklen;
 
 		rc = spdk_bdev_register(&merge_bdev->bdev);
