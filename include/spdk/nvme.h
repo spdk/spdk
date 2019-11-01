@@ -1144,9 +1144,9 @@ int spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair);
  * \param cb_fn Callback function invoked when the I/O command completes.
  * \param cb_arg Argument passed to callback function.
  *
- * \return 0 if successfully submitted, -ENOMEN if resources could not be
- * allocated for this request, -ENXIO if the admin qpair is failed at the
- * transport layer.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 
 int spdk_nvme_ctrlr_io_cmd_raw_no_payload_build(struct spdk_nvme_ctrlr *ctrlr,
@@ -1176,8 +1176,9 @@ int spdk_nvme_ctrlr_io_cmd_raw_no_payload_build(struct spdk_nvme_ctrlr *ctrlr,
  * \param cb_fn Callback function invoked when the I/O command completes.
  * \param cb_arg Argument passed to callback function.
  *
-  * \return 0 if successfully submitted, negated errno if resources could not be
- * allocated for this request, -ENXIO if the admin qpair is failed at the transport layer.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
 			       struct spdk_nvme_qpair *qpair,
@@ -1209,8 +1210,9 @@ int spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
  * \param cb_fn Callback function invoked when the I/O command completes.
  * \param cb_arg Argument passed to callback function.
  *
- * \return 0 if successfully submitted, negated errno if resources could not be
- * allocated for this request, -ENXIO if the admin qpair is failed at the transport layer.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 				       struct spdk_nvme_qpair *qpair,
@@ -2151,6 +2153,9 @@ int spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
 /**
  * Submit a read I/O to the specified NVMe namespace.
  *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ *
  * \param ns NVMe namespace to submit the read I/O
  * \param qpair I/O queue pair to submit the request
  * \param lba starting LBA to read the data
@@ -2170,9 +2175,6 @@ int spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
  * -EINVAL: The request is malformed.
  * -ENOMEM: The request cannot be allocated.
  * -ENXIO: The qpair is failed at the transport level.
- *
- * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
- * The user must ensure that only one thread submits I/O on a given qpair at any given time.
  */
 int spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				   uint64_t lba, uint32_t lba_count,
@@ -2183,6 +2185,10 @@ int spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpa
 
 /**
  * Submits a read I/O to the specified NVMe namespace.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
  *
  * \param ns NVMe namespace to submit the read I/O
  * \param qpair I/O queue pair to submit the request
@@ -2209,10 +2215,7 @@ int spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
 				  uint16_t apptag_mask, uint16_t apptag);
 
 /**
- * Submit a data set management request to the specified NVMe namespace. Data set
- * management operations are designed to optimize interaction with the block
- * translation layer inside the device. The most common type of operation is
- * deallocate, which is often referred to as TRIM or UNMAP.
+ * Submit a data set management request to the specified NVMe namespace.
  *
  * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
  * The user must ensure that only one thread submits I/O on a given qpair at any
@@ -2233,7 +2236,9 @@ int spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
  * \param cb_fn Callback function to invoke when the I/O is completed
  * \param cb_arg Argument to pass to the callback function
  *
- * \return 0 if successfully submitted, negated POSIX errno values otherwise.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_dataset_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 					uint32_t type,
@@ -2254,8 +2259,9 @@ int spdk_nvme_ns_cmd_dataset_management(struct spdk_nvme_ns *ns, struct spdk_nvm
  * \param cb_fn Callback function to invoke when the I/O is completed.
  * \param cb_arg Argument to pass to the callback function.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request, -ENXIO if the qpair is failed at the transport level.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_flush(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			   spdk_nvme_cmd_cb cb_fn, void *cb_arg);
@@ -2276,8 +2282,9 @@ int spdk_nvme_ns_cmd_flush(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
  * \param cb_fn Callback function to invoke when the I/O is completed.
  * \param cb_arg Argument to pass to the callback function.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request, -ENXIO if the qpair is failed at the transport level.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_reservation_register(struct spdk_nvme_ns *ns,
 		struct spdk_nvme_qpair *qpair,
@@ -2303,8 +2310,9 @@ int spdk_nvme_ns_cmd_reservation_register(struct spdk_nvme_ns *ns,
  * \param cb_fn Callback function to invoke when the I/O is completed.
  * \param cb_arg Argument to pass to the callback function.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request, -ENXIO if the qpair is failed at the transport level.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_reservation_release(struct spdk_nvme_ns *ns,
 		struct spdk_nvme_qpair *qpair,
@@ -2330,8 +2338,9 @@ int spdk_nvme_ns_cmd_reservation_release(struct spdk_nvme_ns *ns,
  * \param cb_fn Callback function to invoke when the I/O is completed.
  * \param cb_arg Argument to pass to the callback function.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request, -ENXIO if the qpair is failed at the transport level.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_reservation_acquire(struct spdk_nvme_ns *ns,
 		struct spdk_nvme_qpair *qpair,
@@ -2355,8 +2364,9 @@ int spdk_nvme_ns_cmd_reservation_acquire(struct spdk_nvme_ns *ns,
  * \param cb_fn Callback function to invoke when the I/O is completed.
  * \param cb_arg Argument to pass to the callback function.
  *
- * \return 0 if successfully submitted, negated errno if an nvme_request structure
- * cannot be allocated for the I/O request, -ENXIO if the qpair is failed at the transport level.
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
  */
 int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 					struct spdk_nvme_qpair *qpair,
