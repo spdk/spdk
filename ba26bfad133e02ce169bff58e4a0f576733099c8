@@ -16,6 +16,24 @@
       "revId": "ba26bfad133e02ce169bff58e4a0f576733099c8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "795eedea_f72e2ce3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-11-02T02:36:50Z",
+      "side": 1,
+      "message": "Sure. the io_u structure itself is allocated from FIO and based on https://github.com/axboe/fio/blob/fio-3.3/lib/memalign.c, it is just malloced. Will add a note.",
+      "parentUuid": "dd452bcb_954e3119",
+      "revId": "ba26bfad133e02ce169bff58e4a0f576733099c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
