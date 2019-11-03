@@ -339,7 +339,7 @@ static void
 _iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn, struct spdk_scsi_lun *lun)
 {
 	struct spdk_iscsi_pdu *pdu, *tmp_pdu;
-	struct spdk_iscsi_task *iscsi_task, *tmp_iscsi_task;
+	struct spdk_iscsi_task *task, *tmp_task, *subtask, *tmp_subtask;
 
 	TAILQ_FOREACH_SAFE(pdu, &conn->write_pdu_list, tailq, tmp_pdu) {
 		/* If connection is exited (no LUN is specified) or the PDU's LUN matches
@@ -362,10 +362,14 @@ _iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn, struct spdk_scsi_lun *lun)
 		}
 	}
 
-	TAILQ_FOREACH_SAFE(iscsi_task, &conn->queued_datain_tasks, link, tmp_iscsi_task) {
-		if ((!iscsi_task->is_queued) && (lun == NULL || lun == iscsi_task->scsi.lun)) {
-			TAILQ_REMOVE(&conn->queued_datain_tasks, iscsi_task, link);
-			spdk_iscsi_task_put(iscsi_task);
+	TAILQ_FOREACH_SAFE(task, &conn->queued_datain_tasks, link, tmp_task) {
+		if ((!task->is_queued) && (lun == NULL || lun == task->scsi.lun)) {
+			TAILQ_FOREACH_SAFE(subtask, &task->subtask_list, subtask_link, tmp_subtask) {
+				TAILQ_REMOVE(&task->subtask_list, subtask, subtask_link);
+				spdk_iscsi_task_put(subtask);
+			}
+			TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
+			spdk_iscsi_task_put(task);
 		}
 	}
 }
