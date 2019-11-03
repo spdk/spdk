@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8af42425_d34612b8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2732,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-11-03T18:22:03Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c7c84b8f_622e659f",
+      "revId": "60f2154697195a01f1adbf44078d974064923ed9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19266a52_690a959e",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-11-01T15:00:35Z",
       "side": 1,
       "message": "looking through the blobstore code, I think we\u0027re missing a case where we should be checking the blob-\u003emd_ro bool that gets set as a result of evaluating this\n\nspdk_bs_delete_blob code path needs to check md_ro.  We shouldn\u0027t allow deleting a blob if that blob has bits set that aren\u0027t part of this MD_RO_FLAGS mask\n\ncan you fix that in a separate patch?  maybe after this one, because then you can leverage these new flags for the unit tests",
+      "revId": "60f2154697195a01f1adbf44078d974064923ed9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36e07e62_e6cb45ef",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-11-03T18:22:03Z",
+      "side": 1,
+      "message": "will do",
+      "parentUuid": "19266a52_690a959e",
       "revId": "60f2154697195a01f1adbf44078d974064923ed9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
