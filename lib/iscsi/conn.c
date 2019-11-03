@@ -330,6 +330,9 @@ spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pd
 				spdk_iscsi_task_put(spdk_iscsi_task_get_primary(pdu->task));
 			}
 		}
+		if (!TAILQ_EMPTY(&pdu->task->subtask_list)) {
+			SPDK_ERRLOG("Subtask list is not empty\n");
+		}
 		spdk_iscsi_task_put(pdu->task);
 	}
 	spdk_put_pdu(pdu);
