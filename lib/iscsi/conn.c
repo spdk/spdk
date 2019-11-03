@@ -377,6 +377,7 @@ _iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn, struct spdk_scsi_lun *lun)
 static int
 iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 {
+	spdk_clear_all_transfer_task(conn, NULL, NULL);
 	_iscsi_conn_free_tasks(conn, NULL);
 
 	if (conn->pending_task_cnt) {
