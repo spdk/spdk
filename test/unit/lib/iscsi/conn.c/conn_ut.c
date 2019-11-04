@@ -46,6 +46,7 @@ SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
 struct spdk_iscsi_globals g_spdk_iscsi;
 static TAILQ_HEAD(, spdk_iscsi_task) g_ut_read_tasks = TAILQ_HEAD_INITIALIZER(g_ut_read_tasks);
+static ssize_t g_sock_writev_bytes = 0;
 
 DEFINE_STUB(spdk_app_get_shm_id, int, (void), 0);
 
@@ -67,8 +68,11 @@ DEFINE_STUB(spdk_sock_recv, ssize_t,
 DEFINE_STUB(spdk_sock_readv, ssize_t,
 	    (struct spdk_sock *sock, struct iovec *iov, int iovcnt), 0);
 
-DEFINE_STUB(spdk_sock_writev, ssize_t,
-	    (struct spdk_sock *sock, struct iovec *iov, int iovcnt), 0);
+ssize_t
+spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
+{
+	return g_sock_writev_bytes;
+}
 
 DEFINE_STUB(spdk_sock_set_recvlowat, int, (struct spdk_sock *s, int nbytes), 0);
 
@@ -146,8 +150,12 @@ DEFINE_STUB_V(spdk_iscsi_send_nopin, (struct spdk_iscsi_conn *conn));
 DEFINE_STUB_V(spdk_del_transfer_task,
 	      (struct spdk_iscsi_conn *conn, uint32_t task_tag));
 
-DEFINE_STUB(spdk_iscsi_conn_handle_queued_datain_tasks, int,
-	    (struct spdk_iscsi_conn *conn), 0);
+int
+spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
+{
+	CU_ASSERT(TAILQ_EMPTY(&conn->write_pdu_list));
+	return 0;
+}
 
 DEFINE_STUB(spdk_iscsi_handle_incoming_pdus, int, (struct spdk_iscsi_conn *conn), 0);
 
@@ -317,6 +325,43 @@ propagate_scsi_error_status_for_split_read_tasks(void)
 	CU_ASSERT(TAILQ_EMPTY(&primary.subtask_list));
 }
 
+static void
+recursive_flush_pdus_calls(void)
+{
+	struct spdk_iscsi_pdu pdu1 = {}, pdu2 = {}, pdu3 = {};
+	struct spdk_iscsi_task task1 = {}, task2 = {}, task3 = {};
+	struct spdk_iscsi_conn conn = {};
+	int rc;
+
+	TAILQ_INIT(&conn.write_pdu_list);
+	conn.data_in_cnt = 3;
+
+	task1.scsi.offset = 512;
+	task2.scsi.offset = 512 * 2;
+	task3.scsi.offset = 512 * 3;
+
+	pdu1.task = &task1;
+	pdu2.task = &task2;
+	pdu3.task = &task3;
+
+	pdu1.bhs.opcode = ISCSI_OP_SCSI_DATAIN;
+	pdu2.bhs.opcode = ISCSI_OP_SCSI_DATAIN;
+	pdu3.bhs.opcode = ISCSI_OP_SCSI_DATAIN;
+
+	DSET24(&pdu1.bhs.data_segment_len, 512);
+	DSET24(&pdu2.bhs.data_segment_len, 512);
+	DSET24(&pdu3.bhs.data_segment_len, 512);
+
+	TAILQ_INSERT_TAIL(&conn.write_pdu_list, &pdu1, tailq);
+	TAILQ_INSERT_TAIL(&conn.write_pdu_list, &pdu2, tailq);
+	TAILQ_INSERT_TAIL(&conn.write_pdu_list, &pdu3, tailq);
+
+	g_sock_writev_bytes = (512 + ISCSI_BHS_LEN) * 3;
+
+	rc = iscsi_conn_flush_pdus_internal(&conn);
+	CU_ASSERT(rc == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -336,7 +381,8 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "read task split in order", read_task_split_in_order_case) == NULL ||
 		CU_add_test(suite, "propagate_scsi_error_status_for_split_read_tasks",
-			    propagate_scsi_error_status_for_split_read_tasks) == NULL
+			    propagate_scsi_error_status_for_split_read_tasks) == NULL ||
+		CU_add_test(suite, "recursive_flush_pdus_calls", recursive_flush_pdus_calls) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
