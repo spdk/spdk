@@ -43,6 +43,8 @@ for ctrlr in $(ls /dev/spdk/nvme?); do
 	${NVME_CMD} reset $ctrlr
 done
 
+$rpc_py bdev_nvme_cuse_unregister -n Nvme0
+
 trap - SIGINT SIGTERM EXIT
 kill $spdk_tgt_pid
 
