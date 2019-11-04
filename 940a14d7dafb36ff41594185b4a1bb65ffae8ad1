@@ -22,6 +22,30 @@
       "revId": "940a14d7dafb36ff41594185b4a1bb65ffae8ad1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5448ab5c_51f04cf5",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-04T17:19:28Z",
+      "side": 1,
+      "message": "Good point, thanks.\nDone",
+      "parentUuid": "0c547ba6_5dd03d5f",
+      "range": {
+        "startLine": 171,
+        "startChar": 3,
+        "endLine": 171,
+        "endChar": 40
+      },
+      "revId": "940a14d7dafb36ff41594185b4a1bb65ffae8ad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
