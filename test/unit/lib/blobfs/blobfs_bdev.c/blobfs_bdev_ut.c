@@ -45,6 +45,7 @@ bool g_fs_load_fail = false;
 bool g_fs_unload_fail = false;
 bool g_bs_bdev_claim_fail = false;
 bool g_blobfs_fuse_start_fail = false;
+struct blobfs_bdev_operation_ctx *g_fs_ctx;
 
 const char *g_bdev_name = "ut_bdev";
 
@@ -88,6 +89,7 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	}
 
 	cb_fn(cb_arg, NULL, rc);
+
 	return;
 }
 
@@ -122,7 +124,7 @@ spdk_fs_init(struct spdk_bs_dev *dev, struct spdk_blobfs_opts *opt,
 int
 spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module *module)
 {
-	if (g_bs_bdev_claim_fail == true) {
+	if (g_bs_bdev_claim_fail) {
 		return -1;
 	}
 
@@ -133,9 +135,12 @@ int
 spdk_blobfs_fuse_start(const char *bdev_name, const char *mountpoint, struct spdk_filesystem *fs,
 		       blobfs_fuse_unmount_cb cb_fn, void *cb_arg, struct spdk_blobfs_fuse **_bfuse)
 {
-	if (g_blobfs_fuse_start_fail == true) {
+	if (g_blobfs_fuse_start_fail) {
 		return -1;
 	}
+
+	/* store the ctx for unmount operation */
+	g_fs_ctx = cb_arg;
 
 	return 0;
 }
@@ -311,6 +316,11 @@ spdk_blobfs_bdev_mount_test(void)
 
 	/* no fail */
 	spdk_blobfs_bdev_mount(g_bdev_name, mountpoint, blobfs_bdev_op_complete, NULL);
+	CU_ASSERT(g_fserrno == 0);
+	CU_ASSERT(g_fs_ctx != NULL);
+
+	/* after mount operation success , we need make sure unmount operation success */
+	blobfs_bdev_unmount(g_fs_ctx);
 	CU_ASSERT(g_fserrno == 0);
 #endif
 }
