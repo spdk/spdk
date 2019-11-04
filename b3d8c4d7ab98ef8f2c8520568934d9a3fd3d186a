@@ -16,6 +16,24 @@
       "revId": "b3d8c4d7ab98ef8f2c8520568934d9a3fd3d186a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90c4cb46_fd5af513",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1248,
+      "author": {
+        "id": 1017160
+      },
+      "writtenOn": "2019-11-04T09:24:50Z",
+      "side": 1,
+      "message": "It can happen if a raid module is not registered but there is an entry in g_raid_level_names for this raid_level. But I think you\u0027re right, I will simplify this.",
+      "parentUuid": "52d2f36c_c1f4463b",
+      "revId": "b3d8c4d7ab98ef8f2c8520568934d9a3fd3d186a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
