@@ -16,6 +16,24 @@
       "revId": "5718fe7dd79f6e4444788a8fa4164f01ea7d4a1b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e101f2a_fb6374ed",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-11-04T12:42:02Z",
+      "side": 1,
+      "message": "Konrad is actually doing something similar in his patches, but moves this to ocssd layer. I see advantages of doing this here - I\u0027ll change it. Thanks.",
+      "parentUuid": "652a33e8_97e06335",
+      "revId": "5718fe7dd79f6e4444788a8fa4164f01ea7d4a1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
