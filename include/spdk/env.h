@@ -67,6 +67,8 @@ extern "C" {
  */
 #define SPDK_MEMZONE_NO_IOVA_CONTIG 0x00100000 /**< no iova contiguity */
 
+#define PCI_LEGACY_SUPPORT
+
 /**
  * \brief Environment initialization options
  */
@@ -1100,6 +1102,22 @@ void spdk_pci_hook_device(struct spdk_pci_driver *drv, struct spdk_pci_device *d
  * \param dev fully initialized PCI device struct
  */
 void spdk_pci_unhook_device(struct spdk_pci_device *dev);
+
+struct spdk_pci_ioport {
+#ifdef PCI_LEGACY_SUPPORT
+	void *io_port;
+#endif
+};
+
+int spdk_init_iopl(void);
+
+int spdk_pci_ioport_map(struct spdk_pci_device *dev, int bar,
+			struct spdk_pci_ioport *p);
+void spdk_pci_ioport_read(struct spdk_pci_ioport *p,
+			  void *data, size_t len, off_t offset);
+void spdk_pci_ioport_write(struct spdk_pci_ioport *p,
+			   const void *data, size_t len, off_t offset);
+int spdk_pci_ioport_unmap(struct spdk_pci_ioport *p);
 
 /**
  * Remove any CPU affinity from the current thread.

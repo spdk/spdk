@@ -887,3 +887,72 @@ spdk_pci_unhook_device(struct spdk_pci_device *dev)
 	assert(!dev->internal.attached);
 	TAILQ_REMOVE(&g_pci_devices, dev, internal.tailq);
 }
+
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+#define PCI_LEGACY_SUPPORT
+#endif
+
+int
+spdk_init_iopl(void)
+{
+#ifdef PCI_LEGACY_SUPPORT
+	return rte_eal_iopl_init();
+#endif
+}
+
+int
+spdk_pci_ioport_map(struct spdk_pci_device *dev, int bar,
+		    struct spdk_pci_ioport *p)
+{
+#ifdef PCI_LEGACY_SUPPORT
+	struct rte_pci_device *_dev = dev->dev_handle;
+	struct rte_pci_ioport *_p;
+
+	p->io_port = calloc(1, sizeof(struct rte_pci_ioport));
+	if (!p->io_port) {
+		fprintf(stderr, "failed to allocate ioport\n");
+		return -1;
+	}
+
+	_p = p->io_port;
+	_p->dev = _dev;
+
+	if (rte_pci_ioport_map(_dev, bar, _p) < 0) {
+		free(p->io_port);
+		return -1;
+	}
+#else
+	fprintf(stderr, "DPDK version don't support IO cmd\n");
+#endif
+	return 0;
+}
+
+void
+spdk_pci_ioport_read(struct spdk_pci_ioport *p,
+		     void *data, size_t len, off_t offset)
+{
+#ifdef PCI_LEGACY_SUPPORT
+	rte_pci_ioport_read(p->io_port, data, len, offset);
+#endif
+}
+
+void
+spdk_pci_ioport_write(struct spdk_pci_ioport *p,
+		      const void *data, size_t len, off_t offset)
+{
+#ifdef PCI_LEGACY_SUPPORT
+	rte_pci_ioport_write(p->io_port, data, len, offset);
+#endif
+}
+
+int
+spdk_pci_ioport_unmap(struct spdk_pci_ioport *p)
+{
+	int rc = 0;
+
+#ifdef PCI_LEGACY_SUPPORT
+	rc = rte_pci_ioport_unmap(p->io_port);
+	free(p->io_port);
+#endif
+	return rc;
+}

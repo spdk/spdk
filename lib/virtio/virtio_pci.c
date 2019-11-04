@@ -54,6 +54,9 @@ struct virtio_hw {
 		uint32_t    len;
 	} pci_bar[6];
 
+	struct spdk_pci_ioport io_port;
+	int modern;
+
 	struct virtio_pci_common_cfg *common_cfg;
 	struct spdk_pci_device *pci_dev;
 
@@ -97,12 +100,14 @@ free_virtio_hw(struct virtio_hw *hw)
 {
 	unsigned i;
 
-	for (i = 0; i < 6; ++i) {
-		if (hw->pci_bar[i].vaddr == NULL) {
-			continue;
-		}
+	if (hw->modern) {
+		for (i = 0; i < 6; ++i) {
+			if (hw->pci_bar[i].vaddr == NULL) {
+				continue;
+			}
 
-		spdk_pci_device_unmap_bar(hw->pci_dev, i, hw->pci_bar[i].vaddr);
+			spdk_pci_device_unmap_bar(hw->pci_dev, i, hw->pci_bar[i].vaddr);
+		}
 	}
 
 	free(hw);
@@ -138,6 +143,223 @@ pci_write_json_config(struct virtio_dev *dev, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_string(w, "trtype", "pci");
 	spdk_json_write_named_string(w, "traddr", addr);
 }
+
+#ifdef PCI_LEGACY_SUPPORT
+
+/*
+ * VirtIO Header, located in BAR 0.
+ */
+#define VIRTIO_PCI_HOST_FEATURES  0  /* host's supported features (32bit, RO) */
+#define VIRTIO_PCI_GUEST_FEATURES 4  /* guest's supported features (32, RW) */
+#define VIRTIO_PCI_QUEUE_PFN      8  /* physical address of VQ (32, RW) */
+#define VIRTIO_PCI_QUEUE_NUM      12 /* number of ring entries (16, RO) */
+#define VIRTIO_PCI_QUEUE_SEL      14 /* current VQ selection (16, RW) */
+#define VIRTIO_PCI_QUEUE_NOTIFY   16 /* notify host regarding VQ (16, RW) */
+#define VIRTIO_PCI_STATUS         18 /* device status register (8, RW) */
+#define VIRTIO_PCI_ISR		  19 /* interrupt status register, reading
+				      * also clears the register (8, RO) */
+/* Only if MSIX is enabled: */
+#define VIRTIO_MSI_CONFIG_VECTOR  20 /* configuration change vector (16, RW) */
+#define VIRTIO_MSI_QUEUE_VECTOR	  22 /* vector for selected VQ notifications
+				      (16, RW) */
+
+enum virtio_msix_status {
+	VIRTIO_MSIX_NONE = 0,
+	VIRTIO_MSIX_DISABLED = 1,
+	VIRTIO_MSIX_ENABLED = 2
+};
+
+/* from the spec "When MSI-X capability is present and enabled in the device
+ * 4 bytes at byte of offset 20 are used to map configuration change and queue
+ * interrupts to MSI-X vectors"
+ * When the MSI-X is enabled the ISR Status field is unused.
+ */
+#define VIRTIO_PCI_CONFIG_LEGACY(hw) \
+		(((hw)->use_msix == VIRTIO_MSIX_ENABLED) ? 24 : 20)
+
+/*
+ * Since we are in legacy mode:
+ * http://ozlabs.org/~rusty/virtio-spec/virtio-0.9.5.pdf
+ *
+ * "Note that this is possible because while the virtio header is PCI (i.
+ * little) endian, the device-specific region is encoded in the native endian of
+ * the guest (where such distinction is applicable)."
+ *
+ * For powerpc which supports both, qemu supposes that cpu is big endian and
+ * enforces this for the virtio-net stuff.
+ */
+static int
+legacy_read_dev_config(struct virtio_dev *dev, size_t offset,
+		       void *dst, int length)
+{
+	struct virtio_hw *hw = dev->ctx;
+
+	spdk_pci_ioport_read(&hw->io_port, dst, length,
+			     VIRTIO_PCI_CONFIG_LEGACY(hw) + offset);
+
+	return 0;
+}
+
+static int
+legacy_write_dev_config(struct virtio_dev *dev, size_t offset,
+			const void *src, int length)
+{
+	struct virtio_hw *hw = dev->ctx;
+
+	spdk_pci_ioport_write(&hw->io_port, src, length,
+			      VIRTIO_PCI_CONFIG_LEGACY(hw) + offset);
+
+	return 0;
+}
+
+static uint64_t
+legacy_get_features(struct virtio_dev *dev)
+{
+	struct virtio_hw *hw = dev->ctx;
+	uint32_t dst;
+
+	spdk_pci_ioport_read(&hw->io_port, &dst, 4, VIRTIO_PCI_HOST_FEATURES);
+
+	return dst;
+}
+
+static int
+legacy_set_features(struct virtio_dev *dev, uint64_t features)
+{
+	struct virtio_hw *hw = dev->ctx;
+
+	if ((features >> 32) != 0) {
+		SPDK_ERRLOG("only 32 bit features are allowed for legacy virtio!\n");
+		return -1;
+	}
+
+	spdk_pci_ioport_write(&hw->io_port, &features, 4,
+			      VIRTIO_PCI_GUEST_FEATURES);
+
+	dev->negotiated_features = features;
+
+	return 0;
+}
+
+static void
+legacy_destruct_dev(struct virtio_dev *vdev)
+{
+	struct virtio_hw *hw = vdev->ctx;
+	struct spdk_pci_device *pci_dev = hw->pci_dev;
+
+	free_virtio_hw(hw);
+	spdk_pci_device_detach(pci_dev);
+}
+
+static uint8_t
+legacy_get_status(struct virtio_dev *dev)
+{
+	struct virtio_hw *hw = dev->ctx;
+	uint8_t dst;
+
+	spdk_pci_ioport_read(&hw->io_port, &dst, 1, VIRTIO_PCI_STATUS);
+
+	return dst;
+}
+
+static void
+legacy_set_status(struct virtio_dev *dev, uint8_t status)
+{
+	struct virtio_hw *hw = dev->ctx;
+
+	spdk_pci_ioport_write(&hw->io_port, &status, 1, VIRTIO_PCI_STATUS);
+}
+
+static uint16_t
+legacy_get_queue_size(struct virtio_dev *dev, uint16_t queue_id)
+{
+	struct virtio_hw *hw = dev->ctx;
+	uint16_t dst;
+
+	spdk_pci_ioport_write(&hw->io_port, &queue_id, 2, VIRTIO_PCI_QUEUE_SEL);
+	spdk_pci_ioport_read(&hw->io_port, &dst, 2, VIRTIO_PCI_QUEUE_NUM);
+
+	return dst;
+}
+
+static int
+legacy_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
+{
+	struct virtio_hw *hw = dev->ctx;
+	void *queue_mem;
+	uint64_t queue_mem_phys_addr;
+	uint32_t src;
+
+	if (vq->vq_ring_size > VALUE_2MB) {
+		return -ENOMEM;
+	}
+
+	queue_mem = spdk_zmalloc(vq->vq_ring_size, VALUE_2MB, NULL,
+				 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	if (queue_mem == NULL) {
+		return -ENOMEM;
+	}
+
+	queue_mem_phys_addr = spdk_vtophys(queue_mem, NULL);
+	if (queue_mem_phys_addr == SPDK_VTOPHYS_ERROR) {
+		spdk_free(queue_mem);
+		return -EFAULT;
+	}
+
+	vq->vq_ring_mem = queue_mem_phys_addr;
+	vq->vq_ring_virt_mem = queue_mem;
+
+	if (!check_vq_phys_addr_ok(vq)) {
+		return -1;
+	}
+
+	spdk_pci_ioport_write(&hw->io_port, &vq->vq_queue_index, 2,
+			      VIRTIO_PCI_QUEUE_SEL);
+	src = vq->vq_ring_mem >> VIRTIO_PCI_QUEUE_ADDR_SHIFT;
+	spdk_pci_ioport_write(&hw->io_port, &src, 4, VIRTIO_PCI_QUEUE_PFN);
+
+	return 0;
+}
+
+static void
+legacy_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
+{
+	struct virtio_hw *hw = dev->ctx;
+	uint32_t src = 0;
+
+
+	spdk_pci_ioport_write(&hw->io_port, &vq->vq_queue_index, 2,
+			      VIRTIO_PCI_QUEUE_SEL);
+	spdk_pci_ioport_write(&hw->io_port, &src, 4, VIRTIO_PCI_QUEUE_PFN);
+
+	spdk_free(vq->vq_ring_virt_mem);
+}
+
+static void
+legacy_notify_queue(struct virtio_dev *dev, struct virtqueue *vq)
+{
+	struct virtio_hw *hw = dev->ctx;
+
+	spdk_pci_ioport_write(&hw->io_port, &vq->vq_queue_index, 2,
+			      VIRTIO_PCI_QUEUE_NOTIFY);
+}
+
+static const struct virtio_dev_ops legacy_ops = {
+	.read_dev_cfg	= legacy_read_dev_config,
+	.write_dev_cfg	= legacy_write_dev_config,
+	.get_status	= legacy_get_status,
+	.set_status	= legacy_set_status,
+	.get_features	= legacy_get_features,
+	.set_features	= legacy_set_features,
+	.destruct_dev	= legacy_destruct_dev,
+	.get_queue_size	= legacy_get_queue_size,
+	.setup_queue	= legacy_setup_queue,
+	.del_queue	= legacy_del_queue,
+	.notify_queue	= legacy_notify_queue,
+	.dump_json_info = pci_dump_json_info,
+	.write_json_config = pci_write_json_config,
+};
+#endif
 
 static inline void
 io_write64_twopart(uint64_t val, uint32_t *lo, uint32_t *hi)
@@ -395,6 +617,8 @@ get_cfg_addr(struct virtio_hw *hw, struct virtio_pci_cap *cap)
 	return hw->pci_bar[bar].vaddr + offset;
 }
 
+#define PCI_MSIX_ENABLE	0x8000
+
 static int
 virtio_read_caps(struct virtio_hw *hw)
 {
@@ -416,7 +640,19 @@ virtio_read_caps(struct virtio_hw *hw)
 		}
 
 		if (cap.cap_vndr == PCI_CAP_ID_MSIX) {
-			hw->use_msix = 1;
+			uint16_t flags;
+
+			ret = spdk_pci_device_cfg_read(hw->pci_dev, &flags, sizeof(flags), pos + 2);
+			if (ret < 0) {
+				SPDK_ERRLOG("failed to read pci cap at pos: %x\n", pos + 2);
+				break;
+			}
+
+			if (flags & PCI_MSIX_ENABLE) {
+				hw->use_msix = VIRTIO_MSIX_ENABLED;
+			} else {
+				hw->use_msix = VIRTIO_MSIX_DISABLED;
+			}
 		}
 
 		if (cap.cap_vndr != PCI_CAP_ID_VNDR) {
@@ -457,7 +693,8 @@ next:
 		if (ret < 0) {
 			return ret;
 		} else {
-			return -EINVAL;
+			/* Legacy mode */
+			return 1;
 		}
 	}
 
@@ -498,25 +735,43 @@ virtio_pci_dev_probe(struct spdk_pci_device *pci_dev, struct virtio_pci_probe_ct
 
 	hw->pci_dev = pci_dev;
 
-	for (i = 0; i < 6; ++i) {
-		rc = spdk_pci_device_map_bar(pci_dev, i, (void *) &bar_vaddr, &bar_paddr,
-					     &bar_len);
-		if (rc != 0) {
-			SPDK_ERRLOG("%s: failed to memmap PCI BAR %u\n", bdf, i);
-			free_virtio_hw(hw);
-			return -1;
-		}
-
-		hw->pci_bar[i].vaddr = bar_vaddr;
-		hw->pci_bar[i].len = bar_len;
-	}
-
 	/* Virtio PCI caps exist only on modern PCI devices.
 	 * Legacy devices are not supported.
 	 */
-	if (virtio_read_caps(hw) != 0) {
-		SPDK_NOTICELOG("Ignoring legacy PCI device at %s\n", bdf);
-		free_virtio_hw(hw);
+	rc = virtio_read_caps(hw);
+	if (rc == 1) {
+		SPDK_NOTICELOG("legacy PCI device at %s\n", bdf);
+
+		if (spdk_init_iopl() != 0) {
+			SPDK_ERRLOG("failed to init iopl\n");
+			free(hw);
+			return -1;
+		}
+
+		if (spdk_pci_ioport_map(pci_dev, 0, &hw->io_port) < 0) {
+			free(hw);
+			return -1;
+		}
+
+		hw->modern = 0;
+	} else if (rc == 0) {
+		SPDK_NOTICELOG("modern PCI device at %s\n", bdf);
+		for (i = 0; i < 6; ++i) {
+			rc = spdk_pci_device_map_bar(pci_dev, i, (void *) &bar_vaddr, &bar_paddr,
+						     &bar_len);
+			if (rc != 0) {
+				SPDK_ERRLOG("%s: failed to memmap PCI BAR %u\n", bdf, i);
+				free_virtio_hw(hw);
+				return -1;
+			}
+
+			hw->pci_bar[i].vaddr = bar_vaddr;
+			hw->pci_bar[i].len = bar_len;
+		}
+
+		hw->modern = 1;
+	} else {
+		free(hw);
 		return -1;
 	}
 
@@ -583,15 +838,26 @@ int
 virtio_pci_dev_init(struct virtio_dev *vdev, const char *name,
 		    struct virtio_pci_ctx *pci_ctx)
 {
+	struct virtio_hw *hw = (struct virtio_hw *)pci_ctx;
 	int rc;
 
-	rc = virtio_dev_construct(vdev, name, &modern_ops, pci_ctx);
-	if (rc != 0) {
-		return rc;
+	if (hw->modern) {
+		rc = virtio_dev_construct(vdev, name, &modern_ops, pci_ctx);
+		if (rc != 0) {
+			return rc;
+		}
+
+		vdev->modern = 1;
+	} else {
+		rc = virtio_dev_construct(vdev, name, &legacy_ops, pci_ctx);
+		if (rc != 0) {
+			return rc;
+		}
+
+		vdev->modern = 0;
 	}
 
 	vdev->is_hw = 1;
-	vdev->modern = 1;
 
 	return 0;
 }
