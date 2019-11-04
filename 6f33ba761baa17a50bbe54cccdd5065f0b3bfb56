@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f482e1ae_90769116",
+        "filename": "test/unit/lib/blobfs/blobfs_bdev.c/blobfs_bdev_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-11-04T18:39:42Z",
+      "side": 1,
+      "message": "You may try to add the unload operation here like:\ncb_fn(cb_arg);",
+      "revId": "6f33ba761baa17a50bbe54cccdd5065f0b3bfb56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "726dff85_54584d2b",
+        "filename": "test/unit/lib/blobfs/blobfs_bdev.c/blobfs_bdev_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-11-04T18:39:42Z",
+      "side": 1,
+      "message": "The reason why ctx is not freed is that mount function only does fs_load. So a better way is to find somewhere to do the unload operation.",
+      "range": {
+        "startLine": 320,
+        "startChar": 1,
+        "endLine": 320,
+        "endChar": 80
+      },
+      "revId": "6f33ba761baa17a50bbe54cccdd5065f0b3bfb56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
