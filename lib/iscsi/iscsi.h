@@ -95,7 +95,7 @@
  *  use at any given time. So this limit does not affect I/O smaller than
  *  SPDK_BDEV_SMALL_BUF_MAX_SIZE.
  */
-#define MAX_LARGE_DATAIN_PER_CONNECTION 64
+#define MAX_LARGE_DATAIN_PER_CONNECTION 4
 
 #define SPDK_ISCSI_MAX_BURST_LENGTH	\
 		(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH * MAX_DATA_OUT_PER_CONNECTION)
