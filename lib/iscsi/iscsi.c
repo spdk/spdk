@@ -3270,7 +3270,7 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 			subtask = spdk_iscsi_task_get(conn, task, spdk_iscsi_task_cpl);
 			assert(subtask != NULL);
 			subtask->scsi.offset = task->current_datain_offset;
-			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
+			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE / 16, remaining_size);
 			spdk_scsi_task_set_data(&subtask->scsi, NULL, 0);
 			task->current_datain_offset += subtask->scsi.length;
 			conn->data_in_cnt++;
@@ -3304,7 +3304,7 @@ iscsi_pdu_payload_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_t
 	TAILQ_INIT(&task->subtask_list);
 	task->parent = NULL;
 	task->scsi.offset = 0;
-	task->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, task->scsi.transfer_len);
+	task->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE / 16, task->scsi.transfer_len);
 	spdk_scsi_task_set_data(&task->scsi, NULL, 0);
 
 	remaining_size = task->scsi.transfer_len - task->scsi.length;
@@ -3623,7 +3623,7 @@ _iscsi_conn_abort_queued_datain_task(struct spdk_iscsi_conn *conn,
 			subtask = spdk_iscsi_task_get(conn, task, spdk_iscsi_task_cpl);
 			assert(subtask != NULL);
 			subtask->scsi.offset = task->current_datain_offset;
-			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
+			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE / 16, remaining_size);
 			spdk_scsi_task_set_data(&subtask->scsi, NULL, 0);
 			task->current_datain_offset += subtask->scsi.length;
 			conn->data_in_cnt++;

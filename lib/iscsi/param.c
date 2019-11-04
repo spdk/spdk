@@ -1130,8 +1130,8 @@ spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn)
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 		      "copy MaxRecvDataSegmentLength=%s\n", val);
 	conn->MaxRecvDataSegmentLength = (int)strtol(val, NULL, 10);
-	if (conn->MaxRecvDataSegmentLength > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
-		conn->MaxRecvDataSegmentLength = SPDK_BDEV_LARGE_BUF_MAX_SIZE;
+	if (conn->MaxRecvDataSegmentLength > SPDK_BDEV_LARGE_BUF_MAX_SIZE / 16) {
+		conn->MaxRecvDataSegmentLength = SPDK_BDEV_LARGE_BUF_MAX_SIZE / 16;
 	}
 
 	val = spdk_iscsi_param_get_val(conn->params, "HeaderDigest");
