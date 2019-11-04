@@ -41,6 +41,10 @@ $rpc_py bdev_nvme_cuse_register -n Nvme0 -p spdk/nvme0
 
 sleep 5
 
+if [ ! -c /dev/spdk/nvme0 ]; then
+	return 1
+fi
+
 $rpc_py bdev_get_bdevs
 $rpc_py bdev_nvme_get_controllers
 
@@ -60,6 +64,31 @@ for ctrlr in $(ls /dev/spdk/nvme?); do
 	${NVME_CMD} get-log $ctrlr -i 1 -l 100
 	${NVME_CMD} reset $ctrlr
 done
+
+if [ ! -c /dev/spdk/nvme0 ]; then
+	return 1
+fi
+
+$rpc_py bdev_nvme_cuse_unregister -n Nvme0
+sleep 1
+if [ -c /dev/spdk/nvme0 ]; then
+	return 1
+fi
+
+$rpc_py bdev_nvme_cuse_register -n Nvme0 -p spdk/nvme1
+sleep 1
+
+if [ ! -c /dev/spdk/nvme1 ]; then
+	return 1
+fi
+
+$rpc_py bdev_nvme_cuse_unregister -n Nvme0
+sleep 1
+if [ -c /dev/spdk/nvme1 ]; then
+	return 1
+fi
+
+$rpc_py bdev_nvme_detach_controller Nvme0
 
 trap - SIGINT SIGTERM EXIT
 kill $spdk_tgt_pid
