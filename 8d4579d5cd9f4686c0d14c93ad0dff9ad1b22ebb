@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "592afa2e_8acc16db",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2335,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-04T01:27:35Z",
+      "side": 1,
+      "message": "We ensure that pdu-\u003edata is set when coming here because pdu-\u003edata is set at the line around 4950.",
+      "revId": "8d4579d5cd9f4686c0d14c93ad0dff9ad1b22ebb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "593cebf7_bf2715be",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4908,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-04T01:27:35Z",
+      "side": 1,
+      "message": "This block ensures that the case you are concerned about will not occur.",
+      "range": {
+        "startLine": 4883,
+        "startChar": 0,
+        "endLine": 4908,
+        "endChar": 0
+      },
+      "revId": "8d4579d5cd9f4686c0d14c93ad0dff9ad1b22ebb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
