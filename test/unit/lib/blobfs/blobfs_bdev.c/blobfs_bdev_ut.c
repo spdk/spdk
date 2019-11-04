@@ -45,6 +45,8 @@ bool g_fs_load_fail = false;
 bool g_fs_unload_fail = false;
 bool g_bs_bdev_claim_fail = false;
 bool g_blobfs_fuse_start_fail = false;
+bool g_fs_load_success_free_ctx = false;
+
 
 const char *g_bdev_name = "ut_bdev";
 
@@ -82,9 +84,18 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	     spdk_fs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	int rc = 0;
+	struct blobfs_bdev_operation_ctx ctx;
 
 	if (g_fs_load_fail) {
 		rc = -1;
+	}
+
+	/* when g_fs_load_fail is false , ctx will not be free */
+	if (g_fs_load_success_free_ctx) {
+		ctx = *(struct blobfs_bdev_operation_ctx *)cb_arg;
+		free(cb_arg);
+		cb_fn(&ctx, NULL, rc);
+		return;
 	}
 
 	cb_fn(cb_arg, NULL, rc);
@@ -309,7 +320,9 @@ spdk_blobfs_bdev_mount_test(void)
 	g_blobfs_fuse_start_fail = false;
 
 	/* no fail */
+	g_fs_load_success_free_ctx = true;
 	spdk_blobfs_bdev_mount(g_bdev_name, mountpoint, blobfs_bdev_op_complete, NULL);
+	g_fs_load_success_free_ctx = false;
 	CU_ASSERT(g_fserrno == 0);
 #endif
 }
