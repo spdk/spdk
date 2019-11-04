@@ -16,6 +16,24 @@
       "revId": "14decbec724343f791130a5d934b1bb121cd4cc9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be8f5482_8a35ac65",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-04T20:14:42Z",
+      "side": 1,
+      "message": "Ah thanks for researching this. I just assumed since it was in our code that it was spec defined for some reason. I\u0027ll fix up the comment in this patch, and add investigating keep alive to the NVMe-oF target backlog.",
+      "parentUuid": "c3b10110_84619fe1",
+      "revId": "14decbec724343f791130a5d934b1bb121cd4cc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
