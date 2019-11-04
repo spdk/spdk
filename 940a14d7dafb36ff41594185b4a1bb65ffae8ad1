@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c547ba6_5dd03d5f",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-11-04T14:08:04Z",
+      "side": 1,
+      "message": "Should assign some default value if namespace is empty (e.g for ocssd). In ruby \"1  5\".split(/\\W+/) creates array with length 2 (should be 3).",
+      "range": {
+        "startLine": 171,
+        "startChar": 3,
+        "endLine": 171,
+        "endChar": 40
+      },
+      "revId": "940a14d7dafb36ff41594185b4a1bb65ffae8ad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
