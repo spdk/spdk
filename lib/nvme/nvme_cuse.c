@@ -616,6 +616,41 @@ static const struct cuse_lowlevel_ops cuse_ns_clop = {
 	.ioctl		= cuse_ns_ioctl,
 };
 
+static int
+cuse_thread_loop(struct fuse_session *se)
+{
+	int res = 0;
+	struct fuse_buf fbuf = {
+		.mem = NULL,
+	};
+	struct pollfd fds = {
+		.fd = fuse_session_fd(se),
+		.events = POLLIN
+	};
+	int timeout_msecs = 500;
+
+	while (!fuse_session_exited(se)) {
+
+		res = poll(&fds, 1, timeout_msecs);
+		if (res > 0) {
+			res = fuse_session_receive_buf(se, &fbuf);
+
+			if (res == -EINTR) {
+				continue;
+			}
+			if (res <= 0) {
+				break;
+			}
+
+			fuse_session_process_buf(se, &fbuf);
+		}
+	}
+
+	free(fbuf.mem);
+	fuse_session_reset(se);
+	return res;
+}
+
 static void *
 cuse_thread(void *arg)
 {
@@ -649,7 +684,7 @@ cuse_thread(void *arg)
 	}
 
 	SPDK_NOTICELOG("fuse session for device %s created\n", cuse_device->dev_name);
-	fuse_session_loop(cuse_device->session);
+	cuse_thread_loop(cuse_device->session);
 
 end:
 	cuse_lowlevel_teardown(cuse_device->session);
@@ -700,14 +735,12 @@ cuse_nvme_ctrlr_stop(struct cuse_device *ctrlr_device)
 
 	TAILQ_FOREACH_SAFE(ns_device, &ctrlr_device->ns_devices, tailq, tmp) {
 		fuse_session_exit(ns_device->session);
-		pthread_kill(ns_device->tid, SIGHUP);
 		pthread_join(ns_device->tid, NULL);
 		TAILQ_REMOVE(&ctrlr_device->ns_devices, ns_device, tailq);
 		free(ns_device);
 	}
 
 	fuse_session_exit(ctrlr_device->session);
-	pthread_kill(ctrlr_device->tid, SIGHUP);
 	pthread_join(ctrlr_device->tid, NULL);
 	TAILQ_REMOVE(&g_ctrlr_ctx_head, ctrlr_device, tailq);
 	free(ctrlr_device);
