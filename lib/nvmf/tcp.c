@@ -1151,9 +1151,10 @@ spdk_nvmf_tcp_port_accept(struct spdk_nvmf_transport *transport, struct spdk_nvm
 
 	for (i = 0; i < NVMF_TCP_MAX_ACCEPT_SOCK_ONE_TIME; i++) {
 		sock = spdk_sock_accept(port->listen_sock);
-		if (sock) {
-			_spdk_nvmf_tcp_handle_connect(transport, port, sock, cb_fn, cb_arg);
+		if (sock == NULL) {
+			break;
 		}
+		_spdk_nvmf_tcp_handle_connect(transport, port, sock, cb_fn, cb_arg);
 	}
 }
 
