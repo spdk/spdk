@@ -45,6 +45,7 @@ bool g_fs_load_fail = false;
 bool g_fs_unload_fail = false;
 bool g_bs_bdev_claim_fail = false;
 bool g_blobfs_fuse_start_fail = false;
+bool g_fs_mount_success_need_unload = false;
 
 const char *g_bdev_name = "ut_bdev";
 
@@ -82,12 +83,18 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	     spdk_fs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	int rc = 0;
+	struct blobfs_bdev_operation_ctx *ctx = cb_arg;
 
 	if (g_fs_load_fail) {
 		rc = -1;
 	}
 
 	cb_fn(cb_arg, NULL, rc);
+
+	/* when spdk_blobfs_bdev_mount call this method success , we need call unmount method */
+	if (g_fs_mount_success_need_unload) {
+		blobfs_bdev_unload(ctx);
+	}
 	return;
 }
 
@@ -309,7 +316,9 @@ spdk_blobfs_bdev_mount_test(void)
 	g_blobfs_fuse_start_fail = false;
 
 	/* no fail */
+	g_fs_mount_success_need_unload = true;
 	spdk_blobfs_bdev_mount(g_bdev_name, mountpoint, blobfs_bdev_op_complete, NULL);
+	g_fs_mount_success_need_unload = false;
 	CU_ASSERT(g_fserrno == 0);
 #endif
 }
