@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f537130_81b8fefd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-04T23:56:49Z",
+      "side": 1,
+      "message": "we can remove this.",
+      "range": {
+        "startLine": 7,
+        "startChar": 15,
+        "endLine": 7,
+        "endChar": 25
+      },
+      "revId": "c6121e4ac0cfee98530ea12393ce24a0eea8c50c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92201a57_06cf3fe7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-04T23:56:49Z",
+      "side": 1,
+      "message": "One of the?",
+      "range": {
+        "startLine": 10,
+        "startChar": 57,
+        "endLine": 11,
+        "endChar": 10
+      },
+      "revId": "c6121e4ac0cfee98530ea12393ce24a0eea8c50c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9aa46a06_d6cc779a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-04T23:56:49Z",
+      "side": 1,
+      "message": "is",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 7
+      },
+      "revId": "c6121e4ac0cfee98530ea12393ce24a0eea8c50c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2bd362fd_8e4a3030",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-04T23:56:49Z",
+      "side": 1,
+      "message": "have to",
+      "range": {
+        "startLine": 27,
+        "startChar": 6,
+        "endLine": 27,
+        "endChar": 13
+      },
+      "revId": "c6121e4ac0cfee98530ea12393ce24a0eea8c50c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b237064d_30c62897",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-04T23:56:49Z",
+      "side": 1,
+      "message": "With this patch, we can fix issues caused by recursive calls.",
+      "range": {
+        "startLine": 29,
+        "startChar": 17,
+        "endLine": 30,
+        "endChar": 30
+      },
+      "revId": "c6121e4ac0cfee98530ea12393ce24a0eea8c50c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb0d0e7f_0d816354",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1331,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-04T23:56:49Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "c6121e4ac0cfee98530ea12393ce24a0eea8c50c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
