@@ -168,6 +168,10 @@ if [ $SPDK_TEST_PMDK -eq 1 ]; then
 	run_test "unittest_bdev_pmem" $valgrind $testdir/lib/bdev/pmem/bdev_pmem_ut
 fi
 
+if [ $SPDK_TEST_RAID5 -eq 1 ]; then
+	run_test "unittest_bdev_raid5" $valgrind $testdir/lib/bdev/raid/raid5.c/raid5_ut
+fi
+
 run_test "unittest_blob_blobfs" unittest_blob
 run_test "unittest_event" unittest_event
 if [ $(uname -s) = Linux ]; then

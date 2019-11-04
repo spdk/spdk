@@ -87,6 +87,7 @@ export RUN_NIGHTLY_FAILING
 : ${SPDK_TEST_VMD=0}; export SPDK_TEST_VMD
 : ${SPDK_TEST_OPAL=0}; export SPDK_TEST_OPAL
 : ${SPDK_AUTOTEST_X=true}; export SPDK_AUTOTEST_X
+: ${SPDK_TEST_RAID5=0}; export SPDK_TEST_RAID5
 
 # Export PYTHONPATH with addition of RPC framework. New scripts can be created
 # specific use cases for tests.
@@ -251,6 +252,10 @@ if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
 	else
 		echo "FUSE not enabled because libfuse3 is not installed."
 	fi
+fi
+
+if [ $SPDK_TEST_RAID5 -eq 1 ]; then
+	config_params+=' --with-raid5'
 fi
 
 # By default, --with-dpdk is not set meaning the SPDK build will use the DPDK submodule.

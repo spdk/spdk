@@ -39,6 +39,7 @@
 enum raid_level {
 	INVALID_RAID_LEVEL	= -1,
 	RAID0			= 0,
+	RAID5			= 5,
 };
 
 /*
@@ -162,6 +163,9 @@ struct raid_bdev {
 
 	/* Module for RAID-level specific operations */
 	struct raid_bdev_module		*module;
+
+	/* Private data for the raid module */
+	void				*module_private;
 };
 
 #define RAID_FOR_EACH_BASE_BDEV(r, i) \
@@ -261,6 +265,12 @@ struct raid_bdev_module {
 
 	/* Minimum required number of base bdevs. Must be > 0. */
 	uint8_t base_bdevs_min;
+
+	/*
+	 * Maximum number of base bdevs that can be removed without failing
+	 * the array.
+	 */
+	uint8_t base_bdevs_max_degraded;
 
 	/*
 	 * Called when the raid is starting, right before changing the state to
