@@ -182,7 +182,6 @@ spdk_pci_device_rte_hotremove(const char *device_name,
 			      void *cb_arg)
 {
 	struct spdk_pci_device *dev;
-	bool can_detach = false;
 
 	if (event != RTE_DEV_EVENT_REMOVE) {
 		return;
@@ -194,18 +193,12 @@ spdk_pci_device_rte_hotremove(const char *device_name,
 
 		if (strcmp(rte_dev->name, device_name) == 0 &&
 		    !dev->internal.pending_removal) {
-			can_detach = !dev->internal.attached;
 			/* prevent any further attaches */
 			dev->internal.pending_removal = true;
 			break;
 		}
 	}
 	pthread_mutex_unlock(&g_pci_mutex);
-
-	if (dev != NULL && can_detach) {
-		/* if device is not attached, we can remove it right away. */
-		spdk_detach_rte(dev);
-	}
 }
 #endif
 
