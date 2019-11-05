@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25693eb1_d33fe03e",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 749,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-05T20:35:25Z",
+      "side": 1,
+      "message": "it\u0027s better to use SPDK_CONTAINEROF here to keep the same code style.",
+      "revId": "e5a5d7626b402586e9469b7ef43cfe6e327be8b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
