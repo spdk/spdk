@@ -33,10 +33,10 @@ restore_kill() {
 trap "restore_kill; exit 1" SIGINT SIGTERM EXIT
 
 chunk_size=$(get_chunk_size $device)
-pu_count=$(($pu_end - $pu_start + 1))
+pu_count=$((pu_end - pu_start + 1))
 
 # Write one band worth of data + one extra chunk
-data_size=$(($chunk_size * ($pu_count + 1)))
+data_size=$((chunk_size * (pu_count + 1)))
 
 $rootdir/app/spdk_tgt/spdk_tgt & svcpid=$!
 waitforlisten $svcpid

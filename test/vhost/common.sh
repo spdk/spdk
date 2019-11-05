@@ -655,7 +655,7 @@ function vm_setup()
 	for c in $cpu_list; do
 		# if range is detected - count how many cpus
 		if [[ $c =~ [0-9]+-[0-9]+ ]]; then
-			val=$(($c-1))
+			val=$((c-1))
 			val=${val#-}
 		else
 			val=1

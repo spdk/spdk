@@ -73,7 +73,7 @@ sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
-waitforiscsidevices $(( $CONNECTION_NUMBER + 1 ))
+waitforiscsidevices $(( CONNECTION_NUMBER + 1 ))
 
 trap 'iscsicleanup; killprocess $iscsi_pid; killprocess $record_pid; delete_tmp_files; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 

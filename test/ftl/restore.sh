@@ -42,7 +42,7 @@ $rootdir/app/spdk_tgt/spdk_tgt & svcpid=$!
 waitforlisten $svcpid
 
 if [ -n "$nv_cache" ]; then
-	nvc_bdev=$(create_nv_cache_bdev nvc0 $device $nv_cache $(($pu_end - $pu_start + 1)))
+	nvc_bdev=$(create_nv_cache_bdev nvc0 $device $nv_cache $((pu_end - pu_start + 1)))
 fi
 
 ftl_construct_args="bdev_ftl_create -b nvme0 -a $device -l ${pu_start}-${pu_end}"

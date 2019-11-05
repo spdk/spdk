@@ -132,7 +132,7 @@ nest_lvol_bdevs=()
 used_vms=""
 
 # On each NVMe create one lvol store
-for (( i=0; i<$max_disks; i++ ));do
+for (( i=0; i<max_disks; i++ ));do
 
     # Create base lvol store on NVMe
     notice "Creating lvol store on device Nvme${i}n1"
@@ -150,7 +150,7 @@ for (( i=0; i<$max_disks; i++ ));do
         nest_ls_guid=$($rpc_py bdev_lvol_create_lvstore $lb_name lvs_n_$i -c 4194304)
         nest_lvol_stores+=("$nest_ls_guid")
 
-        for (( j=0; j<$vm_count; j++)); do
+        for (( j=0; j<vm_count; j++)); do
             notice "Creating nested lvol bdev for VM $i on lvol store $nest_ls_guid"
             free_mb=$(get_lvs_free_mb "$nest_ls_guid")
             nest_size=$((free_mb / (vm_count-j) ))
@@ -160,7 +160,7 @@ for (( i=0; i<$max_disks; i++ ));do
     fi
 
     # Create base lvol bdevs
-    for (( j=0; j<$vm_count; j++)); do
+    for (( j=0; j<vm_count; j++)); do
         notice "Creating lvol bdev for VM $i on lvol store $ls_guid"
         free_mb=$(get_lvs_free_mb "$ls_guid")
         size=$((free_mb / (vm_count-j) ))
@@ -175,7 +175,7 @@ $rpc_py bdev_lvol_get_lvstores
 echo "$bdev_info"
 
 # Set up VMs
-for (( i=0; i<$vm_count; i++)); do
+for (( i=0; i<vm_count; i++)); do
     vm="vm_$i"
 
     # Get all lvol bdevs associated with this VM number
@@ -255,7 +255,7 @@ sleep 2
 
 notice "Cleaning up vhost - remove LUNs, controllers, lvol bdevs and lvol stores"
 if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
-    for (( i=0; i<$vm_count; i++)); do
+    for (( i=0; i<vm_count; i++)); do
         notice "Removing devices from vhost SCSI controller naa.0.$i"
         for (( j=0; j<${#bdevs[@]}; j++)); do
             $rpc_py vhost_scsi_controller_remove_target naa.0.$i $j
@@ -265,7 +265,7 @@ if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
         $rpc_py vhost_delete_controller naa.0.$i
     done
 elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
-    for (( i=0; i<$vm_count; i++)); do
+    for (( i=0; i<vm_count; i++)); do
         for (( j=0; j<${#bdevs[@]}; j++)); do
             notice "Removing vhost BLK controller naa.$j.$i"
             $rpc_py vhost_delete_controller naa.$j.$i
