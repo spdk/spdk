@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f4e2bba3_c5178744",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T02:55:14Z",
+      "side": 1,
+      "message": "thanks shuhei, I want to keep this for  making the following comparison more readable.",
+      "parentUuid": "4bf7b9e7_ddf96321",
+      "range": {
+        "startLine": 61,
+        "startChar": 17,
+        "endLine": 61,
+        "endChar": 21
+      },
+      "revId": "838d4fb928c33cf7d35917959563f63d1c63fd66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ab5fcf75_57851d31",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 10
@@ -36,6 +60,30 @@
       "writtenOn": "2019-11-05T01:57:50Z",
       "side": 1,
       "message": "Does the test code actually access g_unexpected_buf by read or write? If no, using simple 0xDEADBEEF, 0xFEEDBEEF, or similar one is better?",
+      "range": {
+        "startLine": 143,
+        "startChar": 1,
+        "endLine": 143,
+        "endChar": 18
+      },
+      "revId": "838d4fb928c33cf7d35917959563f63d1c63fd66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0301d70_8242bced",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T02:55:14Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "ab5fcf75_57851d31",
       "range": {
         "startLine": 143,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "9d9b74d0_bd02fc98",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T02:55:14Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "1f51ef7a_59041654",
+      "range": {
+        "startLine": 148,
+        "startChar": 2,
+        "endLine": 148,
+        "endChar": 8
+      },
+      "revId": "838d4fb928c33cf7d35917959563f63d1c63fd66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7a6c1430_36cadddb",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 10
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "b6208973_fa5aa1b0",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T02:55:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a6c1430_36cadddb",
+      "range": {
+        "startLine": 151,
+        "startChar": 2,
+        "endLine": 151,
+        "endChar": 11
+      },
+      "revId": "838d4fb928c33cf7d35917959563f63d1c63fd66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54f53012_dfd9dfc6",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 10
@@ -114,6 +210,30 @@
       "revId": "838d4fb928c33cf7d35917959563f63d1c63fd66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00be5902_54f11f00",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T02:55:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "54f53012_dfd9dfc6",
+      "range": {
+        "startLine": 154,
+        "startChar": 2,
+        "endLine": 154,
+        "endChar": 22
+      },
+      "revId": "838d4fb928c33cf7d35917959563f63d1c63fd66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -161,6 +281,30 @@
       "revId": "838d4fb928c33cf7d35917959563f63d1c63fd66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd13eba5_def1b323",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T02:55:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "684fceb8_e6a8d7ef",
+      "range": {
+        "startLine": 187,
+        "startChar": 2,
+        "endLine": 187,
+        "endChar": 17
+      },
+      "revId": "838d4fb928c33cf7d35917959563f63d1c63fd66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
