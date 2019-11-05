@@ -64,13 +64,15 @@ if [ ! -c /dev/spdk/nvme1 ]; then
 	return 1
 fi
 
-$rpc_py bdev_nvme_cuse_unregister -n Nvme0
+smartctl -i /dev/spdk/nvme1n1
+smartctl -t select,10-20 /dev/spdk/nvme1n1
+smartctl -t select,10+11 /dev/spdk/nvme1n1
+
+$rpc_py bdev_nvme_detach_controller Nvme0
 sleep 1
 if [ -c /dev/spdk/nvme1 ]; then
 	return 1
 fi
-
-$rpc_py bdev_nvme_detach_controller Nvme0
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_tgt_pid
