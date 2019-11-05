@@ -22,6 +22,30 @@
       "revId": "1f73078417911aadb8ddb2de42cdaaac54f51f38",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "677ad515_d4c1c47d",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T06:08:13Z",
+      "side": 1,
+      "message": "sorry for misunderstanding.\ndone.",
+      "parentUuid": "e8a2ecfe_a7da8a41",
+      "range": {
+        "startLine": 132,
+        "startChar": 14,
+        "endLine": 132,
+        "endChar": 21
+      },
+      "revId": "1f73078417911aadb8ddb2de42cdaaac54f51f38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
