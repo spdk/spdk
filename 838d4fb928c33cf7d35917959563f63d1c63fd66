@@ -137,6 +137,30 @@
       "revId": "838d4fb928c33cf7d35917959563f63d1c63fd66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "684fceb8_e6a8d7ef",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T01:58:28Z",
+      "side": 1,
+      "message": "Please ignore this comment. This is dated.",
+      "parentUuid": "7e800b9e_48e50be2",
+      "range": {
+        "startLine": 187,
+        "startChar": 2,
+        "endLine": 187,
+        "endChar": 17
+      },
+      "revId": "838d4fb928c33cf7d35917959563f63d1c63fd66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
