@@ -161,6 +161,9 @@ struct raid_bdev {
 	struct raid_bdev_module		*module;
 };
 
+#define RAID_FOR_EACH_BASE_BDEV(r, i) \
+	for (i = r->base_bdev_info; i < r->base_bdev_info + r->num_base_bdevs; i++)
+
 /*
  * raid_base_bdev_config is the per base bdev data structure which contains
  * information w.r.t to per base bdev during parsing config

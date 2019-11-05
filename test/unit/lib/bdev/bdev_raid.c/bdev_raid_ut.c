@@ -208,7 +208,8 @@ base_bdevs_cleanup(void)
 static void
 check_and_remove_raid_bdev(struct raid_bdev_config *raid_cfg)
 {
-	struct raid_bdev       *raid_bdev;
+	struct raid_bdev *raid_bdev;
+	struct raid_base_bdev_info *base_info;
 
 	/* Get the raid structured allocated if exists */
 	raid_bdev = raid_cfg->raid_bdev;
@@ -216,10 +217,11 @@ check_and_remove_raid_bdev(struct raid_bdev_config *raid_cfg)
 		return;
 	}
 
-	for (uint8_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
-		assert(raid_bdev->base_bdev_info != NULL);
-		if (raid_bdev->base_bdev_info[i].bdev) {
-			raid_bdev_free_base_bdev_resource(raid_bdev, i);
+	assert(raid_bdev->base_bdev_info != NULL);
+
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		if (base_info->bdev) {
+			raid_bdev_free_base_bdev_resource(raid_bdev, base_info);
 		}
 	}
 	assert(raid_bdev->num_base_bdevs_discovered == 0);
@@ -923,7 +925,7 @@ static void
 verify_raid_bdev(struct rpc_bdev_raid_create *r, bool presence, uint32_t raid_state)
 {
 	struct raid_bdev *pbdev;
-	uint8_t i;
+	struct raid_base_bdev_info *base_info;
 	struct spdk_bdev *bdev = NULL;
 	bool   pbdev_found;
 	uint64_t min_blockcnt = 0xFFFFFFFFFFFFFFFF;
@@ -946,14 +948,12 @@ verify_raid_bdev(struct rpc_bdev_raid_create *r, bool presence, uint32_t raid_st
 			CU_ASSERT(pbdev->num_base_bdevs_discovered == r->base_bdevs.num_base_bdevs);
 			CU_ASSERT(pbdev->level == r->level);
 			CU_ASSERT(pbdev->destruct_called == false);
-			for (i = 0; i < pbdev->num_base_bdevs; i++) {
-				if (pbdev->base_bdev_info && pbdev->base_bdev_info[i].bdev) {
-					bdev = spdk_bdev_get_by_name(pbdev->base_bdev_info[i].bdev->name);
-					CU_ASSERT(bdev != NULL);
-					CU_ASSERT(pbdev->base_bdev_info[i].remove_scheduled == false);
-				} else {
-					CU_ASSERT(0);
-				}
+			CU_ASSERT(pbdev->base_bdev_info != NULL);
+			RAID_FOR_EACH_BASE_BDEV(pbdev, base_info) {
+				CU_ASSERT(base_info->bdev != NULL);
+				bdev = spdk_bdev_get_by_name(base_info->bdev->name);
+				CU_ASSERT(bdev != NULL);
+				CU_ASSERT(base_info->remove_scheduled == false);
 
 				if (bdev && bdev->blockcnt < min_blockcnt) {
 					min_blockcnt = bdev->blockcnt;

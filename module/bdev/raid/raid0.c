@@ -342,15 +342,12 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 
 static int raid0_start(struct raid_bdev *raid_bdev)
 {
-	uint64_t min_blockcnt;
-	uint8_t i;
+	uint64_t min_blockcnt = UINT64_MAX;
+	struct raid_base_bdev_info *base_info;
 
-	min_blockcnt = raid_bdev->base_bdev_info[0].bdev->blockcnt;
-	for (i = 1; i < raid_bdev->num_base_bdevs; i++) {
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 		/* Calculate minimum block count from all base bdevs */
-		if (raid_bdev->base_bdev_info[i].bdev->blockcnt < min_blockcnt) {
-			min_blockcnt = raid_bdev->base_bdev_info[i].bdev->blockcnt;
-		}
+		min_blockcnt = spdk_min(min_blockcnt, base_info->bdev->blockcnt);
 	}
 
 	/*
