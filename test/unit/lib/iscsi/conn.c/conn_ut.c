@@ -45,7 +45,8 @@ SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 #define DMIN32(A,B) ((uint32_t) ((uint32_t)(A) > (uint32_t)(B) ? (uint32_t)(B) : (uint32_t)(A)))
 
 struct spdk_iscsi_globals g_spdk_iscsi;
-static TAILQ_HEAD(, spdk_iscsi_task) g_ut_read_tasks = TAILQ_HEAD_INITIALIZER(g_ut_read_tasks);
+static TAILQ_HEAD(read_tasks_head, spdk_iscsi_task) g_ut_read_tasks =
+	TAILQ_HEAD_INITIALIZER(g_ut_read_tasks);
 static ssize_t g_sock_writev_bytes = 0;
 
 DEFINE_STUB(spdk_app_get_shm_id, int, (void), 0);
@@ -195,6 +196,7 @@ ut_conn_create_read_tasks(int transfer_len)
 
 	task = ut_conn_task_get(NULL);
 
+	TAILQ_INIT(&task->subtask_list);
 	task->scsi.transfer_len = transfer_len;
 	task->scsi.offset = 0;
 	task->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, task->scsi.transfer_len);
@@ -250,9 +252,32 @@ read_task_split_in_order_case(void)
 	primary = TAILQ_FIRST(&g_ut_read_tasks);
 	SPDK_CU_ASSERT_FATAL(primary != NULL);
 
-	if (primary != NULL) {
-		CU_ASSERT(primary->bytes_completed == primary->scsi.transfer_len);
+	CU_ASSERT(primary->bytes_completed == primary->scsi.transfer_len);
+
+	TAILQ_FOREACH_SAFE(task, &g_ut_read_tasks, link, tmp) {
+		TAILQ_REMOVE(&g_ut_read_tasks, task, link);
+		free(task);
 	}
+
+	CU_ASSERT(TAILQ_EMPTY(&g_ut_read_tasks));
+}
+
+static void
+read_task_split_reverse_order_case(void)
+{
+	struct spdk_iscsi_task *primary, *task, *tmp;
+
+	ut_conn_create_read_tasks(SPDK_BDEV_LARGE_BUF_MAX_SIZE * 8);
+
+	TAILQ_FOREACH_REVERSE(task, &g_ut_read_tasks, read_tasks_head, link) {
+		primary = spdk_iscsi_task_get_primary(task);
+		process_read_task_completion(NULL, task, primary);
+	}
+
+	primary = TAILQ_FIRST(&g_ut_read_tasks);
+	SPDK_CU_ASSERT_FATAL(primary != NULL);
+
+	CU_ASSERT(primary->bytes_completed == primary->scsi.transfer_len);
 
 	TAILQ_FOREACH_SAFE(task, &g_ut_read_tasks, link, tmp) {
 		TAILQ_REMOVE(&g_ut_read_tasks, task, link);
@@ -380,6 +405,8 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "read task split in order", read_task_split_in_order_case) == NULL ||
+		CU_add_test(suite, "read task split reverse order",
+			    read_task_split_reverse_order_case) == NULL ||
 		CU_add_test(suite, "propagate_scsi_error_status_for_split_read_tasks",
 			    propagate_scsi_error_status_for_split_read_tasks) == NULL ||
 		CU_add_test(suite, "recursive_flush_pdus_calls", recursive_flush_pdus_calls) == NULL
