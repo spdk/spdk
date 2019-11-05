@@ -16,6 +16,24 @@
       "revId": "687df6b5179b193aea7241cec7dc8cade06c8f96",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e35d96b8_53ecc5f5",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1241,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-05T11:07:27Z",
+      "side": 1,
+      "message": "Yeah, your proposal makes more sense. And you\u0027re right, we don\u0027t need previous patch now.\n\nAs for the test apps, I don\u0027t think any of those in examples/vmd need to be monitoring for hotplugs - they\u0027re simple apps that do one thing (listing devices, setting LEDs) and terminate immediately. I was using spdk_tgt to test the hotplugs and it uses event framework, so there\u0027s no need to change anything there.",
+      "parentUuid": "cec42919_89789b57",
+      "revId": "687df6b5179b193aea7241cec7dc8cade06c8f96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
