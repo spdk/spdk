@@ -388,7 +388,7 @@ function configure_linux {
 
 		MEMLOCK_AMNT=$(ulimit -l)
 		if [ "$MEMLOCK_AMNT" != "unlimited" ] ; then
-			MEMLOCK_MB=$(( $MEMLOCK_AMNT / 1024 ))
+			MEMLOCK_MB=$(( MEMLOCK_AMNT / 1024 ))
 			echo ""
 			echo "Current user memlock limit: ${MEMLOCK_MB} MB"
 			echo ""
@@ -709,7 +709,7 @@ fi
 
 if [ $(uname) = Linux ]; then
 	HUGEPGSZ=$(( $(grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9') ))
-	HUGEPGSZ_MB=$(( $HUGEPGSZ / 1024 ))
+	HUGEPGSZ_MB=$(( HUGEPGSZ / 1024 ))
 	: ${NRHUGE=$(( (HUGEMEM + HUGEPGSZ_MB - 1) / HUGEPGSZ_MB ))}
 
 	if [ "$mode" == "config" ]; then

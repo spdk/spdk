@@ -50,7 +50,7 @@ trap 'killprocess $example_pid; exit 1' SIGINT SIGTERM EXIT
 i=0
 while ! grep "Starting I/O" log.txt; do
 	[ $i -lt 20 ] || break
-	i=$(($i+1))
+	i=$((i+1))
 	sleep 1
 done
 

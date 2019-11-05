@@ -56,7 +56,7 @@ ls_guid=$($rpc_py bdev_lvol_create_lvstore "Nvme0n1" "lvs0" -c 1048576)
 
 # Assign even size for each lvol_bdev.
 get_lvs_free_mb $ls_guid
-lvol_bdev_size=$(($free_mb / $CONNECTION_NUMBER))
+lvol_bdev_size=$((free_mb / CONNECTION_NUMBER))
 for i in $(seq 1 $CONNECTION_NUMBER); do
 	$rpc_py bdev_lvol_create -u $ls_guid lbd_$i $lvol_bdev_size
 done

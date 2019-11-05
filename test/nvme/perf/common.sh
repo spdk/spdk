@@ -107,7 +107,7 @@ function get_disks_on_numa(){
 	for (( i=0; i<${#devs[@]}; i++ ))
 	do
 		if [ ${numas[$i]} = $numa_no ]; then
-			disks_on_numa=$(($disks_on_numa+1))
+			disks_on_numa=$((disks_on_numa+1))
 		fi
 	done
 	echo $disks_on_numa
@@ -124,18 +124,18 @@ function create_fio_config(){
 	local filename=""
 
 	local cores_numa=($(get_cores_numa_node "$5"))
-	local disks_per_core=$(($disk_no/$no_cores))
-	local disks_per_core_mod=$(($disk_no%$no_cores))
+	local disks_per_core=$((disk_no/no_cores))
+	local disks_per_core_mod=$((disk_no%no_cores))
 
 	# For kernel dirver, each disk will be alligned with all cpus on the same NUMA node
 	if [ "$plugin" != "nvme" ] && [ "$plugin" != "bdev" ]; then
-		for (( i=0; i<$disk_no; i++ ))
+		for (( i=0; i<disk_no; i++ ))
 		do
 			sed -i -e "\$a[filename${i}]" $BASE_DIR/config.fio
 			filename="/dev/${disks[$i]}"
 			sed -i -e "\$afilename=$filename" $BASE_DIR/config.fio
 			cpu_used=""
-				for (( j=0; j<$no_cores; j++ ))
+				for (( j=0; j<no_cores; j++ ))
 				do
 					core_numa=${cores_numa[$j]}
 					if [ "${disks_numa[$i]}" = "$core_numa" ]; then
@@ -146,13 +146,13 @@ function create_fio_config(){
 				echo "" >> $BASE_DIR/config.fio
 		done
 	else
-		for (( i=0; i<$no_cores; i++ ))
+		for (( i=0; i<no_cores; i++ ))
 		do
 			core_numa=${cores_numa[$i]}
 			total_disks_per_core=$disks_per_core
 			if [ "$disks_per_core_mod" -gt "0" ]; then
-				total_disks_per_core=$(($disks_per_core+1))
-				disks_per_core_mod=$(($disks_per_core_mod-1))
+				total_disks_per_core=$((disks_per_core+1))
+				disks_per_core_mod=$((disks_per_core_mod-1))
 			fi
 
 			if [ "$total_disks_per_core" = "0" ]; then
@@ -166,7 +166,7 @@ function create_fio_config(){
 			n=0 #counter of all disks
 			while [ "$m" -lt  "$total_disks_per_core" ]; do
 				if [ ${disks_numa[$n]} = $core_numa ]; then
-					m=$(($m+1))
+					m=$((m+1))
 					if [ "$plugin" = "nvme" ]; then
 						filename='trtype=PCIe traddr='${disks[$n]//:/.}' ns=1'
 					elif [ "$plugin" = "bdev" ]; then
@@ -176,7 +176,7 @@ function create_fio_config(){
 					#Mark numa of n'th disk as "x" to mark it as claimed
 					disks_numa[$n]="x"
 				fi
-				n=$(($n+1))
+				n=$((n+1))
 				# If there is no more disks with numa node same as cpu numa node, switch to other numa node.
 				if [ $n -ge $total_disks ]; then
 					if [ "$core_numa" = "1" ]; then
@@ -225,37 +225,37 @@ function get_results(){
 		mean_lat_usec)
 		mean_lat=$(cat $NVME_FIO_RESULTS | jq -r ".jobs[] | (.read.lat_ns.mean * $reads_pct + .write.lat_ns.mean * $writes_pct)")
 		mean_lat=${mean_lat%.*}
-		echo $(( $mean_lat/100000 ))
+		echo $(( mean_lat/100000 ))
 		;;
 		p99_lat_usec)
 		p99_lat=$(cat $NVME_FIO_RESULTS | jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.000000\" * $reads_pct + .write.clat_ns.percentile.\"99.000000\" * $writes_pct)")
 		p99_lat=${p99_lat%.*}
-		echo $(( $p99_lat/100000 ))
+		echo $(( p99_lat/100000 ))
 		;;
 		p99_99_lat_usec)
 		p99_99_lat=$(cat $NVME_FIO_RESULTS | jq -r ".jobs[] | (.read.clat_ns.percentile.\"99.990000\" * $reads_pct + .write.clat_ns.percentile.\"99.990000\" * $writes_pct)")
 		p99_99_lat=${p99_99_lat%.*}
-		echo $(( $p99_99_lat/100000 ))
+		echo $(( p99_99_lat/100000 ))
 		;;
 		stdev_usec)
 		stdev=$(cat $NVME_FIO_RESULTS | jq -r ".jobs[] | (.read.clat_ns.stddev * $reads_pct + .write.clat_ns.stddev * $writes_pct)")
 		stdev=${stdev%.*}
-		echo $(( $stdev/100000 ))
+		echo $(( stdev/100000 ))
 		;;
 		mean_slat_usec)
 		mean_slat=$(cat $NVME_FIO_RESULTS | jq -r ".jobs[] | (.read.slat_ns.mean * $reads_pct + .write.slat_ns.mean * $writes_pct)")
 		mean_slat=${mean_slat%.*}
-		echo $(( $mean_slat/100000 ))
+		echo $(( mean_slat/100000 ))
 		;;
 		mean_clat_usec)
 		mean_clat=$(cat $NVME_FIO_RESULTS | jq -r ".jobs[] | (.read.clat_ns.mean * $reads_pct + .write.clat_ns.mean * $writes_pct)")
 		mean_clat=${mean_clat%.*}
-		echo $(( $mean_clat/100000 ))
+		echo $(( mean_clat/100000 ))
 		;;
 		bw_Kibs)
 		bw=$(cat $NVME_FIO_RESULTS | jq -r ".jobs[] | (.read.bw + .write.bw)")
 		bw=${bw%.*}
-		echo $(( $bw ))
+		echo $(( bw ))
 		;;
 	esac
 }
@@ -270,7 +270,7 @@ function get_bdevperf_results(){
 		bw_Kibs)
 		bw_MBs=$(grep Total $NVME_FIO_RESULTS | awk -F 'Total' '{print $2}' | awk '{print $4}')
 		bw_MBs=${bw_MBs%.*}
-		echo $(( $bw_MBs * 1024 ))
+		echo $(( bw_MBs * 1024 ))
 		;;
 	esac
 }

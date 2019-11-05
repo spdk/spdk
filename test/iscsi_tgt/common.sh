@@ -150,7 +150,7 @@ function start_vpp() {
 	counter=40
 	while [ $counter -gt 0 ] ; do
 		vppctl show version &> /dev/null && break
-		counter=$(( $counter - 1 ))
+		counter=$(( counter - 1 ))
 		sleep 0.5
 	done
 	xtrace_restore
@@ -178,8 +178,8 @@ function start_vpp() {
 	sleep 3
 	# SC1010: ping -M do - in this case do is an option not bash special word
 	# shellcheck disable=SC1010
-	ping -c 1 $TARGET_IP -s $(( $MTU - 28 )) -M do
-	vppctl ping $INITIATOR_IP repeat 1 size $(( $MTU - (28 + 8) )) verbose
+	ping -c 1 $TARGET_IP -s $(( MTU - 28 )) -M do
+	vppctl ping $INITIATOR_IP repeat 1 size $(( MTU - (28 + 8) )) verbose
 }
 
 function kill_vpp() {

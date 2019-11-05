@@ -23,8 +23,8 @@ function run_fio() {
 	local end_io_count=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
 	local end_bytes_read=$(jq -r '.bdevs[0].bytes_read' <<< "$iostats")
 
-	IOPS_RESULT=$(((end_io_count-start_io_count)/$run_time))
-	BANDWIDTH_RESULT=$(((end_bytes_read-start_bytes_read)/$run_time))
+	IOPS_RESULT=$(((end_io_count-start_io_count)/run_time))
+	BANDWIDTH_RESULT=$(((end_bytes_read-start_bytes_read)/run_time))
 }
 
 function verify_qos_limits() {
@@ -84,19 +84,19 @@ trap 'iscsicleanup; killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTER
 run_fio Malloc0
 
 # Set IOPS/bandwidth limit to 50% of the actual unrestrained performance.
-IOPS_LIMIT=$(($IOPS_RESULT/2))
-BANDWIDTH_LIMIT=$(($BANDWIDTH_RESULT/2))
+IOPS_LIMIT=$((IOPS_RESULT/2))
+BANDWIDTH_LIMIT=$((BANDWIDTH_RESULT/2))
 # Set READ bandwidth limit to 50% of the RW bandwidth limit to be able
 # to differentiate those two.
-READ_BANDWIDTH_LIMIT=$(($BANDWIDTH_LIMIT/2))
+READ_BANDWIDTH_LIMIT=$((BANDWIDTH_LIMIT/2))
 
 # Also round them down to nearest multiple of either 1000 IOPS or 1MB BW
 # which are the minimal QoS granularities
-IOPS_LIMIT=$(($IOPS_LIMIT/1000*1000))
-BANDWIDTH_LIMIT_MB=$(($BANDWIDTH_LIMIT/1024/1024))
-BANDWIDTH_LIMIT=$(($BANDWIDTH_LIMIT_MB*1024*1024))
-READ_BANDWIDTH_LIMIT_MB=$(($READ_BANDWIDTH_LIMIT/1024/1024))
-READ_BANDWIDTH_LIMIT=$(($READ_BANDWIDTH_LIMIT_MB*1024*1024))
+IOPS_LIMIT=$((IOPS_LIMIT/1000*1000))
+BANDWIDTH_LIMIT_MB=$((BANDWIDTH_LIMIT/1024/1024))
+BANDWIDTH_LIMIT=$((BANDWIDTH_LIMIT_MB*1024*1024))
+READ_BANDWIDTH_LIMIT_MB=$((READ_BANDWIDTH_LIMIT/1024/1024))
+READ_BANDWIDTH_LIMIT=$((READ_BANDWIDTH_LIMIT_MB*1024*1024))
 
 # Limit the I/O rate by RPC, then confirm the observed rate matches.
 $rpc_py bdev_set_qos_limit Malloc0 --rw_ios_per_sec $IOPS_LIMIT

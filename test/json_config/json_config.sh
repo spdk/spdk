@@ -415,7 +415,7 @@ function json_config_clear() {
 	count=100
 	while [ $count -gt 0 ] ; do
 		$rootdir/scripts/rpc.py -s "${app_socket[$1]}" save_config | $config_filter -method delete_global_parameters | $config_filter -method check_empty && break
-		count=$(( $count -1 ))
+		count=$(( count -1 ))
 		sleep 0.1
 	done
 
