@@ -1017,8 +1017,6 @@ work_fn(void *arg)
 	struct ns_worker_ctx *ns_ctx = NULL;
 	uint32_t unfinished_ns_ctx;
 
-	printf("Starting thread on core %u\n", worker->lcore);
-
 	/* Allocate queue pairs for each namespace. */
 	ns_ctx = worker->ns_ctx;
 	while (ns_ctx != NULL) {
@@ -1812,20 +1810,13 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
-		printf("Attaching to NVMe over Fabrics controller at %s:%s: %s\n",
-		       trid->traddr, trid->trsvcid,
-		       trid->subnqn);
-	} else {
+	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		if (g_disable_sq_cmb) {
 			opts->use_cmb_sqs = false;
 		}
 		if (g_no_shn_notification) {
 			opts->no_shn_notification = true;
 		}
-
-		printf("Attaching to NVMe Controller at %s\n",
-		       trid->traddr);
 	}
 
 	/* Set io_queue_size to UINT16_MAX, NVMe driver
