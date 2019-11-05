@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7d8ee444_cbbe9ca7",
+        "filename": "test/unit/lib/blobfs/blobfs_bdev.c/blobfs_bdev_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2019-11-05T02:49:44Z",
+      "side": 1,
+      "message": "I don\u0027t think we should put the callback here.\nbecause spdk_fs_load will call the callback and then umount bdev.\nbut if you add unmount here , in method _blobfs_bdev_mount_fuse_start(spdk_fs_load callback function) still invoke ctx-\u003ecb_args after spdk_blobfs_fuse_start method.",
+      "parentUuid": "f482e1ae_90769116",
+      "revId": "6f33ba761baa17a50bbe54cccdd5065f0b3bfb56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "726dff85_54584d2b",
         "filename": "test/unit/lib/blobfs/blobfs_bdev.c/blobfs_bdev_ut.c",
         "patchSetId": 5
@@ -39,6 +57,30 @@
       "revId": "6f33ba761baa17a50bbe54cccdd5065f0b3bfb56",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f045749_bfe97b0c",
+        "filename": "test/unit/lib/blobfs/blobfs_bdev.c/blobfs_bdev_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2019-11-05T02:49:44Z",
+      "side": 1,
+      "message": "changed free -\u003e unload. \nand i think we still need a flag val to make sure when we need unmount ctx. because others unit cases(which is not mount method) invoked spdk_fs_load and they have unload callback.",
+      "parentUuid": "726dff85_54584d2b",
+      "range": {
+        "startLine": 320,
+        "startChar": 1,
+        "endLine": 320,
+        "endChar": 80
+      },
+      "revId": "6f33ba761baa17a50bbe54cccdd5065f0b3bfb56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
