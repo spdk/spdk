@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "de0e872d_6fe67297",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-11-05T22:01:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fe825693_ad85b4d1",
+      "revId": "6968477395fb91a8f55ce6397800d7193b4b4f63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6b10843_251908ab",
         "filename": "test/vhost/common.sh",
         "patchSetId": 8
@@ -33,6 +51,24 @@
       "revId": "6968477395fb91a8f55ce6397800d7193b4b4f63",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aeb79203_5b2ca0e9",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-11-05T22:01:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e6b10843_251908ab",
+      "revId": "6968477395fb91a8f55ce6397800d7193b4b4f63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
