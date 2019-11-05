@@ -157,7 +157,7 @@ function host_1_create_share()
 	mkdir -p $VM_BASE_DIR # This dir would've been created later but we need it now
 	rm -rf $share_dir/spdk.tar.gz $share_dir/spdk || true
 	cp $os_image $share_dir/migration.qcow2
-	tar --exclude="*.o"--exclude="*.d" --exclude="*.git" -C $rootdir -zcf $share_dir/spdk.tar.gz .
+	tar --exclude="*.o" --exclude="*.d" --exclude="*.git" -C $rootdir -zcf $share_dir/spdk.tar.gz .
 }
 
 function host_2_create_share()
