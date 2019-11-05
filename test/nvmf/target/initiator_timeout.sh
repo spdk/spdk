@@ -16,7 +16,7 @@ nvmfappstart "-m 0xF"
 
 trap 'process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini $1; exit 1' SIGINT SIGTERM EXIT
 
-$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
+$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 
 # We cannot configure the bdev with an incredibly high latency up front because connect will not work properly.
 $rpc_py bdev_delay_create -b Malloc0 -d Delay0 -r 30 -t 30 -w 30 -n 30
