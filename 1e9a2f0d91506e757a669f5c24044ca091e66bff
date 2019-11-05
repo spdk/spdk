@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "333dba47_87b8ceea",
+        "filename": "module/bdev/raid/bdev_raid.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T16:31:39Z",
+      "side": 1,
+      "message": "how about instead, we add a struct raid_bdev * to struct raid_bdev_io?  then set that when we first get the bdev_io in raid_bdev_submit_request\n\nfunctionally what you have here is fine, but it seems like saving the struct raid_bdev * in struct raid_bdev_io directly might make the code a bit cleaner",
+      "revId": "1e9a2f0d91506e757a669f5c24044ca091e66bff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
