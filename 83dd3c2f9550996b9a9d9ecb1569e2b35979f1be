@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c2063a4d_aafd52d8",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T06:28:05Z",
+      "side": 1,
+      "message": "hi shuhei, these are fake functions to indicates that code be executed here , we only need to verify code can run here.",
+      "parentUuid": "6f847797_5406aa1b",
+      "range": {
+        "startLine": 87,
+        "startChar": 1,
+        "endLine": 87,
+        "endChar": 23
+      },
+      "revId": "83dd3c2f9550996b9a9d9ecb1569e2b35979f1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "98708e20_92ed82de",
         "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
         "patchSetId": 6
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "fa1a41ba_33e0ee60",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T06:28:05Z",
+      "side": 1,
+      "message": "missed , add this before the end of this unittest like other UT.",
+      "parentUuid": "98708e20_92ed82de",
+      "range": {
+        "startLine": 902,
+        "startChar": 1,
+        "endLine": 902,
+        "endChar": 20
+      },
+      "revId": "83dd3c2f9550996b9a9d9ecb1569e2b35979f1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8023d29f_4ff23325",
         "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
         "patchSetId": 6
@@ -59,6 +107,30 @@
       "writtenOn": "2019-11-05T04:46:38Z",
       "side": 1,
       "message": "Why this is necessary? UT will pass even if we set NULL to cb_ctx?",
+      "range": {
+        "startLine": 903,
+        "startChar": 1,
+        "endLine": 903,
+        "endChar": 51
+      },
+      "revId": "83dd3c2f9550996b9a9d9ecb1569e2b35979f1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc918164_9a6a8d7d",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 903,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T06:28:05Z",
+      "side": 1,
+      "message": "this is a initialization.\nthe following test is to verify the code flow of callbacks can be executed.\n1.assignment pointer of callback function\n2. execution of callback functions that be done or executed, so there\u0027re some flags in callback functions to simulate execution. There are unittest to trace code flow.\n\nwe already constructed test_nvme_probe_ctx,here also can set NULL, but to verify the callback function , the following test is g_callback_done \u003d\u003d false as expected, better to set it as expected for contrast.",
+      "parentUuid": "8023d29f_4ff23325",
       "range": {
         "startLine": 903,
         "startChar": 1,
