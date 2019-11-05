@@ -63,6 +63,10 @@ struct nvme_tcp_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
 };
 
+#define TQPAIR_RECV_PDU_INDEX 0
+#define TQPAIR_SEND_PDU_INDEX 1
+#define REQS_BASE_PDU_INDEX   2
+
 /* NVMe TCP qpair extensions for spdk_nvme_qpair */
 struct nvme_tcp_qpair {
 	struct spdk_nvme_qpair			qpair;
@@ -77,6 +81,7 @@ struct nvme_tcp_qpair {
 	enum nvme_tcp_pdu_recv_state		recv_state;
 
 	struct nvme_tcp_req			*tcp_reqs;
+	union nvme_tcp_pdu_hdr			*pdu_hdrs;
 
 	uint16_t				num_entries;
 
@@ -151,7 +156,9 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	tcp_req->active_r2ts = 0;
 	tcp_req->iovcnt = 0;
 	memset(&tcp_req->send_pdu, 0, sizeof(tcp_req->send_pdu));
-	tcp_req->send_pdu.hdr = &tcp_req->send_pdu.hdr_mem;
+	tcp_req->send_pdu.hdr = &tqpair->pdu_hdrs[REQS_BASE_PDU_INDEX + tcp_req->cid];
+	memset(tcp_req->send_pdu.hdr, 0, sizeof(union nvme_tcp_pdu_hdr));
+
 	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
 
 	return tcp_req;
@@ -198,6 +205,7 @@ nvme_tcp_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, c
 static void
 nvme_tcp_free_reqs(struct nvme_tcp_qpair *tqpair)
 {
+	spdk_dma_free(tqpair->pdu_hdrs);
 	free(tqpair->tcp_reqs);
 	tqpair->tcp_reqs = NULL;
 }
@@ -214,6 +222,13 @@ nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 		goto fail;
 	}
 
+	tqpair->pdu_hdrs = spdk_dma_malloc((tqpair->num_entries + 2) * sizeof(union nvme_tcp_pdu_hdr),
+					   PAGE_SIZE, NULL);
+	if (tqpair->pdu_hdrs == NULL) {
+		SPDK_ERRLOG("Failed to allocate pdu_hdrs\n");
+		goto fail_pdus;
+	}
+
 	TAILQ_INIT(&tqpair->send_queue);
 	TAILQ_INIT(&tqpair->free_reqs);
 	TAILQ_INIT(&tqpair->outstanding_reqs);
@@ -224,6 +239,8 @@ nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 	}
 
 	return 0;
+
+fail_pdus:
 fail:
 	nvme_tcp_free_reqs(tqpair);
 	return -ENOMEM;
@@ -699,7 +716,8 @@ nvme_tcp_qpair_set_recv_state(struct nvme_tcp_qpair *tqpair,
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
 	case NVME_TCP_PDU_RECV_STATE_ERROR:
 		memset(&tqpair->recv_pdu, 0, sizeof(struct nvme_tcp_pdu));
-		tqpair->recv_pdu.hdr = &tqpair->recv_pdu.hdr_mem;
+		tqpair->recv_pdu.hdr = &tqpair->pdu_hdrs[TQPAIR_RECV_PDU_INDEX];
+		memset(tqpair->recv_pdu.hdr, 0, sizeof(union nvme_tcp_pdu_hdr));
 		break;
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
@@ -728,7 +746,8 @@ nvme_tcp_qpair_send_h2c_term_req(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 
 	rsp_pdu = &tqpair->send_pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
-	rsp_pdu->hdr = &rsp_pdu->hdr_mem;
+	rsp_pdu->hdr = &tqpair->pdu_hdrs[TQPAIR_SEND_PDU_INDEX];
+	memset(rsp_pdu->hdr, 0, sizeof(union nvme_tcp_pdu_hdr));
 	h2c_term_req = &rsp_pdu->hdr->term_req;
 	h2c_term_req->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ;
 	h2c_term_req->common.hlen = h2c_term_req_hdr_len;
@@ -1166,7 +1185,8 @@ spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 
 	rsp_pdu = &tcp_req->send_pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
-	rsp_pdu->hdr = &rsp_pdu->hdr_mem;
+	rsp_pdu->hdr = &tqpair->pdu_hdrs[REQS_BASE_PDU_INDEX + tcp_req->cid];
+	memset(rsp_pdu->hdr, 0, sizeof(union nvme_tcp_pdu_hdr));
 	h2c_data = &rsp_pdu->hdr->h2c_data;
 
 	h2c_data->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_H2C_DATA;
@@ -1513,7 +1533,8 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 
 	pdu = &tqpair->send_pdu;
 	memset(&tqpair->send_pdu, 0, sizeof(tqpair->send_pdu));
-	pdu->hdr = &pdu->hdr_mem;
+	pdu->hdr = &tqpair->pdu_hdrs[TQPAIR_SEND_PDU_INDEX];
+	memset(pdu->hdr, 0, sizeof(union nvme_tcp_pdu_hdr));
 	ic_req = &pdu->hdr->ic_req;
 
 	ic_req->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_REQ;
@@ -1649,7 +1670,6 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 
 	tqpair->num_entries = qsize;
 	qpair = &tqpair->qpair;
-	tqpair->recv_pdu.hdr = &tqpair->recv_pdu.hdr_mem;
 
 	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests);
 	if (rc != 0) {
@@ -1662,6 +1682,8 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		nvme_tcp_qpair_destroy(qpair);
 		return NULL;
 	}
+
+	tqpair->recv_pdu.hdr = &tqpair->pdu_hdrs[TQPAIR_RECV_PDU_INDEX];
 
 	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, qpair);
 	if (rc < 0) {
