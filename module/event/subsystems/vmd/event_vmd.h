@@ -31,48 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/stdinc.h"
-#include "spdk/conf.h"
+#ifndef EVENT_VMD_H
+#define EVENT_VMD_H
 
-#include "spdk/vmd.h"
+int vmd_subsystem_init(void);
 
-#include "spdk_internal/event.h"
-#include "event_vmd.h"
-
-int
-vmd_subsystem_init(void)
-{
-	return spdk_vmd_init();
-}
-
-static void
-spdk_vmd_subsystem_init(void)
-{
-	struct spdk_conf_section *sp;
-	int rc = 0;
-
-	sp = spdk_conf_find_section(NULL, "Vmd");
-	if (sp != NULL) {
-		if (spdk_conf_section_get_boolval(sp, "Enable", false)) {
-			rc = vmd_subsystem_init();
-		}
-	}
-
-	spdk_subsystem_init_next(rc);
-}
-
-static void
-spdk_vmd_subsystem_fini(void)
-{
-	spdk_subsystem_fini_next();
-}
-
-static struct spdk_subsystem g_spdk_subsystem_vmd = {
-	.name = "vmd",
-	.init = spdk_vmd_subsystem_init,
-	.fini = spdk_vmd_subsystem_fini,
-	.config = NULL,
-	.write_config_json = NULL,
-};
-
-SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_vmd);
+#endif

@@ -37,6 +37,7 @@
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
+#include "event_vmd.h"
 
 static void
 spdk_rpc_vmd_enable(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
@@ -44,7 +45,7 @@ spdk_rpc_vmd_enable(struct spdk_jsonrpc_request *request, const struct spdk_json
 	struct spdk_json_write_ctx *w;
 	int rc;
 
-	rc = spdk_vmd_init();
+	rc = vmd_subsystem_init();
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, rc == 0);
