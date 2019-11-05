@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d13a6414_e1372ca0",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T23:17:09Z",
+      "side": 1,
+      "message": "I\u0027m concerned this may conflict with one of the outstanding shellcheck patches that removes $ from numerical variables - does true/false count as numerical?",
+      "revId": "3293b6d8d90d360e455eecf013a0447a1a8fba6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
