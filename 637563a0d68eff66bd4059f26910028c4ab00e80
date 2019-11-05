@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "901fd0b7_b1f7d267",
+        "filename": "module/bdev/uring/bdev_uring.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T16:56:22Z",
+      "side": 1,
+      "message": "Hi Yao,\n\nThanks for your patch!  But I think this patch is doing two different things:\n\n1) Adding O_RDWR\n2) Trying without O_DIRECT | O_NOATIME if first open fails.\n\nPart #2 should be a different patch, with a commit message specific to those changes.\n\nThanks,\n\n-Jim",
+      "revId": "637563a0d68eff66bd4059f26910028c4ab00e80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
