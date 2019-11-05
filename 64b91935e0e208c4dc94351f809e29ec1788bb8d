@@ -1,0 +1,222 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18536c62_58df9288",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 28
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T14:52:59Z",
+      "side": 1,
+      "message": "This commit needs a good detailed description.\nDescribe \"Why\" and \"what\", like added types of emulated devices, namespaces, examples, etc.",
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62e578b7_e9ee5d06",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 28
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T14:52:59Z",
+      "side": 1,
+      "message": "You could put some comments to this change, so that it\u0027s better described what youre doing here\nIts clear for you and me, but pretty sure it will not be for someone else.",
+      "range": {
+        "startLine": 137,
+        "startChar": 4,
+        "endLine": 137,
+        "endChar": 55
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "730a44df_0462a784",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 28
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T14:52:59Z",
+      "side": 1,
+      "message": "Nitpick: can you put empty lines between conditional blocks? Personally I think it\u0027s easier to read then.\n\ne.g:\n\nif\n    xxx\nend\n\nunlsess\n    yyy\nend",
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6bc5496a_dbabd1ab",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 28
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T14:52:59Z",
+      "side": 1,
+      "message": "Could add comments why we use these values and how do we use them to calculate OCSSD emulated device size.",
+      "range": {
+        "startLine": 160,
+        "startChar": 8,
+        "endLine": 160,
+        "endChar": 324
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "624a6905_f78f7469",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T14:52:59Z",
+      "side": 1,
+      "message": "\"If no -b option is specified then this option defaults to emulating single NVMe with 1 namespace and assumes path: /var/lib/libvirt/images/nvme_disk.img\"",
+      "range": {
+        "startLine": 25,
+        "startChar": 41,
+        "endLine": 25,
+        "endChar": 119
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e9c4ad2_fb3f28e4",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T14:52:59Z",
+      "side": 1,
+      "message": "Missed OS as the last argument in script call:\n\techo \"  $0 -b /var/lib/libvirt/images/nvme1.img,nvme,1 fedora28\"",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 99
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27e95108_97e496e4",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T14:52:59Z",
+      "side": 1,
+      "message": "does this need a separate condition?\nI think it can just be put after line 164",
+      "range": {
+        "startLine": 177,
+        "startChar": 0,
+        "endLine": 180,
+        "endChar": 2
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd198493_bf29b2df",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T14:52:59Z",
+      "side": 1,
+      "message": "same with this one",
+      "range": {
+        "startLine": 182,
+        "startChar": 0,
+        "endLine": 185,
+        "endChar": 2
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dca589c5_8419cc1e",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T14:52:59Z",
+      "side": 1,
+      "message": "move this a couple lines up, just after echo NVME_FILE",
+      "range": {
+        "startLine": 203,
+        "startChar": 0,
+        "endLine": 204,
+        "endChar": 50
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9bb50597_9706a961",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T14:52:59Z",
+      "side": 1,
+      "message": "also print NVME_FILE",
+      "range": {
+        "startLine": 246,
+        "startChar": 0,
+        "endLine": 247,
+        "endChar": 31
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
