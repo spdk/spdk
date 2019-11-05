@@ -20,7 +20,7 @@ function configure_performance() {
 	echo -n "Moving all interrupts off of core 0..."
 	count=$(($(nproc) / 4))
 	cpumask="e"
-	for ((i=1; i<$count; i++)); do
+	for ((i=1; i<count; i++)); do
 		if [ $((i % 8)) -eq 0 ]; then
 			cpumask=",$cpumask"
 		fi

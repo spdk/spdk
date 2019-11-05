@@ -103,17 +103,17 @@ echo "run-time,ramp-time,fio-plugin,QD,block-size,num-cpu-cores,workload,workloa
 printf "%s,%s,%s,%s,%s,%s,%s,%s\n" $RUNTIME $RAMP_TIME $PLUGIN $IODEPTH $BLK_SIZE $no_cores $RW $MIX >> $result_file
 echo "num_of_disks,iops,avg_lat[usec],p99[usec],p99.99[usec],stdev[usec],avg_slat[usec],avg_clat[usec],bw[Kib/s]" >> $result_file
 #Run each workolad $REPEAT_NO times
-for (( j=0; j < $REPEAT_NO; j++ ))
+for (( j=0; j < REPEAT_NO; j++ ))
 do
 	#Start with $DISKNO disks and remove 2 disks for each run to avoid preconditioning before each run.
-	for (( k=$DISKNO; k >= 1; k-=2 ))
+	for (( k=DISKNO; k >= 1; k-=2 ))
 	do
 		cp $BASE_DIR/config.fio.tmp $BASE_DIR/config.fio
 		echo "" >> $BASE_DIR/config.fio
 		#The SPDK fio plugin supports submitting/completing I/Os to multiple SSDs from a single thread.
 		#Therefore, the per thread queue depth is set to the desired IODEPTH/device X the number of devices per thread.
 		if [ "$PLUGIN" = "nvme" ] || [ "$PLUGIN" = "bdev" ] && [ "$NOIOSCALING" = false ]; then
-			qd=$(( $IODEPTH * $k ))
+			qd=$(( IODEPTH * k ))
 		else
 			qd=$IODEPTH
 		fi
@@ -161,17 +161,17 @@ do
 	done
 done
 #Write results to csv file
-for (( k=$DISKNO; k >= 1; k-=2 ))
+for (( k=DISKNO; k >= 1; k-=2 ))
 do
-	iops_disks[$k]=$((${iops_disks[$k]} / $REPEAT_NO))
+	iops_disks[$k]=$((${iops_disks[$k]} / REPEAT_NO))
 
 	if [ $PLUGIN != "bdevperf" ]; then
-		mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} / $REPEAT_NO))
-		p99_lat_disks_usec[$k]=$((${p99_lat_disks_usec[$k]} / $REPEAT_NO))
-		p99_99_lat_disks_usec[$k]=$((${p99_99_lat_disks_usec[$k]} / $REPEAT_NO))
-		stdev_disks_usec[$k]=$((${stdev_disks_usec[$k]} / $REPEAT_NO))
-		mean_slat_disks_usec[$k]=$((${mean_slat_disks_usec[$k]} / $REPEAT_NO))
-		mean_clat_disks_usec[$k]=$((${mean_clat_disks_usec[$k]} / $REPEAT_NO))
+		mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} / REPEAT_NO))
+		p99_lat_disks_usec[$k]=$((${p99_lat_disks_usec[$k]} / REPEAT_NO))
+		p99_99_lat_disks_usec[$k]=$((${p99_99_lat_disks_usec[$k]} / REPEAT_NO))
+		stdev_disks_usec[$k]=$((${stdev_disks_usec[$k]} / REPEAT_NO))
+		mean_slat_disks_usec[$k]=$((${mean_slat_disks_usec[$k]} / REPEAT_NO))
+		mean_clat_disks_usec[$k]=$((${mean_clat_disks_usec[$k]} / REPEAT_NO))
 	else
 		mean_lat_disks_usec[$k]=0
 		p99_lat_disks_usec[$k]=0
@@ -181,7 +181,7 @@ do
 		mean_clat_disks_usec[$k]=0
 	fi
 
-	bw[$k]=$((${bw[$k]} / $REPEAT_NO))
+	bw[$k]=$((${bw[$k]} / REPEAT_NO))
 
 	printf "%s,%s,%s,%s,%s,%s,%s,%s,%s\n" ${k} ${iops_disks[$k]} ${mean_lat_disks_usec[$k]} ${p99_lat_disks_usec[$k]}\
 	${p99_99_lat_disks_usec[$k]} ${stdev_disks_usec[$k]} ${mean_slat_disks_usec[$k]} ${mean_clat_disks_usec[$k]} ${bw[$k]} >> $result_file
