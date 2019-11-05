@@ -166,6 +166,7 @@ nvme_io_msg_ctrlr_stop(struct spdk_nvme_ctrlr *ctrlr, struct nvme_io_msg_produce
 
 	if (ctrlr->external_io_msgs_qpair) {
 		spdk_nvme_ctrlr_free_io_qpair(ctrlr->external_io_msgs_qpair);
+		ctrlr->external_io_msgs_qpair = NULL;
 	}
 
 	pthread_mutex_destroy(&ctrlr->external_io_msgs_lock);
