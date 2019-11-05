@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f458e156_ed12bbfe",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T05:24:56Z",
+      "side": 1,
+      "message": "this is use to free the allocated memory. g_bdev is must. I tried this , need return spdk_bdev *, can\u0027t use non pointer.",
+      "parentUuid": "df50f0a6_c1596e6a",
+      "range": {
+        "startLine": 75,
+        "startChar": 25,
+        "endLine": 75,
+        "endChar": 32
+      },
+      "revId": "6a89922c7065b14ea08af2d195aed8b5c18281e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "240d7546_c8e2753c",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 11
@@ -36,6 +60,30 @@
       "writtenOn": "2019-11-05T04:22:23Z",
       "side": 1,
       "message": "Ditto.",
+      "range": {
+        "startLine": 76,
+        "startChar": 29,
+        "endLine": 76,
+        "endChar": 39
+      },
+      "revId": "6a89922c7065b14ea08af2d195aed8b5c18281e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba09b44e_6216488e",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T05:24:56Z",
+      "side": 1,
+      "message": "same as above.",
+      "parentUuid": "240d7546_c8e2753c",
       "range": {
         "startLine": 76,
         "startChar": 29,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d8d75312_c6add2ea",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T05:24:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "edc2051f_f4fe3d68",
+      "range": {
+        "startLine": 77,
+        "startChar": 20,
+        "endLine": 77,
+        "endChar": 27
+      },
+      "revId": "6a89922c7065b14ea08af2d195aed8b5c18281e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "308101bf_26d2c73b",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 11
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "fbbc42dd_d785147f",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T05:24:56Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "308101bf_26d2c73b",
+      "range": {
+        "startLine": 129,
+        "startChar": 0,
+        "endLine": 133,
+        "endChar": 0
+      },
+      "revId": "6a89922c7065b14ea08af2d195aed8b5c18281e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "760d39a5_98e4d877",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 11
@@ -105,6 +201,30 @@
       "writtenOn": "2019-11-05T04:22:23Z",
       "side": 1,
       "message": "It may be safe to set NULL to g_bdev_io, g_bdev, and g_zone_op may be safe after being freed.",
+      "range": {
+        "startLine": 167,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 0
+      },
+      "revId": "6a89922c7065b14ea08af2d195aed8b5c18281e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2559ba17_d7c66e58",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-05T05:24:56Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "760d39a5_98e4d877",
       "range": {
         "startLine": 167,
         "startChar": 0,
