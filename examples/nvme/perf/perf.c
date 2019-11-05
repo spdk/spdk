@@ -1010,13 +1010,44 @@ cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	ns_ctx->entry->fn_table->cleanup_ns_worker_ctx(ns_ctx);
 }
 
+static void
+print_periodic_performance(uint32_t sec_so_far)
+{
+	double io_per_second, mb_per_second;
+	double total_io_per_second, total_mb_per_second;
+	struct worker_thread	*worker;
+	struct ns_worker_ctx	*ns_ctx;
+
+	total_io_per_second = 0;
+	total_mb_per_second = 0;
+
+	worker = g_workers;
+	while (worker) {
+		ns_ctx = worker->ns_ctx;
+		while (ns_ctx) {
+			if (ns_ctx->io_completed != 0) {
+				io_per_second = (double)ns_ctx->io_completed / sec_so_far;
+				mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
+
+				total_io_per_second += io_per_second;
+				total_mb_per_second += mb_per_second;
+			}
+			ns_ctx = ns_ctx->next;
+		}
+		worker = worker->next;
+	}
+
+	printf("\r%10.2f IO/s, %10.2f MiB/s", total_io_per_second, total_mb_per_second);
+	fflush(stdout);
+}
+
 static int
 work_fn(void *arg)
 {
-	uint64_t tsc_end;
+	uint64_t tsc_end, tsc_current, tsc_next_print;
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
-	uint32_t unfinished_ns_ctx;
+	uint32_t unfinished_ns_ctx, sec_so_far = 0;
 
 	/* Allocate queue pairs for each namespace. */
 	ns_ctx = worker->ns_ctx;
@@ -1028,7 +1059,9 @@ work_fn(void *arg)
 		ns_ctx = ns_ctx->next;
 	}
 
-	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
+	tsc_current = spdk_get_ticks();
+	tsc_end = tsc_current + g_time_in_sec * g_tsc_rate;
+	tsc_next_print = tsc_current + g_tsc_rate;
 
 	/* Submit initial I/O for each namespace. */
 	ns_ctx = worker->ns_ctx;
@@ -1049,7 +1082,14 @@ work_fn(void *arg)
 			ns_ctx = ns_ctx->next;
 		}
 
-		if (spdk_get_ticks() > tsc_end) {
+		tsc_current = spdk_get_ticks();
+
+		if (worker->lcore == g_master_core && tsc_current > tsc_next_print) {
+			tsc_next_print += g_tsc_rate;
+			print_periodic_performance(++sec_so_far);
+		}
+
+		if (tsc_current > tsc_end) {
 			break;
 		}
 	}
@@ -1200,6 +1240,7 @@ print_performance(void)
 		worker = worker->next;
 	}
 
+	printf("\r");
 	printf("========================================================\n");
 	printf("%*s\n", max_strlen + 60, "Latency(us)");
 	printf("%-*s: %10s %10s %10s %10s %10s\n",
