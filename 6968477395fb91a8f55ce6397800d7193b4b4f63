@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe825693_ad85b4d1",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T18:28:21Z",
+      "side": 1,
+      "message": "can we remove \"local\" from all of these, since they are already declared local above?",
+      "revId": "6968477395fb91a8f55ce6397800d7193b4b4f63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6b10843_251908ab",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T18:28:21Z",
+      "side": 1,
+      "message": "I don\u0027t think \"local vhost_dir\" is needed - we already have it at line 534",
+      "revId": "6968477395fb91a8f55ce6397800d7193b4b4f63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
