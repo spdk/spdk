@@ -133,7 +133,7 @@ function vhost_run()
 		return 1
 	fi
 
-	local cmd="$vhost_app -r $vhost_dir/rpc.sock $@"
+	local cmd="$vhost_app -r $vhost_dir/rpc.sock $*"
 
 	notice "Loging to:   $vhost_log_file"
 	notice "Socket:      $vhost_socket"
