@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38bd9020_eed2ed88",
+        "filename": "test/openstack/install_devstack.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T12:05:40Z",
+      "side": 1,
+      "message": "Nitpick, not a reason for -1:\nThis script takes only 1 optional argument, does it really need a getopts for that?\nI think running it as ./install_devstack.sh or ./install_devstack.sh ${branch} should be enough...",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 4
+      },
+      "revId": "9ac99b5a0d5f8c427609721ef82e65d3d8996c12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
