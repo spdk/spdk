@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed33b65b_8fb1e423",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1375,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-05T05:12:15Z",
+      "side": 1,
+      "message": "Directly return here is not correct. If you do not change the code in \ncase NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH: you will calculate the data digest again.",
+      "range": {
+        "startLine": 1365,
+        "startChar": 1,
+        "endLine": 1375,
+        "endChar": 13
+      },
+      "revId": "2e2a9a5794fe8dd9edd1b0f012c075a2e3eae059",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
