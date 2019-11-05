@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c63a8870_e8da9669",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T17:13:54Z",
+      "side": 1,
+      "message": "let\u0027s put this in the previous patch",
+      "revId": "4cd711df29e0623462a33156d7798506b55b696a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0aa0252c_ce6e9f95",
+        "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T17:13:54Z",
+      "side": 1,
+      "message": "rpc_construct_zone_block\n\nthis name is a bit too generic (we have lots of things in SPDK that are called \"vbdev\")\n\nsimilarly below, for example:\n\nfree_rpc_construct_zone_block\nrpc_construct_zone_block_decoders\nrpc_zone_block_create\nstruct rpc_delete_zone_block\n\ntake a look through the rest of the file - there are others at the end I didn\u0027t list here",
+      "revId": "4cd711df29e0623462a33156d7798506b55b696a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc1b18e7_50ae83bf",
+        "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T17:13:54Z",
+      "side": 1,
+      "message": "similar to above",
+      "revId": "4cd711df29e0623462a33156d7798506b55b696a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0adff64_187e7399",
+        "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T17:13:54Z",
+      "side": 1,
+      "message": "similar to above (free_rpc_delete_bdev_zone)",
+      "revId": "4cd711df29e0623462a33156d7798506b55b696a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11c1ade2_07e300e8",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T17:13:54Z",
+      "side": 1,
+      "message": "Create virtual zone namespace...",
+      "revId": "4cd711df29e0623462a33156d7798506b55b696a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed8b859d_5dcc51f1",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T17:13:54Z",
+      "side": 1,
+      "message": "on top of existing non-zoned bdev?",
+      "revId": "4cd711df29e0623462a33156d7798506b55b696a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
