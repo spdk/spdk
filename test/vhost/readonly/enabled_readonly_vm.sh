@@ -27,7 +27,7 @@ if (( $(lsblk -r -n -o RO -d "/dev/$disk_name") == 0 )); then
 fi
 
 echo "INFO: Found vhost-blk disk with readonly flag"
-if [[ ! -b "/dev/$disk_name"1"" ]]; then
+if [[ ! -b "/dev/$disk_name\"1\"" ]]; then
 	error "Partition not found!"
 fi
 
