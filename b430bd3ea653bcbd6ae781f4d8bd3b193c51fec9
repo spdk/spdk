@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "481d4992_ee42f836",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T16:53:16Z",
+      "side": 1,
+      "message": "I think there is a subtle problem here.\n\nThis now requires pdu-\u003etask !\u003d NULL.  In the code that was moved to here, it had to check pdu-\u003etask before checking pdu-\u003etask-\u003escsi.lun.  But now in the iscsi_conn_free_tasks() code path, if there is a pdu with no task, it will not get removed and freed.",
+      "revId": "b430bd3ea653bcbd6ae781f4d8bd3b193c51fec9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
