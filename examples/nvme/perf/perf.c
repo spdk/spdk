@@ -122,6 +122,7 @@ static const double g_latency_cutoffs[] = {
 struct ns_worker_ctx {
 	struct ns_entry		*entry;
 	uint64_t		io_completed;
+	uint64_t		last_io_completed;
 	uint64_t		total_tsc;
 	uint64_t		min_tsc;
 	uint64_t		max_tsc;
@@ -1010,10 +1011,42 @@ cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	ns_ctx->entry->fn_table->cleanup_ns_worker_ctx(ns_ctx);
 }
 
+static void
+print_periodic_performance(void)
+{
+	uint64_t io_this_second;
+	double mb_this_second;
+	struct worker_thread *worker;
+	struct ns_worker_ctx *ns_ctx;
+
+	if (!isatty(STDOUT_FILENO)) {
+		/* Don't print periodic stats if output is not going
+		 * to a terminal.
+		 */
+		return;
+	}
+
+	io_this_second = 0;
+	worker = g_workers;
+	while (worker) {
+		ns_ctx = worker->ns_ctx;
+		while (ns_ctx) {
+			io_this_second += ns_ctx->io_completed - ns_ctx->last_io_completed;
+			ns_ctx->last_io_completed = ns_ctx->io_completed;
+			ns_ctx = ns_ctx->next;
+		}
+		worker = worker->next;
+	}
+
+	mb_this_second = (double)io_this_second * g_io_size_bytes / (1024 * 1024);
+	printf("%9ju IO/s, %8.2f MiB/s\r", io_this_second, mb_this_second);
+	fflush(stdout);
+}
+
 static int
 work_fn(void *arg)
 {
-	uint64_t tsc_end;
+	uint64_t tsc_end, tsc_current, tsc_next_print;
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
 	uint32_t unfinished_ns_ctx;
@@ -1028,7 +1061,9 @@ work_fn(void *arg)
 		ns_ctx = ns_ctx->next;
 	}
 
-	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
+	tsc_current = spdk_get_ticks();
+	tsc_end = tsc_current + g_time_in_sec * g_tsc_rate;
+	tsc_next_print = tsc_current + g_tsc_rate;
 
 	/* Submit initial I/O for each namespace. */
 	ns_ctx = worker->ns_ctx;
@@ -1049,7 +1084,14 @@ work_fn(void *arg)
 			ns_ctx = ns_ctx->next;
 		}
 
-		if (spdk_get_ticks() > tsc_end) {
+		tsc_current = spdk_get_ticks();
+
+		if (worker->lcore == g_master_core && tsc_current > tsc_next_print) {
+			tsc_next_print += g_tsc_rate;
+			print_periodic_performance();
+		}
+
+		if (tsc_current > tsc_end) {
 			break;
 		}
 	}
