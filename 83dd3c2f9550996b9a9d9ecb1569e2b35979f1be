@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "b0ad0291_94d8a358",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T08:05:32Z",
+      "side": 1,
+      "message": "Yes UT\u0027s main purpose is to improve coverage, but I think it\u0027s nice if we can reduce the additional global variables only for UT.",
+      "parentUuid": "c2063a4d_aafd52d8",
+      "range": {
+        "startLine": 87,
+        "startChar": 1,
+        "endLine": 87,
+        "endChar": 23
+      },
+      "revId": "83dd3c2f9550996b9a9d9ecb1569e2b35979f1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "98708e20_92ed82de",
         "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
         "patchSetId": 6

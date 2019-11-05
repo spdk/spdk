@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "23a9bbd3_4d012d34",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T08:05:32Z",
+      "side": 1,
+      "message": "Why this declaration is necessary?",
+      "range": {
+        "startLine": 76,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 63
+      },
+      "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76ffa5d4_5ab181b4",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T08:05:32Z",
+      "side": 1,
+      "message": "This is duplicated with the line 155 and the line 351. Please remove either one.",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 0
+      },
+      "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0162626_226994a9",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T08:05:32Z",
+      "side": 1,
+      "message": "Can we change this to static function?",
+      "range": {
+        "startLine": 348,
+        "startChar": 0,
+        "endLine": 348,
+        "endChar": 4
+      },
+      "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08cc46c3_44e2e5cc",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T08:05:32Z",
+      "side": 1,
+      "message": "callbck_exe is called only in \"Case *g_get_uevent\u003d\u003d1 SPDK_NVME_UEVENT_REMOVE/ NVME_UI\" or \"/* Case *g_get_uevent\u003d\u003d0  test only for VFIO hot remove detection  *\".\n\nThe former case, the passed ctrlr matches g_ctrlr.\nThe latter case, the passed ctrlr matches the one allocated on the stack.\n\nCan we check if ctrlr matches g_ctrlr here, and add free(g_ctrlr), g_ctrlr \u003d NULL only for the case \"Case *g_get_uevent\u003d\u003d1 SPDK_NVME_UEVENT_REMOVE/ NVME_UI\"?",
+      "range": {
+        "startLine": 354,
+        "startChar": 5,
+        "endLine": 354,
+        "endChar": 12
+      },
+      "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cff5446d_1ef351fc",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T08:05:32Z",
+      "side": 1,
+      "message": "I think CU_ASSERT(g_ctrlr !\u003d NULL), CU_ASSERT(g_ctrlr-\u003eis_failed \u003d\u003d true), free(g_ctrlr), g_ctrlr \u003d NULL\u003c is more precise. I don\u0027t have fixed my idea how to replace g_callback_done yet. I think it\u0027s nice if we can use any variable in struct spdk_nvme_ctrlr to check if callback is called.",
+      "range": {
+        "startLine": 945,
+        "startChar": 0,
+        "endLine": 947,
+        "endChar": 0
+      },
+      "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0fb9c62a_fab4ac75",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1019,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T08:05:32Z",
+      "side": 1,
+      "message": "No, I think we should restore at the end of test_nvme_pcie_hotplug_monitor. shadow_doorbell_update or any upcoming test cases may want to use _g_nvme_driver.",
+      "range": {
+        "startLine": 1019,
+        "startChar": 1,
+        "endLine": 1019,
+        "endChar": 38
+      },
+      "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
