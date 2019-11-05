@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "b8b89e6f_907e29ff",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T05:38:37Z",
+      "side": 1,
+      "message": "Got it, thank you for teaching me.",
+      "parentUuid": "f458e156_ed12bbfe",
+      "range": {
+        "startLine": 75,
+        "startChar": 25,
+        "endLine": 75,
+        "endChar": 32
+      },
+      "revId": "6a89922c7065b14ea08af2d195aed8b5c18281e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "240d7546_c8e2753c",
         "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
         "patchSetId": 11

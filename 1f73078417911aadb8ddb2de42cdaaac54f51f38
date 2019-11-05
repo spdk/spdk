@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8a2ecfe_a7da8a41",
+        "filename": "test/unit/lib/bdev/bdev_zone.c/bdev_zone_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T05:38:37Z",
+      "side": 1,
+      "message": "So sorry Dong.\n\nMy intention was:\n\nstruct zone_io_operation {\n  struct iovec iov;\n  union {\n    struct {\n      struct iovec *iovs;\n      int iovcnt;\n    } bdev;\n  };\n}\n\nin start_operation:\n  g_zone_op-\u003ebdev.iovs \u003d \u0026g_zone_op-\u003eiov;\n  g_zone_op-\u003ebdev.iovs[0].iov_base \u003d g_unexpected_buf;\n  g_zone_op-\u003ebdev.iovs[0].iov_len \u003d g_unexpeced_num_blocks * g_unexpected_bdev_blocklen;\n\nThen we can remove g_iovs and support multiple iovec array in future.",
+      "range": {
+        "startLine": 132,
+        "startChar": 14,
+        "endLine": 132,
+        "endChar": 21
+      },
+      "revId": "1f73078417911aadb8ddb2de42cdaaac54f51f38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
