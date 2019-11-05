@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a002b03d_dae2c670",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 6107,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T15:45:07Z",
+      "side": 1,
+      "message": "Set cache pool size for blobfs filesystems.  This RPC is only permitted when the cache pool is not already initialized.\n\nThe cache pool is initialized when the first blobfs filesystem is initialized or loaded.  It is freed when the all initialized or loaded filesystems are unloaded.",
+      "revId": "a282e752e137c4a5476166024d61f69eb490ccc6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
