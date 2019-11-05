@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "956cada5_8b5711c2",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T02:26:00Z",
+      "side": 1,
+      "message": "About return code,\n\nswitch (g_poll_with_event) {\ncase 3:\ncase 2:\ncase 1:\ncase 0:\n  return 1;\ndefault:\n  return -1;\n}\n\nis possible?",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 15
+      },
+      "revId": "ce85a2666016680402d740d790ecdae7039c09c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd901b4a_a7a929d3",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T02:26:00Z",
+      "side": 1,
+      "message": "We don\u0027t need this memset",
+      "revId": "ce85a2666016680402d740d790ecdae7039c09c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
