@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75a31977_d1b25b0a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 21
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T13:31:42Z",
+      "side": 1,
+      "message": "should probably be more specific and mention scsi hotplug",
+      "range": {
+        "startLine": 7,
+        "startChar": 38,
+        "endLine": 7,
+        "endChar": 46
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bcb14436_335ac142",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 21
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T13:31:42Z",
+      "side": 1,
+      "message": "BTW, why not extend this to vhost-blk as well?\nCan be done in separate patch.",
+      "range": {
+        "startLine": 9,
+        "startChar": 19,
+        "endLine": 9,
+        "endChar": 36
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52c83771_2cb47643",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T13:31:42Z",
+      "side": 1,
+      "message": "??",
+      "range": {
+        "startLine": 135,
+        "startChar": 20,
+        "endLine": 135,
+        "endChar": 25
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee62d44c_9294c632",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T13:31:42Z",
+      "side": 1,
+      "message": "??",
+      "range": {
+        "startLine": 135,
+        "startChar": 12,
+        "endLine": 135,
+        "endChar": 15
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fcbddc59_8b7b2a7e",
+        "filename": "test/vhost/common/autotest.config",
+        "patchSetId": 21
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T13:31:42Z",
+      "side": 1,
+      "message": "Vhost will be run on the same cpu cores as VM0, which might not be a good thing.\nEither change the mask for vhost or change the VM number in scsi_stress_test.sh",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 28
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f779968_d9f50ac3",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T13:31:42Z",
+      "side": 1,
+      "message": "Name is kind of confusing. Change to vm_reboot_loop?",
+      "range": {
+        "startLine": 9,
+        "startChar": 9,
+        "endLine": 9,
+        "endChar": 20
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb0f2c18_8421603d",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T13:31:42Z",
+      "side": 1,
+      "message": "As for the counter values - for per-patch test aim for less than a minute for this test.\nIf not possible then this should be nightly only and take no more than 2 minutes I suppose.",
+      "range": {
+        "startLine": 14,
+        "startChar": 1,
+        "endLine": 17,
+        "endChar": 3
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72159b55_a6344fea",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T13:31:42Z",
+      "side": 1,
+      "message": "If you specify a mask here then why add an entry with masks in autotest.config? \nYou should also probably specify a primary core",
+      "range": {
+        "startLine": 48,
+        "startChar": 12,
+        "endLine": 48,
+        "endChar": 20
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c213ce0d_df1cf8f8",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-05T13:31:42Z",
+      "side": 1,
+      "message": "Put these loops into a function, eg. \"vhost_scsi_stress_loop\"\nAs a result you should reduce the script body to something like:\n\nvhost_run\n$rpc_py construct_vhost_scsi_controller\nvhost_scsi_stress_loop \u0026\nvm_reboot_loop \u0026\n\nEach function then should exit on first encountered fail (rc!\u003d1).\nUse \"wait\" to get return values of functions. Use traps appropriately.",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 4
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
