@@ -194,6 +194,7 @@ static struct ns_entry *g_namespaces = NULL;
 static int g_num_namespaces = 0;
 static struct worker_thread *g_workers = NULL;
 static int g_num_workers = 0;
+static uint32_t g_master_core;
 
 static uint64_t g_tsc_rate;
 
@@ -1993,7 +1994,6 @@ int main(int argc, char **argv)
 {
 	int rc;
 	struct worker_thread *worker, *master_worker;
-	unsigned master_core;
 	struct spdk_env_opts opts;
 	pthread_t thread_id = 0;
 
@@ -2063,11 +2063,11 @@ int main(int argc, char **argv)
 	printf("Initialization complete. Launching workers.\n");
 
 	/* Launch all of the slave workers */
-	master_core = spdk_env_get_current_core();
+	g_master_core = spdk_env_get_current_core();
 	master_worker = NULL;
 	worker = g_workers;
 	while (worker != NULL) {
-		if (worker->lcore != master_core) {
+		if (worker->lcore != g_master_core) {
 			spdk_env_thread_launch_pinned(worker->lcore, work_fn, worker);
 		} else {
 			assert(master_worker == NULL);
