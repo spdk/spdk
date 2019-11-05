@@ -46,6 +46,30 @@
       "revId": "13f30a254e655c9174995f7178d3440e049aa9db",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd1a9cef_6ccd4e84",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1120,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-05T17:43:40Z",
+      "side": 1,
+      "message": "That\u0027s a really good point. We need to make sure that the bdev layer knows what to do here. Thanks for pointing that out. I\u0027ll make checking this out a priority.",
+      "parentUuid": "8d1599a1_2d74912b",
+      "range": {
+        "startLine": 1120,
+        "startChar": 7,
+        "endLine": 1120,
+        "endChar": 55
+      },
+      "revId": "13f30a254e655c9174995f7178d3440e049aa9db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
