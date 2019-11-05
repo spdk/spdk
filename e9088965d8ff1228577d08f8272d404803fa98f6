@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "414850d2_805ac517",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T15:55:12Z",
+      "side": 1,
+      "message": "Let\u0027s just add this to the existing blobfs section.  Typically we add information about new RPCs in the section about the module - not a general \"rpc\" section.",
+      "revId": "e9088965d8ff1228577d08f8272d404803fa98f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
