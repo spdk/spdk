@@ -242,8 +242,9 @@ if hash shellcheck 2>/dev/null; then
 	# This SHCK_EXCLUDE list is out "to do" and we work to fix all of this errors.
 	SHCK_EXCLUDE="SC1083,SC2002,\
 SC2010,SC2012,SC2016,SC2034,SC2045,SC2046,SC2068,SC2086,SC2089,SC2090,\
-SC2097,SC2098,SC2119,SC2120,SC2121,SC2124,SC2126,SC2128,\
-SC2129,SC2140,SC2142,SC2143,SC2154,SC2155,SC2162"
+SC2097,SC2098,SC2119,SC2120,SC2124,SC2126,SC2128,\
+SC2129,SC2140,SC2142,SC2143,SC2154,SC2155,\
+SC2162"
 	# SPDK fails some error checks which have been deprecated in later versions of shellcheck.
 	# We will not try to fix these error checks, but instead just leave the error types here
 	# so that we can still run with older versions of shellcheck.
