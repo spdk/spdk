@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0bb12f5_1e110f79",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-05T13:09:55Z",
+      "side": 1,
+      "message": "\"  08:04:43      # rpc_cmd construct_malloc_bdev 128 512\ntest/lvol/basic.sh: line 11: rpc_cmd: command not found\"\nThis test will not work without specifying $rpc_cmd to point to rpc.py.",
+      "range": {
+        "startLine": 11,
+        "startChar": 15,
+        "endLine": 11,
+        "endChar": 23
+      },
+      "revId": "56840d446a7d2301d0e5958590b4e009572f1af9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
