@@ -79,7 +79,7 @@ function waitforiscsidevices() {
 	local num=$1
 
 	for ((i=1; i<=20; i++)); do
-		n=$( iscsiadm -m session -P 3 | grep "Attached scsi disk sd[a-z]*" | wc -l )
+		n=$( iscsiadm -m session -P 3 | grep -c "Attached scsi disk sd[a-z]*" || true)
 		if [ $n -ne $num ]; then
 			sleep 0.1
 		else
