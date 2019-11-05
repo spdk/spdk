@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f847797_5406aa1b",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T04:46:38Z",
+      "side": 1,
+      "message": "Can we use g_ctrlr-\u003eis_failed instead?",
+      "range": {
+        "startLine": 87,
+        "startChar": 1,
+        "endLine": 87,
+        "endChar": 23
+      },
+      "revId": "83dd3c2f9550996b9a9d9ecb1569e2b35979f1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98708e20_92ed82de",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T04:46:38Z",
+      "side": 1,
+      "message": "Is it OK not to restore _g_nvme_driver to g_spdk_nvme_driver after these tests?",
+      "range": {
+        "startLine": 902,
+        "startChar": 1,
+        "endLine": 902,
+        "endChar": 20
+      },
+      "revId": "83dd3c2f9550996b9a9d9ecb1569e2b35979f1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8023d29f_4ff23325",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 903,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-05T04:46:38Z",
+      "side": 1,
+      "message": "Why this is necessary? UT will pass even if we set NULL to cb_ctx?",
+      "range": {
+        "startLine": 903,
+        "startChar": 1,
+        "endLine": 903,
+        "endChar": 51
+      },
+      "revId": "83dd3c2f9550996b9a9d9ecb1569e2b35979f1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
