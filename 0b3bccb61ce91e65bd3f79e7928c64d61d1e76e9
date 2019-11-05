@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "73a00d6f_7acce1df",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 11
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T17:07:33Z",
+      "side": 1,
+      "message": "patch looks great - just the -EEXIST thing that Shuhei suggested\n\ncould you update this commit message to indicate that this is adding a new dev module?  that\u0027s not really clear from only reading the commit message (I know it is kind of inferred since you are adding create/delete which are the first steps - but someone reading the log messages may not draw this conclusion)",
+      "revId": "0b3bccb61ce91e65bd3f79e7928c64d61d1e76e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fcadaba6_267faff2",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 11
@@ -13,6 +30,30 @@
       "writtenOn": "2019-11-05T03:04:02Z",
       "side": 1,
       "message": "Maybe -EEXIST? Please don\u0027t update the patch only for this. We can fix this later.",
+      "range": {
+        "startLine": 59,
+        "startChar": 9,
+        "endLine": 59,
+        "endChar": 16
+      },
+      "revId": "0b3bccb61ce91e65bd3f79e7928c64d61d1e76e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "535863f5_184eba93",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-05T17:07:33Z",
+      "side": 1,
+      "message": "I agree -EEXIST would be better.  I\u0027m making some comments on the commit message too, so let\u0027s fix this return code here now.",
+      "parentUuid": "fcadaba6_267faff2",
       "range": {
         "startLine": 59,
         "startChar": 9,
