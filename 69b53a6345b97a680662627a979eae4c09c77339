@@ -16,6 +16,24 @@
       "revId": "69b53a6345b97a680662627a979eae4c09c77339",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74af58f3_e112698e",
+        "filename": "test/unit/lib/iscsi/conn.c/conn_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-06T00:09:05Z",
+      "side": 1,
+      "message": "Thank you Changpeng. Done. I removed the line 255 too and add a sentence in the commit message.",
+      "parentUuid": "e30d4424_66ca7a02",
+      "revId": "69b53a6345b97a680662627a979eae4c09c77339",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
