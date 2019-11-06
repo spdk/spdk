@@ -60,7 +60,7 @@ static const struct spdk_json_object_decoder rpc_construct_vbdev_decoders[] = {
 
 static void
 rpc_vbdev_bs_adapter_create(struct spdk_jsonrpc_request *request,
-		       const struct spdk_json_val *params)
+			    const struct spdk_json_val *params)
 {
 	struct rpc_construct_vbdev req = {};
 	struct spdk_json_write_ctx *w;
@@ -120,7 +120,7 @@ _rpc_vbdev_delete_bs_adapter_cb(void *cb_ctx, int rc)
 
 static void
 rpc_vbdev_bs_adapter_delete(struct spdk_jsonrpc_request *request,
-		       const struct spdk_json_val *params)
+			    const struct spdk_json_val *params)
 {
 	struct rpc_delete_vbdev attrs = {};
 

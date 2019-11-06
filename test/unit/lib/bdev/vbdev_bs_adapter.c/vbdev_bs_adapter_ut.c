@@ -134,7 +134,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 void
 spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
 {
-	cb((void*)bdev_io->internal.ch, bdev_io, true);
+	cb((void *)bdev_io->internal.ch, bdev_io, true);
 }
 
 const char *
@@ -246,11 +246,19 @@ free_test_req(struct rpc_construct_vbdev *r)
 	g_rpc_req = NULL;
 }
 
+int spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			    struct iovec *iov, int iovcnt,
+			    uint64_t offset_blocks, uint64_t num_blocks,
+			    spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return 0;
+}
+
 int
 spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-			       struct iovec *iov, int iovcnt,
-			       uint64_t offset_blocks, uint64_t num_blocks,
-			       spdk_bdev_io_completion_cb cb, void *cb_arg)
+		       struct iovec *iov, int iovcnt,
+		       uint64_t offset_blocks, uint64_t num_blocks,
+		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *child_io;
 	struct iovec *iovs;
@@ -280,6 +288,20 @@ spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	cb(child_io, true, cb_arg);
 
+	return 0;
+}
+
+int spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			  uint64_t offset_blocks, uint64_t num_blocks,
+			  bool populate,
+			  spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return 0;
+}
+
+int spdk_bdev_zcopy_end(struct spdk_bdev_io *bdev_io, bool commit,
+			spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
 	return 0;
 }
 
@@ -491,7 +513,7 @@ bdev_io_initialize(struct spdk_bdev_io *bdev_io, struct spdk_io_channel *ch, str
 	bdev_io->u.bdev.offset_blocks = lba;
 	bdev_io->u.bdev.num_blocks = blocks;
 	bdev_io->type = iotype;
-	bdev_io->internal.ch = (void*)ch;
+	bdev_io->internal.ch = (void *)ch;
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_UNMAP || bdev_io->type == SPDK_BDEV_IO_TYPE_FLUSH) {
 		return;
@@ -517,7 +539,7 @@ bdev_io_cleanup(struct spdk_bdev_io *bdev_io)
 
 static void
 send_read(struct bdev_adapter *bdev, struct spdk_io_channel *ch, uint64_t lba,
-	       uint64_t blocks, bool success)
+	  uint64_t blocks, bool success)
 {
 	struct spdk_bdev_io *bdev_io;
 
@@ -531,7 +553,7 @@ send_read(struct bdev_adapter *bdev, struct spdk_io_channel *ch, uint64_t lba,
 	CU_ASSERT(g_io_comp_status == success);
 	if (success) {
 		for (uint64_t i = 0; i < blocks; i++) {
-			CU_ASSERT(((uint8_t*)bdev_io->u.bdev.iovs[0].iov_base)[512 * i] == (uint8_t)(lba + i));
+			CU_ASSERT(((uint8_t *)bdev_io->u.bdev.iovs[0].iov_base)[512 * i] == (uint8_t)(lba + i));
 		}
 	}
 	bdev_io_cleanup(bdev_io);
