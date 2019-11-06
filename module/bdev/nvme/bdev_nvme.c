@@ -232,6 +232,11 @@ static void
 bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	assert(nvme_bdev_ctrlr->destruct);
+
+#ifdef SPDK_CONFIG_NVME_CUSE
+	spdk_nvme_cuse_unregister(nvme_bdev_ctrlr->ctrlr);
+#endif
+
 	if (nvme_bdev_ctrlr->opal_dev) {
 		if (nvme_bdev_ctrlr->opal_poller != NULL) {
 			spdk_poller_unregister(&nvme_bdev_ctrlr->opal_poller);
