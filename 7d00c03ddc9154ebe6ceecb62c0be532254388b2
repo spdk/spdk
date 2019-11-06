@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b93ef760_634bec51",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 21
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-11-06T13:34:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "75a31977_d1b25b0a",
+      "range": {
+        "startLine": 7,
+        "startChar": 38,
+        "endLine": 7,
+        "endChar": 46
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bcb14436_335ac142",
         "filename": "/COMMIT_MSG",
         "patchSetId": 21
@@ -36,6 +60,30 @@
       "writtenOn": "2019-11-05T13:31:42Z",
       "side": 1,
       "message": "BTW, why not extend this to vhost-blk as well?\nCan be done in separate patch.",
+      "range": {
+        "startLine": 9,
+        "startChar": 19,
+        "endLine": 9,
+        "endChar": 36
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4aaaaea0_c449dc3f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 21
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-11-06T13:34:41Z",
+      "side": 1,
+      "message": "Ok, I will create separate patch for this",
+      "parentUuid": "bcb14436_335ac142",
       "range": {
         "startLine": 9,
         "startChar": 19,
@@ -94,6 +142,54 @@
     },
     {
       "key": {
+        "uuid": "85028cb6_7a26e196",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-11-06T13:34:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "52c83771_2cb47643",
+      "range": {
+        "startLine": 135,
+        "startChar": 20,
+        "endLine": 135,
+        "endChar": 25
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a1c86a0_1094eda9",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-11-06T13:34:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ee62d44c_9294c632",
+      "range": {
+        "startLine": 135,
+        "startChar": 12,
+        "endLine": 135,
+        "endChar": 15
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fcbddc59_8b7b2a7e",
         "filename": "test/vhost/common/autotest.config",
         "patchSetId": 21
@@ -105,6 +201,30 @@
       "writtenOn": "2019-11-05T13:31:42Z",
       "side": 1,
       "message": "Vhost will be run on the same cpu cores as VM0, which might not be a good thing.\nEither change the mask for vhost or change the VM number in scsi_stress_test.sh",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 28
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "810f15fb_8f11fc78",
+        "filename": "test/vhost/common/autotest.config",
+        "patchSetId": 21
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-11-06T13:34:41Z",
+      "side": 1,
+      "message": "In reproduction in issue 687 vm is using the same core as vhost.\nMoved declaration of reactor mask when starting vhost.",
+      "parentUuid": "fcbddc59_8b7b2a7e",
       "range": {
         "startLine": 4,
         "startChar": 0,
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "d0acc613_ef4a8c1f",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-11-06T13:34:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2f779968_d9f50ac3",
+      "range": {
+        "startLine": 9,
+        "startChar": 9,
+        "endLine": 9,
+        "endChar": 20
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fb0f2c18_8421603d",
         "filename": "test/vhost/hotplug/scsi_stress_test.sh",
         "patchSetId": 21
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "d9f86586_d10e42df",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-11-06T13:34:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fb0f2c18_8421603d",
+      "range": {
+        "startLine": 14,
+        "startChar": 1,
+        "endLine": 17,
+        "endChar": 3
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "72159b55_a6344fea",
         "filename": "test/vhost/hotplug/scsi_stress_test.sh",
         "patchSetId": 21
@@ -174,6 +342,30 @@
       "writtenOn": "2019-11-05T13:31:42Z",
       "side": 1,
       "message": "If you specify a mask here then why add an entry with masks in autotest.config? \nYou should also probably specify a primary core",
+      "range": {
+        "startLine": 48,
+        "startChar": 12,
+        "endLine": 48,
+        "endChar": 20
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7dccc569_8102a03a",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-11-06T13:34:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "72159b55_a6344fea",
       "range": {
         "startLine": 48,
         "startChar": 12,
@@ -206,6 +398,30 @@
       "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b16fd6b_21d123ce",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-11-06T13:34:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c213ce0d_df1cf8f8",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 4
+      },
+      "revId": "7d00c03ddc9154ebe6ceecb62c0be532254388b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
