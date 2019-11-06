@@ -289,6 +289,30 @@
     },
     {
       "key": {
+        "uuid": "a12617b2_35813a6d",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-06T09:31:56Z",
+      "side": 1,
+      "message": "Then why nod add these additional if blocks as part of \"else\" statement on line 165? Inside the while/read loop?",
+      "parentUuid": "2bb88070_6e7397f3",
+      "range": {
+        "startLine": 177,
+        "startChar": 0,
+        "endLine": 180,
+        "endChar": 2
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dd198493_bf29b2df",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 28

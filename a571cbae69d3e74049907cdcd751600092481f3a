@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac845007_fbbbfdf7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 29
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-06T09:31:56Z",
+      "side": 1,
+      "message": "Rephrase: emulate OCSSD disks which are used in OCF tests.",
+      "range": {
+        "startLine": 12,
+        "startChar": 26,
+        "endLine": 12,
+        "endChar": 79
+      },
+      "revId": "a571cbae69d3e74049907cdcd751600092481f3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12269b0f_43c67740",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 29
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-06T09:31:56Z",
+      "side": 1,
+      "message": "Rephrase: This patch also allows",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 22
+      },
+      "revId": "a571cbae69d3e74049907cdcd751600092481f3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e13647aa_b74f3513",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 29
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-06T09:31:56Z",
+      "side": 1,
+      "message": "Empty line before this comments. Now it looks like it\u0027s part of the sentence on previous line, especially that there\u0027s not capital letters",
+      "revId": "a571cbae69d3e74049907cdcd751600092481f3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3719a1b3_f0d46ff6",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 29
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-06T09:31:56Z",
+      "side": 1,
+      "message": "Inconsistent indentation",
+      "range": {
+        "startLine": 163,
+        "startChar": 0,
+        "endLine": 163,
+        "endChar": 1
+      },
+      "revId": "a571cbae69d3e74049907cdcd751600092481f3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c2e1471_d8485ce0",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 29
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-06T09:31:56Z",
+      "side": 1,
+      "message": "delete \"here we\"",
+      "range": {
+        "startLine": 163,
+        "startChar": 3,
+        "endLine": 163,
+        "endChar": 9
+      },
+      "revId": "a571cbae69d3e74049907cdcd751600092481f3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "119edb4c_91178223",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-06T09:31:56Z",
+      "side": 1,
+      "message": "nitpick:\nCan we change to if []; then (on single line) to keep style consistent?",
+      "range": {
+        "startLine": 163,
+        "startChar": 0,
+        "endLine": 164,
+        "endChar": 4
+      },
+      "revId": "a571cbae69d3e74049907cdcd751600092481f3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
