@@ -35,6 +35,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/likely.h"
+#include "spdk/util.h"
 
 static unsigned char *device_type[] = {
 	"PCI Express Endpoint",
@@ -1191,6 +1192,14 @@ vmd_bus_handle_hotremove(struct vmd_pci_bus *bus)
 	}
 }
 
+static uint64_t g_total_time_slot;
+static uint64_t g_total_time_comp;
+static uint64_t g_max_time_slot;
+static uint64_t g_max_time_comp;
+static uint64_t g_num_reads;
+
+static volatile uint64_t g_test_value[MAX_VMD_SUPPORTED];
+
 int
 spdk_vmd_hotplug_monitor(void)
 {
@@ -1198,6 +1207,9 @@ spdk_vmd_hotplug_monitor(void)
 	struct vmd_pci_device *device;
 	int num_hotplugs = 0;
 	uint32_t i;
+	union express_slot_status_register slot_status;
+	uint64_t stsc, etsc;
+	volatile uint64_t val __attribute__((unused));
 
 	for (i = 0; i < g_vmd_container.count; ++i) {
 		TAILQ_FOREACH(bus, &g_vmd_container.vmd[i].bus_list, tailq) {
@@ -1206,7 +1218,22 @@ spdk_vmd_hotplug_monitor(void)
 				continue;
 			}
 
-			if (device->pcie_cap->slot_status.bit_field.datalink_state_changed != 1) {
+			stsc = spdk_readtsc();
+			val = g_test_value[i];
+			etsc = spdk_readtsc();
+
+			g_total_time_comp += etsc - stsc;
+			g_max_time_comp = spdk_max(g_max_time_comp, etsc - stsc);
+
+			stsc = spdk_readtsc();
+			slot_status = device->pcie_cap->slot_status;
+			etsc = spdk_readtsc();
+
+			g_total_time_slot += etsc - stsc;
+			g_max_time_slot = spdk_max(g_max_time_slot, etsc - stsc);
+			g_num_reads++;
+
+			if (slot_status.bit_field.datalink_state_changed != 1) {
 				continue;
 			}
 
@@ -1232,6 +1259,17 @@ int
 spdk_vmd_init(void)
 {
 	return spdk_pci_enumerate(spdk_pci_vmd_get_driver(), vmd_enum_cb, &g_vmd_container);
+}
+
+void spdk_vmd_dump_stats(void)
+{
+	printf("total: %"PRIu64", num: %"PRIu64", max: %fus, avg: %fus\n", g_total_time_slot,
+	       g_num_reads, ((double)g_max_time_slot * SPDK_SEC_TO_USEC) / spdk_get_tsc_hz(),
+	       (((double)g_total_time_slot / g_num_reads) * SPDK_SEC_TO_USEC) / spdk_get_tsc_hz());
+
+	printf("total: %"PRIu64", num: %"PRIu64", max: %fus, avg: %fus\n", g_total_time_comp,
+	       g_num_reads, ((double)g_max_time_comp * SPDK_SEC_TO_USEC) / spdk_get_tsc_hz(),
+	       (((double)g_total_time_comp / g_num_reads) * SPDK_SEC_TO_USEC) / spdk_get_tsc_hz());
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vmd", SPDK_LOG_VMD)
