@@ -36,6 +36,21 @@
 
 #include "spdk/bdev_module.h"
 
+#define BUFFER_FILLED 0
+#define GET_LAST_ONE(num) (num)&(-(num))
+#define BIT_2_NUM(opt, rst)		\
+	for (rst = 0;				\
+	opt > 0;					\
+	opt = opt >> 1, rst += 1)	\
+
+#define SWITCH_TO_EMPTY_BUFFER(buffer_map, buffer_number, tmp)	\
+	tmp = GET_LAST_ONE(buffer_map);			\
+	BIT_2_NUM(tmp, buffer_number);			\
+	buffer_number--
+
+#define BUF_RELEASE(opt, bit) opt=opt|(1<<(bit))
+#define BUF_USE(opt, bit) opt=opt&(~(1<<(bit)))
+
 
 struct taus258_state {
 	uint64_t s1, s2, s3, s4, s5;
@@ -52,13 +67,26 @@ struct merge_bdev_io {
 
 struct merge_bdev_io_channel {
 	/* Array of IO channels of master base bdevs, for now, there is only one */
-	struct spdk_io_channel	**master_channel;
+	struct spdk_io_channel	*master_channel;
 	/* Array of IO channels of slave base bdevs, for now, there is only one */
-	struct spdk_io_channel	**slave_channel;
-	/* Number of IO channels of master_channel, for now these is only one. */
-	uint8_t			num_master_channels;
-	/* Number of IO channels of slave_channel, for now these is only one. */
-	uint8_t			num_slave_channels;
+	struct spdk_io_channel	*slave_channel;
+	/* Number of outstanding large I/O that submitted through this channel */
+	uint16_t			outstanding_large_io;
+};
+
+struct merge_master_io_queue_ele {
+	/* Pointer to the I/O to put in queue */
+	struct spdk_bdev_io			*bdev_io;
+
+	STAILQ_ENTRY(merge_master_io_queue_ele) link;
+
+};
+
+struct merge_slave_io_queue_ele {
+	/* Number of the filled buffer */
+	int			buffer_no;
+
+	STAILQ_ENTRY(merge_slave_io_queue_ele)	link;
 };
 
 
@@ -89,7 +117,6 @@ enum merge_bdev_state {
 };
 
 
-
 enum merge_bdev_type {
 	/* master merge bdev , all of small io request will be store in master */
 	MERGE_BDEV_TYPE_MASTER,
@@ -113,7 +140,7 @@ struct merge_bdev {
 
 	enum merge_bdev_state		state;
 
-	struct merge_config *config;
+	struct merge_bdev_config *config;
 
 	/* Set to true if destruct is called for this merge bdev */
 	bool				destruct_called;
@@ -121,18 +148,66 @@ struct merge_bdev {
 	/* Set to true if destroy of this merge bdev is started. */
 	bool				destroy_started;
 
-	/* cache buff */
+	/* block amount of slave block device */
+	uint64_t slave_blockcnt;
+
+	/* block amount of master block device */
+	uint64_t master_blockcnt;
+
+	/* block size of slave block device */
+	uint32_t slave_blocklen;
+
+	/* block size of master block device */
+	uint32_t master_blocklen;
+
+	/* Current offset of slave bdev, will be replaced by a map */
+	uint64_t slave_offset;
+
+	/* Number of base devices discovered, should finally be 2 */
+	uint8_t	base_bdev_discovered;
+
+	/* Used for generate 64bit random number */
+	struct taus258_state max_io_rand_state;
+
+	/* Memory area of BUFFER_MAX_COUNT*slave_strip_size */
 	void *big_buff;
+
+	/* cache buff pointer array as a circular queue */
+	void **buff_group;
+
+	/* Bit map to show the empty and busy buffer, at most the number is 32 */
+	uint32_t buff_map;
+
+	/* Order number of the buffer being used */
+	uint8_t buff_number;
 
 	struct iovec big_buff_iov;
 
 	uint32_t big_buff_size;
 
-	uint64_t slave_offset;
+	/* Indicator, whether all buffers have been used */
+	bool queue;
 
-	uint64_t max_blockcnt;
+	/* indicator, whether a large io has been submitted without completion yet */
+	bool submit_large_io;
 
-	struct taus258_state max_io_rand_state;
+	/*
+	 * Queue for storing master I/O, to handle asynchorous writes while all buffers
+	 * have been occupied.
+	 */
+	STAILQ_HEAD(, merge_master_io_queue_ele)	queued_req;
+
+	/*
+	 * Queue for storing slave I/O, to handle asynchorous writes while a buffer related
+	 * request is outstanding.
+	 */
+	STAILQ_HEAD(, merge_slave_io_queue_ele)		queued_buf;
+
+	/* Used for waiting outstanding I/Os to compelete before destroying I/O channel */
+	struct spdk_poller *io_timer;
+
+	/* Entry for global bdev list */
+	TAILQ_ENTRY(merge_bdev)		link;
 };
 
 
@@ -147,14 +222,14 @@ struct merge_base_bdev_config {
 	/* strip size */
 	uint32_t			strip_size;
 
-	/* Points to already created raid bdev  */
+	/* Points to already created merge bdev  */
 	struct merge_bdev *merge_bdev;
 
 	TAILQ_ENTRY(merge_base_bdev_config) link;
 };
 
 
-struct merge_config {
+struct merge_bdev_config {
 	char *name;
 
 	uint32_t			master_strip_size;
@@ -163,11 +238,28 @@ struct merge_config {
 
 	struct merge_bdev *merge_bdev;
 
-	TAILQ_HEAD(, merge_base_bdev_config) merge_base_bdev_config_head;
+	struct merge_base_bdev_config	*slave_bdev_config;
+
+	struct merge_base_bdev_config	*master_bdev_config;
+
+	/* The total count of buffers for use */
+	uint8_t buff_cnt;
+
+	TAILQ_ENTRY(merge_bdev_config)	link;
+};
+
+struct merge_config {
+	/* merge bdev context from config file */
+	TAILQ_HEAD(, merge_bdev_config) merge_bdev_config_head;
 
 	/* total merge bdev  from config file */
-	uint8_t total_merge_slave_bdev;
+	uint8_t total_merge_bdev;
 };
+
+TAILQ_HEAD(merge_configured_tailq, merge_bdev);
+TAILQ_HEAD(merge_configuring_tailq, merge_bdev);
+TAILQ_HEAD(merge_all_tailq, merge_bdev);
+TAILQ_HEAD(merge_offline_tailq, merge_bdev);
 
 
 typedef void (*merge_bdev_destruct_cb)(void *cb_ctx, int rc);
