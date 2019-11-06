@@ -4,6 +4,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
+source $rootdir/scripts/common.sh
 
 # $1 = "iso" - triggers isolation mode (setting up required environment).
 # $2 = test type posix or vpp. defaults to posix.
@@ -13,6 +14,20 @@ delete_tmp_files() {
 	rm -f $testdir/iscsi2.json
 	rm -f ./local-job0-0-verify.state
 	rm -f ./local-job1-1-verify.state
+}
+
+# Remove lvol bdevs and stores.
+function remove_backends() {
+	echo "INFO: Removing lvol bdev"
+	$rpc_py bdev_lvol_delete "lvs_0/lbd_0"
+
+	echo "INFO: Removing lvol stores"
+	$rpc_py bdev_lvol_delete_lvstore -l lvs_0
+
+	echo "INFO: Removing NVMe"
+	$rpc_py bdev_nvme_detach_controller Nvme0
+
+	return 0
 }
 
 function running_config() {
@@ -80,23 +95,34 @@ timing_exit start_iscsi_tgt
 
 $rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+bdf=$(iter_pci_class_code 01 08 02 | head -1)
+$rpc_py bdev_nvme_attach_controller -b "Nvme0" -t "pcie" -a $bdf
+ls_guid=$($rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs_0)
+free_mb=$(get_lvs_free_mb "$ls_guid")
+# Using maximum 1024MiB to reduce the test time
+if [ $free_mb -gt 1024 ]; then
+	$rpc_py bdev_lvol_create -u $ls_guid lbd_0 1024
+else
+	$rpc_py bdev_lvol_create -u $ls_guid lbd_0 $free_mb
+fi
 # Create a RAID-0 bdev from two malloc bdevs
 malloc_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
 malloc_bdevs+="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 $rpc_py bdev_raid_create -n raid0 -z 64 -r 0 -b "$malloc_bdevs"
 bdev=$( $rpc_py bdev_malloc_create 1024 512 )
-# "raid0:0" ==> use raid0 blockdev for LUN0
+# "lvs_0/lbd_0:0" ==> use lvs_0/lbd_0 block dev for LUN0
+# "raid0:0" ==> use raid0 blockdev for LUN1
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "-d" ==> disable CHAP authentication
-$rpc_py iscsi_create_target_node Target3 Target3_alias "raid0:0 ${bdev}:1" $PORTAL_TAG:$INITIATOR_TAG 64 -d
+$rpc_py iscsi_create_target_node Target3 Target3_alias "lvs_0/lbd_0:0 raid0:0 ${bdev}:1" $PORTAL_TAG:$INITIATOR_TAG 64 -d
 sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 waitforiscsidevices 2
 
-trap 'iscsicleanup; killprocess $pid; iscsitestfini $1 $2; delete_tmp_files; exit 1' SIGINT SIGTERM EXIT
+trap 'iscsicleanup; remove_backends; killprocess $pid; iscsitestfini $1 $2; delete_tmp_files; exit 1' SIGINT SIGTERM EXIT
 
 $fio_py -p iscsi -i 4096 -d 1 -t randrw -r 1 -v
 $fio_py -p iscsi -i 131072 -d 32 -t randrw -r 1 -v
@@ -118,6 +144,9 @@ $fio_py -p iscsi -i 1048576 -d 128 -t rw -r 10 &
 fio_pid=$!
 
 sleep 3
+
+# Delete lvs_0/lbd_0 blockdev
+remove_backends
 
 # Delete raid0 blockdev
 $rpc_py bdev_raid_delete 'raid0'
