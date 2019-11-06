@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6758302_12364d49",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-06T02:44:13Z",
+      "side": 1,
+      "message": "overwriting if exists is intentional? It looks that the line 371 uses \u003e\u003e (appending).",
+      "range": {
+        "startLine": 365,
+        "startChar": 38,
+        "endLine": 365,
+        "endChar": 39
+      },
+      "revId": "a1e4fe2ace8c754e7019c02b17d57bf5460bc9ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f1cfb5f_ccdcadb5",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-06T02:44:13Z",
+      "side": 1,
+      "message": "shifting right by a tab is possible?",
+      "range": {
+        "startLine": 377,
+        "startChar": 2,
+        "endLine": 377,
+        "endChar": 3
+      },
+      "revId": "a1e4fe2ace8c754e7019c02b17d57bf5460bc9ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
