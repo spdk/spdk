@@ -3152,6 +3152,7 @@ spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	bdev_io->u.bdev.iovs = NULL;
 	bdev_io->u.bdev.iovcnt = 0;
+	bdev_io->u.bdev.md_buf = NULL;
 	bdev_io->u.bdev.zcopy.populate = populate ? 1 : 0;
 	bdev_io->u.bdev.zcopy.commit = 0;
 	bdev_io->u.bdev.zcopy.start = 1;
