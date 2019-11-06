@@ -45,6 +45,8 @@ static int adapter_get_ctx_size(void);
 static void adapter_finish(void);
 static int adapter_config_json(struct spdk_json_write_ctx *w);
 static void adapter_examine(struct spdk_bdev *bdev);
+static void
+_adapter_complete_read_modify(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 
 static struct spdk_bdev_module bdev_adapter_if = {
 	.name = "bdev_adapter",
@@ -73,6 +75,7 @@ struct bdev_adapter {
 	struct spdk_bdev		bdev;    /* the block zoned bdev */
 	struct spdk_bdev_desc		*base_desc; /* its descriptor we get from open */
 	uint64_t			block_size_scaling;
+	bool				busy;
 	TAILQ_ENTRY(bdev_adapter)	link;
 };
 static TAILQ_HEAD(, bdev_adapter) g_bdev_nodes = TAILQ_HEAD_INITIALIZER(g_bdev_nodes);
@@ -81,11 +84,36 @@ struct adapter_io_channel {
 	struct spdk_io_channel	*base_ch; /* IO channel of base device */
 };
 
+enum write_state {
+	WRITE_STATE_SLBA_READ,
+	WRITE_STATE_SLBA_WRITE,
+	WRITE_STATE_MIDLBA_WRITE,
+	WRITE_STATE_ELBA_READ,
+	WRITE_STATE_ELBA_WRITE,
+};
+
 struct adapter_io {
 	/* bdev IO was issued to */
 	struct bdev_adapter *bdev_adapter;
-	/* Indicates whether the buffer was reallocated and needs to be copied */
-	bool copy_buffer;
+	union {
+		/* Indicates whether the buffer was reallocated and needs to be copied for reads */
+		bool copy_buffer;
+		struct {
+			/* Indicates whether the write needed a read-modify-write for first sector */
+			bool slba_unaligned;
+			uint64_t slba;
+			uint64_t slba_len;
+			/* Indicates whether the write needed a read-modify-write for last sector */
+			bool elba_unaligned;
+			uint64_t elba;
+			uint64_t elba_len;
+			/* Indicates whether the write has any aligned 4k sector buffer */
+			bool midlba_exists;
+			uint64_t midlba;
+			uint64_t midlba_len;
+			enum write_state state;
+		} write;
+	};
 };
 
 static int
@@ -169,7 +197,7 @@ adapter_destruct(void *ctx)
 }
 
 static void
-_copy_iovs(void *buf, struct spdk_bdev_io *destination_io)
+_copy_to_iovs(void *buf, struct spdk_bdev_io *destination_io)
 {
 	size_t buf_len = destination_io->u.bdev.num_blocks * 512;
 	struct iovec *iovs = destination_io->u.bdev.iovs;
@@ -198,7 +226,7 @@ _adapter_complete_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	if (io_ctx->copy_buffer) {
 		assert(bdev_io->u.bdev.iovcnt == 1);
-		_copy_iovs(buf, orig_io);
+		_copy_to_iovs(buf, orig_io);
 	}
 
 	/* Complete the original IO and then free the one that we created here
@@ -215,8 +243,10 @@ adapter_read(struct bdev_adapter *bdev_node, struct adapter_io_channel *ch,
 	struct adapter_io *io_ctx = (struct adapter_io *)bdev_io->driver_ctx;
 	uint64_t len = bdev_io->u.bdev.num_blocks;
 	uint64_t lba = bdev_io->u.bdev.offset_blocks;
-	uint64_t physical_lba = lba / bdev_node->block_size_scaling;
-	uint64_t physical_len = len / bdev_node->block_size_scaling;
+	uint64_t scaling = bdev_node->block_size_scaling;
+	uint64_t physical_lba = lba / scaling;
+	uint64_t physical_len = 0;
+	uint64_t aligned_len = len;
 	bool slba_unaligned = false, elba_unaligned = false;
 	void *iovs = bdev_io->u.bdev.iovs;
 	uint64_t iovcnt = bdev_io->u.bdev.iovcnt;
@@ -227,23 +257,31 @@ adapter_read(struct bdev_adapter *bdev_node, struct adapter_io_channel *ch,
 		return -EINVAL;
 	}
 
+	io_ctx->copy_buffer = false;
 	/* Check if the first block starts on unaligned 4k offset - if it does recalculate physical
 	 * starting LBA and extend the read length by 1 sector.
 	 */
-	if (lba % bdev_node->block_size_scaling) {
+	if (lba % scaling) {
 		slba_unaligned = true;
 		physical_len++;
+		if ((scaling - lba % scaling) > aligned_len) {
+			aligned_len = 0;
+		} else {
+			aligned_len -= (scaling - lba % scaling);
+		}
 	}
 
 	/* Check if the last block ends on unaligned 4k offset - if it does extend read length by one
 	 * sector, but only if the request crossed at least one 4k sector boundary
 	 */
-	if ((lba + len) % bdev_node->block_size_scaling) {
-		if (((lba + len) / bdev_node->block_size_scaling) != physical_lba || !slba_unaligned) {
+	if ((lba + len) % scaling) {
+		if (((lba + len) / scaling) != physical_lba || !slba_unaligned) {
 			elba_unaligned = true;
 			physical_len++;
+			aligned_len -= ((lba + len) % scaling);
 		}
 	}
+	physical_len += (aligned_len / scaling);
 
 	if (slba_unaligned || elba_unaligned) {
 		iovs = NULL;
@@ -254,6 +292,282 @@ adapter_read(struct bdev_adapter *bdev_node, struct adapter_io_channel *ch,
 				    iovcnt, physical_lba,
 				    physical_len, _adapter_complete_read,
 				    bdev_io);
+
+	return rc;
+}
+
+static void
+_adapter_complete_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
+
+static void
+_copy_from_iovs(void *buf, size_t buf_len, struct spdk_bdev_io *source_io, uint64_t offset)
+{
+	struct iovec *iovs = source_io->u.bdev.iovs;
+	uint64_t total_offset = 0, src_iov_offset = 0, shift;
+	int iovcnt = source_io->u.bdev.iovcnt;
+	int src_index = 0;
+	void *src_buf;
+	size_t len;
+
+	while (true) {
+		shift = spdk_min(source_io->u.bdev.iovs[src_index].iov_len - src_iov_offset, offset - total_offset);
+		total_offset += shift;
+		src_iov_offset += shift;
+
+		if (shift == 0) {
+			break;
+		}
+		if (src_iov_offset == source_io->u.bdev.iovs[src_index].iov_len) {
+			src_iov_offset = 0;
+			src_index++;
+		}
+		if (total_offset == offset) {
+			break;
+		}
+	}
+
+	for (; src_index < iovcnt && buf_len; src_index++) {
+		len = spdk_min(iovs[src_index].iov_len - src_iov_offset, buf_len);
+		src_buf = ((uint8_t *)source_io->u.bdev.iovs[src_index].iov_base) + src_iov_offset;
+		memcpy(buf, src_buf, len);
+		buf += len;
+		buf_len -= len;
+		src_iov_offset = 0;
+	}
+}
+
+static void
+_adapter_complete_zcopy_start(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	struct adapter_io *io_ctx = (struct adapter_io *)orig_io->driver_ctx;
+	struct bdev_adapter *bdev_node = SPDK_CONTAINEROF(orig_io->bdev, struct bdev_adapter, bdev);
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	bool complete_request = false;
+	void *buf;
+	int rc;
+
+	if (!success) {
+		goto complete_request;
+	}
+
+	buf = bdev_io->u.bdev.iovs[0].iov_base;
+	_copy_from_iovs(buf, bdev_io->u.bdev.iovcnt * bdev_node->block_size_scaling * 512, orig_io,
+			io_ctx->write.slba_len * 512);
+
+	rc = spdk_bdev_zcopy_end(bdev_io, true, _adapter_complete_write, orig_io);
+	if (rc) {
+		complete_request = true;
+		status = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+complete_request:
+	if (complete_request) {
+		if (io_ctx->write.slba_unaligned || io_ctx->write.elba_unaligned) {
+			/* Increased QD unlock */
+			__atomic_store_n(&bdev_node->busy, false, __ATOMIC_SEQ_CST);
+		}
+		spdk_bdev_io_complete(orig_io, status);
+		spdk_bdev_free_io(bdev_io);
+	}
+}
+
+static void
+_adapter_complete_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	struct adapter_io *io_ctx = (struct adapter_io *)orig_io->driver_ctx;
+	struct bdev_adapter *bdev_node = SPDK_CONTAINEROF(orig_io->bdev, struct bdev_adapter, bdev);
+	struct spdk_io_channel *ioch = spdk_bdev_get_io_channel(bdev_node->base_desc);
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	bool complete_request = false;
+	int rc = 0;
+
+	if (!success) {
+		goto complete_request;
+	}
+
+	switch (io_ctx->write.state) {
+	case WRITE_STATE_SLBA_WRITE:
+		/* Increased QD unlock */
+		if (io_ctx->write.midlba_exists) {
+			io_ctx->write.state = WRITE_STATE_MIDLBA_WRITE;
+			rc = spdk_bdev_zcopy_start(bdev_node->base_desc, ioch,
+						   io_ctx->write.midlba, io_ctx->write.midlba_len,
+						   false, _adapter_complete_zcopy_start, orig_io);
+		} else if (io_ctx->write.elba_unaligned) {
+			io_ctx->write.state = WRITE_STATE_ELBA_READ;
+			/* Increased QD lock */
+			rc = spdk_bdev_zcopy_start(bdev_node->base_desc, ioch, io_ctx->write.elba,
+						   1, true, _adapter_complete_read_modify,
+						   orig_io);
+		} else {
+			complete_request = true;
+		}
+		break;
+	case WRITE_STATE_MIDLBA_WRITE:
+		if (!io_ctx->write.elba_unaligned) {
+			complete_request = true;
+			break;
+		}
+		/* Increased QD lock */
+		io_ctx->write.state = WRITE_STATE_ELBA_READ;
+		rc = spdk_bdev_zcopy_start(bdev_node->base_desc, ioch, io_ctx->write.elba,
+					   1, true, _adapter_complete_read_modify,
+					   orig_io);
+		break;
+	case WRITE_STATE_ELBA_WRITE:
+		/* Increased QD unlock */
+		complete_request = true;
+		break;
+	default:
+		SPDK_ERRLOG("Incorrect request state (%x)\n", io_ctx->write.state);
+		status = SPDK_BDEV_IO_STATUS_FAILED;
+		complete_request = true;
+	}
+
+	if (rc) {
+		complete_request = true;
+		status = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+	/* Complete the original IO and then free the one that we created here
+	 * as a result of issuing an IO via submit_reqeust.
+	 */
+complete_request:
+	if (complete_request) {
+		if (io_ctx->write.slba_unaligned || io_ctx->write.elba_unaligned) {
+			/* Increased QD unlock */
+			__atomic_store_n(&bdev_node->busy, false, __ATOMIC_SEQ_CST);
+		}
+		spdk_bdev_io_complete(orig_io, status);
+	}
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+_adapter_complete_read_modify(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	struct adapter_io *io_ctx = (struct adapter_io *)orig_io->driver_ctx;
+	struct bdev_adapter *bdev_node = SPDK_CONTAINEROF(orig_io->bdev, struct bdev_adapter, bdev);
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	uint64_t lba = orig_io->u.bdev.offset_blocks;
+	uint64_t len = orig_io->u.bdev.num_blocks;
+	uint64_t start_buf_offset = (lba % bdev_node->block_size_scaling) * 512;
+	uint64_t scaling = bdev_node->block_size_scaling;
+	void *buf = NULL;
+	int rc = 0;
+
+	if (!success) {
+		goto complete_request;
+	}
+
+	switch (io_ctx->write.state) {
+	case WRITE_STATE_SLBA_READ:
+		io_ctx->write.state = WRITE_STATE_SLBA_WRITE;
+		buf = ((uint8_t *)bdev_io->u.bdev.iovs[0].iov_base) + start_buf_offset;
+		_copy_from_iovs(buf, 512 * bdev_node->block_size_scaling - start_buf_offset, orig_io, 0);
+		rc = spdk_bdev_zcopy_end(bdev_io, true, _adapter_complete_write, orig_io);
+		break;
+	case WRITE_STATE_ELBA_READ:
+		io_ctx->write.state = WRITE_STATE_ELBA_WRITE;
+		buf = ((uint8_t *)bdev_io->u.bdev.iovs[0].iov_base);
+		_copy_from_iovs(buf, ((lba + len) % scaling) * 512, orig_io,
+				io_ctx->write.slba_len * 512 + io_ctx->write.midlba_len * 512 * scaling);
+		rc = spdk_bdev_zcopy_end(bdev_io, true, _adapter_complete_write, orig_io);
+		break;
+	default:
+		SPDK_ERRLOG("Incorrect request state (%x)\n", io_ctx->write.state);
+		status = SPDK_BDEV_IO_STATUS_FAILED;
+		success = false;
+	}
+	if (rc) {
+		success = false;
+		status = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+
+complete_request:
+	if (!success) {
+		/* Increased QD unlock */
+		__atomic_store_n(&bdev_node->busy, false, __ATOMIC_SEQ_CST);
+		spdk_bdev_io_complete(orig_io, status);
+	}
+}
+
+static int
+adapter_write(struct bdev_adapter *bdev_node, struct adapter_io_channel *ch,
+	      struct spdk_bdev_io *bdev_io)
+{
+	struct adapter_io *io_ctx = (struct adapter_io *)bdev_io->driver_ctx;
+	uint64_t scaling = bdev_node->block_size_scaling;
+	uint64_t len = bdev_io->u.bdev.num_blocks;
+	uint64_t lba = bdev_io->u.bdev.offset_blocks;
+	uint64_t physical_lba = lba / scaling;
+	uint64_t aligned_len = len;
+	bool slba_unaligned = false;
+	void *iovs = bdev_io->u.bdev.iovs;
+	uint64_t iovcnt = bdev_io->u.bdev.iovcnt;
+	int rc = 0;
+
+	if (lba > bdev_node->bdev.blockcnt || (lba + len) > bdev_node->bdev.blockcnt) {
+		SPDK_ERRLOG("Write exceeds device capacity (lba 0x%lx, len 0x%lx)\n", lba, len);
+		return -EINVAL;
+	}
+
+	memset(io_ctx, 0, sizeof(struct adapter_io));
+	/* Check state and skip some parts of this code */
+	/* Check if the first block starts on unaligned 4k offset - if it does recalculate physical
+	 * starting LBA
+	 */
+	if (lba % scaling || (aligned_len / scaling) == 0) {
+		slba_unaligned = true;
+		io_ctx->write.slba_unaligned = true;
+		io_ctx->write.slba_len = scaling - lba % scaling;
+		if ((aligned_len / scaling) == 0) {
+			aligned_len = 0;
+		} else {
+			aligned_len -= (scaling - lba % scaling);
+		}
+	}
+
+	/* Check if the last block ends on unaligned 4k offset - if it does extend request by one
+	 * sector, but only if the request crossed at least one 4k sector boundary
+	 */
+	if ((lba + len) % scaling) {
+		if (((lba + len) / scaling) != physical_lba || !slba_unaligned) {
+			io_ctx->write.elba_unaligned = true;
+			io_ctx->write.elba = (lba + len) / scaling;
+			if (aligned_len) {
+				aligned_len -= ((lba + len) % scaling);
+			}
+		}
+	}
+
+	/* Check if there's at least one aligned 4k part of the write */
+	if (aligned_len / scaling) {
+		io_ctx->write.midlba_exists = true;
+		io_ctx->write.midlba = physical_lba + (slba_unaligned ? 1 : 0);
+		io_ctx->write.midlba_len = aligned_len / scaling;
+	}
+
+	/* TODO allow for increased QD of unaligned requests */
+	if (slba_unaligned || io_ctx->write.elba_unaligned) {
+		if (__atomic_exchange_n(&bdev_node->busy, true, __ATOMIC_SEQ_CST)) {
+			return -ENOMEM;
+		}
+	}
+	if (!slba_unaligned) {
+		io_ctx->write.state = WRITE_STATE_MIDLBA_WRITE;
+		rc = spdk_bdev_writev_blocks(bdev_node->base_desc, ch->base_ch, iovs,
+					     iovcnt, physical_lba,
+					     aligned_len / scaling, _adapter_complete_write,
+					     bdev_io);
+	} else {
+		io_ctx->write.state = WRITE_STATE_SLBA_READ;
+		/* Increased QD lock */
+		rc = spdk_bdev_zcopy_start(bdev_node->base_desc, ch->base_ch, physical_lba,
+					   1, true, _adapter_complete_read_modify,
+					   bdev_io);
+	}
 
 	return rc;
 }
@@ -283,12 +597,17 @@ bdev_io_get_buf_cb(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io, b
 static void
 adapter_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
+	struct bdev_adapter *bdev_node = SPDK_CONTAINEROF(bdev_io->bdev, struct bdev_adapter, bdev);
+	struct adapter_io_channel *dev_ch = spdk_io_channel_get_ctx(ch);
 	int rc = 0;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_buf(bdev_io, bdev_io_get_buf_cb,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		rc = adapter_write(bdev_node, dev_ch, bdev_io);
 		break;
 	default:
 		SPDK_ERRLOG("vbdev_adapter: unknown I/O type %u\n", bdev_io->type);
