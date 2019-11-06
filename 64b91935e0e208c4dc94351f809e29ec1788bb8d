@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "a6a971f0_a49b6d19",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 28
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-06T09:17:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "62e578b7_e9ee5d06",
+      "range": {
+        "startLine": 137,
+        "startChar": 4,
+        "endLine": 137,
+        "endChar": 55
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "730a44df_0462a784",
         "filename": "scripts/vagrant/Vagrantfile",
         "patchSetId": 28
@@ -56,6 +80,24 @@
       "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "18f04bab_2815219c",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 28
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-06T09:17:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "730a44df_0462a784",
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -82,6 +124,30 @@
     },
     {
       "key": {
+        "uuid": "5fed0cc7_0d6fd92a",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 28
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-06T09:17:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6bc5496a_dbabd1ab",
+      "range": {
+        "startLine": 160,
+        "startChar": 8,
+        "endLine": 160,
+        "endChar": 324
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "624a6905_f78f7469",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 28
@@ -102,6 +168,30 @@
       "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cfa72538_265e7dfe",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-06T09:17:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "624a6905_f78f7469",
+      "range": {
+        "startLine": 25,
+        "startChar": 41,
+        "endLine": 25,
+        "endChar": 119
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -128,6 +218,30 @@
     },
     {
       "key": {
+        "uuid": "98562363_6010bae3",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-06T09:17:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4e9c4ad2_fb3f28e4",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 99
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "27e95108_97e496e4",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 28
@@ -139,6 +253,30 @@
       "writtenOn": "2019-11-05T14:52:59Z",
       "side": 1,
       "message": "does this need a separate condition?\nI think it can just be put after line 164",
+      "range": {
+        "startLine": 177,
+        "startChar": 0,
+        "endLine": 180,
+        "endChar": 2
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2bb88070_6e7397f3",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-06T09:17:34Z",
+      "side": 1,
+      "message": "In case that there was not used -b Your idea is good, but when you use -b here/only/path without other parameters it will not work properly.\nThat\u0027s why I add in this if statement checking semicolon",
+      "parentUuid": "27e95108_97e496e4",
       "range": {
         "startLine": 177,
         "startChar": 0,
@@ -174,6 +312,30 @@
     },
     {
       "key": {
+        "uuid": "3931d468_569b9d7d",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-06T09:17:34Z",
+      "side": 1,
+      "message": "the same as above",
+      "parentUuid": "dd198493_bf29b2df",
+      "range": {
+        "startLine": 182,
+        "startChar": 0,
+        "endLine": 185,
+        "endChar": 2
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dca589c5_8419cc1e",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 28
@@ -197,6 +359,30 @@
     },
     {
       "key": {
+        "uuid": "9df56b52_9fd491c8",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-06T09:17:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dca589c5_8419cc1e",
+      "range": {
+        "startLine": 203,
+        "startChar": 0,
+        "endLine": 204,
+        "endChar": 50
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bb50597_9706a961",
         "filename": "scripts/vagrant/create_vbox.sh",
         "patchSetId": 28
@@ -217,6 +403,30 @@
       "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "752ddc1f_190815f3",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-06T09:17:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9bb50597_9706a961",
+      "range": {
+        "startLine": 246,
+        "startChar": 0,
+        "endLine": 247,
+        "endChar": 31
+      },
+      "revId": "64b91935e0e208c4dc94351f809e29ec1788bb8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
