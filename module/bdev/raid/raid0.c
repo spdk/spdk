@@ -91,6 +91,8 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 	int				ret = 0;
 	uint64_t			start_strip;
 	uint64_t			end_strip;
+	struct raid_base_bdev_info	*base_info;
+	struct spdk_io_channel		*base_ch;
 
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
 	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
@@ -107,7 +109,8 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 	offset_in_strip = bdev_io->u.bdev.offset_blocks & (raid_bdev->strip_size - 1);
 	pd_lba = (pd_strip << raid_bdev->strip_size_shift) + offset_in_strip;
 	pd_blocks = bdev_io->u.bdev.num_blocks;
-	if (raid_bdev->base_bdev_info[pd_idx].desc == NULL) {
+	base_info = &raid_bdev->base_bdev_info[pd_idx];
+	if (base_info->desc == NULL) {
 		SPDK_ERRLOG("base bdev desc null for pd_idx %u\n", pd_idx);
 		assert(0);
 	}
@@ -119,15 +122,14 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 	 */
 	assert(raid_ch != NULL);
 	assert(raid_ch->base_channel);
+	base_ch = raid_ch->base_channel[pd_idx];
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		ret = spdk_bdev_readv_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
-					     raid_ch->base_channel[pd_idx],
+		ret = spdk_bdev_readv_blocks(base_info->desc, base_ch,
 					     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 					     pd_lba, pd_blocks, raid0_bdev_io_completion,
 					     bdev_io);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		ret = spdk_bdev_writev_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
-					      raid_ch->base_channel[pd_idx],
+		ret = spdk_bdev_writev_blocks(base_info->desc, base_ch,
 					      bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 					      pd_lba, pd_blocks, raid0_bdev_io_completion,
 					      bdev_io);
@@ -286,6 +288,8 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 	struct raid_bdev		*raid_bdev;
 	struct raid_bdev_io_range	io_range;
 	int				ret;
+	struct raid_base_bdev_info	*base_info;
+	struct spdk_io_channel		*base_ch;
 
 	bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	raid_bdev = raid_io->raid_bdev;
@@ -305,20 +309,20 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 		 * It is possible that index of start_disk is larger than end_disk's.
 		 */
 		disk_idx = (io_range.start_disk + raid_io->base_bdev_io_submitted) % raid_bdev->num_base_bdevs;
+		base_info = &raid_bdev->base_bdev_info[disk_idx];
+		base_ch = raid_io->raid_ch->base_channel[disk_idx];
 
 		_raid0_split_io_range(&io_range, disk_idx, &offset_in_disk, &nblocks_in_disk);
 
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_UNMAP:
-			ret = spdk_bdev_unmap_blocks(raid_bdev->base_bdev_info[disk_idx].desc,
-						     raid_io->raid_ch->base_channel[disk_idx],
+			ret = spdk_bdev_unmap_blocks(base_info->desc, base_ch,
 						     offset_in_disk, nblocks_in_disk,
 						     raid_bdev_base_io_completion, bdev_io);
 			break;
 
 		case SPDK_BDEV_IO_TYPE_FLUSH:
-			ret = spdk_bdev_flush_blocks(raid_bdev->base_bdev_info[disk_idx].desc,
-						     raid_io->raid_ch->base_channel[disk_idx],
+			ret = spdk_bdev_flush_blocks(base_info->desc, base_ch,
 						     offset_in_disk, nblocks_in_disk,
 						     raid_bdev_base_io_completion, bdev_io);
 			break;
