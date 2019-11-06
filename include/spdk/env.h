@@ -1241,6 +1241,9 @@ int spdk_mem_register(void *vaddr, size_t len);
  */
 int spdk_mem_unregister(void *vaddr, size_t len);
 
+uint64_t spdk_readtsc(void);
+uint64_t spdk_get_tsc_hz(void);
+
 #ifdef __cplusplus
 }
 #endif

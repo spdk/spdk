@@ -437,3 +437,17 @@ spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count)
 {
 	return rte_ring_dequeue_burst((struct rte_ring *)ring, objs, count, NULL);
 }
+
+#include <rte_cycles.h>
+
+uint64_t
+spdk_readtsc(void)
+{
+	return rte_rdtsc_precise();
+}
+
+uint64_t
+spdk_get_tsc_hz(void)
+{
+	return rte_get_tsc_hz();
+}

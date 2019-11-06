@@ -35,6 +35,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/likely.h"
+#include "spdk/util.h"
 
 static unsigned char *device_type[] = {
 	"PCI Express Endpoint",
@@ -1191,6 +1192,40 @@ vmd_bus_handle_hotremove(struct vmd_pci_bus *bus)
 	}
 }
 
+#include <emmintrin.h>
+#include "spdk/histogram_data.h"
+
+#define USE_RDTSCP	0
+#define USE_BARRIER	0
+
+#if USE_RDTSCP
+#include <x86intrin.h>
+static uint64_t
+get_time(void)
+{
+	unsigned int dummy;
+
+	return __rdtscp(&dummy);
+}
+#else
+#define get_time() spdk_readtsc()
+#endif
+
+#if USE_BARRIER
+#define mb() _mm_mfence()
+#else
+#define mb()
+#endif
+
+static uint64_t g_total_time_slot;
+static uint64_t g_total_time_comp;
+static uint64_t g_max_time_slot;
+static uint64_t g_max_time_comp;
+static uint64_t g_num_reads;
+static struct spdk_histogram_data *g_histogram;
+
+static volatile uint64_t g_test_value[MAX_VMD_SUPPORTED];
+
 int
 spdk_vmd_hotplug_monitor(void)
 {
@@ -1198,6 +1233,9 @@ spdk_vmd_hotplug_monitor(void)
 	struct vmd_pci_device *device;
 	int num_hotplugs = 0;
 	uint32_t i;
+	union express_slot_status_register slot_status;
+	uint64_t stsc, etsc;
+	volatile uint64_t val __attribute__((unused));
 
 	for (i = 0; i < g_vmd_container.count; ++i) {
 		TAILQ_FOREACH(bus, &g_vmd_container.vmd[i].bus_list, tailq) {
@@ -1206,7 +1244,26 @@ spdk_vmd_hotplug_monitor(void)
 				continue;
 			}
 
-			if (device->pcie_cap->slot_status.bit_field.datalink_state_changed != 1) {
+			stsc = get_time();
+			val = g_test_value[i];
+			etsc = get_time();
+
+			g_total_time_comp += etsc - stsc;
+			g_max_time_comp = spdk_max(g_max_time_comp, etsc - stsc);
+
+			stsc = get_time();
+			mb();
+			slot_status = device->pcie_cap->slot_status;
+			mb();
+			etsc = get_time();
+
+			g_total_time_slot += etsc - stsc;
+			g_max_time_slot = spdk_max(g_max_time_slot, etsc - stsc);
+			g_num_reads++;
+
+			spdk_histogram_data_tally(g_histogram, etsc - stsc);
+
+			if (slot_status.bit_field.datalink_state_changed != 1) {
 				continue;
 			}
 
@@ -1231,7 +1288,41 @@ spdk_vmd_hotplug_monitor(void)
 int
 spdk_vmd_init(void)
 {
+	g_histogram = spdk_histogram_data_alloc_sized(5);
+	assert(g_histogram != NULL);
+
 	return spdk_pci_enumerate(spdk_pci_vmd_get_driver(), vmd_enum_cb, &g_vmd_container);
+}
+
+static void
+print_bucket(void *ctx, uint64_t start, uint64_t end, uint64_t count,
+	     uint64_t total, uint64_t so_far)
+{
+	double so_far_pct;
+
+	if (count == 0) {
+		return;
+	}
+
+	so_far_pct = (double)so_far * 100 / total;
+	printf("%2.3f - %2.3f: %7.4f%%  (%5ju)  %7.4f%%\n",
+	       (double)start * 1000 * 1000 / spdk_get_tsc_hz(),
+	       (double)end * 1000 * 1000 / spdk_get_tsc_hz(),
+	       (double)count * 100 / total, count, so_far_pct);
+}
+
+void spdk_vmd_dump_stats(void)
+{
+	printf("total: %"PRIu64", num: %"PRIu64", max: %fus, avg: %fus\n", g_total_time_slot,
+	       g_num_reads, ((double)g_max_time_slot * SPDK_SEC_TO_USEC) / spdk_get_tsc_hz(),
+	       (((double)g_total_time_slot / g_num_reads) * SPDK_SEC_TO_USEC) / spdk_get_tsc_hz());
+
+	printf("total: %"PRIu64", num: %"PRIu64", max: %fus, avg: %fus\n", g_total_time_comp,
+	       g_num_reads, ((double)g_max_time_comp * SPDK_SEC_TO_USEC) / spdk_get_tsc_hz(),
+	       (((double)g_total_time_comp / g_num_reads) * SPDK_SEC_TO_USEC) / spdk_get_tsc_hz());
+
+	printf("    range      percentage count  cumulative\n");
+	spdk_histogram_data_iterate(g_histogram, print_bucket, NULL);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vmd", SPDK_LOG_VMD)

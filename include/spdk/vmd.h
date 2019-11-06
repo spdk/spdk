@@ -104,6 +104,8 @@ int spdk_vmd_get_led_state(struct spdk_pci_device *pci_device, enum spdk_vmd_led
  */
 int spdk_vmd_hotplug_monitor(void);
 
+void spdk_vmd_dump_stats(void);
+
 #ifdef __cplusplus
 }
 #endif
