@@ -332,19 +332,78 @@ static void check_io_flow(struct spdk_bdev_io *bdev_io)
 #endif
 
 static void
-merge_bdev_io_completion_without_clear_pio(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+merge_bdev_master_write_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
+
+static bool
+get_slave_master_config(const struct merge_bdev *mbdev, struct merge_base_bdev_config **master_cfg,
+			struct merge_base_bdev_config **slave_cfg)
 {
-#ifdef SPDK_CONFIG_LOG_BACKTRACE
-	if (g_trace_file_path) {
-		check_io_flow(bdev_io);
+	struct merge_base_bdev_config			*merge_cfg = NULL;
+	int			i = 2;
+
+	TAILQ_FOREACH(merge_cfg, &mbdev->config->merge_base_bdev_config_head, link) {
+		i--;
+		if (merge_cfg->type == MERGE_BDEV_TYPE_MASTER) {
+			*master_cfg = merge_cfg;
+		} else if (merge_cfg->type == MERGE_BDEV_TYPE_SLAVE) {
+			*slave_cfg = merge_cfg;
+		}
 	}
-#endif
-	spdk_bdev_free_io(bdev_io);
+
+	if (i != 0 || *master_cfg == NULL || *slave_cfg == NULL) {
+		return false;
+	}
+	return true;
 }
 
+static void
+execute_write_io_queue(struct merge_bdev *const mbdev,
+		       const struct merge_base_bdev_config *master_cfg,
+		       const struct merge_base_bdev_config *slave_cfg)
+{
+	struct merge_bdev_io_queue_ele			*queue_io = NULL, *tmp = NULL;
+	struct merge_bdev_io			*merge_io = NULL;
+	struct spdk_bdev_io			*bdev_io = NULL;
+	struct merge_config			*merge_cfg = mbdev->config;
+	struct merge_bdev_io_channel			*merge_ch = NULL;
+	uint64_t			offset  = 0;
+	int			ret = 0;
+
+	STAILQ_FOREACH_SAFE(queue_io, &mbdev->write_io_queue, link, tmp) {
+		bdev_io = queue_io->bdev_io;
+		merge_io = (struct merge_bdev_io *)bdev_io->driver_ctx;
+		merge_ch = spdk_io_channel_get_ctx(merge_io->ch);
+		mbdev->big_buff_size += merge_cfg->master_strip_size;
+		if (mbdev->big_buff_size >= merge_cfg->slave_strip_size) {
+			mbdev->slave_state = MERGE_SLAVE_STATE_READY;
+		}
+		spdk_memcpy(mbdev->big_buff + mbdev->big_buff_size, bdev_io->u.bdev.iovs[0].iov_base,
+			    merge_cfg->master_strip_size);
+		offset = bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks > mbdev->master_blockcnt ?
+			 (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks) % mbdev->master_blockcnt :
+			 bdev_io->u.bdev.offset_blocks;
+		ret = spdk_bdev_writev_blocks(master_cfg->base_bdev_info.desc,
+					      merge_ch->master_channel[0],
+					      bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					      offset, bdev_io->u.bdev.num_blocks,
+					      merge_bdev_master_write_io_completion,
+					      bdev_io);
+		STAILQ_REMOVE(&mbdev->write_io_queue, queue_io, merge_bdev_io_queue_ele, link);
+		free(queue_io);
+		if (ret != 0) {
+			SPDK_ERRLOG("Bad IO write request. error code : %d\n", ret);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			return;
+		}
+		mbdev->master_cnt += 1;
+		if (mbdev->slave_state == MERGE_SLAVE_STATE_READY) {
+			return;
+		}
+	}
+}
 
 static void
-merge_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+merge_bdev_master_write_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io         *parent_io = cb_arg;
 
@@ -354,13 +413,12 @@ merge_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 	}
 #endif
 	spdk_bdev_free_io(bdev_io);
-
 	spdk_bdev_io_complete(parent_io,
 			      success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
 }
 
 static void
-merge_bdev_slave_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+merge_bdev_slave_read_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io         *parent_io = cb_arg;
 
@@ -370,11 +428,49 @@ merge_bdev_slave_io_completion(struct spdk_bdev_io *bdev_io, bool success, void 
 	}
 #endif
 	spdk_bdev_free_io(bdev_io);
-
 	spdk_bdev_io_complete(parent_io,
 			      success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
 }
 
+static void
+merge_bdev_slave_write_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct merge_bdev			*mbdev = cb_arg;
+	struct merge_base_bdev_config			*master_cfg = NULL;
+	struct merge_base_bdev_config			*slave_cfg = NULL;
+
+	if (!get_slave_master_config(mbdev, &master_cfg, &slave_cfg)) {
+		SPDK_ERRLOG("Base bdev error\n");
+		return;
+	}
+
+#ifdef SPDK_CONFIG_LOG_BACKTRACE
+	if (g_trace_file_path) {
+		check_io_flow(bdev_io);
+	}
+#endif
+	/* After finishing writing salve bdev, set slave_state to "wait" */
+	mbdev->slave_state = MERGE_SLAVE_STATE_WAIT;
+	spdk_bdev_free_io(bdev_io);
+	if (!STAILQ_EMPTY(&mbdev->write_io_queue)) {
+		execute_write_io_queue(mbdev, master_cfg, slave_cfg);
+	}
+}
+
+
+static int
+merge_bdev_add_write_io_to_queue(struct spdk_bdev_io *bdev_io)
+{
+	struct merge_bdev			*mbdev = (struct merge_bdev *)bdev_io->bdev->ctxt;
+	struct merge_bdev_io_queue_ele			*write_queue_ele = NULL;
+
+	write_queue_ele = (struct merge_bdev_io_queue_ele *)calloc(1,
+			  sizeof(struct merge_bdev_io_queue_ele));
+	write_queue_ele->bdev_io = bdev_io;
+
+	STAILQ_INSERT_TAIL(&mbdev->write_io_queue, write_queue_ele, link);
+	return 0;
+}
 
 static bool _test = true;
 
@@ -385,39 +481,26 @@ merge_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 	struct merge_bdev_io_channel	*merge_ch;
 	struct merge_bdev		*merge_bdev;
 	struct merge_config		*merge_config;
-	struct merge_base_bdev_config *merge_cfg, *master_bdev_config = NULL, *slave_bdev_config = NULL;
-	int i = 2, ret = 0;
+	struct merge_base_bdev_config			*master_bdev_config = NULL;
+	struct merge_base_bdev_config			*slave_bdev_config = NULL;
+	int ret = 0;
 	int number_block = 0;
-	uint64_t offset;
-	bool merge = false;
 
 	merge_bdev = (struct merge_bdev *)bdev_io->bdev->ctxt;
 	merge_io = (struct merge_bdev_io *)bdev_io->driver_ctx;
 	merge_io->ch = ch;
 	merge_ch =  spdk_io_channel_get_ctx(merge_io->ch);
 
-	TAILQ_FOREACH(merge_cfg, &merge_bdev->config->merge_base_bdev_config_head, link) {
-		i--;
-		if (merge_cfg->type == MERGE_BDEV_TYPE_MASTER) {
-			master_bdev_config = merge_cfg;
-		} else if (merge_cfg->type == MERGE_BDEV_TYPE_SLAVE) {
-			slave_bdev_config = merge_cfg;
-		}
-	}
-
-	if (i != 0 || master_bdev_config == NULL || slave_bdev_config == NULL) {
+	if (!get_slave_master_config(merge_bdev, &master_bdev_config, &slave_bdev_config)) {
 		SPDK_ERRLOG("Base bdev error\n");
-		return ;
+		return;
 	}
 
-	merge_io->ch = ch;
-
-	/* todo deal with number_block and offset */
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 		ret = spdk_bdev_readv_blocks(slave_bdev_config->base_bdev_info.desc,
 					     merge_ch->slave_channel[0],
 					     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-					     bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, merge_bdev_slave_io_completion,
+					     bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks, merge_bdev_slave_read_io_completion,
 					     bdev_io);
 		if (ret != 0) {
 			SPDK_ERRLOG("Bad IO read request. error code : %d\n", ret);
@@ -429,55 +512,53 @@ merge_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 		    merge_bdev->config->master_strip_size != bdev_io->u.bdev.iovs[0].iov_len) {
 			SPDK_ERRLOG("Bad IO write request ,iovcnt must be 1 , io size must be %d\n"
 				    , merge_bdev->config->master_strip_size);
-			return     ;
-		}
-		/* Add the small size I/O into buffer */
-		merge_config = merge_bdev->config;
-		spdk_memcpy(merge_bdev->big_buff + merge_bdev->big_buff_size, bdev_io->u.bdev.iovs[0].iov_base,
-			    merge_config->master_strip_size);
-		merge_bdev->big_buff_size += merge_config->master_strip_size;
-		merge = merge_bdev->big_buff_size >= merge_config->slave_strip_size;
-
-		offset = bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks > merge_bdev->bdev.blockcnt ?
-			 (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks) % merge_bdev->bdev.blockcnt :
-			 bdev_io->u.bdev.offset_blocks;
-		ret = spdk_bdev_writev_blocks(master_bdev_config->base_bdev_info.desc,
-					      merge_ch->master_channel[0],
-					      bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-					      offset % merge_bdev->bdev.blockcnt, bdev_io->u.bdev.num_blocks,
-					      merge ? merge_bdev_io_completion_without_clear_pio : merge_bdev_io_completion,
-					      merge ? NULL : bdev_io);
-		if (ret != 0) {
-			SPDK_ERRLOG("Bad IO write request. error code : %d\n", ret);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 			return;
 		}
 
-		if (merge) {
-			number_block = merge_config->slave_strip_size / merge_config->master_strip_size *
-				       (merge_config->master_strip_size / spdk_bdev_get_block_size(&merge_bdev->bdev));
+		merge_config = merge_bdev->config;
+		/* Before handling I/O, first put it in the Queue */
+		ret = merge_bdev_add_write_io_to_queue(bdev_io);
+		if (ret != 0) {
+			SPDK_ERRLOG("Too much I/O to put in queue: %d\n", ret);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			return;
+		}
+		/*
+		 *	Before writing master bdev, check the slave_state: if it is false, the big buffer is not occupied,
+		 * then the buffer can be used and we can normally write to buffer; if it is true, then we can't use buffer.
+		 * In the latter situation, we only need to put these write I/O in a queue, and still write to slave bdev. Once the
+		 * buffer is free from slave buffer, we are supposed to execute the I/Os which are in the queue immediately,
+		 * and put all these data into buffer.
+		 */
+		if (merge_bdev->slave_state == MERGE_SLAVE_STATE_WAIT) {
+			/*  Write all I/O in queue or Write untill the buffer being filled */
+			execute_write_io_queue(merge_bdev, master_bdev_config, slave_bdev_config);
+		}
+		if (merge_bdev->slave_state == MERGE_SLAVE_STATE_READY) {
+			/* Begin to write to slave bdev, at the moment, big buffer must not be used by master bdev */
+			merge_bdev->slave_state = MERGE_SLAVE_STATE_WRITE;
+			number_block = merge_config->slave_strip_size / merge_bdev->slave_blocklen;
 			merge_bdev->big_buff_iov.iov_base = merge_bdev->big_buff;
 			merge_bdev->big_buff_iov.iov_len = merge_config->slave_strip_size;
 			if (_test) {
-				merge_bdev->slave_offset = __rand64(&merge_bdev->max_io_rand_state) % merge_bdev->max_blockcnt;
+				merge_bdev->slave_offset = __rand64(&merge_bdev->max_io_rand_state) % merge_bdev->slave_blockcnt;
 			}
-			if (merge_bdev->slave_offset + number_block > merge_bdev->max_blockcnt) {
-				merge_bdev->slave_offset = (merge_bdev->slave_offset + number_block) % merge_bdev->max_blockcnt;
+			if (merge_bdev->slave_offset + number_block > merge_bdev->slave_blockcnt) {
+				merge_bdev->slave_offset = (merge_bdev->slave_offset + number_block) % merge_bdev->slave_blockcnt;
 			}
 			ret = spdk_bdev_writev_blocks(slave_bdev_config->base_bdev_info.desc,
 						      merge_ch->slave_channel[0],
 						      &merge_bdev->big_buff_iov, 1,
-						      merge_bdev->slave_offset % merge_bdev->max_blockcnt, number_block, merge_bdev_slave_io_completion,
-						      bdev_io);
-
+						      merge_bdev->slave_offset, number_block, merge_bdev_slave_write_io_completion,
+						      merge_bdev);
 			if (ret != 0) {
 				SPDK_ERRLOG("Bad IO write request submit to slave bdev. error code : %d\n", ret);
-				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+				return;
 			}
-			merge_bdev->slave_offset += merge_bdev->big_buff_size / spdk_bdev_get_block_size(&merge_bdev->bdev);
+			merge_bdev->slave_cnt += 1;
+			merge_bdev->slave_offset += merge_bdev->big_buff_size / merge_bdev->slave_blocklen;
 			merge_bdev->big_buff_size = 0;
 		}
-
 	} else {
 		SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
 	}
@@ -880,11 +961,11 @@ merge_bdev_config_add_slave_bdev(struct merge_base_bdev_config *merge_cfg,
 static int
 merge_bdev_destruct(void *ctxt)
 {
-	/* todo: do we need g_shutdown_started? */
 	struct merge_bdev *merge_bdev = ctxt;
 	struct merge_base_bdev_config *base_bdev_p;
 	uint8_t i = 0, j = 0;
 
+	SPDK_ERRLOG("master write:%ld, slave write:%ld\n", merge_bdev->master_cnt, merge_bdev->slave_cnt);
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_MERGE, "merge_bdev_destruct\n");
 
 	merge_bdev->destruct_called = true;
@@ -936,9 +1017,14 @@ merge_bdev_create(struct merge_config *merge_config)
 	merge_bdev->big_buff = spdk_zmalloc(merge_config->slave_strip_size, 8, NULL, SPDK_ENV_LCORE_ID_ANY,
 					    SPDK_MALLOC_DMA);
 	merge_bdev->big_buff_size = 0;
+	merge_bdev->slave_state = MERGE_SLAVE_STATE_WAIT;
+	merge_bdev->slave_cnt = 0;
+	merge_bdev->master_cnt = 0;
+	/* Maybe later in the future do not need random */
 	__init_rand64(&merge_bdev->max_io_rand_state, getpid());
 	merge_bdev->config = merge_config;
 	merge_bdev->state = MERGE_BDEV_STATE_CONFIGURING;
+	STAILQ_INIT(&merge_bdev->write_io_queue);
 	merge_bdev_gen = &merge_bdev->bdev;
 
 	merge_bdev_gen->name = strdup(merge_config->name);
@@ -1003,9 +1089,10 @@ merge_bdev_add_base_devices(struct merge_config *merge_config)
 	struct spdk_bdev	*base_bdev;
 	int			rc = 0, _rc;
 
-	uint64_t		min_blockcnt = UINT64_MAX;
-	uint64_t		max_blockcnt = 0;
-	uint32_t		blocklen = 0;
+	uint64_t		master_blockcnt = 0;
+	uint64_t		slave_blockcnt = 0;
+	uint32_t		master_blocklen = 0;
+	uint32_t		slave_blocklen = 0;
 
 	TAILQ_FOREACH(mb_config, &merge_config->merge_base_bdev_config_head, link) {
 		base_bdev = spdk_bdev_get_by_name(mb_config->name);
@@ -1013,13 +1100,6 @@ merge_bdev_add_base_devices(struct merge_config *merge_config)
 			SPDK_DEBUGLOG(SPDK_LOG_BDEV_MERGE, "base bdev %s doesn't exist now\n", mb_config->name);
 			continue;
 		}
-
-		/* config merge bdev blockcnt */
-		min_blockcnt = min_blockcnt < base_bdev->blockcnt ? min_blockcnt : base_bdev->blockcnt;
-		max_blockcnt = max_blockcnt < base_bdev->blockcnt ?  base_bdev->blockcnt : max_blockcnt;
-
-		/* todo make sure blocklen */
-		blocklen = base_bdev->blocklen;
 
 		_rc = merge_bdev_add_base_device(mb_config, base_bdev);
 		if (_rc != 0) {
@@ -1030,6 +1110,15 @@ merge_bdev_add_base_devices(struct merge_config *merge_config)
 				rc = _rc;
 			}
 		}
+		/* Record block information of master and slave block devices */
+		if (mb_config->type == MERGE_BDEV_TYPE_SLAVE) {
+			slave_blockcnt = base_bdev->blockcnt;
+			slave_blocklen = base_bdev->blocklen;
+		} else {
+			master_blockcnt = base_bdev->blockcnt;
+			master_blocklen = base_bdev->blocklen;
+		}
+
 	}
 
 	merge_bdev = merge_config->merge_bdev;
@@ -1042,9 +1131,19 @@ merge_bdev_add_base_devices(struct merge_config *merge_config)
 					merge_bdev_destroy_io_channel,
 					sizeof(struct merge_bdev_io_channel),
 					merge_bdev->bdev.name);
-		merge_bdev->bdev.blockcnt = min_blockcnt;
-		merge_bdev->max_blockcnt = max_blockcnt;
-		merge_bdev->bdev.blocklen = blocklen;
+		/*
+		 * Set info of master and slave block
+		 *
+		 * The blockcnt of merge_bdev is the sum of blockcnt of slave bdev
+		 * and the number of master blocks composing the master_strip_size.
+		 *
+		 * The blocklen of merge_bdev equals to it of master_bdev
+		 */
+		merge_bdev->bdev.blockcnt = slave_blockcnt;
+		merge_bdev->master_blockcnt = master_blockcnt;
+		merge_bdev->bdev.blocklen = master_blocklen;
+		merge_bdev->slave_blockcnt = slave_blockcnt;
+		merge_bdev->slave_blocklen = slave_blocklen;
 
 		rc = spdk_bdev_register(&merge_bdev->bdev);
 		if (rc != 0) {

@@ -61,6 +61,14 @@ struct merge_bdev_io_channel {
 	uint8_t			num_slave_channels;
 };
 
+struct merge_bdev_io_queue_ele {
+	/* Pointer to the I/O to put in queue */
+	struct spdk_bdev_io			*bdev_io;
+
+	STAILQ_ENTRY(merge_bdev_io_queue_ele) link;
+
+};
+
 
 
 /*
@@ -89,13 +97,23 @@ enum merge_bdev_state {
 };
 
 
-
 enum merge_bdev_type {
 	/* master merge bdev , all of small io request will be store in master */
 	MERGE_BDEV_TYPE_MASTER,
 
 	/* slave merge bdev , store the merged io request which come from master node */
 	MERGE_BDEV_TYPE_SLAVE
+};
+
+enum merge_bdev_slave_state {
+	/* Slave bdev is waiting for write, and the big buff hasn't been filled */
+	MERGE_SLAVE_STATE_WAIT,
+
+	/* Slave bdev is going to be written, and the big buff was just filled */
+	MERGE_SLAVE_STATE_READY,
+
+	/* Slave bdev is being written, and the big buff can't be used by master bdev */
+	MERGE_SLAVE_STATE_WRITE
 };
 
 struct merge_base_bdev_info {
@@ -130,9 +148,30 @@ struct merge_bdev {
 
 	uint64_t slave_offset;
 
-	uint64_t max_blockcnt;
+	/* block amount of slave block device */
+	uint64_t slave_blockcnt;
+
+	/* block amount of master block device */
+	uint64_t master_blockcnt;
+
+	/* block size of slave block device */
+	uint32_t slave_blocklen;
 
 	struct taus258_state max_io_rand_state;
+
+	/* The state of slave bdev */
+	enum merge_bdev_slave_state slave_state;
+
+	/*
+	 * Queue for storing bdev I/O, to handle asynchorous writes.
+	 * Before being written down to master bdev, every I/O should be
+	 * put into the queue
+	 */
+	STAILQ_HEAD(, merge_bdev_io_queue_ele) write_io_queue;
+
+	uint64_t master_cnt;
+
+	uint64_t slave_cnt;
 };
 
 
