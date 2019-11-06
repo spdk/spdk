@@ -153,6 +153,10 @@ def clear_vhost_subsystem(args, vhost_config):
                 args.client.call("vhost_delete_controller", {'ctrlr': vhost['params']['ctrlr']})
 
 
+def clear_vmd_subsystem(args, vmd_config):
+    pass
+
+
 def call_test_cmd(func):
     def rpc_test_cmd(*args, **kwargs):
         try:
