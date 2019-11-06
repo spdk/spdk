@@ -341,7 +341,6 @@ _sem_timedwait(sem_t *sem, __time_t sec)
 
 volatile int g_rpc_server_th_stop;
 static sem_t g_rpc_server_th_listening;
-static sem_t g_rpc_server_th_done;
 
 static void *
 rpc_server_th(void *arg)
@@ -363,8 +362,6 @@ rpc_server_th(void *arg)
 
 	spdk_rpc_close();
 out:
-	sem_post(&g_rpc_server_th_done);
-
 	return (void *)(intptr_t)rc;
 }
 
@@ -428,7 +425,6 @@ int main(int argc, char **argv)
 	int rc = 0, err_cnt = 0;
 
 	sem_init(&g_rpc_server_th_listening, 0, 0);
-	sem_init(&g_rpc_server_th_done, 0, 0);
 	sem_init(&g_rpc_client_th_done, 0, 0);
 
 	srv_tid_valid = pthread_create(&srv_tid, NULL, rpc_server_th, NULL);
@@ -453,10 +449,10 @@ out:
 
 		rc = pthread_join(client_tid, (void **)&th_rc);
 		if (rc) {
-			fprintf(stderr, "pthread_join() on cliennt thread failed (rc: %d)\n", rc);
+			fprintf(stderr, "pthread_join() on client thread failed (rc: %d)\n", rc);
 			err_cnt++;
 		} else if (th_rc) {
-			fprintf(stderr, "cliennt thread failed reported failure(thread rc: %d)\n", (int)th_rc);
+			fprintf(stderr, "client thread failed reported failure(thread rc: %d)\n", (int)th_rc);
 			err_cnt++;
 		}
 	}
@@ -464,18 +460,12 @@ out:
 	g_rpc_server_th_stop = 1;
 
 	if (srv_tid_valid == 0) {
-		rc = _sem_timedwait(&g_rpc_server_th_done, JOIN_TIMEOUT_S);
-		if (rc) {
-			fprintf(stderr, "server thread failed to exit in %d sec: (rc: %d)\n", JOIN_TIMEOUT_S, rc);
-			err_cnt++;
-		}
-
 		rc = pthread_join(srv_tid, (void **)&th_rc);
 		if (rc) {
-			fprintf(stderr, "pthread_join() on cliennt thread failed (rc: %d)\n", rc);
+			fprintf(stderr, "pthread_join() on server thread failed (rc: %d)\n", rc);
 			err_cnt++;
 		} else if (th_rc) {
-			fprintf(stderr, "cliennt thread failed reported failure(thread rc: %d)\n", (int)th_rc);
+			fprintf(stderr, "server thread failed reported failure(thread rc: %d)\n", (int)th_rc);
 			err_cnt++;
 		}
 	}
@@ -486,7 +476,6 @@ out:
 	}
 
 	sem_destroy(&g_rpc_server_th_listening);
-	sem_destroy(&g_rpc_server_th_done);
 	sem_destroy(&g_rpc_client_th_done);
 
 	fprintf(stderr, "%s\n", err_cnt == 0 ? "OK" : "FAILED");
