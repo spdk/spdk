@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bee4ce38_d3ce36ed",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-06T13:04:34Z",
+      "side": 1,
+      "message": "You could extend this assertion to check that the band is empty:\nassert(breloc-\u003enum_lbks \u003d\u003d 0 \u0026\u0026 ftl_band_empty(band));",
+      "revId": "ce9cc2efc474cd6ee7fd9ded4c9837d707b881d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4af2fee3_78a019ec",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-06T13:04:34Z",
+      "side": 1,
+      "message": "Can we make sure ftl_reloc_prep takes care of that for the high_prio bands too?",
+      "range": {
+        "startLine": 853,
+        "startChar": 3,
+        "endLine": 853,
+        "endChar": 42
+      },
+      "revId": "ce9cc2efc474cd6ee7fd9ded4c9837d707b881d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
