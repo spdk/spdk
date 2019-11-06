@@ -246,6 +246,14 @@ free_test_req(struct rpc_construct_vbdev *r)
 	g_rpc_req = NULL;
 }
 
+int spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			    struct iovec *iov, int iovcnt,
+			    uint64_t offset_blocks, uint64_t num_blocks,
+			    spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return 0;
+}
+
 int
 spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       struct iovec *iov, int iovcnt,
@@ -280,6 +288,20 @@ spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	cb(child_io, true, cb_arg);
 
+	return 0;
+}
+
+int spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			  uint64_t offset_blocks, uint64_t num_blocks,
+			  bool populate,
+			  spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return 0;
+}
+
+int spdk_bdev_zcopy_end(struct spdk_bdev_io *bdev_io, bool commit,
+			spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
 	return 0;
 }
 
