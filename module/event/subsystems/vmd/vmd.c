@@ -42,6 +42,7 @@
 #include "event_vmd.h"
 
 static struct spdk_poller *g_hotplug_poller;
+static bool g_enabled;
 
 static int
 vmd_hotplug_monitor(void *ctx)
@@ -54,8 +55,7 @@ vmd_subsystem_init(void)
 {
 	int rc;
 
-	/* If the poller is registered, the initialization already took place */
-	if (g_hotplug_poller != NULL) {
+	if (g_enabled) {
 		SPDK_ERRLOG("The initialization has already been performed\n");
 		return -EBUSY;
 	}
@@ -66,11 +66,15 @@ vmd_subsystem_init(void)
 		return rc;
 	}
 
+	assert(g_hotplug_poller == NULL);
+
 	g_hotplug_poller = spdk_poller_register(vmd_hotplug_monitor, NULL, 1000000ULL);
 	if (g_hotplug_poller == NULL) {
 		SPDK_ERRLOG("Failed to register hotplug monitor poller\n");
 		return -ENOMEM;
 	}
+
+	g_enabled = true;
 
 	return 0;
 }
@@ -99,12 +103,28 @@ spdk_vmd_subsystem_fini(void)
 	spdk_subsystem_fini_next();
 }
 
+static void
+spdk_vmd_write_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_array_begin(w);
+
+	if (g_enabled) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "enable_vmd");
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_object_end(w);
+		spdk_json_write_object_end(w);
+	}
+
+	spdk_json_write_array_end(w);
+}
+
 static struct spdk_subsystem g_spdk_subsystem_vmd = {
 	.name = "vmd",
 	.init = spdk_vmd_subsystem_init,
 	.fini = spdk_vmd_subsystem_fini,
 	.config = NULL,
-	.write_config_json = NULL,
+	.write_config_json = spdk_vmd_write_config_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_vmd);
