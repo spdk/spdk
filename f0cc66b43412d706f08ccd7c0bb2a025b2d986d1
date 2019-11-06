@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49fc7074_b738b92f",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1014,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-06T02:12:25Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nI think if we get periodic stats, the following is also possible rather than passing elapsed seconds:\n io_per_second \u003d ns_ctx-\u003eio_completed - ns_ctx-\u003elast_io_completed;\n ns_ctx-\u003elast_io_completed \u003d ns_ctx-\u003eio_completed;\nWhich is better?\n\nYour idea is fine but the value of periodic stats is that we can notice rapid go/down?\nI think perf tool is steady and so rapid go/down is unlikely though.\nHow do you think?\n\n-Shuhei",
+      "range": {
+        "startLine": 1014,
+        "startChar": 36,
+        "endLine": 1014,
+        "endChar": 46
+      },
+      "revId": "f0cc66b43412d706f08ccd7c0bb2a025b2d986d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
