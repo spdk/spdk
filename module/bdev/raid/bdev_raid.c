@@ -365,6 +365,8 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 	struct raid_bdev		*raid_bdev;
 	int				ret;
 	uint8_t				i;
+	struct raid_base_bdev_info	*base_info;
+	struct spdk_io_channel		*base_ch;
 
 	bdev_io = spdk_bdev_io_from_ctx(raid_io);
 	raid_bdev = raid_io->raid_bdev;
@@ -373,8 +375,9 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 
 	while (raid_io->base_bdev_io_submitted < raid_bdev->num_base_bdevs) {
 		i = raid_io->base_bdev_io_submitted;
-		ret = spdk_bdev_reset(raid_bdev->base_bdev_info[i].desc,
-				      raid_io->raid_ch->base_channel[i],
+		base_info = &raid_bdev->base_bdev_info[i];
+		base_ch = raid_io->raid_ch->base_channel[i];
+		ret = spdk_bdev_reset(base_info->desc, base_ch,
 				      raid_bdev_base_io_completion, bdev_io);
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
