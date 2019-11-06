@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56285652_bae6fdf2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-06T13:55:59Z",
+      "side": 1,
+      "message": "Please add couple sentences what this change does.",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 52
+      },
+      "revId": "828138586fe13a0f96e972b1ae727e82f0a0e3e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "168bd080_df2344b5",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 2594,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-06T13:55:59Z",
+      "side": 1,
+      "message": "Right now this function does not initialize, but rather sets/changes the dev_path. I think the original expectation here was to make it possible to only call once (maybe even require it - as to not have defaults).\n\nMaking it possible to call this function multiple times, creates possible issues when called from multiple threads and the id tracking then.\nJust requiring to be called just once and not assuming any defaults, resolves that pretty easily.\n\nAnyway I\u0027m open to either way. Wonder what others think.",
+      "range": {
+        "startLine": 2594,
+        "startChar": 5,
+        "endLine": 2594,
+        "endChar": 30
+      },
+      "revId": "828138586fe13a0f96e972b1ae727e82f0a0e3e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad9d396f_0b97fa0a",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 2607,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-06T13:55:59Z",
+      "side": 1,
+      "message": "Please add information that this parameter is optional. If not provided defaults of \"/\" and 128 are used. Unless changed by spdk_nvme_cuse_initialize()",
+      "range": {
+        "startLine": 2607,
+        "startChar": 10,
+        "endLine": 2607,
+        "endChar": 84
+      },
+      "revId": "828138586fe13a0f96e972b1ae727e82f0a0e3e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "605247d1_ea38baed",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 659,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-06T13:55:59Z",
+      "side": 1,
+      "message": "Unnecessary whiteline.",
+      "range": {
+        "startLine": 659,
+        "startChar": 0,
+        "endLine": 659,
+        "endChar": 0
+      },
+      "revId": "828138586fe13a0f96e972b1ae727e82f0a0e3e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1658934_e50fb1fd",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-06T13:55:59Z",
+      "side": 1,
+      "message": "Please mention defaults if not provided.",
+      "revId": "828138586fe13a0f96e972b1ae727e82f0a0e3e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
