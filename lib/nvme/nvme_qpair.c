@@ -660,13 +660,14 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 		req->submit_tick = 0;
 	}
 
-	if (spdk_likely(nvme_qpair_state_equals(qpair, NVME_QPAIR_ENABLED))) {
-		rc = nvme_transport_qpair_submit_request(qpair, req);
-	} else if (req->cmd.opc == SPDK_NVME_OPC_FABRIC &&
-		   nvme_qpair_state_equals(qpair, NVME_QPAIR_CONNECTING)) {
-		/* Always allow fabrics commands through - these get
-		 * the controller out of reset state.
-		 */
+	/* Allow two cases:
+	 * 1. NVMe qpair is enabled.
+	 * 2. Always allow fabrics commands through - these get
+	 * the controller out of reset state.
+	 */
+	if (spdk_likely(nvme_qpair_state_equals(qpair, NVME_QPAIR_ENABLED)) ||
+	    (req->cmd.opc == SPDK_NVME_OPC_FABRIC &&
+	     nvme_qpair_state_equals(qpair, NVME_QPAIR_CONNECTING))) {
 		rc = nvme_transport_qpair_submit_request(qpair, req);
 	} else {
 		/* The controller is being reset - queue this request and
