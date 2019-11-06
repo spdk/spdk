@@ -94,6 +94,8 @@ echo "leak:spdk_fs_alloc_thread_ctx" >> "$asan_suppression_file"
 echo "leak:/usr/src/fio/parse.c" >> "$asan_suppression_file"
 echo "leak:/usr/src/fio/iolog.c" >> "$asan_suppression_file"
 echo "leak:/usr/src/fio/init.c" >> "$asan_suppression_file"
+echo "leak:fio_memalign" >> "$asan_suppression_file"
+echo "leak:spdk_fio_io_u_init" >> "$asan_suppression_file"
 
 # Suppress leaks in libiscsi
 echo "leak:libiscsi.so" >> "$asan_suppression_file"
