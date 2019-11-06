@@ -1224,7 +1224,9 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 				i->ch = ch;
 				pthread_mutex_unlock(&g_devlist_mutex);
 				rc = spdk_thread_send_msg(thread, _call_channel, i);
-				assert(rc == 0);
+				if (rc != 0) {
+					assert(false);
+				}
 				return;
 			}
 		}
@@ -1233,7 +1235,9 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	rc = spdk_thread_send_msg(i->orig_thread, _call_completion, i);
-	assert(rc == 0);
+	if (rc != 0) {
+		assert(false);
+	}
 }
 
 void
