@@ -16,6 +16,24 @@
       "revId": "1e9a2f0d91506e757a669f5c24044ca091e66bff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f18c7ea_ac87951e",
+        "filename": "module/bdev/raid/bdev_raid.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1017160
+      },
+      "writtenOn": "2019-11-06T11:14:06Z",
+      "side": 1,
+      "message": "I wanted to avoid adding anything unnecessary to struct raid_bdev_io, because that will bloat the bdev_io mempool. I can change it if you think it\u0027s not an issue.",
+      "parentUuid": "333dba47_87b8ceea",
+      "revId": "1e9a2f0d91506e757a669f5c24044ca091e66bff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
