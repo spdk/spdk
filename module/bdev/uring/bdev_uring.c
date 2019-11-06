@@ -105,10 +105,14 @@ bdev_uring_open(struct bdev_uring *bdev)
 
 	fd = open(bdev->filename, O_RDWR | O_DIRECT | O_NOATIME);
 	if (fd < 0) {
-		SPDK_ERRLOG("open() failed (file:%s), errno %d: %s\n",
-			    bdev->filename, errno, spdk_strerror(errno));
-		bdev->fd = -1;
-		return -1;
+		/* Try without O_DIRECT for non-disk files */
+		fd = open(bdev->filename, O_RDWR | O_NOATIME);
+		if (fd < 0) {
+			SPDK_ERRLOG("open() failed (file:%s), errno %d: %s\n",
+				    bdev->filename, errno, spdk_strerror(errno));
+			bdev->fd = -1;
+			return -1;
+		}
 	}
 
 	bdev->fd = fd;
