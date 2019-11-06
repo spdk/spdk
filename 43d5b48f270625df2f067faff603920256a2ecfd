@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09b27266_4c1e3e80",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1189,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-06T10:08:59Z",
+      "side": 1,
+      "message": "rebase bug.. here\u0027s the fix - pushing it now\n\n@ -1186,7 +1185,7 @@ spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)\n \n        rsp_pdu \u003d \u0026tcp_req-\u003esend_pdu;\n        memset(rsp_pdu, 0, sizeof(*rsp_pdu));\n-       rsp_pdu-\u003ehdr \u003d \u0026tqpair-\u003epdu_hdrs[TQPAIR_SEND_PDU_INDEX];\n+       rsp_pdu-\u003ehdr \u003d \u0026tqpair-\u003epdu_hdrs[REQS_BASE_PDU_INDEX + tcp_req-\u003ecid];\n        memset(rsp_pdu-\u003ehdr, 0, sizeof(union nvme_tcp_pdu_hdr));\n        h2c_data \u003d \u0026rsp_pdu-\u003ehdr-\u003eh2c_data;",
+      "range": {
+        "startLine": 1189,
+        "startChar": 1,
+        "endLine": 1189,
+        "endChar": 57
+      },
+      "revId": "43d5b48f270625df2f067faff603920256a2ecfd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
