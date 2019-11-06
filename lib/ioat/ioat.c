@@ -395,6 +395,7 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 
 	/* Always support DMA copy */
 	ioat->dma_capabilities = SPDK_IOAT_ENGINE_COPY_SUPPORTED;
+	printf("0x%x\n", ioat->regs->dmacapability);
 	if (ioat->regs->dmacapability & SPDK_IOAT_DMACAP_BFILL) {
 		ioat->dma_capabilities |= SPDK_IOAT_ENGINE_FILL_SUPPORTED;
 	}
