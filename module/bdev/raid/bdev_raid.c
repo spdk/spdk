@@ -318,32 +318,22 @@ raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *c
  * raid_bdev_io - pointer to raid bdev_io
  * pd_idx - base_dev index in raid_bdev
  * cb_fn - callback when the spdk_bdev_io for base_bdev becomes available
- * ret - return code
  * returns:
  * none
  */
 void
 raid_bdev_queue_io_wait(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx,
-			spdk_bdev_io_wait_cb cb_fn, int ret)
+			spdk_bdev_io_wait_cb cb_fn)
 {
 	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)raid_bdev_io->driver_ctx;
 	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
 
-	assert(ret != 0);
-
-	if (ret == -ENOMEM) {
-		raid_io->waitq_entry.bdev = raid_bdev->base_bdev_info[pd_idx].bdev;
-		raid_io->waitq_entry.cb_fn = cb_fn;
-		raid_io->waitq_entry.cb_arg = raid_bdev_io;
-		spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[pd_idx].bdev,
-					raid_io->raid_ch->base_channel[pd_idx],
-					&raid_io->waitq_entry);
-		return;
-	}
-
-	SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
-	assert(false);
-	spdk_bdev_io_complete(raid_bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	raid_io->waitq_entry.bdev = raid_bdev->base_bdev_info[pd_idx].bdev;
+	raid_io->waitq_entry.cb_fn = cb_fn;
+	raid_io->waitq_entry.cb_arg = raid_bdev_io;
+	spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[pd_idx].bdev,
+				raid_io->raid_ch->base_channel[pd_idx],
+				&raid_io->waitq_entry);
 }
 
 static void
@@ -388,9 +378,14 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 				      raid_bdev_base_io_completion, bdev_io);
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
-		} else {
+		} else if (ret == -ENOMEM) {
 			raid_bdev_queue_io_wait(bdev_io, i,
-						_raid_bdev_submit_reset_request, ret);
+						_raid_bdev_submit_reset_request);
+			return;
+		} else {
+			SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
+			assert(false);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 			return;
 		}
 	}
