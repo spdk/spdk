@@ -40,8 +40,8 @@
 #include "spdk/util.h"
 #include "spdk/likely.h"
 
-static void
-scsi_lun_free_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+void
+spdk_scsi_lun_free_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	TAILQ_REMOVE(&lun->tasks, task, scsi_link);
 	spdk_trace_record(TRACE_SCSI_TASK_DONE, lun->dev->id, 0, (uintptr_t)task, 0);
@@ -50,8 +50,8 @@ scsi_lun_free_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
-	if (lun) {
-		scsi_lun_free_task(lun, task);
+	if (lun && !task->zcopy) {
+		spdk_scsi_lun_free_task(lun, task);
 	}
 	task->cpl_fn(task);
 }
