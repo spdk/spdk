@@ -1508,12 +1508,10 @@ int spdk_nvme_ctrlr_cmd_set_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t fe
  * \return 0 if successfully submitted, negated errno if resources could not be allocated
  * for this request.
  */
-int spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
-				     uint16_t spsp, uint8_t nssf, void *payload, size_t size);
-
-/**
- * Send security protocol data to controller.
- *
+int spdk_nvme_ctrlr_cmd_security_receive(struct spdk_nvme_ctrlr * ctrlr, uint8_t secp,
+                                    uint16_t spsp, uint8_t nssf, void * payload, uint32_t payload_size,
+                                    spdk_nvme_cmd_cb cb_fn, void * cb_arg);
+ /*
  * This function is thread safe and can be called at any point after spdk_nvme_probe().
  *
  * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
@@ -1530,8 +1528,9 @@ int spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp
  * \return 0 if successfully submitted, negated errno if resources could not be allocated
  * for this request.
  */
-int spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
-				  uint16_t spsp, uint8_t nssf, void *payload, size_t size);
+int spdk_nvme_ctrlr_cmd_security_send(struct spdk_nvme_ctrlr * ctrlr, uint8_t secp, 
+                            uint16_t spsp, uint8_t nssf, void * payload, uint32_t payload_size,
+                            spdk_nvme_cmd_cb cb_fn, void * cb_arg);
 
 /**
  * Get supported flags of the controller.

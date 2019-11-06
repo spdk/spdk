@@ -37,9 +37,8 @@
 
 #include "nvme_opal_internal.h"
 
-typedef int (*spdk_opal_cb)(struct spdk_opal_dev *dev, void *ctx);
-
 static int opal_parse_and_check_status(struct spdk_opal_dev *dev, void *data);
+static int opal_recv_cmd(struct spdk_opal_dev *dev);
 
 static const char *
 opal_error_to_human(int error)
@@ -58,43 +57,48 @@ opal_error_to_human(int error)
 static int
 opal_send_cmd(struct spdk_opal_dev *dev)
 {
-	return spdk_nvme_ctrlr_security_send(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
-					     0, dev->cmd, IO_BUFFER_LENGTH);
+	return spdk_nvme_ctrlr_cmd_security_send(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
+					     0, dev->cmd, IO_BUFFER_LENGTH, NULL, NULL);
+}
+
+static void
+opal_recv_done(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+    struct spdk_opal_dev *dev = cb_arg;
+    void *response = dev->resp;
+    struct spdk_opal_header *header = response;
+
+    if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("Security receive error on dev = %p\n", dev);
+        return;
+	}
+
+    assert(dev->cb_fn);
+
+    if (header->com_packet.outstanding_data == 0 &&
+		    header->com_packet.min_transfer == 0) {
+		    if(dev->cb_fn(dev, dev->ctx)) {
+                SPDK_ERRLOG("receive callback function error\n");
+            }
+			return;	/* return if all the response data are ready by tper and received by host */
+    }
+
+    /* if not ready, receive again */
+    memset(response, 0, IO_BUFFER_LENGTH);
+    opal_recv_cmd(dev); 
 }
 
 static int
 opal_recv_cmd(struct spdk_opal_dev *dev)
 {
-	void *response = dev->resp;
-	struct spdk_opal_header *header = response;
-	int ret = 0;
-	uint64_t start = spdk_get_ticks();
-	uint64_t now;
+    int ret;
 
-	do {
-		ret = spdk_nvme_ctrlr_security_receive(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
-						       0, dev->resp, IO_BUFFER_LENGTH);
-		if (ret) {
-			SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
-			return ret;
-		}
-		SPDK_DEBUGLOG(SPDK_LOG_OPAL, "outstanding_data=%d, minTransfer=%d\n",
-			      header->com_packet.outstanding_data,
-			      header->com_packet.min_transfer);
-
-		if (header->com_packet.outstanding_data == 0 &&
-		    header->com_packet.min_transfer == 0) {
-			return 0;	/* return if all the response data are ready by tper and received by host */
-		} else {	/* check timeout */
-			now = spdk_get_ticks();
-			if (now - start > dev->timeout * spdk_get_ticks_hz()) {
-				SPDK_ERRLOG("Secutiy Receive Timeout on dev = %p\n", dev);
-				return 0x0F; /* TPer Malfunction */
-			}
-		}
-
-		memset(response, 0, IO_BUFFER_LENGTH);
-	} while (!ret);
+	ret = spdk_nvme_ctrlr_cmd_security_receive(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
+					       0, dev->resp, IO_BUFFER_LENGTH, opal_recv_done, dev);
+	if (ret) {
+		SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
+		return ret;
+	}
 
 	return ret;
 }
@@ -104,15 +108,43 @@ opal_send_recv(struct spdk_opal_dev *dev, spdk_opal_cb cb, void *data)
 {
 	int ret;
 
+    dev->cb_fn = cb;
+    dev->ctx = data;
 	ret = opal_send_cmd(dev);
 	if (ret) {
 		return ret;
 	}
-	ret = opal_recv_cmd(dev);
+
+	return opal_recv_cmd(dev);    
+}
+
+int
+spdk_opal_revert_poll(struct spdk_opal_dev *dev)
+{
+	void *response = dev->resp;
+	struct spdk_opal_header *header = response;
+	int ret;
+
+	assert(dev->revert_cb_fn);
+
+	ret = spdk_nvme_ctrlr_cmd_security_receive(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
+					       0, dev->resp, IO_BUFFER_LENGTH, NULL, NULL);
 	if (ret) {
-		return ret;
+		SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
+		dev->revert_cb_fn(dev, dev->ctx, ret);
+		return 0;
 	}
-	return cb(dev, data);
+
+	if (header->com_packet.outstanding_data == 0 &&
+	    header->com_packet.min_transfer == 0) {
+		ret = opal_parse_and_check_status(dev, NULL);
+		dev->revert_cb_fn(dev, dev->ctx, ret);
+		return 0;
+	} else {
+		memset(response, 0, IO_BUFFER_LENGTH);
+	}
+
+	return -EAGAIN;
 }
 
 static void
@@ -286,7 +318,7 @@ opal_cmd_finalize(struct spdk_opal_dev *dev, uint32_t hsn, uint32_t tsn, bool eo
  * Wait until response is received. And then call the callback functions.
  */
 static int
-opal_finalize_and_send(struct spdk_opal_dev *dev, bool eod, spdk_opal_cb cb, void *data)
+opal_finalize_and_send_receive(struct spdk_opal_dev *dev, bool eod, spdk_opal_cb cb, void *data)
 {
 	int ret;
 
@@ -297,6 +329,25 @@ opal_finalize_and_send(struct spdk_opal_dev *dev, bool eod, spdk_opal_cb cb, voi
 	}
 
 	return opal_send_recv(dev, cb, data);
+}
+
+/**
+ * asynchronous function: Just send.
+ *
+ * Need to poll for response outside.
+ */
+static int
+opal_finalize_and_send(struct spdk_opal_dev *dev, bool eod)
+{
+	int ret;
+
+	ret = opal_cmd_finalize(dev, dev->hsn, dev->tsn, eod);
+	if (ret) {
+		SPDK_ERRLOG("Error finalizing command buffer: %d\n", ret);
+		return ret;
+	}
+
+	return opal_send_cmd(dev);
 }
 
 static size_t
@@ -842,7 +893,7 @@ opal_get_comid_v200(struct spdk_opal_dev *dev, const void *data)
 }
 
 static int
-opal_discovery0_end(struct spdk_opal_dev *dev)
+opal_discovery0_end(struct spdk_opal_dev *dev, void *data)
 {
 	bool found_com_id = false, supported = false, single_user = false;
 	const struct spdk_d0_header *hdr = (struct spdk_d0_header *)dev->resp;
@@ -917,16 +968,12 @@ opal_discovery0_end(struct spdk_opal_dev *dev)
 static int
 opal_discovery0(struct spdk_opal_dev *dev)
 {
-	int ret;
-
 	memset(dev->resp, 0, IO_BUFFER_LENGTH);
 	dev->comid = LV0_DISCOVERY_COMID;
-	ret = opal_recv_cmd(dev);
-	if (ret) {
-		return ret;
-	}
+    dev->cb_fn = opal_discovery0_end;
+    dev->ctx = dev;
 
-	return opal_discovery0_end(dev);
+	return opal_recv_cmd(dev);
 }
 
 static inline void
@@ -959,7 +1006,7 @@ opal_end_session(struct spdk_opal_dev *dev)
 	if (err < 0) {
 		return err;
 	}
-	return opal_finalize_and_send(dev, eod, opal_end_session_cb, NULL);
+	return opal_finalize_and_send_receive(dev, eod, opal_end_session_cb, NULL);
 }
 
 static int
@@ -1069,7 +1116,7 @@ opal_start_generic_session(struct spdk_opal_dev *dev,
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_start_session_cb, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_start_session_cb, NULL);
 }
 
 static int
@@ -1153,7 +1200,7 @@ opal_get_msid_cpin_pin(struct spdk_opal_dev *dev)
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_get_msid_cpin_pin_cb, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_get_msid_cpin_pin_cb, NULL);
 }
 
 static int
@@ -1264,7 +1311,7 @@ opal_get_locking_sp_lifecycle(struct spdk_opal_dev *dev)
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_get_locking_sp_lifecycle_cb, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_get_locking_sp_lifecycle_cb, NULL);
 }
 
 static int
@@ -1290,7 +1337,7 @@ opal_activate(struct spdk_opal_dev *dev)
 
 	/* TODO: Single User Mode for activatation */
 
-	return opal_finalize_and_send(dev, 1, opal_parse_and_check_status, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_parse_and_check_status, NULL);
 }
 
 static int
@@ -1337,7 +1384,7 @@ opal_start_auth_session(struct spdk_opal_dev *dev, struct opal_common_session *s
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_start_session_cb, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_start_session_cb, NULL);
 }
 
 static int
@@ -1397,7 +1444,7 @@ opal_lock_unlock_range(struct spdk_opal_dev *dev, struct spdk_opal_locking_sessi
 		SPDK_ERRLOG("Error building SET command.\n");
 		return err;
 	}
-	return opal_finalize_and_send(dev, 1, opal_parse_and_check_status, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_parse_and_check_status, NULL);
 }
 
 static int opal_generic_locking_range_enable_disable(struct spdk_opal_dev *dev,
@@ -1520,7 +1567,7 @@ opal_setup_locking_range(struct spdk_opal_dev *dev,
 
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_parse_and_check_status, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_parse_and_check_status, NULL);
 }
 
 static int
@@ -1570,14 +1617,14 @@ opal_get_max_ranges(struct spdk_opal_dev *dev)
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_get_max_ranges_cb, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_get_max_ranges_cb, NULL);
 }
 
 static int
 opal_get_locking_range_info_cb(struct spdk_opal_dev *dev, void *data)
 {
 	int error = 0;
-	uint8_t id = *(uint8_t *)data;
+	uint8_t id = *(uint8_t *)dev->ctx;
 
 	error = opal_parse_and_check_status(dev, NULL);
 	if (error) {
@@ -1652,7 +1699,7 @@ opal_get_locking_range_info(struct spdk_opal_dev *dev,
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_get_locking_range_info_cb, &locking_range_id);
+	return opal_finalize_and_send_receive(dev, 1, opal_get_locking_range_info_cb, &locking_range_id);
 }
 
 static int
@@ -1688,7 +1735,7 @@ opal_enable_user(struct spdk_opal_dev *dev, struct opal_common_session *session)
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_parse_and_check_status, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_parse_and_check_status, NULL);
 }
 
 static int
@@ -1758,7 +1805,7 @@ opal_add_user_to_locking_range(struct spdk_opal_dev *dev,
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_parse_and_check_status, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_parse_and_check_status, NULL);
 }
 
 static int
@@ -1780,7 +1827,7 @@ opal_new_user_passwd(struct spdk_opal_dev *dev, struct opal_common_session *sess
 		return ret;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_parse_and_check_status, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_parse_and_check_status, NULL);
 }
 
 static int
@@ -1802,7 +1849,7 @@ opal_set_sid_cpin_pin(struct spdk_opal_dev *dev, void *data)
 		SPDK_ERRLOG("Error building Set SID cpin\n");
 		return -ERANGE;
 	}
-	return opal_finalize_and_send(dev, 1, opal_parse_and_check_status, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_parse_and_check_status, NULL);
 }
 
 int
@@ -1971,7 +2018,7 @@ opal_gen_new_active_key(struct spdk_opal_dev *dev)
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_parse_and_check_status, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_parse_and_check_status, NULL);
 }
 
 static int
@@ -2043,7 +2090,7 @@ opal_get_active_key(struct spdk_opal_dev *dev, struct opal_common_session *sessi
 		return err;
 	}
 
-	return opal_finalize_and_send(dev, 1, opal_get_active_key_cb, NULL);
+	return opal_finalize_and_send_receive(dev, 1, opal_get_active_key_cb, NULL);
 }
 
 int
@@ -2081,7 +2128,7 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 		goto end;
 	}
 
-	ret = opal_finalize_and_send(dev, 1, opal_parse_and_check_status, NULL);
+	ret = opal_finalize_and_send_receive(dev, 1, opal_parse_and_check_status, NULL);
 	if (ret) {
 		opal_end_session(dev);
 		SPDK_ERRLOG("Error on reverting TPer with error %d: %s\n", ret,
@@ -2093,35 +2140,6 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 end:
 	pthread_mutex_unlock(&dev->mutex_lock);
 	return ret;
-}
-
-int
-spdk_opal_revert_poll(struct spdk_opal_dev *dev)
-{
-	void *response = dev->resp;
-	struct spdk_opal_header *header = response;
-	int ret;
-
-	assert(dev->revert_cb_fn);
-
-	ret = spdk_nvme_ctrlr_security_receive(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
-					       0, dev->resp, IO_BUFFER_LENGTH);
-	if (ret) {
-		SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
-		dev->revert_cb_fn(dev, dev->ctx, ret);
-		return 0;
-	}
-
-	if (header->com_packet.outstanding_data == 0 &&
-	    header->com_packet.min_transfer == 0) {
-		ret = opal_parse_and_check_status(dev, NULL);
-		dev->revert_cb_fn(dev, dev->ctx, ret);
-		return 0;
-	} else {
-		memset(response, 0, IO_BUFFER_LENGTH);
-	}
-
-	return -EAGAIN;
 }
 
 int
@@ -2168,14 +2186,8 @@ spdk_opal_cmd_revert_tper_async(struct spdk_opal_dev *dev, const char *passwd,
 		goto end;
 	}
 
-	ret = opal_cmd_finalize(dev, dev->hsn, dev->tsn, true);    /* true: end of data */
-	if (ret) {
-		SPDK_ERRLOG("Error finalizing command buffer: %d\n", ret);
-		goto end;
-	}
-
-	ret = opal_send_cmd(dev);
-	if (ret) {
+    ret = opal_finalize_and_send(dev, true);
+    if (ret) {
 		SPDK_ERRLOG("Error sending opal command: %d\n", ret);
 	}
 

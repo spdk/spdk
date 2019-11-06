@@ -3106,7 +3106,7 @@ spdk_nvme_ctrlr_is_discovery(struct spdk_nvme_ctrlr *ctrlr)
 	return !strncmp(ctrlr->trid.subnqn, SPDK_NVMF_DISCOVERY_NQN,
 			strlen(SPDK_NVMF_DISCOVERY_NQN));
 }
-
+/*
 int
 spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 				 uint16_t spsp, uint8_t nssf, void *payload, size_t size)
@@ -3145,7 +3145,7 @@ spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 	}
 
 	return 0;
-}
+}*/
 
 uint64_t
 spdk_nvme_ctrlr_get_flags(struct spdk_nvme_ctrlr *ctrlr)
