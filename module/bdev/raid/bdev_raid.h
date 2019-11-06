@@ -278,6 +278,6 @@ void
 raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 void
 raid_bdev_queue_io_wait(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx,
-			spdk_bdev_io_wait_cb cb_fn, int ret);
+			spdk_bdev_io_wait_cb cb_fn);
 
 #endif /* SPDK_BDEV_RAID_INTERNAL_H */

@@ -136,8 +136,12 @@ raid0_submit_rw_request(struct raid_bdev_io *raid_io)
 		assert(0);
 	}
 
-	if (ret) {
-		raid_bdev_queue_io_wait(bdev_io, pd_idx, raid0_waitq_io_process, ret);
+	if (ret == -ENOMEM) {
+		raid_bdev_queue_io_wait(bdev_io, pd_idx, raid0_waitq_io_process);
+	} else if (ret != 0) {
+		SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
+		assert(false);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
 
@@ -327,9 +331,14 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
-		} else {
+		} else if (ret == -ENOMEM) {
 			raid_bdev_queue_io_wait(bdev_io, disk_idx,
-						_raid0_submit_null_payload_request, ret);
+						_raid0_submit_null_payload_request);
+			return;
+		} else {
+			SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
+			assert(false);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 			return;
 		}
 	}
