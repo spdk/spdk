@@ -16,6 +16,24 @@
       "revId": "b430bd3ea653bcbd6ae781f4d8bd3b193c51fec9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08b85fd4_81b124ee",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-06T00:08:30Z",
+      "side": 1,
+      "message": "Thank you for finding critical bug. I added UT code to test the subtle cases.",
+      "parentUuid": "481d4992_ee42f836",
+      "revId": "b430bd3ea653bcbd6ae781f4d8bd3b193c51fec9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
