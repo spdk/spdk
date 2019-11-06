@@ -36,6 +36,16 @@
 
 #include "spdk/bdev_module.h"
 
+#define BUFFER_FILLED 0
+#define GET_LAST_ONE(num) (num)&(-(num))
+#define BIT_2_NUM(opt, rst)		\
+	for (rst = 0;				\
+	opt > 0;					\
+	opt = opt >> 1, rst += 1)	\
+
+#define BUF_RELEASE(opt, bit) opt=opt|(1<<(bit))
+#define BUF_USE(opt, bit) opt=opt&(~(1<<(bit)))
+
 
 struct taus258_state {
 	uint64_t s1, s2, s3, s4, s5;
@@ -59,6 +69,16 @@ struct merge_bdev_io_channel {
 	uint8_t			num_master_channels;
 	/* Number of IO channels of slave_channel, for now these is only one. */
 	uint8_t			num_slave_channels;
+	/* Number of unfinished large I/O that submitted through this channel */
+	uint8_t			large_io_unfin;
+};
+
+struct merge_bdev_io_queue_ele {
+	/* Pointer to the I/O to put in queue */
+	struct spdk_bdev_io			*bdev_io;
+
+	STAILQ_ENTRY(merge_bdev_io_queue_ele) link;
+
 };
 
 
@@ -87,7 +107,6 @@ enum merge_bdev_state {
 	 */
 	MERGE_BDEV_STATE_ERROR
 };
-
 
 
 enum merge_bdev_type {
@@ -121,18 +140,51 @@ struct merge_bdev {
 	/* Set to true if destroy of this merge bdev is started. */
 	bool				destroy_started;
 
-	/* cache buff */
+	/* block amount of slave block device */
+	uint64_t slave_blockcnt;
+
+	/* block amount of master block device */
+	uint64_t master_blockcnt;
+
+	/* block size of slave block device */
+	uint32_t slave_blocklen;
+
+	uint64_t slave_offset;
+
+	/* Used for generate 64bit random number */
+	struct taus258_state max_io_rand_state;
+
+	/* Memory area of BUFFER_MAX_COUNT*slave_strip_size */
 	void *big_buff;
+
+	/* cache buff pointer array as a circular queue */
+	void **buff_group;
+
+	/* Bit map to show the empty and busy buffer, at most the number is 32 */
+	uint32_t buff_map;
+
+	/* Order number of the buffer being used */
+	uint32_t buff_number;
 
 	struct iovec big_buff_iov;
 
 	uint32_t big_buff_size;
 
-	uint64_t slave_offset;
+	/* Whether all buffers have been used */
+	bool queue;
 
-	uint64_t max_blockcnt;
+	bool submit_large_io;
 
-	struct taus258_state max_io_rand_state;
+	/*
+	 * Queue for storing bdev I/O, to handle asynchorous writes while all buffers
+	 * have been occupied.
+	 */
+	STAILQ_HEAD(, merge_bdev_io_queue_ele) write_io_queue;
+
+	uint64_t master_cnt;
+
+	uint64_t slave_cnt;
+
 };
 
 
@@ -167,6 +219,9 @@ struct merge_config {
 
 	/* total merge bdev  from config file */
 	uint8_t total_merge_slave_bdev;
+
+	/* The total count of buffers for use */
+	uint8_t buff_cnt;
 };
 
 
