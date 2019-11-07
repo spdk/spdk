@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48eb4ce5_54b4b16e",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-07T13:46:01Z",
+      "side": 1,
+      "message": "Is this configurable?",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 20
+      },
+      "revId": "4f11d5e3d577c5a78626f94418061ace39cf55d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ccde7eda_80c8a569",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-07T13:46:01Z",
+      "side": 1,
+      "message": "Could we have a name for this enum, if you want to use this?",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 2
+      },
+      "revId": "4f11d5e3d577c5a78626f94418061ace39cf55d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "791d6075_9ab11842",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1656,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-07T13:46:01Z",
+      "side": 1,
+      "message": "Can we use dynamic configuration instead of calling getenv?",
+      "range": {
+        "startLine": 1656,
+        "startChar": 13,
+        "endLine": 1656,
+        "endChar": 20
+      },
+      "revId": "4f11d5e3d577c5a78626f94418061ace39cf55d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
