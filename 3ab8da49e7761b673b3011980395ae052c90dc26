@@ -16,6 +16,24 @@
       "revId": "3ab8da49e7761b673b3011980395ae052c90dc26",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2799d50e_4e62ac92",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-07T14:15:46Z",
+      "side": 1,
+      "message": "I don\u0027t think it worth the effort, I think we can just always have them on DMA memory.",
+      "parentUuid": "83bf1098_70fd9dbb",
+      "revId": "3ab8da49e7761b673b3011980395ae052c90dc26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
