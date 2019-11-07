@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5237c8fa_e64fa60c",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-07T07:41:44Z",
+      "side": 1,
+      "message": "Yes, that\u0027s on purpose:)",
+      "parentUuid": "b6758302_12364d49",
+      "range": {
+        "startLine": 365,
+        "startChar": 38,
+        "endLine": 365,
+        "endChar": 39
+      },
+      "revId": "a1e4fe2ace8c754e7019c02b17d57bf5460bc9ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9f1cfb5f_ccdcadb5",
         "filename": "test/vhost/perf_bench/vhost_perf.sh",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2019-11-06T02:44:13Z",
       "side": 1,
       "message": "shifting right by a tab is possible?",
+      "range": {
+        "startLine": 377,
+        "startChar": 2,
+        "endLine": 377,
+        "endChar": 3
+      },
+      "revId": "a1e4fe2ace8c754e7019c02b17d57bf5460bc9ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c03e692a_cf9a620b",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-07T07:41:44Z",
+      "side": 1,
+      "message": "uhh, indentation one level too deep.\nIt works just fine, bash doesn\u0027t care that much for indentation as Python does.\nLet\u0027s just hope that no one else notices, lol",
+      "parentUuid": "9f1cfb5f_ccdcadb5",
       "range": {
         "startLine": 377,
         "startChar": 2,
