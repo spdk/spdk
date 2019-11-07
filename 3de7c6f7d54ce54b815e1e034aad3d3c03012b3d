@@ -22,6 +22,30 @@
       "revId": "3de7c6f7d54ce54b815e1e034aad3d3c03012b3d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60fd1a25_4c53ffd2",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-11-07T10:20:43Z",
+      "side": 1,
+      "message": "I agree, I will remove it from this function because it is not necessary, when running bdev_svc on TP",
+      "parentUuid": "cde5d04d_1c698d13",
+      "range": {
+        "startLine": 657,
+        "startChar": 36,
+        "endLine": 657,
+        "endChar": 40
+      },
+      "revId": "3de7c6f7d54ce54b815e1e034aad3d3c03012b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
