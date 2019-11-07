@@ -837,6 +837,7 @@ INPUT                  += \
                          vhost.md \
                          vhost_processing.md \
                          virtio.md \
+                         vmd.md \
                          vpp_integration.md
 
 # This tag can be used to specify the character encoding of the source files
