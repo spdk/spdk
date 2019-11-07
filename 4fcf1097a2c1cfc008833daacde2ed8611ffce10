@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfe2f25a_2a23f35d",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-07T17:04:14Z",
+      "side": 1,
+      "message": "was this a bug before this change, since it wasn\u0027t incrementing the ops pointer?  just trying to understand why that didn\u0027t cause any unit test failure - it certainly looks wrong if you ever tried to dequeue multiple ops (we\u0027d only fill in the first element in the ops array)",
+      "revId": "4fcf1097a2c1cfc008833daacde2ed8611ffce10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "53a1c770_5b5718f9",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-07T17:04:14Z",
+      "side": 1,
+      "message": "should we explicitly set crypto_ops[0]-\u003estatus \u003d RTE_CRYPTO_OP_STATUS_SUCCESS here?  it\u0027s not really referenced here, but seems like the right thing to do if we are setting it for the 2nd crypto_op",
+      "revId": "4fcf1097a2c1cfc008833daacde2ed8611ffce10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
