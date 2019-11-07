@@ -3281,7 +3281,6 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 				if (task->current_datain_offset == task->scsi.transfer_len) {
 					TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
 				}
-				subtask->scsi.transfer_len = subtask->scsi.length;
 				spdk_scsi_task_process_null_lun(&subtask->scsi);
 				spdk_iscsi_task_cpl(&subtask->scsi);
 				return 0;
