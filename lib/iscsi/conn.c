@@ -313,21 +313,27 @@ error_return:
 void
 spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
+	struct spdk_iscsi_task *primary;
+
 	if (pdu->task) {
+		primary = spdk_iscsi_task_get_primary(pdu->task);
 		if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
 			if (pdu->task->scsi.offset > 0) {
 				conn->data_in_cnt--;
 				if (pdu->bhs.flags & ISCSI_DATAIN_STATUS) {
 					/* Free the primary task after the last subtask done */
 					conn->data_in_cnt--;
-					spdk_iscsi_task_put(spdk_iscsi_task_get_primary(pdu->task));
+					spdk_iscsi_task_put(primary);
 				}
 				spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 			}
 		} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_RSP &&
 			   pdu->task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
 			if (pdu->task->scsi.offset > 0) {
-				spdk_iscsi_task_put(spdk_iscsi_task_get_primary(pdu->task));
+				if (primary->bytes_completed == primary->scsi.transfer_len) {
+					/* Free the primary task after the last subtask done */
+					spdk_iscsi_task_put(primary);
+				}
 			}
 		}
 		spdk_iscsi_task_put(pdu->task);
@@ -357,6 +363,10 @@ iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 	TAILQ_FOREACH_SAFE(iscsi_task, &conn->queued_datain_tasks, link, tmp_iscsi_task) {
 		if (!iscsi_task->is_queued) {
 			TAILQ_REMOVE(&conn->queued_datain_tasks, iscsi_task, link);
+			/* shrink SCSI transfer length of the primary task because no subtask
+			 * is submitted anymore.
+			 */
+			iscsi_task->scsi.transfer_len = iscsi_task->current_datain_offset;
 			spdk_iscsi_task_put(iscsi_task);
 		}
 	}
@@ -524,6 +534,10 @@ _iscsi_conn_remove_lun(void *_ctx)
 	TAILQ_FOREACH_SAFE(iscsi_task, &conn->queued_datain_tasks, link, tmp_iscsi_task) {
 		if ((!iscsi_task->is_queued) && (lun == iscsi_task->scsi.lun)) {
 			TAILQ_REMOVE(&conn->queued_datain_tasks, iscsi_task, link);
+			/* shrink SCSI transfer length of the primary task because no subtask
+			 * is submitted anymore.
+			 */
+			iscsi_task->scsi.transfer_len = iscsi_task->current_datain_offset;
 			spdk_iscsi_task_put(iscsi_task);
 		}
 	}
@@ -1096,6 +1110,9 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 	primary->bytes_completed += task->scsi.length;
 	spdk_iscsi_task_response(conn, task);
 
+	/* Free itself if is subtask or primary with no subtask.  If primary with
+	 * subtask, it is freed in spdk_iscsi_conn_free_pdu() later.
+	 */
 	if ((task != primary) ||
 	    (task->scsi.transfer_len == task->scsi.length)) {
 		spdk_iscsi_task_put(task);
