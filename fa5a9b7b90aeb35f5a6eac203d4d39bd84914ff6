@@ -1,0 +1,383 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91ff1e1c_87a403bf",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "\"is a hardware logic component inside processor\u0027s Root Complex responsible for management of PCIe NVMe SSDs.\"",
+      "range": {
+        "startLine": 14,
+        "startChar": 31,
+        "endLine": 15,
+        "endChar": 29
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec8ce1e3_3a04bf4e",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "\"It also provides\"",
+      "range": {
+        "startLine": 19,
+        "startChar": 26,
+        "endLine": 19,
+        "endChar": 37
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed822694_5374c91e",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "\"To enable VMD driver enumeration, the following steps...\"",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 62
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "720af171_a276eb02",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "Needs",
+      "range": {
+        "startLine": 39,
+        "startChar": 37,
+        "endLine": 39,
+        "endChar": 42
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce2520b5_24d8fa37",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "set up",
+      "range": {
+        "startLine": 39,
+        "startChar": 57,
+        "endLine": 39,
+        "endChar": 63
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a760605_b1fe47bd",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "Add a space between \"|\" and \"grep\".",
+      "range": {
+        "startLine": 43,
+        "startChar": 8,
+        "endLine": 43,
+        "endChar": 9
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1263e640_4caea60f",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "Let\u0027s be consistent with all examples and use the BDFs found by lspci (I think you have the same device listed there twice).",
+      "range": {
+        "startLine": 53,
+        "startChar": 37,
+        "endLine": 53,
+        "endChar": 49
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e996271d_33961ae9",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "You could just both steps at the same time:\nPCI_WHITELIST\u003d\"0000:5d:05.5 0000:d7:05.5\" scripts/setup.sh\nAlso, there\u0027s no need for using sudo in the examples.",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 26
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c503c4d6_25c7eb0b",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "behind the VMD",
+      "range": {
+        "startLine": 61,
+        "startChar": 28,
+        "endLine": 61,
+        "endChar": 38
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e4f2725_23e9f7e5",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "The dollar sign denotes commands issued in the shell, it shouldn\u0027t be present in the output of the commands, remove it.",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 32
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39a726ea_6950b26d",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "Let\u0027s add an example of using the disk behind the VMD (e.g. create an NVMe bdev on top of it).",
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e2a8dd0_2aaf118e",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "Missing comma.",
+      "range": {
+        "startLine": 77,
+        "startChar": 34,
+        "endLine": 77,
+        "endChar": 35
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e677653_c01b3a6b",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "needs to be added to the configuration file",
+      "range": {
+        "startLine": 77,
+        "startChar": 47,
+        "endLine": 77,
+        "endChar": 85
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59e3b45a_bad4fd48",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "rpc.py",
+      "range": {
+        "startLine": 88,
+        "startChar": 12,
+        "endLine": 88,
+        "endChar": 16
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76813419_e6835686",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "I think it\u0027s also worth mentioning, that the apps not using the application framework don\u0027t support hotplugs.",
+      "range": {
+        "startLine": 91,
+        "startChar": 2,
+        "endLine": 91,
+        "endChar": 40
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "146c4743_19fd9c37",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "Missing period.",
+      "range": {
+        "startLine": 94,
+        "startChar": 91,
+        "endLine": 94,
+        "endChar": 94
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5551a735_c1495a03",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-07T12:07:00Z",
+      "side": 1,
+      "message": "It\u0027d be nice to mention the LED management app somewhere around here too.",
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
