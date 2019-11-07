@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83bf1098_70fd9dbb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-07T14:14:58Z",
+      "side": 1,
+      "message": "Ziye said: Could we use the DMA buffer if zero copy is enabled, if not we should not use this? Normally, it is no need to use the DMA buffer if zero copy is not enabled.",
+      "revId": "3ab8da49e7761b673b3011980395ae052c90dc26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
