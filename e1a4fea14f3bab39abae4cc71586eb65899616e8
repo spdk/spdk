@@ -16,6 +16,24 @@
       "revId": "e1a4fea14f3bab39abae4cc71586eb65899616e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e2f95e7_0394889d",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-11-07T08:24:32Z",
+      "side": 1,
+      "message": "Actually I\u0027ve been using this flag, but I don\u0027t have libfuse3 installed (it\u0027s not available natively in Ubuntu 18.04) so it didn\u0027t work anyway. This finally motivated me to download and install manually libfuse3 :)",
+      "parentUuid": "cc0b9cd9_37cae45f",
+      "revId": "e1a4fea14f3bab39abae4cc71586eb65899616e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
