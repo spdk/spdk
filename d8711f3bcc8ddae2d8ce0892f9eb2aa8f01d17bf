@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba2bbd13_610db45e",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-07T18:51:40Z",
+      "side": 1,
+      "message": "Can we do all configuration via RPC instead? The current configuration file format assumes just 1 target and I don\u0027t want to go back and change that. The RPCs have been extended with multi-target support.",
+      "revId": "d8711f3bcc8ddae2d8ce0892f9eb2aa8f01d17bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
