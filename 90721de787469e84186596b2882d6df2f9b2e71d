@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1230fd1e_3a8c0c82",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 42
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-07T19:48:12Z",
+      "side": 1,
+      "message": "If the decorator doesn\u0027t need arguments, you can remove a layer here.\n\ndef subcommand(rpc_parser):\n    def inner(subparsers):\n        rpc_parser(subparsers)\n    subcommands[rpc_parser.__name__] \u003d inner\n    return rpc_parser",
+      "revId": "90721de787469e84186596b2882d6df2f9b2e71d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c441b41_ed33d7ac",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 42
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-07T19:48:12Z",
+      "side": 1,
+      "message": "I think this goes back to the original performance because it\u0027s going to add the argparse arguments for every single subcommand, won\u0027t it?",
+      "revId": "90721de787469e84186596b2882d6df2f9b2e71d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "828e0d21_98fbb46b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 42
+      },
+      "lineNbr": 2662,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-07T19:48:12Z",
+      "side": 1,
+      "message": "When I call something like ./scripts/rpc.py bdev_get_bdevs -h, in the help it doesn\u0027t have the global parameters listed (-s, -p, -t, -v).",
+      "revId": "90721de787469e84186596b2882d6df2f9b2e71d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
