@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87813c2d_7d588e2a",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 830,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-07T18:10:14Z",
+      "side": 1,
+      "message": "The API today has the users do the following steps:\n\n1) Create a transport\n2) Create a target\n3) Add the transport to the target\n\nBut if you\u0027re going to make the user pass the target to the transport create function, we\u0027d need to shuffle the steps around entirely. You\u0027d reverse steps 1 and 2 and eliminate step 3.\n\nI think the first question we have to answer is whether to share transports across NVMe-oF targets. I think that may actually make sense to do, but we\u0027ll need some community discussion. Do you need to do this patch for this example you\u0027re writing, or can we defer this until later?",
+      "revId": "933bfc1a6b6482b398f530e3a546762c2392750a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
