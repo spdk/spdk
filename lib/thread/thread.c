@@ -1199,7 +1199,7 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
 	struct spdk_io_channel_iter *i;
-	int rc;
+	__attribute__((unused)) int rc;
 
 	i = calloc(1, sizeof(*i));
 	if (!i) {
