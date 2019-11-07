@@ -93,7 +93,7 @@ spdk_jsonrpc_parse_response(struct spdk_jsonrpc_client *client)
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_RPC_CLIENT, "JSON string is :\n%s\n", client->recv_buf);
-	if (rc < 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
+	if (rc < 0 || rc > SPDK_JSONRPC_CLIENT_MAX_VALUES) {
 		SPDK_ERRLOG("JSON parse error (rc: %zd)\n", rc);
 		/*
 		 * Can't recover from parse error (no guaranteed resync point in streaming JSON).
