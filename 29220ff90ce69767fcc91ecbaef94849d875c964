@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f7fcf7e_288e3a9a",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-07T17:17:10Z",
+      "side": 1,
+      "message": "I don\u0027t think this works.  I\u0027m just guessing but this test probably doesn\u0027t get run except for nightly tests otherwise this would have failed the test pool.\n\ndisk_name\u003dsdb\n[[ -b \"/dev/$disk_name\"1\"\" ]] -\u003e this succeeds\n[[ -b \"/dev/$disk_name\\\"1\\\"\" ]] -\u003e this fails\n\nI think the spellcheck rule is making sure that we want /dev/sdb1 (we do) and not /dev/sdb\"1\" (which we obviously don\u0027t) - but what was there before was actually correct, and doing this here makes it add literal quotes in the name\n\nI think you want this instead:\n\n[[ -b \"/dev/${disk_name}1\" ]]",
+      "revId": "29220ff90ce69767fcc91ecbaef94849d875c964",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
