@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1cec66e2_4377f737",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1027,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-07T20:03:25Z",
+      "side": 1,
+      "message": "Shouldn\u0027t io_this_second be an integer? I don\u0027t know the atomicity rules of a double (probably the same as a 32 bit integer), and I wouldn\u0027t ever want to hit a precision issue.",
+      "revId": "fd27c8fa2e03a220074b17c26328cad374d2330e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "524f1bcb_138426d0",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1033,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-07T20:03:25Z",
+      "side": 1,
+      "message": "io_completed is getting updated by a different thread, potentially. While a 32 bit integer read is atomic, two 32 bit integer reads aren\u0027t. You should probably do a single read of ns_ctx-\u003eio_completed to the stack, then use that for this calculation and the assignment to last_io_completed below or there\u0027s a chance your counting won\u0027t be quite right. The most it can be off is a trivial amount, but may as well deal with this while we\u0027re reviewing it.",
+      "revId": "fd27c8fa2e03a220074b17c26328cad374d2330e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
