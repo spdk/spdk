@@ -3,3 +3,4 @@
 - @subpage nvme
 - @subpage ioat
 - @subpage virtio
+- @subpage vmd
