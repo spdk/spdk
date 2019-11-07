@@ -256,6 +256,9 @@ struct raid_bdev_module {
 	/* RAID level implemented by this module */
 	enum raid_level level;
 
+	/* Minimum required number of base bdevs. Must be > 0. */
+	uint8_t base_bdevs_min;
+
 	/*
 	 * Called when the raid is starting, right before changing the state to
 	 * online and registering the bdev. Parameters of the bdev like blockcnt

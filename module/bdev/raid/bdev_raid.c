@@ -1179,6 +1179,21 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 {
 	struct raid_bdev *raid_bdev;
 	struct spdk_bdev *raid_bdev_gen;
+	struct raid_bdev_module *module;
+
+	module = raid_bdev_module_find(raid_cfg->level);
+	if (module == NULL) {
+		SPDK_ERRLOG("Unsupported raid level '%d'\n", raid_cfg->level);
+		return -EINVAL;
+	}
+
+	assert(module->base_bdevs_min != 0);
+	if (raid_cfg->num_base_bdevs < module->base_bdevs_min) {
+		SPDK_ERRLOG("At least %u base devices required for %s\n",
+			    module->base_bdevs_min,
+			    raid_bdev_level_to_str(raid_cfg->level));
+		return -EINVAL;
+	}
 
 	raid_bdev = calloc(1, sizeof(*raid_bdev));
 	if (!raid_bdev) {
@@ -1186,7 +1201,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 		return -ENOMEM;
 	}
 
-	assert(raid_cfg->num_base_bdevs != 0);
+	raid_bdev->module = module;
 	raid_bdev->num_base_bdevs = raid_cfg->num_base_bdevs;
 	raid_bdev->base_bdev_info = calloc(raid_bdev->num_base_bdevs,
 					   sizeof(struct raid_base_bdev_info));
@@ -1204,14 +1219,6 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 	raid_bdev->config = raid_cfg;
 	raid_bdev->level = raid_cfg->level;
-
-	raid_bdev->module = raid_bdev_module_find(raid_bdev->level);
-	if (raid_bdev->module == NULL) {
-		SPDK_ERRLOG("Unsupported raid level '%d'\n", raid_bdev->level);
-		free(raid_bdev->base_bdev_info);
-		free(raid_bdev);
-		return -EINVAL;
-	}
 
 	raid_bdev_gen = &raid_bdev->bdev;
 
