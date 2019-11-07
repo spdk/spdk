@@ -529,6 +529,10 @@ spdk_sock_group_impl_poll_count(struct spdk_sock_group_impl *group_impl,
 	num_events = group_impl->net_impl->group_impl_poll(group_impl, max_events, socks);
 	if (num_events == -1) {
 		return -1;
+	} else if(!num_events) {
+		struct spdk_sock *sock1 = TAILQ_FIRST(&group_impl->socks);
+		spdk_sock_is_connected(sock1);
+		return 0;
 	}
 
 	for (i = 0; i < num_events; i++) {
