@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc0b9cd9_37cae45f",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-07T00:26:08Z",
+      "side": 1,
+      "message": "this needs to be fixed here (and is what caused all of the patches after this to fail)\n\nI\u0027d suggest configuring --with-nvme-cuse so that you can catch these on your local system before pushing",
+      "revId": "e1a4fea14f3bab39abae4cc71586eb65899616e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
