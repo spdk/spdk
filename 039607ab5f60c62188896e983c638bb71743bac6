@@ -16,6 +16,24 @@
       "revId": "039607ab5f60c62188896e983c638bb71743bac6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2da75dd5_d56fcf00",
+        "filename": "test/iscsi_tgt/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-07T08:55:12Z",
+      "side": 1,
+      "message": "Done\nThank you for this hint",
+      "parentUuid": "2b202c3e_fc3c9471",
+      "revId": "039607ab5f60c62188896e983c638bb71743bac6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
