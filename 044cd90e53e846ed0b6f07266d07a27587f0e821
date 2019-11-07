@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a9bd8da_616bc313",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 820,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-07T16:28:47Z",
+      "side": 1,
+      "message": "The last sentence of this comment seems misworded.\n\nThis comment also doesn\u0027t really explain why setting cryop_cnt_remaining \u003d 1 results in failing of the bdev_io (or maybe rewording this last sentence will help explain that).",
+      "revId": "044cd90e53e846ed0b6f07266d07a27587f0e821",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e547233d_c220a079",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 823,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-07T16:28:47Z",
+      "side": 1,
+      "message": "is this special index_to_check variable needed?\n\nif cryop_cnt \u003d\u003d 1, and we get here, it means num_enqueued_ops must \u003d\u003d 0 - in which case this is basically:\n\nindex_to_check \u003d (cryop_cnt \u003d\u003d 1) ? 0 : 0;",
+      "revId": "044cd90e53e846ed0b6f07266d07a27587f0e821",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
