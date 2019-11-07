@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb611cec_35086cee",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1017252
+      },
+      "writtenOn": "2019-11-07T03:21:00Z",
+      "side": 1,
+      "message": "here need free io_port",
+      "revId": "ad57d8ec4b7cefbe462a8dae4eefe4924c4bcf03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6a70319_0ae25318",
+        "filename": "lib/virtio/virtio_pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1017252
+      },
+      "writtenOn": "2019-11-07T03:21:00Z",
+      "side": 1,
+      "message": "这里考虑下legacy也失败的情况，那么modern-\u003emode, -1 0 1",
+      "revId": "ad57d8ec4b7cefbe462a8dae4eefe4924c4bcf03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "103725c3_315b59ed",
+        "filename": "lib/virtio/virtio_pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 846,
+      "author": {
+        "id": 1017252
+      },
+      "writtenOn": "2019-11-07T03:21:00Z",
+      "side": 1,
+      "message": "这里考虑下上面说的hw-\u003emode为-1的情况",
+      "revId": "ad57d8ec4b7cefbe462a8dae4eefe4924c4bcf03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
