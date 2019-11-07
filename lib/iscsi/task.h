@@ -147,13 +147,10 @@ spdk_iscsi_task_disassociate_pdu(struct spdk_iscsi_task *task)
 	}
 }
 
-static inline int
+static inline bool
 spdk_iscsi_task_is_read(struct spdk_iscsi_task *task)
 {
-	struct iscsi_bhs_scsi_req *scsi_req;
-
-	scsi_req = (struct iscsi_bhs_scsi_req *)spdk_iscsi_task_get_bhs(task);
-	return (scsi_req->read_bit == 1);
+	return (task->scsi.dxfer_dir == SPDK_SCSI_DIR_FROM_DEV);
 }
 
 struct spdk_iscsi_task *spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
