@@ -34,6 +34,24 @@
       "revId": "3293b6d8d90d360e455eecf013a0447a1a8fba6f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9f8c5c2_e8548edd",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-07T07:39:38Z",
+      "side": 1,
+      "message": "Just checked. I manually removed SC2004 on my patch and ran check_format.sh.\nThis line does not come up as error.",
+      "parentUuid": "cbc80a95_a961bf0d",
+      "revId": "3293b6d8d90d360e455eecf013a0447a1a8fba6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
