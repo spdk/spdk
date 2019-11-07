@@ -82,7 +82,7 @@
           "params": {
             "name": "RaidBdev0",
             "strip_size": 128,
-            "raid_level": 0,
+            "raid_level": "0",
             "base_bdevs": [
               "Malloc2",
               "Malloc3"
@@ -94,7 +94,7 @@
           "params": {
             "name": "RaidBdev1",
             "strip_size": 128,
-            "raid_level": 0,
+            "raid_level": "0",
             "base_bdevs": [
               "Nvme0n1p2",
               "Malloc4"
@@ -106,7 +106,7 @@
           "params": {
             "name": "RaidBdev2",
             "strip_size": 128,
-            "raid_level": 0,
+            "raid_level": "0",
             "base_bdevs": [
               "Malloc5",
               "Malloc6"
