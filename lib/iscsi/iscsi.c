@@ -3251,14 +3251,15 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 
 		if (task->current_datain_offset == 0) {
 			task->scsi.lun = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
+			conn->data_in_cnt++;
 			if (task->scsi.lun == NULL) {
+				task->scsi.length = task->scsi.transfer_len;
 				TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
 				spdk_scsi_task_process_null_lun(&task->scsi);
 				spdk_iscsi_task_cpl(&task->scsi);
 				return 0;
 			}
 			task->current_datain_offset = task->scsi.length;
-			conn->data_in_cnt++;
 			iscsi_queue_task(conn, task);
 			continue;
 		}
@@ -3278,10 +3279,8 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 			task->scsi.lun = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
 			if (task->scsi.lun == NULL) {
 				/* Remove the primary task from the list if this is the last subtask */
-				if (task->current_datain_offset == task->scsi.transfer_len) {
-					TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
-				}
-				subtask->scsi.transfer_len = subtask->scsi.length;
+				TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
+				subtask->scsi.transfer_len = subtask->scsi.length = remaining_size;
 				spdk_scsi_task_process_null_lun(&subtask->scsi);
 				spdk_iscsi_task_cpl(&subtask->scsi);
 				return 0;
