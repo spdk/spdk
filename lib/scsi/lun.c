@@ -326,6 +326,14 @@ _scsi_lun_hot_remove(void *arg1)
 {
 	struct spdk_scsi_lun *lun = arg1;
 
+	/* If lun->removed is set, no new task can be submitted to the LUN.
+	 * Execute previously queued tasks, which will be immediately aborted.
+	 */
+	scsi_lun_execute_tasks(lun);
+
+	/* Then we only need to wait for all outstanding tasks to be completed
+	 * before notifying the upper layer about the removal.
+	 */
 	if (scsi_lun_has_pending_tasks(lun) ||
 	    scsi_lun_has_pending_mgmt_tasks(lun)) {
 		lun->hotremove_poller = spdk_poller_register(scsi_lun_check_pending_tasks,
