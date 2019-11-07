@@ -2970,7 +2970,7 @@ iscsi_send_datain(struct spdk_iscsi_conn *conn,
 		conn->StatSN++;
 	}
 
-	if (F_bit && S_bit && !spdk_iscsi_task_is_immediate(primary)) {
+	if (F_bit && S_bit && !primary->immediate) {
 		conn->sess->MaxCmdSN++;
 	}
 
@@ -3193,7 +3193,7 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 	to_be32(&rsph->stat_sn, conn->StatSN);
 	conn->StatSN++;
 
-	if (!spdk_iscsi_task_is_immediate(primary)) {
+	if (!primary->immediate) {
 		conn->sess->MaxCmdSN++;
 	}
 
@@ -3381,7 +3381,7 @@ iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint32_t task_tag;
 	uint32_t data_len;
 	uint32_t transfer_len;
-	int R_bit, W_bit;
+	int R_bit, W_bit, I_bit;
 	int lun_i;
 	struct iscsi_bhs_scsi_req *reqh;
 
@@ -3394,6 +3394,7 @@ iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	R_bit = reqh->read_bit;
 	W_bit = reqh->write_bit;
+	I_bit = reqh->immediate;
 	lun = from_be64(&reqh->lun);
 	task_tag = from_be32(&reqh->itt);
 	data_len = pdu->data_segment_len;
@@ -3427,6 +3428,7 @@ iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task->scsi.initiator_port = conn->initiator_port;
 	task->parent = NULL;
 	task->rsp_scsi_status = SPDK_SCSI_STATUS_GOOD;
+	task->immediate = I_bit;
 
 	if (task->scsi.lun == NULL) {
 		spdk_scsi_task_process_null_lun(&task->scsi);
@@ -3753,7 +3755,7 @@ iscsi_pdu_hdr_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint32_t task_tag;
 	uint32_t ref_task_tag;
 	uint8_t function;
-	int lun_i;
+	int lun_i, I_bit;
 	struct spdk_iscsi_task *task;
 	struct spdk_scsi_dev *dev;
 
@@ -3767,9 +3769,10 @@ iscsi_pdu_hdr_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	lun = from_be64(&reqh->lun);
 	task_tag = from_be32(&reqh->itt);
 	ref_task_tag = from_be32(&reqh->ref_task_tag);
+	I_bit = reqh->immediate;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "I=%d, func=%d, ITT=%x, ref TT=%x, LUN=0x%16.16"PRIx64"\n",
-		      reqh->immediate, function, task_tag, ref_task_tag, lun);
+		      I_bit, function, task_tag, ref_task_tag, lun);
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
 		      conn->StatSN, conn->sess->ExpCmdSN, conn->sess->MaxCmdSN);
@@ -3789,6 +3792,7 @@ iscsi_pdu_hdr_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task->tag = task_tag;
 	task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_i);
 	task->lun_id = lun_i;
+	task->immediate = I_bit;
 
 	if (task->scsi.lun == NULL) {
 		task->scsi.response = SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN;

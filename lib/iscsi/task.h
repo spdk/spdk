@@ -88,6 +88,7 @@ struct spdk_iscsi_task {
 	uint32_t datain_datasn;
 	uint32_t acked_data_sn; /* next expected datain datasn */
 	uint32_t ttt;
+	int immediate;
 
 	uint32_t tag;
 
@@ -144,15 +145,6 @@ spdk_iscsi_task_disassociate_pdu(struct spdk_iscsi_task *task)
 		spdk_put_pdu(spdk_iscsi_task_get_pdu(task));
 		spdk_iscsi_task_set_pdu(task, NULL);
 	}
-}
-
-static inline int
-spdk_iscsi_task_is_immediate(struct spdk_iscsi_task *task)
-{
-	struct iscsi_bhs_scsi_req *scsi_req;
-
-	scsi_req = (struct iscsi_bhs_scsi_req *)spdk_iscsi_task_get_bhs(task);
-	return (scsi_req->immediate == 1);
 }
 
 static inline int
