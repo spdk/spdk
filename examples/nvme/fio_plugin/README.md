@@ -104,3 +104,9 @@ blocks with 32 metadata bytes per block and a 128KiB I/O size, 4KiB isn't large 
 Expose two options 'apptag' and 'apptag_mask', users can change them in the configuration file when using
 application tag and application tag mask in end-to-end data protection.  Application tag and application
 tag mask are set to 0x1234 and 0xFFFF by default.
+
+# VMD (Optional)
+
+To enable VMD enumeration add enable_vmd flag in fio configuration file:
+
+    enable_vmd=1
