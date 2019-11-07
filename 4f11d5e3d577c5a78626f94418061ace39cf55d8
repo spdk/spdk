@@ -68,6 +68,30 @@
       "revId": "4f11d5e3d577c5a78626f94418061ace39cf55d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d56726e_22034a0d",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1656,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-07T14:17:03Z",
+      "side": 1,
+      "message": "sure, I will do that. I wanted to post the bits and feedback on the approach that takes advantage on the transactional nature and avoids the notifications.",
+      "parentUuid": "791d6075_9ab11842",
+      "range": {
+        "startLine": 1656,
+        "startChar": 13,
+        "endLine": 1656,
+        "endChar": 20
+      },
+      "revId": "4f11d5e3d577c5a78626f94418061ace39cf55d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
