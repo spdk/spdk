@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba571f2b_3d6258d3",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-07T23:57:38Z",
+      "side": 1,
+      "message": "this line is not required, otherwise the patch is fine to me.",
+      "range": {
+        "startLine": 212,
+        "startChar": 3,
+        "endLine": 212,
+        "endChar": 38
+      },
+      "revId": "47320340d3512625e5e9b9de70f30f2d3f0e7962",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
