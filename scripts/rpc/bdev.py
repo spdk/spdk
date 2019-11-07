@@ -401,7 +401,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry
     return client.call('bdev_nvme_set_options', params)
 
 
-@deprecated_alias('bdev_nvme_set_hotplug')
+@deprecated_alias('set_bdev_nvme_hotplug')
 def bdev_nvme_set_hotplug(client, enable, period_us=None):
     """Set options for the bdev nvme. This is startup command.
 
