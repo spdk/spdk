@@ -263,7 +263,6 @@ spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task)
 	uint32_t allocation_len;
 	uint32_t data_len;
 
-	task->length = task->transfer_len;
 	if (task->cdb[0] == SPDK_SPC_INQUIRY) {
 		/*
 		 * SPC-4 states that INQUIRY commands to an unsupported LUN
