@@ -50,14 +50,14 @@ extern "C" {
 /* Maximum VMD devices - up to 6 per cpu */
 #define MAX_VMD_TARGET  24
 
-/*
+/**
  * Enumerate VMD devices and hook them into the spdk pci subsystem
  *
  * \return 0 on success, -1 on failure
  */
 int spdk_vmd_init(void);
 
-/*
+/**
  * Returns a list of nvme devices found on the given vmd pci BDF.
  *
  * \param vmd_addr pci BDF of the vmd device to return end device list
