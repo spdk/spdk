@@ -326,6 +326,11 @@ _scsi_lun_hot_remove(void *arg1)
 {
 	struct spdk_scsi_lun *lun = arg1;
 
+	/* If lun->removed is turned on, no task is submitted to the LUN.
+	 * Hence process all pending tasks here.
+	 */
+	scsi_lun_execute_tasks(lun);
+
 	if (scsi_lun_has_pending_tasks(lun) ||
 	    scsi_lun_has_pending_mgmt_tasks(lun)) {
 		lun->hotremove_poller = spdk_poller_register(scsi_lun_check_pending_tasks,
