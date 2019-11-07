@@ -47,6 +47,7 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 		return;
 	}
 
+	assert(task->ref > 0);
 	task->ref--;
 
 	if (task->ref == 0) {
