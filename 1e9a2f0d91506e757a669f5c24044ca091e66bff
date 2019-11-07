@@ -34,6 +34,24 @@
       "revId": "1e9a2f0d91506e757a669f5c24044ca091e66bff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d23eaaee_96ff330e",
+        "filename": "module/bdev/raid/bdev_raid.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-07T13:57:02Z",
+      "side": 1,
+      "message": "I like how you\u0027re thinking.  But in this case it won\u0027t actually bloat anything.  We allocate the extra space for each bdev_io based on the \"worst-case\" bdev module, and RAID is far from the worst as far as space allocated per bdev_io.  So adding an extra pointer here won\u0027t add any bloat.",
+      "parentUuid": "8f18c7ea_ac87951e",
+      "revId": "1e9a2f0d91506e757a669f5c24044ca091e66bff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
