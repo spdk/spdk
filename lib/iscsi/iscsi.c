@@ -3277,10 +3277,9 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 
 			task->scsi.lun = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
 			if (task->scsi.lun == NULL) {
-				/* Remove the primary task from the list if this is the last subtask */
-				if (task->current_datain_offset == task->scsi.transfer_len) {
-					TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
-				}
+				TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
+				/* add remaining data transfer because no subtask is submitted anymore. */
+				task->bytes_completed += remaining_size - task->scsi.length;
 				subtask->scsi.transfer_len = subtask->scsi.length;
 				spdk_scsi_task_process_null_lun(&subtask->scsi);
 				spdk_iscsi_task_cpl(&subtask->scsi);
