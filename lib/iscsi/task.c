@@ -47,6 +47,7 @@ iscsi_task_free(struct spdk_scsi_task *scsi_task)
 		task->parent = NULL;
 	}
 
+	assert(scsi_task->ref == 0);
 	spdk_iscsi_task_disassociate_pdu(task);
 	assert(task->conn->pending_task_cnt > 0);
 	task->conn->pending_task_cnt--;
