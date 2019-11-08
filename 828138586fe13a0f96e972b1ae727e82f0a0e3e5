@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "fc0e7034_f5934882",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 2594,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-11-08T13:29:20Z",
+      "side": 1,
+      "message": "So, yours point is:\n\n1) We should always REQUIRE to call this function to use automatic enumeration in CUSE.\n2) If this function is not called before (CUSE is not initialized), starting device without provided dev_path should fail,\n3) Or even we should to not allow to use CUSE at all.\n\nIs that right?",
+      "parentUuid": "168bd080_df2344b5",
+      "range": {
+        "startLine": 2594,
+        "startChar": 5,
+        "endLine": 2594,
+        "endChar": 30
+      },
+      "revId": "828138586fe13a0f96e972b1ae727e82f0a0e3e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ad9d396f_0b97fa0a",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 7
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "e7e9f647_03627813",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 2607,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-11-08T13:29:20Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ad9d396f_0b97fa0a",
+      "range": {
+        "startLine": 2607,
+        "startChar": 10,
+        "endLine": 2607,
+        "endChar": 84
+      },
+      "revId": "828138586fe13a0f96e972b1ae727e82f0a0e3e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "605247d1_ea38baed",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 7
@@ -91,6 +139,30 @@
       "revId": "828138586fe13a0f96e972b1ae727e82f0a0e3e5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f34df03b_48f30c51",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 659,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-11-08T13:29:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "605247d1_ea38baed",
+      "range": {
+        "startLine": 659,
+        "startChar": 0,
+        "endLine": 659,
+        "endChar": 0
+      },
+      "revId": "828138586fe13a0f96e972b1ae727e82f0a0e3e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
