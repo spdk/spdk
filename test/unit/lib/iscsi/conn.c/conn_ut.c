@@ -268,38 +268,38 @@ propagate_scsi_error_status_for_split_read_tasks(void)
 	struct spdk_iscsi_task primary, task1, task2, task3, task4, task5, task6;
 
 	memset(&primary, 0, sizeof(struct spdk_iscsi_task));
-	primary.scsi.length = 512;
+	primary.scsi.transfer_len = 512 * 6;
 	primary.scsi.status = SPDK_SCSI_STATUS_GOOD;
 	primary.rsp_scsi_status = SPDK_SCSI_STATUS_GOOD;
 	TAILQ_INIT(&primary.subtask_list);
 
 	memset(&task1, 0, sizeof(struct spdk_iscsi_task));
-	task1.scsi.offset = 512;
+	task1.scsi.offset = 0;
 	task1.scsi.length = 512;
 	task1.scsi.status = SPDK_SCSI_STATUS_GOOD;
 
 	memset(&task2, 0, sizeof(struct spdk_iscsi_task));
-	task2.scsi.offset = 512 * 2;
+	task2.scsi.offset = 512;
 	task2.scsi.length = 512;
 	task2.scsi.status = SPDK_SCSI_STATUS_CHECK_CONDITION;
 
 	memset(&task3, 0, sizeof(struct spdk_iscsi_task));
-	task3.scsi.offset = 512 * 3;
+	task3.scsi.offset = 512 * 2;
 	task3.scsi.length = 512;
 	task3.scsi.status = SPDK_SCSI_STATUS_GOOD;
 
 	memset(&task4, 0, sizeof(struct spdk_iscsi_task));
-	task4.scsi.offset = 512 * 4;
+	task4.scsi.offset = 512 * 3;
 	task4.scsi.length = 512;
 	task4.scsi.status = SPDK_SCSI_STATUS_GOOD;
 
 	memset(&task5, 0, sizeof(struct spdk_iscsi_task));
-	task5.scsi.offset = 512 * 5;
+	task5.scsi.offset = 512 * 4;
 	task5.scsi.length = 512;
 	task5.scsi.status = SPDK_SCSI_STATUS_GOOD;
 
 	memset(&task6, 0, sizeof(struct spdk_iscsi_task));
-	task6.scsi.offset = 512 * 6;
+	task6.scsi.offset = 512 * 5;
 	task6.scsi.length = 512;
 	task6.scsi.status = SPDK_SCSI_STATUS_GOOD;
 
@@ -322,6 +322,7 @@ propagate_scsi_error_status_for_split_read_tasks(void)
 	CU_ASSERT(task4.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT(task5.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT(task6.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT(primary.bytes_completed == primary.scsi.transfer_len);
 	CU_ASSERT(TAILQ_EMPTY(&primary.subtask_list));
 }
 
