@@ -54,13 +54,14 @@ static void bdev_nvme_get_spdk_running_config(FILE *fp);
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
 struct nvme_io_channel {
-	struct spdk_nvme_qpair	*qpair;
-	struct spdk_poller	*poller;
+	struct spdk_nvme_qpair		*qpair;
+	struct spdk_poller		*poller;
+	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
 
-	bool			collect_spin_stat;
-	uint64_t		spin_ticks;
-	uint64_t		start_ticks;
-	uint64_t		end_ticks;
+	bool				collect_spin_stat;
+	uint64_t			spin_ticks;
+	uint64_t			start_ticks;
+	uint64_t			end_ticks;
 };
 
 struct nvme_bdev_io {
@@ -146,6 +147,8 @@ static int bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_chan
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
 static int nvme_ctrlr_create_bdev(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, uint32_t nsid);
+static int bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio,
+			   bool recursive);
 
 struct spdk_nvme_qpair *
 spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
@@ -275,6 +278,40 @@ bdev_nvme_flush(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio,
 }
 
 static void
+_bdev_nvme_pending_resets_cleared(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_io_device(i);
+
+	/*
+	 * If there were no pending resets, we can clear the resetting flag.
+	 * Otherwise the recursive reset will clear it.
+	 */
+	if (status == 0) {
+		__atomic_clear(&nvme_bdev_ctrlr->resetting, __ATOMIC_RELAXED);
+	}
+}
+
+static void
+_bdev_nvme_clear_pending_resets(struct spdk_io_channel_iter *i)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_io_device(i);
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_io *bdev_io;
+	struct nvme_bdev_io *nbdev_io;
+
+	if (!TAILQ_EMPTY(&nvme_ch->pending_resets)) {
+		bdev_io = TAILQ_FIRST(&nvme_ch->pending_resets);
+		TAILQ_REMOVE(&nvme_ch->pending_resets, bdev_io, module_link);
+		nbdev_io = (struct nvme_bdev_io *)bdev_io->driver_ctx;
+		bdev_nvme_reset(nvme_bdev_ctrlr, nbdev_io, true);
+		spdk_for_each_channel_continue(i, 1);
+	} else {
+		spdk_for_each_channel_continue(i, 0);
+	}
+}
+
+static void
 _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 {
 	if (rc) {
@@ -282,6 +319,12 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 	} else {
 		SPDK_NOTICELOG("Successful reset on a controller.\n");
 	}
+
+	/* Make sure we clear any pending resets before returning. */
+	spdk_for_each_channel(nvme_bdev_ctrlr,
+			      _bdev_nvme_clear_pending_resets,
+			      NULL,
+			      _bdev_nvme_pending_resets_cleared);
 }
 
 static void
@@ -369,8 +412,23 @@ _bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 }
 
 static int
-bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio)
+bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio, bool recursive)
 {
+	struct spdk_io_channel *ch;
+	struct nvme_io_channel *nvme_ch;
+
+	/* If this is a recursive call, the resetting flag will already be set. */
+	if (!recursive && __atomic_test_and_set(&nvme_bdev_ctrlr->resetting, __ATOMIC_RELAXED)) {
+		SPDK_NOTICELOG("Unable to perform reset, already in progress.\n");
+		if (bio) {
+			ch = spdk_get_io_channel(nvme_bdev_ctrlr);
+			assert(ch != NULL);
+			nvme_ch = spdk_io_channel_get_ctx(ch);
+			TAILQ_INSERT_TAIL(&nvme_ch->pending_resets, spdk_bdev_io_from_ctx(bio), module_link);
+		}
+		return 0;
+	}
+
 	/* First, delete all NVMe I/O queue pairs. */
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_reset_destroy_qpair,
@@ -458,7 +516,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 				       bdev_io->u.bdev.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		return bdev_nvme_reset(nbdev->nvme_bdev_ctrlr, nbdev_io);
+		return bdev_nvme_reset(nbdev->nvme_bdev_ctrlr, nbdev_io, false);
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return bdev_nvme_flush(nbdev,
@@ -581,6 +639,8 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 	}
 
 	ch->poller = spdk_poller_register(bdev_nvme_poll, ch, g_opts.nvme_ioq_poll_period_us);
+
+	TAILQ_INIT(&ch->pending_resets);
 	return 0;
 }
 
