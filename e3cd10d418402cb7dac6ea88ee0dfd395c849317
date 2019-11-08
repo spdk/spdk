@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20ddf1b0_6f052dcf",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-11-08T09:30:57Z",
+      "side": 1,
+      "message": "You should also check offset_blocks \u003c bdev-\u003eblockcnt and (offset_blocks + num_blocks) \u003c blockcnt\nOtherwise, after the translations in bdev_ocssd_to_disk_lba you may come up with a valid address again and pass it to device below",
+      "revId": "e3cd10d418402cb7dac6ea88ee0dfd395c849317",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "687c7ad9_d1b271eb",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-11-08T09:30:57Z",
+      "side": 1,
+      "message": "Same here",
+      "revId": "e3cd10d418402cb7dac6ea88ee0dfd395c849317",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
