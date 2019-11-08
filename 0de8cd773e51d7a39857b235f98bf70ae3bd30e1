@@ -69,6 +69,24 @@
       "revId": "0de8cd773e51d7a39857b235f98bf70ae3bd30e1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b623dae3_e74d96f4",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-08T18:16:11Z",
+      "side": 1,
+      "message": "If shutdown is not set and refcnt is greater than 0, then something has a reference to this memory still, right? You can\u0027t free it in that case.",
+      "parentUuid": "720d78a4_7398821e",
+      "revId": "0de8cd773e51d7a39857b235f98bf70ae3bd30e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
