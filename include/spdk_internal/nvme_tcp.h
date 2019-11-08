@@ -138,6 +138,9 @@ enum nvme_tcp_pdu_recv_state {
 	/* Active tqpair waiting for any PDU specific header */
 	NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH,
 
+	/* Active tqpair waiting for a tcp request, only use in target side */
+	NVME_TCP_PDU_RECV_STATE_AWAIT_REQ,
+
 	/* Active tqpair waiting for payload */
 	NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD,
 
