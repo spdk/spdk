@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "19960d6c_d6cff5ca",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 2127,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-08T08:59:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "23a55fd6_1dddbd69",
+      "range": {
+        "startLine": 2127,
+        "startChar": 1,
+        "endLine": 2127,
+        "endChar": 63
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f62e2c8_926893d8",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 21
@@ -131,6 +155,30 @@
       "side": 1,
       "message": "I had some dependencies on it but you are right it could stay on same place now.",
       "parentUuid": "1f62e2c8_926893d8",
+      "range": {
+        "startLine": 301,
+        "startChar": 0,
+        "endLine": 398,
+        "endChar": 0
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d3689cd_d7d992b0",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-08T08:59:37Z",
+      "side": 1,
+      "message": "Let\u0027s restore it to its original place then.",
+      "parentUuid": "94cf4c52_97b4144f",
       "range": {
         "startLine": 301,
         "startChar": 0,
@@ -190,6 +238,30 @@
     },
     {
       "key": {
+        "uuid": "cd95492f_fddf6878",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-08T08:59:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "71b07d8c_053ca03b",
+      "range": {
+        "startLine": 405,
+        "startChar": 0,
+        "endLine": 405,
+        "endChar": 13
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cc553566_92242c90",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 21
@@ -225,6 +297,30 @@
       "side": 1,
       "message": "I don\u0027t like this name, it suggest that we are getting zone object or zone_id and here we want to get our internal geometry - I will get rid of this function since it is used only as helper for ftl_addr_band_id and ftl_addr_pu_id",
       "parentUuid": "cc553566_92242c90",
+      "range": {
+        "startLine": 435,
+        "startChar": 0,
+        "endLine": 435,
+        "endChar": 17
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7862502_5ca70a21",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-08T08:59:37Z",
+      "side": 1,
+      "message": "I really don\u0027t see the point of the \"_id\" suffix, especially since all of the functions retrieving part of the ftl_addr have it. Also, let\u0027s be consistent with other SPDK\u0027s getters and add the \"_get_\" part.",
+      "parentUuid": "917d07e2_d38111b5",
       "range": {
         "startLine": 435,
         "startChar": 0,
@@ -375,6 +471,30 @@
       "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba5a59df_a8ced667",
+        "filename": "test/unit/lib/ftl/ftl_band.c/ftl_band_ut.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-08T08:59:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5114b086_8c5c876b",
+      "range": {
+        "startLine": 64,
+        "startChar": 1,
+        "endLine": 64,
+        "endChar": 53
+      },
+      "revId": "bc3e3697d070e6dd1cb86312750233aac0df9768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
