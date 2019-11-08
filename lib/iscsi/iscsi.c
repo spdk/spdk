@@ -3275,8 +3275,7 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 			task->current_datain_offset += subtask->scsi.length;
 			conn->data_in_cnt++;
 
-			task->scsi.lun = spdk_scsi_dev_get_lun(conn->dev, task->lun_id);
-			if (task->scsi.lun == NULL) {
+			if (spdk_scsi_dev_get_lun(conn->dev, task->lun_id) == NULL) {
 				/* Remove the primary task from the list if this is the last subtask */
 				if (task->current_datain_offset == task->scsi.transfer_len) {
 					TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
