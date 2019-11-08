@@ -70,6 +70,7 @@ struct nvme_bdev_ctrlr {
 	struct spdk_poller		*opal_poller;
 
 	struct spdk_poller		*adminq_timer_poller;
+	struct spdk_poller		*reset_poller;
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;
