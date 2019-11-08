@@ -42,6 +42,7 @@ TAILQ_HEAD(nvme_bdev_ctrlrs, nvme_bdev_ctrlr);
 extern struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs;
 extern pthread_mutex_t g_bdev_nvme_mutex;
 
+#define NVME_MAX_BDEVS_PER_NS 128
 #define NVME_MAX_CONTROLLERS 1024
 
 enum nvme_bdev_ns_type {
@@ -64,6 +65,8 @@ struct nvme_bdev_ns {
 	struct spdk_nvme_ns	*ns;
 	bool			creation_in_progress;
 	struct nvme_bdev_ctrlr	*ctrlr;
+	const char		*bdevs_names[NVME_MAX_BDEVS_PER_NS];
+	uint32_t		bdevs_count;
 	spdk_bdev_init_ns_fn	init_fn;
 	spdk_bdev_remove_ns_fn	remove_fn;
 };

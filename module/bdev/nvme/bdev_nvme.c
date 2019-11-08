@@ -794,6 +794,9 @@ nvme_ctrlr_init_ns(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns 
 		return;
 	}
 
+	nvme_bdev_ns->bdevs_names[0] = nvme_ns->disk.name;
+	nvme_bdev_ns->bdevs_count = 1;
+
 	nvme_bdev_ctrlr->ref++;
 
 	cb_fn(cb_arg, nvme_bdev_ns, 0);
@@ -1344,7 +1347,7 @@ bdev_nvme_create_namespaces_cb(void *cb_arg, int rc)
 {
 	struct create_ns_ctx	*ctx = cb_arg;
 	struct nvme_bdev_ns	*ns;
-	uint32_t		i, nsid;
+	uint32_t		i, k, nsid;
 	size_t			j;
 
 	if (rc) {
@@ -1364,15 +1367,18 @@ bdev_nvme_create_namespaces_cb(void *cb_arg, int rc)
 			continue;
 		}
 		assert(ns->id == nsid);
-		if (j < ctx->probe_ctx->count) {
-			ctx->probe_ctx->names[j] = ((struct nvme_bdev_ns_standard *)ns)->disk.name;
-			j++;
-		} else {
-			SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %du. Unable to return all names of created bdevs\n",
-				    ctx->probe_ctx->count);
-			ctx->cb_fn(ctx->cb_arg, 0, -ERANGE);
-			free(ctx);
-			return;
+		assert(ns->bdevs_count <= NVME_MAX_BDEVS_PER_NS);
+		for (k = 0; k < ns->bdevs_count; k++) {
+			if (j < ctx->probe_ctx->count) {
+				ctx->probe_ctx->names[j] = ns->bdevs_names[k];
+				j++;
+			} else {
+				SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %du. Unable to return all names of created bdevs\n",
+					    ctx->probe_ctx->count);
+				ctx->cb_fn(ctx->cb_arg, 0, -ERANGE);
+				free(ctx);
+				return;
+			}
 		}
 	}
 
