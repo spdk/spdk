@@ -16,6 +16,24 @@
       "revId": "e38a17c06a5ab48c7e08ca03bd14e8b8861e2772",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1af018b9_e8791070",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1276,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-08T12:48:41Z",
+      "side": 1,
+      "message": "Do you mean this should be _stop_session() instead of vhost_stop_device_cb() ?\nIt is more clear because it is one line shorter.\nShould I change it back?",
+      "parentUuid": "515d157f_98ef9f4a",
+      "revId": "e38a17c06a5ab48c7e08ca03bd14e8b8861e2772",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
