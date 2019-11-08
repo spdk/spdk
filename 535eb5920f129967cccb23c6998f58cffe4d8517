@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ea07473_f0b3415a",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-08T22:24:43Z",
+      "side": 1,
+      "message": "This return isn\u0027t needed.  But I guess we already have one at line 389 which isn\u0027t needed either.  So this is fine.\n\n(But if you do update this patch, I\u0027d vote for removing both returns.)",
+      "revId": "535eb5920f129967cccb23c6998f58cffe4d8517",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
