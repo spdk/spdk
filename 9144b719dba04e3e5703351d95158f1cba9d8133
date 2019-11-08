@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b797023_34e12475",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-08T15:33:08Z",
+      "side": 1,
+      "message": "change all of these to just pass \u0026ns-\u003ebase, then you shouldn\u0027t have to change as much code (i.e. bdev_nvme_write first parameter won\u0027t have to be changed)\n\nthe only caveat is that the dif_check_flags are currently stored in the bdev structure, which you now can\u0027t get to via the base structure, so I think you should create a new patch, before this one, that copies the dif_check_flags value to a new member in the nvme_bdev_ns structure, and change the current usages to use this new field\n\nthen this patch will shrink considerably",
+      "revId": "9144b719dba04e3e5703351d95158f1cba9d8133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45ab3684_13448f76",
+        "filename": "module/bdev/nvme/bdev_nvme.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-08T15:33:08Z",
+      "side": 1,
+      "message": "we should also take the spdk_bdev out of nvme_bdev_ns",
+      "revId": "9144b719dba04e3e5703351d95158f1cba9d8133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
