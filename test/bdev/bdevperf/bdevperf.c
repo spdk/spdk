@@ -64,6 +64,7 @@ static int g_rw_percentage = -1;
 static int g_is_random;
 static bool g_verify = false;
 static bool g_reset = false;
+static bool g_continue_on_failure = false;
 static bool g_unmap = false;
 static bool g_write_zeroes = false;
 static bool g_flush = false;
@@ -493,7 +494,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	md_check = spdk_bdev_get_dif_type(target->bdev) == SPDK_DIF_DISABLE;
 
 	if (!success) {
-		if (!g_reset) {
+		if (!g_reset && !g_continue_on_failure) {
 			target->is_draining = true;
 			g_run_failed = true;
 			printf("task offset: %lu on target bdev=%s fails\n",
@@ -961,6 +962,7 @@ bdevperf_usage(void)
 	printf("\t\t(only valid with -S)\n");
 	printf(" -S <period>               show performance result in real time every <period> seconds\n");
 	printf(" -T <target>               target bdev\n");
+	printf(" -f                        continue processing I/O even after failures\n");
 	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
 	printf(" -C                        enable every core to send I/Os to each bdev\n");
 }
@@ -1387,6 +1389,8 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_wait_for_tests = true;
 	} else if (ch == 'C') {
 		g_every_core_for_each_bdev = true;
+	} else if (ch == 'f') {
+		g_continue_on_failure = true;
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
@@ -1504,7 +1508,7 @@ main(int argc, char **argv)
 	g_time_in_sec = 0;
 	g_mix_specified = false;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zq:o:t:w:CM:P:S:T:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zfq:o:t:w:CM:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
