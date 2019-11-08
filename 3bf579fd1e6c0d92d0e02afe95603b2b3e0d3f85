@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f150e6ed_482334c9",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1811,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-08T22:10:51Z",
+      "side": 1,
+      "message": "wouldn\u0027t it be better to set this state in spdk_nvmf_tcp_capsule_cmd_hdr_handle, if we can\u0027t get a request?\n\nI just think it\u0027s confusing to set this state here - the state doesn\u0027t get changed in spdk_nvmf_tcp_capsule_cmd_hdr_handle, so the tqpair stays in this state, even if we are able to get a request.",
+      "revId": "3bf579fd1e6c0d92d0e02afe95603b2b3e0d3f85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
