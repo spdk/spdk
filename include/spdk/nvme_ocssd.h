@@ -57,6 +57,15 @@ extern "C" {
 bool spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * \brief Determine if OpenChannel is supported by the given namespace of NVMe controller.
+ * \param ctrlr NVMe controller to check.
+ * \param nsid Namespace ID to check.
+ *
+ * \return true if support OpenChannel
+ */
+bool spdk_nvme_ctrlr_is_ocssd_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
+
+/**
  * \brief Identify geometry of the given namespace.
  * \param ctrlr NVMe controller to query.
  * \param nsid Id of the given namesapce.

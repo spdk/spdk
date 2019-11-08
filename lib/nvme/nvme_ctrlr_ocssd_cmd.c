@@ -55,6 +55,18 @@ spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
 	return false;
 }
 
+bool
+spdk_nvme_ctrlr_is_ocssd_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	if (ctrlr->quirks & NVME_QUIRK_OCSSD) {
+		if (ctrlr->cdata.vid == SPDK_PCI_VID_CNEXLABS) {
+			if (ctrlr->nsdata[nsid - 1].vendor_specific[0] == 0x1) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
 
 int
 spdk_nvme_ocssd_ctrlr_cmd_geometry(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
