@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9b2f2709_fd783ae5",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 820,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-11-08T15:12:03Z",
+      "side": 1,
+      "message": "I\u0027m glad you commented on the comment as the logic, as is, includes a crypto op leak!",
+      "parentUuid": "7a9bd8da_616bc313",
+      "revId": "044cd90e53e846ed0b6f07266d07a27587f0e821",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e547233d_c220a079",
         "filename": "module/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 5
