@@ -813,12 +813,6 @@ int	nvme_ctrlr_cmd_fw_commit(struct spdk_nvme_ctrlr *ctrlr,
 int	nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 		uint32_t size, uint32_t offset, void *payload,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-int	nvme_ctrlr_cmd_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp, uint16_t spsp,
-					uint8_t nssf, void *payload, uint32_t payload_size,
-					spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-int	nvme_ctrlr_cmd_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
-				     uint16_t spsp, uint8_t nssf, void *payload,
-				     uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_sanitize(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 				struct spdk_nvme_sanitize *sanitize, uint32_t cdw11,
 				spdk_nvme_cmd_cb cb_fn, void *cb_arg);

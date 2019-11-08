@@ -3114,8 +3114,8 @@ spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 	struct nvme_completion_poll_status	status;
 	int					res;
 
-	res = nvme_ctrlr_cmd_security_receive(ctrlr, secp, spsp, nssf, payload, size,
-					      nvme_completion_poll_cb, &status);
+	res = spdk_nvme_ctrlr_cmd_security_receive(ctrlr, secp, spsp, nssf, payload, size,
+			nvme_completion_poll_cb, &status);
 	if (res) {
 		return res;
 	}
@@ -3134,8 +3134,9 @@ spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 	struct nvme_completion_poll_status	status;
 	int					res;
 
-	res = nvme_ctrlr_cmd_security_send(ctrlr, secp, spsp, nssf, payload, size, nvme_completion_poll_cb,
-					   &status);
+	res = spdk_nvme_ctrlr_cmd_security_send(ctrlr, secp, spsp, nssf, payload, size,
+						nvme_completion_poll_cb,
+						&status);
 	if (res) {
 		return res;
 	}
