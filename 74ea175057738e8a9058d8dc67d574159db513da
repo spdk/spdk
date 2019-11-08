@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cd95c52_3a853d7a",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-08T22:30:20Z",
+      "side": 1,
+      "message": "This patch totally makes sense and is a nice simplification.  I just don\u0027t particularly care for the \"bdi\" name.  I think something like \"raid_info\" would be better and more easily understood if you see the variable name but don\u0027t know exactly what it is.",
+      "revId": "74ea175057738e8a9058d8dc67d574159db513da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
