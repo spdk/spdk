@@ -52,6 +52,24 @@
       "revId": "1e9a2f0d91506e757a669f5c24044ca091e66bff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a72daae8_11000fe8",
+        "filename": "module/bdev/raid/bdev_raid.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1017160
+      },
+      "writtenOn": "2019-11-08T09:49:55Z",
+      "side": 1,
+      "message": "OK, that\u0027s very convenient. Thank you for explaining.",
+      "parentUuid": "d23eaaee_96ff330e",
+      "revId": "1e9a2f0d91506e757a669f5c24044ca091e66bff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
