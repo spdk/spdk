@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "918d7fe3_f1a76abb",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-08T15:36:53Z",
+      "side": 1,
+      "message": "So at least let\u0027s change it to:\n\"is a hardware logic inside processor\u0027s Root Complex responsible for management of PCIe NVMe SSDs.\"",
+      "parentUuid": "4577ce12_db93b7a7",
+      "range": {
+        "startLine": 14,
+        "startChar": 31,
+        "endLine": 15,
+        "endChar": 29
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ec8ce1e3_3a04bf4e",
         "filename": "doc/vmd.md",
         "patchSetId": 1
@@ -93,6 +117,30 @@
       "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "191a5b61_347c1b95",
+        "filename": "doc/vmd.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-08T15:36:53Z",
+      "side": 1,
+      "message": "I think you\u0027ve changed wrong \"It provides\" ;-)",
+      "parentUuid": "2def4ca7_f94d8840",
+      "range": {
+        "startLine": 19,
+        "startChar": 26,
+        "endLine": 19,
+        "endChar": 37
+      },
+      "revId": "fa5a9b7b90aeb35f5a6eac203d4d39bd84914ff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {

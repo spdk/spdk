@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8c22fc3_903ccaec",
+        "filename": "doc/vmd.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-08T15:36:53Z",
+      "side": 1,
+      "message": "I think this statement can be a bit misleading... It\u0027s the SPDK apps not using the app framework that don\u0027t support hotplugs, but the user can use the VMD without app framework and still be able to handle hotplugs by periodically calling spdk_vmd_hotplug_monitor...",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 51
+      },
+      "revId": "8a48bb72725a6cb5061384b1026e2a62bf02a43e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

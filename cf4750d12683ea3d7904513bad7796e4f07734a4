@@ -46,6 +46,30 @@
       "revId": "cf4750d12683ea3d7904513bad7796e4f07734a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95a96144_3d2f6eb9",
+        "filename": "doc/vmd.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-08T15:36:53Z",
+      "side": 1,
+      "message": "You just need the following part added to JSON config:\n    {                                                                                                                 \n      \"subsystem\": \"vmd\",                                                                                             \n      \"config\": [                                                                                                     \n        {                                                                                                             \n          \"method\": \"enable_vmd\",                                                                                     \n          \"params\": {}                                                                                                \n        }                                                                                                             \n      ]                                                                                                               \n    }",
+      "parentUuid": "b9b5e45c_9288e0c2",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 44
+      },
+      "revId": "cf4750d12683ea3d7904513bad7796e4f07734a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
