@@ -738,6 +738,8 @@ nvme_ctrlr_init_ns(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns 
 	const struct spdk_nvme_ns_data *nsdata;
 	int			rc;
 
+	nvme_bdev_ns->type = nvme_bdev_ns_type_standard;
+
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nvme_ns->base.id);

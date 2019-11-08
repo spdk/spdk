@@ -44,7 +44,14 @@ extern pthread_mutex_t g_bdev_nvme_mutex;
 
 #define NVME_MAX_CONTROLLERS 1024
 
+enum nvme_bdev_ns_type {
+	nvme_bdev_ns_type_standard,
+	nvme_bdev_ns_type_ocssd,
+	nvme_bdev_ns_type_unknown,
+};
+
 struct nvme_bdev_ns {
+	enum nvme_bdev_ns_type	type;
 	uint32_t		id;
 	struct spdk_nvme_ns	*ns;
 	bool			creation_in_progress;
