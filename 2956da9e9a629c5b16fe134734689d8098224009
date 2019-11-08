@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2eb90ac_2b96e94c",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1307,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-08T22:48:53Z",
+      "side": 1,
+      "message": "Can we move this stuff into the start function too?  it means lines 1320-1325 would need to move until after -\u003estart() was called.\n\nI feel like there\u0027s more refactoring we can do here.  Is it ever valid to call this function if raid_bdev-\u003estate is not CONFIGURING?  If not, then maybe we should have an assert(raid_bdev-\u003estate \u003d\u003d CONFIGURING) and assert(raid_bdev-\u003enum_base_bdevs_discovered \u003d\u003d raid_bdev-\u003enum_base_bdevs) at the beginning of this function, Then you can simplify this function a bit in a patch before this one, which should make some of this rearranging easier.",
+      "revId": "2956da9e9a629c5b16fe134734689d8098224009",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
