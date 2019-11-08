@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac051d28_95d43abd",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3284,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-08T02:23:44Z",
+      "side": 1,
+      "message": "shrink the transfer size will make the other developers confuse, it is better to use scsi length, which will the code clear since we do want to get transfer size stable.",
+      "revId": "95ce971d66c6c5f1ceb7dc98b989ad05558c5c68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
