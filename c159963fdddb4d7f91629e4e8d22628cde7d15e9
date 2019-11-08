@@ -16,6 +16,24 @@
       "revId": "c159963fdddb4d7f91629e4e8d22628cde7d15e9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "901bcd64_f304a546",
+        "filename": "include/spdk/nvme_ocssd.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-11-08T10:19:57Z",
+      "side": 1,
+      "message": "This function checked only for first NS, so it didn\u0027t work as we expect it to do. I\u0027ve changed this one to check by NS and Konrad added correct one in this patch:\nhttps://review.gerrithub.io/c/spdk/spdk/+/472043/5\nProbably we should not remove this one but create new one (as you suggested) and correct existing one in Konrad\u0027s patch instead of recreating it. Let\u0027s go this way.",
+      "parentUuid": "b9b3054c_07ae171c",
+      "revId": "c159963fdddb4d7f91629e4e8d22628cde7d15e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
