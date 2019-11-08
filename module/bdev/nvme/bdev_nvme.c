@@ -210,9 +210,19 @@ bdev_nvme_poll(void *arg)
 static int
 bdev_nvme_poll_adminq(void *arg)
 {
+	int32_t rc;
 	struct spdk_nvme_ctrlr *ctrlr = arg;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 
-	return spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	rc = spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+
+	if (rc < 0) {
+		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
+		assert(nvme_bdev_ctrlr != NULL);
+		bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+	}
+
+	return rc;
 }
 
 static void
