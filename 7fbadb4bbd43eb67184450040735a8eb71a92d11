@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e347cf52_3c4e4af1",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-08T21:53:50Z",
+      "side": 1,
+      "message": "could you add this to the private data size for rte_crypto_op_pool_create?  then you don\u0027t have to worry about memory allocation failures on these vbdev_crypto_op structures - once you have a crypto_op and have to queue it, you\u0027ll already have the memory needed to do it",
+      "revId": "7fbadb4bbd43eb67184450040735a8eb71a92d11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
