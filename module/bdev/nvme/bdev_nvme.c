@@ -50,8 +50,11 @@
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
+#define BDEV_NVME_RESET_TIMEOUT_US 5000000
+
 static void bdev_nvme_get_spdk_running_config(FILE *fp);
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
+static int bdev_nvme_reset_async(void *arg);
 
 struct nvme_io_channel {
 	struct spdk_nvme_qpair	*qpair;
@@ -223,6 +226,7 @@ bdev_nvme_unregister_cb(void *io_device)
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	spdk_nvme_detach(nvme_bdev_ctrlr->ctrlr);
 	spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
+	spdk_poller_unregister(&nvme_bdev_ctrlr->reset_poller);
 	free(nvme_bdev_ctrlr->name);
 	free(nvme_bdev_ctrlr->bdevs);
 	free(nvme_bdev_ctrlr);
@@ -279,6 +283,15 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 {
 	if (rc) {
 		SPDK_ERRLOG("Resetting controller failed.\n");
+		if (!nvme_bdev_ctrlr->reset_poller) {
+			nvme_bdev_ctrlr->reset_poller = spdk_poller_register(bdev_nvme_reset_async, nvme_bdev_ctrlr,
+							BDEV_NVME_RESET_TIMEOUT_US);
+		}
+	} else {
+		if (nvme_bdev_ctrlr->reset_poller) {
+			spdk_poller_unregister(&nvme_bdev_ctrlr->reset_poller);
+			nvme_bdev_ctrlr->reset_poller = NULL;
+		}
 	}
 
 	__atomic_clear(&nvme_bdev_ctrlr->resetting, __ATOMIC_RELAXED);
@@ -386,6 +399,14 @@ bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bi
 			      _bdev_nvme_reset);
 
 	return 0;
+}
+
+static int
+bdev_nvme_reset_async(void *arg)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = arg;
+
+	return bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
 }
 
 static int
