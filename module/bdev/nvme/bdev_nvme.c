@@ -883,14 +883,13 @@ static void
 spdk_nvme_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ctx;
-	int rc;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		SPDK_WARNLOG("Abort failed. Resetting controller.\n");
-		rc = spdk_nvme_ctrlr_reset(ctrlr);
-		if (rc) {
-			SPDK_ERRLOG("Resetting controller failed.\n");
-		}
+		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
+		assert(nvme_bdev_ctrlr != NULL);
+		bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
 	}
 }
 
@@ -900,16 +899,16 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 {
 	int rc;
 	union spdk_nvme_csts_register csts;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 
 	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n", ctrlr, qpair, cid);
 
 	csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 	if (csts.bits.cfs) {
 		SPDK_ERRLOG("Controller Fatal Status, reset required\n");
-		rc = spdk_nvme_ctrlr_reset(ctrlr);
-		if (rc) {
-			SPDK_ERRLOG("Resetting controller failed.\n");
-		}
+		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
+		assert(nvme_bdev_ctrlr != NULL);
+		bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
 		return;
 	}
 
@@ -927,10 +926,9 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 
 	/* FALLTHROUGH */
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET:
-		rc = spdk_nvme_ctrlr_reset(ctrlr);
-		if (rc) {
-			SPDK_ERRLOG("Resetting controller failed.\n");
-		}
+		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
+		assert(nvme_bdev_ctrlr != NULL);
+		bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
 		break;
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE:
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "No action for nvme controller timeout.\n");
