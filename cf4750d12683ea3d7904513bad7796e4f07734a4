@@ -22,6 +22,30 @@
       "revId": "cf4750d12683ea3d7904513bad7796e4f07734a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9b5e45c_9288e0c2",
+        "filename": "doc/vmd.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-11-08T14:22:06Z",
+      "side": 1,
+      "message": "Maybe I am missing something but I can\u0027t find functionality responsible for loading json config into vmd event subsystem.",
+      "parentUuid": "00fe1710_49d7b34d",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 44
+      },
+      "revId": "cf4750d12683ea3d7904513bad7796e4f07734a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
