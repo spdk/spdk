@@ -3280,7 +3280,6 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 				TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
 				/* add remaining data transfer because no subtask is submitted anymore. */
 				task->bytes_completed += remaining_size - subtask->scsi.length;
-				subtask->scsi.transfer_len = subtask->scsi.length;
 				spdk_scsi_task_process_null_lun(&subtask->scsi);
 				spdk_iscsi_task_cpl(&subtask->scsi);
 				return 0;
