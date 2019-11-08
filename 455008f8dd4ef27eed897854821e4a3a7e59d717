@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0eff39ea_75f7f3e4",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-08T18:29:08Z",
+      "side": 1,
+      "message": "This section should be removed.  This is already covered by the 20.01 section that you added to above.",
+      "revId": "455008f8dd4ef27eed897854821e4a3a7e59d717",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
