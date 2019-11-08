@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9c1c3d6_28c3d869",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 830,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-08T21:48:54Z",
+      "side": 1,
+      "message": "we need to check calloc() failure\n\nI really hate having to do memory allocations here - it\u0027s just one more thing that can fail.  But I guess there\u0027s no better option for now.",
+      "revId": "fd5a699bda0b0046748b910cfcaedba15774fee9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
