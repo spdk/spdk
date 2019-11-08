@@ -56,6 +56,7 @@ typedef void (*spdk_bdev_init_namespaces_fn)(void *ctx, struct nvme_bdev_ns *ns,
 typedef void (*spdk_bdev_create_namespaces_fn)(void *ctx, int rc);
 typedef void (*spdk_bdev_init_ns_fn)(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 				     struct nvme_bdev_ns *nvme_ns, spdk_bdev_init_namespaces_fn cb_fn, void *cb_arg);
+typedef void (*spdk_bdev_remove_ns_fn)(struct nvme_bdev_ns *ns);
 
 struct nvme_bdev_ns {
 	enum nvme_bdev_ns_type	type;
@@ -64,6 +65,7 @@ struct nvme_bdev_ns {
 	bool			creation_in_progress;
 	struct nvme_bdev_ctrlr	*ctrlr;
 	spdk_bdev_init_ns_fn	init_fn;
+	spdk_bdev_remove_ns_fn	remove_fn;
 };
 
 struct nvme_bdev_ctrlr {

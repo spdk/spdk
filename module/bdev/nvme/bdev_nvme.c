@@ -928,7 +928,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static void
-nvme_ctrlr_deactivate_namespace(struct nvme_bdev_ns *ns)
+nvme_ctrlr_remove_ns(struct nvme_bdev_ns *ns)
 {
 	spdk_bdev_unregister(&((struct nvme_bdev_ns_standard *)ns)->disk, NULL, NULL);
 
@@ -992,6 +992,7 @@ nvme_ctrlr_init_ns_type(struct nvme_bdev_ns *ns)
 	} else {
 		ns->type = nvme_bdev_ns_type_standard;
 		ns->init_fn = nvme_ctrlr_init_ns;
+		ns->remove_fn = nvme_ctrlr_remove_ns;
 	}
 }
 
@@ -1058,7 +1059,7 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 
 		if (ns && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
 			SPDK_NOTICELOG("NSID %u is removed\n", nsid);
-			nvme_ctrlr_deactivate_namespace(ns);
+			ns->remove_fn(ns);
 		}
 	}
 
@@ -1206,7 +1207,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 				ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
 				if (ns) {
 					assert(ns->id == nsid);
-					spdk_bdev_unregister(&((struct nvme_bdev_ns_standard *)ns)->disk, NULL, NULL);
+					ns->remove_fn(ns);
 				}
 			}
 
