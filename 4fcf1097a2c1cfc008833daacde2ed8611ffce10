@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9060af65_cb0bafa5",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-11-08T15:20:38Z",
+      "side": 1,
+      "message": "it wasn\u0027t a bug because I didn\u0027t have a test case that checked multiple dequeue - good eye!",
+      "parentUuid": "cfe2f25a_2a23f35d",
+      "revId": "4fcf1097a2c1cfc008833daacde2ed8611ffce10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "53a1c770_5b5718f9",
         "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
         "patchSetId": 2
@@ -33,6 +51,24 @@
       "revId": "4fcf1097a2c1cfc008833daacde2ed8611ffce10",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e57ac69d_dc569d56",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-11-08T15:20:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "53a1c770_5b5718f9",
+      "revId": "4fcf1097a2c1cfc008833daacde2ed8611ffce10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
