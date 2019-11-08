@@ -88,6 +88,7 @@ spdk_rpc_nvme_cuse_register(struct spdk_jsonrpc_request *request,
 	if (rc) {
 		SPDK_ERRLOG("Failed to register CUSE devices\n");
 		spdk_jsonrpc_send_error_response(request, -rc, spdk_strerror(rc));
+		goto cleanup;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
