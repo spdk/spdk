@@ -22,6 +22,30 @@
       "revId": "7eef734dce5315649f1097869583f387359d7909",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34cc3e77_682ef4db",
+        "filename": "lib/vhost/rte_vhost_compat.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-08T12:23:23Z",
+      "side": 1,
+      "message": "I tried to keep code the same as before\nTherefore if previusly we did not use rte_vhost_driver_set_protocol_features() for internal vhost lib, we should not use it with this patch. But such change can be submitted separately.\nDo you agree?",
+      "parentUuid": "bb6de14b_a0411f7b",
+      "range": {
+        "startLine": 272,
+        "startChar": 0,
+        "endLine": 276,
+        "endChar": 6
+      },
+      "revId": "7eef734dce5315649f1097869583f387359d7909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
