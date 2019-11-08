@@ -3282,7 +3282,6 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 				 * subtask is submitted anymore.
 				 */
 				task->scsi.transfer_len = task->current_datain_offset;
-				subtask->scsi.transfer_len = subtask->scsi.length;
 				spdk_scsi_task_process_null_lun(&subtask->scsi);
 				spdk_iscsi_task_cpl(&subtask->scsi);
 				return 0;
