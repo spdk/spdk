@@ -397,7 +397,7 @@ spdk_iscsi_find_tgt_node(const char *target_name)
 		return NULL;
 	}
 	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
-		if (strcasecmp(target_name, target->name) == 0) {
+		if (strcasecmp(target_name, target->name) == 0 && !target->destructed) {
 			return target;
 		}
 	}
