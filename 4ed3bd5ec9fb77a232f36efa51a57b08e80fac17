@@ -22,6 +22,30 @@
       "revId": "4ed3bd5ec9fb77a232f36efa51a57b08e80fac17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f222ec2_e075c218",
+        "filename": "lib/vhost/rte_vhost_compat.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-08T12:43:15Z",
+      "side": 1,
+      "message": "Are you sure we use get_config/set_config in vhost_blk?\nI checked and we don\u0027t.\nThe structure \"vhost_device_ops\" does not even have fields get_config/set_config if we dont compile with internal vhost lib. (It is defined differently in DPDK vs our internal lib)\nCould you take another look?",
+      "parentUuid": "fb735637_dee6322f",
+      "range": {
+        "startLine": 88,
+        "startChar": 1,
+        "endLine": 89,
+        "endChar": 26
+      },
+      "revId": "4ed3bd5ec9fb77a232f36efa51a57b08e80fac17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
