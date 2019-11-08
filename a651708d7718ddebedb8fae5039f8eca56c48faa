@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3d2acb0_713214b2",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 982,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-11-08T15:45:37Z",
+      "side": 1,
+      "message": "it\u0027s still calling sync mode API here, so spdk_fs_rmdir is still sync mode API.\nwhat you need to implement is a spdk_fs_rmdir_async, and then add spdk_fs_rmdir based on spdk_fs_rmdir_async.\n\nfor all related API, if it calls some external sync mode spdk_fs function, then the API will be blocked and can\u0027t be easily used inside SPDK applications.",
+      "range": {
+        "startLine": 982,
+        "startChar": 2,
+        "endLine": 982,
+        "endChar": 21
+      },
+      "revId": "a651708d7718ddebedb8fae5039f8eca56c48faa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
