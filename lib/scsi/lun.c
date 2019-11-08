@@ -216,21 +216,26 @@ spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task
 	TAILQ_INSERT_TAIL(&lun->pending_tasks, task, scsi_link);
 }
 
-void
-spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
+static void
+scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 {
 	struct spdk_scsi_task *task, *task_tmp;
-
-	if (scsi_lun_has_pending_mgmt_tasks(lun)) {
-		/* Pending IO tasks will wait for completion of existing mgmt tasks.
-		 */
-		return;
-	}
 
 	TAILQ_FOREACH_SAFE(task, &lun->pending_tasks, scsi_link, task_tmp) {
 		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
 		_scsi_lun_execute_task(lun, task);
 	}
+}
+
+void
+spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
+{
+	if (scsi_lun_has_pending_mgmt_tasks(lun)) {
+		/* Pending IO tasks will wait for completion of existing mgmt tasks.
+		 */
+		return;
+	}
+	scsi_lun_execute_tasks(lun);
 }
 
 static void
