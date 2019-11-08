@@ -280,6 +280,8 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 	if (rc) {
 		SPDK_ERRLOG("Resetting controller failed.\n");
 	}
+
+	__atomic_clear(&nvme_bdev_ctrlr->resetting, __ATOMIC_RELAXED);
 }
 
 static void
@@ -369,6 +371,13 @@ _bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 static int
 bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio)
 {
+	if (__atomic_test_and_set(&nvme_bdev_ctrlr->resetting, __ATOMIC_RELAXED)) {
+		SPDK_NOTICELOG("Unable to perform reset, already in progress.\n");
+		if (bio) {
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+
 	/* First, delete all NVMe I/O queue pairs. */
 	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_reset_destroy_qpair,
