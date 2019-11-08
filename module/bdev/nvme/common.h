@@ -62,6 +62,7 @@ struct nvme_bdev_ctrlr {
 	struct spdk_nvme_transport_id	trid;
 	char				*name;
 	int				ref;
+	bool				resetting;
 	bool				destruct;
 	/**
 	 * PI check flags. This flags is set to NVMe controllers created only
