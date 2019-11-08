@@ -127,6 +127,7 @@ static struct spdk_poller *g_hotplug_poller;
 static struct spdk_nvme_probe_ctx *g_hotplug_probe_ctx;
 static char *g_nvme_hostnqn = NULL;
 
+static int bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio);
 static void nvme_ctrlr_create_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
@@ -211,9 +212,28 @@ bdev_nvme_poll(void *arg)
 static int
 bdev_nvme_poll_adminq(void *arg)
 {
+	int32_t rc;
 	struct spdk_nvme_ctrlr *ctrlr = arg;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 
-	return spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	rc = spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+
+	if (rc < 0) {
+		nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(spdk_nvme_ctrlr_get_transport_id(ctrlr));
+		assert(nvme_bdev_ctrlr != NULL);
+		/*
+		 * If we are already looping on a reset, we don't need to try again.
+		 * In terms of concurrency, we don't need to take reset lock here before
+		 * checking the poller period because if for some reason the controller failed
+		 * right after we unregistered the poller, we will just pick this up on the next
+		 * poll of the admin qpair.
+		 */
+		if (!nvme_bdev_ctrlr->reset_poller) {
+			bdev_nvme_reset(nvme_bdev_ctrlr, NULL);
+		}
+	}
+
+	return rc;
 }
 
 static void
