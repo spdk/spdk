@@ -369,10 +369,10 @@ _bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 }
 
 static int
-bdev_nvme_reset(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio)
+bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio)
 {
 	/* First, delete all NVMe I/O queue pairs. */
-	spdk_for_each_channel(nbdev->nvme_bdev_ctrlr,
+	spdk_for_each_channel(nvme_bdev_ctrlr,
 			      _bdev_nvme_reset_destroy_qpair,
 			      bio,
 			      _bdev_nvme_reset);
@@ -458,7 +458,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 				       bdev_io->u.bdev.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		return bdev_nvme_reset(nbdev, nbdev_io);
+		return bdev_nvme_reset(nbdev->nvme_bdev_ctrlr, nbdev_io);
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return bdev_nvme_flush(nbdev,
