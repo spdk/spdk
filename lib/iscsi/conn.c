@@ -313,21 +313,31 @@ error_return:
 void
 spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
+	struct spdk_iscsi_task *primary;
+
 	if (pdu->task) {
+		primary = spdk_iscsi_task_get_primary(pdu->task);
 		if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
 			if (pdu->task->scsi.offset > 0) {
 				conn->data_in_cnt--;
 				if (pdu->bhs.flags & ISCSI_DATAIN_STATUS) {
 					/* Free the primary task after the last subtask done */
 					conn->data_in_cnt--;
-					spdk_iscsi_task_put(spdk_iscsi_task_get_primary(pdu->task));
+					spdk_iscsi_task_put(primary);
 				}
 				spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 			}
 		} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_RSP &&
 			   pdu->task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
 			if (pdu->task->scsi.offset > 0) {
-				spdk_iscsi_task_put(spdk_iscsi_task_get_primary(pdu->task));
+				if (spdk_iscsi_task_is_read(primary)) {
+					if (primary->bytes_completed == primary->scsi.transfer_len) {
+						/* Free the primary task after the last subtask done */
+						spdk_iscsi_task_put(primary);
+					}
+				} else {
+					spdk_iscsi_task_put(primary);
+				}
 			}
 		}
 		spdk_iscsi_task_put(pdu->task);
