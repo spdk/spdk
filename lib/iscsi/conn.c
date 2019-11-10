@@ -335,8 +335,6 @@ spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pd
 						/* Free the primary task after the last subtask done */
 						spdk_iscsi_task_put(primary);
 					}
-				} else {
-					spdk_iscsi_task_put(primary);
 				}
 			}
 		}
