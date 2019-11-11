@@ -22,6 +22,30 @@
       "revId": "910d297b81ab2d29387cbef423838ff7231dac13",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "604b91ce_0de231f4",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-11T07:24:21Z",
+      "side": 1,
+      "message": "It looks that this is new change. I thought we could use existing code even after this patch.",
+      "parentUuid": "4c28452c_6f32ade0",
+      "range": {
+        "startLine": 1069,
+        "startChar": 0,
+        "endLine": 1076,
+        "endChar": 0
+      },
+      "revId": "910d297b81ab2d29387cbef423838ff7231dac13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
