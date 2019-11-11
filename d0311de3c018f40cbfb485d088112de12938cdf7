@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8bd37cc_de072996",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 3252,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-11T08:10:56Z",
+      "side": 1,
+      "message": "If you have chance to rebase, please change \"when\" to \"if\".\nSorry for my mistake.",
+      "range": {
+        "startLine": 3252,
+        "startChar": 46,
+        "endLine": 3252,
+        "endChar": 51
+      },
+      "revId": "d0311de3c018f40cbfb485d088112de12938cdf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
