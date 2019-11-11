@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32bd8cd4_b4569460",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3253,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-11T13:42:59Z",
+      "side": 1,
+      "message": "should we also remove setting of task-\u003escsi.lun here?\n\nI know in this case, it does not really matter if we overwrite scsi.lun, since we will be completing this task with error status immediately.  But I think it may be confusing why we overwrite scsi.lun here, but do not overwrite it below.",
+      "revId": "20b4e66ff87da46dd1b61ced4975ca835884fa72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
