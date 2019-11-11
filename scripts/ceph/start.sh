@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# create mon
+# Create mon
 
 set -x
 set -e
@@ -19,10 +19,11 @@ dev=/dev/loop200
 umount ${dev}p2 || true
 losetup -d $dev_backend || true
 
-# partition osd
+# Partition osd
 if [ -d $base_dir ]; then
 	rm -rf $base_dir
 fi
+
 mkdir ${base_dir}
 cp ${script_dir}/ceph.conf $ceph_conf
 
@@ -49,7 +50,21 @@ ${SGDISK} -c 1:osd-device-${partno}-journal ${dev}
 ${SGDISK} -c 2:osd-device-${partno}-data ${dev}
 kpartx ${dev}
 
-# prep osds
+# Later versions of ceph-12 have a lot of changes, to compatible with the new version of ceph-deploy.
+ceph_version=$(ceph -v | awk '{print $3}')
+ceph_maj=${ceph_version%%.*}
+if [ $ceph_maj -gt 12 ]; then
+        update_config=true
+        rm -f /var/log/ceph/ceph-mon.a.log || true
+        set_min_mon_release="--set-min-mon-release 14"
+        ceph_osd_extra_config="--check-needs-journal --no-mon-config"
+else
+        update_config=false
+        set_min_mon_release=""
+        ceph_osd_extra_config=""
+fi
+
+# Prep osds
 
 mnt_pt=${mnt_dir}/osd-device-0-data
 mkdir -p ${mnt_pt}
@@ -58,11 +73,11 @@ mount /dev/disk/by-partlabel/osd-device-0-data ${mnt_pt}
 echo -e "\tosd data = ${mnt_pt}" >> "$ceph_conf"
 echo -e "\tosd journal = /dev/disk/by-partlabel/osd-device-0-journal" >> "$ceph_conf"
 
-# add mon address
+# Add mon address
 echo -e "\t[mon.a]" >> "$ceph_conf"
 echo -e "\tmon addr = ${mon_ip}:12046" >> "$ceph_conf"
 
-# create mon
+# Create mon
 rm -rf "${mon_dir:?}/"*
 mkdir -p ${mon_dir}
 mkdir -p ${pid_dir}
@@ -71,21 +86,36 @@ rm -f /etc/ceph/ceph.client.admin.keyring
 ceph-authtool --create-keyring --gen-key --name=mon. ${base_dir}/keyring --cap mon 'allow *'
 ceph-authtool --gen-key --name=client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *' ${base_dir}/keyring
 
-monmaptool --create --clobber --add a ${mon_ip}:12046 --print ${base_dir}/monmap
+monmaptool --create --clobber --add a ${mon_ip}:12046 --print ${base_dir}/monmap $set_min_mon_release
 
 sh -c "ulimit -c unlimited && exec ceph-mon --mkfs -c ${ceph_conf} -i a --monmap=${base_dir}/monmap --keyring=${base_dir}/keyring --mon-data=${mon_dir}"
 
+if [ $update_config = true ] ;then
+        sed -i 's/mon addr = /mon addr = v2:/g' $ceph_conf
+fi
+
 cp ${base_dir}/keyring ${mon_dir}/keyring
-
 cp $ceph_conf /etc/ceph/ceph.conf
-
 cp ${base_dir}/keyring /etc/ceph/keyring
 cp ${base_dir}/keyring /etc/ceph/ceph.client.admin.keyring
 chmod a+r /etc/ceph/ceph.client.admin.keyring
 
 ceph-run sh -c "ulimit -n 16384 && ulimit -c unlimited && exec ceph-mon -c ${ceph_conf} -i a --keyring=${base_dir}/keyring --pid-file=${base_dir}/pid/root@$(hostname).pid --mon-data=${mon_dir}" || true
 
-# create osd
+# After ceph-mon creation, ceph -s should be work.
+if [ $update_config = true ] ;then
+        # This is reserved for moitoring  message
+        #ceph-conf --name mon.a --show-config-value log_file
+        #ceph osd stat
+        #ceph health detail
+
+        # Add fsid to ceph config file.
+        fsid=$(ceph -s | grep id |awk '{print $2}')
+        sed -i 's/perf = true/perf = true\n\tfsid = '$fsid' \n/g' $ceph_conf
+        cat ${ceph_conf}
+fi
+
+# Create osd
 
 i=0
 
@@ -93,11 +123,11 @@ mkdir -p ${mnt_dir}
 
 uuid=$(uuidgen)
 ceph -c ${ceph_conf} osd create ${uuid} $i
-ceph-osd -c ${ceph_conf} -i $i --mkfs --mkkey --osd-uuid ${uuid}
+ceph-osd -c ${ceph_conf} -i $i --mkfs --mkkey --osd-uuid ${uuid} ${ceph_osd_extra_config}
 ceph -c ${ceph_conf} osd crush add osd.${i} 1.0 host=$(hostname) root=default
 ceph -c ${ceph_conf} -i ${mnt_dir}/osd-device-${i}-data/keyring auth add osd.${i} osd "allow *" mon "allow profile osd" mgr "allow *"
 
-# start osd
+# Start osd
 pkill -9 ceph-osd || true
 sleep 2
 
