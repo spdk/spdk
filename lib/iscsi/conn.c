@@ -629,6 +629,7 @@ _iscsi_conn_check_shutdown(void *arg)
 
 	spdk_poller_unregister(&conn->shutdown_timer);
 
+	assert(conn->data_in_cnt == 0);
 	iscsi_conn_stop(conn);
 	iscsi_conn_free(conn);
 
@@ -652,6 +653,7 @@ _iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 		/* The connection cannot be freed yet. Check back later. */
 		conn->shutdown_timer = spdk_poller_register(_iscsi_conn_check_shutdown, conn, 1000);
 	} else {
+		assert(conn->data_in_cnt == 0);
 		iscsi_conn_stop(conn);
 		iscsi_conn_free(conn);
 	}
