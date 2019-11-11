@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fdc3d649_3674d245",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-11T06:04:51Z",
+      "side": 1,
+      "message": "Can we move this to just after/before assert(conn-\u003estate \u003d\u003d ISCSI_CONN_STATE_EXITED) in iscsi_conn_stop()?",
+      "revId": "17d8acbccb616615f7aa04bb7408da3d7591ade1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ae43cc5_35190c49",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-11T06:04:51Z",
+      "side": 1,
+      "message": "Ditto",
+      "revId": "17d8acbccb616615f7aa04bb7408da3d7591ade1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
