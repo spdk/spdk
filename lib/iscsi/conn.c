@@ -304,31 +304,14 @@ error_return:
 void
 spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
-	struct spdk_iscsi_task *primary;
-
 	if (pdu->task) {
-		primary = spdk_iscsi_task_get_primary(pdu->task);
 		if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
-			if (pdu->task->scsi.offset > 0) {
+			if (pdu->task != spdk_iscsi_task_get_primary(pdu->task)) {
 				conn->data_in_cnt--;
-				if (pdu->bhs.flags & ISCSI_DATAIN_STATUS) {
-					/* Free the primary task after the last subtask done */
-					conn->data_in_cnt--;
-					spdk_iscsi_task_put(primary);
-				}
 				spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 			}
-		} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_RSP &&
-			   pdu->task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
-			if (pdu->task->scsi.offset > 0) {
-				if (spdk_iscsi_task_is_read(primary)) {
-					if (primary->bytes_completed == primary->scsi.transfer_len) {
-						/* Free the primary task after the last subtask done */
-						spdk_iscsi_task_put(primary);
-					}
-				}
-			}
 		}
+
 		spdk_iscsi_task_put(pdu->task);
 	}
 	spdk_put_pdu(pdu);
@@ -1040,6 +1023,10 @@ process_completed_read_subtask_list(struct spdk_iscsi_conn *conn,
 			break;
 		}
 	}
+
+	if (primary->bytes_completed == primary->scsi.transfer_len) {
+		spdk_iscsi_task_put(primary);
+	}
 }
 
 static void
@@ -1068,27 +1055,27 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 		iscsi_task_copy_from_rsp_scsi_status(&task->scsi, primary);
 	}
 
-	if ((task != primary) &&
-	    (task->scsi.offset != primary->bytes_completed)) {
-		TAILQ_FOREACH(tmp, &primary->subtask_list, subtask_link) {
-			if (task->scsi.offset < tmp->scsi.offset) {
-				TAILQ_INSERT_BEFORE(tmp, task, subtask_link);
-				return;
-			}
-		}
-
-		TAILQ_INSERT_TAIL(&primary->subtask_list, task, subtask_link);
-		return;
-	}
-
-	primary->bytes_completed += task->scsi.length;
-	spdk_iscsi_task_response(conn, task);
-
-	if ((task != primary) ||
-	    (task->scsi.transfer_len == task->scsi.length)) {
+	if (task == primary) {
+		primary->bytes_completed = task->scsi.length;
+		/* For non split read I/O */
+		assert(primary->bytes_completed == task->scsi.transfer_len);
+		spdk_iscsi_task_response(conn, task);
 		spdk_iscsi_task_put(task);
+	} else {
+		if (task->scsi.offset != primary->bytes_completed) {
+			TAILQ_FOREACH(tmp, &primary->subtask_list, subtask_link) {
+				if (task->scsi.offset < tmp->scsi.offset) {
+					TAILQ_INSERT_BEFORE(tmp, task, subtask_link);
+					return;
+				}
+			}
+
+			TAILQ_INSERT_TAIL(&primary->subtask_list, task, subtask_link);
+		} else {
+			TAILQ_INSERT_HEAD(&primary->subtask_list, task, subtask_link);
+			process_completed_read_subtask_list(conn, primary);
+		}
 	}
-	process_completed_read_subtask_list(conn, primary);
 }
 
 void
