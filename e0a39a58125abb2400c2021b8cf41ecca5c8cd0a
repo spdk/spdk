@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a865b77b_63bee5e4",
+        "filename": "scripts/ceph/start.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-11T13:34:41Z",
+      "side": 1,
+      "message": "I would suggest putting a lot of these comment changes (not related to Ceph compatibility) in a different patch",
+      "revId": "e0a39a58125abb2400c2021b8cf41ecca5c8cd0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84ea823b_8460c0b1",
+        "filename": "scripts/ceph/start.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-11T13:34:41Z",
+      "side": 1,
+      "message": "After ceph-mon creation, ceph -s should work",
+      "revId": "e0a39a58125abb2400c2021b8cf41ecca5c8cd0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef9a7b38_6a31f802",
+        "filename": "scripts/ceph/start.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-11T13:34:41Z",
+      "side": 1,
+      "message": "Should we remove these commented lines?  It\u0027s not clear what purpose they have if they are commented out.",
+      "revId": "e0a39a58125abb2400c2021b8cf41ecca5c8cd0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
