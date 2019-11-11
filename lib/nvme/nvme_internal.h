@@ -149,7 +149,7 @@ extern pid_t g_spdk_nvme_pid;
 
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)
 
-#define MIN_KEEP_ALIVE_TIMEOUT_IN_MS	(10000)
+#define MIN_KEEP_ALIVE_TIMEOUT_IN_MS	(100000)
 
 /* We want to fit submission and completion rings each in a single 2MB
  * hugepage to ensure physical address contiguity.
