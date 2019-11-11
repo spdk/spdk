@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45c3bc55_28087633",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-11T04:33:21Z",
+      "side": 1,
+      "message": "Please separate this into another patch.",
+      "revId": "917a712f340bbc22800137dd1a75b086c8e4dcdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0579a8c2_bb8bcf70",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-11T04:33:21Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "917a712f340bbc22800137dd1a75b086c8e4dcdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
