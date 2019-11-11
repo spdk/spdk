@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7be17a9_f6206eca",
+        "filename": "module/bdev/uring/bdev_uring.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-11T05:19:34Z",
+      "side": 1,
+      "message": "I think the following is slightly simpler but may be personal preference.\n\n\tif (detected_block_size \u003d\u003d 0) {\n\t\tif (block_size \u003d\u003d 0) {\n\t\t\tSPDK_ERRLOG(\"Block size could not be auto-detected and was not specified\\n\");\n\t\t\tgoto error_return;\n\t\t}\n\t} else {\n\t\tif (block_size \u003c detected_block_size) {\n\t\t\tSPDK_ERRLOG(\"Specified block size is smaller than auto-detected block size\\n\");\n\t\t\tgoto error_return;\n\t\t} else if (block_size !\u003d detected_block_size) {\n\t\t\tSPDK_WARNLOG(\"Specified block size does not match auto-detected block size\\n\");\n\t\t}\n\t}",
+      "revId": "9867cf181c7822ba4b0a3dd4460d4dbdbd79a9b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad6932b5_1fcdb839",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-11T05:19:34Z",
+      "side": 1,
+      "message": "Maybe \"use auto-detected size if omitted, or must not be less than auto-detected size if specified\"",
+      "range": {
+        "startLine": 330,
+        "startChar": 52,
+        "endLine": 330,
+        "endChar": 75
+      },
+      "revId": "9867cf181c7822ba4b0a3dd4460d4dbdbd79a9b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
