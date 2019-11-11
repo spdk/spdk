@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "725beb1e_29d6ee89",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-11T06:00:43Z",
+      "side": 1,
+      "message": "The following reverse ordering may be intuitive.\n\nif (task \u003d\u003d primary) {\n  small single read I/O.\n} else {\n  large read I/O is split.\n}",
+      "revId": "3b973dffbf1f554bd290af8c19f98fc79faf4913",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5fd9038_add31d39",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1095,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-11T06:00:43Z",
+      "side": 1,
+      "message": "We don\u0027t need to use +\u003d.\n\u003d should be OK.\n\nAdding assert(primary-\u003ebytes_completed \u003d\u003d task-\u003escsi.transfer_len) between the line 1095 and 1096 may clarify this is for non-split small read I/O.\nPlease see spdk_iscsi_task_response().",
+      "range": {
+        "startLine": 1095,
+        "startChar": 27,
+        "endLine": 1095,
+        "endChar": 29
+      },
+      "revId": "3b973dffbf1f554bd290af8c19f98fc79faf4913",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "965cf1ff_3329ac03",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 3252,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-11T06:00:43Z",
+      "side": 1,
+      "message": "\"Stop splitting I/Os for remaining data when we detect LUN is removed.\" may be a little more straight-forward?",
+      "range": {
+        "startLine": 3252,
+        "startChar": 6,
+        "endLine": 3252,
+        "endChar": 90
+      },
+      "revId": "3b973dffbf1f554bd290af8c19f98fc79faf4913",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f23c2572_2a6e8f8e",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 3254,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-11T06:00:43Z",
+      "side": 1,
+      "message": "task-\u003ecurrent_datain_offset +\u003d remaining_size is a little more intuitive?",
+      "range": {
+        "startLine": 3254,
+        "startChar": 4,
+        "endLine": 3254,
+        "endChar": 58
+      },
+      "revId": "3b973dffbf1f554bd290af8c19f98fc79faf4913",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2a13116_e439ee6d",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 3255,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-11T06:00:43Z",
+      "side": 1,
+      "message": "Unrelated with this patch, but in spdk_scsi_task_process_null_lun(), subtask-\u003escsi.length \u003d subtask-\u003escsi.transfer_len.\nSo, subtask-\u003escsi.transfer_len \u003d remaining_size is better.",
+      "range": {
+        "startLine": 3255,
+        "startChar": 4,
+        "endLine": 3255,
+        "endChar": 71
+      },
+      "revId": "3b973dffbf1f554bd290af8c19f98fc79faf4913",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
