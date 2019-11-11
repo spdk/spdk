@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "7793858e_84b40eb7",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-11T02:18:22Z",
+      "side": 1,
+      "message": "\u003e yes we can, you prefer not to use anonymous enums? is this a convention of spdk?\n\nUsually, we do not use anonymous enums.",
+      "parentUuid": "2a665666_485068f5",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 2
+      },
+      "revId": "4f11d5e3d577c5a78626f94418061ace39cf55d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "791d6075_9ab11842",
         "filename": "lib/nvme/nvme_tcp.c",
         "patchSetId": 5
