@@ -12,12 +12,11 @@ mon_dir=${base_dir}/mon.a
 pid_dir=${base_dir}/pid
 ceph_conf=${base_dir}/ceph.conf
 mnt_dir=${base_dir}/mnt
-dev_backend=/dev/ceph
 image=/var/tmp/ceph_raw.img
 dev=/dev/loop200
 
 umount ${dev}p2 || true
-losetup -d $dev_backend || true
+losetup -d $dev || true
 
 # partition osd
 if [ -d $base_dir ]; then
@@ -30,8 +29,7 @@ if [ ! -e $image ]; then
         fallocate -l 4G $image
 fi
 
-mknod ${dev_backend} b 7 200 || true
-losetup ${dev_backend} ${image} || true
+losetup ${dev} ${image} || true
 
 PARTED="parted -s"
 SGDISK="sgdisk"

@@ -4,10 +4,10 @@ set -x
 
 base_dir=/var/tmp/ceph
 image=${base_dir}/ceph_raw.img
-dev_backend=/dev/ceph
+dev=/dev/loop200
 
 pkill -9 ceph
 sleep 3
-umount /dev/loop200p2
-losetup -d $dev_backend
+umount ${dev}p2
+losetup -d $dev
 rm -rf $base_dir
