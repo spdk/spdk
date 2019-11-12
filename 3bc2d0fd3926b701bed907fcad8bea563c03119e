@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4851bc80_83128f6c",
+        "filename": "module/bdev/raid/raid0.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T16:27:36Z",
+      "side": 1,
+      "message": "I know this was copied from other parts of this file, but in SPDK we typically don\u0027t declare variables in the for statement itself.  So we should declare uint8_t i at the beginning of this function.  (It would be good to fix this in the code changes above too since you\u0027re already making modifications there.)\n\nI would be fine checking this code in with the variable declared inline but since you\u0027ll need to rebase this series anyways, let\u0027s go ahead and fix it now.",
+      "revId": "3bc2d0fd3926b701bed907fcad8bea563c03119e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
