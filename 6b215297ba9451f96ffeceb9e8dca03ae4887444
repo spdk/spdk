@@ -46,6 +46,30 @@
       "revId": "6b215297ba9451f96ffeceb9e8dca03ae4887444",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3503414d_8bf0c43c",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-12T20:51:44Z",
+      "side": 1,
+      "message": "Actually, I am not sure that queueing resets will work either because resets can come in on any thread on any bdev associated with the controller. So I would have to queue resets on a per I/O channel basis to avoid contention over a shared tailq, then I would have to do a for_each_channel on each bdev to free the queued resets before I clear the reset flag. While I am in the process of doing that, another reset could potentially come in on a thread. That spdk_bdev_io would be queued, and then never get completed. I think that trying to queue reset requests and batch complete them introduces too many possibilities for errors.\nSo I am back to thinking that failing the reset attempt when there is already one in progress is the right thing to do.",
+      "parentUuid": "c31ec3be_ce97bd40",
+      "range": {
+        "startLine": 377,
+        "startChar": 53,
+        "endLine": 377,
+        "endChar": 79
+      },
+      "revId": "6b215297ba9451f96ffeceb9e8dca03ae4887444",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
