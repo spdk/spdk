@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "46832ac4_f94d3b9c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 15
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-12T23:44:06Z",
+      "side": 1,
+      "message": "Yes, your understanding is correct.\nI updated the comment in the source code and the commit message, and appended a patch to abort pending mgmt tasks. I hope you will see improvement.",
+      "parentUuid": "6abdb41b_c1c2a664",
+      "revId": "090d7862d6b2425d80639f44abbb208e09cae3d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8b107265_e48aa6ff",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 15
@@ -30,6 +48,70 @@
       "writtenOn": "2019-11-12T17:00:12Z",
       "side": 1,
       "message": "lun-\u003eremoved has been set, meaning no new tasks can be submitted to the\nLUN.  So execute any previously queued tasks, which will be immediately\naborted.  Then we only need to wait for all outstanding tasks to be\ncompleted before notifying the upper layer about the removal.",
+      "revId": "090d7862d6b2425d80639f44abbb208e09cae3d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e331c315_6665f40d",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-12T23:44:06Z",
+      "side": 1,
+      "message": "Yes, that\u0027s true.",
+      "parentUuid": "8b107265_e48aa6ff",
+      "revId": "090d7862d6b2425d80639f44abbb208e09cae3d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73b65f1e_0af505f1",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-12T23:44:06Z",
+      "side": 1,
+      "message": "We can replace this by scsi_lun_has_outstanding_tasks() but it\u0027s not critical. I want to do this after stabilization.",
+      "range": {
+        "startLine": 334,
+        "startChar": 5,
+        "endLine": 334,
+        "endChar": 31
+      },
+      "revId": "090d7862d6b2425d80639f44abbb208e09cae3d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e544659a_46688586",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-12T23:44:06Z",
+      "side": 1,
+      "message": "We can comment about management tasks here too, for example \"All pending tasks are executed sequentially.  We don\u0027t have to kick them here.\" But it is also minor and we can do it after stabilization.\n\nBut I think we should abort pending management tasks immediately as same as IO tasks by adding check if lun-\u003eremoved is true. I will do it in the next patch.",
+      "range": {
+        "startLine": 335,
+        "startChar": 5,
+        "endLine": 335,
+        "endChar": 36
+      },
       "revId": "090d7862d6b2425d80639f44abbb208e09cae3d4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
