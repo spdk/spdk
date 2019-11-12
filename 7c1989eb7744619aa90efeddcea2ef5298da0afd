@@ -87,6 +87,23 @@
     },
     {
       "key": {
+        "uuid": "805be5f8_5f66eba9",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T18:11:47Z",
+      "side": 1,
+      "message": "why does this need to use $QOS_RPC_SERVER?  can you just use the default RPC sock address?  then you don\u0027t need the previous patch",
+      "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cde289a4_94e4ba9a",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 36
