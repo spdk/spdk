@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d8b10e8_c6962f66",
+        "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-12T07:57:36Z",
+      "side": 1,
+      "message": "Please use \"create\" instead.\n\nUsing the term \"construct\" in RPC has been deprecated recently.",
+      "range": {
+        "startLine": 44,
+        "startChar": 11,
+        "endLine": 44,
+        "endChar": 20
+      },
+      "revId": "945ea688ef39223e9a959186939e9d455053facd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03324396_6382e612",
+        "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-12T07:57:36Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 52,
+        "startChar": 9,
+        "endLine": 52,
+        "endChar": 18
+      },
+      "revId": "945ea688ef39223e9a959186939e9d455053facd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3942d24f_d6d39865",
+        "filename": "module/bdev/zone_block/vbdev_zone_block_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-12T07:57:36Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 58,
+        "startChar": 49,
+        "endLine": 58,
+        "endChar": 58
+      },
+      "revId": "945ea688ef39223e9a959186939e9d455053facd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
