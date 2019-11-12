@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1066,7 +1066,7 @@ fuzz_vhost_usage(void)
 		" -k                        Keep the iov pointer addresses from the json file. only valid with -j.\n");
 	fprintf(stderr, " -S <integer>              Seed value for test.\n");
 	fprintf(stderr, " -t <integer>              Time in seconds to run the fuzz test.\n");
-	fprintf(stderr, " -v                        Enable logging of each submitted command.\n");
+	fprintf(stderr, " -V                        Enable logging of each submitted command.\n");
 }
 
 static int
@@ -1097,7 +1097,7 @@ fuzz_vhost_parse(int ch, char *arg)
 			return -1;
 		}
 		break;
-	case 'v':
+	case 'V':
 		g_verbose_mode = true;
 		break;
 	case '?':
@@ -1117,7 +1117,7 @@ main(int argc, char **argv)
 	opts.name = "vhost_fuzz";
 	g_runtime = DEFAULT_RUNTIME;
 
-	rc = spdk_app_parse_args(argc, argv, &opts, "j:kS:t:v", NULL, fuzz_vhost_parse, fuzz_vhost_usage);
+	rc = spdk_app_parse_args(argc, argv, &opts, "j:kS:t:V", NULL, fuzz_vhost_parse, fuzz_vhost_usage);
 	if (rc != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		fprintf(stderr, "Unable to parse the application arguments.\n");
 		return -1;

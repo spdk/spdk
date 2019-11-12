@@ -39,7 +39,7 @@ always be started with the --wait-for-rpc argument. Please see below for an exam
 
 ~~~
 ./test/app/fuzz/vhost_fuzz/vhost_fuzz -t 30 --wait-for-rpc &
-./scripts/rpc.py fuzz_vhost_create_dev -s ./Vhost.1 -b -v
-./scripts/rpc.py fuzz_vhost_create_dev -s ./naa.VhostScsi0.1 -l -v
+./scripts/rpc.py fuzz_vhost_create_dev -s ./Vhost.1 -b -V
+./scripts/rpc.py fuzz_vhost_create_dev -s ./naa.VhostScsi0.1 -l -V
 ./scripts/rpc.py framework_start_init
 ~~~
