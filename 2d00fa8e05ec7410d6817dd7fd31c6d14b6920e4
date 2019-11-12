@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f25192d0_6c071223",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-12T07:20:30Z",
+      "side": 1,
+      "message": "status may be better? _bdev_nvme_reset_done() and _bdev_nvme_reset() uses both rc and status, respectively.\nCan we do some clarification about rc and status?",
+      "range": {
+        "startLine": 278,
+        "startChar": 71,
+        "endLine": 278,
+        "endChar": 73
+      },
+      "revId": "2d00fa8e05ec7410d6817dd7fd31c6d14b6920e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35791814_c542b8e8",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-12T07:20:30Z",
+      "side": 1,
+      "message": "should we print the value of rc here?",
+      "range": {
+        "startLine": 281,
+        "startChar": 43,
+        "endLine": 281,
+        "endChar": 46
+      },
+      "revId": "2d00fa8e05ec7410d6817dd7fd31c6d14b6920e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
