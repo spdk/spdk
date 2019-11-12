@@ -22,6 +22,30 @@
       "revId": "6b215297ba9451f96ffeceb9e8dca03ae4887444",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c31ec3be_ce97bd40",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-12T17:34:37Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nThanks for the review. I was actually not sure what to do in this case either. Later on in this callback chain we definitely do return an error code (see lines 298, 332, 341). However, I agree that the semantics of returning an error code here are slightly different. It\u0027s not that we attempted the operation and it failed, it\u0027s that we weren\u0027t able to attempt the reset because of the state of the bdev.\nThe reason I didn\u0027t queue resets is because I don\u0027t think users would want to  unconditionally do a reset twice in a row. My thought process is that once the first reset completes successfully, the bdev will be in a fixed state and we won\u0027t want to do the second reset. However, if the reset going on when this function is called fails, then we will find ourselves in a bad state again. In that case, we can try this function again.\nI am open to not returning a failure here, and just queueing the reset bdevio until the original reset completes, then returning the same return code for both bdevios. Do you think that would be a reasonable approach?",
+      "parentUuid": "0c2a3e14_4fe61fb7",
+      "range": {
+        "startLine": 377,
+        "startChar": 53,
+        "endLine": 377,
+        "endChar": 79
+      },
+      "revId": "6b215297ba9451f96ffeceb9e8dca03ae4887444",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
