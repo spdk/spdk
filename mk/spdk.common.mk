@@ -212,6 +212,11 @@ COMMON_CFLAGS += -fsanitize=thread
 LDFLAGS += -fsanitize=thread
 endif
 
+SPDK_GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null)
+ifneq (, $(SPDK_GIT_COMMIT))
+COMMON_CFLAGS += -DSPDK_GIT_COMMIT=$(SPDK_GIT_COMMIT)
+endif
+
 COMMON_CFLAGS += -pthread
 LDFLAGS += -pthread
 
