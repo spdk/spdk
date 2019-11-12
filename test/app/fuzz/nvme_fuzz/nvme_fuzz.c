@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -883,7 +883,7 @@ nvme_fuzz_parse(int ch, char *arg)
 			return -1;
 		}
 		break;
-	case 'v':
+	case 'V':
 		g_verbose_mode = true;
 		break;
 	case '?':
@@ -905,7 +905,7 @@ main(int argc, char **argv)
 	g_runtime = DEFAULT_RUNTIME;
 	g_run = true;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "aC:j:NS:t:v", NULL, nvme_fuzz_parse,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "aC:j:NS:t:V", NULL, nvme_fuzz_parse,
 				      nvme_fuzz_usage) != SPDK_APP_PARSE_ARGS_SUCCESS)) {
 		return rc;
 	}
