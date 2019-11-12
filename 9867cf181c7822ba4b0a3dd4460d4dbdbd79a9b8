@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "20f85d37_b8545bf0",
+        "filename": "module/bdev/uring/bdev_uring.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-12T06:13:14Z",
+      "side": 1,
+      "message": "Thank you Yao. I missed that block_size is optional and its default is 0 carelessly.\nI could understand your patch now.",
+      "parentUuid": "bf1076b4_1492aae0",
+      "revId": "9867cf181c7822ba4b0a3dd4460d4dbdbd79a9b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ad6932b5_1fcdb839",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 2
