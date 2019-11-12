@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6abdb41b_c1c2a664",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 15
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T17:00:12Z",
+      "side": 1,
+      "message": "I think it\u0027s not exactly clear to everyone what \"after starting its removal process\" means.  Maybe my understanding is wrong, but I don\u0027t think this patch really changes when we notify the LUN is removed - because I think of notification as when we call the upper layer\u0027s remove callback.  What is really changing here is that you now \"detach\" the LUN sooner than before (i.e. the upper layer may get NULL when calling get_lun() even before they get the notification callback).\n\nPlease correct me if I am wrong in any of my understanding here.",
+      "revId": "090d7862d6b2425d80639f44abbb208e09cae3d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b107265_e48aa6ff",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T17:00:12Z",
+      "side": 1,
+      "message": "lun-\u003eremoved has been set, meaning no new tasks can be submitted to the\nLUN.  So execute any previously queued tasks, which will be immediately\naborted.  Then we only need to wait for all outstanding tasks to be\ncompleted before notifying the upper layer about the removal.",
+      "revId": "090d7862d6b2425d80639f44abbb208e09cae3d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
