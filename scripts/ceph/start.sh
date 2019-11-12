@@ -49,6 +49,21 @@ ${SGDISK} -c 1:osd-device-${partno}-journal ${dev}
 ${SGDISK} -c 2:osd-device-${partno}-data ${dev}
 kpartx ${dev}
 
+# later versions of ceph-12 have a lot of changes, to compatible with the new
+# version of ceph-deploy.
+ceph_version=$(ceph -v | awk '{print $3}')
+ceph_maj=${ceph_version%%.*}
+if [ $ceph_maj -gt 12 ]; then
+	update_config=true
+	rm -f /var/log/ceph/ceph-mon.a.log || true
+	set_min_mon_release="--set-min-mon-release 14"
+	ceph_osd_extra_config="--check-needs-journal --no-mon-config"
+else
+	update_config=false
+	set_min_mon_release=""
+	ceph_osd_extra_config=""
+fi
+
 # prep osds
 
 mnt_pt=${mnt_dir}/osd-device-0-data
@@ -71,9 +86,13 @@ rm -f /etc/ceph/ceph.client.admin.keyring
 ceph-authtool --create-keyring --gen-key --name=mon. ${base_dir}/keyring --cap mon 'allow *'
 ceph-authtool --gen-key --name=client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *' ${base_dir}/keyring
 
-monmaptool --create --clobber --add a ${mon_ip}:12046 --print ${base_dir}/monmap
+monmaptool --create --clobber --add a ${mon_ip}:12046 --print ${base_dir}/monmap $set_min_mon_release
 
 sh -c "ulimit -c unlimited && exec ceph-mon --mkfs -c ${ceph_conf} -i a --monmap=${base_dir}/monmap --keyring=${base_dir}/keyring --mon-data=${mon_dir}"
+
+if [ $update_config = true ] ;then
+	sed -i 's/mon addr = /mon addr = v2:/g' $ceph_conf
+fi
 
 cp ${base_dir}/keyring ${mon_dir}/keyring
 
@@ -85,6 +104,20 @@ chmod a+r /etc/ceph/ceph.client.admin.keyring
 
 ceph-run sh -c "ulimit -n 16384 && ulimit -c unlimited && exec ceph-mon -c ${ceph_conf} -i a --keyring=${base_dir}/keyring --pid-file=${base_dir}/pid/root@$(hostname).pid --mon-data=${mon_dir}" || true
 
+# after ceph-mon creation, ceph -s should work.
+if [ $update_config = true ] ;then
+        # start to get whole log.
+	ceph-conf --name mon.a --show-config-value log_file
+
+	# add fsid to ceph config file.
+        fsid=$(ceph -s | grep id |awk '{print $2}')
+        sed -i 's/perf = true/perf = true\n\tfsid = '$fsid' \n/g' $ceph_conf
+
+	# unify the filesystem with the old versions.
+	sed -i 's/perf = true/perf = true\n\tosd objectstore = filestore\n/g' $ceph_conf
+	cat ${ceph_conf}
+fi
+
 # create osd
 
 i=0
@@ -93,7 +126,7 @@ mkdir -p ${mnt_dir}
 
 uuid=$(uuidgen)
 ceph -c ${ceph_conf} osd create ${uuid} $i
-ceph-osd -c ${ceph_conf} -i $i --mkfs --mkkey --osd-uuid ${uuid}
+ceph-osd -c ${ceph_conf} -i $i --mkfs --mkkey --osd-uuid ${uuid} ${ceph_osd_extra_config}
 ceph -c ${ceph_conf} osd crush add osd.${i} 1.0 host=$(hostname) root=default
 ceph -c ${ceph_conf} -i ${mnt_dir}/osd-device-${i}-data/keyring auth add osd.${i} osd "allow *" mon "allow profile osd" mgr "allow *"
 
