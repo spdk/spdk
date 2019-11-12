@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "cc97f898_f03af293",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-12T09:45:05Z",
+      "side": 1,
+      "message": "use static  remove this, before it reports warning.",
+      "parentUuid": "23a9bbd3_4d012d34",
+      "range": {
+        "startLine": 76,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 63
+      },
+      "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "76ffa5d4_5ab181b4",
         "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
         "patchSetId": 7
@@ -36,6 +60,30 @@
       "writtenOn": "2019-11-05T08:05:32Z",
       "side": 1,
       "message": "This is duplicated with the line 155 and the line 351. Please remove either one.",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 0
+      },
+      "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ebe43639_bbbd4a38",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-12T09:45:05Z",
+      "side": 1,
+      "message": "removed.",
+      "parentUuid": "76ffa5d4_5ab181b4",
       "range": {
         "startLine": 124,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "acfc2e3a_2115234d",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-12T09:45:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0162626_226994a9",
+      "range": {
+        "startLine": 348,
+        "startChar": 0,
+        "endLine": 348,
+        "endChar": 4
+      },
+      "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "08cc46c3_44e2e5cc",
         "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
         "patchSetId": 7
@@ -91,6 +163,30 @@
       "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f137cc33_fb0d4d12",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-12T09:45:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "08cc46c3_44e2e5cc",
+      "range": {
+        "startLine": 354,
+        "startChar": 5,
+        "endLine": 354,
+        "endChar": 12
+      },
+      "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "67ad0103_0588c1c4",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-12T09:45:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cff5446d_1ef351fc",
+      "range": {
+        "startLine": 945,
+        "startChar": 0,
+        "endLine": 947,
+        "endChar": 0
+      },
+      "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0fb9c62a_fab4ac75",
         "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
         "patchSetId": 7
@@ -137,6 +257,30 @@
       "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3274c9a7_6bc7bca0",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1019,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-12T09:45:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0fb9c62a_fab4ac75",
+      "range": {
+        "startLine": 1019,
+        "startChar": 1,
+        "endLine": 1019,
+        "endChar": 38
+      },
+      "revId": "d705a8b79ce26032a6bb95908160292e705807f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
