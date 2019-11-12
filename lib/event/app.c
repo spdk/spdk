@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/version.h"
 
 #include "spdk_internal/event.h"
 
@@ -105,6 +106,8 @@ static const struct option g_cmdline_options[] = {
 	{"mem-size",			required_argument,	NULL, MEM_SIZE_OPT_IDX},
 #define NO_PCI_OPT_IDX		'u'
 	{"no-pci",			no_argument,		NULL, NO_PCI_OPT_IDX},
+#define VERSION_OPT_IDX		'v'
+	{"version",			no_argument,		NULL, VERSION_OPT_IDX},
 #define PCI_BLACKLIST_OPT_IDX	'B'
 	{"pci-blacklist",		required_argument,	NULL, PCI_BLACKLIST_OPT_IDX},
 #define LOGFLAG_OPT_IDX	'L'
@@ -758,6 +761,7 @@ usage(void (*app_usage)(void))
 	printf(" -B, --pci-blacklist <bdf>\n");
 	printf("                           pci addr to blacklist (can be used more than once)\n");
 	printf(" -R, --huge-unlink         unlink huge files after initialization\n");
+	printf(" -v, --version             print SPDK version\n");
 	printf(" -W, --pci-whitelist <bdf>\n");
 	printf("                           pci addr to whitelist (-B and -W cannot be used at the same time)\n");
 	printf("      --huge-dir <path>    use a specific hugetlbfs mount to reserve memory from\n");
@@ -989,6 +993,10 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			fprintf(stderr,
 				"Deprecation warning: The maximum allowed latency parameter is no longer supported.\n");
 			break;
+		case VERSION_OPT_IDX:
+			printf(SPDK_VERSION_STRING"\n");
+			retval = SPDK_APP_PARSE_ARGS_HELP;
+			goto out;
 		case '?':
 			/*
 			 * In the event getopt() above detects an option
