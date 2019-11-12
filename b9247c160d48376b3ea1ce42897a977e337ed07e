@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb99e43f_a3962268",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T20:01:25Z",
+      "side": 1,
+      "message": "Rather than having a \"shutdown\" flag for this function, let\u0027s do the following which will make all of this more consistent with the main SPDK nvme API.\n\n1) nvme_io_msg_ctrlr_start \u003d\u003e nvme_io_msg_ctrlr_register (to mirror spdk_nvme_cuse_register)\n2) nvme_io_msg_ctrlr_stop w/ shutdown\u003d\u003dfalse \u003d\u003e nvme_io_msg_ctrlr_unregister (to mirror spdk_nvme_cuse_unregister)\n3) nvme_io_msg_ctrlr_stop w/ shutdown\u003d\u003dtrue \u003d\u003e nvme_io_msg_ctrlr_detach (to mirror spdk_nvme_detach)\n\nnvme_io_msg_ctrlr_unregister will just decrement the refcnt.  When it gets to zero, it can call nvme_io_msg_ctrlr_detach directly.\n\nnvme_io_msg_ctrlr_detach just does nothing if refcnt \u003d\u003d 0 (i.e. it returns immediately).\n\nLet\u0027s do some of this renaming in a separate patch before this one.  Then this patch can just do the refcnt changes and remove the io_producers TAILQ.",
+      "revId": "b9247c160d48376b3ea1ce42897a977e337ed07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
