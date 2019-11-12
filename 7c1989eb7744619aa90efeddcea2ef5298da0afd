@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a495a559_4924193f",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T18:07:58Z",
+      "side": 1,
+      "message": "is this needed?",
+      "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b303652_0247cf8d",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T18:07:58Z",
+      "side": 1,
+      "message": "I think for this test, without iSCSI running (only bdev layer), should we have a tighter window?",
+      "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d061a4f_69ef57c9",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T18:07:58Z",
+      "side": 1,
+      "message": "upper_limit\u003d$(echo \"$qos_limit * 1.15\" | bc)\n\nwould be simpler than using awk",
+      "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42fa2c9e_b368d6ef",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T18:07:58Z",
+      "side": 1,
+      "message": "lines 105-111 are basically a duplicate of lines 72-88\n\nIt might be better to make 72-88 its own function, and have it return the io_result\n\nthen have a separate function that checks whether a parameter falls within a certain limit",
+      "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a5040c5_98cf46e8",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T18:07:58Z",
+      "side": 1,
+      "message": "let\u0027s just fail the test if io_result is too low - there is no reason that it should ever be as low as 1000 (and if it is, we want it to exit with failure)\n\nthis will simplify the test",
+      "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cde289a4_94e4ba9a",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T18:07:58Z",
+      "side": 1,
+      "message": "I think you can move this qos_create_dev and qos_delete_dev code inline (i.e. don\u0027t make them functions)",
+      "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
