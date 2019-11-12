@@ -1299,6 +1299,9 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	struct spdk_bdev	*raid_bdev_gen;
 	int rc = 0;
 
+	assert(raid_bdev->state == RAID_BDEV_STATE_CONFIGURING);
+	assert(raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs);
+
 	blocklen = raid_bdev->base_bdev_info[0].bdev->blocklen;
 	min_blockcnt = raid_bdev->base_bdev_info[0].bdev->blockcnt;
 	for (uint8_t i = 1; i < raid_bdev->num_base_bdevs; i++) {
@@ -1349,24 +1352,23 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "io device register %p\n", raid_bdev);
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "blockcnt %lu, blocklen %u\n", raid_bdev_gen->blockcnt,
 		      raid_bdev_gen->blocklen);
-	if (raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
-		raid_bdev->state = RAID_BDEV_STATE_ONLINE;
-		spdk_io_device_register(raid_bdev, raid_bdev_create_cb, raid_bdev_destroy_cb,
-					sizeof(struct raid_bdev_io_channel),
-					raid_bdev->bdev.name);
-		rc = spdk_bdev_register(raid_bdev_gen);
-		if (rc != 0) {
-			SPDK_ERRLOG("Unable to register raid bdev and stay at configuring state\n");
-			spdk_io_device_unregister(raid_bdev, NULL);
-			raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
-			return rc;
-		}
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev generic %p\n", raid_bdev_gen);
-		TAILQ_REMOVE(&g_raid_bdev_configuring_list, raid_bdev, state_link);
-		TAILQ_INSERT_TAIL(&g_raid_bdev_configured_list, raid_bdev, state_link);
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev is created with name %s, raid_bdev %p\n",
-			      raid_bdev_gen->name, raid_bdev);
+
+	raid_bdev->state = RAID_BDEV_STATE_ONLINE;
+	spdk_io_device_register(raid_bdev, raid_bdev_create_cb, raid_bdev_destroy_cb,
+				sizeof(struct raid_bdev_io_channel),
+				raid_bdev->bdev.name);
+	rc = spdk_bdev_register(raid_bdev_gen);
+	if (rc != 0) {
+		SPDK_ERRLOG("Unable to register raid bdev and stay at configuring state\n");
+		spdk_io_device_unregister(raid_bdev, NULL);
+		raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
+		return rc;
 	}
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev generic %p\n", raid_bdev_gen);
+	TAILQ_REMOVE(&g_raid_bdev_configuring_list, raid_bdev, state_link);
+	TAILQ_INSERT_TAIL(&g_raid_bdev_configured_list, raid_bdev, state_link);
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev is created with name %s, raid_bdev %p\n",
+		      raid_bdev_gen->name, raid_bdev);
 
 	return 0;
 }
