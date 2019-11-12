@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -415,6 +415,9 @@ spdk_rpc_spdk_get_version(struct spdk_jsonrpc_request *request, const struct spd
 	spdk_json_write_named_uint32(w, "minor", SPDK_VERSION_MINOR);
 	spdk_json_write_named_uint32(w, "patch", SPDK_VERSION_PATCH);
 	spdk_json_write_named_string_fmt(w, "suffix", "%s", SPDK_VERSION_SUFFIX);
+#ifdef SPDK_GIT_COMMIT
+	spdk_json_write_named_string_fmt(w, "commit", "%s", SPDK_GIT_COMMIT_STRING);
+#endif
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

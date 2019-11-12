@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -97,6 +97,14 @@
 #define SPDK_VERSION_PATCH_STRING	""
 #endif
 
+#ifdef SPDK_GIT_COMMIT
+#define SPDK_GIT_COMMIT_STRING SPDK_VERSION_STRINGIFY(SPDK_GIT_COMMIT)
+#define SPDK_GIT_COMMIT_STRING_SHA1 " git sha1 " SPDK_GIT_COMMIT_STRING
+#else
+#define SPDK_GIT_COMMIT_STRING ""
+#define SPDK_GIT_COMMIT_STRING_SHA1 ""
+#endif
+
 /**
  * Human-readable version string.
  */
@@ -105,6 +113,7 @@
 	SPDK_VERSION_MAJOR_STRING \
 	SPDK_VERSION_MINOR_STRING \
 	SPDK_VERSION_PATCH_STRING \
-	SPDK_VERSION_SUFFIX
+	SPDK_VERSION_SUFFIX \
+	SPDK_GIT_COMMIT_STRING_SHA1
 
 #endif
