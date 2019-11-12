@@ -22,6 +22,30 @@
       "revId": "8a48bb72725a6cb5061384b1026e2a62bf02a43e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "698aa0ed_5c545d08",
+        "filename": "doc/vmd.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-11-12T12:59:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a8c22fc3_903ccaec",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 51
+      },
+      "revId": "8a48bb72725a6cb5061384b1026e2a62bf02a43e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
