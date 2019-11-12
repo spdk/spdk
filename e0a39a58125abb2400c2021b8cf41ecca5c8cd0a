@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a1af4ca7_70d8dea2",
+        "filename": "scripts/ceph/start.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-12T03:02:33Z",
+      "side": 1,
+      "message": "move it back, and focus on issue.",
+      "parentUuid": "a865b77b_63bee5e4",
+      "revId": "e0a39a58125abb2400c2021b8cf41ecca5c8cd0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "84ea823b_8460c0b1",
         "filename": "scripts/ceph/start.sh",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "9428b2db_4ac6cc57",
+        "filename": "scripts/ceph/start.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-12T03:02:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "84ea823b_8460c0b1",
+      "revId": "e0a39a58125abb2400c2021b8cf41ecca5c8cd0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef9a7b38_6a31f802",
         "filename": "scripts/ceph/start.sh",
         "patchSetId": 3
@@ -47,6 +83,24 @@
       "writtenOn": "2019-11-11T13:34:41Z",
       "side": 1,
       "message": "Should we remove these commented lines?  It\u0027s not clear what purpose they have if they are commented out.",
+      "revId": "e0a39a58125abb2400c2021b8cf41ecca5c8cd0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e959c76_10aadfb7",
+        "filename": "scripts/ceph/start.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-12T03:02:33Z",
+      "side": 1,
+      "message": "hi jim,\n     keep this \"ceph-conf --name mon.a --show-config-value log_file\" on.\nthanks.",
+      "parentUuid": "ef9a7b38_6a31f802",
       "revId": "e0a39a58125abb2400c2021b8cf41ecca5c8cd0a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
