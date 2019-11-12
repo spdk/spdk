@@ -616,7 +616,7 @@ ftl_init_lba_map_pools(struct spdk_ftl_dev *dev)
 	 * TODO: This memory pool is utilized only by core thread - it introduce
 	 * unnecessary overhead and should be replaced by different data structure.
 	 */
-	dev->lba_pool = spdk_mempool_create(pool_name, 2 + 8,
+	dev->lba_pool = spdk_mempool_create(pool_name, ftl_dev_num_bands(dev),
 					    ftl_lba_map_pool_elem_size(dev),
 					    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 					    SPDK_ENV_SOCKET_ID_ANY);
