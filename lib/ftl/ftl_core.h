@@ -252,6 +252,8 @@ struct spdk_ftl_dev {
 
 	/* Devices' list */
 	STAILQ_ENTRY(spdk_ftl_dev)		stailq;
+
+	TAILQ_HEAD(, ftl_io)			io_queue;
 };
 
 struct ftl_nv_cache_header {

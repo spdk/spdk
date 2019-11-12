@@ -217,6 +217,8 @@ struct ftl_io {
 	uint64_t				trace;
 
 	TAILQ_ENTRY(ftl_io)			retry_entry;
+
+	TAILQ_ENTRY(ftl_io)			io_tailq;
 };
 
 /* Metadata IO */

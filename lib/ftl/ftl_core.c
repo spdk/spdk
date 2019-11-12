@@ -340,7 +340,6 @@ ftl_submit_erase(struct ftl_io *io)
 	struct ftl_band *band = io->band;
 	struct ftl_ppa ppa = io->ppa;
 	struct ftl_chunk *chunk;
-	uint64_t ppa_packed;
 	int rc = 0;
 	size_t i;
 
@@ -353,16 +352,10 @@ ftl_submit_erase(struct ftl_io *io)
 		}
 
 		assert(ppa.lbk == 0);
-		ppa_packed = ftl_ppa_addr_pack(dev, ppa);
 
 		ftl_trace_submission(dev, io, ppa, 1);
-		rc = spdk_nvme_ocssd_ns_cmd_vector_reset(dev->ns, ftl_get_write_qpair(dev),
-				&ppa_packed, 1, NULL, ftl_io_cmpl_cb, io);
-		if (spdk_unlikely(rc)) {
-			ftl_io_fail(io, rc);
-			SPDK_ERRLOG("Vector reset failed with status: %d\n", rc);
-			break;
-		}
+
+		TAILQ_INSERT_TAIL(&dev->io_queue, io, io_tailq);
 
 		ftl_io_inc_req(io);
 		ftl_io_advance(io, 1);
@@ -897,15 +890,6 @@ ftl_read_canceled(int rc)
 	return rc == -EFAULT || rc == 0;
 }
 
-static void
-ftl_add_to_retry_queue(struct ftl_io *io)
-{
-	if (!(io->flags & FTL_IO_RETRY)) {
-		io->flags |= FTL_IO_RETRY;
-		TAILQ_INSERT_TAIL(&io->dev->retry_queue, io, retry_entry);
-	}
-}
-
 static int
 ftl_ppa_cache_read(struct ftl_io *io, uint64_t lba,
 		   struct ftl_ppa ppa, void *buf)
@@ -1006,18 +990,8 @@ ftl_submit_read(struct ftl_io *io)
 		assert(lbk_cnt > 0);
 
 		ftl_trace_submission(dev, io, ppa, lbk_cnt);
-		rc = spdk_nvme_ns_cmd_read(dev->ns, ftl_get_read_qpair(dev),
-					   ftl_io_iovec_addr(io),
-					   ftl_ppa_addr_pack(io->dev, ppa), lbk_cnt,
-					   ftl_io_cmpl_cb, io, 0);
-		if (spdk_unlikely(rc)) {
-			if (rc == -ENOMEM) {
-				ftl_add_to_retry_queue(io);
-			} else {
-				ftl_io_fail(io, rc);
-			}
-			break;
-		}
+
+		TAILQ_INSERT_TAIL(&dev->io_queue, io, io_tailq);
 
 		ftl_io_inc_req(io);
 		ftl_io_advance(io, lbk_cnt);
@@ -1503,7 +1477,6 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 {
 	struct spdk_ftl_dev	*dev = io->dev;
 	struct ftl_io		*child;
-	int			rc;
 	struct ftl_ppa		ppa;
 
 	if (spdk_likely(!wptr->direct_mode)) {
@@ -1522,18 +1495,7 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 	}
 
 	wptr->num_outstanding++;
-	rc = spdk_nvme_ns_cmd_write_with_md(dev->ns, ftl_get_write_qpair(dev),
-					    ftl_io_iovec_addr(child), child->md,
-					    ftl_ppa_addr_pack(dev, ppa),
-					    lbk_cnt, ftl_io_cmpl_cb, child, 0, 0, 0);
-	if (rc) {
-		wptr->num_outstanding--;
-		ftl_io_fail(child, rc);
-		ftl_io_complete(child);
-		SPDK_ERRLOG("spdk_nvme_ns_cmd_write_with_md failed with status:%d, ppa:%lu\n",
-			    rc, ppa.ppa);
-		return -EIO;
-	}
+	TAILQ_INSERT_TAIL(&dev->io_queue, child, io_tailq);
 
 	ftl_io_inc_req(child);
 	ftl_io_advance(child, lbk_cnt);
@@ -2187,12 +2149,27 @@ ftl_process_retry_queue(struct spdk_ftl_dev *dev)
 	}
 }
 
+static uint32_t
+ftl_process_completions(struct spdk_ftl_dev *dev)
+{
+	struct spdk_nvme_cpl status = {};
+	struct ftl_io *io;
+	uint32_t num_completions = 0;
+
+	while ((io = TAILQ_FIRST(&dev->io_queue))) {
+		TAILQ_REMOVE(&dev->io_queue, io, io_tailq);
+		ftl_io_cmpl_cb(io, &status);
+		num_completions++;
+	}
+
+	return num_completions;
+}
+
 int
 ftl_task_read(void *ctx)
 {
 	struct ftl_thread *thread = ctx;
 	struct spdk_ftl_dev *dev = thread->dev;
-	struct spdk_nvme_qpair *qpair = ftl_get_read_qpair(dev);
 	size_t num_completed;
 
 	if (dev->halt) {
@@ -2202,7 +2179,7 @@ ftl_task_read(void *ctx)
 		}
 	}
 
-	num_completed = spdk_nvme_qpair_process_completions(qpair, 0);
+	num_completed = ftl_process_completions(dev);
 
 	if (num_completed && !TAILQ_EMPTY(&dev->retry_queue)) {
 		ftl_process_retry_queue(dev);
@@ -2216,7 +2193,6 @@ ftl_task_core(void *ctx)
 {
 	struct ftl_thread *thread = ctx;
 	struct spdk_ftl_dev *dev = thread->dev;
-	struct spdk_nvme_qpair *qpair = ftl_get_write_qpair(dev);
 
 	if (dev->halt) {
 		if (ftl_shutdown_complete(dev)) {
@@ -2226,7 +2202,7 @@ ftl_task_core(void *ctx)
 	}
 
 	ftl_process_writes(dev);
-	spdk_nvme_qpair_process_completions(qpair, 0);
+	ftl_process_completions(dev);
 	ftl_process_relocs(dev);
 
 	return 0;

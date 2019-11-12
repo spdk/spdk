@@ -1298,12 +1298,20 @@ bdevperf_test(void)
 	return 0;
 }
 
+#include "spdk/vmd.h"
+
 static void
 bdevperf_run(void *arg1)
 {
 	int rc;
 
 	rc = blockdev_heads_init();
+	if (rc) {
+		spdk_app_stop(1);
+		return;
+	}
+
+	rc = spdk_vmd_init();
 	if (rc) {
 		spdk_app_stop(1);
 		return;

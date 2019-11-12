@@ -106,6 +106,23 @@ static const struct spdk_ftl_conf	g_default_conf = {
 	}
 };
 
+struct spdk_ocssd_geometry_data g_geometry = {
+	.mjr = 2,
+	.mnr = 0,
+	.lbaf = {
+		.grp_len = 1,
+		.pu_len = 4,
+		.chk_len = 8,
+		.lbk_len = 10,
+	},
+	.num_grp = 1,
+	.num_pu = 8,
+	.num_chk = 80,
+	.clba = 192,
+	.ws_min = 4,
+	.ws_opt = 16,
+};
+
 static void ftl_dev_free_sync(struct spdk_ftl_dev *dev);
 
 static void
@@ -359,6 +376,7 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 	for (i = 0; i < ftl_dev_num_punits(dev); ++i) {
 		punit = &dev->punits[i];
 
+#if 0
 		rc = ftl_retrieve_punit_chunk_info(dev, punit, info);
 		if (rc) {
 			SPDK_ERRLOG("Failed to retrieve bbt for @ppa: %s [%lu]\n",
@@ -366,12 +384,13 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 				    ftl_ppa_addr_pack(dev, punit->start_ppa));
 			goto out;
 		}
+#endif
 
 		for (j = 0; j < ftl_dev_num_bands(dev); ++j) {
 			band = &dev->bands[j];
 			chunk = &band->chunk_buf[i];
 			chunk->pos = i;
-			chunk->state = ftl_get_chunk_state(&info[j]);
+			chunk->state = FTL_CHUNK_STATE_CLOSED;
 			chunk->punit = punit;
 			chunk->start_ppa = punit->start_ppa;
 			chunk->start_ppa.chk = band->id;
@@ -420,25 +439,7 @@ ftl_dev_init_punits(struct spdk_ftl_dev *dev)
 static int
 ftl_dev_retrieve_geo(struct spdk_ftl_dev *dev)
 {
-	volatile struct ftl_admin_cmpl cmpl = {};
-	uint32_t nsid = spdk_nvme_ns_get_id(dev->ns);
-
-	if (spdk_nvme_ocssd_ctrlr_cmd_geometry(dev->ctrlr, nsid, &dev->geo, sizeof(dev->geo),
-					       ftl_admin_cb, (void *)&cmpl)) {
-		SPDK_ERRLOG("Unable to retrieve geometry\n");
-		return -1;
-	}
-
-	/* TODO: add a timeout */
-	while (!cmpl.complete) {
-		spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
-	}
-
-	if (spdk_nvme_cpl_is_error(&cmpl.status)) {
-		SPDK_ERRLOG("Unexpected status code: [%d], status code type: [%d]\n",
-			    cmpl.status.status.sc, cmpl.status.status.sct);
-		return -1;
-	}
+	dev->geo = g_geometry;
 
 	/* TODO: add sanity checks for the geo */
 	dev->ppa_len = dev->geo.lbaf.grp_len +
@@ -481,11 +482,13 @@ ftl_dev_nvme_init(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_init_opts 
 	dev->trid = opts->trid;
 	dev->md_size = spdk_nvme_ns_get_md_size(dev->ns);
 
+#if 0
 	block_size = spdk_nvme_ns_get_extended_sector_size(dev->ns);
 	if (block_size != FTL_BLOCK_SIZE) {
 		SPDK_ERRLOG("Unsupported block size (%"PRIu32")\n", block_size);
 		return -1;
 	}
+#endif
 
 	if (dev->md_size % sizeof(uint32_t) != 0) {
 		/* Metadata pointer must be dword aligned */
@@ -1100,6 +1103,8 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 	}
 
 	TAILQ_INIT(&dev->retry_queue);
+	TAILQ_INIT(&dev->io_queue);
+
 	dev->conf = *opts.conf;
 	dev->init_ctx.cb_fn = cb_fn;
 	dev->init_ctx.cb_arg = cb_arg;
