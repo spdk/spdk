@@ -16,6 +16,24 @@
       "revId": "535eb5920f129967cccb23c6998f58cffe4d8517",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05818680_8b0ad772",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1017160
+      },
+      "writtenOn": "2019-11-12T11:26:18Z",
+      "side": 1,
+      "message": "I think that it is necessary to break the loop here. If we don\u0027t, spdk_bdev_reset() will be called again for the same base bdev and probably result in -ENOMEM again...\n\nThe same goes for the return at line 389, but there is an assert before that, so I\u0027m not sure if that\u0027s needed or not. I noticed that there are many places in this code where there is some cleanup performed even after an assert fails, I assume that it is for NDEBUG builds. Is this a common practice in SPDK? Personally, I would just leave the assert(false) and remove lines 388 and 389.",
+      "parentUuid": "0ea07473_f0b3415a",
+      "revId": "535eb5920f129967cccb23c6998f58cffe4d8517",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
