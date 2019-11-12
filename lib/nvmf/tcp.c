@@ -501,7 +501,7 @@ spdk_nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
 	free(tqpair->reqs);
 	spdk_free(tqpair->buf);
 	spdk_free(tqpair->bufs);
-	free(tqpair->pdu_recv_buf.buf);
+	spdk_free(tqpair->pdu_recv_buf.buf);
 	free(tqpair);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Leave\n");
 }
@@ -997,7 +997,9 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair, uint16
 
 		tqpair->pdu_recv_buf.size = (in_capsule_data_size + sizeof(struct spdk_nvme_tcp_cmd) + 2 *
 					     SPDK_NVME_TCP_DIGEST_LEN) * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
-		tqpair->pdu_recv_buf.buf = calloc(1, tqpair->pdu_recv_buf.size);
+		tqpair->pdu_recv_buf.buf = spdk_zmalloc(tqpair->pdu_recv_buf.size, 0x1000,
+						    NULL, SPDK_ENV_LCORE_ID_ANY,
+						    SPDK_MALLOC_DMA);
 		if (!tqpair->pdu_recv_buf.buf) {
 			SPDK_ERRLOG("Unable to allocate the pdu recv buf on tqpair=%p with size=%d\n", tqpair,
 				    tqpair->pdu_recv_buf.size);
