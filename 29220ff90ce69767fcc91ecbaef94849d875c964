@@ -16,6 +16,24 @@
       "revId": "29220ff90ce69767fcc91ecbaef94849d875c964",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "054bd403_67811c33",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-12T18:18:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6f7fcf7e_288e3a9a",
+      "revId": "29220ff90ce69767fcc91ecbaef94849d875c964",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
