@@ -119,6 +119,12 @@ _scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun,
 {
 	TAILQ_INSERT_TAIL(&lun->mgmt_tasks, task, scsi_link);
 
+	if (lun->removed) {
+		task->response = SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN;
+		scsi_lun_complete_mgmt_task(lun, task);
+		return;
+	}
+
 	switch (task->function) {
 	case SPDK_SCSI_TASK_FUNC_ABORT_TASK:
 		task->response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
