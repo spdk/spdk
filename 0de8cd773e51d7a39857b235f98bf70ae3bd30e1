@@ -87,6 +87,23 @@
       "revId": "0de8cd773e51d7a39857b235f98bf70ae3bd30e1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16ba9d86_56b749b0",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-11-12T15:55:33Z",
+      "side": 1,
+      "message": "Yes... this flag is used only when NVMe is detached. We shouldn\u0027t let NVMe to detach controller used by CUSE.",
+      "revId": "0de8cd773e51d7a39857b235f98bf70ae3bd30e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
