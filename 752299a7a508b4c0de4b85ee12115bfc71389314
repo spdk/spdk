@@ -22,6 +22,30 @@
       "revId": "752299a7a508b4c0de4b85ee12115bfc71389314",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20084628_72be0275",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-12T06:48:28Z",
+      "side": 1,
+      "message": "Checking Python style... Python formatting errors detected\nscripts/rpc/bdev.py:330:141: E501 line too long (144 \u003e 140 characters)",
+      "parentUuid": "c85f4af2_91c474b9",
+      "range": {
+        "startLine": 330,
+        "startChar": 41,
+        "endLine": 330,
+        "endChar": 144
+      },
+      "revId": "752299a7a508b4c0de4b85ee12115bfc71389314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
