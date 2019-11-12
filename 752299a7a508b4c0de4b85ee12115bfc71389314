@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c85f4af2_91c474b9",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-12T06:45:59Z",
+      "side": 1,
+      "message": "Sorry Yao, this will fail Python style check.\nI think \"optional\" says \"use auto-detected size if omitted\", so how about the following simply?\n\n(optional: must not be less than auto-detected size if specified)",
+      "range": {
+        "startLine": 330,
+        "startChar": 41,
+        "endLine": 330,
+        "endChar": 144
+      },
+      "revId": "752299a7a508b4c0de4b85ee12115bfc71389314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
