@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bf1076b4_1492aae0",
+        "filename": "module/bdev/uring/bdev_uring.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1017166
+      },
+      "writtenOn": "2019-11-12T06:06:08Z",
+      "side": 1,
+      "message": "When \"block_size \u003d\u003d 0 \u0026\u0026 detected_block_size !\u003d 0\", means user not specify block size and automatical block size detection succeed, we should use detected_block_size instead of error out in this situation.",
+      "parentUuid": "a7be17a9_f6206eca",
+      "revId": "9867cf181c7822ba4b0a3dd4460d4dbdbd79a9b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ad6932b5_1fcdb839",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 2
@@ -30,6 +48,30 @@
       "writtenOn": "2019-11-11T05:19:34Z",
       "side": 1,
       "message": "Maybe \"use auto-detected size if omitted, or must not be less than auto-detected size if specified\"",
+      "range": {
+        "startLine": 330,
+        "startChar": 52,
+        "endLine": 330,
+        "endChar": 75
+      },
+      "revId": "9867cf181c7822ba4b0a3dd4460d4dbdbd79a9b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88a6fa4b_725529d2",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1017166
+      },
+      "writtenOn": "2019-11-12T06:06:08Z",
+      "side": 1,
+      "message": "I\u0027 ll push a new version with this new message later.",
+      "parentUuid": "ad6932b5_1fcdb839",
       "range": {
         "startLine": 330,
         "startChar": 52,
