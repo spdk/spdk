@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "285808e0_a0997f18",
+        "filename": "module/bdev/raid/bdev_raid.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T16:21:31Z",
+      "side": 1,
+      "message": "I\u0027m sorry to be pedantic, but we really should have \"info\" in the name here.  \"bdev\" indicates that it is either an spdk_bdev or a raid_bdev.  I think \"base_info\" would be a better name.",
+      "revId": "d7c789c2f8e0349e71dd121beb81bc49d91f2664",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "adc89914_f807c7d2",
+        "filename": "module/bdev/raid/raid0.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T16:21:31Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "d7c789c2f8e0349e71dd121beb81bc49d91f2664",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2bc034c2_3e77e10b",
+        "filename": "module/bdev/raid/raid0.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-12T16:21:31Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "d7c789c2f8e0349e71dd121beb81bc49d91f2664",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
