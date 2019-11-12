@@ -19,7 +19,7 @@ By default, the fuzzer will print commands that:
 Commands are dumped as named objects in json format which can then be supplied back to the
 script for targeted debugging on a subsequent run. See `Debugging` below.
 By default no output is generated when a specific command is returned with a failed status.
-This can be overridden with the -v flag. if -v is specified, each command will be dumped as
+This can be overridden with the -V flag. if -V is specified, each command will be dumped as
 it is completed in the JSON format specified above.
 At the end of each test run, a summary is printed for each namespace in the following format:
 
