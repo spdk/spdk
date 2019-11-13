@@ -1,0 +1,239 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ec64834_f6c1f83d",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T02:44:36Z",
+      "side": 1,
+      "message": "It\u0027s better to consolidate this to the one place at its definition around the line 60.\n\nstatic int g_poll_with_event \u003d 1;\nstatic const int *g_get_uevent \u003d \u0026g_poll_with_event;\n\nHowever, it looks that g_get_uevent is not necessary. The test passes even if we return g_poll_with_event in spdk_get_uevent(). So we can remove g_get_uevent.",
+      "range": {
+        "startLine": 60,
+        "startChar": 12,
+        "endLine": 60,
+        "endChar": 25
+      },
+      "revId": "4069bc321dca13437bfb92d181de29acddac0b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b826afe4_d197b0f1",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T02:44:36Z",
+      "side": 1,
+      "message": "if (hot_remove) {\n  ctrlr-\u003eis_removed \u003d true;\n}",
+      "revId": "4069bc321dca13437bfb92d181de29acddac0b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a446e9bb_a68b292c",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T02:44:36Z",
+      "side": 1,
+      "message": "We can return g_poll_with_event simply.",
+      "range": {
+        "startLine": 121,
+        "startChar": 8,
+        "endLine": 121,
+        "endChar": 21
+      },
+      "revId": "4069bc321dca13437bfb92d181de29acddac0b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fdf337c4_eb495945",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T02:44:36Z",
+      "side": 1,
+      "message": "ut_remove_cb may be a little clearer.",
+      "range": {
+        "startLine": 342,
+        "startChar": 0,
+        "endLine": 342,
+        "endChar": 12
+      },
+      "revId": "4069bc321dca13437bfb92d181de29acddac0b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "69d82ccb_74b8b380",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T02:44:36Z",
+      "side": 1,
+      "message": "ctrlr-\u003eis_removed \u003d false;",
+      "revId": "4069bc321dca13437bfb92d181de29acddac0b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f686498a_e2608f52",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 906,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T02:44:36Z",
+      "side": 1,
+      "message": "Ditto",
+      "range": {
+        "startLine": 906,
+        "startChar": 1,
+        "endLine": 906,
+        "endChar": 35
+      },
+      "revId": "4069bc321dca13437bfb92d181de29acddac0b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "118d9f4c_964529de",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 919,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T02:44:36Z",
+      "side": 1,
+      "message": "Ditto",
+      "range": {
+        "startLine": 919,
+        "startChar": 1,
+        "endLine": 919,
+        "endChar": 35
+      },
+      "revId": "4069bc321dca13437bfb92d181de29acddac0b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ff78071_1b76106e",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 932,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T02:44:36Z",
+      "side": 1,
+      "message": "Ditto",
+      "range": {
+        "startLine": 932,
+        "startChar": 1,
+        "endLine": 932,
+        "endChar": 8
+      },
+      "revId": "4069bc321dca13437bfb92d181de29acddac0b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d254b654_3f3055bc",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 948,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T02:44:36Z",
+      "side": 1,
+      "message": "Ditto",
+      "range": {
+        "startLine": 948,
+        "startChar": 1,
+        "endLine": 948,
+        "endChar": 35
+      },
+      "revId": "4069bc321dca13437bfb92d181de29acddac0b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0042ca8_f8511490",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 962,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T02:44:36Z",
+      "side": 1,
+      "message": "Ditto",
+      "range": {
+        "startLine": 962,
+        "startChar": 1,
+        "endLine": 962,
+        "endChar": 35
+      },
+      "revId": "4069bc321dca13437bfb92d181de29acddac0b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44aa0dd6_c871d604",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 989,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T02:44:36Z",
+      "side": 1,
+      "message": "CU_ASSERT(ctrlr.is_removed \u003d\u003d true);",
+      "revId": "4069bc321dca13437bfb92d181de29acddac0b3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
