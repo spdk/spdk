@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6def866_d2ff5f80",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2774,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T10:39:45Z",
+      "side": 1,
+      "message": "ns_num may remind me ns index. Number of namespaces or namespace count, so How about num_ns or ns_count?",
+      "revId": "2ffa692a94e7352e4a88dfdc71a6bece132cbd11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
