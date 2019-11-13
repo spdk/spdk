@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4819aa74_4b0c74f4",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 895,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-13T07:40:44Z",
+      "side": 1,
+      "message": "Since this function can be called from many threads now, this should be under a lock. Or better yet, use spdk_ring instead of a TAILQ.",
+      "range": {
+        "startLine": 895,
+        "startChar": 2,
+        "endLine": 895,
+        "endChar": 60
+      },
+      "revId": "73b9bd078fca6bb2864dc4dcbc0a197c0b5ef6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
