@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0bbb377_8e22d66e",
+        "filename": "test/nvmf/host/target_disconnect.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-13T23:38:13Z",
+      "side": 1,
+      "message": "discovery\n\nI would maybe explain this just a bit more than just \"bad\".  Specifically that you\u0027re trying to connect to a discovery controller that doesn\u0027t exist yet (it gets created as part of disconnect_init).",
+      "revId": "7937db3fc5a1e6302ff6908a585a26d40fc707bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
