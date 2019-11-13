@@ -16,6 +16,24 @@
       "revId": "3bc2d0fd3926b701bed907fcad8bea563c03119e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc101297_490f28a4",
+        "filename": "module/bdev/raid/raid0.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1017160
+      },
+      "writtenOn": "2019-11-13T10:28:55Z",
+      "side": 1,
+      "message": "There were many more places where the variables were declared inside \u0027for\u0027 statement, so I fixed all of that in a separate commit.",
+      "parentUuid": "4851bc80_83128f6c",
+      "revId": "3bc2d0fd3926b701bed907fcad8bea563c03119e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
