@@ -182,8 +182,10 @@ struct rpc_bdev_raid_create {
 static void
 free_rpc_bdev_raid_create(struct rpc_bdev_raid_create *req)
 {
+	size_t i;
+
 	free(req->name);
-	for (size_t i = 0; i < req->base_bdevs.num_base_bdevs; i++) {
+	for (i = 0; i < req->base_bdevs.num_base_bdevs; i++) {
 		free(req->base_bdevs.base_bdevs[i]);
 	}
 }
@@ -253,6 +255,7 @@ spdk_rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx	*w;
 	struct raid_bdev_config		*raid_cfg;
 	int				rc;
+	size_t				i;
 
 	if (spdk_json_decode_object(params, rpc_bdev_raid_create_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_create_decoders),
@@ -284,7 +287,7 @@ spdk_rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	for (size_t i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
+	for (i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
 		rc = raid_bdev_config_add_base_bdev(raid_cfg, req.base_bdevs.base_bdevs[i], i);
 		if (rc != 0) {
 			raid_bdev_config_cleanup(raid_cfg);

@@ -115,6 +115,7 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 {
 	struct raid_bdev            *raid_bdev = io_device;
 	struct raid_bdev_io_channel *raid_ch = ctx_buf;
+	uint8_t i;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_create_cb, %p\n", raid_ch);
 
@@ -129,7 +130,7 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 		SPDK_ERRLOG("Unable to allocate base bdevs io channel\n");
 		return -ENOMEM;
 	}
-	for (uint8_t i = 0; i < raid_ch->num_channels; i++) {
+	for (i = 0; i < raid_ch->num_channels; i++) {
 		/*
 		 * Get the spdk_io_channel for all the base bdevs. This is used during
 		 * split logic to send the respective child bdev ios to respective base
@@ -138,7 +139,9 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 		raid_ch->base_channel[i] = spdk_bdev_get_io_channel(
 						   raid_bdev->base_bdev_info[i].desc);
 		if (!raid_ch->base_channel[i]) {
-			for (uint8_t j = 0; j < i; j++) {
+			uint8_t j;
+
+			for (j = 0; j < i; j++) {
 				spdk_put_io_channel(raid_ch->base_channel[j]);
 			}
 			free(raid_ch->base_channel);
@@ -165,12 +168,13 @@ static void
 raid_bdev_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct raid_bdev_io_channel *raid_ch = ctx_buf;
+	uint8_t i;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_destroy_cb\n");
 
 	assert(raid_ch != NULL);
 	assert(raid_ch->base_channel);
-	for (uint8_t i = 0; i < raid_ch->num_channels; i++) {
+	for (i = 0; i < raid_ch->num_channels; i++) {
 		/* Free base bdev channels */
 		assert(raid_ch->base_channel[i] != NULL);
 		spdk_put_io_channel(raid_ch->base_channel[i]);
@@ -249,11 +253,12 @@ static int
 raid_bdev_destruct(void *ctxt)
 {
 	struct raid_bdev *raid_bdev = ctxt;
+	uint8_t i;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_destruct\n");
 
 	raid_bdev->destruct_called = true;
-	for (uint8_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
+	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		/*
 		 * Close all base bdev descriptors for which call has come from below
 		 * layers.  Also close the descriptors if we have started shutdown.
@@ -561,6 +566,7 @@ static int
 raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct raid_bdev *raid_bdev = ctx;
+	uint8_t i;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_dump_config_json\n");
 	assert(raid_bdev != NULL);
@@ -576,7 +582,7 @@ raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint32(w, "num_base_bdevs_discovered", raid_bdev->num_base_bdevs_discovered);
 	spdk_json_write_name(w, "base_bdevs_list");
 	spdk_json_write_array_begin(w);
-	for (uint8_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
+	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		if (raid_bdev->base_bdev_info[i].bdev) {
 			spdk_json_write_string(w, raid_bdev->base_bdev_info[i].bdev->name);
 		} else {
@@ -1298,13 +1304,14 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	uint64_t		min_blockcnt;
 	struct spdk_bdev	*raid_bdev_gen;
 	int rc = 0;
+	uint8_t i;
 
 	assert(raid_bdev->state == RAID_BDEV_STATE_CONFIGURING);
 	assert(raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs);
 
 	blocklen = raid_bdev->base_bdev_info[0].bdev->blocklen;
 	min_blockcnt = raid_bdev->base_bdev_info[0].bdev->blockcnt;
-	for (uint8_t i = 1; i < raid_bdev->num_base_bdevs; i++) {
+	for (i = 1; i < raid_bdev->num_base_bdevs; i++) {
 		/* Calculate minimum block count from all base bdevs */
 		if (raid_bdev->base_bdev_info[i].bdev->blockcnt < min_blockcnt) {
 			min_blockcnt = raid_bdev->base_bdev_info[i].bdev->blockcnt;
