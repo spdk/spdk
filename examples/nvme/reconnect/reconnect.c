@@ -1088,19 +1088,19 @@ int main(int argc, char **argv)
 	}
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
-		rc = -1;
+		rc = 1;
 		goto cleanup;
 	}
 
 	g_tsc_rate = spdk_get_ticks_hz();
 
 	if (register_workers() != 0) {
-		rc = -1;
+		rc = 1;
 		goto cleanup;
 	}
 
 	if (register_controllers() != 0) {
-		rc = -1;
+		rc = 1;
 		goto cleanup;
 	}
 
@@ -1120,7 +1120,7 @@ int main(int argc, char **argv)
 	}
 
 	if (associate_workers_with_ns() != 0) {
-		rc = -1;
+		rc = 1;
 		goto cleanup;
 	}
 
@@ -1156,6 +1156,13 @@ cleanup:
 
 	if (rc != 0) {
 		fprintf(stderr, "%s: errors occured\n", argv[0]);
+		/*
+		 * return a generic error to the caller. This allows us to
+		 * distinguish between a failure in the script and something
+		 * like a segfault or an invalid access which causes the program
+		 * to crash.
+		 */
+		rc = 1;
 	}
 
 	return rc;
