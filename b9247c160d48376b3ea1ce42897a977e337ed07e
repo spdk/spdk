@@ -16,6 +16,24 @@
       "revId": "b9247c160d48376b3ea1ce42897a977e337ed07e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da0cd99b_f18364d2",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-11-13T16:12:41Z",
+      "side": 1,
+      "message": "I\u0027ve created patch here: https://review.gerrithub.io/c/spdk/spdk/+/474096/",
+      "parentUuid": "cb99e43f_a3962268",
+      "revId": "b9247c160d48376b3ea1ce42897a977e337ed07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
