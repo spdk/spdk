@@ -77,6 +77,7 @@ struct bdev_uring {
 static int bdev_uring_init(void);
 static void bdev_uring_fini(void);
 static void uring_free_bdev(struct bdev_uring *uring);
+static void bdev_uring_get_spdk_running_config(FILE *fp);
 static TAILQ_HEAD(, bdev_uring) g_uring_bdev_head;
 
 #define SPDK_URING_QUEUE_DEPTH 512
@@ -92,7 +93,7 @@ static struct spdk_bdev_module uring_if = {
 	.name		= "uring",
 	.module_init	= bdev_uring_init,
 	.module_fini	= bdev_uring_fini,
-	.config_text	= NULL,
+	.config_text	= bdev_uring_get_spdk_running_config,
 	.get_ctx_size	= bdev_uring_get_ctx_size,
 };
 
@@ -607,6 +608,34 @@ static void
 bdev_uring_fini(void)
 {
 	spdk_io_device_unregister(&uring_if, NULL);
+}
+
+static void
+bdev_uring_get_spdk_running_config(FILE *fp)
+{
+	char *file;
+	char *name;
+	uint32_t block_size;
+	struct bdev_uring *uring;
+
+	fprintf(fp,
+		"\n"
+		"# Users must change this section to match the /dev/sdX devices to be\n"
+		"# exported as iSCSI LUNs. The devices are accessed using io_uring.\n"
+		"# The format is:\n"
+		"# URING <file name> <bdev name> [<block size>]\n"
+		"# The file name is the backing device\n"
+		"# The bdev name can be referenced from elsewhere in the configuration file.\n"
+		"# Block size may be omitted to automatically detect the block size of a bdev.\n"
+		"[URING]\n");
+
+	TAILQ_FOREACH(uring, &g_uring_bdev_head, link) {
+		file = uring->filename;
+		name = uring->bdev.name;
+		block_size = uring->bdev.blocklen;
+		fprintf(fp, "  URING %s %s %d\n", file, name, block_size);
+	}
+	fprintf(fp, "\n");
 }
 
 SPDK_LOG_REGISTER_COMPONENT("uring", SPDK_LOG_URING)
