@@ -72,11 +72,13 @@ struct bdev_uring {
 	char			*filename;
 	int			fd;
 	TAILQ_ENTRY(bdev_uring)  link;
+	bool			block_size_override;
 };
 
 static int bdev_uring_init(void);
 static void bdev_uring_fini(void);
 static void uring_free_bdev(struct bdev_uring *uring);
+static void bdev_uring_get_spdk_running_config(FILE *fp);
 static TAILQ_HEAD(, bdev_uring) g_uring_bdev_head;
 
 #define SPDK_URING_QUEUE_DEPTH 512
@@ -92,7 +94,7 @@ static struct spdk_bdev_module uring_if = {
 	.name		= "uring",
 	.module_init	= bdev_uring_init,
 	.module_fini	= bdev_uring_fini,
-	.config_text	= NULL,
+	.config_text	= bdev_uring_get_spdk_running_config,
 	.get_ctx_size	= bdev_uring_get_ctx_size,
 };
 
@@ -451,6 +453,7 @@ create_uring_bdev(const char *name, const char *filename, uint32_t block_size)
 			SPDK_ERRLOG("Block size could not be auto-detected\n");
 			goto error_return;
 		}
+		uring->block_size_override = false;
 		block_size = detected_block_size;
 	} else {
 		if (block_size < detected_block_size) {
@@ -463,6 +466,7 @@ create_uring_bdev(const char *name, const char *filename, uint32_t block_size)
 				     "auto-detected block size %" PRIu32 "\n",
 				     block_size, detected_block_size);
 		}
+		uring->block_size_override = true;
 	}
 
 	if (block_size < 512) {
@@ -607,6 +611,37 @@ static void
 bdev_uring_fini(void)
 {
 	spdk_io_device_unregister(&uring_if, NULL);
+}
+
+static void
+bdev_uring_get_spdk_running_config(FILE *fp)
+{
+	char 	*file;
+	char 	*name;
+	uint32_t block_size;
+	struct 	 bdev_uring *uring;
+
+	fprintf(fp,
+		"\n"
+		"# Users must change this section to match the /dev/sdX devices to be\n"
+		"# exported as iSCSI LUNs. The devices are accessed using io_uring.\n"
+		"# The format is:\n"
+		"# URING <file name> <bdev name> [<block size>]\n"
+		"# The file name is the backing device\n"
+		"# The bdev name can be referenced from elsewhere in the configuration file.\n"
+		"# Block size may be omitted to automatically detect the block size of a bdev.\n"
+		"[URING]\n");
+
+	TAILQ_FOREACH(uring, &g_uring_bdev_head, link) {
+		file = uring->filename;
+		name = uring->bdev.name;
+		block_size = uring->bdev.blocklen;
+		fprintf(fp, "  URING %s %s ", file, name);
+		if (uring->block_size_override)
+			fprintf(fp, "%d", block_size);
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\n");
 }
 
 SPDK_LOG_REGISTER_COMPONENT("uring", SPDK_LOG_URING)
