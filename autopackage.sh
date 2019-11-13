@@ -55,30 +55,22 @@ echo "tmpdir=$tmpdir"
 tar -C "$tmpdir" -xf $spdk_tarball
 
 if [ -z "$WITH_DPDK_DIR" ]; then
-	cd dpdk
-	git archive HEAD^{tree} --prefix=dpdk/ -o ../${dpdk_tarball}
-	cd ..
+	(cd dpdk && git archive HEAD^{tree} --prefix=dpdk/ -o ../${dpdk_tarball})
 	tar -C "$tmpdir/${spdk_pv}" -xf $dpdk_tarball
 fi
 
 if [ -d "intel-ipsec-mb" ]; then
-	cd intel-ipsec-mb
-	git archive HEAD^{tree} --prefix=intel-ipsec-mb/ -o ../${ipsec_tarball}
-	cd ..
+	(cd intel-ipsec-mb && git archive HEAD^{tree} --prefix=intel-ipsec-mb/ -o ../${ipsec_tarball})
 	tar -C "$tmpdir/${spdk_pv}" -xf $ipsec_tarball
 fi
 
 if [ -d "isa-l" ]; then
-	cd isa-l
-	git archive HEAD^{tree} --prefix=isa-l/ -o ../${isal_tarball}
-	cd ..
+	(cd isa-l && git archive HEAD^{tree} --prefix=isa-l/ -o ../${isal_tarball})
 	tar -C "$tmpdir/${spdk_pv}" -xf $isal_tarball
 fi
 
 if [ -d "ocf" ]; then
-	cd ocf
-	git archive HEAD^{tree} --prefix=ocf/ -o ../${ocf_tarball}
-	cd ..
+	(cd ocf && git archive HEAD^{tree} --prefix=ocf/ -o ../${ocf_tarball})
 	tar -C "$tmpdir/${spdk_pv}" -xf $ocf_tarball
 fi
 

@@ -190,9 +190,7 @@ if [ "$cov_avail" = "yes" ]; then
 	rm -f $UT_COVERAGE/ut_cov_base.info $UT_COVERAGE/ut_cov_test.info
 	genhtml $UT_COVERAGE/ut_cov_unit.info --output-directory $UT_COVERAGE
 	# git -C option not used for compatibility reasons
-	cd $rootdir
-	git clean -f "*.gcda"
-	cd -
+	(cd $rootdir && git clean -f "*.gcda")
 fi
 
 set +x
