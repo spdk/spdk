@@ -95,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "7351b8e9_22335440",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T03:08:40Z",
+      "side": 1,
+      "message": "I do this now in https://review.gerrithub.io/c/spdk/spdk/+/474032/1.",
+      "parentUuid": "73b65f1e_0af505f1",
+      "range": {
+        "startLine": 334,
+        "startChar": 5,
+        "endLine": 334,
+        "endChar": 31
+      },
+      "revId": "090d7862d6b2425d80639f44abbb208e09cae3d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e544659a_46688586",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 15
