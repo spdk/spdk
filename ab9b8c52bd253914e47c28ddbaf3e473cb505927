@@ -16,6 +16,24 @@
       "revId": "ab9b8c52bd253914e47c28ddbaf3e473cb505927",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8622e0b0_b9e4a44b",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 949,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-11-13T11:50:09Z",
+      "side": 1,
+      "message": "I\u0027m getting scan build error w/o it because ns is different type than type we allocate for (\u0027sizeof(struct nvme_bdev_ns_standard)\u0027).",
+      "parentUuid": "8d4f25cc_3ca3e699",
+      "revId": "ab9b8c52bd253914e47c28ddbaf3e473cb505927",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
