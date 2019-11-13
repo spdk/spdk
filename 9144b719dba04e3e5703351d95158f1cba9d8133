@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "2caf4b4b_0a85eb14",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-11-13T16:51:19Z",
+      "side": 1,
+      "message": "After meeting with Jim, Ben and Konrad we decided to bring back nvme_bdev structure and the bdevs list (struct nvme_bdev) in nvme_bdev_ns structure which will help to simplify the code. I\u0027ll update code accordingly.",
+      "parentUuid": "b9c396c8_b9dbc6b5",
+      "revId": "9144b719dba04e3e5703351d95158f1cba9d8133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "45ab3684_13448f76",
         "filename": "module/bdev/nvme/bdev_nvme.h",
         "patchSetId": 12
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "You *want* to move spdk_bdev to nvme_bdev_ns structure?\n\nCause spdk_bdev is not present in nvme_bdev_ns structure currently, it\u0027s in nvme_bdev_ns_standard one.",
       "parentUuid": "e82e6e26_18f03436",
+      "revId": "9144b719dba04e3e5703351d95158f1cba9d8133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "422ae6f4_e5b7b4f7",
+        "filename": "module/bdev/nvme/bdev_nvme.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-11-13T16:51:19Z",
+      "side": 1,
+      "message": "I\u0027ve talked with Jim and we can disregard this comment. Please see details in my next comment.",
+      "parentUuid": "aa8d04a5_91e4fc0c",
       "revId": "9144b719dba04e3e5703351d95158f1cba9d8133",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
