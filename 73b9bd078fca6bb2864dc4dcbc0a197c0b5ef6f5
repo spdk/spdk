@@ -22,6 +22,30 @@
       "revId": "73b9bd078fca6bb2864dc4dcbc0a197c0b5ef6f5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "902eb004_88585e11",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 895,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-11-13T07:59:27Z",
+      "side": 1,
+      "message": "No it can\u0027t - please refer to patch before this one. Internal read\u0027s are still processed on core thread and user IO is not using this retry mechanism but BDEV one.",
+      "parentUuid": "4819aa74_4b0c74f4",
+      "range": {
+        "startLine": 895,
+        "startChar": 2,
+        "endLine": 895,
+        "endChar": 60
+      },
+      "revId": "73b9bd078fca6bb2864dc4dcbc0a197c0b5ef6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
