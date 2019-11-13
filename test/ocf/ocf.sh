@@ -16,6 +16,7 @@ timing_enter ocf
 
 suite "$testdir/integrity/fio-modes.sh"
 suite "$testdir/integrity/bdevperf-iotypes.sh"
+suite "$testdir/integrity/stats.sh"
 suite "$testdir/management/create-destruct.sh"
 suite "$testdir/management/multicore.sh"
 suite "$testdir/management/persistent-metadata.sh"
