@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1a5e563_564d7c54",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T08:30:17Z",
+      "side": 1,
+      "message": "Please check state, remove from queue, change param, and then change state.\n\nassert(breloc-\u003enum_lbks \u003d\u003d 0 \u0026\u0026 ftl_band_empty(band));\nTAILQ_REMOVE(\u0026reloc-\u003eprio_queue, breloc, entry);\nband-\u003ehigh_prio \u003d 0;\nbreloc-\u003estate \u003d FTL_BAND_RELOC_STATE_INACTIVE;",
+      "revId": "8b0e1d9264c2ccd9fc146599fedabe7d87f2f598",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0109912e_dcc324d1",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T08:30:17Z",
+      "side": 1,
+      "message": "assert(breloc-\u003estate \u003d\u003d FTL_BAND_RELOC_STATE_ACTIVE);\nTAILQ_REMOVE(\u0026reloc-\u003eactive_queue, breloc, entry);\nbreloc-\u003estate \u003d FTL_BAND_RELOC_STATE_INACTIVE;\n\nsits well with me.",
+      "revId": "8b0e1d9264c2ccd9fc146599fedabe7d87f2f598",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d602abd_dad8e723",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 579,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T08:30:17Z",
+      "side": 1,
+      "message": "This ordering (change state and enqueue) is OK.",
+      "revId": "8b0e1d9264c2ccd9fc146599fedabe7d87f2f598",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c197b080_33f81fb3",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 776,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T08:30:17Z",
+      "side": 1,
+      "message": "Please \n\nftl_reloc_prep(breloc);\nassert(breloc-\u003estate \u003d\u003d FTL_BAND_RELOC_STATE_PENDING);\nTAILQ_REMOVE(\u0026reloc-\u003epending_queue, breloc, entry);\nbreloc-\u003estate \u003d FTL_BAND_RELOC_STATE_ACTIVE;\nTAILQ_INSERT_HEAD(\u0026reloc-\u003eactive_queue, breloc, entry);",
+      "revId": "8b0e1d9264c2ccd9fc146599fedabe7d87f2f598",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2e6a534_d677a289",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 829,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T08:30:17Z",
+      "side": 1,
+      "message": "The following may sit well with me.\n\nif (!prio) {\n  if (breloc-\u003estate \u003d\u003d INACTIVE) {\n    breloc-\u003estate \u003d PENDING;\n    TAILQ_INSERT_HEAD(\u0026reloc-\u003epending_queue, breloc, entry);\n  }\n} else {\n  bool active \u003d false;\n\n  switch (breloc-\u003estate) {\n  case PENDING:\n    TAILQ_REMOVE(\u0026reloc-\u003epending_queue, breloc, entry);\n    break;\n  case ACTIVE:\n    active \u003d true;\n    TAILQ_REMOVE(\u0026reloc-\u003eactive_queue, breloc, entry);\n    break;\n  default:\n    break;\n  }\n\n  breloc-\u003estate \u003d HIGH_PRIO;\n  TAILQ_INSERT_TAIL(\u0026reloc-\u003eprio_queue, breloc, entry);\n}",
+      "revId": "8b0e1d9264c2ccd9fc146599fedabe7d87f2f598",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
