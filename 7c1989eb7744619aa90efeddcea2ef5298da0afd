@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "caf785a9_cc845983",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-11-13T06:08:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a495a559_4924193f",
+      "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0b303652_0247cf8d",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 36
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "42a119a5_b6a71489",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-11-13T06:08:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0b303652_0247cf8d",
+      "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d061a4f_69ef57c9",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 36
@@ -47,6 +83,24 @@
       "writtenOn": "2019-11-12T18:07:58Z",
       "side": 1,
       "message": "upper_limit\u003d$(echo \"$qos_limit * 1.15\" | bc)\n\nwould be simpler than using awk",
+      "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "602e7882_a62c35c4",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-11-13T06:08:54Z",
+      "side": 1,
+      "message": "Previously I\u0027ve tried to use \u0027bc\u0027 and looks like some environment does not have that command. So instead to be a generic way, use \u0027awk\u0027 here.",
+      "parentUuid": "5d061a4f_69ef57c9",
       "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -87,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "dbbf3fdf_0bf67ea1",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-11-13T06:08:54Z",
+      "side": 1,
+      "message": "Yes, please refer to line 273, it will just delete the device and exit the QoS testing after below line 130 \u0027else\" condition to print out one message.",
+      "parentUuid": "2a5040c5_98cf46e8",
+      "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "805be5f8_5f66eba9",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 36
@@ -104,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "25a1b6ca_5e86198b",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-11-13T06:08:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "805be5f8_5f66eba9",
+      "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cde289a4_94e4ba9a",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 36
@@ -118,6 +208,24 @@
       "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d86cdba8_0262b44d",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-11-13T06:08:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cde289a4_94e4ba9a",
+      "revId": "7c1989eb7744619aa90efeddcea2ef5298da0afd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
