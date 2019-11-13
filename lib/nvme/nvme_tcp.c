@@ -235,6 +235,7 @@ nvme_tcp_qpair_disconnect(struct spdk_nvme_qpair *qpair)
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 	struct nvme_tcp_pdu *pdu;
 
+	qpair->transport_qp_is_failed = true;
 	spdk_sock_close(&tqpair->sock);
 
 	/* clear the send_queue */
@@ -1490,7 +1491,7 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 		if (rc < 0) {
 			SPDK_DEBUGLOG(SPDK_LOG_NVME, "Error polling CQ! (%d): %s\n",
 				      errno, spdk_strerror(errno));
-			return -1;
+			goto fail;
 		} else if (rc == 0) {
 			/* Partial PDU is read */
 			break;
@@ -1503,6 +1504,19 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 	}
 
 	return reaped;
+fail:
+
+	/*
+	 * Since admin queues take the ctrlr_lock before entering this function,
+	 * we can call nvme_tcp_qpair_disconnect. For other qpairs we need
+	 * to call the generic function which will take the lock for us.
+	 */
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvme_tcp_qpair_disconnect(qpair);
+	} else {
+		nvme_ctrlr_disconnect_qpair(qpair);
+	}
+	return -ENXIO;
 }
 
 static int
@@ -1610,8 +1624,10 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 		return -1;
 	}
 
+	tqpair->qpair.transport_qp_is_failed = false;
 	rc = nvme_fabric_qpair_connect(&tqpair->qpair, tqpair->num_entries);
 	if (rc < 0) {
+		tqpair->qpair.transport_qp_is_failed = true;
 		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
 		return -1;
 	}
