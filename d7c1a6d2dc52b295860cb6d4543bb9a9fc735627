@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "fe39bf20_ce0a6a27",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-13T14:54:42Z",
+      "side": 1,
+      "message": "Can you please put new ocf section with this information in v20.01 ?\nIt would be good to specify the exact RPC and argument that is changing.",
+      "range": {
+        "startLine": 218,
+        "startChar": 0,
+        "endLine": 218,
+        "endChar": 56
+      },
+      "revId": "d7c1a6d2dc52b295860cb6d4543bb9a9fc735627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00c4600e_349ee9d3",
+        "filename": "doc/bdev.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-13T14:54:42Z",
+      "side": 1,
+      "message": "Is there a reason why cache line size of 4KiB cannot be kept as default, making the cache line parameter optional ?",
+      "range": {
+        "startLine": 356,
+        "startChar": 0,
+        "endLine": 356,
+        "endChar": 10
+      },
+      "revId": "d7c1a6d2dc52b295860cb6d4543bb9a9fc735627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bdc6aff2_887449bc",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1190,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-13T14:54:42Z",
+      "side": 1,
+      "message": "This change does not look relevant to this patch.",
+      "range": {
+        "startLine": 1190,
+        "startChar": 5,
+        "endLine": 1190,
+        "endChar": 55
+      },
+      "revId": "d7c1a6d2dc52b295860cb6d4543bb9a9fc735627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "601cbad7_f1edbdca",
         "filename": "module/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 13
