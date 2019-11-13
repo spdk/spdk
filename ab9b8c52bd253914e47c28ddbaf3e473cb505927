@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d4f25cc_3ca3e699",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 949,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-13T10:38:38Z",
+      "side": 1,
+      "message": "tmp is needed?",
+      "revId": "ab9b8c52bd253914e47c28ddbaf3e473cb505927",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
