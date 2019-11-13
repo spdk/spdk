@@ -18,6 +18,13 @@ Added boolean return value for function spdk_fs_set_cache_size to indicate its o
 
 Added `blobfs_set_cache_size` RPC method to set cache size for blobstore filesystem.
 
+### ocf
+
+Added new ocf volume - atomic. This new type of volume provides ability to use block device
+formated to handling IO with additional metadata, using such device, allow OCF to reduce
+number of IOs connected with metadata, and therefore increase the throughput on
+write workloads.
+
 ## v19.10:
 
 ### rpc

@@ -42,6 +42,7 @@ extern ocf_ctx_t vbdev_ocf_ctx;
 #define OCF_WRITE_FLUSH 11
 
 #define SPDK_OBJECT 1
+#define SPDK_OBJECT_ATOMIC 2
 
 /* Context of cache instance */
 struct vbdev_ocf_cache_ctx {

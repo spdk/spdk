@@ -1163,6 +1163,7 @@ init_vbdev(const char *vbdev_name,
 {
 	struct vbdev_ocf *vbdev;
 	int rc = 0;
+	struct spdk_bdev *cache_bdev;
 
 	if (spdk_bdev_get_by_name(vbdev_name) || vbdev_ocf_get_by_name(vbdev_name)) {
 		SPDK_ERRLOG("Device with name '%s' already exists\n", vbdev_name);
@@ -1210,6 +1211,14 @@ init_vbdev(const char *vbdev_name,
 
 	vbdev->cfg.loadq = loadq;
 	init_vbdev_config(vbdev);
+
+	cache_bdev = spdk_bdev_get_by_name(vbdev->cache.name);
+	if (cache_bdev && cache_bdev->blocklen == ATOMIC_BLOCK_LEN &&
+		cache_bdev->md_len == OCF_ATOMIC_METADATA_SIZE) {
+		SPDK_NOTICELOG("Cache device is formated to data length equal to "
+			"512B and meatadata length equal to 8B, OCF uses atomic mode\n");
+		vbdev->cfg.device.volume_type = SPDK_OBJECT_ATOMIC;
+	}
 	TAILQ_INSERT_TAIL(&g_ocf_vbdev_head, vbdev, tailq);
 	return rc;
 
