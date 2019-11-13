@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b860b877_b4e9fbe8",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2806,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-13T18:20:55Z",
+      "side": 1,
+      "message": "I don\u0027t actually think you need to do this. When you\u0027re waiting on a tcp request to become available, what you\u0027re actually waiting for is a message from the host. So you\u0027ll always get notified via the spdk_sock_group_poll below anyway.\n\nI really don\u0027t want to add a loop over all qpairs here - there could be a very large number of them (thousands) and I think this would have a significant performance impact.",
+      "revId": "4da8b1c22c3e0d2ed1da792161b21d14dd8630a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
