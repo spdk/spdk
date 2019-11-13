@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b1cbc2c6_40714a21",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-11-13T08:49:44Z",
+      "side": 1,
+      "message": "\u0026ns-\u003ebase is still different type then the previous one (struct nvme_bdev), so I will still have to change bdev_nvme_writev parameter type and all other calls like I did in this patch set. The only way to keep those parameters is to not remove nvme_bdev structure. But in such case it will duplicate most of the fields from other structures and the question is where we should keep it - in nvme_bdev_ns we will have again the issue with different number of bdevs per namespace; in nvme_bdev_ns_standard then, instead of directly having spdk_bdev?",
+      "parentUuid": "0b797023_34e12475",
+      "revId": "9144b719dba04e3e5703351d95158f1cba9d8133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "45ab3684_13448f76",
         "filename": "module/bdev/nvme/bdev_nvme.h",
         "patchSetId": 12
@@ -30,6 +48,24 @@
       "writtenOn": "2019-11-08T15:33:08Z",
       "side": 1,
       "message": "we should also take the spdk_bdev out of nvme_bdev_ns",
+      "revId": "9144b719dba04e3e5703351d95158f1cba9d8133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e82e6e26_18f03436",
+        "filename": "module/bdev/nvme/bdev_nvme.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-11-13T08:49:44Z",
+      "side": 1,
+      "message": "I\u0027m not sure what you mean here. You to move spdk_bdev to nvme_bdev_ns structure? If so, how we will handle namespaces with many bdevs if we have only one spdk_bdev object in nvme_bdev_ns?",
+      "parentUuid": "45ab3684_13448f76",
       "revId": "9144b719dba04e3e5703351d95158f1cba9d8133",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
