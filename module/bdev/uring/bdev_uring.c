@@ -368,12 +368,26 @@ bdev_uring_get_io_channel(void *ctx)
 	return spdk_get_io_channel(uring);
 }
 
+static int
+bdev_uring_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
+{
+	struct bdev_uring *uring = ctx;
+
+	spdk_json_write_named_object_begin(w, "uring");
+
+	spdk_json_write_named_string(w, "filename", uring->filename);
+
+	spdk_json_write_object_end(w);
+
+	return 0;
+}
 
 static const struct spdk_bdev_fn_table uring_fn_table = {
 	.destruct		= bdev_uring_destruct,
 	.submit_request		= bdev_uring_submit_request,
 	.io_type_supported	= bdev_uring_io_type_supported,
 	.get_io_channel		= bdev_uring_get_io_channel,
+	.dump_info_json		= bdev_uring_dump_info_json,
 };
 
 static void uring_free_bdev(struct bdev_uring *uring)
