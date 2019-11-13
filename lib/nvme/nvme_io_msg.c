@@ -107,7 +107,8 @@ spdk_nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
-nvme_io_msg_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr, struct nvme_io_msg_producer *io_msg_producer)
+nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
+			   struct nvme_io_msg_producer *io_msg_producer)
 {
 	if (io_msg_producer == NULL) {
 		SPDK_ERRLOG("io_msg_producer cannot be NULL\n");
@@ -144,25 +145,13 @@ nvme_io_msg_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr, struct nvme_io_msg_produc
 }
 
 void
-nvme_io_msg_ctrlr_stop(struct spdk_nvme_ctrlr *ctrlr, struct nvme_io_msg_producer *io_msg_producer,
-		       bool shutdown)
+nvme_io_msg_ctrlr_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (STAILQ_EMPTY(&ctrlr->io_producers) && shutdown) {
-		/* Shutdown path with no producers registered = io msg ctrlr not started */
-		return;
-	}
+	assert(STAILQ_EMPTY(&ctrlr->io_producers));
 
-	if (io_msg_producer != NULL) {
-		STAILQ_REMOVE(&ctrlr->io_producers, io_msg_producer, nvme_io_msg_producer, link);
+	if (ctrlr->external_io_msgs) {
+		spdk_ring_free(ctrlr->external_io_msgs);
 	}
-
-	if (!STAILQ_EMPTY(&ctrlr->io_producers) && !shutdown) {
-		/* There are still some registered producers */
-		return;
-	}
-
-	assert(ctrlr->external_io_msgs);
-	spdk_ring_free(ctrlr->external_io_msgs);
 
 	if (ctrlr->external_io_msgs_qpair) {
 		spdk_nvme_ctrlr_free_io_qpair(ctrlr->external_io_msgs_qpair);
@@ -170,4 +159,17 @@ nvme_io_msg_ctrlr_stop(struct spdk_nvme_ctrlr *ctrlr, struct nvme_io_msg_produce
 	}
 
 	pthread_mutex_destroy(&ctrlr->external_io_msgs_lock);
+}
+
+void
+nvme_io_msg_ctrlr_unregister(struct spdk_nvme_ctrlr *ctrlr,
+			     struct nvme_io_msg_producer *io_msg_producer)
+{
+	if (io_msg_producer != NULL) {
+		STAILQ_REMOVE(&ctrlr->io_producers, io_msg_producer, nvme_io_msg_producer, link);
+	}
+
+	if (STAILQ_EMPTY(&ctrlr->io_producers)) {
+		nvme_io_msg_ctrlr_detach(ctrlr);
+	}
 }
