@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c9e4570_bddcfbf8",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-13T16:12:05Z",
+      "side": 1,
+      "message": "this help string also needs to be updated",
+      "revId": "a7eb12e2f9771e7ab304ccfa42d2096387bd50a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "299b33b4_5e19cd72",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-13T16:12:05Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "a7eb12e2f9771e7ab304ccfa42d2096387bd50a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
