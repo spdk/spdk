@@ -118,6 +118,30 @@
       "revId": "6b215297ba9451f96ffeceb9e8dca03ae4887444",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "434777d3_f6b39452",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-11-14T10:40:50Z",
+      "side": 1,
+      "message": "I don\u0027t understand a bit why do we need to queue resets? If the user/bdev_nvme layer itself decided to reset the controller simultaneously and we queue the 2nd reset request then we will have 2 resets in a row. I think 1 reset is enough to e.g. restore transport layer failures, the second reset will do nothing useful. Probably we can just complete bio (if any) with success SPDK_BDEV_IO_STATUS_SUCCESS code\nAt least NVME controller itself doesn\u0027t queue reset request if the reset is already in progress.",
+      "parentUuid": "c68a2560_5e14cb0b",
+      "range": {
+        "startLine": 377,
+        "startChar": 53,
+        "endLine": 377,
+        "endChar": 79
+      },
+      "revId": "6b215297ba9451f96ffeceb9e8dca03ae4887444",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
