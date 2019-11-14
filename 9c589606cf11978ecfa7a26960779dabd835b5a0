@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "879f100c_98127966",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-11-14T08:32:32Z",
+      "side": 1,
+      "message": "Maybe I\u0027m picky, but function names _bdev_nvme_reset_complete and _bdev_nvme_reset_done have the same semantic and it may confuse - which function actually completes the reset? \nWhat if we rename _bdev_nvme_reset_complete to e.g. _bdev_nvme_reset_check_result?",
+      "range": {
+        "startLine": 278,
+        "startChar": 0,
+        "endLine": 278,
+        "endChar": 25
+      },
+      "revId": "9c589606cf11978ecfa7a26960779dabd835b5a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
