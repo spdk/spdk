@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c75786df_cce22f1e",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-14T04:50:56Z",
+      "side": 1,
+      "message": "As per Ben\u0027s feedback, it looks like this patch will require major change or be abandoned for another.\nThis you try to resolve later in https://review.gerrithub.io/c/spdk/spdk/+/473426/, but that does not look like right solution either.\n\nWhen nvme_io_msg_ctrlr_detach() is called and there are still some registered io_producers, each of those need to be called and allowed to clean up after itself. This implies that each registered io_producer needs to pass its own callback.\n\nThus making refcnt not sufficient to track registered io_producers. Keeping a structure as is right now, but adding callback to perform spdk_nvme_cuse_unregister() for CUSE would help resolve the issue 1033.",
+      "range": {
+        "startLine": 146,
+        "startChar": 0,
+        "endLine": 149,
+        "endChar": 15
+      },
+      "revId": "87be09054f8bfe8cf126ecff2bc836fd8fb410c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
