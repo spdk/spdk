@@ -45,6 +45,30 @@
       "revId": "2d29295cc9e3fb2ab489b8971028e7367c847f3b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b355823b_70edcc73",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 832,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-14T21:24:41Z",
+      "side": 1,
+      "message": "You\u0027re right - this needs to remain level-triggered. I\u0027ll find a way to do this without looping over every sock in the group.",
+      "parentUuid": "8cb22057_7255648f",
+      "range": {
+        "startLine": 824,
+        "startChar": 0,
+        "endLine": 832,
+        "endChar": 0
+      },
+      "revId": "2d29295cc9e3fb2ab489b8971028e7367c847f3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
