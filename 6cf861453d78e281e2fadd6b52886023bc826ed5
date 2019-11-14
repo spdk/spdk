@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a86307af_4a9dad20",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 31
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-14T21:40:16Z",
+      "side": 1,
+      "message": "This line would be clearer if you wrote it as the following:\n\"usage: type \u003cnumber_of_namespaces\u003e types available: ocssd, nvme\"",
+      "revId": "6cf861453d78e281e2fadd6b52886023bc826ed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
