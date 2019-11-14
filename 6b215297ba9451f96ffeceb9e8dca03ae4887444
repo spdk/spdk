@@ -142,6 +142,30 @@
       "revId": "6b215297ba9451f96ffeceb9e8dca03ae4887444",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1cbbb833_69d6ecd7",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-14T13:31:27Z",
+      "side": 1,
+      "message": "Hi Seth, Alexey,\n\nI was confused and wrong. SPDK SCSI controller queues and serializes resets. Even if multiple SCSI controller share a single NVMe controller, they are coordinated and resets are serialized. So uncoordinated resets are unlikely. Hence complex queueing is not necessary. I think returning success in the middle of reset may not be intuitive. Hence returning busy or error may be used as Seth originally proposed. Anyway I apologize for confusing you and thank you for your insight.\n-Shuhei",
+      "parentUuid": "434777d3_f6b39452",
+      "range": {
+        "startLine": 377,
+        "startChar": 53,
+        "endLine": 377,
+        "endChar": 79
+      },
+      "revId": "6b215297ba9451f96ffeceb9e8dca03ae4887444",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
