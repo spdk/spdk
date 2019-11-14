@@ -161,10 +161,9 @@ void
 nvme_io_msg_ctrlr_unregister(struct spdk_nvme_ctrlr *ctrlr,
 			     struct nvme_io_msg_producer *io_msg_producer)
 {
-	if (io_msg_producer != NULL) {
-		STAILQ_REMOVE(&ctrlr->io_producers, io_msg_producer, nvme_io_msg_producer, link);
-	}
+	assert(io_msg_producer != NULL);
 
+	STAILQ_REMOVE(&ctrlr->io_producers, io_msg_producer, nvme_io_msg_producer, link);
 	if (!STAILQ_EMPTY(&ctrlr->io_producers)) {
 		return;
 	}
