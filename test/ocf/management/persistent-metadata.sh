@@ -9,9 +9,9 @@ function clear_nvme()
 {
         # Clear metadata on NVMe device
         $rootdir/scripts/setup.sh reset
-        sleep 1
+        sleep 5
         name=$(get_nvme_name_from_bdf $1)
-        mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
+        mountpoints=$(lsblk /dev/$name --output MOUNTPOINT -n | wc -w)
         if [ "$mountpoints" != "0" ]; then
                 $rootdir/scripts/setup.sh
                 exit 1
@@ -22,6 +22,7 @@ function clear_nvme()
 
 rpc_py=$rootdir/scripts/rpc.py
 
+$rootdir/scripts/setup.sh
 nvme_cfg=$($rootdir/scripts/gen_nvme.sh)
 
 config="
