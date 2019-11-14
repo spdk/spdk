@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "233cd345_33b309e1",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-11-14T08:24:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9c9e4570_bddcfbf8",
+      "revId": "a7eb12e2f9771e7ab304ccfa42d2096387bd50a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "299b33b4_5e19cd72",
         "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
         "patchSetId": 2
@@ -33,6 +51,24 @@
       "revId": "a7eb12e2f9771e7ab304ccfa42d2096387bd50a5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03ca15b9_1b2b0887",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-11-14T08:24:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "299b33b4_5e19cd72",
+      "revId": "a7eb12e2f9771e7ab304ccfa42d2096387bd50a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
