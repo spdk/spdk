@@ -147,6 +147,17 @@ nvme_io_msg_ctrlr_register(struct spdk_nvme_ctrlr *ctrlr,
 void
 nvme_io_msg_ctrlr_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
+	struct nvme_io_msg_producer *io_msg_producer;
+
+	if (STAILQ_EMPTY(&ctrlr->io_producers)) {
+		return;
+	}
+
+	/* Unregister all producers */
+	STAILQ_FOREACH(io_msg_producer, &ctrlr->io_producers, link) {
+		nvme_io_msg_ctrlr_unregister(ctrlr, io_msg_producer);
+	}
+
 	assert(STAILQ_EMPTY(&ctrlr->io_producers));
 }
 
@@ -155,6 +166,9 @@ nvme_io_msg_ctrlr_unregister(struct spdk_nvme_ctrlr *ctrlr,
 			     struct nvme_io_msg_producer *io_msg_producer)
 {
 	assert(io_msg_producer != NULL);
+
+	/* Stop producer */
+	io_msg_producer->stop(ctrlr);
 
 	STAILQ_REMOVE(&ctrlr->io_producers, io_msg_producer, nvme_io_msg_producer, link);
 	if (!STAILQ_EMPTY(&ctrlr->io_producers)) {

@@ -765,8 +765,10 @@ nvme_cuse_stop(struct spdk_nvme_ctrlr *ctrlr)
 	cuse_nvme_ctrlr_stop(ctrlr_device);
 }
 
+void spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
 static struct nvme_io_msg_producer cuse_nvme_io_msg_producer = {
 	.name = "cuse",
+	.stop = nvme_cuse_stop,
 };
 
 int
@@ -794,8 +796,7 @@ spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 void
 spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr)
 {
-	nvme_cuse_stop(ctrlr);
-
+	/* nvme_io_msg_ctrlr_unregister should call nvme_cuse_stop via callback */
 	nvme_io_msg_ctrlr_unregister(ctrlr, &cuse_nvme_io_msg_producer);
 }
 
