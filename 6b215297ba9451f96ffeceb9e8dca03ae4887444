@@ -166,6 +166,30 @@
       "revId": "6b215297ba9451f96ffeceb9e8dca03ae4887444",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d504907_49a2d016",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-14T17:08:14Z",
+      "side": 1,
+      "message": "So there are a few different ways to handle this, and from discussions with all of you, I have found support for all of them. My favorite solution is bullet 4, but I\u0027d like to get buy in from everyone.\n\n1. My initial patch - If a reset is already in progress just fail the new incoming reset.\nPro: we don\u0027t have to have the extra callback code.\nCon: If the upper layer has a bigger hammer, it may try to use that to destroy the controller or something when really we are in the middle of what amounts to a successful reset.\n2. Alexey\u0027s Idea - If a reset is already in progress complete the bdevio with a successful.\nPro: same as above\nCon: you think you successfully reset a controller and start submitting I/O, but you get failures back.\n3. Current patch - If a reset is in progress queue the new one and then complete it in serial after the old one completes.\nPros: This is actually how the generic bdev module code handles resets. It respects the user request in a literal sense and ensures that the return value of the bdevio represents the actual return value of the reset that was queued.\nCons: Possibly doing more resets than necessary. If a reset succeeds, it has done the work that all of the queued resets want done. So doing a supplementary reset is a waste.\n4. Batched reset completions. Queue resets when one is in process. Complete all queued resets with the same return code that the original reset finishes with.\npros: The return code of the reset represents the actual current state of the controller without doing any additional work.\ncons: I don\u0027t actually see any cons with this strategy. I think we should do it this way but want to know what you all think.",
+      "parentUuid": "1cbbb833_69d6ecd7",
+      "range": {
+        "startLine": 377,
+        "startChar": 53,
+        "endLine": 377,
+        "endChar": 79
+      },
+      "revId": "6b215297ba9451f96ffeceb9e8dca03ae4887444",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
