@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f777a0b_2121d5f6",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-14T06:49:08Z",
+      "side": 1,
+      "message": "I got your last comment.\nIf so, how about the following?\n\niops_limit\u003d$(((io_result/4)/qos_lower_iops_limit*qos_iops_limit))\nif [$iops_limit -ge $qpos_lower_iops_limit]; then\n\nAnd the reason why you round down to 1000 multiples is current specification?",
+      "range": {
+        "startLine": 104,
+        "startChar": 1,
+        "endLine": 104,
+        "endChar": 27
+      },
+      "revId": "e352db5d703fca0d92e9d82f7409520ddad454d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
