@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4e9a804_5601a914",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-14T20:06:03Z",
+      "side": 1,
+      "message": "sing \u003d\u003e using\n\nAlso add \"Fixes issue #1043\".",
+      "revId": "1ac39922f93ad44e3369dbb590e37f84cfa507f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
