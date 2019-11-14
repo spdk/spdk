@@ -52,6 +52,7 @@ struct spdk_nvme_io_msg {
 
 struct nvme_io_msg_producer {
 	const char *name;
+	void (*stop)(struct spdk_nvme_ctrlr *ctrlr);
 	STAILQ_ENTRY(nvme_io_msg_producer) link;
 };
 
