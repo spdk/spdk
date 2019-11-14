@@ -164,12 +164,6 @@ spdk_iscsi_task_is_read(struct spdk_iscsi_task *task)
 	return (scsi_req->read_bit == 1);
 }
 
-static inline uint32_t
-spdk_iscsi_task_get_cmdsn(struct spdk_iscsi_task *task)
-{
-	return spdk_iscsi_task_get_pdu(task)->cmd_sn;
-}
-
 struct spdk_iscsi_task *spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
 		struct spdk_iscsi_task *parent,
 		spdk_scsi_task_cpl cpl_fn);
