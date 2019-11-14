@@ -16,6 +16,24 @@
       "revId": "1ab487546fc460d26712b300e2743a7a507be6c6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af29ec27_868a9358",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1496,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-14T16:24:27Z",
+      "side": 1,
+      "message": "I don\u0027t think I NEED the delay, the reason I put it in is because after the first failed connection attempt, the qpair places itself into a timewait state (from my best interpretation of the IB spec). After that time expires, the qpair can connect again. So spinning on connect/disconnect would just pollute the logs with errors. From my experience messing with this, even with the delay, we don\u0027t get a successful connection until about the third attempt.\n\nRIght now the API is synchronous, do you mean when/if we remove the wait_for_completion spinning in the fabrics_connect call? I think that would still work, but we would have to re-architect this whole function with or without the stale connection mitigation.",
+      "parentUuid": "d21f72e2_a3b72d85",
+      "revId": "1ab487546fc460d26712b300e2743a7a507be6c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
