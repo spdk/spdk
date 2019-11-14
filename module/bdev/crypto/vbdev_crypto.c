@@ -106,8 +106,10 @@ static pthread_mutex_t g_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
  */
 #define NUM_MBUFS		32768
 #define POOL_CACHE_SIZE		256
-#define NUM_SESSIONS		2
+#define MAX_CRYPTO_VOLUMES	128
+#define NUM_SESSIONS		(2 * MAX_CRYPTO_VOLUMES)
 #define SESS_MEMPOOL_CACHE_SIZE 0
+uint8_t g_number_of_claimed_volumes = 0;
 
 /* This is the max number of IOs we can supply to any crypto device QP at one time.
  * It can vary between drivers.
@@ -1161,6 +1163,8 @@ vbdev_crypto_destruct(void *ctx)
 	/* Unregister the io_device. */
 	spdk_io_device_unregister(crypto_bdev, _device_unregister_cb);
 
+	g_number_of_claimed_volumes--;
+
 	return 0;
 }
 
@@ -1584,6 +1588,12 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 	bool found = false;
 	int rc = 0;
 
+	if (g_number_of_claimed_volumes++ > MAX_CRYPTO_VOLUMES) {
+		SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "Reached max number of claimed volumes\n");
+		rc = -EINVAL;
+		goto error_vbdev_alloc;
+	}
+
 	/* Check our list of names from config versus this bdev and if
 	 * there's a match, create the crypto_bdev & bdev accordingly.
 	 */
@@ -1760,6 +1770,7 @@ error_alloc_key:
 error_bdev_name:
 	free(vbdev);
 error_vbdev_alloc:
+	g_number_of_claimed_volumes--;
 	return rc;
 }
 
