@@ -16,6 +16,24 @@
       "revId": "7937db3fc5a1e6302ff6908a585a26d40fc707bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99107c08_3b554cf3",
+        "filename": "test/nvmf/host/target_disconnect.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-14T16:08:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f0bbb377_8e22d66e",
+      "revId": "7937db3fc5a1e6302ff6908a585a26d40fc707bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
