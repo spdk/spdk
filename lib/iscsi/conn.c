@@ -589,6 +589,10 @@ iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 	struct spdk_iscsi_tgt_node *target;
 
 	assert(conn->state == ISCSI_CONN_STATE_EXITED);
+	if (conn->data_in_cnt != 0) {
+		SPDK_ERRLOG("conn->data_in_cnt = %d\n", conn->data_in_cnt);
+		assert(false);
+	}
 
 	if (conn->sess != NULL &&
 	    conn->sess->session_type == SESSION_TYPE_NORMAL &&
