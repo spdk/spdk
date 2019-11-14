@@ -111,7 +111,7 @@ nvme_bdev_dump_trid_json(struct spdk_nvme_transport_id *trid, struct spdk_json_w
 }
 
 static void
-bdev_nvme_unregister_cb(void *io_device)
+nvme_bdev_unregister_cb(void *io_device)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = io_device;
 	uint32_t i;
@@ -130,7 +130,7 @@ bdev_nvme_unregister_cb(void *io_device)
 }
 
 void
-bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	assert(nvme_bdev_ctrlr->destruct);
 	if (nvme_bdev_ctrlr->opal_dev) {
@@ -143,5 +143,5 @@ bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		nvme_bdev_ctrlr->opal_dev = NULL;
 	}
 
-	spdk_io_device_unregister(nvme_bdev_ctrlr, bdev_nvme_unregister_cb);
+	spdk_io_device_unregister(nvme_bdev_ctrlr, nvme_bdev_unregister_cb);
 }
