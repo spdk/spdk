@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "36d9e9a3_30acc131",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-15T18:46:48Z",
+      "side": 1,
+      "message": "is it OK for this function to ever get called with these unit tests, if both g_remove_cb_done \u003d\u003d false and g_device_is_enumerated \u003d\u003d false?\n\nif not, then I\u0027d suggest:\n\nSPDK_CU_ASSERT_FATAL(g_remove_cb_done || g_device_is_enumerated);\n\nif that is OK, then I would suggest:\n\nif (!g_remove_cb_done \u0026\u0026 !g_device_is_enumerated) {\n  return -1;\n}\n\nif (g_vfio_is_enabled) {\n/* code */\n}\n\nif (g_add_device) {\n  uevent-\u003eaction \u003d SPDK_NVME_UEVENT_ADD;\n} else {\n  action \u003d UEVENT_REMOVE;\n}\n\nreturn 0;\n\nit makes all of this simpler to read",
+      "revId": "756669bcef287f83977143f9c7f1791ca41d0212",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7fa825e_f72a0d42",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-15T18:46:48Z",
+      "side": 1,
+      "message": "is there any case where it is OK if g_ctrlr !\u003d ctrlr?\n\nif not, then it would be better to do:\n\nSPDK_CU_ASSERT_FATAL(g_ctrlr \u003d\u003d ctrlr);\nfree(g_ctrlr);\ng_ctrlr \u003d NULL;\n\nand avoid the if statement",
+      "revId": "756669bcef287f83977143f9c7f1791ca41d0212",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
