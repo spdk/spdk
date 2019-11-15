@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00f02bc8_c98d0277",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1837,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-15T21:13:49Z",
+      "side": 1,
+      "message": "Hi Jin,\n\nSorry it has taken me so long to look at these patches!  I\u0027ve assigned them to me for now and will help get them ready for merging.\n\nInstead of checking this flag here, can we just always TAILQ_INSERT_TAIL at the beginning of spdk_bdev_io_submit (not _spdk_bdev_io_submit).  I think this will reduce the complexity a bit.  I think it\u0027s fine to track these I/O from the channel where they were submitted by the user, not necessarily the channel where they are sent to the bdev module (in the case of QoS).",
+      "revId": "6bf9fa062d917c36d4c26e805b098a14340f3404",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff1693d3_7bf6eac4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3700,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-15T21:13:49Z",
+      "side": 1,
+      "message": "we should probably always put the bdev_io into io_submitted - even for resets\n\nso maybe TAILQ_INSERT_TAIL also in spdk_bdev_reset()",
+      "revId": "6bf9fa062d917c36d4c26e805b098a14340f3404",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
