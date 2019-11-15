@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3862211a_509562bd",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-15T20:41:57Z",
+      "side": 1,
+      "message": "ok - I guess this is fine - I\u0027m just not sure about NOTICELOGs when the reset starts either, there\u0027s no information about which controller is being reset, so it\u0027s not general useful to an admin or user",
+      "revId": "84f2b23c4d8f6d204f5583fed7cad95ef02bf46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
