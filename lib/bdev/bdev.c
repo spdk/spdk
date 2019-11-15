@@ -3815,14 +3815,34 @@ _spdk_bdev_reset_complete(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-_spdk_bdev_unfreeze_channel(struct spdk_io_channel_iter *i)
+_spdk_bdev_unfreeze_channel_neg(struct spdk_io_channel_iter *i)
 {
 	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_io *queued_reset;
 
 	ch->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
-	if (!TAILQ_EMPTY(&ch->queued_resets)) {
-		_spdk_bdev_channel_start_reset(ch);
+	while (!TAILQ_EMPTY(&ch->queued_resets)) {
+		queued_reset = TAILQ_FIRST(&ch->queued_resets);
+		TAILQ_REMOVE(&ch->queued_resets, queued_reset, internal.link);
+		spdk_bdev_io_complete(queued_reset, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+_spdk_bdev_unfreeze_channel_pos(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_io *queued_reset;
+
+	ch->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
+	while (!TAILQ_EMPTY(&ch->queued_resets)) {
+		queued_reset = TAILQ_FIRST(&ch->queued_resets);
+		TAILQ_REMOVE(&ch->queued_resets, queued_reset, internal.link);
+		spdk_bdev_io_complete(queued_reset, SPDK_BDEV_IO_STATUS_SUCCESS);
 	}
 
 	spdk_for_each_channel_continue(i, 0);
@@ -3834,6 +3854,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
 	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
+	spdk_channel_msg ch_fn;
 
 	bdev_io->internal.status = status;
 
@@ -3851,7 +3872,12 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		pthread_mutex_unlock(&bdev->internal.mutex);
 
 		if (unlock_channels) {
-			spdk_for_each_channel(__bdev_to_io_dev(bdev), _spdk_bdev_unfreeze_channel,
+			if (status == SPDK_BDEV_IO_STATUS_FAILED) {
+				ch_fn = _spdk_bdev_unfreeze_channel_neg;
+			} else {
+				ch_fn = _spdk_bdev_unfreeze_channel_pos;
+			}
+			spdk_for_each_channel(__bdev_to_io_dev(bdev), ch_fn,
 					      bdev_io, _spdk_bdev_reset_complete);
 			return;
 		}
