@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b56dd726_c019a163",
+        "filename": "module/bdev/uring/bdev_uring.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-15T21:09:53Z",
+      "side": 1,
+      "message": "That is not accurate, since it would appear as bdev. But its being copy/pasted from similar section in AIO that should be fixed too.",
+      "range": {
+        "startLine": 627,
+        "startChar": 5,
+        "endLine": 627,
+        "endChar": 28
+      },
+      "revId": "92a5275a47498d70822f66c68903cded7927bcd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
