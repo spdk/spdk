@@ -1,0 +1,77 @@
+{
+  "case_1": {
+    "Test name": "register_and_read_key",
+    "Test category": "function",
+    "Test type": "positive"
+  },
+  "case_2": {
+    "Test name": "ignore_and_read_key",
+    "Test category": "function",
+    "Test type": "positive"
+  },
+  "case_3": {
+    "Test name": "reserve5_and_holderio",
+    "Test category": "function",
+    "Test type": "positive"
+  },
+  "case_4": {
+    "Test name": "reserve5_and_registerio",
+    "Test category": "function",
+    "Test type": "positive"
+  },
+  "case_5": {
+    "Test name": "reserve5_and_invalidio",
+    "Test category": "function",
+    "Test type": "negative"
+  },
+  "case_6": {
+    "Test name": "duplicated_registers_reserve5",
+    "Test category": "function",
+    "Test type": "negative"
+  },
+  "case_7": {
+    "Test name": "nonregistered_reserve5",
+    "Test category": "function",
+    "Test type": "negative"
+  },
+  "case_8": {
+    "Test name": "reserve_then_release5",
+    "Test category": "function",
+    "Test type": "positive"
+  },
+  "case_9": {
+    "Test name": "reserve_then_invalid_release5",
+    "Test category": "function",
+    "Test type": "negative"
+  },
+  "case_10": {
+    "Test name": "reserve_and_clear5",
+    "Test category": "function",
+    "Test type": "positive"
+  },
+  "case_11": {
+    "Test name": "areserve_and_bclear5",
+    "Test category": "function",
+    "Test type": "positive"
+  },
+  "case_12": {
+    "Test name": "areserve_and_bclear5",
+    "Test category": "function",
+    "Test type": "negative"
+  },
+  "case_13": {
+    "Test name": "| areserve_and_bpreempt5",
+    "Test category": "function",
+    "Test type": "negative"
+  },
+  "case_14": {
+    "Test name": "areserve_and_bpreempt5",
+    "Test category": "function",
+    "Test type": "positive"
+  },
+  "case_15": {
+    "Test name": "abreserve_and_bapreempt5",
+    "Test category": "function",
+    "Test type": "negative"
+  }
+}
