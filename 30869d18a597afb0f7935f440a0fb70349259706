@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9320d64d_a295b644",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-15T16:44:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "37ccb767_b6c24983",
+      "revId": "30869d18a597afb0f7935f440a0fb70349259706",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54da4121_2323d765",
         "filename": "module/bdev/nvme/bdev_nvme.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-11-15T16:19:33Z",
       "side": 1,
       "message": "I don\u0027t think we should add a NOTICELOG for a successful reset.",
+      "revId": "30869d18a597afb0f7935f440a0fb70349259706",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52f04282_ecd0bbf1",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-15T16:44:40Z",
+      "side": 1,
+      "message": "The reason I added it is because we print a noticelog when we begin a reset. So if we do a successful reset, the user just sees starting reset and then nothing. When running an application like bdevperf, it can be unclear whether the reset was successful or the operation is stalled somewhere, especially for long workloads. I figure for other applications we might see similar logging behavior.",
+      "parentUuid": "54da4121_2323d765",
       "revId": "30869d18a597afb0f7935f440a0fb70349259706",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
