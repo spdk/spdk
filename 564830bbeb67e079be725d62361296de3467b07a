@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0624387f_8129b0dd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-15T22:09:12Z",
+      "side": 1,
+      "message": "Please remove WIP.\nNot sure if this was the intention, but please note that having [WIP] tag in patch does not prevent running CI or from showing up in folks review dashboards. If you wanted to save people time from reviewing while working on patch, the Work in progress functionality in Gerrit will help with that.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 5
+      },
+      "revId": "564830bbeb67e079be725d62361296de3467b07a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bca8a374_3f746213",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-15T22:09:12Z",
+      "side": 1,
+      "message": "Please make the commit title and body more descriptive.",
+      "range": {
+        "startLine": 7,
+        "startChar": 16,
+        "endLine": 7,
+        "endChar": 48
+      },
+      "revId": "564830bbeb67e079be725d62361296de3467b07a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
