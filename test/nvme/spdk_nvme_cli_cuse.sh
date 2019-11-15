@@ -19,7 +19,7 @@ waitforlisten $spdk_tgt_pid
 bdf=$(iter_pci_class_code 01 08 02 | head -1)
 
 $rpc_py bdev_nvme_attach_controller -b Nvme0 -t PCIe -a ${bdf}
-$rpc_py bdev_nvme_cuse_register -n Nvme0 -p spdk/nvme0
+$rpc_py bdev_nvme_cuse_register -n Nvme0
 
 sleep 5
 
@@ -57,16 +57,16 @@ if [ -c /dev/spdk/nvme0 ]; then
 	return 1
 fi
 
-$rpc_py bdev_nvme_cuse_register -n Nvme0 -p spdk/nvme1
+$rpc_py bdev_nvme_cuse_register -n Nvme0
 sleep 1
 
-if [ ! -c /dev/spdk/nvme1 ]; then
+if [ ! -c /dev/spdk/nvme0 ]; then
 	return 1
 fi
 
 $rpc_py bdev_nvme_cuse_unregister -n Nvme0
 sleep 1
-if [ -c /dev/spdk/nvme1 ]; then
+if [ -c /dev/spdk/nvme0 ]; then
 	return 1
 fi
 
