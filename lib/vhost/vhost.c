@@ -1017,6 +1017,7 @@ vhost_start_device_cb(int vid)
 	vsession->max_queues = 0;
 	memset(vsession->virtqueue, 0, sizeof(vsession->virtqueue));
 	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
+#ifndef SPDK_VHOST_THREADING_TEST /* TODO */
 		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
 
 		q->vring_idx = -1;
@@ -1037,6 +1038,7 @@ vhost_start_device_cb(int vid)
 		/* Disable I/O submission notifications, we'll be polling. */
 		q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
 		vsession->max_queues = i + 1;
+#endif
 	}
 
 	if (vhost_get_negotiated_features(vid, &vsession->negotiated_features) != 0) {
