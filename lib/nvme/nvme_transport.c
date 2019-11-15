@@ -251,6 +251,11 @@ nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nv
 
 	nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTING);
 	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, rc, ctrlr_connect_qpair, (ctrlr, qpair));
+
+	if (rc) {
+		nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
+		qpair->transport_qp_is_failed = true;
+	}
 	return rc;
 }
 
