@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab24d762_47788c62",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 948,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-15T16:48:32Z",
+      "side": 1,
+      "message": "no need to set this to NULL (since it\u0027s a local variable)",
+      "revId": "e4d38367af6c5fa29c1617ce1c17e6188c1ca432",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
