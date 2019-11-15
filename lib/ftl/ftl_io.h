@@ -83,6 +83,8 @@ enum ftl_io_type {
 	FTL_IO_ERASE,
 };
 
+#define FTL_IO_MAX_IOVEC 64
+
 struct ftl_io_init_opts {
 	struct spdk_ftl_dev			*dev;
 
@@ -110,8 +112,8 @@ struct ftl_io_init_opts {
 	/* Number of logical blocks */
 	size_t                                  lbk_cnt;
 
-	/* Data */
-	void                                    *data;
+	struct iovec				iovs[FTL_IO_MAX_IOVEC];
+	int					iovcnt;
 
 	/* Metadata */
 	void                                    *md;
@@ -159,7 +161,6 @@ struct ftl_io {
 	/* Number of lbks */
 	size_t					lbk_cnt;
 
-#define FTL_IO_MAX_IOVEC 64
 	struct iovec				iov[FTL_IO_MAX_IOVEC];
 
 	/* Metadata */

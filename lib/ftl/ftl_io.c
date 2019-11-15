@@ -275,10 +275,6 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	struct ftl_io *io = opts->io;
 	struct ftl_io *parent = opts->parent;
 	struct spdk_ftl_dev *dev = opts->dev;
-	struct iovec iov = {
-		.iov_base = opts->data,
-		.iov_len  = opts->lbk_cnt * FTL_BLOCK_SIZE
-	};
 
 	if (!io) {
 		if (parent) {
@@ -307,7 +303,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 		}
 	}
 
-	if (ftl_io_init_iovec(io, &iov, 1, opts->lbk_cnt)) {
+	if (ftl_io_init_iovec(io, opts->iovs, opts->iovcnt, opts->lbk_cnt)) {
 		if (!opts->io) {
 			ftl_io_free(io);
 		}
@@ -339,7 +335,13 @@ ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
 		.type		= FTL_IO_WRITE,
 		.lbk_cnt	= dev->xfer_size,
 		.cb_fn		= cb,
-		.data		= ftl_rwb_batch_get_data(batch),
+		.iovs = {
+			{
+				.iov_base = ftl_rwb_batch_get_data(batch),
+				.iov_len = dev->xfer_size * FTL_BLOCK_SIZE,
+			}
+		},
+		.iovcnt		= 1,
 		.md		= ftl_rwb_batch_get_md(batch),
 	};
 
@@ -360,7 +362,7 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_io_fn cb)
 		.type		= FTL_IO_ERASE,
 		.lbk_cnt	= 1,
 		.cb_fn		= cb,
-		.data		= NULL,
+		.iovcnt		= 0,
 		.md		= NULL,
 	};
 
