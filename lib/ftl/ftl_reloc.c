@@ -578,6 +578,8 @@ ftl_reloc_release(struct ftl_band_reloc *breloc)
 			assert(reloc->num_defrag_bands > 0);
 			reloc->num_defrag_bands--;
 		}
+	} else {
+		assert(0);
 	}
 }
 

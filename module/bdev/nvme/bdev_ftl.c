@@ -70,7 +70,7 @@ struct ftl_io_channel {
 
 	struct spdk_poller		*poller;
 
-#define FTL_MAX_COMPLETIONS 64
+#define FTL_MAX_COMPLETIONS 1024
 	struct ftl_bdev_io		*io[FTL_MAX_COMPLETIONS];
 
 	/* Completion ring */
@@ -240,15 +240,31 @@ bdev_ftl_complete_io(struct ftl_bdev_io *io, int rc)
 }
 
 static void
+_bdev_ftl_complete_io(void *_io)
+{
+	struct ftl_bdev_io *io = _io;
+
+	bdev_ftl_complete_io(io, io->status);
+}
+
+static void
 bdev_ftl_cb(void *arg, int status)
 {
 	struct ftl_bdev_io *io = arg;
 	size_t cnt __attribute__((unused));
 
-	io->status = status;
+	if (spdk_get_thread() == io->orig_thread) {
+		bdev_ftl_complete_io(io, status);
+	} else {
+		assert(0);
+		io->status = status;
+		spdk_thread_send_msg(io->orig_thread, _bdev_ftl_complete_io, io);
+	}
+#if 0
 
 	cnt = spdk_ring_enqueue(io->ring, (void **)&io, 1, NULL);
 	assert(cnt == 1);
+#endif
 }
 
 static int
@@ -656,6 +672,7 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 	return rc;
 }
 
+#if 0
 static int
 bdev_ftl_poll(void *arg)
 {
@@ -670,6 +687,7 @@ bdev_ftl_poll(void *arg)
 
 	return cnt;
 }
+#endif
 
 static int
 bdev_ftl_io_channel_create_cb(void *io_device, void *ctx)
@@ -685,11 +703,13 @@ bdev_ftl_io_channel_create_cb(void *io_device, void *ctx)
 		return -ENOMEM;
 	}
 
+#if 0
 	ch->poller = spdk_poller_register(bdev_ftl_poll, ch, 0);
 	if (!ch->poller) {
 		spdk_ring_free(ch->ring);
 		return -ENOMEM;
 	}
+#endif
 
 	ch->ioch = spdk_get_io_channel(ftl_bdev->dev);
 

@@ -38,7 +38,7 @@ DIRS-y = bdev blob blobfs event ioat iscsi json jsonrpc log lvol
 DIRS-y += notify nvme nvmf scsi sock thread util
 DIRS-$(CONFIG_REDUCE) += reduce
 ifeq ($(OS),Linux)
-DIRS-$(CONFIG_VHOST) += vhost ftl
+DIRS-$(CONFIG_VHOST) += vhost
 endif
 
 .PHONY: all clean $(DIRS-y)

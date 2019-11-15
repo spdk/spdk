@@ -514,7 +514,7 @@ ftl_anm_register_poller_cb(void *ctx)
 	int rc = 0;
 
 	/* TODO: adjust polling timeout */
-	g_anm.poller = spdk_poller_register(ftl_anm_poller_cb, &g_anm, 1000);
+	g_anm.poller = spdk_poller_register(ftl_anm_poller_cb, &g_anm, 100000);
 	if (!g_anm.poller) {
 		SPDK_ERRLOG("Unable to register ANM poller\n");
 		rc = -ENOMEM;

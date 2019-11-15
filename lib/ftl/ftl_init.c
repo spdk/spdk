@@ -106,21 +106,25 @@ static const struct spdk_ftl_conf	g_default_conf = {
 	}
 };
 
+#define SCALE_LOG	3
+#define PU_SCALE_LOG	1
+#define PU_SCALE	(1ull << PU_SCALE_LOG)
+#define SCALE		(1ull << SCALE_LOG)
+
 struct spdk_ocssd_geometry_data g_geometry = {
 	.mjr = 2,
 	.mnr = 0,
 	.lbaf = {
 		.grp_len = 1,
-		.pu_len = 4,
-		.chk_len = 8,
-		.lbk_len = 10,
+		.pu_len = 7 + PU_SCALE_LOG,
+		.chk_len = 8 + SCALE_LOG,
+		.lbk_len = 15 - SCALE_LOG - PU_SCALE_LOG,
 	},
-	.num_grp = 1,
-	.num_pu = 8,
-	.num_chk = 80,
-	.clba = 192,
-	.ws_min = 4,
 	.ws_opt = 16,
+	.num_grp = 1,
+	.num_pu = 116 * PU_SCALE,
+	.num_chk = 256 * SCALE,
+	.clba = 32768 / SCALE / PU_SCALE,
 };
 
 static void ftl_dev_free_sync(struct spdk_ftl_dev *dev);
@@ -440,7 +444,6 @@ static int
 ftl_dev_retrieve_geo(struct spdk_ftl_dev *dev)
 {
 	dev->geo = g_geometry;
-
 	/* TODO: add sanity checks for the geo */
 	dev->ppa_len = dev->geo.lbaf.grp_len +
 		       dev->geo.lbaf.pu_len +

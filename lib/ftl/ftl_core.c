@@ -1970,13 +1970,16 @@ _ftl_io_read(void *arg)
 void
 ftl_io_read(struct ftl_io *io)
 {
+#if 0
 	struct spdk_ftl_dev *dev = io->dev;
-
 	if (ftl_check_read_thread(dev)) {
 		ftl_io_call_foreach_child(io, ftl_io_read_leaf);
 	} else {
 		spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_io_read, io);
 	}
+#else
+	ftl_io_call_foreach_child(io, ftl_io_read_leaf);
+#endif
 }
 
 int

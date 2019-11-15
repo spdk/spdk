@@ -37,6 +37,8 @@
 bool
 spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
 {
+	return true;
+#if 0
 	if (ctrlr->quirks & NVME_QUIRK_OCSSD) {
 		/* TODO: There isn't a standardized way to identify Open-Channel SSD
 		 * different verdors may have different conditions.
@@ -53,6 +55,7 @@ spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 	return false;
+#endif
 }
 
 

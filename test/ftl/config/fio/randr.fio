@@ -13,7 +13,7 @@ norandommap
 [test]
 stonewall
 bs=4k
-numjobs=4
+numjobs=32
 rw=randread
 iodepth=128
 runtime=1200

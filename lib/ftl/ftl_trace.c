@@ -39,6 +39,7 @@
 #include "ftl_band.h"
 #include "ftl_rwb.h"
 
+#if FTL_TRACE_ENABLED
 #define OWNER_FTL	0x20
 #define TRACE_GROUP_FTL	0x6
 
@@ -356,3 +357,4 @@ ftl_trace_alloc_id(struct spdk_ftl_dev *dev)
 
 	return ftl_trace_next_id(trace);
 }
+#endif

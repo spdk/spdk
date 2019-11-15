@@ -11,8 +11,8 @@ time_based
 norandommap
 
 [test]
-bs=4k
-numjobs=1
+bs=128k
+numjobs=8
 rw=randwrite
-iodepth=64
-runtime=1200
+iodepth=128
+runtime=120
