@@ -58,6 +58,7 @@ struct cuse_device {
 };
 
 static TAILQ_HEAD(, cuse_device) g_ctrlr_ctx_head = TAILQ_HEAD_INITIALIZER(g_ctrlr_ctx_head);
+static int g_ctrlr_index;
 
 struct cuse_io_ctx {
 	struct spdk_nvme_cmd	nvme_cmd;
@@ -705,7 +706,7 @@ cuse_nvme_ctrlr_stop(struct cuse_device *ctrlr_device)
 }
 
 static int
-nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
+nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t i, nsid;
 	struct cuse_device *ctrlr_device;
@@ -720,7 +721,8 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 
 	TAILQ_INIT(&ctrlr_device->ns_devices);
 	ctrlr_device->ctrlr = ctrlr;
-	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "%s", dev_path);
+	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "spdk/%d", g_ctrlr_index);
+	g_ctrlr_index++;
 
 	if (pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device)) {
 		SPDK_ERRLOG("pthread_create failed\n");
@@ -736,7 +738,7 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 			continue;
 		}
 
-		if (cuse_nvme_ns_start(ctrlr_device, nsid, dev_path) < 0) {
+		if (cuse_nvme_ns_start(ctrlr_device, nsid, ctrlr_device->dev_name) < 0) {
 			SPDK_ERRLOG("Cannot start CUSE namespace device.");
 			cuse_nvme_ctrlr_stop(ctrlr_device);
 			return -1;
@@ -771,20 +773,16 @@ static struct nvme_io_msg_producer cuse_nvme_io_msg_producer = {
 };
 
 int
-spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
+spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
-
-	if (dev_path == NULL) {
-		return -EINVAL;
-	}
 
 	rc = nvme_io_msg_ctrlr_register(ctrlr, &cuse_nvme_io_msg_producer);
 	if (rc) {
 		return rc;
 	}
 
-	rc = nvme_cuse_start(ctrlr, dev_path);
+	rc = nvme_cuse_start(ctrlr);
 	if (rc) {
 		nvme_io_msg_ctrlr_unregister(ctrlr, &cuse_nvme_io_msg_producer);
 	}
