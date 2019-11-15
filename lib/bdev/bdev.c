@@ -3851,12 +3851,16 @@ bdev_reset_complete(struct spdk_io_channel_iter *i, int status)
 static void
 bdev_unfreeze_channel(struct spdk_io_channel_iter *i)
 {
+	struct spdk_bdev_io *bdev_io = spdk_io_channel_iter_get_ctx(i);
 	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_io *queued_reset;
 
 	ch->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
-	if (!TAILQ_EMPTY(&ch->queued_resets)) {
-		bdev_channel_start_reset(ch);
+	while (!TAILQ_EMPTY(&ch->queued_resets)) {
+		queued_reset = TAILQ_FIRST(&ch->queued_resets);
+		TAILQ_REMOVE(&ch->queued_resets, queued_reset, internal.link);
+		spdk_bdev_io_complete(queued_reset, bdev_io->internal.status);
 	}
 
 	spdk_for_each_channel_continue(i, 0);
