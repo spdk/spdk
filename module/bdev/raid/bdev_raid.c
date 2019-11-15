@@ -317,28 +317,37 @@ raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status sta
 
 /*
  * brief:
- * raid_bdev_base_io_completion is the completion callback for member disk requests
+ * raid_bdev_io_complete_part - signal the completion of a part of the expected
+ * base bdev IOs and complete the raid_io if this is the final expected IO.
+ * The caller should first set raid_io->base_bdev_io_remaining. This function
+ * will decrement this counter by the value of the 'completed' parameter and
+ * complete the raid_io if the counter reaches 0. The caller is free to
+ * interpret the 'base_bdev_io_remaining' and 'completed' values as needed,
+ * it can represent e.g. blocks or IOs.
  * params:
- * bdev_io - pointer to member disk requested bdev_io
- * success - true if successful, false if unsuccessful
- * cb_arg - callback argument (parent raid_bdev_io)
+ * raid_io - pointer to raid_bdev_io
+ * completed - the part of the raid_io that has been completed
+ * status - status of the base IO
  * returns:
- * none
+ * true - if the raid_io is completed
+ * false - otherwise
  */
-void
-raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+bool
+raid_bdev_io_complete_part(struct raid_bdev_io *raid_io, uint64_t completed,
+			   enum spdk_bdev_io_status status)
 {
-	struct raid_bdev_io *raid_io = cb_arg;
+	assert(raid_io->base_bdev_io_remaining >= completed);
+	raid_io->base_bdev_io_remaining -= completed;
 
-	spdk_bdev_free_io(bdev_io);
-
-	if (!success) {
-		raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_FAILED;
+	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+		raid_io->base_bdev_io_status = status;
 	}
 
-	raid_io->base_bdev_io_completed++;
-	if (raid_io->base_bdev_io_completed == raid_io->base_bdev_io_expected) {
+	if (raid_io->base_bdev_io_remaining == 0) {
 		raid_bdev_io_complete(raid_io, raid_io->base_bdev_io_status);
+		return true;
+	} else {
+		return false;
 	}
 }
 
@@ -362,6 +371,18 @@ raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
 	raid_io->waitq_entry.cb_fn = cb_fn;
 	raid_io->waitq_entry.cb_arg = raid_io;
 	spdk_bdev_queue_io_wait(bdev, ch, &raid_io->waitq_entry);
+}
+
+static void
+raid_base_bdev_reset_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct raid_bdev_io *raid_io = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	raid_bdev_io_complete_part(raid_io, 1, success ?
+				   SPDK_BDEV_IO_STATUS_SUCCESS :
+				   SPDK_BDEV_IO_STATUS_FAILED);
 }
 
 static void
@@ -396,14 +417,16 @@ raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io)
 
 	raid_bdev = raid_io->raid_bdev;
 
-	raid_io->base_bdev_io_expected = raid_bdev->num_base_bdevs;
+	if (raid_io->base_bdev_io_remaining == 0) {
+		raid_io->base_bdev_io_remaining = raid_bdev->num_base_bdevs;
+	}
 
 	while (raid_io->base_bdev_io_submitted < raid_bdev->num_base_bdevs) {
 		i = raid_io->base_bdev_io_submitted;
 		base_info = &raid_bdev->base_bdev_info[i];
 		base_ch = raid_io->raid_ch->base_channel[i];
 		ret = spdk_bdev_reset(base_info->desc, base_ch,
-				      raid_bdev_base_io_completion, raid_io);
+				      raid_base_bdev_reset_complete, raid_io);
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
 		} else if (ret == -ENOMEM) {
@@ -461,8 +484,8 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 
 	raid_io->raid_bdev = bdev_io->bdev->ctxt;
 	raid_io->raid_ch = spdk_io_channel_get_ctx(ch);
+	raid_io->base_bdev_io_remaining = 0;
 	raid_io->base_bdev_io_submitted = 0;
-	raid_io->base_bdev_io_completed = 0;
 	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	switch (bdev_io->type) {

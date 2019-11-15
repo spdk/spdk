@@ -104,9 +104,8 @@ struct raid_bdev_io {
 	struct raid_bdev_io_channel	*raid_ch;
 
 	/* Used for tracking progress on io requests sent to member disks. */
+	uint64_t			base_bdev_io_remaining;
 	uint8_t				base_bdev_io_submitted;
-	uint8_t				base_bdev_io_completed;
-	uint8_t				base_bdev_io_expected;
 	uint8_t				base_bdev_io_status;
 };
 
@@ -308,8 +307,9 @@ __RAID_MODULE_REGISTER(__LINE__)(void)					\
     raid_bdev_module_list_add(_module);					\
 }
 
-void
-raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
+bool
+raid_bdev_io_complete_part(struct raid_bdev_io *raid_io, uint64_t completed,
+			   enum spdk_bdev_io_status status);
 void
 raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
 			struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn);

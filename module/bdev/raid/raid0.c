@@ -262,6 +262,18 @@ _raid0_submit_null_payload_request(void *_raid_io)
 	raid0_submit_null_payload_request(raid_io);
 }
 
+static void
+raid0_base_io_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct raid_bdev_io *raid_io = cb_arg;
+
+	raid_bdev_io_complete_part(raid_io, 1, success ?
+				   SPDK_BDEV_IO_STATUS_SUCCESS :
+				   SPDK_BDEV_IO_STATUS_FAILED);
+
+	spdk_bdev_free_io(bdev_io);
+}
+
 /*
  * brief:
  * raid0_submit_null_payload_request function submits the next batch of
@@ -290,9 +302,11 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 			    raid_bdev->strip_size, raid_bdev->strip_size_shift,
 			    bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks);
 
-	raid_io->base_bdev_io_expected = io_range.n_disks_involved;
+	if (raid_io->base_bdev_io_remaining == 0) {
+		raid_io->base_bdev_io_remaining = io_range.n_disks_involved;
+	}
 
-	while (raid_io->base_bdev_io_submitted < raid_io->base_bdev_io_expected) {
+	while (raid_io->base_bdev_io_submitted < io_range.n_disks_involved) {
 		uint8_t disk_idx;
 		uint64_t offset_in_disk;
 		uint64_t nblocks_in_disk;
@@ -310,13 +324,13 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 		case SPDK_BDEV_IO_TYPE_UNMAP:
 			ret = spdk_bdev_unmap_blocks(base_info->desc, base_ch,
 						     offset_in_disk, nblocks_in_disk,
-						     raid_bdev_base_io_completion, raid_io);
+						     raid0_base_io_complete, raid_io);
 			break;
 
 		case SPDK_BDEV_IO_TYPE_FLUSH:
 			ret = spdk_bdev_flush_blocks(base_info->desc, base_ch,
 						     offset_in_disk, nblocks_in_disk,
-						     raid_bdev_base_io_completion, raid_io);
+						     raid0_base_io_complete, raid_io);
 			break;
 
 		default:
