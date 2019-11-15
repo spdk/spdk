@@ -3026,16 +3026,6 @@ iscsi_transfer_in(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	if (task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
 		if (task != primary) {
 			conn->data_in_cnt--;
-			/* Handle the case when primary task return success but the subtask failed */
-			if (primary->bytes_completed == primary->scsi.transfer_len &&
-			    primary->scsi.status == SPDK_SCSI_STATUS_GOOD) {
-				conn->data_in_cnt--;
-			}
-		} else {
-			/* handle the case that it is a primary task which has subtasks */
-			if (primary->scsi.transfer_len != primary->scsi.length) {
-				conn->data_in_cnt--;
-			}
 		}
 
 		return 0;
