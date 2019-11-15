@@ -4511,13 +4511,26 @@ reject_return:
 static int
 iscsi_pdu_payload_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
-	struct spdk_iscsi_task	*subtask;
+	struct spdk_iscsi_task *subtask;
+	struct iscsi_bhs_data_out *reqh;
+	uint32_t transfer_tag;
 
 	if (pdu->task == NULL) {
 		return 0;
 	}
 
 	subtask = pdu->task;
+
+	reqh = (struct iscsi_bhs_data_out *)&pdu->bhs;
+	transfer_tag = from_be32(&reqh->ttt);
+
+	if (get_transfer_task(conn, transfer_tag) == NULL) {
+		SPDK_ERRLOG("Not found for transfer_tag=%x\n", transfer_tag);
+		subtask->scsi.transfer_len = subtask->scsi.length;
+		spdk_scsi_task_process_abort(&subtask->scsi);
+		spdk_iscsi_task_cpl(&subtask->scsi);
+		return 0;
+	}
 
 	if (spdk_likely(!pdu->dif_insert_or_strip)) {
 		spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_segment_len);
