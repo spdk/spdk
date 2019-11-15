@@ -44,6 +44,7 @@
 
 struct cuse_device {
 	char				dev_name[128];
+	uint32_t			index;
 
 	struct spdk_nvme_ctrlr		*ctrlr;		/**< NVMe controller */
 	uint32_t			nsid;		/**< NVMe name space id, or 0 */
@@ -58,6 +59,7 @@ struct cuse_device {
 };
 
 static TAILQ_HEAD(, cuse_device) g_ctrlr_ctx_head = TAILQ_HEAD_INITIALIZER(g_ctrlr_ctx_head);
+static struct spdk_bit_array *g_ctrlr_started;
 
 struct cuse_io_ctx {
 	struct spdk_nvme_cmd	nvme_cmd;
@@ -680,6 +682,7 @@ static int
 cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid, const char *dev_path)
 {
 	struct cuse_device *ns_device;
+	int rv;
 
 	ns_device = (struct cuse_device *)calloc(1, sizeof(struct cuse_device));
 	if (!ns_device) {
@@ -690,8 +693,13 @@ cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid, const char *
 	ns_device->ctrlr = ctrlr_device->ctrlr;
 	ns_device->ctrlr_device = ctrlr_device;
 	ns_device->nsid = nsid;
-	snprintf(ns_device->dev_name, sizeof(ns_device->dev_name), "%sn%d",
-		 dev_path, ns_device->nsid);
+	rv = snprintf(ns_device->dev_name, sizeof(ns_device->dev_name), "%sn%d",
+		      dev_path, ns_device->nsid);
+	if (rv < 0) {
+		SPDK_ERRLOG("Device name too long.\n");
+		free(ns_device);
+		return -1;
+	}
 
 	if (pthread_create(&ns_device->tid, NULL, cuse_thread, ns_device)) {
 		SPDK_ERRLOG("pthread_create failed\n");
@@ -718,31 +726,53 @@ cuse_nvme_ctrlr_stop(struct cuse_device *ctrlr_device)
 	fuse_session_exit(ctrlr_device->session);
 	pthread_join(ctrlr_device->tid, NULL);
 	TAILQ_REMOVE(&g_ctrlr_ctx_head, ctrlr_device, tailq);
+	spdk_bit_array_clear(g_ctrlr_started, ctrlr_device->index);
+	if (spdk_bit_array_count_set(g_ctrlr_started) == 0) {
+		spdk_bit_array_free(&g_ctrlr_started);
+	}
 	free(ctrlr_device);
 }
 
 static int
-nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
+nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t i, nsid;
+	int rv = 0;
 	struct cuse_device *ctrlr_device;
 
 	SPDK_NOTICELOG("Creating cuse device for controller\n");
 
+	if (g_ctrlr_started == NULL) {
+		g_ctrlr_started = spdk_bit_array_create(128);
+		if (g_ctrlr_started == NULL) {
+			SPDK_ERRLOG("Cannot create bit array\n");
+			return -1;
+		}
+	}
+
 	ctrlr_device = (struct cuse_device *)calloc(1, sizeof(struct cuse_device));
 	if (!ctrlr_device) {
 		SPDK_ERRLOG("Cannot allocate memory for ctrlr_device.");
-		return -ENOMEM;
+		rv = -ENOMEM;
+		goto err2;
 	}
 
 	TAILQ_INIT(&ctrlr_device->ns_devices);
 	ctrlr_device->ctrlr = ctrlr;
-	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "%s", dev_path);
+
+	ctrlr_device->index = spdk_bit_array_find_first_clear(g_ctrlr_started, 0);
+	if (ctrlr_device->index == UINT32_MAX) {
+		SPDK_ERRLOG("Too many registered controllers\n");
+		goto err2;
+	}
+	spdk_bit_array_set(g_ctrlr_started, ctrlr_device->index);
+	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "spdk/nvme%d",
+		 ctrlr_device->index);
 
 	if (pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device)) {
 		SPDK_ERRLOG("pthread_create failed\n");
-		free(ctrlr_device);
-		return -1;
+		rv = -1;
+		goto err3;
 	}
 	TAILQ_INSERT_TAIL(&g_ctrlr_ctx_head, ctrlr_device, tailq);
 
@@ -753,14 +783,24 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
 			continue;
 		}
 
-		if (cuse_nvme_ns_start(ctrlr_device, nsid, dev_path) < 0) {
+		if (cuse_nvme_ns_start(ctrlr_device, nsid, ctrlr_device->dev_name) < 0) {
 			SPDK_ERRLOG("Cannot start CUSE namespace device.");
 			cuse_nvme_ctrlr_stop(ctrlr_device);
-			return -1;
+			rv = -1;
+			goto err3;
 		}
 	}
 
 	return 0;
+
+err3:
+	spdk_bit_array_clear(g_ctrlr_started, ctrlr_device->index);
+err2:
+	free(ctrlr_device);
+	if (spdk_bit_array_count_set(g_ctrlr_started) == 0) {
+		spdk_bit_array_free(&g_ctrlr_started);
+	}
+	return rv;
 }
 
 static void
@@ -788,20 +828,16 @@ static struct nvme_io_msg_producer cuse_nvme_io_msg_producer = {
 };
 
 int
-spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path)
+spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
-
-	if (dev_path == NULL) {
-		return -EINVAL;
-	}
 
 	rc = nvme_io_msg_ctrlr_register(ctrlr, &cuse_nvme_io_msg_producer);
 	if (rc) {
 		return rc;
 	}
 
-	rc = nvme_cuse_start(ctrlr, dev_path);
+	rc = nvme_cuse_start(ctrlr);
 	if (rc) {
 		nvme_io_msg_ctrlr_unregister(ctrlr, &cuse_nvme_io_msg_producer);
 	}
