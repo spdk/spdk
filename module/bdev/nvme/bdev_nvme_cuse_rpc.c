@@ -44,19 +44,16 @@
 
 struct rpc_nvme_cuse_register {
 	char *name;
-	char *dev_path;
 };
 
 static void
 free_rpc_nvme_cuse_register(struct rpc_nvme_cuse_register *req)
 {
 	free(req->name);
-	free(req->dev_path);
 }
 
 static const struct spdk_json_object_decoder rpc_nvme_cuse_register_decoders[] = {
 	{"name", offsetof(struct rpc_nvme_cuse_register, name), spdk_json_decode_string},
-	{"dev_path", offsetof(struct rpc_nvme_cuse_register, dev_path), spdk_json_decode_string},
 };
 
 static void
@@ -84,7 +81,7 @@ spdk_rpc_nvme_cuse_register(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = spdk_nvme_cuse_register(bdev_ctrlr->ctrlr, req.dev_path);
+	rc = spdk_nvme_cuse_register(bdev_ctrlr->ctrlr);
 	if (rc) {
 		SPDK_ERRLOG("Failed to register CUSE devices\n");
 		spdk_jsonrpc_send_error_response(request, -rc, spdk_strerror(rc));
