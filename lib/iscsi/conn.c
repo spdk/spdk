@@ -324,6 +324,7 @@ spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pd
 				if (spdk_iscsi_task_is_read(primary)) {
 					if (primary->bytes_completed == primary->scsi.transfer_len) {
 						/* Free the primary task after the last subtask done */
+						conn->data_in_cnt--;
 						spdk_iscsi_task_put(primary);
 					}
 				}
@@ -356,6 +357,9 @@ iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 	TAILQ_FOREACH_SAFE(iscsi_task, &conn->queued_datain_tasks, link, tmp_iscsi_task) {
 		if (!iscsi_task->is_queued) {
 			TAILQ_REMOVE(&conn->queued_datain_tasks, iscsi_task, link);
+			if (iscsi_task->current_datain_offset > 0) {
+				conn->data_in_cnt--;
+			}
 			spdk_iscsi_task_put(iscsi_task);
 		}
 	}
@@ -512,6 +516,9 @@ _iscsi_conn_remove_lun(void *_ctx)
 	TAILQ_FOREACH_SAFE(iscsi_task, &conn->queued_datain_tasks, link, tmp_iscsi_task) {
 		if ((!iscsi_task->is_queued) && (lun == iscsi_task->scsi.lun)) {
 			TAILQ_REMOVE(&conn->queued_datain_tasks, iscsi_task, link);
+			if (iscsi_task->current_datain_offset > 0) {
+				conn->data_in_cnt--;
+			}
 			spdk_iscsi_task_put(iscsi_task);
 		}
 	}
