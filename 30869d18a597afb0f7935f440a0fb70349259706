@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37ccb767_b6c24983",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-15T16:14:08Z",
+      "side": 1,
+      "message": "I agree with Alexey\u0027s comment on previous version of this patch.  I think a better renaming strategy would be to change _bdev_nvme_reset_done to _bdev_nvme_reset_create_qpairs_done (and do that in a separate patch before this one).  That reduces the confusion on what is really \"done\" when _bdev_nvme_reset_done is called.\n\n(After looking at later patches, I think _bdev_nvme_reset_complete is the best name for this function, even though here in this patch, it\u0027s only checking a result).",
+      "revId": "30869d18a597afb0f7935f440a0fb70349259706",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
