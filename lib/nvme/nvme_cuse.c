@@ -44,6 +44,8 @@
 
 struct cuse_device {
 	char				dev_name[128];
+	int				index;
+	int				claim_fd;
 
 	struct spdk_nvme_ctrlr		*ctrlr;		/**< NVMe controller */
 	uint32_t			nsid;		/**< NVMe name space id, or 0 */
@@ -685,6 +687,72 @@ cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid, const char *
 	return 0;
 }
 
+static int
+nvme_cuse_claim(struct cuse_device *ctrlr_device, int index)
+{
+	int dev_fd;
+	char dev_name[64];
+	int pid;
+	void *dev_map;
+	struct flock pcidev_lock = {
+		.l_type = F_WRLCK,
+		.l_whence = SEEK_SET,
+		.l_start = 0,
+		.l_len = 0,
+	};
+
+	snprintf(dev_name, PATH_MAX, "/tmp/spdk_nvme_cuse_lock_%d", index);
+
+	dev_fd = open(dev_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+	if (dev_fd == -1) {
+		fprintf(stderr, "could not open %s\n", dev_name);
+		return -errno;
+	}
+
+	if (ftruncate(dev_fd, sizeof(int)) != 0) {
+		fprintf(stderr, "could not truncate %s\n", dev_name);
+		close(dev_fd);
+		return -errno;
+	}
+
+	dev_map = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE,
+		       MAP_SHARED, dev_fd, 0);
+	if (dev_map == MAP_FAILED) {
+		fprintf(stderr, "could not mmap dev %s (%d)\n", dev_name, errno);
+		close(dev_fd);
+		return -errno;
+	}
+
+	if (fcntl(dev_fd, F_SETLK, &pcidev_lock) != 0) {
+		pid = *(int *)dev_map;
+		fprintf(stderr, "Cannot create lock on device %s, probably"
+			" process %d has claimed it\n", dev_name, pid);
+		munmap(dev_map, sizeof(int));
+		close(dev_fd);
+		/* F_SETLK returns unspecified errnos, normalize them */
+		return -EACCES;
+	}
+
+	*(int *)dev_map = (int)getpid();
+	munmap(dev_map, sizeof(int));
+	ctrlr_device->claim_fd = dev_fd;
+	ctrlr_device->index = index;
+	/* Keep dev_fd open to maintain the lock. */
+	return 0;
+}
+
+static void
+nvme_cuse_unclaim(struct cuse_device *ctrlr_device)
+{
+	char dev_name[64];
+
+	snprintf(dev_name, sizeof(dev_name), "/tmp/spdk_nvme_cuse_lock_%d", ctrlr_device->index);
+
+	close(ctrlr_device->claim_fd);
+	ctrlr_device->claim_fd = -1;
+	unlink(dev_name);
+}
+
 static void
 cuse_nvme_ctrlr_stop(struct cuse_device *ctrlr_device)
 {
@@ -702,6 +770,7 @@ cuse_nvme_ctrlr_stop(struct cuse_device *ctrlr_device)
 	pthread_kill(ctrlr_device->tid, SIGHUP);
 	pthread_join(ctrlr_device->tid, NULL);
 	TAILQ_REMOVE(&g_ctrlr_ctx_head, ctrlr_device, tailq);
+	nvme_cuse_unclaim(ctrlr_device);
 	free(ctrlr_device);
 }
 
@@ -721,8 +790,22 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 
 	TAILQ_INIT(&ctrlr_device->ns_devices);
 	ctrlr_device->ctrlr = ctrlr;
+
+	/* Check if device already exists, if not increment index until success */
+	while (1) {
+		if (nvme_cuse_claim(ctrlr_device, g_ctrlr_index) == 0) {
+			g_ctrlr_index++;
+			break;
+		}
+		g_ctrlr_index++;
+
+		if (g_ctrlr_index > 127) {
+			SPDK_ERRLOG("Cannot start CUSE namespace device.");
+			free(ctrlr_device);
+			return -1;
+		}
+	}
 	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "spdk/nvme%d", g_ctrlr_index);
-	g_ctrlr_index++;
 
 	if (pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device)) {
 		SPDK_ERRLOG("pthread_create failed\n");
