@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c043cab7_de055cfc",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-15T17:47:34Z",
+      "side": 1,
+      "message": "I like the patch to change the names.  :-)\n\nBut how about instead we name this nvme_ctrlr_populate_namespaces?  Currently we create all of the namespace objects up front, based on num_ns, and use the active flag to denote which ones are active at any time.  I don\u0027t see a reason to change that (although I see that it does get changed in a later patch).\n\nTaking that approach should eliminate or at least greatly simplify that later patch.",
+      "revId": "05c56e67dbb1b99e407bd363bdf05d5842f79f8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
