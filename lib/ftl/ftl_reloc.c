@@ -426,7 +426,13 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move,
 		.flags		= flags | FTL_IO_INTERNAL | FTL_IO_PPA_MODE,
 		.type		= io_type,
 		.block_cnt	= move->block_cnt,
-		.data		= move->data,
+		.iovs		= {
+			{
+				.iov_base = move->data,
+				.iov_len = move->block_cnt * FTL_BLOCK_SIZE,
+			}
+		},
+		.iovcnt		= 1,
 		.cb_fn		= fn,
 	};
 
