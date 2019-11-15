@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46ae5468_e27c7e67",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-15T16:14:41Z",
+      "side": 1,
+      "message": "It might be better to move this function up to line 1029. In path that opens snapshot first (line 1043) clear method would not be set.",
+      "range": {
+        "startLine": 1054,
+        "startChar": 0,
+        "endLine": 1058,
+        "endChar": 38
+      },
+      "revId": "67851d6f7346e93974e8b6598ba069413fe1c70a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
