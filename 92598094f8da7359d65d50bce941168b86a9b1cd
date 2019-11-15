@@ -70,6 +70,30 @@
       "revId": "92598094f8da7359d65d50bce941168b86a9b1cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dfda0a19_8572369d",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 823,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-11-15T20:24:34Z",
+      "side": 1,
+      "message": "No problem. I do think you\u0027ve spotted an issue though, in the previous implementation we would make sure that all OPs are resubmitted up to crypto_cnt but only at one \"burst\" at a time. In this code, however, I\u0027m only queueing from the point where the API was unable to accept more up to burst which would potentially leave some unhandled.  It may not be as simple as changing this one variable though :( I\u0027ll update soon",
+      "parentUuid": "1ab000d1_92e75ff9",
+      "range": {
+        "startLine": 823,
+        "startChar": 55,
+        "endLine": 823,
+        "endChar": 60
+      },
+      "revId": "92598094f8da7359d65d50bce941168b86a9b1cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
