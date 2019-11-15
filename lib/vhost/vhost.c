@@ -1019,6 +1019,10 @@ vhost_start_device_cb(int vid)
 	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
 		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
 
+#ifdef SPDK_VHOST_THREADING_TEST
+		continue;
+#endif
+
 		q->vring_idx = -1;
 		if (rte_vhost_get_vhost_vring(vid, i, &q->vring)) {
 			continue;

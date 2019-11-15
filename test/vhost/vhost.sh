@@ -30,6 +30,11 @@ DISKS_NUMBER=$(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"
 WORKDIR=$(readlink -f $(dirname $0))
 
 timing_enter vhost
+timing_enter vhost_threading
+run_test case $WORKDIR/vhost_threading/vhost_threading
+report_test_completion "vhost_threading"
+timing_exit vhost_threading
+
 timing_enter negative
 run_test case $WORKDIR/other/negative.sh
 report_test_completion "vhost_negative"
