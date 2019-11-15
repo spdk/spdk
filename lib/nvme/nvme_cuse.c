@@ -45,6 +45,8 @@
 struct cuse_device {
 	char				dev_name[128];
 	uint32_t			index;
+	int				claim_fd;
+	char				lock_name[64];
 
 	struct spdk_nvme_ctrlr		*ctrlr;		/**< NVMe controller */
 	uint32_t			nsid;		/**< NVMe name space id, or 0 */
@@ -711,6 +713,68 @@ cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid, const char *
 	return 0;
 }
 
+static int
+nvme_cuse_claim(struct cuse_device *ctrlr_device, uint32_t index)
+{
+	int dev_fd;
+	int pid;
+	void *dev_map;
+	struct flock cusedev_lock = {
+		.l_type = F_WRLCK,
+		.l_whence = SEEK_SET,
+		.l_start = 0,
+		.l_len = 0,
+	};
+
+	snprintf(ctrlr_device->lock_name, sizeof(ctrlr_device->lock_name),
+		 "/tmp/spdk_nvme_cuse_lock_%" PRIu32, index);
+
+	dev_fd = open(ctrlr_device->lock_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+	if (dev_fd == -1) {
+		fprintf(stderr, "could not open %s\n", ctrlr_device->lock_name);
+		return -errno;
+	}
+
+	if (ftruncate(dev_fd, sizeof(int)) != 0) {
+		fprintf(stderr, "could not truncate %s\n", ctrlr_device->lock_name);
+		close(dev_fd);
+		return -errno;
+	}
+
+	dev_map = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE,
+		       MAP_SHARED, dev_fd, 0);
+	if (dev_map == MAP_FAILED) {
+		fprintf(stderr, "could not mmap dev %s (%d)\n", ctrlr_device->lock_name, errno);
+		close(dev_fd);
+		return -errno;
+	}
+
+	if (fcntl(dev_fd, F_SETLK, &cusedev_lock) != 0) {
+		pid = *(int *)dev_map;
+		fprintf(stderr, "Cannot create lock on device %s, probably"
+			" process %d has claimed it\n", ctrlr_device->lock_name, pid);
+		munmap(dev_map, sizeof(int));
+		close(dev_fd);
+		/* F_SETLK returns unspecified errnos, normalize them */
+		return -EACCES;
+	}
+
+	*(int *)dev_map = (int)getpid();
+	munmap(dev_map, sizeof(int));
+	ctrlr_device->claim_fd = dev_fd;
+	ctrlr_device->index = index;
+	/* Keep dev_fd open to maintain the lock. */
+	return 0;
+}
+
+static void
+nvme_cuse_unclaim(struct cuse_device *ctrlr_device)
+{
+	close(ctrlr_device->claim_fd);
+	ctrlr_device->claim_fd = -1;
+	unlink(ctrlr_device->lock_name);
+}
+
 static void
 cuse_nvme_ctrlr_stop(struct cuse_device *ctrlr_device)
 {
@@ -730,6 +794,7 @@ cuse_nvme_ctrlr_stop(struct cuse_device *ctrlr_device)
 	if (spdk_bit_array_count_set(g_ctrlr_started) == 0) {
 		spdk_bit_array_free(&g_ctrlr_started);
 	}
+	nvme_cuse_unclaim(ctrlr_device);
 	free(ctrlr_device);
 }
 
@@ -760,10 +825,19 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 	TAILQ_INIT(&ctrlr_device->ns_devices);
 	ctrlr_device->ctrlr = ctrlr;
 
-	ctrlr_device->index = spdk_bit_array_find_first_clear(g_ctrlr_started, 0);
-	if (ctrlr_device->index == UINT32_MAX) {
-		SPDK_ERRLOG("Too many registered controllers\n");
-		goto err2;
+	/* Check if device already exists, if not increment index until success */
+	ctrlr_device->index = 0;
+	while (1) {
+		ctrlr_device->index = spdk_bit_array_find_first_clear(g_ctrlr_started, ctrlr_device->index);
+		if (ctrlr_device->index == UINT32_MAX) {
+			SPDK_ERRLOG("Too many registered controllers\n");
+			goto err2;
+		}
+
+		if (nvme_cuse_claim(ctrlr_device, ctrlr_device->index) == 0) {
+			break;
+		}
+		ctrlr_device->index++;
 	}
 	spdk_bit_array_set(g_ctrlr_started, ctrlr_device->index);
 	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "spdk/nvme%d",
