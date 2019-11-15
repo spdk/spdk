@@ -486,15 +486,13 @@ def bdev_nvme_detach_controller(client, name):
     return client.call('bdev_nvme_detach_controller', params)
 
 
-def bdev_nvme_cuse_register(client, name, dev_path):
+def bdev_nvme_cuse_register(client, name):
     """Register CUSE devices on NVMe controller.
 
     Args:
         name: Name of the operating NVMe controller
-        dev_path: CUSE dev path with dev prefix
     """
-    params = {'name': name,
-              'dev_path': dev_path}
+    params = {'name': name}
 
     return client.call('bdev_nvme_cuse_register', params)
 
