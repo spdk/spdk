@@ -33,6 +33,11 @@ run_test "vhost_negative" $WORKDIR/other/negative.sh
 
 run_test "vhost_boot" $WORKDIR/vhost_boot/vhost_boot.sh --vm_image=$VM_IMAGE
 
+timing_enter vhost_threading
+run_test case $WORKDIR/vhost_threading/vhost_threading
+report_test_completion "vhost_threading"
+timing_exit vhost_threading
+
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	echo 'Running blk integrity suite...'
 	run_test "vhost_blk_integrity" $WORKDIR/fiotest/fio.sh -x --fio-bin=$FIO_BIN \
