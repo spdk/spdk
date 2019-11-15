@@ -22,6 +22,30 @@
       "revId": "a37da555121aec905a6f62ef6bac378e98e235bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5eb67d3_b7f1bae1",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-11-15T17:58:43Z",
+      "side": 1,
+      "message": "Well, that was kind of the point I thought. If you specify a clear method you expect it to be honored and if you roll back to a version that doesn\u0027t support it you expect it to either not load or, as the design is here, load but in MD RO mode.",
+      "parentUuid": "f64b63a0_20985f14",
+      "range": {
+        "startLine": 278,
+        "startChar": 0,
+        "endLine": 280,
+        "endChar": 57
+      },
+      "revId": "a37da555121aec905a6f62ef6bac378e98e235bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
