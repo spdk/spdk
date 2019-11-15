@@ -538,7 +538,6 @@ static int
 ftl_dev_l2p_alloc(struct spdk_ftl_dev *dev)
 {
 	size_t addr_size;
-	uint64_t i;
 
 	if (dev->num_lbas == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Invalid l2p table size\n");
@@ -557,9 +556,7 @@ ftl_dev_l2p_alloc(struct spdk_ftl_dev *dev)
 		return -1;
 	}
 
-	for (i = 0; i < dev->num_lbas; ++i) {
-		ftl_l2p_set(dev, i, ftl_to_addr(FTL_ADDR_INVALID));
-	}
+	memset(dev->l2p, FTL_ADDR_INVALID, dev->num_lbas * addr_size);
 
 	return 0;
 }
