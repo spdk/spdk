@@ -2644,11 +2644,10 @@ char *spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
  * for the CUSE device to function.
  *
  * \param ctrlr Opaque handle to the NVMe controller.
- * \param dev_path The path at which the device should appear. Ex. /dev/spdk/nvme0n1
  *
  * \return 0 on success. Negated errno on failure.
  */
-int spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr, const char *dev_path);
+int spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Remove a previously created character device (Experimental)
