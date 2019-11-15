@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ac97e9d_739d3fa2",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-15T00:04:44Z",
+      "side": 1,
+      "message": "No change required here, please see below.",
+      "range": {
+        "startLine": 799,
+        "startChar": 1,
+        "endLine": 799,
+        "endChar": 37
+      },
+      "revId": "ed71dc0d08e8509c5516ebe33a7a2959a3c2f627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b82485e_2e035081",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-15T00:04:44Z",
+      "side": 1,
+      "message": "Registered callback should be used here. Please see comment below.",
+      "range": {
+        "startLine": 158,
+        "startChar": 2,
+        "endLine": 158,
+        "endChar": 30
+      },
+      "revId": "ed71dc0d08e8509c5516ebe33a7a2959a3c2f627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed1bdfbb_e9035df6",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-15T00:04:44Z",
+      "side": 1,
+      "message": "Stop() should not be called in nvme_io_msg_ctrlr_unregister().\nnvme_io_msg_ctrlr_unregister() is to be called by particular io_msg_producer when it wants to unregister itself. No need to go through callback.\nPlease look at spdk_nvme_cuse_register() that first calls nvme_io_msg_ctrlr_register(), which registers io_msg_producer, and then proceeds to initiate CUSE via nvme_cuse_start().\n\nMeanwhile nvme_io_msg_ctrlr_detach() is started by nvme_ctrlr_detach that has no knowledge of what io_msg_producers are registered. It ought to go over all of them and call proper callback, as to notify each io_msg_producer to clean itself up.\nThis makes the callback behave like a hot-remove.",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 171,
+        "endChar": 30
+      },
+      "revId": "ed71dc0d08e8509c5516ebe33a7a2959a3c2f627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
