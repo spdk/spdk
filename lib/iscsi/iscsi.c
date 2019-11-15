@@ -3025,6 +3025,7 @@ iscsi_transfer_in(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 
 	if (task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
 		if (task != primary) {
+			assert(conn->data_in_cnt > 0);
 			conn->data_in_cnt--;
 		}
 
