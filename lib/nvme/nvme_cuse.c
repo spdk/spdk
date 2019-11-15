@@ -710,6 +710,7 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t i, nsid;
 	struct cuse_device *ctrlr_device;
+	char cuse_device_path[PATH_MAX] = "";
 
 	SPDK_NOTICELOG("Creating cuse device for controller\n");
 
@@ -721,8 +722,21 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 
 	TAILQ_INIT(&ctrlr_device->ns_devices);
 	ctrlr_device->ctrlr = ctrlr;
-	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "spdk/nvme%d", g_ctrlr_index);
-	g_ctrlr_index++;
+
+	/* Check if device already exists, if not increment index until success */
+	while (1) {
+		snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "spdk/nvme%d", g_ctrlr_index);
+		g_ctrlr_index++;
+		snprintf(cuse_device_path, PATH_MAX, "/dev/%s", ctrlr_device->dev_name);
+		if (access(cuse_device_path, F_OK) == -1) {
+			break;
+		}
+		if (g_ctrlr_index > 127) {
+			SPDK_ERRLOG("Cannot start CUSE namespace device.");
+			free(ctrlr_device);
+			return -1;
+		}
+	}
 
 	if (pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device)) {
 		SPDK_ERRLOG("pthread_create failed\n");
