@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "226efb7c_a145b048",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-15T15:57:27Z",
+      "side": 1,
+      "message": "this should move to 20.01 section",
+      "revId": "70ae88b82fdfc1b8bf51bd7b73f43a9e50c32ab3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef90e86b_1a28edaf",
+        "filename": "include/spdk/pipe.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-15T15:57:27Z",
+      "side": 1,
+      "message": "Should we add the same comments here about \"the user is not required to advance the same number of bytes as we obtained...\" - or does that not apply on the reader side?",
+      "revId": "70ae88b82fdfc1b8bf51bd7b73f43a9e50c32ab3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
