@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import logging
 import os
 import re
 import sys
@@ -15,6 +15,28 @@ import rpc
 import rpc.client
 from common import *
 
+now = int(round(time.time() * 1000))
+timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now / 1000))
+timestamp = timestamp.replace(' ', '_')
+timestamp = timestamp.replace(':', '_')
+
+class Logger(object):
+    def __init__(self, log_file_name, log_level, logger_name):
+        self.__logger = logging.getLogger(logger_name)
+        if not self.__logger.handlers:
+            self.__logger.setLevel(log_level)
+            file_handler = logging.FileHandler(log_file_name)
+            console_handler = logging.StreamHandler()
+            formatter = logging.Formatter(
+                '[%(asctime)s] - [line:%(lineno)d] - %(levelname)s: %(message)s')
+            file_handler.setFormatter(formatter)
+            console_handler.setFormatter(formatter)
+            self.__logger.addHandler(file_handler)
+            self.__logger.addHandler(console_handler)
+
+    def get_log(self):
+        return self.__logger
+
 
 class Server:
     def __init__(self, name, username, password, mode, nic_ips, transport):
@@ -25,12 +47,20 @@ class Server:
         self.nic_ips = nic_ips
         self.transport = transport.lower()
 
+        # if os.path.exists("/home/nvme_bdev_log/run_nvme_bdev.log"):
+        #     proc = subprocess.Popen("rm -rf /home/nvme_bdev_log/run_nvme_bdev.log", shell=True)
         if not re.match("^[A-Za-z0-9]*$", name):
             self.log_print("Please use a name which contains only letters or numbers")
             sys.exit(1)
 
-    def log_print(self, msg):
-        print("[%s] %s" % (self.name, msg), flush=True)
+    def log_print(self, msg, source=None):
+        log_name = "run_nvme_bdev_" + timestamp + ".log"
+        self.logger = Logger(log_file_name='/home/nvme_bdev_log/' + log_name, log_level=logging.DEBUG,
+                             logger_name=log_name).get_log()
+        if source:
+            msg = json.dumps(msg, indent=2)
+            msg = "[%s] %s" % (source, msg)
+        self.logger.info("[%s] %s" % (self.name, msg))
 
 
 class Target(Server):
@@ -104,7 +134,9 @@ class Target(Server):
         json_files = [x for x in files if ".json" in x]
 
         # Create empty results file
-        csv_file = "nvmf_results.csv"
+        time_stamp = results_dir.split('/')[-1]
+        csv_file = "nvmf_results_" + time_stamp + ".csv"
+
         with open(os.path.join(results_dir, csv_file), "w") as fh:
             header_line = ",".join(["Name",
                                     "read_iops", "read_bw", "read_avg_lat_us",
@@ -176,13 +208,12 @@ class Target(Server):
 
 
 class Initiator(Server):
-    def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma", nvmecli_dir=None, workspace="/tmp/spdk",
-                 fio_dir="/usr/src/fio"):
+    def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma", nvmecli_dir=None, workspace="/tmp/spdk", fio_dir="/usr/src/fio", driver="bdev"):
         super(Initiator, self).__init__(name, username, password, mode, nic_ips, transport)
         self.ip = ip
         self.spdk_dir = workspace
+        self.driver = driver
         self.fio_dir = fio_dir
-
         if nvmecli_dir:
             self.nvmecli_bin = os.path.join(nvmecli_dir, "nvme")
         else:
@@ -233,6 +264,11 @@ class Initiator(Server):
         nvme_discover_output = ""
         for ip, subsys_no in itertools.product(address_list, num_nvmes):
             self.log_print("Trying to discover: %s:%s" % (ip, 4420 + subsys_no))
+            # nvme_discover_cmd = ["sudo",
+            #                      "%s" % self.nvmecli_bin,
+            #                      "discover", "-t %s" % self.transport,
+            #                      "-s %s" % (4420 + subsys_no),
+            #                      "-a %s" % ip]
             nvme_discover_cmd = ["sudo",
                                  "%s" % self.nvmecli_bin,
                                  "discover", "-t %s" % self.transport,
@@ -243,11 +279,11 @@ class Initiator(Server):
             stdout, stderr = self.remote_call(nvme_discover_cmd)
             if stdout:
                 nvme_discover_output = nvme_discover_output + stdout
-
         subsystems = re.findall(r'trsvcid:\s(\d+)\s+'  # get svcid number
                                 r'subnqn:\s+([a-zA-Z0-9\.\-\:]+)\s+'  # get NQN id
                                 r'traddr:\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})',  # get IP address
                                 nvme_discover_output)  # from nvme discovery output
+        print(address_list,"----------------",subsystems)
         subsystems = filter(lambda x: x[-1] in address_list, subsystems)
         subsystems = list(set(subsystems))
         subsystems.sort(key=lambda x: x[1])
@@ -257,7 +293,8 @@ class Initiator(Server):
 
         return subsystems
 
-    def gen_fio_config(self, rw, rwmixread, block_size, io_depth, subsys_no, num_jobs=None, ramp_time=0, run_time=10):
+    def gen_fio_config(self, rw, rwmixread, block_size, io_depth, subsys_no, num_jobs=None, ramp_time=0, run_time=10,
+                       fio_mem_size_mb=None, fio_size=None):
         fio_conf_template = """
 [global]
 ioengine={ioengine}
@@ -277,21 +314,32 @@ runtime={run_time}
 """
         if "spdk" in self.mode:
             subsystems = self.discover_subsystems(self.nic_ips, subsys_no)
-            bdev_conf = self.gen_spdk_bdev_conf(subsystems)
+            if fio_size:
+                bdev_conf, bdev_rows = self.gen_spdk_bdev_conf(subsystems, fio_size)
+            else:
+                bdev_conf, bdev_rows = self.gen_spdk_bdev_conf(subsystems)
             self.remote_call("echo '%s' > %s/bdev.conf" % (bdev_conf, self.spdk_dir))
-            ioengine = "%s/examples/bdev/fio_plugin/fio_plugin" % self.spdk_dir
+            ioengine = "%s/examples/" % self.spdk_dir + "%s/fio_plugin/fio_plugin" % self.driver
             spdk_conf = "spdk_conf=%s/bdev.conf" % self.spdk_dir
-            filename_section = self.gen_fio_filename_conf(subsystems)
+            if bdev_rows:
+                filename_section = self.gen_fio_filename_conf(subsystems, bdev_rows)
+            else:
+                filename_section = self.gen_fio_filename_conf(subsystems)
         else:
             ioengine = "libaio"
             spdk_conf = ""
             filename_section = self.gen_fio_filename_conf()
-
+        if self.driver == "nvme":
+            fio_conf_template = fio_conf_template.replace("{spdk_conf}", '')
         fio_config = fio_conf_template.format(ioengine=ioengine, spdk_conf=spdk_conf,
                                               rw=rw, rwmixread=rwmixread, block_size=block_size,
                                               io_depth=io_depth, ramp_time=ramp_time, run_time=run_time)
         if num_jobs:
             fio_config = fio_config + "numjobs=%s" % num_jobs
+        if fio_mem_size_mb:
+            fio_config = fio_config + "\n" + "mem_size_mb=%s" % fio_mem_size_mb
+        if fio_size:
+            fio_config = fio_config + "\n" + "size=%s" % fio_size
         fio_config = fio_config + filename_section
 
         fio_config_filename = "%s_%s_%s_m_%s" % (block_size, io_depth, rw, rwmixread)
@@ -470,7 +518,7 @@ class SPDKTarget(Target):
         # Create RDMA transport layer
         rpc.nvmf.nvmf_create_transport(self.client, trtype=self.transport, num_shared_buffers=self.num_shared_buffers)
         self.log_print("SPDK NVMeOF transport layer:")
-        rpc.client.print_dict(rpc.nvmf.nvmf_get_transports(self.client))
+        self.log_print(rpc.nvmf.nvmf_get_transports(self.client), "rpc.nvmf")
 
         if self.null_block:
             nvme_section = self.spdk_tgt_add_nullblock()
@@ -482,9 +530,11 @@ class SPDKTarget(Target):
 
     def spdk_tgt_add_nullblock(self):
         self.log_print("Adding null block bdev to config via RPC")
+        # rpc.bdev.construct_null_bdev(self.client, 102400, 4096, "Nvme0n1")
         rpc.bdev.bdev_null_create(self.client, 102400, 4096, "Nvme0n1")
         self.log_print("SPDK Bdevs configuration:")
-        rpc.client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))
+        # rpc.client.print_dict(rpc.bdev.get_bdevs(self.client))
+        self.log_print(rpc.bdev.bdev_get_bdevs(self.client), "rpc.bdev")
 
     def spdk_tgt_add_nvme_conf(self, req_num_disks=None):
         self.log_print("Adding NVMe bdevs to config via RPC")
@@ -500,15 +550,18 @@ class SPDKTarget(Target):
                 bdfs = bdfs[0:req_num_disks]
 
         for i, bdf in enumerate(bdfs):
+            # rpc.bdev.construct_nvme_bdev(self.client, name="Nvme%s" % i, trtype="PCIe", traddr=bdf)
             rpc.bdev.bdev_nvme_attach_controller(self.client, name="Nvme%s" % i, trtype="PCIe", traddr=bdf)
 
         self.log_print("SPDK Bdevs configuration:")
-        rpc.client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))
+        self.log_print(rpc.bdev.bdev_get_bdevs(self.client), "rpc.bdev")
 
     def spdk_tgt_add_subsystem_conf(self, ips=None, req_num_disks=None):
         self.log_print("Adding subsystems to config")
         if not req_num_disks:
             req_num_disks = get_nvme_devices_count()
+        else:
+            req_num_disks = req_num_disks
 
         # Distribute bdevs between provided NICs
         num_disks = range(1, req_num_disks + 1)
@@ -521,6 +574,8 @@ class SPDKTarget(Target):
                 nqn = "nqn.2018-09.io.spdk:cnode%s" % c
                 serial = "SPDK00%s" % c
                 bdev_name = "Nvme%sn1" % (c - 1)
+                # rpc.nvmf.nvmf_subsystem_create(self.client, nqn, serial,
+                #                                allow_any_host=True, max_namespaces=8)
                 rpc.nvmf.nvmf_create_subsystem(self.client, nqn, serial,
                                                allow_any_host=True, max_namespaces=8)
                 rpc.nvmf.nvmf_subsystem_add_ns(self.client, nqn, bdev_name)
@@ -528,11 +583,12 @@ class SPDKTarget(Target):
                 rpc.nvmf.nvmf_subsystem_add_listener(self.client, nqn,
                                                      trtype=self.transport,
                                                      traddr=ip,
-                                                     trsvcid="4420",
+                                                     trsvcid=str(4420 + c-1),
                                                      adrfam="ipv4")
 
         self.log_print("SPDK NVMeOF subsystem configuration:")
-        rpc.client.print_dict(rpc.nvmf.nvmf_get_subsystems(self.client))
+        # rpc.client.print_dict(rpc.nvmf.get_nvmf_subsystems(self.client))
+        self.log_print(rpc.nvmf.nvmf_get_subsystems(self.client), "rpc.nvmf")
 
     def tgt_start(self):
         self.subsys_no = get_nvme_devices_count()
@@ -567,8 +623,8 @@ class SPDKTarget(Target):
 
 
 class KernelInitiator(Initiator):
-    def __init__(self, name, username, password, mode, nic_ips, ip, transport, **kwargs):
-        super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport, fio_dir)
+    def __init__(self, name, username, password, mode, nic_ips, ip, transport, nvmecli_dir, fio_dir, **kwargs):
+        super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport, nvmecli_dir, fio_dir)
 
     def __del__(self):
         self.ssh_connection.close()
@@ -601,10 +657,11 @@ class KernelInitiator(Initiator):
 
 
 class SPDKInitiator(Initiator):
-    def __init__(self, name, username, password, mode, nic_ips, ip, num_cores=None, transport="rdma", **kwargs):
-        super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport, fio_dir)
+    def __init__(self, name, username, password, mode, nic_ips, ip, num_cores=None, transport="rdma", nvmecli_dir=None, workspace="/tmp/spdk",fio_dir=None, driver="bdev",**kwargs):
+        super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport, nvmecli_dir, workspace, fio_dir, driver=driver)
         if num_cores:
             self.num_cores = num_cores
+        self.driver = driver
 
     def install_spdk(self, local_spdk_zip):
         self.put_file(local_spdk_zip, "/tmp/spdk_drop.zip")
@@ -619,22 +676,33 @@ class SPDKInitiator(Initiator):
         self.log_print("SPDK built")
         self.remote_call("sudo %s/scripts/setup.sh" % self.spdk_dir)
 
-    def gen_spdk_bdev_conf(self, remote_subsystem_list):
+    def gen_spdk_bdev_conf(self, remote_subsystem_list, size="8G"):
+        if self.driver == "bdev":
+            row_template = """  TransportId "trtype:{transport} adrfam:IPv4 traddr:{ip} trsvcid:{svc} subnqn:{nqn}" Nvme{i}"""
+            bdev_rows = [row_template.format(transport=self.transport,
+                                             svc=x[0],
+                                             nqn=x[1],
+                                             ip=x[2],
+                                             i=i) for i, x in enumerate(remote_subsystem_list)]
+        else:
+            row_template = """  filename=trtype={transport} adrfam=IPv4 traddr={ip} trsvcid={svc} ns={i}"""
+            # tamp_list = [row_template,"size={n}"]
+            # row_template = "\n".join(tamp_list)
+            bdev_rows = [row_template.format(transport=self.transport,
+                                             svc=x[0],
+                                             ip=x[2],
+                                             i=1) for x in remote_subsystem_list]
+        tamp_rows_list = bdev_rows
         header = "[Nvme]"
-        row_template = """  TransportId "trtype:{transport} adrfam:IPv4 traddr:{ip} trsvcid:{svc} subnqn:{nqn}" Nvme{i}"""
-
-        bdev_rows = [row_template.format(transport=self.transport,
-                                         svc=x[0],
-                                         nqn=x[1],
-                                         ip=x[2],
-                                         i=i) for i, x in enumerate(remote_subsystem_list)]
         bdev_rows = "\n".join(bdev_rows)
         bdev_section = "\n".join([header, bdev_rows])
-        return bdev_section
+        if self.driver == "nvme":
+            return bdev_section, tamp_rows_list
+        return bdev_section, 0
 
-    def gen_fio_filename_conf(self, remote_subsystem_list):
+    def gen_fio_filename_conf(self, remote_subsystem_list, filename=None):
         subsystems = [str(x) for x in range(0, len(remote_subsystem_list))]
-
+        header_prefix = "filename"
         # If num_cpus exists then limit FIO to this number of CPUs
         # Otherwise - each connected subsystem gets its own CPU
         if hasattr(self, 'num_cores'):
@@ -642,13 +710,14 @@ class SPDKInitiator(Initiator):
             threads = range(0, int(self.num_cores))
         else:
             threads = range(0, len(subsystems))
-
         n = int(len(subsystems) / len(threads))
-
         filename_section = ""
         for t in threads:
-            header = "[filename%s]" % t
-            disks = "\n".join(["filename=Nvme%sn1" % x for x in subsystems[n * t:n + n * t]])
+            header = "[" + header_prefix + str(t) + "]"
+            if not filename:
+                disks = "\n".join(["filename=Nvme%sn1" % x for x in subsystems[n * t:n + n * t]])
+            else:
+                disks = filename[t]
             filename_section = "\n".join([filename_section, header, disks])
 
         return filename_section
@@ -657,7 +726,10 @@ class SPDKInitiator(Initiator):
 if __name__ == "__main__":
     spdk_zip_path = "/tmp/spdk.zip"
     target_results_dir = "/tmp/results"
-
+    if not os.path.exists("/tmp/results"):
+        out = subprocess.check_output("mkdir /tmp/results", shell=True).decode(encoding="utf-8")
+    out = subprocess.check_output("mkdir /tmp/results/"+timestamp, shell=True).decode(encoding="utf-8")
+    target_results_dir = target_results_dir + "/" + timestamp
     if (len(sys.argv) > 1):
         config_file_path = sys.argv[1]
     else:
@@ -688,11 +760,13 @@ if __name__ == "__main__":
                                               data[k]["qd"],
                                               data[k]["rw"])
 
-            fio_run_time = data[k]["run_time"]
-            fio_ramp_time = data[k]["ramp_time"]
             fio_rw_mix_read = data[k]["rwmixread"]
+            fio_run_time = data[k]["run_time"] if "run_time" in data[k].keys() else 10
+            fio_ramp_time = data[k]["ramp_time"] if "ramp_time" in data[k].keys() else 0
             fio_run_num = data[k]["run_num"] if "run_num" in data[k].keys() else None
             fio_num_jobs = data[k]["num_jobs"] if "num_jobs" in data[k].keys() else None
+            fio_mem_size_mb = data[k]["mem_size_mb"] if "mem_size_mb" in data[k].keys() else None
+            fio_size = data[k]["size"] if "size" in data[k].keys() else "8G"
         else:
             continue
 
@@ -719,7 +793,10 @@ if __name__ == "__main__":
                 i.kernel_init_connect(i.nic_ips, target_obj.subsys_no)
 
             cfg = i.gen_fio_config(rw, fio_rw_mix_read, block_size, io_depth, target_obj.subsys_no,
-                                   fio_num_jobs, fio_ramp_time, fio_run_time)
+                                   num_jobs=fio_num_jobs, ramp_time=fio_ramp_time, run_time=fio_run_time,
+                                   fio_mem_size_mb=fio_mem_size_mb, fio_size=fio_size,
+                                   )
+
             configs.append(cfg)
 
         for i, cfg in zip(initiators, configs):
