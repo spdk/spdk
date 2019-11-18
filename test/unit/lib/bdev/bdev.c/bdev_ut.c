@@ -972,25 +972,25 @@ bdev_io_spans_boundary_test(void)
 	bdev_io.bdev = &bdev;
 
 	/* bdev has no optimal_io_boundary set - so this should return false. */
-	CU_ASSERT(_spdk_bdev_io_should_split(&bdev_io) == false);
+	CU_ASSERT(bdev_io_should_split(&bdev_io) == false);
 
 	bdev.optimal_io_boundary = 32;
 	bdev_io.type = SPDK_BDEV_IO_TYPE_RESET;
 
 	/* RESETs are not based on LBAs - so this should return false. */
-	CU_ASSERT(_spdk_bdev_io_should_split(&bdev_io) == false);
+	CU_ASSERT(bdev_io_should_split(&bdev_io) == false);
 
 	bdev_io.type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io.u.bdev.offset_blocks = 0;
 	bdev_io.u.bdev.num_blocks = 32;
 
 	/* This I/O run right up to, but does not cross, the boundary - so this should return false. */
-	CU_ASSERT(_spdk_bdev_io_should_split(&bdev_io) == false);
+	CU_ASSERT(bdev_io_should_split(&bdev_io) == false);
 
 	bdev_io.u.bdev.num_blocks = 33;
 
 	/* This I/O spans a boundary. */
-	CU_ASSERT(_spdk_bdev_io_should_split(&bdev_io) == true);
+	CU_ASSERT(bdev_io_should_split(&bdev_io) == true);
 }
 
 static void
