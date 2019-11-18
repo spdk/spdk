@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d1cb807c_6b91ef6d",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-11-18T09:58:01Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "83f2c4d1_09f32ce7",
+      "revId": "3277bd587804dcb1fd579f4b0e1bb7732255ec59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1041c9b7_8a13b9ba",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-11-15T21:23:10Z",
       "side": 1,
       "message": "I would rather the user call something like spdk_bdev_set_timeout(struct spdk_bdev_desc *desc, uint32_t timeout_in_sec).  Then we do not need new APIs for getting io channels with timeouts.  It\u0027s also a bit more flexible, since then user can enable and disable timeouts if desired.\n\nLet\u0027s also say that this new function I suggested must only be called from the thread that opened the bdev.  This would avoid handling case where set_timeout is called simultaneously from multiple threads.",
+      "revId": "3277bd587804dcb1fd579f4b0e1bb7732255ec59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd4815b9_574db02f",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-11-18T09:58:01Z",
+      "side": 1,
+      "message": "Yes, It can be more flexible. It\u0027s really a good idea and I accept it. Thanks.",
+      "parentUuid": "1041c9b7_8a13b9ba",
       "revId": "3277bd587804dcb1fd579f4b0e1bb7732255ec59",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
