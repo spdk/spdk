@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "6653f87c_4c165877",
+        "filename": "module/bdev/uring/bdev_uring.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-18T08:22:45Z",
+      "side": 1,
+      "message": "Hi Yao, I\u0027m sorry for my careless mistake. I just compared V1 with V2 and noticed their difference. But they are fine as you said.",
+      "parentUuid": "7c8a618d_3e1d5818",
+      "range": {
+        "startLine": 619,
+        "startChar": 0,
+        "endLine": 623,
+        "endChar": 0
+      },
+      "revId": "11d868d9254858ff8d623cc59ae2d9e3aa826b76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7bc6bde2_45a6a090",
         "filename": "module/bdev/uring/bdev_uring.c",
         "patchSetId": 2
