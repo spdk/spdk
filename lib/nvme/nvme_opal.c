@@ -2151,14 +2151,14 @@ spdk_opal_revert_poll(struct spdk_opal_dev *dev)
 	struct spdk_opal_header *header = response;
 	int ret;
 
-	assert(dev->revert_cb_fn);
+	assert(dev->cb_fn);
 	assert(dev->state == OPAL_DEV_STATE_BUSY);
 
 	ret = spdk_nvme_ctrlr_security_receive(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
 					       0, dev->resp, IO_BUFFER_LENGTH);
 	if (ret) {
 		SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
-		dev->revert_cb_fn(dev, dev->ctx, ret);
+		dev->cb_fn(dev, dev->ctx, ret);
 		dev->state = OPAL_DEV_STATE_ENABLED;
 		return 0;
 	}
@@ -2166,7 +2166,7 @@ spdk_opal_revert_poll(struct spdk_opal_dev *dev)
 	if (header->com_packet.outstanding_data == 0 &&
 	    header->com_packet.min_transfer == 0) {
 		ret = opal_parse_and_check_status(dev, NULL);
-		dev->revert_cb_fn(dev, dev->ctx, ret);
+		dev->cb_fn(dev, dev->ctx, ret);
 		dev->state = OPAL_DEV_STATE_DEFAULT;
 		return 0;
 	} else {
@@ -2178,7 +2178,7 @@ spdk_opal_revert_poll(struct spdk_opal_dev *dev)
 
 int
 spdk_opal_cmd_revert_tper_async(struct spdk_opal_dev *dev, const char *passwd,
-				spdk_opal_revert_cb cb_fn, void *cb_ctx)
+				spdk_opal_callback cb_fn, void *cb_ctx)
 {
 	int ret;
 	struct spdk_opal_key opal_key;
@@ -2201,7 +2201,7 @@ spdk_opal_cmd_revert_tper_async(struct spdk_opal_dev *dev, const char *passwd,
 		return -EFAULT;
 	}
 
-	dev->revert_cb_fn = cb_fn;
+	dev->cb_fn = cb_fn;
 	dev->ctx = cb_ctx;
 
 	ret = opal_init_key(&opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);

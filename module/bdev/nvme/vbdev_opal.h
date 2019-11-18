@@ -46,7 +46,7 @@ struct spdk_opal_locking_range_info *spdk_vbdev_opal_get_info_from_bdev(const ch
 int spdk_vbdev_opal_destruct(const char *bdev_name, const char *password);
 
 int spdk_vbdev_opal_revert_tper(struct nvme_bdev_ctrlr *nvme_ctrlr, const char *password,
-				spdk_opal_revert_cb cb_fn, void *cb_ctx);
+				spdk_opal_callback cb_fn, void *cb_ctx);
 int spdk_vbdev_opal_enable_new_user(const char *bdev_name, const char *admin_password,
 				    uint16_t user_id, const char *user_password);
 

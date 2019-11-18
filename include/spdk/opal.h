@@ -170,7 +170,7 @@ enum spdk_opal_dev_state {
 
 struct spdk_opal_dev;
 
-typedef void (*spdk_opal_revert_cb)(struct spdk_opal_dev *dev, void *ctx, int rc);
+typedef void (*spdk_opal_callback)(struct spdk_opal_dev *dev, void *ctx, int rc);
 
 struct spdk_opal_dev *spdk_opal_init_dev(void *dev_handler);
 
@@ -184,8 +184,8 @@ int spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd);
 
 /**
  * Users should periodically call spdk_opal_revert_poll to check if the response is received.
- * Once a final result is received, no matter success or failure, dev->revert_cb_fn will be called.
- * Error code is put to dev->revert_cb_fn.
+ * Once a final result is received, no matter success or failure, dev->cb_fn will be called.
+ * Error code is put to dev->cb_fn.
  *
  * Return: -EAGAIN for no result yet. 0 for final result received.
  */
@@ -198,7 +198,7 @@ int spdk_opal_revert_poll(struct spdk_opal_dev *dev);
  * Because usually revert TPer operation will take a while.
  */
 int spdk_opal_cmd_revert_tper_async(struct spdk_opal_dev *dev, const char *passwd,
-				    spdk_opal_revert_cb cb_fn, void *cb_ctx);
+				    spdk_opal_callback cb_fn, void *cb_ctx);
 
 /**
  * synchronous function: send and then receive.
