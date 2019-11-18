@@ -264,7 +264,7 @@ function configure_linux_pci {
 			fi
 			blknames=()
 			get_virtio_names_from_bdf "$bdf" blknames
-			for blkname in $blknames; do
+			for blkname in "${blknames[@]}"; do
 				if [ "$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)" != "0" ]; then
 					pci_dev_echo "$bdf" "Active mountpoints on /dev/$blkname, so not binding"
 					continue 2
@@ -612,7 +612,7 @@ function status_linux {
 			vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
 			blknames=()
 			get_virtio_names_from_bdf "$bdf" blknames
-			echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t\t${driver:--}\t\t$blknames"
+			echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t\t${driver:--}\t\t" "${blknames[@]}"
 		done
 	done
 

@@ -115,7 +115,7 @@ shift "$((OPTIND-1))"   # Discard the options and sentinel --
 
 SPDK_VAGRANT_DISTRO=( "$@" )
 
-case "$SPDK_VAGRANT_DISTRO" in
+case "${SPDK_VAGRANT_DISTRO[@]}" in
 	centos7)
 		export SPDK_VAGRANT_DISTRO
 	;;
