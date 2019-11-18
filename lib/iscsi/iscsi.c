@@ -3035,10 +3035,6 @@ iscsi_transfer_in(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	transfer_len = task->scsi.length;
 
 	if (task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
-		if (task != primary) {
-			assert(conn->data_in_cnt > 0);
-			conn->data_in_cnt--;
-		}
 		return 0;
 	}
 
@@ -3261,7 +3257,6 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 			assert(subtask != NULL);
 			subtask->scsi.offset = task->current_datain_offset;
 			spdk_scsi_task_set_data(&subtask->scsi, NULL, 0);
-			conn->data_in_cnt++;
 
 			if (spdk_scsi_dev_get_lun(conn->dev, task->lun_id) == NULL) {
 				/* Stop submitting split read I/Os for remaining data. */
@@ -3597,16 +3592,16 @@ _iscsi_conn_abort_queued_datain_task(struct spdk_iscsi_conn *conn,
 	struct spdk_iscsi_task *subtask;
 	uint32_t remaining_size;
 
-	while (conn->data_in_cnt < MAX_LARGE_DATAIN_PER_CONNECTION) {
-		assert(task->current_datain_offset <= task->scsi.transfer_len);
-		/* If no IO is submitted yet, just abort the primary task. */
-		if (task->current_datain_offset == 0) {
-			TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
-			spdk_scsi_task_process_abort(&task->scsi);
-			spdk_iscsi_task_cpl(&task->scsi);
-			return 0;
-		}
+	assert(task->current_datain_offset <= task->scsi.transfer_len);
+	/* If no IO is submitted yet, just abort the primary task. */
+	if (task->current_datain_offset == 0) {
+		TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
+		spdk_scsi_task_process_abort(&task->scsi);
+		spdk_iscsi_task_cpl(&task->scsi);
+		return 0;
+	}
 
+	while (conn->data_in_cnt < MAX_LARGE_DATAIN_PER_CONNECTION) {
 		/* If any IO is submitted already, abort all subtasks by repetition. */
 		if (task->current_datain_offset < task->scsi.transfer_len) {
 			remaining_size = task->scsi.transfer_len - task->current_datain_offset;
@@ -3616,7 +3611,6 @@ _iscsi_conn_abort_queued_datain_task(struct spdk_iscsi_conn *conn,
 			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
 			spdk_scsi_task_set_data(&subtask->scsi, NULL, 0);
 			task->current_datain_offset += subtask->scsi.length;
-			conn->data_in_cnt++;
 
 			subtask->scsi.transfer_len = subtask->scsi.length;
 			spdk_scsi_task_process_abort(&subtask->scsi);
