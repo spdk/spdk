@@ -166,7 +166,7 @@ stop_operation(void)
 }
 
 struct spdk_bdev_io *
-spdk_bdev_get_io(struct spdk_bdev_channel *channel)
+bdev_channel_get_io(struct spdk_bdev_channel *channel)
 {
 	struct spdk_bdev_io *bdev_io;
 
