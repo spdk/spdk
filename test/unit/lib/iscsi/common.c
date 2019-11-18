@@ -34,6 +34,25 @@ spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
 	if (!task) {
 		return NULL;
 	}
+
+	task->conn = conn;
+	task->scsi.cpl_fn = cpl_fn;
+	if (parent) {
+		parent->scsi.ref++;
+		task->parent = parent;
+		task->tag = parent->tag;
+		task->lun_id = parent->lun_id;
+		task->scsi.dxfer_dir = parent->scsi.dxfer_dir;
+		task->scsi.transfer_len = parent->scsi.transfer_len;
+		task->scsi.lun = parent->scsi.lun;
+		task->scsi.cdb = parent->scsi.cdb;
+		task->scsi.target_port = parent->scsi.target_port;
+		task->scsi.initiator_port = parent->scsi.initiator_port;
+		if (conn && (task->scsi.dxfer_dir == SPDK_SCSI_DIR_FROM_DEV)) {
+			conn->data_in_cnt++;
+		}
+	}
+
 	task->scsi.iovs = &task->scsi.iov;
 	return task;
 }
@@ -141,6 +160,11 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 
 	if (scsi_task != NULL) {
 		iscsi_task = spdk_iscsi_task_from_scsi_task(scsi_task);
+		if (iscsi_task->parent && (iscsi_task->scsi.dxfer_dir == SPDK_SCSI_DIR_FROM_DEV)) {
+			assert(iscsi_task->conn->data_in_cnt > 0);
+			iscsi_task->conn->data_in_cnt--;
+		}
+
 		free(iscsi_task);
 	}
 }
