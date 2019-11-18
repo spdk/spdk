@@ -3401,6 +3401,14 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 		free(poller);
 	}
 
+	if (!rtransport) {
+		/* Transport can be NULL when failure occured during spdk_nvmf_rdma_poll_group_create().
+		 * The upper layer did not assign the rtransport to rgroup yet.
+		 */
+		free(rgroup);
+		return;
+	}
+
 	pthread_mutex_lock(&rtransport->lock);
 	next_rgroup = TAILQ_NEXT(rgroup, link);
 	TAILQ_REMOVE(&rtransport->poll_groups, rgroup, link);
