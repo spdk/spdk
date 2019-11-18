@@ -276,6 +276,24 @@ vbdev_ocf_volume_submit_flush(struct ocf_io *io)
 	}
 }
 
+typedef int (*spdk_bdev_submit_scalar_io)(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		void *buf, uint64_t offset_blocks, uint64_t num_blocks,
+		spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+typedef int (*spdk_bdev_submit_vector_io)(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt,
+		uint64_t offset, uint64_t nbytes,
+		spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+static uint64_t
+vbdev_ocf_volume_bytes_2_blocks(struct spdk_bdev *bdev, uint64_t bytes,
+				uint64_t *num_blocks)
+{
+	*num_blocks = bytes / bdev->blocklen;
+
+	return bytes % bdev->blocklen;
+}
+
 static void
 vbdev_ocf_volume_submit_io(struct ocf_io *io)
 {
@@ -283,7 +301,9 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	struct iovec *iovs;
 	int iovcnt, status = 0, i, offset;
-	uint64_t addr, len;
+	uint64_t blk_addr, blk_len;
+	spdk_bdev_submit_scalar_io submit_scalar_io_fn;
+	spdk_bdev_submit_vector_io submit_vector_io_fn;
 
 	if (io->flags == OCF_WRITE_FLUSH) {
 		vbdev_ocf_volume_submit_flush(io);
@@ -298,59 +318,63 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 	}
 
 	/* IO fields */
-	addr = io->addr;
-	len = io->bytes;
+	if (vbdev_ocf_volume_bytes_2_blocks(base->bdev, io->addr, &blk_addr)) {
+		SPDK_ERRLOG("Address are not aligned to block size\n");
+		vbdev_ocf_volume_submit_io_cb(NULL, false, io);
+		return;
+	}
+
+	if (vbdev_ocf_volume_bytes_2_blocks(base->bdev, io->bytes, &blk_len)) {
+		SPDK_ERRLOG("Length are not aligned to block size\n");
+		vbdev_ocf_volume_submit_io_cb(NULL, false, io);
+		return;
+	}
+
 	offset = io_ctx->offset;
 
-	if (len < io_ctx->data->size) {
-		if (io_ctx->data->iovcnt == 1) {
-			if (io->dir == OCF_READ) {
-				status = spdk_bdev_read(base->desc, io_ctx->ch,
-							io_ctx->data->iovs[0].iov_base + offset, addr, len,
-							vbdev_ocf_volume_submit_io_cb, io);
-			} else if (io->dir == OCF_WRITE) {
-				status = spdk_bdev_write(base->desc, io_ctx->ch,
-							 io_ctx->data->iovs[0].iov_base + offset, addr, len,
-							 vbdev_ocf_volume_submit_io_cb, io);
-			}
-			goto end;
-		} else {
-			i = get_starting_vec(io_ctx->data->iovs, io_ctx->data->iovcnt, &offset);
-
-			if (i < 0) {
-				SPDK_ERRLOG("offset bigger than data size\n");
-				vbdev_ocf_volume_submit_io_cb(NULL, false, io);
-				return;
-			}
-
-			iovcnt = io_ctx->data->iovcnt - i;
-
-			io_ctx->iovs_allocated = true;
-			iovs = env_malloc(sizeof(*iovs) * iovcnt, ENV_MEM_NOIO);
-
-			if (!iovs) {
-				SPDK_ERRLOG("allocation failed\n");
-				vbdev_ocf_volume_submit_io_cb(NULL, false, io);
-				return;
-			}
-
-			initialize_cpy_vector(iovs, io_ctx->data->iovcnt, &io_ctx->data->iovs[i],
-					      iovcnt, offset, len);
+	if (io_ctx->data->iovcnt == 1) {
+		submit_scalar_io_fn = io->dir ? spdk_bdev_write_blocks : spdk_bdev_read_blocks;
+		status = (submit_scalar_io_fn)(base->desc, io_ctx->ch,
+					       io_ctx->data->iovs[0].iov_base + offset,
+					       blk_addr, blk_len, vbdev_ocf_volume_submit_io_cb, io);
+		if (status) {
+			SPDK_ERRLOG("Submission of scalar io failed with status=%d\n", status);
+			vbdev_ocf_volume_submit_io_cb(NULL, false, io);
 		}
+		return;
+	}
+
+	if (io->bytes < io_ctx->data->size) {
+		i = get_starting_vec(io_ctx->data->iovs, io_ctx->data->iovcnt, &offset);
+
+		if (i < 0) {
+			SPDK_ERRLOG("offset bigger than data size\n");
+			vbdev_ocf_volume_submit_io_cb(NULL, false, io);
+			return;
+		}
+
+		iovcnt = io_ctx->data->iovcnt - i;
+
+		io_ctx->iovs_allocated = true;
+		iovs = env_malloc(sizeof(*iovs) * iovcnt, ENV_MEM_NOIO);
+		if (!iovs) {
+			SPDK_ERRLOG("allocation failed\n");
+			vbdev_ocf_volume_submit_io_cb(NULL, false, io);
+			return;
+		}
+
+		initialize_cpy_vector(iovs, io_ctx->data->iovcnt, &io_ctx->data->iovs[i],
+				      iovcnt, offset, io->bytes);
 	} else {
 		iovs = io_ctx->data->iovs;
 		iovcnt = io_ctx->data->iovcnt;
 	}
 
-	if (io->dir == OCF_READ) {
-		status = spdk_bdev_readv(base->desc, io_ctx->ch,
-					 iovs, iovcnt, addr, len, vbdev_ocf_volume_submit_io_cb, io);
-	} else if (io->dir == OCF_WRITE) {
-		status = spdk_bdev_writev(base->desc, io_ctx->ch,
-					  iovs, iovcnt, addr, len, vbdev_ocf_volume_submit_io_cb, io);
-	}
+	submit_vector_io_fn = io->dir ? spdk_bdev_writev_blocks : spdk_bdev_readv_blocks;
+	status = (submit_vector_io_fn)(base->desc, io_ctx->ch,
+				       iovs, iovcnt, blk_addr, blk_len,
+				       vbdev_ocf_volume_submit_io_cb, io);
 
-end:
 	if (status) {
 		/* TODO [ENOMEM]: implement ENOMEM handling when submitting IO to base device */
 
