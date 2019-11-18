@@ -766,13 +766,16 @@ nvme_pcie_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		enum_ctx.has_pci_addr = true;
 	}
 
-	if (g_hotplug_fd < 0) {
-		g_hotplug_fd = spdk_uevent_connect();
+	/* Only the primary process can monitor hotplug. */
+	if (spdk_process_is_primary()) {
 		if (g_hotplug_fd < 0) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "Failed to open uevent netlink socket\n");
+			g_hotplug_fd = spdk_uevent_connect();
+			if (g_hotplug_fd < 0) {
+				SPDK_DEBUGLOG(SPDK_LOG_NVME, "Failed to open uevent netlink socket\n");
+			}
+		} else {
+			_nvme_pcie_hotplug_monitor(probe_ctx);
 		}
-	} else {
-		_nvme_pcie_hotplug_monitor(probe_ctx);
 	}
 
 	if (enum_ctx.has_pci_addr == false) {
