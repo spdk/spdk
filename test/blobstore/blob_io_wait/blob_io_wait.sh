@@ -30,10 +30,12 @@ killprocess $bdev_svc_pid
 
 # Minimal number of bdev io pool (128) and cache (1)
 echo "[Bdev]" > $testdir/bdevperf.conf
-echo "BdevIoPoolSize 128" >> $testdir/bdevperf.conf
-echo "BdevIoCacheSize 1" >> $testdir/bdevperf.conf
-echo "[AIO]" >> $testdir/bdevperf.conf
-echo "AIO $testdir/aio.bdev aio0 4096" >> $testdir/bdevperf.conf
+{
+	echo "BdevIoPoolSize 128"
+	echo "BdevIoCacheSize 1"
+	echo "[AIO]"
+	echo "AIO $testdir/aio.bdev aio0 4096"
+} >> $testdir/bdevperf.conf
 
 $rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w write -t 5 -r /var/tmp/spdk.sock &
 bdev_perf_pid=$!
