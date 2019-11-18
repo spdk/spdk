@@ -78,7 +78,7 @@ spdk_bdev_get_zone_info(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.zone_mgmt.buf = info;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_bdev_io_submit(bdev_io);
+	bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -104,7 +104,7 @@ spdk_bdev_zone_management(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 	bdev_io->u.zone_mgmt.num_zones = 1;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_bdev_io_submit(bdev_io);
+	bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -134,7 +134,7 @@ _spdk_bdev_append_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 	bdev_io->u.bdev.offset_blocks = zone_id;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_bdev_io_submit(bdev_io);
+	bdev_io_submit(bdev_io);
 	return 0;
 }
 

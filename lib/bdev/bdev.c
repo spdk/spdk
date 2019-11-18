@@ -1827,7 +1827,7 @@ _spdk_bdev_io_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *
  *  be inlined, at least on some compilers.
  */
 static inline void
-_spdk_bdev_io_submit(void *ctx)
+_bdev_io_submit(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 	struct spdk_bdev *bdev = bdev_io->bdev;
@@ -1862,7 +1862,7 @@ _spdk_bdev_io_submit(void *ctx)
 }
 
 void
-spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
+bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_thread *thread = spdk_bdev_io_get_thread(bdev_io);
@@ -1877,19 +1877,19 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	if (bdev_io->internal.ch->flags & BDEV_CH_QOS_ENABLED) {
 		if ((thread == bdev->internal.qos->thread) || !bdev->internal.qos->thread) {
-			_spdk_bdev_io_submit(bdev_io);
+			_bdev_io_submit(bdev_io);
 		} else {
 			bdev_io->internal.io_submit_ch = bdev_io->internal.ch;
 			bdev_io->internal.ch = bdev->internal.qos->ch;
-			spdk_thread_send_msg(bdev->internal.qos->thread, _spdk_bdev_io_submit, bdev_io);
+			spdk_thread_send_msg(bdev->internal.qos->thread, _bdev_io_submit, bdev_io);
 		}
 	} else {
-		_spdk_bdev_io_submit(bdev_io);
+		_bdev_io_submit(bdev_io);
 	}
 }
 
 static void
-spdk_bdev_io_submit_reset(struct spdk_bdev_io *bdev_io)
+bdev_io_submit_reset(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
@@ -2807,7 +2807,7 @@ _spdk_bdev_read_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chann
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_bdev_io_submit(bdev_io);
+	bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -2900,7 +2900,7 @@ _spdk_bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chan
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_bdev_io_submit(bdev_io);
+	bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -2965,7 +2965,7 @@ _spdk_bdev_write_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chan
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_bdev_io_submit(bdev_io);
+	bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -3047,7 +3047,7 @@ _spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_cha
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_bdev_io_submit(bdev_io);
+	bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -3109,7 +3109,7 @@ bdev_zcopy_get_buf(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, boo
 		/* Read the real data into the buffer */
 		bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
-		spdk_bdev_io_submit(bdev_io);
+		bdev_io_submit(bdev_io);
 		return;
 	}
 
@@ -3159,7 +3159,7 @@ spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	if (_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZCOPY)) {
-		spdk_bdev_io_submit(bdev_io);
+		bdev_io_submit(bdev_io);
 	} else {
 		/* Emulate zcopy by allocating a buffer */
 		spdk_bdev_io_get_buf(bdev_io, bdev_zcopy_get_buf,
@@ -3194,7 +3194,7 @@ spdk_bdev_zcopy_end(struct spdk_bdev_io *bdev_io, bool commit,
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 
 	if (_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZCOPY)) {
-		spdk_bdev_io_submit(bdev_io);
+		bdev_io_submit(bdev_io);
 		return 0;
 	}
 
@@ -3206,7 +3206,7 @@ spdk_bdev_zcopy_end(struct spdk_bdev_io *bdev_io, bool commit,
 	}
 
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
-	spdk_bdev_io_submit(bdev_io);
+	bdev_io_submit(bdev_io);
 
 	return 0;
 }
@@ -3262,7 +3262,7 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	if (_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
-		spdk_bdev_io_submit(bdev_io);
+		bdev_io_submit(bdev_io);
 		return 0;
 	}
 
@@ -3330,7 +3330,7 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_bdev_io_submit(bdev_io);
+	bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -3380,7 +3380,7 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_bdev_io_submit(bdev_io);
+	bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -3392,7 +3392,7 @@ _spdk_bdev_reset_dev(struct spdk_io_channel_iter *i, int status)
 
 	bdev_io = TAILQ_FIRST(&ch->queued_resets);
 	TAILQ_REMOVE(&ch->queued_resets, bdev_io, internal.link);
-	spdk_bdev_io_submit_reset(bdev_io);
+	bdev_io_submit_reset(bdev_io);
 }
 
 static void
@@ -3586,7 +3586,7 @@ spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channe
 
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_bdev_io_submit(bdev_io);
+	bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -3624,7 +3624,7 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_bdev_io_submit(bdev_io);
+	bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -3662,7 +3662,7 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_bdev_io_submit(bdev_io);
+	bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -4776,7 +4776,7 @@ _spdk_bdev_disable_qos_done(void *cb_arg)
 		}
 
 		spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io),
-				     _spdk_bdev_io_submit, bdev_io);
+				     _bdev_io_submit, bdev_io);
 	}
 
 	if (qos->thread != NULL) {
