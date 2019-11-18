@@ -30,6 +30,10 @@ has been added. The public API is available at `include/spdk/pipe.h`.
 `delayed_pcie_doorbell` parameter in `spdk_nvme_io_qpair_opts` was renamed to `delay_cmd_submit`
 to allow reuse in other transports.
 
+### rpc
+
+Added optional 'delay_cmd_submit' parameter to 'bdev_nvme_set_options' RPC method.
+
 ## v19.10:
 
 ### rpc
