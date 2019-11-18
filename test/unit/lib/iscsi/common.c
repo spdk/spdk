@@ -48,6 +48,9 @@ spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
 		task->scsi.cdb = parent->scsi.cdb;
 		task->scsi.target_port = parent->scsi.target_port;
 		task->scsi.initiator_port = parent->scsi.initiator_port;
+		if (conn && (task->scsi.dxfer_dir == SPDK_SCSI_DIR_FROM_DEV)) {
+			conn->data_in_cnt++;
+		}
 	}
 
 	task->scsi.iovs = &task->scsi.iov;
