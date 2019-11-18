@@ -3368,8 +3368,6 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_rdma_transport		*rtransport;
 
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
-	rtransport = SPDK_CONTAINEROF(rgroup->group.transport, struct spdk_nvmf_rdma_transport, transport);
-
 	if (!rgroup) {
 		return;
 	}
@@ -3400,6 +3398,15 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 		free(poller);
 	}
+
+	if (rgroup->group.transport == NULL) {
+		/* Transport can be NULL when spdk_nvmf_rdma_poll_group_create()
+		 * calls this function directly in a failure path. */
+		free(rgroup);
+		return;
+	}
+
+	rtransport = SPDK_CONTAINEROF(rgroup->group.transport, struct spdk_nvmf_rdma_transport, transport);
 
 	pthread_mutex_lock(&rtransport->lock);
 	next_rgroup = TAILQ_NEXT(rgroup, link);
