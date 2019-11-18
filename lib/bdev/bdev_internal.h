@@ -40,7 +40,7 @@ struct spdk_bdev;
 struct spdk_bdev_io;
 struct spdk_bdev_channel;
 
-struct spdk_bdev_io *spdk_bdev_get_io(struct spdk_bdev_channel *channel);
+struct spdk_bdev_io *bdev_channel_get_io(struct spdk_bdev_channel *channel);
 
 void bdev_io_init(struct spdk_bdev_io *bdev_io, struct spdk_bdev *bdev, void *cb_arg,
 		       spdk_bdev_io_completion_cb cb);
