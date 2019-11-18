@@ -212,7 +212,7 @@ static int nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair);
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
 static uint16_t g_signal_lock;
 static bool g_sigset = false;
-static int hotplug_fd = -1;
+static int g_hotplug_fd = -1;
 
 static void
 nvme_sigbus_fault_sighandler(int signum, siginfo_t *info, void *ctx)
@@ -271,7 +271,7 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 	union spdk_nvme_csts_register csts;
 	struct spdk_nvme_ctrlr_process *proc;
 
-	while (spdk_get_uevent(hotplug_fd, &event) > 0) {
+	while (spdk_get_uevent(g_hotplug_fd, &event) > 0) {
 		if (event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UIO ||
 		    event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_VFIO) {
 			if (event.action == SPDK_NVME_UEVENT_ADD) {
@@ -766,9 +766,9 @@ nvme_pcie_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		enum_ctx.has_pci_addr = true;
 	}
 
-	if (hotplug_fd < 0) {
-		hotplug_fd = spdk_uevent_connect();
-		if (hotplug_fd < 0) {
+	if (g_hotplug_fd < 0) {
+		g_hotplug_fd = spdk_uevent_connect();
+		if (g_hotplug_fd < 0) {
 			SPDK_DEBUGLOG(SPDK_LOG_NVME, "Failed to open uevent netlink socket\n");
 		}
 	} else {
