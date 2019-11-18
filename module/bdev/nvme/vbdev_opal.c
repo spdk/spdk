@@ -659,7 +659,7 @@ vbdev_opal_recv_poll(void *arg)
 
 int
 spdk_vbdev_opal_revert_tper(struct nvme_bdev_ctrlr *nvme_ctrlr, const char *password,
-			    spdk_opal_revert_cb cb_fn, void *cb_ctx)
+			    spdk_opal_callback cb_fn, void *cb_ctx)
 {
 	int rc;
 
