@@ -2,7 +2,7 @@
 # as we are usin non-interactive session to connect to remote.
 # Without -m it would be not possible to suspend the process.
 set -m
-source $testdir/autotest.config
+source "$testdir"/autotest.config
 
 incoming_vm=1
 target_vm=2
@@ -28,14 +28,14 @@ function host_2_start_vhost()
 {
 	echo "BASE DIR $VHOST_DIR"
 	vhost_work_dir=$VHOST_DIR/vhost1
-	mkdir -p $vhost_work_dir
-	rm -f $vhost_work_dir/*
+	mkdir -p "$vhost_work_dir"
+	rm -f "$vhost_work_dir"/*
 
 	notice "Starting vhost 1 instance on remote server"
 	trap 'host_2_cleanup_vhost; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 	vhost_run 1 "-u"
 
-	$rpc bdev_nvme_attach_controller -b Nvme0 -t rdma -f ipv4 -a $RDMA_TARGET_IP -s 4420 -n "nqn.2018-02.io.spdk:cnode1"
+	$rpc bdev_nvme_attach_controller -b Nvme0 -t rdma -f ipv4 -a "$RDMA_TARGET_IP" -s 4420 -n "nqn.2018-02.io.spdk:cnode1"
 	$rpc vhost_create_scsi_controller $target_vm_ctrl
 	$rpc vhost_scsi_controller_add_target $target_vm_ctrl 0 Nvme0n1
 
@@ -46,10 +46,10 @@ function host_2_start_vhost()
 
 	# Use this file as a flag to notify main script
 	# that setup on remote server is done
-	echo "DONE" > $share_dir/DONE
+	echo "DONE" > "$share_dir"/DONE
 }
 
-echo $$ > $VHOST_DIR/tc3b.pid
+echo $$ > "$VHOST_DIR"/tc3b.pid
 host_2_start_vhost
 suspend -f
 
@@ -76,4 +76,4 @@ notice "FIO result after migration:"
 vm_exec $target_vm "cat /root/migration-tc3.job.out"
 
 host_2_cleanup_vhost
-echo "DONE" > $share_dir/DONE
+echo "DONE" > "$share_dir"/DONE

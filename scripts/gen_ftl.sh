@@ -2,7 +2,7 @@
 
 set -e
 
-rootdir=$(readlink -f $(dirname $0))/..
+rootdir=$(readlink -f $(dirname "$0"))/..
 
 function usage {
 	echo "Usage: [-j] $0 -a TRANSPORT_ADDR -n BDEV_NAME -l PUNITS [-u UUID] [-c CACHE]"
@@ -68,7 +68,7 @@ if [[ -z "$addr" || -z "$name" || -z "$punits" ]]; then
 fi
 
 if [ -n "$json" ]; then
-	create_json_config $addr $name $punits $uuid $cache
+	create_json_config "$addr" "$name" "$punits" "$uuid" "$cache"
 else
-	create_classic_config $addr $name $punits $uuid $cache
+	create_classic_config "$addr" "$name" "$punits" "$uuid" "$cache"
 fi

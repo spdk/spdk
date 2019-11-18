@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/nvmf/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/nvmf/common.sh
 
 nvmftestinit
 
@@ -35,20 +35,20 @@ fi
 
 echo -n rdma > /sys/kernel/config/nvmet/ports/1/addr_trtype
 echo -n ipv4 > /sys/kernel/config/nvmet/ports/1/addr_adrfam
-echo -n $NVMF_FIRST_TARGET_IP > /sys/kernel/config/nvmet/ports/1/addr_traddr
-echo -n $NVMF_PORT > /sys/kernel/config/nvmet/ports/1/addr_trsvcid
+echo -n "$NVMF_FIRST_TARGET_IP" > /sys/kernel/config/nvmet/ports/1/addr_traddr
+echo -n "$NVMF_PORT" > /sys/kernel/config/nvmet/ports/1/addr_trsvcid
 
 ln -s /sys/kernel/config/nvmet/subsystems/$subsystemname /sys/kernel/config/nvmet/ports/1/subsystems/$subsystemname
 
 sleep 4
 
-$rootdir/examples/nvme/identify/identify -r "\
+"$rootdir"/examples/nvme/identify/identify -r "\
 	trtype:$TEST_TRANSPORT \
 	adrfam:IPv4 \
 	traddr:$NVMF_FIRST_TARGET_IP \
 	trsvcid:$NVMF_PORT \
 	subnqn:nqn.2014-08.org.nvmexpress.discovery" -t all
-$rootdir/examples/nvme/identify/identify -r "\
+"$rootdir"/examples/nvme/identify/identify -r "\
 	trtype:$TEST_TRANSPORT \
 	adrfam:IPv4 \
 	traddr:$NVMF_FIRST_TARGET_IP \

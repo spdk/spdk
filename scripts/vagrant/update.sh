@@ -23,7 +23,7 @@ fi
 # Setup for run-autorun.sh
 if [ ! -f /home/vagrant/autorun-spdk.conf ]; then
 	echo "Copying scripts/vagrant/autorun-spdk.conf to /home/vagrant"
-	cp ${SPDK_DIR}/scripts/vagrant/autorun-spdk.conf /home/vagrant
+	cp "${SPDK_DIR}"/scripts/vagrant/autorun-spdk.conf /home/vagrant
 	chown vagrant /home/vagrant/autorun-spdk.conf
 	chgrp vagrant /home/vagrant/autorun-spdk.conf
 fi
@@ -33,7 +33,7 @@ SYSTEM=$(uname -s)
 if [ "$SYSTEM" = "FreeBSD" ]; then
 	# Do initial setup for the system
 	pkg upgrade -f
-	${SPDK_DIR}/scripts/pkgdep.sh
+	"${SPDK_DIR}"/scripts/pkgdep.sh
 	if [ -d /usr/src/.git ]; then
 		echo
 		echo "/usr/src/ is a git repository"
@@ -51,7 +51,7 @@ else
 	#       So do it here just in case
 	sysctl -w vm.nr_hugepages=1024
 	HUGEPAGES=$(sysctl -n  vm.nr_hugepages)
-	if [ $HUGEPAGES != 1024 ]; then
+	if [ "$HUGEPAGES" != 1024 ]; then
 		echo "Warning: Unable to get 1024 hugepages, only got $HUGEPAGES"
 		echo "Warning: Adjusting HUGEMEM in /home/vagrant/autorun-spdk.conf"
 		sed "s/HUGEMEM=.*$/HUGEMEM=${HUGEPAGES}/g" /home/vagrant/autorun-spdk.conf > /home/vagrant/foo.conf
@@ -79,12 +79,12 @@ else
 		# Standard update + upgrade dance
 		apt-get update --assume-yes --no-install-suggests --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 		apt-get upgrade --assume-yes --no-install-suggests --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-		${SPDK_DIR}/scripts/pkgdep.sh
+		"${SPDK_DIR}"/scripts/pkgdep.sh
 	elif [ "$DISTRIB_ID" == "CentOS" ]; then
 		# Standard update + upgrade dance
 		yum check-update
 		yum update -y
-		${SPDK_DIR}/scripts/pkgdep.sh
+		"${SPDK_DIR}"/scripts/pkgdep.sh
 	elif [ "$DISTRIB_ID" == "Fedora" ]; then
 		if [ "$DISTRIB_RELEASE" = "26" ]; then
 			echo
@@ -93,7 +93,7 @@ else
 		else
 			yum check-update
 			yum update -y
-			${SPDK_DIR}/scripts/pkgdep.sh
+			"${SPDK_DIR}"/scripts/pkgdep.sh
 		fi
 	fi
 fi

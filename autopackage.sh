@@ -10,13 +10,13 @@ fi
 
 source "$1"
 
-rootdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $(dirname "$0"))
 source "$rootdir/test/common/autotest_common.sh"
 
 out=$PWD
 
 MAKEFLAGS=${MAKEFLAGS:--j16}
-cd $rootdir
+cd "$rootdir"
 
 timing_enter porcelain_check
 $MAKE clean
@@ -47,47 +47,47 @@ ocf_pv=ocf-$(date +%Y_%m_%d)
 ocf_tarball=${ocf_pv}.tar
 
 find . -iname "spdk-*.tar* dpdk-*.tar* ipsec-*.tar* isal-*.tar*" -delete
-git archive HEAD^{tree} --prefix=${spdk_pv}/ -o ${spdk_tarball}
+git archive HEAD^{tree} --prefix="${spdk_pv}"/ -o "${spdk_tarball}"
 
 # Build from packaged source
 tmpdir=$(mktemp -d)
 echo "tmpdir=$tmpdir"
-tar -C "$tmpdir" -xf $spdk_tarball
+tar -C "$tmpdir" -xf "$spdk_tarball"
 
 if [ -z "$WITH_DPDK_DIR" ]; then
 	cd dpdk
-	git archive HEAD^{tree} --prefix=dpdk/ -o ../${dpdk_tarball}
+	git archive HEAD^{tree} --prefix=dpdk/ -o ../"${dpdk_tarball}"
 	cd ..
-	tar -C "$tmpdir/${spdk_pv}" -xf $dpdk_tarball
+	tar -C "$tmpdir/${spdk_pv}" -xf "$dpdk_tarball"
 fi
 
 if [ -d "intel-ipsec-mb" ]; then
 	cd intel-ipsec-mb
-	git archive HEAD^{tree} --prefix=intel-ipsec-mb/ -o ../${ipsec_tarball}
+	git archive HEAD^{tree} --prefix=intel-ipsec-mb/ -o ../"${ipsec_tarball}"
 	cd ..
-	tar -C "$tmpdir/${spdk_pv}" -xf $ipsec_tarball
+	tar -C "$tmpdir/${spdk_pv}" -xf "$ipsec_tarball"
 fi
 
 if [ -d "isa-l" ]; then
 	cd isa-l
-	git archive HEAD^{tree} --prefix=isa-l/ -o ../${isal_tarball}
+	git archive HEAD^{tree} --prefix=isa-l/ -o ../"${isal_tarball}"
 	cd ..
-	tar -C "$tmpdir/${spdk_pv}" -xf $isal_tarball
+	tar -C "$tmpdir/${spdk_pv}" -xf "$isal_tarball"
 fi
 
 if [ -d "ocf" ]; then
 	cd ocf
-	git archive HEAD^{tree} --prefix=ocf/ -o ../${ocf_tarball}
+	git archive HEAD^{tree} --prefix=ocf/ -o ../"${ocf_tarball}"
 	cd ..
-	tar -C "$tmpdir/${spdk_pv}" -xf $ocf_tarball
+	tar -C "$tmpdir/${spdk_pv}" -xf "$ocf_tarball"
 fi
 
 (
 	cd "$tmpdir"/spdk-*
 	# use $config_params to get the right dependency options, but disable coverage and ubsan
 	#  explicitly since they are not needed for this build
-	./configure $config_params --disable-debug --enable-werror --disable-coverage --disable-ubsan
-	time $MAKE ${MAKEFLAGS}
+	./configure "$config_params" --disable-debug --enable-werror --disable-coverage --disable-ubsan
+	time $MAKE "${MAKEFLAGS}"
 )
 rm -rf "$tmpdir"
 

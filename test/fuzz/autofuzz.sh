@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
 
 source "$rootdir/test/common/autotest_common.sh"
 
@@ -28,7 +28,7 @@ done
 timing_enter autofuzz
 if [ "$TEST_MODULE" == "nvmf" ]; then
 	allowed_transports=( "${allowed_nvme_transports[@]}" )
-	if [ $TEST_TRANSPORT == "rdma" ]; then
+	if [ "$TEST_TRANSPORT" == "rdma" ]; then
 		config_params="$config_params --with-rdma"
 	fi
 elif [ "$TEST_MODULE" == "vhost" ]; then
@@ -40,7 +40,7 @@ else
 fi
 
 for transport in ${allowed_transports[@]}; do
-	if [ $transport == "$TEST_TRANSPORT" ]; then
+	if [ "$transport" == "$TEST_TRANSPORT" ]; then
 		bad_transport=false
 	fi
 done
@@ -52,19 +52,19 @@ if $bad_transport; then
 fi
 
 timing_enter make
-cd $rootdir
-./configure $config_params
-$MAKE $MAKEFLAGS
+cd "$rootdir"
+./configure "$config_params"
+$MAKE "$MAKEFLAGS"
 timing_exit make
 
 # supply --iso to each test module so that it can run setup.sh.
 timing_enter fuzz_module
 if [ "$TEST_MODULE" == "nvmf" ]; then
-	sudo $testdir/autofuzz_nvmf.sh --iso --transport=$TEST_TRANSPORT --timeout=$TEST_TIMEOUT
+	sudo "$testdir"/autofuzz_nvmf.sh --iso --transport="$TEST_TRANSPORT" --timeout="$TEST_TIMEOUT"
 fi
 
 if [ "$TEST_MODULE" == "vhost" ]; then
-	sudo $testdir/autofuzz_vhost.sh --iso --transport=$TEST_TRANSPORT --timeout=$TEST_TIMEOUT
+	sudo "$testdir"/autofuzz_vhost.sh --iso --transport="$TEST_TRANSPORT" --timeout="$TEST_TIMEOUT"
 fi
 timing_exit fuzz_module
 timing_exit autofuzz

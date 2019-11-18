@@ -9,7 +9,7 @@
 
 VAGRANT_TARGET="$PWD"
 
-DIR="$( cd "$( dirname $0 )" && pwd )"
+DIR="$( cd "$( dirname "$0" )" && pwd )"
 SPDK_DIR="$( cd "${DIR}/../../" && pwd )"
 
 # The command line help
@@ -154,20 +154,20 @@ fi
 
 if [ ${VERBOSE} = 1 ]; then
 	echo
-	echo DIR=${DIR}
-	echo SPDK_DIR=${SPDK_DIR}
-	echo VAGRANT_TARGET=${VAGRANT_TARGET}
+	echo DIR="${DIR}"
+	echo SPDK_DIR="${SPDK_DIR}"
+	echo VAGRANT_TARGET="${VAGRANT_TARGET}"
 	echo HELP=$HELP
 	echo DRY_RUN=$DRY_RUN
-	echo NVME_FILE=$NVME_FILE
+	echo NVME_FILE="$NVME_FILE"
 	echo SPDK_VAGRANT_DISTRO=$SPDK_VAGRANT_DISTRO
-	echo SPDK_VAGRANT_VMCPU=$SPDK_VAGRANT_VMCPU
-	echo SPDK_VAGRANT_VMRAM=$SPDK_VAGRANT_VMRAM
-	echo SPDK_VAGRANT_PROVIDER=$SPDK_VAGRANT_PROVIDER
-	echo SPDK_VAGRANT_HTTP_PROXY=$SPDK_VAGRANT_HTTP_PROXY
-	echo VHOST_HOST_DIR=$VHOST_HOST_DIR
-	echo VHOST_VM_DIR=$VHOST_VM_DIR
-	echo SPDK_QEMU_EMULATOR=$SPDK_QEMU_EMULATOR
+	echo SPDK_VAGRANT_VMCPU="$SPDK_VAGRANT_VMCPU"
+	echo SPDK_VAGRANT_VMRAM="$SPDK_VAGRANT_VMRAM"
+	echo SPDK_VAGRANT_PROVIDER="$SPDK_VAGRANT_PROVIDER"
+	echo SPDK_VAGRANT_HTTP_PROXY="$SPDK_VAGRANT_HTTP_PROXY"
+	echo VHOST_HOST_DIR="$VHOST_HOST_DIR"
+	echo VHOST_VM_DIR="$VHOST_VM_DIR"
+	echo SPDK_QEMU_EMULATOR="$SPDK_QEMU_EMULATOR"
 	echo
 fi
 
@@ -217,7 +217,7 @@ fi
 
 if [ ${DRY_RUN} != 1 ]; then
 	mkdir -vp "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
-	cp ${DIR}/Vagrantfile ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}
+	cp "${DIR}"/Vagrantfile "${VAGRANT_TARGET}"/${SPDK_VAGRANT_DISTRO}-"${SPDK_VAGRANT_PROVIDER}"
 	pushd "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
 	if [ -n "${http_proxy}" ]; then
 		export http_proxy
@@ -235,7 +235,7 @@ http_proxy: ${http_proxy}
 EOF
 		fi
 	fi
-	vagrant up $provider
+	vagrant up "$provider"
 	echo ""
 	echo "  SUCCESS!"
 	echo ""

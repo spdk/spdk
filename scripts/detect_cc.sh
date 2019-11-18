@@ -128,7 +128,7 @@ if [ -n "$CROSS_PREFIX" ]; then
 
 		# Try to fix this automatically. Maybe the user set CROSS_PREFIX but not CC.
 		CC=$CROSS_PREFIX-$CC
-		if hash $CC 2>/dev/null; then
+		if hash "$CC" 2>/dev/null; then
 			expected_prefix=$($CC -dumpmachine)
 
 			if [ "$expected_prefix" = "$CROSS_PREFIX" ]; then
@@ -151,7 +151,7 @@ if [ -n "$CROSS_PREFIX" ]; then
 
 		# Try to fix this automatically. Maybe the user set CROSS_PREFIX but not CXX.
 		CXX=$CROSS_PREFIX-$CXX
-		if hash $CXX 2>/dev/null; then
+		if hash "$CXX" 2>/dev/null; then
 			expected_prefix=$($CXX -dumpmachine)
 
 			if [ "$expected_prefix" = "$CROSS_PREFIX" ]; then
@@ -175,8 +175,8 @@ function set_default() {
 	echo ""
 }
 
-set_default CC $CC
-set_default CXX $CXX
+set_default CC "$CC"
+set_default CXX "$CXX"
 set_default LD $LD
 
 echo "CCAR=$CCAR"

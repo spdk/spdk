@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 set -e
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/vhost/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/vhost/common.sh
 
 MALLOC_BDEV_SIZE=128
 MALLOC_BLOCK_SIZE=512
@@ -40,10 +40,10 @@ vm_wait_for_boot 300 1
 sleep 5
 
 # Run the fio workload on the VM
-vm_scp 0 $testdir/vhost_fio.job 127.0.0.1:/root/vhost_fio.job
+vm_scp 0 "$testdir"/vhost_fio.job 127.0.0.1:/root/vhost_fio.job
 vm_exec 0 "fio /root/vhost_fio.job"
 
-vm_scp 1 $testdir/vhost_fio.job 127.0.0.1:/root/vhost_fio.job
+vm_scp 1 "$testdir"/vhost_fio.job 127.0.0.1:/root/vhost_fio.job
 vm_exec 1 "fio /root/vhost_fio.job"
 
 # Shut the VM down

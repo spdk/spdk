@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/vhost/common.sh
-source $rootdir/test/vhost/hotplug/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/vhost/common.sh
+source "$rootdir"/test/vhost/hotplug/common.sh
 
 if [[ $scsi_hot_remove_test == 1 ]] && [[ $blk_hot_remove_test == 1 ]]; then
     notice "Vhost-scsi and vhost-blk hotremove tests cannot be run together"
@@ -74,9 +74,9 @@ $rpc_py bdev_get_bdevs
 
 if [[ $scsi_hot_remove_test == 0 ]] && [[ $blk_hot_remove_test == 0 ]]; then
     pre_hot_attach_detach_test_case
-    $testdir/scsi_hotattach.sh --fio-bin=$fio_bin &
+    "$testdir"/scsi_hotattach.sh --fio-bin="$fio_bin" &
     first_script=$!
-    $testdir/scsi_hotdetach.sh --fio-bin=$fio_bin &
+    "$testdir"/scsi_hotdetach.sh --fio-bin="$fio_bin" &
     second_script=$!
     wait $first_script
     wait $second_script
@@ -84,9 +84,9 @@ if [[ $scsi_hot_remove_test == 0 ]] && [[ $blk_hot_remove_test == 0 ]]; then
     clear_vhost_config
 fi
 if [[ $scsi_hot_remove_test == 1 ]]; then
-    source $testdir/scsi_hotremove.sh
+    source "$testdir"/scsi_hotremove.sh
 fi
 if [[ $blk_hot_remove_test == 1 ]]; then
-    source $testdir/blk_hotremove.sh
+    source "$testdir"/blk_hotremove.sh
 fi
 post_test_case

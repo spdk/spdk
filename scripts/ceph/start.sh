@@ -4,7 +4,7 @@
 set -x
 set -e
 
-script_dir=$(readlink -f $(dirname $0))
+script_dir=$(readlink -f $(dirname "$0"))
 
 base_dir=/var/tmp/ceph
 mon_ip=$1
@@ -24,7 +24,7 @@ if [ -d $base_dir ]; then
 	rm -rf $base_dir
 fi
 mkdir ${base_dir}
-cp ${script_dir}/ceph.conf $ceph_conf
+cp "${script_dir}"/ceph.conf $ceph_conf
 
 if [ ! -e $image ]; then
         fallocate -l 4G $image
@@ -53,7 +53,7 @@ kpartx ${dev}
 # version of ceph-deploy.
 ceph_version=$(ceph -v | awk '{print $3}')
 ceph_maj=${ceph_version%%.*}
-if [ $ceph_maj -gt 12 ]; then
+if [ "$ceph_maj" -gt 12 ]; then
 	update_config=true
 	rm -f /var/log/ceph/ceph-mon.a.log || true
 	set_min_mon_release="--set-min-mon-release 14"
@@ -86,7 +86,7 @@ rm -f /etc/ceph/ceph.client.admin.keyring
 ceph-authtool --create-keyring --gen-key --name=mon. ${base_dir}/keyring --cap mon 'allow *'
 ceph-authtool --gen-key --name=client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *' ${base_dir}/keyring
 
-monmaptool --create --clobber --add a ${mon_ip}:12046 --print ${base_dir}/monmap $set_min_mon_release
+monmaptool --create --clobber --add a "${mon_ip}":12046 --print ${base_dir}/monmap $set_min_mon_release
 
 sh -c "ulimit -c unlimited && exec ceph-mon --mkfs -c ${ceph_conf} -i a --monmap=${base_dir}/monmap --keyring=${base_dir}/keyring --mon-data=${mon_dir}"
 
@@ -111,7 +111,7 @@ if [ $update_config = true ] ;then
 
 	# add fsid to ceph config file.
         fsid=$(ceph -s | grep id |awk '{print $2}')
-        sed -i 's/perf = true/perf = true\n\tfsid = '$fsid' \n/g' $ceph_conf
+        sed -i 's/perf = true/perf = true\n\tfsid = '"$fsid"' \n/g' $ceph_conf
 
 	# unify the filesystem with the old versions.
 	sed -i 's/perf = true/perf = true\n\tosd objectstore = filestore\n/g' $ceph_conf
@@ -125,8 +125,8 @@ i=0
 mkdir -p ${mnt_dir}
 
 uuid=$(uuidgen)
-ceph -c ${ceph_conf} osd create ${uuid} $i
-ceph-osd -c ${ceph_conf} -i $i --mkfs --mkkey --osd-uuid ${uuid} ${ceph_osd_extra_config}
+ceph -c ${ceph_conf} osd create "${uuid}" $i
+ceph-osd -c ${ceph_conf} -i $i --mkfs --mkkey --osd-uuid "${uuid}" ${ceph_osd_extra_config}
 ceph -c ${ceph_conf} osd crush add osd.${i} 1.0 host=$(hostname) root=default
 ceph -c ${ceph_conf} -i ${mnt_dir}/osd-device-${i}-data/keyring auth add osd.${i} osd "allow *" mon "allow profile osd" mgr "allow *"
 

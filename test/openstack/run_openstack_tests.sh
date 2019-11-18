@@ -1,33 +1,33 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
 rpc_py=$rootdir/scripts/rpc.py
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/nvmf/common.sh
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/nvmf/common.sh
 TEST_TRANSPORT='rdma'
 
 nvmftestinit
 
 function finish_test {
 	$rpc_py bdev_lvol_delete_lvstore -l lvs0
-	kill -9 $rpc_proxy_pid
-	killprocess $nvmfpid
-	rm $testdir/conf.json
+	kill -9 "$rpc_proxy_pid"
+	killprocess "$nvmfpid"
+	rm "$testdir"/conf.json
 }
 
 trap "finish_test" SIGINT SIGTERM EXIT
 
 timing_enter run_spdk_tgt
-$rootdir/scripts/gen_nvme.sh >> $testdir/conf.json
-$rootdir/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 1024 -c $testdir/conf.json &
+"$rootdir"/scripts/gen_nvme.sh >> "$testdir"/conf.json
+"$rootdir"/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 1024 -c "$testdir"/conf.json &
 nvmfpid=$!
 waitforlisten $nvmfpid
 $rpc_py bdev_nvme_set_hotplug -e
 timing_exit run_spdk_tgt
 
 timing_enter run_rpc_proxy
-$rootdir/scripts/rpc_http_proxy.py 127.0.0.1 3333 secret secret &
+"$rootdir"/scripts/rpc_http_proxy.py 127.0.0.1 3333 secret secret &
 rpc_proxy_pid=$!
 timing_exit run_rpc_proxy
 
@@ -64,7 +64,7 @@ tox -e all -- tempest.api.volume.test_volumes_snapshots.VolumesSnapshotTestJSON.
 tox -e all -- tempest.api.volume.test_volumes_snapshots.VolumesSnapshotTestJSON.test_volume_from_snapshot
 tox -e all -- tempest.api.volume.test_volumes_snapshots.VolumesSnapshotTestJSON.test_volume_from_snapshot_no_size
 tox -e all -- tempest.api.volume.test_volumes_snapshots_list.VolumesSnapshotListTestJSON.test_snapshot_list_param_limit
-cd $current_dir
+cd "$current_dir"
 timing_exit tempest_tests
 
 timing_enter test_cleanup

@@ -6,8 +6,8 @@
 
 set -xe
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $(dirname $0)/../..)
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f $(dirname "$0")/../..)
 
 cd "$rootdir"
 
@@ -15,7 +15,7 @@ cd "$rootdir"
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
-	if grep -q '#undef SPDK_CONFIG_ASAN' $rootdir/include/spdk/config.h && hash valgrind; then
+	if grep -q '#undef SPDK_CONFIG_ASAN' "$rootdir"/include/spdk/config.h && hash valgrind; then
 		valgrind='valgrind --leak-check=full --error-exitcode=2'
 	else
 		valgrind=''
@@ -23,7 +23,7 @@ if [ -z ${valgrind+x} ]; then
 fi
 
 # setup local unit test coverage if cov is available
-if hash lcov && grep -q '#define SPDK_CONFIG_COVERAGE 1' $rootdir/include/spdk/config.h; then
+if hash lcov && grep -q '#define SPDK_CONFIG_COVERAGE 1' "$rootdir"/include/spdk/config.h; then
 	cov_avail="yes"
 else
 	cov_avail="no"
@@ -52,128 +52,128 @@ if [ $(uname -m) = "aarch64" ]; then
 	export LD_HWCAP_MASK=1
 fi
 
-$valgrind $testdir/include/spdk/histogram_data.h/histogram_ut
+$valgrind "$testdir"/include/spdk/histogram_data.h/histogram_ut
 
-$valgrind $testdir/lib/bdev/bdev.c/bdev_ut
-$valgrind $testdir/lib/bdev/bdev_raid.c/bdev_raid_ut
-$valgrind $testdir/lib/bdev/bdev_zone.c/bdev_zone_ut
-$valgrind $testdir/lib/bdev/part.c/part_ut
-$valgrind $testdir/lib/bdev/scsi_nvme.c/scsi_nvme_ut
-$valgrind $testdir/lib/bdev/gpt/gpt.c/gpt_ut
-$valgrind $testdir/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut
-$valgrind $testdir/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut
+$valgrind "$testdir"/lib/bdev/bdev.c/bdev_ut
+$valgrind "$testdir"/lib/bdev/bdev_raid.c/bdev_raid_ut
+$valgrind "$testdir"/lib/bdev/bdev_zone.c/bdev_zone_ut
+$valgrind "$testdir"/lib/bdev/part.c/part_ut
+$valgrind "$testdir"/lib/bdev/scsi_nvme.c/scsi_nvme_ut
+$valgrind "$testdir"/lib/bdev/gpt/gpt.c/gpt_ut
+$valgrind "$testdir"/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut
+$valgrind "$testdir"/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut
 
-if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
-	$valgrind $testdir/lib/bdev/crypto.c/crypto_ut
+if grep -q '#define SPDK_CONFIG_CRYPTO 1' "$rootdir"/include/spdk/config.h; then
+	$valgrind "$testdir"/lib/bdev/crypto.c/crypto_ut
 fi
 
-if grep -q '#define SPDK_CONFIG_REDUCE 1' $rootdir/include/spdk/config.h; then
-        $valgrind $testdir/lib/bdev/compress.c/compress_ut
+if grep -q '#define SPDK_CONFIG_REDUCE 1' "$rootdir"/include/spdk/config.h; then
+        $valgrind "$testdir"/lib/bdev/compress.c/compress_ut
 fi
 
-if grep -q '#define SPDK_CONFIG_PMDK 1' $rootdir/include/spdk/config.h; then
-	$valgrind $testdir/lib/bdev/pmem/bdev_pmem_ut
+if grep -q '#define SPDK_CONFIG_PMDK 1' "$rootdir"/include/spdk/config.h; then
+	$valgrind "$testdir"/lib/bdev/pmem/bdev_pmem_ut
 fi
 
-$valgrind $testdir/lib/bdev/mt/bdev.c/bdev_ut
+$valgrind "$testdir"/lib/bdev/mt/bdev.c/bdev_ut
 
-$valgrind $testdir/lib/blob/blob.c/blob_ut
-$valgrind $testdir/lib/blobfs/tree.c/tree_ut
+$valgrind "$testdir"/lib/blob/blob.c/blob_ut
+$valgrind "$testdir"/lib/blobfs/tree.c/tree_ut
 
-$valgrind $testdir/lib/blobfs/blobfs_async_ut/blobfs_async_ut
+$valgrind "$testdir"/lib/blobfs/blobfs_async_ut/blobfs_async_ut
 # blobfs_sync_ut hangs when run under valgrind, so don't use $valgrind
-$testdir/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut
-$valgrind $testdir/lib/blobfs/blobfs_bdev.c/blobfs_bdev_ut
+"$testdir"/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut
+$valgrind "$testdir"/lib/blobfs/blobfs_bdev.c/blobfs_bdev_ut
 
-$valgrind $testdir/lib/event/subsystem.c/subsystem_ut
-$valgrind $testdir/lib/event/app.c/app_ut
+$valgrind "$testdir"/lib/event/subsystem.c/subsystem_ut
+$valgrind "$testdir"/lib/event/app.c/app_ut
 
-$valgrind $testdir/lib/sock/sock.c/sock_ut
+$valgrind "$testdir"/lib/sock/sock.c/sock_ut
 
-$valgrind $testdir/lib/nvme/nvme.c/nvme_ut
-$valgrind $testdir/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut
-$valgrind $testdir/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut
-$valgrind $testdir/lib/nvme/nvme_ctrlr_ocssd_cmd.c/nvme_ctrlr_ocssd_cmd_ut
-$valgrind $testdir/lib/nvme/nvme_ns.c/nvme_ns_ut
-$valgrind $testdir/lib/nvme/nvme_ns_cmd.c/nvme_ns_cmd_ut
-$valgrind $testdir/lib/nvme/nvme_ns_ocssd_cmd.c/nvme_ns_ocssd_cmd_ut
-$valgrind $testdir/lib/nvme/nvme_qpair.c/nvme_qpair_ut
-$valgrind $testdir/lib/nvme/nvme_pcie.c/nvme_pcie_ut
-$valgrind $testdir/lib/nvme/nvme_quirks.c/nvme_quirks_ut
-$valgrind $testdir/lib/nvme/nvme_tcp.c/nvme_tcp_ut
-if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
-	$valgrind $testdir/lib/nvme/nvme_rdma.c/nvme_rdma_ut
+$valgrind "$testdir"/lib/nvme/nvme.c/nvme_ut
+$valgrind "$testdir"/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut
+$valgrind "$testdir"/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut
+$valgrind "$testdir"/lib/nvme/nvme_ctrlr_ocssd_cmd.c/nvme_ctrlr_ocssd_cmd_ut
+$valgrind "$testdir"/lib/nvme/nvme_ns.c/nvme_ns_ut
+$valgrind "$testdir"/lib/nvme/nvme_ns_cmd.c/nvme_ns_cmd_ut
+$valgrind "$testdir"/lib/nvme/nvme_ns_ocssd_cmd.c/nvme_ns_ocssd_cmd_ut
+$valgrind "$testdir"/lib/nvme/nvme_qpair.c/nvme_qpair_ut
+$valgrind "$testdir"/lib/nvme/nvme_pcie.c/nvme_pcie_ut
+$valgrind "$testdir"/lib/nvme/nvme_quirks.c/nvme_quirks_ut
+$valgrind "$testdir"/lib/nvme/nvme_tcp.c/nvme_tcp_ut
+if grep -q '#define SPDK_CONFIG_RDMA 1' "$rootdir"/include/spdk/config.h; then
+	$valgrind "$testdir"/lib/nvme/nvme_rdma.c/nvme_rdma_ut
 fi
 
-$valgrind $testdir/lib/ioat/ioat.c/ioat_ut
+$valgrind "$testdir"/lib/ioat/ioat.c/ioat_ut
 
-$valgrind $testdir/lib/json/json_parse.c/json_parse_ut
-$valgrind $testdir/lib/json/json_util.c/json_util_ut
-$valgrind $testdir/lib/json/json_write.c/json_write_ut
+$valgrind "$testdir"/lib/json/json_parse.c/json_parse_ut
+$valgrind "$testdir"/lib/json/json_util.c/json_util_ut
+$valgrind "$testdir"/lib/json/json_write.c/json_write_ut
 
-$valgrind $testdir/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut
+$valgrind "$testdir"/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut
 
-$valgrind $testdir/lib/log/log.c/log_ut
+$valgrind "$testdir"/lib/log/log.c/log_ut
 
-$valgrind $testdir/lib/nvmf/ctrlr.c/ctrlr_ut
-$valgrind $testdir/lib/nvmf/ctrlr_bdev.c/ctrlr_bdev_ut
-$valgrind $testdir/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut
-if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
-	$valgrind $testdir/lib/nvmf/rdma.c/rdma_ut
+$valgrind "$testdir"/lib/nvmf/ctrlr.c/ctrlr_ut
+$valgrind "$testdir"/lib/nvmf/ctrlr_bdev.c/ctrlr_bdev_ut
+$valgrind "$testdir"/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut
+if grep -q '#define SPDK_CONFIG_RDMA 1' "$rootdir"/include/spdk/config.h; then
+	$valgrind "$testdir"/lib/nvmf/rdma.c/rdma_ut
 fi
-$valgrind $testdir/lib/nvmf/subsystem.c/subsystem_ut
-$valgrind $testdir/lib/nvmf/tcp.c/tcp_ut
+$valgrind "$testdir"/lib/nvmf/subsystem.c/subsystem_ut
+$valgrind "$testdir"/lib/nvmf/tcp.c/tcp_ut
 
-$valgrind $testdir/lib/scsi/dev.c/dev_ut
-$valgrind $testdir/lib/scsi/lun.c/lun_ut
-$valgrind $testdir/lib/scsi/scsi.c/scsi_ut
-$valgrind $testdir/lib/scsi/scsi_bdev.c/scsi_bdev_ut
-$valgrind $testdir/lib/scsi/scsi_pr.c/scsi_pr_ut
+$valgrind "$testdir"/lib/scsi/dev.c/dev_ut
+$valgrind "$testdir"/lib/scsi/lun.c/lun_ut
+$valgrind "$testdir"/lib/scsi/scsi.c/scsi_ut
+$valgrind "$testdir"/lib/scsi/scsi_bdev.c/scsi_bdev_ut
+$valgrind "$testdir"/lib/scsi/scsi_pr.c/scsi_pr_ut
 
-$valgrind $testdir/lib/lvol/lvol.c/lvol_ut
+$valgrind "$testdir"/lib/lvol/lvol.c/lvol_ut
 
-$valgrind $testdir/lib/notify/notify.c/notify_ut
+$valgrind "$testdir"/lib/notify/notify.c/notify_ut
 
-$valgrind $testdir/lib/iscsi/conn.c/conn_ut
-$valgrind $testdir/lib/iscsi/param.c/param_ut
-$valgrind $testdir/lib/iscsi/tgt_node.c/tgt_node_ut $testdir/lib/iscsi/tgt_node.c/tgt_node.conf
-$valgrind $testdir/lib/iscsi/iscsi.c/iscsi_ut
-$valgrind $testdir/lib/iscsi/init_grp.c/init_grp_ut $testdir/lib/iscsi/init_grp.c/init_grp.conf
-$valgrind $testdir/lib/iscsi/portal_grp.c/portal_grp_ut $testdir/lib/iscsi/portal_grp.c/portal_grp.conf
+$valgrind "$testdir"/lib/iscsi/conn.c/conn_ut
+$valgrind "$testdir"/lib/iscsi/param.c/param_ut
+$valgrind "$testdir"/lib/iscsi/tgt_node.c/tgt_node_ut "$testdir"/lib/iscsi/tgt_node.c/tgt_node.conf
+$valgrind "$testdir"/lib/iscsi/iscsi.c/iscsi_ut
+$valgrind "$testdir"/lib/iscsi/init_grp.c/init_grp_ut "$testdir"/lib/iscsi/init_grp.c/init_grp.conf
+$valgrind "$testdir"/lib/iscsi/portal_grp.c/portal_grp_ut "$testdir"/lib/iscsi/portal_grp.c/portal_grp.conf
 
-if grep -q '#define SPDK_CONFIG_REDUCE 1' $rootdir/config.h; then
-	$valgrind $testdir/lib/reduce/reduce.c/reduce_ut
+if grep -q '#define SPDK_CONFIG_REDUCE 1' "$rootdir"/config.h; then
+	$valgrind "$testdir"/lib/reduce/reduce.c/reduce_ut
 fi
 
-$valgrind $testdir/lib/thread/thread.c/thread_ut
+$valgrind "$testdir"/lib/thread/thread.c/thread_ut
 
-$valgrind $testdir/lib/util/base64.c/base64_ut
-$valgrind $testdir/lib/util/bit_array.c/bit_array_ut
-$valgrind $testdir/lib/util/cpuset.c/cpuset_ut
-$valgrind $testdir/lib/util/crc16.c/crc16_ut
-$valgrind $testdir/lib/util/crc32_ieee.c/crc32_ieee_ut
-$valgrind $testdir/lib/util/crc32c.c/crc32c_ut
-$valgrind $testdir/lib/util/string.c/string_ut
-$valgrind $testdir/lib/util/dif.c/dif_ut
+$valgrind "$testdir"/lib/util/base64.c/base64_ut
+$valgrind "$testdir"/lib/util/bit_array.c/bit_array_ut
+$valgrind "$testdir"/lib/util/cpuset.c/cpuset_ut
+$valgrind "$testdir"/lib/util/crc16.c/crc16_ut
+$valgrind "$testdir"/lib/util/crc32_ieee.c/crc32_ieee_ut
+$valgrind "$testdir"/lib/util/crc32c.c/crc32c_ut
+$valgrind "$testdir"/lib/util/string.c/string_ut
+$valgrind "$testdir"/lib/util/dif.c/dif_ut
 
 if [ $(uname -s) = Linux ]; then
-$valgrind $testdir/lib/vhost/vhost.c/vhost_ut
+$valgrind "$testdir"/lib/vhost/vhost.c/vhost_ut
 
-$valgrind $testdir/lib/ftl/ftl_rwb.c/ftl_rwb_ut
-$valgrind $testdir/lib/ftl/ftl_ppa/ftl_ppa_ut
-$valgrind $testdir/lib/ftl/ftl_band.c/ftl_band_ut
-$valgrind $testdir/lib/ftl/ftl_reloc.c/ftl_reloc_ut
-$valgrind $testdir/lib/ftl/ftl_wptr/ftl_wptr_ut
-$valgrind $testdir/lib/ftl/ftl_md/ftl_md_ut
-$valgrind $testdir/lib/ftl/ftl_io.c/ftl_io_ut
+$valgrind "$testdir"/lib/ftl/ftl_rwb.c/ftl_rwb_ut
+$valgrind "$testdir"/lib/ftl/ftl_ppa/ftl_ppa_ut
+$valgrind "$testdir"/lib/ftl/ftl_band.c/ftl_band_ut
+$valgrind "$testdir"/lib/ftl/ftl_reloc.c/ftl_reloc_ut
+$valgrind "$testdir"/lib/ftl/ftl_wptr/ftl_wptr_ut
+$valgrind "$testdir"/lib/ftl/ftl_md/ftl_md_ut
+$valgrind "$testdir"/lib/ftl/ftl_io.c/ftl_io_ut
 fi
 
-if [ -e $testdir/lib/nvmf/fc.c/fc_ut ]; then
-	$valgrind $testdir/lib/nvmf/fc.c/fc_ut
+if [ -e "$testdir"/lib/nvmf/fc.c/fc_ut ]; then
+	$valgrind "$testdir"/lib/nvmf/fc.c/fc_ut
 fi
 
-if [ -e $testdir/lib/nvmf/fc_ls.c/fc_ls_ut ]; then
-	$valgrind $testdir/lib/nvmf/fc_ls.c/fc_ls_ut
+if [ -e "$testdir"/lib/nvmf/fc_ls.c/fc_ls_ut ]; then
+	$valgrind "$testdir"/lib/nvmf/fc_ls.c/fc_ls_ut
 fi
 
 # local unit test coverage
@@ -190,7 +190,7 @@ if [ "$cov_avail" = "yes" ]; then
 	rm -f $UT_COVERAGE/ut_cov_base.info $UT_COVERAGE/ut_cov_test.info
 	genhtml $UT_COVERAGE/ut_cov_unit.info --output-directory $UT_COVERAGE
 	# git -C option not used for compatibility reasons
-	cd $rootdir
+	cd "$rootdir"
 	git clean -f "*.gcda"
 	cd -
 fi
@@ -207,7 +207,7 @@ if [ "$cov_avail" = "yes" ]; then
 else
 	echo "WARN: lcov not installed or SPDK built without coverage!"
 fi
-if grep -q '#undef SPDK_CONFIG_ASAN' $rootdir/include/spdk/config.h && [ "$valgrind" = "" ]; then
+if grep -q '#undef SPDK_CONFIG_ASAN' "$rootdir"/include/spdk/config.h && [ "$valgrind" = "" ]; then
 	echo "WARN: neither valgrind nor ASAN is enabled!"
 fi
 

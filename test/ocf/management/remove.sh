@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 curdir=$(dirname $(readlink -f "$BASH_SOURCE"))
-rootdir=$(readlink -f $curdir/../../..)
-source $rootdir/test/common/autotest_common.sh
+rootdir=$(readlink -f "$curdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
 
@@ -14,9 +14,9 @@ echo "
 [AIO]
   AIO ./aio0 aio0 512
   AIO ./aio1 aio1 512
-" > $curdir/config
+" > "$curdir"/config
 
-$rootdir/app/iscsi_tgt/iscsi_tgt -c $curdir/config &
+"$rootdir"/app/iscsi_tgt/iscsi_tgt -c "$curdir"/config &
 spdk_pid=$!
 
 waitforlisten $spdk_pid
@@ -42,7 +42,7 @@ trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
 
 # Check for ocfWT was deleted permanently
-$rootdir/app/iscsi_tgt/iscsi_tgt -c $curdir/config &
+"$rootdir"/app/iscsi_tgt/iscsi_tgt -c "$curdir"/config &
 spdk_pid=$!
 
 trap 'killprocess $spdk_pid; rm -f aio* $curdir/config ocf_bdevs ocf_bdevs_verify; exit 1' SIGINT SIGTERM EXIT
@@ -56,4 +56,4 @@ waitforlisten $spdk_pid
 trap - SIGINT SIGTERM EXIT
 
 killprocess $spdk_pid
-rm -f aio* $curdir/config ocf_bdevs ocf_bdevs_verify
+rm -f aio* "$curdir"/config ocf_bdevs ocf_bdevs_verify

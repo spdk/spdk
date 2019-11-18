@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/spdkcli/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/spdkcli/common.sh
 
 MATCH_FILE="spdkcli_rbd.test"
 SPDKCLI_BRANCH="/bdevs/rbd"
@@ -30,7 +30,7 @@ $spdkcli_job "\"/bdevs/rbd delete Ceph0 'Ceph0' "\"/bdevs/rbd delete_all' 'Ceph1
 rbd_cleanup
 timing_exit spdkcli_clear_rbd_config
 
-killprocess $spdk_tgt_pid
+killprocess "$spdk_tgt_pid"
 
 timing_exit spdk_cli_rbd
 report_test_completion spdk_cli_rbd

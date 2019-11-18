@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
 
 function usage()
 {
 	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Devstack installation script"
-	echo "Usage: $(basename $1) [OPTIONS]"
+	echo "Usage: $(basename "$1") [OPTIONS]"
 	echo "--branch=BRANCH    Define which version of openstack"
 	echo "                   should be installed. Default is master."
 	echo "-h, --help         Print help and exit"
@@ -21,12 +21,12 @@ while getopts 'h-:' optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
-			help) usage $0 ;;
+			help) usage "$0" ;;
 			branch=*) branch="${OPTARG#*=}" ;;
 		esac
 		;;
-	h) usage $0 ;;
-	*) usage $0 "Invalid argument '$OPTARG'"
+	h) usage "$0" ;;
+	*) usage "$0" "Invalid argument '$OPTARG'"
 	esac
 done
 
@@ -41,7 +41,7 @@ if [[ $branch == "master" ]]; then
 else
 	su -c "git clone https://opendev.org/openstack-dev/devstack -b stable/$branch" -s /bin/bash stack
 fi
-cp $rootdir/scripts/vagrant/local.conf /opt/stack/devstack/local.conf
+cp "$rootdir"/scripts/vagrant/local.conf /opt/stack/devstack/local.conf
 
 cd /opt/stack/devstack
 su -c "./stack.sh" -s /bin/bash stack

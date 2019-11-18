@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/vhost/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/vhost/common.sh
 
 PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
 FIO_PATH="/usr/src/fio"
@@ -14,7 +14,7 @@ function usage()
 {
 	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Script for running vhost initiator tests."
-	echo "Usage: $(basename $1) [-h|--help] [--fiobin=PATH]"
+	echo "Usage: $(basename "$1") [-h|--help] [--fiobin=PATH]"
 	echo "-h, --help            Print help and exit"
 	echo "    --fiopath=PATH    Path to fio directory on host [default=$FIO_PATH]"
 }
@@ -23,23 +23,23 @@ while getopts 'h-:' optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
-			help) usage $0 && exit 0 ;;
+			help) usage "$0" && exit 0 ;;
 			fiopath=*) FIO_PATH="${OPTARG#*=}" ;;
-			*) usage $0 echo "Invalid argument '$OPTARG'" && exit 1 ;;
+			*) usage "$0" echo "Invalid argument '$OPTARG'" && exit 1 ;;
 		esac
 		;;
-		h) usage $0 && exit 0 ;;
-		*) usage $0 "Invalid argument '$optchar'" && exit 1 ;;
+		h) usage "$0" && exit 0 ;;
+		*) usage "$0" "Invalid argument '$optchar'" && exit 1 ;;
 	esac
 done
 
 vhosttestinit
 
-source $testdir/autotest.config
+source "$testdir"/autotest.config
 PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
 RPC_PY="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
-if [ ! -x $FIO_PATH ]; then
+if [ ! -x "$FIO_PATH" ]; then
 	error "Invalid path of fio binary"
 fi
 
@@ -82,10 +82,10 @@ function create_bdev_config()
 	$RPC_PY vhost_create_scsi_controller naa.Malloc1.0
 	$RPC_PY vhost_scsi_controller_add_target naa.Malloc1.0 0 Malloc1
 
-	vbdevs=$(discover_bdevs $rootdir $testdir/bdev.conf)
-	virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< $vbdevs)
+	vbdevs=$(discover_bdevs "$rootdir" "$testdir"/bdev.conf)
+	virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< "$vbdevs")
 	virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
-	 | join(":")' <<< $vbdevs)
+	 | join(":")' <<< "$vbdevs")
 }
 
 timing_enter vhost_run
@@ -97,14 +97,14 @@ create_bdev_config
 timing_exit create_bdev_config
 
 timing_enter run_spdk_fio
-run_spdk_fio $testdir/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
-	--section=job_write --section=job_rw --spdk_conf=$testdir/bdev.conf
+run_spdk_fio "$testdir"/bdev.fio --filename="$virtio_bdevs" --section=job_randwrite --section=job_randrw \
+	--section=job_write --section=job_rw --spdk_conf="$testdir"/bdev.conf
 report_test_completion "vhost_run_spdk_fio"
 timing_exit run_spdk_fio
 
 timing_enter run_spdk_fio_unmap
-run_spdk_fio $testdir/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$testdir/bdev.conf \
-	--spdk_conf=$testdir/bdev.conf
+run_spdk_fio "$testdir"/bdev.fio --filename="$virtio_with_unmap" --spdk_conf="$testdir"/bdev.conf \
+	--spdk_conf="$testdir"/bdev.conf
 timing_exit run_spdk_fio_unmap
 
 $RPC_PY bdev_nvme_detach_controller Nvme0

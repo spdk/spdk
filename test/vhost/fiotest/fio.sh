@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/vhost/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/vhost/common.sh
 
 dry_run=false
 no_shutdown=false
@@ -21,7 +21,7 @@ function usage()
 {
 	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Shortcut script for doing automated test"
-	echo "Usage: $(basename $1) [OPTIONS]"
+	echo "Usage: $(basename "$1") [OPTIONS]"
 	echo
 	echo "-h, --help                print help and exit"
 	echo "    --test-type=TYPE      Perform specified test:"
@@ -50,7 +50,7 @@ while getopts 'xh-:' optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
-			help) usage $0 ;;
+			help) usage "$0" ;;
 			fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
 			fio-job=*) fio_job="${OPTARG#*=}" ;;
 			dry-run) dry_run=true ;;
@@ -58,13 +58,13 @@ while getopts 'xh-:' optchar; do
 			test-type=*) test_type="${OPTARG#*=}" ;;
 			vm=*) vms+=("${OPTARG#*=}") ;;
 			readonly) readonly="--readonly" ;;
-			*) usage $0 "Invalid argument '$OPTARG'" ;;
+			*) usage "$0" "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
-	h) usage $0 ;;
+	h) usage "$0" ;;
 	x) set -x
 		x="-x" ;;
-	*) usage $0 "Invalid argument '$OPTARG'"
+	*) usage "$0" "Invalid argument '$OPTARG'"
 	esac
 done
 shift $(( OPTIND - 1 ))
@@ -85,7 +85,7 @@ if [[ $test_type =~ "spdk_vhost" ]]; then
 	notice "running SPDK"
 	notice ""
 	vhost_run 0
-	vhost_load_config 0 $testdir/conf.json
+	vhost_load_config 0 "$testdir"/conf.json
 	notice ""
 fi
 
@@ -98,7 +98,7 @@ rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 for vm_conf in ${vms[@]}; do
 	IFS=',' read -ra conf <<< "$vm_conf"
-	if [[ x"${conf[0]}" == x"" ]] || ! assert_number ${conf[0]}; then
+	if [[ x"${conf[0]}" == x"" ]] || ! assert_number "${conf[0]}"; then
 		fail "invalid VM configuration syntax $vm_conf"
 	fi
 
@@ -121,7 +121,7 @@ for vm_conf in ${vms[@]}; do
 				if [[ $disk == "RaidBdev2" ]]; then
 					ls_guid=$($rpc_py bdev_lvol_create_lvstore RaidBdev2 lvs_0 -c 4194304)
 					free_mb=$(get_lvs_free_mb "$ls_guid")
-					based_disk=$($rpc_py bdev_lvol_create -u $ls_guid lbd_0 $free_mb)
+					based_disk=$($rpc_py bdev_lvol_create -u "$ls_guid" lbd_0 "$free_mb")
 				else
 					based_disk="$disk"
 				fi
@@ -129,13 +129,13 @@ for vm_conf in ${vms[@]}; do
 				if [[ "$test_type" == "spdk_vhost_blk" ]]; then
 					disk=${disk%%_*}
 					notice "Creating vhost block controller naa.$disk.${conf[0]} with device $disk"
-					$rpc_py vhost_create_blk_controller naa.$disk.${conf[0]} $based_disk
+					$rpc_py vhost_create_blk_controller naa."$disk"."${conf[0]}" "$based_disk"
 				else
 					notice "Creating controller naa.$disk.${conf[0]}"
-					$rpc_py vhost_create_scsi_controller naa.$disk.${conf[0]}
+					$rpc_py vhost_create_scsi_controller naa."$disk"."${conf[0]}"
 
 					notice "Adding device (0) to naa.$disk.${conf[0]}"
-					$rpc_py vhost_scsi_controller_add_target naa.$disk.${conf[0]} 0 $based_disk
+					$rpc_py vhost_scsi_controller_add_target naa."$disk"."${conf[0]}" 0 "$based_disk"
 				fi
 			done
 		done <<< "${conf[2]}"
@@ -151,8 +151,8 @@ for vm_conf in ${vms[@]}; do
 done
 
 # Run everything
-vm_run $used_vms
-vm_wait_for_boot 300 $used_vms
+vm_run "$used_vms"
+vm_wait_for_boot 300 "$used_vms"
 
 if [[ $test_type == "spdk_vhost_scsi" ]]; then
 	for vm_conf in ${vms[@]}; do
@@ -166,12 +166,12 @@ if [[ $test_type == "spdk_vhost_scsi" ]]; then
 					based_disk="$disk"
 				fi
 				notice "Hotdetach test. Trying to remove existing device from a controller naa.$disk.${conf[0]}"
-				$rpc_py vhost_scsi_controller_remove_target naa.$disk.${conf[0]} 0
+				$rpc_py vhost_scsi_controller_remove_target naa."$disk"."${conf[0]}" 0
 
 				sleep 0.1
 
 				notice "Hotattach test. Re-adding device 0 to naa.$disk.${conf[0]}"
-				$rpc_py vhost_scsi_controller_add_target naa.$disk.${conf[0]} 0 $based_disk
+				$rpc_py vhost_scsi_controller_add_target naa."$disk"."${conf[0]}" 0 "$based_disk"
 			done
 		done <<< "${conf[2]}"
 		unset IFS;
@@ -195,17 +195,17 @@ for vm_num in $used_vms; do
 
 	host_name="VM-$vm_num"
 	notice "Setting up hostname: $host_name"
-	vm_exec $vm_num "hostname $host_name"
-	vm_start_fio_server $fio_bin $readonly $vm_num
+	vm_exec "$vm_num" "hostname $host_name"
+	vm_start_fio_server "$fio_bin" $readonly "$vm_num"
 
 	if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
-		vm_check_scsi_location $vm_num
+		vm_check_scsi_location "$vm_num"
 		#vm_reset_scsi_devices $vm_num $SCSI_DISK
 	elif [[ "$test_type" == "spdk_vhost_blk" ]]; then
-		vm_check_blk_location $vm_num
+		vm_check_blk_location "$vm_num"
 	fi
 
-	fio_disks+=" --vm=${vm_num}$(printf ':/dev/%s' $SCSI_DISK)"
+	fio_disks+=" --vm=${vm_num}$(printf ':/dev/%s' "$SCSI_DISK")"
 done
 
 if $dry_run; then
@@ -215,11 +215,11 @@ if $dry_run; then
 	exit 0
 fi
 
-run_fio $fio_bin --job-file="$fio_job" --out="$VHOST_DIR/fio_results" $fio_disks
+run_fio "$fio_bin" --job-file="$fio_job" --out="$VHOST_DIR/fio_results" "$fio_disks"
 
 if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
 	for vm_num in $used_vms; do
-	vm_reset_scsi_devices $vm_num $SCSI_DISK
+	vm_reset_scsi_devices "$vm_num" "$SCSI_DISK"
 	done
 fi
 
@@ -240,10 +240,10 @@ if ! $no_shutdown; then
 					disk=${disk%%_*}
 					notice "Removing all vhost devices from controller naa.$disk.${conf[0]}"
 					if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
-						$rpc_py vhost_scsi_controller_remove_target naa.$disk.${conf[0]} 0
+						$rpc_py vhost_scsi_controller_remove_target naa."$disk"."${conf[0]}" 0
 					fi
 
-					$rpc_py vhost_delete_controller naa.$disk.${conf[0]}
+					$rpc_py vhost_delete_controller naa."$disk"."${conf[0]}"
 					if [[ $disk == "RaidBdev2" ]]; then
 						notice "Removing lvol bdev and lvol store"
 						$rpc_py bdev_lvol_delete lvs_0/lbd_0

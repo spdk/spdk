@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/spdkcli/common.sh
-source $rootdir/test/iscsi_tgt/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/spdkcli/common.sh
+source "$rootdir"/test/iscsi_tgt/common.sh
 
 MATCH_FILE="spdkcli_iscsi.test"
 SPDKCLI_BRANCH="/iscsi"
@@ -15,10 +15,10 @@ trap 'on_error_exit;' ERR
 timing_enter run_iscsi_tgt
 
 # Running iscsi target with --wait-for-rpc. Implies framework_start_init later
-$rootdir/app/iscsi_tgt/iscsi_tgt -m 0x3 -p 0 -s 4096 --wait-for-rpc &
+"$rootdir"/app/iscsi_tgt/iscsi_tgt -m 0x3 -p 0 -s 4096 --wait-for-rpc &
 iscsi_tgt_pid=$!
 waitforlisten $iscsi_tgt_pid
-$rootdir/scripts/rpc.py framework_start_init
+"$rootdir"/scripts/rpc.py framework_start_init
 
 timing_exit run_iscsi_tgt
 

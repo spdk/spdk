@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/vhost/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/vhost/common.sh
 
 vm_count=1
 vm_memory=2048
@@ -31,7 +31,7 @@ function usage()
 {
 	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Shortcut script for doing automated test"
-	echo "Usage: $(basename $1) [OPTIONS]"
+	echo "Usage: $(basename "$1") [OPTIONS]"
 	echo
 	echo "-h, --help                  Print help and exit"
 	echo "    --fio-bin=PATH          Path to FIO binary on host.;"
@@ -74,13 +74,13 @@ function cleanup_lvol_cfg()
 {
 	notice "Removing lvol bdevs"
 	for lvol_bdev in "${lvol_bdevs[@]}"; do
-		$rpc_py bdev_lvol_delete $lvol_bdev
+		$rpc_py bdev_lvol_delete "$lvol_bdev"
 		notice "lvol bdev $lvol_bdev removed"
 	done
 
 	notice "Removing lvol stores"
 	for lvol_store in "${lvol_stores[@]}"; do
-		$rpc_py bdev_lvol_delete_lvstore -u $lvol_store
+		$rpc_py bdev_lvol_delete_lvstore -u "$lvol_store"
 		notice "lvol store $lvol_store removed"
 	done
 }
@@ -98,7 +98,7 @@ function cleanup_parted_config()
 	local disks
 	disks=$(ls /dev/nvme*n1 | sort --version-sort)
 	for disk in $disks; do
-		parted -s $disk rm 1
+		parted -s "$disk" rm 1
 	done
 }
 
@@ -113,7 +113,7 @@ while getopts 'xh-:' optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
-			help) usage $0 ;;
+			help) usage "$0" ;;
 			fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
 			fio-job=*) fio_job="${OPTARG#*=}" ;;
 			fio-iterations=*) fio_iterations="${OPTARG#*=}" ;;
@@ -133,20 +133,20 @@ while getopts 'xh-:' optchar; do
 			precond-fio-bin=*) precond_fio_bin="${OPTARG#*=}" ;;
 			limit-kernel-vhost=*) kernel_cpus="${OPTARG#*=}" ;;
 			custom-cpu-cfg=*) custom_cpu_cfg="${OPTARG#*=}" ;;
-			*) usage $0 "Invalid argument '$OPTARG'" ;;
+			*) usage "$0" "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
-	h) usage $0 ;;
+	h) usage "$0" ;;
 	x) set -x
 		x="-x" ;;
-	*) usage $0 "Invalid argument '$OPTARG'"
+	*) usage "$0" "Invalid argument '$OPTARG'"
 	esac
 done
 
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 if [[ -n $custom_cpu_cfg ]]; then
-	source $custom_cpu_cfg
+	source "$custom_cpu_cfg"
 fi
 
 if [[ -z $fio_job ]]; then
@@ -193,8 +193,8 @@ notice "Nvme split list: ${splits[*]}"
 if [[ $run_precondition == true ]]; then
 	# Using the same precondition routine possible for lvols thanks
 	# to --clear-method option. Lvols should not UNMAP on creation.
-    $rootdir/scripts/gen_nvme.sh > $rootdir/nvme.cfg
-    mapfile -t nvmes < <(cat $rootdir/nvme.cfg | grep -oP "Nvme\d+")
+    "$rootdir"/scripts/gen_nvme.sh > "$rootdir"/nvme.cfg
+    mapfile -t nvmes < <(cat "$rootdir"/nvme.cfg | grep -oP "Nvme\d+")
     fio_filename=$(printf ":%sn1" "${nvmes[@]}")
     fio_filename=${fio_filename:1}
     $precond_fio_bin --name="precondition" \
@@ -231,9 +231,9 @@ if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 
 	# Create block backstores for vhost kernel process
 	for p in $partitions; do
-		backstore_name=$(basename $p)
+		backstore_name=$(basename "$p")
 		backstores+=("$backstore_name")
-		targetcli backstores/block create $backstore_name $p
+		targetcli backstores/block create "$backstore_name" "$p"
 	done
 
 	# Create kernel vhost controllers and add LUNs
@@ -242,8 +242,8 @@ if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 		# using block backstore number
 		x=$(printf %03d $i)
 		wwpn="${wwpn_prefix}${x}"
-		targetcli vhost/ create $wwpn
-		targetcli vhost/$wwpn/tpg1/luns create /backstores/block/${backstores[$i]}
+		targetcli vhost/ create "$wwpn"
+		targetcli vhost/"$wwpn"/tpg1/luns create /backstores/block/"${backstores[$i]}"
 	done
 else
 	# Run vhost process and prepare split vbdevs or lvol bdevs
@@ -271,7 +271,7 @@ else
 			for (( j=0; j<${splits[$i]}; j++)); do
 				free_mb=$(get_lvs_free_mb "$ls_guid")
 				size=$((free_mb / (${splits[$i]}-j) ))
-				lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_$j $size --clear-method none)
+				lb_name=$($rpc_py bdev_lvol_create -u "$ls_guid" lbd_$j $size --clear-method none)
 				lvol_bdevs+=("$lb_name")
 			done
 		done
@@ -288,10 +288,10 @@ for (( i=0; i<vm_count; i++)); do
 
 	if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
 		$rpc_py vhost_create_scsi_controller naa.0.$i
-		$rpc_py vhost_scsi_controller_add_target naa.0.$i 0 ${bdevs[$i]}
+		$rpc_py vhost_scsi_controller_add_target naa.0.$i 0 "${bdevs[$i]}"
 		setup_cmd+=" --disks=0"
 	elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
-		$rpc_py vhost_create_blk_controller naa.$i.$i ${bdevs[$i]}
+		$rpc_py vhost_create_blk_controller naa.$i.$i "${bdevs[$i]}"
 		setup_cmd+=" --disks=$i"
 	elif [[ "$ctrl_type" == "kernel_vhost" ]]; then
 		x=$(printf %03d $i)
@@ -303,8 +303,8 @@ done
 
 # Start VMs
 # Run VMs
-vm_run $used_vms
-vm_wait_for_boot 300 $used_vms
+vm_run "$used_vms"
+vm_wait_for_boot 300 "$used_vms"
 
 if [[ -n "$kernel_cpus" ]]; then
 	mkdir -p /sys/fs/cgroup/cpuset/spdk
@@ -326,43 +326,43 @@ fi
 fio_disks=""
 for vm_num in $used_vms; do
 	host_name="VM-$vm_num"
-	vm_exec $vm_num "hostname $host_name"
-	vm_start_fio_server $fio_bin $vm_num
+	vm_exec "$vm_num" "hostname $host_name"
+	vm_start_fio_server "$fio_bin" "$vm_num"
 
 	if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
-		vm_check_scsi_location $vm_num
+		vm_check_scsi_location "$vm_num"
 	elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
-		vm_check_blk_location $vm_num
+		vm_check_blk_location "$vm_num"
 	elif [[ "$ctrl_type" == "kernel_vhost" ]]; then
-		vm_check_scsi_location $vm_num
+		vm_check_scsi_location "$vm_num"
 	fi
 
 	if [[ -n "$vm_throttle" ]]; then
-		block=$(printf '%s' $SCSI_DISK)
+		block=$(printf '%s' "$SCSI_DISK")
 		major_minor=$(vm_exec "$vm_num" "cat /sys/block/$block/dev")
 		vm_exec "$vm_num" "echo \"$major_minor $vm_throttle\" > /sys/fs/cgroup/blkio/blkio.throttle.read_iops_device"
 		vm_exec "$vm_num" "echo \"$major_minor $vm_throttle\" > /sys/fs/cgroup/blkio/blkio.throttle.write_iops_device"
 	fi
 
-	fio_disks+=" --vm=${vm_num}$(printf ':/dev/%s' $SCSI_DISK)"
+	fio_disks+=" --vm=${vm_num}$(printf ':/dev/%s' "$SCSI_DISK")"
 done
 
 # Run FIO traffic
-fio_job_fname=$(basename $fio_job)
+fio_job_fname=$(basename "$fio_job")
 fio_log_fname="${fio_job_fname%%.*}.log"
-for i in $(seq 1 $fio_iterations); do
+for i in $(seq 1 "$fio_iterations"); do
 	echo "Running FIO iteration $i"
-	run_fio $fio_bin --job-file="$fio_job" --out="$VHOST_DIR/fio_results" --json $fio_disks &
+	run_fio "$fio_bin" --job-file="$fio_job" --out="$VHOST_DIR/fio_results" --json "$fio_disks" &
 	fio_pid=$!
 
 	if $host_sar_enable || $vm_sar_enable; then
 		pids=""
-		mkdir -p $VHOST_DIR/fio_results/sar_stats
-		sleep $sar_delay
+		mkdir -p "$VHOST_DIR"/fio_results/sar_stats
+		sleep "$sar_delay"
 	fi
 
 	if $host_sar_enable; then
-		sar -P ALL $sar_interval $sar_count > "$VHOST_DIR/fio_results/sar_stats/sar_stats_host.txt" &
+		sar -P ALL "$sar_interval" "$sar_count" > "$VHOST_DIR/fio_results/sar_stats/sar_stats_host.txt" &
 		pids+=" $!"
 	fi
 
@@ -374,7 +374,7 @@ for i in $(seq 1 $fio_iterations); do
 	fi
 
 	for j in $pids; do
-			wait $j
+			wait "$j"
 	done
 
 	if $vm_sar_enable; then
@@ -385,7 +385,7 @@ for i in $(seq 1 $fio_iterations); do
 
 
 	wait $fio_pid
-	mv $VHOST_DIR/fio_results/$fio_log_fname $VHOST_DIR/fio_results/$fio_log_fname.$i
+	mv "$VHOST_DIR"/fio_results/"$fio_log_fname" "$VHOST_DIR"/fio_results/"$fio_log_fname"."$i"
 	sleep 1
 done
 

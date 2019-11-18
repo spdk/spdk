@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
-source $rootdir/test/common/autotest_common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
+source "$rootdir"/test/common/autotest_common.sh
 
 total_size=256
 block_size=512
@@ -14,7 +14,7 @@ rpc_py="$rootdir/scripts/rpc.py "
 function usage() {
     [[ -n $2 ]] && ( echo "$2"; echo ""; )
     echo "Shortcut script for doing automated lvol tests"
-    echo "Usage: $(basename $1) [OPTIONS]"
+    echo "Usage: $(basename "$1") [OPTIONS]"
     echo
     echo "-h, --help                print help and exit"
     echo "    --total-size          Size of malloc bdev in MB (int > 0)"
@@ -92,17 +92,17 @@ while getopts 'xh-:' optchar; do
     case "$optchar" in
         -)
         case "$OPTARG" in
-            help) usage $0 && exit 0;;
+            help) usage "$0" && exit 0;;
             total-size=*) total_size="${OPTARG#*=}" ;;
             block-size=*) block_size="${OPTARG#*=}" ;;
             test-cases=*) test_cases="${OPTARG#*=}" ;;
-            *) usage $0 "Invalid argument '$OPTARG'" && exit 1 ;;
+            *) usage "$0" "Invalid argument '$OPTARG'" && exit 1 ;;
         esac
         ;;
-    h) usage $0 && exit 0 ;;
+    h) usage "$0" && exit 0 ;;
     x) set -x
         x="-x" ;;
-    *) usage $0 "Invalid argument '$OPTARG'" && exit 1 ;;
+    *) usage "$0" "Invalid argument '$OPTARG'" && exit 1 ;;
     esac
 done
 shift $(( OPTIND - 1 ))
@@ -111,9 +111,9 @@ shift $(( OPTIND - 1 ))
 function vhost_start()
 {
     modprobe nbd
-    $rootdir/app/vhost/vhost &
+    "$rootdir"/app/vhost/vhost &
     vhost_pid=$!
-    echo $vhost_pid > $testdir/vhost.pid
+    echo $vhost_pid > "$testdir"/vhost.pid
     waitforlisten $vhost_pid
 }
 
@@ -121,18 +121,18 @@ function vhost_start()
 function vhost_kill()
 {
     ### Kill with SIGKILL param
-    if pkill -F $testdir/vhost.pid; then
+    if pkill -F "$testdir"/vhost.pid; then
         sleep 1
     fi
-    rm $testdir/vhost.pid || true
+    rm "$testdir"/vhost.pid || true
 }
 
 trap 'vhost_kill; rm -f $testdir/aio_bdev_0 $testdir/aio_bdev_1; exit 1' SIGINT SIGTERM EXIT
 
-truncate -s 400M $testdir/aio_bdev_0 $testdir/aio_bdev_1
+truncate -s 400M "$testdir"/aio_bdev_0 "$testdir"/aio_bdev_1
 vhost_start
-$testdir/lvol_test.py $rpc_py $total_size $block_size $testdir $rootdir/app/vhost "${test_cases[@]}"
+"$testdir"/lvol_test.py "$rpc_py" "$total_size" "$block_size" "$testdir" "$rootdir"/app/vhost "${test_cases[@]}"
 
 vhost_kill 0
-rm -rf $testdir/aio_bdev_0 $testdir/aio_bdev_1
+rm -rf "$testdir"/aio_bdev_0 "$testdir"/aio_bdev_1
 trap - SIGINT SIGTERM EXIT

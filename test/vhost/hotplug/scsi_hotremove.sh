@@ -20,16 +20,16 @@ function prepare_fio_cmd_tc1() {
 
     run_fio="$fio_bin --eta=never "
     for vm_num in $1; do
-        cp $fio_job $tmp_detach_job
-        vm_check_scsi_location $vm_num
+        cp "$fio_job" "$tmp_detach_job"
+        vm_check_scsi_location "$vm_num"
         for disk in $SCSI_DISK; do
-            echo "[nvme-host$disk]" >> $tmp_detach_job
-            echo "filename=/dev/$disk" >> $tmp_detach_job
-            echo "size=100%" >> $tmp_detach_job
+            echo "[nvme-host$disk]" >> "$tmp_detach_job"
+            echo "filename=/dev/$disk" >> "$tmp_detach_job"
+            echo "size=100%" >> "$tmp_detach_job"
         done
-        vm_scp "$vm_num" $tmp_detach_job 127.0.0.1:/root/default_integrity_2discs.job
-        run_fio+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/default_integrity_2discs.job "
-        rm $tmp_detach_job
+        vm_scp "$vm_num" "$tmp_detach_job" 127.0.0.1:/root/default_integrity_2discs.job
+        run_fio+="--client=127.0.0.1,$(vm_fio_socket "$vm_num") --remote-config /root/default_integrity_2discs.job "
+        rm "$tmp_detach_job"
     done
 }
 

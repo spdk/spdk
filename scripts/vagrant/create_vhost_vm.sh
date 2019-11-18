@@ -8,7 +8,7 @@ set -e
 
 VAGRANT_TARGET="$PWD"
 
-DIR="$( cd "$( dirname $0 )" && pwd )"
+DIR="$( cd "$( dirname "$0" )" && pwd )"
 SPDK_DIR="$( cd "${DIR}/../../" && pwd )"
 USE_SSH_DIR=""
 MOVE_TO_DEFAULT_DIR=false
@@ -87,13 +87,13 @@ case "$SPDK_VAGRANT_DISTRO" in
 esac
 
 mkdir -vp "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}"
-cp ${DIR}/Vagrantfile_vhost_vm ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/Vagrantfile
+cp "${DIR}"/Vagrantfile_vhost_vm "${VAGRANT_TARGET}"/"${SPDK_VAGRANT_DISTRO}"/Vagrantfile
 
 # Copy or generate SSH keys to the VM
 mkdir -vp "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/ssh_keys"
 
 if [[ -n $USE_SSH_DIR ]]; then
-	cp ${USE_SSH_DIR}/spdk_vhost_id_rsa* "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/ssh_keys"
+	cp "${USE_SSH_DIR}"/spdk_vhost_id_rsa* "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/ssh_keys"
 else
 	ssh-keygen -f "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/ssh_keys/spdk_vhost_id_rsa" -N "" -q
 fi
@@ -115,13 +115,13 @@ vagrant halt
 VBoxManage setproperty machinefolder default
 
 # Convert Vbox .vmkd image to qcow2
-vmdk_img=$(find ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO} -name "*.vmdk")
-qemu-img convert -f vmdk -O qcow2 ${vmdk_img} ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/vhost_vm_image.qcow2
+vmdk_img=$(find "${VAGRANT_TARGET}"/"${SPDK_VAGRANT_DISTRO}" -name "*.vmdk")
+qemu-img convert -f vmdk -O qcow2 "${vmdk_img}" "${VAGRANT_TARGET}"/"${SPDK_VAGRANT_DISTRO}"/vhost_vm_image.qcow2
 
 if $MOVE_TO_DEFAULT_DIR; then
 	sudo mkdir -p /home/sys_sgsw
-	sudo mv -f ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/vhost_vm_image.qcow2 /home/sys_sgsw/vhost_vm_image.qcow2
-	sudo mv -f ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/ssh_keys/spdk_vhost_id_rsa* ~/.ssh/
+	sudo mv -f "${VAGRANT_TARGET}"/"${SPDK_VAGRANT_DISTRO}"/vhost_vm_image.qcow2 /home/sys_sgsw/vhost_vm_image.qcow2
+	sudo mv -f "${VAGRANT_TARGET}"/"${SPDK_VAGRANT_DISTRO}"/ssh_keys/spdk_vhost_id_rsa* ~/.ssh/
 fi
 
 echo ""

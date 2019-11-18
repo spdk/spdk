@@ -2,7 +2,7 @@
 
 set -e
 
-rootdir=$(readlink -f $(dirname $0))/..
+rootdir=$(readlink -f $(dirname "$0"))/..
 source "$rootdir/scripts/common.sh"
 
 function create_classic_config()
@@ -28,7 +28,7 @@ function create_json_config()
 		echo "\"traddr\": \"${bdfs[i]}\""
 		echo '},'
 		echo '"method": "bdev_nvme_attach_controller"'
-		if [ -z ${bdfs[i+1]} ]; then
+		if [ -z "${bdfs[i+1]}" ]; then
 			echo '}'
 		else
 			echo '},'
@@ -43,7 +43,7 @@ bdfs=()
 # then most likely PCI_WHITELIST option was used for setup.sh
 # and we do not want to use that disk.
 for bdf in $(iter_pci_class_code 01 08 02); do
-	driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent | awk -F"=" '{print $2}')
+	driver=$(grep DRIVER /sys/bus/pci/devices/"$bdf"/uevent | awk -F"=" '{print $2}')
 	if [ "$driver" != "nvme" ]; then
 		bdfs+=("$bdf")
 	fi

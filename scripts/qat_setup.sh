@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-rootdir=$(readlink -f $(dirname $0))/..
+rootdir=$(readlink -f $(dirname "$0"))/..
 igb_driverdir=$rootdir/dpdk/build/build/kernel/igb_uio/
 allowed_drivers=("igb_uio" "uio_pci_generic")
 
@@ -23,7 +23,7 @@ if [ -n "$1" ]; then
 fi
 
 for driver in ${allowed_drivers[@]}; do
-	if [ $driver == $driver_to_bind ]; then
+	if [ "$driver" == "$driver_to_bind" ]; then
 		bad_driver=false
 	fi
 done
@@ -41,8 +41,8 @@ fi
 
 # configure virtual functions for the QAT cards.
 for qat_bdf in ${qat_pci_bdfs[@]}; do
-	echo "$num_vfs" > /sys/bus/pci/drivers/c6xx/$qat_bdf/sriov_numvfs
-	num_vfs=$(cat /sys/bus/pci/drivers/c6xx/$qat_bdf/sriov_numvfs)
+	echo "$num_vfs" > /sys/bus/pci/drivers/c6xx/"$qat_bdf"/sriov_numvfs
+	num_vfs=$(cat /sys/bus/pci/drivers/c6xx/"$qat_bdf"/sriov_numvfs)
 	echo "$qat_bdf set to $num_vfs VFs"
 done
 
@@ -56,19 +56,19 @@ fi
 
 # Unbind old driver if necessary.
 for vf in ${qat_vf_bdfs[@]}; do
-	old_driver=$(basename $(readlink -f /sys/bus/pci/devices/${vf}/driver))
-	if [ $old_driver != "driver" ]; then
+	old_driver=$(basename $(readlink -f /sys/bus/pci/devices/"${vf}"/driver))
+	if [ "$old_driver" != "driver" ]; then
 		echo "unbinding driver $old_driver from qat VF at BDF $vf"
-		echo -n $vf > /sys/bus/pci/drivers/$old_driver/unbind
+		echo -n "$vf" > /sys/bus/pci/drivers/"$old_driver"/unbind
 	fi
 done
 
 modprobe uio
 
 # Insert the dpdk uio kernel module.
-if [ $driver_to_bind == "igb_uio" ]; then
+if [ "$driver_to_bind" == "igb_uio" ]; then
 	if ! lsmod | grep -q igb_uio; then
-		if ! insmod $igb_driverdir/igb_uio.ko; then
+		if ! insmod "$igb_driverdir"/igb_uio.ko; then
 			echo "Unable to insert the igb_uio kernel module. Aborting."
 			exit 1
 		fi
@@ -80,9 +80,9 @@ else
 	exit 1
 fi
 
-echo -n "8086 37c9" > /sys/bus/pci/drivers/$driver_to_bind/new_id
+echo -n "8086 37c9" > /sys/bus/pci/drivers/"$driver_to_bind"/new_id
 for vf in ${qat_vf_bdfs[@]}; do
-	if ! ls -l /sys/bus/pci/devices/$vf/driver | grep -q $driver_to_bind; then
+	if ! ls -l /sys/bus/pci/devices/"$vf"/driver | grep -q "$driver_to_bind"; then
 		echo "unable to bind the driver to the device at bdf $vf"
 		if [ "$driver_to_bind" == "uio_pci_generic" ]; then
 			echo "Your kernel's uio_pci_generic module does not support binding to virtual functions."

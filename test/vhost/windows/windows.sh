@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/vhost/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/vhost/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 ctrl_type="spdk_vhost_scsi"
@@ -15,7 +15,7 @@ function usage()
 {
 	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Windows Server automated test"
-	echo "Usage: $(basename $1) [OPTIONS]"
+	echo "Usage: $(basename "$1") [OPTIONS]"
 	echo "--vm-ssh-pass=PASSWORD    Text password for the VM"
 	echo "--vm-image=PATH           Path to qcow2 image of Windows VM"
 	echo "--ctrl-type=TYPE          Controller type to use for test:"
@@ -31,16 +31,16 @@ while getopts 'xh-:' optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
-			help) usage $0 ;;
+			help) usage "$0" ;;
 			vm-ssh-pass=*) ssh_pass="${OPTARG#*=}" ;;
 			vm-image=*) vm_image="${OPTARG#*=}" ;;
 			ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
 		esac
 		;;
-	h) usage $0 ;;
+	h) usage "$0" ;;
 	x) set -x
 		x="-x" ;;
-	*) usage $0 "Invalid argument '$OPTARG'"
+	*) usage "$0" "Invalid argument '$OPTARG'"
 	esac
 done
 
@@ -55,14 +55,14 @@ done
 # due to OpenSSH being available directly from Windows Store.
 function vm_sshpass()
 {
-	vm_num_is_valid $1 || return 1
+	vm_num_is_valid "$1" || return 1
 
 	local ssh_cmd
 	ssh_cmd="sshpass -p $2 ssh \
 		-o UserKnownHostsFile=/dev/null \
 		-o StrictHostKeyChecking=no \
 		-o User=root \
-		-p $(vm_ssh_socket $1) $VM_SSH_OPTIONS 127.0.0.1"
+		-p $(vm_ssh_socket "$1") $VM_SSH_OPTIONS 127.0.0.1"
 
 	shift 2
 	$ssh_cmd "$@"
@@ -95,8 +95,8 @@ notice "..."
 # is available
 # TODO: use a param for blocksize for AIO and Malloc bdevs
 aio_file="$testdir/aio_disk"
-dd if=/dev/zero of=$aio_file bs=1M count=512
-$rpc_py bdev_aio_create $aio_file Aio0 512
+dd if=/dev/zero of="$aio_file" bs=1M count=512
+$rpc_py bdev_aio_create "$aio_file" Aio0 512
 $rpc_py bdev_malloc_create -b Malloc0 256 512
 $rpc_py bdev_get_bdevs
 
@@ -135,4 +135,4 @@ vm_kill $vm_num
 notice "Shutting down SPDK vhost app..."
 vhost_kill 0
 
-rm -f $aio_file
+rm -f "$aio_file"

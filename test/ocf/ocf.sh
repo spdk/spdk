@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
 
-source $rootdir/test/common/autotest_common.sh
+source "$rootdir"/test/common/autotest_common.sh
 
 function suite()
 {

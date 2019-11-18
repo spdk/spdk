@@ -6,7 +6,7 @@ NVMF_TRANSPORT_OPTS=""
 
 function build_nvmf_app_args()
 {
-	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
+	if [ "$SPDK_RUN_NON_ROOT" -eq 1 ]; then
 		echo "sudo -u $(logname) ./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"
 	else
 		echo "./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"
@@ -47,7 +47,7 @@ function detect_soft_roce_nics()
 			if [[ -d /sys/class/net/${nic}/bridge ]]; then
 				continue
 			fi
-			rxe_cfg add $nic || true
+			rxe_cfg add "$nic" || true
 		done
 	fi
 }
@@ -111,28 +111,28 @@ function allocate_nic_ips()
 {
 	(( count=NVMF_IP_LEAST_ADDR ))
 	for nic_name in $(get_rdma_if_list); do
-		ip="$(get_ip_address $nic_name)"
-		if [ -z $ip ]; then
-			ip addr add $NVMF_IP_PREFIX.$count/24 dev $nic_name
-			ip link set $nic_name up
+		ip="$(get_ip_address "$nic_name")"
+		if [ -z "$ip" ]; then
+			ip addr add $NVMF_IP_PREFIX.$count/24 dev "$nic_name"
+			ip link set "$nic_name" up
 			(( count=count+1 ))
 		fi
 		# dump configuration for debug log
-		ip addr show $nic_name
+		ip addr show "$nic_name"
 	done
 }
 
 function get_available_rdma_ips()
 {
 	for nic_name in $(get_rdma_if_list); do
-		get_ip_address $nic_name
+		get_ip_address "$nic_name"
 	done
 }
 
 function get_rdma_if_list()
 {
 	for nic_type in $(ls /sys/class/infiniband); do
-		for nic_name in $(ls /sys/class/infiniband/${nic_type}/device/net); do
+		for nic_name in $(ls /sys/class/infiniband/"${nic_type}"/device/net); do
 			echo "$nic_name"
 		done
 	done
@@ -141,7 +141,7 @@ function get_rdma_if_list()
 function get_ip_address()
 {
 	interface=$1
-	ip -o -4 addr show $interface | awk '{print $4}' | cut -d"/" -f1
+	ip -o -4 addr show "$interface" | awk '{print $4}' | cut -d"/" -f1
 }
 
 function nvmfcleanup()
@@ -149,7 +149,7 @@ function nvmfcleanup()
 	sync
 	set +e
 	for i in {1..20}; do
-		modprobe -v -r nvme-$TEST_TRANSPORT
+		modprobe -v -r nvme-"$TEST_TRANSPORT"
 		if modprobe -v -r nvme-fabrics; then
 			set -e
 			return
@@ -162,18 +162,18 @@ function nvmfcleanup()
 	# one more time and let it fail.
 	# Allow the transport module to fail for now. See Jim's comment
 	# about the nvme-tcp module below.
-	modprobe -v -r nvme-$TEST_TRANSPORT || true
+	modprobe -v -r nvme-"$TEST_TRANSPORT" || true
 	modprobe -v -r nvme-fabrics
 }
 
 function nvmftestinit()
 {
-	if [ -z $TEST_TRANSPORT ]; then
+	if [ -z "$TEST_TRANSPORT" ]; then
 		echo "transport not specified - use --transport= to specify"
 		return 1
 	fi
 	if [ "$TEST_MODE" == "iso" ]; then
-		$rootdir/scripts/setup.sh
+		"$rootdir"/scripts/setup.sh
 		if [ "$TEST_TRANSPORT" == "rdma" ]; then
 			rdma_device_init
 		fi
@@ -184,7 +184,7 @@ function nvmftestinit()
 		RDMA_IP_LIST=$(get_available_rdma_ips)
 		NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
 		NVMF_SECOND_TARGET_IP=$(echo "$RDMA_IP_LIST" | tail -n +2 | head -n 1)
-		if [ -z $NVMF_FIRST_TARGET_IP ]; then
+		if [ -z "$NVMF_FIRST_TARGET_IP" ]; then
 			echo "no NIC for nvmf test"
 			exit 0
 		fi
@@ -198,13 +198,13 @@ function nvmftestinit()
 	# maybe later we will enforce modprobe to succeed once we have systems in the test pool
 	#  with nvme-tcp kernel support - but until then let this pass so we can still run the
 	#  host/perf test with the tcp transport
-	modprobe nvme-$TEST_TRANSPORT || true
+	modprobe nvme-"$TEST_TRANSPORT" || true
 }
 
 function nvmfappstart()
 {
 	timing_enter start_nvmf_tgt
-	$NVMF_APP $1 &
+	$NVMF_APP "$1" &
 	nvmfpid=$!
 	trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $nvmfpid
@@ -216,7 +216,7 @@ function nvmftestfini()
 	nvmfcleanup
 	killprocess $nvmfpid
 	if [ "$TEST_MODE" == "iso" ]; then
-		$rootdir/scripts/setup.sh reset
+		"$rootdir"/scripts/setup.sh reset
 		if [ "$TEST_TRANSPORT" == "rdma" ]; then
 			rdma_device_init
 		fi
@@ -235,7 +235,7 @@ function revert_soft_roce()
 	if hash rxe_cfg; then
 		interfaces="$(ip -o link | awk '{print $2}' | cut -d":" -f1)"
 		for interface in $interfaces; do
-			rxe_cfg remove $interface || true
+			rxe_cfg remove "$interface" || true
 		done
 		rxe_cfg stop || true
 	fi
@@ -245,8 +245,8 @@ function check_ip_is_soft_roce()
 {
 	IP=$1
 	if hash rxe_cfg; then
-		dev=$(ip -4 -o addr show | grep $IP | cut -d" " -f2)
-		if [ -z $(rxe_cfg | grep $dev | awk '{print $4}' | grep "rxe") ]; then
+		dev=$(ip -4 -o addr show | grep "$IP" | cut -d" " -f2)
+		if [ -z $(rxe_cfg | grep "$dev" | awk '{print $4}' | grep "rxe") ]; then
 			return 1
 		else
 			return 0
@@ -264,7 +264,7 @@ function nvme_connect()
 	if ! nvme connect $@; then return $?; fi
 
 	for i in $(seq 1 10); do
-		if [ $(nvme list | wc -l) -gt $init_count ]; then
+		if [ $(nvme list | wc -l) -gt "$init_count" ]; then
 			return 0
 		else
 			sleep 1s

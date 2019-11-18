@@ -2,7 +2,7 @@
 
 set -x
 
-testdir=$(readlink -f $(dirname $0))
+testdir=$(readlink -f $(dirname "$0"))
 
 disk_name="vda"
 test_folder_name="readonly_test"
@@ -31,12 +31,12 @@ if [[ ! -b "/dev/${disk_name}1" ]]; then
 	error "Partition not found!"
 fi
 
-if ! mkdir $testdir/$test_folder_name; then
+if ! mkdir "$testdir"/$test_folder_name; then
 	error "Failed to create test folder $test_folder_name"
 fi
 
 echo "INFO: Mounting partition"
-if ! mount /dev/$disk_name"1" $testdir/$test_folder_name; then
+if ! mount /dev/$disk_name"1" "$testdir"/$test_folder_name; then
 	error "Failed to mount partition $disk_name""1"
 fi
 
@@ -55,8 +55,8 @@ else
 fi
 
 echo "INFO: Copying file from readonly disk"
-cp $test_folder_name/$test_file_name $testdir
-if ! rm $testdir/$test_file_name; then
+cp $test_folder_name/$test_file_name "$testdir"
+if ! rm "$testdir"/$test_file_name; then
 	error "Copied file from a readonly disk was not found!"
 fi
 

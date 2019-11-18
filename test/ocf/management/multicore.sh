@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
 curdir=$(dirname $(readlink -f "$BASH_SOURCE"))
-rootdir=$(readlink -f $curdir/../../..)
-source $rootdir/test/common/autotest_common.sh
+rootdir=$(readlink -f "$curdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
 
 spdk_pid='?'
 function start_spdk()
 {
-	$rootdir/app/iscsi_tgt/iscsi_tgt &
+	"$rootdir"/app/iscsi_tgt/iscsi_tgt &
 	spdk_pid=$!
 	trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $spdk_pid

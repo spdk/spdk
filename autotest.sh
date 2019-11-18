@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-rootdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $(dirname "$0"))
 
 # In autotest_common.sh all tests are disabled by default.
 # If the configuration of tests is not provided, no tests will be carried out.
@@ -33,9 +33,9 @@ timing_enter autotest
 
 create_test_list
 
-src=$(readlink -f $(dirname $0))
+src=$(readlink -f $(dirname "$0"))
 out=$PWD
-cd $src
+cd "$src"
 
 ./scripts/setup.sh status
 
@@ -56,7 +56,7 @@ if hash lcov; then
 	# Print lcov version to log
 	$LCOV -v
 	# zero out coverage data
-	$LCOV -q -c -i -t "Baseline" -d $src -o cov_base.info
+	$LCOV -q -c -i -t "Baseline" -d "$src" -o cov_base.info
 fi
 
 # Make sure the disks are clean (no leftover partition tables)
@@ -82,8 +82,8 @@ if [ $(uname -s) = Linux ]; then
 	while IFS= read -r -d '' dev
 	do
 		# Send Open Channel 2.0 Geometry opcode "0xe2" - not supported by NVMe device.
-		if nvme admin-passthru $dev --namespace-id=1 --data-len=4096  --opcode=0xe2 --read >/dev/null; then
-			bdf="$(basename $(readlink -e /sys/class/nvme/${dev#/dev/}/device))"
+		if nvme admin-passthru "$dev" --namespace-id=1 --data-len=4096  --opcode=0xe2 --read >/dev/null; then
+			bdf="$(basename $(readlink -e /sys/class/nvme/"${dev#/dev/}"/device))"
 			echo "INFO: blacklisting OCSSD device: $dev ($bdf)"
 			PCI_BLACKLIST+=" $bdf"
 			OCSSD_PCI_DEVICES+=" $bdf"
@@ -127,7 +127,7 @@ rdma_device_init
 timing_exit nvmf_setup
 
 if [[ $SPDK_TEST_CRYPTO -eq 1 || $SPDK_TEST_REDUCE -eq 1 ]]; then
-	if grep -q '#define SPDK_CONFIG_IGB_UIO_DRIVER 1' $rootdir/include/spdk/config.h; then
+	if grep -q '#define SPDK_CONFIG_IGB_UIO_DRIVER 1' "$rootdir"/include/spdk/config.h; then
 		./scripts/qat_setup.sh igb_uio
 	else
 		./scripts/qat_setup.sh
@@ -142,7 +142,7 @@ opal_revert_cleanup
 # Unit Tests
 #####################
 
-if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
+if [ "$SPDK_TEST_UNITTEST" -eq 1 ]; then
 	timing_enter unittest
 	run_test suite ./test/unit/unittest.sh
 	report_test_completion "unittest"
@@ -150,7 +150,7 @@ if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 fi
 
 
-if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
+if [ "$SPDK_RUN_FUNCTIONAL_TEST" -eq 1 ]; then
 	timing_enter lib
 
 	run_test suite test/env/env.sh
@@ -159,22 +159,22 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	run_test suite test/json_config/alias_rpc/alias_rpc.sh
 	run_test suite test/spdkcli/tcp.sh
 
-	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
+	if [ "$SPDK_TEST_BLOCKDEV" -eq 1 ]; then
 		run_test suite test/bdev/blockdev.sh
 		if [[ $RUN_NIGHTLY -eq 1 ]]; then
 			run_test suite test/bdev/bdev_raid.sh
 		fi
 	fi
 
-	if [ $SPDK_TEST_JSON -eq 1 ]; then
+	if [ "$SPDK_TEST_JSON" -eq 1 ]; then
 		run_test suite test/config_converter/test_converter.sh
 	fi
 
-	if [ $SPDK_TEST_EVENT -eq 1 ]; then
+	if [ "$SPDK_TEST_EVENT" -eq 1 ]; then
 		run_test suite test/event/event.sh
 	fi
 
-	if [ $SPDK_TEST_NVME -eq 1 ]; then
+	if [ "$SPDK_TEST_NVME" -eq 1 ]; then
 		run_test suite test/nvme/nvme.sh
 		if [[ $SPDK_TEST_NVME_CLI -eq 1 ]]; then
 			run_test suite test/nvme/spdk_nvme_cli.sh
@@ -185,18 +185,18 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		# Only test hotplug without ASAN enabled. Since if it is
 		# enabled, it catches SEGV earlier than our handler which
 		# breaks the hotplug logic.
-		if [ $SPDK_RUN_ASAN -eq 0 ]; then
+		if [ "$SPDK_RUN_ASAN" -eq 0 ]; then
 			run_test suite test/nvme/hotplug.sh intel
 		fi
 	fi
 
-	if [ $SPDK_TEST_IOAT -eq 1 ]; then
+	if [ "$SPDK_TEST_IOAT" -eq 1 ]; then
 		run_test suite test/ioat/ioat.sh
 	fi
 
 	timing_exit lib
 
-	if [ $SPDK_TEST_ISCSI -eq 1 ]; then
+	if [ "$SPDK_TEST_ISCSI" -eq 1 ]; then
 		run_test suite ./test/iscsi_tgt/iscsi_tgt.sh posix
 		run_test suite ./test/spdkcli/iscsi.sh
 
@@ -204,27 +204,27 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test suite test/spdkcli/raid.sh
 	fi
 
-	if [ $SPDK_TEST_VPP -eq 1 ]; then
+	if [ "$SPDK_TEST_VPP" -eq 1 ]; then
 		run_test suite ./test/iscsi_tgt/iscsi_tgt.sh vpp
 	fi
 
-	if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
+	if [ "$SPDK_TEST_BLOBFS" -eq 1 ]; then
 		run_test suite ./test/blobfs/rocksdb/rocksdb.sh
 		run_test suite ./test/blobstore/blobstore.sh
 		run_test suite ./test/blobfs/blobfs.sh
 	fi
 
-	if [ $SPDK_TEST_NVMF -eq 1 ]; then
-		run_test suite ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
+	if [ "$SPDK_TEST_NVMF" -eq 1 ]; then
+		run_test suite ./test/nvmf/nvmf.sh --transport="$SPDK_TEST_NVMF_TRANSPORT"
 		run_test suite ./test/spdkcli/nvmf.sh
 	fi
 
-	if [ $SPDK_TEST_VHOST -eq 1 ]; then
+	if [ "$SPDK_TEST_VHOST" -eq 1 ]; then
 		run_test suite ./test/vhost/vhost.sh
 		report_test_completion "vhost"
 	fi
 
-	if [ $SPDK_TEST_LVOL -eq 1 ]; then
+	if [ "$SPDK_TEST_LVOL" -eq 1 ]; then
 		timing_enter lvol
 		run_test suite ./test/lvol/lvol.sh --test-cases=all
 		run_test suite ./test/blobstore/blob_io_wait/blob_io_wait.sh
@@ -232,7 +232,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		timing_exit lvol
 	fi
 
-	if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
+	if [ "$SPDK_TEST_VHOST_INIT" -eq 1 ]; then
 		timing_enter vhost_initiator
 		run_test suite ./test/vhost/initiator/blockdev.sh
 		run_test suite ./test/spdkcli/virtio.sh
@@ -242,32 +242,32 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		timing_exit vhost_initiator
 	fi
 
-	if [ $SPDK_TEST_PMDK -eq 1 ]; then
+	if [ "$SPDK_TEST_PMDK" -eq 1 ]; then
 		run_test suite ./test/pmem/pmem.sh -x
 		run_test suite ./test/spdkcli/pmem.sh
 	fi
 
-	if [ $SPDK_TEST_RBD -eq 1 ]; then
+	if [ "$SPDK_TEST_RBD" -eq 1 ]; then
 		run_test suite ./test/spdkcli/rbd.sh
 	fi
 
-	if [ $SPDK_TEST_OCF -eq 1 ]; then
+	if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 		run_test suite ./test/ocf/ocf.sh
 	fi
 
-	if [ $SPDK_TEST_FTL -eq 1 ]; then
+	if [ "$SPDK_TEST_FTL" -eq 1 ]; then
 		run_test suite ./test/ftl/ftl.sh
 	fi
 
-	if [ $SPDK_TEST_VMD -eq 1 ]; then
+	if [ "$SPDK_TEST_VMD" -eq 1 ]; then
 		run_test suite ./test/vmd/vmd.sh
 	fi
 
-        if [ $SPDK_TEST_REDUCE -eq 1 ]; then
+        if [ "$SPDK_TEST_REDUCE" -eq 1 ]; then
                 run_test suite ./test/compress/compress.sh
         fi
 
-	if [ $SPDK_TEST_OPAL -eq 1 ]; then
+	if [ "$SPDK_TEST_OPAL" -eq 1 ]; then
 		run_test suite ./test/nvme/nvme_opal.sh
 	fi
 fi
@@ -277,7 +277,7 @@ autotest_cleanup
 timing_exit cleanup
 
 timing_exit autotest
-chmod a+r $output_dir/timing.txt
+chmod a+r "$output_dir"/timing.txt
 
 trap - SIGINT SIGTERM EXIT
 
@@ -286,10 +286,10 @@ process_core
 
 if hash lcov; then
 	# generate coverage data and combine with baseline
-	$LCOV -q -c -d $src -t "$(hostname)" -o cov_test.info
-	$LCOV -q -a cov_base.info -a cov_test.info -o $out/cov_total.info
-	$LCOV -q -r $out/cov_total.info '*/dpdk/*' -o $out/cov_total.info
-	$LCOV -q -r $out/cov_total.info '/usr/*' -o $out/cov_total.info
+	$LCOV -q -c -d "$src" -t "$(hostname)" -o cov_test.info
+	$LCOV -q -a cov_base.info -a cov_test.info -o "$out"/cov_total.info
+	$LCOV -q -r "$out"/cov_total.info '*/dpdk/*' -o "$out"/cov_total.info
+	$LCOV -q -r "$out"/cov_total.info '/usr/*' -o "$out"/cov_total.info
 	git clean -f "*.gcda"
 	rm -f cov_base.info cov_test.info OLD_STDOUT OLD_STDERR
 fi

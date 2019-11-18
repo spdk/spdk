@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/iscsi_tgt/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/iscsi_tgt/common.sh
 
 # $1 = "iso" - triggers isolation mode (setting up required environment).
 # $2 = test type posix or vpp. defaults to posix.
-iscsitestinit $1 $2
+iscsitestinit "$1" "$2"
 
 rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio.py"
@@ -19,7 +19,7 @@ function remove_backends() {
 	echo "INFO: Removing lvol bdevs"
 	for i in $(seq 1 $CONNECTION_NUMBER); do
 		lun="lvs0/lbd_$i"
-		$rpc_py bdev_lvol_delete $lun
+		$rpc_py bdev_lvol_delete "$lun"
 		echo -e "\tINFO: lvol bdev $lun removed"
 	done
 	sleep 1
@@ -45,31 +45,31 @@ trap 'remove_backends; iscsicleanup; killprocess $iscsipid; iscsitestfini $1 $2;
 waitforlisten $iscsipid
 $rpc_py iscsi_set_options -o 30 -a 128
 $rpc_py framework_start_init
-$rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
+"$rootdir"/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
 timing_exit start_iscsi_tgt
 
-$rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
-$rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+$rpc_py iscsi_create_portal_group "$PORTAL_TAG" "$TARGET_IP":"$ISCSI_PORT"
+$rpc_py iscsi_create_initiator_group "$INITIATOR_TAG" "$INITIATOR_NAME" "$NETMASK"
 
 echo "Creating an iSCSI target node."
 ls_guid=$($rpc_py bdev_lvol_create_lvstore "Nvme0n1" "lvs0" -c 1048576)
 
 # Assign even size for each lvol_bdev.
-get_lvs_free_mb $ls_guid
+get_lvs_free_mb "$ls_guid"
 lvol_bdev_size=$((free_mb / CONNECTION_NUMBER))
 for i in $(seq 1 $CONNECTION_NUMBER); do
-	$rpc_py bdev_lvol_create -u $ls_guid lbd_$i $lvol_bdev_size
+	$rpc_py bdev_lvol_create -u "$ls_guid" lbd_"$i" $lvol_bdev_size
 done
 
 for i in $(seq 1 $CONNECTION_NUMBER); do
 	lun="lvs0/lbd_$i:0"
-	$rpc_py iscsi_create_target_node Target$i Target${i}_alias "$lun" $PORTAL_TAG:$INITIATOR_TAG 256 -d
+	$rpc_py iscsi_create_target_node Target"$i" Target"${i}"_alias "$lun" "$PORTAL_TAG":"$INITIATOR_TAG" 256 -d
 done
 sleep 1
 
 echo "Logging into iSCSI target."
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
-iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+iscsiadm -m discovery -t sendtargets -p "$TARGET_IP":"$ISCSI_PORT"
+iscsiadm -m node --login -p "$TARGET_IP":"$ISCSI_PORT"
 waitforiscsidevices $CONNECTION_NUMBER
 
 echo "Running FIO"
@@ -83,5 +83,5 @@ rm -f ./local-job*
 iscsicleanup
 remove_backends
 killprocess $iscsipid
-iscsitestfini $1 $2
+iscsitestfini "$1" "$2"
 timing_exit multiconnection

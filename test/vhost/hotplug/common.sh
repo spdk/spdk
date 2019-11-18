@@ -1,7 +1,7 @@
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/vhost/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/vhost/common.sh
 
 dry_run=false
 no_shutdown=false
@@ -21,7 +21,7 @@ readonly=""
 function usage() {
     [[ -n $2 ]] && ( echo "$2"; echo ""; )
     echo "Shortcut script for doing automated hotattach/hotdetach test"
-    echo "Usage: $(basename $1) [OPTIONS]"
+    echo "Usage: $(basename "$1") [OPTIONS]"
     echo
     echo "-h, --help                print help and exit"
     echo "    --test-type=TYPE      Perform specified test:"
@@ -45,7 +45,7 @@ while getopts 'xh-:' optchar; do
     case "$optchar" in
         -)
         case "$OPTARG" in
-            help) usage $0 ;;
+            help) usage "$0" ;;
             fio-bin=*) fio_bin="${OPTARG#*=}" ;;
             fio-jobs=*) fio_jobs="${OPTARG#*=}" ;;
             test-type=*) test_type="${OPTARG#*=}" ;;
@@ -53,13 +53,13 @@ while getopts 'xh-:' optchar; do
             scsi-hotremove-test) scsi_hot_remove_test=1 ;;
             blk-hotremove-test) blk_hot_remove_test=1 ;;
             readonly) readonly="--readonly" ;;
-            *) usage $0 "Invalid argument '$OPTARG'" ;;
+            *) usage "$0" "Invalid argument '$OPTARG'" ;;
         esac
         ;;
-    h) usage $0 ;;
+    h) usage "$0" ;;
     x) set -x
         x="-x" ;;
-    *) usage $0 "Invalid argument '$OPTARG'"
+    *) usage "$0" "Invalid argument '$OPTARG'"
     esac
 done
 shift $(( OPTIND - 1 ))
@@ -77,14 +77,14 @@ function print_test_fio_header() {
 
     notice "Running fio jobs ..."
     if [ $# -gt 0 ]; then
-        echo $1
+        echo "$1"
     fi
 }
 
 function vms_setup() {
     for vm_conf in ${vms[@]}; do
         IFS=',' read -ra conf <<< "$vm_conf"
-        if [[ x"${conf[0]}" == x"" ]] || ! assert_number ${conf[0]}; then
+        if [[ x"${conf[0]}" == x"" ]] || ! assert_number "${conf[0]}"; then
             fail "invalid VM configuration syntax $vm_conf"
         fi
 
@@ -120,35 +120,35 @@ function vms_prepare() {
 
         host_name="VM-${vm_num}-${!qemu_mask_param}"
         notice "Setting up hostname: $host_name"
-        vm_exec $vm_num "hostname $host_name"
-        vm_start_fio_server --fio-bin=$fio_bin $readonly $vm_num
+        vm_exec "$vm_num" "hostname $host_name"
+        vm_start_fio_server --fio-bin="$fio_bin" $readonly "$vm_num"
     done
 }
 
 function vms_reboot_all() {
     notice "Rebooting all vms "
     for vm_num in $1; do
-        vm_exec $vm_num "reboot" || true
-        while vm_os_booted $vm_num; do
+        vm_exec "$vm_num" "reboot" || true
+        while vm_os_booted "$vm_num"; do
              sleep 0.5
         done
     done
 
-    vm_wait_for_boot 300 $1
+    vm_wait_for_boot 300 "$1"
 }
 
 function check_fio_retcode() {
     local fio_retcode=$3
-    echo $1
+    echo "$1"
     local retcode_expected=$2
-    if [ $retcode_expected == 0 ]; then
-        if [ $fio_retcode != 0 ]; then
+    if [ "$retcode_expected" == 0 ]; then
+        if [ "$fio_retcode" != 0 ]; then
             error "    Fio test ended with error."
         else
             notice "    Fio test ended with success."
         fi
     else
-        if [ $fio_retcode != 0 ]; then
+        if [ "$fio_retcode" != 0 ]; then
             notice "    Fio test ended with expected error."
         else
             error "    Fio test ended with unexpected success."
@@ -159,19 +159,19 @@ function check_fio_retcode() {
 function wait_for_finish() {
     local wait_for_pid=$1
     local sequence=${2:-30}
-    for i in $(seq 1 $sequence); do
-        if kill -0 $wait_for_pid; then
+    for i in $(seq 1 "$sequence"); do
+        if kill -0 "$wait_for_pid"; then
              sleep 0.5
              continue
         else
              break
         fi
     done
-    if kill -0 $wait_for_pid; then
+    if kill -0 "$wait_for_pid"; then
         error "Timeout for fio command"
     fi
 
-    wait $wait_for_pid
+    wait "$wait_for_pid"
 }
 
 
@@ -203,13 +203,13 @@ function check_disks() {
 function get_traddr() {
     local nvme_name=$1
     local nvme
-    nvme="$( $rootdir/scripts/gen_nvme.sh )"
+    nvme="$( "$rootdir"/scripts/gen_nvme.sh )"
     while read -r line; do
         if [[ $line == *"TransportID"* ]] && [[ $line == *$nvme_name* ]]; then
             local word_array=($line)
             for word in "${word_array[@]}"; do
                 if [[ $word == *"traddr"* ]]; then
-                    traddr=$( echo $word | sed 's/traddr://' | sed 's/"//' )
+                    traddr=$( echo "$word" | sed 's/traddr://' | sed 's/"//' )
                 fi
             done
         fi
@@ -217,9 +217,9 @@ function get_traddr() {
 }
 
 function delete_nvme() {
-    $rpc_py bdev_nvme_detach_controller $1
+    $rpc_py bdev_nvme_detach_controller "$1"
 }
 
 function add_nvme() {
-    $rpc_py bdev_nvme_attach_controller -b $1 -t PCIe -a $2
+    $rpc_py bdev_nvme_attach_controller -b "$1" -t PCIe -a "$2"
 }
