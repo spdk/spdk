@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6cb98152_fed3bac6",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 814,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T20:33:07Z",
+      "side": 1,
+      "message": "does this need to check if there are already ops that are queued?  or are we guaranteed that if any ops are queued that this call to rte_cryptodev_enqueue_burst will return 0?\n\nI\u0027m mainly concerned about fairness, that new I/O could steal enqueue slots from other crypto ops that are pending",
+      "revId": "28f11064311b9fe8190cc0f0beed43c35b34908e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "69042e70_b7ac0f59",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T20:33:07Z",
+      "side": 1,
+      "message": "where does io_ctx-\u003eon_pending_list get initialized to false?",
+      "revId": "28f11064311b9fe8190cc0f0beed43c35b34908e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49aed0f6_80e45b2b",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1237,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T20:33:07Z",
+      "side": 1,
+      "message": "should this be queued_cry_ops to make it consistent with pending_cry_ios?  (I know one is ops and one is ios but just curious why once gets the cry abbreviation but the other one doesn\u0027t)",
+      "revId": "28f11064311b9fe8190cc0f0beed43c35b34908e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d38b5eb7_92b16317",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T20:33:07Z",
+      "side": 1,
+      "message": "a local variable for g_test_crypto_ops[0]-\u003esym would reduce a lot of text here\n\nyou could then reuse the same variable for queued_op-\u003ecrypto_op-\u003esym below",
+      "revId": "28f11064311b9fe8190cc0f0beed43c35b34908e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b6043ef_70c18b52",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T20:33:07Z",
+      "side": 1,
+      "message": "do we expect more than one queued op here?  if it\u0027s just one, I think the while loop makes it a bit confusing - it would be better to just get the first element, remove it, and then assert that the TAILQ is now empty\n\notherwise it\u0027s confusing to me why line 574 would always compare toe g_test_crypto_ops[1] - I would think that each time through the loop, it should compare to a different element in the g_test_crypto_ops array",
+      "revId": "28f11064311b9fe8190cc0f0beed43c35b34908e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
