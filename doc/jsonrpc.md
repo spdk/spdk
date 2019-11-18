@@ -1415,6 +1415,7 @@ high_priority_weight       | Optional | number      | The maximum number of comm
 nvme_adminq_poll_period_us | Optional | number      | How often the admin queue is polled for asynchronous events in microseconds
 nvme_ioq_poll_period_us    | Optional | number      | How often I/O queues are polled for completions, in microseconds. Default: 0 (as fast as possible).
 io_queue_requests          | Optional | number      | The number of requests allocated for each NVMe I/O queue. Default: 512.
+delay_cmd_submit           | Optional | boolean     | Delay NVMe command submission to allow batching of multiple commands.
 
 ### Example
 
@@ -1433,6 +1434,7 @@ request:
     "timeout_us": 10000000,
     "action_on_timeout": "reset",
     "io_queue_requests" : 2048,
+    "delay_cmd_submit": true
   },
   "jsonrpc": "2.0",
   "method": "bdev_nvme_set_options",
