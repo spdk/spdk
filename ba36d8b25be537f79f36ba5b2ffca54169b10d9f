@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a986e16_04dcf4d2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T23:49:30Z",
+      "side": 1,
+      "message": "This needs to clarify that this can only happen when spdk_nvmf_transport_poll_group_create() itself calls spdk_nvmf_transport_poll_grou_destroy().",
+      "revId": "ba36d8b25be537f79f36ba5b2ffca54169b10d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7e35d69_6afdbcfc",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3404,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T23:49:30Z",
+      "side": 1,
+      "message": "Technically this works, but only because \"transport\" is the first data member of struct spdk_nvmf_rdma_transport.  If it wasn\u0027t, then rgroup-\u003egroup.transport would be NULL, and the SPDK_CONTAINEROF would return something that was !\u003d NULL.\n\nI would suggest moving line 3371 down here, and doing something like:\n\nif (rgroup-\u003egroup.transport \u003d\u003d NULL) {\n  free(rgroup);\n  return;\n}\ntransport \u003d SPDK_CONTAINEROF(...);",
+      "revId": "ba36d8b25be537f79f36ba5b2ffca54169b10d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a98ebc80_5703a45c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3405,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T23:49:30Z",
+      "side": 1,
+      "message": "Transport can be NULL when spdk_nvmf_rdma_poll_group_create() calls this function directly in a failure path.\n\n(I think you can remove the comment about the upper layer.)",
+      "revId": "ba36d8b25be537f79f36ba5b2ffca54169b10d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
