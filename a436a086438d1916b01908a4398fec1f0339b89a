@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4e21bc5_09fdd6e2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T23:53:37Z",
+      "side": 1,
+      "message": "Can you add a small note here that you\u0027re reverting this because the optimization was specific to POSIX sockets and the optimization is going to move the POSIX sock layer instead?",
+      "revId": "a436a086438d1916b01908a4398fec1f0339b89a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
