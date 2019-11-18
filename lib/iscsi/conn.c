@@ -305,14 +305,8 @@ void
 spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	if (pdu->task) {
-		if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
-			if (pdu->task != spdk_iscsi_task_get_primary(pdu->task)) {
-				conn->data_in_cnt--;
-				spdk_iscsi_conn_handle_queued_datain_tasks(conn);
-			}
-		}
-
 		spdk_iscsi_task_put(pdu->task);
+		spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 	}
 	spdk_put_pdu(pdu);
 }
