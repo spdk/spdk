@@ -57,9 +57,6 @@ struct ftl_rwb_entry {
 	/* Owner rwb */
 	struct ftl_rwb				*rwb;
 
-	/* Batch containing the entry */
-	struct ftl_rwb_batch			*batch;
-
 	/* Logical address */
 	uint64_t				lba;
 
@@ -108,13 +105,15 @@ size_t	ftl_rwb_num_batches(const struct ftl_rwb *rwb);
 size_t	ftl_rwb_size(const struct ftl_rwb *rwb);
 struct ftl_rwb_entry *ftl_rwb_acquire(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type);
 struct ftl_rwb_batch *ftl_rwb_pop(struct ftl_rwb *rwb);
-struct ftl_rwb_batch *ftl_rwb_first_batch(struct ftl_rwb *rwb);
-struct ftl_rwb_batch *ftl_rwb_next_batch(struct ftl_rwb_batch *batch);
-int	ftl_rwb_batch_empty(struct ftl_rwb_batch *batch);
 struct ftl_rwb_entry *ftl_rwb_entry_from_offset(struct ftl_rwb *rwb, size_t offset);
 size_t	ftl_rwb_batch_get_offset(const struct ftl_rwb_batch *batch);
 void	ftl_rwb_batch_revert(struct ftl_rwb_batch *batch);
+struct ftl_rwb_entry *ftl_rwb_batch_get_entry(struct ftl_rwb_batch *batch, size_t idx);
+size_t ftl_rwb_batch_get_entry_count(const struct ftl_rwb_batch *batch);
+void ftl_rwb_batch_get_iovs(struct ftl_rwb_batch *batch, struct iovec *iovs);
+size_t ftl_rwb_batch_get_iovcnt(const struct ftl_rwb_batch *batch);
 struct ftl_rwb_entry *ftl_rwb_batch_first_entry(struct ftl_rwb_batch *batch);
+
 void	*ftl_rwb_batch_get_data(struct ftl_rwb_batch *batch);
 void	*ftl_rwb_batch_get_md(struct ftl_rwb_batch *batch);
 void	ftl_rwb_disable_interleaving(struct ftl_rwb *rwb);
@@ -161,11 +160,6 @@ ftl_rwb_entry_internal(const struct ftl_rwb_entry *entry)
 }
 
 #define ftl_rwb_foreach(entry, batch) \
-	for (entry = ftl_rwb_batch_first_entry(batch); \
-	     entry; entry = LIST_NEXT(entry, list_entry))
-
-#define ftl_rwb_foreach_batch(batch, rwb) \
-	for (batch = ftl_rwb_first_batch(rwb); batch; \
-	     batch = ftl_rwb_next_batch(batch))
+	for (size_t __i = 0; (entry = ftl_rwb_batch_get_entry(batch, __i)); ++__i)
 
 #endif /* FTL_RWB_H */

@@ -335,15 +335,13 @@ ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
 		.type		= FTL_IO_WRITE,
 		.lbk_cnt	= dev->xfer_size,
 		.cb_fn		= cb,
-		.iovs = {
-			{
-				.iov_base = ftl_rwb_batch_get_data(batch),
-				.iov_len = dev->xfer_size * FTL_BLOCK_SIZE,
-			}
-		},
-		.iovcnt		= 1,
+		.iovs		= {},
+		.iovcnt		= ftl_rwb_batch_get_iovcnt(batch),
 		.md		= ftl_rwb_batch_get_md(batch),
 	};
+
+	assert(ftl_rwb_batch_get_iovcnt(batch) <= FTL_IO_MAX_IOVEC);
+	ftl_rwb_batch_get_iovs(batch, opts.iovs);
 
 	return ftl_io_init_internal(&opts);
 }
