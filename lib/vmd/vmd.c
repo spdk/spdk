@@ -229,12 +229,17 @@ vmd_assign_base_addrs(struct vmd_pci_device *dev)
 	}
 
 	if (!vmd) {
+		assert(0);
 		return 0;
 	}
 
 	vmd_align_base_addrs(vmd, ONE_MB);
 
 	last = dev->header_type ? 2 : 6;
+
+	SPDK_DEBUGLOG(SPDK_LOG_VMD, "PCI:%04x:%04x: last %d\n",
+		      dev->header->common.vendor_id, dev->header->common.device_id, last);
+
 	for (int i = 0; i < last; i++) {
 		bar_value = dev->header->zero.BAR[i];
 		dev->header->zero.BAR[i] = ~(0U);
@@ -243,6 +248,8 @@ vmd_assign_base_addrs(struct vmd_pci_device *dev)
 
 		if (dev->bar[i].size == ~(0U) || dev->bar[i].size == 0  ||
 		    dev->header->zero.BAR[i] & 1) {
+			SPDK_DEBUGLOG(SPDK_LOG_VMD, "bar[%d].size: %x, header->zero.BAR[%d]: %x\n",
+				      i, dev->bar[i].size, i, dev->header->zero.BAR[i]);
 			dev->bar[i].size = 0;
 			continue;
 		}
@@ -261,6 +268,7 @@ vmd_assign_base_addrs(struct vmd_pci_device *dev)
 			if (mem_attr == (PCI_BAR_MEMORY_PREFETCH | PCI_BAR_MEMORY_TYPE_64)) {
 				i++;
 			}
+			SPDK_DEBUGLOG(SPDK_LOG_VMD, "mem_attr[%d]: %c\n", i - 1, mem_attr);
 			continue;
 		}
 
@@ -817,6 +825,13 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 	uint8_t  device_number, dev_cnt = 0;
 	uint8_t new_bus_num;
 
+	if (bus->self != NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_VMD, "Scanning PCI device: %04x:%04x\n",
+			      bus->self->header->common.vendor_id, bus->self->header->common.device_id);
+	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_VMD, "Scanning PCI device: bus == NULL\n");
+	}
+
 	for (device_number = 0; device_number < 32; device_number++) {
 		new_dev = vmd_alloc_dev(bus, device_number);
 		if (new_dev == NULL) {
@@ -833,12 +848,12 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 			new_bus_num = vmd_get_next_bus_number(bus->vmd->is_hotplug_scan ? new_dev : NULL, bus->vmd);
 			if (new_bus_num == 0xff) {
 				free(new_dev);
-				return dev_cnt;
+				goto finish;
 			}
 			new_bus = vmd_create_new_bus(bus, new_dev, new_bus_num);
 			if (!new_bus) {
 				free(new_dev);
-				return dev_cnt;
+				goto finish;
 			}
 			new_bus->primary_bus = bus->secondary_bus;
 			new_bus->self = new_dev;
@@ -874,7 +889,7 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 			dev_cnt += vmd_scan_single_bus(new_bus, new_dev);
 			if (new_dev->pcie_cap != NULL) {
 				if (new_dev->pcie_cap->express_cap_register.bit_field.device_type == SwitchUpstreamPort) {
-					return dev_cnt;
+					goto finish;
 				}
 			}
 		} else {
@@ -898,6 +913,14 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 				}
 			}
 		}
+	}
+
+finish:
+	if (bus->self != NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_VMD, "Scan complete PCI device: %04x:%04x\n",
+			      bus->self->header->common.vendor_id, bus->self->header->common.device_id);
+	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_VMD, "Scan complete PCI device: bus == NULL\n");
 	}
 
 	return dev_cnt;
