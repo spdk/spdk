@@ -70,9 +70,10 @@ export INSTALL_DEPS
 
 
 shift "$((OPTIND-1))"   # Discard the options and sentinel --
+
 SPDK_VAGRANT_DISTRO=( "$@" )
 
-case "$SPDK_VAGRANT_DISTRO" in
+case "${SPDK_VAGRANT_DISTRO[0]}" in
 	ubuntu16)
 		export SPDK_VAGRANT_DISTRO
 	;;
