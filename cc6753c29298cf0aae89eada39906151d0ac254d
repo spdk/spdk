@@ -1,0 +1,259 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6012728c_aee47eac",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "Hmm - this one may have actually meant take the first element.",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b0d6be8_579ec3ee",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "A case statement over the array doesn\u0027t make sense. This should either be looping or taking the first element explicitly.",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1937d955_b46ec661",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "I think this one also meant to take the first element.",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c5a992d_9267669e",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "First element",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64a7140d_ea07e0af",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "This meant take the first element",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8a29284_33c40046",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "First element",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "474bed8d_9517d00b",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "First element",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b46a492e_25056a89",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "First element",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20dcea05_100ddc5b",
+        "filename": "test/ocf/integrity/bdevperf-iotypes.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "This meant take the first element",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db919c49_3897908e",
+        "filename": "test/ocf/integrity/fio-modes.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "First element",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76593889_bb4acc51",
+        "filename": "test/ocf/integrity/stats.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "First element",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "577f15b9_0294f4c4",
+        "filename": "test/ocf/management/create-destruct.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "First element",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "779b920a_d13524b1",
+        "filename": "test/ocf/management/multicore.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "First element",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad09b5ac_ec453a26",
+        "filename": "test/ocf/management/persistent-metadata.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "First element",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ca73fdb_8811d633",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:33:19Z",
+      "side": 1,
+      "message": "First element",
+      "revId": "cc6753c29298cf0aae89eada39906151d0ac254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
