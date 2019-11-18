@@ -162,7 +162,6 @@ DEFINE_STUB_V(spdk_del_transfer_task,
 int
 spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 {
-	CU_ASSERT(TAILQ_EMPTY(&conn->write_pdu_list));
 	return 0;
 }
 
