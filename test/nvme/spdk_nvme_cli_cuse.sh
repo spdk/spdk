@@ -44,7 +44,7 @@ for ctrlr in $(ls /dev/spdk/nvme?); do
 done
 
 trap - SIGINT SIGTERM EXIT
-kill $spdk_tgt_pid
+killprocess $spdk_tgt_pid
 
 report_test_completion spdk_nvme_cli_cuse
 timing_exit nvme_cli_cuse
