@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "32de2534_eea5df25",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-18T05:48:36Z",
+      "side": 1,
+      "message": "I see only code movement. Any clarification or improvement after your change?",
+      "parentUuid": "0f269972_0e98fb5f",
+      "revId": "756669bcef287f83977143f9c7f1791ca41d0212",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d7fa825e_f72a0d42",
         "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
         "patchSetId": 11
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "remove condition \"if (g_ctrlr \u003d\u003d ctrlr)\"\ndone.",
       "parentUuid": "d7fa825e_f72a0d42",
+      "revId": "756669bcef287f83977143f9c7f1791ca41d0212",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31500352_3ab4d2b9",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-18T05:48:36Z",
+      "side": 1,
+      "message": "Oh, this change means you don\u0027t grasp the whole logic.\nThis function is called even when g_ctrlr is NULL, and that case is normal.\nSo the previous version should be valid.\n\nIf you change, please do CU_ASSERT(ctrlr !\u003d NULL), CU_ASSERT(g_ctrlr \u003d\u003d NULL || g_ctrlr \u003d\u003d ctrlr);",
+      "parentUuid": "e0a760e5_c2aeaa87",
       "revId": "756669bcef287f83977143f9c7f1791ca41d0212",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
