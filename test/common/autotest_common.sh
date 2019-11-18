@@ -84,22 +84,23 @@ export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 # and known leaks in external executables or libraries from showing up.
 asan_suppression_file="/var/tmp/asan_suppression_file"
 sudo rm -rf "$asan_suppression_file"
+{
+	# ASAN has some bugs around thread_local variables.  We have a destructor in place
+	# to free the thread contexts, but ASAN complains about the leak before those
+	# destructors have a chance to run.  So suppress this one specific leak using
+	# LSAN_OPTIONS.
+	echo "leak:spdk_fs_alloc_thread_ctx"
 
-# ASAN has some bugs around thread_local variables.  We have a destructor in place
-# to free the thread contexts, but ASAN complains about the leak before those
-# destructors have a chance to run.  So suppress this one specific leak using
-# LSAN_OPTIONS.
-echo "leak:spdk_fs_alloc_thread_ctx" >> "$asan_suppression_file"
+	# Suppress known leaks in fio project
+	echo "leak:/usr/src/fio/parse.c"
+	echo "leak:/usr/src/fio/iolog.c"
+	echo "leak:/usr/src/fio/init.c"
+	echo "leak:fio_memalign"
+	echo "leak:spdk_fio_io_u_init"
 
-# Suppress known leaks in fio project
-echo "leak:/usr/src/fio/parse.c" >> "$asan_suppression_file"
-echo "leak:/usr/src/fio/iolog.c" >> "$asan_suppression_file"
-echo "leak:/usr/src/fio/init.c" >> "$asan_suppression_file"
-echo "leak:fio_memalign" >> "$asan_suppression_file"
-echo "leak:spdk_fio_io_u_init" >> "$asan_suppression_file"
-
-# Suppress leaks in libiscsi
-echo "leak:libiscsi.so" >> "$asan_suppression_file"
+	# Suppress leaks in libiscsi
+	echo "leak:libiscsi.so"
+} >> "$asan_suppression_file"
 
 export LSAN_OPTIONS=suppressions="$asan_suppression_file"
 
@@ -763,9 +764,11 @@ ramp_time=0
 EOL
 
 	if [ "$workload" == "verify" ]; then
-		echo "verify=sha1" >> $config_file
-		echo "verify_backlog=1024" >> $config_file
-		echo "rw=randwrite" >> $config_file
+		{
+			echo "verify=sha1"
+			echo "verify_backlog=1024"
+			echo "rw=randwrite"
+		} >> $config_file
 
 		# To avoid potential data race issue due to the AIO device
 		# flush mechanism, add the flag to serialize the writes.
