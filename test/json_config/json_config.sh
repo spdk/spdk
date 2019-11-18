@@ -42,7 +42,7 @@ RE_UUID="[[:alnum:]-]+"
 last_event_id=0
 
 function tgt_check_notification_types() {
-	timing_enter $FUNCNAME
+	timing_enter "${FUNCNAME[@]}"
 
 	local ret=0
 	local enabled_types="bdev_register
@@ -54,7 +54,7 @@ function tgt_check_notification_types() {
 		ret=1
 	fi
 
-	timing_exit $FUNCNAME
+	timing_exit "${FUNCNAME[@]}"
 	return $ret
 }
 
@@ -147,7 +147,7 @@ function json_config_test_shutdown_app() {
 }
 
 function create_bdev_subsystem_config() {
-	timing_enter $FUNCNAME
+	timing_enter "${FUNCNAME[@]}"
 
 	local expected_notifications=()
 
@@ -159,7 +159,7 @@ function create_bdev_subsystem_config() {
 				echo "WARNING: No NVMe drive found. Using '$lvol_store_base_bdev' instead."
 			else
 				echo "ERROR: No NVMe drive found and bdev_aio is not supported on $(uname -s)."
-				timing_exit $FUNCNAME
+				timing_exit "${FUNCNAME[@]}"
 				return 1
 			fi
 		fi
@@ -243,11 +243,11 @@ function create_bdev_subsystem_config() {
 
 	tgt_check_notifications "${expected_notifications[@]}"
 
-	timing_exit $FUNCNAME
+	timing_exit "${FUNCNAME[@]}"
 }
 
 function cleanup_bdev_subsystem_config() {
-	timing_enter $FUNCNAME
+	timing_enter "${FUNCNAME[@]}"
 
 	if [[ $SPDK_TEST_BLOCKDEV -eq 1 ]]; then
 		tgt_rpc bdev_lvol_delete     lvs_test/clone0
@@ -270,11 +270,11 @@ function cleanup_bdev_subsystem_config() {
 		rbd_cleanup
 	fi
 
-	timing_exit $FUNCNAME
+	timing_exit "${FUNCNAME[@]}"
 }
 
 function create_vhost_subsystem_config() {
-	timing_enter $FUNCNAME
+	timing_enter "${FUNCNAME[@]}"
 
 	tgt_rpc bdev_malloc_create 64 1024 --name MallocForVhost0
 	tgt_rpc bdev_split_create MallocForVhost0 8
@@ -290,20 +290,20 @@ function create_vhost_subsystem_config() {
 #	tgt_rpc vhost_create_nvme_controller   VhostNvmeCtrlr0 16
 #	tgt_rpc vhost_nvme_controller_add_ns                 VhostNvmeCtrlr0 MallocForVhost0p6
 
-	timing_exit $FUNCNAME
+	timing_exit "${FUNCNAME[@]}"
 }
 
 function create_iscsi_subsystem_config() {
-	timing_enter $FUNCNAME
+	timing_enter "${FUNCNAME[@]}"
 	tgt_rpc bdev_malloc_create 64 1024 --name MallocForIscsi0
 	tgt_rpc iscsi_create_portal_group $PORTAL_TAG 127.0.0.1:$ISCSI_PORT
 	tgt_rpc iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 	tgt_rpc iscsi_create_target_node Target3 Target3_alias 'MallocForIscsi0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
-	timing_exit $FUNCNAME
+	timing_exit "${FUNCNAME[@]}"
 }
 
 function create_nvmf_subsystem_config() {
-	timing_enter $FUNCNAME
+	timing_enter "${FUNCNAME[@]}"
 
 	RDMA_IP_LIST=$(get_available_rdma_ips)
 	NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
@@ -321,21 +321,21 @@ function create_nvmf_subsystem_config() {
 	tgt_rpc nvmf_subsystem_add_ns       nqn.2016-06.io.spdk:cnode1 MallocForNvmf1
 	tgt_rpc nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
 
-	timing_exit $FUNCNAME
+	timing_exit "${FUNCNAME[@]}"
 }
 
 function create_virtio_initiator_config() {
-	timing_enter $FUNCNAME
+	timing_enter "${FUNCNAME[@]}"
 	initiator_rpc bdev_virtio_attach_controller -t user -a /var/tmp/VhostScsiCtrlr0 -d scsi VirtioScsiCtrlr0
 	initiator_rpc bdev_virtio_attach_controller -t user -a /var/tmp/VhostBlkCtrlr0  -d blk  VirtioBlk0
 	# TODO: initiator_rpc bdev_virtio_attach_controller -t user -a /var/tmp/VhostNvmeCtrlr0 -d nvme VirtioNvme0
-	timing_exit $FUNCNAME
+	timing_exit "${FUNCNAME[@]}"
 }
 
 
 function json_config_test_init()
 {
-	timing_enter $FUNCNAME
+	timing_enter "${FUNCNAME[@]}"
 	timing_enter json_config_setup_target
 
 	json_config_test_start_app target --wait-for-rpc
@@ -375,11 +375,11 @@ function json_config_test_init()
 
 	tgt_rpc bdev_malloc_create 8 512 --name MallocBdevForConfigChangeCheck
 
-	timing_exit $FUNCNAME
+	timing_exit "${FUNCNAME[@]}"
 }
 
 function json_config_test_fini() {
-	timing_enter $FUNCNAME
+	timing_enter "${FUNCNAME[@]}"
 	local ret=0
 
 	if [[ -n "${app_pid[initiator]}" ]]; then
@@ -396,7 +396,7 @@ function json_config_test_fini() {
 	fi
 
 	rm -f "${configs_path[@]}"
-	timing_exit $FUNCNAME
+	timing_exit "${FUNCNAME[@]}"
 	return $ret
 }
 
