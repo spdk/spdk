@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5acc8f7c_383dfaaf",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 861,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:44:20Z",
+      "side": 1,
+      "message": "If you\u0027re going to make this change, I think we need to combine this function with spdk_nvmf_tgt_add_transport. It doesn\u0027t make sense to have both.\n\nYou can either do this before your new nvmf example, or you can make your nvmf example just use a single nvmf_tgt to start and add multi-target support later on.",
+      "revId": "dad6f55805553cbae21b0c067a8df72dad2becad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
