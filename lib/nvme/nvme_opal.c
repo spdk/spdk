@@ -868,7 +868,7 @@ opal_get_comid_v200(struct spdk_opal_dev *dev, const void *data)
 }
 
 static int
-opal_discovery0_end(struct spdk_opal_dev *dev)
+opal_discovery0_parse_response(struct spdk_opal_dev *dev)
 {
 	bool found_com_id = false, supported = false, single_user = false;
 	const struct spdk_d0_header *hdr = (struct spdk_d0_header *)dev->resp;
@@ -876,6 +876,7 @@ opal_discovery0_end(struct spdk_opal_dev *dev)
 	uint16_t comid = 0;
 	uint32_t hlen = from_be32(&(hdr->length));
 
+	dev->state = OPAL_DEV_STATE_DEFAULT;
 	if (hlen > IO_BUFFER_LENGTH - sizeof(*hdr)) {
 		SPDK_ERRLOG("Discovery length overflows buffer (%zu+%u)/%u\n",
 			    sizeof(*hdr), hlen, IO_BUFFER_LENGTH);
@@ -936,8 +937,14 @@ opal_discovery0_end(struct spdk_opal_dev *dev)
 		return -EINVAL;
 	}
 
+	dev->supported = true;
 	dev->comid = comid;
 	return 0;
+}
+static int
+opal_discovery0_end(struct spdk_opal_dev *dev)
+{
+	return opal_discovery0_parse_response(dev);
 }
 
 static int
@@ -953,6 +960,37 @@ opal_discovery0(struct spdk_opal_dev *dev)
 	}
 
 	return opal_discovery0_end(dev);
+}
+
+static void
+opal_discovery0_end_async(void *data, const struct spdk_nvme_cpl *cpl)
+{
+	int rc = 0;
+	struct spdk_opal_dev *dev = data;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("Opal command failure\n");
+		rc = -EFAULT;
+		dev->cb_fn(dev, dev->ctx, rc);
+		return;
+	}
+
+	rc = opal_discovery0_parse_response(dev);
+	dev->cb_fn(dev, dev->ctx, rc);
+}
+
+static int
+opal_discovery0_async(struct spdk_opal_dev *dev)
+{
+	int ret;
+
+	memset(dev->resp, 0, IO_BUFFER_LENGTH);
+	dev->comid = LV0_DISCOVERY_COMID;
+	dev->state = OPAL_DEV_STATE_BUSY;
+	ret = spdk_nvme_ctrlr_cmd_security_receive(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
+			0, dev->resp, IO_BUFFER_LENGTH, opal_discovery0_end_async, dev);
+
+	return ret;
 }
 
 static inline void
@@ -998,6 +1036,21 @@ opal_check_support(struct spdk_opal_dev *dev)
 
 	dev->supported = (ret == 0 ? true : false);
 
+	return ret;
+}
+
+static int
+opal_check_support_async(struct spdk_opal_dev *dev, spdk_opal_callback cb_fn, void *cb_ctx)
+{
+	int ret;
+
+	opal_setup_dev(dev);
+	dev->cb_fn = cb_fn;
+	dev->ctx = cb_ctx;
+	ret = opal_discovery0_async(dev);
+	if (ret) {
+		SPDK_ERRLOG("Discovery 0 failed\n");
+	}
 	return ret;
 }
 
@@ -1934,6 +1987,47 @@ spdk_opal_init_dev(void *dev_handler)
 
 	if (pthread_mutex_init(&dev->mutex_lock, NULL)) {
 		SPDK_ERRLOG("Mutex init failed\n");
+		free(dev->opal_info);
+		free(dev);
+		return NULL;
+	}
+
+	return dev;
+}
+
+struct spdk_opal_dev *
+spdk_opal_init_dev_async(void *dev_handler, spdk_opal_callback cb_fn, void *cb_ctx)
+{
+	struct spdk_opal_dev *dev;
+	struct spdk_opal_info *info;
+
+	dev = calloc(1, sizeof(*dev));
+	if (!dev) {
+		SPDK_ERRLOG("Memory allocation failed\n");
+		return NULL;
+	}
+
+	dev->dev_handler = dev_handler;
+	dev->state = OPAL_DEV_STATE_DEFAULT;
+
+	info = calloc(1, sizeof(struct spdk_opal_info));
+	if (info == NULL) {
+		free(dev);
+		SPDK_ERRLOG("Memory allocation failed\n");
+		return NULL;
+	}
+
+	dev->opal_info = info;
+
+	if (pthread_mutex_init(&dev->mutex_lock, NULL)) {
+		SPDK_ERRLOG("Mutex init failed\n");
+		free(dev->opal_info);
+		free(dev);
+		return NULL;
+	}
+
+	if (opal_check_support_async(dev, cb_fn, cb_ctx) != 0) {
+		SPDK_ERRLOG("Init opal dev failed\n");
 		free(dev->opal_info);
 		free(dev);
 		return NULL;

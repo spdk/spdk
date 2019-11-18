@@ -173,6 +173,8 @@ struct spdk_opal_dev;
 typedef void (*spdk_opal_callback)(struct spdk_opal_dev *dev, void *ctx, int rc);
 
 struct spdk_opal_dev *spdk_opal_init_dev(void *dev_handler);
+struct spdk_opal_dev *spdk_opal_init_dev_async(void *dev_handler, spdk_opal_callback cb_fn,
+		void *cb_ctx);
 
 void spdk_opal_close(struct spdk_opal_dev *dev);
 struct spdk_opal_info *spdk_opal_get_info(struct spdk_opal_dev *dev);
