@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f2559ac_a19414bc",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:02:42Z",
+      "side": 1,
+      "message": "This might be considered too much of a hack, but you can just pass 0 (NULL) as the ctx pointer on success, and 1 on failure. The code will hold the \u00271\u0027 value in a pointer, but the infrastructure never dereferences it and you can just cast the pointer to an integer. Then you don\u0027t need two callbacks here.",
+      "revId": "be38923230d76d2c706333d359bff2ed3efef4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1cc8f49_0adedb91",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:02:42Z",
+      "side": 1,
+      "message": "Getting the I/O channel takes a reference to it. You need to also put the channel when you\u0027re done with this approach. However, it\u0027d probably be better if you passed the channel into this function because the callpoint already has a channel.",
+      "revId": "be38923230d76d2c706333d359bff2ed3efef4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
