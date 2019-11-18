@@ -69,12 +69,14 @@ mnt_pt=${mnt_dir}/osd-device-0-data
 mkdir -p ${mnt_pt}
 mkfs.xfs -f /dev/disk/by-partlabel/osd-device-0-data
 mount /dev/disk/by-partlabel/osd-device-0-data ${mnt_pt}
-echo -e "\tosd data = ${mnt_pt}" >> "$ceph_conf"
-echo -e "\tosd journal = /dev/disk/by-partlabel/osd-device-0-journal" >> "$ceph_conf"
+cat << EOL > $ceph_conf
+osd data = ${mnt_pt}
+osd journal = /dev/disk/by-partlabel/osd-device-0-journal
 
 # add mon address
-echo -e "\t[mon.a]" >> "$ceph_conf"
-echo -e "\tmon addr = ${mon_ip}:12046" >> "$ceph_conf"
+[mon.a]
+mon addr = ${mon_ip}:12046
+EOL
 
 # create mon
 rm -rf "${mon_dir:?}/"*
