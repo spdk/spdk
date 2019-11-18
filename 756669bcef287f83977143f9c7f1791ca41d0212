@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "0a1e98b7_60452b53",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-18T06:20:20Z",
+      "side": 1,
+      "message": "hi shuhei,\n please see patch set 12.\nI think the change what want to do is make it more directly.\ng_add_device -\u003e SPDK_NVME_UEVENT_ADD rather than !g_add_device;\n\nbut indeed there\u0027s no large differences.",
+      "parentUuid": "32de2534_eea5df25",
+      "revId": "756669bcef287f83977143f9c7f1791ca41d0212",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d7fa825e_f72a0d42",
         "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
         "patchSetId": 11
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "Oh, this change means you don\u0027t grasp the whole logic.\nThis function is called even when g_ctrlr is NULL, and that case is normal.\nSo the previous version should be valid.\n\nIf you change, please do CU_ASSERT(ctrlr !\u003d NULL), CU_ASSERT(g_ctrlr \u003d\u003d NULL || g_ctrlr \u003d\u003d ctrlr);",
       "parentUuid": "e0a760e5_c2aeaa87",
+      "revId": "756669bcef287f83977143f9c7f1791ca41d0212",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "caddd01e_2e037d70",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-18T06:20:20Z",
+      "side": 1,
+      "message": "hi shuhei,\n    we can do this \"free(g_ctrlr)\" althrough g_ctrlr is NULL, Am I right? If I\u0027m wrong , please \ncorrect me?",
+      "parentUuid": "31500352_3ab4d2b9",
       "revId": "756669bcef287f83977143f9c7f1791ca41d0212",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
