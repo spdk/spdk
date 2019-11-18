@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7c8a618d_3e1d5818",
+        "filename": "module/bdev/uring/bdev_uring.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1017166
+      },
+      "writtenOn": "2019-11-18T08:19:07Z",
+      "side": 1,
+      "message": "I just modified this patch. It\u0027s not a revert action because there aren\u0027t these four lines until now.",
+      "parentUuid": "088f73d9_6d505e7d",
+      "range": {
+        "startLine": 619,
+        "startChar": 0,
+        "endLine": 623,
+        "endChar": 0
+      },
+      "revId": "11d868d9254858ff8d623cc59ae2d9e3aa826b76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7bc6bde2_45a6a090",
         "filename": "module/bdev/uring/bdev_uring.c",
         "patchSetId": 2
