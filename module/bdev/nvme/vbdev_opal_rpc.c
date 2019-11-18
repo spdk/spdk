@@ -73,12 +73,19 @@ spdk_rpc_bdev_nvme_opal_init(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	/* check if opal supported */
 	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(req.nvme_ctrlr_name);
-	if (nvme_ctrlr == NULL || nvme_ctrlr->opal_dev == NULL ||
-	    !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
-		SPDK_ERRLOG("%s not support opal\n", req.nvme_ctrlr_name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("device %s not found\n", req.nvme_ctrlr_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto out;
+	}
+
+	/* check if opal supported */
+	if (nvme_ctrlr->opal_dev == NULL || !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
+		SPDK_NOTICELOG("%s not support opal\n", req.nvme_ctrlr_name);
+		w = spdk_jsonrpc_begin_result(request);
+		spdk_json_write_bool(w, false);
+		spdk_jsonrpc_end_result(request, w);
 		goto out;
 	}
 
@@ -168,12 +175,19 @@ spdk_rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	/* check if opal supported */
 	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(req.nvme_ctrlr_name);
-	if (nvme_ctrlr == NULL || nvme_ctrlr->opal_dev == NULL ||
-	    !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
-		SPDK_ERRLOG("%s not support opal\n", req.nvme_ctrlr_name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("device %s not found\n", req.nvme_ctrlr_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto out;
+	}
+
+	/* check if opal supported */
+	if (nvme_ctrlr->opal_dev == NULL || !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
+		SPDK_NOTICELOG("%s not support opal\n", req.nvme_ctrlr_name);
+		w = spdk_jsonrpc_begin_result(request);
+		spdk_json_write_bool(w, false);
+		spdk_jsonrpc_end_result(request, w);
 		goto out;
 	}
 
