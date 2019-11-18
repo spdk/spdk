@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db3bf7d1_8cbdf57e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2122,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T21:46:37Z",
+      "side": 1,
+      "message": "it\u0027s ok that assert() doesn\u0027t work in non-debug mode :-)\n\nJust assert(desc-\u003ecb_fn !\u003d NULL)\n\nTo be extra safe, you could check cb_fn in spdk_bdev_set_timeout().  If user passes NULL, print an ERRLOG and don\u0027t start the poller.  I see you have an assert() there already - this idea would just be to expand on that.",
+      "revId": "033a546baf890e47601b97a621b1f51fe6d2aba8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a39d609_8624516b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2125,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T21:46:37Z",
+      "side": 1,
+      "message": "I think you can just test the first entry in io_submitted.  Since all of the io are queued in order of submission, if the first one has not expired, then none of the rest of them have either.\n\nBut I think we should clarify which IO are checked.  A bdev may have multiple open descriptors.  We should only call the cb_fn if bdev_io-\u003edesc matches also.  The comments for the timeout function should clarify that the timeout callback will only be called for IO submitted using the specified descriptor.",
+      "revId": "033a546baf890e47601b97a621b1f51fe6d2aba8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c2b94d1_3c25f5de",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2160,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T21:46:37Z",
+      "side": 1,
+      "message": "I think you should just call spdk_poller_unregister() at the beginning of this function.  See below for why that is OK.  Then you do not need to duplicate the spdk_poller_register() call.",
+      "revId": "033a546baf890e47601b97a621b1f51fe6d2aba8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be2cba11_021eaf39",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2172,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T21:46:37Z",
+      "side": 1,
+      "message": "spdk_poller_unregister() can be called even if poller is already NULL (so you don\u0027t need this \"if\" check)",
+      "revId": "033a546baf890e47601b97a621b1f51fe6d2aba8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f799ac2d_68a9ff8c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2754,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T21:46:37Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "033a546baf890e47601b97a621b1f51fe6d2aba8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
