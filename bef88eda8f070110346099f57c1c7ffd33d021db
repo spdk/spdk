@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1862bd28_2878b48c",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 854,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-18T06:35:00Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nThanks for considering my comments,if this is added, the upper layer will be correctly notified.",
+      "range": {
+        "startLine": 854,
+        "startChar": 1,
+        "endLine": 854,
+        "endChar": 63
+      },
+      "revId": "bef88eda8f070110346099f57c1c7ffd33d021db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
