@@ -51,6 +51,8 @@
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
+#define SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT true
+
 static void bdev_nvme_get_spdk_running_config(FILE *fp);
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
@@ -102,6 +104,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.nvme_adminq_poll_period_us = 1000000ULL,
 	.nvme_ioq_poll_period_us = 0,
 	.io_queue_requests = 0,
+	.delay_cmd_submit = SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -326,7 +329,7 @@ _bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 	struct spdk_nvme_io_qpair_opts opts;
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(nvme_bdev_ctrlr->ctrlr, &opts, sizeof(opts));
-	opts.delay_cmd_submit = true;
+	opts.delay_cmd_submit = g_opts.delay_cmd_submit;
 
 	nvme_ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(nvme_bdev_ctrlr->ctrlr, &opts, sizeof(opts));
 	if (!nvme_ch->qpair) {
@@ -608,7 +611,7 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 #endif
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(nvme_bdev_ctrlr->ctrlr, &opts, sizeof(opts));
-	opts.delay_cmd_submit = true;
+	opts.delay_cmd_submit = g_opts.delay_cmd_submit;
 	opts.io_queue_requests = spdk_max(g_opts.io_queue_requests, opts.io_queue_requests);
 	g_opts.io_queue_requests = opts.io_queue_requests;
 
