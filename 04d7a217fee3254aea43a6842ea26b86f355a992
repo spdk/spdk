@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ac60a1d_2474a5a1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1842,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:23:35Z",
+      "side": 1,
+      "message": "Remove extra whitespace change",
+      "revId": "04d7a217fee3254aea43a6842ea26b86f355a992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4c3f8cd_ba7f5cab",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1878,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:23:35Z",
+      "side": 1,
+      "message": "Have you measured the performance impact here? At a minimum I think you can get away with an STAILQ instead.",
+      "revId": "04d7a217fee3254aea43a6842ea26b86f355a992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3dd0b265_c0ec5dfe",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1880,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:23:35Z",
+      "side": 1,
+      "message": "What happens if a virtual bdev passes a bdev_io down to the layer below it? It\u0027s going to end up queued twice.",
+      "revId": "04d7a217fee3254aea43a6842ea26b86f355a992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
