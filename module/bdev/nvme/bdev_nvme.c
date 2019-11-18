@@ -1619,6 +1619,9 @@ bdev_nvme_library_init(void)
 	g_nvme_hostnqn = spdk_conf_section_get_val(sp, "HostNQN");
 	probe_ctx->hostnqn = g_nvme_hostnqn;
 
+	g_opts.delay_cmd_submit = spdk_conf_section_get_boolval(sp, "DelayCmdSubmit",
+				  SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT);
+
 	for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 0);
 		if (val == NULL) {
@@ -2253,6 +2256,7 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 	if (g_nvme_hostnqn) {
 		fprintf(fp, "HostNQN %s\n",  g_nvme_hostnqn);
 	}
+	fprintf(fp, "DelayCmdSubmit %s\n", g_opts.delay_cmd_submit ? "True" : "False");
 
 	fprintf(fp, "\n");
 }
