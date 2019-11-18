@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "d7049ad8_cdf1d663",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-18T06:52:45Z",
+      "side": 1,
+      "message": "I think add operation is not important for this test. So I wanted to emphasize that.\nAnd returning 0 is important, and so if () return 0 else return 1 will clarify that.\n\nBut your change is OK",
+      "parentUuid": "0a1e98b7_60452b53",
+      "revId": "756669bcef287f83977143f9c7f1791ca41d0212",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d7fa825e_f72a0d42",
         "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
         "patchSetId": 11
@@ -138,6 +156,24 @@
       "side": 1,
       "message": "hi shuhei,\n    we can do this \"free(g_ctrlr)\" althrough g_ctrlr is NULL, Am I right? If I\u0027m wrong , please \ncorrect me?",
       "parentUuid": "31500352_3ab4d2b9",
+      "revId": "756669bcef287f83977143f9c7f1791ca41d0212",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ec3ca11_e6bcf3a1",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-18T06:52:45Z",
+      "side": 1,
+      "message": "I think Jim’s suggestion is that we should add assert. In this function we ensure that the asserts are true. I was not good at but I actually wanted to add assert",
+      "parentUuid": "caddd01e_2e037d70",
       "revId": "756669bcef287f83977143f9c7f1791ca41d0212",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
