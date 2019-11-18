@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c4196787_ab72e2bf",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1837,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-11-18T09:58:29Z",
+      "side": 1,
+      "message": "Hi Jim, Thanks for your comments.\nI checked my thoughts I just aligned my design to the IO trace record. I should say you are right it will reduce the complexity in the spdk_bdev_io_submit() and also I should also record the reset cmd.",
+      "parentUuid": "00f02bc8_c98d0277",
+      "revId": "6bf9fa062d917c36d4c26e805b098a14340f3404",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ff1693d3_7bf6eac4",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -33,6 +51,24 @@
       "revId": "6bf9fa062d917c36d4c26e805b098a14340f3404",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e7ea32c_d7235f97",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3700,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-11-18T09:58:29Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ff1693d3_7bf6eac4",
+      "revId": "6bf9fa062d917c36d4c26e805b098a14340f3404",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
