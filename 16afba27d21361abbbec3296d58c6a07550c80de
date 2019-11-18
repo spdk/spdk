@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75298a23_cf324e1d",
+        "filename": "module/bdev/uring/bdev_uring.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T22:14:28Z",
+      "side": 1,
+      "message": "I don\u0027t think this is needed, if you follow Ben\u0027s suggestion on previous patch.",
+      "revId": "16afba27d21361abbbec3296d58c6a07550c80de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
