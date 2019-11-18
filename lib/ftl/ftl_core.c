@@ -2096,6 +2096,7 @@ _ftl_flush(void *ctx)
 {
 	struct ftl_flush *flush = ctx;
 	struct spdk_ftl_dev *dev = flush->dev;
+#if 0
 	struct ftl_rwb *rwb = dev->rwb;
 	struct ftl_rwb_batch *batch;
 
@@ -2106,6 +2107,7 @@ _ftl_flush(void *ctx)
 			flush->num_req++;
 		}
 	}
+#endif
 
 	LIST_INSERT_HEAD(&dev->flush_list, flush, list_entry);
 
