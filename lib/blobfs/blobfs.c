@@ -1645,6 +1645,8 @@ spdk_file_truncate_async(struct spdk_file *file, uint64_t length,
 		return;
 	}
 
+	cache_free_buffers(file);
+
 	req = alloc_fs_request(file->fs->md_target.md_fs_channel);
 	if (req == NULL) {
 		cb_fn(cb_arg, -ENOMEM);
@@ -1659,6 +1661,7 @@ spdk_file_truncate_async(struct spdk_file *file, uint64_t length,
 	fs = file->fs;
 
 	num_clusters = __bytes_to_clusters(length, fs->bs_opts.cluster_sz);
+
 
 	spdk_blob_resize(file->blob, num_clusters, fs_truncate_resize_cb, req);
 }
@@ -1682,6 +1685,7 @@ spdk_file_truncate(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 	struct spdk_fs_cb_args *args;
 	int rc;
 
+
 	req = alloc_fs_request(channel);
 	if (req == NULL) {
 		return -ENOMEM;
@@ -1694,7 +1698,7 @@ spdk_file_truncate(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 	args->fn.file_op = __wake_caller;
 	args->sem = &channel->sem;
 
-	channel->send_request(__truncate, req);
+	file->fs->send_request(__truncate, req);
 	sem_wait(&channel->sem);
 	rc = args->rc;
 	free_fs_request(req);
@@ -2175,6 +2179,18 @@ __check_sync_reqs(struct spdk_file *file)
 }
 
 static void
+__file_flush_finished(void *ctx, int bserrno)
+{
+	struct spdk_fs_request *req = ctx;
+	struct spdk_fs_cb_args *args = &req->args;
+
+	if (args->fn.file_op != NULL) {
+		args->fn.file_op(args->arg, bserrno);
+	}
+}
+
+
+static void
 __file_flush_done(void *ctx, int bserrno)
 {
 	struct spdk_fs_request *req = ctx;
@@ -2232,6 +2248,7 @@ __file_flush(void *ctx)
 		 *  more data after that is completed, or a partial buffer will get flushed
 		 *  when it is either filled or the file is synced.
 		 */
+		__file_flush_finished(req, 0);
 		free_fs_request(req);
 		if (next == NULL) {
 			/*
@@ -2250,12 +2267,14 @@ __file_flush(void *ctx)
 			 */
 			__check_sync_reqs(file);
 		}
+
 		return;
 	}
 
 	offset = next->offset + next->bytes_flushed;
 	length = next->bytes_filled - next->bytes_flushed;
 	if (length == 0) {
+		__file_flush_finished(req, 0);
 		free_fs_request(req);
 		pthread_spin_unlock(&file->lock);
 		/*
@@ -2461,8 +2480,13 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		return 0;
 	}
 
+	flush_req->args.sem = &channel->sem;
 	flush_req->args.file = file;
+	flush_req->args.fn.file_op = __wake_caller;
+	flush_req->args.arg = &flush_req->args;
 	file->fs->send_request(__file_flush, flush_req);
+	sem_wait(&channel->sem);
+
 	return 0;
 }
 
