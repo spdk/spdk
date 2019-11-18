@@ -1282,7 +1282,7 @@ spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 }
 
 struct spdk_bdev_io *
-spdk_bdev_get_io(struct spdk_bdev_channel *channel)
+bdev_channel_get_io(struct spdk_bdev_channel *channel)
 {
 	struct spdk_bdev_mgmt_channel *ch = channel->shared_resource->mgmt_ch;
 	struct spdk_bdev_io *bdev_io;
@@ -2790,7 +2790,7 @@ _spdk_bdev_read_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chann
 		return -EINVAL;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
+	bdev_io = bdev_channel_get_io(channel);
 	if (!bdev_io) {
 		return -ENOMEM;
 	}
@@ -2885,7 +2885,7 @@ _spdk_bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chan
 		return -EINVAL;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
+	bdev_io = bdev_channel_get_io(channel);
 	if (!bdev_io) {
 		return -ENOMEM;
 	}
@@ -2948,7 +2948,7 @@ _spdk_bdev_write_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chan
 		return -EINVAL;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
+	bdev_io = bdev_channel_get_io(channel);
 	if (!bdev_io) {
 		return -ENOMEM;
 	}
@@ -3032,7 +3032,7 @@ _spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_cha
 		return -EINVAL;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
+	bdev_io = bdev_channel_get_io(channel);
 	if (!bdev_io) {
 		return -ENOMEM;
 	}
@@ -3140,7 +3140,7 @@ spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -ENOTSUP;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
+	bdev_io = bdev_channel_get_io(channel);
 	if (!bdev_io) {
 		return -ENOMEM;
 	}
@@ -3248,7 +3248,7 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 		return -ENOTSUP;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
+	bdev_io = bdev_channel_get_io(channel);
 
 	if (!bdev_io) {
 		return -ENOMEM;
@@ -3312,7 +3312,7 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
+	bdev_io = bdev_channel_get_io(channel);
 	if (!bdev_io) {
 		return -ENOMEM;
 	}
@@ -3366,7 +3366,7 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
+	bdev_io = bdev_channel_get_io(channel);
 	if (!bdev_io) {
 		return -ENOMEM;
 	}
@@ -3473,7 +3473,7 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
-	bdev_io = spdk_bdev_get_io(channel);
+	bdev_io = bdev_channel_get_io(channel);
 	if (!bdev_io) {
 		return -ENOMEM;
 	}
@@ -3570,7 +3570,7 @@ spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channe
 		return -EBADF;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
+	bdev_io = bdev_channel_get_io(channel);
 	if (!bdev_io) {
 		return -ENOMEM;
 	}
@@ -3608,7 +3608,7 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 		return -EBADF;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
+	bdev_io = bdev_channel_get_io(channel);
 	if (!bdev_io) {
 		return -ENOMEM;
 	}
@@ -3646,7 +3646,7 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 		return -EBADF;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
+	bdev_io = bdev_channel_get_io(channel);
 	if (!bdev_io) {
 		return -ENOMEM;
 	}
