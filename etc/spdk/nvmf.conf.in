@@ -199,6 +199,10 @@
   # Default: No
   HotplugEnable No
 
+  # Enable/disable delayed NVMe command submission.
+  # Default: True.
+  DelayCmdSubmit True
+
 # The Split virtual block device slices block devices into multiple smaller bdevs.
 [Split]
   # Syntax:
