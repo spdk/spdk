@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10ee9832_20b562f1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1030,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T22:01:54Z",
+      "side": 1,
+      "message": "I think we should clarify what we mean by \"passed in\".  Something like:\n\nCheck the clear_method stored in metadata vs. what may have been passed via spdk_bs_open_blob_ext().",
+      "revId": "4a884ba4e53a4a6720661ae8d5a834f80fa7aa5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c47761af_2e428aae",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1031,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T22:01:54Z",
+      "side": 1,
+      "message": "update",
+      "revId": "4a884ba4e53a4a6720661ae8d5a834f80fa7aa5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b165e56_b18cf18f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T22:01:54Z",
+      "side": 1,
+      "message": "extra newline added",
+      "revId": "4a884ba4e53a4a6720661ae8d5a834f80fa7aa5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a7610ba_9bf54784",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 6353,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T22:01:54Z",
+      "side": 1,
+      "message": "this is a nit, but we normally leave an extra newline after the last variable declaration",
+      "revId": "4a884ba4e53a4a6720661ae8d5a834f80fa7aa5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3fb20c1c_1eefe082",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 6364,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T22:01:54Z",
+      "side": 1,
+      "message": "the else and if can be combined to eliminate one level of nesting",
+      "revId": "4a884ba4e53a4a6720661ae8d5a834f80fa7aa5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ebf9bd2a_679b2da6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 6366,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-18T22:01:54Z",
+      "side": 1,
+      "message": "I\u0027m OK with the WARNLOG, but it wouldn\u0027t be wrong to omit it either.  Using a different clear method than what was stored is a valid use case.",
+      "revId": "4a884ba4e53a4a6720661ae8d5a834f80fa7aa5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
