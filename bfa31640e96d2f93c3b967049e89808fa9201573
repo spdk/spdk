@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8261cf7c_12d79eaf",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T18:39:48Z",
+      "side": 1,
+      "message": "It\u0027s probably simpler, at this point, to write a static inlined function named NVME_TRANSPORT_CALL that returns the retval. With LTO, the performance impact will be effectively nothing.",
+      "revId": "bfa31640e96d2f93c3b967049e89808fa9201573",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
