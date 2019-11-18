@@ -86,6 +86,24 @@
       "revId": "04d7a217fee3254aea43a6842ea26b86f355a992",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1897d055_21489616",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1880,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-18T23:04:08Z",
+      "side": 1,
+      "message": "I forgot we removed the ability for modules to directly pass bdev_io down a layer, so there\u0027s no problem with this part.",
+      "parentUuid": "e5fa565d_e7e2c5cf",
+      "revId": "04d7a217fee3254aea43a6842ea26b86f355a992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
