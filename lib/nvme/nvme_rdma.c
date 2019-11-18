@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -139,6 +139,7 @@ struct nvme_rdma_qpair {
 
 	struct ibv_recv_wr			*rsp_recv_wrs;
 
+	bool					delay_cmd_submit;
 	/* Memory region describing all rsps for this qpair */
 	struct ibv_mr				*rsp_mr;
 
@@ -1452,7 +1453,8 @@ static struct spdk_nvme_qpair *
 nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 			     uint16_t qid, uint32_t qsize,
 			     enum spdk_nvme_qprio qprio,
-			     uint32_t num_requests)
+			     uint32_t num_requests,
+			     bool delay_cmd_submit)
 {
 	struct nvme_rdma_qpair *rqpair;
 	struct spdk_nvme_qpair *qpair;
@@ -1465,6 +1467,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	rqpair->num_entries = qsize;
+	rqpair->delay_cmd_submit = delay_cmd_submit;
 
 	qpair = &rqpair->qpair;
 
@@ -1569,7 +1572,8 @@ nvme_rdma_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 				const struct spdk_nvme_io_qpair_opts *opts)
 {
 	return nvme_rdma_ctrlr_create_qpair(ctrlr, qid, opts->io_queue_size, opts->qprio,
-					    opts->io_queue_requests);
+					    opts->io_queue_requests,
+					    opts->delay_cmd_submit);
 }
 
 int
@@ -1666,7 +1670,8 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 	}
 
 	rctrlr->ctrlr.adminq = nvme_rdma_ctrlr_create_qpair(&rctrlr->ctrlr, 0,
-			       SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES, 0, SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES);
+			       SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES, 0, SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES,
+			       false);
 	if (!rctrlr->ctrlr.adminq) {
 		SPDK_ERRLOG("failed to create admin qpair\n");
 		nvme_rdma_ctrlr_destruct(&rctrlr->ctrlr);
