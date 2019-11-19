@@ -175,6 +175,7 @@ spdk_rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_uint64(w, "tick_rate", spdk_get_ticks_hz());
+	spdk_json_write_named_uint64(w, "ticks", spdk_get_ticks());
 
 	spdk_json_write_named_array_begin(w, "bdevs");
 

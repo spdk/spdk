@@ -515,6 +515,7 @@ Example response:
   "id": 1,
   "result": {
     "tick_rate": 2400000000,
+    "ticks": 2523538189523655,
     "threads": [
       {
         "name": "reactor_0",
