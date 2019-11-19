@@ -312,7 +312,10 @@ function timing_finish() {
 }
 
 function create_test_list() {
-	grep -rshI --exclude="autotest_common.sh" --exclude="$rootdir/test/common/autotest_common.sh" -e "report_test_completion" $rootdir | sed 's/report_test_completion//g; s/[[:blank:]]//g; s/"//g;' > $output_dir/all_tests.txt || true
+	# First search all scripts in test directory recursively, then follow up with just main directory.
+	completion=$(grep -shI -d skip --include \*.sh --exclude="autotest_common.sh" --exclude="$rootdir/test/common/autotest_common.sh" -e "report_test_completion" $rootdir/*)
+	completion+=$(grep -rshI --include \*.sh --exclude="autotest_common.sh" --exclude="$rootdir/test/common/autotest_common.sh" -e "report_test_completion" $rootdir/test)
+	printf "$completion" | sed 's/report_test_completion//g; s/[[:blank:]]//g; s/"//g;' > $output_dir/all_tests.txt || true
 }
 
 function report_test_completion() {
