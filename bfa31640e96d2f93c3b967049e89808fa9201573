@@ -16,6 +16,24 @@
       "revId": "bfa31640e96d2f93c3b967049e89808fa9201573",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afe8b08c_ea1e20f6",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-19T18:01:09Z",
+      "side": 1,
+      "message": "How does that work exactly? There are at least six types returned from the various functions that use NVME_TRANSPORT_CALL in addition to the void ones. I still really like the overloading feature of the macros and we wouldn\u0027t be able to get that with an inlined function.",
+      "parentUuid": "8261cf7c_12d79eaf",
+      "revId": "bfa31640e96d2f93c3b967049e89808fa9201573",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
