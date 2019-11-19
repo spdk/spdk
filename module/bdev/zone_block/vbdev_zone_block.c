@@ -35,6 +35,7 @@
 
 #include "vbdev_zone_block.h"
 
+#include "spdk/conf.h"
 #include "spdk/config.h"
 #include "spdk/nvme.h"
 #include "spdk/bdev_zone.h"
@@ -45,13 +46,15 @@ static int zone_block_init(void);
 static int zone_block_get_ctx_size(void);
 static void zone_block_finish(void);
 static int zone_block_config_json(struct spdk_json_write_ctx *w);
+static void zone_block_config_text(FILE *fp);
 static void zone_block_examine(struct spdk_bdev *bdev);
+static int zone_block_bdev_parse_entry(struct spdk_conf_section *conf_section);
 
 static struct spdk_bdev_module bdev_zoned_if = {
 	.name = "bdev_zoned_block",
 	.module_init = zone_block_init,
 	.module_fini = zone_block_finish,
-	.config_text = NULL,
+	.config_text = zone_block_config_text,
 	.config_json = zone_block_config_json,
 	.examine_config = zone_block_examine,
 	.get_ctx_size = zone_block_get_ctx_size,
@@ -98,8 +101,39 @@ struct zone_block_io {
 };
 
 static int
+zone_block_bdev_parse_config(void)
+{
+	int                      ret;
+	struct spdk_conf_section *conf_section;
+
+	conf_section = spdk_conf_first_section(NULL);
+	while (conf_section != NULL) {
+		if (spdk_conf_section_match_prefix(conf_section, "Zone_Block")) {
+			ret = zone_block_bdev_parse_entry(conf_section);
+			if (ret < 0) {
+				SPDK_ERRLOG("Unable to parse zone block bdev section\n");
+				return ret;
+			}
+		}
+		conf_section = spdk_conf_next_section(conf_section);
+	}
+
+	return 0;
+}
+
+static int
 zone_block_init(void)
 {
+	int ret;
+
+	/* Parse config file for zone block */
+	ret = zone_block_bdev_parse_config();
+	if (ret < 0) {
+		SPDK_ERRLOG("zone block bdev init failed parsing\n");
+		zone_block_finish();
+		return ret;
+	}
+
 	return 0;
 }
 
@@ -148,6 +182,29 @@ zone_block_config_json(struct spdk_json_write_ctx *w)
 	}
 
 	return 0;
+}
+
+static void
+zone_block_config_text(FILE *fp)
+{
+	struct bdev_zone_block *bdev_node;
+	struct spdk_bdev *base_bdev;
+	int index = 1;
+
+	TAILQ_FOREACH(bdev_node, &g_bdev_nodes, link) {
+		base_bdev = spdk_bdev_desc_get_bdev(bdev_node->base_desc);
+		fprintf(fp,
+			"\n"
+			"[Zone_Block%d]\n"
+			"  Name %s\n"
+			"  Bdev %s\n"
+			"  ZoneCapacity %lu\n"
+			"  OptimalOpenZones %u\n",
+			index, spdk_bdev_get_name(&bdev_node->bdev), spdk_bdev_get_name(base_bdev),
+			bdev_node->zone_capacity, bdev_node->bdev.optimal_open_zones);
+		fprintf(fp, "\n");
+		index++;
+	}
 }
 
 /* Callback for unregistering the IO device. */
@@ -887,6 +944,79 @@ strdup_failed:
 free_config:
 	zone_block_remove_config(name);
 	return rc;
+}
+
+
+/*
+ * brief:
+ * zone_block_bdev_parse_entry is used to parse the zone_block bdev from config file based on
+ * pre-defined zone_block bdev format in config file.
+ * Format of config file:
+ *   [Zone_Block1]
+ *   Name zone1
+ *   Bdev Nvme0n1
+ *   ZoneCapacity 1024
+ *   OptimalOpenZones 1
+ *
+ *   [Zone_Block2]
+ *   Name zone2
+ *   Bdev Nvme1n1
+ *   ZoneCapacity 262144
+ *   OptimalOpenZones 2
+ *
+ * params:
+ * conf_section - pointer to config section
+ * returns:
+ * 0 - success
+ * non zero - failure
+ */
+static int
+zone_block_bdev_parse_entry(struct spdk_conf_section *conf_section)
+{
+	struct spdk_bdev *bdev = NULL;
+	const char *bdev_name = NULL;
+	const char *vbdev_name = NULL;
+	uint32_t zone_capacity, optimal_open_zones;
+	int rc, val;
+
+	vbdev_name = spdk_conf_section_get_val(conf_section, "Name");
+	if (vbdev_name == NULL) {
+		SPDK_ERRLOG("vbdev_name is null\n");
+		return -EINVAL;
+	}
+
+	bdev_name = spdk_conf_section_get_val(conf_section, "Bdev");
+	if (bdev_name == NULL) {
+		SPDK_ERRLOG("bdev_name is null\n");
+		return -EINVAL;
+	}
+
+	val = spdk_conf_section_get_intval(conf_section, "ZoneCapacity");
+	if (val < 0) {
+		return -EINVAL;
+	}
+	zone_capacity = val;
+
+	val = spdk_conf_section_get_intval(conf_section, "OptimalOpenZones");
+	if (val <= 0) {
+		return -EINVAL;
+	}
+	optimal_open_zones = val;
+
+	rc = zone_block_insert_name(bdev_name, vbdev_name, zone_capacity, optimal_open_zones);
+	if (rc != 0) {
+		return rc;
+	}
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	if (!bdev) {
+		/* This is not an error, even though the bdev is not present at this time it may
+		 * still show up later.
+		 */
+		return 0;
+	}
+
+	return zone_block_register(bdev);
 }
 
 int
