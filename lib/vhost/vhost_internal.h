@@ -320,7 +320,7 @@ void vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ct
  */
 
 int vhost_new_connection_cb(int vid, const char *ifname);
-int vhost_start_device_cb(int vid);
+int vhost_start_device_cb(int vid, struct spdk_vhost_virtqueue *vqueues, int max_queues);
 int vhost_stop_device_cb(int vid);
 int vhost_destroy_connection_cb(int vid);
 
