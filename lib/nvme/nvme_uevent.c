@@ -119,8 +119,7 @@ parse_event(const char *buf, struct spdk_uevent *event)
 			buf += 14;
 			snprintf(vfio_pci_addr, sizeof(vfio_pci_addr), "%s", buf);
 		}
-		while (*buf++)
-			;
+		buf++;
 	}
 
 	if (!strncmp(subsystem, "uio", 3)) {
