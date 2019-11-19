@@ -87,6 +87,15 @@ DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
 					struct spdk_json_write_ctx *w));
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc),
 	    (void *)0);
+DEFINE_STUB(spdk_conf_first_section, struct spdk_conf_section *, (struct spdk_conf *conf), NULL);
+DEFINE_STUB(spdk_conf_next_section, struct spdk_conf_section *, (struct spdk_conf_section *sp),
+	    NULL);
+DEFINE_STUB(spdk_conf_section_match_prefix, bool, (const struct spdk_conf_section *sp,
+		const char *name_prefix),
+	    false);
+DEFINE_STUB(spdk_conf_section_get_val, char *, (struct spdk_conf_section *sp, const char *key),
+	    NULL);
+DEFINE_STUB(spdk_conf_section_get_intval, int, (struct spdk_conf_section *sp, const char *key), 0);
 
 static void
 set_test_opts(void)
