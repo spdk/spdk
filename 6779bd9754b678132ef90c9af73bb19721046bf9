@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5098240d_d3dbc244",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1276,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-19T12:46:36Z",
+      "side": 1,
+      "message": "I looked up definitions once again and it looks like this patch does not change the behaviour at all. Abandoning. Sorry",
+      "range": {
+        "startLine": 1276,
+        "startChar": 1,
+        "endLine": 1276,
+        "endChar": 27
+      },
+      "revId": "6779bd9754b678132ef90c9af73bb19721046bf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
