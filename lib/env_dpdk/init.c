@@ -336,6 +336,16 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	}
 
 #ifdef __linux__
+
+#ifdef __PPC64__
+	/* On Linux + PowerPC, DPDK doesn't support VA mode at all. Unfortunately, it doesn't correctly
+	 * auto-detect at the moment, so we'll just force it here. */
+	args = spdk_push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
+	if (args == NULL) {
+		return -1;
+	}
+#endif
+
 	/* Set the base virtual address - it must be an address that is not in the
 	 * ASAN shadow region, otherwise ASAN-enabled builds will ignore the
 	 * mmap hint.
