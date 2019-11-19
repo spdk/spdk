@@ -402,6 +402,9 @@ spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
 	case SPDK_RING_TYPE_MP_MC:
 		flags |= 0;
 		break;
+	case SPDK_RING_TYPE_SP_MC:
+		flags |= RING_F_SP_ENQ;
+		break;
 	default:
 		return NULL;
 	}
