@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "96f78dad_824e6353",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1848,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-19T08:10:30Z",
+      "side": 1,
+      "message": "Unrelated white space change.",
+      "revId": "f51e1e3e30485821f30a61e533fc20ecf62b0b1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08c9d161_442053d6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2131,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-19T08:10:30Z",
+      "side": 1,
+      "message": "Should we check this is parent I/O? The upper layer don\u0027t know if the I/O is split or not. They will be surprised if they gets any timeout for children I/O.",
+      "range": {
+        "startLine": 2131,
+        "startChar": 6,
+        "endLine": 2131,
+        "endChar": 36
+      },
+      "revId": "f51e1e3e30485821f30a61e533fc20ecf62b0b1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8be036a6_387dd46a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 9
@@ -13,6 +53,30 @@
       "writtenOn": "2019-11-19T06:48:47Z",
       "side": 1,
       "message": "timeout_in_sec should be the caller\u0027s setting, while in the bdev layer, if the poller still use this value, it\u0027s not accurate. I think the poller period should be much smaller that user\u0027s input, e.g: 1 second.",
+      "range": {
+        "startLine": 2159,
+        "startChar": 7,
+        "endLine": 2159,
+        "endChar": 46
+      },
+      "revId": "f51e1e3e30485821f30a61e533fc20ecf62b0b1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2a98fe8_d3a92ad0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2159,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-19T08:10:30Z",
+      "side": 1,
+      "message": "Agree with Changpeng, but I think at least 1 or 10 msec is better.",
+      "parentUuid": "8be036a6_387dd46a",
       "range": {
         "startLine": 2159,
         "startChar": 7,
