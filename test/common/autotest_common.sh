@@ -101,6 +101,9 @@ echo "leak:spdk_fio_io_u_init" >> "$asan_suppression_file"
 # Suppress leaks in libiscsi
 echo "leak:libiscsi.so" >> "$asan_suppression_file"
 
+# Suppress leaks in libfuse3
+echo "leak:libfuse3.so" >> "$asan_suppression_file"
+
 export LSAN_OPTIONS=suppressions="$asan_suppression_file"
 
 export DEFAULT_RPC_ADDR="/var/tmp/spdk.sock"
