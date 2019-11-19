@@ -14,9 +14,7 @@ function opal_init() {
 
 	# Ignore bdev_nvme_opal_init failure because sometimes revert TPer might fail and
 	# in another run we don't want init to return errors to stop other tests.
-	set +e
-	$rpc_py bdev_nvme_opal_init -b nvme0 -p test
-	set -e
+	$rpc_py bdev_nvme_opal_init -b nvme0 -p test || true
 }
 
 function test_opal_cmds() {
@@ -72,9 +70,7 @@ function clean_up() {
 
 function revert() {
 	# Ignore revert failure and kill the process
-	set +e
-	$rpc_py bdev_nvme_opal_revert -b nvme0 -p test
-	set -e
+	$rpc_py bdev_nvme_opal_revert -b nvme0 -p test || true
 }
 
 $rootdir/app/spdk_tgt/spdk_tgt &
