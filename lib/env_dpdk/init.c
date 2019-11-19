@@ -382,6 +382,15 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	}
 #endif
 
+#ifdef __PPC64__
+	/* On PowerPC, DPDK doesn't support VA mode at all. Unfortunately, it doesn't correctly
+	 * auto-detect at the moment, so we'll just force it here. */
+	args = spdk_push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
+	if (args == NULL) {
+		return -1;
+	}
+#endif
+
 	g_eal_cmdline = args;
 	g_eal_cmdline_argcount = argcount;
 	return argcount;
