@@ -2797,7 +2797,8 @@ start_queued_transfer_tasks(struct spdk_iscsi_conn *conn)
 	}
 }
 
-void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
+bool
+spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 {
 	struct spdk_iscsi_task *task;
 	int i;
@@ -2812,11 +2813,11 @@ void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 				conn->outstanding_r2t_tasks[i] = conn->outstanding_r2t_tasks[i + 1];
 			}
 			conn->outstanding_r2t_tasks[conn->pending_r2t] = NULL;
-			break;
+			start_queued_transfer_tasks(conn);
+			return true;
 		}
 	}
-
-	start_queued_transfer_tasks(conn);
+	return false;
 }
 
 static void
