@@ -175,6 +175,73 @@ spdk_push_arg(char *args[], int *argcount, char *arg)
 	return tmp;
 }
 
+#ifdef __linux__
+
+/* TODO: Can likely get this value from rlimits in the future */
+#define SPDK_IOMMU_VA_REQUIRED_WIDTH 48
+
+static int
+spdk_get_iommu_width(void)
+{
+	DIR *dir;
+	FILE *file;
+	struct dirent *entry;
+	char mgaw_path[64];
+	char buf[64];
+	char *end;
+	long long int val;
+	int width, tmp;
+
+	dir = opendir("/sys/devices/virtual/iommu/");
+	if (dir == NULL) {
+		return -EINVAL;
+	}
+
+	width = 0;
+
+	while ((entry = readdir(dir)) != NULL) {
+		/* Find directories named "dmar0", "dmar1", etc */
+		if (strncmp(entry->d_name, "dmar", sizeof("dmar") - 1) != 0) {
+			continue;
+		}
+
+		tmp = snprintf(mgaw_path, sizeof(mgaw_path), "/sys/devices/virtual/iommu/%s/intel-iommu/cap",
+			       entry->d_name);
+		if ((unsigned)tmp >= sizeof(mgaw_path)) {
+			continue;
+		}
+
+		file = fopen(mgaw_path, "r");
+		if (file == NULL) {
+			continue;
+		}
+
+		if (fgets(buf, sizeof(buf), file) == NULL) {
+			fclose(file);
+			continue;
+		}
+
+		val = strtoll(buf, &end, 16);
+		if (val == LLONG_MIN || val == LLONG_MAX) {
+			fclose(file);
+			continue;
+		}
+
+		tmp = ((val & (0x3F << 16)) >> 16) + 1;
+		if (width == 0 || tmp < width) {
+			width = tmp;
+		}
+
+		fclose(file);
+	}
+
+	closedir(dir);
+
+	return width;
+}
+
+#endif
+
 static int
 spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 {
@@ -336,6 +403,19 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	}
 
 #ifdef __linux__
+
+	/* DPDK by default guesses that it should be using iova-mode=va so that it can
+	 * support running as an unprivileged user. However, some systems (especially
+	 * virtual machines) don't have an IOMMU capable of handling the full virtual
+	 * address space and DPDK doesn't currently catch that. Add a check in SPDK
+	 * and force iova-mode=pa here. */
+	if (spdk_get_iommu_width() < SPDK_IOMMU_VA_REQUIRED_WIDTH) {
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--iova-mode=pa"));
+		if (args == NULL) {
+			return -1;
+		}
+	}
+
 	/* Set the base virtual address - it must be an address that is not in the
 	 * ASAN shadow region, otherwise ASAN-enabled builds will ignore the
 	 * mmap hint.
