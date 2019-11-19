@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c2f8948_ec2f3a39",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1876,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-19T07:57:44Z",
+      "side": 1,
+      "message": "If I understand correctly, this case is not monitored.\nChildren are monitored correctly but they are not visible to the upper layer.",
+      "range": {
+        "startLine": 1876,
+        "startChar": 2,
+        "endLine": 1876,
+        "endChar": 20
+      },
+      "revId": "382233e76aa7da806c5c74e2ce6f38f9069fa30e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
