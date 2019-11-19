@@ -1027,7 +1027,7 @@ vhost_stop_device_cb(int vid)
 }
 
 int
-vhost_start_device_cb(int vid)
+vhost_start_device_cb(int vid, struct spdk_vhost_virtqueue *vqueues, int max_queues)
 {
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_session *vsession;
@@ -1049,29 +1049,10 @@ vhost_start_device_cb(int vid)
 		goto out;
 	}
 
-	vsession->max_queues = 0;
+	vsession->max_queues = max_queues;
 	memset(vsession->virtqueue, 0, sizeof(vsession->virtqueue));
-	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
-		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
-
-		q->vring_idx = -1;
-		if (rte_vhost_get_vhost_vring(vid, i, &q->vring)) {
-			continue;
-		}
-		q->vring_idx = i;
-
-		if (q->vring.desc == NULL || q->vring.size == 0) {
-			continue;
-		}
-
-		if (rte_vhost_get_vring_base(vsession->vid, i, &q->last_avail_idx, &q->last_used_idx)) {
-			q->vring.desc = NULL;
-			continue;
-		}
-
-		/* Disable I/O submission notifications, we'll be polling. */
-		q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
-		vsession->max_queues = i + 1;
+	for (i = 0; i < max_queues; i++) {
+		vsession->virtqueue[i] = vqueues[i];
 	}
 
 	if (vhost_get_negotiated_features(vid, &vsession->negotiated_features) != 0) {
