@@ -118,10 +118,38 @@ new_connection(int vid)
 	return vhost_new_connection_cb(vid, ifname);
 }
 
+struct spdk_vhost_virtqueue device_queues_buffer[SPDK_VHOST_MAX_VQUEUES];
+
 static int
 start_device(int vid)
 {
-	return vhost_start_device_cb(vid);
+	int i, max_queues = 0;
+
+	memset(device_queues_buffer, 0, sizeof(device_queues_buffer));
+	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
+		struct spdk_vhost_virtqueue *q = &device_queues_buffer[i];
+
+		q->vring_idx = -1;
+		if (rte_vhost_get_vhost_vring(vid, i, &q->vring)) {
+			continue;
+		}
+		q->vring_idx = i;
+
+		if (q->vring.desc == NULL || q->vring.size == 0) {
+			continue;
+		}
+
+		if (rte_vhost_get_vring_base(vid, i, &q->last_avail_idx, &q->last_used_idx)) {
+			q->vring.desc = NULL;
+			continue;
+		}
+
+		/* Disable I/O submission notifications, we'll be polling. */
+		q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
+		max_queues = i + 1;
+	}
+
+	return vhost_start_device_cb(vid, device_queues_buffer, max_queues);
 }
 
 static void
