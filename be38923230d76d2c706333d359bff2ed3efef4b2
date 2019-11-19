@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ca02021f_2def8b46",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-19T17:52:01Z",
+      "side": 1,
+      "message": "That\u0027s a nice trick! I think I\u0027ll use it, but I\u0027ll make sure to include a comment because I know that will confuse the crap out of me in 6 months.",
+      "parentUuid": "1f2559ac_a19414bc",
+      "revId": "be38923230d76d2c706333d359bff2ed3efef4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c1cc8f49_0adedb91",
         "filename": "module/bdev/nvme/bdev_nvme.c",
         "patchSetId": 11
@@ -30,6 +48,24 @@
       "writtenOn": "2019-11-18T18:02:42Z",
       "side": 1,
       "message": "Getting the I/O channel takes a reference to it. You need to also put the channel when you\u0027re done with this approach. However, it\u0027d probably be better if you passed the channel into this function because the callpoint already has a channel.",
+      "revId": "be38923230d76d2c706333d359bff2ed3efef4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e4a9c19_f192ab14",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-19T17:52:01Z",
+      "side": 1,
+      "message": "Nice catch. Thanks! I think I\u0027ll keep using this method where I pull the channel here, because this call point has a channel already, but some of the ones I use in the next couple of changes don\u0027t, for example spdk_nvme_abort_cpl and the bdev_nvme timeout_cb.",
+      "parentUuid": "c1cc8f49_0adedb91",
       "revId": "be38923230d76d2c706333d359bff2ed3efef4b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
