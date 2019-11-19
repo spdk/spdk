@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1bb9d450_4b09868f",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-19T19:32:31Z",
+      "side": 1,
+      "message": "what happens with this on ARM?  I think this function will always return 0 which will fail the check and always force iova\u003dpa.  Maybe run this by Alexey?",
+      "revId": "cbaecf334293ccf46eff039004c10603c4adb8a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b532b0ca_6ef8e912",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-19T19:32:31Z",
+      "side": 1,
+      "message": "Will DPDK get pissed if we specify --iova-mode\u003dpa twice (once here, once for PPC case)?\n\nI say you just move the PPC stuff here into Linux.  I don\u0027t think DPDK supports anything but PA on FreeBSD, and PPC is a tier 2 architecture on FreeBSD anyways.  Then you can put all of the --iova-mode stuff together.",
+      "revId": "cbaecf334293ccf46eff039004c10603c4adb8a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
