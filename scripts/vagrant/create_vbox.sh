@@ -24,6 +24,7 @@ display_help() {
 	echo "                                  usage: type <number_of_namespaces> types available: ocssd, nvme"
 	echo "                                  If no -b option is specified then this option defaults to emulating single"
 	echo "                                  NVMe with 1 namespace and assumes path: /var/lib/libvirt/images/nvme_disk.img"
+	echo "  -c                              create all above disk, default 0"
 	echo "  -s <ram-size> in kb             default: ${SPDK_VAGRANT_VMRAM}"
 	echo "  -n <num-cpus> 1 to 4            default: ${SPDK_VAGRANT_VMCPU}"
 	echo "  -x <http-proxy>                 default: \"${SPDK_VAGRANT_HTTP_PROXY}\""
@@ -69,9 +70,10 @@ OPTIND=1
 NVME_DISKS_TYPE=""
 NVME_DISKS_NAMESPACES=""
 NVME_FILE=""
+NVME_AUTO_CREATE=0
 VAGRANTFILE_DIR=""
 
-while getopts ":b:n:s:x:p:vrldh-:" opt; do
+while getopts ":b:n:s:x:p:vcrldh-:" opt; do
 	case "${opt}" in
 		-)
 		case "${OPTARG}" in
@@ -98,6 +100,9 @@ while getopts ":b:n:s:x:p:vrldh-:" opt; do
 		;;
 		v)
 			VERBOSE=1
+		;;
+		c)
+			NVME_AUTO_CREATE=1
 		;;
 		r)
 			DRY_RUN=1
@@ -180,6 +185,9 @@ else
 				namespace="1"
 			fi
 			NVME_DISKS_NAMESPACES+="$namespace,";
+			if [ ${NVME_AUTO_CREATE} = 1 ]; then
+				$SPDK_DIR/scripts/vagrant/create_nvme_img.sh -t $type -n $path
+			fi
 		done <<< $args
 	done
 fi
@@ -194,6 +202,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo DRY_RUN=$DRY_RUN
 	echo NVME_FILE=$NVME_FILE
 	echo NVME_DISKS_TYPE=$NVME_DISKS_TYPE
+	echo NVME_AUTO_CREATE=$NVME_AUTO_CREATE
 	echo NVME_DISKS_NAMESPACES=$NVME_DISKS_NAMESPACES
 	echo SPDK_VAGRANT_DISTRO=$SPDK_VAGRANT_DISTRO
 	echo SPDK_VAGRANT_VMCPU=$SPDK_VAGRANT_VMCPU
@@ -245,6 +254,7 @@ if [ ${DRY_RUN} = 1 ]; then
 	printenv SPDK_VAGRANT_HTTP_PROXY
 	printenv SPDK_QEMU_EMULATOR
 	printenv NVME_DISKS_TYPE
+	printenv NVME_AUTO_CREATE
 	printenv NVME_DISKS_NAMESPACES
 	printenv NVME_FILE
 	printenv SPDK_DIR
