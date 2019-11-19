@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 SYSTEM=$(uname -s)
 size="1024M"
-name="nvme_disk.img"
+nvme_disk="/var/lib/libvirt/images/nvme_disk.img"
 type="nvme"
 
 function usage() {
 	echo "Usage: ${0##*/} [-s <disk_size>] [-n <backing file name>]"
 	echo "-s <disk_size> with postfix e.g. 2G        default: 1024M"
-	echo "-n <backing file name>             default: nvme_disk.img"
+	echo "                                    for OCSSD default: 9G"
+	echo "-n <backing file name>        backing file path with name"
+	echo "           default: /var/lib/libvirt/images/nvme_disk.img"
 	echo "-t <type>                  default: nvme available: ocssd"
 }
 
@@ -22,7 +24,7 @@ while getopts "s:n:t:h-:" opt; do
 			size=$OPTARG
 		;;
 		n)
-			name=$OPTARG
+			nvme_disk=$OPTARG
 		;;
 		t)
 			type=$OPTARG
@@ -41,12 +43,14 @@ done
 
 if [ ! "${SYSTEM}" = "FreeBSD" ]; then
 	WHICH_OS=$(lsb_release -i | awk '{print $3}')
-	nvme_disk="/var/lib/libvirt/images/$name"
 	case $type in
 		"nvme")
 			qemu-img create -f raw $nvme_disk ${size}
 		;;
 		"ocssd")
+			if [ ${size} == "1024M" ]; then
+				size="9G"
+			fi
 			fallocate -l ${size} $nvme_disk
 			touch /var/lib/libvirt/images/ocssd_md
 		;;
