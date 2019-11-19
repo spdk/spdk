@@ -1081,11 +1081,6 @@ process_non_read_task_completion(struct spdk_iscsi_conn *conn,
 	}
 
 	if (primary->bytes_completed == primary->scsi.transfer_len) {
-		spdk_del_transfer_task(conn, primary->tag);
-		if (primary->rsp_scsi_status != SPDK_SCSI_STATUS_GOOD) {
-			iscsi_task_copy_from_rsp_scsi_status(&primary->scsi, primary);
-		}
-		spdk_iscsi_task_response(conn, primary);
 		/*
 		 * Check if this is the last task completed for an iSCSI write
 		 *  that required child subtasks.  If task != primary, we know
@@ -1095,8 +1090,15 @@ process_non_read_task_completion(struct spdk_iscsi_conn *conn,
 		 *  the overall transfer length.
 		 */
 		if (task != primary || task->scsi.length != task->scsi.transfer_len) {
+			spdk_del_transfer_task(conn, primary->tag);
+			if (primary->rsp_scsi_status != SPDK_SCSI_STATUS_GOOD) {
+				iscsi_task_copy_from_rsp_scsi_status(&primary->scsi, primary);
+			}
+			spdk_iscsi_task_response(conn, primary);
 			TAILQ_REMOVE(&conn->active_r2t_tasks, primary, link);
 			spdk_iscsi_task_put(primary);
+		} else {
+			spdk_iscsi_task_response(conn, task);
 		}
 	}
 	spdk_iscsi_task_put(task);
