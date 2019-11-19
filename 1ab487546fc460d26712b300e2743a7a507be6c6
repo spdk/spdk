@@ -34,6 +34,24 @@
       "revId": "1ab487546fc460d26712b300e2743a7a507be6c6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ace765bb_138a7cba",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1496,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-19T21:19:36Z",
+      "side": 1,
+      "message": "I was worried about blocking when we make it actually async. This is fine for now though.",
+      "parentUuid": "af29ec27_868a9358",
+      "revId": "1ab487546fc460d26712b300e2743a7a507be6c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
