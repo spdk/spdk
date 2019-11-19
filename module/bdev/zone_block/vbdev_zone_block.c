@@ -35,6 +35,7 @@
 
 #include "vbdev_zone_block.h"
 
+#include "spdk/conf.h"
 #include "spdk/config.h"
 #include "spdk/nvme.h"
 #include "spdk/bdev_zone.h"
@@ -45,13 +46,15 @@ static int zone_block_init(void);
 static int zone_block_get_ctx_size(void);
 static void zone_block_finish(void);
 static int zone_block_config_json(struct spdk_json_write_ctx *w);
+static void zone_block_config_text(FILE *fp);
 static void zone_block_examine(struct spdk_bdev *bdev);
+static int zone_block_register(struct spdk_bdev *base_bdev);
 
 static struct spdk_bdev_module bdev_zoned_if = {
 	.name = "bdev_zoned_block",
 	.module_init = zone_block_init,
 	.module_fini = zone_block_finish,
-	.config_text = NULL,
+	.config_text = zone_block_config_text,
 	.config_json = zone_block_config_json,
 	.examine_config = zone_block_examine,
 	.get_ctx_size = zone_block_get_ctx_size,
@@ -98,8 +101,153 @@ struct zone_block_io {
 };
 
 static int
+zone_block_insert_name(const char *bdev_name, const char *vbdev_name, uint64_t zone_capacity,
+		       uint64_t optimal_open_zones)
+{
+	struct bdev_zone_block_config *name;
+
+	TAILQ_FOREACH(name, &g_bdev_configs, link) {
+		if (strcmp(vbdev_name, name->vbdev_name) == 0) {
+			SPDK_ERRLOG("block zoned bdev %s already exists\n", vbdev_name);
+			return -EEXIST;
+		}
+		if (strcmp(bdev_name, name->bdev_name) == 0) {
+			SPDK_ERRLOG("base bdev %s already claimed\n", bdev_name);
+			return -EEXIST;
+		}
+	}
+
+	name = calloc(1, sizeof(*name));
+	if (!name) {
+		SPDK_ERRLOG("could not allocate bdev_names\n");
+		return -ENOMEM;
+	}
+
+	name->bdev_name = strdup(bdev_name);
+	if (!name->bdev_name) {
+		SPDK_ERRLOG("could not allocate name->bdev_name\n");
+		free(name);
+		return -ENOMEM;
+	}
+
+	name->vbdev_name = strdup(vbdev_name);
+	if (!name->vbdev_name) {
+		SPDK_ERRLOG("could not allocate name->vbdev_name\n");
+		free(name->bdev_name);
+		free(name);
+		return -ENOMEM;
+	}
+
+	name->zone_capacity = zone_capacity;
+	name->optimal_open_zones = optimal_open_zones;
+
+	TAILQ_INSERT_TAIL(&g_bdev_configs, name, link);
+
+	return 0;
+}
+
+/*
+ * brief:
+ * zone_block_bdev_parse_config is used to parse the zone_block bdev from config file based on
+ * pre-defined zone_block bdev format in config file.
+ * Format of config file:
+ *   [Zone_Block]
+ *   Zone_Block zone1 Nvme0n1 1024 1
+ *   Zone_Block zone2 Nvme1n1 262144 2
+ *   Zone_Block vbdev_name bdev_name zone_capacity optimal_open_zones
+ */
+static int
+zone_block_bdev_parse_config(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_conf_section *conf_section;
+	const char *bdev_name, *vbdev_name, *val;
+	uint64_t zone_capacity, optimal_open_zones;
+	int i, rc;
+
+	conf_section = spdk_conf_find_section(NULL, "Zone_Block");
+	if (conf_section == NULL) {
+		return 0;
+	}
+
+	for (i = 0; ; i++) {
+		if (!spdk_conf_section_get_nval(conf_section, "Zone_Block", i)) {
+			break;
+		}
+
+		vbdev_name = spdk_conf_section_get_nmval(conf_section, "Zone_Block", i, 0);
+		if (!vbdev_name) {
+			SPDK_ERRLOG("vbdev_name is null\n");
+			return -1;
+		}
+
+		bdev_name = spdk_conf_section_get_nmval(conf_section, "Zone_Block", i, 1);
+		if (!bdev_name) {
+			SPDK_ERRLOG("bdev_name is null\n");
+			return -1;
+		}
+
+		val = spdk_conf_section_get_nmval(conf_section, "Zone_Block", i, 2);
+		if (!val) {
+			SPDK_ERRLOG("Zone capacity is null\n");
+			return -1;
+		}
+
+		errno = 0;
+		zone_capacity = strtoull(val, NULL, 10);
+		if (errno) {
+			SPDK_ERRLOG("Null entry %d: Invalid zone capacity %s\n", i, val);
+			return -1;
+		}
+
+		val = spdk_conf_section_get_nmval(conf_section, "Zone_Block", i, 3);
+		if (!val) {
+			SPDK_ERRLOG("Optimal open zones is null\n");
+			break;
+		}
+
+		errno = 0;
+		optimal_open_zones = strtoull(val, NULL, 10);
+		if (errno) {
+			SPDK_ERRLOG("Null entry %d: Invalid optimal open zones %s\n", i, val);
+			return -1;
+		}
+
+		rc = zone_block_insert_name(bdev_name, vbdev_name, zone_capacity, optimal_open_zones);
+		if (rc != 0) {
+			return rc;
+		}
+
+		bdev = spdk_bdev_get_by_name(bdev_name);
+		if (!bdev) {
+			/* This is not an error, even though the bdev is not present at this time it may
+			 * still show up later.
+			 */
+			continue;
+		}
+
+		rc = zone_block_register(bdev);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
+static int
 zone_block_init(void)
 {
+	int ret;
+
+	/* Parse config file for zone block */
+	ret = zone_block_bdev_parse_config();
+	if (ret < 0) {
+		SPDK_ERRLOG("zone block bdev init failed parsing\n");
+		zone_block_finish();
+		return ret;
+	}
+
 	return 0;
 }
 
@@ -148,6 +296,25 @@ zone_block_config_json(struct spdk_json_write_ctx *w)
 	}
 
 	return 0;
+}
+
+static void
+zone_block_config_text(FILE *fp)
+{
+	struct bdev_zone_block *bdev_node;
+	struct spdk_bdev *base_bdev;
+
+	fprintf(fp, "\n[Zone_Block]\n");
+	TAILQ_FOREACH(bdev_node, &g_bdev_nodes, link) {
+		base_bdev = spdk_bdev_desc_get_bdev(bdev_node->base_desc);
+		fprintf(fp,
+			"\n"
+			"  Zone_Block %s %s %lu %u",
+			spdk_bdev_get_name(&bdev_node->bdev), spdk_bdev_get_name(base_bdev),
+			bdev_node->zone_capacity, bdev_node->bdev.optimal_open_zones);
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\n");
 }
 
 /* Callback for unregistering the IO device. */
@@ -610,52 +777,6 @@ _zone_block_ch_destroy_cb(void *io_device, void *ctx_buf)
 	struct zone_block_io_channel *bdev_ch = ctx_buf;
 
 	spdk_put_io_channel(bdev_ch->base_ch);
-}
-
-static int
-zone_block_insert_name(const char *bdev_name, const char *vbdev_name, uint64_t zone_capacity,
-		       uint64_t optimal_open_zones)
-{
-	struct bdev_zone_block_config *name;
-
-	TAILQ_FOREACH(name, &g_bdev_configs, link) {
-		if (strcmp(vbdev_name, name->vbdev_name) == 0) {
-			SPDK_ERRLOG("block zoned bdev %s already exists\n", vbdev_name);
-			return -EEXIST;
-		}
-		if (strcmp(bdev_name, name->bdev_name) == 0) {
-			SPDK_ERRLOG("base bdev %s already claimed\n", bdev_name);
-			return -EEXIST;
-		}
-	}
-
-	name = calloc(1, sizeof(*name));
-	if (!name) {
-		SPDK_ERRLOG("could not allocate bdev_names\n");
-		return -ENOMEM;
-	}
-
-	name->bdev_name = strdup(bdev_name);
-	if (!name->bdev_name) {
-		SPDK_ERRLOG("could not allocate name->bdev_name\n");
-		free(name);
-		return -ENOMEM;
-	}
-
-	name->vbdev_name = strdup(vbdev_name);
-	if (!name->vbdev_name) {
-		SPDK_ERRLOG("could not allocate name->vbdev_name\n");
-		free(name->bdev_name);
-		free(name);
-		return -ENOMEM;
-	}
-
-	name->zone_capacity = zone_capacity;
-	name->optimal_open_zones = optimal_open_zones;
-
-	TAILQ_INSERT_TAIL(&g_bdev_configs, name, link);
-
-	return 0;
 }
 
 static int
