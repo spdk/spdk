@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f84f96ca_e71b1c09",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-19T19:09:00Z",
+      "side": 1,
+      "message": "Hi Vitaly,\n\nI like this change.  But could we split it into two patches?  I feel like this patch is both moving the feature masks from the backend to the vdev structure, as well as changing how some of these #defines are initially defined and passed to rte_vhost.\n\nTake VIRTIO_BLK_F_RO for example.  Previously we would set this flag in both virtio_features and disabled_features.  This gets passed to vhost_dev_register.  That will make this flag set in DPDK\u0027s supported_features, but clear it in features.\n\nBut now with this patch, if RO isn\u0027t set, then VIRTIO_BLK_F_RO is never set in supported_features.\n\nMaybe the new method is better, but I think it could use a bit more explaining at least, if not separating into multiple patches.  I always find how we specify these feature flags a bit \nconfusing.  :-)\n\nThanks,\n\n-Jim",
+      "revId": "bbe7645d85401912c5477c609e661a528e7ab46c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
