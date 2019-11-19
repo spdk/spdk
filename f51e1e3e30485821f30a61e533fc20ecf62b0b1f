@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8be036a6_387dd46a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2159,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-19T06:48:47Z",
+      "side": 1,
+      "message": "timeout_in_sec should be the caller\u0027s setting, while in the bdev layer, if the poller still use this value, it\u0027s not accurate. I think the poller period should be much smaller that user\u0027s input, e.g: 1 second.",
+      "range": {
+        "startLine": 2159,
+        "startChar": 7,
+        "endLine": 2159,
+        "endChar": 46
+      },
+      "revId": "f51e1e3e30485821f30a61e533fc20ecf62b0b1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
