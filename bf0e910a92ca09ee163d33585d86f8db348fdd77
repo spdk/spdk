@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d27a2fed_9ab47c4d",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-19T17:25:44Z",
+      "side": 1,
+      "message": "This is the assert that it\u0027s failing on.  We may need to remove this assert for now - it won\u0027t be valid when controller is shutdown without first unregistering CUSE.",
+      "revId": "bf0e910a92ca09ee163d33585d86f8db348fdd77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
