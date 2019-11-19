@@ -63,6 +63,8 @@ function get_io_result() {
 	else
 		io_result_before=$(echo $io_result | jq -r '.bdevs[0].bytes_read')
 	fi
+	tick_rate=$(echo $io_result | jq -r '.tick_rate')
+	ticks_before=$(echo $io_result | jq -r '.ticks')
 
 	sleep $QOS_RUN_TIME
 
@@ -72,8 +74,9 @@ function get_io_result() {
 	else
 		io_result_after=$(echo $io_result | jq -r '.bdevs[0].bytes_read')
 	fi
+	ticks_after=$(echo $io_result | jq -r '.ticks')
 
-	echo $(((io_result_after-io_result_before)/QOS_RUN_TIME))
+	echo $((((io_result_after-io_result_before)*tick_rate)/(ticks_after-ticks_before)))
 }
 
 function run_qos_test() {
