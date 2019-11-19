@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22c4ee59_6f1d66ee",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1201,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-11-19T10:05:04Z",
+      "side": 1,
+      "message": "Should not we remove \"spdk\" from functions starting with underscore?",
+      "range": {
+        "startLine": 1201,
+        "startChar": 0,
+        "endLine": 1201,
+        "endChar": 4
+      },
+      "revId": "02b8513f15800f29c9eb63f92c214bd9a0667042",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
