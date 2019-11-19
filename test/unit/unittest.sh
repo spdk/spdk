@@ -78,6 +78,7 @@ function unittest_nvme {
 	$valgrind $testdir/lib/nvme/nvme_pcie.c/nvme_pcie_ut
 	$valgrind $testdir/lib/nvme/nvme_quirks.c/nvme_quirks_ut
 	$valgrind $testdir/lib/nvme/nvme_tcp.c/nvme_tcp_ut
+	$valgrind $testdir/lib/nvme/nvme_uevent.c/nvme_uevent_ut
 }
 
 function unittest_nvmf {
