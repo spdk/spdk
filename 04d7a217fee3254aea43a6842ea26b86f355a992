@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "669d6a88_11944ea1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1878,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-19T00:01:29Z",
+      "side": 1,
+      "message": "No - this has to be a TAILQ.  STAILQ has O(n) removal, and IO will be completed out of order.\n\nThis will add some overhead, but I think there are other places where we\u0027re going to need this eventually.  A couple of examples come to mind:\n\n1) spdk_bdev_abort_io() - the idea where user passes the cb_arg related to some previously submitted IO, then we can search the io_submitted list, find the matching bdev_io and tell the bdev module to abort it\n2) smarter bdev resets - somewhat related to the timeout concept here, don\u0027t immediately pass the reset to the underlying bdev module, only do it if there is actually some I/O that has been outstanding for a long period of time (it\u0027s a bit more complicated than that but you get the idea)",
+      "parentUuid": "2a8d9853_f121f73a",
+      "revId": "04d7a217fee3254aea43a6842ea26b86f355a992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3dd0b265_c0ec5dfe",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
