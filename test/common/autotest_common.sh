@@ -914,14 +914,12 @@ function opal_revert_cleanup {
 	spdk_tgt_pid=$!
 	waitforlisten $spdk_tgt_pid
 
-	# ignore the result
-	set +e
 	# OPAL test only runs on the first NVMe device
 	# So we just revert the first one here
 	bdf=$($rootdir/scripts/gen_nvme.sh --json | jq -r '.config[].params | select(.name=="Nvme0").traddr')
 	$rootdir/scripts/rpc.py bdev_nvme_attach_controller -b "nvme0" -t "pcie" -a $bdf
-	$rootdir/scripts/rpc.py bdev_nvme_opal_revert -b nvme0 -p test
-	set -e
+	# Ignore if this fails.
+	$rootdir/scripts/rpc.py bdev_nvme_opal_revert -b nvme0 -p test || true
 
 	killprocess $spdk_tgt_pid
 }
