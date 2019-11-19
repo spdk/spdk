@@ -40,6 +40,11 @@
 #include "ctx.h"
 #include "data.h"
 
+/*
+ * OCF for atomic IOs require block len equal to 512B
+ */
+#define ATOMIC_BLOCK_LEN 512
+
 /* ocf_io context
  * It is initialized from io size and offset */
 struct ocf_io_ctx {
@@ -50,6 +55,7 @@ struct ocf_io_ctx {
 	int rq_cnt;
 	int error;
 	bool iovs_allocated;
+	void *md_buf;
 };
 
 int vbdev_ocf_volume_init(void);
