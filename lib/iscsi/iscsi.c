@@ -4934,7 +4934,7 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 			}
 
 			if (conn->is_logged_out) {
-				SPDK_ERRLOG("pdu received after logout\n");
+				SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "pdu received after logout\n");
 				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_ERROR;
 				break;
 			}
