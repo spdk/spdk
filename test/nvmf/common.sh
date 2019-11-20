@@ -247,9 +247,9 @@ function check_ip_is_soft_roce()
 	if hash rxe_cfg; then
 		dev=$(ip -4 -o addr show | grep $IP | cut -d" " -f2)
 		if (rxe_cfg | grep $dev | awk '{print $4}' | grep -q "rxe"); then
-			return 1
-		else
 			return 0
+		else
+			return 1
 		fi
 	else
 		return 1
