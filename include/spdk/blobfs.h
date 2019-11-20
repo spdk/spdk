@@ -60,6 +60,10 @@ struct spdk_blobfs_opts {
 struct spdk_file_stat {
 	spdk_blob_id	blobid;
 	uint64_t	size;
+
+	struct timespec a_time;
+	struct timespec m_time;
+	struct timespec c_time;
 };
 
 /**
