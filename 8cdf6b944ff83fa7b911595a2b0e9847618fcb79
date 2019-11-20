@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "7ace2377_cbd769b7",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T23:03:16Z",
+      "side": 1,
+      "message": "Thank you for kind comments. I had not understood background. The patch will be fine to me if changing only macro constants.",
+      "parentUuid": "6823879c_296f25cc",
+      "revId": "8cdf6b944ff83fa7b911595a2b0e9847618fcb79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "736f44c3_4b812751",
         "filename": "lib/env_dpdk/init.c",
         "patchSetId": 2
