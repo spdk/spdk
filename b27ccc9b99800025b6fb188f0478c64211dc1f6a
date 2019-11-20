@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8bf1dcb4_bb6eb623",
+        "filename": "examples/nvmf/nvmf/README.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-20T23:23:53Z",
+      "side": 1,
+      "message": "This section is out-dated now, since it isn\u0027t going to use multiple targets at first.",
+      "revId": "b27ccc9b99800025b6fb188f0478c64211dc1f6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fab9321_67ca88a3",
+        "filename": "examples/nvmf/nvmf/README.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-20T23:23:53Z",
+      "side": 1,
+      "message": "Tell the users to use the RPC interface - that\u0027s the preferred way.",
+      "revId": "b27ccc9b99800025b6fb188f0478c64211dc1f6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d143f48_e86d0a23",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-20T23:23:53Z",
+      "side": 1,
+      "message": "For this example, can we only support RPC? We only keep the config file around for backward compatibility.",
+      "revId": "b27ccc9b99800025b6fb188f0478c64211dc1f6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
