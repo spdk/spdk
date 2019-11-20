@@ -92,6 +92,7 @@ spdk_blobfs_fuse_send_request(fs_request_fn fn, void *arg)
 	spdk_event_call(event);
 }
 
+
 static int
 spdk_fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi)
 {
@@ -109,6 +110,10 @@ spdk_fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *f
 		stbuf->st_mode = S_IFREG | 0644;
 		stbuf->st_nlink = 1;
 		stbuf->st_size = stat.size;
+
+		stbuf->st_atim = stat.a_time;
+		stbuf->st_mtim = stat.m_time;
+		stbuf->st_ctim = stat.c_time;
 	}
 
 	return rc;

@@ -118,6 +118,11 @@ struct spdk_file {
 	struct spdk_filesystem	*fs;
 	struct spdk_blob	*blob;
 	char			*name;
+
+	struct timespec	a_time; /* the last time the file was accessed */
+	struct timespec	m_time; /* the last time the file was modified */
+	struct timespec	c_time; /* the last time meta data of the file was changed */
+
 	uint64_t		trace_arg_name;
 	uint64_t		length;
 	bool                    is_deleted;
@@ -618,6 +623,7 @@ file_alloc(struct spdk_filesystem *fs)
 		return NULL;
 	}
 
+
 	file->fs = fs;
 	TAILQ_INIT(&file->open_requests);
 	TAILQ_INIT(&file->sync_requests);
@@ -688,28 +694,29 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 	struct spdk_filesystem *fs = args->fs;
 	uint64_t *length;
 	const char *name;
+	struct timespec *a_time, *m_time, *c_time;
 	uint32_t *is_deleted;
 	size_t value_len;
 
 	if (rc < 0) {
-		args->fn.fs_op_with_handle(args->arg, fs, rc);
-		free_fs_request(req);
-		return;
+		goto error;
 	}
+
+	/* tim info are not mandatory */
+	rc = spdk_blob_get_xattr_value(blob, "a_time", (const void **)&a_time, &value_len);
+	rc = spdk_blob_get_xattr_value(blob, "m_time", (const void **)&m_time, &value_len);
+	rc = spdk_blob_get_xattr_value(blob, "c_time", (const void **)&c_time, &value_len);
 
 	rc = spdk_blob_get_xattr_value(blob, "name", (const void **)&name, &value_len);
 	if (rc < 0) {
-		args->fn.fs_op_with_handle(args->arg, fs, rc);
-		free_fs_request(req);
-		return;
+		goto error;
 	}
 
 	rc = spdk_blob_get_xattr_value(blob, "length", (const void **)&length, &value_len);
 	if (rc < 0) {
-		args->fn.fs_op_with_handle(args->arg, fs, rc);
-		free_fs_request(req);
-		return;
+		goto error;
 	}
+
 
 	assert(value_len == 8);
 
@@ -721,13 +728,16 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 		f = file_alloc(fs);
 		if (f == NULL) {
 			SPDK_ERRLOG("Cannot allocate file to handle deleted file on disk\n");
-			args->fn.fs_op_with_handle(args->arg, fs, -ENOMEM);
-			free_fs_request(req);
-			return;
+			rc = -ENOMEM;
+			goto error;
 		}
 
 		f->name = strdup(name);
 		_file_build_trace_arg_name(f);
+		f->c_time = *c_time;
+		f->a_time = *a_time;
+		f->m_time = *m_time;
+
 		f->blobid = spdk_blob_get_id(blob);
 		f->length = *length;
 		f->length_flushed = *length;
@@ -739,13 +749,17 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 
 		deleted_file = calloc(1, sizeof(*deleted_file));
 		if (deleted_file == NULL) {
-			args->fn.fs_op_with_handle(args->arg, fs, -ENOMEM);
-			free_fs_request(req);
-			return;
+			rc = -ENOMEM;
+			goto error;
 		}
 		deleted_file->id = spdk_blob_get_id(blob);
 		TAILQ_INSERT_TAIL(&args->op.fs_load.deleted_files, deleted_file, tailq);
 	}
+
+	return;
+error:
+	args->fn.fs_op_with_handle(args->arg, fs, rc);
+	free_fs_request(req);
 }
 
 static void
@@ -923,6 +937,10 @@ spdk_fs_file_stat_async(struct spdk_filesystem *fs, const char *name,
 	if (f != NULL) {
 		stat.blobid = f->blobid;
 		stat.size = f->append_pos >= f->length ? f->append_pos : f->length;
+		stat.a_time = f->a_time;
+		stat.m_time = f->m_time;
+		stat.c_time = f->c_time;
+
 		cb_fn(cb_arg, &stat, 0);
 		return;
 	}
@@ -1010,6 +1028,12 @@ fs_create_blob_resize_cb(void *ctx, int bserrno)
 
 	spdk_blob_set_xattr(blob, "name", f->name, strlen(f->name) + 1);
 	spdk_blob_set_xattr(blob, "length", &length, sizeof(length));
+
+	clock_gettime(CLOCK_REALTIME, &f->c_time);
+	f->m_time = f->a_time = f->c_time;
+	spdk_blob_set_xattr(blob, "a_time", &f->a_time, sizeof(f->a_time));
+	spdk_blob_set_xattr(blob, "m_time", &f->m_time, sizeof(f->m_time));
+	spdk_blob_set_xattr(blob, "c_time", &f->c_time, sizeof(f->c_time));
 
 	spdk_blob_close(blob, fs_create_blob_close_cb, args);
 }
@@ -1309,8 +1333,11 @@ fs_rename_blob_open_cb(void *ctx, struct spdk_blob *blob, int bserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 	const char *new_name = args->op.rename.new_name;
+	struct spdk_file *file = args->file;
 
 	spdk_blob_set_xattr(blob, "name", new_name, strlen(new_name) + 1);
+	spdk_blob_set_xattr(blob, "m_time", &file->m_time, sizeof(file->m_time));
+
 	spdk_blob_close(blob, fs_rename_blob_close_cb, req);
 }
 
@@ -1329,6 +1356,8 @@ __spdk_fs_md_rename_file(struct spdk_fs_request *req)
 
 	free(f->name);
 	f->name = strdup(args->op.rename.new_name);
+	clock_gettime(CLOCK_REALTIME, &f->m_time);
+
 	_file_build_trace_arg_name(f);
 	args->file = f;
 	spdk_bs_open_blob(args->fs->bs, f->blobid, fs_rename_blob_open_cb, req);
@@ -1615,11 +1644,13 @@ fs_truncate_resize_cb(void *ctx, int bserrno)
 	}
 
 	spdk_blob_set_xattr(file->blob, "length", length, sizeof(*length));
-
 	file->length = *length;
 	if (file->append_pos > file->length) {
 		file->append_pos = file->length;
 	}
+
+	clock_gettime(CLOCK_REALTIME, &file->m_time);
+	spdk_blob_set_xattr(file->blob, "m_time", &file->m_time, sizeof(file->m_time));
 
 	spdk_blob_sync_md(file->blob, fs_truncate_complete_cb, req);
 }
@@ -2164,6 +2195,9 @@ __check_sync_reqs(struct spdk_file *file)
 		sync_req->args.op.sync.length = file->length_flushed;
 		spdk_blob_set_xattr(file->blob, "length", &file->length_flushed,
 				    sizeof(file->length_flushed));
+		spdk_blob_set_xattr(file->blob, "m_time", &file->m_time,
+				    sizeof(file->m_time));
+
 
 		pthread_spin_unlock(&file->lock);
 		spdk_trace_record(TRACE_BLOBFS_XATTR_START, 0, file->length_flushed,
@@ -2196,6 +2230,7 @@ __file_flush_done(void *ctx, int bserrno)
 		next = spdk_tree_find_buffer(file->tree, file->length_flushed);
 	}
 
+	clock_gettime(CLOCK_REALTIME, &file->m_time);
 	/*
 	 * Assert that there is no cached data that extends past the end of the underlying
 	 *  blob.
@@ -2265,6 +2300,7 @@ __file_flush(void *ctx)
 		__check_sync_reqs(file);
 		return;
 	}
+
 	args->op.flush.length = length;
 	args->op.flush.cache_buffer = next;
 
@@ -2327,10 +2363,14 @@ __rw_from_file(void *ctx)
 	struct spdk_file *file = args->file;
 
 	if (args->op.rw.is_read) {
+		clock_gettime(CLOCK_REALTIME, &file->a_time);
+		spdk_blob_set_xattr(file->blob, "a_time", &file->a_time, sizeof(file->a_time));
 		spdk_file_read_async(file, file->fs->sync_target.sync_io_channel, args->iovs[0].iov_base,
 				     args->op.rw.offset, (uint64_t)args->iovs[0].iov_len,
 				     __rw_from_file_done, req);
 	} else {
+		clock_gettime(CLOCK_REALTIME, &file->m_time);
+		spdk_blob_set_xattr(file->blob, "m_time", &file->m_time, sizeof(file->m_time));
 		spdk_file_write_async(file, file->fs->sync_target.sync_io_channel, args->iovs[0].iov_base,
 				      args->op.rw.offset, (uint64_t)args->iovs[0].iov_len,
 				      __rw_from_file_done, req);
@@ -2358,6 +2398,7 @@ __send_rw_from_file(struct spdk_file *file, void *payload,
 	args->iovs[0].iov_len = (size_t)length;
 	args->op.rw.offset = offset;
 	args->op.rw.is_read = is_read;
+
 	file->fs->send_request(__rw_from_file, req);
 	return 0;
 }
