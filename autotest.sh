@@ -136,7 +136,8 @@ fi
 
 # Revert existing OPAL to factory settings that may have been left from earlier failed tests.
 # This ensures we won't hit any unexpected failures due to NVMe SSDs being locked.
-opal_revert_cleanup
+# Disable this for now as we don't have opal test running
+# opal_revert_cleanup
 
 #####################
 # Unit Tests
