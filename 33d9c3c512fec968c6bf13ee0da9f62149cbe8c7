@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2be6d844_06964465",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-20T07:25:47Z",
+      "side": 1,
+      "message": "TAB here to be consistent with other part in this structure.",
+      "revId": "33d9c3c512fec968c6bf13ee0da9f62149cbe8c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ea26851_b95688c2",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-20T07:25:47Z",
+      "side": 1,
+      "message": "we don\u0027t need to pass m_time in the parameter, just update when calling the truncate function.",
+      "revId": "33d9c3c512fec968c6bf13ee0da9f62149cbe8c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "230c3774_55130ee8",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 712,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-20T07:25:47Z",
+      "side": 1,
+      "message": "name and length are mandatory, for a/m/c time attribute, we may not abort here.",
+      "range": {
+        "startLine": 710,
+        "startChar": 1,
+        "endLine": 712,
+        "endChar": 2
+      },
+      "revId": "33d9c3c512fec968c6bf13ee0da9f62149cbe8c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f5efabd_1d17c66b",
+        "filename": "module/blobfs/bdev/blobfs_fuse.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-20T07:25:47Z",
+      "side": 1,
+      "message": "Directory a/m/c time should not included here, we don\u0027t support that.",
+      "range": {
+        "startLine": 109,
+        "startChar": 2,
+        "endLine": 110,
+        "endChar": 28
+      },
+      "revId": "33d9c3c512fec968c6bf13ee0da9f62149cbe8c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
