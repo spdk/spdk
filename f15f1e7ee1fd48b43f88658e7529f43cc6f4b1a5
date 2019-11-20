@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64342814_e0a1c6e1",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T03:19:10Z",
+      "side": 1,
+      "message": "Will you help me to understand what is \"s\" of \"slba\"?",
+      "revId": "f15f1e7ee1fd48b43f88658e7529f43cc6f4b1a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9400542c_25d38d94",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T03:19:10Z",
+      "side": 1,
+      "message": "bdev_zone_block is \"block to which bdev IO was issued\" and zone is \"zone to which bdev IO was issued\" ?",
+      "revId": "f15f1e7ee1fd48b43f88658e7529f43cc6f4b1a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d35de1b_f68f3419",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T03:19:10Z",
+      "side": 1,
+      "message": "case OPEN:\ncase FULL:\ncase CLOSED:\ncase READ_ONLY:\ncase OFFLINE:\n  zone-\u003ezone_info.state \u003d OPEN;\n  __atomic_store_n(\u0026zone-\u003ebusy, false, __ATOMIC_SEQ_CST);\n  spdk_bdev_io_complete(bdev_io, SUCCESS);\n  return 0;\ndefault:\n  return -EINVAL;\n\nmay be kind for reader?",
+      "revId": "f15f1e7ee1fd48b43f88658e7529f43cc6f4b1a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "476e87cd_03674822",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T03:19:10Z",
+      "side": 1,
+      "message": "Current code is fine but it may be a little easier to follow if moving status update into lf (success) block.",
+      "revId": "f15f1e7ee1fd48b43f88658e7529f43cc6f4b1a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98277cfc_b9119b03",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T03:19:10Z",
+      "side": 1,
+      "message": "case OPEN:\ncase FULL:\ncase CLOSED:\ncase READ_ONLY:\ncase OFFLINE:\n  io_ctx-\u003ezone \u003d zone;\n  io_ctx-\u003ebdev_zone_block \u003d bdev_node;\n  return spdk_bdev_unmap_blocks();\ndefault:\n  return -EINVAL;\n\nmay be kind for reader?",
+      "revId": "f15f1e7ee1fd48b43f88658e7529f43cc6f4b1a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
