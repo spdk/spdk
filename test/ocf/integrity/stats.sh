@@ -12,4 +12,5 @@ bdev_perf_pid=$!
 waitforlisten $bdev_perf_pid
 sleep 1
 $rpc_py bdev_ocf_get_stats MalCache1
-killprocess $bdev_perf_pid
+kill -9 $bdev_perf_pid
+wait $bdev_perf_pid || true
