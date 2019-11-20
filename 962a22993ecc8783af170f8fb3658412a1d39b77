@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "fd18688a_b3120ea8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-20T09:23:55Z",
+      "side": 1,
+      "message": "running with v6, we consistently crash on assert(sock-\u003equeued_iovcnt \u003e\u003d req-\u003eiovcnt) at include/spdk_internal/sock.h +222 which was added by the earlier commit of the writev_async support but if I run with that other commit on top it works (with cool improvements BTW..)\n\nIs it possible that we are just disconnecting the discovery session or a like and crash?\n\n#4  0x0000000000499910 in spdk_sock_abort_requests (sock\u003d0x1d0d7b0) at /mnt/ogerlitz/spdk.git/include/spdk_internal/sock.h:222\n#5  0x000000000049b980 in spdk_posix_sock_group_impl_remove_sock (_group\u003d0x1d0a4a0, _sock\u003d0x1d0d7b0) at posix.c:930\n#6  0x00000000004f10d9 in spdk_sock_group_remove_sock (group\u003d0x1137700, sock\u003d0x1d0d7b0) at sock.c:542\n#7  0x00000000004bcf43 in spdk_nvmf_tcp_poll_group_remove (group\u003d0x1d0a430, qpair\u003d0x1d0da50) at tcp.c:2669\n#8  0x00000000004b491c in spdk_nvmf_transport_poll_group_remove (group\u003d0x1d0a430, qpair\u003d0x1d0da50) at transport.c:269\n#9  0x00000000004aef49 in _spdk_nvmf_qpair_destroy (ctx\u003d0x1d0a4d0, status\u003d0) at nvmf.c:783\n#10 0x00000000004af34a in spdk_nvmf_qpair_disconnect (qpair\u003d0x1d0da50, cb_fn\u003d0x0, ctx\u003d0x0) at nvmf.c:873\n#11 0x00000000004b7d12 in spdk_nvmf_tcp_qpair_disconnect (tqpair\u003d0x1d0da50) at tcp.c:777\n#12 0x00000000004bcc12 in spdk_nvmf_tcp_sock_cb (arg\u003d0x1d0da50, group\u003d0x1137700, sock\u003d0x1d0d7b0) at tcp.c:2602\n#13 0x00000000004f1267 in spdk_sock_group_impl_poll_count (group_impl\u003d0x1d0a4a0, group\u003d0x1137700, max_events\u003d32) at sock.c:580\n#14 0x00000000004f12fe in spdk_sock_group_poll_count (group\u003d0x1137700, max_events\u003d32) at sock.c:605\n#15 0x00000000004f116e in spdk_sock_group_poll (group\u003d0x1137700) at sock.c:556\n#16 0x00000000004bd0ec in spdk_nvmf_tcp_poll_group_poll (group\u003d0x1d0a430) at tcp.c:2726\n#17 0x00000000004b4948 in spdk_nvmf_transport_poll_group_poll (group\u003d0x1d0a430) at transport.c:278\n#18 0x00000000004ad5c3 in spdk_nvmf_poll_group_poll (ctx\u003d0x1d08150) at nvmf.c:100\n#19 0x00000000004cff77 in spdk_thread_poll (thread\u003d0x1d06d40, max_msgs\u003d0, now\u003d12534901116805213) at thread.c:482\n#20 0x00000000004c9f0a in _spdk_reactor_run (arg\u003d0x1d06c00) at reactor.c:365\n#21 0x00000000004ca292 in spdk_reactors_start () at reactor.c:468\n#22 0x00000000004c86e2 in spdk_app_start (opts\u003d0x7ffddbc89b10, start_fn\u003d0x405e28 \u003cnvmf_tgt_started\u003e, arg1\u003d0x0) at app.c:691\n#23 0x0000000000405f2b in main (argc\u003d7, argv\u003d0x7ffddbc89ca8) at nvmf_main.c:75",
+      "revId": "962a22993ecc8783af170f8fb3658412a1d39b77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "81000a6e_5236f26f",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 6
