@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "71f047fd_e45b9763",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-11-20T13:25:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "533a736f_4c811b8e",
+      "range": {
+        "startLine": 657,
+        "startChar": 1,
+        "endLine": 657,
+        "endChar": 56
+      },
+      "revId": "0216ca15e8613c4b7eb38bced4c72e977dbed391",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d598ea2_a13fb466",
         "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
         "patchSetId": 24
@@ -39,6 +63,24 @@
       "revId": "0216ca15e8613c4b7eb38bced4c72e977dbed391",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c82ae95_6d2c1b73",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-11-20T13:25:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1d598ea2_a13fb466",
+      "revId": "0216ca15e8613c4b7eb38bced4c72e977dbed391",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
