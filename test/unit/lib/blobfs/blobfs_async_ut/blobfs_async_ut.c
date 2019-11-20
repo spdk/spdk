@@ -501,6 +501,104 @@ fs_writev_readv_async(void)
 	CU_ASSERT(g_fserrno == 0);
 }
 
+static bool
+_check_time(struct timespec	time)
+{
+	struct timespec	now;
+
+	clock_gettime(CLOCK_REALTIME, &now);
+	return abs(time.tv_sec - now.tv_sec) <= 60 * 10;
+}
+
+static void
+fs_time(void)
+{
+	struct spdk_filesystem *fs;
+	struct spdk_bs_dev *dev;
+	uint8_t w_buf[4096];
+	uint8_t r_buf[4096];
+	struct timespec	time;
+
+	dev = init_dev();
+
+	spdk_fs_init(dev, NULL, NULL, fs_op_with_handle_complete, NULL);
+	poll_threads();
+	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
+	CU_ASSERT(g_fserrno == 0);
+	fs = g_fs;
+	SPDK_CU_ASSERT_FATAL(fs->bs->dev == dev);
+
+	/* Check time when create file */
+	g_file = NULL;
+	g_fserrno = 1;
+	spdk_fs_open_file_async(fs, "file1", SPDK_BLOBFS_OPEN_CREATE, open_cb, NULL);
+	poll_threads();
+	CU_ASSERT(g_fserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+	CU_ASSERT(_check_time(g_file->a_time));
+	CU_ASSERT(_check_time(g_file->m_time));
+	CU_ASSERT(_check_time(g_file->c_time));
+	CU_ASSERT(g_file->a_time.tv_sec == g_file->m_time.tv_sec);
+	CU_ASSERT(g_file->m_time.tv_sec == g_file->c_time.tv_sec);
+
+	/* Check m_time changed when write file */
+	time.tv_nsec = g_file->m_time.tv_nsec;
+	CU_ASSERT(g_file->length == 0);
+	g_fserrno = 1;
+	memset(w_buf, 0x5a, sizeof(w_buf));
+	spdk_file_write_async(g_file, fs->sync_target.sync_io_channel, w_buf, 0, 4096,
+			      fs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_fserrno == 0);
+	CU_ASSERT(g_file->length == 4096);
+	CU_ASSERT(time.tv_nsec != g_file->m_time.tv_nsec);
+	CU_ASSERT(_check_time(g_file->m_time));
+
+	/* Check a_time changed when read file */
+	time.tv_nsec = g_file->a_time.tv_nsec;
+	g_fserrno = 1;
+	memset(r_buf, 0x0, sizeof(r_buf));
+	spdk_file_read_async(g_file, fs->sync_target.sync_io_channel, r_buf, 0, 4096,
+			     fs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_fserrno == 0);
+	CU_ASSERT(memcmp(r_buf, w_buf, sizeof(r_buf)) == 0);
+	CU_ASSERT(g_file->a_time.tv_nsec != time.tv_nsec);
+	CU_ASSERT(_check_time(g_file->a_time));
+
+	/* Check m_time changed when truncate file */
+	time.tv_nsec = g_file->m_time.tv_nsec;
+	g_fserrno = 1;
+	spdk_file_truncate_async(g_file, 18 * 1024 * 1024 + 1, fs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_fserrno == 0);
+	CU_ASSERT(g_file->length == 18 * 1024 * 1024 + 1);
+	CU_ASSERT(time.tv_nsec != g_file->m_time.tv_nsec);
+	CU_ASSERT(_check_time(g_file->m_time));
+
+	/* Check m_time changed when rename file */
+	time.tv_nsec = g_file->m_time.tv_nsec;
+	g_fserrno = 1;
+	spdk_fs_rename_file_async(fs, "file1", "file2", fs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_fserrno == 0);
+	CU_ASSERT(!strcmp(g_file->name, "file2"));
+	CU_ASSERT(time.tv_nsec != g_file->m_time.tv_nsec);
+	CU_ASSERT(_check_time(g_file->m_time));
+
+	g_fserrno = 1;
+	spdk_file_close_async(g_file, fs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_fserrno == 0);
+
+	g_fserrno = 1;
+	spdk_fs_unload(fs, fs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_fserrno == 0);
+
+}
+
+
 static void
 tree_find_buffer_ut(void)
 {
@@ -634,6 +732,7 @@ channel_ops_sync(void)
 	g_fs = NULL;
 }
 
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -659,7 +758,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "fs_writev_readv_async", fs_writev_readv_async) == NULL ||
 		CU_add_test(suite, "tree_find_buffer", tree_find_buffer_ut) == NULL ||
 		CU_add_test(suite, "channel_ops", channel_ops) == NULL ||
-		CU_add_test(suite, "channel_ops_sync", channel_ops_sync) == NULL
+		CU_add_test(suite, "channel_ops_sync", channel_ops_sync) == NULL ||
+		CU_add_test(suite, "fs_time", fs_time) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
