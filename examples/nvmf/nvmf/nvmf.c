@@ -365,6 +365,129 @@ nvmf_destroy_threads(void)
 	spdk_thread_lib_fini();
 }
 
+static void
+nvmf_tgt_add_transport_done(void *cb_arg, int status)
+{
+	/* TODO: Config parsing should wait for this operation to finish. */
+
+	if (status) {
+		fprintf(stderr, "Failed to add the transport\n");
+	}
+}
+
+static int
+nvmf_parse_and_create_transport(struct spdk_conf_section *sp)
+{
+	const char *type;
+	struct spdk_nvmf_transport_opts opts = { 0 };
+	enum spdk_nvme_transport_type trtype;
+	struct spdk_nvmf_transport *transport;
+	bool bval;
+	int val;
+
+	type = spdk_conf_section_get_val(sp, "Type");
+	if (type == NULL) {
+		fprintf(stderr, "Transport missing Type\n");
+		return -1;
+	}
+
+	if (spdk_nvme_transport_id_parse_trtype(&trtype, type)) {
+		fprintf(stderr, "Invalid transport type '%s'\n", type);
+		return -1;
+	}
+
+	if (spdk_nvmf_tgt_get_transport(g_nvmf_tgt->tgt, trtype)) {
+		fprintf(stderr, "Duplicate transport type '%s'\n", type);
+		return -1;
+	}
+
+	if (!spdk_nvmf_transport_opts_init(trtype, &opts)) {
+		fprintf(stderr, "spdk_nvmf_transport_opts_init() failed\n");
+		return -1;
+	}
+
+	val = spdk_conf_section_get_intval(sp, "MaxQueueDepth");
+	if (val >= 0) {
+		opts.max_queue_depth = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "MaxQueuesPerSession");
+	if (val >= 0) {
+		opts.max_qpairs_per_ctrlr = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "InCapsuleDataSize");
+	if (val >= 0) {
+		opts.in_capsule_data_size = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "MaxIOSize");
+	if (val >= 0) {
+		opts.max_io_size = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "IOUnitSize");
+	if (val >= 0) {
+		opts.io_unit_size = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "MaxAQDepth");
+	if (val >= 0) {
+		opts.max_aq_depth = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "NumSharedBuffers");
+	if (val >= 0) {
+		opts.num_shared_buffers = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "BufCacheSize");
+	if (val >= 0) {
+		opts.buf_cache_size = val;
+	}
+
+	val = spdk_conf_section_get_intval(sp, "MaxSRQDepth");
+	if (val >= 0) {
+		if (trtype == SPDK_NVME_TRANSPORT_RDMA) {
+			opts.max_srq_depth = val;
+		} else {
+			fprintf(stderr, "MaxSRQDepth is relevant only for RDMA transport '%s'\n",
+				type);
+			return -1;
+		}
+	}
+
+	if (trtype == SPDK_NVME_TRANSPORT_TCP) {
+		bval = spdk_conf_section_get_boolval(sp, "C2HSuccess", true);
+		opts.c2h_success = bval;
+	}
+
+	transport = spdk_nvmf_transport_create(trtype, &opts);
+	if (transport) {
+		spdk_nvmf_tgt_add_transport(g_nvmf_tgt->tgt, transport,
+					    nvmf_tgt_add_transport_done,
+					    NULL);
+	} else {
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
+nvmf_parse_and_create_transports(void)
+{
+	int rc;
+	struct spdk_conf_section *sp;
+
+	sp = spdk_conf_first_section(NULL);
+
+	while (sp != NULL) {
+		if (spdk_conf_section_match_prefix(sp, "Transport")) {
+			rc = nvmf_parse_and_create_transport(sp);
+			if (rc < 0) {
+				return rc;
+			}
+		}
+		sp = spdk_conf_next_section(sp);
+	}
+
+	return 0;
+}
+
 static int
 nvmf_tgt_add_discovery_subsystem(struct nvmf_target *nvmf_tgt)
 {
@@ -502,6 +625,14 @@ nvmf_parse_and_create_nvmf_tgt(void)
 	rc = nvmf_tgt_add_discovery_subsystem(g_nvmf_tgt);
 	if (rc != 0) {
 		fprintf(stderr, "spdk_add_nvmf_discovery_subsystem() failed\n");
+		nvmf_tgt_destroy(g_nvmf_tgt);
+		return rc;
+	}
+
+	/* prase and create transports */
+	rc = nvmf_parse_and_create_transports();
+	if (rc != 0) {
+		fprintf(stderr, "failed to create and add transports in target\n");
 		nvmf_tgt_destroy(g_nvmf_tgt);
 		return rc;
 	}
