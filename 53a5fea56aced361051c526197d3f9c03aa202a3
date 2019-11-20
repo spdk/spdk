@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3cd98559_6cca5d43",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-11-20T23:25:38Z",
+      "side": 1,
+      "message": "I think you need to add a newline to completions between 316 and 317. Otherwise you end up with a weird test name that is combined between two tests. For example in https://dqtibwqq6s6ux.cloudfront.net/results/autotest-per-patch/builds/50140/archive/unittest_autotests/all_tests.txt you end up with a line that looks like this:\nvhost_initiatorbdev_raid",
+      "revId": "53a5fea56aced361051c526197d3f9c03aa202a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
