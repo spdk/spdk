@@ -89,7 +89,7 @@ static const struct spdk_ftl_conf	g_default_conf = {
 	/* Max 3 active band relocates */
 	.max_active_relocs = 3,
 	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */
-	.user_io_pool_size = 2048,
+	.user_io_pool_size = 4096,
 	/* Number of interleaving units per ws_opt */
 	/* 1 for default and 3 for 3D TLC NAND */
 	.num_interleave_units = 1,
@@ -500,7 +500,6 @@ static int
 ftl_dev_l2p_alloc(struct spdk_ftl_dev *dev)
 {
 	size_t addr_size;
-	uint64_t i;
 
 	if (dev->num_lbas == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Invalid l2p table size\n");
@@ -519,9 +518,7 @@ ftl_dev_l2p_alloc(struct spdk_ftl_dev *dev)
 		return -1;
 	}
 
-	for (i = 0; i < dev->num_lbas; ++i) {
-		ftl_l2p_set(dev, i, ftl_to_addr(FTL_ADDR_INVALID));
-	}
+	memset(dev->l2p, -1, dev->num_lbas * addr_size);
 
 	return 0;
 }
@@ -653,10 +650,14 @@ ftl_setup_initial_state(struct spdk_ftl_dev *dev)
 		return -1;
 	}
 
+	SPDK_ERRLOG("l2p is allocated now\n");
+
 	if (ftl_init_bands_state(dev)) {
 		SPDK_ERRLOG("Unable to finish the initialization\n");
 		return -1;
 	}
+
+	SPDK_ERRLOG("bands state is set now\n");
 
 	if (!ftl_dev_has_nv_cache(dev)) {
 		ftl_init_complete(dev);
@@ -823,6 +824,7 @@ ftl_dev_get_zone_info_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 
 	if (zones_left == 0) {
 		free(info);
+		SPDK_ERRLOG("Zones are initialized now!!!!!\n");
 		ftl_dev_init_state(dev);
 		return;
 	}
@@ -903,6 +905,20 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 			spdk_put_io_channel(ioch->base_ioch);
 			return -1;
 		}
+	}
+
+	int fake_queue_size = dev->conf.rwb_size / (FTL_BLOCK_SIZE * dev->xfer_size);
+
+	ioch->free_fake_queue = spdk_ring_create(SPDK_RING_TYPE_SP_SC,
+			  spdk_align32pow2(fake_queue_size + 1),
+			  SPDK_ENV_SOCKET_ID_ANY);
+
+	assert(ioch->free_fake_queue);
+	for (int i = 0; i < fake_queue_size; ++i) {
+		struct ftl_io *io = spdk_mempool_get(ioch->io_pool);
+		assert(io);
+		io->ftl_ioch = ioch;
+		spdk_ring_enqueue(ioch->free_fake_queue, (void **)&io, 1, NULL);
 	}
 
 	return 0;
@@ -1108,6 +1124,13 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		goto fail_sync;
 	}
 
+	int fake_queue_size = dev->conf.rwb_size / (FTL_BLOCK_SIZE * dev->xfer_size) * 48;
+	dev->fake_queue = spdk_ring_create(SPDK_RING_TYPE_MP_SC,
+			  spdk_align32pow2(fake_queue_size + 1),
+			  SPDK_ENV_SOCKET_ID_ANY);
+
+	assert(dev->fake_queue);
+
 	dev->reloc = ftl_reloc_init(dev);
 	if (!dev->reloc) {
 		SPDK_ERRLOG("Unable to initialize reloc structures\n");
@@ -1124,6 +1147,7 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		goto fail_sync;
 	}
 
+	SPDK_ERRLOG("Starting initialize zones\n");
 	if (ftl_dev_init_zones(dev)) {
 		SPDK_ERRLOG("Failed to initialize zones\n");
 		goto fail_async;

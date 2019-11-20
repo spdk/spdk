@@ -171,6 +171,7 @@ bdev_nvme_poll(void *arg)
 	struct nvme_io_channel *ch = arg;
 	int32_t num_completions;
 
+	return 0;
 	if (ch->qpair == NULL) {
 		return -1;
 	}

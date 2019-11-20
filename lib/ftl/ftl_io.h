@@ -135,6 +135,8 @@ struct ftl_io_channel {
 	struct spdk_io_channel			*base_ioch;
 	/* Persistent cache IO channel */
 	struct spdk_io_channel			*cache_ioch;
+
+	struct spdk_ring			*free_fake_queue;
 };
 
 /* General IO descriptor */
@@ -144,6 +146,8 @@ struct ftl_io {
 
 	/* IO channel */
 	struct spdk_io_channel			*ioch;
+
+	struct ftl_io_channel			*ftl_ioch;
 
 	union {
 		/* LBA table */

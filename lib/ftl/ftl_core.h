@@ -215,7 +215,8 @@ struct spdk_ftl_dev {
 	/* Ring write buffer */
 	struct ftl_rwb				*rwb;
 
-	/* Current user write limit */
+	struct spdk_ring			*fake_queue;
+
 	int					limit;
 
 	/* Inflight IO operations */

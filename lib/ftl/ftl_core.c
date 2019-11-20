@@ -1359,6 +1359,9 @@ ftl_write_cb(struct ftl_io *io, void *arg, int status)
 		return;
 	}
 
+	ftl_rwb_batch_release(batch);
+	return;
+
 	assert(io->block_cnt == dev->xfer_size);
 	assert(!(io->flags & FTL_IO_MD));
 
@@ -1750,13 +1753,50 @@ ftl_rwb_entry_fill(struct ftl_rwb_entry *entry, struct ftl_io *io)
 	}
 }
 
+static int atom, atom2;
+
+
 static int
 ftl_rwb_fill(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_rwb_entry *entry;
+	struct ftl_rwb_entry fake_entry;
 	struct ftl_addr addr = { .cached = 1 };
 	int flags = ftl_rwb_flags_from_io(io);
+	char temp[4096 * 128];
+	void *buf;
+	struct ftl_io_channel *ioch;
+	struct ftl_io *fake_io = NULL;
+
+	ioch = spdk_io_channel_get_ctx(io->ioch);
+	assert(ioch);
+	assert(ioch->free_fake_queue);
+
+	if (spdk_ring_dequeue(ioch->free_fake_queue, (void **)&fake_io, 1) == 1) {
+		assert(fake_io->ftl_ioch == ioch);
+		/*  
+		while (io->pos < io->block_cnt) {
+			//__atomic_load_n(&atom, __ATOMIC_SEQ_CST);
+			memcpy(temp + io->pos * 4096, ftl_io_iovec_addr(io), FTL_BLOCK_SIZE);
+			fake_entry.lba = ftl_io_current_lba(io);
+			//fake_entry.addr.offset = rand() % dev->num_lbas;
+			fake_entry.addr.offset = 33;
+			ftl_l2p_set(dev, fake_entry.lba, fake_entry.addr);
+			fake_entry.addr = ftl_l2p_get(dev, fake_entry.lba);
+			ftl_io_advance(io, 1);
+
+			//__atomic_fetch_add(&atom, 1, __ATOMIC_SEQ_CST);
+			//__atomic_store_n(&atom, 10, __ATOMIC_SEQ_CST);
+		}
+		*/
+
+		int size = spdk_ring_enqueue(dev->fake_queue, (void **)&fake_io, 1, NULL);
+		assert(size == 1);
+		ftl_io_complete(io);
+		return 0;
+	}
+	return -EAGAIN;
 
 	while (io->pos < io->block_cnt) {
 		if (ftl_io_current_lba(io) == FTL_LBA_INVALID) {
@@ -2154,28 +2194,52 @@ ftl_process_retry_queue(struct spdk_ftl_dev *dev)
 	}
 }
 
+static uint64_t in_core, batch_exist, all_batch;
 int
 ftl_task_core(void *ctx)
 {
 	struct ftl_thread *thread = ctx;
 	struct spdk_ftl_dev *dev = thread->dev;
+	struct ftl_io_channel *ioch;
+	struct ftl_io *io = NULL;
 
 	if (dev->halt) {
+		SPDK_ERRLOG("In core %lu batch_found %lu all batch %lu\n", in_core, batch_exist, all_batch);
 		if (ftl_shutdown_complete(dev)) {
 			spdk_poller_unregister(&thread->poller);
 			return 0;
 		}
 	}
 
-	ftl_process_writes(dev);
-	ftl_process_relocs(dev);
+	in_core++;
+
+	if (spdk_ring_dequeue(dev->fake_queue, (void **)&io, 1) == 1) {
+		assert(io);
+		spdk_ring_enqueue(io->ftl_ioch->free_fake_queue, (void **)&io, 1, NULL);
+	}
+
+	//ftl_process_writes(dev);
+	return 0;
+
+	struct ftl_rwb_batch *batch;
+	batch = ftl_rwb_pop(dev->rwb);
+	if (batch)
+		batch_exist++;
+	while(batch) {
+		ftl_rwb_batch_release(batch);
+		all_batch++;
+		batch = ftl_rwb_pop(dev->rwb);
+	}
+
+	//ftl_process_writes(dev);
+	//ftl_process_relocs(dev);
 
 	if (!TAILQ_EMPTY(&dev->retry_queue)) {
 		ftl_process_retry_queue(dev);
 		return 1;
 	}
 
-	return 0;
+	return 100;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("ftl_core", SPDK_LOG_FTL_CORE)
