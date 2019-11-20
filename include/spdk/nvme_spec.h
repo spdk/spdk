@@ -462,6 +462,127 @@ enum spdk_nvme_cc_ams {
 	SPDK_NVME_CC_AMS_VS		= 0x7,	/**< vendor specific */
 };
 
+union spdk_nvme_cmd_cdw10 {
+	uint32_t raw;
+	struct {
+		/* Controller or Namespace Structure */
+		uint32_t cns       : 8;
+		uint32_t reserved  : 8;
+		/* Controller Identifier */
+		uint32_t cntid     : 16;
+	} identify;
+
+	struct {
+		/* Log Page Identifier */
+		uint32_t lid       : 8;
+		/* Log Specific Field */
+		uint32_t lsp       : 4;
+		uint32_t reserved  : 3;
+		/* Retain Asynchronous Event */
+		uint32_t rae       : 1;
+		/* Number of Dwords Lower */
+		uint32_t numdl     : 16;
+	} get_log_page;
+
+	struct {
+		/* Submission Queue Identifier */
+		uint32_t sqid      : 16;
+		/* Command Identifier */
+		uint32_t cid       : 16;
+	} abort;
+
+	struct {
+		/* NVMe Security Specific Field */
+		uint32_t nssf      : 8;
+		/* SP Specific 0 */
+		uint32_t spsp0     : 8;
+		/* SP Specific 1 */
+		uint32_t spsp1     : 8;
+		/* Security Protocol */
+		uint32_t secp      : 8;
+	} sec_send_recv;
+
+	struct {
+		/* Queue Identifier */
+		uint32_t qid       : 16;
+		/* Queue Size */
+		uint32_t qsize     : 16;
+	} create_io_q;
+
+	struct {
+		/* Queue Identifier */
+		uint32_t qid       : 16;
+		uint32_t reserved  : 16;
+	} delete_io_q;
+
+	struct {
+		/* Feature Identifier */
+		uint32_t fid       : 8;
+		/* Select */
+		uint32_t sel       : 3;
+		uint32_t reserved  : 21;
+	} get_features;
+
+	struct {
+		/* Feature Identifier */
+		uint32_t fid       : 8;
+		uint32_t reserved  : 23;
+		/* Save */
+		uint32_t sv        : 1;
+	} set_features;
+
+	struct {
+		/* Select */
+		uint32_t sel      : 4;
+		uint32_t reserved : 28;
+	} ns_attach;
+
+	struct {
+		/* Select */
+		uint32_t sel      : 4;
+		uint32_t reserved : 28;
+	} ns_manage;
+
+	struct {
+		/* Number of Ranges */
+		uint32_t nr       : 8;
+		uint32_t reserved : 24;
+	} dsm;
+
+	struct {
+		/* Reservation Register Action */
+		uint32_t rrega     : 3;
+		/* Ignore Existing Key */
+		uint32_t iekey     : 1;
+		uint32_t reserved  : 26;
+		/* Change Persist Through Power Loss State */
+		uint32_t cptpl     : 2;
+	} resv_register;
+
+	struct {
+		/* Reservation Release Action */
+		uint32_t rrela     : 3;
+		/* Ignore Existing Key */
+		uint32_t iekey     : 1;
+		uint32_t reserved1 : 4;
+		/* Reservation Type */
+		uint32_t rtype     : 8;
+		uint32_t reserved2 : 16;
+	} resv_release;
+
+	struct {
+		/* Reservation Acquire Action */
+		uint32_t racqa     : 3;
+		/* Ignore Existing Key */
+		uint32_t iekey     : 1;
+		uint32_t reserved1 : 4;
+		/* Reservation Type */
+		uint32_t rtype     : 8;
+		uint32_t reserved2 : 16;
+	} resv_acquire;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmd_cdw10) == 4, "Incorrect size");
+
 struct spdk_nvme_cmd {
 	/* dword 0 */
 	uint16_t opc	:  8;	/* opcode */
