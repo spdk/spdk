@@ -34,6 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+DIRS-y += lsblk
 DIRS-y += trace
 DIRS-y += trace_record
 DIRS-y += nvmf_tgt
