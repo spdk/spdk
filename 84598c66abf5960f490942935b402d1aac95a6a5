@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0628421d_d609fabb",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T08:52:07Z",
+      "side": 1,
+      "message": "We can remove if (g_io_output) here.",
+      "range": {
+        "startLine": 101,
+        "startChar": 1,
+        "endLine": 101,
+        "endChar": 19
+      },
+      "revId": "84598c66abf5960f490942935b402d1aac95a6a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00f32627_fde8ba9e",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T08:52:07Z",
+      "side": 1,
+      "message": "Should we add SPDK_CU_ASSERT_FATAL(bdev_io-\u003eu.zone_mgmt.buf !\u003d NULL) here?",
+      "revId": "84598c66abf5960f490942935b402d1aac95a6a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1523f556_0740f808",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 576,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T08:52:07Z",
+      "side": 1,
+      "message": "ditto. We can remove this if condition.",
+      "range": {
+        "startLine": 576,
+        "startChar": 0,
+        "endLine": 576,
+        "endChar": 32
+      },
+      "revId": "84598c66abf5960f490942935b402d1aac95a6a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75187ab2_11f11f62",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 587,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T08:52:07Z",
+      "side": 1,
+      "message": "Please add an empty line after variable definitions.",
+      "revId": "84598c66abf5960f490942935b402d1aac95a6a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
