@@ -46,6 +46,87 @@
       "revId": "d141cbb0c5126de0854c6f560a3b5446ccbca55c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f06fc8e_86c44067",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-20T13:43:58Z",
+      "side": 1,
+      "message": "If size\u003d1024M then size\u003d9G?\nI think I know what you wanted do do here: in case \"size\" is not specified (and we use default) then change it to 9G in case of OCSSD disk (otherwise it won\u0027t work).\n\nI am against this kind of implicit / \"hidden\" modifying size of created nvme file as this could potentially surprise the user.\nYou can:\na) create another variable with default size for OCSSD disk and inform about this in info message\nOr:\nb) Modify the parameters in Vagrantfile so that they\u0027re appropriate to handle 1G disk file",
+      "parentUuid": "feaf9c33_ac62f33a",
+      "range": {
+        "startLine": 51,
+        "startChar": 10,
+        "endLine": 51,
+        "endChar": 11
+      },
+      "revId": "d141cbb0c5126de0854c6f560a3b5446ccbca55c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "319443b0_ee95ff3d",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-20T13:43:58Z",
+      "side": 1,
+      "message": "Can we rename it to NVME_AUTO_CREATE or similar, so that all NVMe options are grouped?",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 16
+      },
+      "revId": "d141cbb0c5126de0854c6f560a3b5446ccbca55c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5df573e4_8362c3d7",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-20T13:43:58Z",
+      "side": 1,
+      "message": "print new option here",
+      "revId": "d141cbb0c5126de0854c6f560a3b5446ccbca55c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "795551dd_73f38aae",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-20T13:43:58Z",
+      "side": 1,
+      "message": "print new option here",
+      "revId": "d141cbb0c5126de0854c6f560a3b5446ccbca55c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
