@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "533a736f_4c811b8e",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T09:03:15Z",
+      "side": 1,
+      "message": "Can we do the following instead?\n\nbdev_io-\u003eu.bdev.iovs \u003d \u0026bdev_io-\u003eu.bdev.iov;\n\nThen we can remove calloc and free.",
+      "range": {
+        "startLine": 657,
+        "startChar": 1,
+        "endLine": 657,
+        "endChar": 56
+      },
+      "revId": "0216ca15e8613c4b7eb38bced4c72e977dbed391",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d598ea2_a13fb466",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T09:03:15Z",
+      "side": 1,
+      "message": "Please check this together.",
+      "revId": "0216ca15e8613c4b7eb38bced4c72e977dbed391",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

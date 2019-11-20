@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "5642659d_e170a234",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T09:03:15Z",
+      "side": 1,
+      "message": "Thank you for nice explanation. I understand slba now.",
+      "parentUuid": "3c5b2c69_5693ac03",
+      "revId": "f15f1e7ee1fd48b43f88658e7529f43cc6f4b1a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9400542c_25d38d94",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 23
@@ -107,6 +125,24 @@
     },
     {
       "key": {
+        "uuid": "9f912a02_da345ea9",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T09:03:15Z",
+      "side": 1,
+      "message": "Thank you. Much better for me to understand now.",
+      "parentUuid": "7bd67e6d_78ce7ebe",
+      "revId": "f15f1e7ee1fd48b43f88658e7529f43cc6f4b1a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "476e87cd_03674822",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 23
@@ -171,6 +207,24 @@
       "side": 1,
       "message": "Same as in the above comment.",
       "parentUuid": "98277cfc_b9119b03",
+      "revId": "f15f1e7ee1fd48b43f88658e7529f43cc6f4b1a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a7f805f_c128d8d9",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T09:03:15Z",
+      "side": 1,
+      "message": "Got it.",
+      "parentUuid": "37490636_ecfe77dc",
       "revId": "f15f1e7ee1fd48b43f88658e7529f43cc6f4b1a5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
