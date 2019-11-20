@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "205fb35c_c9f94b3b",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T02:17:47Z",
+      "side": 1,
+      "message": "I think checking not MGAW but SAGAW will be better as done by DPDK in http://mails.dpdk.org/archives/stable/2018-January/004109.html. We can create page table only within SAGAW.\n\nIf we use MGAW, using macro constants is helpful for reader.\n\n#define VTD_CAP_MGAW_SHIFT 16\n#define VTD_CAP_MGAW_MASK (0x3F \u003c\u003c VTD_CAP_MGAW_SHIFT)\ntmp \u003d ((val \u0026 VTD_CAP_MGAW_MASK) \u003e\u003e VTD_CAP_MGAW_SHIFT) + 1",
+      "revId": "8cdf6b944ff83fa7b911595a2b0e9847618fcb79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "736f44c3_4b812751",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T02:17:47Z",
+      "side": 1,
+      "message": "I think it is ensured that two dmars will have same capability.",
+      "revId": "8cdf6b944ff83fa7b911595a2b0e9847618fcb79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
