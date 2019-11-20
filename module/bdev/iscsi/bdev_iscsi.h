@@ -54,13 +54,13 @@ typedef void (*spdk_bdev_iscsi_create_cb)(void *cb_arg, struct spdk_bdev *bdev, 
  * they will show up in configuration dump.
  *
  * \param name name for new bdev.
- * \param initiator_iqn connection iqn name we identify to target as
  * \param url iSCSI URL string.
+ * \param initiator_iqn connection iqn name we identify to target as
  * \param cb_fn Completion callback
  * \param cb_arg Completion callback custom arguments
  * \return 0 on success or negative error code. If success bdev with provided name was created.
  */
-int create_iscsi_disk(const char *bdev_name, const char *initiator_iqn, const char *url,
+int create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_iqn,
 		      spdk_bdev_iscsi_create_cb cb_fn, void *cb_arg);
 
 /**
