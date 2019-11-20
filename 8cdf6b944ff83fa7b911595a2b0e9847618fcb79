@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6823879c_296f25cc",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-20T14:53:42Z",
+      "side": 1,
+      "message": "I just realized that the DPDK code does check this value, but only if a device is present because it goes through /sys/bus/pci/device/.... That doesn\u0027t help us here because SPDK hasn\u0027t actually attached any devices yet, and that\u0027s why we see this bug. My change just generically checks the capabilities of the IOMMU present on the system, regardless of whether devices are present. I guess it\u0027s technically possible that a system could have multiple IOMMUs with different capabilities and so iova-mode\u003dva may be possible in some cases where this code will pick iova-mode\u003dpa, but I don\u0027t think any systems like that actually exist.\n\nEither way, I do like your suggestion to use the macro constants.",
+      "parentUuid": "205fb35c_c9f94b3b",
+      "revId": "8cdf6b944ff83fa7b911595a2b0e9847618fcb79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "736f44c3_4b812751",
         "filename": "lib/env_dpdk/init.c",
         "patchSetId": 2
