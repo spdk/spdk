@@ -526,6 +526,47 @@ Example response:
 }
 ~~~
 
+## thread_get_threads {#rpc_thread_get_threads}
+
+Retrieve curent thread list.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+The response is an array of objects containing thread information.
+
+### Exapmle
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "thread_get_threads",
+  "id": 1
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "app_thread",
+      "cpumask": "1"
+    },
+    {
+      "name": "reactor_1",
+      "cpumask": "2"
+    }
+  ]
+}
+~~~
+
 # Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
 ## bdev_set_options {#rpc_bdev_set_options}
