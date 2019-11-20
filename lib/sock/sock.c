@@ -216,24 +216,25 @@ spdk_sock_accept(struct spdk_sock *sock)
 }
 
 int
-spdk_sock_close(struct spdk_sock **sock)
+spdk_sock_close(struct spdk_sock **_sock)
 {
+	struct spdk_sock *sock = *_sock;
 	int rc;
 
-	if (*sock == NULL) {
+	if (sock == NULL) {
 		errno = EBADF;
 		return -1;
 	}
 
-	if ((*sock)->cb_fn != NULL) {
+	if (sock->cb_fn != NULL) {
 		/* This sock is still part of a sock_group. */
 		errno = EBUSY;
 		return -1;
 	}
 
-	rc = (*sock)->net_impl->close(*sock);
+	rc = sock->net_impl->close(sock);
 	if (rc == 0) {
-		*sock = NULL;
+		*_sock = NULL;
 	}
 
 	return rc;
