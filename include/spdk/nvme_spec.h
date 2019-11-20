@@ -462,6 +462,58 @@ enum spdk_nvme_cc_ams {
 	SPDK_NVME_CC_AMS_VS		= 0x7,	/**< vendor specific */
 };
 
+struct spdk_nvme_cmd_cdw10 {
+	union {
+		uint32_t raw;
+		struct {
+			/* Controller or Namespace Structure */
+			uint32_t cns      : 8;
+			uint32_t reserved : 8;
+			/* Controller Identifier */
+			uint32_t cntid    : 16;
+		} identify;
+		struct {
+			/* Queue Identifier */
+			uint32_t qid      : 16;
+			/* Queue Size */
+			uint32_t qsize    : 16;
+		} create_io_q;
+
+		struct {
+			/* Queue Identifier */
+			uint32_t qid      : 16;
+			uint32_t reserved : 16;
+		} delete_io_q;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_cmd_cdw10) == 4, "Incorrect size");
+
+struct spdk_nvme_cmd_cdw11 {
+	union {
+		uint32_t raw;
+		struct {
+			/* Physically Contiguous */
+			uint32_t pc       : 1;
+			/* Queue Priority */
+			uint32_t qprio    : 2;
+			uint32_t reserved : 13;
+			/* Completion Queue Identifier */
+			uint32_t cqid     : 16;
+		} create_io_sq;
+		struct {
+			/* Physically Contiguous */
+			uint32_t pc       : 1;
+			/* Interrupts Enabled */
+			uint32_t ien      : 1;
+			uint32_t reserved : 14;
+			/* Interrupt Vector */
+			uint32_t iv       : 16;
+		} create_io_cq;
+
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_cmd_cdw11) == 4, "Incorrect size");
+
 struct spdk_nvme_cmd {
 	/* dword 0 */
 	uint16_t opc	:  8;	/* opcode */
