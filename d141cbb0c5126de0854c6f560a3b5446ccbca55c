@@ -22,6 +22,30 @@
       "revId": "d141cbb0c5126de0854c6f560a3b5446ccbca55c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "feaf9c33_ac62f33a",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-20T09:41:51Z",
+      "side": 1,
+      "message": "If you want, I can set comment but this is explaine in scripts/vagrant/Vagrantfile:\n        # create ocssd drive with special parameters\n        # lba_index\u003d4 it is LBA namespace format, 4 means that block size is 4K and have 64B metadata\n        # lnum_lun, lnum_pln, lpgs_per_blk, lsecs_per_pg, lblks_per_pln this are parameters describing the device geometry\n        # we need to multiply these parameters by ourselves to have backend file minimal size:\n        # in our case: 4K * 8 * 2 * 1536 * 2 * 45 \u003d 8640 MB\n\nMinimum space for ocssd is 8640MB, I round it to 9G here.",
+      "parentUuid": "7f21ad20_da3e7a04",
+      "range": {
+        "startLine": 51,
+        "startChar": 10,
+        "endLine": 51,
+        "endChar": 11
+      },
+      "revId": "d141cbb0c5126de0854c6f560a3b5446ccbca55c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
