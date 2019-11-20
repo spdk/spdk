@@ -1,0 +1,30 @@
+RFC patch for sysfs emulation
+=============================
+
+This patch demonstrates a framework for how Linux utilities
+that depend on /sys for information for block devices
+could work with SPDK.
+
+This same idea could be used for /proc (which contains diskstats
+used for iostat) or even /dev.
+
+1) SPDK would need to emulate a /sys using fuse.
+   For purposes of this example, let's assume they are
+   mounted at /tmp/lsblk/sys.  This patch does not contain
+   any fuse code for this - it's known how to do this, we
+   have multiple examples of it in SPDK today.
+2) SPDK would create a special shared library that overrides
+   weak symbols such as open, fopen and opendir so that
+   if an application tries to access something that starts
+   with /sys/block, the shared library can prepend the patch
+   from #1 before passing it to the "real" system call.  So
+   in this case, /sys/block is changed to /tmp/lsblk/sys/block,
+   transparent to the Linux utility.
+3) SPDK could also create wrapper binaries that would
+   add the LD_PRELOAD to the environment and then execvp the
+   associated utility.  For example, spdk_lsblk would execvp
+   lsblk.
+
+To demonstrate this RFC, build SPDK and then run the setup.sh
+script in this directory to set up a mock /sys directory under
+/tmp/lsblk.  Then run app/lsblk/spdk_lsblk to see it work.
