@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "823ed2f4_9c3a2f7e",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-11-20T11:28:54Z",
+      "side": 1,
+      "message": "Hi,\n\nUnfortunately I don\u0027t have enough expertise in this area. I would suggest to ask richael02 from ARM\n\nOn our ARM setup with nvme disks we use uio_pci_generic driver. So this will force DPDK to use iova\u003dpa.\nRegarding a generic approach - I think Jim is right, this function will return 0 since there will be no path like /sys/devices/virtual/iommu/%s/intel-iommu/cap on ARM. However in the 2nd patch Ben put the usage of this function under #ifdef __x86_64__\nI checked about IOMMU on ARM, it has its own realization called SMMU (depending on ARM version) but I didn\u0027t find any variables that describe the address width. The spec says that it supports the translation of VAs of up to 49 bits.\n\nIn DPDK implementation of pci_device_iommu_support_va, the function returns true for ARM, this may imply that ARM supports iova\u003dva in all cases. Probably we can implement the same approach: change the semantic of this function to return true if VA is supported (move statement on line 412 inside the function); check mgaw register for x86, return false for ppc and return true for ARM. If later we find any issue on ARM we can fix it with minimal changes",
+      "parentUuid": "1bb9d450_4b09868f",
+      "revId": "cbaecf334293ccf46eff039004c10603c4adb8a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b532b0ca_6ef8e912",
         "filename": "lib/env_dpdk/init.c",
         "patchSetId": 1
