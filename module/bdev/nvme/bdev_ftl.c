@@ -63,6 +63,7 @@ struct ftl_bdev {
 	void				*init_arg;
 
 	LIST_ENTRY(ftl_bdev)		list_entry;
+	struct spdk_thread		*thread;
 };
 
 struct ftl_io_channel {
@@ -247,8 +248,10 @@ bdev_ftl_cb(void *arg, int status)
 
 	io->status = status;
 
-	cnt = spdk_ring_enqueue(io->ring, (void **)&io, 1, NULL);
-	assert(cnt == 1);
+	bdev_ftl_complete_io(io, 0);
+
+	//cnt = spdk_ring_enqueue(io->ring, (void **)&io, 1, NULL);
+	//assert(cnt == 1);
 }
 
 static int
@@ -399,6 +402,10 @@ static struct spdk_io_channel *
 bdev_ftl_get_io_channel(void *ctx)
 {
 	struct ftl_bdev *ftl_bdev = ctx;
+
+	if (ftl_bdev->thread == spdk_get_thread()) {
+		return NULL;
+	}
 
 	return spdk_get_io_channel(ftl_bdev);
 }
@@ -849,6 +856,8 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct ftl_bdev_init_opts *
 
 	/* TODO: set threads based on config */
 	opts.core_thread = opts.read_thread = spdk_get_thread();
+	opts.core_thread = spdk_get_thread();
+	ftl_bdev->thread = spdk_get_thread();
 
 	rc = spdk_ftl_dev_init(&opts, bdev_ftl_create_cb, ftl_bdev);
 	if (rc) {

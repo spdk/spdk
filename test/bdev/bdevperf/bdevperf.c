@@ -929,7 +929,7 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 			printf("Skip this device (%s) as IO channel not setup.\n",
 			       spdk_bdev_get_name(target->bdev));
 			g_target_count--;
-			g_run_failed = true;
+			g_run_failed = false;
 			spdk_bdev_close(target->bdev_desc);
 
 			target = target->next;
