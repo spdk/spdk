@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d9c57f71_58038a68",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1848,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-11-20T06:23:49Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "96f78dad_824e6353",
+      "revId": "f51e1e3e30485821f30a61e533fc20ecf62b0b1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "08c9d161_442053d6",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 9
@@ -30,6 +48,30 @@
       "writtenOn": "2019-11-19T08:10:30Z",
       "side": 1,
       "message": "Should we check this is parent I/O? The upper layer don\u0027t know if the I/O is split or not. They will be surprised if they gets any timeout for children I/O.",
+      "range": {
+        "startLine": 2131,
+        "startChar": 6,
+        "endLine": 2131,
+        "endChar": 36
+      },
+      "revId": "f51e1e3e30485821f30a61e533fc20ecf62b0b1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72cbf62d_043c18d6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2131,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-11-20T06:23:49Z",
+      "side": 1,
+      "message": "From the first patch. I would say the parent IO always insert before children IO, So if we find a timeout case then it should be a normal IO or parent IO.",
+      "parentUuid": "08c9d161_442053d6",
       "range": {
         "startLine": 2131,
         "startChar": 6,
@@ -77,6 +119,30 @@
       "side": 1,
       "message": "Agree with Changpeng, but I think at least 1 or 10 msec is better.",
       "parentUuid": "8be036a6_387dd46a",
+      "range": {
+        "startLine": 2159,
+        "startChar": 7,
+        "endLine": 2159,
+        "endChar": 46
+      },
+      "revId": "f51e1e3e30485821f30a61e533fc20ecf62b0b1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45b327d7_6cef121a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2159,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-11-20T06:23:49Z",
+      "side": 1,
+      "message": "I thought the timeout value would be a large value such as 30s. So I prefer the 1 second. If I am wrong please correct me. Thanks.",
+      "parentUuid": "b2a98fe8_d3a92ad0",
       "range": {
         "startLine": 2159,
         "startChar": 7,
