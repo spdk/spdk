@@ -2220,6 +2220,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'thread_get_stats', help='Display current statistics of all the threads')
     p.set_defaults(func=thread_get_stats)
 
+    def thread_get_threads(args):
+        print_dict(rpc.app.thread_get_threads(args.client))
+
+    p = subparsers.add_parser(
+        'thread_get_threads', help='Display current thread list')
+    p.set_defaults(func=thread_get_threads)
+
     # blobfs
     def blobfs_detect(args):
         print(rpc.blobfs.blobfs_detect(args.client,

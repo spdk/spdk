@@ -213,3 +213,63 @@ spdk_rpc_thread_get_stats(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("thread_get_stats", spdk_rpc_thread_get_stats, SPDK_RPC_RUNTIME)
+
+struct rpc_thread_get_threads_ctx {
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+};
+
+static void
+rpc_thread_get_threads_done(void *arg)
+{
+	struct rpc_thread_get_threads_ctx *ctx = arg;
+
+	spdk_json_write_array_end(ctx->w);
+	spdk_jsonrpc_end_result(ctx->request, ctx->w);
+
+	free(ctx);
+}
+
+static void
+rpc_thread_get_threads(void *arg)
+{
+	struct rpc_thread_get_threads_ctx *ctx = arg;
+	struct spdk_thread *thread = spdk_get_thread();
+
+	spdk_json_write_object_begin(ctx->w);
+
+	spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(thread));
+
+	spdk_json_write_named_string(ctx->w, "cpumask",
+				     spdk_cpuset_fmt(spdk_thread_get_cpumask(thread)));
+
+	spdk_json_write_object_end(ctx->w);
+}
+
+static void
+spdk_rpc_thread_get_threads(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_thread_get_threads_ctx *ctx;
+
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "`thread_get_threads` requires no arguments");
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation error");
+		return;
+	}
+	ctx->request = request;
+
+	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
+	spdk_json_write_array_begin(ctx->w);
+
+	spdk_for_each_thread(rpc_thread_get_threads, ctx, rpc_thread_get_threads_done);
+}
+
+SPDK_RPC_REGISTER("thread_get_threads", spdk_rpc_thread_get_threads, SPDK_RPC_RUNTIME);
