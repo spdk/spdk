@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68d9fb17_6b2bd8e3",
+        "filename": "module/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-11-20T08:23:01Z",
+      "side": 1,
+      "message": "Maybe we can reuse this structure?",
+      "range": {
+        "startLine": 155,
+        "startChar": 0,
+        "endLine": 158,
+        "endChar": 2
+      },
+      "revId": "ef2cf4c89daafcb5354ae01fa31631d82ebe1d63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
