@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f86a660b_9187df6f",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T02:54:11Z",
+      "side": 1,
+      "message": "if (index \u003e\u003d bdev_node-\u003enum_zones) {\n  return NULL;\n}\n\nzone \u003d \u0026bdev_node-\u003ezones[index];\n\nif (zone-\u003ezone_info.zone_id \u003d\u003d start_lba) {\n  return zone;\n} else {\n  return NULL;\n}\n\nmay be a little more intuitive.",
+      "revId": "dc5659b78cfccb712777f369861a2c85c356a1b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "353c08b2_6a4b21f3",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-20T02:54:11Z",
+      "side": 1,
+      "message": "The following may be a little simpler:\n\nzone_info \u003d bdev_io-\u003eu.zone_mgmt.buf;\nzone_id \u003d bdev_io-\u003eu.zone_mgmt.zone_id;\n\nzone \u003d zone_block_get_zone(bdev_node, zone_id);\n\nfor (i \u003d 0; i \u003c bdev_io-\u003eu.zome_mgmt.num_zones; i++, zone_id +\u003d bdev_node-\u003ebdev.zone_size) {\n  zone \u003d zone_block_get_zoone(bdev_node, zone_id);\n  memcpy(zone_info[i], \u0026zone-\u003ezone_info, sizeof(*zone_info));\n}",
+      "revId": "dc5659b78cfccb712777f369861a2c85c356a1b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
