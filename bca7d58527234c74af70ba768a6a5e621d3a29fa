@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1e35aed_c55e6b47",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-20T23:29:55Z",
+      "side": 1,
+      "message": "You definitely need to implement the thread_schedule callback here. That\u0027s one of the main reasons I wanted to have this example.",
+      "revId": "bca7d58527234c74af70ba768a6a5e621d3a29fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af44c825_c9e2a883",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-20T23:29:55Z",
+      "side": 1,
+      "message": "This is an example, so let\u0027s fill all of these functions with comments about why the code is doing what it\u0027s doing.\n\nFor this part, you could say that we\u0027re spawning a lightweight thread per core and creating an nvmf poll group on each lightweight thread.",
+      "revId": "bca7d58527234c74af70ba768a6a5e621d3a29fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba3001c5_307e1678",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-20T23:29:55Z",
+      "side": 1,
+      "message": "Technically, the thread scheduler you implement should just be fanning the lightweight threads out properly. For this example, I\u0027d call spdk_thread_create with no CPU mask at all.",
+      "revId": "bca7d58527234c74af70ba768a6a5e621d3a29fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a17941ff_d89929a3",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-20T23:29:55Z",
+      "side": 1,
+      "message": "The mapping of lightweight spdk threads to the actual threads should be done by the spdk_thread_schedule callback that you pass to spdk_thread_lib_init.",
+      "revId": "bca7d58527234c74af70ba768a6a5e621d3a29fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

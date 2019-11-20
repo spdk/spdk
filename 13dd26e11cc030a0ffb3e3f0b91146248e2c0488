@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c598d844_750fb42e",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-20T23:29:55Z",
+      "side": 1,
+      "message": "You should be implementing the callback here. Just have it assign spdk_threads to the system threads using round-robin.",
+      "revId": "13dd26e11cc030a0ffb3e3f0b91146248e2c0488",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a84901d_6b6ab18b",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-20T23:29:55Z",
+      "side": 1,
+      "message": "Separate this into two loops. The first loop should loop over each core and do spdk_env_thread_launch_pinned. The second loop should call spdk_thread_create(). When spdk_thread_create() is called, it will call the callback you passed to spdk_thread_lib_init, and in that callback you should map the new thread to one of the system threads you spawned.\n\nI know this is more complex than what you have, but it\u0027s the \"modern\" way to do this in SPDK.",
+      "revId": "13dd26e11cc030a0ffb3e3f0b91146248e2c0488",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
