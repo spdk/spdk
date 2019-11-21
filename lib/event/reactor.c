@@ -282,6 +282,7 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 	return count;
 }
 
+/* 1s */
 #define CONTEXT_SWITCH_MONITOR_PERIOD 1000000
 
 static int
@@ -340,6 +341,7 @@ _spdk_reactor_run(void *arg)
 	uint64_t		last_rusage = 0;
 	struct spdk_lw_thread	*lw_thread, *tmp;
 	char			thread_name[32];
+	uint64_t		rusage_period = 0;
 
 	SPDK_NOTICELOG("Reactor started on core %u\n", reactor->lcore);
 
@@ -348,6 +350,8 @@ _spdk_reactor_run(void *arg)
 	 */
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
 	_set_thread_name(thread_name);
+
+	rusage_period = (CONTEXT_SWITCH_MONITOR_PERIOD * spdk_get_ticks_hz()) / SPDK_SEC_TO_USEC;
 
 	while (1) {
 		uint64_t now;
@@ -374,7 +378,7 @@ _spdk_reactor_run(void *arg)
 		}
 
 		if (g_framework_monitor_context_switch_enabled) {
-			if ((last_rusage + CONTEXT_SWITCH_MONITOR_PERIOD) < now) {
+			if ((last_rusage + rusage_period) < now) {
 				get_rusage(reactor);
 				last_rusage = now;
 			}
