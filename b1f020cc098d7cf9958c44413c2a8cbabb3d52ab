@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cb7b37ff_e7c299c1",
+        "filename": "test/bdev/bdev_raid.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-21T07:06:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f9a6de75_80f27093",
+      "revId": "b1f020cc098d7cf9958c44413c2a8cbabb3d52ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a92765cb_9236d8a9",
         "filename": "test/blobfs/rocksdb/rocksdb.sh",
         "patchSetId": 7
@@ -33,6 +51,24 @@
       "revId": "b1f020cc098d7cf9958c44413c2a8cbabb3d52ab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7fac35b_ad2b7987",
+        "filename": "test/blobfs/rocksdb/rocksdb.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-21T07:06:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a92765cb_9236d8a9",
+      "revId": "b1f020cc098d7cf9958c44413c2a8cbabb3d52ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "bc389bc3_1a6d26e5",
+        "filename": "test/blobstore/blob_io_wait/blob_io_wait.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-21T07:06:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f108e22f_a7438f5b",
+      "revId": "b1f020cc098d7cf9958c44413c2a8cbabb3d52ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3921b13_b09b2d8c",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 7
@@ -67,6 +121,24 @@
       "revId": "b1f020cc098d7cf9958c44413c2a8cbabb3d52ab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62eb463f_4463a3f5",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 767,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-21T07:06:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f3921b13_b09b2d8c",
+      "revId": "b1f020cc098d7cf9958c44413c2a8cbabb3d52ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "bdd44bdd_dd2795d8",
+        "filename": "test/nvmf/target/shutdown.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-21T07:06:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bc5751d5_0cc088e2",
+      "revId": "b1f020cc098d7cf9958c44413c2a8cbabb3d52ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e1f50bdb_e2dcfa0b",
         "filename": "test/vhost/hotplug/scsi_hotremove.sh",
         "patchSetId": 7
@@ -101,6 +191,24 @@
       "revId": "b1f020cc098d7cf9958c44413c2a8cbabb3d52ab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8eb67bf4_6b625216",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-21T07:06:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e1f50bdb_e2dcfa0b",
+      "revId": "b1f020cc098d7cf9958c44413c2a8cbabb3d52ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
