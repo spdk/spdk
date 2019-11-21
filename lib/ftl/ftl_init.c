@@ -964,27 +964,44 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 	ioch->base_ioch = spdk_bdev_get_io_channel(dev->base_bdev_desc);
 	if (!ioch->base_ioch) {
 		SPDK_ERRLOG("Failed to create base bdev IO channel\n");
-		spdk_mempool_free(ioch->io_pool);
-		return -1;
+		goto fail_ioch;
 	}
 
 	if (ftl_dev_has_nv_cache(dev)) {
 		ioch->cache_ioch = spdk_bdev_get_io_channel(dev->nv_cache.bdev_desc);
 		if (!ioch->cache_ioch) {
 			SPDK_ERRLOG("Failed to create cache IO channel\n");
-			spdk_mempool_free(ioch->io_pool);
-			spdk_put_io_channel(ioch->base_ioch);
-			return -1;
+			goto fail_cache;
 		}
 	}
 
+	TAILQ_INIT(&ioch->write_cmpl_queue);
+	ioch->poller = spdk_poller_register(ftl_io_channel_poll, ioch, 0);
+	if (!ioch->poller) {
+		SPDK_ERRLOG("Failed to register IO channel poller\n");
+		goto fail_poller;
+	}
+
 	return 0;
+
+fail_poller:
+	if (ioch->cache_ioch) {
+		spdk_put_io_channel(ioch->cache_ioch);
+	}
+fail_cache:
+	spdk_put_io_channel(ioch->base_ioch);
+fail_ioch:
+	spdk_mempool_free(ioch->io_pool);
+	return -1;
+
 }
 
 static void
 ftl_io_channel_destroy_cb(void *io_device, void *ctx)
 {
 	struct ftl_io_channel *ioch = ctx;
+
+	spdk_poller_unregister(&ioch->poller);
 
 	spdk_mempool_free(ioch->io_pool);
 

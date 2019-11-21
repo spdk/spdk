@@ -1758,6 +1758,7 @@ static int
 ftl_rwb_fill(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
+	struct ftl_io_channel *ioch;
 	struct ftl_rwb_entry *entry;
 	struct ftl_addr addr = { .cached = 1 };
 	int flags = ftl_rwb_flags_from_io(io);
@@ -1791,7 +1792,8 @@ ftl_rwb_fill(struct ftl_io *io)
 		if (ftl_dev_has_nv_cache(dev) && !(io->flags & FTL_IO_BYPASS_CACHE)) {
 			ftl_write_nv_cache(io);
 		} else {
-			ftl_io_complete(io);
+			ioch = spdk_io_channel_get_ctx(io->ioch);
+			TAILQ_INSERT_TAIL(&ioch->write_cmpl_queue, io, ioch_entry);
 		}
 	}
 
@@ -2234,6 +2236,29 @@ ftl_process_retry_queue(struct spdk_ftl_dev *dev)
 			ftl_io_complete(io);
 		}
 	}
+}
+
+int
+ftl_io_channel_poll(void *arg)
+{
+	struct ftl_io_channel *ch = arg;
+	struct ftl_io *io;
+	TAILQ_HEAD(, ftl_io) io_queue;
+
+	TAILQ_INIT(&io_queue);
+	TAILQ_SWAP(&ch->write_cmpl_queue, &io_queue, ftl_io, ioch_entry);
+
+	if (TAILQ_EMPTY(&io_queue)) {
+		return 0;
+	}
+
+	while (!TAILQ_EMPTY(&io_queue)) {
+		io = TAILQ_FIRST(&io_queue);
+		TAILQ_REMOVE(&io_queue, io, ioch_entry);
+		ftl_io_complete(io);
+	}
+
+	return 1;
 }
 
 int

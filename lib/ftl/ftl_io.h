@@ -134,6 +134,10 @@ struct ftl_io_channel {
 	struct spdk_io_channel			*base_ioch;
 	/* Persistent cache IO channel */
 	struct spdk_io_channel			*cache_ioch;
+	/* Poller */
+	struct spdk_poller			*poller;
+	/* Wirte completion queue */
+	TAILQ_HEAD(, ftl_io)			write_cmpl_queue;
 };
 
 /* General IO descriptor */
@@ -219,6 +223,8 @@ struct ftl_io {
 	uint64_t				trace;
 
 	TAILQ_ENTRY(ftl_io)			retry_entry;
+
+	TAILQ_ENTRY(ftl_io)			ioch_entry;
 };
 
 /* Metadata IO */
