@@ -46,8 +46,6 @@
 
 #include "bdev_ftl.h"
 
-#define FTL_COMPLETION_RING_SIZE 4096
-
 struct ftl_bdev {
 	struct spdk_bdev		bdev;
 
@@ -61,21 +59,11 @@ struct ftl_bdev {
 struct ftl_io_channel {
 	struct spdk_ftl_dev		*dev;
 
-	struct spdk_poller		*poller;
-
-#define FTL_MAX_COMPLETIONS 64
-	struct ftl_bdev_io		*io[FTL_MAX_COMPLETIONS];
-
-	/* Completion ring */
-	struct spdk_ring		*ring;
-
 	struct spdk_io_channel		*ioch;
 };
 
 struct ftl_bdev_io {
 	struct ftl_bdev			*bdev;
-
-	struct spdk_ring		*ring;
 
 	int				status;
 };
@@ -154,24 +142,18 @@ static void
 bdev_ftl_cb(void *arg, int status)
 {
 	struct ftl_bdev_io *io = arg;
-	size_t cnt __attribute__((unused));
 
 	io->status = status;
-
-	cnt = spdk_ring_enqueue(io->ring, (void **)&io, 1, NULL);
-	assert(cnt == 1);
+	bdev_ftl_complete_io(io, io->status);
 }
 
 static int
 bdev_ftl_fill_bio(struct ftl_bdev *ftl_bdev, struct spdk_io_channel *ch,
 		  struct ftl_bdev_io *io)
 {
-	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(ch);
-
 	memset(io, 0, sizeof(*io));
 
 	io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	io->ring = ioch->ring;
 	io->bdev = ftl_bdev;
 	return 0;
 }
@@ -394,40 +376,12 @@ static const struct spdk_bdev_fn_table ftl_fn_table = {
 };
 
 static int
-bdev_ftl_poll(void *arg)
-{
-	struct ftl_io_channel *ch = arg;
-	size_t cnt, i;
-
-	cnt = spdk_ring_dequeue(ch->ring, (void **)&ch->io, FTL_MAX_COMPLETIONS);
-
-	for (i = 0; i < cnt; ++i) {
-		bdev_ftl_complete_io(ch->io[i], ch->io[i]->status);
-	}
-
-	return cnt;
-}
-
-static int
 bdev_ftl_io_channel_create_cb(void *io_device, void *ctx)
 {
 	struct ftl_io_channel *ch = ctx;
 	struct ftl_bdev *ftl_bdev = (struct ftl_bdev *)io_device;
 
 	ch->dev = ftl_bdev->dev;
-	ch->ring = spdk_ring_create(SPDK_RING_TYPE_MP_SC, FTL_COMPLETION_RING_SIZE,
-				    SPDK_ENV_SOCKET_ID_ANY);
-
-	if (!ch->ring) {
-		return -ENOMEM;
-	}
-
-	ch->poller = spdk_poller_register(bdev_ftl_poll, ch, 0);
-	if (!ch->poller) {
-		spdk_ring_free(ch->ring);
-		return -ENOMEM;
-	}
-
 	ch->ioch = spdk_get_io_channel(ftl_bdev->dev);
 
 	return 0;
@@ -438,8 +392,6 @@ bdev_ftl_io_channel_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct ftl_io_channel *ch = ctx_buf;
 
-	spdk_ring_free(ch->ring);
-	spdk_poller_unregister(&ch->poller);
 	spdk_put_io_channel(ch->ioch);
 }
 
