@@ -428,9 +428,13 @@ ftl_next_write_band(struct spdk_ftl_dev *dev)
 	/* Find a free band that has all of its data moved onto other closed bands */
 	LIST_FOREACH(band, &dev->free_bands, list_entry) {
 		assert(band->state == FTL_BAND_STATE_FREE);
+#if 1
 		if (band->num_reloc_bands == 0 && band->num_reloc_blocks == 0) {
 			break;
 		}
+#else
+		break;
+#endif
 	}
 
 	if (spdk_unlikely(!band)) {
@@ -723,11 +727,11 @@ unlock:
 }
 
 static struct ftl_rwb_entry *
-ftl_acquire_entry(struct spdk_ftl_dev *dev, int flags)
+ftl_acquire_entry(struct spdk_ftl_dev *dev, struct ftl_io_channel *ioch, int flags)
 {
 	struct ftl_rwb_entry *entry;
 
-	entry = ftl_rwb_acquire(dev->rwb, ftl_rwb_type_from_flags(flags));
+	entry = ftl_rwb_acquire(dev->rwb, ioch->wbuf_ioch, ftl_rwb_type_from_flags(flags));
 	if (!entry) {
 		return NULL;
 	}
@@ -745,7 +749,7 @@ ftl_rwb_pad(struct spdk_ftl_dev *dev, size_t size)
 	int flags = FTL_IO_PAD | FTL_IO_INTERNAL;
 
 	for (size_t i = 0; i < size; ++i) {
-		entry = ftl_acquire_entry(dev, flags);
+		entry = ftl_acquire_entry(dev, spdk_io_channel_get_ctx(ftl_get_io_channel(dev)), flags);
 		if (!entry) {
 			break;
 		}
@@ -1596,8 +1600,6 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 	int			rc = 0;
 
 	assert(io->block_cnt % dev->xfer_size == 0);
-	/* Only one child write make sense in case user write */
-	assert((io->flags & FTL_IO_MD) || io->iov_cnt == 1);
 
 	while (io->iov_pos < io->iov_cnt) {
 		/* There are no guarantees of the order of completion of NVMe IO submission queue */
@@ -1732,7 +1734,7 @@ ftl_process_writes(struct spdk_ftl_dev *dev)
 	enum ftl_band_state state;
 
 	LIST_FOREACH_SAFE(wptr, &dev->wptr_list, list_entry, twptr) {
-		ftl_wptr_process_writes(wptr);
+		while (ftl_wptr_process_writes(wptr) > 0) {}
 		state = wptr->band->state;
 
 		if (state != FTL_BAND_STATE_FULL &&
@@ -1775,6 +1777,7 @@ ftl_rwb_fill(struct ftl_io *io)
 	struct ftl_rwb_entry *entry;
 	struct ftl_addr addr = { .cached = 1 };
 	int flags = ftl_rwb_flags_from_io(io);
+	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(io->ioch);
 
 	while (io->pos < io->block_cnt) {
 		if (ftl_io_current_lba(io) == FTL_LBA_INVALID) {
@@ -1782,7 +1785,7 @@ ftl_rwb_fill(struct ftl_io *io)
 			continue;
 		}
 
-		entry = ftl_acquire_entry(dev, flags);
+		entry = ftl_acquire_entry(dev, ioch, flags);
 		if (!entry) {
 			return -EAGAIN;
 		}
