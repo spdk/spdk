@@ -1419,7 +1419,7 @@ spdk_nvmf_rdma_request_get_xfer(struct spdk_nvmf_rdma_request *rdma_req)
 		if ((rdma_req->req.qpair->qid == 0) &&
 		    ((cmd->opc == SPDK_NVME_OPC_GET_FEATURES) ||
 		     (cmd->opc == SPDK_NVME_OPC_SET_FEATURES))) {
-			switch (cmd->cdw10 & 0xff) {
+			switch (cmd->cdw10_bits.get_features.fid) {
 			case SPDK_NVME_FEAT_LBA_RANGE_TYPE:
 			case SPDK_NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION:
 			case SPDK_NVME_FEAT_HOST_IDENTIFIER:

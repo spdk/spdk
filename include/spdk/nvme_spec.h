@@ -611,8 +611,12 @@ struct spdk_nvme_cmd {
 		struct spdk_nvme_sgl_descriptor sgl1;
 	} dptr;
 
-	/* dword 10-15 */
-	uint32_t cdw10;		/* command-specific */
+	/* command-specific */
+	union {
+		uint32_t cdw10;
+		union spdk_nvme_cmd_cdw10 cdw10_bits;
+	};
+	/* dword 11-15 */
 	uint32_t cdw11;		/* command-specific */
 	uint32_t cdw12;		/* command-specific */
 	uint32_t cdw13;		/* command-specific */
