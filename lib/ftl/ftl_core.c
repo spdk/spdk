@@ -1787,7 +1787,8 @@ ftl_rwb_fill(struct ftl_io *io)
 		if (ftl_dev_has_nv_cache(dev) && !(io->flags & FTL_IO_BYPASS_CACHE)) {
 			ftl_write_nv_cache(io);
 		} else {
-			ftl_io_complete(io);
+			struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(io->ioch);
+			TAILQ_INSERT_TAIL(&ioch->completion_queue, io, ioch_entry);
 		}
 	}
 
@@ -1919,8 +1920,8 @@ ftl_rwb_fill_leaf(struct ftl_io *io)
 
 	rc = ftl_rwb_fill(io);
 	if (rc == -EAGAIN) {
-		spdk_thread_send_msg(spdk_io_channel_get_thread(io->ioch),
-				     _ftl_io_write, io);
+		struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(io->ioch);
+		TAILQ_INSERT_TAIL(&ioch->retry_queue, io, ioch_entry);
 		return 0;
 	}
 
@@ -2152,6 +2153,45 @@ ftl_process_retry_queue(struct spdk_ftl_dev *dev)
 			ftl_io_complete(io);
 		}
 	}
+}
+
+int
+ftl_io_channel_poll(void *arg)
+{
+	struct ftl_io_channel *ch = arg;
+	struct ftl_io *io;
+	int rc;
+	TAILQ_HEAD(, ftl_io)	io_queue;
+	TAILQ_HEAD(, ftl_io)	retry_queue;
+
+	TAILQ_INIT(&io_queue);
+	TAILQ_SWAP(&ch->completion_queue, &io_queue, ftl_io, ioch_entry);
+
+	if (TAILQ_EMPTY(&io_queue) && TAILQ_EMPTY(&ch->retry_queue)) {
+		return 0;
+	}
+
+	while (!TAILQ_EMPTY(&io_queue)) {
+		io = TAILQ_FIRST(&io_queue);
+		TAILQ_REMOVE(&io_queue, io, ioch_entry);
+		ftl_io_complete(io);
+	}
+
+	TAILQ_INIT(&retry_queue);
+	TAILQ_SWAP(&ch->retry_queue, &retry_queue, ftl_io, ioch_entry);
+
+	while (!TAILQ_EMPTY(&retry_queue)) {
+		io = TAILQ_FIRST(&retry_queue);
+		TAILQ_REMOVE(&retry_queue, io, ioch_entry);
+		rc = ftl_rwb_fill(io);
+		if (rc == -EAGAIN) {
+			TAILQ_INSERT_HEAD(&retry_queue, io, ioch_entry);
+			TAILQ_SWAP(&ch->retry_queue, &retry_queue, ftl_io, ioch_entry);
+			break;
+		}
+	}
+
+	return 1;
 }
 
 int
