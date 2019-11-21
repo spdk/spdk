@@ -1001,7 +1001,7 @@ get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t fid)
 	feature->valid = false;
 
 	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
-	cmd.cdw10 = fid;
+	cmd.cdw10_bits.get_features.fid = fid;
 
 	return spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, get_feature_completion, feature);
 }
@@ -1067,7 +1067,7 @@ set_arb_feature(struct spdk_nvme_ctrlr *ctrlr)
 	unsigned ab, lpw, mpw, hpw;
 
 	cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
-	cmd.cdw10 = SPDK_NVME_FEAT_ARBITRATION;
+	cmd.cdw10_bits.set_features.fid = SPDK_NVME_FEAT_ARBITRATION;
 
 	g_arbitration.outstanding_commands = 0;
 
