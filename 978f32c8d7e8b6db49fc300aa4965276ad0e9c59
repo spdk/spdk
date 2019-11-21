@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "38abe9c8_6fda586b",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-11-21T20:26:53Z",
+      "side": 1,
+      "message": "Maybe add common API, like:\n\nint spdk_something_claim(char *lock_name);\nint spdk_something_unclaim(char *lock_name, int fd);\n\nand use it in both places. It will let us to reuse it in future if needed as well as keep cuse specific code in one place. If so, I think it should be done as separate commit with rework of spdk_pci_device_claim/unclaim.",
+      "parentUuid": "1fcecdc5_22bfdcec",
+      "revId": "978f32c8d7e8b6db49fc300aa4965276ad0e9c59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e3012fa2_d5b50f3e",
         "filename": "lib/nvme/nvme_cuse.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2019-11-21T16:17:31Z",
       "side": 1,
       "message": "per previous e-mail, I think the bit array will still work here - we just make sure that the bit array for each process only tracks the indices that its process is using\n\nnote that the spdk_bit_array API will allow you to find the first cleared bit starting at some offset into the bit array",
+      "revId": "978f32c8d7e8b6db49fc300aa4965276ad0e9c59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2bc501c9_89a5bcf9",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 812,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-11-21T20:26:53Z",
+      "side": 1,
+      "message": "Something like that?:\n\nstatic struct spdk_bit_array *g_ctrlr_started;\n\nnvme_cuse_start() {\n\tuint32_t index \u003d 0;\n\n\t/* ... */\n\n\tif (g_ctrlr_started \u003d\u003d NULL) {\n\t\tg_ctrlr_started \u003d spdk_bit_array_create(128);\n\t}\n\n\tdo {\n\t\tindex \u003d spdk_bit_array_find_first_clear(g_ctrlr_started, index);\n\t\tif (index \u003d\u003d UINT32_MAX) {\n\t\t\treturn -1;\n\t\t}\n\t} while(!nvme_cuse_claim(index));\n\n\tspdk_bit_array_set(g_ctrlr_started, index);\n\n\tcuse_device-\u003eindex \u003d index;\n\n\t/* ... */\n}\n\n\nnvme_cuse_stop() {\n\n\t/* ... */\n\n\tspdk_bit_array_clear(g_ctrlr_started, cuse_device-\u003eindex);\n\tif (spdk_bit_array_count_set(g_ctrlr_started) \u003d\u003d 0) {\n\t\tspdk_bit_array_free(\u0026g_ctrlr_started);\n\t}\n\tnvme_cuse_unclaim(cuse_device-\u003eindex);\n\n\t/* ... */\n}",
+      "parentUuid": "e3012fa2_d5b50f3e",
       "revId": "978f32c8d7e8b6db49fc300aa4965276ad0e9c59",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
