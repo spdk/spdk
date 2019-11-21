@@ -340,6 +340,7 @@ _spdk_reactor_run(void *arg)
 	uint64_t		last_rusage = 0;
 	struct spdk_lw_thread	*lw_thread, *tmp;
 	char			thread_name[32];
+	uint64_t quotient, remainder, ticks, period = 0;
 
 	SPDK_NOTICELOG("Reactor started on core %u\n", reactor->lcore);
 
@@ -348,6 +349,13 @@ _spdk_reactor_run(void *arg)
 	 */
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
 	_set_thread_name(thread_name);
+
+	if (g_framework_monitor_context_switch_enabled) {
+		quotient = CONTEXT_SWITCH_MONITOR_PERIOD / SPDK_SEC_TO_USEC;
+		remainder = CONTEXT_SWITCH_MONITOR_PERIOD % SPDK_SEC_TO_USEC;
+		ticks = spdk_get_ticks_hz();
+		period = ticks * quotient + (ticks * remainder) / SPDK_SEC_TO_USEC;
+	}
 
 	while (1) {
 		uint64_t now;
@@ -374,7 +382,7 @@ _spdk_reactor_run(void *arg)
 		}
 
 		if (g_framework_monitor_context_switch_enabled) {
-			if ((last_rusage + CONTEXT_SWITCH_MONITOR_PERIOD) < now) {
+			if ((last_rusage + period) < now) {
 				get_rusage(reactor);
 				last_rusage = now;
 			}
