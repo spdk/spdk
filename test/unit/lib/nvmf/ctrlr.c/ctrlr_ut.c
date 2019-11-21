@@ -221,7 +221,8 @@ test_get_log_page(void)
 	memset(&cmd, 0, sizeof(cmd));
 	memset(&rsp, 0, sizeof(rsp));
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
-	cmd.nvme_cmd.cdw10 = SPDK_NVME_LOG_ERROR | (req.length / 4 - 1) << 16;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_ERROR;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = (req.length / 4 - 1);
 	CU_ASSERT(spdk_nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
@@ -230,7 +231,7 @@ test_get_log_page(void)
 	memset(&cmd, 0, sizeof(cmd));
 	memset(&rsp, 0, sizeof(rsp));
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
-	cmd.nvme_cmd.cdw10 = 0;
+	cmd.nvme_cmd.cdw10  = 0;
 	CU_ASSERT(spdk_nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
@@ -239,7 +240,8 @@ test_get_log_page(void)
 	memset(&cmd, 0, sizeof(cmd));
 	memset(&rsp, 0, sizeof(rsp));
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
-	cmd.nvme_cmd.cdw10 = SPDK_NVME_LOG_ERROR | (req.length / 4 - 1) << 16;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_ERROR;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = (req.length / 4 - 1);
 	cmd.nvme_cmd.cdw12 = 2;
 	CU_ASSERT(spdk_nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
@@ -250,7 +252,8 @@ test_get_log_page(void)
 	memset(&rsp, 0, sizeof(rsp));
 	req.data = NULL;
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
-	cmd.nvme_cmd.cdw10 = SPDK_NVME_LOG_ERROR | (req.length / 4 - 1) << 16;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_ERROR;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = (req.length / 4 - 1);
 	CU_ASSERT(spdk_nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
@@ -720,7 +723,7 @@ test_get_ns_id_desc_list(void)
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_IDENTIFY;
-	cmd.nvme_cmd.cdw10 = SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST;
+	cmd.nvme_cmd.cdw10_bits.identify.cns = SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST;
 
 	/* Invalid NSID */
 	cmd.nvme_cmd.nsid = 0;
@@ -920,7 +923,7 @@ test_set_get_features(void)
 
 	/* Get SPDK_NVME_FEAT_HOST_RESERVE_PERSIST feature */
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
-	cmd.nvme_cmd.cdw10 = SPDK_NVME_FEAT_HOST_RESERVE_PERSIST;
+	cmd.nvme_cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_HOST_RESERVE_PERSIST;
 	rc = spdk_nvmf_ctrlr_get_features_reservation_persistence(&req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
