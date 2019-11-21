@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "684cbeb9_522167d4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T00:10:36Z",
+      "side": 1,
+      "message": "Oh - I totally missed this earlier.  You need to do an spdk_for_each_channel(), when the timer expires.  This will be the function that is executed for each channel.  One descriptor can be associated with multiple channels (one channel for each core), so you need to make sure you check all of the channels, not just the one associated with the core that calls spdk_bdev_set_timeout().",
+      "revId": "60acd4bae307ff8e396db49c7d4c2b72143bdb7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afab7967_c13b9662",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2130,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T00:10:36Z",
+      "side": 1,
+      "message": "I think we should make this comment a bit more clear.  How about:\n\n/* I/O are added to this TAILQ as they are submitted.  So once we find an I/O that has not\n * timed out, we can immediately exit the loop.\n */",
+      "revId": "60acd4bae307ff8e396db49c7d4c2b72143bdb7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b83717dd_28599572",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2138,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T00:10:36Z",
+      "side": 1,
+      "message": "I don\u0027t think you want to return here.  If there are multiple I/O that timed out, this will only invoke the callback on the first one.",
+      "revId": "60acd4bae307ff8e396db49c7d4c2b72143bdb7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dcb7bed4_d0106e00",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2165,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T00:10:36Z",
+      "side": 1,
+      "message": "just to explain this a bit more, since I saw a question on an earlier version of this patch\n\nthe idea is that we may set a timeout value of 30 seconds, but we want to check the timeout more frequently - for example, if the poller only runs every 30 seconds, then poller executes at 0, 30, 60, 90, 120 seconds.  If user submits an I/O at 31 seconds, when poller executes at 60 seconds, it will not be expired.  It will not detect expiration until 90 seconds (which is 59 seconds after submission).\n\nThe timeout does not need to be absolutely precise.  1 second is the right amount of granularity in my opinion.",
+      "revId": "60acd4bae307ff8e396db49c7d4c2b72143bdb7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
