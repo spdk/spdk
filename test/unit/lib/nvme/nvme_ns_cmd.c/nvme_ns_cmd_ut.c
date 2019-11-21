@@ -503,7 +503,7 @@ test_cmd_child_request(void)
 		CU_ASSERT(child->payload_offset == offset);
 		CU_ASSERT(child->cmd.opc == SPDK_NVME_OPC_READ);
 		CU_ASSERT(child->cmd.nsid == ns.id);
-		CU_ASSERT(child->cmd.cdw10 == (lba + sectors_per_max_io * i));
+		CU_ASSERT(child->cmd.cdw10.raw == (lba + sectors_per_max_io * i));
 		CU_ASSERT(child->cmd.cdw12 == ((sectors_per_max_io - 1) | 0));
 		offset += max_io_size;
 		nvme_free_request(child);
@@ -618,7 +618,7 @@ test_nvme_ns_cmd_dataset_management(void)
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_DATASET_MANAGEMENT);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
-	CU_ASSERT(g_request->cmd.cdw10 == 0);
+	CU_ASSERT(g_request->cmd.cdw10.raw == 0);
 	CU_ASSERT(g_request->cmd.cdw11 == SPDK_NVME_DSM_ATTR_DEALLOCATE);
 	spdk_free(g_request->payload.contig_or_cb_arg);
 	nvme_free_request(g_request);
@@ -630,7 +630,7 @@ test_nvme_ns_cmd_dataset_management(void)
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_DATASET_MANAGEMENT);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
-	CU_ASSERT(g_request->cmd.cdw10 == 255u);
+	CU_ASSERT(g_request->cmd.cdw10.raw == 255u);
 	CU_ASSERT(g_request->cmd.cdw11 == SPDK_NVME_DSM_ATTR_DEALLOCATE);
 	spdk_free(g_request->payload.contig_or_cb_arg);
 	nvme_free_request(g_request);
@@ -812,7 +812,7 @@ test_nvme_ns_cmd_reservation_register(void)
 	tmp_cdw10 |= ignore_key ? 1 << 3 : 0;
 	tmp_cdw10 |= (uint32_t)SPDK_NVME_RESERVE_PTPL_NO_CHANGES << 30;
 
-	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
+	CU_ASSERT(g_request->cmd.cdw10.raw == tmp_cdw10);
 
 	spdk_free(g_request->payload.contig_or_cb_arg);
 	nvme_free_request(g_request);
@@ -850,7 +850,7 @@ test_nvme_ns_cmd_reservation_release(void)
 	tmp_cdw10 |= ignore_key ? 1 << 3 : 0;
 	tmp_cdw10 |= (uint32_t)SPDK_NVME_RESERVE_WRITE_EXCLUSIVE << 8;
 
-	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
+	CU_ASSERT(g_request->cmd.cdw10.raw == tmp_cdw10);
 
 	spdk_free(g_request->payload.contig_or_cb_arg);
 	nvme_free_request(g_request);
@@ -888,7 +888,7 @@ test_nvme_ns_cmd_reservation_acquire(void)
 	tmp_cdw10 |= ignore_key ? 1 << 3 : 0;
 	tmp_cdw10 |= (uint32_t)SPDK_NVME_RESERVE_WRITE_EXCLUSIVE << 8;
 
-	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
+	CU_ASSERT(g_request->cmd.cdw10.raw == tmp_cdw10);
 
 	spdk_free(g_request->payload.contig_or_cb_arg);
 	nvme_free_request(g_request);
@@ -920,7 +920,7 @@ test_nvme_ns_cmd_reservation_report(void)
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_RESERVATION_REPORT);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 
-	CU_ASSERT(g_request->cmd.cdw10 == (size / 4));
+	CU_ASSERT(g_request->cmd.cdw10.raw == (size / 4));
 
 	spdk_free(g_request->payload.contig_or_cb_arg);
 	nvme_free_request(g_request);
