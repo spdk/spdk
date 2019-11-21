@@ -978,6 +978,9 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 		}
 	}
 
+	TAILQ_INIT(&ioch->completion_queue);
+	ioch->poller = spdk_poller_register(ftl_io_channel_poll, ioch, 0);
+
 	return 0;
 }
 
@@ -985,6 +988,8 @@ static void
 ftl_io_channel_destroy_cb(void *io_device, void *ctx)
 {
 	struct ftl_io_channel *ioch = ctx;
+
+	spdk_poller_unregister(&ioch->poller);
 
 	spdk_mempool_free(ioch->io_pool);
 
