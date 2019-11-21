@@ -36,8 +36,17 @@
 #include "spdk/event.h"
 #include "spdk/string.h"
 #include "spdk/thread.h"
+#include "spdk/bdev.h"
+#include "spdk/rpc.h"
+
+#include "spdk_internal/event.h"
 
 static const char *g_rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+
+enum nvmf_target_state {
+	NVMF_INIT_SUBSYSTEM = 0,
+	NVMF_FINI_SUBSYSTEM,
+};
 
 struct nvmf_lw_thread {
 	TAILQ_ENTRY(nvmf_lw_thread) link;
@@ -54,8 +63,12 @@ TAILQ_HEAD(, nvmf_reactor) g_reactors = TAILQ_HEAD_INITIALIZER(g_reactors);
 
 static struct nvmf_reactor *g_master_reactor = NULL;
 static struct nvmf_reactor *g_next_reactor = NULL;
+static struct spdk_thread *g_init_thread = NULL;
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool g_reactors_exit = false;
+static enum nvmf_target_state g_target_state;
+
+static void nvmf_target_advance_state(void);
 
 static void
 usage(char *program_name)
@@ -290,10 +303,57 @@ nvmf_destroy_threads(void)
 	fprintf(stdout, "nvmf threads destroy successfully\n");
 }
 
+static void
+nvmf_subsystem_fini_done(void *cb_arg)
+{
+	fprintf(stdout, "bdev subsystem finish successfully\n");
+	spdk_rpc_finish();
+	g_reactors_exit = true;
+}
+
+static void
+nvmf_subsystem_init_done(int rc, void *cb_arg)
+{
+	fprintf(stdout, "bdev subsystem init successfully\n");
+	spdk_rpc_initialize(g_rpc_addr);
+	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+
+	g_target_state = NVMF_FINI_SUBSYSTEM;
+	nvmf_target_advance_state();
+}
+
+static void
+nvmf_target_advance_state(void)
+{
+	enum nvmf_target_state prev_state;
+
+	do {
+		prev_state = g_target_state;
+
+		switch (g_target_state) {
+		case NVMF_INIT_SUBSYSTEM:
+			/* initlize the bdev layer */
+			spdk_subsystem_init(nvmf_subsystem_init_done, NULL);
+			break;
+		case NVMF_FINI_SUBSYSTEM:
+			spdk_subsystem_fini(nvmf_subsystem_fini_done, NULL);
+			break;
+		}
+	} while (g_target_state != prev_state);
+}
+
+static void
+nvmf_target_app_start(void *arg)
+{
+	g_target_state = NVMF_INIT_SUBSYSTEM;
+	nvmf_target_advance_state();
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
 	struct spdk_env_opts opts;
+	struct nvmf_lw_thread *lw_thread;
 
 	spdk_env_opts_init(&opts);
 	opts.name = "nvmf-example";
@@ -310,12 +370,19 @@ int main(int argc, char **argv)
 
 	/* Initialize the threads */
 	rc = nvmf_init_threads();
-	if (rc != 0) {
-		fprintf(stderr, "failed to initlize the nvmf thread layer\n");
-		g_reactors_exit = true;
-	}
+	assert(rc == 0);
+
+	/* Send a message to the thread assigned to the master reactor
+	 * that continues initialization. This is how we bootstrap the
+	 * program so that all code from here on is running on an SPDK thread.
+	 */
+	lw_thread = TAILQ_FIRST(&g_master_reactor->threads);
+	g_init_thread = spdk_thread_get_from_ctx(lw_thread);
+	assert(g_init_thread != NULL);
+	spdk_thread_send_msg(g_init_thread, nvmf_target_app_start, NULL);
 
 	nvmf_reactor_run(g_master_reactor);
+
 	spdk_env_thread_wait_all();
 	nvmf_destroy_threads();
 	return rc;
