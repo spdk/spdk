@@ -1,0 +1,6 @@
+[Malloc]
+  NumberOfLuns 1
+  LunSizeInMB 512
+
+#[Nvme]
+#  TransportID "trtype:PCIe traddr:0000:af:00.0" Nvme0
