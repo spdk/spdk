@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7f38954_dfe99c16",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 741,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T16:13:14Z",
+      "side": 1,
+      "message": "Should we try to reduce indices?  For example, if user starts and stops many times (including hotplug related cases), the ctrlr index will keep increasing and increasing.\n\nI think a better way to handle this would be to use an spdk_bit_array() to keep track of the used ctrlr indices.  Then here you get the first cleared bit in the array to use as the ctrlr index.  You\u0027ll need to save it in the cuse_device and then set that bit in the array.  Then when the device gets unregistered, you clear that bit.",
+      "revId": "a45cba3013fcdc8862cdfd3d0e72376eaea1dbab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
