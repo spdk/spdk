@@ -284,6 +284,7 @@ int	ftl_nv_cache_write_header(struct ftl_nv_cache *nv_cache, bool shutdown,
 int	ftl_nv_cache_scrub(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb cb_fn,
 			   void *cb_arg);
 void	ftl_get_media_events(struct spdk_ftl_dev *dev);
+int	ftl_io_channel_poll(void *arg);
 
 struct spdk_io_channel *
 ftl_get_io_channel(const struct spdk_ftl_dev *dev);
