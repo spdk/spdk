@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75730a24_a43549c7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-21T16:04:52Z",
+      "side": 1,
+      "message": "Ben, you want it this patch\u0027s way or your way (1st revert)? please let me know and I will also do the patch for the nvmf target code.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 65
+      },
+      "revId": "0c0d0b24acde9a8d48137d02e1472b15fd374458",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
