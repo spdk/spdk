@@ -36,6 +36,9 @@
 #include "spdk/event.h"
 #include "spdk/string.h"
 #include "spdk/thread.h"
+#include "spdk/bdev.h"
+
+#include "spdk_internal/event.h"
 
 static const char *g_rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 
@@ -255,6 +258,46 @@ nvmf_destroy_threads(void)
 	fprintf(stdout, "nvmf threads destroy done\n");
 }
 
+static void
+nvmf_bdev_init_done(int rc, void *cb_arg)
+{
+	*(bool *)cb_arg = true;
+
+	fprintf(stdout, "bdev layer init done\n");
+}
+
+static void
+nvmf_bdev_init_start(void)
+{
+	bool done = false;
+
+	spdk_subsystem_init(nvmf_bdev_init_done, &done);
+
+	while (!done) {
+		spdk_thread_poll(init_thread, 0, 0);
+	}
+}
+
+static void
+nvmf_bdev_fini_done(void *cb_arg)
+{
+	*(bool *)cb_arg = true;
+
+	fprintf(stdout, "bdev layer finish done\n");
+}
+
+static void
+nvmf_bdev_fini_start(void)
+{
+	bool done = false;
+
+	spdk_subsystem_fini(nvmf_bdev_fini_done, &done);
+
+	while (!done) {
+		spdk_thread_poll(init_thread, 0, 0);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
@@ -280,7 +323,12 @@ int main(int argc, char **argv)
 		g_threads_exit = true;
 	}
 
+	/* Initialize the bdev layer */
+	nvmf_bdev_init_start();
+
 	nvmf_work_fn(g_master_thread);
+	nvmf_bdev_fini_start();
+
 	spdk_env_thread_wait_all();
 	nvmf_destroy_threads();
 	return rc;
