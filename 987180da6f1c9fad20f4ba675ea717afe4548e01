@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12a4946a_7b0a3155",
+        "filename": "lib/nvme/nvme_io_msg.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T16:05:51Z",
+      "side": 1,
+      "message": "you can remove this STAILQ_EMPTY check - if there are no io_producers, then the STAILQ_FOREACH_SAFE loop will handle it",
+      "revId": "987180da6f1c9fad20f4ba675ea717afe4548e01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
