@@ -596,11 +596,6 @@ spdk_posix_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *r
 
 	spdk_sock_request_queue(sock, req);
 
-	if (sock->group_impl == NULL) {
-		spdk_sock_request_put(sock, req, -ENOTSUP);
-		return;
-	}
-
 	/* If there are a sufficient number queued, just flush them out immediately. */
 	if (sock->queued_iovcnt >= IOV_BATCH_SIZE) {
 		rc = _sock_flush(sock);
