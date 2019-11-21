@@ -127,7 +127,7 @@ get_feature_test(bool error_expected)
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
-	cmd.cdw10 = SPDK_NVME_FEAT_NUMBER_OF_QUEUES;
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_NUMBER_OF_QUEUES;
 
 	foreach_dev(dev) {
 		dev->error_expected = error_expected;
