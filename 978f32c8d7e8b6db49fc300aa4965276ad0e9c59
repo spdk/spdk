@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1fcecdc5_22bfdcec",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T16:17:31Z",
+      "side": 1,
+      "message": "should we put this code into a common utility function?  then we can avoid duplicating the same code in nvme_cuse_claim and spdk_pci_device_claim",
+      "revId": "978f32c8d7e8b6db49fc300aa4965276ad0e9c59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3012fa2_d5b50f3e",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 812,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T16:17:31Z",
+      "side": 1,
+      "message": "per previous e-mail, I think the bit array will still work here - we just make sure that the bit array for each process only tracks the indices that its process is using\n\nnote that the spdk_bit_array API will allow you to find the first cleared bit starting at some offset into the bit array",
+      "revId": "978f32c8d7e8b6db49fc300aa4965276ad0e9c59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
