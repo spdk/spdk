@@ -1925,9 +1925,9 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 	uint32_t num_hostid = 0;
 	int rc;
 
-	rrega = cmd->cdw10 & 0x7u;
-	iekey = (cmd->cdw10 >> 3) & 0x1u;
-	cptpl = (cmd->cdw10 >> 30) & 0x3u;
+	rrega = cmd->cdw10.resv_register.rrega;
+	iekey = cmd->cdw10.resv_register.iekey;
+	cptpl = cmd->cdw10.resv_register.cptpl;
 
 	if (req->data && req->length >= sizeof(key)) {
 		memcpy(&key, req->data, sizeof(key));
@@ -2061,9 +2061,9 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 	bool reservation_released = false;
 	uint8_t status = SPDK_NVME_SC_SUCCESS;
 
-	racqa = cmd->cdw10 & 0x7u;
-	iekey = (cmd->cdw10 >> 3) & 0x1u;
-	rtype = (cmd->cdw10 >> 8) & 0xffu;
+	racqa = cmd->cdw10.resv_acquire.racqa;
+	iekey = cmd->cdw10.resv_acquire.iekey;
+	rtype = cmd->cdw10.resv_acquire.rtype;
 
 	if (req->data && req->length >= sizeof(key)) {
 		memcpy(&key, req->data, sizeof(key));
@@ -2223,9 +2223,9 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 	struct spdk_uuid hostid_list[SPDK_NVMF_MAX_NUM_REGISTRANTS];
 	uint32_t num_hostid = 0;
 
-	rrela = cmd->cdw10 & 0x7u;
-	iekey = (cmd->cdw10 >> 3) & 0x1u;
-	rtype = (cmd->cdw10 >> 8) & 0xffu;
+	rrela = cmd->cdw10.resv_release.rrela;
+	iekey = cmd->cdw10.resv_release.iekey;
+	rtype = cmd->cdw10.resv_release.rtype;
 
 	if (req->data && req->length >= sizeof(crkey)) {
 		memcpy(&crkey, req->data, sizeof(crkey));
@@ -2380,7 +2380,7 @@ nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
 		count++;
 	}
 
-	memcpy(req->data, payload, spdk_min(len, (cmd->cdw10 + 1) * sizeof(uint32_t)));
+	memcpy(req->data, payload, spdk_min(len, (cmd->cdw10.raw + 1) * sizeof(uint32_t)));
 	free(payload);
 
 exit:

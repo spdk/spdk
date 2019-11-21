@@ -190,7 +190,7 @@ test_nvme_ocssd_ns_cmd_vector_reset_single_entry(void)
 
 	CU_ASSERT(g_request->cmd.opc == SPDK_OCSSD_OPC_VECTOR_RESET);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
-	CU_ASSERT(g_request->cmd.cdw10 == lba_list);
+	CU_ASSERT(g_request->cmd.cdw10.raw == lba_list);
 	CU_ASSERT(g_request->cmd.cdw12 == 0);
 
 	nvme_free_request(g_request);
@@ -260,7 +260,7 @@ test_nvme_ocssd_ns_cmd_vector_read_with_md_single_entry(void)
 	CU_ASSERT(g_request->payload.contig_or_cb_arg == buffer);
 	CU_ASSERT(g_request->cmd.opc == SPDK_OCSSD_OPC_VECTOR_READ);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
-	CU_ASSERT(g_request->cmd.cdw10 == lba_list);
+	CU_ASSERT(g_request->cmd.cdw10.raw == lba_list);
 	CU_ASSERT(g_request->cmd.cdw12 == 0);
 
 	nvme_free_request(g_request);
@@ -343,7 +343,7 @@ test_nvme_ocssd_ns_cmd_vector_read_single_entry(void)
 	CU_ASSERT(g_request->payload.contig_or_cb_arg == buffer);
 	CU_ASSERT(g_request->cmd.opc == SPDK_OCSSD_OPC_VECTOR_READ);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
-	CU_ASSERT(g_request->cmd.cdw10 == lba_list);
+	CU_ASSERT(g_request->cmd.cdw10.raw == lba_list);
 	CU_ASSERT(g_request->cmd.cdw12 == 0);
 
 	nvme_free_request(g_request);
@@ -421,7 +421,7 @@ test_nvme_ocssd_ns_cmd_vector_write_with_md_single_entry(void)
 	CU_ASSERT(g_request->payload.contig_or_cb_arg == buffer);
 	CU_ASSERT(g_request->cmd.opc == SPDK_OCSSD_OPC_VECTOR_WRITE);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
-	CU_ASSERT(g_request->cmd.cdw10 == lba_list);
+	CU_ASSERT(g_request->cmd.cdw10.raw == lba_list);
 	CU_ASSERT(g_request->cmd.cdw12 == 0);
 
 	nvme_free_request(g_request);
@@ -505,7 +505,7 @@ test_nvme_ocssd_ns_cmd_vector_write_single_entry(void)
 	CU_ASSERT(g_request->payload.contig_or_cb_arg == buffer);
 	CU_ASSERT(g_request->cmd.opc == SPDK_OCSSD_OPC_VECTOR_WRITE);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
-	CU_ASSERT(g_request->cmd.cdw10 == lba_list);
+	CU_ASSERT(g_request->cmd.cdw10.raw == lba_list);
 	CU_ASSERT(g_request->cmd.cdw12 == 0);
 
 	nvme_free_request(g_request);
@@ -577,7 +577,7 @@ test_nvme_ocssd_ns_cmd_vector_copy_single_entry(void)
 	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
 	CU_ASSERT(g_request->cmd.opc == SPDK_OCSSD_OPC_VECTOR_COPY);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
-	CU_ASSERT(g_request->cmd.cdw10 == src_lba_list);
+	CU_ASSERT(g_request->cmd.cdw10.raw == src_lba_list);
 	CU_ASSERT(g_request->cmd.cdw12 == 0);
 	CU_ASSERT(g_request->cmd.cdw14 == dst_lba_list);
 

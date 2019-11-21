@@ -95,7 +95,7 @@ set_temp_threshold(struct dev *dev, uint32_t temp)
 	int rc;
 
 	cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
-	cmd.cdw10 = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
+	cmd.cdw10.set_features.fid = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
 	cmd.cdw11 = temp;
 
 	rc = spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, NULL, 0, set_temp_completion, dev);
@@ -133,7 +133,7 @@ get_temp_threshold(struct dev *dev)
 	int rc;
 
 	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
-	cmd.cdw10 = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
+	cmd.cdw10.get_features.fid = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
 
 	rc = spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, NULL, 0, get_temp_completion, dev);
 	if (rc == 0) {
@@ -426,7 +426,7 @@ get_feature_test(struct dev *dev)
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
-	cmd.cdw10 = SPDK_NVME_FEAT_NUMBER_OF_QUEUES;
+	cmd.cdw10.get_features.fid = SPDK_NVME_FEAT_NUMBER_OF_QUEUES;
 	if (spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, NULL, 0,
 					  get_feature_test_cb, dev) != 0) {
 		printf("Failed to send Get Features command for dev=%p\n", dev);
