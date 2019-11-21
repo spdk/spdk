@@ -1372,7 +1372,7 @@ int spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr,
  * \param nssf NVMe Security Specific field. Indicate RPMB target when using Security
  * Protocol EAh.
  * \param payload The pointer to the payload buffer.
- * \param size The size of payload buffer.
+ * \param payload_size The size of payload buffer.
  * \param cb_fn Callback function to invoke when the security receive is done.
  * \param cb_arg Argument to pass to the callback function.
  *
@@ -1398,7 +1398,7 @@ int spdk_nvme_ctrlr_cmd_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t 
  * \param nssf NVMe Security Specific field. Indicate RPMB target when using Security
  * Protocol EAh.
  * \param payload The pointer to the payload buffer.
- * \param size The size of payload buffer.
+ * \param payload_size The size of payload buffer.
  * \param cb_fn Callback function to invoke when the security send is done.
  * \param cb_arg Argument to pass to the callback function.
  *
