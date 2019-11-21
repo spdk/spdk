@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "865982fd_26167a46",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T00:45:27Z",
+      "side": 1,
+      "message": "instead of adding one byte, should we round it up to the next cache line?  otherwise we only touch 1 byte in that last cache line which seems like a tiny waste (does it matter if the sz is exact?)",
+      "revId": "0db46b1484b69189152de6da23b2a65eb1832d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4ff49db_2a1f8728",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T00:45:27Z",
+      "side": 1,
+      "message": "would it be cleaner to do this before you even bother to allocate new_buf/new_pipe?  (I\u0027m not sure - just a thought)",
+      "revId": "0db46b1484b69189152de6da23b2a65eb1832d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5c80792_959a1afb",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T00:45:27Z",
+      "side": 1,
+      "message": "I totally missed this when we did the spdk_iovcpy review - but should we order these as diov and then siov to match memcpy semantics?  I know that\u0027s a separate patch...",
+      "revId": "0db46b1484b69189152de6da23b2a65eb1832d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba865679_89a27574",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T00:45:27Z",
+      "side": 1,
+      "message": "if sz \u003c SO_RCVBUF_SIZE, do you want the pipe to be size sz even though we\u0027re going to bump sz up to SO_RCVBUF_SIZE just afterwards?  it wasn\u0027t clear to me whether that was intended or not",
+      "revId": "0db46b1484b69189152de6da23b2a65eb1832d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
