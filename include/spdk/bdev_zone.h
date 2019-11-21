@@ -165,6 +165,10 @@ int spdk_bdev_zone_append(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 			  void *buf, uint64_t zone_id, uint64_t num_blocks,
 			  spdk_bdev_io_completion_cb cb, void *cb_arg);
 
+int spdk_bdev_zone_appendv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			   struct iovec *iov, int iovcnt, uint64_t zone_id, uint64_t num_blocks,
+			   spdk_bdev_io_completion_cb cb, void *cb_arg);
+
 /**
  * Submit a zone_append request with metadata to the bdev.
  *
