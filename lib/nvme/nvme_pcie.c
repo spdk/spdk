@@ -1470,11 +1470,9 @@ nvme_pcie_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_CREATE_IO_CQ;
 
-	/*
-	 * TODO: create a create io completion queue command data
-	 *  structure.
-	 */
-	cmd->cdw10 = ((pqpair->num_entries - 1) << 16) | io_que->id;
+	cmd->cdw10_bits.create_io_q.qid = io_que->id;
+	cmd->cdw10_bits.create_io_q.qsize = pqpair->num_entries - 1;
+
 	/*
 	 * 0x2 = interrupts enabled
 	 * 0x1 = physically contiguous
@@ -1501,11 +1499,8 @@ nvme_pcie_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_CREATE_IO_SQ;
 
-	/*
-	 * TODO: create a create io submission queue command data
-	 *  structure.
-	 */
-	cmd->cdw10 = ((pqpair->num_entries - 1) << 16) | io_que->id;
+	cmd->cdw10_bits.create_io_q.qid = io_que->id;
+	cmd->cdw10_bits.create_io_q.qsize = pqpair->num_entries - 1;
 	/* 0x1 = physically contiguous */
 	cmd->cdw11 = (io_que->id << 16) | (io_que->qprio << 1) | 0x1;
 	cmd->dptr.prp.prp1 = pqpair->cmd_bus_addr;
@@ -1527,7 +1522,7 @@ nvme_pcie_ctrlr_cmd_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_DELETE_IO_CQ;
-	cmd->cdw10 = qpair->id;
+	cmd->cdw10_bits.delete_io_q.qid = qpair->id;
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
@@ -1546,7 +1541,7 @@ nvme_pcie_ctrlr_cmd_delete_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_DELETE_IO_SQ;
-	cmd->cdw10 = qpair->id;
+	cmd->cdw10_bits.delete_io_q.qid = qpair->id;
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
