@@ -436,7 +436,7 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	uint32_t lba_count;
 	int rc;
 
-	nr = ((cmd->cdw10 & 0x000000ff) + 1);
+	nr = cmd->cdw10_bits.dsm.nr + 1;
 	if (nr * sizeof(struct spdk_nvme_dsm_range) > req->length) {
 		SPDK_ERRLOG("Dataset Management number of ranges > SGL length\n");
 		response->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
