@@ -137,6 +137,15 @@ struct spdk_sock *spdk_sock_accept(struct spdk_sock *sock);
 int spdk_sock_close(struct spdk_sock **sock);
 
 /**
+ * Flush a socket from data gathered in previous writev_async calls.
+ *
+ * \param sock Socket to flush.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+int spdk_sock_flush(struct spdk_sock *sock);
+
+/**
  * Receive a message from the given socket.
  *
  * \param sock Socket to receive message.

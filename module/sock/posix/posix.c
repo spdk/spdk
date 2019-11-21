@@ -545,6 +545,12 @@ _sock_flush(struct spdk_sock *sock)
 	return 0;
 }
 
+static int
+spdk_posix_sock_flush(struct spdk_sock *_sock)
+{
+	return _sock_flush(_sock);
+}
+
 static ssize_t
 spdk_posix_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 {
@@ -589,11 +595,6 @@ spdk_posix_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *r
 	int rc;
 
 	spdk_sock_request_queue(sock, req);
-
-	if (sock->group_impl == NULL) {
-		spdk_sock_request_put(sock, req, -ENOTSUP);
-		return;
-	}
 
 	/* If there are a sufficient number queued, just flush them out immediately. */
 	if (sock->queued_iovcnt >= IOV_BATCH_SIZE) {
@@ -870,6 +871,7 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.readv		= spdk_posix_sock_readv,
 	.writev		= spdk_posix_sock_writev,
 	.writev_async	= spdk_posix_sock_writev_async,
+	.flush		= spdk_posix_sock_flush,
 	.set_recvlowat	= spdk_posix_sock_set_recvlowat,
 	.set_recvbuf	= spdk_posix_sock_set_recvbuf,
 	.set_sendbuf	= spdk_posix_sock_set_sendbuf,

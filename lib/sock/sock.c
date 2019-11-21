@@ -322,6 +322,12 @@ spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 }
 
 int
+spdk_sock_flush(struct spdk_sock *sock)
+{
+	return sock->net_impl->flush(sock);
+}
+
+int
 spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
 {
 	return sock->net_impl->set_recvlowat(sock, nbytes);
