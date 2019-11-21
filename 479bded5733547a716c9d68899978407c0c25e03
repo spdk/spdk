@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "7f5f443c_543c8bbe",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-21T00:38:10Z",
+      "side": 1,
+      "message": "right, it\u0027s better to use union structure directly.",
+      "parentUuid": "65f2594f_e20aad0d",
+      "revId": "479bded5733547a716c9d68899978407c0c25e03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bf6cc3fe_bc600a1a",
         "filename": "include/spdk/nvme_spec.h",
         "patchSetId": 1
