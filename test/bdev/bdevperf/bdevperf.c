@@ -103,6 +103,7 @@ struct io_target {
 	double				ema_io_per_second;
 	int				current_queue_depth;
 	uint64_t			size_in_ios;
+	uint64_t			region_offset_in_ios;
 	uint64_t			offset_in_ios;
 	uint64_t			io_size_blocks;
 	uint32_t			dif_check_flags;
@@ -304,11 +305,11 @@ bdevperf_target_gone(void *arg)
 }
 
 static int
-bdevperf_construct_target(struct spdk_bdev *bdev)
+bdevperf_construct_target(struct spdk_bdev *bdev, uint8_t core_idx, uint8_t core_count)
 {
 	struct io_target *target;
 	size_t align;
-	int block_size, data_block_size;
+	int block_size, data_block_size, region_size_in_ios;
 	int rc, index;
 
 	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
@@ -339,14 +340,17 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 		return 0;
 	}
 
-	target->bdev = bdev;
-	target->io_completed = 0;
-	target->current_queue_depth = 0;
-	target->offset_in_ios = 0;
-
 	block_size = spdk_bdev_get_block_size(bdev);
 	data_block_size = spdk_bdev_get_data_block_size(bdev);
 	target->io_size_blocks = g_io_size / data_block_size;
+
+	region_size_in_ios = (spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks) / core_count;
+
+	target->bdev = bdev;
+	target->io_completed = 0;
+	target->current_queue_depth = 0;
+	target->region_offset_in_ios = target->offset_in_ios = core_idx * region_size_in_ios;
+
 	if ((g_io_size % data_block_size) != 0) {
 		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
 			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
@@ -366,7 +370,7 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 		target->dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
 	}
 
-	target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
+	target->size_in_ios = target->region_offset_in_ios + region_size_in_ios;
 	align = spdk_bdev_get_buf_align(bdev);
 	/*
 	 * TODO: This should actually use the LCM of align and g_min_alignment, but
@@ -410,7 +414,7 @@ bdevperf_construct_targets(void)
 		}
 
 		for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
-			rc = bdevperf_construct_target(bdev);
+			rc = bdevperf_construct_target(bdev, core_idx, core_count_for_each_bdev);
 			if (rc != 0) {
 				return;
 			}
@@ -419,7 +423,7 @@ bdevperf_construct_targets(void)
 		bdev = spdk_bdev_first_leaf();
 		while (bdev != NULL) {
 			for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
-				rc = bdevperf_construct_target(bdev);
+				rc = bdevperf_construct_target(bdev, core_idx, core_count_for_each_bdev);
 				if (rc != 0) {
 					return;
 				}
@@ -786,7 +790,7 @@ bdevperf_prep_task(struct bdevperf_task *task)
 	} else {
 		offset_in_ios = target->offset_in_ios++;
 		if (target->offset_in_ios == target->size_in_ios) {
-			target->offset_in_ios = 0;
+			target->offset_in_ios = target->region_offset_in_ios;
 		}
 	}
 
