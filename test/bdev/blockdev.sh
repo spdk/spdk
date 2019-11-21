@@ -85,8 +85,8 @@ function run_qos_test() {
 		qos_limit=$((qos_limit*1024*1024))
 	fi
 
-	lower_limit=$(echo "$qos_limit 0.9" | awk '{printf("%i",$1*$2)}')
-	upper_limit=$(echo "$qos_limit 1.1" | awk '{printf("%i",$1*$2)}')
+	lower_limit=$(echo "$qos_limit 0.85" | awk '{printf("%i",$1*$2)}')
+	upper_limit=$(echo "$qos_limit 1.15" | awk '{printf("%i",$1*$2)}')
 	# QoS realization is related with bytes transfered. It currently has some variation.
 	if [ $qos_result -lt $lower_limit ] || [ $qos_result -gt $upper_limit ]; then
 		echo "Failed to limit the io read rate of NULL bdev by qos"
