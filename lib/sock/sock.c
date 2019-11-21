@@ -178,6 +178,8 @@ spdk_sock_connect(const char *ip, int port)
 		sock = impl->connect(ip, port);
 		if (sock != NULL) {
 			sock->net_impl = impl;
+			TAILQ_INIT(&sock->queued_reqs);
+			TAILQ_INIT(&sock->pending_reqs);
 			return sock;
 		}
 	}
@@ -297,6 +299,12 @@ spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 	}
 
 	sock->net_impl->writev_async(sock, req);
+}
+
+int
+spdk_sock_flush(struct spdk_sock *sock)
+{
+	return sock->net_impl->flush(sock);
 }
 
 int
