@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59d78480_73923aa0",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1123,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T16:33:35Z",
+      "side": 1,
+      "message": "if del_connection_queued_task() already freed the primary task, then is it bad that we are accessing that task here?  how do we know this task has not been reallocated for some other I/O?\n\nwe should also add some kind of comment here, explaining when deleted might be false here",
+      "revId": "9641b0d8e0fd8b80fd55785983bb94e7f14d0817",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
