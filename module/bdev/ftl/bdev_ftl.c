@@ -98,10 +98,16 @@ static int bdev_ftl_initialize(void);
 static void bdev_ftl_finish(void);
 static void bdev_ftl_examine(struct spdk_bdev *bdev);
 
+static struct ftl_io *
+bdev_ftl_lib_io_from_bdev_io(struct ftl_bdev_io *io)
+{
+	return (struct ftl_io *)((uintptr_t)io + sizeof(struct ftl_bdev_io));
+}
+
 static int
 bdev_ftl_get_ctx_size(void)
 {
-	return sizeof(struct ftl_bdev_io);
+	return sizeof(struct ftl_bdev_io) + spdk_ftl_io_size();
 }
 
 static struct spdk_bdev_module g_ftl_if = {
@@ -204,7 +210,7 @@ bdev_ftl_readv(struct ftl_bdev *ftl_bdev, struct spdk_io_channel *ch,
 		return rc;
 	}
 
-	return spdk_ftl_read(ftl_bdev->dev,
+	return spdk_ftl_read(ftl_bdev->dev, bdev_ftl_lib_io_from_bdev_io(io),
 			     ioch->ioch,
 			     bio->u.bdev.offset_blocks,
 			     bio->u.bdev.num_blocks,
@@ -227,7 +233,7 @@ bdev_ftl_writev(struct ftl_bdev *ftl_bdev, struct spdk_io_channel *ch,
 		return rc;
 	}
 
-	return spdk_ftl_write(ftl_bdev->dev,
+	return spdk_ftl_write(ftl_bdev->dev, bdev_ftl_lib_io_from_bdev_io(io),
 			      ioch->ioch,
 			      bio->u.bdev.offset_blocks,
 			      bio->u.bdev.num_blocks,

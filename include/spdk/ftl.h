@@ -44,6 +44,7 @@ extern "C" {
 #endif
 
 struct spdk_ftl_dev;
+struct ftl_io;
 
 /* Limit thresholds */
 enum {
@@ -195,6 +196,7 @@ void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attr
  * Submits a read to the specified device.
  *
  * \param dev Device
+ * \param io Allocated ftl_io
  * \param ch I/O channel
  * \param lba Starting LBA to read the data
  * \param lba_cnt Number of sectors to read
@@ -205,14 +207,15 @@ void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attr
  *
  * \return 0 if successfully submitted, negative errno otherwise.
  */
-int spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba,
-		  size_t lba_cnt,
+int spdk_ftl_read(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
+		  uint64_t lba, size_t lba_cnt,
 		  struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
 
 /**
  * Submits a write to the specified device.
  *
  * \param dev Device
+ * \param io Allocated ftl_io
  * \param ch I/O channel
  * \param lba Starting LBA to write the data
  * \param lba_cnt Number of sectors to write
@@ -223,8 +226,8 @@ int spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t
  *
  * \return 0 if successfully submitted, negative errno otherwise.
  */
-int spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba,
-		   size_t lba_cnt,
+int spdk_ftl_write(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
+		   uint64_t lba, size_t lba_cnt,
 		   struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
 
 /**
@@ -237,6 +240,14 @@ int spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_
  * \return 0 if successfully submitted, negative errno otherwise.
  */
 int spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
+
+/**
+ * Returns the size of ftl_io struct that needs to be passed to spdk_ftl_read/write
+ *
+ * \return The size of struct
+ */
+size_t
+spdk_ftl_io_size(void);
 
 #ifdef __cplusplus
 }
