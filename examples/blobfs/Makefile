@@ -1,4 +1,3 @@
-#
 #  BSD LICENSE
 #
 #  Copyright (c) Intel Corporation.
@@ -29,16 +28,18 @@
 #  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 #  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += bdev blob ioat nvme sock vmd blobfs
+DIRS-$(CONFIG_FIO_PLUGIN) = fio_plugin
 
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)
+	@:
+
 clean: $(DIRS-y)
+	@:
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
