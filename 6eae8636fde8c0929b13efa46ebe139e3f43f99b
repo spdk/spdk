@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "030c9a6b_5acd50ca",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-21T12:40:05Z",
+      "side": 1,
+      "message": "These shouldn\u0027t be needed anymore.",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 25
+      },
+      "revId": "6eae8636fde8c0929b13efa46ebe139e3f43f99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3bf1078_baaa5255",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-21T12:40:05Z",
+      "side": 1,
+      "message": "This is no longer needed.",
+      "range": {
+        "startLine": 173,
+        "startChar": 0,
+        "endLine": 173,
+        "endChar": 21
+      },
+      "revId": "6eae8636fde8c0929b13efa46ebe139e3f43f99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fabe4ef4_2c73d052",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-21T12:40:05Z",
+      "side": 1,
+      "message": "This is no longer needed.",
+      "range": {
+        "startLine": 416,
+        "startChar": 0,
+        "endLine": 430,
+        "endChar": 0
+      },
+      "revId": "6eae8636fde8c0929b13efa46ebe139e3f43f99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
