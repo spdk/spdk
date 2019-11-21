@@ -36,6 +36,9 @@
 #include "spdk/event.h"
 #include "spdk/string.h"
 #include "spdk/thread.h"
+#include "spdk/bdev.h"
+
+#include "spdk_internal/event.h"
 
 static const char *g_rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 
@@ -54,6 +57,7 @@ TAILQ_HEAD(, nvmf_reactor) g_reactors = TAILQ_HEAD_INITIALIZER(g_reactors);
 
 static struct nvmf_reactor *g_master_reactor = NULL;
 static struct nvmf_reactor *g_next_reactor = NULL;
+static struct spdk_thread *init_thread = NULL;
 static bool g_reactors_exit = false;
 
 static void
@@ -266,6 +270,74 @@ nvmf_destroy_threads(void)
 	fprintf(stdout, "nvmf threads destroy successfully\n");
 }
 
+static void
+nvmf_bdev_init_done(int rc, void *cb_arg)
+{
+	*(bool *)cb_arg = true;
+
+	fprintf(stdout, "bdev layer init successfully\n");
+}
+
+static void
+nvmf_bdev_init_start(void *arg)
+{
+	spdk_subsystem_init(nvmf_bdev_init_done, arg);
+}
+
+static int
+nvmf_bdev_init(void)
+{
+	struct spdk_thread *init_thread;
+	struct nvmf_lw_thread *lw_thread;
+	bool done = false;
+
+	/* use the first thread of the master reactor as the init thread like the app thread */
+	lw_thread = TAILQ_FIRST(&g_master_reactor->threads);
+	init_thread = spdk_thread_get_from_ctx(lw_thread);
+	if (!init_thread) {
+		fprintf(stderr, "failed to get thread from the master reactor\n");
+		return -1;
+	}
+
+	spdk_thread_send_msg(init_thread, nvmf_bdev_init_start, &done);
+
+	do {
+		spdk_thread_poll(init_thread, 0, 0);
+	} while (!done);
+
+	return 0;
+}
+
+static void
+nvmf_bdev_fini_done(void *cb_arg)
+{
+	*(bool *)cb_arg = true;
+
+	fprintf(stdout, "bdev layer finish successfully\n");
+}
+
+static void
+nvmf_bdev_fini_start(void *arg)
+{
+	spdk_subsystem_fini(nvmf_bdev_fini_done, arg);
+}
+
+static void
+nvmf_bdev_fini(void)
+{
+	bool done = false;
+
+	if (!init_thread) {
+		return;
+	}
+
+	spdk_thread_send_msg(init_thread, nvmf_bdev_fini_start, &done);
+
+	do {
+		spdk_thread_poll(init_thread, 0, 0);
+	} while (!done);
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
@@ -289,9 +361,22 @@ int main(int argc, char **argv)
 	if (rc != 0) {
 		fprintf(stderr, "failed to initlize the nvmf thread layer\n");
 		g_reactors_exit = true;
+		nvmf_reactor_run(g_master_reactor);
+		goto exit;
+	}
+
+	/* Initialize the bdev layer */
+	rc = nvmf_bdev_init();
+	if (rc != 0) {
+		fprintf(stderr, "failed to initlize the nvmf bdev layer\n");
+		g_reactors_exit = true;
+		nvmf_reactor_run(g_master_reactor);
 	}
 
 	nvmf_reactor_run(g_master_reactor);
+
+	nvmf_bdev_fini();
+exit:
 	spdk_env_thread_wait_all();
 	nvmf_destroy_threads();
 	return rc;
