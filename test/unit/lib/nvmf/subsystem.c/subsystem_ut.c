@@ -571,14 +571,14 @@ ut_reservation_build_register_request(struct spdk_nvmf_request *req,
 				      uint8_t cptpl, uint64_t crkey,
 				      uint64_t nrkey)
 {
-	uint32_t cdw10;
 	struct spdk_nvme_reservation_register_data key;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	cdw10 = (((uint32_t)cptpl << 30) | ((uint32_t)iekey << 3) | rrega);
 	key.crkey = crkey;
 	key.nrkey = nrkey;
-	cmd->cdw10 = cdw10;
+	cmd->cdw10.resv_register.rrega = rrega;
+	cmd->cdw10.resv_register.iekey = iekey;
+	cmd->cdw10.resv_register.cptpl = cptpl;
 	memcpy(req->data, &key, sizeof(key));
 }
 
@@ -588,14 +588,14 @@ ut_reservation_build_acquire_request(struct spdk_nvmf_request *req,
 				     uint8_t rtype, uint64_t crkey,
 				     uint64_t prkey)
 {
-	uint32_t cdw10;
 	struct spdk_nvme_reservation_acquire_data key;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	cdw10 = ((rtype << 8) | (iekey << 3) | racqa);
 	key.crkey = crkey;
 	key.prkey = prkey;
-	cmd->cdw10 = cdw10;
+	cmd->cdw10.resv_acquire.racqa = racqa;
+	cmd->cdw10.resv_acquire.iekey = iekey;
+	cmd->cdw10.resv_acquire.rtype = rtype;
 	memcpy(req->data, &key, sizeof(key));
 }
 
@@ -604,11 +604,11 @@ ut_reservation_build_release_request(struct spdk_nvmf_request *req,
 				     uint8_t rrela, uint8_t iekey,
 				     uint8_t rtype, uint64_t crkey)
 {
-	uint32_t cdw10;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	cdw10 = ((rtype << 8) | (iekey << 3) | rrela);
-	cmd->cdw10 = cdw10;
+	cmd->cdw10.resv_release.rrela = rrela;
+	cmd->cdw10.resv_release.iekey = iekey;
+	cmd->cdw10.resv_release.rtype = rtype;
 	memcpy(req->data, &crkey, sizeof(crkey));
 }
 
