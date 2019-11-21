@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "d424c8c9_64748bcb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-21T16:45:33Z",
+      "side": 1,
+      "message": "Did you also compare the I/Ops between the two patches? We see a very significant performance improvement using this buffering strategy. Up to 50% improvements on random write workloads, for example. My numbers are from an older version of this patch, so we\u0027ll make sure to re-run the benchmarks on the latest version.\n\nNote that the current NVMe-oF target already does this buffering. This patch series is just pushing it down into the posix sock layer instead, so that when there are other sock layers available that don\u0027t benefit from buffering they aren\u0027t forced to do it.",
+      "parentUuid": "2271ddb6_a1cebb97",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 54
+      },
+      "revId": "0db46b1484b69189152de6da23b2a65eb1832d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "865982fd_26167a46",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 7
