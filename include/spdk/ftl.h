@@ -144,6 +144,7 @@ struct spdk_ftl_attrs {
 	struct spdk_ftl_conf			conf;
 };
 
+struct ftl_io;
 typedef void (*spdk_ftl_fn)(void *, int);
 typedef void (*spdk_ftl_init_fn)(struct spdk_ftl_dev *, void *, int);
 
@@ -205,7 +206,7 @@ void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attr
  *
  * \return 0 if successfully submitted, negative errno otherwise.
  */
-int spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba,
+int spdk_ftl_read(struct spdk_ftl_dev *dev, struct ftl_io* io, struct spdk_io_channel *ch, uint64_t lba,
 		  size_t lba_cnt,
 		  struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
 
@@ -223,7 +224,7 @@ int spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t
  *
  * \return 0 if successfully submitted, negative errno otherwise.
  */
-int spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba,
+int spdk_ftl_write(struct spdk_ftl_dev *dev, struct ftl_io* io, struct spdk_io_channel *ch, uint64_t lba,
 		   size_t lba_cnt,
 		   struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
 
@@ -237,6 +238,9 @@ int spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_
  * \return 0 if successfully submitted, negative errno otherwise.
  */
 int spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
+
+size_t
+spdk_ftl_io_size(void);
 
 #ifdef __cplusplus
 }

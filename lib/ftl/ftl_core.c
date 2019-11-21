@@ -160,6 +160,12 @@ ftl_remove_wptr(struct ftl_wptr *wptr)
 	ftl_wptr_free(wptr);
 }
 
+size_t
+spdk_ftl_io_size(void)
+{
+	return sizeof(struct ftl_io);
+}
+
 static void
 ftl_io_cmpl_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
@@ -2001,11 +2007,9 @@ ftl_io_write(struct ftl_io *io)
 }
 
 int
-spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba, size_t lba_cnt,
+spdk_ftl_write(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch, uint64_t lba, size_t lba_cnt,
 	       struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg)
 {
-	struct ftl_io *io;
-
 	if (iov_cnt == 0) {
 		return -EINVAL;
 	}
@@ -2022,7 +2026,7 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 		return -EBUSY;
 	}
 
-	io = ftl_io_user_init(ch, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_WRITE);
+	io = ftl_io_user_init(ch, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_WRITE);
 	if (!io) {
 		return -ENOMEM;
 	}
@@ -2056,11 +2060,9 @@ ftl_io_read(struct ftl_io *io)
 }
 
 int
-spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba, size_t lba_cnt,
+spdk_ftl_read(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch, uint64_t lba, size_t lba_cnt,
 	      struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg)
 {
-	struct ftl_io *io;
-
 	if (iov_cnt == 0) {
 		return -EINVAL;
 	}
@@ -2077,10 +2079,10 @@ spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba
 		return -EBUSY;
 	}
 
-	io = ftl_io_user_init(ch, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_READ);
-	if (!io) {
+	ftl_io_user_init(ch, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_READ);
+	/*if (!io) {
 		return -ENOMEM;
-	}
+	}*/
 
 	ftl_io_read(io);
 	return 0;
