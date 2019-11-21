@@ -98,25 +98,34 @@ function run_qos_test() {
 
 function qos_function_test() {
 	local qos_lower_iops_limit=1000
+	local qos_lower_bw_limit=2
 	local io_result=0
+	local iops_limit=0
+	local bw_limit=0
 
 	io_result=$(get_io_result IOPS)
 	# Set the IOPS limit as one quarter of the measured performance without QoS
-	local iops_limit=$(((io_result/4)/qos_lower_iops_limit*qos_lower_iops_limit))
+	iops_limit=$(((io_result/4)/qos_lower_iops_limit*qos_lower_iops_limit))
 	if [ $iops_limit -gt $qos_lower_iops_limit ]; then
 
 		# Run bdevperf with IOPS rate limit
 		$rpc_py bdev_set_qos_limit --rw_ios_per_sec $iops_limit $QOS_DEV
 		run_qos_test $iops_limit IOPS
 
-		# Run bdevperf with IOPS and bandwidth rate limits
-		# Test bandwidth limit with 4K I/O size as we get enough IOPS without QoS
-		$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec 4 $QOS_DEV
-		run_qos_test 4 BANDWIDTH
+		# Run bdevperf with bandwidth rate limit
+		# Set the bandwidth limit as one quarter of the measure performance with IOPS limit
+		bw_limit=$(get_io_result BANDWIDTH)
+		bw_limit=$((bw_limit/1024/1024/4))
+		if [ $bw_limit -lt $qos_lower_bw_limit ]; then
+			bw_limit=$qos_lower_bw_limit
+		fi
+		$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec $bw_limit $QOS_DEV
+		run_qos_test $bw_limit BANDWIDTH
 
 		# Run bdevperf with additional read only bandwidth rate limit
-		$rpc_py bdev_set_qos_limit --r_mbytes_per_sec 2 $QOS_DEV
-		run_qos_test 2 BANDWIDTH
+		bw_limit=$((bw_limit/2))
+		$rpc_py bdev_set_qos_limit --r_mbytes_per_sec $bw_limit $QOS_DEV
+		run_qos_test $bw_limit BANDWIDTH
 	else
 		echo "Actual IOPS without limiting is too low - exit testing"
 	fi
