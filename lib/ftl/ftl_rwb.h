@@ -44,6 +44,7 @@
 struct ftl_rwb;
 struct ftl_rwb_batch;
 struct ftl_band;
+struct ftl_wbuf_io_channel;
 struct spdk_ftl_conf;
 
 enum ftl_rwb_entry_type {
@@ -87,12 +88,11 @@ struct ftl_rwb_entry {
 	/* Trace group id */
 	uint64_t				trace;
 
-	/* Batch list entry */
-	LIST_ENTRY(ftl_rwb_entry)		list_entry;
+	struct ftl_wbuf_io_channel		*ioch;
 };
 
-struct ftl_rwb *ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size,
-			     size_t md_size, size_t num_punits);
+struct ftl_rwb *ftl_rwb_init(struct spdk_ftl_dev *dev, const struct spdk_ftl_conf *conf,
+			     size_t xfer_size, size_t md_size, size_t num_punits);
 size_t	ftl_rwb_get_active_batches(const struct ftl_rwb *rwb);
 void	ftl_rwb_free(struct ftl_rwb *rwb);
 void	ftl_rwb_batch_release(struct ftl_rwb_batch *batch);
@@ -103,7 +103,8 @@ void	ftl_rwb_get_limits(struct ftl_rwb *rwb, size_t limit[FTL_RWB_TYPE_MAX]);
 size_t	ftl_rwb_num_acquired(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type);
 size_t	ftl_rwb_num_batches(const struct ftl_rwb *rwb);
 size_t	ftl_rwb_size(const struct ftl_rwb *rwb);
-struct ftl_rwb_entry *ftl_rwb_acquire(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type);
+struct ftl_rwb_entry *ftl_rwb_acquire(struct ftl_rwb *rwb, struct ftl_wbuf_io_channel *ioch,
+				      enum ftl_rwb_entry_type type);
 struct ftl_rwb_batch *ftl_rwb_pop(struct ftl_rwb *rwb);
 struct ftl_rwb_entry *ftl_rwb_entry_from_offset(struct ftl_rwb *rwb, size_t offset);
 size_t	ftl_rwb_batch_get_offset(const struct ftl_rwb_batch *batch);
@@ -118,6 +119,9 @@ void	*ftl_rwb_batch_get_data(struct ftl_rwb_batch *batch);
 void	*ftl_rwb_batch_get_md(struct ftl_rwb_batch *batch);
 void	ftl_rwb_disable_interleaving(struct ftl_rwb *rwb);
 unsigned int ftl_rwb_num_pending(struct ftl_rwb *rwb);
+int ftl_rwb_init_entries(struct ftl_rwb *rwb, struct ftl_rwb_entry *entries, size_t count,
+			 void *data, struct ftl_wbuf_io_channel *ioch);
+
 
 static inline void
 _ftl_rwb_entry_set_valid(struct ftl_rwb_entry *entry, bool valid)
