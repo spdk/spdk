@@ -322,79 +322,21 @@ nvme_tcp_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_
 	return nvme_fabric_ctrlr_get_reg_8(ctrlr, offset, value);
 }
 
-static int
-nvme_tcp_qpair_process_send_queue(struct nvme_tcp_qpair *tqpair)
+static void
+_pdu_write_done(void *cb_arg, int err)
 {
-	const int array_size = 32;
-	struct iovec iovs[array_size];
-	int iovcnt = 0;
-	int bytes = 0;
-	uint32_t mapped_length;
-	struct nvme_tcp_pdu *pdu;
-	int pdu_length;
-	TAILQ_HEAD(, nvme_tcp_pdu) completed_pdus_list;
+	struct nvme_tcp_pdu *pdu = cb_arg;
+	struct nvme_tcp_qpair *tqpair = pdu->qpair;
 
-	pdu = TAILQ_FIRST(&tqpair->send_queue);
+	TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
 
-	if (pdu == NULL) {
-		return 0;
+	if (err != 0) {
+		nvme_tcp_qpair_disconnect(&tqpair->qpair);
+		return;
 	}
 
-	/*
-	 * Build up a list of iovecs for the first few PDUs in the
-	 *  tqpair 's send_queue.
-	 */
-	while (pdu != NULL && ((array_size - iovcnt) >= (2 + (int)pdu->data_iovcnt))) {
-		iovcnt += nvme_tcp_build_iovs(&iovs[iovcnt], array_size - iovcnt,
-					      pdu, tqpair->host_hdgst_enable,
-					      tqpair->host_ddgst_enable, &mapped_length);
-		pdu = TAILQ_NEXT(pdu, tailq);
-	}
-
-	bytes = spdk_sock_writev(tqpair->sock, iovs, iovcnt);
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "bytes=%d are out\n", bytes);
-	if (bytes == -1) {
-		if (errno == EWOULDBLOCK || errno == EAGAIN) {
-			return 1;
-		} else {
-			SPDK_ERRLOG("spdk_sock_writev() failed, errno %d: %s\n",
-				    errno, spdk_strerror(errno));
-			return -errno;
-		}
-	}
-
-	pdu = TAILQ_FIRST(&tqpair->send_queue);
-
-	/*
-	 * Free any PDUs that were fully written.  If a PDU was only
-	 *  partially written, update its writev_offset so that next
-	 *  time only the unwritten portion will be sent to writev().
-	 */
-	TAILQ_INIT(&completed_pdus_list);
-	while (bytes > 0) {
-		pdu_length = pdu->hdr->common.plen - pdu->writev_offset;
-		assert(pdu_length > 0);
-		if (bytes >= pdu_length) {
-			bytes -= pdu_length;
-			TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
-			TAILQ_INSERT_TAIL(&completed_pdus_list, pdu, tailq);
-			pdu = TAILQ_FIRST(&tqpair->send_queue);
-
-		} else {
-			pdu->writev_offset += bytes;
-			bytes = 0;
-		}
-	}
-
-	while (!TAILQ_EMPTY(&completed_pdus_list)) {
-		pdu = TAILQ_FIRST(&completed_pdus_list);
-		TAILQ_REMOVE(&completed_pdus_list, pdu, tailq);
-		assert(pdu->cb_fn != NULL);
-		pdu->cb_fn(pdu->cb_arg);
-	}
-
-	return TAILQ_EMPTY(&tqpair->send_queue) ? 0 : 1;
-
+	assert(pdu->cb_fn != NULL);
+	pdu->cb_fn(pdu->cb_arg);
 }
 
 static int
@@ -406,6 +348,7 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 	int enable_digest;
 	int hlen;
 	uint32_t crc32c;
+	uint32_t mapped_length = 0;
 
 	hlen = pdu->hdr->common.hlen;
 	enable_digest = 1;
@@ -429,7 +372,16 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 
 	pdu->cb_fn = cb_fn;
 	pdu->cb_arg = cb_arg;
+
+	pdu->sock_req.iovcnt = nvme_tcp_build_iovs(pdu->iov, NVME_TCP_MAX_SGL_DESCRIPTORS, pdu,
+			       tqpair->host_hdgst_enable, tqpair->host_ddgst_enable,
+			       &mapped_length);
+	pdu->qpair = tqpair;
+	pdu->sock_req.cb_fn = _pdu_write_done;
+	pdu->sock_req.cb_arg = pdu;
 	TAILQ_INSERT_TAIL(&tqpair->send_queue, pdu, tailq);
+	spdk_sock_writev_async(tqpair->sock, &pdu->sock_req);
+
 	return 0;
 }
 
@@ -1475,10 +1427,7 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 	uint32_t reaped;
 	int rc;
 
-	rc = nvme_tcp_qpair_process_send_queue(tqpair);
-	if (rc < 0) {
-		return rc;
-	}
+	rc = spdk_sock_flush(tqpair->sock);
 
 	if (max_completions == 0) {
 		max_completions = tqpair->num_entries;
