@@ -116,7 +116,7 @@ nvme_admin_qpair_print_command(struct spdk_nvme_qpair *qpair,
 	SPDK_NOTICELOG("%s (%02x) sqid:%d cid:%d nsid:%x "
 		       "cdw10:%08x cdw11:%08x\n",
 		       nvme_get_string(admin_opcode, cmd->opc), cmd->opc, qpair->id, cmd->cid,
-		       cmd->nsid, cmd->cdw10, cmd->cdw11);
+		       cmd->nsid, cmd->cdw10.raw, cmd->cdw11);
 }
 
 static void
@@ -134,7 +134,7 @@ nvme_io_qpair_print_command(struct spdk_nvme_qpair *qpair,
 			       "lba:%llu len:%d\n",
 			       nvme_get_string(io_opcode, cmd->opc), qpair->id, cmd->cid,
 			       cmd->nsid,
-			       ((unsigned long long)cmd->cdw11 << 32) + cmd->cdw10,
+			       ((unsigned long long)cmd->cdw11 << 32) + cmd->cdw10.raw,
 			       (cmd->cdw12 & 0xFFFF) + 1);
 		break;
 	case SPDK_NVME_OPC_FLUSH:

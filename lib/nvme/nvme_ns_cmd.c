@@ -835,7 +835,7 @@ spdk_nvme_ns_cmd_dataset_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qp
 	cmd->opc = SPDK_NVME_OPC_DATASET_MANAGEMENT;
 	cmd->nsid = ns->id;
 
-	cmd->cdw10 = num_ranges - 1;
+	cmd->cdw10.dsm.nr = num_ranges - 1;
 	cmd->cdw11 = type;
 
 	return nvme_qpair_submit_request(qpair, req);
@@ -883,12 +883,9 @@ spdk_nvme_ns_cmd_reservation_register(struct spdk_nvme_ns *ns,
 	cmd->opc = SPDK_NVME_OPC_RESERVATION_REGISTER;
 	cmd->nsid = ns->id;
 
-	/* Bits 0-2 */
-	cmd->cdw10 = action;
-	/* Bit 3 */
-	cmd->cdw10 |= ignore_key ? 1 << 3 : 0;
-	/* Bits 30-31 */
-	cmd->cdw10 |= (uint32_t)cptpl << 30;
+	cmd->cdw10.resv_register.rrega = action;
+	cmd->cdw10.resv_register.iekey = ignore_key;
+	cmd->cdw10.resv_register.cptpl = cptpl;
 
 	return nvme_qpair_submit_request(qpair, req);
 }
@@ -916,12 +913,9 @@ spdk_nvme_ns_cmd_reservation_release(struct spdk_nvme_ns *ns,
 	cmd->opc = SPDK_NVME_OPC_RESERVATION_RELEASE;
 	cmd->nsid = ns->id;
 
-	/* Bits 0-2 */
-	cmd->cdw10 = action;
-	/* Bit 3 */
-	cmd->cdw10 |= ignore_key ? 1 << 3 : 0;
-	/* Bits 8-15 */
-	cmd->cdw10 |= (uint32_t)type << 8;
+	cmd->cdw10.resv_release.rrela = action;
+	cmd->cdw10.resv_release.iekey = ignore_key;
+	cmd->cdw10.resv_release.rtype = type;
 
 	return nvme_qpair_submit_request(qpair, req);
 }
@@ -949,12 +943,9 @@ spdk_nvme_ns_cmd_reservation_acquire(struct spdk_nvme_ns *ns,
 	cmd->opc = SPDK_NVME_OPC_RESERVATION_ACQUIRE;
 	cmd->nsid = ns->id;
 
-	/* Bits 0-2 */
-	cmd->cdw10 = action;
-	/* Bit 3 */
-	cmd->cdw10 |= ignore_key ? 1 << 3 : 0;
-	/* Bits 8-15 */
-	cmd->cdw10 |= (uint32_t)type << 8;
+	cmd->cdw10.resv_acquire.racqa = action;
+	cmd->cdw10.resv_acquire.iekey = ignore_key;
+	cmd->cdw10.resv_acquire.rtype = type;
 
 	return nvme_qpair_submit_request(qpair, req);
 }
@@ -983,7 +974,7 @@ spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 	cmd->opc = SPDK_NVME_OPC_RESERVATION_REPORT;
 	cmd->nsid = ns->id;
 
-	cmd->cdw10 = num_dwords;
+	cmd->cdw10.raw = num_dwords;
 
 	return nvme_qpair_submit_request(qpair, req);
 }

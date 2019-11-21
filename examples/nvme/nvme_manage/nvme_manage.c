@@ -115,7 +115,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	/* Identify Namespace with NSID set to FFFFFFFFh to get common namespace capabilities. */
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opc = SPDK_NVME_OPC_IDENTIFY;
-	cmd.cdw10 = 0; /* CNS = 0 (Identify Namespace) */
+	cmd.cdw10.identify.cns = 0; /* CNS = 0 (Identify Namespace) */
 	cmd.nsid = SPDK_NVME_GLOBAL_NS_TAG;
 
 	dev->outstanding_admin_cmds++;
@@ -410,7 +410,7 @@ get_allocated_nsid(struct dev *dev)
 	}
 
 	cmd.opc = SPDK_NVME_OPC_IDENTIFY;
-	cmd.cdw10 = SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST;
+	cmd.cdw10.identify.cns = SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST;
 	cmd.nsid = 0;
 
 	dev->outstanding_admin_cmds++;

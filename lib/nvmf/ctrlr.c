@@ -1471,7 +1471,7 @@ spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	numdl = (cmd->cdw10 >> 16) & 0xFFFFu;
+	numdl = cmd->cdw10.get_log_page.numdl;
 	numdu = (cmd->cdw11) & 0xFFFFu;
 	len = ((numdu << 16) + numdl + (uint64_t)1) * 4;
 	if (len > req->length) {
@@ -1482,7 +1482,7 @@ spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	lid = cmd->cdw10 & 0xFF;
+	lid = cmd->cdw10.get_log_page.lid;
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get log page: LID=0x%02X offset=0x%" PRIx64 " len=0x%" PRIx64 "\n",
 		      lid, offset, len);
 
@@ -1769,7 +1769,7 @@ spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	cns = cmd->cdw10 & 0xFF;
+	cns = cmd->cdw10.identify.cns;
 
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY &&
 	    cns != SPDK_NVME_IDENTIFY_CTRLR) {
@@ -1833,13 +1833,13 @@ spdk_nvmf_ctrlr_abort_on_pg(struct spdk_io_channel_iter *i)
 	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	uint16_t sqid = cmd->cdw10 & 0xFFFFu;
+	uint16_t sqid = cmd->cdw10.abort.sqid;
 	struct spdk_nvmf_qpair *qpair;
 
 	TAILQ_FOREACH(qpair, &group->qpairs, link) {
 		if (qpair->ctrlr == req->qpair->ctrlr && qpair->qid == sqid) {
 			struct spdk_nvmf_request *req_to_abort;
-			uint16_t cid = cmd->cdw10 >> 16;
+			uint16_t cid = cmd->cdw10.abort.cid;
 
 			/* Found the qpair */
 
@@ -1907,7 +1907,7 @@ spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
-	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
+	feature = cmd->cdw10.get_features.fid;
 	switch (feature) {
 	case SPDK_NVME_FEAT_ARBITRATION:
 		return get_features_generic(req, ctrlr->feat.arbitration.raw);
@@ -1947,7 +1947,7 @@ spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
-	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
+	feature = cmd->cdw10.set_features.fid;
 	switch (feature) {
 	case SPDK_NVME_FEAT_ARBITRATION:
 		return spdk_nvmf_ctrlr_set_features_arbitration(req);
@@ -2358,13 +2358,17 @@ nvmf_ns_reservation_request_check(struct spdk_nvmf_subsystem_pg_ns_info *ns_info
 		}
 		break;
 	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
-	case SPDK_NVME_OPC_RESERVATION_RELEASE:
-		racqa = cmd->cdw10 & 0x7u;
-		if (cmd->opc == SPDK_NVME_OPC_RESERVATION_ACQUIRE &&
-		    racqa == SPDK_NVME_RESERVE_ACQUIRE) {
+		racqa = cmd->cdw10.resv_acquire.racqa;
+		if (racqa == SPDK_NVME_RESERVE_ACQUIRE) {
 			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
 			goto exit;
 		}
+		if (!is_registrant) {
+			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+			goto exit;
+		}
+		break;
+	case SPDK_NVME_OPC_RESERVATION_RELEASE:
 		if (!is_registrant) {
 			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
 			goto exit;
@@ -2548,7 +2552,7 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, bool is_admin_queue)
 		opc = cmd->opc;
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "%s cmd: opc 0x%02x fuse %u cid %u nsid %u cdw10 0x%08x\n",
 			      is_admin_queue ? "Admin" : "I/O",
-			      cmd->opc, cmd->fuse, cmd->cid, cmd->nsid, cmd->cdw10);
+			      cmd->opc, cmd->fuse, cmd->cid, cmd->nsid, cmd->cdw10.raw);
 		if (cmd->mptr) {
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "mptr 0x%" PRIx64 "\n", cmd->mptr);
 		}
