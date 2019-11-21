@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7133818_846a25cf",
+        "filename": "lib/nvme/nvme_uevent.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-21T17:03:45Z",
+      "side": 1,
+      "message": "Hi Yidong,\n\nHow does the Linux kernel format these events?  I\u0027m concerned that you modifying this loop here, but there\u0027s no explanation on why this didn\u0027t cause problems before.  We at least need an explanation in the commit message on why it\u0027s OK to make this change.\n\nI suspect that your unit tests are putting spaces between the clauses, while the Linux kernel probably puts null characters.  If so, I\u0027d rather keep the existing behavior.  We should make our unit tests match the kernel behavior.\n\nThanks,\n\n-Jim",
+      "revId": "de3f4ad736ac9a53a0ee50032040cf44f58c80e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
