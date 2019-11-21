@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee9d3c4f_2c789f6e",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-21T18:38:17Z",
+      "side": 1,
+      "message": "Maybe call this nvmf_lw_thread instead, since there is an spdk_lw_thread elsewhere in the code.",
+      "revId": "9ba100d95d1e1134cd4d3bff7a34d732c973af82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "964eab9b_e4684c86",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-21T18:38:17Z",
+      "side": 1,
+      "message": "Call this nvmf_reactor_run",
+      "revId": "9ba100d95d1e1134cd4d3bff7a34d732c973af82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2cbefd6a_e9282c32",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-21T18:38:17Z",
+      "side": 1,
+      "message": "Remove this spdk_set_thread",
+      "revId": "9ba100d95d1e1134cd4d3bff7a34d732c973af82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7445230_80be71a0",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-21T18:38:17Z",
+      "side": 1,
+      "message": "Add this comment:\n\nLightweight threads may have a requested cpumask. This is a request only - the scheduler does not have to honor it. For this scheduler implementation, each reactor is pinned to a particular core so honoring the request is reasonably easy.",
+      "revId": "9ba100d95d1e1134cd4d3bff7a34d732c973af82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "091a243d_2ca8e62b",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-21T18:38:17Z",
+      "side": 1,
+      "message": "Let\u0027s add this comment here:\n\nWhenever SPDK creates a new lightweight thread it will call nvmf_schedule_spdk_thread asking for the application to begin polling it via spdk_thread_poll(). Each lightweight thread in SPDK optionally allocates extra memory to be used by the application framework. The size of the extra memory allocated is the second parameter.",
+      "revId": "9ba100d95d1e1134cd4d3bff7a34d732c973af82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ca509c1_90594e08",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-21T18:38:17Z",
+      "side": 1,
+      "message": "Can we rename nvmf_thread to \"reactor\"? I think that word might be meaningful to people trying to learn how SPDK works because it is used in other projects. Can you also add the following comment here:\n\nSpawn one system thread per CPU core. The system thread is called a reactor. SPDK will spawn lightweight threads that must be mapped to reactors in nvmf_schedule_spdk_thread. Using a single system thread per CPU core is a choice unique to this application. SPDK itself does not require this specific threading model. For example, another viable threading model would be dynamically scheduling the lightweight threads onto a thread pool using a work queue.",
+      "revId": "9ba100d95d1e1134cd4d3bff7a34d732c973af82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8947ea63_81dc2515",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-21T18:38:17Z",
+      "side": 1,
+      "message": "Change this comment to the following:\n\nSome SPDK libraries assume that there is at least some number of lightweight threads that exist from the beginning of time. That assumption is currently being removed from the SPDK libraries, but until that work is completed spawn one lightweight thread per reactor here.",
+      "revId": "9ba100d95d1e1134cd4d3bff7a34d732c973af82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf28e69e_fa03c717",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-21T18:38:17Z",
+      "side": 1,
+      "message": "You don\u0027t need to do anything different for the master core here. You can just call spdk_thread_create for each one. You should fill out a cpumask that contains core \u0027i\u0027 for each one though. This whole loop is just temporary until we change the SPDK libraries to spawn their own lightweight threads.",
+      "revId": "9ba100d95d1e1134cd4d3bff7a34d732c973af82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
