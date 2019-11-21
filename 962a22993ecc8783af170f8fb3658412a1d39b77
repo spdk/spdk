@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "64292827_c74f2d2d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-21T16:50:10Z",
+      "side": 1,
+      "message": "It was just running out of request objects on the socket, but the new strategy is to allow the upper layer to allocate the requests according to its needs. This makes everything a lot simpler.",
+      "parentUuid": "225f166b_967b45e8",
+      "revId": "962a22993ecc8783af170f8fb3658412a1d39b77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "81000a6e_5236f26f",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 6
