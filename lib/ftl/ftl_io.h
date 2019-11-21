@@ -43,6 +43,7 @@
 
 struct spdk_ftl_dev;
 struct ftl_rwb_batch;
+struct ftl_rwb_entry;
 struct ftl_band;
 struct ftl_io;
 
@@ -126,6 +127,15 @@ struct ftl_io_init_opts {
 	void					*cb_ctx;
 };
 
+struct ftl_wbuf_io_channel {
+	struct spdk_thread			*thread;
+	struct spdk_ring			*free_entry_queue;
+	struct spdk_ring			*submit_entry_queue;
+	struct ftl_rwb_entry			*entries;
+	void					*buffer;
+	TAILQ_ENTRY(ftl_wbuf_io_channel)	tailq;
+};
+
 struct ftl_io_channel {
 	/* Device */
 	struct spdk_ftl_dev			*dev;
@@ -137,6 +147,8 @@ struct ftl_io_channel {
 	struct spdk_io_channel			*base_ioch;
 	/* Persistent cache IO channel */
 	struct spdk_io_channel			*cache_ioch;
+	/* Write buffer stuff */
+	struct ftl_wbuf_io_channel		*wbuf_ioch;
 	/* Poller */
 	struct spdk_poller			*poller;
 

@@ -864,6 +864,89 @@ ftl_dev_init_zones(struct spdk_ftl_dev *dev)
 	return 0;
 }
 
+static struct ftl_wbuf_io_channel *
+ftl_find_wbuf_io_channel(struct spdk_ftl_dev *dev)
+{
+	struct ftl_wbuf_io_channel *ioch = NULL;
+
+	pthread_spin_lock(&dev->lock);
+	TAILQ_FOREACH(ioch, &dev->ioch_queue, tailq) {
+		if (ioch->thread == spdk_get_thread()) {
+			break;
+		}
+	}
+	pthread_spin_unlock(&dev->lock);
+
+	return ioch;
+}
+
+#define USE_SINGLE_BUFFER 1
+
+static struct ftl_wbuf_io_channel *
+ftl_init_wbuf_io_channel(struct spdk_ftl_dev *dev)
+{
+	struct ftl_wbuf_io_channel *ioch;
+	size_t num_entries = dev->conf.rwb_size / FTL_BLOCK_SIZE;
+
+	ioch = calloc(1, sizeof(*ioch));
+	if (!ioch) {
+		return NULL;
+	}
+
+	ioch->thread = spdk_get_thread();
+	ioch->free_entry_queue = spdk_ring_create(SPDK_RING_TYPE_SP_SC,
+				 spdk_align32pow2(num_entries + 1),
+				 SPDK_ENV_SOCKET_ID_ANY);
+	if (!ioch->free_entry_queue) {
+		SPDK_ERRLOG("Failed to create free entry queue\n");
+		return NULL;
+	}
+
+	ioch->submit_entry_queue = spdk_ring_create(SPDK_RING_TYPE_SP_SC,
+				   spdk_align32pow2(num_entries + 1),
+				   SPDK_ENV_SOCKET_ID_ANY);
+	if (!ioch->submit_entry_queue) {
+		SPDK_ERRLOG("Failed to create free entry queue\n");
+		spdk_ring_free(ioch->free_entry_queue);
+		return NULL;
+	}
+
+	ioch->entries = calloc(num_entries, sizeof(*ioch->entries));
+	if (!ioch->entries) {
+		SPDK_ERRLOG("Failed to allocate entry buffer\n");
+		spdk_ring_free(ioch->free_entry_queue);
+		spdk_ring_free(ioch->submit_entry_queue);
+		return NULL;
+	}
+
+#if USE_SINGLE_BUFFER
+	ioch->buffer = spdk_dma_zmalloc(num_entries * FTL_BLOCK_SIZE, FTL_BLOCK_SIZE, NULL);
+	if (!ioch->buffer) {
+		spdk_ring_free(ioch->free_entry_queue);
+		spdk_ring_free(ioch->submit_entry_queue);
+		free(ioch->entries);
+		return NULL;
+	}
+#endif
+
+	if (ftl_rwb_init_entries(dev->rwb, ioch->entries, num_entries, ioch->buffer, ioch)) {
+		SPDK_ERRLOG("Failed to initialize RWB entries\n");
+		spdk_ring_free(ioch->free_entry_queue);
+		spdk_ring_free(ioch->submit_entry_queue);
+		spdk_dma_free(ioch->buffer);
+		free(ioch->entries);
+		return NULL;
+	}
+
+	/* TODO: free these */
+	pthread_spin_lock(&dev->lock);
+	dev->num_io_channels++;
+	TAILQ_INSERT_TAIL(&dev->ioch_queue, ioch, tailq);
+	pthread_spin_unlock(&dev->lock);
+
+	return ioch;
+}
+
 static int
 ftl_io_channel_create_cb(void *io_device, void *ctx)
 {
@@ -875,6 +958,7 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 	ioch->cache_ioch = NULL;
 	ioch->dev = dev;
 	ioch->elem_size = sizeof(struct ftl_md_io);
+
 	ioch->io_pool = spdk_mempool_create(mempool_name,
 					    dev->conf.user_io_pool_size,
 					    ioch->elem_size,
@@ -904,6 +988,18 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 
 	TAILQ_INIT(&ioch->completion_queue);
 	TAILQ_INIT(&ioch->retry_queue);
+
+	ioch->wbuf_ioch = ftl_find_wbuf_io_channel(dev);
+	if (!ioch->wbuf_ioch) {
+		ioch->wbuf_ioch = ftl_init_wbuf_io_channel(dev);
+		if (!ioch->wbuf_ioch) {
+			SPDK_ERRLOG("Failed to create write buffer IO channel\n");
+			spdk_mempool_free(ioch->io_pool);
+			spdk_put_io_channel(ioch->base_ioch);
+			spdk_put_io_channel(ioch->cache_ioch);
+			return -1;
+		}
+	}
 	ioch->poller = spdk_poller_register(ftl_io_channel_poll, ioch, 0);
 
 	return 0;
@@ -1060,7 +1156,11 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		goto fail_sync;
 	}
 
+	TAILQ_INIT(&dev->ioch_queue);
 	TAILQ_INIT(&dev->retry_queue);
+
+	pthread_spin_init(&dev->lock, PTHREAD_PROCESS_PRIVATE);
+
 	dev->conf = *opts.conf;
 	dev->init_ctx.cb_fn = cb_fn;
 	dev->init_ctx.cb_arg = cb_arg;
@@ -1105,7 +1205,7 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		goto fail_sync;
 	}
 
-	dev->rwb = ftl_rwb_init(&dev->conf, dev->xfer_size, dev->md_size, ftl_dev_num_punits(dev));
+	dev->rwb = ftl_rwb_init(dev, &dev->conf, dev->xfer_size, dev->md_size, ftl_dev_num_punits(dev));
 	if (!dev->rwb) {
 		SPDK_ERRLOG("Unable to initialize rwb structures\n");
 		goto fail_sync;
