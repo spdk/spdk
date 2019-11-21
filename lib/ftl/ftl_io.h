@@ -134,6 +134,10 @@ struct ftl_io_channel {
 	struct spdk_io_channel			*base_ioch;
 	/* Persistent cache IO channel */
 	struct spdk_io_channel			*cache_ioch;
+	/* Poller used for completing write requests */
+	struct spdk_poller			*poller;
+	/* Write completion queue */
+	TAILQ_HEAD(, ftl_io)			write_cmpl_queue;
 };
 
 /* General IO descriptor */
@@ -218,7 +222,8 @@ struct ftl_io {
 	/* Trace group id */
 	uint64_t				trace;
 
-	TAILQ_ENTRY(ftl_io)			retry_entry;
+	/* Used by retry and write completion queues */
+	TAILQ_ENTRY(ftl_io)			tailq_entry;
 };
 
 /* Metadata IO */
