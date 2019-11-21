@@ -129,6 +129,8 @@ struct spdk_sock *spdk_sock_accept(struct spdk_sock *sock);
  */
 int spdk_sock_close(struct spdk_sock **sock);
 
+int spdk_sock_flush(struct spdk_sock *sock);
+
 /**
  * Receive a message from the given socket.
  *
