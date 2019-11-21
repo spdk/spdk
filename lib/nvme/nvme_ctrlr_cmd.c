@@ -141,7 +141,8 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_IDENTIFY;
-	cmd->cdw10 = cns | ((uint32_t)cntid << 16);
+	cmd->cdw10.identify.cns = cns;
+	cmd->cdw10.identify.cntid = cntid;
 	cmd->nsid = nsid;
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);
@@ -167,7 +168,7 @@ nvme_ctrlr_cmd_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_NS_ATTACHMENT;
 	cmd->nsid = nsid;
-	cmd->cdw10 = SPDK_NVME_NS_CTRLR_ATTACH;
+	cmd->cdw10.raw = SPDK_NVME_NS_CTRLR_ATTACH;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 
@@ -195,7 +196,7 @@ nvme_ctrlr_cmd_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_NS_ATTACHMENT;
 	cmd->nsid = nsid;
-	cmd->cdw10 = SPDK_NVME_NS_CTRLR_DETACH;
+	cmd->cdw10.raw = SPDK_NVME_NS_CTRLR_DETACH;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 
@@ -222,7 +223,7 @@ nvme_ctrlr_cmd_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_data
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_NS_MANAGEMENT;
-	cmd->cdw10 = SPDK_NVME_NS_MANAGEMENT_CREATE;
+	cmd->cdw10.raw = SPDK_NVME_NS_MANAGEMENT_CREATE;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 
@@ -247,7 +248,7 @@ nvme_ctrlr_cmd_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_NS_MANAGEMENT;
-	cmd->cdw10 = SPDK_NVME_NS_MANAGEMENT_DELETE;
+	cmd->cdw10.raw = SPDK_NVME_NS_MANAGEMENT_DELETE;
 	cmd->nsid = nsid;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
@@ -327,7 +328,7 @@ spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_SET_FEATURES;
-	cmd->cdw10 = feature;
+	cmd->cdw10.set_features.fid = feature;
 	cmd->cdw11 = cdw11;
 	cmd->cdw12 = cdw12;
 
@@ -356,7 +357,7 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_GET_FEATURES;
-	cmd->cdw10 = feature;
+	cmd->cdw10.get_features.fid = feature;
 	cmd->cdw11 = cdw11;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
@@ -385,7 +386,7 @@ spdk_nvme_ctrlr_cmd_get_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t featur
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_GET_FEATURES;
-	cmd->cdw10 = feature;
+	cmd->cdw10.get_features.fid = feature;
 	cmd->cdw11 = cdw11;
 	cmd->nsid = ns_id;
 
@@ -414,7 +415,7 @@ int spdk_nvme_ctrlr_cmd_set_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t fe
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_SET_FEATURES;
-	cmd->cdw10 = feature;
+	cmd->cdw10.set_features.fid = feature;
 	cmd->cdw11 = cdw11;
 	cmd->cdw12 = cdw12;
 	cmd->nsid = ns_id;
@@ -521,8 +522,9 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_GET_LOG_PAGE;
 	cmd->nsid = nsid;
-	cmd->cdw10 = numdl << 16;
-	cmd->cdw10 |= log_page;
+	cmd->cdw10.get_log_page.numdl = numdl;
+	cmd->cdw10.get_log_page.lid = log_page;
+
 	cmd->cdw11 = numdu;
 	cmd->cdw12 = lpol;
 	cmd->cdw13 = lpou;
@@ -594,7 +596,8 @@ spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair 
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_ABORT;
-	cmd->cdw10 = (cid << 16) | sqid;
+	cmd->cdw10.abort.sqid = sqid;
+	cmd->cdw10.abort.cid = cid;
 
 	if (ctrlr->outstanding_aborts >= ctrlr->cdata.acl) {
 		STAILQ_INSERT_TAIL(&ctrlr->queued_aborts, req, stailq);
@@ -653,7 +656,7 @@ nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD;
-	cmd->cdw10 = (size >> 2) - 1;
+	cmd->cdw10.raw = (size >> 2) - 1;
 	cmd->cdw11 = offset >> 2;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
@@ -681,7 +684,10 @@ nvme_ctrlr_cmd_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_SECURITY_RECEIVE;
-	cmd->cdw10 = ((uint32_t)secp << 24) | ((uint32_t)spsp << 8) | ((uint32_t)nssf);
+	cmd->cdw10.sec_send_recv.nssf = nssf;
+	cmd->cdw10.sec_send_recv.spsp0 = (uint8_t)spsp;
+	cmd->cdw10.sec_send_recv.spsp1 = (uint8_t)(spsp >> 8);
+	cmd->cdw10.sec_send_recv.secp = secp;
 	cmd->cdw11 = payload_size;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
@@ -709,7 +715,10 @@ nvme_ctrlr_cmd_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_SECURITY_SEND;
-	cmd->cdw10 = ((uint32_t)secp << 24) | ((uint32_t)spsp << 8) | ((uint32_t)nssf);
+	cmd->cdw10.sec_send_recv.nssf = nssf;
+	cmd->cdw10.sec_send_recv.spsp0 = (uint8_t)spsp;
+	cmd->cdw10.sec_send_recv.spsp1 = (uint8_t)(spsp >> 8);
+	cmd->cdw10.sec_send_recv.secp = secp;
 	cmd->cdw11 = payload_size;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
