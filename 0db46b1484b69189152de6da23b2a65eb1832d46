@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "5fe253f1_9619887b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-21T08:46:38Z",
+      "side": 1,
+      "message": "Doing this will get us to amortize the cost of the system call. But we will have twice copies (from kernel buffer to pipe and from pipe to the spdk nvme/nvmf buffer that goes to the bdev).\n\nThis approach might turn to be problematic from few aspects:\n\nThe SPDK approach is zero copy on data-path. For TCP we have now one copy (user buffer \u003c--\u003e kernel socket buffer) and we\u0027re aiming to get to zero copy (for TX your MSG_ZEROCOPY patches and some TBD work/thinking we have for RX). \n\nThis work gets us to have two copies and not one copy in some (many cases) which is @ high level against where we want the wind to blow to.\n\nOn systems such as SoC ARM based, where the copy cost is notable increasing it is going to hurt the performance notably. On such systems we should get to 0-copy and nothing more..\n\nI gave the patches quick test and the cpu cost for copy + syscall was higher with the patch (upper listing) vs. without it (lower listing, just used the same code without the top most patch). \n\nThis was nvme-perf with write test, six initiator threads pushing to one target thread, depth 64, size 4k, all goes in-capsule). \n\npipe cost of syscall + copy \u003d 32% (14.1 + 11.8 + 3 + 2.58)\n  14.19%  [kernel]            [k] copy_user_enhanced_fast_string\n  11.84%  libc-2.17.so        [.] __memcpy_ssse3_back\n   5.26%  nvmf_tgt            [.] spdk_nvmf_tcp_req_set_state\n   3.36%  nvmf_tgt            [.] spdk_nvmf_tcp_req_process\n   3.07%  [kernel]            [k] entry_SYSCALL_64\n   2.58%  [kernel]            [k] syscall_return_via_sysret\n   2.23%  [kernel]            [k] skb_release_data\n\nno pipe cost of syscall + copy \u003d 23.5% (8.7 + 8.5 + 7.2)\n   8.70%  [kernel]            [k] entry_SYSCALL_64\n   8.45%  [kernel]            [k] copy_user_enhanced_fast_string\n   7.24%  [kernel]            [k] syscall_return_via_sysret\n   4.39%  nvmf_tgt            [.] spdk_nvmf_tcp_req_set_state\n   3.73%  [kernel]            [k] __skb_datagram_iter\n   2.43%  nvmf_tgt            [.] spdk_nvmf_tcp_req_process",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 54
+      },
+      "revId": "0db46b1484b69189152de6da23b2a65eb1832d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "865982fd_26167a46",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 7
