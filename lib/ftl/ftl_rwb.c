@@ -37,6 +37,9 @@
 
 #include "ftl_rwb.h"
 #include "ftl_core.h"
+#include "ftl_io.h"
+
+#define MAX_RWB_REGIONS 128
 
 struct ftl_rwb_batch {
 	/* Parent RWB */
@@ -45,11 +48,14 @@ struct ftl_rwb_batch {
 	/* Entry buffer */
 	struct ftl_rwb_entry			**entries;
 
+	size_t					num_entries;
+
 	/* Queue entry */
 	STAILQ_ENTRY(ftl_rwb_batch)		stailq;
 };
 
 struct ftl_rwb {
+	struct spdk_ftl_dev *dev;
 	/* Number of entries per batch */
 	size_t					xfer_size;
 	/* Metadata's size */
@@ -69,15 +75,15 @@ struct ftl_rwb {
 	/* Number of batches on the retry_batch_queue */
 	unsigned int				retry_batch_count;
 
-	/* Free entry queue */
-	struct spdk_ring			*free_queue;
-	/* Submission entryh queue */
-	struct spdk_ring			*submit_queue;
-
 	/* Entry buffer */
-	struct ftl_rwb_entry			*entries;
+	struct ftl_rwb_entry			**entries;
 	/* Batch buffer */
 	struct ftl_rwb_batch			*batches;
+
+	struct ftl_rwb_batch			*current;
+
+	size_t					current_region_pos;
+	pthread_mutex_t				lock;
 };
 
 static int
@@ -94,36 +100,77 @@ ftl_rwb_init_batch(struct ftl_rwb *rwb, struct ftl_rwb_batch *batch)
 	return 0;
 }
 
-static int
-ftl_rwb_init_entry(struct ftl_rwb *rwb, struct ftl_rwb_entry *entry, unsigned int pos)
+/* TODO ftl_rwb_free_entries */
+int
+ftl_rwb_init_entries(struct ftl_rwb *rwb, struct ftl_rwb_entry *entries, size_t count,
+		     void *data, struct ftl_wbuf_io_channel *ioch)
 {
-	int rc;
+	struct ftl_rwb_entry *entry;
+	size_t i, region_offset;
+	int rc = 0;
 
-	entry->rwb = rwb;
-	entry->pos = pos;
-
-	/* The data should be aligned to a cc.mps, but since currently there's no way of retrieving
-	 * this value at the FTL level, use FTL_BLOCK_SIZE instead. */
-	entry->data = spdk_dma_zmalloc(FTL_BLOCK_SIZE, FTL_BLOCK_SIZE, NULL);
-	if (!entry->data) {
+	pthread_mutex_lock(&rwb->lock);
+	if (rwb->current_region_pos + count > rwb->num_entries) {
+		pthread_mutex_unlock(&rwb->lock);
 		return -ENOMEM;
 	}
 
-	rc = pthread_spin_init(&entry->lock, PTHREAD_PROCESS_PRIVATE);
+	region_offset = rwb->current_region_pos;
+	rwb->current_region_pos += count;
+	pthread_mutex_unlock(&rwb->lock);
+
+	for (i = 0; i < count; ++i) {
+		entry = &entries[i];
+
+		entry->rwb = rwb;
+		entry->pos = region_offset + i;
+		entry->ioch = ioch;
+		entry->data = (char *)data + i * FTL_BLOCK_SIZE;
+
+		if (data == NULL) {
+			/* The data should be aligned to a cc.mps, but since currently there's no way of
+			 * retrieving this value at the FTL level, use FTL_BLOCK_SIZE instead. */
+			entry->data = spdk_dma_zmalloc(FTL_BLOCK_SIZE, FTL_BLOCK_SIZE, NULL);
+			if (!entry->data) {
+				rc = -ENOMEM;
+				goto finish;
+			}
+		}
+
+		rc = pthread_spin_init(&entry->lock, PTHREAD_PROCESS_PRIVATE);
+		if (spdk_unlikely(rc != 0)) {
+			spdk_dma_free(entry->data);
+			entry->data = NULL;
+			goto finish;
+		}
+
+		rwb->entries[region_offset + i] = entry;
+	}
+
+	if (spdk_ring_enqueue(ioch->free_entry_queue, (void **)&rwb->entries[region_offset], count,
+			      NULL) != count) {
+		rc = -ENOMEM;
+	}
+finish:
 	if (spdk_unlikely(rc != 0)) {
-		spdk_dma_free(entry->data);
-		entry->data = NULL;
-		return -ENOMEM;
+		for (i = 0; i < count; ++i) {
+			entry = &entries[i];
+			if (!entry->data) {
+				break;
+			}
+
+			spdk_dma_free(entry->data);
+		}
 	}
 
-	return 0;
+	return rc;
 }
 
 struct ftl_rwb *
-ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size, size_t md_size, size_t num_punits)
+ftl_rwb_init(struct spdk_ftl_dev *dev, const struct spdk_ftl_conf *conf, size_t xfer_size,
+	     size_t md_size, size_t num_punits)
 {
 	struct ftl_rwb *rwb;
-	struct ftl_rwb_entry *entry;
 	unsigned int i, num_batches;
 	int rc;
 
@@ -133,12 +180,14 @@ ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size, size_t md_size,
 		return NULL;
 	}
 
+	rwb->dev = dev;
+
 	STAILQ_INIT(&rwb->free_batch_queue);
 	STAILQ_INIT(&rwb->retry_batch_queue);
 
 	rwb->xfer_size = xfer_size;
 	rwb->md_size = md_size;
-	rwb->num_entries = conf->rwb_size / FTL_BLOCK_SIZE;
+	rwb->num_entries = MAX_RWB_REGIONS * conf->rwb_size / FTL_BLOCK_SIZE;
 
 	assert(rwb->num_entries % xfer_size == 0);
 	num_batches = rwb->num_entries / xfer_size;
@@ -148,42 +197,13 @@ ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size, size_t md_size,
 		goto error;
 	}
 
+	if (pthread_mutex_init(&rwb->lock, NULL)) {
+		goto error;
+	}
+
 	rwb->entries = calloc(rwb->num_entries, sizeof(*rwb->entries));
 	if (!rwb->entries) {
 		goto error;
-	}
-
-	rwb->free_queue = spdk_ring_create(SPDK_RING_TYPE_MP_MC,
-					   spdk_align32pow2(rwb->num_entries + 1),
-					   SPDK_ENV_SOCKET_ID_ANY);
-	if (!rwb->free_queue) {
-		SPDK_ERRLOG("Failed to create free entry queue\n");
-		goto error;
-	}
-
-	rwb->submit_queue = spdk_ring_create(SPDK_RING_TYPE_MP_SC,
-					     spdk_align32pow2(rwb->num_entries + 1),
-					     SPDK_ENV_SOCKET_ID_ANY);
-	if (!rwb->submit_queue) {
-		SPDK_ERRLOG("Failed to create entry submission queue\n");
-		goto error;
-	}
-
-	for (i = 0; i < rwb->num_entries; ++i) {
-		entry = &rwb->entries[i];
-
-		rc = ftl_rwb_init_entry(rwb, entry, i);
-		if (spdk_unlikely(rc != 0)) {
-			SPDK_ERRLOG("Failed to initialize RWB entry %u\n", i);
-			goto error;
-		}
-
-		assert(rwb->entries[i].pos < rwb->num_entries);
-		rc = spdk_ring_enqueue(rwb->free_queue, (void **)&entry, 1, NULL);
-		if (spdk_unlikely(rc != 1)) {
-			SPDK_ERRLOG("Failed to populate free entry queue\n");
-			goto error;
-		}
 	}
 
 	for (i = 0; i < num_batches; ++i) {
@@ -207,27 +227,13 @@ error:
 void
 ftl_rwb_free(struct ftl_rwb *rwb)
 {
-	struct ftl_rwb_entry *entry;
 	unsigned int i;
 
 	if (!rwb) {
 		return;
 	}
 
-	if (rwb->entries != NULL) {
-		for (i = 0; i < rwb->num_entries; ++i) {
-			entry = &rwb->entries[i];
-
-			if (entry->data == NULL) {
-				break;
-			}
-
-			spdk_dma_free(rwb->entries[i].data);
-			pthread_spin_destroy(&entry->lock);
-		}
-
-		free(rwb->entries);
-	}
+	free(rwb->entries);
 
 	if (rwb->batches != NULL) {
 		for (i = 0; i < rwb->num_entries / rwb->xfer_size; ++i) {
@@ -237,8 +243,6 @@ ftl_rwb_free(struct ftl_rwb *rwb)
 		free(rwb->batches);
 	}
 
-	spdk_ring_free(rwb->free_queue);
-	spdk_ring_free(rwb->submit_queue);
 	free(rwb);
 }
 
@@ -247,18 +251,16 @@ ftl_rwb_batch_release(struct ftl_rwb_batch *batch)
 {
 	struct ftl_rwb *rwb = batch->rwb;
 	struct ftl_rwb_entry *entry;
-	unsigned int num_acquired __attribute__((unused));
-	int rc, num_entries = ftl_rwb_batch_get_entry_count(batch);
+	size_t rc, count = 0, num_entries = ftl_rwb_batch_get_entry_count(batch);
 
 	ftl_rwb_foreach(entry, batch) {
-		num_acquired = __atomic_fetch_sub(&rwb->num_acquired[ftl_rwb_entry_type(entry)], 1,
-						  __ATOMIC_SEQ_CST);
-		assert(num_acquired > 0);
 		entry->band = NULL;
+		rc = spdk_ring_enqueue(entry->ioch->free_entry_queue, (void **)&entry, 1, NULL);
+		assert(rc == 1);
+		count++;
 	}
 
-	rc = spdk_ring_enqueue(rwb->free_queue, (void **)batch->entries, num_entries, NULL);
-	assert(rc == num_entries);
+	assert(count == num_entries);
 	memset(batch->entries, 0, sizeof(*batch->entries) * num_entries);
 
 	STAILQ_INSERT_TAIL(&rwb->free_batch_queue, batch, stailq);
@@ -309,14 +311,16 @@ ftl_rwb_get_limits(struct ftl_rwb *rwb,
 size_t
 ftl_rwb_num_acquired(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type)
 {
-	return __atomic_load_n(&rwb->num_acquired[type], __ATOMIC_SEQ_CST);
+	/* TODO: we should probably iterate through all IO channels and return the sum of all
+	 * acquired requests there */
+	return 0;
 }
 
 size_t
 ftl_rwb_get_active_batches(const struct ftl_rwb *rwb)
 {
-	/* TODO: do we still need this function? For now let's  */
-	return spdk_ring_count(rwb->submit_queue) % rwb->xfer_size;
+	/* TODO: do we still need this function?  */
+	return rwb->current == NULL ? 0 : 1;
 }
 
 void
@@ -331,41 +335,31 @@ ftl_rwb_batch_revert(struct ftl_rwb_batch *batch)
 unsigned int
 ftl_rwb_num_pending(struct ftl_rwb *rwb)
 {
-	return spdk_ring_count(rwb->submit_queue) + rwb->retry_batch_count * rwb->xfer_size;
+	/* TODO: this should take all the IO channels into account */
+	return rwb->retry_batch_count * rwb->xfer_size;
 }
 
 void
 ftl_rwb_push(struct ftl_rwb_entry *entry)
 {
-	struct ftl_rwb *rwb = entry->rwb;
+	struct ftl_wbuf_io_channel *ioch = entry->ioch;
 	int rc;
 
-	rc = spdk_ring_enqueue(rwb->submit_queue, (void **)&entry, 1, NULL);
+	rc = spdk_ring_enqueue(ioch->submit_entry_queue, (void **)&entry, 1, NULL);
 	if (spdk_unlikely(rc != 1)) {
 		assert(0 && "Should never happen");
 	}
 }
 
-static int
-ftl_rwb_check_limits(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type)
-{
-	return ftl_rwb_num_acquired(rwb, type) >= rwb->limits[type];
-}
-
 struct ftl_rwb_entry *
-ftl_rwb_acquire(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type)
+ftl_rwb_acquire(struct ftl_rwb *rwb, struct ftl_wbuf_io_channel *ioch, enum ftl_rwb_entry_type type)
 {
 	struct ftl_rwb_entry *entry = NULL;
 
-	if (ftl_rwb_check_limits(rwb, type)) {
+	/* TODO: limits */
+	if (spdk_ring_dequeue(ioch->free_entry_queue, (void **)&entry, 1) != 1) {
 		return NULL;
 	}
-
-	if (spdk_ring_dequeue(rwb->free_queue, (void **)&entry, 1) != 1) {
-		return NULL;
-	}
-
-	__atomic_fetch_add(&rwb->num_acquired[type], 1, __ATOMIC_SEQ_CST);
 
 	return entry;
 }
@@ -376,11 +370,26 @@ ftl_rwb_disable_interleaving(struct ftl_rwb *rwb)
 	/* TODO: figure out what to do here */
 }
 
+#if 0
+void
+dump_rwb_stats(struct spdk_ftl_dev *dev)
+{
+	struct ftl_wbuf_io_channel *ioch;
+
+	TAILQ_FOREACH(ioch, &dev->ioch_queue, tailq) {
+		printf("ioch[%p]: %zu, %zu\n", ioch, spdk_ring_count(ioch->free_entry_queue),
+		       spdk_ring_count(ioch->submit_entry_queue));
+	}
+}
+#endif
+
 struct ftl_rwb_batch *
 ftl_rwb_pop(struct ftl_rwb *rwb)
 {
-	struct ftl_rwb_batch *batch;
-	size_t num_entries;
+	struct spdk_ftl_dev *dev = rwb->dev;
+	struct ftl_rwb_batch *batch = rwb->current;
+	struct ftl_wbuf_io_channel *ioch;
+	size_t num_entries = 0;
 
 	if (!STAILQ_EMPTY(&rwb->retry_batch_queue)) {
 		batch = STAILQ_FIRST(&rwb->retry_batch_queue);
@@ -388,18 +397,47 @@ ftl_rwb_pop(struct ftl_rwb *rwb)
 		return batch;
 	}
 
-	if (spdk_ring_count(rwb->submit_queue) < rwb->xfer_size) {
-		return NULL;
+	if (batch == NULL) {
+		batch = rwb->current = STAILQ_FIRST(&rwb->free_batch_queue);
+		if (batch == NULL) {
+			return NULL;
+		}
+
+		STAILQ_REMOVE(&rwb->free_batch_queue, batch, ftl_rwb_batch, stailq);
+		batch->num_entries = 0;
 	}
 
-	batch = STAILQ_FIRST(&rwb->free_batch_queue);
-	assert(batch != NULL);
-	STAILQ_REMOVE(&rwb->free_batch_queue, batch, ftl_rwb_batch, stailq);
+	assert(batch->num_entries < rwb->xfer_size);
 
-	num_entries = spdk_ring_dequeue(rwb->submit_queue, (void **)batch->entries, rwb->xfer_size);
-	assert(num_entries == rwb->xfer_size);
+	ioch = dev->current_ioch;
+	TAILQ_FOREACH_FROM(ioch, &dev->ioch_queue, tailq) {
+		num_entries = spdk_ring_dequeue(ioch->submit_entry_queue,
+						(void **)&batch->entries[batch->num_entries],
+						rwb->xfer_size - batch->num_entries);
+		batch->num_entries += num_entries;
+		if (batch->num_entries == rwb->xfer_size) {
+			goto finish;
+		}
+	}
 
-	return batch;
+	TAILQ_FOREACH(ioch, &dev->ioch_queue, tailq) {
+		num_entries = spdk_ring_dequeue(ioch->submit_entry_queue,
+						(void **)&batch->entries[batch->num_entries],
+						rwb->xfer_size - batch->num_entries);
+		batch->num_entries += num_entries;
+		if (batch->num_entries == rwb->xfer_size) {
+			goto finish;
+		}
+	}
+finish:
+	dev->current_ioch = ioch;
+
+	if (batch->num_entries == rwb->xfer_size) {
+		rwb->current = NULL;
+		return batch;
+	}
+
+	return NULL;
 }
 
 size_t
@@ -431,7 +469,7 @@ ftl_rwb_entry_from_offset(struct ftl_rwb *rwb, size_t offset)
 {
 	assert(offset < rwb->num_entries);
 
-	return &rwb->entries[offset];
+	return rwb->entries[offset];
 }
 
 struct ftl_rwb_entry *
@@ -456,299 +494,3 @@ ftl_rwb_batch_first_entry(struct ftl_rwb_batch *batch)
 	/* TODO: we should get rid of this function */
 	return batch->entries[0];
 }
-
-
-
-#if 0
-void
-ftl_rwb_batch_release(struct ftl_rwb_batch *batch)
-{
-	struct ftl_rwb *rwb = batch->rwb;
-	struct ftl_rwb_entry *entry;
-	unsigned int num_acquired __attribute__((unused));
-
-	batch->num_ready = 0;
-	batch->num_acquired = 0;
-
-	ftl_rwb_foreach(entry, batch) {
-		num_acquired = __atomic_fetch_sub(&rwb->num_acquired[ftl_rwb_entry_type(entry)], 1,
-						  __ATOMIC_SEQ_CST);
-		entry->band = NULL;
-		assert(num_acquired > 0);
-	}
-
-	pthread_spin_lock(&rwb->lock);
-	STAILQ_INSERT_TAIL(&rwb->free_queue, batch, stailq);
-	rwb->num_free_batches++;
-	pthread_spin_unlock(&rwb->lock);
-}
-
-size_t
-ftl_rwb_entry_cnt(const struct ftl_rwb *rwb)
-{
-	return rwb->num_batches * rwb->xfer_size;
-}
-
-size_t
-ftl_rwb_num_batches(const struct ftl_rwb *rwb)
-{
-	return rwb->num_batches;
-}
-
-size_t
-ftl_rwb_size(const struct ftl_rwb *rwb)
-{
-	return rwb->num_batches * rwb->xfer_size;
-}
-
-size_t
-ftl_rwb_batch_get_offset(const struct ftl_rwb_batch *batch)
-{
-	/* TODO: figure out what we should do here */
-	return 0;
-}
-
-void
-ftl_rwb_set_limits(struct ftl_rwb *rwb,
-		   const size_t limit[FTL_RWB_TYPE_MAX])
-{
-	assert(limit[FTL_RWB_TYPE_USER] <= ftl_rwb_entry_cnt(rwb));
-	assert(limit[FTL_RWB_TYPE_INTERNAL] <= ftl_rwb_entry_cnt(rwb));
-	memcpy(rwb->limits, limit, sizeof(rwb->limits));
-}
-
-void
-ftl_rwb_get_limits(struct ftl_rwb *rwb,
-		   size_t limit[FTL_RWB_TYPE_MAX])
-{
-	memcpy(limit, rwb->limits, sizeof(rwb->limits));
-}
-
-size_t
-ftl_rwb_num_acquired(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type)
-{
-	return __atomic_load_n(&rwb->num_acquired[type], __ATOMIC_SEQ_CST);
-}
-
-size_t
-ftl_rwb_get_active_batches(const struct ftl_rwb *rwb)
-{
-	return rwb->num_active_batches;
-}
-
-void
-ftl_rwb_batch_revert(struct ftl_rwb_batch *batch)
-{
-	struct ftl_rwb *rwb = batch->rwb;
-
-	if (spdk_ring_enqueue(rwb->prio_queue, (void **)&batch, 1, NULL) != 1) {
-		assert(0 && "Should never happen");
-	}
-
-	__atomic_fetch_add(&rwb->num_pending, rwb->xfer_size, __ATOMIC_SEQ_CST);
-}
-
-/* TODO: use spdk_ring_count(submit_quue) + len(submit_batch_queue) */
-unsigned int
-ftl_rwb_num_pending(struct ftl_rwb *rwb)
-{
-	return __atomic_load_n(&rwb->num_pending, __ATOMIC_SEQ_CST);
-}
-
-void
-ftl_rwb_push(struct ftl_rwb_entry *entry)
-{
-	struct ftl_rwb_batch *batch = entry->batch;
-	struct ftl_rwb *rwb = batch->rwb;
-	size_t batch_size;
-
-	batch_size = __atomic_fetch_add(&batch->num_ready, 1, __ATOMIC_SEQ_CST) + 1;
-
-	/* Once all of the entries are put back, push the batch on the */
-	/* submission queue */
-	if (ftl_rwb_batch_full(batch, batch_size)) {
-		if (spdk_ring_enqueue(rwb->submit_queue, (void **)&batch, 1, NULL) != 1) {
-			assert(0 && "Should never happen");
-		}
-	}
-}
-
-static int
-ftl_rwb_check_limits(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type)
-{
-	return ftl_rwb_num_acquired(rwb, type) >= rwb->limits[type];
-}
-
-static struct ftl_rwb_batch *
-_ftl_rwb_acquire_batch(struct ftl_rwb *rwb)
-{
-	struct ftl_rwb_batch *batch;
-	size_t i;
-
-	if (rwb->num_free_batches < rwb->max_active_batches) {
-		return NULL;
-	}
-
-	for (i = 0; i < rwb->max_active_batches; i++) {
-		batch = STAILQ_FIRST(&rwb->free_queue);
-		STAILQ_REMOVE(&rwb->free_queue, batch, ftl_rwb_batch, stailq);
-		rwb->num_free_batches--;
-
-		STAILQ_INSERT_TAIL(&rwb->active_queue, batch, stailq);
-		rwb->num_active_batches++;
-	}
-
-	return STAILQ_FIRST(&rwb->active_queue);
-}
-
-struct ftl_rwb_entry *
-ftl_rwb_acquire(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type)
-{
-	struct ftl_rwb_entry *entry = NULL;
-	struct ftl_rwb_batch *current;
-
-	if (ftl_rwb_check_limits(rwb, type)) {
-		return NULL;
-	}
-
-	pthread_spin_lock(&rwb->lock);
-
-	current = STAILQ_FIRST(&rwb->active_queue);
-	if (!current) {
-		current = _ftl_rwb_acquire_batch(rwb);
-		if (!current) {
-			goto error;
-		}
-	}
-
-	entry = &current->entries[current->num_acquired++];
-
-	if (current->num_acquired >= rwb->xfer_size) {
-		/* If the whole batch is filled, */
-		/* remove the current batch from active_queue */
-		/* since it will need to move to submit_queue */
-		STAILQ_REMOVE(&rwb->active_queue, current, ftl_rwb_batch, stailq);
-		rwb->num_active_batches--;
-	} else if (current->num_acquired % rwb->interleave_offset == 0) {
-		/* If the current batch is filled by the interleaving offset, */
-		/* move the current batch at the tail of active_queue */
-		/* to place the next logical blocks into another batch. */
-		STAILQ_REMOVE(&rwb->active_queue, current, ftl_rwb_batch, stailq);
-		STAILQ_INSERT_TAIL(&rwb->active_queue, current, stailq);
-	}
-
-	pthread_spin_unlock(&rwb->lock);
-	__atomic_fetch_add(&rwb->num_acquired[type], 1, __ATOMIC_SEQ_CST);
-	__atomic_fetch_add(&rwb->num_pending, 1, __ATOMIC_SEQ_CST);
-	return entry;
-error:
-	pthread_spin_unlock(&rwb->lock);
-	return NULL;
-}
-
-void
-ftl_rwb_disable_interleaving(struct ftl_rwb *rwb)
-{
-	struct ftl_rwb_batch *batch, *temp;
-
-	pthread_spin_lock(&rwb->lock);
-	rwb->max_active_batches = 1;
-	rwb->interleave_offset = rwb->xfer_size;
-
-	STAILQ_FOREACH_SAFE(batch, &rwb->active_queue, stailq, temp) {
-		if (batch->num_acquired == 0) {
-			STAILQ_REMOVE(&rwb->active_queue, batch, ftl_rwb_batch, stailq);
-			rwb->num_active_batches--;
-
-			assert(batch->num_ready == 0);
-			assert(batch->num_acquired == 0);
-
-			STAILQ_INSERT_TAIL(&rwb->free_queue, batch, stailq);
-			rwb->num_free_batches++;
-		}
-	}
-	pthread_spin_unlock(&rwb->lock);
-}
-
-struct ftl_rwb_batch *
-ftl_rwb_pop(struct ftl_rwb *rwb)
-{
-	struct ftl_rwb_batch *batch = NULL;
-	unsigned int num_pending __attribute__((unused));
-
-	if (spdk_ring_dequeue(rwb->prio_queue, (void **)&batch, 1) == 1) {
-		num_pending = __atomic_fetch_sub(&rwb->num_pending, rwb->xfer_size,
-						 __ATOMIC_SEQ_CST);
-		assert(num_pending > 0);
-		return batch;
-	}
-
-	if (spdk_ring_dequeue(rwb->submit_queue, (void **)&batch, 1) == 1) {
-		num_pending = __atomic_fetch_sub(&rwb->num_pending, rwb->xfer_size,
-						 __ATOMIC_SEQ_CST);
-		assert(num_pending > 0);
-		return batch;
-	}
-
-	return NULL;
-}
-
-static struct ftl_rwb_batch *
-_ftl_rwb_next_batch(struct ftl_rwb *rwb, size_t pos)
-{
-	if (pos >= rwb->num_batches) {
-		return NULL;
-	}
-
-	return &rwb->batches[pos];
-}
-
-struct ftl_rwb_batch *
-ftl_rwb_next_batch(struct ftl_rwb_batch *batch)
-{
-	return _ftl_rwb_next_batch(batch->rwb, batch->pos + 1);
-}
-
-struct ftl_rwb_batch *
-ftl_rwb_first_batch(struct ftl_rwb *rwb)
-{
-	return _ftl_rwb_next_batch(rwb, 0);
-}
-
-int
-ftl_rwb_batch_empty(struct ftl_rwb_batch *batch)
-{
-	return __atomic_load_n(&batch->num_ready, __ATOMIC_SEQ_CST) == 0;
-}
-
-void *
-ftl_rwb_batch_get_data(struct ftl_rwb_batch *batch)
-{
-	return batch->buffer;
-}
-
-void *
-ftl_rwb_batch_get_md(struct ftl_rwb_batch *batch)
-{
-	return batch->md_buffer;
-}
-
-struct ftl_rwb_entry *
-ftl_rwb_entry_from_offset(struct ftl_rwb *rwb, size_t offset)
-{
-	unsigned int b_off, e_off;
-
-	b_off = offset / rwb->xfer_size;
-	e_off = offset % rwb->xfer_size;
-
-	assert(b_off < rwb->num_batches);
-
-	return &rwb->batches[b_off].entries[e_off];
-}
-
-struct ftl_rwb_entry *
-ftl_rwb_batch_first_entry(struct ftl_rwb_batch *batch)
-{
-	return LIST_FIRST(&batch->entry_list);
-}
-#endif

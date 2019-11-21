@@ -226,6 +226,10 @@ struct spdk_ftl_dev {
 	/* Manages data relocation */
 	struct ftl_reloc			*reloc;
 
+	TAILQ_HEAD(, ftl_wbuf_io_channel)	ioch_queue;
+	size_t					num_io_channels;
+	struct ftl_wbuf_io_channel		*current_ioch;
+
 	/* Threads */
 	struct ftl_thread			core_thread;
 
