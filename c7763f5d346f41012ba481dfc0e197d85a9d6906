@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04735e4d_50ecb2e1",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-22T18:36:18Z",
+      "side": 1,
+      "message": "Zone size is the next power of two greater than or equal to zone_capacity. The number of zones should be equal to:\n\nbdev_node-\u003enum_zones \u003d base_bdev-\u003eblockcnt / zone_size.\n\nI think you\u0027re trying to allow for overprovisioning here so as to not waste blocks on the backing bdev. However, this bdev is just for testing purposes, so let\u0027s keep it simple. The user is almost certainly going to specify a zone capacity that\u0027s a power of 2 anyway.",
+      "revId": "c7763f5d346f41012ba481dfc0e197d85a9d6906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b41bbbfb_c87b8f55",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-22T18:36:18Z",
+      "side": 1,
+      "message": "I do understand if the user wants to explicitly set a particular optimal open zones value for testing purposes, but I don\u0027t understand why the number of zones needs to be a multiple of the optimal_open_zones value. I don\u0027t think you need to do this math here at all.",
+      "revId": "c7763f5d346f41012ba481dfc0e197d85a9d6906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2fdd173_c3a3d691",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-22T18:36:18Z",
+      "side": 1,
+      "message": "If you take my suggestion above, this comment isn\u0027t correct. The block count here will always be less than or equal to the underlying device. However, your math to calculate the blockcnt remains correct.",
+      "revId": "c7763f5d346f41012ba481dfc0e197d85a9d6906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
