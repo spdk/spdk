@@ -484,7 +484,7 @@ spdk_nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
 	if (err > 0) {
 		nvmf_tcp_dump_qpair_req_contents(tqpair);
 	}
-	free(tqpair->pdu);
+	spdk_dma_free(tqpair->pdu);
 	free(tqpair->pdu_pool);
 	free(tqpair->req);
 	free(tqpair->reqs);
@@ -905,7 +905,8 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair, uint16
 		tcp_req->state = TCP_REQUEST_STATE_FREE;
 		TAILQ_INSERT_TAIL(&tqpair->state_queue[tcp_req->state], tcp_req, state_link);
 
-		tqpair->pdu = calloc(NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM + 1, sizeof(*tqpair->pdu));
+		tqpair->pdu = spdk_dma_malloc((NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM + 1) * sizeof(*tqpair->pdu), 0x1000,
+					      NULL);
 		if (!tqpair->pdu) {
 			SPDK_ERRLOG("Unable to allocate pdu on tqpair=%p.\n", tqpair);
 			return -1;
