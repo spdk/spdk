@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fba1a48_14d85fde",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1019,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-22T20:13:07Z",
+      "side": 1,
+      "message": "I don\u0027t think the \"wait for I/O queue to be fully processed\" part makes sense. Maybe write the second sentence as:\n\nInstead, queue up new commands and submit them to the hardware inside spdk_nvme_qpair_process_completions().",
+      "revId": "36eb65183310d1d811aafd308319fbd5ebf7cd84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "609a6fce_986de77e",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1023,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-22T20:13:07Z",
+      "side": 1,
+      "message": "Change this part about MMIO to this:\n\nThis results in better batching of I/O commands. Often, it is more efficient to submit patches of commands to the underlying hardware than each command individually.",
+      "revId": "36eb65183310d1d811aafd308319fbd5ebf7cd84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
