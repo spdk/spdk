@@ -371,6 +371,7 @@ process_non_read_task_completion_test(void)
 	primary.scsi.transfer_len = 4096 * 3;
 	primary.rsp_scsi_status = SPDK_SCSI_STATUS_GOOD;
 	TAILQ_INSERT_TAIL(&conn.active_r2t_tasks, &primary, link);
+	primary.is_r2t_active = true;
 
 	/* First subtask which failed. */
 	task.scsi.length = 4096;
@@ -413,6 +414,7 @@ process_non_read_task_completion_test(void)
 	primary.scsi.status = SPDK_SCSI_STATUS_GOOD;
 	primary.rsp_scsi_status = SPDK_SCSI_STATUS_GOOD;
 	TAILQ_INSERT_TAIL(&conn.active_r2t_tasks, &primary, link);
+	primary.is_r2t_active = true;
 
 	process_non_read_task_completion(&conn, &primary, &primary);
 	CU_ASSERT(TAILQ_EMPTY(&conn.active_r2t_tasks));
