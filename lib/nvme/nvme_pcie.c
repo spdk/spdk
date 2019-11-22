@@ -1807,6 +1807,78 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 }
 
 /**
+ * Build an SGL describing a physically contiguous payload buffer.
+ *
+ * This is more efficient than using PRP because large buffers can be
+ * described this way.
+ */
+static int
+nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+		struct nvme_tracker *tr)
+{
+	void *virt_addr;
+	uint64_t phys_addr, mapping_length;
+	uint32_t length;
+	struct spdk_nvme_sgl_descriptor *sgl;
+	uint32_t nseg = 0;
+
+	assert(req->payload_size != 0);
+	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
+
+	sgl = tr->u.sgl;
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
+	req->cmd.dptr.sgl1.unkeyed.subtype = 0;
+
+	length = req->payload_size;
+	virt_addr = req->payload.contig_or_cb_arg + req->payload_offset;
+
+	while (length > 0) {
+		if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -EFAULT;
+		}
+
+		phys_addr = spdk_vtophys(virt_addr, &mapping_length);
+		if (phys_addr == SPDK_VTOPHYS_ERROR) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -EFAULT;
+		}
+
+		mapping_length = spdk_min(length, mapping_length);
+
+		length -= mapping_length;
+		virt_addr += mapping_length;
+
+		sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+		sgl->unkeyed.length = mapping_length;
+		sgl->address = phys_addr;
+		sgl->unkeyed.subtype = 0;
+
+		sgl++;
+		nseg++;
+	}
+
+	if (nseg == 1) {
+		/*
+		 * The whole transfer can be described by a single SGL descriptor.
+		 *  Use the special case described by the spec where SGL1's type is Data Block.
+		 *  This means the SGL in the tracker is not used at all, so copy the first (and only)
+		 *  SGL element into SGL1.
+		 */
+		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+		req->cmd.dptr.sgl1.address = tr->u.sgl[0].address;
+		req->cmd.dptr.sgl1.unkeyed.length = tr->u.sgl[0].unkeyed.length;
+	} else {
+		/* For now we can only support 1 SGL segment in NVMe controller */
+		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
+		req->cmd.dptr.sgl1.address = tr->prp_sgl_bus_addr;
+		req->cmd.dptr.sgl1.unkeyed.length = nseg * sizeof(struct spdk_nvme_sgl_descriptor);
+	}
+
+	return 0;
+}
+
+/**
  * Build SGL list describing scattered payload buffer.
  */
 static int
@@ -1992,7 +2064,11 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 		/* Null payload - leave PRP fields untouched */
 		rc = 0;
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
-		rc = nvme_pcie_qpair_build_contig_request(qpair, req, tr);
+		if (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) {
+			rc = nvme_pcie_qpair_build_contig_hw_sgl_request(qpair, req, tr);
+		} else {
+			rc = nvme_pcie_qpair_build_contig_request(qpair, req, tr);
+		}
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL) {
 		if (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) {
 			rc = nvme_pcie_qpair_build_hw_sgl_request(qpair, req, tr);
