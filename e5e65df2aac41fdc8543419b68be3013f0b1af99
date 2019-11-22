@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fce4a7c_b1f7c9be",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-22T20:22:28Z",
+      "side": 1,
+      "message": "nvmf_schedule_spdk_thread can actually get called at any time and from any core, so it isn\u0027t thread safe to access nvmf_reactor-\u003ethreads here. The way the actual SPDK event framework solves this is by using internal rings for messages between reactors, but a simple solution would be to put a mutex inside each nvmf_reactor and acquire the mutex here and inside nvmf_reactor_run.\n\nNote that it is safe to access g_reactors because that is unchanging after initial start up. But it\u0027s not necessarily safe to access g_next_reactor here either.",
+      "revId": "e5e65df2aac41fdc8543419b68be3013f0b1af99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
