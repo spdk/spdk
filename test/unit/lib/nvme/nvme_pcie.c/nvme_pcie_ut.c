@@ -35,6 +35,7 @@
 
 #include "spdk_cunit.h"
 
+#define UNIT_TEST_NO_VTOPHYS
 #include "common/lib/test_env.c"
 
 #include "nvme/nvme_pcie.c"
@@ -228,24 +229,6 @@ nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_reg
 
 uint64_t
 nvme_get_quirks(const struct spdk_pci_id *id)
-{
-	abort();
-}
-
-bool
-nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl)
-{
-	abort();
-}
-
-void
-spdk_nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd)
-{
-	abort();
-}
-
-void
-spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl)
 {
 	abort();
 }
@@ -570,97 +553,30 @@ test_hw_sgl_req(void)
 	nvme_free_request(req);
 }
 
-static void test_nvme_qpair_abort_reqs(void)
-{
-	struct spdk_nvme_qpair		qpair = {};
-	struct nvme_request		*req = NULL;
-	struct spdk_nvme_ctrlr		ctrlr = {};
-	struct nvme_tracker		*tr_temp;
-
-	prepare_submit_request_test(&qpair, &ctrlr);
-
-	tr_temp = TAILQ_FIRST(&qpair.free_tr);
-	SPDK_CU_ASSERT_FATAL(tr_temp != NULL);
-	TAILQ_REMOVE(&qpair.free_tr, tr_temp, tq_list);
-	tr_temp->req = nvme_allocate_request_null(expected_failure_callback, NULL);
-	SPDK_CU_ASSERT_FATAL(tr_temp->req != NULL);
-	tr_temp->req->cmd.cid = tr_temp->cid;
-
-	TAILQ_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, tq_list);
-	nvme_qpair_abort_reqs(&qpair, true);
-	CU_ASSERT_TRUE(TAILQ_EMPTY(&qpair.outstanding_tr));
-
-	req = nvme_allocate_request_null(expected_failure_callback, NULL);
-	SPDK_CU_ASSERT_FATAL(req != NULL);
-
-	STAILQ_INSERT_HEAD(&qpair.queued_req, req, stailq);
-	nvme_qpair_abort_reqs(&qpair, true);
-	CU_ASSERT_TRUE(STAILQ_EMPTY(&qpair.queued_req));
-
-	cleanup_submit_request_test(&qpair);
-}
-
-static void
-test_nvme_qpair_process_completions_limit(void)
-{
-	struct spdk_nvme_qpair		qpair = {};
-	struct spdk_nvme_ctrlr		ctrlr = {};
-
-	prepare_submit_request_test(&qpair, &ctrlr);
-	qpair.is_enabled = true;
-
-	/* Insert 4 entries into the completion queue */
-	CU_ASSERT(qpair.cq_head == 0);
-	ut_insert_cq_entry(&qpair, 0);
-	ut_insert_cq_entry(&qpair, 1);
-	ut_insert_cq_entry(&qpair, 2);
-	ut_insert_cq_entry(&qpair, 3);
-
-	/* This should only process 2 completions, and 2 should be left in the queue */
-	spdk_nvme_qpair_process_completions(&qpair, 2);
-	CU_ASSERT(qpair.cq_head == 2);
-
-	/* This should only process 1 completion, and 1 should be left in the queue */
-	spdk_nvme_qpair_process_completions(&qpair, 1);
-	CU_ASSERT(qpair.cq_head == 3);
-
-	/* This should process the remaining completion */
-	spdk_nvme_qpair_process_completions(&qpair, 5);
-	CU_ASSERT(qpair.cq_head == 4);
-
-	cleanup_submit_request_test(&qpair);
-}
-
-static void test_nvme_qpair_destroy(void)
-{
-	struct spdk_nvme_qpair		qpair = {};
-	struct spdk_nvme_ctrlr		ctrlr = {};
-	struct nvme_tracker		*tr_temp;
-
-	memset(&ctrlr, 0, sizeof(ctrlr));
-	TAILQ_INIT(&ctrlr.free_io_qpairs);
-	TAILQ_INIT(&ctrlr.active_io_qpairs);
-	TAILQ_INIT(&ctrlr.active_procs);
-
-	nvme_qpair_init(&qpair, 1, 128, &ctrlr);
-	nvme_qpair_destroy(&qpair);
-
-
-	nvme_qpair_init(&qpair, 0, 128, &ctrlr);
-	tr_temp = TAILQ_FIRST(&qpair.free_tr);
-	SPDK_CU_ASSERT_FATAL(tr_temp != NULL);
-	TAILQ_REMOVE(&qpair.free_tr, tr_temp, tq_list);
-	tr_temp->req = nvme_allocate_request_null(expected_failure_callback, NULL);
-	SPDK_CU_ASSERT_FATAL(tr_temp->req != NULL);
-
-	tr_temp->req->cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
-	tr_temp->req->cmd.cid = tr_temp->cid;
-	TAILQ_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, tq_list);
-
-	nvme_qpair_destroy(&qpair);
-	CU_ASSERT(TAILQ_EMPTY(&qpair.outstanding_tr));
-}
 #endif
+
+static uint64_t g_vtophys_size = 0;
+
+DEFINE_RETURN_MOCK(spdk_vtophys, uint64_t);
+uint64_t
+spdk_vtophys(void *buf, uint64_t *size)
+{
+	if (size) {
+		*size = g_vtophys_size;
+	}
+
+	HANDLE_RETURN_MOCK(spdk_vtophys);
+
+	return (uintptr_t)buf;
+}
+
+DEFINE_STUB(spdk_nvme_ctrlr_get_process, struct spdk_nvme_ctrlr_process *,
+	    (struct spdk_nvme_ctrlr *ctrlr, pid_t pid), NULL);
+DEFINE_STUB(nvme_completion_is_retry, bool, (const struct spdk_nvme_cpl *cpl), false);
+DEFINE_STUB_V(spdk_nvme_qpair_print_command, (struct spdk_nvme_qpair *qpair,
+		struct spdk_nvme_cmd *cmd));
+DEFINE_STUB_V(spdk_nvme_qpair_print_completion, (struct spdk_nvme_qpair *qpair,
+		struct spdk_nvme_cpl *cpl));
 
 static void
 prp_list_prep(struct nvme_tracker *tr, struct nvme_request *req, uint32_t *prp_index)
@@ -799,16 +715,75 @@ test_prp_list_append(void)
 					    (NVME_MAX_PRP_LIST_ENTRIES + 1) * 0x1000, 0x1000) == -EINVAL);
 }
 
-static void test_shadow_doorbell_update(void)
+static void
+test_build_contig_hw_sgl_request(void)
 {
-	bool ret;
+	struct spdk_nvme_qpair qpair = {};
+	struct nvme_request req = {};
+	struct nvme_tracker tr = {};
+	int rc;
 
-	/* nvme_pcie_qpair_need_event(uint16_t event_idx, uint16_t new_idx, uint16_t old) */
-	ret = nvme_pcie_qpair_need_event(10, 15, 14);
-	CU_ASSERT(ret == false);
+	/* Test 1: Payload covered by a single mapping */
+	req.payload_size = 100;
+	req.payload = NVME_PAYLOAD_CONTIG(0, 0);
+	g_vtophys_size = 100;
+	MOCK_SET(spdk_vtophys, 0xDEADBEEF);
 
-	ret = nvme_pcie_qpair_need_event(14, 15, 14);
-	CU_ASSERT(ret == true);
+	rc = nvme_pcie_qpair_build_contig_hw_sgl_request(&qpair, &req, &tr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0xDEADBEEF);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == 100);
+
+	MOCK_CLEAR(spdk_vtophys);
+	g_vtophys_size = 0;
+	memset(&qpair, 0, sizeof(qpair));
+	memset(&req, 0, sizeof(req));
+	memset(&tr, 0, sizeof(tr));
+
+	/* Test 2: Payload covered by a single mapping, but request is at an offset */
+	req.payload_size = 100;
+	req.payload_offset = 50;
+	req.payload = NVME_PAYLOAD_CONTIG(0, 0);
+	g_vtophys_size = 1000;
+	MOCK_SET(spdk_vtophys, 0xDEADBEEF);
+
+	rc = nvme_pcie_qpair_build_contig_hw_sgl_request(&qpair, &req, &tr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0xDEADBEEF);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == 100);
+
+	MOCK_CLEAR(spdk_vtophys);
+	g_vtophys_size = 0;
+	memset(&qpair, 0, sizeof(qpair));
+	memset(&req, 0, sizeof(req));
+	memset(&tr, 0, sizeof(tr));
+
+	/* Test 3: Payload spans two mappings */
+	req.payload_size = 100;
+	req.payload = NVME_PAYLOAD_CONTIG(0, 0);
+	g_vtophys_size = 60;
+	tr.prp_sgl_bus_addr = 0xFF0FF;
+	MOCK_SET(spdk_vtophys, 0xDEADBEEF);
+
+	rc = nvme_pcie_qpair_build_contig_hw_sgl_request(&qpair, &req, &tr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == tr.prp_sgl_bus_addr);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == 2 * sizeof(struct spdk_nvme_sgl_descriptor));
+	CU_ASSERT(tr.u.sgl[0].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(tr.u.sgl[0].unkeyed.length = 60);
+	CU_ASSERT(tr.u.sgl[0].address = 0xDEADBEEF);
+	CU_ASSERT(tr.u.sgl[1].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(tr.u.sgl[1].unkeyed.length = 40);
+	CU_ASSERT(tr.u.sgl[1].address = 0xDEADBEEF);
+
+	MOCK_CLEAR(spdk_vtophys);
+	g_vtophys_size = 0;
+	memset(&qpair, 0, sizeof(qpair));
+	memset(&req, 0, sizeof(req));
+	memset(&tr, 0, sizeof(tr));
 }
 
 int main(int argc, char **argv)
@@ -826,9 +801,8 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	if (CU_add_test(suite, "prp_list_append", test_prp_list_append) == NULL
-	    || CU_add_test(suite, "shadow_doorbell_update",
-			   test_shadow_doorbell_update) == NULL) {
+	if (CU_add_test(suite, "prp_list_append", test_prp_list_append) == NULL ||
+	    CU_add_test(suite, "build_contig_hw_sgl_request", test_build_contig_hw_sgl_request) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
