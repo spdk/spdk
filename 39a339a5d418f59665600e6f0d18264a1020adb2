@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "40954de7_b0238265",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-22T10:07:35Z",
+      "side": 1,
+      "message": "If I remove blknames\u003d() and back to oryginal code there will be still SC error: \nIn scripts/setup.sh line 266:\n                        for blkname in $blknames; do\n                                       ^-------^ SC2128: Expanding an array without an index only gives the first element.\n\n\nIn scripts/setup.sh line 614:\n                        echo -e \"$bdf\\t${vendor#0x}\\t${device#0x}\\t$node\\t\\t${driver:--}\\t\\t$blknames\"\n                                                                                            ^-------^ SC2128: Expanding an array without an index only gives the first element.\n\nIn line 266 You will get list of elements and need to be iterated on it.",
+      "parentUuid": "a7c31ad5_e935b80a",
+      "range": {
+        "startLine": 267,
+        "startChar": 3,
+        "endLine": 267,
+        "endChar": 38
+      },
+      "revId": "39a339a5d418f59665600e6f0d18264a1020adb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "046dfadc_b9fc664c",
         "filename": "scripts/setup.sh",
         "patchSetId": 5
@@ -36,6 +60,24 @@
       "writtenOn": "2019-11-22T08:02:35Z",
       "side": 1,
       "message": "Same situation here, blknames is no longer an array here",
+      "revId": "39a339a5d418f59665600e6f0d18264a1020adb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b18da17f_03272aa6",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-22T10:07:35Z",
+      "side": 1,
+      "message": "the same as above",
+      "parentUuid": "046dfadc_b9fc664c",
       "revId": "39a339a5d418f59665600e6f0d18264a1020adb2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "cce92df7_3a86f17a",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-22T10:07:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2f0cf5b1_19fc9d66",
+      "range": {
+        "startLine": 128,
+        "startChar": 0,
+        "endLine": 130,
+        "endChar": 35
+      },
+      "revId": "39a339a5d418f59665600e6f0d18264a1020adb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "45f0a2f1_9f68d34c",
         "filename": "scripts/vagrant/create_vhost_vm.sh",
         "patchSetId": 5
@@ -85,6 +151,30 @@
       "revId": "39a339a5d418f59665600e6f0d18264a1020adb2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30279cc0_e91a48a9",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-22T10:07:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "45f0a2f1_9f68d34c",
+      "range": {
+        "startLine": 75,
+        "startChar": 8,
+        "endLine": 75,
+        "endChar": 27
+      },
+      "revId": "39a339a5d418f59665600e6f0d18264a1020adb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
