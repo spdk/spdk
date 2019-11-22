@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1929f4c8_d50aff09",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-22T09:18:02Z",
+      "side": 1,
+      "message": "This patch is for write handling.\nCould we do this name change in the last patch?",
+      "revId": "0443eaba01cdf670673dfaeb944ec49704bf5045",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55f3cae2_3a29b140",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-22T09:18:02Z",
+      "side": 1,
+      "message": "Could we do this refactoring in the last patch?",
+      "revId": "0443eaba01cdf670673dfaeb944ec49704bf5045",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0c1eadc6_151fab9b",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-22T09:18:02Z",
+      "side": 1,
+      "message": "Please remove bdev_node in the last patch.",
+      "revId": "0443eaba01cdf670673dfaeb944ec49704bf5045",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
