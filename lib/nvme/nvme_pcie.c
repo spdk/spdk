@@ -1815,6 +1815,25 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 }
 
 /**
+ * Build an SGL describing a physically contiguous payload buffer.
+ *
+ * This is more efficient than using PRP because large buffers can be
+ * described this way.
+ */
+static int
+nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+		struct nvme_tracker *tr)
+{
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
+	req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+	req->cmd.dptr.sgl1.unkeyed.subtype = 0;
+	req->cmd.dptr.sgl1.address = (uint64_t)(req->payload.contig_or_cb_arg + req->payload_offset);
+	req->cmd.dptr.sgl1.unkeyed.length = req->payload_size;
+
+	return 0;
+}
+
+/**
  * Build SGL list describing scattered payload buffer.
  */
 static int
@@ -2000,7 +2019,11 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 		/* Null payload - leave PRP fields untouched */
 		rc = 0;
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
-		rc = nvme_pcie_qpair_build_contig_request(qpair, req, tr);
+		if (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) {
+			rc = nvme_pcie_qpair_build_contig_hw_sgl_request(qpair, req, tr);
+		} else {
+			rc = nvme_pcie_qpair_build_contig_request(qpair, req, tr);
+		}
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL) {
 		if (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) {
 			rc = nvme_pcie_qpair_build_hw_sgl_request(qpair, req, tr);
