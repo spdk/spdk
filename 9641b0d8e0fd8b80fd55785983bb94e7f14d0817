@@ -16,6 +16,24 @@
       "revId": "9641b0d8e0fd8b80fd55785983bb94e7f14d0817",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2746a211_91cb7ad7",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1123,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-22T02:02:36Z",
+      "side": 1,
+      "message": "Thank you for very critical comment.\n\nI thought we might be able to use ITT (Initiator Task Tag) as reference count but that was wrong.\nWe can\u0027t rely on ITT because it is managed by initiator.\n\nReference count will be more intuitive and accurate.\nI updated the patch accordingly.",
+      "parentUuid": "59d78480_73923aa0",
+      "revId": "9641b0d8e0fd8b80fd55785983bb94e7f14d0817",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
