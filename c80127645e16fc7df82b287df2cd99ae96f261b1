@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "756d103c_beaeadcc",
+        "filename": "test/unit/lib/nvmf/tcp.c/tcp_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-22T09:10:36Z",
+      "side": 1,
+      "message": "transport and poll group can be initialized in the beginning, you don\u0027t need to call spdk_nvmf_tcp_create() to get a *real* transport.",
+      "range": {
+        "startLine": 626,
+        "startChar": 1,
+        "endLine": 642,
+        "endChar": 30
+      },
+      "revId": "c80127645e16fc7df82b287df2cd99ae96f261b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
