@@ -34,6 +34,8 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_cunit.h"
+
+#define UNIT_TEST_NO_VTOPHYS
 #include "common/lib/test_env.c"
 
 #include "nvme/nvme_pcie.c"
@@ -90,6 +92,21 @@ spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, voi
 	return 0;
 }
 
+static uint64_t g_vtophys_size = 0;
+
+DEFINE_RETURN_MOCK(spdk_vtophys, uint64_t);
+uint64_t
+spdk_vtophys(void *buf, uint64_t *size)
+{
+	if (size) {
+		*size = g_vtophys_size;
+	}
+
+	HANDLE_RETURN_MOCK(spdk_vtophys);
+
+	return (uintptr_t)buf;
+}
+
 DEFINE_STUB(spdk_pci_device_get_addr, struct spdk_pci_addr, (struct spdk_pci_device *dev), {});
 DEFINE_STUB(nvme_ctrlr_add_process, int, (struct spdk_nvme_ctrlr *ctrlr, void *devhandle), 0);
 DEFINE_STUB(nvme_ctrlr_probe, int, (const struct spdk_nvme_transport_id *trid,
@@ -101,6 +118,13 @@ DEFINE_STUB(spdk_nvme_get_ctrlr_by_trid_unsafe, struct spdk_nvme_ctrlr *,
 	    (const struct spdk_nvme_transport_id *trid), NULL);
 DEFINE_STUB(spdk_nvme_ctrlr_get_regs_csts, union spdk_nvme_csts_register,
 	    (struct spdk_nvme_ctrlr *ctrlr), {});
+DEFINE_STUB(spdk_nvme_ctrlr_get_process, struct spdk_nvme_ctrlr_process *,
+	    (struct spdk_nvme_ctrlr *ctrlr, pid_t pid), NULL);
+DEFINE_STUB(nvme_completion_is_retry, bool, (const struct spdk_nvme_cpl *cpl), false);
+DEFINE_STUB_V(spdk_nvme_qpair_print_command, (struct spdk_nvme_qpair *qpair,
+		struct spdk_nvme_cmd *cmd));
+DEFINE_STUB_V(spdk_nvme_qpair_print_completion, (struct spdk_nvme_qpair *qpair,
+		struct spdk_nvme_cpl *cpl));
 
 static void
 prp_list_prep(struct nvme_tracker *tr, struct nvme_request *req, uint32_t *prp_index)
@@ -349,6 +373,77 @@ static void test_shadow_doorbell_update(void)
 	CU_ASSERT(ret == true);
 }
 
+static void
+test_build_contig_hw_sgl_request(void)
+{
+	struct spdk_nvme_qpair qpair = {};
+	struct nvme_request req = {};
+	struct nvme_tracker tr = {};
+	int rc;
+
+	/* Test 1: Payload covered by a single mapping */
+	req.payload_size = 100;
+	req.payload = NVME_PAYLOAD_CONTIG(0, 0);
+	g_vtophys_size = 100;
+	MOCK_SET(spdk_vtophys, 0xDEADBEEF);
+
+	rc = nvme_pcie_qpair_build_contig_hw_sgl_request(&qpair, &req, &tr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0xDEADBEEF);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == 100);
+
+	MOCK_CLEAR(spdk_vtophys);
+	g_vtophys_size = 0;
+	memset(&qpair, 0, sizeof(qpair));
+	memset(&req, 0, sizeof(req));
+	memset(&tr, 0, sizeof(tr));
+
+	/* Test 2: Payload covered by a single mapping, but request is at an offset */
+	req.payload_size = 100;
+	req.payload_offset = 50;
+	req.payload = NVME_PAYLOAD_CONTIG(0, 0);
+	g_vtophys_size = 1000;
+	MOCK_SET(spdk_vtophys, 0xDEADBEEF);
+
+	rc = nvme_pcie_qpair_build_contig_hw_sgl_request(&qpair, &req, &tr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == 0xDEADBEEF);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == 100);
+
+	MOCK_CLEAR(spdk_vtophys);
+	g_vtophys_size = 0;
+	memset(&qpair, 0, sizeof(qpair));
+	memset(&req, 0, sizeof(req));
+	memset(&tr, 0, sizeof(tr));
+
+	/* Test 3: Payload spans two mappings */
+	req.payload_size = 100;
+	req.payload = NVME_PAYLOAD_CONTIG(0, 0);
+	g_vtophys_size = 60;
+	tr.prp_sgl_bus_addr = 0xFF0FF;
+	MOCK_SET(spdk_vtophys, 0xDEADBEEF);
+
+	rc = nvme_pcie_qpair_build_contig_hw_sgl_request(&qpair, &req, &tr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT);
+	CU_ASSERT(req.cmd.dptr.sgl1.address == tr.prp_sgl_bus_addr);
+	CU_ASSERT(req.cmd.dptr.sgl1.unkeyed.length == 2 * sizeof(struct spdk_nvme_sgl_descriptor));
+	CU_ASSERT(tr.u.sgl[0].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(tr.u.sgl[0].unkeyed.length = 60);
+	CU_ASSERT(tr.u.sgl[0].address = 0xDEADBEEF);
+	CU_ASSERT(tr.u.sgl[1].unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(tr.u.sgl[1].unkeyed.length = 40);
+	CU_ASSERT(tr.u.sgl[1].address = 0xDEADBEEF);
+
+	MOCK_CLEAR(spdk_vtophys);
+	g_vtophys_size = 0;
+	memset(&qpair, 0, sizeof(qpair));
+	memset(&req, 0, sizeof(req));
+	memset(&tr, 0, sizeof(tr));
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -364,10 +459,10 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	if (CU_add_test(suite, "prp_list_append", test_prp_list_append) == NULL
-	    || CU_add_test(suite, "nvme_pcie_hotplug_monitor", test_nvme_pcie_hotplug_monitor) == NULL
-	    || CU_add_test(suite, "shadow_doorbell_update",
-			   test_shadow_doorbell_update) == NULL) {
+	if (CU_add_test(suite, "prp_list_append", test_prp_list_append) == NULL ||
+	    CU_add_test(suite, "nvme_pcie_hotplug_monitor", test_nvme_pcie_hotplug_monitor) == NULL ||
+	    CU_add_test(suite, "shadow_doorbell_update", test_shadow_doorbell_update) == NULL ||
+	    CU_add_test(suite, "build_contig_hw_sgl_request", test_build_contig_hw_sgl_request) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
