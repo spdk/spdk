@@ -4487,6 +4487,8 @@ blob_insert_cluster_msg(void)
 	struct spdk_blob_opts opts;
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
+	uint64_t new_cluster = 0;
+	uint32_t cluster_num = 3;
 
 	dev = init_dev();
 
@@ -4517,13 +4519,18 @@ blob_insert_cluster_msg(void)
 
 	CU_ASSERT(blob->active.num_clusters == 4);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 4);
-	CU_ASSERT(blob->active.clusters[1] == 0);
+	CU_ASSERT(blob->active.clusters[cluster_num] == 0);
 
-	_spdk_bs_claim_cluster(bs, 0xF);
-	_spdk_blob_insert_cluster_on_md_thread(blob, 1, 0xF, blob_op_complete, NULL);
+	/* Specify cluster_num to allocate and new_cluster will be returned to insert on md_thread.
+	 * This is to simulate behaviour when cluster is allocated after blob creation.
+	 * Such as _spdk_bs_allocate_and_copy_cluster(). */
+	_spdk_bs_allocate_cluster(blob, cluster_num, &new_cluster, false);
+	CU_ASSERT(blob->active.clusters[cluster_num] == 0);
+
+	_spdk_blob_insert_cluster_on_md_thread(blob, cluster_num, new_cluster, blob_op_complete, NULL);
 	poll_threads();
 
-	CU_ASSERT(blob->active.clusters[1] != 0);
+	CU_ASSERT(blob->active.clusters[cluster_num] != 0);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -4552,7 +4559,7 @@ blob_insert_cluster_msg(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 
-	CU_ASSERT(blob->active.clusters[1] != 0);
+	CU_ASSERT(blob->active.clusters[cluster_num] != 0);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
