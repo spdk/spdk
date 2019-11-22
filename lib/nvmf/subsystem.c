@@ -2338,7 +2338,7 @@ nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
 	}
 
 	/* NVMeoF uses Extended Data Structure */
-	if ((cmd->cdw11 & 0x00000001u) == 0) {
+	if (!cmd->cdw11.resv_report.eds) {
 		SPDK_ERRLOG("NVMeoF uses extended controller data structure, "
 			    "please set EDS bit in cdw11 and try again\n");
 		status = SPDK_NVME_SC_HOSTID_INCONSISTENT_FORMAT;

@@ -910,7 +910,7 @@ test_set_get_features(void)
 
 	/* Set SPDK_NVME_FEAT_HOST_RESERVE_PERSIST feature */
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
-	cmd.nvme_cmd.cdw11 = 0x1u;
+	cmd.nvme_cmd.cdw11.raw = 0x1u;
 	ns[0].ptpl_file = "testcfg";
 	rc = spdk_nvmf_ctrlr_set_features_reservation_persistence(&req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
