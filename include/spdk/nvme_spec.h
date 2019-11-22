@@ -462,6 +462,20 @@ enum spdk_nvme_cc_ams {
 	SPDK_NVME_CC_AMS_VS		= 0x7,	/**< vendor specific */
 };
 
+union spdk_nvme_critical_warning_state {
+	uint8_t		raw;
+
+	struct {
+		uint8_t	available_spare		: 1;
+		uint8_t	temperature		: 1;
+		uint8_t	device_reliability	: 1;
+		uint8_t	read_only		: 1;
+		uint8_t	volatile_memory_backup	: 1;
+		uint8_t	reserved		: 3;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_critical_warning_state) == 1, "Incorrect size");
+
 union spdk_nvme_cmd_cdw10 {
 	uint32_t raw;
 	struct {
@@ -564,6 +578,201 @@ union spdk_nvme_cmd_cdw10 {
 	} set_features;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmd_cdw10) == 4, "Incorrect size");
+
+union spdk_nvme_cmd_cdw11 {
+	uint32_t raw;
+
+	struct {
+		/* Physically Contiguous */
+		uint32_t pc       : 1;
+		/* Queue Priority */
+		uint32_t qprio    : 2;
+		uint32_t reserved : 13;
+		/* Completion Queue Identifier */
+		uint32_t cqid     : 16;
+	} create_io_sq;
+
+	struct {
+		/* Physically Contiguous */
+		uint32_t pc       : 1;
+		/* Interrupts Enabled */
+		uint32_t ien      : 1;
+		uint32_t reserved : 14;
+		/* Interrupt Vector */
+		uint32_t iv       : 16;
+	} create_io_cq;
+
+	struct {
+		/* Number of Dwords */
+		uint32_t numdu    : 16;
+		/* Log Specific Identifier */
+		uint32_t lsid     : 16;
+	} get_log_page;
+
+	struct {
+		/* Extended Data Structure */
+		uint32_t eds      : 1;
+		uint32_t reserved : 31;
+	} resv_report;
+
+	struct {
+		/** Arbitration Burst */
+		uint32_t ab : 3;
+
+		uint32_t reserved : 5;
+
+		/** Low Priority Weight */
+		uint32_t lpw : 8;
+
+		/** Medium Priority Weight */
+		uint32_t mpw : 8;
+
+		/** High Priority Weight */
+		uint32_t hpw : 8;
+	} arbitration;
+
+	struct {
+		/** Power State */
+		uint32_t ps : 5;
+
+		/** Workload Hint */
+		uint32_t wh : 3;
+
+		uint32_t reserved : 24;
+	} power_management;
+
+	struct {
+		/** Number of LBA Ranges */
+		uint32_t num : 6;
+
+		uint32_t reserved : 26;
+	} lba_range_type;
+
+	struct {
+		/** Temperature Threshold */
+		uint32_t tmpth : 16;
+
+		/** Threshold Temperature Select */
+		uint32_t tmpsel : 4;
+
+		/** Threshold Type Select */
+		uint32_t thsel : 2;
+
+		uint32_t reserved : 10;
+	} temperature_threshold;
+
+	struct {
+		/** Time Limited Error Recovery */
+		uint32_t tler : 16;
+
+		/** Deallocated or Unwritten Logical Block Error Enable */
+		uint32_t dulbe : 1;
+
+		uint32_t reserved : 15;
+	} error_recovery;
+
+	struct {
+		/** Volatile Write Cache Enable */
+		uint32_t wce : 1;
+
+		uint32_t reserved : 31;
+	} volatile_write_cache;
+
+	struct {
+		/** Number of I/O Submission Queues Requested */
+		uint32_t nsqr : 16;
+
+		/** Number of I/O Completion Queues Requested */
+		uint32_t ncqr : 16;
+	} number_of_queues;
+
+	struct {
+		/** Aggregation Threshold */
+		uint32_t thr : 8;
+
+		/** Aggregration time */
+		uint32_t time : 8;
+
+		uint32_t reserved : 16;
+	} interrupt_coalescing;
+
+	struct {
+		/** Interrupt Vector */
+		uint32_t iv : 16;
+
+		/** Coalescing Disable */
+		uint32_t cd : 1;
+
+		uint32_t reserved : 15;
+	} interrupt_vector_configuration;
+
+	struct {
+		/** Disable Normal */
+		uint32_t dn : 1;
+
+		uint32_t reserved : 31;
+	} write_atomicity;
+
+	struct {
+		union spdk_nvme_critical_warning_state crit_warn;
+		uint32_t ns_attr_notice		: 1;
+		uint32_t fw_activation_notice	: 1;
+		uint32_t telemetry_log_notice	: 1;
+		uint32_t reserved		: 21;
+	} async_event_configuration;
+
+	struct {
+		/** Autonomous Power State Transition Enable */
+		uint32_t apste : 1;
+
+		uint32_t reserved : 31;
+	} autonomous_power_state_transition;
+
+	struct {
+		/** Enable Host Memory */
+		uint32_t ehm : 1;
+
+		/** Memory Return */
+		uint32_t mr : 1;
+
+		uint32_t reserved : 30;
+	} host_mem_buffer;
+
+	struct {
+		/** Keep Alive Timeout */
+		uint32_t kato : 32;
+	} keep_alive_timer;
+
+	struct {
+		/** Thermal Management Temperature 2 */
+		uint32_t tmt2 : 16;
+
+		/** Thermal Management Temperature 1 */
+		uint32_t tmt1 : 16;
+	} host_controlled_thermal_management;
+
+	struct {
+		/** Non-Operational Power State Permissive Mode Enable */
+		uint32_t noppme : 1;
+
+		uint32_t reserved : 31;
+	} non_operational_power_state_config;
+
+	struct {
+		/** Pre-boot Software Load Count */
+		uint32_t pbslc : 8;
+
+		uint32_t reserved : 24;
+	} software_progress_marker;
+
+	struct {
+		/** Enable Extended Host Identifier */
+		uint32_t exhid : 1;
+
+		uint32_t reserved : 31;
+	} host_identifier;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmd_cdw11) == 4, "Incorrect size");
 
 struct spdk_nvme_cmd {
 	/* dword 0 */
@@ -1939,20 +2148,6 @@ struct spdk_nvme_error_information_entry {
 	uint8_t			reserved42[22];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_error_information_entry) == 64, "Incorrect size");
-
-union spdk_nvme_critical_warning_state {
-	uint8_t		raw;
-
-	struct {
-		uint8_t	available_spare		: 1;
-		uint8_t	temperature		: 1;
-		uint8_t	device_reliability	: 1;
-		uint8_t	read_only		: 1;
-		uint8_t	volatile_memory_backup	: 1;
-		uint8_t	reserved		: 3;
-	} bits;
-};
-SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_critical_warning_state) == 1, "Incorrect size");
 
 /**
  * SMART / health information page (\ref SPDK_NVME_LOG_HEALTH_INFORMATION)
