@@ -22,6 +22,30 @@
       "revId": "0e26765443baf7435e9a24dd46c0cedfc8b8dad2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6556c476_3d3d4778",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-22T14:48:52Z",
+      "side": 1,
+      "message": "I\u0027m not quite sure I like the idea of complicating this script. Its main purpose is for 1) users/developers to install all necessary packages and 2) possibly DevOps folks to check the dependencies and understand what is required for each component in SPDK.\n\nThis is why this script is as simple as needed, documented well and contains snippets ready for copy pasting.\n\nCommon courtesy is not to remove packages from users system, as that is not expected behavior of script for _installing_ dependencies. Thus adding --allowerasing by default is not the best approach.\n\nMeanwhile providing additional flags complicates the usage a little bit, more intrusive change would be to pollute each line with \u0027non copy pastable\u0027 parts. Especially since probably all install lines would require the proposed PKG_MGR_OPTS variable.\n\nUnless there is way to temporarily set such default (haven\u0027t found one yet), I think changing the CI machines upgrade strategy would be better than changing this script like proposed.",
+      "parentUuid": "35298042_1eb5ea17",
+      "range": {
+        "startLine": 57,
+        "startChar": 16,
+        "endLine": 57,
+        "endChar": 30
+      },
+      "revId": "0e26765443baf7435e9a24dd46c0cedfc8b8dad2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
