@@ -850,9 +850,9 @@ spdk_nvmf_ctrlr_set_features_arbitration(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Arbitration (cdw11 = 0x%0x)\n", cmd->cdw11);
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Arbitration (cdw11 = 0x%0x)\n", cmd->cdw11.raw);
 
-	ctrlr->feat.arbitration.raw = cmd->cdw11;
+	ctrlr->feat.arbitration.raw = cmd->cdw11.arbitration.raw;
 	ctrlr->feat.arbitration.bits.reserved = 0;
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -861,23 +861,21 @@ spdk_nvmf_ctrlr_set_features_arbitration(struct spdk_nvmf_request *req)
 static int
 spdk_nvmf_ctrlr_set_features_power_management(struct spdk_nvmf_request *req)
 {
-	union spdk_nvme_feat_power_management opts;
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Power Management (cdw11 = 0x%0x)\n", cmd->cdw11);
-	opts.raw = cmd->cdw11;
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Power Management (cdw11 = 0x%0x)\n", cmd->cdw11.raw);
 
 	/* Only PS = 0 is allowed, since we report NPSS = 0 */
-	if (opts.bits.ps != 0) {
-		SPDK_ERRLOG("Invalid power state %u\n", opts.bits.ps);
+	if (cmd->cdw11.power_management.bits.ps != 0) {
+		SPDK_ERRLOG("Invalid power state %u\n", cmd->cdw11.power_management.bits.ps);
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	ctrlr->feat.power_management.raw = cmd->cdw11;
+	ctrlr->feat.power_management.raw = cmd->cdw11.power_management.raw;
 	ctrlr->feat.power_management.bits.reserved = 0;
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -914,14 +912,13 @@ temp_threshold_opts_valid(const union spdk_nvme_feat_temperature_threshold *opts
 static int
 spdk_nvmf_ctrlr_set_features_temperature_threshold(struct spdk_nvmf_request *req)
 {
-	union spdk_nvme_feat_temperature_threshold opts;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Temperature Threshold (cdw11 = 0x%0x)\n", cmd->cdw11);
-	opts.raw = cmd->cdw11;
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Temperature Threshold (cdw11 = 0x%0x)\n",
+		      cmd->cdw11.raw);
 
-	if (!temp_threshold_opts_valid(&opts)) {
+	if (!temp_threshold_opts_valid(&cmd->cdw11.temp_threshold)) {
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -934,14 +931,13 @@ spdk_nvmf_ctrlr_set_features_temperature_threshold(struct spdk_nvmf_request *req
 static int
 spdk_nvmf_ctrlr_get_features_temperature_threshold(struct spdk_nvmf_request *req)
 {
-	union spdk_nvme_feat_temperature_threshold opts;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Temperature Threshold (cdw11 = 0x%0x)\n", cmd->cdw11);
-	opts.raw = cmd->cdw11;
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Temperature Threshold (cdw11 = 0x%0x)\n",
+		      cmd->cdw11.raw);
 
-	if (!temp_threshold_opts_valid(&opts)) {
+	if (!temp_threshold_opts_valid(&cmd->cdw11.temp_threshold)) {
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -956,15 +952,13 @@ spdk_nvmf_ctrlr_get_features_temperature_threshold(struct spdk_nvmf_request *req
 static int
 spdk_nvmf_ctrlr_set_features_error_recovery(struct spdk_nvmf_request *req)
 {
-	union spdk_nvme_feat_error_recovery opts;
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Error Recovery (cdw11 = 0x%0x)\n", cmd->cdw11);
-	opts.raw = cmd->cdw11;
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Error Recovery (cdw11 = 0x%0x)\n", cmd->cdw11.raw);
 
-	if (opts.bits.dulbe) {
+	if (cmd->cdw11.error_recovery.bits.dulbe) {
 		/*
 		 * Host is not allowed to set this bit, since we don't advertise it in
 		 * Identify Namespace.
@@ -975,7 +969,7 @@ spdk_nvmf_ctrlr_set_features_error_recovery(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	ctrlr->feat.error_recovery.raw = cmd->cdw11;
+	ctrlr->feat.error_recovery.raw = cmd->cdw11.error_recovery.raw;
 	ctrlr->feat.error_recovery.bits.reserved = 0;
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -987,9 +981,10 @@ spdk_nvmf_ctrlr_set_features_volatile_write_cache(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Volatile Write Cache (cdw11 = 0x%0x)\n", cmd->cdw11);
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Volatile Write Cache (cdw11 = 0x%0x)\n",
+		      cmd->cdw11.raw);
 
-	ctrlr->feat.volatile_write_cache.raw = cmd->cdw11;
+	ctrlr->feat.volatile_write_cache.raw = cmd->cdw11.volatile_write_cache.raw;
 	ctrlr->feat.volatile_write_cache.bits.reserved = 0;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Volatile Write Cache %s\n",
@@ -1003,9 +998,9 @@ spdk_nvmf_ctrlr_set_features_write_atomicity(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Write Atomicity (cdw11 = 0x%0x)\n", cmd->cdw11);
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Write Atomicity (cdw11 = 0x%0x)\n", cmd->cdw11.raw);
 
-	ctrlr->feat.write_atomicity.raw = cmd->cdw11;
+	ctrlr->feat.write_atomicity.raw = cmd->cdw11.write_atomicity.raw;
 	ctrlr->feat.write_atomicity.bits.reserved = 0;
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -1027,12 +1022,10 @@ spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
-	union spdk_nvme_feat_host_identifier opts;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Host Identifier\n");
 
-	opts.raw = cmd->cdw11;
-	if (!opts.bits.exhid) {
+	if (!cmd->cdw11.host_identifier.bits.exhid) {
 		/* NVMe over Fabrics requires EXHID=1 (128-bit/16-byte host ID) */
 		SPDK_ERRLOG("Get Features - Host Identifier with EXHID=0 not allowed\n");
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -1090,7 +1083,7 @@ spdk_nvmf_ctrlr_set_features_reservation_notification_mask(struct spdk_nvmf_requ
 	if (cmd->nsid == 0xffffffffu) {
 		for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
 		     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
-			ns->mask = cmd->cdw11;
+			ns->mask = cmd->cdw11.raw;
 		}
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -1101,7 +1094,7 @@ spdk_nvmf_ctrlr_set_features_reservation_notification_mask(struct spdk_nvmf_requ
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
-	ns->mask = cmd->cdw11;
+	ns->mask = cmd->cdw11.raw;
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -1144,7 +1137,7 @@ spdk_nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *r
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Reservation Persistence\n");
 
 	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
-	ptpl = cmd->cdw11 & 0x1u;
+	ptpl = cmd->cdw11.raw & 0x1u;
 
 	if (cmd->nsid != 0xffffffffu && ns && ns->ptpl_file) {
 		ns->ptpl_activated = ptpl;
@@ -1173,19 +1166,19 @@ spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Keep Alive Timer (%u ms)\n", cmd->cdw11);
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Keep Alive Timer (%u ms)\n", cmd->cdw11.raw);
 
 	/*
 	 * if attempts to disable keep alive by setting kato to 0h
 	 * a status value of keep alive invalid shall be returned
 	 */
-	if (cmd->cdw11 == 0) {
+	if (cmd->cdw11.keep_alive_timer.bits.kato == 0) {
 		rsp->status.sc = SPDK_NVME_SC_KEEP_ALIVE_INVALID;
-	} else if (cmd->cdw11 < MIN_KEEP_ALIVE_TIMEOUT_IN_MS) {
+	} else if (cmd->cdw11.keep_alive_timer.bits.kato < MIN_KEEP_ALIVE_TIMEOUT_IN_MS) {
 		ctrlr->feat.keep_alive_timer.bits.kato = MIN_KEEP_ALIVE_TIMEOUT_IN_MS;
 	} else {
 		/* round up to milliseconds */
-		ctrlr->feat.keep_alive_timer.bits.kato = spdk_divide_round_up(cmd->cdw11,
+		ctrlr->feat.keep_alive_timer.bits.kato = spdk_divide_round_up(cmd->cdw11.keep_alive_timer.bits.kato,
 				KAS_DEFAULT_VALUE * KAS_TIME_UNIT_IN_MS) *
 				KAS_DEFAULT_VALUE * KAS_TIME_UNIT_IN_MS;
 	}
@@ -1194,7 +1187,7 @@ spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 	 * if change the keep alive timeout value successfully
 	 * update the keep alive poller.
 	 */
-	if (cmd->cdw11 != 0) {
+	if (cmd->cdw11.keep_alive_timer.bits.kato != 0) {
 		if (ctrlr->keep_alive_poller != NULL) {
 			spdk_poller_unregister(&ctrlr->keep_alive_poller);
 		}
@@ -1216,7 +1209,7 @@ spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 	uint32_t count;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Number of Queues, cdw11 0x%x\n",
-		      req->cmd->nvme_cmd.cdw11);
+		      req->cmd->nvme_cmd.cdw11.num_of_queues.raw);
 
 	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
 	/* verify that the controller is ready to process commands */
@@ -1241,8 +1234,8 @@ spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request 
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
-		      cmd->cdw11);
-	ctrlr->feat.async_event_configuration.raw = cmd->cdw11;
+		      cmd->cdw11.async_event_cfg.raw);
+	ctrlr->feat.async_event_configuration.raw = cmd->cdw11.async_event_cfg.raw;
 	ctrlr->feat.async_event_configuration.bits.reserved = 0;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -1472,7 +1465,7 @@ spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	}
 
 	numdl = cmd->cdw10.get_log_page.numdl;
-	numdu = (cmd->cdw11) & 0xFFFFu;
+	numdu = cmd->cdw11.get_log_page.numdu;
 	len = ((numdu << 16) + numdl + (uint64_t)1) * 4;
 	if (len > req->length) {
 		SPDK_ERRLOG("Get log page: len (%" PRIu64 ") > buf size (%u)\n",

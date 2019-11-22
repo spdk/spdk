@@ -179,7 +179,7 @@ cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 		ctx->nvme_cmd.opc = admin_cmd->opcode;
 		ctx->nvme_cmd.nsid = admin_cmd->nsid;
 		ctx->nvme_cmd.cdw10.raw = admin_cmd->cdw10;
-		ctx->nvme_cmd.cdw11 = admin_cmd->cdw11;
+		ctx->nvme_cmd.cdw11.raw = admin_cmd->cdw11;
 		ctx->nvme_cmd.cdw12 = admin_cmd->cdw12;
 		ctx->nvme_cmd.cdw13 = admin_cmd->cdw13;
 		ctx->nvme_cmd.cdw14 = admin_cmd->cdw14;
