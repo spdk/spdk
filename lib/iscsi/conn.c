@@ -1235,7 +1235,7 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 static int
 iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 {
-	const int num_iovs = 32;
+	const int num_iovs = 4;
 	struct iovec iovs[num_iovs];
 	struct iovec *iov = iovs;
 	int iovcnt = 0;
