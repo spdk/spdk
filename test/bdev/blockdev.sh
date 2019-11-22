@@ -76,7 +76,13 @@ function get_io_result() {
 	fi
 	ticks_after=$(echo $io_result | jq -r '.ticks')
 
-	echo $((((io_result_after-io_result_before)*tick_rate)/(ticks_after-ticks_before)))
+	if [ $limit_type = IOPS ]; then
+		io_result_diff=$((io_result_after-io_result_before))
+	else
+		# To avoid potential overflow as throughput is in byte
+		io_result_diff=$(((io_result_after-io_result_before)/1024))
+	fi
+	echo $(((io_result_diff*tick_rate)/(ticks_after-ticks_before)))
 }
 
 function run_qos_test() {
@@ -86,6 +92,7 @@ function run_qos_test() {
 	qos_result=$(get_io_result $2)
 	if [ $2 = BANDWIDTH ]; then
 		qos_limit=$((qos_limit*1024*1024))
+		qos_result=$((qos_result*1024))
 	fi
 
 	lower_limit=$(echo "$qos_limit 0.9" | awk '{printf("%i",$1*$2)}')
