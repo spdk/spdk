@@ -344,19 +344,6 @@ _iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn, struct spdk_scsi_lun *lun)
 	struct spdk_iscsi_pdu *pdu, *tmp_pdu;
 	struct spdk_iscsi_task *iscsi_task, *tmp_iscsi_task;
 
-	TAILQ_FOREACH_SAFE(pdu, &conn->write_pdu_list, tailq, tmp_pdu) {
-		/* If connection is exited (no LUN is specified) or the PDU's LUN matches
-		 * the LUN that was removed, free this PDU immediately.  If the pdu's LUN
-		 * is NULL, then we know the datain handling code already detected the hot
-		 * removal, so we can free that PDU as well.
-		 */
-		if ((lun == NULL) ||
-		    (pdu->task && (lun == pdu->task->scsi.lun || NULL == pdu->task->scsi.lun))) {
-			TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
-			spdk_iscsi_conn_free_pdu(conn, pdu);
-		}
-	}
-
 	TAILQ_FOREACH_SAFE(pdu, &conn->snack_pdu_list, tailq, tmp_pdu) {
 		TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
 		if (pdu->task && (lun == NULL || lun == pdu->task->scsi.lun)) {
@@ -373,6 +360,25 @@ _iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn, struct spdk_scsi_lun *lun)
 				conn->data_in_cnt--;
 			}
 			spdk_iscsi_task_put(iscsi_task);
+		}
+	}
+
+	/* We have to parse conn->write_pdu_list in the end.  In spdk_iscsi_conn_free_pdu(),
+	 *  spdk_iscsi_conn_handle_queued_datain_tasks() may be called, and
+	 *  spdk_iscsi_conn_handle_queued_datain_tasks() will parse conn->queued_datain_tasks
+	 *  and may stack some PDUs to conn->write_pdu_list.  Hence when we come here, we
+	 *  have to ensure there is no associated task in conn->queued_datain_tasks.
+	 */
+	TAILQ_FOREACH_SAFE(pdu, &conn->write_pdu_list, tailq, tmp_pdu) {
+		/* If connection is exited (no LUN is specified) or the PDU's LUN matches
+		 * the LUN that was removed, free this PDU immediately.  If the pdu's LUN
+		 * is NULL, then we know the datain handling code already detected the hot
+		 * removal, so we can free that PDU as well.
+		 */
+		if ((lun == NULL) ||
+		    (pdu->task && (lun == pdu->task->scsi.lun || NULL == pdu->task->scsi.lun))) {
+			TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
+			spdk_iscsi_conn_free_pdu(conn, pdu);
 		}
 	}
 }
