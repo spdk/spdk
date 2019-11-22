@@ -4488,7 +4488,7 @@ blob_insert_cluster_msg(void)
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
 	uint64_t new_cluster = 0;
-	uint32_t cluster_num = 3;
+	uint32_t cluster_num = 1;
 
 	dev = init_dev();
 

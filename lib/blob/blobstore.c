@@ -100,6 +100,7 @@ static int
 _spdk_blob_insert_cluster(struct spdk_blob *blob, uint32_t cluster_num, uint64_t cluster)
 {
 	uint64_t *cluster_lba = &blob->active.clusters[cluster_num];
+	assert(cluster_num < blob->active.cluster_array_size);
 
 	_spdk_blob_verify_md_op(blob);
 
@@ -698,7 +699,7 @@ _spdk_blob_serialize_extent_rle(const struct spdk_blob *blob,
 	lba_count = lba_per_cluster;
 	extent_idx = 0;
 	for (i = start_cluster + 1; i < blob->active.num_clusters; i++) {
-		if ((lba + lba_count) == blob->active.clusters[i]) {
+		if ((lba + lba_count) == blob->active.clusters[i] && lba != 0) {
 			lba_count += lba_per_cluster;
 			continue;
 		} else if (lba == 0 && blob->active.clusters[i] == 0) {
