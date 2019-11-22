@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "432c2eeb_0798a45a",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-22T18:16:59Z",
+      "side": 1,
+      "message": "Previously, CONTEXT_SWITCH_MONITOR_PERIOD was in units of CPU ticks. I assume the purpose of this patch is to make the period in units of time instead so that it\u0027s consistent across different machines. Is that right?",
+      "revId": "882b54176beb60301fcc826a70d31328b3c36d56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47a0b5c5_49bb22d4",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-22T18:16:59Z",
+      "side": 1,
+      "message": "Why not just change the #define CONTEXT_SWITCH_MONITOR_PERIOD itself to be a value in units of usec? That eliminates the division and the mod operator here. All you need to do is convert that back to a tsc value at start up time by doing this:\n\n/* 1 second */\n#define CONTEXT_SWITCH_MONITOR_PERIOD 1000000\n\nif (g_framework_monitor_context_switch_enabled) {\n    period \u003d (CONTEXT_SWITCH_MONITOR_PERIOD * spdk_get_ticks_hz()) / SPDK_SEC_TO_USEC;\n}\n\nThe only tricky part is you have to think about integer overflow, which is why I wrote it the way above instead of the more intuitive way:\n\nperiod \u003d CONTEXT_SWITCH_MONITOR_PERIOD * (spdk_get_ticks_hz() / SPDK_SEC_TO_USEC);\n\nspdk_get_ticks_hz() is somewhere around 1-5 billion, so dividing it by a million (SPDK_SEC_TO_USEC) actually loses quite a bit of resolution. Whereas (CONTEXT_SWITCH_MONITOR_PERIOD * spdk_get_ticks_hz) is not going to come close to overflowing.",
+      "revId": "882b54176beb60301fcc826a70d31328b3c36d56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
