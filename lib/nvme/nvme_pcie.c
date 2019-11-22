@@ -1477,7 +1477,7 @@ nvme_pcie_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 	 * 0x2 = interrupts enabled
 	 * 0x1 = physically contiguous
 	 */
-	cmd->cdw11 = 0x1;
+	cmd->cdw11.create_io_cq.pc = 0x1;
 	cmd->dptr.prp.prp1 = pqpair->cpl_bus_addr;
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);
@@ -1502,7 +1502,10 @@ nvme_pcie_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 	cmd->cdw10.create_io_q.qid = io_que->id;
 	cmd->cdw10.create_io_q.qsize = pqpair->num_entries - 1;
 	/* 0x1 = physically contiguous */
-	cmd->cdw11 = (io_que->id << 16) | (io_que->qprio << 1) | 0x1;
+	cmd->cdw11.create_io_sq.pc = 0x1;
+	cmd->cdw11.create_io_sq.qprio = io_que->qprio;
+	cmd->cdw11.create_io_sq.cqid = io_que->id;
+
 	cmd->dptr.prp.prp1 = pqpair->cmd_bus_addr;
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);

@@ -107,7 +107,7 @@ static void verify_set_feature_cmd(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_SET_FEATURES);
 	CU_ASSERT(req->cmd.cdw10.set_features.fid == feature);
-	CU_ASSERT(req->cmd.cdw11 == feature_cdw11);
+	CU_ASSERT(req->cmd.cdw11.raw == feature_cdw11);
 	CU_ASSERT(req->cmd.cdw12 == feature_cdw12);
 }
 
@@ -115,7 +115,7 @@ static void verify_set_feature_ns_cmd(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_SET_FEATURES);
 	CU_ASSERT(req->cmd.cdw10.set_features.fid == expected_feature_cdw10);
-	CU_ASSERT(req->cmd.cdw11 == expected_feature_cdw11);
+	CU_ASSERT(req->cmd.cdw11.raw == expected_feature_cdw11);
 	CU_ASSERT(req->cmd.cdw12 == expected_feature_cdw12);
 	CU_ASSERT(req->cmd.nsid == expected_feature_ns);
 }
@@ -124,14 +124,14 @@ static void verify_get_feature_cmd(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_GET_FEATURES);
 	CU_ASSERT(req->cmd.cdw10.get_features.fid == get_feature);
-	CU_ASSERT(req->cmd.cdw11 == get_feature_cdw11);
+	CU_ASSERT(req->cmd.cdw11.raw == get_feature_cdw11);
 }
 
 static void verify_get_feature_ns_cmd(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_GET_FEATURES);
 	CU_ASSERT(req->cmd.cdw10.get_features.fid == expected_feature_cdw10);
-	CU_ASSERT(req->cmd.cdw11 == expected_feature_cdw11);
+	CU_ASSERT(req->cmd.cdw11.raw == expected_feature_cdw11);
 	CU_ASSERT(req->cmd.nsid == expected_feature_ns);
 }
 
@@ -285,14 +285,14 @@ static void verify_fw_image_download(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD);
 	CU_ASSERT(req->cmd.cdw10.raw == (fw_img_size >> 2) - 1);
-	CU_ASSERT(req->cmd.cdw11 == fw_img_offset >> 2);
+	CU_ASSERT(req->cmd.cdw11.raw == fw_img_offset >> 2);
 }
 
 static void verify_nvme_sanitize(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_SANITIZE);
 	CU_ASSERT(req->cmd.cdw10.raw == 0x309);
-	CU_ASSERT(req->cmd.cdw11 == 0);
+	CU_ASSERT(req->cmd.cdw11.raw == 0);
 	CU_ASSERT(req->cmd.nsid == sanitize_nvme_nsid);
 }
 

@@ -502,7 +502,7 @@ spdk_nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
-	attribute = cmd->cdw11 & 0x00000007;
+	attribute = cmd->cdw11.raw & 0x00000007;
 	if (attribute & SPDK_NVME_DSM_ATTR_DEALLOCATE) {
 		return nvmf_bdev_ctrlr_unmap(bdev, desc, ch, req, NULL);
 	}
