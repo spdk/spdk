@@ -4689,6 +4689,139 @@ blob_thin_prov_rw(void)
 }
 
 static void
+blob_thin_prov_rle(void)
+{
+	static const uint8_t zero[10 * 4096] = { 0 };
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_io_channel *channel;
+	struct spdk_blob_opts opts;
+	spdk_blob_id blobid;
+	uint64_t free_clusters;
+	uint64_t page_size;
+	uint8_t payload_read[10 * 4096];
+	uint8_t payload_write[10 * 4096];
+	uint64_t write_bytes;
+	uint64_t read_bytes;
+	uint64_t io_unit;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+	free_clusters = spdk_bs_free_cluster_count(bs);
+	page_size = spdk_bs_get_page_size(bs);
+
+	spdk_blob_opts_init(&opts);
+	opts.thin_provision = true;
+	opts.num_clusters = 5;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	channel = spdk_bs_alloc_io_channel(bs);
+	CU_ASSERT(channel != NULL);
+
+	/* Target specifically second cluster in a blob as first allocation */
+	io_unit = _spdk_bs_cluster_to_page(bs, 1) * _spdk_bs_io_unit_per_page(bs);
+
+	/* Payload should be all zeros from unallocated clusters */
+	memset(payload_read, 0xFF, sizeof(payload_read));
+	spdk_blob_io_read(blob, channel, payload_read, io_unit, 10, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(zero, payload_read, 10 * 4096) == 0);
+
+	write_bytes = g_dev_write_bytes;
+	read_bytes = g_dev_read_bytes;
+
+	/* Issue write to second cluster in a blob */
+	memset(payload_write, 0xE5, sizeof(payload_write));
+	spdk_blob_io_write(blob, channel, payload_write, io_unit, 10, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(free_clusters - 1 == spdk_bs_free_cluster_count(bs));
+	/* For thin-provisioned blob we need to write 10 pages plus one page metadata and
+	 * read 0 bytes */
+	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 11);
+	CU_ASSERT(g_dev_read_bytes - read_bytes == 0);
+
+	spdk_blob_io_read(blob, channel, payload_read, io_unit, 10, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_write, payload_read, 10 * 4096) == 0);
+
+	spdk_bs_free_io_channel(channel);
+	poll_threads();
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_blob = NULL;
+	g_blobid = 0;
+
+	/* Load an existing blob store */
+	dev = init_dev();
+	spdk_bs_load(dev, NULL, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	bs = g_bs;
+
+	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	channel = spdk_bs_alloc_io_channel(bs);
+	CU_ASSERT(channel != NULL);
+
+	/* Read second cluster after blob reload to confirm data written */
+	spdk_blob_io_read(blob, channel, payload_read, io_unit, 10, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_write, payload_read, 10 * 4096) == 0);
+
+	spdk_bs_free_io_channel(channel);
+	poll_threads();
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+static void
 blob_thin_prov_rw_iov(void)
 {
 	static const uint8_t zero[10 * 4096] = { 0 };
@@ -7447,6 +7580,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_thin_prov_alloc", blob_thin_prov_alloc) == NULL ||
 		CU_add_test(suite, "blob_insert_cluster_msg", blob_insert_cluster_msg) == NULL ||
 		CU_add_test(suite, "blob_thin_prov_rw", blob_thin_prov_rw) == NULL ||
+		CU_add_test(suite, "blob_thin_prov_rle", blob_thin_prov_rle) == NULL ||
 		CU_add_test(suite, "blob_thin_prov_rw_iov", blob_thin_prov_rw_iov) == NULL ||
 		CU_add_test(suite, "bs_load_iter", bs_load_iter) == NULL ||
 		CU_add_test(suite, "blob_snapshot_rw", blob_snapshot_rw) == NULL ||
