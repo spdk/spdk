@@ -76,7 +76,13 @@ function get_io_result() {
 	fi
 	ticks_after=$(echo $io_result | jq -r '.ticks')
 
-	echo $((((io_result_after-io_result_before)*tick_rate)/(ticks_after-ticks_before)))
+	if [ $limit_type = IOPS ]; then
+		io_result_diff=$((io_result_after-io_result_before))
+	else
+		# To avoid potential overflow as throughput is in byte
+		io_result_diff=$(((io_result_after-io_result_before)/1024))
+	fi
+	echo $(((io_result_diff*tick_rate)/(ticks_after-ticks_before)))
 }
 
 function run_qos_test() {
