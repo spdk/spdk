@@ -170,6 +170,15 @@ DEFINE_STUB(spdk_del_transfer_task, bool,
 int
 spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 {
+	struct spdk_iscsi_task *task, *tmp;
+
+	TAILQ_FOREACH_SAFE(task, &conn->queued_datain_tasks, link, tmp) {
+		TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
+		if (task->pdu) {
+			TAILQ_INSERT_TAIL(&conn->write_pdu_list, task->pdu, tailq);
+		}
+	}
+
 	return 0;
 }
 
@@ -686,6 +695,51 @@ free_tasks_on_connection(void)
 	CU_ASSERT(task3.scsi.ref == 1);
 }
 
+static void
+free_tasks_with_queued_datain(void)
+{
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu1 = {}, pdu2 = {}, pdu3 = {}, pdu4 = {}, pdu5 = {}, pdu6 = {};
+	struct spdk_iscsi_task task1 = {}, task2 = {}, task3 = {}, task4 = {}, task5 = {}, task6 = {};
+
+	TAILQ_INIT(&conn.write_pdu_list);
+	TAILQ_INIT(&conn.snack_pdu_list);
+	TAILQ_INIT(&conn.queued_datain_tasks);
+
+	pdu1.task = &task1;
+	pdu2.task = &task2;
+	pdu3.task = &task3;
+
+	task1.scsi.ref = 1;
+	task2.scsi.ref = 1;
+	task3.scsi.ref = 1;
+
+	pdu3.bhs.opcode = ISCSI_OP_SCSI_DATAIN;
+	task3.scsi.offset = 1;
+	conn.data_in_cnt = 1;
+
+	TAILQ_INSERT_TAIL(&conn.write_pdu_list, &pdu1, tailq);
+	TAILQ_INSERT_TAIL(&conn.write_pdu_list, &pdu2, tailq);
+	TAILQ_INSERT_TAIL(&conn.write_pdu_list, &pdu3, tailq);
+
+	task4.scsi.ref = 1;
+	task5.scsi.ref = 1;
+	task6.scsi.ref = 1;
+
+	task4.pdu = &pdu4;
+	task5.pdu = &pdu5;
+	task6.pdu = &pdu6;
+
+	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, &task4, link);
+	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, &task5, link);
+	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, &task6, link);
+
+	_iscsi_conn_free_tasks(&conn, NULL);
+
+	CU_ASSERT(TAILQ_EMPTY(&conn.write_pdu_list));
+	CU_ASSERT(TAILQ_EMPTY(&conn.queued_datain_tasks));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -711,7 +765,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "process_non_read_task_completion_test",
 			    process_non_read_task_completion_test) == NULL ||
 		CU_add_test(suite, "recursive_flush_pdus_calls", recursive_flush_pdus_calls) == NULL ||
-		CU_add_test(suite, "free_tasks_on_connection", free_tasks_on_connection) == NULL
+		CU_add_test(suite, "free_tasks_on_connection", free_tasks_on_connection) == NULL ||
+		CU_add_test(suite, "free_tasks_with_queued_datain", free_tasks_with_queued_datain) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
