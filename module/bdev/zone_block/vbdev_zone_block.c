@@ -833,7 +833,7 @@ zone_block_register(struct spdk_bdev *base_bdev)
 				      base_bdev->blockcnt - bdev_node->num_zones * name->zone_capacity);
 		}
 
-		bdev_node->bdev.write_unit_size = 16;
+		bdev_node->bdev.write_unit_size = 256;
 
 		bdev_node->bdev.md_interleave = base_bdev->md_interleave;
 		bdev_node->bdev.md_len = base_bdev->md_len;

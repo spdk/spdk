@@ -85,7 +85,7 @@ enum ftl_io_type {
 	FTL_IO_APPEND,
 };
 
-#define FTL_IO_MAX_IOVEC 64
+#define FTL_IO_MAX_IOVEC 256
 
 struct ftl_io_init_opts {
 	struct spdk_ftl_dev			*dev;
