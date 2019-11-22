@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68c380c3_7d8a0faf",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-22T08:57:29Z",
+      "side": 1,
+      "message": "bdev module is part of subsystem initialization, let\u0027s rename nvmf_bdev_init_done to nvmf_subsystem_init_done.",
+      "revId": "5e33a7dbae83a0223b5125c742cfe9fc74ace248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
