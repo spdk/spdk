@@ -88,6 +88,7 @@ struct spdk_iscsi_task {
 	uint32_t datain_datasn;
 	uint32_t acked_data_sn; /* next expected datain datasn */
 	uint32_t ttt;
+	bool is_r2t_active;
 
 	uint32_t tag;
 
