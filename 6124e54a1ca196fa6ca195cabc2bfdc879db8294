@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7e6e0d8_820564d1",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-22T18:22:17Z",
+      "side": 1,
+      "message": "Why not embed all of these structures into this union like cdw10 does? They\u0027re all just structs in a union with a raw uint32_t, and this union already has access to the raw data.",
+      "revId": "6124e54a1ca196fa6ca195cabc2bfdc879db8294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
