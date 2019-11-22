@@ -76,7 +76,14 @@ function get_io_result() {
 	fi
 	ticks_after=$(echo $io_result | jq -r '.ticks')
 
-	echo $((((io_result_after-io_result_before)*tick_rate)/(ticks_after-ticks_before)))
+	if [ $limit_type = IOPS ]; then
+		io_result_diff=$((io_result_after-io_result_before))
+	else
+		# To avoid potential overflow as throughput is in byte
+		# Return throughput in kilobyte
+		io_result_diff=$(((io_result_after-io_result_before)/1024))
+	fi
+	echo $(((io_result_diff*tick_rate)/(ticks_after-ticks_before)))
 }
 
 function run_qos_test() {
@@ -85,11 +92,11 @@ function run_qos_test() {
 
 	qos_result=$(get_io_result $2)
 	if [ $2 = BANDWIDTH ]; then
-		qos_limit=$((qos_limit*1024*1024))
+		qos_limit=$((qos_limit*1024))
 	fi
+	lower_limit=$((qos_limit*9/10))
+	upper_limit=$((qos_limit*11/10))
 
-	lower_limit=$(echo "$qos_limit 0.9" | awk '{printf("%i",$1*$2)}')
-	upper_limit=$(echo "$qos_limit 1.1" | awk '{printf("%i",$1*$2)}')
 	# QoS realization is related with bytes transfered. It currently has some variation.
 	if [ $qos_result -lt $lower_limit ] || [ $qos_result -gt $upper_limit ]; then
 		echo "Failed to limit the io read rate of NULL bdev by qos"
