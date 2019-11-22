@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0465358b_69e46e4f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2120,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-11-22T13:43:22Z",
+      "side": 1,
+      "message": "Yes. It\u0027s a bug.",
+      "parentUuid": "684cbeb9_522167d4",
+      "revId": "60acd4bae307ff8e396db49c7d4c2b72143bdb7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "afab7967_c13b9662",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 11
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "402720cc_f51f4626",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2130,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-11-22T13:43:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "afab7967_c13b9662",
+      "revId": "60acd4bae307ff8e396db49c7d4c2b72143bdb7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b83717dd_28599572",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 11
@@ -50,6 +86,24 @@
       "revId": "60acd4bae307ff8e396db49c7d4c2b72143bdb7c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1af5d499_6ed2cab8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2138,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-11-22T13:43:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b83717dd_28599572",
+      "revId": "60acd4bae307ff8e396db49c7d4c2b72143bdb7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
