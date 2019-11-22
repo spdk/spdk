@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "199b30b9_328b2369",
+        "filename": "module/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1221,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-22T08:08:55Z",
+      "side": 1,
+      "message": "cache_bdev with that name could not exist at the point when iniv_vbdev() is called.\nBut this code will work 100% in register_vbdev(). Except that we wont need to search that cache by name - it will be set in vbdev-\u003ecache.bdev",
+      "range": {
+        "startLine": 1215,
+        "startChar": 1,
+        "endLine": 1221,
+        "endChar": 2
+      },
+      "revId": "e31b450ccf92b77c646029c8a48b530207a8103d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1286d37f_b4d895a5",
+        "filename": "module/bdev/ocf/volume.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-22T08:08:55Z",
+      "side": 1,
+      "message": "Can we have uint64_t in previus patch? If so, better to change it in previus patch.",
+      "range": {
+        "startLine": 288,
+        "startChar": 7,
+        "endLine": 288,
+        "endChar": 10
+      },
+      "revId": "e31b450ccf92b77c646029c8a48b530207a8103d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73dad993_082d4a48",
+        "filename": "module/bdev/ocf/volume.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-22T08:08:55Z",
+      "side": 1,
+      "message": "Maybe check_addr_len would be a better name? Because this desn\u0027t look like a calculatation, more like a check.",
+      "range": {
+        "startLine": 298,
+        "startChar": 0,
+        "endLine": 298,
+        "endChar": 35
+      },
+      "revId": "e31b450ccf92b77c646029c8a48b530207a8103d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33f9e746_f32c46c5",
+        "filename": "module/bdev/ocf/volume.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-22T08:08:55Z",
+      "side": 1,
+      "message": "Is \".. is not aligned ..\" better?",
+      "range": {
+        "startLine": 303,
+        "startChar": 23,
+        "endLine": 303,
+        "endChar": 26
+      },
+      "revId": "e31b450ccf92b77c646029c8a48b530207a8103d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c63b8a5a_54e882eb",
+        "filename": "module/bdev/ocf/volume.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-22T08:08:55Z",
+      "side": 1,
+      "message": "are -\u003e is ?",
+      "range": {
+        "startLine": 308,
+        "startChar": 22,
+        "endLine": 308,
+        "endChar": 25
+      },
+      "revId": "e31b450ccf92b77c646029c8a48b530207a8103d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "faad99c5_00aed31a",
+        "filename": "module/bdev/ocf/volume.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-22T08:08:55Z",
+      "side": 1,
+      "message": "Could you use `else` here instead of `goto`?",
+      "range": {
+        "startLine": 392,
+        "startChar": 2,
+        "endLine": 392,
+        "endChar": 11
+      },
+      "revId": "e31b450ccf92b77c646029c8a48b530207a8103d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4112e620_d1c8d43e",
+        "filename": "module/bdev/ocf/volume.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-22T08:08:55Z",
+      "side": 1,
+      "message": "We just want to ensure that address and length are valid, so I think this is better to describe as \"checking\".",
+      "range": {
+        "startLine": 429,
+        "startChar": 4,
+        "endLine": 429,
+        "endChar": 35
+      },
+      "revId": "e31b450ccf92b77c646029c8a48b530207a8103d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f261f2a9_745b96cb",
+        "filename": "module/bdev/ocf/volume.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-22T08:08:55Z",
+      "side": 1,
+      "message": "Could you use `else` here instead of `goto`?",
+      "range": {
+        "startLine": 483,
+        "startChar": 2,
+        "endLine": 483,
+        "endChar": 10
+      },
+      "revId": "e31b450ccf92b77c646029c8a48b530207a8103d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
