@@ -1144,4 +1144,7 @@ _is_page_aligned(uint64_t address, uint64_t page_size)
 	return (address & (page_size - 1)) == 0;
 }
 
+extern int(*submit_ptr)(struct spdk_nvme_qpair *, struct nvme_request *);
+extern int32_t(*completions_ptr)(struct spdk_nvme_qpair *, uint32_t);
+
 #endif /* __NVME_INTERNAL_H__ */

@@ -43,6 +43,9 @@
 #include "nvme_internal.h"
 #include "nvme_uevent.h"
 
+int(*submit_ptr)(struct spdk_nvme_qpair *, struct nvme_request *);
+int32_t(*completions_ptr)(struct spdk_nvme_qpair *, uint32_t);
+
 /*
  * Number of completion queue entries to process before ringing the
  *  completion queue doorbell.
@@ -1958,8 +1961,8 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 	return 0;
 }
 
-int
-nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+static int
+_nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	struct nvme_tracker	*tr;
 	int			rc = 0;
@@ -2027,6 +2030,16 @@ exit:
 	return rc;
 }
 
+int
+nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+{
+	if (submit_ptr == NULL) {
+		submit_ptr = _nvme_pcie_qpair_submit_request;
+	}
+
+	return submit_ptr(qpair, req);
+}
+
 static void
 nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 {
@@ -2066,8 +2079,8 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	}
 }
 
-int32_t
-nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+static int32_t
+_nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_tracker	*tr;
@@ -2173,4 +2186,14 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	return num_completions;
+}
+
+int32_t
+nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+{
+	if (completions_ptr == NULL) {
+		completions_ptr = _nvme_pcie_qpair_process_completions;
+	}
+
+	return completions_ptr(qpair, max_completions);
 }
