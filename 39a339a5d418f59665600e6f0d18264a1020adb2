@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7c31ad5_e935b80a",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-22T08:02:35Z",
+      "side": 1,
+      "message": "I\u0027m 99% sure that blknames is NOT an array at this point.\nget_virtio_names_from_bdf() does eval \"$2\u003d\u0027$virtio_names\u0027\" at the very end, which I think makes blknames effectively a string.\nSo the fix for this code block would be probably just to remove blknames\u003d()\n\nFortunately bash for loop with array expansion applied to string works.",
+      "range": {
+        "startLine": 267,
+        "startChar": 3,
+        "endLine": 267,
+        "endChar": 38
+      },
+      "revId": "39a339a5d418f59665600e6f0d18264a1020adb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "046dfadc_b9fc664c",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-22T08:02:35Z",
+      "side": 1,
+      "message": "Same situation here, blknames is no longer an array here",
+      "revId": "39a339a5d418f59665600e6f0d18264a1020adb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f0cf5b1_19fc9d66",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-22T08:02:35Z",
+      "side": 1,
+      "message": "Didn\u0027t notice this before. Why is even SPDK_VAGRANT_DISTRO used as an array? I don\u0027t think we support multiple choices here :P\n\nYou should probably just remove line 128",
+      "range": {
+        "startLine": 128,
+        "startChar": 0,
+        "endLine": 130,
+        "endChar": 35
+      },
+      "revId": "39a339a5d418f59665600e6f0d18264a1020adb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45f0a2f1_9f68d34c",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-22T08:02:35Z",
+      "side": 1,
+      "message": "Same here",
+      "range": {
+        "startLine": 75,
+        "startChar": 8,
+        "endLine": 75,
+        "endChar": 27
+      },
+      "revId": "39a339a5d418f59665600e6f0d18264a1020adb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
