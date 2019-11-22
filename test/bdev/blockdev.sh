@@ -76,7 +76,12 @@ function get_io_result() {
 	fi
 	ticks_after=$(echo $io_result | jq -r '.ticks')
 
-	echo $((((io_result_after-io_result_before)*tick_rate)/(ticks_after-ticks_before)))
+	# To avoid potential overflow as throughput is in byte
+	run_time_in_tick=$((ticks_after-ticks_before))
+	run_time_in_sec=$(awk 'BEGIN{printf "%.4f\n",'$run_time_in_tick'/'$tick_rate'}')
+	io_result=$((io_result_after-io_result_before))
+	io_result_in_sec=$(awk 'BEGIN{printf "%.0f\n",'$io_result'/'$run_time_in_sec'}')
+	echo $io_result_in_sec
 }
 
 function run_qos_test() {
