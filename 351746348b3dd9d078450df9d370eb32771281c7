@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbf71d3f_ce2482ac",
+        "filename": "module/bdev/ocf/volume.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-22T07:45:14Z",
+      "side": 1,
+      "message": "Just a note - we have a func for this conversion in lib/bdev/bdev.c, but it\u0027s static. Maybe should make it public",
+      "range": {
+        "startLine": 289,
+        "startChar": 0,
+        "endLine": 289,
+        "endChar": 31
+      },
+      "revId": "351746348b3dd9d078450df9d370eb32771281c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f92537f_de196619",
+        "filename": "module/bdev/ocf/volume.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-11-22T07:45:14Z",
+      "side": 1,
+      "message": "Why is this name in brackets?",
+      "range": {
+        "startLine": 374,
+        "startChar": 10,
+        "endLine": 374,
+        "endChar": 31
+      },
+      "revId": "351746348b3dd9d078450df9d370eb32771281c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
