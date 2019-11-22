@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f44d6ee5_d74da6cd",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-11-22T07:25:33Z",
+      "side": 1,
+      "message": "Hey, not much left now!",
+      "revId": "4c0c0c095b627399c1cdd40d3e70a89ec77e305d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
