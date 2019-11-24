@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "8378bcd6_5a0e7d7e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-24T18:00:10Z",
+      "side": 1,
+      "message": "Unfortunately.. I wasn\u0027t aware that for nvmf a 2nd copy is already upstream (just came across Aug 12th commit d50736776c94d \"nvmf/tcp: Use a big buffer for PDU receving\" today. Now, if this series just pushes the copy down into the posix sock layer, I don\u0027t understand why do you see 50% improvement? can you explain that?\n\nYeah, on x86 I saw some improvement with this series, I still can\u0027t explain it, need to get deeper into the code. From the raw cpu %% I listed above it\u0027s also not clear why we get better IOPS.",
+      "parentUuid": "d424c8c9_64748bcb",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 54
+      },
+      "revId": "0db46b1484b69189152de6da23b2a65eb1832d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "865982fd_26167a46",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 7
