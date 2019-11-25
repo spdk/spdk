@@ -22,6 +22,30 @@
       "revId": "07ca02210a201f33377567055fa87d66d9ddd254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9d0fd4f_9499b935",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-25T00:00:24Z",
+      "side": 0,
+      "message": "Hi Gang,\n\nIt looks that overflow occurred when io_result is not IOPs but byte_per_sec.\nI think we can avoid floating point calculation by converting bytes to KiB (divide by 1024).\n\nHow about the following?\n\nif [ $limit_type \u003d IOPS ]; then\n  io_result_diff\u003d$((io_result_after-io_result_before))\nelse\n  io_result_diff\u003d$((((io_result_after-io_result_before)/1024))\nfi\necho $(((io_result_diff*tick_rate)/(ticks_after-ticks_before)))",
+      "parentUuid": "af76698c_ba009941",
+      "range": {
+        "startLine": 79,
+        "startChar": 1,
+        "endLine": 79,
+        "endChar": 83
+      },
+      "revId": "07ca02210a201f33377567055fa87d66d9ddd254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
