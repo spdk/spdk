@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ff946c9_f5747d1d",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-25T22:12:22Z",
+      "side": 1,
+      "message": "for bandwidth, comparing limit and result based on KiB (1024byte) may be fine, so how about the following?\n\nqos_result\u003d$(get_io_result $2)\nif [ $2 \u003d BANDWIDTH ]; then\n  qos_limit\u003d$((qos_limit*1024))\nfi",
+      "revId": "5cb5850f317ae74593422b25ef449197469056b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ad53a42_53578bac",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-25T22:12:22Z",
+      "side": 1,
+      "message": "By the way, is it OK to do lower_limit\u003d$(($io_result_diff*10)/9)) ?",
+      "range": {
+        "startLine": 98,
+        "startChar": 13,
+        "endLine": 98,
+        "endChar": 66
+      },
+      "revId": "5cb5850f317ae74593422b25ef449197469056b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96ed7fcd_c8b0cdcb",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-25T22:12:22Z",
+      "side": 1,
+      "message": "Ditto",
+      "range": {
+        "startLine": 99,
+        "startChar": 13,
+        "endLine": 99,
+        "endChar": 66
+      },
+      "revId": "5cb5850f317ae74593422b25ef449197469056b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
