@@ -7,9 +7,9 @@ source $rootdir/test/common/autotest_common.sh
 
 function suite()
 {
-	timing_enter $(basename $@)
+	timing_enter $(basename "$@")
 	run_test suite "$@"
-	timing_exit $(basename $@)
+	timing_exit $(basename "$@")
 }
 
 timing_enter ocf

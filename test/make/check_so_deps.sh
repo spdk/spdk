@@ -73,11 +73,11 @@ function confirm_deps() {
 	done
 	IFS=$'\n'
 	# Ignore any event_* dependencies. Those are based on the subsystem configuration and not readelf.
-	lib_make_deps=( $(printf "%s\n" ${lib_make_deps[@]} | sort | grep -v "event_") )
+	lib_make_deps=( $(printf "%s\n" "${lib_make_deps[@]}" | sort | grep -v "event_") )
 	# Ignore the env_dpdk readelf dependency. We don't want people explicitly linking against it.
-	dep_names=( $(printf "%s\n" ${dep_names[@]} | sort | uniq | grep -v "env_dpdk") )
+	dep_names=( $(printf "%s\n" "${dep_names[@]}" | sort | uniq | grep -v "env_dpdk") )
 	unset IFS
-	diff=$(echo ${dep_names[@]} ${lib_make_deps[@]} | tr ' ' '\n' | sort | uniq -u)
+	diff=$(echo "${dep_names[@]}" "${lib_make_deps[@]}" | tr ' ' '\n' | sort | uniq -u)
 	if [ "$diff" != "" ]; then
 		touch $fail_file
 		echo "there was a dependency mismatch in the library $lib_shortname"
@@ -86,7 +86,7 @@ function confirm_deps() {
 		echo "---------------------------------------------------------------------"
 	elif [ ${#missing_syms[@]} -ne 0 ]; then
 		echo "There are still undefined symbols in the library $lib_shortname"
-		printf "%s\n" ${missing_syms[@]}
+		printf "%s\n" "${missing_syms[@]}"
 		echo "---------------------------------------------------------------------"
 	fi
 }

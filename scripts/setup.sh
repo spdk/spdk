@@ -224,7 +224,7 @@ function configure_linux_pci {
 		if ! $mount; then
 			linux_bind_driver "$bdf" "$driver_name"
 		else
-			for name in ${blknames[@]}; do
+			for name in "${blknames[@]}"; do
 				pci_dev_echo "$bdf" "Active mountpoints on /dev/$name, so not binding PCI dev"
 			done
 		fi

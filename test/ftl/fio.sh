@@ -31,7 +31,7 @@ else
 	$rootdir/scripts/gen_ftl.sh -a $device -n nvme0 -l 0-3 -u $uuid > $FTL_BDEV_CONF
 fi
 
-for test in ${tests[@]}; do
+for test in "${tests[@]}"; do
 	timing_enter $test
 	fio_bdev $testdir/config/fio/$test.fio
 	timing_exit $test
