@@ -218,7 +218,7 @@ static void test_nvme_qpair_process_completions(void)
 	/* Same if the qpair is failed at the transport layer. */
 	ctrlr.is_failed = false;
 	ctrlr.is_removed = false;
-	qpair.transport_qp_is_failed = true;
+	qpair.state = NVME_QPAIR_DISABLED;
 	rc = spdk_nvme_qpair_process_completions(&qpair, 0);
 	CU_ASSERT(rc == -ENXIO);
 	CU_ASSERT(!STAILQ_EMPTY(&qpair.queued_req));
@@ -228,7 +228,7 @@ static void test_nvme_qpair_process_completions(void)
 	/* If the controller is removed, make sure we abort the requests. */
 	ctrlr.is_failed = true;
 	ctrlr.is_removed = true;
-	qpair.transport_qp_is_failed = false;
+	qpair.state = NVME_QPAIR_CONNECTED;
 	rc = spdk_nvme_qpair_process_completions(&qpair, 0);
 	CU_ASSERT(rc == -ENXIO);
 	CU_ASSERT(STAILQ_EMPTY(&qpair.queued_req));
