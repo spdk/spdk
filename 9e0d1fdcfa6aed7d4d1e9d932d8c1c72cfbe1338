@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4a627e4e_2f609d5a",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-25T08:15:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ed71ab17_fe188e5c",
+      "revId": "9e0d1fdcfa6aed7d4d1e9d932d8c1c72cfbe1338",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b61c0efa_38a18075",
         "filename": "scripts/vagrant/create_vhost_vm.sh",
         "patchSetId": 7
@@ -33,6 +51,24 @@
       "revId": "9e0d1fdcfa6aed7d4d1e9d932d8c1c72cfbe1338",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1d1e74b_3b79d465",
+        "filename": "scripts/vagrant/create_vhost_vm.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-11-25T08:15:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b61c0efa_38a18075",
+      "revId": "9e0d1fdcfa6aed7d4d1e9d932d8c1c72cfbe1338",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
