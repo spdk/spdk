@@ -1033,7 +1033,7 @@ nvme_ctrlr_deactivate_namespace(struct nvme_bdev_ns *ns)
 }
 
 static void
-nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
 	struct nvme_bdev_ns	*ns;
@@ -1051,10 +1051,10 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 			TAILQ_INIT(&ns->bdevs);
 
 			rc = nvme_ctrlr_populate_namespace(nvme_bdev_ctrlr, ns);
-			if (rc) {
-				memset(ns, 0, sizeof(*ns));
-			} else {
+			if (rc == 0) {
 				ns->active = true;
+			} else {
+				memset(ns, 0, sizeof(*ns));
 			}
 		}
 
@@ -1079,7 +1079,7 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	event.raw = cpl->cdw0;
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
 	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
-		nvme_ctrlr_update_ns_bdevs(nvme_bdev_ctrlr);
+		nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr);
 	}
 }
 
@@ -1772,31 +1772,6 @@ bdev_nvme_library_fini(void)
 		pthread_mutex_lock(&g_bdev_nvme_mutex);
 	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
-}
-
-static void
-nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
-{
-	struct nvme_bdev_ns	*ns;
-	int			rc;
-	uint32_t		nsid;
-
-	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(nvme_bdev_ctrlr->ctrlr);
-	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(nvme_bdev_ctrlr->ctrlr, nsid)) {
-		ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
-		ns->id = nsid;
-		ns->ctrlr = nvme_bdev_ctrlr;
-
-		TAILQ_INIT(&ns->bdevs);
-
-		rc = nvme_ctrlr_populate_namespace(nvme_bdev_ctrlr, ns);
-		if (rc == 0) {
-			ns->active = true;
-		} else {
-			memset(ns, 0, sizeof(*ns));
-			SPDK_NOTICELOG("Failed to populate namespace %u of %s\n", nsid, nvme_bdev_ctrlr->name);
-		}
-	}
 }
 
 static void
