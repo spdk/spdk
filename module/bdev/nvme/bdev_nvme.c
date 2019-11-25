@@ -1045,7 +1045,6 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 
 		ns = nvme_bdev_ctrlr->namespaces[i];
 		if (!ns->active && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
-			SPDK_NOTICELOG("NSID %u to be added\n", nsid);
 			ns->id = nsid;
 			ns->ctrlr = nvme_bdev_ctrlr;
 
@@ -1060,7 +1059,6 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		}
 
 		if (ns->active && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
-			SPDK_NOTICELOG("NSID %u is removed\n", nsid);
 			nvme_ctrlr_deactivate_namespace(ns);
 		}
 	}
