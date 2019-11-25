@@ -134,7 +134,7 @@ timing_enter make_uninstall
 # Create empty file to check if it is not deleted by target uninstall
 touch /tmp/spdk/usr/lib/sample_xyz.a
 $MAKE $MAKEFLAGS uninstall DESTDIR=/tmp/spdk prefix=/usr
-if [[ $(ls -A /tmp/spdk/usr | wc -l) -ne 2 ]] || [[ $(ls -A /tmp/spdk/usr/lib/ | wc -l) -ne 1 ]]; then
+if [[ $(find /tmp/spdk/usr -maxdepth 1 -mindepth 1 | wc -l) -ne 2 ]] || [[ $(find /tmp/spdk/usr/lib/ -maxdepth 1 -mindepth 1 | wc -l) -ne 1 ]]; then
 	ls -lR /tmp/spdk
 	rm -rf /tmp/spdk
 	echo "Make uninstall failed"

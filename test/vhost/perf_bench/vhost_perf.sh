@@ -96,7 +96,7 @@ function cleanup_split_cfg()
 function cleanup_parted_config()
 {
 	local disks
-	disks=$(ls /dev/nvme*n1 | sort --version-sort)
+	disks=$(find /dev/ -maxdepth 1 -name 'nvme*n1' | sort --version-sort)
 	for disk in $disks; do
 		parted -s $disk rm 1
 	done
@@ -226,7 +226,7 @@ if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 	# Prepare kernel vhost configuration
 	# Below grep: match only NVMe partitions which are not "Extended" type.
 	# For example: will match nvme0n1p15 but not nvme0n1p1
-	partitions=$(ls -1 /dev/nvme* | sort --version-sort | grep -P 'p(?!1$)\d+')
+	partitions=$(find /dev/ -maxdepth 1 -name 'nvme*' | sort --version-sort | grep -P 'p(?!1$)\d+')
 	backstores=()
 
 	# Create block backstores for vhost kernel process
