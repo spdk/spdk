@@ -39,6 +39,24 @@
       "revId": "84fb0d31fbdacc305d2035f891e73f70ac71fcc5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10d003d5_2b85e35a",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 4276,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-25T22:17:33Z",
+      "side": 1,
+      "message": "This change looks necessary. I got an error that shows this change was necessary.\nPlease see https://dqtibwqq6s6ux.cloudfront.net/public_build/autotest-per-patch_50646.html in \nhttps://review.gerrithub.io/c/spdk/spdk/+/475791",
+      "parentUuid": "6be31abe_6efcedc0",
+      "revId": "84fb0d31fbdacc305d2035f891e73f70ac71fcc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
