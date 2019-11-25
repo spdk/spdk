@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "2971f43f_07bc5332",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-25T16:46:42Z",
+      "side": 1,
+      "message": "This series doesn\u0027t give the 50% improvement - the original patch (d5073677) did. This series is just moving around where the buffering is done. The performance should remain unchanged (on x86) when comparing this series to current master. If it doesn\u0027t, then I haven\u0027t done this patch correctly.",
+      "parentUuid": "8378bcd6_5a0e7d7e",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 54
+      },
+      "revId": "0db46b1484b69189152de6da23b2a65eb1832d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "865982fd_26167a46",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 7
