@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32d89b3e_94190aaa",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1830,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-25T14:56:34Z",
+      "side": 1,
+      "message": "don\u0027t you need to spdk_vtophys this?",
+      "revId": "b2fdc488aa998d120537c80895c858d47ab3bc36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
