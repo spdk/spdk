@@ -146,9 +146,27 @@ static int bdev_nvme_io_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel
 static int bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
-static int nvme_ctrlr_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-					 struct nvme_bdev_ns *nvme_ns);
 static int bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio);
+
+typedef int (*populate_namespace_fn)(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *nvme_ns);
+static int nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *nvme_ns);
+static int nvme_ctrlr_populate_ocssd_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *nvme_ns);
+
+static populate_namespace_fn g_populate_namespace_fn[] = {
+	NULL,
+	nvme_ctrlr_populate_standard_namespace,
+	nvme_ctrlr_populate_ocssd_namespace,
+};
+
+typedef void (*depopulate_namespace_fn)(struct nvme_bdev_ns *ns);
+static void nvme_ctrlr_depopulate_standard_namespace(struct nvme_bdev_ns *ns);
+static void nvme_ctrlr_depopulate_ocssd_namespace(struct nvme_bdev_ns *ns);
+
+static depopulate_namespace_fn g_depopulate_namespace_fn[] = {
+	NULL,
+	nvme_ctrlr_depopulate_standard_namespace,
+	nvme_ctrlr_depopulate_ocssd_namespace,
+};
 
 struct spdk_nvme_qpair *
 spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
@@ -816,7 +834,7 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 };
 
 static int
-nvme_ctrlr_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *nvme_ns)
+nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *nvme_ns)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
 	struct nvme_bdev	*bdev;
@@ -894,6 +912,11 @@ nvme_ctrlr_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nv
 	return 0;
 }
 
+static int
+nvme_ctrlr_populate_ocssd_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *nvme_ns)
+{
+	return 0;
+}
 
 static bool
 hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
@@ -1021,7 +1044,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static void
-nvme_ctrlr_depopulate_namespace(struct nvme_bdev_ns *ns)
+nvme_ctrlr_depopulate_standard_namespace(struct nvme_bdev_ns *ns)
 {
 	struct nvme_bdev *bdev, *tmp;
 
@@ -1030,6 +1053,11 @@ nvme_ctrlr_depopulate_namespace(struct nvme_bdev_ns *ns)
 	}
 
 	ns->populated = false;
+}
+
+static void
+nvme_ctrlr_depopulate_ocssd_namespace(struct nvme_bdev_ns *ns)
+{
 }
 
 static void
@@ -1055,7 +1083,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 
 			TAILQ_INIT(&ns->bdevs);
 
-			rc = nvme_ctrlr_populate_namespace(nvme_bdev_ctrlr, ns);
+			rc = g_populate_namespace_fn[ns->type](nvme_bdev_ctrlr, ns);
 			if (rc == 0) {
 				ns->populated = true;
 			} else {
@@ -1064,7 +1092,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		}
 
 		if (ns->populated && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
-			nvme_ctrlr_depopulate_namespace(ns);
+			g_depopulate_namespace_fn[ns->type](ns);
 		}
 	}
 
@@ -1226,7 +1254,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 				ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
 				if (ns->populated) {
 					assert(ns->id == nsid);
-					nvme_ctrlr_depopulate_namespace(ns);
+					g_depopulate_namespace_fn[ns->type](ns);
 				}
 			}
 
