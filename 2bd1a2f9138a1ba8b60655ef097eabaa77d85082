@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73246555_7a952284",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-25T12:11:45Z",
+      "side": 1,
+      "message": "It is always good idea to provide some background for the reviewers why this was required. Its rare for there to be too much info in the commit message 😊\n\nThis patch is pretty straightforward, but I think most of the info is already known so it does not hurt to include it.\n1) What/when broke, even provide single/couple lines of output that are relevant.\n2) Which patch introduced the failure.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 35
+      },
+      "revId": "2bd1a2f9138a1ba8b60655ef097eabaa77d85082",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
