@@ -67,9 +67,6 @@ struct spdk_nvme_rdma_hooks g_nvmf_hooks = {};
 /* Timeout for destroying defunct rqpairs */
 #define NVMF_RDMA_QPAIR_DESTROY_TIMEOUT_US	4000000
 
-/* The maximum number of buffers per request */
-#define NVMF_REQ_MAX_BUFFERS	(SPDK_NVMF_MAX_SGL_ENTRIES * 2)
-
 static int g_spdk_nvmf_ibv_query_mask =
 	IBV_QP_STATE |
 	IBV_QP_PKEY_INDEX |
