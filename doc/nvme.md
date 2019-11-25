@@ -291,6 +291,12 @@ immediate response, without passing them through the ring.
 
 This interface reserves one qpair for sending down the I/O for each controller.
 
+## Limitations
+
+NVMe CUSE presents character device for controller and namespaces only at the time
+the controller is being attached. Dynamic creation/deletion of namespaces is not
+supported yet.
+
 ## Enabling cuse support for NVMe
 
 Cuse support is disabled by default. To enable support for NVMe devices SPDK
