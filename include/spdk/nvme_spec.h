@@ -512,6 +512,34 @@ struct spdk_nvme_feat_temperature_threshold_bits {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feat_temperature_threshold_bits) == 4, "Incorrect size");
 
+struct spdk_nvme_feat_error_recovery_bits {
+	/** Time Limited Error Recovery */
+	uint32_t tler : 16;
+
+	/** Deallocated or Unwritten Logical Block Error Enable */
+	uint32_t dulbe : 1;
+
+	uint32_t reserved : 15;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feat_error_recovery_bits) == 4, "Incorrect size");
+
+struct spdk_nvme_feat_volatile_write_cache_bits {
+	/** Volatile Write Cache Enable */
+	uint32_t wce : 1;
+
+	uint32_t reserved : 31;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feat_volatile_write_cache_bits) == 4, "Incorrect size");
+
+struct spdk_nvme_feat_number_of_queues_bits {
+	/** Number of I/O Submission Queues Requested */
+	uint32_t nsqr : 16;
+
+	/** Number of I/O Completion Queues Requested */
+	uint32_t ncqr : 16;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feat_number_of_queues_bits) == 4, "Incorrect size");
+
 union spdk_nvme_critical_warning_state {
 	uint8_t		raw;
 
@@ -669,31 +697,9 @@ union spdk_nvme_cmd_cdw11 {
 	struct spdk_nvme_feat_power_management_bits power_management;
 	struct spdk_nvme_feat_lba_range_type_bits lba_range_type;
 	struct spdk_nvme_feat_temperature_threshold_bits temperature_threshold;
-
-	struct {
-		/** Time Limited Error Recovery */
-		uint32_t tler : 16;
-
-		/** Deallocated or Unwritten Logical Block Error Enable */
-		uint32_t dulbe : 1;
-
-		uint32_t reserved : 15;
-	} error_recovery;
-
-	struct {
-		/** Volatile Write Cache Enable */
-		uint32_t wce : 1;
-
-		uint32_t reserved : 31;
-	} volatile_write_cache;
-
-	struct {
-		/** Number of I/O Submission Queues Requested */
-		uint32_t nsqr : 16;
-
-		/** Number of I/O Completion Queues Requested */
-		uint32_t ncqr : 16;
-	} number_of_queues;
+	struct spdk_nvme_feat_error_recovery_bits error_recovery;
+	struct spdk_nvme_feat_volatile_write_cache_bits volatile_write_cache;
+	struct spdk_nvme_feat_number_of_queues_bits number_of_queues;
 
 	struct {
 		/** Aggregation Threshold */
@@ -2441,15 +2447,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_temperature_threshold) == 4, "Inc
  */
 union spdk_nvme_feat_error_recovery {
 	uint32_t raw;
-	struct {
-		/** Time Limited Error Recovery */
-		uint32_t tler : 16;
-
-		/** Deallocated or Unwritten Logical Block Error Enable */
-		uint32_t dulbe : 1;
-
-		uint32_t reserved : 15;
-	} bits;
+	struct spdk_nvme_feat_error_recovery_bits bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_error_recovery) == 4, "Incorrect size");
 
@@ -2458,12 +2456,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_error_recovery) == 4, "Incorrect 
  */
 union spdk_nvme_feat_volatile_write_cache {
 	uint32_t raw;
-	struct {
-		/** Volatile Write Cache Enable */
-		uint32_t wce : 1;
-
-		uint32_t reserved : 31;
-	} bits;
+	struct spdk_nvme_feat_volatile_write_cache_bits bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_volatile_write_cache) == 4, "Incorrect size");
 
@@ -2472,13 +2465,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_volatile_write_cache) == 4, "Inco
  */
 union spdk_nvme_feat_number_of_queues {
 	uint32_t raw;
-	struct {
-		/** Number of I/O Submission Queues Requested */
-		uint32_t nsqr : 16;
-
-		/** Number of I/O Completion Queues Requested */
-		uint32_t ncqr : 16;
-	} bits;
+	struct spdk_nvme_feat_number_of_queues_bits bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_number_of_queues) == 4, "Incorrect size");
 
