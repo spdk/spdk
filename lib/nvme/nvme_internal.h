@@ -381,6 +381,8 @@ struct spdk_nvme_qpair {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
 	void				*req_buf;
+
+	uint8_t				transport_failure_reason: 2;
 };
 
 struct spdk_nvme_ns {
