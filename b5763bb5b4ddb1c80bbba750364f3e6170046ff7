@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f8ec39e_5aace345",
+        "filename": "test/unit/lib/nvme/nvme_uevent.c/nvme_uevent_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-25T23:40:03Z",
+      "side": 1,
+      "message": "let\u0027s use \"get\" instead of \"Get\" - we never start SPDK function names with capital letters",
+      "revId": "b5763bb5b4ddb1c80bbba750364f3e6170046ff7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f11e5881_ff59d47e",
+        "filename": "test/unit/lib/nvme/nvme_uevent.c/nvme_uevent_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-25T23:40:03Z",
+      "side": 1,
+      "message": "I really don\u0027t understand what this code is doing.  Can\u0027t we just use memcpy instead?",
+      "revId": "b5763bb5b4ddb1c80bbba750364f3e6170046ff7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
