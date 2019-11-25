@@ -164,7 +164,7 @@ struct spdk_iscsi_conn {
 	uint32_t data_out_cnt;
 	uint32_t data_in_cnt;
 
-	int timeout;
+	uint64_t timeout;
 	uint64_t nopininterval;
 	bool nop_outstanding;
 
