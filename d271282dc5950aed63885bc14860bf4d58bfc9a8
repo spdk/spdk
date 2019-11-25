@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e9d8165_1e815cc7",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1833,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-25T23:26:04Z",
+      "side": 1,
+      "message": "are 1833-1834 needed?  these both get set in either case by the if statement at line 1872 (and 1833 would need a vtophys anyways)",
+      "revId": "d271282dc5950aed63885bc14860bf4d58bfc9a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b1a7b5a_40db411b",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2079,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-25T23:26:04Z",
+      "side": 1,
+      "message": "there really is no way to reuse the existing build_hw_sgl_request function (at least without a lot more refactoring than I was hoping)\n\nbummer",
+      "revId": "d271282dc5950aed63885bc14860bf4d58bfc9a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7258cf9c_d6785d8a",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-25T23:26:04Z",
+      "side": 1,
+      "message": "maybe pick something like 60 here?  then it\u0027s not exactly half of 100\n\nthat way below you can confirm you get 60 and then 40 for the two SGE lengths",
+      "revId": "d271282dc5950aed63885bc14860bf4d58bfc9a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
