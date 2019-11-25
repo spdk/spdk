@@ -261,7 +261,7 @@ function nvme_connect()
 	local init_count
 	init_count=$(nvme list | wc -l)
 
-	if ! nvme connect $@; then return $?; fi
+	if ! nvme connect "$@"; then return $?; fi
 
 	for i in $(seq 1 10); do
 		if [ $(nvme list | wc -l) -gt $init_count ]; then

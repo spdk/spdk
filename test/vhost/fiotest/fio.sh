@@ -96,7 +96,7 @@ notice ""
 
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
-for vm_conf in ${vms[@]}; do
+for vm_conf in "${vms[@]}"; do
 	IFS=',' read -ra conf <<< "$vm_conf"
 	if [[ x"${conf[0]}" == x"" ]] || ! assert_number ${conf[0]}; then
 		fail "invalid VM configuration syntax $vm_conf"
@@ -155,7 +155,7 @@ vm_run $used_vms
 vm_wait_for_boot 300 $used_vms
 
 if [[ $test_type == "spdk_vhost_scsi" ]]; then
-	for vm_conf in ${vms[@]}; do
+	for vm_conf in "${vms[@]}"; do
 		IFS=',' read -ra conf <<< "$vm_conf"
 		while IFS=':' read -ra disks; do
 			for disk in "${disks[@]}"; do
@@ -232,7 +232,7 @@ if ! $no_shutdown; then
 	sleep 2
 	if [[ $test_type =~ "spdk_vhost" ]]; then
 		notice "Removing vhost devices & controllers via RPC ..."
-		for vm_conf in ${vms[@]}; do
+		for vm_conf in "${vms[@]}"; do
 			IFS=',' read -ra conf <<< "$vm_conf"
 
 			while IFS=':' read -ra disks; do

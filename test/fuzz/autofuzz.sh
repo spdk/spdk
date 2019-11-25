@@ -39,7 +39,7 @@ else
 	exit 1
 fi
 
-for transport in ${allowed_transports[@]}; do
+for transport in "${allowed_transports[@]}"; do
 	if [ $transport == "$TEST_TRANSPORT" ]; then
 		bad_transport=false
 	fi

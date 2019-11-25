@@ -7,7 +7,7 @@ plugindir=$rootdir/examples/bdev/fio_plugin
 source $rootdir/test/common/autotest_common.sh
 
 function fio_verify(){
-	fio_bdev $curdir/test.fio --aux-path=/tmp/ --ioengine=spdk_bdev $@
+	fio_bdev $curdir/test.fio --aux-path=/tmp/ --ioengine=spdk_bdev "$@"
 }
 
 function cleanup(){

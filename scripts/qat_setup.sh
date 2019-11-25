@@ -22,7 +22,7 @@ if [ -n "$1" ]; then
 	driver_to_bind=$1
 fi
 
-for driver in ${allowed_drivers[@]}; do
+for driver in "${allowed_drivers[@]}"; do
 	if [ $driver == $driver_to_bind ]; then
 		bad_driver=false
 	fi
@@ -40,7 +40,7 @@ if service qat_service start; then
 fi
 
 # configure virtual functions for the QAT cards.
-for qat_bdf in ${qat_pci_bdfs[@]}; do
+for qat_bdf in "${qat_pci_bdfs[@]}"; do
 	echo "$num_vfs" > /sys/bus/pci/drivers/c6xx/$qat_bdf/sriov_numvfs
 	num_vfs=$(cat /sys/bus/pci/drivers/c6xx/$qat_bdf/sriov_numvfs)
 	echo "$qat_bdf set to $num_vfs VFs"
@@ -55,7 +55,7 @@ if (( ${#qat_vf_bdfs[@]} != ${#qat_pci_bdfs[@]}*num_vfs )); then
 fi
 
 # Unbind old driver if necessary.
-for vf in ${qat_vf_bdfs[@]}; do
+for vf in "${qat_vf_bdfs[@]}"; do
 	old_driver=$(basename $(readlink -f /sys/bus/pci/devices/${vf}/driver))
 	if [ $old_driver != "driver" ]; then
 		echo "unbinding driver $old_driver from qat VF at BDF $vf"
@@ -81,7 +81,7 @@ else
 fi
 
 echo -n "8086 37c9" > /sys/bus/pci/drivers/$driver_to_bind/new_id
-for vf in ${qat_vf_bdfs[@]}; do
+for vf in "${qat_vf_bdfs[@]}"; do
 	if ! ls -l /sys/bus/pci/devices/$vf/driver | grep -q $driver_to_bind; then
 		echo "unable to bind the driver to the device at bdf $vf"
 		if [ "$driver_to_bind" == "uio_pci_generic" ]; then

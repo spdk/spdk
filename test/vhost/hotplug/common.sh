@@ -82,7 +82,7 @@ function print_test_fio_header() {
 }
 
 function vms_setup() {
-    for vm_conf in ${vms[@]}; do
+    for vm_conf in "${vms[@]}"; do
         IFS=',' read -ra conf <<< "$vm_conf"
         if [[ x"${conf[0]}" == x"" ]] || ! assert_number ${conf[0]}; then
             fail "invalid VM configuration syntax $vm_conf"
@@ -105,13 +105,13 @@ function vms_setup() {
 }
 
 function vm_run_with_arg() {
-    vm_run $@
-    vm_wait_for_boot 300 $@
+    vm_run "$@"
+    vm_wait_for_boot 300 "$@"
 }
 
 function vms_setup_and_run() {
     vms_setup
-    vm_run_with_arg $@
+    vm_run_with_arg "$@"
 }
 
 function vms_prepare() {

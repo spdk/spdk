@@ -45,7 +45,7 @@ function nbd_stop_disks() {
 	local nbd_list=($2)
 	local i
 
-	for i in ${nbd_list[@]}; do
+	for i in "${nbd_list[@]}"; do
 		$rootdir/scripts/rpc.py -s $rpc_server nbd_stop_disk $i
 		waitfornbd_exit $(basename $i)
 	done
@@ -69,12 +69,12 @@ function nbd_dd_data_verify() {
 	if [ "$operation" = "write" ]; then
 		# data write
 		dd if=/dev/urandom of=$tmp_file bs=4096 count=256
-		for i in ${nbd_list[@]}; do
+		for i in "${nbd_list[@]}"; do
 			dd if=$tmp_file of=$i bs=4096 count=256 oflag=direct
 		done
 	elif [ "$operation" = "verify" ]; then
 		# data read and verify
-		for i in ${nbd_list[@]}; do
+		for i in "${nbd_list[@]}"; do
 			cmp -b -n 1M $tmp_file $i
 		done
 		rm $tmp_file

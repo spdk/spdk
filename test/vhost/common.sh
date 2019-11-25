@@ -245,7 +245,7 @@ function vhost_rpc
 	fi
 	shift
 
-	$rootdir/scripts/rpc.py -s $(get_vhost_dir $vhost_name)/rpc.sock $@
+	$rootdir/scripts/rpc.py -s $(get_vhost_dir $vhost_name)/rpc.sock "$@"
 }
 
 ###
@@ -854,7 +854,7 @@ function vm_run()
 		vms_to_run="$(vm_list_all)"
 	else
 		shift $((OPTIND-1))
-		for vm in $@; do
+		for vm in "$@"; do
 			vm_num_is_valid $1 || return 1
 			if [[ ! -x $VM_DIR/$vm/run.sh ]]; then
 				error "VM$vm not defined - setup it first"
@@ -927,7 +927,7 @@ function vm_wait_for_boot()
 		local vms_to_check="$VM_DIR/[0-9]*"
 	else
 		local vms_to_check=""
-		for vm in $@; do
+		for vm in "$@"; do
 			vms_to_check+=" $VM_DIR/$vm"
 		done
 	fi
@@ -992,7 +992,7 @@ function vm_start_fio_server()
 	done
 
 	shift $(( OPTIND - 1 ))
-	for vm_num in $@; do
+	for vm_num in "$@"; do
 		notice "Starting fio server on VM$vm_num"
 		if [[ $fio_bin != "" ]]; then
 			cat $fio_bin | vm_exec $vm_num 'cat > /root/fio; chmod +x /root/fio'
@@ -1056,7 +1056,7 @@ function run_fio()
 	local vm
 	local run_server_mode=true
 
-	for arg in $@; do
+	for arg in "$@"; do
 		case "$arg" in
 			--job-file=*) local job_file="${arg#*=}" ;;
 			--fio-bin=*) local fio_bin="${arg#*=}" ;;
@@ -1087,7 +1087,7 @@ function run_fio()
 	local job_fname
 	job_fname=$(basename "$job_file")
 	# prepare job file for each VM
-	for vm in ${vms[@]}; do
+	for vm in "${vms[@]}"; do
 		local vm_num=${vm%%:*}
 		local vmdisks=${vm#*:}
 
