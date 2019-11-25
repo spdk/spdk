@@ -1029,7 +1029,7 @@ nvme_ctrlr_deactivate_namespace(struct nvme_bdev_ns *ns)
 		spdk_bdev_unregister(&bdev->disk, NULL, NULL);
 	}
 
-	ns->active = false;
+	ns->populated = false;
 }
 
 static void
@@ -1044,7 +1044,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		uint32_t	nsid = i + 1;
 
 		ns = nvme_bdev_ctrlr->namespaces[i];
-		if (!ns->active && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+		if (!ns->populated && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
 			ns->id = nsid;
 			ns->ctrlr = nvme_bdev_ctrlr;
 			if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
@@ -1057,13 +1057,13 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 
 			rc = nvme_ctrlr_populate_namespace(nvme_bdev_ctrlr, ns);
 			if (rc == 0) {
-				ns->active = true;
+				ns->populated = true;
 			} else {
 				memset(ns, 0, sizeof(*ns));
 			}
 		}
 
-		if (ns->active && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+		if (ns->populated && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
 			nvme_ctrlr_deactivate_namespace(ns);
 		}
 	}
@@ -1225,9 +1225,9 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 				uint32_t	nsid = i + 1;
 
 				ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
-				if (ns->active) {
+				if (ns->populated) {
 					assert(ns->id == nsid);
-					ns->active = false;
+					ns->populated = false;
 					TAILQ_FOREACH_SAFE(nvme_bdev, &ns->bdevs, tailq, tmp) {
 						spdk_bdev_unregister(&nvme_bdev->disk, NULL, NULL);
 					}
@@ -1378,7 +1378,7 @@ bdev_nvme_populate_namespaces(struct nvme_async_probe_ctx *ctx, spdk_bdev_create
 	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
 		nsid = i + 1;
 		ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
-		if (!ns->active) {
+		if (!ns->populated) {
 			continue;
 		}
 		assert(ns->id == nsid);

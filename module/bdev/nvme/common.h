@@ -53,7 +53,7 @@ enum nvme_bdev_ns_type {
 struct nvme_bdev_ns {
 	uint32_t		id;
 	enum nvme_bdev_ns_type	type;
-	bool			active;
+	bool			populated;
 	struct spdk_nvme_ns	*ns;
 	struct nvme_bdev_ctrlr	*ctrlr;
 	TAILQ_HEAD(, nvme_bdev)	bdevs;
