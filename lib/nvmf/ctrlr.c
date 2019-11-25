@@ -882,16 +882,16 @@ spdk_nvmf_ctrlr_set_features_power_management(struct spdk_nvmf_request *req)
 }
 
 static bool
-temp_threshold_opts_valid(const union spdk_nvme_feat_temperature_threshold *opts)
+temp_threshold_opts_valid(const struct spdk_nvme_feat_temperature_threshold_bits *opts)
 {
 	/*
 	 * Valid TMPSEL values:
 	 *  0000b - 1000b: temperature sensors
 	 *  1111b: set all implemented temperature sensors
 	 */
-	if (opts->bits.tmpsel >= 9 && opts->bits.tmpsel != 15) {
+	if (opts->tmpsel >= 9 && opts->tmpsel != 15) {
 		/* 1001b - 1110b: reserved */
-		SPDK_ERRLOG("Invalid TMPSEL %u\n", opts->bits.tmpsel);
+		SPDK_ERRLOG("Invalid TMPSEL %u\n", opts->tmpsel);
 		return false;
 	}
 
@@ -900,9 +900,9 @@ temp_threshold_opts_valid(const union spdk_nvme_feat_temperature_threshold *opts
 	 *  00b: over temperature threshold
 	 *  01b: under temperature threshold
 	 */
-	if (opts->bits.thsel > 1) {
+	if (opts->thsel > 1) {
 		/* 10b - 11b: reserved */
-		SPDK_ERRLOG("Invalid THSEL %u\n", opts->bits.thsel);
+		SPDK_ERRLOG("Invalid THSEL %u\n", opts->thsel);
 		return false;
 	}
 
@@ -918,8 +918,7 @@ spdk_nvmf_ctrlr_set_features_temperature_threshold(struct spdk_nvmf_request *req
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Temperature Threshold (cdw11 = 0x%0x)\n",
 		      cmd->cdw11.raw);
 
-	if (!temp_threshold_opts_valid((const union spdk_nvme_feat_temperature_threshold *)
-				       &cmd->cdw11.temperature_threshold)) {
+	if (!temp_threshold_opts_valid(&cmd->cdw11.temperature_threshold)) {
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -938,8 +937,7 @@ spdk_nvmf_ctrlr_get_features_temperature_threshold(struct spdk_nvmf_request *req
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Temperature Threshold (cdw11 = 0x%0x)\n",
 		      cmd->cdw11.raw);
 
-	if (!temp_threshold_opts_valid((const union spdk_nvme_feat_temperature_threshold *)
-				       &cmd->cdw11.temperature_threshold)) {
+	if (!temp_threshold_opts_valid(&cmd->cdw11.temperature_threshold)) {
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;

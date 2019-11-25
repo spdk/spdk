@@ -490,6 +490,28 @@ struct spdk_nvme_feat_power_management_bits {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feat_power_management_bits) == 4, "Incorrect size");
 
+struct spdk_nvme_feat_lba_range_type_bits {
+	/** Number of LBA Ranges */
+	uint32_t num : 6;
+
+	uint32_t reserved : 26;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feat_lba_range_type_bits) == 4, "Incorrect size");
+
+struct spdk_nvme_feat_temperature_threshold_bits {
+	/** Temperature Threshold */
+	uint32_t tmpth : 16;
+
+	/** Threshold Temperature Select */
+	uint32_t tmpsel : 4;
+
+	/** Threshold Type Select */
+	uint32_t thsel : 2;
+
+	uint32_t reserved : 10;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feat_temperature_threshold_bits) == 4, "Incorrect size");
+
 union spdk_nvme_critical_warning_state {
 	uint8_t		raw;
 
@@ -645,26 +667,8 @@ union spdk_nvme_cmd_cdw11 {
 
 	struct spdk_nvme_feat_arbitration_bits arbitration;
 	struct spdk_nvme_feat_power_management_bits power_management;
-
-	struct {
-		/** Number of LBA Ranges */
-		uint32_t num : 6;
-
-		uint32_t reserved : 26;
-	} lba_range_type;
-
-	struct {
-		/** Temperature Threshold */
-		uint32_t tmpth : 16;
-
-		/** Threshold Temperature Select */
-		uint32_t tmpsel : 4;
-
-		/** Threshold Type Select */
-		uint32_t thsel : 2;
-
-		uint32_t reserved : 10;
-	} temperature_threshold;
+	struct spdk_nvme_feat_lba_range_type_bits lba_range_type;
+	struct spdk_nvme_feat_temperature_threshold_bits temperature_threshold;
 
 	struct {
 		/** Time Limited Error Recovery */
@@ -2419,12 +2423,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_power_management) == 4, "Incorrec
  */
 union spdk_nvme_feat_lba_range_type {
 	uint32_t raw;
-	struct {
-		/** Number of LBA Ranges */
-		uint32_t num : 6;
-
-		uint32_t reserved : 26;
-	} bits;
+	struct spdk_nvme_feat_lba_range_type_bits bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_lba_range_type) == 4, "Incorrect size");
 
@@ -2433,18 +2432,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_lba_range_type) == 4, "Incorrect 
  */
 union spdk_nvme_feat_temperature_threshold {
 	uint32_t raw;
-	struct {
-		/** Temperature Threshold */
-		uint32_t tmpth : 16;
-
-		/** Threshold Temperature Select */
-		uint32_t tmpsel : 4;
-
-		/** Threshold Type Select */
-		uint32_t thsel : 2;
-
-		uint32_t reserved : 10;
-	} bits;
+	struct spdk_nvme_feat_temperature_threshold_bits bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_temperature_threshold) == 4, "Incorrect size");
 
