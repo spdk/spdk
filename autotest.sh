@@ -180,6 +180,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		fi
 		if [[ $SPDK_TEST_NVME_CUSE -eq 1 ]]; then
 			run_test suite test/nvme/spdk_nvme_cli_cuse.sh
+			run_test suite test/nvme/spdk_smartctl_cuse.sh
 		fi
 		# Only test hotplug without ASAN enabled. Since if it is
 		# enabled, it catches SEGV earlier than our handler which
