@@ -542,7 +542,10 @@ free_tasks_on_connection(void)
 
 	task1.scsi.ref = 1;
 	task2.scsi.ref = 1;
-	task3.scsi.ref = 1;
+	task3.scsi.ref = 2;
+
+	pdu4.task = &task3;
+
 	TAILQ_INSERT_TAIL(&conn.snack_pdu_list, &pdu1, tailq);
 	TAILQ_INSERT_TAIL(&conn.snack_pdu_list, &pdu2, tailq);
 	TAILQ_INSERT_TAIL(&conn.snack_pdu_list, &pdu3, tailq);
@@ -561,7 +564,7 @@ free_tasks_on_connection(void)
 
 	task1.scsi.ref = 1;
 	task2.scsi.ref = 1;
-	task3.scsi.ref = 1;
+	task3.scsi.ref = 2;
 	TAILQ_INSERT_TAIL(&conn.snack_pdu_list, &pdu1, tailq);
 	TAILQ_INSERT_TAIL(&conn.snack_pdu_list, &pdu2, tailq);
 	TAILQ_INSERT_TAIL(&conn.snack_pdu_list, &pdu3, tailq);
@@ -571,12 +574,12 @@ free_tasks_on_connection(void)
 	_iscsi_conn_free_tasks(&conn, &lun1);
 
 	CU_ASSERT(!dequeue_pdu(&conn.snack_pdu_list, &pdu1));
-	CU_ASSERT(!dequeue_pdu(&conn.snack_pdu_list, &pdu2));
-	CU_ASSERT(!dequeue_pdu(&conn.snack_pdu_list, &pdu3));
-	CU_ASSERT(!dequeue_pdu(&conn.snack_pdu_list, &pdu4));
+	CU_ASSERT(dequeue_pdu(&conn.snack_pdu_list, &pdu2));
+	CU_ASSERT(dequeue_pdu(&conn.snack_pdu_list, &pdu3));
+	CU_ASSERT(dequeue_pdu(&conn.snack_pdu_list, &pdu4));
 	CU_ASSERT(task1.scsi.ref == 0);
 	CU_ASSERT(task2.scsi.ref == 1);
-	CU_ASSERT(task3.scsi.ref == 1);
+	CU_ASSERT(task3.scsi.ref == 2);
 
 	/* Test conn->queued_datain_tasks */
 
