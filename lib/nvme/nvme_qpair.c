@@ -506,6 +506,12 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	return ret;
 }
 
+spdk_nvme_qp_failure_reason
+spdk_nvme_qpair_get_failure_reason(struct spdk_nvme_qpair *qpair)
+{
+	return qpair->transport_failure_reason;
+}
+
 int
 nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		struct spdk_nvme_ctrlr *ctrlr,

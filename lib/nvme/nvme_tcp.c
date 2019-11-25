@@ -1511,6 +1511,8 @@ fail:
 	 * we can call nvme_tcp_qpair_disconnect. For other qpairs we need
 	 * to call the generic function which will take the lock for us.
 	 */
+	qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
+
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_tcp_qpair_disconnect(qpair);
 	} else {
