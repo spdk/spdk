@@ -241,7 +241,7 @@ if hash shellcheck 2>/dev/null; then
 	# Error descriptions can also be found at: https://github.com/koalaman/shellcheck/wiki
 	# This SHCK_EXCLUDE list is out "to do" and we work to fix all of this errors.
 	SHCK_EXCLUDE="SC1083,SC2002,\
-SC2010,SC2016,SC2034,SC2045,SC2046,SC2086,SC2089,SC2090,\
+SC2010,SC2034,SC2045,SC2046,SC2086,SC2089,SC2090,\
 SC2097,SC2098,SC2119,SC2120"
 	# SPDK fails some error checks which have been deprecated in later versions of shellcheck.
 	# We will not try to fix these error checks, but instead just leave the error types here
@@ -252,6 +252,7 @@ SC2097,SC2098,SC2119,SC2120"
 	# SC1090: Can't follow non-constant source. Use a directive to specify location.
 	# SC1091: Not following: (error message here)
 	# SC2001: See if you can use ${variable//search/replace} instead.
+	# SC2016: Expressions don't expand in single quotes, use double quotes for that.
 	# SC2148: Add shebang to the top of your script.
 	# SC2153: Possible Misspelling: MYVARIABLE may not be assigned, but MY_VARIABLE is.
 	# SC2154: var is referenced but not assigned.
@@ -261,7 +262,7 @@ SC2097,SC2098,SC2119,SC2120"
 	#         or split robustly with mapfile or read -a.
 	# SC2207: Prefer mapfile or read -a to split command output (or quote to avoid splitting).
 	# SC2223: This default assignment may cause DoS due to globbing. Quote it.
-	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1090,SC1091,SC2148,SC2153,SC2154,SC2164,\
+	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1090,SC1091,SC2016,SC2148,SC2153,SC2154,SC2164,\
 SC2174,SC2001,SC2206,SC2207,SC2223"
 
 	SHCK_FORMAT="diff"
