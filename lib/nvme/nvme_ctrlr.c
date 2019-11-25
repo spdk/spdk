@@ -422,11 +422,18 @@ spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair)
 		rc = -EAGAIN;
 		goto out;
 	}
+	qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
 	nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
 
 out:
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	return rc;
+}
+
+spdk_nvme_qp_failure_reason
+spdk_nvme_ctrlr_get_admin_qp_failure_reason(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->adminq->transport_failure_reason;
 }
 
 /*
@@ -1076,11 +1083,13 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	/* Disable all queues before disabling the controller hardware. */
 	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
+		qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 		nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
 	}
 	nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_DISABLED);
 	nvme_qpair_complete_error_reqs(ctrlr->adminq);
 	nvme_transport_qpair_abort_reqs(ctrlr->adminq, 0 /* retry */);
+	ctrlr->adminq->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
 	if (nvme_transport_ctrlr_connect_qpair(ctrlr, ctrlr->adminq) != 0) {
 		SPDK_ERRLOG("Controller reinitialization failed.\n");
@@ -1088,6 +1097,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		rc = -1;
 		goto out;
 	}
+	ctrlr->adminq->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
 	nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_CONNECTED);
 
 	/* Doorbell buffer config is invalid during reset */
@@ -1116,10 +1126,12 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 			if (nvme_transport_ctrlr_connect_qpair(ctrlr, qpair) != 0) {
+				qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 				nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
 				rc = -1;
 				continue;
 			}
+			qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
 			nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
 		}
 	}

@@ -236,6 +236,21 @@ void spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts,
 		size_t opts_size);
 
 /**
+ * Reason for qpair disconnect at the transport layer.
+ *
+ * NONE implies that the qpair is still connected while UNKNOWN means that the
+ * qpair is disconnected, but the cause was not apparent.
+ */
+enum spdk_nvme_qp_failure_reason {
+	SPDK_NVME_QPAIR_FAILURE_NONE = 0,
+	SPDK_NVME_QPAIR_FAILURE_LOCAL,
+	SPDK_NVME_QPAIR_FAILURE_REMOTE,
+	SPDK_NVME_QPAIR_FAILURE_UNKNOWN,
+};
+
+typedef enum spdk_nvme_qp_failure_reason spdk_nvme_qp_failure_reason;
+
+/**
  * NVMe library transports
  *
  * NOTE: These are mapped directly to the NVMe over Fabrics TRTYPE values, except for PCIe,
@@ -1107,6 +1122,16 @@ struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *c
 int spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair);
 
 /**
+ * Returns the reason the admin qpair for a given controller is disconnected.
+ *
+ * \param ctrlr The controller to check.
+ *
+ * \return a valid spdk_nvme_qp_failure_reason.
+ */
+spdk_nvme_qp_failure_reason spdk_nvme_ctrlr_get_admin_qp_failure_reason(
+	struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Free an I/O queue pair that was allocated by spdk_nvme_ctrlr_alloc_io_qpair().
  *
  * \param qpair I/O queue pair to free.
@@ -1251,6 +1276,15 @@ int spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
  */
 int32_t spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		uint32_t max_completions);
+
+/**
+ * Returns the reason the qpair is disconnected.
+ *
+ * \param qpair The qpair to check.
+ *
+ * \return a valid spdk_nvme_qp_failure_reason.
+ */
+spdk_nvme_qp_failure_reason spdk_nvme_qpair_get_failure_reason(struct spdk_nvme_qpair *qpair);
 
 /**
  * Send the given admin command to the NVMe controller.
