@@ -162,9 +162,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 		run_test suite test/bdev/blockdev.sh
-		if [[ $RUN_NIGHTLY -eq 1 ]]; then
-			run_test suite test/bdev/bdev_raid.sh
-		fi
+		run_test suite test/bdev/bdev_raid.sh
 	fi
 
 	if [ $SPDK_TEST_JSON -eq 1 ]; then
