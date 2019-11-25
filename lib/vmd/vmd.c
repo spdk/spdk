@@ -463,9 +463,6 @@ vmd_init_hotplug(struct vmd_pci_device *dev, struct vmd_pci_bus *bus)
 
 	if (!vmd->scan_completed) {
 		hp->bar.start = vmd_allocate_base_addr(vmd, NULL, hp->bar.size);
-		bus->self->header->one.mem_base = BRIDGE_BASEREG(hp->bar.start);
-		bus->self->header->one.mem_limit =
-			bus->self->header->one.mem_base + BRIDGE_BASEREG(hp->bar.size - 1);
 	} else {
 		hp->bar.start = (uint64_t)bus->self->header->one.mem_base << 16;
 	}
