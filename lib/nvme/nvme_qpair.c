@@ -448,10 +448,6 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		return -ENXIO;
 	}
 
-	if (spdk_unlikely(qpair->transport_qp_is_failed == true)) {
-		return -ENXIO;
-	}
-
 	if (spdk_unlikely(!nvme_qpair_check_enabled(qpair) &&
 			  !nvme_qpair_state_equals(qpair, NVME_QPAIR_CONNECTING))) {
 		/*
@@ -706,10 +702,6 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		 */
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
 		return 0;
-	}
-
-	if (spdk_unlikely(qpair->transport_qp_is_failed == true)) {
-		return -ENXIO;
 	}
 
 	rc = _nvme_qpair_submit_request(qpair, req);

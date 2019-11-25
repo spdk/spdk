@@ -1468,14 +1468,14 @@ test_spdk_nvme_ctrlr_reconnect_io_qpair(void)
 
 	/* qpair not failed. Make sure we don't call down to the transport */
 	ctrlr.is_failed = 0;
-	qpair.transport_qp_is_failed = false;
+	qpair.state = NVME_QPAIR_CONNECTED;
 	g_connect_qpair_called = false;
 	rc = spdk_nvme_ctrlr_reconnect_io_qpair(&qpair);
 	CU_ASSERT(g_connect_qpair_called == false);
 	CU_ASSERT(rc == 0)
 
 	/* transport qpair is failed. make sure we call down to the transport */
-	qpair.transport_qp_is_failed = true;
+	qpair.state = NVME_QPAIR_DISABLED;
 	rc = spdk_nvme_ctrlr_reconnect_io_qpair(&qpair);
 	CU_ASSERT(g_connect_qpair_called == true);
 	CU_ASSERT(rc == 0)
