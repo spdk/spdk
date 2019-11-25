@@ -214,7 +214,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	}
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	conn->timeout = g_spdk_iscsi.timeout;
+	conn->timeout = g_spdk_iscsi.timeout * spdk_get_ticks_hz(); /* seconds to TSC */
 	conn->nopininterval = g_spdk_iscsi.nopininterval;
 	conn->nopininterval *= spdk_get_ticks_hz(); /* seconds to TSC */
 	conn->nop_outstanding = false;
@@ -1174,7 +1174,7 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 	/* Check for nop interval expiration */
 	tsc = spdk_get_ticks();
 	if (conn->nop_outstanding) {
-		if ((tsc - conn->last_nopin) > (conn->timeout  * spdk_get_ticks_hz())) {
+		if ((tsc - conn->last_nopin) > conn->timeout) {
 			SPDK_ERRLOG("Timed out waiting for NOP-Out response from initiator\n");
 			SPDK_ERRLOG("  tsc=0x%lx, last_nopin=0x%lx\n", tsc, conn->last_nopin);
 			SPDK_ERRLOG("  initiator=%s, target=%s\n", conn->initiator_name,
