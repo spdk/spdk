@@ -462,6 +462,23 @@ enum spdk_nvme_cc_ams {
 	SPDK_NVME_CC_AMS_VS		= 0x7,	/**< vendor specific */
 };
 
+struct spdk_nvme_feat_arbitration_bits {
+	/** Arbitration Burst */
+	uint32_t ab : 3;
+
+	uint32_t reserved : 5;
+
+	/** Low Priority Weight */
+	uint32_t lpw : 8;
+
+	/** Medium Priority Weight */
+	uint32_t mpw : 8;
+
+	/** High Priority Weight */
+	uint32_t hpw : 8;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feat_arbitration_bits) == 4, "Incorrect size");
+
 union spdk_nvme_critical_warning_state {
 	uint8_t		raw;
 
@@ -615,21 +632,7 @@ union spdk_nvme_cmd_cdw11 {
 		uint32_t reserved : 31;
 	} resv_report;
 
-	struct {
-		/** Arbitration Burst */
-		uint32_t ab : 3;
-
-		uint32_t reserved : 5;
-
-		/** Low Priority Weight */
-		uint32_t lpw : 8;
-
-		/** Medium Priority Weight */
-		uint32_t mpw : 8;
-
-		/** High Priority Weight */
-		uint32_t hpw : 8;
-	} arbitration;
+	struct spdk_nvme_feat_arbitration_bits arbitration;
 
 	struct {
 		/** Power State */
@@ -2396,21 +2399,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_async_event_completion) == 4, "Incorre
  */
 union spdk_nvme_feat_arbitration {
 	uint32_t raw;
-	struct {
-		/** Arbitration Burst */
-		uint32_t ab : 3;
-
-		uint32_t reserved : 5;
-
-		/** Low Priority Weight */
-		uint32_t lpw : 8;
-
-		/** Medium Priority Weight */
-		uint32_t mpw : 8;
-
-		/** High Priority Weight */
-		uint32_t hpw : 8;
-	} bits;
+	struct spdk_nvme_feat_arbitration_bits bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_arbitration) == 4, "Incorrect size");
 
