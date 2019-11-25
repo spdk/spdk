@@ -4293,10 +4293,7 @@ iscsi_handle_data_ack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			if ((from_be32(&datain_header->ttt) == transfer_tag) &&
 			    (old_datasn == beg_run - 1)) {
 				TAILQ_REMOVE(&conn->snack_pdu_list, old_pdu, tailq);
-				if (old_pdu->task) {
-					spdk_iscsi_task_put(old_pdu->task);
-				}
-				spdk_put_pdu(old_pdu);
+				spdk_iscsi_conn_free_pdu(conn, old_pdu);
 				break;
 			}
 		}
