@@ -235,7 +235,7 @@ nvme_tcp_qpair_disconnect(struct spdk_nvme_qpair *qpair)
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 	struct nvme_tcp_pdu *pdu;
 
-	qpair->transport_qp_is_failed = true;
+	nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
 	spdk_sock_close(&tqpair->sock);
 
 	/* clear the send_queue */
@@ -1624,10 +1624,9 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 		return -1;
 	}
 
-	tqpair->qpair.transport_qp_is_failed = false;
 	rc = nvme_fabric_qpair_connect(&tqpair->qpair, tqpair->num_entries);
 	if (rc < 0) {
-		tqpair->qpair.transport_qp_is_failed = true;
+		nvme_qpair_set_state(&tqpair->qpair, NVME_QPAIR_DISABLED);
 		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
 		return -1;
 	}

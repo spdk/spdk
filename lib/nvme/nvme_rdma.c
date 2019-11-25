@@ -288,13 +288,13 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			break;
 		case RDMA_CM_EVENT_DISCONNECTED:
 		case RDMA_CM_EVENT_DEVICE_REMOVAL:
-			rqpair->qpair.transport_qp_is_failed = true;
+			nvme_qpair_set_state(&rqpair->qpair, NVME_QPAIR_DISABLED);
 			break;
 		case RDMA_CM_EVENT_MULTICAST_JOIN:
 		case RDMA_CM_EVENT_MULTICAST_ERROR:
 			break;
 		case RDMA_CM_EVENT_ADDR_CHANGE:
-			rqpair->qpair.transport_qp_is_failed = true;
+			nvme_qpair_set_state(&rqpair->qpair, NVME_QPAIR_DISABLED);
 			break;
 		case RDMA_CM_EVENT_TIMEWAIT_EXIT:
 			break;
@@ -1058,10 +1058,9 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 
-	rqpair->qpair.transport_qp_is_failed = false;
 	rc = nvme_fabric_qpair_connect(&rqpair->qpair, rqpair->num_entries);
 	if (rc < 0) {
-		rqpair->qpair.transport_qp_is_failed = true;
+		nvme_qpair_set_state(&rqpair->qpair, NVME_QPAIR_DISABLED);
 		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
 		return -1;
 	}
@@ -1514,7 +1513,7 @@ nvme_rdma_qpair_disconnect(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
 
-	qpair->transport_qp_is_failed = true;
+	nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
 	nvme_rdma_unregister_mem(rqpair);
 	nvme_rdma_unregister_reqs(rqpair);
 	nvme_rdma_unregister_rsps(rqpair);
@@ -1895,7 +1894,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	}
 	nvme_rdma_qpair_process_cm_event(rqpair);
 
-	if (spdk_unlikely(qpair->transport_qp_is_failed)) {
+	if (spdk_unlikely(nvme_qpair_state_equals(qpair, NVME_QPAIR_DISABLED))) {
 		goto fail;
 	}
 
