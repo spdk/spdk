@@ -1781,7 +1781,6 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	struct nvme_bdev_ns	*ns;
 	int			rc;
-	int			bdevs_created = 0;
 	uint32_t		nsid;
 
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(nvme_bdev_ctrlr->ctrlr);
@@ -1795,15 +1794,10 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		rc = nvme_ctrlr_populate_namespace(nvme_bdev_ctrlr, ns);
 		if (rc == 0) {
 			ns->active = true;
-			bdevs_created++;
 		} else {
 			memset(ns, 0, sizeof(*ns));
 			SPDK_NOTICELOG("Failed to populate namespace %u of %s\n", nsid, nvme_bdev_ctrlr->name);
 		}
-	}
-
-	if (bdevs_created == 0) {
-		SPDK_NOTICELOG("No bdev is created for NVMe controller %s\n", nvme_bdev_ctrlr->name);
 	}
 }
 
