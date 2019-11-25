@@ -39,6 +39,48 @@
       "revId": "de3f4ad736ac9a53a0ee50032040cf44f58c80e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c05849b4_da3c8dd8",
+        "filename": "lib/nvme/nvme_uevent.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-25T12:03:40Z",
+      "side": 1,
+      "message": "Thanks hailiang , Will keep  this.",
+      "parentUuid": "ab7bb6ed_1be16f92",
+      "range": {
+        "startLine": 121,
+        "startChar": 2,
+        "endLine": 122,
+        "endChar": 8
+      },
+      "revId": "de3f4ad736ac9a53a0ee50032040cf44f58c80e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7cccc91_ffe41915",
+        "filename": "lib/nvme/nvme_uevent.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-11-25T12:03:40Z",
+      "side": 1,
+      "message": "I think I mad mistakes.\n\nHi jim \u0026 shuhei,\n    I read the topics about uevent from kerenel ,and found:\nIt sends netlink message called uevent. uevent is just string of some special format that is sent via netlink socket. \nExamples:\n\n\"add@/class/input/input9/mouse2\\0    // message\nACTION\u003dadd\\0                         // action type\nDEVPATH\u003d/class/input/input9/mouse2\\0 // path in /sys\nSUBSYSTEM\u003dinput\\0                    // subsystem (class)\nSEQNUM\u003d1064\\0                        // sequence number\nPHYSDEVPATH\u003d/devices/pci0000:00/0000:00:1d.1/usb2/2­2/2­2:1.0\\0  // device path in /sys\nPHYSDEVBUS\u003dusb\\0       // bus\nPHYSDEVDRIVER\u003dusbhid\\0 // driver\nMAJOR\u003d13\\0             // major number\nMINOR\u003d34\\0\",           // minor number\nKernel function that actually sends uevent is kobject_uevent_env and it\u0027s wrapper kobject_uevent that is called in many places.\n\nFrom the messages ,we can see that it sends a command following with \"\\0\".\nSo you are right , I will abandon this patch.\n\nDong.",
+      "parentUuid": "b7133818_846a25cf",
+      "revId": "de3f4ad736ac9a53a0ee50032040cf44f58c80e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
