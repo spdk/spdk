@@ -4565,10 +4565,7 @@ remove_acked_pdu(struct spdk_iscsi_conn *conn, uint32_t ExpStatSN)
 		stat_sn = from_be32(&pdu->bhs.stat_sn);
 		if (SN32_LT(stat_sn, conn->exp_statsn)) {
 			TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
-			if (pdu->task) {
-				spdk_iscsi_task_put(pdu->task);
-			}
-			spdk_put_pdu(pdu);
+			spdk_iscsi_conn_free_pdu(conn, pdu);
 		}
 	}
 }
