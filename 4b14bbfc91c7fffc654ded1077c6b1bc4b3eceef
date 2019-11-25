@@ -177,6 +177,24 @@
     },
     {
       "key": {
+        "uuid": "7d2212b1_b6b91058",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1588,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-25T15:45:36Z",
+      "side": 1,
+      "message": "Just expanding on previous comments here. I\u0027ve added check for sufficient pages.\n\nI think this should only be verified for thick provisioned, for similar reasons as cluster check. Thin provisioned blob size can go way over what device size (or md size) can accommodate, this is not a reason to fail resize. Only actual allocations should possibly fail if we run out of space.",
+      "parentUuid": "35c2bfa6_f9839c4e",
+      "revId": "4b14bbfc91c7fffc654ded1077c6b1bc4b3eceef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dada5729_5ea6fba9",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 8
