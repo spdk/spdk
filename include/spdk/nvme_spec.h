@@ -479,6 +479,17 @@ struct spdk_nvme_feat_arbitration_bits {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feat_arbitration_bits) == 4, "Incorrect size");
 
+struct spdk_nvme_feat_power_management_bits {
+	/** Power State */
+	uint32_t ps : 5;
+
+	/** Workload Hint */
+	uint32_t wh : 3;
+
+	uint32_t reserved : 24;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feat_power_management_bits) == 4, "Incorrect size");
+
 union spdk_nvme_critical_warning_state {
 	uint8_t		raw;
 
@@ -633,16 +644,7 @@ union spdk_nvme_cmd_cdw11 {
 	} resv_report;
 
 	struct spdk_nvme_feat_arbitration_bits arbitration;
-
-	struct {
-		/** Power State */
-		uint32_t ps : 5;
-
-		/** Workload Hint */
-		uint32_t wh : 3;
-
-		uint32_t reserved : 24;
-	} power_management;
+	struct spdk_nvme_feat_power_management_bits power_management;
 
 	struct {
 		/** Number of LBA Ranges */
@@ -2408,15 +2410,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_arbitration) == 4, "Incorrect siz
  */
 union spdk_nvme_feat_power_management {
 	uint32_t raw;
-	struct {
-		/** Power State */
-		uint32_t ps : 5;
-
-		/** Workload Hint */
-		uint32_t wh : 3;
-
-		uint32_t reserved : 24;
-	} bits;
+	struct spdk_nvme_feat_power_management_bits bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_power_management) == 4, "Incorrect size");
 
