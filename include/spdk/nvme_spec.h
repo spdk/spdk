@@ -540,6 +540,29 @@ struct spdk_nvme_feat_number_of_queues_bits {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feat_number_of_queues_bits) == 4, "Incorrect size");
 
+struct spdk_nvme_feat_interrupt_coalescing_bits {
+	/** Aggregation Threshold */
+	uint32_t thr : 8;
+
+	/** Aggregration time */
+	uint32_t time : 8;
+
+	uint32_t reserved : 16;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feat_interrupt_coalescing_bits) == 4, "Incorrect size");
+
+struct spdk_nvme_feat_interrupt_vector_configuration_bits {
+	/** Interrupt Vector */
+	uint32_t iv : 16;
+
+	/** Coalescing Disable */
+	uint32_t cd : 1;
+
+	uint32_t reserved : 15;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_feat_interrupt_vector_configuration_bits) == 4,
+		   "Incorrect size");
+
 union spdk_nvme_critical_warning_state {
 	uint8_t		raw;
 
@@ -700,26 +723,8 @@ union spdk_nvme_cmd_cdw11 {
 	struct spdk_nvme_feat_error_recovery_bits error_recovery;
 	struct spdk_nvme_feat_volatile_write_cache_bits volatile_write_cache;
 	struct spdk_nvme_feat_number_of_queues_bits number_of_queues;
-
-	struct {
-		/** Aggregation Threshold */
-		uint32_t thr : 8;
-
-		/** Aggregration time */
-		uint32_t time : 8;
-
-		uint32_t reserved : 16;
-	} interrupt_coalescing;
-
-	struct {
-		/** Interrupt Vector */
-		uint32_t iv : 16;
-
-		/** Coalescing Disable */
-		uint32_t cd : 1;
-
-		uint32_t reserved : 15;
-	} interrupt_vector_configuration;
+	struct spdk_nvme_feat_interrupt_coalescing_bits interrupt_coalescing;
+	struct spdk_nvme_feat_interrupt_vector_configuration_bits interrupt_vector_configuration;
 
 	struct {
 		/** Disable Normal */
@@ -2474,15 +2479,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_number_of_queues) == 4, "Incorrec
  */
 union spdk_nvme_feat_interrupt_coalescing {
 	uint32_t raw;
-	struct {
-		/** Aggregation Threshold */
-		uint32_t thr : 8;
-
-		/** Aggregration time */
-		uint32_t time : 8;
-
-		uint32_t reserved : 16;
-	} bits;
+	struct spdk_nvme_feat_interrupt_coalescing_bits bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_interrupt_coalescing) == 4, "Incorrect size");
 
@@ -2491,15 +2488,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_interrupt_coalescing) == 4, "Inco
  */
 union spdk_nvme_feat_interrupt_vector_configuration {
 	uint32_t raw;
-	struct {
-		/** Interrupt Vector */
-		uint32_t iv : 16;
-
-		/** Coalescing Disable */
-		uint32_t cd : 1;
-
-		uint32_t reserved : 15;
-	} bits;
+	struct spdk_nvme_feat_interrupt_vector_configuration_bits bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_interrupt_vector_configuration) == 4,
 		   "Incorrect size");
