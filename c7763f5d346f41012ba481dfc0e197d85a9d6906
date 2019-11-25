@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "60aef39c_11238af6",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-11-25T08:32:16Z",
+      "side": 1,
+      "message": "Yes, I used zone_capacity instead of size to maximize the utilization of the underlying bdev in case the capacity isn\u0027t a power of 2.\nIn my mind it doesn\u0027t make the logic that much harder, but I\u0027ll go ahead and change it.",
+      "parentUuid": "04735e4d_50ecb2e1",
+      "revId": "c7763f5d346f41012ba481dfc0e197d85a9d6906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b41bbbfb_c87b8f55",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 21
@@ -30,6 +48,24 @@
       "writtenOn": "2019-11-22T18:36:18Z",
       "side": 1,
       "message": "I do understand if the user wants to explicitly set a particular optimal open zones value for testing purposes, but I don\u0027t understand why the number of zones needs to be a multiple of the optimal_open_zones value. I don\u0027t think you need to do this math here at all.",
+      "revId": "c7763f5d346f41012ba481dfc0e197d85a9d6906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "927ac734_ec608777",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-11-25T08:32:16Z",
+      "side": 1,
+      "message": "This was done mostly for the sake of FTL - it doesn\u0027t support unbalanced OCSSD geometry at the moment (ie. having different amount of chunks in different parallel units), which is what this setting would be responsible for. Having the logic be a part of this bdev means we don\u0027t have to twiddle with different configuration settings when testing different capacities with FTL on top.",
+      "parentUuid": "b41bbbfb_c87b8f55",
       "revId": "c7763f5d346f41012ba481dfc0e197d85a9d6906",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -50,6 +86,24 @@
       "revId": "c7763f5d346f41012ba481dfc0e197d85a9d6906",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b4398b0_21c5d911",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-11-25T08:32:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c2fdd173_c3a3d691",
+      "revId": "c7763f5d346f41012ba481dfc0e197d85a9d6906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
