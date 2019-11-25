@@ -1021,7 +1021,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static void
-nvme_ctrlr_deactivate_namespace(struct nvme_bdev_ns *ns)
+nvme_ctrlr_depopulate_namespace(struct nvme_bdev_ns *ns)
 {
 	struct nvme_bdev *bdev, *tmp;
 
@@ -1064,7 +1064,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		}
 
 		if (ns->populated && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
-			nvme_ctrlr_deactivate_namespace(ns);
+			nvme_ctrlr_depopulate_namespace(ns);
 		}
 	}
 
