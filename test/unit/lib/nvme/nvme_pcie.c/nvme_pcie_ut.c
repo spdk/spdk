@@ -43,24 +43,9 @@ struct spdk_log_flag SPDK_LOG_NVME = {
 	.enabled = false,
 };
 
-static struct nvme_driver _g_nvme_driver = {
-	.lock = PTHREAD_MUTEX_INITIALIZER,
-};
-struct nvme_driver *g_spdk_nvme_driver = &_g_nvme_driver;
-
-struct spdk_nvme_ctrlr *g_ctrlr = NULL;
-
-bool g_add_device = false;
+struct nvme_driver *g_spdk_nvme_driver = NULL;
 
 bool g_device_is_enumerated = false;
-
-bool g_device_is_removed = false;
-
-bool g_remove_cb_done = false;
-
-bool g_vfio_is_enabled = false;
-
-char *g_pcie_traddr_str = "";
 
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
@@ -73,28 +58,28 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 	ctrlr->is_failed = true;
 }
 
+struct spdk_uevent_entry {
+	struct spdk_uevent		uevent;
+	STAILQ_ENTRY(spdk_uevent_entry)	link;
+};
+
+static STAILQ_HEAD(, spdk_uevent_entry) g_uevents = STAILQ_HEAD_INITIALIZER(g_uevents);
+
 int
 spdk_get_uevent(int fd, struct spdk_uevent *uevent)
 {
-	snprintf(uevent->traddr, sizeof(uevent->traddr), "%s", g_pcie_traddr_str);
+	struct spdk_uevent_entry *entry;
 
-	if (g_vfio_is_enabled) {
-		uevent->subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_VFIO;
-	} else {
-		uevent->subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_UIO;
+	if (STAILQ_EMPTY(&g_uevents)) {
+		return 0;
 	}
 
-	if (g_add_device) {
-		uevent->action = SPDK_NVME_UEVENT_ADD;
-	} else {
-		uevent->action = SPDK_NVME_UEVENT_REMOVE;
-	}
+	entry = STAILQ_FIRST(&g_uevents);
+	STAILQ_REMOVE_HEAD(&g_uevents, link);
 
-	if (!g_remove_cb_done && !g_device_is_enumerated) {
-		return 1;
-	}
+	*uevent = entry->uevent;
 
-	return 0;
+	return 1;
 }
 
 int
@@ -130,49 +115,13 @@ spdk_nvme_ctrlr_get_current_process(struct spdk_nvme_ctrlr *ctrlr)
 	return (struct spdk_nvme_ctrlr_process *)0x1;
 }
 
-bool
-spdk_pci_device_is_removed(struct spdk_pci_device *dev)
-{
-	return g_device_is_removed;
-}
-
-static void
-ut_remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
-{
-	g_remove_cb_done = true;
-	if (cb_ctx == NULL) {
-		return;
-	}
-
-	CU_ASSERT(ctrlr != NULL);
-	CU_ASSERT(g_ctrlr == NULL || g_ctrlr == ctrlr);
-	free(g_ctrlr);
-	g_ctrlr = NULL;
-}
-
-struct spdk_nvme_ctrlr *
-spdk_nvme_get_ctrlr_by_trid_unsafe(const struct spdk_nvme_transport_id *trid)
-{
-	struct spdk_nvme_ctrlr *ctrlr;
-
-	ctrlr = calloc(1, sizeof(*ctrlr));
-	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
-
-	ctrlr->remove_cb = (void *)ut_remove_cb;
-	ctrlr->is_failed = false;
-	ctrlr->is_removed = false;
-	g_ctrlr = ctrlr;
-
-	return ctrlr;
-}
+DEFINE_STUB(spdk_pci_device_is_removed, bool, (struct spdk_pci_device *dev), false);
+DEFINE_STUB(spdk_nvme_get_ctrlr_by_trid_unsafe, struct spdk_nvme_ctrlr *,
+	    (const struct spdk_nvme_transport_id *trid), NULL);
 
 union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_csts_register csts = {};
-
-	if (g_device_is_removed) {
-		csts.raw = 0xFFFFFFFFu;
-	}
 
 	return csts;
 }
@@ -318,62 +267,75 @@ static void
 test_nvme_pcie_hotplug_monitor(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {};
-	struct nvme_driver dummy;
+	struct spdk_uevent_entry entry = {};
+	struct nvme_driver driver;
 	pthread_mutexattr_t attr;
 	struct spdk_nvme_probe_ctx test_nvme_probe_ctx = {};
 
 	/* Initiate variables and ctrlr */
-	g_device_is_removed = false;
-	dummy.initialized = true;
+	driver.initialized = true;
 	CU_ASSERT(pthread_mutexattr_init(&attr) == 0);
-	CU_ASSERT(pthread_mutex_init(&dummy.lock, &attr) == 0);
-	TAILQ_INIT(&dummy.shared_attached_ctrlrs);
-	g_spdk_nvme_driver = &dummy;
-	test_nvme_probe_ctx.cb_ctx = (void *)ut_remove_cb;
+	CU_ASSERT(pthread_mutex_init(&driver.lock, &attr) == 0);
+	TAILQ_INIT(&driver.shared_attached_ctrlrs);
+	g_spdk_nvme_driver = &driver;
 
 	/* Case 1:  SPDK_NVME_UEVENT_ADD/ NVME_VFIO */
-	g_add_device = true;
-	g_vfio_is_enabled = true;
-	g_pcie_traddr_str = "0000:05:00.0";
-	CU_ASSERT(g_device_is_enumerated == false);
+	entry.uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_VFIO;
+	entry.uevent.action = SPDK_NVME_UEVENT_ADD;
+	snprintf(entry.uevent.traddr, sizeof(entry.uevent.traddr), "0000:05:00.0");
+	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
+	STAILQ_INSERT_TAIL(&g_uevents, &entry, link);
 
 	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
 
+	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
 	CU_ASSERT(g_device_is_enumerated == true);
 	g_device_is_enumerated = false;
 
 	/* Case 2:  SPDK_NVME_UEVENT_ADD/ NVME_UIO */
-	g_vfio_is_enabled = false;
+	entry.uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_UIO;
+	entry.uevent.action = SPDK_NVME_UEVENT_ADD;
+	snprintf(entry.uevent.traddr, sizeof(entry.uevent.traddr), "0000:05:00.0");
+	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
+	STAILQ_INSERT_TAIL(&g_uevents, &entry, link);
 
 	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
 
+	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
 	CU_ASSERT(g_device_is_enumerated == true);
 	g_device_is_enumerated = false;
 
 	/* Case 3: SPDK_NVME_UEVENT_REMOVE/ NVME_UIO */
-	g_add_device = false;
-	g_pcie_traddr_str = "0000:04:00.0";
-	test_nvme_probe_ctx.cb_ctx = NULL;
+	entry.uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_UIO;
+	entry.uevent.action = SPDK_NVME_UEVENT_REMOVE;
+	snprintf(entry.uevent.traddr, sizeof(entry.uevent.traddr), "0000:05:00.0");
+	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
+	STAILQ_INSERT_TAIL(&g_uevents, &entry, link);
+	MOCK_SET(spdk_nvme_get_ctrlr_by_trid_unsafe, &ctrlr);
 
 	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
 
-	CU_ASSERT(g_remove_cb_done == true);
-	CU_ASSERT(g_ctrlr != NULL);
-	free(g_ctrlr);
-	g_ctrlr = NULL;
-	g_remove_cb_done = false;
+	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
+	CU_ASSERT(ctrlr.is_failed == true);
+	ctrlr.is_failed = false;
+	MOCK_CLEAR(spdk_nvme_get_ctrlr_by_trid_unsafe);
 
 	/* Case 4: SPDK_NVME_UEVENT_REMOVE/ NVME_VFIO */
-	g_vfio_is_enabled = true;
-	test_nvme_probe_ctx.cb_ctx = (void *)ut_remove_cb;
+	entry.uevent.subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_VFIO;
+	entry.uevent.action = SPDK_NVME_UEVENT_REMOVE;
+	snprintf(entry.uevent.traddr, sizeof(entry.uevent.traddr), "0000:05:00.0");
+	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
+	STAILQ_INSERT_TAIL(&g_uevents, &entry, link);
+	MOCK_SET(spdk_nvme_get_ctrlr_by_trid_unsafe, &ctrlr);
 
 	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
 
-	CU_ASSERT(g_remove_cb_done == true);
-	CU_ASSERT(g_ctrlr == NULL);
+	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
+	CU_ASSERT(ctrlr.is_failed == true);
+	ctrlr.is_failed = false;
+	MOCK_CLEAR(spdk_nvme_get_ctrlr_by_trid_unsafe);
 
-	/* Case 5:  test only for VFIO hot remove detection  */
-	g_remove_cb_done  = true;
+	/* Case 5:  Removed device detected in another process  */
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(ctrlr.trid.traddr, sizeof(ctrlr.trid.traddr), "0000:02:00.0");
 	ctrlr.remove_cb = NULL;
@@ -381,23 +343,21 @@ test_nvme_pcie_hotplug_monitor(void)
 	ctrlr.is_removed = false;
 	TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->shared_attached_ctrlrs, &ctrlr, tailq);
 
+	MOCK_SET(spdk_pci_device_is_removed, false);
+
 	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
 
 	CU_ASSERT(ctrlr.is_failed == false);
 
-	g_device_is_removed = true;
-	g_remove_cb_done = false;
-	ctrlr.remove_cb = (void *)ut_remove_cb;
+	MOCK_SET(spdk_pci_device_is_removed, true);
 
 	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
 
 	CU_ASSERT(ctrlr.is_failed == true);
-	CU_ASSERT(ctrlr.is_removed == true);
-	CU_ASSERT(g_remove_cb_done == true);
 
-	pthread_mutex_destroy(&dummy.lock);
+	pthread_mutex_destroy(&driver.lock);
 	pthread_mutexattr_destroy(&attr);
-	g_spdk_nvme_driver = &_g_nvme_driver;
+	g_spdk_nvme_driver = NULL;
 }
 
 static void test_shadow_doorbell_update(void)
