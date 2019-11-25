@@ -1210,7 +1210,6 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t i;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_bdev_ns *ns;
-	struct nvme_bdev *nvme_bdev, *tmp;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
@@ -1227,10 +1226,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 				ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
 				if (ns->populated) {
 					assert(ns->id == nsid);
-					ns->populated = false;
-					TAILQ_FOREACH_SAFE(nvme_bdev, &ns->bdevs, tailq, tmp) {
-						spdk_bdev_unregister(&nvme_bdev->disk, NULL, NULL);
-					}
+					nvme_ctrlr_depopulate_namespace(ns);
 				}
 			}
 
