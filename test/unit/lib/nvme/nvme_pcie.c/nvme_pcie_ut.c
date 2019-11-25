@@ -90,41 +90,17 @@ spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, voi
 	return 0;
 }
 
-struct spdk_pci_addr
-spdk_pci_device_get_addr(struct spdk_pci_device *dev)
-{
-	abort();
-}
-
-int
-nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
-{
-	abort();
-}
-
-int
-nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
-		 struct spdk_nvme_probe_ctx *probe_ctx, void *devhandle)
-{
-	abort();
-}
-
-struct spdk_nvme_ctrlr_process *
-spdk_nvme_ctrlr_get_current_process(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return (struct spdk_nvme_ctrlr_process *)0x1;
-}
-
+DEFINE_STUB(spdk_pci_device_get_addr, struct spdk_pci_addr, (struct spdk_pci_device *dev), {});
+DEFINE_STUB(nvme_ctrlr_add_process, int, (struct spdk_nvme_ctrlr *ctrlr, void *devhandle), 0);
+DEFINE_STUB(nvme_ctrlr_probe, int, (const struct spdk_nvme_transport_id *trid,
+				    struct spdk_nvme_probe_ctx *probe_ctx, void *devhandle), 0);
+DEFINE_STUB(spdk_nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
+	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
 DEFINE_STUB(spdk_pci_device_is_removed, bool, (struct spdk_pci_device *dev), false);
 DEFINE_STUB(spdk_nvme_get_ctrlr_by_trid_unsafe, struct spdk_nvme_ctrlr *,
 	    (const struct spdk_nvme_transport_id *trid), NULL);
-
-union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctrlr *ctrlr)
-{
-	union spdk_nvme_csts_register csts = {};
-
-	return csts;
-}
+DEFINE_STUB(spdk_nvme_ctrlr_get_regs_csts, union spdk_nvme_csts_register,
+	    (struct spdk_nvme_ctrlr *ctrlr), {});
 
 static void
 prp_list_prep(struct nvme_tracker *tr, struct nvme_request *req, uint32_t *prp_index)
