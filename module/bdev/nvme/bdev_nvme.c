@@ -1047,6 +1047,11 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		if (!ns->active && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
 			ns->id = nsid;
 			ns->ctrlr = nvme_bdev_ctrlr;
+			if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
+				ns->type = NVME_BDEV_NS_OCSSD;
+			} else {
+				ns->type = NVME_BDEV_NS_STANDARD;
+			}
 
 			TAILQ_INIT(&ns->bdevs);
 
