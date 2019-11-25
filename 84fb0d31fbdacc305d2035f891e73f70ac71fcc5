@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "803a478c_abc7fb06",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-25T21:58:28Z",
+      "side": 1,
+      "message": "This is not necessary?",
+      "range": {
+        "startLine": 334,
+        "startChar": 6,
+        "endLine": 334,
+        "endChar": 18
+      },
+      "revId": "84fb0d31fbdacc305d2035f891e73f70ac71fcc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6be31abe_6efcedc0",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 4276,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-25T21:58:28Z",
+      "side": 1,
+      "message": "Shame on me. This is my fault. To make review easier, I added a patch to revert this https://review.gerrithub.io/c/spdk/spdk/+/475791. Please rebase your patch onto it.",
+      "revId": "84fb0d31fbdacc305d2035f891e73f70ac71fcc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
