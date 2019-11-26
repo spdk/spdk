@@ -430,10 +430,14 @@ int
 nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 			      uint32_t num_queues, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	uint32_t cdw11;
+	union spdk_nvme_feat_number_of_queues feat_num_queues;
 
-	cdw11 = ((num_queues - 1) << 16) | (num_queues - 1);
-	return spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_NUMBER_OF_QUEUES, cdw11, 0,
+	feat_num_queues.raw = 0;
+	feat_num_queues.bits.nsqr = num_queues - 1;
+	feat_num_queues.bits.ncqr = num_queues - 1;
+
+	return spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_NUMBER_OF_QUEUES, feat_num_queues.raw,
+					       0,
 					       NULL, 0, cb_fn, cb_arg);
 }
 
@@ -462,20 +466,22 @@ int
 nvme_ctrlr_cmd_set_host_id(struct spdk_nvme_ctrlr *ctrlr, void *host_id, uint32_t host_id_size,
 			   spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	uint32_t cdw11;
+	union spdk_nvme_feat_host_identifier feat_host_identifier;
 
+	feat_host_identifier.raw = 0;
 	if (host_id_size == 16) {
 		/* 128-bit extended host identifier */
-		cdw11 = 1;
+		feat_host_identifier.bits.exhid = 1;
 	} else if (host_id_size == 8) {
 		/* 64-bit host identifier */
-		cdw11 = 0;
+		feat_host_identifier.bits.exhid = 0;
 	} else {
 		SPDK_ERRLOG("Invalid host ID size %u\n", host_id_size);
 		return -EINVAL;
 	}
 
-	return spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_HOST_IDENTIFIER, cdw11, 0,
+	return spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_HOST_IDENTIFIER,
+					       feat_host_identifier.raw, 0,
 					       host_id, host_id_size, cb_fn, cb_arg);
 }
 
@@ -525,7 +531,7 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 	cmd->cdw10_bits.get_log_page.numdl = numdl;
 	cmd->cdw10_bits.get_log_page.lid = log_page;
 
-	cmd->cdw11 = numdu;
+	cmd->cdw11_bits.get_log_page.numdu = numdu;
 	cmd->cdw12 = lpol;
 	cmd->cdw13 = lpou;
 
