@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2816bf6d_f3b75ea4",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-26T02:02:40Z",
+      "side": 1,
+      "message": "OK, I will add the data structure to nvme_spec.h first.",
+      "parentUuid": "c85b372c_2308dc50",
+      "revId": "6d3ee9073a590266001fc28bf056dcc1ca29e91e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0ba4764f_50102bbb",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2019-11-26T00:04:11Z",
       "side": 1,
       "message": "now that you have separate structures for acquire and release, I think you should break this into separate cases - otherwise it\u0027s a bit confusing why we\u0027re using the acquire struct for the RELEASE OPC\n\nthen you can also simplify the 2363-2367 code\n\n(I don\u0027t understand lines 2363-2367 though - if opc \u003d\u003d ACQUIRE and racqa \u003d\u003d ACQUIRE - why is that a conflict?  should that be racqa !\u003d ACQUIRE?)",
+      "revId": "6d3ee9073a590266001fc28bf056dcc1ca29e91e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86d764d1_600199bb",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2361,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-26T02:02:40Z",
+      "side": 1,
+      "message": "The logic here is right, see the NVMe 1.4 specification chapter 8.8.3, if the code can enter here, which means there is a reservation holder in other controller that current controller, so current controller can\u0027t get the reservation again via ACQUIRE action, it can preempt the reservation through.\n\nBut the code path, yes, I should break the two cases.",
+      "parentUuid": "0ba4764f_50102bbb",
       "revId": "6d3ee9073a590266001fc28bf056dcc1ca29e91e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "6e3e3251_8007232b",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-26T02:02:40Z",
+      "side": 1,
+      "message": "Ack.",
+      "parentUuid": "ff35d31e_926c0b8b",
+      "revId": "6d3ee9073a590266001fc28bf056dcc1ca29e91e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "89f466e2_388dcf43",
         "filename": "test/unit/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut.c",
         "patchSetId": 4
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "62c1c6ab_73d0909a",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-26T02:02:40Z",
+      "side": 1,
+      "message": "Ack.",
+      "parentUuid": "89f466e2_388dcf43",
+      "revId": "6d3ee9073a590266001fc28bf056dcc1ca29e91e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3f73565d_40e2f585",
         "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
         "patchSetId": 4
@@ -81,6 +153,24 @@
       "writtenOn": "2019-11-26T00:04:11Z",
       "side": 1,
       "message": "use cmd-specific struct from union here instead?",
+      "revId": "6d3ee9073a590266001fc28bf056dcc1ca29e91e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4aee73b8_2130aa5c",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-26T02:02:40Z",
+      "side": 1,
+      "message": "Ack.",
+      "parentUuid": "3f73565d_40e2f585",
       "revId": "6d3ee9073a590266001fc28bf056dcc1ca29e91e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
