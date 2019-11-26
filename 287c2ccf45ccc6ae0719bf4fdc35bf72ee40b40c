@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc5bbceb_87adc500",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1090,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-26T19:52:20Z",
+      "side": 1,
+      "message": "Can you wrap this function lookup in a static inline function for clarity? Maybe called nvme_ctrlr_populate_namespace?",
+      "revId": "287c2ccf45ccc6ae0719bf4fdc35bf72ee40b40c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
