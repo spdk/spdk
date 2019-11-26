@@ -58,11 +58,18 @@ uint64_t PRP_ENTRY_1 = 4096;
 uint64_t PRP_ENTRY_2 = 4096;
 uint32_t format_nvme_nsid = 1;
 uint32_t sanitize_nvme_nsid = 1;
+uint32_t expected_host_id = 0xFF;
 
 uint32_t expected_feature_ns = 2;
 uint32_t expected_feature_cdw10 = SPDK_NVME_FEAT_LBA_RANGE_TYPE;
 uint32_t expected_feature_cdw11 = 1;
 uint32_t expected_feature_cdw12 = 1;
+
+enum _host_id_size {
+	host_id_size_8 = 8,
+	host_id_size_16 = 16,
+	host_id_size_other = 0xFF
+};
 
 typedef void (*verify_request_fn_t)(struct nvme_request *req);
 verify_request_fn_t verify_fn;
@@ -162,6 +169,24 @@ static void verify_io_raw_cmd_with_md(struct nvme_request *req)
 	struct spdk_nvme_cmd	command = {};
 
 	CU_ASSERT(memcmp(&req->cmd, &command, sizeof(req->cmd)) == 0);
+}
+
+static void verify_set_host_id_cmd(struct nvme_request *req)
+{
+	switch (expected_host_id) {
+	case host_id_size_8:
+		CU_ASSERT(req->cmd.cdw10 == SPDK_NVME_FEAT_HOST_IDENTIFIER);
+		CU_ASSERT(req->cmd.cdw11 == 0);
+		CU_ASSERT(req->cmd.cdw12 == 0);
+		break;
+	case host_id_size_16:
+		CU_ASSERT(req->cmd.cdw10 == SPDK_NVME_FEAT_HOST_IDENTIFIER);
+		CU_ASSERT(req->cmd.cdw11 == 1);
+		CU_ASSERT(req->cmd.cdw12 == 0);
+		break;
+	default:
+		CU_ASSERT(0);
+	}
 }
 
 static void verify_intel_smart_log_page(struct nvme_request *req)
@@ -557,6 +582,24 @@ test_io_raw_cmd_with_md(void)
 }
 
 static void
+test_set_host_id_by_case(enum _host_id_size host_id_size)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+
+	expected_host_id = host_id_size;
+	verify_fn = verify_set_host_id_cmd;
+
+	nvme_ctrlr_cmd_set_host_id(&ctrlr, NULL, expected_host_id, NULL, NULL);
+}
+
+static void
+test_set_host_id_cmds(void)
+{
+	test_set_host_id_by_case(host_id_size_8);
+	test_set_host_id_by_case(host_id_size_16);
+}
+
+static void
 test_get_log_pages(void)
 {
 	test_generic_get_log_pages();
@@ -689,6 +732,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test ctrlr cmd get_feature", test_get_feature_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd get_feature_ns", test_get_feature_ns_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd abort_cmd", test_abort_cmd) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd set_host_id", test_set_host_id_cmds) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd io_raw_no_payload_build",
 			       test_io_cmd_raw_no_payload_build) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd io_raw_cmd", test_io_raw_cmd) == NULL
