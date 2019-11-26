@@ -125,7 +125,8 @@ static struct spdk_poller *g_hotplug_poller;
 static struct spdk_nvme_probe_ctx *g_hotplug_probe_ctx;
 static char *g_nvme_hostnqn = NULL;
 
-static void nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+static void nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+		struct nvme_async_probe_ctx *ctx);
 static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
 static int bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
@@ -149,11 +150,11 @@ static int bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_chan
 static int bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio);
 
 typedef int (*populate_namespace_fn)(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-				     struct nvme_bdev_ns *nvme_ns);
+				     struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx);
 static int nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-		struct nvme_bdev_ns *nvme_ns);
+		struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx);
 static int nvme_ctrlr_populate_ocssd_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-		struct nvme_bdev_ns *nvme_ns);
+		struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx);
 
 static populate_namespace_fn g_populate_namespace_fn[] = {
 	NULL,
@@ -794,7 +795,7 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 
 static int
 nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-				       struct nvme_bdev_ns *nvme_ns)
+				       struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
 	struct nvme_bdev	*bdev;
@@ -871,7 +872,7 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 
 static int
 nvme_ctrlr_populate_ocssd_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-				    struct nvme_bdev_ns *nvme_ns)
+				    struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx)
 {
 	return 0;
 }
@@ -1018,9 +1019,10 @@ nvme_ctrlr_depopulate_ocssd_namespace(struct nvme_bdev_ns *ns)
 {
 }
 
-static int nvme_ctrlr_populate_namespace(struct nvme_bdev_ctrlr *ctrlr, struct nvme_bdev_ns *ns)
+static int nvme_ctrlr_populate_namespace(struct nvme_bdev_ctrlr *ctrlr, struct nvme_bdev_ns *ns,
+		struct nvme_async_probe_ctx *ctx)
 {
-	return g_populate_namespace_fn[ns->type](ctrlr, ns);
+	return g_populate_namespace_fn[ns->type](ctrlr, ns, ctx);
 }
 
 static void nvme_ctrlr_depopulate_namespace(struct nvme_bdev_ctrlr *ctrlr, struct nvme_bdev_ns *ns)
@@ -1029,7 +1031,8 @@ static void nvme_ctrlr_depopulate_namespace(struct nvme_bdev_ctrlr *ctrlr, struc
 }
 
 static void
-nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+			       struct nvme_async_probe_ctx *ctx)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
 	struct nvme_bdev_ns	*ns;
@@ -1051,7 +1054,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 
 			TAILQ_INIT(&ns->bdevs);
 
-			rc = nvme_ctrlr_populate_namespace(nvme_bdev_ctrlr, ns);
+			rc = nvme_ctrlr_populate_namespace(nvme_bdev_ctrlr, ns, ctx);
 			if (rc == 0) {
 				ns->populated = true;
 			} else {
@@ -1080,7 +1083,7 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	event.raw = cpl->cdw0;
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
 	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
-		nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr);
+		nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, NULL);
 	}
 }
 
@@ -1195,7 +1198,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr);
+	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, NULL);
 
 	free(name);
 }
@@ -1357,7 +1360,7 @@ bdev_nvme_populate_namespaces(struct nvme_async_probe_ctx *ctx)
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
 	assert(nvme_bdev_ctrlr != NULL);
 
-	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr);
+	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
 
 	/*
 	 * Report the new bdevs that were created in this call.
@@ -1692,7 +1695,7 @@ bdev_nvme_library_init(void)
 				goto end;
 			}
 
-			nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr);
+			nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, NULL);
 		} else {
 			local_nvme_num++;
 		}
