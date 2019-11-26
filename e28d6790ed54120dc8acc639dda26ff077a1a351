@@ -68,6 +68,29 @@
       "revId": "e28d6790ed54120dc8acc639dda26ff077a1a351",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac353895_a8dbd37c",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 909,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-26T14:21:11Z",
+      "side": 1,
+      "message": "the qpair pdu recv buffering was added as part of commit d50736776c \"nvmf/tcp: Use a big buffer for PDU receving\" -- note that this buffer doesn\u0027t go over the network, it where the bytes received from the initiator are copied from the socket. Also you are aiming to revert this commit soon in your pipelining work.. so I suggest to avoid touch it in this patch - makes sense?",
+      "range": {
+        "startLine": 909,
+        "startChar": 2,
+        "endLine": 909,
+        "endChar": 85
+      },
+      "revId": "e28d6790ed54120dc8acc639dda26ff077a1a351",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
