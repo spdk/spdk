@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e17ba00_ad9b19b1",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-26T19:59:45Z",
+      "side": 1,
+      "message": "Can\u0027t this be static?",
+      "revId": "3292888106d49c8b80c1f61a51156bf0f937bcfb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
