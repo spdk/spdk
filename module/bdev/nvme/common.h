@@ -53,6 +53,12 @@ enum nvme_bdev_ns_type {
 struct nvme_bdev_ns {
 	uint32_t		id;
 	enum nvme_bdev_ns_type	type;
+	/** Marks whether this data structure has its bdevs
+	 *  populated for the associated namespace.  It is used
+	 *  to keep track if we need manage the populated
+	 *  resources when a newly active namespace is found,
+	 *  or when a namespace becomes inactive.
+	 */
 	bool			populated;
 	struct spdk_nvme_ns	*ns;
 	struct nvme_bdev_ctrlr	*ctrlr;
