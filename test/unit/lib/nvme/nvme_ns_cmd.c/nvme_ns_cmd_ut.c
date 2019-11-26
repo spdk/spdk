@@ -619,7 +619,7 @@ test_nvme_ns_cmd_dataset_management(void)
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_DATASET_MANAGEMENT);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 	CU_ASSERT(g_request->cmd.cdw10 == 0);
-	CU_ASSERT(g_request->cmd.cdw11 == SPDK_NVME_DSM_ATTR_DEALLOCATE);
+	CU_ASSERT(g_request->cmd.cdw11_bits.dsm.ad == 1);
 	spdk_free(g_request->payload.contig_or_cb_arg);
 	nvme_free_request(g_request);
 
@@ -631,7 +631,7 @@ test_nvme_ns_cmd_dataset_management(void)
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_DATASET_MANAGEMENT);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 	CU_ASSERT(g_request->cmd.cdw10 == 255u);
-	CU_ASSERT(g_request->cmd.cdw11 == SPDK_NVME_DSM_ATTR_DEALLOCATE);
+	CU_ASSERT(g_request->cmd.cdw11_bits.dsm.ad == 1);
 	spdk_free(g_request->payload.contig_or_cb_arg);
 	nvme_free_request(g_request);
 
