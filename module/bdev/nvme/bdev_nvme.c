@@ -1020,6 +1020,17 @@ nvme_ctrlr_depopulate_ocssd_namespace(struct nvme_bdev_ns *ns)
 {
 }
 
+void
+nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
+				   struct nvme_bdev_ns *ns, int rc)
+{
+	if (rc == 0) {
+		ns->populated = true;
+	} else {
+		memset(ns, 0, sizeof(*ns));
+	}
+}
+
 static void
 nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			       struct nvme_async_probe_ctx *ctx)
@@ -1045,11 +1056,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			TAILQ_INIT(&ns->bdevs);
 
 			rc = g_populate_namespace_fn[ns->type](nvme_bdev_ctrlr, ns, ctx);
-			if (rc == 0) {
-				ns->populated = true;
-			} else {
-				memset(ns, 0, sizeof(*ns));
-			}
+			nvme_ctrlr_populate_namespace_done(ctx, ns, rc);
 		}
 
 		if (ns->populated && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
