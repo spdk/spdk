@@ -886,6 +886,66 @@ union spdk_nvme_cmd_cdw10 {
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmd_cdw10) == 4, "Incorrect size");
 
+union spdk_nvme_cmd_cdw11 {
+	uint32_t raw;
+
+	struct {
+		/* Physically Contiguous */
+		uint32_t pc       : 1;
+		/* Queue Priority */
+		uint32_t qprio    : 2;
+		uint32_t reserved : 13;
+		/* Completion Queue Identifier */
+		uint32_t cqid     : 16;
+	} create_io_sq;
+
+	struct {
+		/* Physically Contiguous */
+		uint32_t pc       : 1;
+		/* Interrupts Enabled */
+		uint32_t ien      : 1;
+		uint32_t reserved : 14;
+		/* Interrupt Vector */
+		uint32_t iv       : 16;
+	} create_io_cq;
+
+	struct {
+		/* Number of Dwords */
+		uint32_t numdu    : 16;
+		/* Log Specific Identifier */
+		uint32_t lsid     : 16;
+	} get_log_page;
+
+	struct {
+		/* Extended Data Structure */
+		uint32_t eds      : 1;
+		uint32_t reserved : 31;
+	} resv_report;
+
+	union spdk_nvme_feat_arbitration feat_arbitration;
+	union spdk_nvme_feat_power_management feat_power_management;
+	union spdk_nvme_feat_lba_range_type feat_lba_range_type;
+	union spdk_nvme_feat_temperature_threshold feat_temp_threshold;
+	union spdk_nvme_feat_error_recovery feat_error_recovery;
+	union spdk_nvme_feat_volatile_write_cache feat_volatile_write_cache;
+	union spdk_nvme_feat_number_of_queues feat_num_of_queues;
+	union spdk_nvme_feat_write_atomicity feat_write_atomicity;
+	union spdk_nvme_feat_async_event_configuration feat_async_event_cfg;
+	union spdk_nvme_feat_keep_alive_timer feat_keep_alive_timer;
+	union spdk_nvme_feat_host_identifier feat_host_identifier;
+
+	struct {
+		/* Attribute – Integral Dataset for Read */
+		uint32_t idr      : 1;
+		/* Attribute – Integral Dataset for Write */
+		uint32_t idw      : 1;
+		/* Attribute – Deallocate */
+		uint32_t ad       : 1;
+		uint32_t reserved : 29;
+	} dsm;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmd_cdw11) == 4, "Incorrect size");
+
 struct spdk_nvme_cmd {
 	/* dword 0 */
 	uint16_t opc	:  8;	/* opcode */
