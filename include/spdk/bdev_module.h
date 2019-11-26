@@ -222,6 +222,7 @@ struct spdk_bdev_fn_table {
 
 /** bdev I/O completion status */
 enum spdk_bdev_io_status {
+	SPDK_BDEV_IO_STATUS_MISCOMPARE = -5,
 	/*
 	 * NOMEM should be returned when a bdev module cannot start an I/O because of
 	 *  some lack of resources.  It may not be returned for RESET I/O.  I/O completed
@@ -460,6 +461,14 @@ struct spdk_bdev_io {
 
 			/** For SG buffer cases, number of iovecs in iovec array. */
 			int iovcnt;
+
+			/** For fused operations such as COMPARE_AND_WRITE, array of iovecs
+			 *  for the second operation.
+			 */
+			struct iovec *fused_iovs;
+
+			/** Number of iovecs in fused_iovs. */
+			int fused_iovcnt;
 
 			/* Metadata buffer */
 			void *md_buf;
