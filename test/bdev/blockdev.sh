@@ -51,13 +51,15 @@ function nbd_function_test() {
 	return 0
 }
 
-QOS_DEV="Null_0"
+QOS_DEV_1="Null_0"
+QOS_DEV_2="Null_1"
 QOS_RUN_TIME=5
 
 function get_io_result() {
 	local limit_type=$1
+	local qos_dev=$2
 
-	io_result=$($rpc_py bdev_get_iostat -b $QOS_DEV)
+	io_result=$($rpc_py bdev_get_iostat -b $qos_dev)
 	if [ $limit_type = IOPS ]; then
 		io_result_before=$(echo $io_result | jq -r '.bdevs[0].num_read_ops')
 	else
@@ -68,7 +70,7 @@ function get_io_result() {
 
 	sleep $QOS_RUN_TIME
 
-	io_result=$($rpc_py bdev_get_iostat -b $QOS_DEV)
+	io_result=$($rpc_py bdev_get_iostat -b $qos_dev)
 	if [ $limit_type = IOPS ]; then
 		io_result_after=$(echo $io_result | jq -r '.bdevs[0].num_read_ops')
 	else
@@ -90,7 +92,7 @@ function run_qos_test() {
 	local qos_limit=$1
 	local qos_result=0
 
-	qos_result=$(get_io_result $2)
+	qos_result=$(get_io_result $2 $3)
 	if [ $2 = BANDWIDTH ]; then
 		qos_limit=$((qos_limit*1024))
 	fi
@@ -100,7 +102,8 @@ function run_qos_test() {
 	# QoS realization is related with bytes transfered. It currently has some variation.
 	if [ $qos_result -lt $lower_limit ] || [ $qos_result -gt $upper_limit ]; then
 		echo "Failed to limit the io read rate of NULL bdev by qos"
-		$rpc_py bdev_null_delete $QOS_DEV
+		$rpc_py bdev_null_delete $QOS_DEV_1
+		$rpc_py bdev_null_delete $QOS_DEV_2
 		killprocess $QOS_PID
 		exit 1
 	fi
@@ -108,25 +111,33 @@ function run_qos_test() {
 
 function qos_function_test() {
 	local qos_lower_iops_limit=1000
+	local qos_lower_bw_limit=2
 	local io_result=0
+	local iops_limit=0
+	local bw_limit=0
 
-	io_result=$(get_io_result IOPS)
+	io_result=$(get_io_result IOPS $QOS_DEV_1)
 	# Set the IOPS limit as one quarter of the measured performance without QoS
-	local iops_limit=$(((io_result/4)/qos_lower_iops_limit*qos_lower_iops_limit))
+	iops_limit=$(((io_result/4)/qos_lower_iops_limit*qos_lower_iops_limit))
 	if [ $iops_limit -gt $qos_lower_iops_limit ]; then
 
-		# Run bdevperf with IOPS rate limit
-		$rpc_py bdev_set_qos_limit --rw_ios_per_sec $iops_limit $QOS_DEV
-		run_qos_test $iops_limit IOPS
+		# Run bdevperf with IOPS rate limit on bdev 1
+		$rpc_py bdev_set_qos_limit --rw_ios_per_sec $iops_limit $QOS_DEV_1
+		run_qos_test $iops_limit IOPS $QOS_DEV_1
 
-		# Run bdevperf with IOPS and bandwidth rate limits
-		# Test bandwidth limit with 4K I/O size as we get enough IOPS without QoS
-		$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec 4 $QOS_DEV
-		run_qos_test 4 BANDWIDTH
+		# Run bdevperf with bandwidth rate limit on bdev 2
+		# Set the bandwidth limit as 1/10 of the measure performance without QoS
+		bw_limit=$(get_io_result BANDWIDTH $QOS_DEV_2)
+		bw_limit=$((bw_limit/1024/10))
+		if [ $bw_limit -lt $qos_lower_bw_limit ]; then
+			bw_limit=$qos_lower_bw_limit
+		fi
+		$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec $bw_limit $QOS_DEV_2
+		run_qos_test $bw_limit BANDWIDTH $QOS_DEV_2
 
-		# Run bdevperf with additional read only bandwidth rate limit
-		$rpc_py bdev_set_qos_limit --r_mbytes_per_sec 2 $QOS_DEV
-		run_qos_test 2 BANDWIDTH
+		# Run bdevperf with additional read only bandwidth rate limit on bdev 1
+		$rpc_py bdev_set_qos_limit --r_mbytes_per_sec $qos_lower_bw_limit $QOS_DEV_1
+		run_qos_test $qos_lower_bw_limit BANDWIDTH $QOS_DEV_1
 	else
 		echo "Actual IOPS without limiting is too low - exit testing"
 	fi
@@ -266,13 +277,16 @@ echo "Process qos testing pid: $QOS_PID"
 trap 'killprocess $QOS_PID; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $QOS_PID
 
-$rpc_py bdev_null_create $QOS_DEV 128 512
-waitforbdev $QOS_DEV
+$rpc_py bdev_null_create $QOS_DEV_1 128 512
+waitforbdev $QOS_DEV_1
+$rpc_py bdev_null_create $QOS_DEV_2 128 512
+waitforbdev $QOS_DEV_2
 
 $rootdir/test/bdev/bdevperf/bdevperf.py perform_tests &
 qos_function_test
 
-$rpc_py bdev_null_delete $QOS_DEV
+$rpc_py bdev_null_delete $QOS_DEV_1
+$rpc_py bdev_null_delete $QOS_DEV_2
 killprocess $QOS_PID
 trap - SIGINT SIGTERM EXIT
 
