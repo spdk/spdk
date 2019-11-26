@@ -1227,6 +1227,11 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		ctrlr->flags |= SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED;
 	}
 
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "fuses support: %d\n", ctrlr->cdata.fuses.supported);
+	if (ctrlr->cdata.fuses.supported) {
+		ctrlr->flags |= SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED;
+	}
+
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES,
 			     ctrlr->opts.admin_timeout_ms);
 }
