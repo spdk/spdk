@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29cc2de9_84fcc538",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 719,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T19:22:21Z",
+      "side": 1,
+      "message": "how about we put the lock name into a char[] in struct cuse_device?\n\nthen you don\u0027t have to snprintf it again when you unclaim",
+      "revId": "98478b4a3b5092a4522c9790783303d02bcde081",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c47f730c_3ec08749",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 831,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T19:22:21Z",
+      "side": 1,
+      "message": "let\u0027s set ctrlr_device-\u003eindex \u003d 0 here\n\nI know it\u0027s already 0 because of the calloc, but explicitly setting it will make it more clear",
+      "revId": "98478b4a3b5092a4522c9790783303d02bcde081",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
