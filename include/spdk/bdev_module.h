@@ -476,6 +476,14 @@ struct spdk_bdev_io {
 			/** For SG buffer cases, number of iovecs in iovec array. */
 			int iovcnt;
 
+			/** For fused operations such as COMPARE_AND_WRITE, array of iovecs
+			 *  for the second operation.
+			 */
+			struct iovec *fused_iovs;
+
+			/** Number of iovecs in fused_iovs. */
+			int fused_iovcnt;
+
 			/* Metadata buffer */
 			void *md_buf;
 
