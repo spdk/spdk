@@ -161,6 +161,11 @@ SYS_LIBS += -L$(ISAL_DIR)/.libs -lisal
 COMMON_CFLAGS += -I$(ISAL_DIR)/..
 endif
 
+ifeq ($(CONFIG_URING),y)
+COMMON_CFLAGS += -I$(CONFIG_URING_PATH)
+SYS_LIBS += -L$(CONFIG_URING_PATH) -luring
+endif
+
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 ifeq ($(CONFIG_RDMA),y)

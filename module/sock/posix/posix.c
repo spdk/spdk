@@ -36,6 +36,8 @@
 #if defined(__linux__)
 #include <sys/epoll.h>
 #include <linux/errqueue.h>
+#define CONFIG_HAVE_KERNEL_TIMESPEC
+#include <liburing.h>
 #elif defined(__FreeBSD__)
 #include <sys/event.h>
 #endif
@@ -59,6 +61,7 @@ struct spdk_posix_sock {
 	int			fd;
 
 	uint32_t		sendmsg_idx;
+	struct io_uring		uring;
 	bool			zcopy;
 };
 
@@ -250,6 +253,12 @@ _spdk_posix_sock_alloc(int fd)
 		sock->zcopy = true;
 	}
 #endif
+
+	if (io_uring_queue_init(255, &sock->uring, 0) < 0) {
+		SPDK_ERRLOG("Unable to allocate io_uring for sock.\n");
+		free(sock);
+		return NULL;
+	}
 
 	return sock;
 }
@@ -445,6 +454,7 @@ spdk_posix_sock_close(struct spdk_sock *_sock)
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 
 	assert(TAILQ_EMPTY(&_sock->pending_reqs));
+	io_uring_queue_exit(&sock->uring);
 
 	/* If the socket fails to close, the best choice is to
 	 * leak the fd but continue to free the rest of the sock
@@ -542,6 +552,8 @@ _sock_flush(struct spdk_sock *sock)
 	ssize_t rc;
 	unsigned int offset;
 	size_t len;
+	struct io_uring_sqe *sqe;
+	struct io_uring_cqe *cqe;
 
 	/* Can't flush from within a callback or we end up with recursive calls */
 	if (sock->cb_cnt > 0) {
@@ -594,7 +606,12 @@ _sock_flush(struct spdk_sock *sock)
 	{
 		flags = 0;
 	}
-	rc = sendmsg(psock->fd, &msg, flags);
+
+	sqe = io_uring_get_sqe(&psock->uring);
+	assert(sqe);
+	io_uring_prep_sendmsg(sqe, psock->fd, &msg, flags);
+
+	rc = io_uring_submit(&psock->uring);
 	if (rc <= 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return 0;
@@ -602,7 +619,16 @@ _sock_flush(struct spdk_sock *sock)
 		return rc;
 	}
 
+	/* Wait for the completion */
+	rc = io_uring_wait_cqe(&psock->uring, &cqe);
+	if (rc < 0) {
+		return rc;
+	}
+
+	rc = (size_t)cqe->res;
 	psock->sendmsg_idx++;
+
+	io_uring_cqe_seen(&psock->uring, cqe);
 
 	/* Consume the requests that were actually written */
 	req = TAILQ_FIRST(&sock->queued_reqs);
