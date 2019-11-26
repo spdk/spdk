@@ -1625,7 +1625,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->sgls.supported = 1;
 	cdata->sgls.keyed_sgl = 1;
 	cdata->sgls.sgl_offset = 1;
-	cdata->fuses.compare_and_write = 0;
+	cdata->fuses.compare_and_write = 1;
 	cdata->acwu = 1;
 	spdk_strcpy_pad(cdata->subnqn, subsystem->subnqn, sizeof(cdata->subnqn), '\0');
 
