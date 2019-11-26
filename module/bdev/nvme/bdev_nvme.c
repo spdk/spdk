@@ -1399,11 +1399,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
-		populate_namespaces_cb(ctx, 0, 0);
-	} else {
-		bdev_nvme_populate_namespaces(ctx, populate_namespaces_cb, ctx);
-	}
+	bdev_nvme_populate_namespaces(ctx, populate_namespaces_cb, ctx);
 }
 
 static int
