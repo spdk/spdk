@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56b2fc29_8e74e6f5",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1476,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T00:22:17Z",
+      "side": 1,
+      "message": "I think you can remove this 1476-1479 comment now\n\nand just set create_io_cq.pc to 1, not 0x1 (since it\u0027s only 1 bit)",
+      "revId": "67ab7e1520a98de8fca5ed31a3caf1b5c39d9ddb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "573e794b_bebad437",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1504,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T00:22:17Z",
+      "side": 1,
+      "message": "I think you can remove 1504 comment - and just set to 1 instead of 0x1 (it makes it clearer that it is just a 1 bit member)",
+      "revId": "67ab7e1520a98de8fca5ed31a3caf1b5c39d9ddb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
