@@ -113,7 +113,7 @@ vmd_device_is_root_port(const struct vmd_pci_device *vmd_device)
 static uint64_t
 vmd_allocate_base_addr(struct vmd_adapter *vmd, struct vmd_pci_device *dev, uint32_t size)
 {
-	uint64_t base_address = 0;
+	uint64_t base_address = 0, padding = 0;
 	struct vmd_pci_bus *hp_bus;
 
 	if (size && ((size & (~size + 1)) != size)) {
@@ -135,16 +135,14 @@ vmd_allocate_base_addr(struct vmd_adapter *vmd, struct vmd_pci_device *dev, uint
 
 	/* Ensure physical membar allocated is size aligned */
 	if (vmd->physical_addr & (size - 1)) {
-		uint32_t pad = size - (vmd->physical_addr & (size - 1));
-		vmd->physical_addr += pad;
-		vmd->current_addr_size -= pad;
+		padding = size - (vmd->physical_addr & (size - 1));
 	}
 
 	/* Allocate from membar if enough memory is left */
-	if (vmd->current_addr_size >= size) {
+	if (vmd->current_addr_size >= size + padding) {
 		base_address = vmd->physical_addr;
-		vmd->physical_addr += size;
-		vmd->current_addr_size -= size;
+		vmd->physical_addr += size + padding;
+		vmd->current_addr_size -= size + padding;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_VMD, "allocated(size) %lx (%x)\n", base_address, size);
