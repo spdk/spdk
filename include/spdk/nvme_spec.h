@@ -1752,7 +1752,10 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 	} oncs;
 
 	/** fused operation support */
-	uint16_t		fuses;
+	struct {
+		uint16_t	compare_and_write : 1;
+		uint16_t	reserved : 15;
+	} fuses;
 
 	/** format nvm attributes */
 	struct {

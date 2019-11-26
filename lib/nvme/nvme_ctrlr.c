@@ -1235,6 +1235,11 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		ctrlr->flags |= SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED;
 	}
 
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "fuses compare and write: %d\n", ctrlr->cdata.fuses.compare_and_write);
+	if (ctrlr->cdata.fuses.compare_and_write) {
+		ctrlr->flags |= SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED;
+	}
+
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES,
 			     ctrlr->opts.admin_timeout_ms);
 }
