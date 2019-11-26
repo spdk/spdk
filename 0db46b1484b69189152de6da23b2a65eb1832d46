@@ -121,6 +121,30 @@
     },
     {
       "key": {
+        "uuid": "88551d55_2704216d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-26T13:13:14Z",
+      "side": 1,
+      "message": "From what I saw the target side perf CPU %% accounting for (syscall + copy) before and after the patch are notably different - so something happens here. \n\nNote that since you internalized the change in the posix code, it comes into play also on the initiator side, unlike the earlier change which only affects the target -- both nvme/nvmf call  nvme_tcp_read_data() which further invokes spdk_sock_recv() which goes to the posix code you modified.",
+      "parentUuid": "2971f43f_07bc5332",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 54
+      },
+      "revId": "0db46b1484b69189152de6da23b2a65eb1832d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "865982fd_26167a46",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 7
