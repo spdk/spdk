@@ -540,6 +540,7 @@ blob_thin_provision(void)
 	 *  and try to recover a valid used_cluster map, that blobstore will
 	 *  ignore clusters with index 0 since these are unallocated clusters.
 	 */
+	_spdk_bs_free(bs);
 
 	/* Load an existing blob store and check if invalid_flags is set */
 	dev = init_dev();
@@ -2525,6 +2526,12 @@ blob_xattr(void)
 
 	CU_ASSERT((blob->invalid_flags & SPDK_BLOB_INTERNAL_XATTR) == 0);
 
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
 }
@@ -7337,6 +7344,9 @@ blob_io_unit(void)
 	CU_ASSERT(g_bserrno == 0);
 	blob = NULL;
 	g_blob = NULL;
+
+	spdk_bs_free_io_channel(channel);
+	poll_threads();
 
 	/* Unload the blob store */
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
