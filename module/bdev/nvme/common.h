@@ -57,6 +57,7 @@ struct nvme_bdev_ns {
 	struct spdk_nvme_ns	*ns;
 	struct nvme_bdev_ctrlr	*ctrlr;
 	TAILQ_HEAD(, nvme_bdev)	bdevs;
+	void			*type_ctx;
 };
 
 struct nvme_bdev_ctrlr {
