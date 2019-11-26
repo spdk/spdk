@@ -22,6 +22,30 @@
       "revId": "b29e575934bfa8776dbaf3eee5f5b4a2d6d02aa4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f591749c_c0d3ccad",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-26T14:58:26Z",
+      "side": 1,
+      "message": "I think you have a merge/rebase error locally. In this patch, that line in posix.c is written as:\n\nif (offset \u003e\u003d SPDK_SOCK_REQUEST_IOV(req, i)-\u003eiov_len) {\n\n\nI did miss one place in the VPP code, which is why all of the patches failed. But everything else compiled successfully.",
+      "parentUuid": "14a526d6_d8db7d16",
+      "range": {
+        "startLine": 70,
+        "startChar": 1,
+        "endLine": 70,
+        "endChar": 28
+      },
+      "revId": "b29e575934bfa8776dbaf3eee5f5b4a2d6d02aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
