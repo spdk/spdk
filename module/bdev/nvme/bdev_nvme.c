@@ -1326,10 +1326,8 @@ spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, voi
 }
 
 static void
-populate_namespaces_cb(void *cb_arg, size_t count, int rc)
+populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, size_t count, int rc)
 {
-	struct nvme_async_probe_ctx *ctx = cb_arg;
-
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctx->cb_ctx, count, rc);
 	}
@@ -1338,8 +1336,7 @@ populate_namespaces_cb(void *cb_arg, size_t count, int rc)
 }
 
 static void
-bdev_nvme_populate_namespaces(struct nvme_async_probe_ctx *ctx, spdk_bdev_create_nvme_fn cb_fn,
-			      void *cb_arg)
+bdev_nvme_populate_namespaces(struct nvme_async_probe_ctx *ctx)
 {
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	struct nvme_bdev_ns	*ns;
@@ -1371,13 +1368,13 @@ bdev_nvme_populate_namespaces(struct nvme_async_probe_ctx *ctx, spdk_bdev_create
 			} else {
 				SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %du. Unable to return all names of created bdevs\n",
 					    ctx->count);
-				cb_fn(cb_arg, 0, -ERANGE);
+				populate_namespaces_cb(ctx, 0, -ERANGE);
 				return;
 			}
 		}
 	}
 
-	cb_fn(cb_arg, j, 0);
+	populate_namespaces_cb(ctx, j, 0);
 }
 
 static void
@@ -1399,7 +1396,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	bdev_nvme_populate_namespaces(ctx, populate_namespaces_cb, ctx);
+	bdev_nvme_populate_namespaces(ctx);
 }
 
 static int
