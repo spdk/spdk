@@ -70,6 +70,30 @@
       "revId": "b29e575934bfa8776dbaf3eee5f5b4a2d6d02aa4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "692a0296_3aed70a3",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-26T15:23:14Z",
+      "side": 1,
+      "message": "oh, it was added in the 0-copy commit 94a538c \"sock/posix: Zero copy send\"..",
+      "parentUuid": "9fa3c149_9770ab19",
+      "range": {
+        "startLine": 70,
+        "startChar": 1,
+        "endLine": 70,
+        "endChar": 28
+      },
+      "revId": "b29e575934bfa8776dbaf3eee5f5b4a2d6d02aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
