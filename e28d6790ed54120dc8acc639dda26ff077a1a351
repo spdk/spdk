@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3f08ff5_1f2d2327",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-26T14:05:00Z",
+      "side": 1,
+      "message": "CC (correct, cool)",
+      "range": {
+        "startLine": 9,
+        "startChar": 1,
+        "endLine": 9,
+        "endChar": 54
+      },
+      "revId": "e28d6790ed54120dc8acc639dda26ff077a1a351",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db523440_6344d579",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-26T14:05:00Z",
+      "side": 1,
+      "message": "note that sizeof (pdu) \u003e\u003e sizeof (pdu header) -- 840B vs 152B on x86_64 with these patches applied. \n\nAny reason not to be a bit more conservative and apply the approach taken in my patch [1] namely to put only the pdu header on dma memory?\n\n\n[1] https://review.gerrithub.io/c/spdk/spdk/+/473278",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 12
+      },
+      "revId": "e28d6790ed54120dc8acc639dda26ff077a1a351",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a30e938_7a39bff9",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 862,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-26T14:05:00Z",
+      "side": 1,
+      "message": "I see that you only patched this flow -- can you educate me which one is it?\n\nAdding some print to the code, for running perf under this target config:\n\ntcp.c: 544:spdk_nvmf_tcp_create: *INFO*: *** TCP Transport Init ***\n  Transport opts:  max_ioq_depth\u003d128, max_io_size\u003d131072,\n  max_qpairs_per_ctrlr\u003d128, io_unit_size\u003d131072,\n  in_capsule_data_size\u003d4096, max_aq_depth\u003d128\n  num_shared_buffers\u003d1024, c2h_success\u003d1,\n  dif_insert_or_strip\u003d0, sock_priority\u003d0\n\nI see the following (each of perf and nvmf used one core, so I assume one discovery connection and one IO connection, where each might have admin queue and IO queue?) - we got there six times:\n\nspdk_nvmf_tcp_qpair_init_mem_resource tqpair-\u003eqpair.sq_head_max 0 \nspdk_nvmf_tcp_qpair_init_mem_resource tqpair-\u003eqpair.sq_head_max 31 \nspdk_nvmf_tcp_qpair_init_mem_resource tqpair-\u003eqpair.sq_head_max 0 \nspdk_nvmf_tcp_qpair_init_mem_resource tqpair-\u003eqpair.sq_head_max 31 \nspdk_nvmf_tcp_qpair_init_mem_resource tqpair-\u003eqpair.sq_head_max 0 \nspdk_nvmf_tcp_qpair_init_mem_resource tqpair-\u003eqpair.sq_head_max 127",
+      "range": {
+        "startLine": 862,
+        "startChar": 1,
+        "endLine": 862,
+        "endChar": 34
+      },
+      "revId": "e28d6790ed54120dc8acc639dda26ff077a1a351",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
