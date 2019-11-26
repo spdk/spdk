@@ -189,6 +189,7 @@ struct spdk_iscsi_conn {
 	TAILQ_HEAD(queued_datain_tasks, spdk_iscsi_task)	queued_datain_tasks;
 
 	struct spdk_scsi_lun_desc	*open_lun_descs[SPDK_SCSI_DEV_MAX_LUN];
+	uint32_t			open_lun_descs_num;
 };
 
 extern struct spdk_iscsi_conn *g_conns_array;
