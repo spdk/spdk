@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e7aa8600_f7a9d206",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-26T02:24:18Z",
+      "side": 1,
+      "message": "Let me add an assert.",
+      "parentUuid": "803a478c_abc7fb06",
+      "range": {
+        "startLine": 334,
+        "startChar": 6,
+        "endLine": 334,
+        "endChar": 18
+      },
+      "revId": "84fb0d31fbdacc305d2035f891e73f70ac71fcc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6be31abe_6efcedc0",
         "filename": "lib/iscsi/iscsi.c",
         "patchSetId": 3
