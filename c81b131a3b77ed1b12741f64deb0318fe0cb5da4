@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e94d3d5_22ab3a98",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T19:18:31Z",
+      "side": 1,
+      "message": "I think you can remove this check.  There\u0027s no way we can exceed 128 characters to build this name, now that we\u0027re always building the string internally.  Worst case it will be something like \"spdk/nvme100n65535\" which is still way under 128 characters.",
+      "revId": "c81b131a3b77ed1b12741f64deb0318fe0cb5da4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
