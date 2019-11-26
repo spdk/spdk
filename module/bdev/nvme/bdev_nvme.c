@@ -1425,21 +1425,11 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_async_probe_ctx *ctx)
 }
 
 static void
-bdev_nvme_populate_namespaces(struct nvme_async_probe_ctx *ctx)
-{
-	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
-
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
-	assert(nvme_bdev_ctrlr != NULL);
-
-	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
-}
-
-static void
 connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct spdk_nvme_ctrlr_opts *user_opts = cb_ctx;
+	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	struct nvme_async_probe_ctx *ctx;
 	int rc;
 
@@ -1454,7 +1444,10 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	bdev_nvme_populate_namespaces(ctx);
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
+	assert(nvme_bdev_ctrlr != NULL);
+
+	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
 }
 
 static int
