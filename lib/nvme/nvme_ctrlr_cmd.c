@@ -329,7 +329,7 @@ spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_SET_FEATURES;
 	cmd->cdw10.set_features.fid = feature;
-	cmd->cdw11 = cdw11;
+	cmd->cdw11.raw = cdw11;
 	cmd->cdw12 = cdw12;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
@@ -358,7 +358,7 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_GET_FEATURES;
 	cmd->cdw10.get_features.fid = feature;
-	cmd->cdw11 = cdw11;
+	cmd->cdw11.raw = cdw11;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -387,7 +387,7 @@ spdk_nvme_ctrlr_cmd_get_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t featur
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_GET_FEATURES;
 	cmd->cdw10.get_features.fid = feature;
-	cmd->cdw11 = cdw11;
+	cmd->cdw11.raw = cdw11;
 	cmd->nsid = ns_id;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
@@ -416,7 +416,7 @@ int spdk_nvme_ctrlr_cmd_set_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t fe
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_SET_FEATURES;
 	cmd->cdw10.set_features.fid = feature;
-	cmd->cdw11 = cdw11;
+	cmd->cdw11.raw = cdw11;
 	cmd->cdw12 = cdw12;
 	cmd->nsid = ns_id;
 
@@ -430,10 +430,14 @@ int
 nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 			      uint32_t num_queues, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	uint32_t cdw11;
+	union spdk_nvme_feat_number_of_queues feat_num_queues;
 
-	cdw11 = ((num_queues - 1) << 16) | (num_queues - 1);
-	return spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_NUMBER_OF_QUEUES, cdw11, 0,
+	feat_num_queues.raw = 0;
+	feat_num_queues.bits.nsqr = num_queues - 1;
+	feat_num_queues.bits.ncqr = num_queues - 1;
+
+	return spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_NUMBER_OF_QUEUES, feat_num_queues.raw,
+					       0,
 					       NULL, 0, cb_fn, cb_arg);
 }
 
@@ -462,20 +466,22 @@ int
 nvme_ctrlr_cmd_set_host_id(struct spdk_nvme_ctrlr *ctrlr, void *host_id, uint32_t host_id_size,
 			   spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	uint32_t cdw11;
+	union spdk_nvme_feat_host_identifier feat_host_identifier;
 
+	feat_host_identifier.raw = 0;
 	if (host_id_size == 16) {
 		/* 128-bit extended host identifier */
-		cdw11 = 1;
+		feat_host_identifier.bits.exhid = 1;
 	} else if (host_id_size == 8) {
 		/* 64-bit host identifier */
-		cdw11 = 0;
+		feat_host_identifier.bits.exhid = 0;
 	} else {
 		SPDK_ERRLOG("Invalid host ID size %u\n", host_id_size);
 		return -EINVAL;
 	}
 
-	return spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_HOST_IDENTIFIER, cdw11, 0,
+	return spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_HOST_IDENTIFIER,
+					       feat_host_identifier.raw, 0,
 					       host_id, host_id_size, cb_fn, cb_arg);
 }
 
@@ -525,7 +531,7 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 	cmd->cdw10.get_log_page.numdl = numdl;
 	cmd->cdw10.get_log_page.lid = log_page;
 
-	cmd->cdw11 = numdu;
+	cmd->cdw11.get_log_page.numdu = numdu;
 	cmd->cdw12 = lpol;
 	cmd->cdw13 = lpou;
 
@@ -657,7 +663,7 @@ nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD;
 	cmd->cdw10.raw = (size >> 2) - 1;
-	cmd->cdw11 = offset >> 2;
+	cmd->cdw11.raw = offset >> 2;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -688,7 +694,7 @@ nvme_ctrlr_cmd_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 	cmd->cdw10.sec_send_recv.spsp0 = (uint8_t)spsp;
 	cmd->cdw10.sec_send_recv.spsp1 = (uint8_t)(spsp >> 8);
 	cmd->cdw10.sec_send_recv.secp = secp;
-	cmd->cdw11 = payload_size;
+	cmd->cdw11.raw = payload_size;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -719,7 +725,7 @@ nvme_ctrlr_cmd_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 	cmd->cdw10.sec_send_recv.spsp0 = (uint8_t)spsp;
 	cmd->cdw10.sec_send_recv.spsp1 = (uint8_t)(spsp >> 8);
 	cmd->cdw10.sec_send_recv.secp = secp;
-	cmd->cdw11 = payload_size;
+	cmd->cdw11.raw = payload_size;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -746,7 +752,7 @@ nvme_ctrlr_cmd_sanitize(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_SANITIZE;
 	cmd->nsid = nsid;
-	cmd->cdw11 = cdw11;
+	cmd->cdw11.raw = cdw11;
 	memcpy(&cmd->cdw10, sanitize, sizeof(cmd->cdw10));
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);

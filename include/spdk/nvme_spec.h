@@ -1010,8 +1010,9 @@ struct spdk_nvme_cmd {
 
 	/* command-specific */
 	union spdk_nvme_cmd_cdw10 cdw10;
-	/* dword 11-15 */
-	uint32_t cdw11;		/* command-specific */
+	/* command-specific */
+	union spdk_nvme_cmd_cdw11 cdw11;
+	/* dword 12-15 */
 	uint32_t cdw12;		/* command-specific */
 	uint32_t cdw13;		/* command-specific */
 	uint32_t cdw14;		/* command-specific */

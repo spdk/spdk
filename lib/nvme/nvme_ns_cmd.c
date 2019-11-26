@@ -836,7 +836,7 @@ spdk_nvme_ns_cmd_dataset_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qp
 	cmd->nsid = ns->id;
 
 	cmd->cdw10.dsm.nr = num_ranges - 1;
-	cmd->cdw11 = type;
+	cmd->cdw11.raw = type;
 
 	return nvme_qpair_submit_request(qpair, req);
 }

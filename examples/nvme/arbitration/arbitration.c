@@ -1063,8 +1063,6 @@ set_arb_feature(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int ret;
 	struct spdk_nvme_cmd cmd = {};
-	uint32_t arb = 0;
-	unsigned ab, lpw, mpw, hpw;
 
 	cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
 	cmd.cdw10.set_features.fid = SPDK_NVME_FEAT_ARBITRATION;
@@ -1072,12 +1070,10 @@ set_arb_feature(struct spdk_nvme_ctrlr *ctrlr)
 	g_arbitration.outstanding_commands = 0;
 
 	if (features[SPDK_NVME_FEAT_ARBITRATION].valid) {
-		ab = USER_SPECIFIED_ARBITRATION_BURST & SPDK_NVME_ARB_BURST_MASK;
-		hpw = USER_SPECIFIED_HIGH_PRIORITY_WEIGHT << SPDK_NVME_HIGH_PRIO_WEIGHT_SHIFT;
-		mpw = USER_SPECIFIED_MEDIUM_PRIORITY_WEIGHT << SPDK_NVME_MED_PRIO_WEIGHT_SHIFT;
-		lpw = USER_SPECIFIED_LOW_PRIORITY_WEIGHT << SPDK_NVME_LOW_PRIO_WEIGHT_SHIFT;
-		arb = hpw | mpw | lpw | ab;
-		cmd.cdw11 = arb;
+		cmd.cdw11.feat_arbitration.bits.ab = USER_SPECIFIED_ARBITRATION_BURST;
+		cmd.cdw11.feat_arbitration.bits.lpw = USER_SPECIFIED_LOW_PRIORITY_WEIGHT;
+		cmd.cdw11.feat_arbitration.bits.mpw = USER_SPECIFIED_MEDIUM_PRIORITY_WEIGHT;
+		cmd.cdw11.feat_arbitration.bits.hpw = USER_SPECIFIED_HIGH_PRIORITY_WEIGHT;
 	}
 
 	ret = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0,

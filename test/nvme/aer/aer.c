@@ -96,7 +96,7 @@ set_temp_threshold(struct dev *dev, uint32_t temp)
 
 	cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
 	cmd.cdw10.set_features.fid = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
-	cmd.cdw11 = temp;
+	cmd.cdw11.feat_temp_threshold.bits.tmpth = temp;
 
 	rc = spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, NULL, 0, set_temp_completion, dev);
 	if (rc == 0) {
