@@ -46,6 +46,30 @@
       "revId": "b29e575934bfa8776dbaf3eee5f5b4a2d6d02aa4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9fa3c149_9770ab19",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-26T15:19:36Z",
+      "side": 1,
+      "message": "spdk.git]# git fetch \"https://review.gerrithub.io/spdk/spdk\" refs/changes/52/471752/8 \nFrom https://review.gerrithub.io/spdk/spdk\n * branch            refs/changes/52/471752/8 -\u003e FETCH_HEAD\n\n\nspdk.git]# git checkout -b nvmf_zc_v8 FETCH_HEAD\nSwitched to a new branch \u0027nvmf_zc_v8\u0027\n\nspdk.git]# git log --oneline -10\n94a538c sock/posix: Zero copy send\ne28d679 nvmf/tcp: Allocate pdu pool out of hugepages\nc837e4e nvmf/tcp: Avoid long delays when target is exiting and there are idle connections\n6fde348 nvmf/tcp: Use writev_async for sending data on sockets\n96bd501 sock/posix: Use sendmsg instead of writev when flushing\n9813d0b sock/posix Add a pending list for asynchronous requests\nb29e575 sock: Add an asynchronous writev\n1aace53 Add bdev_raid.sh to per-patch tests\n\n\nspdk.git]# cat -n module/sock/posix/posix.c | grep 47[0-9]\n   470                  offset \u003d req-\u003eoffset;\n   471\n   472                  if (psock-\u003ezcopy) {\n   473                          assert(offset \u003d\u003d 0);\n   474                  }\n   475\n   476                  for (i \u003d 0; i \u003c req-\u003eiovcnt; i++) {\n   477                          /* Advance by the offset first */\n   478                          if (offset \u003e\u003d req-\u003eiov[i].iov_len) {\n   479                                  offset -\u003d req-\u003eiov[i].iov_len;\n\nsomething is wrong?",
+      "parentUuid": "f591749c_c0d3ccad",
+      "range": {
+        "startLine": 70,
+        "startChar": 1,
+        "endLine": 70,
+        "endChar": 28
+      },
+      "revId": "b29e575934bfa8776dbaf3eee5f5b4a2d6d02aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
