@@ -485,6 +485,8 @@ struct spdk_nvmf_rdma_device {
 	struct spdk_mem_map			*map;
 	struct ibv_pd				*pd;
 
+	pthread_mutex_t				lock;
+
 	int					num_srq;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_device)	link;
@@ -930,6 +932,8 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 
 	spdk_trace_record(TRACE_RDMA_QP_DESTROY, 0, 0, (uintptr_t)rqpair->cm_id, 0);
 
+	pthread_mutex_lock(&rqpair->port->device->lock);
+
 	spdk_poller_unregister(&rqpair->destruct_poller);
 
 	if (rqpair->qd != 0) {
@@ -972,6 +976,8 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 
 	spdk_nvmf_rdma_qpair_clean_ibv_events(rqpair);
+
+	pthread_mutex_unlock(&rqpair->port->device->lock);
 
 	free(rqpair);
 }
@@ -2526,6 +2532,12 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 			break;
 		}
 
+		if (spdk_nvmf_rdma_create_recursive_mutex(&device->lock)  != 0) {
+			SPDK_ERRLOG("Unable to initialize mutex\n");
+			rc = -ENOMEM;
+			break;
+		}
+
 		assert(device->map != NULL);
 		assert(device->pd != NULL);
 	}
@@ -2604,6 +2616,7 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 				ibv_dealloc_pd(device->pd);
 			}
 		}
+		pthread_mutex_destroy(&device->lock);
 		free(device);
 	}
 
@@ -3111,6 +3124,8 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	struct spdk_nvmf_rdma_qpair	*rqpair = NULL;
 	struct ibv_async_event		event;
 
+	pthread_mutex_lock(&device->lock);
+
 	rc = ibv_get_async_event(device->context, &event);
 
 	if (rc) {
@@ -3183,6 +3198,8 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		break;
 	}
 	ibv_ack_async_event(&event);
+
+	pthread_mutex_unlock(&device->lock);
 }
 
 static void
