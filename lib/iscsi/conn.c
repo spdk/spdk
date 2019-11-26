@@ -259,6 +259,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	TAILQ_INIT(&conn->active_r2t_tasks);
 	TAILQ_INIT(&conn->queued_datain_tasks);
 	memset(&conn->open_lun_descs, 0, sizeof(conn->open_lun_descs));
+	conn->open_lun_descs_num = 0;
 
 	rc = spdk_sock_getaddr(sock, conn->target_addr, sizeof conn->target_addr, NULL,
 			       conn->initiator_addr, sizeof conn->initiator_addr, NULL);
@@ -470,6 +471,8 @@ iscsi_conn_close_lun(struct spdk_iscsi_conn *conn, int lun_id)
 	if (desc != NULL) {
 		spdk_scsi_lun_free_io_channel(desc);
 		spdk_scsi_lun_close(desc);
+		assert(conn->open_lun_descs_num > 0);
+		conn->open_lun_descs_num--;
 		conn->open_lun_descs[lun_id] = NULL;
 	}
 }
@@ -511,6 +514,10 @@ _iscsi_conn_remove_lun(void *_ctx)
 	_iscsi_conn_free_tasks(conn, lun);
 
 	iscsi_conn_close_lun(conn, lun_id);
+
+	if (!conn->open_lun_descs_num) {
+		conn->state = ISCSI_CONN_STATE_EXITING;
+	}
 }
 
 static void
@@ -556,6 +563,7 @@ iscsi_conn_open_luns(struct spdk_iscsi_conn *conn)
 			goto error;
 		}
 
+		conn->open_lun_descs_num++;
 		conn->open_lun_descs[i] = desc;
 	}
 
