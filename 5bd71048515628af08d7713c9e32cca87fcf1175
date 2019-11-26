@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "10a25388_f714a123",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-26T04:14:08Z",
+      "side": 1,
+      "message": "Ack.",
+      "parentUuid": "c60f2470_aa09efa3",
+      "revId": "5bd71048515628af08d7713c9e32cca87fcf1175",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "805e4157_0d90d227",
         "filename": "include/spdk/nvme_spec.h",
         "patchSetId": 5
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "be5b9b44_36904171",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-26T04:14:08Z",
+      "side": 1,
+      "message": "I can add it at last.",
+      "parentUuid": "805e4157_0d90d227",
+      "revId": "5bd71048515628af08d7713c9e32cca87fcf1175",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b3f1f611_21cd5078",
         "filename": "include/spdk/nvme_spec.h",
         "patchSetId": 5
@@ -64,6 +100,24 @@
       "writtenOn": "2019-11-26T00:17:13Z",
       "side": 1,
       "message": "timestamp feature should go here\n\nI know there are others from 1.4 that aren\u0027t included below, but since all of the rest up to this point are included, and then keep alive, host controlled thermal mgmt, I think you should add timestamp here",
+      "revId": "5bd71048515628af08d7713c9e32cca87fcf1175",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65495df0_b0557a95",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-26T04:14:08Z",
+      "side": 1,
+      "message": "I checked the timestamp feature in the specifiction, there is no cdw11 definition.",
+      "parentUuid": "b3f1f611_21cd5078",
       "revId": "5bd71048515628af08d7713c9e32cca87fcf1175",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
