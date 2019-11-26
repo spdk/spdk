@@ -172,6 +172,29 @@
     },
     {
       "key": {
+        "uuid": "43d4ad4f_2d07a00a",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-26T13:06:04Z",
+      "side": 1,
+      "message": "nit, this is a point cleanup that doesn\u0027t belong to this patch (please..)",
+      "range": {
+        "startLine": 232,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 10
+      },
+      "revId": "0db46b1484b69189152de6da23b2a65eb1832d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ba865679_89a27574",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 7
@@ -183,6 +206,52 @@
       "writtenOn": "2019-11-21T00:45:27Z",
       "side": 1,
       "message": "if sz \u003c SO_RCVBUF_SIZE, do you want the pipe to be size sz even though we\u0027re going to bump sz up to SO_RCVBUF_SIZE just afterwards?  it wasn\u0027t clear to me whether that was intended or not",
+      "revId": "0db46b1484b69189152de6da23b2a65eb1832d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0e009f5_717d4155",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-26T13:06:04Z",
+      "side": 1,
+      "message": "nit, same as above",
+      "range": {
+        "startLine": 251,
+        "startChar": 2,
+        "endLine": 252,
+        "endChar": 17
+      },
+      "revId": "0db46b1484b69189152de6da23b2a65eb1832d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eec4f666_d71b83ff",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-26T13:06:04Z",
+      "side": 1,
+      "message": "nit, same (can do all the cleanups in one pre-patch to this one)",
+      "range": {
+        "startLine": 295,
+        "startChar": 2,
+        "endLine": 297,
+        "endChar": 14
+      },
       "revId": "0db46b1484b69189152de6da23b2a65eb1832d46",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
