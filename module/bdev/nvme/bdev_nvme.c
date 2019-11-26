@@ -149,11 +149,11 @@ static int bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_chan
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
 static int bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_io *bio);
 
-typedef int (*populate_namespace_fn)(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-				     struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx);
-static int nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+typedef void (*populate_namespace_fn)(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+				      struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx);
+static void nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 		struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx);
-static int nvme_ctrlr_populate_ocssd_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+static void nvme_ctrlr_populate_ocssd_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 		struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx);
 
 static populate_namespace_fn g_populate_namespace_fn[] = {
@@ -793,7 +793,7 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.get_spin_time		= bdev_nvme_get_spin_time,
 };
 
-static int
+static void
 nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 				       struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx)
 {
@@ -810,13 +810,15 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nvme_ns->id);
 	if (!ns) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Invalid NS %d\n", nvme_ns->id);
-		return -EINVAL;
+		nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, -EINVAL);
+		return;
 	}
 
 	bdev = calloc(1, sizeof(*bdev));
 	if (!bdev) {
 		SPDK_ERRLOG("bdev calloc() failed\n");
-		return -ENOMEM;
+		nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, -ENOMEM);
+		return;
 	}
 
 	bdev->nvme_bdev_ctrlr = nvme_bdev_ctrlr;
@@ -826,7 +828,8 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_bdev_ctrlr->name, spdk_nvme_ns_get_id(ns));
 	if (!bdev->disk.name) {
 		free(bdev);
-		return -ENOMEM;
+		nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, -ENOMEM);
+		return;
 	}
 	bdev->disk.product_name = "NVMe disk";
 
@@ -862,19 +865,19 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	if (rc) {
 		free(bdev->disk.name);
 		free(bdev);
-		return rc;
+		nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, rc);
+		return;
 	}
 
 	nvme_bdev_attach_bdev_to_ns(nvme_ns, bdev);
-
-	return 0;
+	nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, 0);
 }
 
-static int
+static void
 nvme_ctrlr_populate_ocssd_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 				    struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx)
 {
-	return 0;
+	nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, 0);
 }
 
 static bool
@@ -1019,10 +1022,10 @@ nvme_ctrlr_depopulate_ocssd_namespace(struct nvme_bdev_ns *ns)
 {
 }
 
-static int nvme_ctrlr_populate_namespace(struct nvme_bdev_ctrlr *ctrlr, struct nvme_bdev_ns *ns,
+static void nvme_ctrlr_populate_namespace(struct nvme_bdev_ctrlr *ctrlr, struct nvme_bdev_ns *ns,
 		struct nvme_async_probe_ctx *ctx)
 {
-	return g_populate_namespace_fn[ns->type](ctrlr, ns, ctx);
+	g_populate_namespace_fn[ns->type](ctrlr, ns, ctx);
 }
 
 static void nvme_ctrlr_depopulate_namespace(struct nvme_bdev_ctrlr *ctrlr, struct nvme_bdev_ns *ns)
@@ -1039,6 +1042,13 @@ nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 	} else {
 		memset(ns, 0, sizeof(*ns));
 	}
+
+	if (ctx) {
+		ctx->populates_in_progress--;
+		if (ctx->populates_in_progress == 0) {
+			nvme_ctrlr_populate_namespaces_done(ctx);
+		}
+	}
 }
 
 static void
@@ -1048,7 +1058,13 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
 	struct nvme_bdev_ns	*ns;
 	uint32_t		i;
-	int			rc;
+
+	if (ctx) {
+		/* Initialize this count to 1 to handle the populate functions
+		 * calling nvme_ctrlr_populate_namespace_done() immediately.
+		 */
+		ctx->populates_in_progress = 1;
+	}
 
 	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
 		uint32_t	nsid = i + 1;
@@ -1065,12 +1081,26 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 
 			TAILQ_INIT(&ns->bdevs);
 
-			rc = nvme_ctrlr_populate_namespace(nvme_bdev_ctrlr, ns, ctx);
-			nvme_ctrlr_populate_namespace_done(ctx, ns, rc);
+			if (ctx) {
+				ctx->populates_in_progress++;
+			}
+			nvme_ctrlr_populate_namespace(nvme_bdev_ctrlr, ns, ctx);
 		}
 
 		if (ns->populated && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
 			nvme_ctrlr_depopulate_namespace(nvme_bdev_ctrlr, ns);
+		}
+	}
+
+	if (ctx) {
+		/* Decrement this count now that the loop is over to account
+		 * for the one we started with.  If the count is then 0, we
+		 * know any populate_namespace functions completed immediately,
+		 * so we'll kick the callback here.
+		 */
+		ctx->populates_in_progress--;
+		if (ctx->populates_in_progress == 0) {
+			nvme_ctrlr_populate_namespaces_done(ctx);
 		}
 	}
 
@@ -1403,7 +1433,6 @@ bdev_nvme_populate_namespaces(struct nvme_async_probe_ctx *ctx)
 	assert(nvme_bdev_ctrlr != NULL);
 
 	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
-	nvme_ctrlr_populate_namespaces_done(ctx);
 }
 
 static void
