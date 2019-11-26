@@ -2319,6 +2319,33 @@ const struct spdk_mem_map_ops g_nvmf_rdma_map_ops = {
 
 static int spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport);
 
+static int
+spdk_nvmf_rdma_create_recursive_mutex(pthread_mutex_t *lock)
+{
+	pthread_mutexattr_t attr;
+
+	if (pthread_mutexattr_init(&attr)) {
+		SPDK_ERRLOG("pthread_mutexattr_init() failed\n");
+		return -1;
+	}
+
+	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE)) {
+		SPDK_ERRLOG("pthread_mutexattr_settype() failed\n");
+		pthread_mutexattr_destroy(&attr);
+		return -1;
+	}
+
+	if (pthread_mutex_init(lock, &attr)) {
+		SPDK_ERRLOG("pthread_mutex_init() failed\n");
+		pthread_mutexattr_destroy(&attr);
+		return -1;
+	}
+
+	pthread_mutexattr_destroy(&attr);
+
+	return 0;
+}
+
 static struct spdk_nvmf_transport *
 spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 {
@@ -2331,34 +2358,16 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	uint32_t			sge_count;
 	uint32_t			min_shared_buffers;
 	int				max_device_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
-	pthread_mutexattr_t		attr;
 
 	rtransport = calloc(1, sizeof(*rtransport));
 	if (!rtransport) {
 		return NULL;
 	}
 
-	if (pthread_mutexattr_init(&attr)) {
-		SPDK_ERRLOG("pthread_mutexattr_init() failed\n");
+	if (spdk_nvmf_rdma_create_recursive_mutex(&rtransport->lock) != 0) {
 		free(rtransport);
 		return NULL;
 	}
-
-	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE)) {
-		SPDK_ERRLOG("pthread_mutexattr_settype() failed\n");
-		pthread_mutexattr_destroy(&attr);
-		free(rtransport);
-		return NULL;
-	}
-
-	if (pthread_mutex_init(&rtransport->lock, &attr)) {
-		SPDK_ERRLOG("pthread_mutex_init() failed\n");
-		pthread_mutexattr_destroy(&attr);
-		free(rtransport);
-		return NULL;
-	}
-
-	pthread_mutexattr_destroy(&attr);
 
 	TAILQ_INIT(&rtransport->devices);
 	TAILQ_INIT(&rtransport->ports);
