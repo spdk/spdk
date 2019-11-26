@@ -277,19 +277,86 @@ err_unregister:
 	return rc;
 }
 
-struct spdk_mem_map *
-spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *ops, void *cb_ctx)
+/* Helper function to free any 1GB map page that might have been allocated for
+ * 'num_entries' indices starting from index corresponding to 'start_addr'.
+ * Also frees the map structure.
+ */
+static void
+spdk_mem_map_free_work(struct spdk_mem_map *map, uint64_t start_addr, size_t num_entries)
 {
+	size_t i;
+	uint64_t idx_256tb = MAP_256TB_IDX(start_addr >> SHIFT_2MB);
+
+	for (i = 0 ; i < num_entries; i++) {
+		struct map_1gb *map_1gb = map->map_256tb.map[idx_256tb++];
+		if (map_1gb != NULL) {
+			free(map_1gb);
+		} else {
+			break;
+		}
+	}
+	free(map);
+}
+
+/* Helper function to allocate 1GB map page, also sets up entries to
+ * 'default_translation'.
+ */
+static struct map_1gb *
+spdk_alloc_and_init_map_1gb(uint64_t default_translation)
+{
+	struct map_1gb *map_1gb = malloc(sizeof(struct map_1gb));
+	if (map_1gb != NULL) {
+		/* initialize all entries to default translation */
+		for (size_t i = 0; i < SPDK_COUNTOF(map_1gb->map); i++) {
+			map_1gb->map[i].translation_2mb = default_translation;
+		}
+	}
+	return map_1gb;
+}
+
+/* Helper function to allocate the map structure also pre-allocates the 1GB
+ * map page for 'num_entries' indices starting from 'start_addr'.
+ */
+static struct spdk_mem_map *
+spdk_mem_map_alloc_work(uint64_t default_translation,
+			uint64_t start_addr, size_t num_entries) {
 	struct spdk_mem_map *map;
-	int rc;
+	size_t i;
+	uint64_t idx_256tb = MAP_256TB_IDX(start_addr >> SHIFT_2MB);
 
 	map = calloc(1, sizeof(*map));
 	if (map == NULL) {
 		return NULL;
 	}
 
+	/* Allocate the 1GB map page for 'num_entries' number of indices starting from
+	 * the index corresponding to start_addr.
+	 */
+	for (i = 0; i < num_entries; i++) {
+		struct map_1gb *map_1gb = spdk_alloc_and_init_map_1gb(default_translation);
+		if (map_1gb == NULL) {
+			spdk_mem_map_free_work(map, start_addr, num_entries);
+			return NULL;
+		}
+		map->map_256tb.map[idx_256tb++] = map_1gb;
+	}
+	return map;
+}
+
+static struct spdk_mem_map *
+__spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *ops, void *cb_ctx,
+                     uint64_t start_addr, size_t num_entries)
+{
+	struct spdk_mem_map *map;
+	int rc;
+
+	map = spdk_mem_map_alloc_work(default_translation, start_addr, num_entries);
+	if (map == NULL) {
+		return NULL;
+	}
+
 	if (pthread_mutex_init(&map->mutex, NULL)) {
-		free(map);
+		spdk_mem_map_free_work(map, start_addr, num_entries);
 		return NULL;
 	}
 
@@ -306,7 +373,7 @@ spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *
 			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 			DEBUG_PRINT("Initial mem_map notify failed\n");
 			pthread_mutex_destroy(&map->mutex);
-			free(map);
+			spdk_mem_map_free_work(map, start_addr, num_entries);
 			return NULL;
 		}
 		TAILQ_INSERT_TAIL(&g_spdk_mem_maps, map, tailq);
@@ -315,6 +382,13 @@ spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *
 
 	return map;
 }
+
+struct spdk_mem_map *
+spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *ops, void *cb_ctx)
+{
+  return __spdk_mem_map_alloc(default_translation, ops, cb_ctx, 0, 0);
+}
+
 
 void
 spdk_mem_map_free(struct spdk_mem_map **pmap)
@@ -520,14 +594,8 @@ spdk_mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 		/* Recheck to make sure nobody else got the mutex first. */
 		map_1gb = map->map_256tb.map[idx_256tb];
 		if (!map_1gb) {
-			map_1gb = malloc(sizeof(struct map_1gb));
-			if (map_1gb) {
-				/* initialize all entries to default translation */
-				for (i = 0; i < SPDK_COUNTOF(map_1gb->map); i++) {
-					map_1gb->map[i].translation_2mb = map->default_translation;
-				}
-				map->map_256tb.map[idx_256tb] = map_1gb;
-			}
+			map_1gb = spdk_alloc_and_init_map_1gb(map->default_translation);
+			map->map_256tb.map[idx_256tb] = map_1gb;
 		}
 
 		pthread_mutex_unlock(&map->mutex);
@@ -736,7 +804,8 @@ memory_iter_cb(const struct rte_memseg_list *msl,
 int
 spdk_mem_map_init(void)
 {
-	g_mem_reg_map = spdk_mem_map_alloc(0, NULL, NULL);
+	g_mem_reg_map = __spdk_mem_map_alloc(0, NULL, NULL, 0x2aaaaac00000, 24);
+
 	if (g_mem_reg_map == NULL) {
 		DEBUG_PRINT("memory registration map allocation failed\n");
 		return -ENOMEM;
@@ -1345,7 +1414,8 @@ spdk_vtophys_init(void)
 	spdk_vtophys_iommu_init();
 #endif
 
-	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, &vtophys_map_ops, NULL);
+	g_vtophys_map = __spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, &vtophys_map_ops,
+					     NULL, 0x2aaaaac00000, 24);
 	if (g_vtophys_map == NULL) {
 		DEBUG_PRINT("vtophys map allocation failed\n");
 		return -ENOMEM;
