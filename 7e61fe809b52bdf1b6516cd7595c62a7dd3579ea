@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "880b8b5c_e751399a",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T20:03:41Z",
+      "side": 1,
+      "message": "this is part of the patch that I\u0027m not sure about - previously we were checking task-\u003escsi.status but now we are not\n\nalso above, we would check bhs.flags, and now we are not\n\ncoverage data indicates our unit tests aren\u0027t hitting this path at all - due to all of the intermittent failures we\u0027re seeing around iscsi and hot plug and large I/O, it would be great to try to improve our unit test coverage in these areas",
+      "revId": "7e61fe809b52bdf1b6516cd7595c62a7dd3579ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
