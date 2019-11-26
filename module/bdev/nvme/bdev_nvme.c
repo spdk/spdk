@@ -1349,7 +1349,7 @@ populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, size_t count, int rc)
 }
 
 static void
-bdev_nvme_populate_namespaces(struct nvme_async_probe_ctx *ctx)
+nvme_ctrlr_populate_namespaces_done(struct nvme_async_probe_ctx *ctx)
 {
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	struct nvme_bdev_ns	*ns;
@@ -1358,9 +1358,6 @@ bdev_nvme_populate_namespaces(struct nvme_async_probe_ctx *ctx)
 	size_t			j;
 
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
-	assert(nvme_bdev_ctrlr != NULL);
-
-	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
 
 	/*
 	 * Report the new bdevs that were created in this call.
@@ -1388,6 +1385,18 @@ bdev_nvme_populate_namespaces(struct nvme_async_probe_ctx *ctx)
 	}
 
 	populate_namespaces_cb(ctx, j, 0);
+}
+
+static void
+bdev_nvme_populate_namespaces(struct nvme_async_probe_ctx *ctx)
+{
+	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(&ctx->trid);
+	assert(nvme_bdev_ctrlr != NULL);
+
+	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
+	nvme_ctrlr_populate_namespaces_done(ctx);
 }
 
 static void
