@@ -1013,13 +1013,8 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		if (paddr == SPDK_VTOPHYS_ERROR) {
 			/* This is not an address that DPDK is managing. */
 #if SPDK_VFIO_ENABLED
-			if (spdk_iommu_is_enabled()) {
-				/* We'll use the virtual address as the iova. DPDK
-				 * currently uses physical addresses as the iovas (or counts
-				 * up from 0 if it can't get physical addresses), so
-				 * the range of user space virtual addresses and physical
-				 * addresses will never overlap.
-				 */
+			if (spdk_iommu_is_enabled() && rte_eal_get_configuration()->iova_mode == RTE_IOVA_VA) {
+				/* We'll use the virtual address as the iova to match DPDK. */
 				paddr = (uint64_t)vaddr;
 				rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, len);
 				if (rc) {
@@ -1071,6 +1066,16 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 						DEBUG_PRINT("invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
 						return -EINVAL;
 					}
+#if SPDK_VFIO_ENABLED
+					/* If the IOMMU is on, but DPDK is using iova-mode=pa, we want to register this memory
+					 * with the IOMMU using the physical address to match. */
+					if (spdk_iommu_is_enabled()) {
+						rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, VALUE_2MB);
+						if (rc) {
+							return -EFAULT;
+						}
+					}
+#endif
 
 					rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, VALUE_2MB, paddr);
 					if (rc != 0) {
