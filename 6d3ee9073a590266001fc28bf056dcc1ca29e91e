@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c85b372c_2308dc50",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T00:04:11Z",
+      "side": 1,
+      "message": "I\u0027m OK with this, but I\u0027m curious why you didn\u0027t add these to the union also?  is it just because there was no bit shifting required?",
+      "revId": "6d3ee9073a590266001fc28bf056dcc1ca29e91e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ba4764f_50102bbb",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2361,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T00:04:11Z",
+      "side": 1,
+      "message": "now that you have separate structures for acquire and release, I think you should break this into separate cases - otherwise it\u0027s a bit confusing why we\u0027re using the acquire struct for the RELEASE OPC\n\nthen you can also simplify the 2363-2367 code\n\n(I don\u0027t understand lines 2363-2367 though - if opc \u003d\u003d ACQUIRE and racqa \u003d\u003d ACQUIRE - why is that a conflict?  should that be racqa !\u003d ACQUIRE?)",
+      "revId": "6d3ee9073a590266001fc28bf056dcc1ca29e91e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff35d31e_926c0b8b",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T00:04:11Z",
+      "side": 1,
+      "message": "let\u0027s add dsm to the union so we don\u0027t have to do this",
+      "revId": "6d3ee9073a590266001fc28bf056dcc1ca29e91e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89f466e2_388dcf43",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T00:04:11Z",
+      "side": 1,
+      "message": "should all of these be comparing cdw10.raw instead?  we want to confirm no other bits are being set in cdw10",
+      "revId": "6d3ee9073a590266001fc28bf056dcc1ca29e91e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f73565d_40e2f585",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T00:04:11Z",
+      "side": 1,
+      "message": "use cmd-specific struct from union here instead?",
+      "revId": "6d3ee9073a590266001fc28bf056dcc1ca29e91e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
