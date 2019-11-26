@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "2b1a16b9_218250b7",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T00:24:43Z",
+      "side": 1,
+      "message": "this basically duplicates the existing union spdk_nvme_feat_arbitration\n\nhow about instead we just include a union spdk_nvme_feat_arbitration here?  i know it means a union within a union, and you\u0027d need to access members by something like cdw11.feat_arbitration.bits.ab, but we\u0027d get rid of a lot of duplication here and avoid inconsistency if we add definitions for other features\u0027 bits in the future",
+      "revId": "5bd71048515628af08d7713c9e32cca87fcf1175",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c60f2470_aa09efa3",
         "filename": "include/spdk/nvme_spec.h",
         "patchSetId": 5
