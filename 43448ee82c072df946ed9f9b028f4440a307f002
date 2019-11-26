@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "794b8aac_d3d95854",
+        "filename": "module/bdev/nvme/common.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-26T19:55:38Z",
+      "side": 1,
+      "message": "Why do you need the mutex here but not in attach?",
+      "revId": "43448ee82c072df946ed9f9b028f4440a307f002",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
