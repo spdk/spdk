@@ -1504,8 +1504,6 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 	/** version */
 	union spdk_nvme_vs_register	ver;
 
-	/** RTD3 resume latency */
-	uint32_t		rtd3r;
 
 	/** RTD3 entry latency */
 	uint32_t		rtd3e;
@@ -1754,7 +1752,10 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 	} oncs;
 
 	/** fused operation support */
-	uint16_t		fuses;
+	struct {
+		uint16_t	compare_and_write : 1;
+		uint16_t	reserved : 15;
+	} fuses;
 
 	/** format nvm attributes */
 	struct {
