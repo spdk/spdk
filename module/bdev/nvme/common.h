@@ -110,6 +110,7 @@ struct nvme_async_probe_ctx {
 	struct spdk_nvme_ctrlr_opts opts;
 	spdk_bdev_create_nvme_fn cb_fn;
 	void *cb_ctx;
+	uint32_t populates_in_progress;
 };
 
 void nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
