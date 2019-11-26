@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4bb45a6a_314f7d02",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-11-26T10:19:14Z",
+      "side": 1,
+      "message": "This comment contradicts the function signature which returns int",
+      "range": {
+        "startLine": 352,
+        "startChar": 11,
+        "endLine": 352,
+        "endChar": 57
+      },
+      "revId": "510983735b6904f4ca96a292e08c2a5f1bed6ab8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e2d270e_b57ecfd1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2164,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-11-26T10:19:14Z",
+      "side": 1,
+      "message": "I remember Jim removed \"spdk\" prefix from static function, could you remove it as well?",
+      "range": {
+        "startLine": 2164,
+        "startChar": 0,
+        "endLine": 2164,
+        "endChar": 4
+      },
+      "revId": "510983735b6904f4ca96a292e08c2a5f1bed6ab8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94556044_ce4080e2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2823,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-11-26T10:19:14Z",
+      "side": 1,
+      "message": "Please add \"return\" in this branch, otherwise mutex and memory will be freed twice",
+      "range": {
+        "startLine": 2823,
+        "startChar": 9,
+        "endLine": 2823,
+        "endChar": 27
+      },
+      "revId": "510983735b6904f4ca96a292e08c2a5f1bed6ab8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
