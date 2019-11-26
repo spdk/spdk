@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20195214_7b2c4790",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1840,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T21:15:12Z",
+      "side": 1,
+      "message": "unrelated whitespace change (newline was removed)",
+      "revId": "bace357f18058b7d94d8fc0e29a9c089e4213d17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a084bc7_4cf5adce",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1872,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T21:15:12Z",
+      "side": 1,
+      "message": "good comment - a little bit better wording might be:\n\n/* Only add the bdev_io to io_submitted if it is the original\n * submission from the bdev user.  When a bdev_io is split,\n * it comes back through this code path, so we need to make sure\n * we don\u0027t try to add it a second time.\n */",
+      "revId": "bace357f18058b7d94d8fc0e29a9c089e4213d17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa4da4f6_72faa687",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1879,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T21:15:12Z",
+      "side": 1,
+      "message": "We already set this in _bdev_io_submit() - I don\u0027t think we should add this in this patch.  If there\u0027s some kind of bug related to this, or is needed as part of timeout handling, we should add it in a separate patch.",
+      "revId": "bace357f18058b7d94d8fc0e29a9c089e4213d17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05769bd2_abf27e01",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 3489,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T21:15:12Z",
+      "side": 1,
+      "message": "same here - setting submit_tsc is not related to this new TAILQ - it should be added in a different patch",
+      "revId": "bace357f18058b7d94d8fc0e29a9c089e4213d17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "266cd4ed_b5f30bd4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 3498,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T21:15:12Z",
+      "side": 1,
+      "message": "I don\u0027t think this comment is needed.  It doesn\u0027t provide any extra information that cannot be understood from just reading the code.",
+      "revId": "bace357f18058b7d94d8fc0e29a9c089e4213d17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca6369cd_17b36cdc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 3763,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-26T21:15:12Z",
+      "side": 1,
+      "message": "I don\u0027t think this comment provides any additional information to the reader.\n\nIt would be better to explain the comparison with bdev_io_split_done.",
+      "revId": "bace357f18058b7d94d8fc0e29a9c089e4213d17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
