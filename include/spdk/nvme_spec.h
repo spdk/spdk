@@ -765,6 +765,38 @@ union spdk_nvme_feat_host_identifier {
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_host_identifier) == 4, "Incorrect size");
 
+/**
+ * Data used by Set Features/Get Features \ref SPDK_NVME_FEAT_HOST_RESERVE_MASK
+ */
+union spdk_nvme_feat_reservation_notification_mask {
+	uint32_t raw;
+	struct {
+		uint32_t reserved1 : 1;
+		/* Mask Registration Preempted Notification */
+		uint32_t regpre    : 1;
+		/* Mask Reservation Released Notification */
+		uint32_t resrel    : 1;
+		/* Mask Reservation Preempted Notification */
+		uint32_t respre    : 1;
+		uint32_t reserved2 : 27;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_reservation_notification_mask) == 4,
+		   "Incorrect size");
+
+/**
+ * Data used by Set Features/Get Features \ref SPDK_NVME_FEAT_HOST_RESERVE_PERSIST
+ */
+union spdk_nvme_feat_reservation_persistence {
+	uint32_t raw;
+	struct {
+		/* Persist Through Power Loss */
+		uint32_t ptpl      : 1;
+		uint32_t reserved  : 31;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_reservation_persistence) == 4, "Incorrect size");
+
 union spdk_nvme_cmd_cdw10 {
 	uint32_t raw;
 	struct {
@@ -933,6 +965,8 @@ union spdk_nvme_cmd_cdw11 {
 	union spdk_nvme_feat_async_event_configuration feat_async_event_cfg;
 	union spdk_nvme_feat_keep_alive_timer feat_keep_alive_timer;
 	union spdk_nvme_feat_host_identifier feat_host_identifier;
+	union spdk_nvme_feat_reservation_notification_mask feat_rsv_notification_mask;
+	union spdk_nvme_feat_reservation_persistence feat_rsv_persistence;
 
 	struct {
 		/* Attribute – Integral Dataset for Read */
@@ -1308,7 +1342,9 @@ enum spdk_nvme_feat {
 
 	/** cdw11 layout defined by \ref spdk_nvme_feat_host_identifier */
 	SPDK_NVME_FEAT_HOST_IDENTIFIER				= 0x81,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_reservation_notification_mask */
 	SPDK_NVME_FEAT_HOST_RESERVE_MASK			= 0x82,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_reservation_persistence */
 	SPDK_NVME_FEAT_HOST_RESERVE_PERSIST			= 0x83,
 
 	/* 0x84-0xBF - command set specific (reserved) */
