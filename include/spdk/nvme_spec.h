@@ -463,6 +463,16 @@ enum spdk_nvme_cc_ams {
 };
 
 /**
+ * Fused Operation
+ */
+enum spdk_nvme_cmd_fuse {
+	SPDK_NVMF_CMD_FUSE_NONE		= 0x0,	/**< normal operation */
+	SPDK_NVME_CMD_FUSE_FIRST	= 0x1,	/**< fused operation, first command */
+	SPDK_NVME_CMD_FUSE_SECOND	= 0x2,	/**< fused operation, second command */
+	/* 0x3 - reserved */
+};
+
+/**
  * Data used by Set Features/Get Features \ref SPDK_NVME_FEAT_ARBITRATION
  */
 union spdk_nvme_feat_arbitration {
@@ -2815,6 +2825,10 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fw_commit) == 4, "Incorrect size");
 	  (cpl)->status.sc == SPDK_NVME_SC_APPLICATION_TAG_CHECK_ERROR ||	\
 	  (cpl)->status.sc == SPDK_NVME_SC_REFERENCE_TAG_CHECK_ERROR))
 
+/** Set fused operation */
+#define SPDK_NVME_IO_FLAGS_FUSE_FIRST (1U << 0)
+#define SPDK_NVME_IO_FLAGS_FUSE_SECOND (1U << 1)
+#define SPDK_NVME_IO_FLAGS_FUSE_MASK (3U << 0)
 /** Enable protection information checking of the Logical Block Reference Tag field */
 #define SPDK_NVME_IO_FLAGS_PRCHK_REFTAG (1U << 26)
 /** Enable protection information checking of the Application Tag field */
@@ -2827,7 +2841,8 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fw_commit) == 4, "Incorrect size");
 #define SPDK_NVME_IO_FLAGS_LIMITED_RETRY (1U << 31)
 
 /** Mask of valid io flags mask */
-#define SPDK_NVME_IO_FLAGS_VALID_MASK 0xFFFF0000
+#define SPDK_NVME_IO_FLAGS_VALID_MASK 0xFFFF0003
+#define SPDK_NVME_IO_FLAGS_CDW12_MASK 0xFFFF0000
 
 #ifdef __cplusplus
 }
