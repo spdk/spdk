@@ -1331,8 +1331,9 @@ _spdk_blob_persist_write_page_chain(spdk_bs_sequence_t *seq, void *cb_arg, int b
 	spdk_bs_batch_close(batch);
 }
 
-static int
-_spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
+static void
+_spdk_blob_resize(spdk_bs_sequence_t *seq, struct spdk_blob *blob, uint64_t sz,
+		  spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
 	uint64_t	i;
 	uint64_t	*tmp;
@@ -1346,7 +1347,8 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 	_spdk_blob_verify_md_op(blob);
 
 	if (blob->active.num_clusters == sz) {
-		return 0;
+		cb_fn(seq, cb_arg, 0);
+		return;
 	}
 
 	if (blob->active.num_clusters < blob->active.cluster_array_size) {
@@ -1370,7 +1372,8 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 			lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
 			if (lfc == UINT32_MAX) {
 				/* No more free clusters. Cannot satisfy the request */
-				return -ENOSPC;
+				cb_fn(seq, cb_arg, -ENOSPC);
+				return;
 			}
 			lfc++;
 		}
@@ -1382,7 +1385,8 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 		 */
 		tmp = realloc(blob->active.clusters, sizeof(uint64_t) * sz);
 		if (sz > 0 && tmp == NULL) {
-			return -ENOMEM;
+			cb_fn(seq, cb_arg, -ENOMEM);
+			return;
 		}
 		memset(tmp + blob->active.cluster_array_size, 0,
 		       sizeof(uint64_t) * (sz - blob->active.cluster_array_size));
@@ -1407,7 +1411,7 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 
 	blob->active.num_clusters = sz;
 
-	return 0;
+	cb_fn(seq, cb_arg, 0);
 }
 
 static void
@@ -4251,6 +4255,20 @@ _spdk_bs_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
+static void
+_spdk_bs_create_blob_resize_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob *blob = cb_arg;
+
+	if (bserrno != 0) {
+		_spdk_blob_free(blob);
+		spdk_bs_sequence_finish(seq, bserrno);
+		return;
+	}
+
+	_spdk_blob_persist(seq, blob, _spdk_bs_create_blob_cpl, blob);
+}
+
 static int
 _spdk_blob_set_xattrs(struct spdk_blob *blob, const struct spdk_blob_xattr_opts *xattrs,
 		      bool internal)
@@ -4337,12 +4355,6 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 		_spdk_blob_set_thin_provision(blob);
 	}
 
-	rc = _spdk_blob_resize(blob, opts->num_clusters);
-	if (rc < 0) {
-		_spdk_blob_free(blob);
-		cb_fn(cb_arg, 0, rc);
-		return;
-	}
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
 	cpl.u.blobid.cb_arg = cb_arg;
@@ -4355,7 +4367,7 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 		return;
 	}
 
-	_spdk_blob_persist(seq, blob, _spdk_bs_create_blob_cpl, blob);
+	_spdk_blob_resize(seq, blob, opts->num_clusters, _spdk_bs_create_blob_resize_cpl, blob);
 }
 
 void spdk_bs_create_blob(struct spdk_blob_store *bs,
@@ -5066,11 +5078,10 @@ spdk_bs_blob_decouple_parent(struct spdk_blob_store *bs, struct spdk_io_channel 
 
 /* START spdk_blob_resize */
 struct spdk_bs_resize_ctx {
-	spdk_blob_op_complete cb_fn;
-	void *cb_arg;
 	struct spdk_blob *blob;
 	uint64_t sz;
 	int rc;
+	spdk_bs_sequence_t *seq;
 };
 
 static void
@@ -5089,8 +5100,20 @@ _spdk_bs_resize_unfreeze_cpl(void *cb_arg, int rc)
 
 	ctx->blob->locked_operation_in_progress = false;
 
-	ctx->cb_fn(ctx->cb_arg, rc);
+	spdk_bs_sequence_finish(ctx->seq, rc);
 	free(ctx);
+}
+
+static void
+_spdk_bs_resize_freeze_resize_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_resize_ctx *ctx = (struct spdk_bs_resize_ctx *)cb_arg;
+
+	if (bserrno != 0) {
+		ctx->rc = bserrno;
+	}
+
+	_spdk_blob_unfreeze_io(ctx->blob, _spdk_bs_resize_unfreeze_cpl, ctx);
 }
 
 static void
@@ -5100,20 +5123,20 @@ _spdk_bs_resize_freeze_cpl(void *cb_arg, int rc)
 
 	if (rc != 0) {
 		ctx->blob->locked_operation_in_progress = false;
-		ctx->cb_fn(ctx->cb_arg, rc);
+		spdk_bs_sequence_finish(ctx->seq, rc);
 		free(ctx);
 		return;
 	}
 
-	ctx->rc = _spdk_blob_resize(ctx->blob, ctx->sz);
-
-	_spdk_blob_unfreeze_io(ctx->blob, _spdk_bs_resize_unfreeze_cpl, ctx);
+	_spdk_blob_resize(ctx->seq, ctx->blob, ctx->sz, _spdk_bs_resize_freeze_resize_cpl, ctx);
 }
 
 void
 spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_resize_ctx *ctx;
+	struct spdk_bs_cpl cpl;
+	spdk_bs_sequence_t *seq;
 
 	_spdk_blob_verify_md_op(blob);
 
@@ -5140,11 +5163,22 @@ spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_f
 		return;
 	}
 
+	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	cpl.u.blob_basic.cb_fn = cb_fn;
+	cpl.u.blob_basic.cb_arg = cb_arg;
+
+	seq = spdk_bs_sequence_start(blob->bs->md_channel, &cpl);
+	if (!seq) {
+		cb_fn(cb_arg, -ENOMEM);
+		free(ctx);
+		return;
+	}
+
 	blob->locked_operation_in_progress = true;
-	ctx->cb_fn = cb_fn;
-	ctx->cb_arg = cb_arg;
 	ctx->blob = blob;
 	ctx->sz = sz;
+	ctx->seq = seq;
+
 	_spdk_blob_freeze_io(blob, _spdk_bs_resize_freeze_cpl, ctx);
 }
 
@@ -5483,6 +5517,19 @@ _spdk_update_clone_on_snapshot_deletion(struct spdk_blob *snapshot, struct delet
 }
 
 static void
+_spdk_bs_delete_blob_resize_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob *blob = cb_arg;
+
+	if (bserrno != 0) {
+		_spdk_bs_delete_persist_cpl(seq, blob, bserrno);
+		return;
+	}
+
+	_spdk_blob_persist(seq, blob, _spdk_bs_delete_persist_cpl, blob);
+}
+
+static void
 _spdk_bs_delete_blob_finish(void *cb_arg, struct spdk_blob *blob, int bserrno)
 {
 	spdk_bs_sequence_t *seq = cb_arg;
@@ -5506,9 +5553,7 @@ _spdk_bs_delete_blob_finish(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	spdk_bit_array_clear(blob->bs->used_blobids, page_num);
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 	blob->active.num_pages = 0;
-	_spdk_blob_resize(blob, 0);
-
-	_spdk_blob_persist(seq, blob, _spdk_bs_delete_persist_cpl, blob);
+	_spdk_blob_resize(seq, blob, 0, _spdk_bs_delete_blob_resize_cpl, blob);
 }
 
 static int
