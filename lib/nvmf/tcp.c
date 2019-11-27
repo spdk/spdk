@@ -2127,64 +2127,6 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 	return rc;
 }
 
-static enum spdk_nvme_data_transfer
-spdk_nvmf_tcp_req_get_xfer(struct spdk_nvmf_tcp_req *tcp_req) {
-	enum spdk_nvme_data_transfer xfer;
-	struct spdk_nvme_cmd *cmd = &tcp_req->req.cmd->nvme_cmd;
-	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
-
-	/* Figure out data transfer direction */
-	if (cmd->opc == SPDK_NVME_OPC_FABRIC)
-	{
-		xfer = spdk_nvme_opc_get_data_transfer(tcp_req->req.cmd->nvmf_cmd.fctype);
-	} else
-	{
-		xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
-
-		/* Some admin commands are special cases */
-		if ((tcp_req->req.qpair->qid == 0) &&
-		    ((cmd->opc == SPDK_NVME_OPC_GET_FEATURES) ||
-		     (cmd->opc == SPDK_NVME_OPC_SET_FEATURES))) {
-			switch (cmd->cdw10 & 0xff) {
-			case SPDK_NVME_FEAT_LBA_RANGE_TYPE:
-			case SPDK_NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION:
-			case SPDK_NVME_FEAT_HOST_IDENTIFIER:
-				break;
-			default:
-				xfer = SPDK_NVME_DATA_NONE;
-			}
-		}
-	}
-
-	if (xfer == SPDK_NVME_DATA_NONE)
-	{
-		return xfer;
-	}
-
-	/* Even for commands that may transfer data, they could have specified 0 length.
-	 * We want those to show up with xfer SPDK_NVME_DATA_NONE.
-	 */
-	switch (sgl->generic.type)
-	{
-	case SPDK_NVME_SGL_TYPE_DATA_BLOCK:
-	case SPDK_NVME_SGL_TYPE_BIT_BUCKET:
-	case SPDK_NVME_SGL_TYPE_SEGMENT:
-	case SPDK_NVME_SGL_TYPE_LAST_SEGMENT:
-	case SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK:
-		if (sgl->unkeyed.length == 0) {
-			xfer = SPDK_NVME_DATA_NONE;
-		}
-		break;
-	case SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK:
-		if (sgl->keyed.length == 0) {
-			xfer = SPDK_NVME_DATA_NONE;
-		}
-		break;
-	}
-
-	return xfer;
-}
-
 static int
 spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 			    struct spdk_nvmf_transport *transport,
@@ -2539,7 +2481,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			}
 
 			/* The next state transition depends on the data transfer needs of this request. */
-			tcp_req->req.xfer = spdk_nvmf_tcp_req_get_xfer(tcp_req);
+			tcp_req->req.xfer = spdk_nvmf_req_get_xfer(&tcp_req->req);
 
 			/* If no data to transfer, ready to execute. */
 			if (tcp_req->req.xfer == SPDK_NVME_DATA_NONE) {
