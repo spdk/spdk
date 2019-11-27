@@ -585,6 +585,27 @@ vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
 	return 0;
 }
 
+static int
+vhost_session_bdev_resize_cb(struct spdk_vhost_dev *vdev,
+			     struct spdk_vhost_session *vsession,
+			     void *ctx)
+{
+	SPDK_NOTICELOG("bdev send slave msg to vid(%d)\n", vsession->vid);
+	rte_vhost_user_slave_config_change(vsession->vid);
+	return 0;
+}
+
+static void
+blk_resize_cb(void *resize_ctx)
+{
+	struct spdk_vhost_blk_dev *bvdev = resize_ctx;
+	spdk_vhost_lock();
+	vhost_dev_foreach_session(&bvdev->vdev, vhost_session_bdev_resize_cb,
+				  NULL, NULL);
+	spdk_vhost_unlock();
+
+}
+
 static void
 bdev_remove_cb(void *remove_ctx)
 {
@@ -597,6 +618,29 @@ bdev_remove_cb(void *remove_ctx)
 	vhost_dev_foreach_session(&bvdev->vdev, vhost_session_bdev_remove_cb,
 				  vhost_dev_bdev_remove_cpl_cb, NULL);
 	spdk_vhost_unlock();
+}
+
+static void
+bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+	      void *event_ctx)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Bdev event: type %d, name %s\n",
+		      type,
+		      bdev->name);
+
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		SPDK_NOTICELOG("bdev name (%s) received event(SPDK_BDEV_EVENT_REMOVE)\n", bdev->name);
+		bdev_remove_cb(event_ctx);
+		break;
+	case SPDK_BDEV_EVENT_RESIZE:
+		SPDK_NOTICELOG("bdev name (%s) received event(SPDK_BDEV_EVENT_RESIZE)\n", bdev->name);
+		blk_resize_cb(event_ctx);
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
+	}
 }
 
 static void
@@ -974,7 +1018,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		goto out;
 	}
 
-	ret = spdk_bdev_open(bdev, true, bdev_remove_cb, bvdev, &bvdev->bdev_desc);
+	ret = spdk_bdev_open_ext(dev_name, true, bdev_event_cb, bvdev, &bvdev->bdev_desc);
 	if (ret != 0) {
 		SPDK_ERRLOG("%s: could not open bdev '%s', error=%d\n",
 			    name, dev_name, ret);
