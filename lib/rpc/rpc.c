@@ -157,13 +157,21 @@ spdk_rpc_listen(const char *listen_addr)
 			return -1;
 		}
 
-		snprintf(g_rpc_lock_path, sizeof(g_rpc_lock_path), "%s.lock",
-			 g_rpc_listen_addr_unix.sun_path);
+		rc = snprintf(g_rpc_lock_path, sizeof(g_rpc_lock_path), "%s.lock",
+			      g_rpc_listen_addr_unix.sun_path);
+		if (rc < 0 || (size_t)rc >= sizeof(g_rpc_lock_path)) {
+			SPDK_ERRLOG("RPC lock path too long\n");
+			g_rpc_listen_addr_unix.sun_path[0] = '\0';
+			g_rpc_lock_path[0] = '\0';
+			return -1;
+		}
 
 		g_rpc_lock_fd = open(g_rpc_lock_path, O_RDONLY | O_CREAT, 0600);
 		if (g_rpc_lock_fd == -1) {
 			SPDK_ERRLOG("Cannot open lock file %s: %s\n",
 				    g_rpc_lock_path, spdk_strerror(errno));
+			g_rpc_listen_addr_unix.sun_path[0] = '\0';
+			g_rpc_lock_path[0] = '\0';
 			return -1;
 		}
 
@@ -171,6 +179,8 @@ spdk_rpc_listen(const char *listen_addr)
 		if (rc != 0) {
 			SPDK_ERRLOG("RPC Unix domain socket path %s in use. Specify another.\n",
 				    g_rpc_listen_addr_unix.sun_path);
+			g_rpc_listen_addr_unix.sun_path[0] = '\0';
+			g_rpc_lock_path[0] = '\0';
 			return -1;
 		}
 
@@ -334,6 +344,7 @@ spdk_rpc_close(void)
 		if (g_rpc_listen_addr_unix.sun_path[0]) {
 			/* Delete the Unix socket file */
 			unlink(g_rpc_listen_addr_unix.sun_path);
+			g_rpc_listen_addr_unix.sun_path[0] = '\0';
 		}
 
 		spdk_jsonrpc_server_shutdown(g_jsonrpc_server);
