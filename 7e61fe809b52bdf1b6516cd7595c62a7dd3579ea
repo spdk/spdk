@@ -16,6 +16,24 @@
       "revId": "7e61fe809b52bdf1b6516cd7595c62a7dd3579ea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3955b275_ee01bfbc",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-27T01:36:43Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nThis case is already handled in other functions. So it is correct. You can see the original code, is used to decrease the data_in_cnt for the primary task. But in the new code, there is no counting data_in_cnt for the primary task. And there the primary read task is not executed in the scsi layer, and there is no deferred read primary task free, so why we need this code here?",
+      "parentUuid": "880b8b5c_e751399a",
+      "revId": "7e61fe809b52bdf1b6516cd7595c62a7dd3579ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
