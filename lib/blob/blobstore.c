@@ -113,7 +113,7 @@ _spdk_blob_insert_cluster(struct spdk_blob *blob, uint32_t cluster_num, uint64_t
 
 static int
 _spdk_bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
-			  uint64_t *lowest_free_cluster, bool update_map)
+			  uint64_t *lowest_free_cluster)
 {
 	pthread_mutex_lock(&blob->bs->used_clusters_mutex);
 	*lowest_free_cluster = spdk_bit_array_find_first_clear(blob->bs->used_clusters,
@@ -127,10 +127,6 @@ _spdk_bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %lu for blob %lu\n", *lowest_free_cluster, blob->id);
 	_spdk_bs_claim_cluster(blob->bs, *lowest_free_cluster);
 	pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
-
-	if (update_map) {
-		_spdk_blob_insert_cluster(blob, cluster_num, *lowest_free_cluster);
-	}
 
 	return 0;
 }
@@ -1368,6 +1364,7 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 	uint64_t	lfc; /* lowest free cluster */
 	uint64_t	num_clusters;
 	struct spdk_blob_store *bs;
+	int		rc;
 
 	bs = blob->bs;
 
@@ -1423,7 +1420,9 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 	if (spdk_blob_is_thin_provisioned(blob) == false) {
 		lfc = 0;
 		for (i = num_clusters; i < sz; i++) {
-			_spdk_bs_allocate_cluster(blob, i, &lfc, true);
+			_spdk_bs_allocate_cluster(blob, i, &lfc);
+			rc = _spdk_blob_insert_cluster(blob, i, lfc);
+			assert(rc == 0);
 			lfc++;
 		}
 	}
@@ -1714,7 +1713,7 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 		}
 	}
 
-	rc = _spdk_bs_allocate_cluster(blob, cluster_number, &ctx->new_cluster, false);
+	rc = _spdk_bs_allocate_cluster(blob, cluster_number, &ctx->new_cluster);
 	if (rc != 0) {
 		spdk_free(ctx->buf);
 		free(ctx);
