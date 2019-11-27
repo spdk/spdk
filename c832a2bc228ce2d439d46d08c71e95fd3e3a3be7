@@ -16,6 +16,24 @@
       "revId": "c832a2bc228ce2d439d46d08c71e95fd3e3a3be7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af74e199_5e5b8899",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-11-27T14:56:20Z",
+      "side": 1,
+      "message": "I chatted with Ben about this offline.  This flag is meant to describe whether the struct has been populated with bdevs yet.  We get \"active\" status for the namespace directly from the nvme driver API.  If the namespace is active, but populated \u003d\u003d false, then we need to populate this struct (i.e. create bdevs).  If the namespace is not active, and populated \u003d\u003d true, then we need to depopulate this struct (i.e. unregister bdevs).\n\nI\u0027ve added another patch at the end of this series with a comment describing this field in more detail.",
+      "parentUuid": "02557576_7b31b1dc",
+      "revId": "c832a2bc228ce2d439d46d08c71e95fd3e3a3be7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
