@@ -2592,6 +2592,9 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fw_commit) == 4, "Incorrect size");
 	  (cpl)->status.sc == SPDK_NVME_SC_APPLICATION_TAG_CHECK_ERROR ||	\
 	  (cpl)->status.sc == SPDK_NVME_SC_REFERENCE_TAG_CHECK_ERROR))
 
+/** Set fused operation */
+#define SPDK_NVME_IO_FLAGS_FUSE_FIRST (1U << 0)
+#define SPDK_NVME_IO_FLAGS_FUSE_SECOND (1U << 1)
 /** Enable protection information checking of the Logical Block Reference Tag field */
 #define SPDK_NVME_IO_FLAGS_PRCHK_REFTAG (1U << 26)
 /** Enable protection information checking of the Application Tag field */

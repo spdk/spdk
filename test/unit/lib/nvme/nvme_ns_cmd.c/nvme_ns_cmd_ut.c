@@ -747,6 +747,53 @@ test_nvme_ns_cmd_comparev(void)
 }
 
 static void
+test_nvme_ns_cmd_compare_and_write(void)
+{
+	struct spdk_nvme_ns		ns;
+	struct spdk_nvme_ctrlr		ctrlr;
+	struct spdk_nvme_qpair		qpair;
+	int				rc = 0;
+	uint64_t			lba = 0x1000;
+	uint32_t			lba_count = 256;
+	uint64_t			cmd_lba;
+	uint32_t			cmd_lba_count;
+	uint32_t			sector_size = 512;
+
+	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, 0, 128 * 1024, 0, false);
+
+	rc = spdk_nvme_ns_cmd_compare(&ns, &qpair, NULL, lba, lba_count, NULL, NULL,
+				      SPDK_NVME_IO_FLAGS_FUSE_FIRST);
+
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_COMPARE);
+	CU_ASSERT(g_request->cmd.fuse == 1);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+
+	nvme_cmd_interpret_rw(&g_request->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT_EQUAL(cmd_lba, lba);
+	CU_ASSERT_EQUAL(cmd_lba_count, lba_count);
+
+	nvme_free_request(g_request);
+
+	rc = spdk_nvme_ns_cmd_write(&ns, &qpair, NULL, lba, lba_count, NULL, NULL,
+				    SPDK_NVME_IO_FLAGS_FUSE_SECOND);
+
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_WRITE);
+	CU_ASSERT(g_request->cmd.fuse == 2);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	nvme_cmd_interpret_rw(&g_request->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT_EQUAL(cmd_lba, lba);
+	CU_ASSERT_EQUAL(cmd_lba_count, lba_count);
+
+	nvme_free_request(g_request);
+
+	cleanup_after_test(&qpair);
+}
+
+static void
 test_io_flags(void)
 {
 	struct spdk_nvme_ns	ns;
@@ -1447,6 +1494,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "nvme_ns_cmd_writev", test_nvme_ns_cmd_writev) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_write_with_md", test_nvme_ns_cmd_write_with_md) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_comparev", test_nvme_ns_cmd_comparev) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_compare_and_write", test_nvme_ns_cmd_compare_and_write) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_compare_with_md", test_nvme_ns_cmd_compare_with_md) == NULL
 	) {
 		CU_cleanup_registry();
