@@ -1395,68 +1395,6 @@ spdk_nvmf_rdma_check_contiguous_entries(uint64_t addr_1, uint64_t addr_2)
 	return addr_1 == addr_2;
 }
 
-typedef enum spdk_nvme_data_transfer spdk_nvme_data_transfer_t;
-
-static spdk_nvme_data_transfer_t
-spdk_nvmf_rdma_request_get_xfer(struct spdk_nvmf_rdma_request *rdma_req)
-{
-	enum spdk_nvme_data_transfer xfer;
-	struct spdk_nvme_cmd *cmd = &rdma_req->req.cmd->nvme_cmd;
-	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
-
-#ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
-	rdma_req->rsp.wr.opcode = IBV_WR_SEND;
-	rdma_req->rsp.wr.imm_data = 0;
-#endif
-
-	/* Figure out data transfer direction */
-	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
-		xfer = spdk_nvme_opc_get_data_transfer(rdma_req->req.cmd->nvmf_cmd.fctype);
-	} else {
-		xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
-
-		/* Some admin commands are special cases */
-		if ((rdma_req->req.qpair->qid == 0) &&
-		    ((cmd->opc == SPDK_NVME_OPC_GET_FEATURES) ||
-		     (cmd->opc == SPDK_NVME_OPC_SET_FEATURES))) {
-			switch (cmd->cdw10 & 0xff) {
-			case SPDK_NVME_FEAT_LBA_RANGE_TYPE:
-			case SPDK_NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION:
-			case SPDK_NVME_FEAT_HOST_IDENTIFIER:
-				break;
-			default:
-				xfer = SPDK_NVME_DATA_NONE;
-			}
-		}
-	}
-
-	if (xfer == SPDK_NVME_DATA_NONE) {
-		return xfer;
-	}
-
-	/* Even for commands that may transfer data, they could have specified 0 length.
-	 * We want those to show up with xfer SPDK_NVME_DATA_NONE.
-	 */
-	switch (sgl->generic.type) {
-	case SPDK_NVME_SGL_TYPE_DATA_BLOCK:
-	case SPDK_NVME_SGL_TYPE_BIT_BUCKET:
-	case SPDK_NVME_SGL_TYPE_SEGMENT:
-	case SPDK_NVME_SGL_TYPE_LAST_SEGMENT:
-	case SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK:
-		if (sgl->unkeyed.length == 0) {
-			xfer = SPDK_NVME_DATA_NONE;
-		}
-		break;
-	case SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK:
-		if (sgl->keyed.length == 0) {
-			xfer = SPDK_NVME_DATA_NONE;
-		}
-		break;
-	}
-
-	return xfer;
-}
-
 static inline void
 nvmf_rdma_setup_wr(struct ibv_send_wr *wr, struct ibv_send_wr *next,
 		   enum spdk_nvme_data_transfer xfer)
@@ -2095,8 +2033,13 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				rdma_req->req.dif.dif_insert_or_strip = true;
 			}
 
+#ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
+			rdma_req->rsp.wr.opcode = IBV_WR_SEND;
+			rdma_req->rsp.wr.imm_data = 0;
+#endif
+
 			/* The next state transition depends on the data transfer needs of this request. */
-			rdma_req->req.xfer = spdk_nvmf_rdma_request_get_xfer(rdma_req);
+			rdma_req->req.xfer = spdk_nvmf_req_get_xfer(&rdma_req->req);
 
 			/* If no data to transfer, ready to execute. */
 			if (rdma_req->req.xfer == SPDK_NVME_DATA_NONE) {
