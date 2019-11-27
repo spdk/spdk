@@ -37,12 +37,36 @@
 #define UNIT_TEST_NO_PCI_ADDR
 #include "common/lib/test_env.c"
 #include "spdk_cunit.h"
-
+#include "spdk/stdinc.h"
+#include "spdk/config.h"
+#include "spdk/env.h"
 #include "spdk/bit_array.h"
 
-#define PAGE_ARRAY_SIZE (100)
+#define __SPDK_ENV_NAME(path)	(strrchr(#path, '/') + 1)
+#define _SPDK_ENV_NAME(path)	__SPDK_ENV_NAME(path)
+#define SPDK_ENV_NAME		_SPDK_ENV_NAME(SPDK_CONFIG_ENV)
+
+#define PAGE_ARRAY_SIZE (10)
 static struct spdk_bit_array *g_page_array;
 static void *g_vaddr_to_fail = (void *)UINT64_MAX;
+
+void *addr_start;
+#define TEST_VIRT_START ((uintptr_t)addr_start)
+#define TEST_VIRT_END (TEST_VIRT_START + (VALUE_2MB * PAGE_ARRAY_SIZE))
+
+static void *
+test_get_vaddr(unsigned long offset)
+{
+	return (void *)(TEST_VIRT_START + offset);
+}
+
+static bool
+test_check_vaddr_in_range(void *vaddr)
+{
+	uintptr_t addr = (uintptr_t)vaddr;
+	return addr >= TEST_VIRT_START && addr < TEST_VIRT_END;
+}
+
 
 static int
 test_mem_map_notify(void *cb_ctx, struct spdk_mem_map *map,
@@ -58,9 +82,11 @@ test_mem_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 	 * This is a test requirement - the bit array we use to verify
 	 * pages are valid is only so large.
 	 */
-	SPDK_CU_ASSERT_FATAL((uintptr_t)vaddr < (VALUE_2MB * PAGE_ARRAY_SIZE));
+        if (!test_check_vaddr_in_range(vaddr)) {
+                return 0;
+        }
 
-	i = (uintptr_t)vaddr >> SHIFT_2MB;
+	i = ((uintptr_t)vaddr - TEST_VIRT_START) >> SHIFT_2MB;
 	end = i + (len >> SHIFT_2MB);
 	for (; i < end; i++) {
 		switch (action) {
@@ -111,19 +137,23 @@ test_mem_map_notify_checklen(void *cb_ctx, struct spdk_mem_map *map,
 			     enum spdk_mem_map_notify_action action, void *vaddr, size_t size)
 {
 	size_t *len_arr = cb_ctx;
+	unsigned idx;
 
 	/*
 	 * This is a test requirement - the len array we use to verify
 	 * pages are valid is only so large.
 	 */
-	SPDK_CU_ASSERT_FATAL((uintptr_t)vaddr < (VALUE_2MB * PAGE_ARRAY_SIZE));
+        if (!test_check_vaddr_in_range(vaddr)) {
+                return 0;
+        }
 
+	idx = ((uintptr_t)vaddr - TEST_VIRT_START) / VALUE_2MB;
 	switch (action) {
 	case SPDK_MEM_MAP_NOTIFY_REGISTER:
-		assert(size == len_arr[(uintptr_t)vaddr / VALUE_2MB]);
+		assert(size == len_arr[idx]);
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-		CU_ASSERT(size == len_arr[(uintptr_t)vaddr / VALUE_2MB]);
+		CU_ASSERT(size == len_arr[idx]);
 		break;
 	}
 
@@ -177,24 +207,24 @@ test_mem_map_alloc_free(void)
 	 * initialized translations.
 	 */
 	for (i = 0; i < 5; i++) {
-		spdk_mem_register((void *)(uintptr_t)(2 * i * VALUE_2MB), VALUE_2MB);
+		spdk_mem_register(test_get_vaddr(2 * i * VALUE_2MB), VALUE_2MB);
 	}
 
 	/* The last region */
-	g_vaddr_to_fail = (void *)(8 * VALUE_2MB);
+	g_vaddr_to_fail = test_get_vaddr(8 * VALUE_2MB);
 	failed_map = spdk_mem_map_alloc(default_translation, &test_map_ops_notify_fail, map);
 	CU_ASSERT(failed_map == NULL);
 
 	for (i = 0; i < 4; i++) {
 		uint64_t reg, size = VALUE_2MB;
 
-		reg = spdk_mem_map_translate(map, 2 * i * VALUE_2MB, &size);
+		reg = spdk_mem_map_translate(map, (uintptr_t)test_get_vaddr(2 * i * VALUE_2MB), &size);
 		/* check if `failed_map` didn't leave any translations behind */
 		CU_ASSERT(reg == default_translation);
 	}
 
 	for (i = 0; i < 5; i++) {
-		spdk_mem_unregister((void *)(uintptr_t)(2 * i * VALUE_2MB), VALUE_2MB);
+		spdk_mem_unregister(test_get_vaddr(2 * i * VALUE_2MB), VALUE_2MB);
 	}
 
 	spdk_mem_map_free(&map);
@@ -370,47 +400,47 @@ test_mem_map_registration(void)
 	SPDK_CU_ASSERT_FATAL(map != NULL);
 
 	/* Unregister memory region that wasn't previously registered */
-	rc =  spdk_mem_unregister((void *)VALUE_2MB, VALUE_2MB);
+	rc =  spdk_mem_unregister(test_get_vaddr(0), VALUE_2MB);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Register non-2MB multiple size */
-	rc = spdk_mem_register((void *)VALUE_2MB, 1234);
+	rc = spdk_mem_register(test_get_vaddr(0), 1234);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Register region that isn't 2MB aligned */
-	rc = spdk_mem_register((void *)1234, VALUE_2MB);
+	rc = spdk_mem_register(test_get_vaddr(1234), VALUE_2MB);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Register one 2MB page */
-	rc = spdk_mem_register((void *)VALUE_2MB, VALUE_2MB);
+	rc = spdk_mem_register(test_get_vaddr(VALUE_2MB), VALUE_2MB);
 	CU_ASSERT(rc == 0);
 
 	/* Register an overlapping address range */
-	rc = spdk_mem_register((void *)0, 3 * VALUE_2MB);
+	rc = spdk_mem_register(test_get_vaddr(0), 3 * VALUE_2MB);
 	CU_ASSERT(rc == -EBUSY);
 
 	/* Unregister a 2MB page */
-	rc = spdk_mem_unregister((void *)VALUE_2MB, VALUE_2MB);
+	rc = spdk_mem_unregister(test_get_vaddr(VALUE_2MB), VALUE_2MB);
 	CU_ASSERT(rc == 0);
 
 	/* Register non overlapping address range */
-	rc = spdk_mem_register((void *)0, 3 * VALUE_2MB);
+	rc = spdk_mem_register(test_get_vaddr(0), 3 * VALUE_2MB);
 	CU_ASSERT(rc == 0);
 
 	/* Unregister the middle page of the larger region. */
-	rc = spdk_mem_unregister((void *)VALUE_2MB, VALUE_2MB);
+	rc = spdk_mem_unregister(test_get_vaddr(VALUE_2MB), VALUE_2MB);
 	CU_ASSERT(rc == -ERANGE);
 
 	/* Unregister the first page */
-	rc = spdk_mem_unregister((void *)0, VALUE_2MB);
+	rc = spdk_mem_unregister(test_get_vaddr(0), VALUE_2MB);
 	CU_ASSERT(rc == -ERANGE);
 
 	/* Unregister the third page */
-	rc = spdk_mem_unregister((void *)(2 * VALUE_2MB), VALUE_2MB);
+	rc = spdk_mem_unregister(test_get_vaddr(2 * VALUE_2MB), VALUE_2MB);
 	CU_ASSERT(rc == -ERANGE);
 
 	/* Unregister the entire address range */
-	rc = spdk_mem_unregister((void *)0, 3 * VALUE_2MB);
+	rc = spdk_mem_unregister(test_get_vaddr(0), 3 * VALUE_2MB);
 	CU_ASSERT(rc == 0);
 
 	spdk_mem_map_free(&map);
@@ -422,8 +452,7 @@ test_mem_map_registration_adjacent(void)
 {
 	struct spdk_mem_map *map, *newmap;
 	uint64_t default_translation = 0xDEADBEEF0BADF00D;
-	uintptr_t vaddr;
-	unsigned i;
+	unsigned i, offset;
 	size_t notify_len[PAGE_ARRAY_SIZE] = {0};
 	size_t chunk_len[] = { 2, 1, 3, 2, 1, 1 };
 
@@ -431,11 +460,12 @@ test_mem_map_registration_adjacent(void)
 				 &test_map_ops_notify_checklen, notify_len);
 	SPDK_CU_ASSERT_FATAL(map != NULL);
 
-	vaddr = 0;
+	offset = 0;
 	for (i = 0; i < SPDK_COUNTOF(chunk_len); i++) {
-		notify_len[vaddr / VALUE_2MB] = chunk_len[i] * VALUE_2MB;
-		spdk_mem_register((void *)vaddr, notify_len[vaddr / VALUE_2MB]);
-		vaddr += notify_len[vaddr / VALUE_2MB];
+		int idx = offset / VALUE_2MB;
+		notify_len[idx] = chunk_len[i] * VALUE_2MB;
+		spdk_mem_register(test_get_vaddr(offset), notify_len[idx]);
+		offset += notify_len[idx];
 	}
 
 	/* Verify the memory is translated in the same chunks it was registered */
@@ -445,23 +475,25 @@ test_mem_map_registration_adjacent(void)
 	spdk_mem_map_free(&newmap);
 	CU_ASSERT(newmap == NULL);
 
-	vaddr = 0;
+	offset = 0;
 	for (i = 0; i < SPDK_COUNTOF(chunk_len); i++) {
-		notify_len[vaddr / VALUE_2MB] = chunk_len[i] * VALUE_2MB;
-		spdk_mem_unregister((void *)vaddr, notify_len[vaddr / VALUE_2MB]);
-		vaddr += notify_len[vaddr / VALUE_2MB];
+		int idx = offset / VALUE_2MB;
+		notify_len[idx] = chunk_len[i] * VALUE_2MB;
+		spdk_mem_unregister(test_get_vaddr(offset), notify_len[idx]);
+		offset += notify_len[idx];
 	}
 
 	/* Register all chunks again just to unregister them again, but this
 	 * time with only a single unregister() call.
 	 */
-	vaddr = 0;
+	offset = 0;
 	for (i = 0; i < SPDK_COUNTOF(chunk_len); i++) {
-		notify_len[vaddr / VALUE_2MB] = chunk_len[i] * VALUE_2MB;
-		spdk_mem_register((void *)vaddr, notify_len[vaddr / VALUE_2MB]);
-		vaddr += notify_len[vaddr / VALUE_2MB];
+		int idx = offset / VALUE_2MB;
+		notify_len[idx] = chunk_len[i] * VALUE_2MB;
+		spdk_mem_register(test_get_vaddr(offset), notify_len[idx]);
+		offset += notify_len[idx];
 	}
-	spdk_mem_unregister(0, vaddr);
+	spdk_mem_unregister(test_get_vaddr(0), offset);
 
 	spdk_mem_map_free(&map);
 	CU_ASSERT(map == NULL);
@@ -470,18 +502,28 @@ test_mem_map_registration_adjacent(void)
 int
 main(int argc, char **argv)
 {
+	struct spdk_env_opts opts;
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
 	/*
 	 * These tests can use PAGE_ARRAY_SIZE 2MB pages of memory.
-	 * Note that the tests just verify addresses - this memory
-	 * is not actually allocated.
-	  */
+	 * Note that the tests just verify addresses - but we need the address
+	 * range to be valid for vtophys works correctly on it, so we go ahead
+	 * and allocate that range.
+	 */
 	g_page_array = spdk_bit_array_create(PAGE_ARRAY_SIZE);
+	addr_start = aligned_alloc(VALUE_2MB, PAGE_ARRAY_SIZE * VALUE_2MB);
 
-	/* Initialize the memory map */
-	if (spdk_mem_map_init() < 0) {
+	spdk_env_opts_init(&opts);
+	opts.name = "memoryUT";
+	opts.core_mask = "0x1";
+	if (strcmp(SPDK_ENV_NAME, "env_dpdk") == 0) {
+		opts.env_context = "--log-level=lib.eal:8";
+	}
+
+	if (spdk_env_init(&opts) < 0) {
+		printf("Err: Unable to initialize SPDK env\n");
 		return CUE_NOMEMORY;
 	}
 
@@ -511,6 +553,7 @@ main(int argc, char **argv)
 	CU_cleanup_registry();
 
 	spdk_bit_array_free(&g_page_array);
+	free(addr_start);
 
 	return num_failures;
 }
