@@ -151,8 +151,10 @@ _nvme_ns_cmd_setup_request(struct spdk_nvme_ns *ns, struct nvme_request *req,
 		}
 	}
 
+	cmd->fuse = (io_flags & SPDK_NVME_IO_FLAGS_FUSE_MASK);
+
 	cmd->cdw12 = lba_count - 1;
-	cmd->cdw12 |= io_flags;
+	cmd->cdw12 |= (io_flags & 0xffff0000);
 
 	cmd->cdw15 = apptag_mask;
 	cmd->cdw15 = (cmd->cdw15 << 16 | apptag);
@@ -375,10 +377,9 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	uint32_t		sectors_per_max_io;
 	uint32_t		sectors_per_stripe;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
+	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+		/* Invalid io_flags */
+		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return NULL;
 	}
 
