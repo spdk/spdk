@@ -16,6 +16,24 @@
       "revId": "c81b131a3b77ed1b12741f64deb0318fe0cb5da4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0438522e_c2382221",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-11-27T17:41:33Z",
+      "side": 1,
+      "message": "After changes in this patch there\u0027s format truncation warning with gcc 8.3.1. This check prevents triggering it.\n\nnvme_cuse.c: In function ‘spdk_nvme_cuse_register’:\nnvme_cuse.c:695:65: warning: ‘%d’ directive output may be truncated writing between 1 and 11 bytes into a region of size between 0 and 127 [-Wformat-truncation\u003d]\n  snprintf(ns_device-\u003edev_name, sizeof(ns_device-\u003edev_name), \"%sn%d\",                                                                 ^~                              \nnvme_cuse.c:695:61: note: using the range [-2147483648, 2147483647] for directive argument  snprintf(ns_device-\u003edev_name, sizeof(ns_device-\u003edev_name), \"%sn%d\",                            \n                                                             ^~~~~~~                             \nIn file included from /usr/include/stdio.h:873,                                                  \n                 from /home/tkulasex/spdk-cuse/include/spdk/stdinc.h:57,                         \n                 from /home/tkulasex/spdk-cuse/include/spdk/likely.h:41,                         \n                 from nvme_internal.h:38,                                                        \n                 from nvme_cuse.c:41:                                                            \n/usr/include/bits/stdio2.h:67:10: note: ‘__builtin___snprintf_chk’ output between 3 and 140 bytes\n into a destination of size 128                                                                  \n   return __builtin___snprintf_chk (__s, __n, __USE_FORTIFY_LEVEL - 1,                           \n          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                           \n        __bos (__s), __fmt, __va_arg_pack ());                                                   \n        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+      "parentUuid": "7e94d3d5_22ab3a98",
+      "revId": "c81b131a3b77ed1b12741f64deb0318fe0cb5da4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
