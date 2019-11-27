@@ -34,6 +34,24 @@
       "revId": "7e61fe809b52bdf1b6516cd7595c62a7dd3579ea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a048cda0_53937ebd",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-27T02:05:58Z",
+      "side": 1,
+      "message": "The primary task free now is handled in: process_read_task_completion. Until all subtasks are finishes (either fails or succeeds), then it will be freed. So the primary read task free is only in one space, and it handles all the case.",
+      "parentUuid": "3955b275_ee01bfbc",
+      "revId": "7e61fe809b52bdf1b6516cd7595c62a7dd3579ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
