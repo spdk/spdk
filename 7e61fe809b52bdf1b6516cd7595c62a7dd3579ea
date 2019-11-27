@@ -52,6 +52,23 @@
       "revId": "7e61fe809b52bdf1b6516cd7595c62a7dd3579ea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8de2690_d1edd846",
+        "filename": "test/unit/lib/iscsi/conn.c/conn_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-27T08:58:55Z",
+      "side": 1,
+      "message": "How about the following?\n\nstruct spdk_iscsi_task *g_ut_read_primary;\nTAILQ_HEAD(read_subtasks_head, spdk_iscsi_task) g_ut_read_subtasks;\n\nEnqueue only subtasks into TAILQ.\n\nThis may require not small change but clarified the intention",
+      "revId": "7e61fe809b52bdf1b6516cd7595c62a7dd3579ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
