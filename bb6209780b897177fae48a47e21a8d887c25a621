@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67625912_6281c78a",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-27T07:50:39Z",
+      "side": 1,
+      "message": "for some nasty reason centos 7.x on arm ship headers that do define SO_ZEROCOPY but don\u0027t define\nSO_ZEROCOPY so the build fail here:\n\nCC module/sock/posix/posix.o\nposix.c: In function ‘_sock_flush’:\nposix.c:621:11: error: ‘MSG_ZEROCOPY’ undeclared (first use in this function)\n   flags \u003d MSG_ZEROCOPY;\n\nsnic-010 spdk.git]# rpm -ql kernel-headers-4.14.0-49.el7a.aarch64  | xargs grep -r SO_ZEROCOPY\n/usr/include/asm-generic/socket.h:#define SO_ZEROCOPY           60\n/usr/include/asm-generic/socket.h:#define SO_ZEROCOPY           60\n\nsnic-010 spdk.git]# rpm -ql kernel-headers-4.14.0-49.el7a.aarch64  | xargs grep -r MSG_ZEROCOPY\n-- nothing -- \n\nso we need to somehow WA this and check that MSG_ZEROCOPY is also defined \n\n$ rpm -qi kernel-headers-4.14.0-49.el7a.aarch64 \nName        : kernel-headers\nVersion     : 4.14.0\nRelease     : 49.el7a\nArchitecture: aarch64\nInstall Date: Wed 22 Aug 2018 12:04:27 PM CDT\nGroup       : Development/System\nSize        : 4357406\nLicense     : GPLv2\nSignature   : RSA/SHA256, Wed 25 Apr 2018 08:05:11 AM CDT, Key ID 6c7cb6ef305d49d6\nSource RPM  : kernel-alt-4.14.0-49.el7a.src.rpm\nBuild Date  : Tue 10 Apr 2018 01:37:11 PM CDT\nBuild Host  : aarch64-01.bsys.centos.org \u003c--- official rpm \nRelocations : (not relocatable)\nPackager    : CentOS BuildSystem \u003chttp://bugs.centos.org\u003e\nVendor      : CentOS\nURL         : http://www.kernel.org/\nSummary     : Header files for the Linux kernel for use by glibc",
+      "range": {
+        "startLine": 621,
+        "startChar": 2,
+        "endLine": 621,
+        "endChar": 23
+      },
+      "revId": "bb6209780b897177fae48a47e21a8d887c25a621",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
