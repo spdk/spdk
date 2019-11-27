@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "6488dcdc_39cd1f1e",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-27T09:26:06Z",
+      "side": 1,
+      "message": "what\u0027s the role of these (64) bytes?",
+      "range": {
+        "startLine": 515,
+        "startChar": 73,
+        "endLine": 515,
+        "endChar": 75
+      },
+      "revId": "bb6209780b897177fae48a47e21a8d887c25a621",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb73183c_f7e371e9",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-27T09:26:06Z",
+      "side": 1,
+      "message": "the buffer we read into has room for exactly one cmsghdr and sock_extended_err instances, so why we want to loop here?",
+      "range": {
+        "startLine": 530,
+        "startChar": 1,
+        "endLine": 530,
+        "endChar": 75
+      },
+      "revId": "bb6209780b897177fae48a47e21a8d887c25a621",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c137dde_b46bac54",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-27T09:26:06Z",
+      "side": 1,
+      "message": "I don\u0027t see how this design takes into account the non-sunny days.. namely ooo notifications [1] and notification gaps [2]. \n\nAnother design would be to mark each request with the sendmsg syscall index where the last byte of this request was flushed. And consider it pending as long as we didn\u0027t get notification for that index. \n\nWhen we get a notification for the range [lo..hi] we go over the pending list and complete requests that are in the range. This way can handle both ooo and gaps - thoughts? \n\nnew items to the pending list should be added at the tail.\n\n[1] https://netdevconf.info/2.1/papers/debruijn-msgzerocopy-talk.pdf - see the section Completion Notification and subsection Coalescing -- \"[..] Ordered delivery is not ensured for unreliable protocols such as UDP, nor for TCP on socket teardown [..]\"\n\n[2] https://elixir.bootlin.com/linux/latest/source/tools/testing/selftests/net/msg_zerocopy.c#L436 -- \"Gaps can occur due to drops, reordering and retransmissions\"",
+      "range": {
+        "startLine": 540,
+        "startChar": 2,
+        "endLine": 544,
+        "endChar": 53
+      },
+      "revId": "bb6209780b897177fae48a47e21a8d887c25a621",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "67625912_6281c78a",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 9
