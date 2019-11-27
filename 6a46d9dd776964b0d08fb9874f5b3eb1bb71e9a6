@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "ad4f9fe4_1b2264f0",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-27T17:39:26Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d5a9bebd_ccafff55",
+      "range": {
+        "startLine": 198,
+        "startChar": 3,
+        "endLine": 198,
+        "endChar": 34
+      },
+      "revId": "6a46d9dd776964b0d08fb9874f5b3eb1bb71e9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34c37633_993e6ae1",
         "filename": "lib/sock/sock.c",
         "patchSetId": 19
@@ -68,6 +92,30 @@
       "revId": "6a46d9dd776964b0d08fb9874f5b3eb1bb71e9a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea687540_da9619a2",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-27T17:39:26Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "34c37633_993e6ae1",
+      "range": {
+        "startLine": 214,
+        "startChar": 2,
+        "endLine": 214,
+        "endChar": 33
+      },
+      "revId": "6a46d9dd776964b0d08fb9874f5b3eb1bb71e9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
