@@ -45,6 +45,29 @@
       "revId": "6a46d9dd776964b0d08fb9874f5b3eb1bb71e9a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34c37633_993e6ae1",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-27T08:33:05Z",
+      "side": 1,
+      "message": "new_sock, you fixed it in downstream patch but it should have been set correctly from the beginning..",
+      "range": {
+        "startLine": 214,
+        "startChar": 2,
+        "endLine": 214,
+        "endChar": 33
+      },
+      "revId": "6a46d9dd776964b0d08fb9874f5b3eb1bb71e9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
