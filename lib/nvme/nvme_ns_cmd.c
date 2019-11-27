@@ -165,8 +165,10 @@ _nvme_ns_cmd_setup_request(struct spdk_nvme_ns *ns, struct nvme_request *req,
 		}
 	}
 
+	cmd->fuse = (io_flags & SPDK_NVME_IO_FLAGS_FUSE_MASK);
+
 	cmd->cdw12 = lba_count - 1;
-	cmd->cdw12 |= io_flags;
+	cmd->cdw12 |= (io_flags & 0xffff0000);
 
 	cmd->cdw15 = apptag_mask;
 	cmd->cdw15 = (cmd->cdw15 << 16 | apptag);
@@ -828,7 +830,8 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	tmp_lba = (uint64_t *)&cmd->cdw10;
 	*tmp_lba = lba;
 	cmd->cdw12 = lba_count - 1;
-	cmd->cdw12 |= io_flags;
+	cmd->fuse = (io_flags & SPDK_NVME_IO_FLAGS_FUSE_MASK);
+	cmd->cdw12 |= (io_flags & 0xFFFF0000);
 
 	return nvme_qpair_submit_request(qpair, req);
 }
