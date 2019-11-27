@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "cce1a486_4b540f3c",
+        "filename": "include/spdk_internal/sock.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-27T08:30:15Z",
+      "side": 1,
+      "message": "FWIW there\u0027s large similarity between this code section + another piece below to the request put function above, your call if to somehow re-use the logic in one place.",
+      "range": {
+        "startLine": 167,
+        "startChar": 2,
+        "endLine": 173,
+        "endChar": 0
+      },
+      "revId": "6a46d9dd776964b0d08fb9874f5b3eb1bb71e9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d5a9bebd_ccafff55",
         "filename": "lib/sock/sock.c",
         "patchSetId": 19
