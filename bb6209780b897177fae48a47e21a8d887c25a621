@@ -71,6 +71,29 @@
     },
     {
       "key": {
+        "uuid": "1b219299_a0c378d8",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-27T12:28:46Z",
+      "side": 1,
+      "message": "On my system, we systematically crash here for a read test of 16K over null bdev for queue depth of 32 [1], this is the target config [2]\n\n[1] command lines\n\nnvmf: ./app/nvmf_tgt/nvmf_tgt -c /etc/spdk/nvmf_tgt.conf.tcp.null -m 0x100\nnvme: ./examples/nvme/perf/perf -r \u0027trtype:TCP adrfam:IPv4 traddr:1.1.52.75 trsvcid:4420\u0027 -w randread  -o 16384 -c 0x100 -t 2 -q 32\n\n\n[2] Transport opts:  max_ioq_depth\u003d128, max_io_size\u003d16384,\n  max_qpairs_per_ctrlr\u003d128, io_unit_size\u003d8192,\n  in_capsule_data_size\u003d4096, max_aq_depth\u003d128\n  num_shared_buffers\u003d1024, c2h_success\u003d1,\n  dif_insert_or_strip\u003d0, sock_priority\u003d0",
+      "range": {
+        "startLine": 577,
+        "startChar": 3,
+        "endLine": 577,
+        "endChar": 23
+      },
+      "revId": "bb6209780b897177fae48a47e21a8d887c25a621",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "67625912_6281c78a",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 9
