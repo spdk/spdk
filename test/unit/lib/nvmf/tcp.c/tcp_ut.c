@@ -59,6 +59,9 @@
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 
+DEFINE_STUB(spdk_nvmf_req_get_xfer, enum spdk_nvme_data_transfer, (struct spdk_nvmf_request *req),
+	    SPDK_NVME_DATA_NONE);
+
 DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid,
 	    int,
 	    (struct spdk_nvmf_qpair *qpair, struct spdk_nvme_transport_id *trid),

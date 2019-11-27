@@ -448,6 +448,7 @@ void spdk_nvmf_ns_reservation_request(void *ctx);
 void spdk_nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 		struct spdk_nvmf_ns *ns,
 		enum spdk_nvme_reservation_notification_log_page_type type);
+enum spdk_nvme_data_transfer spdk_nvmf_req_get_xfer(struct spdk_nvmf_request *req);
 
 /*
  * Abort aer is sent on a per controller basis and sends a completion for the aer to the host.

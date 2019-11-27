@@ -57,6 +57,8 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_fc;
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
+DEFINE_STUB(spdk_nvmf_req_get_xfer, enum spdk_nvme_data_transfer, (struct spdk_nvmf_request *req),
+	    SPDK_NVME_DATA_NONE);
 DEFINE_STUB(spdk_mem_map_set_translation, int, (struct spdk_mem_map *map, uint64_t vaddr,
 		uint64_t size, uint64_t translation), 0);
 DEFINE_STUB(spdk_mem_map_clear_translation, int, (struct spdk_mem_map *map, uint64_t vaddr,
