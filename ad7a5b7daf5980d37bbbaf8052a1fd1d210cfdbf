@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b8a8d38_26497a5c",
+        "filename": "module/bdev/nvme/common.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-11-27T05:56:16Z",
+      "side": 1,
+      "message": "I also have similar question with Ben, why the mutex is not used in the attach path, I think currently all the attach/detach is running in the g_bdev_nvme_init_thread core except the RPC part.",
+      "revId": "ad7a5b7daf5980d37bbbaf8052a1fd1d210cfdbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
