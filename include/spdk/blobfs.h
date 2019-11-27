@@ -622,6 +622,7 @@ int
 spdk_fs_rename(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 	       const char *old_name, const char *new_name);
 
+bool spdk_fs_is_dir_node(struct spdk_filesystem *fs, void *dir_or_file);
 struct spdk_directory *spdk_fs_get_dir_id(struct spdk_filesystem *fs, const char *path);
 void spdk_fs_get_dir_path(struct spdk_directory *ctx, char *path);
 bool spdk_fs_path_is_dir(struct spdk_filesystem *fs, const char *path);

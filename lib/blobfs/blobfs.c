@@ -125,8 +125,8 @@ enum spdk_dir_node_type {
 
 struct spdk_directory {
 	struct spdk_filesystem		*fs;
-	enum spdk_dir_node_type type;
 	struct trie_node *node;
+	enum spdk_dir_node_type type;
 
 	uint64_t			mode;
 	uint32_t			ref;
@@ -1019,12 +1019,16 @@ __fs_delete_dir_iter(struct spdk_filesystem *fs, struct trie_node *node,
 		memset(path, 0, SPDK_TRIE_MAX_KEY_LEN);
 		spdk_trie_node_full_key(node, path);
 		spdk_fs_delete_file_async(fs, path, __fs_delete_dir_cb, req);
+
+		return;
 	}
 
 	if (node->child_num != 0) {
 		TAILQ_FOREACH(tmp1, &node->childs, tailq) {
 			__fs_delete_dir_iter(fs, tmp1, req);
 		}
+	} else {
+		spdk_trie_free(node, NULL);
 	}
 
 }
@@ -1053,7 +1057,6 @@ spdk_fs_delete_dir_async(struct spdk_filesystem *fs, const char *path,
 	args->op.deldir.nums = fs_get_trie_file_num(node);
 
 	__fs_delete_dir_iter(fs, node, req);
-	spdk_trie_free(node, NULL);
 
 	if (req->args.op.deldir.nums == 0) {
 		cb_fn(cb_arg, 0);
@@ -3278,6 +3281,20 @@ spdk_file_set_priority(struct spdk_file *file, uint32_t priority)
 	file->priority = priority;
 }
 
+bool
+spdk_fs_is_dir_node(struct spdk_filesystem *fs, void *dir_or_file)
+{
+	struct spdk_directory *dir = (struct spdk_directory *) dir_or_file;
+
+	if (dir->node == NULL) {
+		return false;
+	}
+
+	dir = spdk_trie_node_get_val(dir->node);
+
+	return dir->type == SPDK_NODE_DIR;
+}
+
 struct spdk_directory *
 spdk_fs_get_dir_id(struct spdk_filesystem *fs, const char *path)
 {
@@ -3311,7 +3328,7 @@ bool spdk_fs_path_is_dir(struct spdk_filesystem *fs, const char *path)
 
 	node = spdk_trie_search(fs->root, path);
 	if (node == NULL) {
-		return -1;
+		return false;
 	}
 	dir = spdk_trie_node_get_val(node);
 
@@ -3325,7 +3342,7 @@ bool spdk_fs_path_is_file(struct spdk_filesystem *fs, const char *path)
 
 	node = spdk_trie_search(fs->root, path);
 	if (node == NULL) {
-		return -1;
+		return false;
 	}
 	dir = spdk_trie_node_get_val(node);
 
@@ -3339,11 +3356,11 @@ bool spdk_fs_path_is_valid(struct spdk_filesystem *fs, const char *path)
 
 	node = spdk_trie_search(fs->root, path);
 	if (node == NULL) {
-		return -1;
+		return false;
 	}
 	dir = spdk_trie_node_get_val(node);
 
-	return dir->type == SPDK_NODE_INVALID;
+	return dir->type != SPDK_NODE_INVALID;
 }
 
 
