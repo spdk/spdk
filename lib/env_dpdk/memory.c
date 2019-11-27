@@ -36,6 +36,7 @@
 #include "env_internal.h"
 
 #include <rte_config.h>
+#include <rte_malloc.h>
 #include <rte_memory.h>
 #include <rte_eal_memconfig.h>
 
@@ -342,7 +343,11 @@ spdk_mem_map_free(struct spdk_mem_map **pmap)
 	}
 
 	for (i = 0; i < sizeof(map->map_256tb.map) / sizeof(map->map_256tb.map[0]); i++) {
-		free(map->map_256tb.map[i]);
+		if (g_legacy_mem) {
+			rte_free(map->map_256tb.map[i]);
+		} else {
+			free(map->map_256tb.map[i]);
+		}
 	}
 
 	pthread_mutex_destroy(&map->mutex);
@@ -522,7 +527,23 @@ spdk_mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 		/* Recheck to make sure nobody else got the mutex first. */
 		map_1gb = map->map_256tb.map[idx_256tb];
 		if (!map_1gb) {
-			map_1gb = malloc(sizeof(struct map_1gb));
+			/* Some of the existing apps use TCMalloc hugepage
+			 * allocator and register this tcmalloc allocated
+			 * hugepage memory with SPDK in the mmap hook. Since
+			 * this function is called in the spdk_mem_register
+			 * code path we can't do a malloc here otherwise that
+			 * would cause a livelock. So we use the dpdk provided
+			 * allocator instead, which avoids this cyclic
+			 * dependency.  Note this is only guaranteed to work when
+			 * DPDK dynamic memory allocation is disabled (--legacy-mem),
+			 * which then is a requirement for anyone using TCMalloc in
+			 * this way.
+			 */
+			if (g_legacy_mem) {
+				map_1gb = rte_malloc(NULL, sizeof(struct map_1gb), 0);
+			} else {
+				map_1gb = malloc(sizeof(struct map_1gb));
+			}
 			if (map_1gb) {
 				/* initialize all entries to default translation */
 				for (i = 0; i < SPDK_COUNTOF(map_1gb->map); i++) {

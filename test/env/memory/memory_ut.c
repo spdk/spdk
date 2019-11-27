@@ -52,6 +52,20 @@ DEFINE_STUB(rte_mem_event_callback_register, int,
 	    (const char *name, rte_mem_event_callback_t clb, void *arg), 0);
 DEFINE_STUB(rte_mem_virt2iova, rte_iova_t, (const void *virtaddr), 0);
 
+void *
+rte_malloc(const char *type, size_t size, unsigned align)
+{
+	CU_ASSERT(type == NULL);
+	CU_ASSERT(align == 0);
+	return malloc(size);
+}
+
+void
+rte_free(void *ptr)
+{
+	free(ptr);
+}
+
 static int
 test_mem_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 		    enum spdk_mem_map_notify_action action,
