@@ -1881,6 +1881,7 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	}
 
 	if (bdev->split_on_optimal_io_boundary && bdev_io_should_split(bdev_io)) {
+		bdev_io->internal.submit_tsc = spdk_get_ticks();
 		bdev_io_split(NULL, bdev_io);
 		return;
 	}
@@ -3490,6 +3491,7 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	bdev_io->internal.ch = channel;
 	bdev_io->internal.desc = desc;
+	bdev_io->internal.submit_tsc = spdk_get_ticks();
 	bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
 	bdev_io->u.reset.ch_ref = NULL;
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
