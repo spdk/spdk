@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d970ac8_a41eb439",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-27T08:38:45Z",
+      "side": 1,
+      "message": "both queued and pending lists are irrelevant for listen sockets, suggest to replace with a comment. \n\nSimilar to a comment made on the prev patch, any reason not to set pending reqs list already now (this patch) to client sockets on connect?",
+      "range": {
+        "startLine": 199,
+        "startChar": 3,
+        "endLine": 199,
+        "endChar": 35
+      },
+      "revId": "d075b4b876d44099c93c2cf18a4696fee9dbfa22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad0b2eb6_378993f9",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-27T08:38:45Z",
+      "side": 1,
+      "message": "should move to the prev patch, see comment there",
+      "range": {
+        "startLine": 215,
+        "startChar": 2,
+        "endLine": 215,
+        "endChar": 37
+      },
+      "revId": "d075b4b876d44099c93c2cf18a4696fee9dbfa22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "162e0ade_ceef071b",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-27T08:38:45Z",
+      "side": 1,
+      "message": "not following \n\n[1] the only way to be flushed is if the request was set during an async_write so what is not asynchronous here?\n\n[2] why the comment came in this patch and not the async_write (previous one)?",
+      "range": {
+        "startLine": 524,
+        "startChar": 2,
+        "endLine": 524,
+        "endChar": 69
+      },
+      "revId": "d075b4b876d44099c93c2cf18a4696fee9dbfa22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
