@@ -136,7 +136,7 @@ _nvme_ns_cmd_setup_request(struct spdk_nvme_ns *ns, struct nvme_request *req,
 {
 	struct spdk_nvme_cmd	*cmd;
 
-	assert((io_flags & 0xFFFF) == 0);
+	assert((io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) == 0);
 
 	cmd = &req->cmd;
 	cmd->opc = opc;
@@ -153,8 +153,10 @@ _nvme_ns_cmd_setup_request(struct spdk_nvme_ns *ns, struct nvme_request *req,
 		}
 	}
 
+	cmd->fuse = (io_flags & SPDK_NVME_IO_FLAGS_FUSE_MASK);
+
 	cmd->cdw12 = lba_count - 1;
-	cmd->cdw12 |= io_flags;
+	cmd->cdw12 |= (io_flags & 0xffff0000);
 
 	cmd->cdw15 = apptag_mask;
 	cmd->cdw15 = (cmd->cdw15 << 16 | apptag);
@@ -439,10 +441,9 @@ spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
+	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+		/* Invalid io_flags */
+		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return -EINVAL;
 	}
 
@@ -475,10 +476,9 @@ spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
+	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+		/* Invalid io_flags */
+		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return -EINVAL;
 	}
 
@@ -510,10 +510,9 @@ spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
+	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+		/* Invalid io_flags */
+		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return -EINVAL;
 	}
 
@@ -547,10 +546,9 @@ spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, vo
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
+	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+		/* Invalid io_flags */
+		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return -EINVAL;
 	}
 
@@ -581,10 +579,9 @@ spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
+	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+		/* Invalid io_flags */
+		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return -EINVAL;
 	}
 
@@ -615,10 +612,9 @@ spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
+	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+		/* Invalid io_flags */
+		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return -EINVAL;
 	}
 
@@ -653,10 +649,9 @@ spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
+	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+		/* Invalid io_flags */
+		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return -EINVAL;
 	}
 
@@ -689,10 +684,9 @@ spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
+	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+		/* Invalid io_flags */
+		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return -EINVAL;
 	}
 
@@ -721,10 +715,9 @@ spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
+	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+		/* Invalid io_flags */
+		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return -EINVAL;
 	}
 
@@ -754,10 +747,9 @@ spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
+	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+		/* Invalid io_flags */
+		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return -EINVAL;
 	}
 
@@ -792,10 +784,9 @@ spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
+	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+		/* Invalid io_flags */
+		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return -EINVAL;
 	}
 
@@ -829,10 +820,9 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	struct spdk_nvme_cmd	*cmd;
 	uint64_t		*tmp_lba;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
+	if (io_flags & ~SPDK_NVME_IO_FLAGS_VALID_MASK) {
+		/* Invalid io_flags */
+		SPDK_ERRLOG("Invalid io_flags 0x%x\n", io_flags);
 		return -EINVAL;
 	}
 
@@ -852,7 +842,7 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	tmp_lba = (uint64_t *)&cmd->cdw10;
 	*tmp_lba = lba;
 	cmd->cdw12 = lba_count - 1;
-	cmd->cdw12 |= io_flags;
+	cmd->cdw12 |= (io_flags & 0xFFFF0000);
 
 	return nvme_qpair_submit_request(qpair, req);
 }
