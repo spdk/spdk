@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "1cb22a60_d2ff91fc",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-27T09:34:08Z",
+      "side": 1,
+      "message": "nit: sock/posix --\u003e sock/posix:",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 10
+      },
+      "revId": "d075b4b876d44099c93c2cf18a4696fee9dbfa22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4d970ac8_a41eb439",
         "filename": "lib/sock/sock.c",
         "patchSetId": 9
