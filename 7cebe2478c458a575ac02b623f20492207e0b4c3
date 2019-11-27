@@ -22,6 +22,30 @@
       "revId": "7cebe2478c458a575ac02b623f20492207e0b4c3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2adc74c8_adc59e92",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 15
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-11-27T17:39:17Z",
+      "side": 1,
+      "message": "One interesting thing is that this *shouldn\u0027t* have improved performance, even though it did greatly. The performance improvement seems to be due to the current batching of iovecs in the nvmf/tcp transport being broken/ineffective. But there\u0027s no reason that batching logic couldn\u0027t have done the same thing.",
+      "parentUuid": "e6ecabe3_44736d44",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 34
+      },
+      "revId": "7cebe2478c458a575ac02b623f20492207e0b4c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
