@@ -151,8 +151,14 @@ _nvme_ns_cmd_setup_request(struct spdk_nvme_ns *ns, struct nvme_request *req,
 		}
 	}
 
+	if (io_flags == SPDK_NVME_IO_FLAGS_FUSE_FIRST) {
+		cmd->fuse = 1;
+	} else if (io_flags== SPDK_NVME_IO_FLAGS_FUSE_SECOND) {
+		cmd->fuse = 2;
+	}
+
 	cmd->cdw12 = lba_count - 1;
-	cmd->cdw12 |= io_flags;
+	cmd->cdw12 |= (io_flags & 0x0ffff0000);
 
 	cmd->cdw15 = apptag_mask;
 	cmd->cdw15 = (cmd->cdw15 << 16 | apptag);
