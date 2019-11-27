@@ -2772,6 +2772,7 @@ add_transfer_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	}
 
 	TAILQ_INSERT_TAIL(&conn->active_r2t_tasks, task, link);
+	task->is_r2t_active = true;
 	return 0;
 }
 
@@ -2837,6 +2838,7 @@ del_connection_queued_task(struct spdk_iscsi_conn *conn, void *tailq,
 		if ((lun == NULL || lun == task->scsi.lun) &&
 		    (pdu == NULL || SN32_LT(pdu_tmp->cmd_sn, pdu->cmd_sn))) {
 			TAILQ_REMOVE(head, task, link);
+			task->is_r2t_active = false;
 			if (lun != NULL && spdk_scsi_lun_is_removing(lun)) {
 				spdk_scsi_task_process_null_lun(&task->scsi);
 				spdk_iscsi_task_response(conn, task);

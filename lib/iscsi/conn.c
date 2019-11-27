@@ -1090,13 +1090,23 @@ process_non_read_task_completion(struct spdk_iscsi_conn *conn,
 		 *  the overall transfer length.
 		 */
 		if (task != primary || task->scsi.length != task->scsi.transfer_len) {
-			spdk_del_transfer_task(conn, primary->tag);
-			if (primary->rsp_scsi_status != SPDK_SCSI_STATUS_GOOD) {
-				iscsi_task_copy_from_rsp_scsi_status(&primary->scsi, primary);
+			/* If LUN is removed in the middle of the iSCSI write sequence,
+			 *  primary might complete the write to the initiator because it is not
+			 *  ensured that the initiator will send all data requested by R2Ts.
+			 *
+			 * We check it and skip the following if primary is completed. (see
+			 *  spdk_clear_all_transfer_task() in iscsi.c.)
+			 */
+			if (primary->is_r2t_active) {
+				spdk_del_transfer_task(conn, primary->tag);
+				if (primary->rsp_scsi_status != SPDK_SCSI_STATUS_GOOD) {
+					iscsi_task_copy_from_rsp_scsi_status(&primary->scsi, primary);
+				}
+				spdk_iscsi_task_response(conn, primary);
+				TAILQ_REMOVE(&conn->active_r2t_tasks, primary, link);
+				primary->is_r2t_active = false;
+				spdk_iscsi_task_put(primary);
 			}
-			spdk_iscsi_task_response(conn, primary);
-			TAILQ_REMOVE(&conn->active_r2t_tasks, primary, link);
-			spdk_iscsi_task_put(primary);
 		} else {
 			spdk_iscsi_task_response(conn, task);
 		}
