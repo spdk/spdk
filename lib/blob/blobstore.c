@@ -801,6 +801,7 @@ _spdk_blob_serialize_xattr(const struct spdk_xattr *xattr,
 	return 0;
 }
 
+#if 0
 static void
 _spdk_blob_serialize_extent_rle(const struct spdk_blob *blob,
 				uint64_t start_cluster, uint64_t *next_cluster,
@@ -865,6 +866,7 @@ finish:
 
 	return;
 }
+#endif
 
 static void
 _spdk_blob_serialize_extent_table_entry(const struct spdk_blob *blob,
@@ -926,6 +928,7 @@ finish:
 	return;
 }
 
+#if 0
 static int
 _spdk_blob_serialize_extents_rle(const struct spdk_blob *blob,
 				 struct spdk_blob_md_page **pages,
@@ -955,6 +958,7 @@ _spdk_blob_serialize_extents_rle(const struct spdk_blob *blob,
 
 	return 0;
 }
+#endif
 
 static void
 _spdk_blob_serialize_extent(const struct spdk_blob *blob,
@@ -1142,10 +1146,10 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 	if (rc < 0) {
 		return rc;
 	}
-
+#if 0
 	/* Serialize extents */
 	rc = _spdk_blob_serialize_extents_rle(blob, pages, cur_page, page_count, &buf, &remaining_sz);
-
+#endif
 	return rc;
 }
 
@@ -1154,6 +1158,7 @@ struct spdk_blob_load_ctx {
 
 	struct spdk_blob_md_page	*pages;
 	uint32_t			num_pages;
+	uint32_t			extent_table_id;
 	spdk_bs_sequence_t	        *seq;
 
 	spdk_bs_sequence_cpl		cb_fn;
@@ -1263,6 +1268,110 @@ _spdk_blob_load_cpl_done(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static void
+_spdk_blob_load_cpl_extents_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob_load_ctx	*ctx = cb_arg;
+	struct spdk_blob		*blob = ctx->blob;
+	struct spdk_blob_md_page	*page;
+	uint64_t			i;
+	uint32_t			crc;
+	uint64_t			lba;
+
+	if (bserrno) {
+		goto out;
+	}
+
+	page = &ctx->pages[0];
+	crc = _spdk_blob_md_page_calc_crc(page);
+	if (crc != page->crc) {
+		bserrno = -EINVAL;
+		goto out;
+	}
+
+	if (page->next != SPDK_INVALID_MD_PAGE) {
+		bserrno = -EINVAL;
+		goto out;
+	}
+
+	bserrno = _spdk_blob_parse(page, 1, blob);
+	if (bserrno) {
+		goto out;
+	}
+
+	ctx->extent_table_id++;
+
+	for (i = ctx->extent_table_id; i < blob->active.num_extent_pages; i++) {
+		if (blob->active.extent_table[i] != 0) {
+			lba = _spdk_bs_page_to_lba(blob->bs, blob->active.extent_table[i]);
+			ctx->extent_table_id = i;
+
+			spdk_bs_sequence_read_dev(seq, &ctx->pages[0], lba,
+						  _spdk_bs_byte_to_lba(blob->bs, SPDK_BS_PAGE_SIZE),
+						  _spdk_blob_load_cpl_extents_cpl, ctx);
+			return;
+		} else if (spdk_blob_is_thin_provisioned(blob)) {
+			/* Extent table entry can point to unallocated page
+			 * when blob is thin provisioned.
+			 * In this case blob size should be increased. */
+			blob->active.num_clusters += SPDK_EXTENTS_PER_ET;
+			/* TODO: results in rounding up blob size to multiple of cluster size * SPDK_EXTENTS_PER_ET.
+			 * To prevent, always write out last extent to metadata */
+		} else {
+			/* Extent table entry should never point to unallocated page
+			 * when blob is thick provisioned. */
+			assert(false);
+		}
+	}
+
+out:
+	_spdk_blob_load_cpl_done(seq, ctx, bserrno);
+	return;
+}
+
+static void
+_spdk_blob_load_cpl_extents(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob_load_ctx	*ctx = cb_arg;
+	struct spdk_blob		*blob = ctx->blob;
+	uint64_t			i;
+	uint64_t			lba;
+
+	ctx->pages = spdk_realloc(ctx->pages, SPDK_BS_PAGE_SIZE, SPDK_BS_PAGE_SIZE);
+	if (!ctx->pages) {
+		_spdk_blob_load_cpl_done(seq, ctx, -ENOMEM);
+		return;
+	}
+	ctx->num_pages = 1;
+
+	for (i = 0; i < blob->active.num_extent_pages; i++) {
+		if (blob->active.extent_table[i] != 0) {
+			lba =  _spdk_bs_page_to_lba(blob->bs, blob->active.extent_table[i]);
+			ctx->extent_table_id = i;
+
+			spdk_bs_sequence_read_dev(seq, &ctx->pages[0], lba,
+						  _spdk_bs_byte_to_lba(blob->bs, SPDK_BS_PAGE_SIZE),
+						  _spdk_blob_load_cpl_extents_cpl, ctx);
+			return;
+		} else if (spdk_blob_is_thin_provisioned(blob)) {
+			/* Extent table entry can point to unallocated page
+			 * when blob is thin provisioned.
+			 * In this case blob size should be increased. */
+			blob->active.num_clusters += SPDK_EXTENTS_PER_ET;
+			/* TODO: results in rounding up blob size to multiple of cluster size * SPDK_EXTENTS_PER_ET.
+			 * To prevent, always write out last extent to metadata */
+		} else {
+			/* Extent table entry should never point to unallocated page
+			 * when blob is thick provisioned. */
+			assert(false);
+		}
+	}
+
+	/* No extents are allocated, just complete. */
+	/* TODO: as per above TODO, this should never be the case if last extent is always written out. */
+	_spdk_blob_load_cpl_done(seq, ctx, 0);
+}
+
+static void
 _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_load_ctx	*ctx = cb_arg;
@@ -1328,7 +1437,14 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
-	_spdk_blob_load_cpl_done(seq, ctx, 0);
+	if (blob->active.num_clusters == 0) {
+		/* Only Extent Table was loaded, proceed to load extents */
+		_spdk_blob_load_cpl_extents(seq, ctx, 0);
+	} else {
+		/* Blob is using metadata format that contains EXTENTS_RLE.
+		 * All required information is already present. */
+		_spdk_blob_load_cpl_done(seq, ctx, 0);
+	}
 }
 
 /* Load a blob from disk given a blobid */
