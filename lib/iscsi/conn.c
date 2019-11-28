@@ -258,7 +258,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	TAILQ_INIT(&conn->queued_r2t_tasks);
 	TAILQ_INIT(&conn->active_r2t_tasks);
 	TAILQ_INIT(&conn->queued_datain_tasks);
-	memset(&conn->open_lun_descs, 0, sizeof(conn->open_lun_descs));
+	memset(&conn->luns, 0, sizeof(conn->luns));
 
 	rc = spdk_sock_getaddr(sock, conn->target_addr, sizeof conn->target_addr, NULL,
 			       conn->initiator_addr, sizeof conn->initiator_addr, NULL);
@@ -438,14 +438,18 @@ end:
 static void
 iscsi_conn_close_lun(struct spdk_iscsi_conn *conn, int lun_id)
 {
-	struct spdk_scsi_lun_desc *desc;
+	struct spdk_iscsi_lun *iscsi_lun;
 
-	desc = conn->open_lun_descs[lun_id];
-	if (desc != NULL) {
-		spdk_scsi_lun_free_io_channel(desc);
-		spdk_scsi_lun_close(desc);
-		conn->open_lun_descs[lun_id] = NULL;
+	iscsi_lun = conn->luns[lun_id];
+	if (iscsi_lun == NULL) {
+		return;
 	}
+
+	spdk_scsi_lun_free_io_channel(iscsi_lun->desc);
+	spdk_scsi_lun_close(iscsi_lun->desc);
+	free(iscsi_lun);
+
+	conn->luns[lun_id] = NULL;
 }
 
 static void
@@ -458,20 +462,13 @@ iscsi_conn_close_luns(struct spdk_iscsi_conn *conn)
 	}
 }
 
-struct _iscsi_conn_remove_ctx {
-	struct spdk_iscsi_conn *conn;
-	struct spdk_scsi_lun *lun;
-};
-
 static void
-_iscsi_conn_remove_lun(void *_ctx)
+_iscsi_conn_remove_lun(void *ctx)
 {
-	struct _iscsi_conn_remove_ctx *ctx = _ctx;
-	struct spdk_iscsi_conn *conn = ctx->conn;
-	struct spdk_scsi_lun *lun = ctx->lun;
+	struct spdk_iscsi_lun *iscsi_lun = ctx;
+	struct spdk_iscsi_conn *conn = iscsi_lun->conn;
+	struct spdk_scsi_lun *lun = iscsi_lun->lun;
 	int lun_id = spdk_scsi_lun_get_id(lun);
-
-	free(ctx);
 
 	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg)) ==
 	       spdk_get_thread());
@@ -491,19 +488,17 @@ static void
 iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
 {
 	struct spdk_iscsi_conn *conn = remove_ctx;
-	struct _iscsi_conn_remove_ctx *ctx;
+	int lun_id = spdk_scsi_lun_get_id(lun);
+	struct spdk_iscsi_lun *iscsi_lun;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		SPDK_ERRLOG("Unable to remove lun from connection\n");
+	iscsi_lun = conn->luns[lun_id];
+	if (iscsi_lun == NULL) {
+		SPDK_ERRLOG("Unallocated LUN %d was unplugged\n", lun_id);
 		return;
 	}
 
-	ctx->conn = conn;
-	ctx->lun = lun;
-
 	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg)),
-			     _iscsi_conn_remove_lun, ctx);
+			     _iscsi_conn_remove_lun, iscsi_lun);
 }
 
 static int
@@ -511,20 +506,30 @@ iscsi_conn_open_lun(struct spdk_iscsi_conn *conn, int lun_id,
 		    struct spdk_scsi_lun *lun)
 {
 	int rc;
-	struct spdk_scsi_lun_desc *desc;
+	struct spdk_iscsi_lun *iscsi_lun;
 
-	rc = spdk_scsi_lun_open(lun, iscsi_conn_remove_lun, conn, &desc);
+	iscsi_lun = calloc(1, sizeof(*iscsi_lun));
+	if (iscsi_lun == NULL) {
+		return -ENOMEM;
+	}
+
+	iscsi_lun->conn = conn;
+	iscsi_lun->lun = lun;
+
+	rc = spdk_scsi_lun_open(lun, iscsi_conn_remove_lun, conn, &iscsi_lun->desc);
 	if (rc != 0) {
+		free(iscsi_lun);
 		return rc;
 	}
 
-	rc = spdk_scsi_lun_allocate_io_channel(desc);
+	rc = spdk_scsi_lun_allocate_io_channel(iscsi_lun->desc);
 	if (rc != 0) {
-		spdk_scsi_lun_close(desc);
+		spdk_scsi_lun_close(iscsi_lun->desc);
+		free(iscsi_lun);
 		return rc;
 	}
 
-	conn->open_lun_descs[lun_id] = desc;
+	conn->luns[lun_id] = iscsi_lun;
 
 	return 0;
 }
