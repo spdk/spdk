@@ -46,6 +46,30 @@
       "revId": "7cebe2478c458a575ac02b623f20492207e0b4c3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f13cb74_76dc3529",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 15
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-28T06:27:51Z",
+      "side": 1,
+      "message": "Here\u0027s one difference -- for the nvme/tcp initiator (and I guess for nvmf/tcp it was the same case) under writev_async approach the IOV build-up done inside the socket provider flush code is simpler than the one done when the nvme/nvmf tcp code used to call writev (take a look on nvme_tcp_build_iovs()). So in case the socket can\u0027t now take what was want to send, we used to do this complex logic again and again for sending the same bits, not anymore.. now the IOV build up, just goes on the requests iovs and gathers them.",
+      "parentUuid": "2adc74c8_adc59e92",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 34
+      },
+      "revId": "7cebe2478c458a575ac02b623f20492207e0b4c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
