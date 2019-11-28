@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d632d5f2_60aee1cb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-11-28T04:33:16Z",
+      "side": 1,
+      "message": "RPC?",
+      "revId": "91895f98f5739e1b8d35b3489ed118dce38a293d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
