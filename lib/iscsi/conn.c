@@ -463,7 +463,7 @@ iscsi_conn_close_luns(struct spdk_iscsi_conn *conn)
 }
 
 static void
-_iscsi_conn_remove_lun(void *ctx)
+_iscsi_conn_hotremove_lun(void *ctx)
 {
 	struct spdk_iscsi_lun *iscsi_lun = ctx;
 	struct spdk_iscsi_conn *conn = iscsi_lun->conn;
@@ -485,7 +485,7 @@ _iscsi_conn_remove_lun(void *ctx)
 }
 
 static void
-iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
+iscsi_conn_hotremove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
 {
 	struct spdk_iscsi_conn *conn = remove_ctx;
 	int lun_id = spdk_scsi_lun_get_id(lun);
@@ -498,7 +498,7 @@ iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
 	}
 
 	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg)),
-			     _iscsi_conn_remove_lun, iscsi_lun);
+			     _iscsi_conn_hotremove_lun, iscsi_lun);
 }
 
 static int
@@ -516,7 +516,7 @@ iscsi_conn_open_lun(struct spdk_iscsi_conn *conn, int lun_id,
 	iscsi_lun->conn = conn;
 	iscsi_lun->lun = lun;
 
-	rc = spdk_scsi_lun_open(lun, iscsi_conn_remove_lun, conn, &iscsi_lun->desc);
+	rc = spdk_scsi_lun_open(lun, iscsi_conn_hotremove_lun, conn, &iscsi_lun->desc);
 	if (rc != 0) {
 		free(iscsi_lun);
 		return rc;
