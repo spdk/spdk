@@ -1512,6 +1512,127 @@ bdev_histograms_mt(void)
 
 }
 
+struct timeout_io_cb_arg {
+	struct iovec iov;
+	uint8_t type;
+	bool complete;
+};
+
+static int
+bdev_channel_count_submitted_io(struct spdk_bdev_channel *ch)
+{
+	struct spdk_bdev_io *bdev_io;
+	int n = 0;
+
+	if (!ch) {
+		return -1;
+	}
+
+	TAILQ_FOREACH(bdev_io, &ch->io_submitted, internal.ch_link) {
+		n++;
+	}
+
+	return n;
+}
+
+static void
+bdev_channel_io_timeout_cb(void *cb_arg, struct spdk_bdev_io *bdev_io)
+{
+	struct timeout_io_cb_arg *ctx = cb_arg;
+
+	ctx->type = bdev_io->type;
+	ctx->iov.iov_base = bdev_io->iov.iov_base;
+	ctx->iov.iov_len = bdev_io->iov.iov_len;
+}
+
+
+static void
+bdev_channel_io_timeout_set_cpl(void *cb_arg, int status)
+{
+	struct timeout_io_cb_arg *ctx = cb_arg;
+
+	ctx->complete = true;
+}
+
+static void
+io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+bdev_set_io_timeout_mt(void)
+{
+	struct spdk_io_channel *ch[2];
+	struct spdk_bdev_channel *bdev_ch;
+	struct timeout_io_cb_arg cb_arg;
+	int rc;
+	int count;
+
+	setup_test();
+
+	set_thread(0);
+	ch[0] = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(ch[0] != NULL);
+
+	set_thread(1);
+	ch[1] = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(ch[1] != NULL);
+
+	set_thread(0);
+	rc = spdk_bdev_set_timeout(g_desc, 30, bdev_channel_io_timeout_cb, &cb_arg,
+				   bdev_channel_io_timeout_set_cpl);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(cb_arg.complete == true);
+
+	/* Multi-thread mode
+	 * 1, Check the poller was registered successfully
+	 * 2, Check the timeout IO and ensure the IO was the submitted by user
+	 * 3, Check the link int the bdev_ch works right.
+	 * 4, When close the bdev the poller can also destroy successfully
+	 */
+	bdev_ch = spdk_io_channel_get_ctx(ch[0]);
+	CU_ASSERT(bdev_ch->io_timeout_poller != NULL);
+	rc = spdk_bdev_read_blocks(g_desc, ch[0], (void *)0x2000, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	count = bdev_channel_count_submitted_io(bdev_ch);
+	CU_ASSERT(count == 1);
+	spdk_delay_us(31 * spdk_get_ticks_hz());
+	poll_threads();
+	CU_ASSERT(cb_arg.type == SPDK_BDEV_IO_TYPE_READ);
+	CU_ASSERT(cb_arg.iov.iov_base == (void *)0x2000);
+	CU_ASSERT(cb_arg.iov.iov_len == 1 * g_bdev.bdev.blocklen);
+	stub_complete_io(g_bdev.io_target, 1);
+	count = bdev_channel_count_submitted_io(bdev_ch);
+	CU_ASSERT(count == 0);
+
+	set_thread(1);
+	bdev_ch = spdk_io_channel_get_ctx(ch[1]);
+	CU_ASSERT(bdev_ch->io_timeout_poller != NULL)
+	rc = spdk_bdev_write_blocks(g_desc, ch[1], (void *)0x1000, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	count = bdev_channel_count_submitted_io(bdev_ch);
+	CU_ASSERT(count == 1);
+	spdk_delay_us(31 * spdk_get_ticks_hz());
+	poll_threads();
+	CU_ASSERT(cb_arg.type == SPDK_BDEV_IO_TYPE_WRITE);
+	CU_ASSERT(cb_arg.iov.iov_base == (void *)0x1000);
+	CU_ASSERT(cb_arg.iov.iov_len == 1 * g_bdev.bdev.blocklen);
+	stub_complete_io(g_bdev.io_target, 1);
+	count = bdev_channel_count_submitted_io(bdev_ch);
+	CU_ASSERT(count == 0);
+
+	/* Tear down the channels */
+	set_thread(0);
+	spdk_put_io_channel(ch[0]);
+	set_thread(1);
+	spdk_put_io_channel(ch[1]);
+	poll_threads();
+	set_thread(0);
+	teardown_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1541,7 +1662,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev) == NULL ||
 		CU_add_test(suite, "enomem_multi_io_target", enomem_multi_io_target) == NULL ||
 		CU_add_test(suite, "qos_dynamic_enable", qos_dynamic_enable) == NULL ||
-		CU_add_test(suite, "bdev_histograms_mt", bdev_histograms_mt) == NULL
+		CU_add_test(suite, "bdev_histograms_mt", bdev_histograms_mt) == NULL ||
+		CU_add_test(suite, "bdev_set_io_timeout_mt", bdev_set_io_timeout_mt) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
