@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e812e58_2aec6327",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-11-28T05:45:02Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nSo this patch is to fix specified issues? if yes, please add the issue github link here.\n\nthanks\n\nLiang",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 44
+      },
+      "revId": "d9f3bb735d76306fe433ce8955c2a50e3499bf4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
