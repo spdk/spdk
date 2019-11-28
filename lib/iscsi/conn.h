@@ -88,6 +88,7 @@ struct spdk_iscsi_lun {
 	struct spdk_iscsi_conn		*conn;
 	struct spdk_scsi_lun		*lun;
 	struct spdk_scsi_lun_desc	*desc;
+	struct spdk_poller		*remove_poller;
 };
 
 struct spdk_iscsi_conn {
