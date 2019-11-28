@@ -615,6 +615,30 @@ free_tasks_on_connection(void)
 	CU_ASSERT(task3.scsi.ref == 1);
 }
 
+static void
+free_task_in_a_data_in_pdu_sequence(void)
+{
+	struct spdk_iscsi_pdu pdu1 = {}, pdu2 = {}, pdu3 = {};
+	struct spdk_iscsi_task task = {};
+
+	pdu1.task = &task;
+	pdu2.task = &task;
+	pdu3.task = &task;
+	task.scsi.ref = 1;
+
+	pdu1.bhs.opcode = ISCSI_OP_SCSI_DATAIN;
+	pdu2.bhs.opcode = ISCSI_OP_SCSI_DATAIN;
+	pdu3.bhs.opcode = ISCSI_OP_SCSI_DATAIN;
+
+	pdu3.bhs.flags |= ISCSI_FLAG_FINAL;
+
+	spdk_iscsi_conn_free_pdu(NULL, &pdu1);
+	spdk_iscsi_conn_free_pdu(NULL, &pdu2);
+	spdk_iscsi_conn_free_pdu(NULL, &pdu3);
+
+	CU_ASSERT(task.scsi.ref == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -640,7 +664,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "process_non_read_task_completion_test",
 			    process_non_read_task_completion_test) == NULL ||
 		CU_add_test(suite, "recursive_flush_pdus_calls", recursive_flush_pdus_calls) == NULL ||
-		CU_add_test(suite, "free_tasks_on_connection", free_tasks_on_connection) == NULL
+		CU_add_test(suite, "free_tasks_on_connection", free_tasks_on_connection) == NULL ||
+		CU_add_test(suite, "free_task_in_a_data_in_pdu_sequence",
+			    free_task_in_a_data_in_pdu_sequence) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
