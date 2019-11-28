@@ -308,7 +308,8 @@ spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pd
 
 	if (pdu->task) {
 		primary = spdk_iscsi_task_get_primary(pdu->task);
-		if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
+		if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN &&
+		    (pdu->bhs.flags & ISCSI_DATAIN_FINAL)) {
 			if (pdu->task->scsi.offset > 0) {
 				assert(conn->data_in_cnt > 0);
 				conn->data_in_cnt--;
