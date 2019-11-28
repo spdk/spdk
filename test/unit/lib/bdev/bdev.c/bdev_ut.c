@@ -2364,6 +2364,183 @@ bdev_open_ext(void)
 	poll_threads();
 }
 
+struct timeout_io_cb_arg {
+	struct iovec iov;
+	uint8_t type;
+};
+
+static int
+bdev_channel_count_submitted_io(struct spdk_bdev_channel *ch)
+{
+	struct spdk_bdev_io *bdev_io;
+	int n = 0;
+
+	if (!ch) {
+		return -1;
+	}
+
+	TAILQ_FOREACH(bdev_io, &ch->io_submitted, internal.ch_link) {
+		n++;
+	}
+
+	return n;
+}
+
+static void
+bdev_channel_io_timeout_cb(void *cb_arg, struct spdk_bdev_io *bdev_io)
+{
+	struct timeout_io_cb_arg *ctx = cb_arg;
+
+	ctx->type = bdev_io->type;
+	ctx->iov.iov_base = bdev_io->iov.iov_base;
+	ctx->iov.iov_len = bdev_io->iov.iov_len;
+}
+
+static void
+bdev_set_io_timeout(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch = NULL;
+	struct spdk_bdev_channel *bdev_ch = NULL;
+	struct timeout_io_cb_arg cb_arg;
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	bdev = allocate_bdev("bdev");
+
+	CU_ASSERT(spdk_bdev_open(bdev, true, NULL, NULL, &desc) == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch->io_submitted));
+
+	/* This is the part1.
+	 * We will check the bdev_ch->io_submitted list
+	 * TO make sure that it can link IOs and only the user submitted IOs
+	 */
+	CU_ASSERT(spdk_bdev_read(desc, io_ch, (void *)0x1000, 0, 4096, io_done, NULL) == 0);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 1);
+	CU_ASSERT(spdk_bdev_write(desc, io_ch, (void *)0x2000, 0, 4096, io_done, NULL) == 0);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 2);
+	stub_complete_io(1);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 1);
+	stub_complete_io(1);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 0);
+
+	/* Split IO */
+	bdev->optimal_io_boundary = 16;
+	bdev->split_on_optimal_io_boundary = true;
+
+	/* Now test that a single-vector command is split correctly.
+	 * Offset 14, length 8, payload 0xF000
+	 *  Child - Offset 14, length 2, payload 0xF000
+	 *  Child - Offset 16, length 6, payload 0xF000 + 2 * 512
+	 *
+	 * Set up the expected values before calling spdk_bdev_read_blocks
+	 */
+	CU_ASSERT(spdk_bdev_read_blocks(desc, io_ch, (void *)0xF000, 14, 8, io_done, NULL) == 0);
+	/* We only count the submitted IO by the user
+	 * Even the IO split into two IOs but we only count one.
+	 * Becauce the user only see one IO.
+	 */
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 1);
+	stub_complete_io(1);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 1);
+	stub_complete_io(1);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 0);
+
+	/* Also include the reset IO */
+	CU_ASSERT(spdk_bdev_reset(desc, io_ch, io_done, NULL) == 0);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 1);
+	poll_threads();
+	stub_complete_io(1);
+	poll_threads();
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 0);
+
+	/* This is part2
+	 * Test the desc timeout poller register
+	 */
+
+	/* Successfully set the timeout */
+	CU_ASSERT(spdk_bdev_set_timeout(desc, 30, bdev_channel_io_timeout_cb, &cb_arg) == 0);
+	CU_ASSERT(desc->io_timeout_poller != NULL);
+	CU_ASSERT(desc->timeout_in_sec == 30);
+	CU_ASSERT(desc->cb_fn == bdev_channel_io_timeout_cb);
+	CU_ASSERT(desc->cb_arg == &cb_arg);
+
+	/* Change the timeout limit */
+	CU_ASSERT(spdk_bdev_set_timeout(desc, 20, bdev_channel_io_timeout_cb, &cb_arg) == 0);
+	CU_ASSERT(desc->io_timeout_poller != NULL);
+	CU_ASSERT(desc->timeout_in_sec == 20);
+	CU_ASSERT(desc->cb_fn == bdev_channel_io_timeout_cb);
+	CU_ASSERT(desc->cb_arg == &cb_arg);
+
+	/* Disable the timeout */
+	CU_ASSERT(spdk_bdev_set_timeout(desc, 0, NULL, NULL) == 0);
+	CU_ASSERT(desc->io_timeout_poller == NULL);
+
+	/* This the part3
+	 * We will test to catch timeout IO and check whether the IO is
+	 * the submitted one.
+	 */
+	memset(&cb_arg, 0, sizeof(cb_arg));
+	CU_ASSERT(spdk_bdev_set_timeout(desc, 30, bdev_channel_io_timeout_cb, &cb_arg) == 0);
+	CU_ASSERT(spdk_bdev_write_blocks(desc, io_ch, (void *)0x1000, 0, 1, io_done, NULL) == 0);
+
+	/* Don't reach the limit */
+	spdk_delay_us(15 * spdk_get_ticks_hz());
+	poll_threads();
+	CU_ASSERT(cb_arg.type == 0);
+	CU_ASSERT(cb_arg.iov.iov_base == (void *)0x0);
+	CU_ASSERT(cb_arg.iov.iov_len == 0);
+
+	/* 15 + 15 = 30 reach the limit */
+	spdk_delay_us(15 * spdk_get_ticks_hz());
+	poll_threads();
+	CU_ASSERT(cb_arg.type == SPDK_BDEV_IO_TYPE_WRITE);
+	CU_ASSERT(cb_arg.iov.iov_base == (void *)0x1000);
+	CU_ASSERT(cb_arg.iov.iov_len == 1 * bdev->blocklen);
+	stub_complete_io(1);
+
+	/* Use the same split IO above and check the IO */
+	memset(&cb_arg, 0, sizeof(cb_arg));
+	CU_ASSERT(spdk_bdev_write_blocks(desc, io_ch, (void *)0xF000, 14, 8, io_done, NULL) == 0);
+
+	/* The first child complete in time */
+	spdk_delay_us(15 * spdk_get_ticks_hz());
+	poll_threads();
+	stub_complete_io(1);
+	CU_ASSERT(cb_arg.type == 0);
+	CU_ASSERT(cb_arg.iov.iov_base == (void *)0x0);
+	CU_ASSERT(cb_arg.iov.iov_len == 0);
+
+	/* The second child reach the limit */
+	spdk_delay_us(15 * spdk_get_ticks_hz());
+	poll_threads();
+	CU_ASSERT(cb_arg.type == SPDK_BDEV_IO_TYPE_WRITE);
+	CU_ASSERT(cb_arg.iov.iov_base == (void *)0xF000);
+	CU_ASSERT(cb_arg.iov.iov_len == 8 * bdev->blocklen);
+	stub_complete_io(1);
+
+	/* Also include the reset IO */
+	memset(&cb_arg, 0, sizeof(cb_arg));
+	CU_ASSERT(spdk_bdev_reset(desc, io_ch, io_done, NULL) == 0);
+	spdk_delay_us(30 * spdk_get_ticks_hz());
+	poll_threads();
+	CU_ASSERT(cb_arg.type == SPDK_BDEV_IO_TYPE_RESET);
+	stub_complete_io(1);
+	poll_threads();
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2398,7 +2575,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_write_zeroes", bdev_write_zeroes) == NULL ||
 		CU_add_test(suite, "bdev_open_while_hotremove", bdev_open_while_hotremove) == NULL ||
 		CU_add_test(suite, "bdev_close_while_hotremove", bdev_close_while_hotremove) == NULL ||
-		CU_add_test(suite, "bdev_open_ext", bdev_open_ext) == NULL
+		CU_add_test(suite, "bdev_open_ext", bdev_open_ext) == NULL ||
+		CU_add_test(suite, "bdev_set_io_timeout", bdev_set_io_timeout) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
