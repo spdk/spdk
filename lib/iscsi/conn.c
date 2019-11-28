@@ -331,11 +331,10 @@ _iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn, struct spdk_scsi_lun *lun)
 	}
 
 	TAILQ_FOREACH_SAFE(pdu, &conn->snack_pdu_list, tailq, tmp_pdu) {
-		TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
-		if (pdu->task && (lun == NULL || lun == pdu->task->scsi.lun)) {
-			spdk_iscsi_task_put(pdu->task);
+		if (lun == NULL || lun == pdu->task->scsi.lun) {
+			TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
+			spdk_iscsi_conn_free_pdu(conn, pdu);
 		}
-		spdk_put_pdu(pdu);
 	}
 
 	TAILQ_FOREACH_SAFE(iscsi_task, &conn->queued_datain_tasks, link, tmp_iscsi_task) {
