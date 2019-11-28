@@ -221,6 +221,7 @@ struct spdk_nvmf_request {
 	bool				data_from_pool;
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 	struct spdk_nvmf_dif_info	dif;
+	struct spdk_nvmf_request	*first_fused_request;
 
 	STAILQ_ENTRY(spdk_nvmf_request)	buf_link;
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
@@ -269,6 +270,8 @@ struct spdk_nvmf_qpair {
 	uint16_t				qid;
 	uint16_t				sq_head;
 	uint16_t				sq_head_max;
+
+	struct spdk_nvmf_request		*first_fused_request;
 
 	TAILQ_HEAD(, spdk_nvmf_request)		outstanding;
 	TAILQ_ENTRY(spdk_nvmf_qpair)		link;
