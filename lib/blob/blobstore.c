@@ -97,7 +97,8 @@ _spdk_bs_claim_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 }
 
 static int
-_spdk_blob_insert_cluster(struct spdk_blob *blob, uint32_t cluster_num, uint64_t cluster)
+_spdk_blob_insert_cluster(spdk_bs_batch_t *batch, struct spdk_blob *blob, uint32_t cluster_num,
+			  uint64_t cluster)
 {
 	uint64_t *cluster_lba = &blob->active.clusters[cluster_num];
 
@@ -1356,15 +1357,72 @@ _spdk_blob_persist_write_page_chain(spdk_bs_sequence_t *seq, void *cb_arg, int b
 	spdk_bs_batch_close(batch);
 }
 
+struct spdk_blob_insert_ctx {
+	uint64_t sz;
+	spdk_bs_sequence_cpl cb_fn;
+	void *cb_arg;
+	struct spdk_blob *blob;
+};
+
 static void
-_spdk_blob_resize(spdk_bs_sequence_t *seq, struct spdk_blob *blob, uint64_t sz, spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+_spdk_blob_resize_reserve_cluster_done(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob_insert_ctx *ctx = cb_arg;
+
+	if (bserrno != 0) {
+		assert(false);
+	}
+
+	ctx->blob->active.num_clusters = ctx->sz;
+
+	ctx->cb_fn(seq, ctx->cb_arg, bserrno);
+	free(ctx);
+}
+
+static void
+_spdk_blob_resize_reserve_cluster(spdk_bs_sequence_t *seq, struct spdk_blob *blob, uint64_t sz,
+				  uint64_t num_clusters, spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+{
+	spdk_bs_batch_t			*batch;
+	struct spdk_blob_insert_ctx *ctx;
+	uint64_t	lfc; /* lowest free cluster */
+	uint64_t	i;
+	int rc;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	ctx->sz = sz;
+	ctx->blob = blob;
+
+	batch = spdk_bs_sequence_to_batch(seq, _spdk_blob_resize_reserve_cluster_done, ctx);
+	lfc = 0;
+	for (i = num_clusters; i < sz; i++) {
+		_spdk_bs_allocate_cluster(blob, i, &lfc);
+		rc = _spdk_blob_insert_cluster(batch, blob, i, lfc);
+		if (rc != 0) {
+			assert(false);
+			return;
+		}
+		lfc++;
+	}
+	spdk_bs_batch_close(batch);
+}
+
+static void
+_spdk_blob_resize(spdk_bs_sequence_t *seq, struct spdk_blob *blob, uint64_t sz,
+		  spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
 	uint64_t	i;
 	uint64_t	*tmp;
 	uint64_t	lfc; /* lowest free cluster */
 	uint64_t	num_clusters;
 	struct spdk_blob_store *bs;
-	int rc;
 
 	bs = blob->bs;
 
@@ -1421,16 +1479,8 @@ _spdk_blob_resize(spdk_bs_sequence_t *seq, struct spdk_blob *blob, uint64_t sz, 
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 
 	if (spdk_blob_is_thin_provisioned(blob) == false) {
-		lfc = 0;
-		for (i = num_clusters; i < sz; i++) {
-			_spdk_bs_allocate_cluster(blob, i, &lfc);
-			rc = _spdk_blob_insert_cluster(blob, i, lfc);
-			if (rc != 0) {
-				assert(false);
-				return rc;
-			}
-			lfc++;
-		}
+		_spdk_blob_resize_reserve_cluster(seq, blob, sz, num_clusters, cb_fn, cb_arg);
+		return;
 	}
 
 	blob->active.num_clusters = sz;
@@ -5902,18 +5952,44 @@ _spdk_blob_insert_cluster_msg_cb(void *arg, int bserrno)
 }
 
 static void
-_spdk_blob_insert_cluster_msg(void *arg)
+_spdk_blob_insert_cluster_msg_insert_cpl(void *cb_arg, int bserrno)
 {
-	struct spdk_blob_insert_cluster_ctx *ctx = arg;
+	struct spdk_blob_insert_cluster_ctx *ctx = cb_arg;
 
-	ctx->rc = _spdk_blob_insert_cluster(ctx->blob, ctx->cluster_num, ctx->cluster);
-	if (ctx->rc != 0) {
-		spdk_thread_send_msg(ctx->thread, _spdk_blob_insert_cluster_msg_cpl, ctx);
+	if (bserrno != 0) {
+		_spdk_blob_insert_cluster_msg_cb(ctx, bserrno);
 		return;
 	}
 
 	ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
 	_spdk_blob_sync_md(ctx->blob, _spdk_blob_insert_cluster_msg_cb, ctx);
+}
+
+static void
+_spdk_blob_insert_cluster_msg(void *arg)
+{
+	struct spdk_blob_insert_cluster_ctx *ctx = arg;
+	spdk_bs_batch_t *batch;
+	struct spdk_bs_cpl cpl;
+
+	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	cpl.u.blob_basic.cb_fn = _spdk_blob_insert_cluster_msg_insert_cpl;
+	cpl.u.blob_basic.cb_arg = ctx;
+
+	batch = spdk_bs_batch_open(ctx->blob->bs->md_channel, &cpl);
+	if (!batch) {
+		ctx->rc = -ENOMEM;
+		spdk_thread_send_msg(ctx->thread, _spdk_blob_insert_cluster_msg_cpl, ctx);
+		return;
+	}
+
+	ctx->rc = _spdk_blob_insert_cluster(batch, ctx->blob, ctx->cluster_num, ctx->cluster);
+	if (ctx->rc != 0) {
+		/* ??? */
+		spdk_bs_call_cpl(&cpl, ctx->rc);
+		return;
+	}
+	spdk_bs_batch_close(batch);
 }
 
 static void
