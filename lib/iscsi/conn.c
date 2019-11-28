@@ -506,12 +506,34 @@ iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
 			     _iscsi_conn_remove_lun, ctx);
 }
 
+static int
+iscsi_conn_open_lun(struct spdk_iscsi_conn *conn, int lun_id,
+		    struct spdk_scsi_lun *lun)
+{
+	int rc;
+	struct spdk_scsi_lun_desc *desc;
+
+	rc = spdk_scsi_lun_open(lun, iscsi_conn_remove_lun, conn, &desc);
+	if (rc != 0) {
+		return rc;
+	}
+
+	rc = spdk_scsi_lun_allocate_io_channel(desc);
+	if (rc != 0) {
+		spdk_scsi_lun_close(desc);
+		return rc;
+	}
+
+	conn->open_lun_descs[lun_id] = desc;
+
+	return 0;
+}
+
 static void
 iscsi_conn_open_luns(struct spdk_iscsi_conn *conn)
 {
 	int i, rc;
 	struct spdk_scsi_lun *lun;
-	struct spdk_scsi_lun_desc *desc;
 
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		lun = spdk_scsi_dev_get_lun(conn->dev, i);
@@ -519,18 +541,10 @@ iscsi_conn_open_luns(struct spdk_iscsi_conn *conn)
 			continue;
 		}
 
-		rc = spdk_scsi_lun_open(lun, iscsi_conn_remove_lun, conn, &desc);
+		rc = iscsi_conn_open_lun(conn, i, lun);
 		if (rc != 0) {
 			goto error;
 		}
-
-		rc = spdk_scsi_lun_allocate_io_channel(desc);
-		if (rc != 0) {
-			spdk_scsi_lun_close(desc);
-			goto error;
-		}
-
-		conn->open_lun_descs[i] = desc;
 	}
 
 	return;
