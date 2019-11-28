@@ -1623,6 +1623,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->sgls.supported = 1;
 	cdata->sgls.keyed_sgl = 1;
 	cdata->sgls.sgl_offset = 1;
+	cdata->fuses.compare_and_write = 0;
 	spdk_strcpy_pad(cdata->subnqn, subsystem->subnqn, sizeof(cdata->subnqn), '\0');
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ctrlr data: maxcmd 0x%x\n", cdata->maxcmd);
@@ -2460,6 +2461,33 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	/* pre-set response details for this command */
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	nsid = cmd->nsid;
+
+	if (cmd->fuse == SPDK_NVME_CMD_FUSE_FIRST) {
+		/* first fused operation (should be compare) */
+		if (req->qpair->first_fused_req != NULL) {
+			struct spdk_nvme_cpl *fused_response = &req->qpair->first_fused_req->rsp->nvme_cpl;
+
+			SPDK_ERRLOG("Wrong sequence of fused operations\n");
+			/* abort req->qpair->first_fused_request and continue with new fused command */
+			fused_response->status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
+			fused_response->status.sct = SPDK_NVME_SCT_GENERIC;
+			spdk_nvmf_request_complete(req->qpair->first_fused_req);
+		}
+
+		req->qpair->first_fused_req = req;
+	} else if (cmd->fuse == SPDK_NVME_CMD_FUSE_SECOND) {
+		/* second fused operation */
+		if (req->qpair->first_fused_req == NULL) {
+			SPDK_ERRLOG("Wrong sequence of fused operations\n");
+			response->status.sct = SPDK_NVME_SCT_GENERIC;
+			response->status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+
+		/* save request of first command to generate response later */
+		req->first_fused_req = req->qpair->first_fused_req;
+		req->qpair->first_fused_req = NULL;
+	}
 
 	if (spdk_unlikely(ctrlr == NULL)) {
 		SPDK_ERRLOG("I/O command sent before CONNECT\n");
