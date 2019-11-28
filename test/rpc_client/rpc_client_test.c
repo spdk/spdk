@@ -338,6 +338,7 @@ rpc_server_th(void *arg)
 	rc = spdk_rpc_listen(g_rpcsock_addr);
 	if (rc) {
 		fprintf(stderr, "spdk_rpc_listen() failed: %d\n", rc);
+		sem_post(&g_rpc_server_th_listening);
 		goto out;
 	}
 
