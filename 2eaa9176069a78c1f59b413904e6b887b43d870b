@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "061649fd_d6828ff1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-11-28T12:34:26Z",
+      "side": 1,
+      "message": "Please provide better description. What broke and which patch introduced it. How it affects the setup.sh user, even provide log snippet and what are conditions for this issue to occur.\n\nThis helps greatly when reviewing the change.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 88
+      },
+      "revId": "2eaa9176069a78c1f59b413904e6b887b43d870b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
