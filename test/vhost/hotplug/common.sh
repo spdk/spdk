@@ -105,13 +105,15 @@ function vms_setup() {
 }
 
 function vm_run_with_arg() {
-    vm_run "$@"
-    vm_wait_for_boot 300 "$@"
+    local vms_to_run="$*"
+    vm_run $vms_to_run
+    vm_wait_for_boot 300 $vms_to_run
 }
 
 function vms_setup_and_run() {
+    local vms_to_run="$*"
     vms_setup
-    vm_run_with_arg "$@"
+    vm_run_with_arg $vms_to_run
 }
 
 function vms_prepare() {
