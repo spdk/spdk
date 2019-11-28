@@ -16,6 +16,24 @@
       "revId": "ee0c3b2635d9c80296ee4d221d05d2b65164a64c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c89546dd_84320184",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 5186,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-28T12:13:52Z",
+      "side": 1,
+      "message": "I would really like to avoid using recursive mutexes as much as possible - they usually make the locking much more complicated. Especially since this mutex is used for many other purposes. I think the common use-case should match the requirement - usually when a user receives a callback that some kind of events have been produced, he\u0027ll want to retrieve those events right away. But if we really wanted to allow the user to call this outside of the callback context, I think it\u0027d be a better idea to use thread-safe structures for the pending/free event queues.",
+      "parentUuid": "52e67478_5444e2d7",
+      "revId": "ee0c3b2635d9c80296ee4d221d05d2b65164a64c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
