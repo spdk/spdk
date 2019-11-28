@@ -2403,6 +2403,31 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	nsid = cmd->nsid;
 
+	if (cmd->fuse == 1) {
+		/* first fused operation (should be compare) */
+		if (req->qpair->first_fused_request != NULL) {
+			SPDK_ERRLOG("Wrong sequence of fused operations\n");
+			/* Both requests should fail! */
+			assert(false);
+		}
+		req->qpair->first_fused_request = req;
+	} else if (cmd->fuse == 2) {
+		/* second fused operation */
+		if (req->qpair->first_fused_request == NULL) {
+			SPDK_ERRLOG("Wrong sequence of fused operations\n");
+			/* Both requests should fail! */
+			assert(false);
+		}
+
+		/* ... */
+		/* we may do here some additional checks, like data length and so on */
+		/* .... */
+
+		/* we should to generate responses for both operations */
+		req->first_fused_request = req->qpair->first_fused_request;
+		req->qpair->first_fused_request = NULL;
+	}
+
 	if (spdk_unlikely(ctrlr == NULL)) {
 		SPDK_ERRLOG("I/O command sent before CONNECT\n");
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
