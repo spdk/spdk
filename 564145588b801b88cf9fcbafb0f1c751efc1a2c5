@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9dd9684_9b66e28c",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-28T06:04:10Z",
+      "side": 1,
+      "message": "this is error indication (not length of something).\n\nworth documentation what is consumer can/expected to do when error occurs",
+      "range": {
+        "startLine": 62,
+        "startChar": 33,
+        "endLine": 62,
+        "endChar": 36
+      },
+      "revId": "564145588b801b88cf9fcbafb0f1c751efc1a2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c7f5f25_cf4aada9",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-11-28T06:04:10Z",
+      "side": 1,
+      "message": "worth putting a comment that these two fields are used by the socket provider, so the consumer must not assume/use them.",
+      "range": {
+        "startLine": 65,
+        "startChar": 1,
+        "endLine": 67,
+        "endChar": 23
+      },
+      "revId": "564145588b801b88cf9fcbafb0f1c751efc1a2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
