@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd56fc5c_89f284e4",
+        "filename": "test/unit/lib/iscsi/conn.c/conn_ut.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-28T10:59:25Z",
+      "side": 1,
+      "message": "Same as below",
+      "revId": "02bd280fa8c99e2750c3e69799a7858f18dacdb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5eebe05e_971230cf",
+        "filename": "test/unit/lib/iscsi/conn.c/conn_ut.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-28T10:59:25Z",
+      "side": 1,
+      "message": "Maybe CU_ASSERT(primary \u003d\u003d spdk_iscsi_get_primary(task) instead",
+      "revId": "02bd280fa8c99e2750c3e69799a7858f18dacdb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
