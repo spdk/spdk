@@ -159,15 +159,15 @@ function get_nvme_name_from_bdf {
 
 function get_virtio_names_from_bdf {
 	blk_devs=$(lsblk --nodeps --output NAME)
-	virtio_names=''
+	virtio_names=()
 
 	for dev in $blk_devs; do
 		if readlink "/sys/block/$dev" | grep -q "$1"; then
-			virtio_names="$virtio_names $dev"
+			virtio_names+=("$dev")
 		fi
 	done
 
-	eval "$2='$virtio_names'"
+	eval "$2=( " "${virtio_names[@]}" " )"
 }
 
 function configure_linux_pci {
