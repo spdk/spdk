@@ -222,6 +222,7 @@ struct spdk_bdev_fn_table {
 
 /** bdev I/O completion status */
 enum spdk_bdev_io_status {
+	SPDK_BDEV_IO_STATUS_FIRST_FUSED_FAILED = -6,
 	SPDK_BDEV_IO_STATUS_MISCOMPARE = -5,
 	/*
 	 * NOMEM should be returned when a bdev module cannot start an I/O because of

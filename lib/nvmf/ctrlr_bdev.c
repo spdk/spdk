@@ -94,8 +94,24 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 	struct spdk_nvme_cpl		*response = &req->rsp->nvme_cpl;
 	int				sc, sct;
 	uint32_t			cdw0;
+	struct spdk_nvmf_request	*fused_req = req->first_fused_request;
 
 	spdk_bdev_io_get_nvme_status(bdev_io, &cdw0, &sct, &sc);
+
+	if (fused_req != NULL) {
+		/* fused operation, first request should be completed */
+		struct spdk_nvme_cpl *fused_response = &fused_req->rsp->nvme_cpl;
+
+		fused_response->cdw0 = cdw0;
+		if (sc == SPDK_NVME_SC_ABORTED_FAILED_FUSED) {
+			fused_response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		} else {
+			fused_response->status.sc = sc;
+		}
+		fused_response->status.sct = sct;
+		spdk_nvmf_request_complete(fused_req);
+	}
+
 	response->cdw0 = cdw0;
 	response->status.sc = sc;
 	response->status.sct = sct;
