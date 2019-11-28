@@ -93,10 +93,25 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 {
 	struct spdk_nvmf_request	*req = cb_arg;
 	struct spdk_nvme_cpl		*response = &req->rsp->nvme_cpl;
-	int				sc, sct;
+	int				sc, sct, fused_sc, fused_sct;
 	uint32_t			cdw0;
+	struct spdk_nvmf_request	*fused_req = req->first_fused_request;
 
-	spdk_bdev_io_get_nvme_status(bdev_io, &cdw0, &sct, &sc);
+	if (fused_req != NULL) {
+		/* fused commands - get status for both operations */
+		struct spdk_nvme_cpl *fused_response = &fused_req->rsp->nvme_cpl;
+
+		spdk_bdev_io_get_nvme_fused_status(bdev_io, &cdw0, &fused_sct, &fused_sc, &sct, &sc);
+		fused_response->cdw0 = cdw0;
+		fused_response->status.sc = fused_sc;
+		fused_response->status.sct = fused_sct;
+
+		/* first request should be completed */
+		spdk_nvmf_request_complete(fused_req);
+	} else {
+		spdk_bdev_io_get_nvme_status(bdev_io, &cdw0, &sct, &sc);
+	}
+
 	response->cdw0 = cdw0;
 	response->status.sc = sc;
 	response->status.sct = sct;
