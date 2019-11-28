@@ -447,6 +447,7 @@ iscsi_conn_close_lun(struct spdk_iscsi_conn *conn, int lun_id)
 
 	spdk_scsi_lun_free_io_channel(iscsi_lun->desc);
 	spdk_scsi_lun_close(iscsi_lun->desc);
+	spdk_poller_unregister(&iscsi_lun->remove_poller);
 	free(iscsi_lun);
 
 	conn->luns[lun_id] = NULL;
@@ -462,13 +463,59 @@ iscsi_conn_close_luns(struct spdk_iscsi_conn *conn)
 	}
 }
 
+static bool
+iscsi_conn_check_tasks_for_lun(struct spdk_iscsi_conn *conn,
+			       struct spdk_scsi_lun *lun)
+{
+	struct spdk_iscsi_pdu *pdu, *tmp_pdu;
+	struct spdk_iscsi_task *task;
+
+	assert(lun != NULL);
+
+	/* We can remove deferred PDUs safely because they are already flushed. */
+	TAILQ_FOREACH_SAFE(pdu, &conn->snack_pdu_list, tailq, tmp_pdu) {
+		if (lun == pdu->task->scsi.lun) {
+			TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
+			spdk_iscsi_conn_free_pdu(conn, pdu);
+		}
+	}
+
+	TAILQ_FOREACH(task, &conn->queued_datain_tasks, link) {
+		if (lun == task->scsi.lun) {
+			return false;
+		}
+	}
+
+	TAILQ_FOREACH(pdu, &conn->write_pdu_list, tailq) {
+		if (pdu->task && lun == pdu->task->scsi.lun) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+static int
+iscsi_conn_remove_lun(void *ctx)
+{
+	struct spdk_iscsi_lun *iscsi_lun = ctx;
+	struct spdk_iscsi_conn *conn = iscsi_lun->conn;
+	struct spdk_scsi_lun *lun = iscsi_lun->lun;
+	int lun_id = spdk_scsi_lun_get_id(lun);
+
+	if (!iscsi_conn_check_tasks_for_lun(conn, lun)) {
+		return -1;
+	}
+	iscsi_conn_close_lun(conn, lun_id);
+	return -1;
+}
+
 static void
 _iscsi_conn_hotremove_lun(void *ctx)
 {
 	struct spdk_iscsi_lun *iscsi_lun = ctx;
 	struct spdk_iscsi_conn *conn = iscsi_lun->conn;
 	struct spdk_scsi_lun *lun = iscsi_lun->lun;
-	int lun_id = spdk_scsi_lun_get_id(lun);
 
 	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg)) ==
 	       spdk_get_thread());
@@ -479,9 +526,8 @@ _iscsi_conn_hotremove_lun(void *ctx)
 	}
 
 	spdk_clear_all_transfer_task(conn, lun, NULL);
-	_iscsi_conn_free_tasks(conn, lun);
 
-	iscsi_conn_close_lun(conn, lun_id);
+	iscsi_lun->remove_poller = spdk_poller_register(iscsi_conn_remove_lun, iscsi_lun, 1000);
 }
 
 static void
