@@ -214,7 +214,11 @@ function nvmfappstart()
 function nvmftestfini()
 {
 	nvmfcleanup
-	killprocess $nvmfpid
+	if [ -z "$nvmfpid" ]; then
+		echo "process is not there"
+	else
+		killprocess $nvmfpid
+	fi
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh reset
 		if [ "$TEST_TRANSPORT" == "rdma" ]; then
