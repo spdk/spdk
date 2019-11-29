@@ -2701,28 +2701,24 @@ spdk_nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	if (rc != 0) {
 		SPDK_ERRLOG("Could not add sock to sock_group: %s (%d)\n",
 			    spdk_strerror(errno), errno);
-		spdk_nvmf_tcp_qpair_destroy(tqpair);
 		return -1;
 	}
 
 	rc =  spdk_nvmf_tcp_qpair_sock_init(tqpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("Cannot set sock opt for tqpair=%p\n", tqpair);
-		spdk_nvmf_tcp_qpair_destroy(tqpair);
 		return -1;
 	}
 
 	rc = spdk_nvmf_tcp_qpair_init(&tqpair->qpair);
 	if (rc < 0) {
 		SPDK_ERRLOG("Cannot init tqpair=%p\n", tqpair);
-		spdk_nvmf_tcp_qpair_destroy(tqpair);
 		return -1;
 	}
 
 	rc = spdk_nvmf_tcp_qpair_init_mem_resource(tqpair, 1);
 	if (rc < 0) {
 		SPDK_ERRLOG("Cannot init memory resource info for tqpair=%p\n", tqpair);
-		spdk_nvmf_tcp_qpair_destroy(tqpair);
 		return -1;
 	}
 
