@@ -1,5 +1,7 @@
 MALLOC_SIZE_MB=128
 MALLOC_BS=512
+AIO_SIZE_MB=400
+AIO_BS=4096
 LVS_DEFAULT_CLUSTER_SIZE_MB=4
 LVS_DEFAULT_CLUSTER_SIZE=$(( LVS_DEFAULT_CLUSTER_SIZE_MB * 1024 * 1024 ))
 # reserve some MBs for lvolstore metadata
@@ -19,5 +21,9 @@ function check_leftover_devices() {
 
 # round down size to the nearest cluster size boundary
 function round_down() {
-	echo $(( $1 / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+	local CLUSTER_SIZE_MB=$LVS_DEFAULT_CLUSTER_SIZE_MB
+	if [ -n "$2" ]; then
+		CLUSTER_SIZE_MB=$2
+	fi
+	echo $(( $1 / CLUSTER_SIZE_MB * CLUSTER_SIZE_MB ))
 }
