@@ -10,6 +10,7 @@ timing_enter basic
 run_test "lvol_basic" test/lvol/basic.sh
 run_test "lvol_resize" test/lvol/resize.sh
 run_test "lvol_hotremove" test/lvol/hotremove.sh
+run_test "lvol_tasting" test/lvol/tasting.sh
 timing_exit basic
 
 timing_exit lvol
