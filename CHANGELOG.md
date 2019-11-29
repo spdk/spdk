@@ -20,6 +20,11 @@ Added boolean return value for function spdk_fs_set_cache_size to indicate its o
 
 Added `blobfs_set_cache_size` RPC method to set cache size for blobstore filesystem.
 
+### nvmf
+
+Add SockPriority option in [Transport] section, this can be used for NVMe-oF target
+on TCP transport to set sock priority for the incomming TCP connections.
+
 ### util
 
 `spdk_pipe`, a new utility for buffering data from sockets or files for parsing

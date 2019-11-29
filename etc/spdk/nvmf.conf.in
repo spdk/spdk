@@ -146,6 +146,9 @@
   # Set whether to use the C2H Success optimization, only used for TCP transport.
   # C2HSuccess true
 
+  # Set whether to use different priority for socket, only used for TCP transport.
+  # SockPriority 0
+
 # Define FC transport
 #[Transport]
   # Set FC transport type.
