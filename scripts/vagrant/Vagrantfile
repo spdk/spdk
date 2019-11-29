@@ -8,33 +8,17 @@ Vagrant.configure(2) do |config|
   provider = (ENV['SPDK_VAGRANT_PROVIDER'] || "virtualbox")
   case distro
   when "centos7"
-    config.vm.box = "puppetlabs/centos-7.2-64-nocm"
-    config.ssh.insert_key = false
-    # Puppetlabs does not provide libvirt Box so we will use official one
-    config.vm.provider :libvirt do |libvirt|
-      config.vm.box = "centos/7"
-    end if Vagrant.has_plugin?('vagrant-libvirt')
+    # See: https://app.vagrantup.com/generic/boxes/centos7
+    config.vm.box = "generic/centos7"
   when "centos8"
     # See: https://app.vagrantup.com/generic/boxes/centos8
     config.vm.box = "generic/centos8"
   when "ubuntu16"
-    if provider.eql?("libvirt")
-      # https://app.vagrantup.com/sjohnsen/boxes/ubuntu1604
-      config.vm.box = "sjohnsen/ubuntu1604"
-    else
-      # See: https://app.vagrantup.com/puppetlabs/boxes/ubuntu-16.04-64-nocm
-      config.vm.box = "puppetlabs/ubuntu-16.04-64-nocm"
-      config.vm.box_version = "1.0.0"
-    end
+    #See: https://app.vagrantup.com/generic/boxes/ubuntu1604
+    config.vm.box = "generic/ubuntu1604"
   when "ubuntu18"
-    if provider.eql?("libvirt")
-      # https://app.vagrantup.com/sjohnsen/boxes/ubuntu1804
-      config.vm.box = "sjohnsen/ubuntu1804"
-    else
-      # See: https://app.vagrantup.com/bento/boxes/ubuntu-18.04
-      config.vm.box = "bento/ubuntu-18.04"
-      config.vm.box_version = "201803.24.0"
-    end
+    #See: https://app.vagrantup.com/generic/boxes/ubuntu1804
+    config.vm.box = "generic/ubuntu1804"
   when "fedora29"
     #See: https://app.vagrantup.com/generic/boxes/fedora29
     config.vm.box = "generic/fedora29"
@@ -91,8 +75,12 @@ Vagrant.configure(2) do |config|
     config.cache.scope = :box
   end
 
-  if !(distro.include?("ubuntu"))
+  if (distro.include?("ubuntu"))
+    # Ubuntu boxes from generic/ubuntuX do not generate /etc/resolv.conf files properly which causes
+    # DNS to not work. Copy host /etc/resolv.conf file to the VM as a workaround.
     config.vm.network "private_network", type: "dhcp"
+    config.vm.provision "file", source: "/etc/resolv.conf", destination: "/home/vagrant/resolv.conf"
+    config.vm.provision "shell", inline: "sudo mv -f /home/vagrant/resolv.conf /etc/resolv.conf"
   end
 
   # use http proxy if avaiable
