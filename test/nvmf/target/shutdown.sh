@@ -87,6 +87,7 @@ function nvmf_shutdown_tc3 {
 
 	# Kill the target half way through
 	killprocess $nvmfpid
+	nvmfpid=
 
 	# Verify bdevperf exits successfully
 	sleep 1
