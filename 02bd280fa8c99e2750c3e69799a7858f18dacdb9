@@ -33,6 +33,24 @@
       "revId": "02bd280fa8c99e2750c3e69799a7858f18dacdb9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb4bba16_f477c975",
+        "filename": "test/unit/lib/iscsi/conn.c/conn_ut.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-11-29T00:13:14Z",
+      "side": 1,
+      "message": "Let me revise it.",
+      "parentUuid": "5eebe05e_971230cf",
+      "revId": "02bd280fa8c99e2750c3e69799a7858f18dacdb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
