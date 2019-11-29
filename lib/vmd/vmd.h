@@ -75,10 +75,11 @@ struct vmd_pci_bus {
  * memory element for base address assignment and reuse
  */
 struct pci_mem_mgr {
-	uint32_t size : 30;        /* size of memory element */
-	uint32_t in_use : 1;
-	uint32_t rsv : 1;
-	uint64_t addr;
+	uint32_t			size : 30;        /* size of memory element */
+	uint32_t			in_use : 1;
+	uint32_t			rsv : 1;
+	uint64_t			addr;
+	TAILQ_ENTRY(pci_mem_mgr)	tailq;
 };
 
 struct vmd_hot_plug {
@@ -91,6 +92,9 @@ struct vmd_hot_plug {
 	struct pci_mem_mgr mem[ADDR_ELEM_COUNT];
 	uint8_t bus_numbers[RESERVED_HOTPLUG_BUSES];
 	struct vmd_pci_bus *bus;
+	TAILQ_HEAD(, pci_mem_mgr) free_mem_queue;
+	TAILQ_HEAD(, pci_mem_mgr) alloc_mem_queue;
+	TAILQ_HEAD(, pci_mem_mgr) unused_mem_queue;
 };
 
 struct vmd_pci_device {
@@ -177,13 +181,6 @@ static inline struct vmd_pci_bus *
 vmd_is_dev_in_hotplug_path(struct vmd_pci_device *dev)
 {
 	return NULL;
-}
-
-static inline uint64_t
-vmd_hp_allocate_base_addr(struct vmd_hot_plug *hp, uint32_t size)
-{
-	assert(false);
-	return 0;
 }
 
 static inline void

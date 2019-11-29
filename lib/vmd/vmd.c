@@ -101,6 +101,109 @@ vmd_device_is_root_port(const struct vmd_pci_device *vmd_device)
 		vmd_device->header->common.device_id == 0x2033);
 }
 
+static void
+vmd_hotplug_coalesce_regions(struct vmd_hot_plug *hp)
+{
+	struct pci_mem_mgr *region, *prev;
+
+	do {
+		prev = NULL;
+		TAILQ_FOREACH(region, &hp->free_mem_queue, tailq) {
+			if (prev != NULL && (prev->addr + prev->size == region->addr)) {
+				break;
+			}
+
+			prev = region;
+		}
+
+		if (region != NULL) {
+			prev->size += region->size;
+			TAILQ_REMOVE(&hp->free_mem_queue, region, tailq);
+			TAILQ_INSERT_TAIL(&hp->unused_mem_queue, region, tailq);
+		}
+	} while (region != NULL);
+}
+
+static void
+vmd_hotplug_free_region(struct vmd_hot_plug *hp, struct pci_mem_mgr *region)
+{
+	struct pci_mem_mgr *current, *prev = NULL;
+
+	assert(region->addr >= hp->bar.start && region->addr < hp->bar.start + hp->bar.size);
+
+	TAILQ_FOREACH(current, &hp->free_mem_queue, tailq) {
+		if (current->addr > region->addr) {
+			break;
+		}
+
+		prev = current;
+	}
+
+	if (prev != NULL) {
+		assert(prev->addr + prev->size <= region->addr);
+		assert(current == NULL || (region->addr + region->size <= current->addr));
+		TAILQ_INSERT_AFTER(&hp->free_mem_queue, prev, region, tailq);
+	} else {
+		TAILQ_INSERT_HEAD(&hp->free_mem_queue, region, tailq);
+	}
+
+	vmd_hotplug_coalesce_regions(hp);
+}
+
+static void
+vmd_hotplug_free_addr(struct vmd_hot_plug *hp, uint64_t addr)
+{
+	struct pci_mem_mgr *region;
+
+	TAILQ_FOREACH(region, &hp->alloc_mem_queue, tailq) {
+		if (region->addr == addr) {
+			break;
+		}
+	}
+
+	assert(region != NULL);
+	TAILQ_REMOVE(&hp->alloc_mem_queue, region, tailq);
+
+	vmd_hotplug_free_region(hp, region);
+}
+
+static uint64_t
+vmd_hotplug_allocate_base_addr(struct vmd_hot_plug *hp, uint32_t size)
+{
+	struct pci_mem_mgr *region = NULL, *free_region;
+
+	TAILQ_FOREACH(region, &hp->free_mem_queue, tailq) {
+		if (region->size >= size) {
+			break;
+		}
+	}
+
+	if (region == NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_VMD, "Unable to find free hotplug memory region of size:"
+			      "%"PRIx32"\n", size);
+		return 0;
+	}
+
+	TAILQ_REMOVE(&hp->free_mem_queue, region, tailq);
+	if (size < region->size) {
+		free_region = TAILQ_FIRST(&hp->unused_mem_queue);
+		if (free_region == NULL) {
+			SPDK_DEBUGLOG(SPDK_LOG_VMD, "Unable to find unused descriptor to store the "
+				      "free region of size: %"PRIu32"\n", region->size - size);
+		} else {
+			TAILQ_REMOVE(&hp->unused_mem_queue, free_region, tailq);
+			free_region->size = region->size - size;
+			free_region->addr = region->addr + size;
+			region->size = size;
+			vmd_hotplug_free_region(hp, free_region);
+		}
+	}
+
+	TAILQ_INSERT_TAIL(&hp->alloc_mem_queue, region, tailq);
+
+	return region->addr;
+}
+
 /*
  *  Allocates an address from vmd membar for the input memory size
  *  vmdAdapter - vmd adapter object
@@ -127,9 +230,9 @@ vmd_allocate_base_addr(struct vmd_adapter *vmd, struct vmd_pci_device *dev, uint
 	 *  get a buffer from the  unused chunk. First fit algorithm, is used.
 	 */
 	if (dev) {
-		hp_bus = vmd_is_dev_in_hotplug_path(dev);
+		hp_bus = dev->parent;
 		if (hp_bus && hp_bus->self && hp_bus->self->hotplug_capable) {
-			return vmd_hp_allocate_base_addr(&hp_bus->self->hp, size);
+			return vmd_hotplug_allocate_base_addr(&hp_bus->self->hp, size);
 		}
 	}
 
@@ -200,14 +303,18 @@ vmd_update_base_limit_register(struct vmd_pci_device *dev, uint16_t base, uint16
 }
 
 static uint64_t
-vmd_get_base_addr(struct vmd_pci_device *dev, uint32_t index)
+vmd_get_base_addr(struct vmd_pci_device *dev, uint32_t index, uint32_t size)
 {
 	struct vmd_pci_bus *bus = dev->parent;
 
 	if (dev->header_type == PCI_HEADER_TYPE_BRIDGE) {
 		return dev->header->zero.BAR[index] & ~0xf;
 	} else {
-		return (uint64_t)bus->self->header->one.mem_base << 16;
+		if (bus->self->hotplug_capable) {
+			return vmd_hotplug_allocate_base_addr(&bus->self->hp, size);
+		} else {
+			return (uint64_t)bus->self->header->one.mem_base << 16;
+		}
 	}
 }
 
@@ -248,7 +355,7 @@ vmd_assign_base_addrs(struct vmd_pci_device *dev)
 		dev->bar[i].size = TWOS_COMPLEMENT(dev->bar[i].size & PCI_BASE_ADDR_MASK);
 
 		if (vmd->scan_completed) {
-			dev->bar[i].start = vmd_get_base_addr(dev, i);
+			dev->bar[i].start = vmd_get_base_addr(dev, i, dev->bar[i].size);
 		} else {
 			dev->bar[i].start = vmd_allocate_base_addr(vmd, dev, dev->bar[i].size);
 		}
@@ -447,6 +554,7 @@ vmd_init_hotplug(struct vmd_pci_device *dev, struct vmd_pci_bus *bus)
 {
 	struct vmd_adapter *vmd = bus->vmd;
 	struct vmd_hot_plug *hp = &dev->hp;
+	size_t mem_id;
 
 	dev->hotplug_capable = true;
 	hp->bar.size = 1 << 20;
@@ -461,6 +569,19 @@ vmd_init_hotplug(struct vmd_pci_device *dev, struct vmd_pci_bus *bus)
 	}
 
 	hp->bar.vaddr = (uint64_t)vmd->mem_vaddr + (hp->bar.start - vmd->membar);
+
+	TAILQ_INIT(&hp->free_mem_queue);
+	TAILQ_INIT(&hp->unused_mem_queue);
+	TAILQ_INIT(&hp->alloc_mem_queue);
+
+	hp->mem[0].size = hp->bar.size;
+	hp->mem[0].addr = hp->bar.start;
+
+	TAILQ_INSERT_TAIL(&hp->free_mem_queue, &hp->mem[0], tailq);
+
+	for (mem_id = 1; mem_id < ADDR_ELEM_COUNT; ++mem_id) {
+		TAILQ_INSERT_TAIL(&hp->unused_mem_queue, &hp->mem[mem_id], tailq);
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_VMD, "%s: mem_base:mem_limit = %x : %x\n", __func__,
 		      bus->self->header->one.mem_base, bus->self->header->one.mem_limit);
@@ -746,11 +867,22 @@ static void
 vmd_dev_detach(struct spdk_pci_device *dev)
 {
 	struct vmd_pci_device *vmd_device = (struct vmd_pci_device *)dev;
+	struct vmd_pci_device *bus_device = vmd_device->bus->self;
 	struct vmd_pci_bus *bus = vmd_device->bus;
+	size_t i, num_bars = vmd_device->header_type ? 2 : 6;
 
 	spdk_pci_unhook_device(dev);
-
 	TAILQ_REMOVE(&bus->dev_list, vmd_device, tailq);
+
+	/* Release the hotplug region if the device is under hotplug-capable bus */
+	if (bus_device && bus_device->hotplug_capable) {
+		for (i = 0; i < num_bars; ++i) {
+			if (vmd_device->bar[i].start != 0) {
+				vmd_hotplug_free_addr(&bus_device->hp, vmd_device->bar[i].start);
+			}
+		}
+	}
+
 	free(dev);
 }
 
