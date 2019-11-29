@@ -57,6 +57,19 @@ def bdev_nvme_get_controllers(client, name=None):
     return client.call('bdev_nvme_get_controllers', params)
 
 
+def bdev_nvme_opal_discovery(client, nvme_ctrlr_name):
+    """Discovery Opal ctrlr and check support
+
+    Args:
+        nvme_ctrlr_name: name of nvme ctrlr
+    """
+    params = {
+        'nvme_ctrlr_name': nvme_ctrlr_name,
+    }
+
+    return client.call('bdev_nvme_opal_discovery', params)
+
+
 def bdev_nvme_opal_init(client, nvme_ctrlr_name, password):
     """Init nvme opal. Take ownership and activate
 

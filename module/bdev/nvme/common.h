@@ -88,9 +88,6 @@ struct nvme_bdev_ctrlr {
 	/** Array of pointers to namespaces indexed by nsid - 1 */
 	struct nvme_bdev_ns		**namespaces;
 
-	struct spdk_opal_dev		*opal_dev;
-	struct spdk_poller		*opal_poller;
-
 	struct spdk_poller		*adminq_timer_poller;
 
 	/** linked list pointer for device list */
