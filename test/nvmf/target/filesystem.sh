@@ -75,6 +75,7 @@ function nvmf_filesystem_part {
 	trap - SIGINT SIGTERM EXIT
 
 	killprocess $nvmfpid
+	nvmfpid=
 }
 
 run_test "suite" "nvmf_filesystem_no_incapsule" nvmf_filesystem_part 0
