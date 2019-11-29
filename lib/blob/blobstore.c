@@ -956,13 +956,57 @@ error:
 }
 
 static void
+_spdk_blob_load_cpl_done(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob_load_ctx	*ctx = cb_arg;
+	struct spdk_blob		*blob = ctx->blob;
+	const void			*value;
+	size_t				len;
+	int rc;
+
+	if (bserrno) {
+		SPDK_ERRLOG("Metadata page read failed: %d\n", bserrno);
+		_spdk_blob_free(blob);
+		ctx->cb_fn(seq, NULL, bserrno);
+		spdk_free(ctx->pages);
+		free(ctx);
+		return;
+	}
+
+	ctx->seq = seq;
+
+	if (spdk_blob_is_thin_provisioned(blob)) {
+		rc = _spdk_blob_get_xattr_value(blob, BLOB_SNAPSHOT, &value, &len, true);
+		if (rc == 0) {
+			if (len != sizeof(spdk_blob_id)) {
+				_spdk_blob_free(blob);
+				ctx->cb_fn(seq, NULL, -EINVAL);
+				spdk_free(ctx->pages);
+				free(ctx);
+				return;
+			}
+			/* open snapshot blob and continue in the callback function */
+			blob->parent_id = *(spdk_blob_id *)value;
+			spdk_bs_open_blob(blob->bs, blob->parent_id,
+					  _spdk_blob_load_snapshot_cpl, ctx);
+			return;
+		} else {
+			/* add zeroes_dev for thin provisioned blob */
+			blob->back_bs_dev = spdk_bs_create_zeroes_dev();
+		}
+	} else {
+		/* standard blob */
+		blob->back_bs_dev = NULL;
+	}
+	_spdk_blob_load_final(ctx, bserrno);
+}
+
+static void
 _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_load_ctx	*ctx = cb_arg;
 	struct spdk_blob		*blob = ctx->blob;
 	struct spdk_blob_md_page	*page;
-	const void			*value;
-	size_t				len;
 	int				rc;
 	uint32_t			crc;
 
@@ -1021,33 +1065,8 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		free(ctx);
 		return;
 	}
-	ctx->seq = seq;
 
-
-	if (spdk_blob_is_thin_provisioned(blob)) {
-		rc = _spdk_blob_get_xattr_value(blob, BLOB_SNAPSHOT, &value, &len, true);
-		if (rc == 0) {
-			if (len != sizeof(spdk_blob_id)) {
-				_spdk_blob_free(blob);
-				ctx->cb_fn(seq, NULL, -EINVAL);
-				spdk_free(ctx->pages);
-				free(ctx);
-				return;
-			}
-			/* open snapshot blob and continue in the callback function */
-			blob->parent_id = *(spdk_blob_id *)value;
-			spdk_bs_open_blob(blob->bs, blob->parent_id,
-					  _spdk_blob_load_snapshot_cpl, ctx);
-			return;
-		} else {
-			/* add zeroes_dev for thin provisioned blob */
-			blob->back_bs_dev = spdk_bs_create_zeroes_dev();
-		}
-	} else {
-		/* standard blob */
-		blob->back_bs_dev = NULL;
-	}
-	_spdk_blob_load_final(ctx, bserrno);
+	_spdk_blob_load_cpl_done(seq, ctx, 0);
 }
 
 /* Load a blob from disk given a blobid */
