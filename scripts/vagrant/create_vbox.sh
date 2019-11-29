@@ -17,7 +17,8 @@ display_help() {
 	echo
 	echo " Usage: ${0##*/} [-b nvme-backing-file] [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrld] <distro>"
 	echo
-	echo "  distro = <centos7 | ubuntu16 | ubuntu18 | fedora28 | fedora29 | fedora 30 | freebsd11> "
+	echo "  distro = <centos7 | centos8| ubuntu16 | ubuntu18 |"
+	echo "            fedora29 | fedora 30 | fedora 31 | freebsd11 | freebsd12>"
 	echo
 	echo "  -b <nvme-backing-file>          nvme file path with name"
 	echo "                                  type of emulated nvme disk"
@@ -42,10 +43,10 @@ display_help() {
 	echo
 	echo " Examples:"
 	echo
-	echo "  $0 -x http://user:password@host:port fedora28"
+	echo "  $0 -x http://user:password@host:port fedora30"
 	echo "  $0 -s 2048 -n 2 ubuntu16"
 	echo "  $0 -rv freebsd"
-	echo "  $0 fedora28"
+	echo "  $0 fedora30"
 	echo "  $0 -b /var/lib/libvirt/images/nvme1.img,nvme,1 fedora30"
 	echo "  $0 -b /var/lib/libvirt/images/ocssd.img,ocssd fedora30"
 	echo "  $0 -b /var/lib/libvirt/images/nvme5.img,nvme,5 -b /var/lib/libvirt/images/ocssd.img,ocssd fedora30"
@@ -136,13 +137,13 @@ case "${SPDK_VAGRANT_DISTRO}" in
 	centos7)
 		export SPDK_VAGRANT_DISTRO
 	;;
+	centos8)
+		export SPDK_VAGRANT_DISTRO
+	;;
 	ubuntu16)
 		export SPDK_VAGRANT_DISTRO
 	;;
 	ubuntu18)
-		export SPDK_VAGRANT_DISTRO
-	;;
-	fedora28)
 		export SPDK_VAGRANT_DISTRO
 	;;
 	fedora29)
@@ -151,7 +152,13 @@ case "${SPDK_VAGRANT_DISTRO}" in
 	fedora30)
 		export SPDK_VAGRANT_DISTRO
 	;;
+	fedora31)
+		export SPDK_VAGRANT_DISTRO
+	;;
 	freebsd11)
+		export SPDK_VAGRANT_DISTRO
+	;;
+	freebsd12)
 		export SPDK_VAGRANT_DISTRO
 	;;
 	arch-linux)
