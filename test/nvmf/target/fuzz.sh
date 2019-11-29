@@ -40,6 +40,7 @@ trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
 killprocess $nvmfpid
+nvmfpid=
 
 nvmftestfini
 timing_exit fuzz_test

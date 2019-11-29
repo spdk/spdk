@@ -478,6 +478,10 @@ function killprocess() {
 		# wait for the process regardless if its the dummy sudo one
 		# or the actual app - it should terminate anyway
 		wait $1
+	else
+		# the process is not there anymore
+		echo "Process with pid $1 is not found"
+		exit 1
 	fi
 }
 

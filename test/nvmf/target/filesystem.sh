@@ -69,6 +69,7 @@ for incapsule in 0 4096; do
 	trap - SIGINT SIGTERM EXIT
 
 	killprocess $nvmfpid
+	nvmfpid=
 done
 
 nvmftestfini
