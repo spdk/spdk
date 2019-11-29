@@ -38,5 +38,6 @@ trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
 killprocess $nvmfpid
+nvmfpid=
 
 nvmftestfini
