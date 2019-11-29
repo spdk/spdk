@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "243a5896_a998fa39",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2701,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-11-29T01:41:59Z",
+      "side": 1,
+      "message": "This is also necessary.",
+      "range": {
+        "startLine": 2701,
+        "startChar": 2,
+        "endLine": 2701,
+        "endChar": 38
+      },
+      "revId": "e0133adff89696f7bc8298c3cb8cc8f06b693c29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
