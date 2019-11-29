@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bda78984_6cc61a8d",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-11-29T06:53:17Z",
+      "side": 1,
+      "message": "Issue verified locally with the fix instead of hanging long time which leads to time out.\n\n 14:44:52       # /home/gangcao/storage17/20160628/waikiki/spdk/test/rpc_client/rpc_client_test\nrpc.c: 173:spdk_rpc_listen: *ERROR*: RPC Unix domain socket path /var/tmp/spdk.sock in use. Specify another.\nspdk_rpc_listen() failed: -1\nrpc_client_test.c: 136:spdk_jsonrpc_client_check_rpc_method: *NOTICE*: spdk_get_version\nrpc_client_test.c: 136:spdk_jsonrpc_client_check_rpc_method: *NOTICE*: rpc_get_methods\nrpc_client_test.c: 136:spdk_jsonrpc_client_check_rpc_method: *NOTICE*: hook_conn_close\nrpc_client_test.c: 136:spdk_jsonrpc_client_check_rpc_method: *NOTICE*: test_null_params\nrpc_client_test.c: 136:spdk_jsonrpc_client_check_rpc_method: *NOTICE*: test_method_runtime\nrpc_client_test.c: 136:spdk_jsonrpc_client_check_rpc_method: *NOTICE*: test_method_startup\nserver thread failed reported failure(thread rc: -1)\nConnection close not detected\nFAILED\n  14:44:52      # trap - ERR\n  14:44:52      # print_backtrace\n  14:44:52      # [[ ehxBE \u003d~ e ]]\n  14:44:52      # xtrace_disable\n  14:44:52      # PREV_BASH_OPTS\u003dehxBE\n  14:44:52      # set +x\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d Backtrace start: \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n\nin ./rpc_client/rpc_client.sh:8 -\u003e main()\n     ...\n   3    testdir\u003d$(readlink -f $(dirname $0))\n   4    rootdir\u003d$(readlink -f $testdir/../..)\n   5    source $rootdir/test/common/autotest_common.sh\n   6\n   7    timing_enter rpc_client\n\u003d\u003e 8    $rootdir/test/rpc_client/rpc_client_test\n   9    timing_exit rpc_client\n   10\n   11   trap - SIGINT SIGTERM EXIT\n     ...",
+      "range": {
+        "startLine": 341,
+        "startChar": 2,
+        "endLine": 341,
+        "endChar": 39
+      },
+      "revId": "98ebf9b0cf3b28331157f0ec600d315755941b78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
