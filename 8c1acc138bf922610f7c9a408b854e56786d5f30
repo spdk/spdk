@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32c57e71_ad04bd2b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-29T11:22:53Z",
+      "side": 1,
+      "message": "I think you should add a prefix with an area that this patch is touching (e.g. test/ftl).",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 30
+      },
+      "revId": "8c1acc138bf922610f7c9a408b854e56786d5f30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76e2f7b1_e34ef335",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-11-29T11:22:53Z",
+      "side": 1,
+      "message": "I\u0027d rephrase the message:\nPatch fdc82d3bc8c45a90f297e713dd48d3cb4e159824 fixing shellcheck\u0027s rule SC2068 caused `ftl/fio.sh` to take the whole array as single element during loop iteration.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 68
+      },
+      "revId": "8c1acc138bf922610f7c9a408b854e56786d5f30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
