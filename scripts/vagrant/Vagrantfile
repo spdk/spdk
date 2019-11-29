@@ -72,10 +72,14 @@ Vagrant.configure(2) do |config|
 
   # Copy the tsocks configuration file for use when installing some spdk test pool dependencies
   if File.file?("/etc/tsocks.conf")
+    $tsocks_copy = <<-SCRIPT
+    sudo -s
+    mv -f tsocks.conf /etc/tsocks.conf
+    chown root /etc/tsocks.conf
+    chmod 644 /etc/tsocks.conf
+    SCRIPT
     config.vm.provision  "file", source: "/etc/tsocks.conf", destination: "tsocks.conf"
-    config.vm.provision "shell", inline: "sudo mv tsocks.conf /etc/tsocks.conf"
-    config.vm.provision "shell", inline: "sudo chown root:wheel /etc/tsocks.conf"
-    config.vm.provision "shell", inline: "sudo chmod 644 /etc/tsocks.conf"
+    config.vm.provision "shell", inline: $tsocks_copy
   end
 
   # vagrant-cachier caches apt/yum etc to speed subsequent
