@@ -1044,7 +1044,8 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		ctx->pages = spdk_realloc(ctx->pages, (sizeof(*page) * ctx->num_pages),
 					  sizeof(*page));
 		if (ctx->pages == NULL) {
-			ctx->cb_fn(seq, ctx->cb_arg, -ENOMEM);
+			_spdk_blob_free(blob);
+			ctx->cb_fn(seq, NULL, -ENOMEM);
 			free(ctx);
 			return;
 		}
@@ -1085,15 +1086,17 @@ _spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
-		cb_fn(seq, cb_arg, -ENOMEM);
+		_spdk_blob_free(blob);
+		cb_fn(seq, NULL, -ENOMEM);
 		return;
 	}
 
 	ctx->blob = blob;
 	ctx->pages = spdk_realloc(ctx->pages, SPDK_BS_PAGE_SIZE, SPDK_BS_PAGE_SIZE);
 	if (!ctx->pages) {
+		_spdk_blob_free(blob);
 		free(ctx);
-		cb_fn(seq, cb_arg, -ENOMEM);
+		cb_fn(seq, NULL, -ENOMEM);
 		return;
 	}
 	ctx->num_pages = 1;
