@@ -10,6 +10,7 @@ timing_enter basic
 run_test suite test/lvol/basic.sh
 run_test suite test/lvol/resize.sh
 run_test suite test/lvol/hotremove.sh
+run_test suite test/lvol/tasting.sh
 timing_exit basic
 
 timing_exit lvol
