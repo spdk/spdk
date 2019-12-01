@@ -1185,6 +1185,120 @@ iscsi_op_login_response(struct spdk_iscsi_conn *conn,
 }
 
 /*
+ * The function which is used to initialize the internal response data
+ * structure of iscsi login function.
+ * return:
+ * 0, success;
+ * otherwise, error;
+ */
+static int
+iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
+			struct spdk_iscsi_pdu *pdu, struct spdk_iscsi_pdu *rsp_pdu)
+{
+	struct iscsi_bhs_login_req *reqh;
+	struct iscsi_bhs_login_rsp *rsph;
+	uint32_t alloc_len;
+
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+	rsph->opcode = ISCSI_OP_LOGIN_RSP;
+	rsph->status_class = ISCSI_CLASS_SUCCESS;
+	rsph->status_detail = ISCSI_LOGIN_ACCEPT;
+	rsp_pdu->data_segment_len = 0;
+
+	/* Default MaxRecvDataSegmentLength - RFC3720(12.12) */
+	if (conn->MaxRecvDataSegmentLength < 8192) {
+		alloc_len = 8192;
+	} else {
+		alloc_len = conn->MaxRecvDataSegmentLength;
+	}
+
+	rsp_pdu->data = calloc(1, alloc_len);
+	if (!rsp_pdu->data) {
+		SPDK_ERRLOG("calloc() failed for data segment\n");
+		rsph->status_class = ISCSI_CLASS_TARGET_ERROR;
+		rsph->status_detail = ISCSI_LOGIN_STATUS_NO_RESOURCES;
+		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+	}
+	rsp_pdu->data_buf_len = alloc_len;
+
+	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
+	rsph->flags |= (reqh->flags & ISCSI_LOGIN_TRANSIT);
+	rsph->flags |= (reqh->flags & ISCSI_LOGIN_CONTINUE);
+	rsph->flags |= (reqh->flags & ISCSI_LOGIN_CURRENT_STAGE_MASK);
+	if (ISCSI_BHS_LOGIN_GET_TBIT(rsph->flags)) {
+		rsph->flags |= (reqh->flags & ISCSI_LOGIN_NEXT_STAGE_MASK);
+	}
+
+	/* We don't need to convert from network byte order. Just store it */
+	memcpy(&rsph->isid, reqh->isid, 6);
+	rsph->tsih = reqh->tsih;
+	rsph->itt = reqh->itt;
+	rsp_pdu->cmd_sn = from_be32(&reqh->cmd_sn);
+
+	if (rsph->tsih) {
+		rsph->stat_sn = reqh->exp_stat_sn;
+	}
+
+	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "PDU", (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN);
+
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+		      "T=%d, C=%d, CSG=%d, NSG=%d, Min=%d, Max=%d, ITT=%x\n",
+		      ISCSI_BHS_LOGIN_GET_TBIT(rsph->flags),
+		      ISCSI_BHS_LOGIN_GET_CBIT(rsph->flags),
+		      ISCSI_BHS_LOGIN_GET_CSG(rsph->flags),
+		      ISCSI_BHS_LOGIN_GET_NSG(rsph->flags),
+		      reqh->version_min, reqh->version_max, from_be32(&rsph->itt));
+
+	if (conn->sess != NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+			      "CmdSN=%u, ExpStatSN=%u, StatSN=%u, ExpCmdSN=%u,"
+			      "MaxCmdSN=%u\n", rsp_pdu->cmd_sn,
+			      from_be32(&rsph->stat_sn), conn->StatSN,
+			      conn->sess->ExpCmdSN,
+			      conn->sess->MaxCmdSN);
+	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+			      "CmdSN=%u, ExpStatSN=%u, StatSN=%u\n",
+			      rsp_pdu->cmd_sn, from_be32(&rsph->stat_sn),
+			      conn->StatSN);
+	}
+
+	if (ISCSI_BHS_LOGIN_GET_TBIT(rsph->flags) &&
+	    ISCSI_BHS_LOGIN_GET_CBIT(rsph->flags)) {
+		SPDK_ERRLOG("transit error\n");
+		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+		rsph->status_detail = ISCSI_LOGIN_INITIATOR_ERROR;
+		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+	}
+	/* make sure reqh->version_max < ISCSI_VERSION */
+	if (reqh->version_min > ISCSI_VERSION) {
+		SPDK_ERRLOG("unsupported version min %d/max %d, expecting %d\n", reqh->version_min,
+			    reqh->version_max, ISCSI_VERSION);
+		/* Unsupported version */
+		/* set all reserved flag to zero */
+		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+		rsph->status_detail = ISCSI_LOGIN_UNSUPPORTED_VERSION;
+		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+	}
+
+	if ((ISCSI_BHS_LOGIN_GET_NSG(rsph->flags) == ISCSI_NSG_RESERVED_CODE) &&
+	    ISCSI_BHS_LOGIN_GET_TBIT(rsph->flags)) {
+		/* set NSG to zero */
+		rsph->flags &= ~ISCSI_LOGIN_NEXT_STAGE_MASK;
+		/* also set other bits to zero */
+		rsph->flags &= ~ISCSI_LOGIN_TRANSIT;
+		rsph->flags &= ~ISCSI_LOGIN_CURRENT_STAGE_MASK;
+		SPDK_ERRLOG("Received reserved NSG code: %d\n", ISCSI_NSG_RESERVED_CODE);
+		/* Initiator error */
+		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+		rsph->status_detail = ISCSI_LOGIN_INITIATOR_ERROR;
+		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+	}
+
+	return 0;
+}
+
+/*
  * This function is used to del the original param and update it with new
  * value
  * return:
@@ -1775,120 +1889,6 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	}
 
 	return iscsi_op_login_set_target_info(conn, rsp_pdu, session_type);
-}
-
-/*
- * The function which is used to initialize the internal response data
- * structure of iscsi login function.
- * return:
- * 0, success;
- * otherwise, error;
- */
-static int
-iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
-			struct spdk_iscsi_pdu *pdu, struct spdk_iscsi_pdu *rsp_pdu)
-{
-	struct iscsi_bhs_login_req *reqh;
-	struct iscsi_bhs_login_rsp *rsph;
-	uint32_t alloc_len;
-
-	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
-	rsph->opcode = ISCSI_OP_LOGIN_RSP;
-	rsph->status_class = ISCSI_CLASS_SUCCESS;
-	rsph->status_detail = ISCSI_LOGIN_ACCEPT;
-	rsp_pdu->data_segment_len = 0;
-
-	/* Default MaxRecvDataSegmentLength - RFC3720(12.12) */
-	if (conn->MaxRecvDataSegmentLength < 8192) {
-		alloc_len = 8192;
-	} else {
-		alloc_len = conn->MaxRecvDataSegmentLength;
-	}
-
-	rsp_pdu->data = calloc(1, alloc_len);
-	if (!rsp_pdu->data) {
-		SPDK_ERRLOG("calloc() failed for data segment\n");
-		rsph->status_class = ISCSI_CLASS_TARGET_ERROR;
-		rsph->status_detail = ISCSI_LOGIN_STATUS_NO_RESOURCES;
-		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
-	}
-	rsp_pdu->data_buf_len = alloc_len;
-
-	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
-	rsph->flags |= (reqh->flags & ISCSI_LOGIN_TRANSIT);
-	rsph->flags |= (reqh->flags & ISCSI_LOGIN_CONTINUE);
-	rsph->flags |= (reqh->flags & ISCSI_LOGIN_CURRENT_STAGE_MASK);
-	if (ISCSI_BHS_LOGIN_GET_TBIT(rsph->flags)) {
-		rsph->flags |= (reqh->flags & ISCSI_LOGIN_NEXT_STAGE_MASK);
-	}
-
-	/* We don't need to convert from network byte order. Just store it */
-	memcpy(&rsph->isid, reqh->isid, 6);
-	rsph->tsih = reqh->tsih;
-	rsph->itt = reqh->itt;
-	rsp_pdu->cmd_sn = from_be32(&reqh->cmd_sn);
-
-	if (rsph->tsih) {
-		rsph->stat_sn = reqh->exp_stat_sn;
-	}
-
-	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "PDU", (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN);
-
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
-		      "T=%d, C=%d, CSG=%d, NSG=%d, Min=%d, Max=%d, ITT=%x\n",
-		      ISCSI_BHS_LOGIN_GET_TBIT(rsph->flags),
-		      ISCSI_BHS_LOGIN_GET_CBIT(rsph->flags),
-		      ISCSI_BHS_LOGIN_GET_CSG(rsph->flags),
-		      ISCSI_BHS_LOGIN_GET_NSG(rsph->flags),
-		      reqh->version_min, reqh->version_max, from_be32(&rsph->itt));
-
-	if (conn->sess != NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
-			      "CmdSN=%u, ExpStatSN=%u, StatSN=%u, ExpCmdSN=%u,"
-			      "MaxCmdSN=%u\n", rsp_pdu->cmd_sn,
-			      from_be32(&rsph->stat_sn), conn->StatSN,
-			      conn->sess->ExpCmdSN,
-			      conn->sess->MaxCmdSN);
-	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
-			      "CmdSN=%u, ExpStatSN=%u, StatSN=%u\n",
-			      rsp_pdu->cmd_sn, from_be32(&rsph->stat_sn),
-			      conn->StatSN);
-	}
-
-	if (ISCSI_BHS_LOGIN_GET_TBIT(rsph->flags) &&
-	    ISCSI_BHS_LOGIN_GET_CBIT(rsph->flags)) {
-		SPDK_ERRLOG("transit error\n");
-		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = ISCSI_LOGIN_INITIATOR_ERROR;
-		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
-	}
-	/* make sure reqh->version_max < ISCSI_VERSION */
-	if (reqh->version_min > ISCSI_VERSION) {
-		SPDK_ERRLOG("unsupported version min %d/max %d, expecting %d\n", reqh->version_min,
-			    reqh->version_max, ISCSI_VERSION);
-		/* Unsupported version */
-		/* set all reserved flag to zero */
-		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = ISCSI_LOGIN_UNSUPPORTED_VERSION;
-		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
-	}
-
-	if ((ISCSI_BHS_LOGIN_GET_NSG(rsph->flags) == ISCSI_NSG_RESERVED_CODE) &&
-	    ISCSI_BHS_LOGIN_GET_TBIT(rsph->flags)) {
-		/* set NSG to zero */
-		rsph->flags &= ~ISCSI_LOGIN_NEXT_STAGE_MASK;
-		/* also set other bits to zero */
-		rsph->flags &= ~ISCSI_LOGIN_TRANSIT;
-		rsph->flags &= ~ISCSI_LOGIN_CURRENT_STAGE_MASK;
-		SPDK_ERRLOG("Received reserved NSG code: %d\n", ISCSI_NSG_RESERVED_CODE);
-		/* Initiator error */
-		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = ISCSI_LOGIN_INITIATOR_ERROR;
-		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
-	}
-
-	return 0;
 }
 
 static int
