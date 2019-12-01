@@ -1407,6 +1407,49 @@ iscsi_op_login_session_type(struct spdk_iscsi_conn *conn,
 }
 
 /*
+ * This function is used to check the target info
+ * return:
+ * 0: success
+ * otherwise: error
+ */
+static int
+iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
+			    struct spdk_iscsi_pdu *rsp_pdu,
+			    const char *target_name,
+			    struct spdk_iscsi_tgt_node **target)
+{
+	bool result;
+	struct iscsi_bhs_login_rsp *rsph;
+
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+	*target = spdk_iscsi_find_tgt_node(target_name);
+	if (*target == NULL) {
+		SPDK_WARNLOG("target %s not found\n", target_name);
+		/* Not found */
+		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+		rsph->status_detail = ISCSI_LOGIN_TARGET_NOT_FOUND;
+		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+	}
+	if (spdk_iscsi_tgt_node_is_destructed(*target)) {
+		SPDK_ERRLOG("target %s is removed\n", target_name);
+		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+		rsph->status_detail = ISCSI_LOGIN_TARGET_REMOVED;
+		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+	}
+	result = spdk_iscsi_tgt_node_access(conn, *target,
+					    conn->initiator_name,
+					    conn->initiator_addr);
+	if (!result) {
+		SPDK_ERRLOG("access denied\n");
+		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+		rsph->status_detail = ISCSI_LOGIN_AUTHORIZATION_FAIL;
+		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+	}
+
+	return 0;
+}
+
+/*
  * This function is used to del the original param and update it with new
  * value
  * return:
@@ -1564,49 +1607,6 @@ iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
 	}
 
 	return rc;
-}
-
-/*
- * This function is used to check the target info
- * return:
- * 0: success
- * otherwise: error
- */
-static int
-iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
-			    struct spdk_iscsi_pdu *rsp_pdu,
-			    const char *target_name,
-			    struct spdk_iscsi_tgt_node **target)
-{
-	bool result;
-	struct iscsi_bhs_login_rsp *rsph;
-
-	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
-	*target = spdk_iscsi_find_tgt_node(target_name);
-	if (*target == NULL) {
-		SPDK_WARNLOG("target %s not found\n", target_name);
-		/* Not found */
-		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = ISCSI_LOGIN_TARGET_NOT_FOUND;
-		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
-	}
-	if (spdk_iscsi_tgt_node_is_destructed(*target)) {
-		SPDK_ERRLOG("target %s is removed\n", target_name);
-		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = ISCSI_LOGIN_TARGET_REMOVED;
-		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
-	}
-	result = spdk_iscsi_tgt_node_access(conn, *target,
-					    conn->initiator_name,
-					    conn->initiator_addr);
-	if (!result) {
-		SPDK_ERRLOG("access denied\n");
-		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = ISCSI_LOGIN_AUTHORIZATION_FAIL;
-		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
-	}
-
-	return 0;
 }
 
 /*
