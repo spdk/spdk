@@ -11,6 +11,7 @@ run_test "lvol_basic" test/lvol/basic.sh
 run_test "lvol_resize" test/lvol/resize.sh
 run_test "lvol_hotremove" test/lvol/hotremove.sh
 run_test "lvol_tasting" test/lvol/tasting.sh
+run_test "lvol_snapshot_clone" test/lvol/snapshot_clone.sh
 timing_exit basic
 
 timing_exit lvol
