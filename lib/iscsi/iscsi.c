@@ -2804,6 +2804,7 @@ spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 	for (i = 0; i < conn->pending_r2t; i++) {
 		if (conn->outstanding_r2t_tasks[i]->tag == task_tag) {
 			task = conn->outstanding_r2t_tasks[i];
+			assert(conn->data_out_cnt >= task->data_out_cnt);
 			conn->data_out_cnt -= task->data_out_cnt;
 
 			conn->pending_r2t--;
@@ -2866,6 +2867,7 @@ void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 			task->outstanding_r2t = 0;
 			task->next_r2t_offset = 0;
 			task->next_expected_r2t_offset = 0;
+			assert(conn->data_out_cnt >= task->data_out_cnt);
 			conn->data_out_cnt -= task->data_out_cnt;
 			conn->pending_r2t--;
 		}
