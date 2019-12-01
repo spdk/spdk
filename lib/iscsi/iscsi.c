@@ -1324,6 +1324,43 @@ iscsi_op_login_store_incoming_params(struct spdk_iscsi_conn *conn,
 }
 
 /*
+ * This function is used to initialize the port info
+ * return
+ * 0: success
+ * otherwise: error
+ */
+static int
+iscsi_op_login_initialize_port(struct spdk_iscsi_conn *conn,
+			       struct spdk_iscsi_pdu *rsp_pdu,
+			       char *initiator_port_name,
+			       uint32_t name_length,
+			       struct iscsi_param *params)
+{
+	const char *val;
+	struct iscsi_bhs_login_rsp *rsph;
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+
+	/* Initiator Name and Port */
+	val = spdk_iscsi_param_get_val(params, "InitiatorName");
+	if (val == NULL) {
+		SPDK_ERRLOG("InitiatorName is empty\n");
+		/* Missing parameter */
+		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+		rsph->status_detail = ISCSI_LOGIN_MISSING_PARMS;
+		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+	}
+	snprintf(conn->initiator_name, sizeof(conn->initiator_name), "%s", val);
+	snprintf(initiator_port_name, name_length,
+		 "%s,i,0x%12.12" PRIx64, val, iscsi_get_isid(rsph->isid));
+	spdk_strlwr(conn->initiator_name);
+	spdk_strlwr(initiator_port_name);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Initiator name: %s\n", conn->initiator_name);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Initiator port: %s\n", initiator_port_name);
+
+	return 0;
+}
+
+/*
  * This function is used to del the original param and update it with new
  * value
  * return:
@@ -1651,42 +1688,6 @@ iscsi_op_login_session_type(struct spdk_iscsi_conn *conn,
 		}
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Session Type: %s\n", session_type_str);
-
-	return 0;
-}
-/*
- * This function is used to initialize the port info
- * return
- * 0: success
- * otherwise: error
- */
-static int
-iscsi_op_login_initialize_port(struct spdk_iscsi_conn *conn,
-			       struct spdk_iscsi_pdu *rsp_pdu,
-			       char *initiator_port_name,
-			       uint32_t name_length,
-			       struct iscsi_param *params)
-{
-	const char *val;
-	struct iscsi_bhs_login_rsp *rsph;
-	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
-
-	/* Initiator Name and Port */
-	val = spdk_iscsi_param_get_val(params, "InitiatorName");
-	if (val == NULL) {
-		SPDK_ERRLOG("InitiatorName is empty\n");
-		/* Missing parameter */
-		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = ISCSI_LOGIN_MISSING_PARMS;
-		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
-	}
-	snprintf(conn->initiator_name, sizeof(conn->initiator_name), "%s", val);
-	snprintf(initiator_port_name, name_length,
-		 "%s,i,0x%12.12" PRIx64, val, iscsi_get_isid(rsph->isid));
-	spdk_strlwr(conn->initiator_name);
-	spdk_strlwr(initiator_port_name);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Initiator name: %s\n", conn->initiator_name);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Initiator port: %s\n", initiator_port_name);
 
 	return 0;
 }
