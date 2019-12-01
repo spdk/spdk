@@ -1298,6 +1298,31 @@ iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 	return 0;
 }
 
+static int
+iscsi_op_login_store_incoming_params(struct spdk_iscsi_conn *conn,
+				     struct spdk_iscsi_pdu *pdu, struct spdk_iscsi_pdu *rsp_pdu,
+				     struct iscsi_param **params)
+{
+	struct iscsi_bhs_login_req *reqh;
+	struct iscsi_bhs_login_rsp *rsph;
+	int rc;
+
+	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+
+	rc = spdk_iscsi_parse_params(params, pdu->data,
+				     pdu->data_segment_len, ISCSI_BHS_LOGIN_GET_CBIT(reqh->flags),
+				     &conn->partial_text_parameter);
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_parse_params() failed\n");
+		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+		rsph->status_detail = ISCSI_LOGIN_INITIATOR_ERROR;
+		return SPDK_ISCSI_LOGIN_ERROR_PARAMETER;
+	}
+
+	return 0;
+}
+
 /*
  * This function is used to del the original param and update it with new
  * value
@@ -1889,31 +1914,6 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	}
 
 	return iscsi_op_login_set_target_info(conn, rsp_pdu, session_type);
-}
-
-static int
-iscsi_op_login_store_incoming_params(struct spdk_iscsi_conn *conn,
-				     struct spdk_iscsi_pdu *pdu, struct spdk_iscsi_pdu *rsp_pdu,
-				     struct iscsi_param **params)
-{
-	struct iscsi_bhs_login_req *reqh;
-	struct iscsi_bhs_login_rsp *rsph;
-	int rc;
-
-	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
-	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
-
-	rc = spdk_iscsi_parse_params(params, pdu->data,
-				     pdu->data_segment_len, ISCSI_BHS_LOGIN_GET_CBIT(reqh->flags),
-				     &conn->partial_text_parameter);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_parse_params() failed\n");
-		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = ISCSI_LOGIN_INITIATOR_ERROR;
-		return SPDK_ISCSI_LOGIN_ERROR_PARAMETER;
-	}
-
-	return 0;
 }
 
 /*
