@@ -1361,6 +1361,52 @@ iscsi_op_login_initialize_port(struct spdk_iscsi_conn *conn,
 }
 
 /*
+ * This function is used to judge the session type
+ * return
+ * 0: success
+ * Other value: error
+ */
+static int
+iscsi_op_login_session_type(struct spdk_iscsi_conn *conn,
+			    struct spdk_iscsi_pdu *rsp_pdu,
+			    enum session_type *session_type,
+			    struct iscsi_param *params)
+{
+	const char *session_type_str;
+	struct iscsi_bhs_login_rsp *rsph;
+
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+	session_type_str = spdk_iscsi_param_get_val(params, "SessionType");
+	if (session_type_str == NULL) {
+		if (rsph->tsih != 0) {
+			*session_type = SESSION_TYPE_NORMAL;
+		} else {
+			SPDK_ERRLOG("SessionType is empty\n");
+			/* Missing parameter */
+			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+			rsph->status_detail = ISCSI_LOGIN_MISSING_PARMS;
+			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+		}
+	} else {
+		if (strcasecmp(session_type_str, "Discovery") == 0) {
+			*session_type = SESSION_TYPE_DISCOVERY;
+		} else if (strcasecmp(session_type_str, "Normal") == 0) {
+			*session_type = SESSION_TYPE_NORMAL;
+		} else {
+			*session_type = SESSION_TYPE_INVALID;
+			SPDK_ERRLOG("SessionType is invalid\n");
+			/* Missing parameter */
+			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+			rsph->status_detail = ISCSI_LOGIN_MISSING_PARMS;
+			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+		}
+	}
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Session Type: %s\n", session_type_str);
+
+	return 0;
+}
+
+/*
  * This function is used to del the original param and update it with new
  * value
  * return:
@@ -1644,52 +1690,6 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 	}
 
 	return rc;
-}
-
-/*
- * This function is used to judge the session type
- * return
- * 0: success
- * otherwise, error
- */
-static int
-iscsi_op_login_session_type(struct spdk_iscsi_conn *conn,
-			    struct spdk_iscsi_pdu *rsp_pdu,
-			    enum session_type *session_type,
-			    struct iscsi_param *params)
-{
-	const char *session_type_str;
-	struct iscsi_bhs_login_rsp *rsph;
-
-	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
-	session_type_str = spdk_iscsi_param_get_val(params, "SessionType");
-	if (session_type_str == NULL) {
-		if (rsph->tsih != 0) {
-			*session_type = SESSION_TYPE_NORMAL;
-		} else {
-			SPDK_ERRLOG("SessionType is empty\n");
-			/* Missing parameter */
-			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-			rsph->status_detail = ISCSI_LOGIN_MISSING_PARMS;
-			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
-		}
-	} else {
-		if (strcasecmp(session_type_str, "Discovery") == 0) {
-			*session_type = SESSION_TYPE_DISCOVERY;
-		} else if (strcasecmp(session_type_str, "Normal") == 0) {
-			*session_type = SESSION_TYPE_NORMAL;
-		} else {
-			*session_type = SESSION_TYPE_INVALID;
-			SPDK_ERRLOG("SessionType is invalid\n");
-			/* Missing parameter */
-			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-			rsph->status_detail = ISCSI_LOGIN_MISSING_PARMS;
-			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
-		}
-	}
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Session Type: %s\n", session_type_str);
-
-	return 0;
 }
 
 /*
