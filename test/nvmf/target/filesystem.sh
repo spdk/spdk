@@ -68,7 +68,11 @@ for incapsule in 0 4096; do
 
 	trap - SIGINT SIGTERM EXIT
 
-	killprocess $nvmfpid
+	if [ $incapsule -ne 4096 ]; then
+		# killprocess will be executed in the nvmftestfini
+		# skip below call before exiting the loop
+		killprocess $nvmfpid
+	fi
 done
 
 nvmftestfini
