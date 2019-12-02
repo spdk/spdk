@@ -44,6 +44,14 @@
 static struct spdk_bit_array *g_page_array;
 static void *g_vaddr_to_fail = (void *)UINT64_MAX;
 
+DEFINE_STUB(rte_memseg_contig_walk, int, (rte_memseg_contig_walk_t func, void *arg), 0);
+DEFINE_STUB(rte_mem_virt2memseg, struct rte_memseg *,
+	    (const void *virt, const struct rte_memseg_list *msl), NULL);
+DEFINE_STUB(spdk_env_dpdk_external_init, bool, (void), true);
+DEFINE_STUB(rte_mem_event_callback_register, int,
+	    (const char *name, rte_mem_event_callback_t clb, void *arg), 0);
+DEFINE_STUB(rte_mem_virt2iova, rte_iova_t, (const void *virtaddr), 0);
+
 static int
 test_mem_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 		    enum spdk_mem_map_notify_action action,
