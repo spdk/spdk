@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ce387da_6221286f",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-02T17:03:50Z",
+      "side": 1,
+      "message": "Let\u0027s instead just declare this as:\n\nstruct nvme_pcie_ctrlr ctrlr;\n\nYou\u0027ll still need to make changes since spdk_nvme_ctrlr is embedded inside of nvme_pcie_ctrlr, but I think the final code will be more clear than the calloc.",
+      "revId": "5c02a7976eba8b0ad352058c74e085ec78fe978d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
