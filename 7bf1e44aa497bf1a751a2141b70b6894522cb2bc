@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "103195f8_83a6820d",
+        "filename": "lib/vhost/vhost_fs.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-12-02T06:17:39Z",
+      "side": 1,
+      "message": "in some cases, there will be blocked metadata update, which may lead to EBUSY",
+      "parentUuid": "806ad9f1_1b802af0",
+      "revId": "7bf1e44aa497bf1a751a2141b70b6894522cb2bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4af6e437_51a1d6da",
         "filename": "lib/vhost/vhost_fs.c",
         "patchSetId": 10
@@ -47,6 +65,24 @@
       "writtenOn": "2019-09-12T02:07:12Z",
       "side": 1,
       "message": "fvdev-\u003ename and fvdev-\u003ecpumask need be freed.",
+      "revId": "7bf1e44aa497bf1a751a2141b70b6894522cb2bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52d7cba1_403189c5",
+        "filename": "lib/vhost/vhost_fs.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 864,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-12-02T06:17:39Z",
+      "side": 1,
+      "message": "it is not required to free them here.",
+      "parentUuid": "55648799_3a054648",
       "revId": "7bf1e44aa497bf1a751a2141b70b6894522cb2bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
