@@ -86,34 +86,6 @@ struct spdk_iscsi_globals g_spdk_iscsi = {
 	    | (((uint32_t) *((uint8_t *)(BUF)+3)) << 24))	\
 	    == (CRC32C))
 
-#if 0
-static int
-match_digest_word(const uint8_t *buf, uint32_t crc32c)
-{
-	uint32_t l;
-
-	l = (buf[0] & 0xffU) << 0;
-	l |= (buf[1] & 0xffU) << 8;
-	l |= (buf[2] & 0xffU) << 16;
-	l |= (buf[3] & 0xffU) << 24;
-	return (l == crc32c);
-}
-
-static uint8_t *
-make_digest_word(uint8_t *buf, size_t len, uint32_t crc32c)
-{
-	if (len < ISCSI_DIGEST_LEN) {
-		return NULL;
-	}
-
-	buf[0] = (crc32c >> 0) & 0xffU;
-	buf[1] = (crc32c >> 8) & 0xffU;
-	buf[2] = (crc32c >> 16) & 0xffU;
-	buf[3] = (crc32c >> 24) & 0xffU;
-	return buf;
-}
-#endif
-
 #ifndef HAVE_SRANDOMDEV
 static void
 srandomdev(void)
