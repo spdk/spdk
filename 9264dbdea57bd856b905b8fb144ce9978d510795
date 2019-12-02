@@ -22,6 +22,30 @@
       "revId": "9264dbdea57bd856b905b8fb144ce9978d510795",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47991430_0dad70c5",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-02T08:23:40Z",
+      "side": 1,
+      "message": "No, we actually do need the outer do while loop. The TAILQ_FOREACH loop only finds a mergeable regions, while the outer loop makes sure we coalesce all possible regions. Consider the following scenario:\n\n region 0  region 1  region 2\n[0      1][2      3][4      5]\n\nWithout the outer loop we would only merge region 0 with region 1 leaving region 2 untouched, which is incorrect and we should coalesce all three of them.",
+      "parentUuid": "75942243_ae293587",
+      "range": {
+        "startLine": 109,
+        "startChar": 1,
+        "endLine": 124,
+        "endChar": 26
+      },
+      "revId": "9264dbdea57bd856b905b8fb144ce9978d510795",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
