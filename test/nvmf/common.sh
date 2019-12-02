@@ -214,7 +214,9 @@ function nvmfappstart()
 function nvmftestfini()
 {
 	nvmfcleanup
-	killprocess $nvmfpid
+	if [ $nvmfpid -ne 0 ]; then
+		killprocess $nvmfpid
+	fi
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh reset
 		if [ "$TEST_TRANSPORT" == "rdma" ]; then

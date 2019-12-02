@@ -124,6 +124,7 @@ waitforio /var/tmp/bdevperf.sock Nvme1n1
 
 # Kill the target half way through
 killprocess $nvmfpid
+nvmfpid=0
 
 # Verify bdevperf exits successfully
 sleep 1
