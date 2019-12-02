@@ -1450,6 +1450,47 @@ iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
 }
 
 /*
+ * This function use to check the session
+ * return:
+ * 0, success
+ * otherwise: error
+ */
+static int
+iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
+			     struct spdk_iscsi_pdu *rsp_pdu,
+			     char *initiator_port_name, int cid)
+
+{
+	int rc = 0;
+	struct iscsi_bhs_login_rsp *rsph;
+
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+	/* check existing session */
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "isid=%"PRIx64", tsih=%u, cid=%u\n",
+		      iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih), cid);
+	if (rsph->tsih != 0) {
+		/* multiple connections */
+		rc = append_iscsi_sess(conn, initiator_port_name,
+				       from_be16(&rsph->tsih), cid);
+		if (rc != 0) {
+			SPDK_ERRLOG("isid=%"PRIx64", tsih=%u, cid=%u:"
+				    "spdk_append_iscsi_sess() failed\n",
+				    iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih),
+				    cid);
+			/* Can't include in session */
+			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+			rsph->status_detail = rc;
+			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+		}
+	} else if (!g_spdk_iscsi.AllowDuplicateIsid) {
+		/* new session, drop old sess by the initiator */
+		spdk_iscsi_drop_conns(conn, initiator_port_name, 0 /* drop old */);
+	}
+
+	return rc;
+}
+
+/*
  * This function is used to del the original param and update it with new
  * value
  * return:
@@ -1566,47 +1607,6 @@ iscsi_op_login_negotiate_digest_param(struct spdk_iscsi_conn *conn,
 	}
 
 	return 0;
-}
-
-/*
- * This function use to check the session
- * return:
- * 0, success
- * otherwise: error
- */
-static int
-iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
-			     struct spdk_iscsi_pdu *rsp_pdu,
-			     char *initiator_port_name, int cid)
-
-{
-	int rc = 0;
-	struct iscsi_bhs_login_rsp *rsph;
-
-	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
-	/* check existing session */
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "isid=%"PRIx64", tsih=%u, cid=%u\n",
-		      iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih), cid);
-	if (rsph->tsih != 0) {
-		/* multiple connections */
-		rc = append_iscsi_sess(conn, initiator_port_name,
-				       from_be16(&rsph->tsih), cid);
-		if (rc != 0) {
-			SPDK_ERRLOG("isid=%"PRIx64", tsih=%u, cid=%u:"
-				    "spdk_append_iscsi_sess() failed\n",
-				    iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih),
-				    cid);
-			/* Can't include in session */
-			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-			rsph->status_detail = rc;
-			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
-		}
-	} else if (!g_spdk_iscsi.AllowDuplicateIsid) {
-		/* new session, drop old sess by the initiator */
-		spdk_iscsi_drop_conns(conn, initiator_port_name, 0 /* drop old */);
-	}
-
-	return rc;
 }
 
 /*
