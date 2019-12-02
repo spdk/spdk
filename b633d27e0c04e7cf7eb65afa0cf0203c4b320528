@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "013f15bf_e4c280e5",
+        "filename": "test/lvol/snapshot_clone.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-02T08:52:26Z",
+      "side": 1,
+      "message": "Mixed tabs/spaces across file.\nPlease use tabs.",
+      "revId": "b633d27e0c04e7cf7eb65afa0cf0203c4b320528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75957a05_5ada7cd4",
+        "filename": "test/lvol/snapshot_clone.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-02T08:52:26Z",
+      "side": 1,
+      "message": "Leftover debug prints.",
+      "range": {
+        "startLine": 33,
+        "startChar": 1,
+        "endLine": 33,
+        "endChar": 17
+      },
+      "revId": "b633d27e0c04e7cf7eb65afa0cf0203c4b320528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d002b682_8db5befc",
+        "filename": "test/lvol/snapshot_clone.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-02T08:52:26Z",
+      "side": 1,
+      "message": "Leftover debug prints.",
+      "range": {
+        "startLine": 39,
+        "startChar": 1,
+        "endLine": 39,
+        "endChar": 16
+      },
+      "revId": "b633d27e0c04e7cf7eb65afa0cf0203c4b320528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
