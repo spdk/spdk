@@ -242,7 +242,7 @@ test_prp_list_append(void)
 static void
 test_nvme_pcie_hotplug_monitor(void)
 {
-	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_uevent_entry entry = {};
 	struct nvme_driver driver;
 	pthread_mutexattr_t attr;
@@ -287,13 +287,17 @@ test_nvme_pcie_hotplug_monitor(void)
 	snprintf(entry.uevent.traddr, sizeof(entry.uevent.traddr), "0000:05:00.0");
 	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
 	STAILQ_INSERT_TAIL(&g_uevents, &entry, link);
-	MOCK_SET(spdk_nvme_get_ctrlr_by_trid_unsafe, &ctrlr);
+
+	/* This is a workaround for wrong analyzing report which blocks tests */
+	ctrlr = calloc(1, sizeof(struct spdk_nvme_ctrlr) + sizeof(struct spdk_pci_device));
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+	MOCK_SET(spdk_nvme_get_ctrlr_by_trid_unsafe, ctrlr);
 
 	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
 
 	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
-	CU_ASSERT(ctrlr.is_failed == true);
-	ctrlr.is_failed = false;
+	CU_ASSERT(ctrlr->is_failed == true);
+	ctrlr->is_failed = false;
 	MOCK_CLEAR(spdk_nvme_get_ctrlr_by_trid_unsafe);
 
 	/* Case 4: SPDK_NVME_UEVENT_REMOVE/ NVME_VFIO */
@@ -302,35 +306,36 @@ test_nvme_pcie_hotplug_monitor(void)
 	snprintf(entry.uevent.traddr, sizeof(entry.uevent.traddr), "0000:05:00.0");
 	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
 	STAILQ_INSERT_TAIL(&g_uevents, &entry, link);
-	MOCK_SET(spdk_nvme_get_ctrlr_by_trid_unsafe, &ctrlr);
+	MOCK_SET(spdk_nvme_get_ctrlr_by_trid_unsafe, ctrlr);
 
 	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
 
 	CU_ASSERT(STAILQ_EMPTY(&g_uevents));
-	CU_ASSERT(ctrlr.is_failed == true);
-	ctrlr.is_failed = false;
+	CU_ASSERT(ctrlr->is_failed == true);
+	ctrlr->is_failed = false;
 	MOCK_CLEAR(spdk_nvme_get_ctrlr_by_trid_unsafe);
 
 	/* Case 5:  Removed device detected in another process  */
-	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
-	snprintf(ctrlr.trid.traddr, sizeof(ctrlr.trid.traddr), "0000:02:00.0");
-	ctrlr.remove_cb = NULL;
-	ctrlr.is_failed = false;
-	ctrlr.is_removed = false;
-	TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->shared_attached_ctrlrs, &ctrlr, tailq);
+	ctrlr->trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	snprintf(ctrlr->trid.traddr, sizeof(ctrlr->trid.traddr), "0000:02:00.0");
+	ctrlr->remove_cb = NULL;
+	ctrlr->is_failed = false;
+	ctrlr->is_removed = false;
+	TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->shared_attached_ctrlrs, ctrlr, tailq);
 
 	MOCK_SET(spdk_pci_device_is_removed, false);
 
 	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
 
-	CU_ASSERT(ctrlr.is_failed == false);
+	CU_ASSERT(ctrlr->is_failed == false);
 
 	MOCK_SET(spdk_pci_device_is_removed, true);
 
 	_nvme_pcie_hotplug_monitor(&test_nvme_probe_ctx);
 
-	CU_ASSERT(ctrlr.is_failed == true);
+	CU_ASSERT(ctrlr->is_failed == true);
 
+	free(ctrlr);
 	pthread_mutex_destroy(&driver.lock);
 	pthread_mutexattr_destroy(&attr);
 	g_spdk_nvme_driver = NULL;
