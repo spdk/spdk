@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "5a9868ba_f14cb35e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1779,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-02T23:16:42Z",
+      "side": 1,
+      "message": "Can we double check by adding assert(parent_io-\u003einternal.cb !\u003d bdev_io_split_done) here?",
+      "revId": "17f55caec2ce41ce13af11a22c865312507c86e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90a671ee_b1926ecf",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1873,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-02T23:16:42Z",
+      "side": 1,
+      "message": "Maybe \"Add the bdev_io to io_submitted only if\" ?",
+      "range": {
+        "startLine": 1873,
+        "startChar": 3,
+        "endLine": 1873,
+        "endChar": 44
+      },
+      "revId": "17f55caec2ce41ce13af11a22c865312507c86e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5cb580b2_61cc045a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 11
