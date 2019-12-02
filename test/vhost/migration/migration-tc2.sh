@@ -59,7 +59,7 @@ function migration_tc2_cleanup_vhost_config()
 	unset -v rpc_0 rpc_1
 
 	trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
-	migration_tc2_cleanup_nvmf_tgt
+	migration_tc2_cleanup_nvmf_tgt "$@"
 
 	timing_exit migration_tc2_cleanup_vhost_config
 }
@@ -152,7 +152,7 @@ function migration_tc2_error_cleanup()
 	set -x
 
 	vm_kill_all
-	migration_tc2_cleanup_vhost_config
+	migration_tc2_cleanup_vhost_config "$@"
 	notice "Migration TC2 FAILED"
 }
 
@@ -201,8 +201,8 @@ function migration_tc2()
 	notice "Fio result is:"
 	vm_exec $target_vm "cat /root/$(basename ${job_file}).out"
 
-	migration_tc2_cleanup_vhost_config
+	migration_tc2_cleanup_vhost_config "$@"
 	notice "Migration TC2 SUCCESS"
 }
 
-migration_tc2
+migration_tc2 "$@"
