@@ -653,8 +653,8 @@ function configure_freebsd_pci {
 		GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
 	done < $TMP
 
-	AWK_PROG="{if (count > 0) printf \",\"; printf \"%s:%s:%s\",\$2,\$3,\$4; count++}"
-	echo $AWK_PROG > $TMP
+	AWK_PROG=("{if (count > 0) printf \",\"; printf \"%s:%s:%s\",\$2,\$3,\$4; count++}")
+	echo "${AWK_PROG[*]}" > $TMP
 
 	BDFS=$(pciconf -l | grep "${GREP_STR}" | awk -F: -f $TMP)
 
