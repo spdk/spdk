@@ -91,7 +91,7 @@ function host1_cleanup_vhost()
 	notice "Shutting down vhost app"
 	vhost_kill 0
 
-	host1_cleanup_nvmf
+	host1_cleanup_nvmf "$@"
 }
 
 function host1_start_nvmf()
@@ -223,8 +223,8 @@ function migration_tc3()
 	wait_for_remote
 
 	# Clean up local stuff
-	host1_cleanup_vhost
+	host1_cleanup_vhost "$@"
 	cleanup_share
 }
 
-migration_tc3
+migration_tc3 "$@"
