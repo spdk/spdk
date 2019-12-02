@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50083f7f_c8219fa5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1884,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-02T23:15:32Z",
+      "side": 1,
+      "message": "Should we add trace_record_tsc here too?",
+      "revId": "3acb0d22f4625848ae32ce38dee161e9843a7b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
