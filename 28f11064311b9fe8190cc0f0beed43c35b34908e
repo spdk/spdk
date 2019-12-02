@@ -124,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "081afb59_7e182193",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-02T16:39:41Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d38b5eb7_92b16317",
+      "revId": "28f11064311b9fe8190cc0f0beed43c35b34908e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6b6043ef_70c18b52",
         "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
         "patchSetId": 9
@@ -135,6 +153,24 @@
       "writtenOn": "2019-11-18T20:33:07Z",
       "side": 1,
       "message": "do we expect more than one queued op here?  if it\u0027s just one, I think the while loop makes it a bit confusing - it would be better to just get the first element, remove it, and then assert that the TAILQ is now empty\n\notherwise it\u0027s confusing to me why line 574 would always compare toe g_test_crypto_ops[1] - I would think that each time through the loop, it should compare to a different element in the g_test_crypto_ops array",
+      "revId": "28f11064311b9fe8190cc0f0beed43c35b34908e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2989b1b5_6c206078",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-02T16:39:41Z",
+      "side": 1,
+      "message": "agree, not sure why I made this a loop",
+      "parentUuid": "6b6043ef_70c18b52",
       "revId": "28f11064311b9fe8190cc0f0beed43c35b34908e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
