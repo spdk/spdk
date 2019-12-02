@@ -42,6 +42,23 @@
     },
     {
       "key": {
+        "uuid": "18d3276a_0a3b1327",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2046,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-02T23:48:13Z",
+      "side": 1,
+      "message": "Please add assert(TAILQ_EMPTY(\u0026ch-\u003eio_submitted)) here",
+      "revId": "17f55caec2ce41ce13af11a22c865312507c86e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5cb580b2_61cc045a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 11
