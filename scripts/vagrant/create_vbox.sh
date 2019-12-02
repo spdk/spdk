@@ -130,7 +130,7 @@ done
 
 shift "$((OPTIND-1))"   # Discard the options and sentinel --
 
-SPDK_VAGRANT_DISTRO=( "$@" )
+SPDK_VAGRANT_DISTRO="$1"
 
 case "${SPDK_VAGRANT_DISTRO[0]}" in
 	centos7)
