@@ -178,7 +178,6 @@ fi
 if [ -z "$NVME_FILE" ]; then
 	TMP="/var/lib/libvirt/images/nvme_disk.img"
 	NVME_DISKS_TYPE="nvme"
-	NVME_DISKS_NAMESPACES="1"
 else
 	TMP=""
 	for args in $NVME_FILE; do
@@ -188,7 +187,7 @@ else
 				type="nvme"
 			fi
 			NVME_DISKS_TYPE+="$type,";
-			if [ -z "$namespace" ]; then
+			if [ -z "$namespace" ] && [ -n "$SPDK_QEMU_EMULATOR" ]; then
 				namespace="1"
 			fi
 			NVME_DISKS_NAMESPACES+="$namespace,";

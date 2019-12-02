@@ -150,7 +150,7 @@ Vagrant.configure(2) do |config|
         libvirt.qemuargs :value => "-drive"
         libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=#{nvme_disk_id}"
         libvirt.qemuargs :value => "-device"
-        if nvme_namespaces["#{index}".to_i].nil?
+        if nvme_namespaces["#{index}".to_i].nil? || nvme_namespaces["#{index}".to_i] == "1"
           libvirt.qemuargs :value => "nvme,drive=#{nvme_disk_id},serial=1234#{index}"
         else
           libvirt.qemuargs :value => "nvme,drive=#{nvme_disk_id},serial=1234#{index},namespaces=#{nvme_namespaces["#{index}".to_i]}"
