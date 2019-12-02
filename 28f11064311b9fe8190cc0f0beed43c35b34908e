@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b86ed020_1c1f06e2",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 814,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-02T16:16:36Z",
+      "side": 1,
+      "message": "We don\u0027t need to check, if there are pending ops from a previous call to this function that\u0027s OK and if there are so many that it can\u0027t take some or all of the ones we have to submit now then we get back a number smaller than what we tried. The PMDs we use can take in quite a bit, I think it was like 2K or something. Either way I\u0027ve discussed the 2 strategies used here at length with Fiona. The initial one, drain them all here by calling the poller inline is likely a little \"less fair\" in terms of taking time on this thread. What we\u0027re doing now is actually what was preferred at the initial time of development and allows the current thread to do what it can and let the poller resubmit on the next run. So, I don\u0027t think it\u0027s the case that new IO will end up \"stealing\" time in the PMD. If anything the one change here that\u0027s also not really concerning I don\u0027t think is that previously we would never leave this function without releasing all ops in the mempool.  Now we hold on to ops that couldn\u0027t be submitted because the PMD was busy but I\u0027ve got the memppol over provisioned already so that\u0027s why I\u0027m not concerned.  Make sense? Great question as usual!",
+      "parentUuid": "6cb98152_fed3bac6",
+      "revId": "28f11064311b9fe8190cc0f0beed43c35b34908e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "69042e70_b7ac0f59",
         "filename": "module/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 9
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "335f3d68_91bdae27",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-02T16:16:36Z",
+      "side": 1,
+      "message": "io_ctx is memset to 0 in the submit function",
+      "parentUuid": "69042e70_b7ac0f59",
+      "revId": "28f11064311b9fe8190cc0f0beed43c35b34908e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "49aed0f6_80e45b2b",
         "filename": "module/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 9
@@ -47,6 +83,24 @@
       "writtenOn": "2019-11-18T20:33:07Z",
       "side": 1,
       "message": "should this be queued_cry_ops to make it consistent with pending_cry_ios?  (I know one is ops and one is ios but just curious why once gets the cry abbreviation but the other one doesn\u0027t)",
+      "revId": "28f11064311b9fe8190cc0f0beed43c35b34908e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f076b032_16542bce",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1237,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-02T16:16:36Z",
+      "side": 1,
+      "message": "no reason, I will change it...",
+      "parentUuid": "49aed0f6_80e45b2b",
       "revId": "28f11064311b9fe8190cc0f0beed43c35b34908e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
