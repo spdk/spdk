@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cb580b2_61cc045a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 3765,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-02T19:56:15Z",
+      "side": 1,
+      "message": "/* When a bdev_io is split, the children bdev_io are not added\n * to the io_submitted list.  So don\u0027t try to remove them in that\n * case.\n */",
+      "revId": "17f55caec2ce41ce13af11a22c865312507c86e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d41d4677_3a25b52d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 3770,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-02T19:56:15Z",
+      "side": 1,
+      "message": "I think you should remove this assert.  It\u0027s true that this should always be true here.  But in many cases, if the bdev_io was not actually on io_submitted TAILQ, this assert would probably still be true since there may be different bdev_io on the TAILQ.",
+      "revId": "17f55caec2ce41ce13af11a22c865312507c86e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
