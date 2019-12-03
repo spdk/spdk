@@ -585,41 +585,7 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 int
 spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size)
 {
-	uint64_t vfn_2mb;
-	struct map_1gb *map_1gb;
-	uint64_t idx_1gb;
-	struct map_2mb *map_2mb;
-
-	if ((uintptr_t)vaddr & ~MASK_256TB) {
-		DEBUG_PRINT("invalid usermode virtual address %lu\n", vaddr);
-		return -EINVAL;
-	}
-
-	/* For now, only 2 MB-aligned registrations are supported */
-	if (((uintptr_t)vaddr & MASK_2MB) || (size & MASK_2MB)) {
-		DEBUG_PRINT("invalid %s parameters, vaddr=%lu len=%ju\n",
-			    __func__, vaddr, size);
-		return -EINVAL;
-	}
-
-	vfn_2mb = vaddr >> SHIFT_2MB;
-
-	while (size) {
-		map_1gb = spdk_mem_map_get_map_1gb(map, vfn_2mb);
-		if (!map_1gb) {
-			DEBUG_PRINT("could not get %p map\n", (void *)vaddr);
-			return -ENOMEM;
-		}
-
-		idx_1gb = MAP_1GB_IDX(vfn_2mb);
-		map_2mb = &map_1gb->map[idx_1gb];
-		map_2mb->translation_2mb = map->default_translation;
-
-		size -= VALUE_2MB;
-		vfn_2mb++;
-	}
-
-	return 0;
+	return spdk_mem_map_set_translation(map, vaddr, size, map->default_translation);
 }
 
 inline uint64_t
