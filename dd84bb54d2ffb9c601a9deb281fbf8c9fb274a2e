@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4bf34923_99b2a52d",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1093,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T21:09:57Z",
+      "side": 1,
+      "message": "I think this code looks good.  But it is getting more complicated.  :-(\n\nI hope we can make further code refactoring so that we can start creating good unit tests for iSCSI hot plug.",
+      "revId": "dd84bb54d2ffb9c601a9deb281fbf8c9fb274a2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
