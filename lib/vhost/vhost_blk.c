@@ -45,16 +45,13 @@
 
 #include "vhost_internal.h"
 
-/* Supported features for every SPDK VHOST-blk driver instance
- * Some of these get disabled depending on backend bdev */
-#define SPDK_VHOST_BLK_SUPPORTED_FEATURES (SPDK_VHOST_FEATURES | \
+/* Minimal set of features supported by every SPDK VHOST-BLK device */
+#define SPDK_VHOST_BLK_FEATURES_BASE (SPDK_VHOST_FEATURES | \
 		(1ULL << VIRTIO_BLK_F_SIZE_MAX) | (1ULL << VIRTIO_BLK_F_SEG_MAX) | \
-		(1ULL << VIRTIO_BLK_F_GEOMETRY) | (1ULL << VIRTIO_BLK_F_RO) | \
-		(1ULL << VIRTIO_BLK_F_BLK_SIZE) | (1ULL << VIRTIO_BLK_F_TOPOLOGY) | \
-		(1ULL << VIRTIO_BLK_F_BARRIER)  | (1ULL << VIRTIO_BLK_F_SCSI) | \
-		(1ULL << VIRTIO_BLK_F_FLUSH)    | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) | \
-		(1ULL << VIRTIO_BLK_F_MQ)       | (1ULL << VIRTIO_BLK_F_DISCARD) | \
-		(1ULL << VIRTIO_BLK_F_WRITE_ZEROES))
+		(1ULL << VIRTIO_BLK_F_GEOMETRY) | (1ULL << VIRTIO_BLK_F_BLK_SIZE) | \
+		(1ULL << VIRTIO_BLK_F_TOPOLOGY) | (1ULL << VIRTIO_BLK_F_BARRIER)  | \
+		(1ULL << VIRTIO_BLK_F_SCSI)     | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) | \
+		(1ULL << VIRTIO_BLK_F_MQ))
 
 /* Not supported features */
 #define SPDK_VHOST_BLK_DISABLED_FEATURES (SPDK_VHOST_DISABLED_FEATURES | \
@@ -979,20 +976,20 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	}
 
 	vdev = &bvdev->vdev;
-	vdev->virtio_features = SPDK_VHOST_BLK_SUPPORTED_FEATURES;
+	vdev->virtio_features = SPDK_VHOST_BLK_FEATURES_BASE;
 	vdev->disabled_features = SPDK_VHOST_BLK_DISABLED_FEATURES;
 
-	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-		vdev->disabled_features |= (1ULL << VIRTIO_BLK_F_DISCARD);
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_DISCARD);
 	}
-	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
-		vdev->disabled_features |= (1ULL << VIRTIO_BLK_F_WRITE_ZEROES);
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
+		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_WRITE_ZEROES);
 	}
-	if (!readonly) {
-		vdev->disabled_features |= (1ULL << VIRTIO_BLK_F_RO);
+	if (readonly) {
+		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_RO);
 	}
-	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH)) {
-		vdev->disabled_features |= (1ULL << VIRTIO_BLK_F_FLUSH);
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH)) {
+		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_FLUSH);
 	}
 
 	ret = spdk_bdev_open(bdev, true, bdev_remove_cb, bvdev, &bvdev->bdev_desc);
