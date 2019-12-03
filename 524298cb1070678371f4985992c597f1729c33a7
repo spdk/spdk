@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "dfd84e78_8604f6dc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T20:49:12Z",
+      "side": 1,
+      "message": "I agree.  I think we could put a lot (or all) of this in spdk_bdev_desc directly, and then avoid allocating this ctx.",
+      "parentUuid": "87551b6d_76954b12",
+      "range": {
+        "startLine": 2117,
+        "startChar": 7,
+        "endLine": 2117,
+        "endChar": 22
+      },
+      "revId": "524298cb1070678371f4985992c597f1729c33a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e783a26f_acabb553",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 16
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "e56dd343_3f56e3de",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2126,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T20:49:12Z",
+      "side": 1,
+      "message": "Yes - certainly if we get rid of io_timeout_ctx struct, then we would pass the descriptor here instead.",
+      "parentUuid": "e783a26f_acabb553",
+      "range": {
+        "startLine": 2126,
+        "startChar": 34,
+        "endLine": 2126,
+        "endChar": 41
+      },
+      "revId": "524298cb1070678371f4985992c597f1729c33a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e0ddf49c_f2b228fd",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 16
@@ -59,6 +107,57 @@
       "writtenOn": "2019-12-03T09:46:45Z",
       "side": 1,
       "message": "This is not performance sensitive and polling interval is very large, 1 second?\nSo it may better to update now per each iteration.",
+      "revId": "524298cb1070678371f4985992c597f1729c33a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64dc6bf6_fa35403c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2197,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T20:49:12Z",
+      "side": 1,
+      "message": "I think we should do this differently.\n\nLet\u0027s put the poller in the descriptor.  Then we only need one poller.\nWhen the poller runs (every 1 second), it does the spdk_for_each_channel().\n\nI don\u0027t think the current version would work, especially since channels can be created (and destroyed!) while the descriptor is open.  We will definitely need some test cases for that in the bdev multithreaded unit tests.",
+      "revId": "524298cb1070678371f4985992c597f1729c33a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e469642a_9cd5a9b3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2814,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T20:49:12Z",
+      "side": 1,
+      "message": "extra newline added",
+      "revId": "524298cb1070678371f4985992c597f1729c33a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aab46502_4aef3c65",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2818,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T20:49:12Z",
+      "side": 1,
+      "message": "free(NULL) is fine - so the if is not needed",
       "revId": "524298cb1070678371f4985992c597f1729c33a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
