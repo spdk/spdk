@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bdbd71fe_063a202e",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-03T13:56:21Z",
+      "side": 1,
+      "message": "It would be nice to have enum for this (like NVMe spec defines it):\n00 Normal Op\n01 Fused op, first cmd\n10 Fused op, second cmd\n11 Reserved",
+      "range": {
+        "startLine": 155,
+        "startChar": 14,
+        "endLine": 155,
+        "endChar": 15
+      },
+      "revId": "8b35e12ba97b631c3fd8a016264f6896ff4b262e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

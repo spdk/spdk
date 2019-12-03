@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dac82a45_ab06ac93",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-03T13:56:21Z",
+      "side": 0,
+      "message": "I\u0027m not sure if removing this is a good idea. Let\u0027s just do exception here for bits we are using.",
+      "range": {
+        "startLine": 378,
+        "startChar": 0,
+        "endLine": 383,
+        "endChar": 2
+      },
+      "revId": "2a166b1f2e0ad84a4e2faaf5c7dfa2be466cf122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
