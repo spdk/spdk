@@ -622,6 +622,13 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		cdata = spdk_nvme_ctrlr_get_data(nbdev->nvme_bdev_ctrlr->ctrlr);
 		return cdata->oncs.compare;
 
+	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
+		if (spdk_nvme_ctrlr_get_flags(nbdev->nvme_bdev_ctrlr->ctrlr) &
+		    SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED) {
+			return true;
+		}
+		return false;
+
 	default:
 		return false;
 	}
