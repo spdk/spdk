@@ -1,0 +1,135 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f05f708d_ebe8391f",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-03T07:25:24Z",
+      "side": 1,
+      "message": "remove one line.",
+      "revId": "096f346dcd515c8029e9ce4f9324026241c3fe9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c493de7b_1e6fe738",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-03T07:25:24Z",
+      "side": 1,
+      "message": "remove unnecessary line.",
+      "revId": "096f346dcd515c8029e9ce4f9324026241c3fe9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc78d614_4c4a26af",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 510,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-03T07:25:24Z",
+      "side": 1,
+      "message": "Can we define a enum class for those 0 to ...",
+      "range": {
+        "startLine": 510,
+        "startChar": 6,
+        "endLine": 510,
+        "endChar": 7
+      },
+      "revId": "096f346dcd515c8029e9ce4f9324026241c3fe9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25eba037_90e510de",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-03T07:25:24Z",
+      "side": 1,
+      "message": "remove one line.",
+      "revId": "096f346dcd515c8029e9ce4f9324026241c3fe9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "011a4875_daccd2c3",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 684,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-03T07:25:24Z",
+      "side": 1,
+      "message": "remove unnecessary lines",
+      "revId": "096f346dcd515c8029e9ce4f9324026241c3fe9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81e58766_bfcd0793",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 766,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-03T07:25:24Z",
+      "side": 1,
+      "message": "Could we define enum class?",
+      "range": {
+        "startLine": 766,
+        "startChar": 3,
+        "endLine": 766,
+        "endChar": 9
+      },
+      "revId": "096f346dcd515c8029e9ce4f9324026241c3fe9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e3df8d0_7c4c2c18",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 996,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-03T07:25:24Z",
+      "side": 1,
+      "message": "remove uncessary line.",
+      "revId": "096f346dcd515c8029e9ce4f9324026241c3fe9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
