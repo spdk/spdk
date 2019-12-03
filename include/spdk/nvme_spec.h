@@ -474,6 +474,8 @@ enum spdk_nvme_cmd_fuse {
 	/* 0x3 - reserved */
 };
 
+#define SPDK_NVME_CMD_FUSE_FLAG_MASK	0x3
+
 /**
  * Data used by Set Features/Get Features \ref SPDK_NVME_FEAT_ARBITRATION
  */
