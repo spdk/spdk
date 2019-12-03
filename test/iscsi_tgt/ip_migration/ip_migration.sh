@@ -32,6 +32,32 @@ function rpc_config() {
 	$rpc_py -s $1 bdev_malloc_create 64 512
 }
 
+function rpc_validate_ip() {
+	$rpc_py -s $1 net_interface_add_ip_address 1 $MIGRATION_ADDRESS
+	if [ $? -ne 0 ]; then
+		echo "Add new IP failed. Expected to succeed..."
+		exit 1;
+	fi
+
+	$rpc_py -s $1 net_interface_add_ip_address 1 $MIGRATION_ADDRESS
+	if [ $? -eq 0 ]; then
+		echo "Duplicate IP existed. Expected to fail..."
+		exit 1;
+	fi
+
+	$rpc_py -s $1 net_interface_delete_ip_address 1 $MIGRATION_ADDRESS
+	if [ $? -ne 0 ]; then
+		echo "Delete existed IP failed. Expected to succeed..."
+		exit 1;
+	fi
+
+	$rpc_py -s $1 net_interface_delete_ip_address 1 $MIGRATION_ADDRESS
+	if [ $? -eq 0 ]; then
+		echo "No required IP existed. Expected to fail..."
+		exit 1;
+	fi
+}
+
 function rpc_add_target_node() {
 	$rpc_py -s $1 net_interface_add_ip_address 1 $MIGRATION_ADDRESS
 	$rpc_py -s $1 iscsi_create_portal_group $PORTAL_TAG $MIGRATION_ADDRESS:$ISCSI_PORT
@@ -66,6 +92,7 @@ for ((i = 0; i < 2; i++)); do
 done
 
 rpc_first_addr="/var/tmp/spdk0.sock"
+rpc_validate_ip $rpc_second_addr
 rpc_add_target_node $rpc_first_addr
 
 sleep 1
