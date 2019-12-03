@@ -27,14 +27,15 @@ function disconnect_init()
 
 # There is an intermittent error relating to this test and Soft-RoCE. for now, just
 # skip this test if we are using rxe. TODO: get to the bottom of GitHub issue #1043
+nvmftestinit
 if [ $TEST_TRANSPORT == "rdma" ] && check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	echo "Using software RDMA, skipping the target disconnect tests."
+	nvmftestfini
 	exit 0
 fi
 
 timing_enter target_disconnect
 
-nvmftestinit
 
 # Test to make sure we don't segfault or access null pointers when we try to connect to
 # a discovery controller that doesn't exist yet.
