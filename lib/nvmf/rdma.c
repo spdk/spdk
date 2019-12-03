@@ -333,6 +333,15 @@ struct spdk_nvmf_rdma_resources {
 	STAILQ_HEAD(, spdk_nvmf_rdma_request)	free_queue;
 };
 
+typedef void (*spdk_nvmf_rdma_qpair_ibv_event)(struct spdk_nvmf_rdma_qpair *rqpair);
+
+struct spdk_nvmf_rdma_ibv_event_ctx {
+	struct spdk_nvmf_rdma_qpair			*rqpair;
+	spdk_nvmf_rdma_qpair_ibv_event			cb_fn;
+	/* Link to other ibv events associated with this qpair */
+	STAILQ_ENTRY(spdk_nvmf_rdma_ibv_event_ctx)	link;
+};
+
 struct spdk_nvmf_rdma_qpair {
 	struct spdk_nvmf_qpair			qpair;
 
@@ -401,6 +410,9 @@ struct spdk_nvmf_rdma_qpair {
 	 */
 
 	struct spdk_poller			*destruct_poller;
+
+	/* List of ibv async events */
+	STAILQ_HEAD(, spdk_nvmf_rdma_ibv_event_ctx)	ibv_events;
 
 	/* There are several ways a disconnect can start on a qpair
 	 * and they are not all mutually exclusive. It is important
@@ -902,6 +914,17 @@ cleanup:
 }
 
 static void
+spdk_nvmf_rdma_qpair_clean_ibv_events(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	struct spdk_nvmf_rdma_ibv_event_ctx *ctx, *tctx;
+	STAILQ_FOREACH_SAFE(ctx, &rqpair->ibv_events, link, tctx) {
+		ctx->rqpair = NULL;
+		/* Memory allocated for ctx is freed in spdk_nvmf_rdma_qpair_process_ibv_event */
+		STAILQ_REMOVE(&rqpair->ibv_events, ctx, spdk_nvmf_rdma_ibv_event_ctx, link);
+	}
+}
+
+static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	struct spdk_nvmf_rdma_recv	*rdma_recv, *recv_tmp;
@@ -950,6 +973,8 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	if (rqpair->srq == NULL && rqpair->resources != NULL) {
 		nvmf_rdma_resources_destroy(rqpair->resources);
 	}
+
+	spdk_nvmf_rdma_qpair_clean_ibv_events(rqpair);
 
 	free(rqpair);
 }
@@ -1334,6 +1359,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	rqpair->cm_id = event->id;
 	rqpair->listen_id = event->listen_id;
 	rqpair->qpair.transport = transport;
+	STAILQ_INIT(&rqpair->ibv_events);
 	/* use qid from the private data to determine the qpair type
 	   qid will be set to the appropriate value when the controller is created */
 	rqpair->qpair.qid = private_data->qid;
@@ -3078,6 +3104,43 @@ spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn c
 			break;
 		}
 	}
+}
+
+static void
+spdk_nvmf_rdma_qpair_process_ibv_event(void *ctx)
+{
+	struct spdk_nvmf_rdma_ibv_event_ctx *event_ctx = ctx;
+
+	if (event_ctx->rqpair) {
+		STAILQ_REMOVE(&event_ctx->rqpair->ibv_events, event_ctx, spdk_nvmf_rdma_ibv_event_ctx, link);
+		if (event_ctx->cb_fn) {
+			event_ctx->cb_fn(event_ctx->rqpair);
+		}
+	}
+	free(event_ctx);
+}
+
+static int
+spdk_nvmf_rdma_send_qpair_async_event(struct spdk_nvmf_rdma_qpair *rqpair,
+				      spdk_nvmf_rdma_qpair_ibv_event fn)
+{
+	struct spdk_nvmf_rdma_ibv_event_ctx *ctx;
+
+	if (!rqpair->qpair.group) {
+		return EINVAL;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return ENOMEM;
+	}
+
+	ctx->rqpair = rqpair;
+	ctx->cb_fn = fn;
+	STAILQ_INSERT_TAIL(&rqpair->ibv_events, ctx, link);
+
+	return spdk_thread_send_msg(rqpair->qpair.group->thread, spdk_nvmf_rdma_qpair_process_ibv_event,
+				    ctx);
 }
 
 static void
