@@ -126,7 +126,6 @@ def case_message(func):
             654: 'thin_overprovisioning',
             655: 'thin_provisioning_filling_disks_less_than_lvs_size',
             # snapshot and clone
-            753: 'snapshot_of_snapshot',
             754: 'clone_bdev_only',
             755: 'clone_writing_clone',
             756: 'clone_and_snapshot_consistency',
@@ -942,52 +941,6 @@ class TestCases(object):
         fail_count += self.c.bdev_malloc_delete(base_name)
         # Expected result:
         # - calls successful, return code = 0
-        # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case753(self):
-        """
-        snapshot_of_snapshot
-
-        Check that creating snapshot of snapshot will fail
-        """
-        fail_count = 0
-        snapshot_name0 = "snapshot0"
-        snapshot_name1 = "snapshot1"
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct lvol store
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        fail_count += self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                          self.cluster_size)
-        # Create thick provisioned lvol bdev
-        size = self.get_lvs_divided_size(2)
-        uuid_bdev = self.c.bdev_lvol_create(uuid_store, self.lbd_name,
-                                            size, thin=False)
-
-        lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev)
-        # Create snapshot of created lvol bdev
-        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name0)
-        # Create snapshot of previously created snapshot
-        # and check if operation will fail
-        if self.c.bdev_lvol_snapshot(snapshot_name0, snapshot_name1) == 0:
-            print("ERROR: Creating snapshot of snapshot should fail")
-            fail_count += 1
-        # Delete lvol bdev
-        fail_count += self.c.bdev_lvol_delete(lvol_bdev['name'])
-        # Destroy snapshot
-        fail_count += self.c.bdev_lvol_delete(self.lvs_name + "/" + snapshot_name0)
-        # Destroy lvol store
-        fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
-        # Delete malloc bdev
-        fail_count += self.c.bdev_malloc_delete(base_name)
-
-        # Expected result:
-        # - calls successful, return code = 0
-        # - creating snapshot of snapshot should fail
         # - no other operation fails
         return fail_count
 
