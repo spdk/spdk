@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a50bc46c_04943c58",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T19:14:30Z",
+      "side": 1,
+      "message": "We should change this comment now - it may be confusing with the newly added io_submitted.\n\n/*\n * Count of I/O submitted to the underlying bdev module through this channel\n * and waiting for completion.\n */\n\n(You can remove the \"Incremented before...\" part.)",
+      "revId": "5dadaa34662fa5e0d6d148968d6eb7aea21de68d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d39045e_7de3d45d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T19:14:30Z",
+      "side": 1,
+      "message": "Let\u0027s move queued_resets to the end of this data structure, and put io_submitted here instead.\n\nThis will better pack this data structure.  queued_resets is very rarely referenced, so it\u0027s best to put it at the end of the data structure.  This may avoid extra cache line references in some cases.",
+      "revId": "5dadaa34662fa5e0d6d148968d6eb7aea21de68d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fe23612_3f72c315",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T19:14:30Z",
+      "side": 1,
+      "message": "Let\u0027s add a comment:\n\n/*\n * List of spdk_bdev_io directly associated with a call to the public bdev API.\n * It does not include any spdk_bdev_io that are generated via splitting.\n */",
+      "revId": "5dadaa34662fa5e0d6d148968d6eb7aea21de68d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
