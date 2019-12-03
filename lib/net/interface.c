@@ -421,6 +421,42 @@ static void spdk_interface_ip_update(void)
 	pthread_mutex_unlock(&interface_lock);
 }
 
+static bool spdk_interface_ip_is_valid(int ifc_index, uint32_t addr, bool add)
+{
+	struct spdk_interface *ifc_entry;
+	bool is_valid = true;
+	uint32_t idx = 0;
+
+	spdk_interface_ip_update();
+
+	pthread_mutex_lock(&interface_lock);
+	TAILQ_FOREACH(ifc_entry, &g_interface_head, tailq) {
+		if (ifc_entry->index == (uint32_t)ifc_index) {
+			if (add == true) {
+				is_valid = true;
+				for (idx = 0; idx < ifc_entry->num_ip_addresses; idx++) {
+					if (ifc_entry->ip_address[idx] == addr) {
+						is_valid = false;
+						break;
+					}
+				}
+			} else {
+				is_valid = false;
+				for (idx = 0; idx < ifc_entry->num_ip_addresses; idx++) {
+					if (ifc_entry->ip_address[idx] == addr) {
+						is_valid = true;
+						break;
+					}
+				}
+			}
+			break;
+		}
+	}
+	pthread_mutex_unlock(&interface_lock);
+
+	return is_valid;
+}
+
 int
 spdk_interface_init(void)
 {
@@ -450,18 +486,24 @@ spdk_interface_destroy(void)
 int
 spdk_interface_net_interface_add_ip_address(int ifc_index, char *ip_addr)
 {
-	uint32_t addr;
+	uint32_t addr = inet_addr(ip_addr);
 
-	addr = inet_addr(ip_addr);
+	if (spdk_interface_ip_is_valid(ifc_index, addr, true) == false) {
+		return -EINVAL;
+	}
+
 	return netlink_addr_msg(ifc_index, addr, 1);
 }
 
 int
 spdk_interface_net_interface_delete_ip_address(int ifc_index, char *ip_addr)
 {
-	uint32_t addr;
+	uint32_t addr = inet_addr(ip_addr);
 
-	addr = inet_addr(ip_addr);
+	if (spdk_interface_ip_is_valid(ifc_index, addr, false) == false) {
+		return -EINVAL;
+	}
+
 	return netlink_addr_msg(ifc_index, addr, 0);
 }
 
