@@ -471,7 +471,8 @@ enum spdk_nvme_cmd_fuse {
 	SPDK_NVME_CMD_FUSE_NONE		= 0x0,	/**< normal operation */
 	SPDK_NVME_CMD_FUSE_FIRST	= 0x1,	/**< fused operation, first command */
 	SPDK_NVME_CMD_FUSE_SECOND	= 0x2,	/**< fused operation, second command */
-	/* 0x3 - reserved */
+	SPDK_NVME_CMD_FUSE_MASK		= 0x3,  /**< fused operation flags mask */
+	/* 0x4 - reserved */
 };
 
 /**
@@ -2831,10 +2832,6 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fw_commit) == 4, "Incorrect size");
 	  (cpl)->status.sc == SPDK_NVME_SC_APPLICATION_TAG_CHECK_ERROR ||	\
 	  (cpl)->status.sc == SPDK_NVME_SC_REFERENCE_TAG_CHECK_ERROR))
 
-/** Set fused operation */
-#define SPDK_NVME_IO_FLAGS_FUSE_FIRST (1U << 0)
-#define SPDK_NVME_IO_FLAGS_FUSE_SECOND (1U << 1)
-#define SPDK_NVME_IO_FLAGS_FUSE_MASK (3U << 0)
 /** Enable protection information checking of the Logical Block Reference Tag field */
 #define SPDK_NVME_IO_FLAGS_PRCHK_REFTAG (1U << 26)
 /** Enable protection information checking of the Application Tag field */
