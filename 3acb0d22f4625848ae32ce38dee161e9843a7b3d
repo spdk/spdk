@@ -16,6 +16,24 @@
       "revId": "3acb0d22f4625848ae32ce38dee161e9843a7b3d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea76136d_59a1ebe7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1884,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-03T11:45:09Z",
+      "side": 1,
+      "message": "Ack. I will add this in another patch.",
+      "parentUuid": "50083f7f_c8219fa5",
+      "revId": "3acb0d22f4625848ae32ce38dee161e9843a7b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
