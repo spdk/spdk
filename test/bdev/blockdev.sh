@@ -58,35 +58,16 @@ QOS_RUN_TIME=5
 function get_io_result() {
 	local limit_type=$1
 	local qos_dev=$2
-
-	io_result=$($rpc_py bdev_get_iostat -b $qos_dev)
+	local iostat_result = $($rootdir/scripts/iostat.py -d -i 1 -t $QOS_RUN_TIME | grep $qos_dev | tail -1)
 	if [ $limit_type = IOPS ]; then
-		io_result_before=$(echo $io_result | jq -r '.bdevs[0].num_read_ops')
-	else
-		io_result_before=$(echo $io_result | jq -r '.bdevs[0].bytes_read')
+		iostat_result=$(awk '{print $2}' <<< $iostat_result)
+	elif [ $limit_type = BANDWIDTH ]
+		iostat_result=$(awk '{print $6}' <<< $iostat_result)
 	fi
-	tick_rate=$(echo $io_result | jq -r '.tick_rate')
-	ticks_before=$(echo $io_result | jq -r '.ticks')
 
-	sleep $QOS_RUN_TIME
-
-	io_result=$($rpc_py bdev_get_iostat -b $qos_dev)
-	if [ $limit_type = IOPS ]; then
-		io_result_after=$(echo $io_result | jq -r '.bdevs[0].num_read_ops')
-	else
-		io_result_after=$(echo $io_result | jq -r '.bdevs[0].bytes_read')
-	fi
-	ticks_after=$(echo $io_result | jq -r '.ticks')
-
-	if [ $limit_type = IOPS ]; then
-		io_result_diff=$((io_result_after-io_result_before))
-	else
-		# To avoid potential overflow as throughput is in byte
-		# Return throughput in kilobyte
-		io_result_diff=$(((io_result_after-io_result_before)/1024))
-	fi
-	echo $(((io_result_diff*tick_rate)/(ticks_after-ticks_before)))
+	echo ${iostat_result/.*}
 }
+
 
 function run_qos_test() {
 	local qos_limit=$1
