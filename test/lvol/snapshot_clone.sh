@@ -80,6 +80,39 @@ function test_snapshot_compare_with_lvol_bdev() {
 }
 
 
+function test_create_snapshot_with_io() {
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Create lvol bdev
+	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 2 )) )
+	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+
+	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb" -t)
+	lvol1=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+
+	# Run fio in background that writes to lvol bdev
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
+	run_fio_test /dev/nbd0 0 lvol_size "write" "0xcc" "--time_based --runtime=8" &
+	fio_proc=$!
+	sleep 4
+	# Create snapshots of lvol bdev
+	snapshot_uuid=$(rpc_cmd bdev_lvol_snapshot lvs_test/lvol_test lvol_snapshot)
+	wait $fio_proc
+
+	# Clean up
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
+	rpc_cmd bdev_lvol_delete "$lvol_uuid"
+	rpc_cmd bdev_get_bdevs -b "$lvol_uuid" && false
+	rpc_cmd bdev_lvol_delete "$snapshot_uuid"
+	rpc_cmd bdev_get_bdevs -b "$snapshot_uuid" && false
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
+}
+
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -87,6 +120,7 @@ waitforlisten $spdk_pid
 modprobe nbd
 
 run_test "test_snapshot_compare_with_lvol_bdev" test_snapshot_compare_with_lvol_bdev
+run_test "test_create_snapshot_with_io" test_create_snapshot_with_io
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid

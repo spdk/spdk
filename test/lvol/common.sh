@@ -27,3 +27,23 @@ function round_down() {
 	fi
 	echo $(( $1 / CLUSTER_SIZE_MB * CLUSTER_SIZE_MB ))
 }
+
+function run_fio_test() {
+	file=$1
+	offset=$2
+	size=$3
+	rw=$4
+	pattern=$5
+	extra_params=""
+	if [ -n "$6" ]; then
+		extra_params=$6
+	fi
+
+	pattern_template=""
+	if [ ! $pattern ]; then
+		pattern_template="--do_verify=1 --verify=pattern --verify_pattern=$pattern --verify_state_save=0"
+	fi
+
+	fio_template="fio --name=fio_test --filename=$file --offset=$offset --size=$size --rw=$rw --direct=1 $extra_params $pattern_template"
+	$fio_template
+}
