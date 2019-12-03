@@ -304,20 +304,19 @@ exit:
 	return ret;
 }
 
-static int spdk_interface_available(uint32_t ifc_index)
+static struct spdk_interface *
+spdk_interface_find_by_index(uint32_t ifc_index)
 {
 	struct spdk_interface *ifc_entry;
 
-	pthread_mutex_lock(&interface_lock);
+	/* Mutex must has benn held by the caller */
 	TAILQ_FOREACH(ifc_entry, &g_interface_head, tailq) {
 		if (ifc_entry->index == ifc_index) {
-			pthread_mutex_unlock(&interface_lock);
-			return 0;
+			return ifc_entry;
 		}
 	}
-	pthread_mutex_unlock(&interface_lock);
 
-	return -1;
+	return NULL;
 }
 
 static int netlink_addr_msg(uint32_t ifc_idx, uint32_t ip_address, uint32_t create)
@@ -334,10 +333,6 @@ static int netlink_addr_msg(uint32_t ifc_idx, uint32_t ip_address, uint32_t crea
 		char buf[16384];
 	} req;
 	struct rtattr *rta;
-
-	if (spdk_interface_available(ifc_idx)) {
-		return -ENODEV;
-	}
 
 	fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
 	if (fd < 0) {
@@ -421,6 +416,43 @@ static void spdk_interface_ip_update(void)
 	pthread_mutex_unlock(&interface_lock);
 }
 
+static int
+spdk_interface_is_ip_address_in_use(int ifc_index, uint32_t addr, bool add)
+{
+	struct spdk_interface *ifc_entry;
+	bool in_use = false;
+	uint32_t idx = 0;
+
+	spdk_interface_ip_update();
+
+	pthread_mutex_lock(&interface_lock);
+	ifc_entry = spdk_interface_find_by_index(ifc_index);
+	if (ifc_entry == NULL) {
+		pthread_mutex_unlock(&interface_lock);
+		return -ENODEV;
+	}
+
+	for (idx = 0; idx < ifc_entry->num_ip_addresses; idx++) {
+		if (ifc_entry->ip_address[idx] == addr) {
+			in_use = true;
+			break;
+		}
+	}
+	pthread_mutex_unlock(&interface_lock);
+
+	/* The IP address to add is alerady in use */
+	if (add == true && in_use == true) {
+		return -EADDRINUSE;
+	}
+
+	/* The IP address to delete is not in use */
+	if (add == false && in_use == false) {
+		return -ENXIO;
+	}
+
+	return 0;
+}
+
 int
 spdk_interface_init(void)
 {
@@ -451,8 +483,15 @@ int
 spdk_interface_net_interface_add_ip_address(int ifc_index, char *ip_addr)
 {
 	uint32_t addr;
+	int ret;
 
 	addr = inet_addr(ip_addr);
+
+	ret = spdk_interface_is_ip_address_in_use(ifc_index, addr, true);
+	if (ret < 0) {
+		return ret;
+	}
+
 	return netlink_addr_msg(ifc_index, addr, 1);
 }
 
@@ -460,8 +499,15 @@ int
 spdk_interface_net_interface_delete_ip_address(int ifc_index, char *ip_addr)
 {
 	uint32_t addr;
+	int ret;
 
 	addr = inet_addr(ip_addr);
+
+	ret = spdk_interface_is_ip_address_in_use(ifc_index, addr, false);
+	if (ret < 0) {
+		return ret;
+	}
+
 	return netlink_addr_msg(ifc_index, addr, 0);
 }
 
