@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -xe
 
+check_parted_finish () {
+	while [ ! -e "/dev/${dev}1" ]; do
+		sleep 0.1
+	done
+	return 0
+}
+
+export -f check_parted_finish
+
 MAKE="make -j$(( $(nproc)  * 2 ))"
 
 if [[ $1 == "spdk_vhost_scsi" ]]; then
@@ -25,7 +34,7 @@ for fs in $fs; do
 		echo "INFO: Creating partition table on disk using: $parted_cmd mklabel gpt"
 		$parted_cmd mklabel gpt
 		$parted_cmd mkpart primary 2048s 100%
-		sleep 2
+		timeout 10 bash -c check_parted_finish
 
 		mkfs_cmd="mkfs.$fs"
 		if [[ $fs == "ntfs" ]]; then
@@ -51,6 +60,7 @@ for fs in $fs; do
 	for dev in $devs; do
 		umount /mnt/${dev}dir
 		rm -rf /mnt/${dev}dir
+		parted -s /dev/${dev} rm 1
 
 		stats=( $(cat /sys/block/$dev/stat) )
 		echo ""
