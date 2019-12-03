@@ -126,7 +126,6 @@ def case_message(func):
             654: 'thin_overprovisioning',
             655: 'thin_provisioning_filling_disks_less_than_lvs_size',
             # snapshot and clone
-            752: 'snapshot_during_io_traffic',
             753: 'snapshot_of_snapshot',
             754: 'clone_bdev_only',
             755: 'clone_writing_clone',
@@ -941,63 +940,6 @@ class TestCases(object):
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # destroy malloc bdev
         fail_count += self.c.bdev_malloc_delete(base_name)
-        # Expected result:
-        # - calls successful, return code = 0
-        # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case752(self):
-        """
-        snapshot_during_io_traffic
-
-        Check that when writing to lvol bdev
-        creating snapshot ends with success
-        """
-        global current_fio_pid
-        fail_count = 0
-        nbd_name = "/dev/nbd0"
-        snapshot_name = "snapshot"
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct lvol store
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        fail_count += self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                          self.cluster_size)
-        # Create thin provisioned lvol bdev with size equal to 50% of lvs space
-        size = self.get_lvs_divided_size(2)
-        uuid_bdev = self.c.bdev_lvol_create(uuid_store, self.lbd_name,
-                                            size, thin=True)
-
-        lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev)
-        fail_count += self.c.nbd_start_disk(lvol_bdev['name'], nbd_name)
-        fill_size = int(size * MEGABYTE)
-        # Create thread that will run fio in background
-        thread = FioThread(nbd_name, 0, fill_size, "write", "0xcc", 0,
-                           extra_params="--time_based --runtime=8")
-        # Perform write operation with verification to created lvol bdev
-        thread.start()
-        time.sleep(4)
-        fail_count += is_process_alive(current_fio_pid)
-        # During write operation create snapshot of created lvol bdev
-        # and check that snapshot has been created successfully
-        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
-        fail_count += is_process_alive(current_fio_pid)
-        thread.join()
-        # Check that write operation ended with success
-        fail_count += thread.rv
-        fail_count += self.c.nbd_stop_disk(nbd_name)
-        # Destroy lvol bdev
-        fail_count += self.c.bdev_lvol_delete(lvol_bdev['name'])
-        # Delete snapshot
-        fail_count += self.c.bdev_lvol_delete(self.lvs_name + "/" + snapshot_name)
-        # Destroy lvol store
-        fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
-        # Delete malloc bdevs
-        fail_count += self.c.bdev_malloc_delete(base_name)
-
         # Expected result:
         # - calls successful, return code = 0
         # - no other operation fails

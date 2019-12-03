@@ -34,7 +34,6 @@ function usage() {
                                     653: 'thin_provisioning_resize',
                                     654: 'thin_overprovisioning',
                                     655: 'thin_provisioning_filling_disks_less_than_lvs_size',
-                                    752: 'snapshot_during_io_traffic',
                                     753: 'snapshot_of_snapshot',
                                     754: 'clone_bdev_only',
                                     755: 'clone_writing_clone',
