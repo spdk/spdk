@@ -158,8 +158,9 @@ class JSONRPCClient(object):
                 raise e
 
         if 'error' in response:
-            msg = "\n".join(["request:", "%s" % json.dumps({**{"method": method, "req_id": req_id},
-                                                            **params}, indent=2),
+            params["method"] = method
+            params["req_id"] = req_id
+            msg = "\n".join(["request:", "%s" % json.dumps(params, indent=2),
                              "Got JSON-RPC error response",
                              "response:",
                              json.dumps(response['error'], indent=2)])
