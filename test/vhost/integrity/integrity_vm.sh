@@ -24,6 +24,7 @@ for fs in $fs; do
 
 		echo "INFO: Creating partition table on disk using: $parted_cmd mklabel gpt"
 		$parted_cmd mklabel gpt
+		sleep 2
 		$parted_cmd mkpart primary 2048s 100%
 		sleep 2
 
