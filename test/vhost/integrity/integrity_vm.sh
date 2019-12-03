@@ -24,8 +24,11 @@ for fs in $fs; do
 
 		echo "INFO: Creating partition table on disk using: $parted_cmd mklabel gpt"
 		$parted_cmd mklabel gpt
+		parted_cmd_pid=$!
+		wait $parted_cmd_pid
 		$parted_cmd mkpart primary 2048s 100%
-		sleep 2
+		parted_cmd_pid=$!
+		wait $parted_cmd_pid
 
 		mkfs_cmd="mkfs.$fs"
 		if [[ $fs == "ntfs" ]]; then
