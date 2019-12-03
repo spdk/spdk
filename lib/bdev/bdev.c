@@ -1747,6 +1747,8 @@ _bdev_io_split(void *_bdev_io)
 			} else {
 				bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 				if (bdev_io->u.bdev.split_outstanding == 0) {
+					spdk_trace_record_tsc(spdk_get_ticks(), TRACE_BDEV_IO_DONE, 0, 0,
+							      (uintptr_t)bdev_io, 0);
 					TAILQ_REMOVE(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
 					bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 				}
@@ -1777,6 +1779,8 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	 */
 	if (parent_io->u.bdev.split_remaining_num_blocks == 0) {
 		assert(parent_io->internal.cb != bdev_io_split_done);
+		spdk_trace_record_tsc(spdk_get_ticks(), TRACE_BDEV_IO_DONE, 0, 0,
+				      (uintptr_t)bdev_io, 0);
 		TAILQ_REMOVE(&parent_io->internal.ch->io_submitted, parent_io, internal.ch_link);
 		parent_io->internal.cb(parent_io, parent_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS,
 				       parent_io->internal.caller_ctx);
@@ -1882,6 +1886,8 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	if (bdev->split_on_optimal_io_boundary && bdev_io_should_split(bdev_io)) {
 		bdev_io->internal.submit_tsc = spdk_get_ticks();
+		spdk_trace_record_tsc(bdev_io->internal.submit_tsc, TRACE_BDEV_IO_START, 0, 0,
+				      (uintptr_t)bdev_io, bdev_io->type);
 		bdev_io_split(NULL, bdev_io);
 		return;
 	}
