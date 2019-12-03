@@ -78,7 +78,7 @@ elif [ $PLUGIN = "kernel-io-uring" ]; then
 		echo "INFO: Backing up device parameters for $disk"
 		sysfs=/sys/block/$disk/queue
 		mkdir -p $backup_dir/$disk
-		cat $sysfs/iostats > $backup_dir/$disk/io_stats
+		cat $sysfs/iostats > $backup_dir/$disk/iostats
 		cat $sysfs/rq_affinity > $backup_dir/$disk/rq_affinity
 		cat $sysfs/nomerges > $backup_dir/$disk/nomerges
 		cat $sysfs/io_poll_delay > $backup_dir/$disk/io_poll_delay
@@ -131,7 +131,7 @@ do
 				run_spdk_nvme_fio $PLUGIN "--runtime=$RUNTIME" "--ramp_time=$RAMP_TIME" "--bs=$BLK_SIZE"\
 				"--rw=$RW" "--rwmixread=$MIX" "--iodepth=$qd" "--output=$NVME_FIO_RESULTS" "--time_based=1"\
 				"--numjobs=$NUMJOBS" "--description=$desc" "-log_avg_msec=250"\
-				"--write_lat_log=$BASE_DIR/results/$result_dir/perf_lat_$${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${date}_${k}disks_${j}"
+				"--write_lat_log=$BASE_DIR/results/$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${date}_${k}disks_${j}"
 			else
 				run_nvme_fio $fio_ioengine_opt "--runtime=$RUNTIME" "--ramp_time=$RAMP_TIME" "--bs=$BLK_SIZE"\
 				"--rw=$RW" "--rwmixread=$MIX" "--iodepth=$qd" "--output=$NVME_FIO_RESULTS" "--time_based=1"\
