@@ -21,11 +21,15 @@ trap "exit 1" SIGINT SIGTERM EXIT
 for fs in $fs; do
 	for dev in $devs; do
 		parted_cmd="parted -s /dev/${dev}"
+		parted_time=0
 
 		echo "INFO: Creating partition table on disk using: $parted_cmd mklabel gpt"
 		$parted_cmd mklabel gpt
 		$parted_cmd mkpart primary 2048s 100%
-		sleep 2
+		while [ ! -e "/dev/${dev}1" ] || [ $parted_time -lt 10 ]; do
+			sleep 0.5;
+			parted_time="$(echo "$parted_time + 0.5" | bc)"
+		done
 
 		mkfs_cmd="mkfs.$fs"
 		if [[ $fs == "ntfs" ]]; then
@@ -51,6 +55,7 @@ for fs in $fs; do
 	for dev in $devs; do
 		umount /mnt/${dev}dir
 		rm -rf /mnt/${dev}dir
+		parted -s /dev/${dev} rm 1
 
 		stats=( $(cat /sys/block/$dev/stat) )
 		echo ""
