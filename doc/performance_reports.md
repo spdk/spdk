@@ -7,3 +7,4 @@
 - [SPDK 19.04 NVMe-oF RDMA Performance Report](https://dqtibwqq6s6ux.cloudfront.net/download/performance-reports/SPDK_19.04_NVMeOF_RDMA_benchmark_report.pdf)
 - [SPDK 19.07 Vhost Performance Report](https://dqtibwqq6s6ux.cloudfront.net/download/performance-reports/SPDK_vhost_perf_report_19.07.pdf)
 - [SPDK 19.07 NVMe-oF TCP Performance Report](https://dqtibwqq6s6ux.cloudfront.net/download/performance-reports/SPDK_nvmeof_tcp_perf_report_19.07.pdf)
+- [SPDK 19.10 Vhost Performance Report](https://dqtibwqq6s6ux.cloudfront.net/download/performance-reports/SPDK_vhost_perf_report_1910.pdf)
