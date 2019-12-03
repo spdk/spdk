@@ -40,7 +40,7 @@ run_test suite $WORKDIR/vhost_boot/vhost_boot.sh --vm_image=$VM_IMAGE
 report_test_completion "vhost_boot"
 timing_exit vhost_boot
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
+if [ 1 == 1 ]; then
 	timing_enter integrity_blk
 	echo 'Running blk integrity suite...'
 	run_test case $WORKDIR/fiotest/fio.sh -x --fio-bin=$FIO_BIN \

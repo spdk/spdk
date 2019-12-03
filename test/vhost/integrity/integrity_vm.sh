@@ -20,11 +20,11 @@ trap "exit 1" SIGINT SIGTERM EXIT
 
 for fs in $fs; do
 	for dev in $devs; do
-		parted_cmd="parted -s /dev/${dev}"
+		parted_cmd="sgdisk /dev/${dev}"
 
-		echo "INFO: Creating partition table on disk using: $parted_cmd mklabel gpt"
-		$parted_cmd mklabel gpt
-		$parted_cmd mkpart primary 2048s 100%
+		echo "INFO: Creating partition table on disk using: $parted_cmd -og"
+		$parted_cmd -og
+		$parted_cmd -uM
 		sleep 2
 
 		mkfs_cmd="mkfs.$fs"
