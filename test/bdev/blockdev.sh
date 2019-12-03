@@ -57,24 +57,15 @@ QOS_RUN_TIME=5
 function get_io_result() {
 	local limit_type=$1
 
-	io_result=$($rpc_py bdev_get_iostat -b $QOS_DEV)
 	if [ $limit_type = IOPS ]; then
-		io_result_before=$(echo $io_result | jq -r '.bdevs[0].num_read_ops')
+		iostat_result=$($rootdir/scripts/iostat.py -d -i 1 -t $QOS_RUN_TIME | grep $QOS_DEV | tail -1 | awk '{print $2}')
 	else
-		io_result_before=$(echo $io_result | jq -r '.bdevs[0].bytes_read')
+		iostat_result=$($rootdir/scripts/iostat.py -d -i 1 -t $QOS_RUN_TIME | grep $QOS_DEV | tail -1 | awk '{print $6}')
 	fi
 
-	sleep $QOS_RUN_TIME
-
-	io_result=$($rpc_py bdev_get_iostat -b $QOS_DEV)
-	if [ $limit_type = IOPS ]; then
-		io_result_after=$(echo $io_result | jq -r '.bdevs[0].num_read_ops')
-	else
-		io_result_after=$(echo $io_result | jq -r '.bdevs[0].bytes_read')
-	fi
-
-	echo $(((io_result_after-io_result_before)/QOS_RUN_TIME))
+	echo ${iostat_result/.*}
 }
+
 
 function run_qos_test() {
 	local qos_limit=$1
@@ -82,7 +73,7 @@ function run_qos_test() {
 
 	qos_result=$(get_io_result $2)
 	if [ $2 = BANDWIDTH ]; then
-		qos_limit=$((qos_limit*1024*1024))
+		qos_limit=$((qos_limit*1024))
 	fi
 
 	lower_limit=$(echo "$qos_limit 0.9" | awk '{printf("%i",$1*$2)}')
