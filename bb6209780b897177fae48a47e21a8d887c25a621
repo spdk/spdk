@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "d4bffdbc_d6861bbf",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-12-03T07:29:40Z",
+      "side": 1,
+      "message": "Hi Ben, any thoughts re my suggestion -- again, the idea is \n\n[1] once a request is fully sent and moved to the pending list it is marked with the system call index of that sendmsg invocation\n\n[2] when we get notifications in the rangle [lo..hi] we go over the pending list and signal (\u003d\u003d issue the callback) for those request who are in the rangle.\n\nIt would be good to add request to the tail of the pending list and on the completion flow traverse it from the head.\n\nThis design supports both ooo notifications and notification gaps",
+      "parentUuid": "3c137dde_b46bac54",
+      "range": {
+        "startLine": 540,
+        "startChar": 2,
+        "endLine": 544,
+        "endChar": 53
+      },
+      "revId": "bb6209780b897177fae48a47e21a8d887c25a621",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1b219299_a0c378d8",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 9
