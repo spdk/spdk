@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7ec0723_e57c1127",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T21:42:18Z",
+      "side": 1,
+      "message": "You could remove the -n.  But this is fine.",
+      "revId": "277a7434d89574bb53032f3f9466a3269a943995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
