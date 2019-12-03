@@ -139,6 +139,12 @@ DEFINE_STUB(spdk_nvmf_bdev_ctrlr_compare_cmd,
 	     struct spdk_nvmf_request *req),
 	    0);
 
+DEFINE_STUB(spdk_nvmf_bdev_ctrlr_compare_and_write_cmd,
+	    int,
+	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct spdk_nvmf_request *cmp_req, struct spdk_nvmf_request *write_req),
+	    0);
+
 DEFINE_STUB(spdk_nvmf_bdev_ctrlr_write_zeroes_cmd,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
