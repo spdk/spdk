@@ -16,6 +16,24 @@
       "revId": "bbe7645d85401912c5477c609e661a528e7ab46c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a659012_7e075722",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-12-03T13:10:36Z",
+      "side": 1,
+      "message": "Hello Jim,\n\nThank you for comments and explanatin, I totally agree, this patch should be splitted.\nI will keep this way of setting flags as with RO, but move that change to separate patch as well.\n\n-Vitaliy",
+      "parentUuid": "f84f96ca_e71b1c09",
+      "revId": "bbe7645d85401912c5477c609e661a528e7ab46c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
