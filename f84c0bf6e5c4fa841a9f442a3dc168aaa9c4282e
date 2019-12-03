@@ -16,6 +16,24 @@
       "revId": "f84c0bf6e5c4fa841a9f442a3dc168aaa9c4282e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db6cea2b_96d8e803",
+        "filename": "test/unit/lib/iscsi/conn.c/conn_ut.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-03T07:40:57Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nThanks for your nice comment.\nWe don\u0027t submit primary anymore when the read I/O is split into subtasks.\nI tried to clarify that in both iSCSI library and its unit test.",
+      "parentUuid": "a4cb2f17_bad84598",
+      "revId": "f84c0bf6e5c4fa841a9f442a3dc168aaa9c4282e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
