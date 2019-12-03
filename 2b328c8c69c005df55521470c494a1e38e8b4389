@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eafb2a75_7d7e2d3d",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T23:40:34Z",
+      "side": 1,
+      "message": "let\u0027s use tabs to align \"period\" with the other variables here\n\nlet\u0027s also rename it to rusage_period, to make it clear what the period is used for",
+      "revId": "2b328c8c69c005df55521470c494a1e38e8b4389",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80a195b0_ce2781ea",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T23:40:34Z",
+      "side": 1,
+      "message": "let\u0027s just always set rusage_period\n\nin the future, we might decide to disable this by default, or allow user to change the default via command line option or STARTUP RPC\n\nin that case, rusage_period wouldn\u0027t get calculated, but user could later enable it via RPC, and we wouldn\u0027t have the rusage_period calculated\n\nsince this only runs once at the very beginning of the app, always calculating it is fine",
+      "revId": "2b328c8c69c005df55521470c494a1e38e8b4389",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
