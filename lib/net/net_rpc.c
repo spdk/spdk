@@ -79,6 +79,9 @@ spdk_rpc_net_interface_add_ip_address(struct spdk_jsonrpc_request *request,
 		if (ret_val == -ENODEV) {
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_STATE,
 							     "Interface %d not available", req.ifc_index);
+		} else if (ret_val == -EEXIST) {
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							     "IP to add is existing");
 		} else {
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 strerror(ret_val));
@@ -122,6 +125,9 @@ spdk_rpc_net_interface_delete_ip_address(struct spdk_jsonrpc_request *request,
 		if (ret_val == -ENODEV) {
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_STATE,
 							     "Interface %d not available", req.ifc_index);
+		} else if (ret_val == -EINVAL) {
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							     "IP to delete is not existing");
 		} else {
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 strerror(ret_val));
