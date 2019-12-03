@@ -70,6 +70,7 @@ elif [ $PLUGIN = "kernel-io-uring" ]; then
 
 	modprobe -rv nvme
 	modprobe nvme poll_queues=8
+	wait_for_nvme_reload $disk_names
 
 	backup_dir="/tmp/nvme_param_bak"
 	mkdir -p $backup_dir
@@ -196,6 +197,7 @@ if [ $PLUGIN = "kernel-io-uring" ]; then
 	# Reload the nvme driver so that other test runs are not affected
 	modprobe -rv nvme
 	modprobe nvme
+	wait_for_nvme_reload $disk_names
 
 	for disk in $disk_names; do
 		echo "INFO: Restoring device parameters for $disk"
