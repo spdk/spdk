@@ -36,6 +36,10 @@
 #include "spdk/env.h"
 #include "spdk/event.h"
 
+// #ifdef TPD
+#include "tpd_hdlr.h"
+// #endif
+
 static void
 nvmf_usage(void)
 {
@@ -70,6 +74,10 @@ main(int argc, char **argv)
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
+
+// #ifdef TPD
+	spdk_nvmf_set_custom_admin_hdlr(tpd_admin_hdlr);
+// #endif
 
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(&opts, nvmf_tgt_started, NULL);

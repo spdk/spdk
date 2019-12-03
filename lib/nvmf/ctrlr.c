@@ -1525,7 +1525,11 @@ invalid_log_page:
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+#ifdef TPD
+int
+#else
 static int
+#endif
 spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 			    struct spdk_nvme_cmd *cmd,
 			    struct spdk_nvme_cpl *rsp,
@@ -1567,7 +1571,11 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+#ifdef TPD
+int
+#else
 static int
+#endif
 spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_ctrlr_data *cdata)
 {
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
@@ -1771,6 +1779,8 @@ spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 
 	cns = cmd->cdw10 & 0xFF;
 
+	printf("\tidentify: cns=0x%02x\n", cns);
+
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY &&
 	    cns != SPDK_NVME_IDENTIFY_CTRLR) {
 		/* Discovery controllers only support Identify Controller */
@@ -1908,6 +1918,9 @@ spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
 	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
+
+	printf("*** get feature ID 0x%02x requested\n", feature);
+
 	switch (feature) {
 	case SPDK_NVME_FEAT_ARBITRATION:
 		return get_features_generic(req, ctrlr->feat.arbitration.raw);
@@ -1934,6 +1947,7 @@ spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 	case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
 		return spdk_nvmf_ctrlr_get_features_reservation_persistence(req);
 	default:
+		printf("*** get feature with ID 0x%02x not supported\n", feature);
 		SPDK_ERRLOG("Get Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -1948,6 +1962,9 @@ spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
 	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
+
+	printf("*** set feature ID 0x%02x requested\n", feature);
+
 	switch (feature) {
 	case SPDK_NVME_FEAT_ARBITRATION:
 		return spdk_nvmf_ctrlr_set_features_arbitration(req);
@@ -1974,6 +1991,7 @@ spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 	case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
 		return spdk_nvmf_ctrlr_set_features_reservation_persistence(req);
 	default:
+		printf("*** set feature with ID 0x%02x not supported\n", feature);
 		SPDK_ERRLOG("Set Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -1998,6 +2016,136 @@ spdk_nvmf_ctrlr_keep_alive(struct spdk_nvmf_request *req)
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
+
+//#ifdef TPD
+int fixup(struct spdk_nvmf_request *req) {
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	if (cmd->opc == SPDK_NVME_OPC_IDENTIFY) {
+		uint8_t cns = cmd->cdw10 & 0xFF;
+		printf("*** fixup: identify: cns=%02x, status:%02x:%02x\n", cns, response->status.sct, response->status.sc);
+		switch(cns) {
+			case SPDK_NVME_IDENTIFY_CTRLR:
+			{
+				struct spdk_nvme_ctrlr_data nvmf_cdata;
+				memset(&nvmf_cdata, 0, sizeof(nvmf_cdata));
+				int rc = spdk_nvmf_ctrlr_identify_ctrlr(ctrlr, &nvmf_cdata);
+				assert(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+				// fixup
+				struct spdk_nvme_ctrlr_data *nvme_cdata = req->data;
+				// PCI Vendor ID (VID)
+				nvmf_cdata.vid = nvme_cdata->vid;
+				// PCI Subsystem Vendor ID (SSVID)
+				nvmf_cdata.ssvid = nvme_cdata->ssvid;
+				// Serial Number (SN)
+				memcpy(&nvmf_cdata.sn[0], &nvme_cdata->sn[0], sizeof(nvmf_cdata.sn));
+				// Model Number (MN)
+				memcpy(&nvmf_cdata.mn[0], &nvme_cdata->mn[0], sizeof(nvmf_cdata.mn));
+				// Firmware Revision (FR)
+				memcpy(&nvmf_cdata.fr[0], &nvme_cdata->fr[0], sizeof(nvmf_cdata.fr));
+				// IEEE OUI Identifier (IEEE)
+				memcpy(&nvmf_cdata.ieee[0], &nvme_cdata->ieee[0], sizeof(nvmf_cdata.ieee));
+				// FRU Globally Unique Identifier (FGUID)
+				memcpy(&nvmf_cdata.fguid[0], &nvme_cdata->fguid[0], sizeof(nvmf_cdata.fguid));
+				// Optional Admin Command Support (OACS)
+				memcpy(&nvmf_cdata.oacs, &nvme_cdata->oacs, sizeof(nvmf_cdata.oacs));
+				// Firmware Updates (FRMW)
+				nvmf_cdata.frmw = nvme_cdata->frmw;
+				// Maximum Time for Firmware Activation (MTFA)
+				nvmf_cdata.mtfa = nvme_cdata->mtfa;
+				// Firmware Update Granularity (FWUG)
+				nvmf_cdata.fwug = nvme_cdata->fwug;
+				// Number of Power States Support (NPSS)?
+				// Warning Composite Temperature Threshold (WCTEMP)?
+				// Critical Composite Temperature Threshold (CCTEMP)?
+				// Minimum Thermal Management Temperature (MNTMT)?
+				// Maximum Thermal Management Temperature (MXTMT)?
+				// Power State 0 Descriptor (PSD0...31)?
+				// Optional NVM Command Support (ONCS)
+				nvmf_cdata.oncs = nvme_cdata->oncs;
+				// Format NVM Attributes (FNA)
+				nvmf_cdata.fna = nvme_cdata->fna;
+
+				// replace
+				memcpy(req->data, &nvmf_cdata, req->length);
+				printf("-->\tfixed\n");
+				break;
+			}
+			default:
+				break;
+		}
+	}
+	return 0;
+}
+//#endif
+
+// #ifdef TPD
+// Public
+int
+spdk_nvmf_request_get_bdev_info(uint32_t nsid, struct spdk_nvmf_request *req,
+												struct spdk_bdev **bdev, struct spdk_bdev_desc **desc, struct spdk_io_channel **ch)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_poll_group *group = req->qpair->group;
+	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
+
+	*bdev = NULL;
+	*desc = NULL; 
+	*ch = NULL;
+
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
+	if (ns == NULL || ns->bdev == NULL) {
+		SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
+		return -EINVAL;
+	}
+
+	assert(group != NULL && group->sgroups != NULL);
+	ns_info = &group->sgroups[ctrlr->subsys->id].ns_info[nsid - 1];
+	*bdev = ns->bdev;
+	*desc = ns->desc;
+	*ch = ns_info->channel;
+
+	return 0;
+}
+struct spdk_nvmf_ctrlr* spdk_nvmf_request_get_ctrlr(struct spdk_nvmf_request *req) 
+{
+	return req->qpair->ctrlr;
+}
+
+struct spdk_nvme_cmd* spdk_nvmf_request_get_cmd(struct spdk_nvmf_request *req)
+{
+	return &req->cmd->nvme_cmd;
+}
+
+struct spdk_nvme_cpl* spdk_nvmf_request_get_response(struct spdk_nvmf_request *req)
+{
+	return &req->rsp->nvme_cpl;
+}
+
+struct spdk_nvmf_subsystem* spdk_nvmf_request_get_subsystem(struct spdk_nvmf_request *req)
+{
+	return req->qpair->ctrlr->subsys;
+}
+
+void spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length)
+{
+	*data = req->data;
+	*length = req->length;
+}
+
+
+custom_admin_hdlr g_custom_admin_hdlr = NULL;
+
+void
+spdk_nvmf_set_custom_admin_hdlr(custom_admin_hdlr hdlr)
+{
+	g_custom_admin_hdlr = hdlr;
+}
+// #endif
 
 int
 spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
@@ -2035,10 +2183,29 @@ spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		}
 	}
 
+//#ifdef TDP
+	printf("**** opc=%02x: nsid=%04x\n", cmd->opc, cmd->nsid);
+
+	if (g_custom_admin_hdlr) {
+		int rc = g_custom_admin_hdlr(req);
+		if (rc >= 0) {
+			// handled
+			return rc;
+		} else {
+			// skipped
+			printf("**** opc=%02x: nsid=%04x: skipped\n", cmd->opc, cmd->nsid);
+		}
+	}
+//#endif
+
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_GET_LOG_PAGE:
 		return spdk_nvmf_ctrlr_get_log_page(req);
 	case SPDK_NVME_OPC_IDENTIFY:
+	//	printf("*** SPDK_NVME_OPC_IDENTIFY passthru\n");
+		//int rc = spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(bdev, desc, ch, req, fixup);
+		// return rc;
+
 		return spdk_nvmf_ctrlr_identify(req);
 	case SPDK_NVME_OPC_ABORT:
 		return spdk_nvmf_ctrlr_abort(req);

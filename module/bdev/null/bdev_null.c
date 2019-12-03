@@ -165,6 +165,25 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 	case SPDK_BDEV_IO_TYPE_RESET:
 		TAILQ_INSERT_TAIL(&ch->io, bdev_io, module_link);
 		break;
+#ifdef TPD
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	{
+		uint8_t data_xfer = bdev_io->u.nvme_passthru.cmd.opc & 0x03;
+		printf("*** Admin command received: %02x, [data xfer=%01x], cdw10=%04x, cdw11=%04x\n", 
+			bdev_io->u.nvme_passthru.cmd.opc, data_xfer, bdev_io->u.nvme_passthru.cmd.cdw10, bdev_io->u.nvme_passthru.cmd.cdw11);
+		if (data_xfer == 1) {
+			printf("buffer size=%ld\n", bdev_io->u.nvme_passthru.nbytes);
+			for (size_t i=0; i<bdev_io->u.nvme_passthru.nbytes; i++) printf("%02x ", *(((uint8_t*)bdev_io->u.nvme_passthru.buf)+i));
+			printf("\n");
+		} else if (data_xfer == 2) {
+			printf("buffer size=%ld\n", bdev_io->u.nvme_passthru.nbytes);
+			memset(bdev_io->u.nvme_passthru.buf, 0xbd, bdev_io->u.nvme_passthru.nbytes);
+		}
+		
+		spdk_bdev_io_complete_nvme_status(bdev_io, 0xaffe, SPDK_NVME_SCT_VENDOR_SPECIFIC, 0x00);
+	}
+	break;
+#endif
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	default:
@@ -182,6 +201,10 @@ bdev_null_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	case SPDK_BDEV_IO_TYPE_RESET:
 		return true;
+#ifdef TPD
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+		return true;
+#endif
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	default:

@@ -1011,6 +1011,35 @@ spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
  */
 void spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
 
+// #ifdef TPD
+#include "spdk/bdev.h"
+
+int
+spdk_nvmf_request_get_bdev_info(uint32_t nsid, struct spdk_nvmf_request *req,
+												struct spdk_bdev **bdev, struct spdk_bdev_desc **desc, struct spdk_io_channel **ch);
+struct spdk_nvmf_ctrlr* 
+spdk_nvmf_request_get_ctrlr(struct spdk_nvmf_request *req);
+
+struct spdk_nvmf_subsystem*
+spdk_nvmf_request_get_subsystem(struct spdk_nvmf_request *req);
+
+void
+spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length);
+
+struct spdk_nvme_cmd*
+spdk_nvmf_request_get_cmd(struct spdk_nvmf_request *req);
+
+struct spdk_nvme_cpl* 
+spdk_nvmf_request_get_response(struct spdk_nvmf_request *req);
+
+typedef int (*custom_admin_hdlr)(struct spdk_nvmf_request *req);
+void spdk_nvmf_set_custom_admin_hdlr(custom_admin_hdlr hdlr);
+
+typedef int (*nvme_passthru_admin_cb)(struct spdk_nvmf_request *req);
+int spdk_nvmf_bdev_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch, struct spdk_nvmf_request *req, nvme_passthru_admin_cb cb);
+// #endif
+
 #ifdef __cplusplus
 }
 #endif

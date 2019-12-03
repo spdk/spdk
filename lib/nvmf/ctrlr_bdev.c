@@ -104,6 +104,32 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 	spdk_bdev_free_io(bdev_io);
 }
 
+// #ifdef TPD
+struct completion_ctx {
+	struct spdk_nvmf_request *req;
+	nvme_passthru_admin_cb cb;
+};
+static void
+nvmf_bdev_ctrlr_complete_admin_cmd(struct spdk_bdev_io *bdev_io, bool success,
+			     void *cb_arg)
+{
+	struct completion_ctx *ctx = cb_arg;
+	if (ctx->cb) {
+		ctx->cb(ctx->req);
+	}
+	// TODO: What should we do if the cb fails? Can it fail?
+	
+	uint32_t dw0, sct, sc;
+	spdk_bdev_io_get_nvme_status(bdev_io, &dw0, &sct, &sc);
+	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(ctx->req);
+	printf("*** nvmf_bdev_ctrlr_complete_admin_cmd: opc=%02x: success=%d, status=%02x:%02x\n", cmd->opc, success, sct, sc);
+
+	nvmf_bdev_ctrlr_complete_cmd(bdev_io, success, ctx->req);
+
+	free(ctx);
+}
+// #endif
+
 void
 spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata,
 				 bool dif_insert_or_strip)
@@ -200,6 +226,16 @@ spdk_nvmf_ctrlr_process_io_cmd_resubmit(void *arg)
 
 	spdk_nvmf_ctrlr_process_io_cmd(req);
 }
+
+#ifdef TPD
+static void
+spdk_nvmf_ctrlr_process_admin_cmd_resubmit(void *arg)
+{
+	struct spdk_nvmf_request *req = arg;
+
+	spdk_nvmf_ctrlr_process_admin_cmd(req);
+}
+#endif
 
 static void
 nvmf_bdev_ctrl_queue_io(struct spdk_nvmf_request *req, struct spdk_bdev *bdev,
@@ -532,6 +568,36 @@ spdk_nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_d
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
+
+// #ifdef TPD
+int
+spdk_nvmf_bdev_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				      struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
+				      int (*completion_cb)(struct spdk_nvmf_request *req))
+{
+	int rc;
+
+	struct completion_ctx *ctx = calloc(1, sizeof(*ctx));
+	ctx->req = req;
+	ctx->cb = completion_cb;
+
+	printf("*** spdk_nvmf_bdev_nvme_passthru_admin: opc=%02x\n", req->cmd->nvme_cmd.opc);
+
+	rc = spdk_bdev_nvme_admin_passthru(desc, ch, &req->cmd->nvme_cmd, req->data, req->length,
+					nvmf_bdev_ctrlr_complete_admin_cmd, ctx);
+	if (spdk_unlikely(rc)) {
+		if (rc == -ENOMEM) {
+			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_admin_cmd_resubmit, req);
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+		}
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+}
+// #endif
 
 bool
 spdk_nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,

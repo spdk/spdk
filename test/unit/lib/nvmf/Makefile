@@ -34,6 +34,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+CFLAGS += -DTPD
+
 DIRS-y = tcp.c ctrlr.c subsystem.c ctrlr_discovery.c ctrlr_bdev.c
 
 DIRS-$(CONFIG_RDMA) += rdma.c
