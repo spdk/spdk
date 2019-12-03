@@ -78,7 +78,7 @@ elif [ $PLUGIN = "kernel-io-uring" ]; then
 		echo "INFO: Backing up device parameters for $disk"
 		sysfs=/sys/block/$disk/queue
 		mkdir -p $backup_dir/$disk
-		cat $sysfs/iostats > $backup_dir/$disk/io_stats
+		cat $sysfs/iostats > $backup_dir/$disk/iostats
 		cat $sysfs/rq_affinity > $backup_dir/$disk/rq_affinity
 		cat $sysfs/nomerges > $backup_dir/$disk/nomerges
 		cat $sysfs/io_poll_delay > $backup_dir/$disk/io_poll_delay
