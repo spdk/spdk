@@ -39,7 +39,6 @@ function usage() {
                                     702: 'tasting_positive_with_different_lvol_store_cluster_size',
                                     750: 'snapshot_readonly',
                                     751: 'snapshot_compare_with_lvol_bdev',
-                                    753: 'snapshot_of_snapshot',
                                     754: 'clone_bdev_only',
                                     755: 'clone_writing_clone',
                                     756: 'clone_and_snapshot_consistency',

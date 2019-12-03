@@ -117,6 +117,36 @@ function test_create_snapshot_with_io() {
 }
 
 
+function test_create_snapshot_of_snapshot() {
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Create lvol bdev
+	lvol_size_mb=$(( LVS_DEFAULT_CAPACITY_MB / 3 ))
+	# Round down lvol size to the nearest cluster size boundary
+	lvol_size_mb=$(( lvol_size_mb / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+
+	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb")
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+
+	# Create snapshots of lvol bdev
+        snapshot_uuid=$(rpc_cmd bdev_lvol_snapshot lvs_test/lvol_test lvol_snapshot)
+
+	# Create snapshot of previously created snapshot
+	# and check if operation will fail
+	! rpc_cmd bdev_lvol_snapshot lvs_test/lvol_snapshot lvol_snapshot2
+
+	# Clean up
+	rpc_cmd bdev_lvol_delete "$lvol_uuid"
+	! rpc_cmd bdev_get_bdevs -b "$lvol_uuid"
+	rpc_cmd bdev_lvol_delete "$snapshot_uuid"
+	! rpc_cmd bdev_get_bdevs -b "$snapshot_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -125,6 +155,7 @@ modprobe nbd
 
 run_lvol_test test_snapshot_compare_with_lvol_bdev
 run_lvol_test test_create_snapshot_with_io
+run_lvol_test test_create_snapshot_of_snapshot
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
