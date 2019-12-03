@@ -295,3 +295,9 @@ This interface reserves one qpair for sending down the I/O for each controller.
 
 Cuse support is disabled by default. To enable support for NVMe devices SPDK
 must be compiled with "./configure --with-nvme-cuse".
+
+## Limitations
+
+NVMe CUSE presents character device for controller and namespaces only at the time
+the controller is being attached. Dynamic creation/deletion of namespaces is not
+supported yet.
