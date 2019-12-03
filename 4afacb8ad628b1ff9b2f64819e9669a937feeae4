@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f818c3f8_5fc63dc5",
+        "filename": "test/vhost/migration/migration-tc2.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-03T09:19:52Z",
+      "side": 1,
+      "message": "I\u0027ll just comment on example of this change, so not to generate too much comments.\n\nThere\u0027s an IF statement in migration_tc2_cleanup_nvmf_tgt function. If first param is proveided then we send SIGKILL. If not we send SIGTERM. (I imagine the original author of the script wanted to do a \"clean exit\" and use SIGKILL as last resort).\n\nCalling migration_tc2_cleanup_nvmf_tgt without any arguments is on purpose here - we want to use SIGTERM.\nLine 41 has an example where we explicitly call it with SIGKILL.\n\nSince migration tests are chained (migration.sh is called with params, then sources and calls migration_tc2() and so on) at this point it\u0027s pretty hard to say what\u0027s inside \"$@\" so we risk IF in migration_tc2_cleanup_nvmf_tgt enetering just one branch.\n\n\nAlso, my personal opinion: I don\u0027t really see a benefit of passing all of parent scope params to functions local scope.\nIMO 2119 and 2120 should stay excluded.",
+      "range": {
+        "startLine": 62,
+        "startChar": 1,
+        "endLine": 62,
+        "endChar": 36
+      },
+      "revId": "4afacb8ad628b1ff9b2f64819e9669a937feeae4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
