@@ -3053,6 +3053,12 @@ nvmf_rdma_handle_last_wqe_reached(struct spdk_nvmf_rdma_qpair *rqpair)
 }
 
 static void
+nvmf_rdma_handle_sq_drained(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	spdk_nvmf_rdma_start_disconnect(rqpair);
+}
+
+static void
 spdk_nvmf_rdma_qpair_process_ibv_event(void *ctx)
 {
 	struct spdk_nvmf_rdma_ibv_event_ctx *event_ctx = ctx;
@@ -3095,7 +3101,6 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	int				rc;
 	struct spdk_nvmf_rdma_qpair	*rqpair = NULL;
 	struct ibv_async_event		event;
-	enum ibv_qp_state		state;
 
 	rc = ibv_get_async_event(device->context, &event);
 
@@ -3127,17 +3132,16 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		break;
 	case IBV_EVENT_SQ_DRAINED:
 		/* This event occurs frequently in both error and non-error states.
-		 * Check if the qpair is in an error state before sending a message.
-		 * Note that we're not on the correct thread to access the qpair, but
-		 * the operations that the below calls make all happen to be thread
-		 * safe. */
+		 * Check if the qpair is in an error state before sending a message. */
 		rqpair = event.element.qp->qp_context;
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Last sq drained event received for rqpair %p\n", rqpair);
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
-		state = spdk_nvmf_rdma_update_ibv_state(rqpair);
-		if (state == IBV_QPS_ERR) {
-			spdk_nvmf_rdma_start_disconnect(rqpair);
+		if (spdk_nvmf_rdma_update_ibv_state(rqpair) == IBV_QPS_ERR) {
+			if (spdk_nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_sq_drained)) {
+				SPDK_ERRLOG("Failed to send SQ_DRAINED event for rqpair %p\n", rqpair);
+				nvmf_rdma_handle_sq_drained(rqpair);
+			}
 		}
 		break;
 	case IBV_EVENT_QP_REQ_ERR:
