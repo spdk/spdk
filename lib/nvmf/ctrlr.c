@@ -2466,9 +2466,17 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	case SPDK_NVME_OPC_READ:
 		return spdk_nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_WRITE:
-		return spdk_nvmf_bdev_ctrlr_write_cmd(bdev, desc, ch, req);
+		if (cmd->fuse == SPDK_NVME_CMD_FUSE_SECOND) {
+			return spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(bdev, desc, ch, req->first_fused_request, req);
+		} else {
+			return spdk_nvmf_bdev_ctrlr_write_cmd(bdev, desc, ch, req);
+		}
 	case SPDK_NVME_OPC_COMPARE:
-		return spdk_nvmf_bdev_ctrlr_compare_cmd(bdev, desc, ch, req);
+		if (cmd->fuse == SPDK_NVME_CMD_FUSE_FIRST) {
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+		} else {
+			return spdk_nvmf_bdev_ctrlr_compare_cmd(bdev, desc, ch, req);
+		}
 	case SPDK_NVME_OPC_WRITE_ZEROES:
 		return spdk_nvmf_bdev_ctrlr_write_zeroes_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_FLUSH:
