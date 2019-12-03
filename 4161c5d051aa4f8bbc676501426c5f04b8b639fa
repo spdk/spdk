@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c275986_8068a68b",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-03T04:55:23Z",
+      "side": 1,
+      "message": "May I ask a corner case.\nDuring the hotplug test, if the connection is broken(e.g., the network is shutdown, or we just unplug the network adapter). Will the write_pdu_list be empty under this case? \nWhat I mean checking the write_pdu_list can be OK. However, the pdu writing function, if there is failure, will we correctly free the pdu can call the call back in the write_pdu handle code?\n\nThanks.",
+      "range": {
+        "startLine": 489,
+        "startChar": 27,
+        "endLine": 489,
+        "endChar": 41
+      },
+      "revId": "4161c5d051aa4f8bbc676501426c5f04b8b639fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
