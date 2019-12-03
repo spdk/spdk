@@ -22,7 +22,7 @@ for fs in $fs; do
 	for dev in $devs; do
 		parted_cmd="parted -s /dev/${dev}"
 
-		echo "INFO: Creating partition table on disk using: $parted_cmd mklabel gpt"
+		echo "INFO: Creating partition table on disk using: $parted_cmd -og"
 		$parted_cmd mklabel gpt
 		$parted_cmd mkpart primary 2048s 100%
 		sleep 2
@@ -51,6 +51,7 @@ for fs in $fs; do
 	for dev in $devs; do
 		umount /mnt/${dev}dir
 		rm -rf /mnt/${dev}dir
+		parted -s /dev/${dev} rm 1
 
 		stats=( $(cat /sys/block/$dev/stat) )
 		echo ""
