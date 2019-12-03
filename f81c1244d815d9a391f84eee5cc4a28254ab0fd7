@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2ee5690_6606e6f7",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-03T09:45:42Z",
+      "side": 1,
+      "message": "io_flags \u0026 SPDK_NVME_IO_FLAGS_FUSE_FIRST",
+      "range": {
+        "startLine": 154,
+        "startChar": 5,
+        "endLine": 154,
+        "endChar": 46
+      },
+      "revId": "f81c1244d815d9a391f84eee5cc4a28254ab0fd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b1f9858_2984103d",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-03T09:45:42Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 156,
+        "startChar": 12,
+        "endLine": 156,
+        "endChar": 53
+      },
+      "revId": "f81c1244d815d9a391f84eee5cc4a28254ab0fd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28e233d8_9720ce21",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-03T09:45:42Z",
+      "side": 1,
+      "message": "Why not 0xffff0000?",
+      "range": {
+        "startLine": 161,
+        "startChar": 27,
+        "endLine": 161,
+        "endChar": 38
+      },
+      "revId": "f81c1244d815d9a391f84eee5cc4a28254ab0fd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
