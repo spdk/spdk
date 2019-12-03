@@ -45,6 +45,30 @@
       "revId": "5a90d259d9e3749a0a96804c486ef21c1bccbf3c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6187ee7_c6773d58",
+        "filename": "lib/iscsi/conn.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-03T08:05:07Z",
+      "side": 1,
+      "message": "Make sense but struct spdk_scsi_dev has LUNs as an array too, and We can use index of LUN array as LUN ID.\nBesides, NVMf subsystem has its namespaces as an array.\nHence may I continue to use an array until we cannot avoid using linked list?",
+      "parentUuid": "647da1c2_b5682482",
+      "range": {
+        "startLine": 198,
+        "startChar": 1,
+        "endLine": 198,
+        "endChar": 52
+      },
+      "revId": "5a90d259d9e3749a0a96804c486ef21c1bccbf3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
