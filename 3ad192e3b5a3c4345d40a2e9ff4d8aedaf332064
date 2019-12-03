@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd50aa2d_8f083242",
+        "filename": "test/vhost/fuzz/fuzz.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T22:10:20Z",
+      "side": 0,
+      "message": "we should remove this in a separate patch",
+      "revId": "3ad192e3b5a3c4345d40a2e9ff4d8aedaf332064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

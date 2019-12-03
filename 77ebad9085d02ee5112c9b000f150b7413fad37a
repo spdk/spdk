@@ -25,6 +25,23 @@
     },
     {
       "key": {
+        "uuid": "bbcb6649_9c88b781",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T22:10:20Z",
+      "side": 1,
+      "message": "Seth has a separate patch out for this.  But instead of comparing to 0, he checks if nvmfpid is empty (which I think is the better check).\n\nBut would it be better to just set nvmfpid here, rather than at each place that calls nvmftestfini?\n\nJust do:\n\nnvmfpid\u003d",
+      "revId": "77ebad9085d02ee5112c9b000f150b7413fad37a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e861f69d_e781c275",
         "filename": "test/nvmf/target/filesystem.sh",
         "patchSetId": 3
