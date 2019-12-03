@@ -1,0 +1,187 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99936191_3e0635fa",
+        "filename": "examples/blobfs/fio_plugin/example_config.fio",
+        "patchSetId": 3
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-03T23:25:48Z",
+      "side": 1,
+      "message": "Should we set ./exapmles/blobfs/fio_plugin/bdev.conf.in instead?",
+      "range": {
+        "startLine": 3,
+        "startChar": 10,
+        "endLine": 3,
+        "endChar": 24
+      },
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f214a5f3_60a146c7",
+        "filename": "examples/blobfs/fio_plugin/example_config.fio",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-03T23:25:48Z",
+      "side": 1,
+      "message": "Can we specify which bdev to run by setting the filename as we do in examples/bdev/fio_plugin?",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 9
+      },
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c077c50c_c19681e1",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-03T23:25:48Z",
+      "side": 1,
+      "message": "Please do not change the line here.",
+      "range": {
+        "startLine": 94,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 0
+      },
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4ce04be_37e7ced4",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-03T23:25:48Z",
+      "side": 1,
+      "message": "Is this necessary?",
+      "range": {
+        "startLine": 104,
+        "startChar": 0,
+        "endLine": 104,
+        "endChar": 58
+      },
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e30df5ac_a50aba3c",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-03T23:25:48Z",
+      "side": 1,
+      "message": "do you want to do {;} instead?",
+      "range": {
+        "startLine": 427,
+        "startChar": 1,
+        "endLine": 427,
+        "endChar": 3
+      },
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ddd20459_6f863fb8",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-03T23:25:48Z",
+      "side": 1,
+      "message": "Please insert an empty line after variable definition.",
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9115bd14_f3b2e3f9",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-03T23:25:48Z",
+      "side": 1,
+      "message": "Can we do the following? SPDK usually define all variables at the top of the function.\n\nstruct spdk_fio_thread *fio_thread \u003d td-\u003eio_ops_data;\nstruct spdk_fio_target *target;\n\nif (!fio_thread) {\n  return -1;\n}\n\ntarget \u003d calloc(1, sizeof(*target));",
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e7a17f67_ba5bbf2d",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-03T23:25:48Z",
+      "side": 1,
+      "message": "Please insert an empty line after variable definition.",
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f38e1d7a_9e64e9ee",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-03T23:25:48Z",
+      "side": 1,
+      "message": "About iocq_count, the following may be simpler. Please see example/bdev/fio_plugin.\nOr will you let us know if you have any specific reason not to do the following?\n\nfio_thread-\u003eiocq_count \u003d 0;\n\nfor (;;) {\n  spdk_fio_poll_thread(fio_thread);\n\n  if (fio_thread-\u003eiocq_count \u003e\u003d min) {\n    return fio_thread-\u003eiocq_count;\n  }\n\n  (snip)\n}\n\nreturn fio_thread-\u003eiocq_count;",
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
