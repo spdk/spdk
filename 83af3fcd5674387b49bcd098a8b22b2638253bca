@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4301085_154530f0",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1591,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-03T19:28:59Z",
+      "side": 1,
+      "message": "Should this be something more like:\n\nif (g_number_of_claimed_volumes \u003e\u003d MAX_CRYPTO_VOLUMES) {\n  /* blah */\n}\ng_number_of_claimed_volumes++;\n\nOtherwise we have two problems I think:\n1) when we hit the limit, g_number_of_claimed_volumes keeps getting incremented, even though no new volume was claimed\n2) right at the limit, we have an off-by-one error\n\nif we start with g_number_of_claimed_volumes \u003d 128, the variable is post-decremented so it evaluates 128 \u003e 128 which is false and allows it\n\nI think the code above makes it all a lot clearer.",
+      "revId": "83af3fcd5674387b49bcd098a8b22b2638253bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
