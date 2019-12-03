@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0969e4ef_a71e59c4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3874,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-03T23:34:20Z",
+      "side": 1,
+      "message": "The passed spdk_io_channel_iter has bdev_io in its ctx, and the status is stored in bdev_io-\u003einternal.status.\n\nHence can we do the following instead of separating funcitons for negative/positive?\nbdev_io is not freed until we call bdev_reset_complete().\n\nbdev_unfreeze_channel(i)\n{\n  bdev_io \u003d spdk_io_channel_iter_get_ctx(i);\n  enum status \u003d bdev_io-\u003einternal.status;\n\n  while (!TAILQ_EMPTY(\u0026ch-\u003equeued_resets)) {\n    queued_reset \u003d TAILQ_FIRST(A\u0026ch-\u003equeued_resets);\n    TAILQ_REMOVE(\u0026ch-\u003equeued_resets, queued_reset, internal.link);\n    spdk_bdev_io_complete(queued_resets, status);\n  }\n}",
+      "range": {
+        "startLine": 3869,
+        "startChar": 0,
+        "endLine": 3874,
+        "endChar": 0
+      },
+      "revId": "a4c4e1ba8f538e8e748d3ebad64e355a241ef01c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
