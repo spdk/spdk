@@ -22,6 +22,30 @@
       "revId": "4afacb8ad628b1ff9b2f64819e9669a937feeae4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89e7c1b3_8d81057f",
+        "filename": "test/vhost/migration/migration-tc2.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-12-03T10:07:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f818c3f8_5fc63dc5",
+      "range": {
+        "startLine": 62,
+        "startChar": 1,
+        "endLine": 62,
+        "endChar": 36
+      },
+      "revId": "4afacb8ad628b1ff9b2f64819e9669a937feeae4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
