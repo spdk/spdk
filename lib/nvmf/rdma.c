@@ -3039,6 +3039,13 @@ spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn c
 }
 
 static void
+nvmf_rdma_handle_qp_fatal(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	spdk_nvmf_rdma_update_ibv_state(rqpair);
+	spdk_nvmf_rdma_start_disconnect(rqpair);
+}
+
+static void
 nvmf_rdma_handle_last_wqe_reached(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	rqpair->last_wqe_reached = true;
@@ -3104,8 +3111,10 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		SPDK_ERRLOG("Fatal event received for rqpair %p\n", rqpair);
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
-		spdk_nvmf_rdma_update_ibv_state(rqpair);
-		spdk_nvmf_rdma_start_disconnect(rqpair);
+		if (spdk_nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_qp_fatal)) {
+			SPDK_ERRLOG("Failed to send QP_FATAL event for rqpair %p\n", rqpair);
+			nvmf_rdma_handle_qp_fatal(rqpair);
+		}
 		break;
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
 		/* This event only occurs for shared receive queues. */
