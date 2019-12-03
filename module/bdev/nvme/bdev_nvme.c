@@ -2228,7 +2228,7 @@ bdev_nvme_comparev_and_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *c
 	}
 
 	if (!bio->first_fused_submitted) {
-		flags |= SPDK_NVME_IO_FLAGS_FUSE_FIRST;
+		flags |= SPDK_NVME_CMD_FUSE_FIRST;
 		memset(&bio->cpl, 0, sizeof(bio->cpl));
 
 		rc = spdk_nvme_ns_cmd_comparev_with_md(nbdev->nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
@@ -2236,7 +2236,7 @@ bdev_nvme_comparev_and_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *c
 						       bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge, md, 0, 0);
 		if (rc == 0) {
 			bio->first_fused_submitted = true;
-			flags &= ~SPDK_NVME_IO_FLAGS_FUSE_FIRST;
+			flags &= ~SPDK_NVME_CMD_FUSE_FIRST;
 		} else {
 			if (rc != -ENOMEM) {
 				SPDK_ERRLOG("compare failed: rc = %d\n", rc);
@@ -2245,7 +2245,7 @@ bdev_nvme_comparev_and_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *c
 		}
 	}
 
-	flags |= SPDK_NVME_IO_FLAGS_FUSE_SECOND;
+	flags |= SPDK_NVME_CMD_FUSE_SECOND;
 
 	rc = spdk_nvme_ns_cmd_writev_with_md(nbdev->nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
 					     bdev_nvme_comparev_and_writev_done, bio, flags,
