@@ -2301,7 +2301,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         try:
             call_rpc_func(args)
         except JSONRPCException as ex:
-            print(ex)
+            print(ex.message)
             exit(1)
     elif sys.stdin.isatty():
         # No arguments and no data piped through stdin
