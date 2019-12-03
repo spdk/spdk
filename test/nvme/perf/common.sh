@@ -310,6 +310,20 @@ function run_bdevperf(){
 	sleep 1
 }
 
+function wait_for_nvme_reload() {
+	local nvmes=$1
+
+	shopt -s extglob
+	for disk in $nvmes; do
+		cmd="ls /sys/block/$disk/queue/*@(iostats|rq_affinity|nomerges|io_poll_delay)*"
+		until $cmd 2>/dev/null; do
+			echo "Waiting for full nvme driver reload..."
+			sleep 0.5
+		done
+	done
+	shopt -q extglob
+}
+
 function usage()
 {
 	set +x
