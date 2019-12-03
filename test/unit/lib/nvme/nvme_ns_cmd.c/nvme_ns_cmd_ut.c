@@ -982,7 +982,7 @@ test_nvme_ns_cmd_compare_and_write(void)
 	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, 0, 128 * 1024, 0, false);
 
 	rc = spdk_nvme_ns_cmd_compare(&ns, &qpair, NULL, lba, lba_count, NULL, NULL,
-				      SPDK_NVME_IO_FLAGS_FUSE_FIRST);
+				      SPDK_NVME_CMD_FUSE_FIRST);
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
@@ -997,7 +997,7 @@ test_nvme_ns_cmd_compare_and_write(void)
 	nvme_free_request(g_request);
 
 	rc = spdk_nvme_ns_cmd_write(&ns, &qpair, NULL, lba, lba_count, NULL, NULL,
-				    SPDK_NVME_IO_FLAGS_FUSE_SECOND);
+				    SPDK_NVME_CMD_FUSE_SECOND);
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
