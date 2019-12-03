@@ -25,7 +25,9 @@ for fs in $fs; do
 		echo "INFO: Creating partition table on disk using: $parted_cmd mklabel gpt"
 		$parted_cmd mklabel gpt
 		$parted_cmd mkpart primary 2048s 100%
-		sleep 2
+		while [ ! -e "/dev/${dev}1" ]; do
+			sleep 0.5;
+		done
 
 		mkfs_cmd="mkfs.$fs"
 		if [[ $fs == "ntfs" ]]; then
@@ -51,6 +53,7 @@ for fs in $fs; do
 	for dev in $devs; do
 		umount /mnt/${dev}dir
 		rm -rf /mnt/${dev}dir
+		parted -s /dev/${dev} rm 1
 
 		stats=( $(cat /sys/block/$dev/stat) )
 		echo ""
