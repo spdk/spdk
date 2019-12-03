@@ -22,6 +22,30 @@
       "revId": "4161c5d051aa4f8bbc676501426c5f04b8b639fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2283e49_5068f16c",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-03T10:10:10Z",
+      "side": 1,
+      "message": "Hi Ziye,\n\nThanks for your comment.\nIf the current connection is broken, we remove all pdus in conn-\u003ewrite_pdu_list by iscsi_conn_free_tasks().\nHence this is OK.\nI add a comment for clarification. \n\n-Shuhei",
+      "parentUuid": "5c275986_8068a68b",
+      "range": {
+        "startLine": 489,
+        "startChar": 27,
+        "endLine": 489,
+        "endChar": 41
+      },
+      "revId": "4161c5d051aa4f8bbc676501426c5f04b8b639fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
