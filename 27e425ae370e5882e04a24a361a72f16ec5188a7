@@ -22,6 +22,30 @@
       "revId": "27e425ae370e5882e04a24a361a72f16ec5188a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a1c0322_2b9427fc",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-04T14:25:29Z",
+      "side": 1,
+      "message": "I suggested avoiding adding \"sleep\" for scripts which belong to autotest.sh, so they run in per-patch tests where we try to save time.\n\nThis script is not a part of autotest.sh so it has no impact on the CI.\nAlso, it\u0027s a total of 10 seconds for a script which usually takes at least a couple of minutes to complete;)\n\nBut OK, I\u0027ll get rid of the sleep call.",
+      "parentUuid": "ade610b3_f71d3899",
+      "range": {
+        "startLine": 73,
+        "startChar": 1,
+        "endLine": 73,
+        "endChar": 8
+      },
+      "revId": "27e425ae370e5882e04a24a361a72f16ec5188a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
