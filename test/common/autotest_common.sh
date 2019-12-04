@@ -567,6 +567,8 @@ function run_test() {
 	local test_type
 	test_type="$(echo $1 | tr '[:lower:]' '[:upper:]')"
 	shift
+	local test_name="$1"
+	shift
 	echo "************************************"
 	echo "START TEST $test_type $*"
 	echo "************************************"
