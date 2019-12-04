@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3261bb63_a0e59876",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T17:03:27Z",
+      "side": 1,
+      "message": "Hi Jin,\n\nI think you may have misread my earlier note on this comment.  I was proposing that we remove this sentence, and instead just say:\n\n/*\n * Count of I/O submitted to the underlying dev module through this channel\n * and waiting for completion.\n */",
+      "revId": "d95dab0b2c06ff91929feaf2ac271f17ff9f2293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
