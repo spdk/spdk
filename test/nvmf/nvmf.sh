@@ -9,8 +9,6 @@ fi
 
 source $rootdir/test/nvmf/common.sh
 
-timing_enter nvmf_tgt
-
 trap "exit 1" SIGINT SIGTERM EXIT
 
 TEST_ARGS=( "$@" )
@@ -59,4 +57,3 @@ trap - SIGINT SIGTERM EXIT
 revert_soft_roce
 
 report_test_completion "nvmf"
-timing_exit nvmf_tgt

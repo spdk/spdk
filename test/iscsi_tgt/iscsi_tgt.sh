@@ -9,8 +9,6 @@ fi
 
 source $rootdir/test/iscsi_tgt/common.sh
 
-timing_enter iscsi_tgt
-
 # $1 = test type (posix/vpp)
 if [ "$1" == "posix" ] || [ "$1" == "vpp" ]; then
 	TEST_TYPE=$1
@@ -82,4 +80,3 @@ fi
 
 cleanup_veth_interfaces $TEST_TYPE
 trap - SIGINT SIGTERM EXIT
-timing_exit iscsi_tgt

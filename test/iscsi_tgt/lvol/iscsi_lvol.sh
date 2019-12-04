@@ -9,8 +9,6 @@ source $rootdir/test/iscsi_tgt/common.sh
 # $2 = test type posix or vpp. defaults to posix.
 iscsitestinit $1 $2
 
-timing_enter iscsi_lvol
-
 MALLOC_BDEV_SIZE=128
 MALLOC_BLOCK_SIZE=512
 if [ $RUN_NIGHTLY -eq 1 ]; then
@@ -85,4 +83,3 @@ rm -f ./local-job*
 iscsicleanup
 killprocess $pid
 iscsitestfini $1 $2
-timing_exit iscsi_lvol

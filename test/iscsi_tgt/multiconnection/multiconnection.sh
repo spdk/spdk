@@ -34,8 +34,6 @@ function remove_backends() {
 	return 0
 }
 
-timing_enter multiconnection
-
 timing_enter start_iscsi_tgt
 $ISCSI_APP --wait-for-rpc &
 iscsipid=$!
@@ -84,4 +82,3 @@ iscsicleanup
 remove_backends
 killprocess $iscsipid
 iscsitestfini $1 $2
-timing_exit multiconnection

@@ -10,7 +10,6 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-timing_enter srq_overwhelm
 nvmftestinit
 
 if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
@@ -49,4 +48,3 @@ done
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit srq_overwhelm

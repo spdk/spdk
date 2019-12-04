@@ -15,7 +15,6 @@ if ! hash nvme; then
 	exit 0
 fi
 
-timing_enter discovery
 nvmftestinit
 nvmfappstart "-m 0xF"
 
@@ -48,4 +47,3 @@ fi
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit discovery

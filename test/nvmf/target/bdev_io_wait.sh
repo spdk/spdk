@@ -10,7 +10,6 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-timing_enter bdev_io_wait
 nvmftestinit
 nvmfappstart "-m 0xF --wait-for-rpc"
 
@@ -47,4 +46,3 @@ $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit bdev_io_wait

@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
-timing_enter nvme_cli_cuse
-
 NVME_CMD=/usr/local/src/nvme-cli/nvme
 rpc_py=$rootdir/scripts/rpc.py
 
@@ -74,4 +72,3 @@ trap - SIGINT SIGTERM EXIT
 killprocess $spdk_tgt_pid
 
 report_test_completion spdk_nvme_cli_cuse
-timing_exit nvme_cli_cuse

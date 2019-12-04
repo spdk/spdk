@@ -13,8 +13,6 @@ vhost_rpc_py="$rootdir/scripts/rpc.py"
 fuzz_generic_rpc_py="$rootdir/scripts/rpc.py -s $FUZZ_RPC_SOCK"
 fuzz_specific_rpc_py="$rootdir/test/app/fuzz/common/fuzz_rpc.py -s $FUZZ_RPC_SOCK"
 
-timing_enter fuzz_test
-
 $VHOST_APP >$output_dir/vhost_fuzz_tgt_output.txt 2>&1 &
 vhostpid=$!
 waitforlisten $vhostpid
@@ -66,5 +64,3 @@ wait $fuzzpid
 trap - SIGINT SIGTERM exit
 
 killprocess $vhostpid
-
-timing_exit fuzz_test

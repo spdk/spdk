@@ -122,8 +122,6 @@ function blobfs_fuse_test() {
 	killprocess $blobfs_pid
 }
 
-timing_enter blobfs
-
 trap 'on_error_exit;' ERR
 
 # Create one temp file as test bdev
@@ -146,5 +144,3 @@ blobfs_fuse_test
 rm -rf $mount_dir
 rm -f $tmp_file
 report_test_completion "blobfs"
-
-timing_exit blobfs

@@ -12,8 +12,6 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 rpc_py="$rootdir/scripts/rpc.py"
 
-timing_enter blob_bdev_io_wait
-
 truncate -s 64M $testdir/aio.bdev
 
 $rootdir/test/app/bdev_svc/bdev_svc &
@@ -63,4 +61,3 @@ rm -rf $testdir/aio.bdev
 trap - SIGINT SIGTERM EXIT
 
 report_test_completion "blob_io_wait"
-timing_exit bdev_io_wait

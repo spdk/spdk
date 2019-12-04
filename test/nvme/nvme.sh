@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
-timing_enter nvme
-
 if [ $(uname) = Linux ]; then
 	# check that our setup.sh script does not bind NVMe devices to uio/vfio if they
 	# have an active mountpoint
@@ -160,5 +158,3 @@ if [ -d /usr/src/fio ]; then
 	done
 	timing_exit fio_plugin
 fi
-
-timing_exit nvme

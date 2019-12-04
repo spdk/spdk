@@ -14,8 +14,6 @@ if [ -z "$pci_devs" ]; then
         exit 1
 fi
 
-timing_enter vmd
-
 timing_enter identify
 for bdf in $pci_devs; do
 	$rootdir/examples/nvme/identify/identify -i 0 -V -r "trtype:PCIe traddr:$bdf"
@@ -56,5 +54,3 @@ done
 
 trap - SIGINT SIGTERM EXIT
 killprocess $svcpid
-
-timing_exit vmd

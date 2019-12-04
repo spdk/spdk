@@ -12,7 +12,6 @@ NVMF_SUBSYS=11
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-timing_enter multiconnection
 nvmftestinit
 nvmfappstart "-m 0xF"
 
@@ -55,4 +54,3 @@ rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit multiconnection

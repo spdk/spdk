@@ -12,7 +12,6 @@ LVOL_BDEV_FINAL_SIZE=30
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-timing_enter lvol_integrity
 nvmftestinit
 nvmfappstart "-m 0x7"
 
@@ -67,4 +66,3 @@ rm -f ./local-job*
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit lvol_integrity

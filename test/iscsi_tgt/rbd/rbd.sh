@@ -19,8 +19,6 @@ rbd_setup $TARGET_IP $TARGET_NAMESPACE
 trap 'rbd_cleanup; exit 1' SIGINT SIGTERM EXIT
 timing_exit rbd_setup
 
-timing_enter rbd
-
 rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio.py"
 
@@ -68,4 +66,3 @@ rbd_cleanup
 
 iscsitestfini $1 $2
 report_test_completion "iscsi_rbd"
-timing_exit rbd

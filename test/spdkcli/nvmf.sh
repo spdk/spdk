@@ -9,7 +9,6 @@ source $rootdir/test/nvmf/common.sh
 MATCH_FILE="spdkcli_nvmf.test"
 SPDKCLI_BRANCH="/nvmf"
 
-timing_enter spdkcli_nvmf
 trap 'on_error_exit; revert_soft_roce' ERR
 rdma_device_init
 
@@ -84,5 +83,4 @@ timing_exit spdkcli_clear_nvmf_config
 
 killprocess $nvmf_tgt_pid
 #revert_soft_roce
-timing_exit spdkcli_nvmf
 report_test_completion spdk_cli_nvmf
