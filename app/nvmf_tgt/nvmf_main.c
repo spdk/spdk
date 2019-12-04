@@ -36,6 +36,10 @@
 #include "spdk/env.h"
 #include "spdk/event.h"
 
+/* TODO: Remove ... just to demo custom handlers */
+#include "spdk/nvme.h"
+#include "spdk_internal/nvmf.h"
+
 static void
 nvmf_usage(void)
 {
@@ -70,6 +74,10 @@ main(int argc, char **argv)
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
+
+	/* TODO: Remove ... just to demo custom handlers */
+	spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_IDENTIFY, spdk_nvmf_custom_identify_hdlr);
+	spdk_nvmf_set_passthru_admin_cmd(SPDK_NVME_OPC_FORMAT_NVM, 1);
 
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(&opts, nvmf_tgt_started, NULL);

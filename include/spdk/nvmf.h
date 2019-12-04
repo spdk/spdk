@@ -45,6 +45,7 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 #include "spdk/uuid.h"
+#include "spdk/bdev.h"
 
 #ifdef __cplusplus
 extern "C" {

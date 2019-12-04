@@ -46,6 +46,7 @@
 #include "spdk/version.h"
 
 #include "spdk_internal/log.h"
+#include "spdk_internal/nvmf.h"
 
 #define MIN_KEEP_ALIVE_TIMEOUT_IN_MS 10000
 #define NVMF_DISC_KATO_IN_MS 120000
@@ -57,6 +58,19 @@
  * SPDK_VERSION_STRING won't fit into FR (only 8 bytes), so try to fit the most important parts.
  */
 #define FW_VERSION SPDK_VERSION_MAJOR_STRING SPDK_VERSION_MINOR_STRING SPDK_VERSION_PATCH_STRING
+
+
+/*
+ * Support for custom admin command handlers
+ * The array index corresponds to the OPC
+ */
+struct spdk_nvmf_custom_admin_cmd {
+	spdk_nvmf_custom_cmd_hdlr hdlr;
+	uint32_t nsid;
+};
+
+static struct spdk_nvmf_custom_admin_cmd g_nvmf_custom_admin_cmd_hdlrs[256];
+
 
 static inline void
 spdk_nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
@@ -1516,7 +1530,7 @@ invalid_log_page:
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-static int
+int
 spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 			    struct spdk_nvme_cmd *cmd,
 			    struct spdk_nvme_cpl *rsp,
@@ -1558,7 +1572,29 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-static int
+static void
+spdk_nvmf_ctrlr_optional_admin_cmd_supported(struct spdk_nvmf_ctrlr *ctrlr,
+		struct spdk_nvme_ctrlr_data *cdata)
+{
+	cdata->oacs.virtualization_management =
+		g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_VIRTUALIZATION_MANAGEMENT].hdlr != NULL;
+	cdata->oacs.nvme_mi = g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_NVME_MI_SEND].hdlr
+			      && g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_NVME_MI_RECEIVE].hdlr;
+	cdata->oacs.directives = g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_DIRECTIVE_SEND].hdlr
+				 && g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_DIRECTIVE_RECEIVE].hdlr;
+	cdata->oacs.device_self_test =
+		g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_DEVICE_SELF_TEST].hdlr != NULL;
+	cdata->oacs.ns_manage = g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_NS_MANAGEMENT].hdlr
+				&& g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_NS_ATTACHMENT].hdlr;
+	cdata->oacs.firmware = g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD].hdlr
+			       && g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_FIRMWARE_COMMIT].hdlr;
+	cdata->oacs.format =
+		g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_FORMAT_NVM].hdlr != NULL;
+	cdata->oacs.security = g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_SECURITY_SEND].hdlr
+			       &&  g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_SECURITY_RECEIVE].hdlr;
+}
+
+int
 spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_ctrlr_data *cdata)
 {
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
@@ -1631,6 +1667,8 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->oncs.dsm = spdk_nvmf_ctrlr_dsm_supported(ctrlr);
 		cdata->oncs.write_zeroes = spdk_nvmf_ctrlr_write_zeroes_supported(ctrlr);
 		cdata->oncs.reservations = 1;
+
+		spdk_nvmf_ctrlr_optional_admin_cmd_supported(ctrlr, cdata);
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ext ctrlr data: ioccsz 0x%x\n",
 			      cdata->nvmf_specific.ioccsz);
@@ -2023,6 +2061,14 @@ spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 			break;
 		default:
 			goto invalid_opcode;
+		}
+	}
+
+	if (g_nvmf_custom_admin_cmd_hdlrs[cmd->opc].hdlr) {
+		int rc = g_nvmf_custom_admin_cmd_hdlrs[cmd->opc].hdlr(req);
+		if (rc >= 0) {
+			/* The handler took care of this commmand */
+			return rc;
 		}
 	}
 
@@ -2672,4 +2718,99 @@ spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx
 	}
 
 	return spdk_nvmf_ctrlr_get_dif_ctx(ctrlr, &req->cmd->nvme_cmd, dif_ctx);
+}
+
+void
+spdk_nvmf_set_custom_admin_cmd_hdlr(uint8_t opc, spdk_nvmf_custom_cmd_hdlr hdlr)
+{
+	g_nvmf_custom_admin_cmd_hdlrs[opc].hdlr = hdlr;
+}
+
+static int
+spdk_nvmf_passthru_admin_cmd(struct spdk_nvmf_request *req)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch;
+	struct spdk_nvme_cmd *cmd = spdk_nvmf_request_get_cmd(req);
+	struct spdk_nvme_cpl *response = spdk_nvmf_request_get_response(req);
+	uint32_t bdev_nsid;
+	int rc;
+
+	if (!g_nvmf_custom_admin_cmd_hdlrs[cmd->opc].hdlr) {
+		return -EINVAL;
+	}
+
+	bdev_nsid = (cmd->nsid == 0 || cmd->nsid == 0xffffffffu) ?
+			     g_nvmf_custom_admin_cmd_hdlrs[cmd->opc].nsid : cmd->nsid;
+
+	rc = spdk_nvmf_request_get_bdev(bdev_nsid, req, &bdev, &desc, &ch);
+	if (rc) {
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+	return spdk_nvmf_bdev_nvme_passthru_admin(bdev, desc, ch, req, NULL);
+}
+
+void
+spdk_nvmf_set_passthru_admin_cmd(uint8_t opc, uint32_t forward_nsid)
+{
+	g_nvmf_custom_admin_cmd_hdlrs[opc].hdlr = spdk_nvmf_passthru_admin_cmd;
+	g_nvmf_custom_admin_cmd_hdlrs[opc].nsid = forward_nsid;
+}
+
+int
+spdk_nvmf_request_get_bdev(uint32_t nsid, struct spdk_nvmf_request *req,
+			   struct spdk_bdev **bdev, struct spdk_bdev_desc **desc, struct spdk_io_channel **ch)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_poll_group *group = req->qpair->group;
+	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
+
+	*bdev = NULL;
+	*desc = NULL;
+	*ch = NULL;
+
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
+	if (ns == NULL || ns->bdev == NULL) {
+		SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
+		return -EINVAL;
+	}
+
+	assert(group != NULL && group->sgroups != NULL);
+	ns_info = &group->sgroups[ctrlr->subsys->id].ns_info[nsid - 1];
+	*bdev = ns->bdev;
+	*desc = ns->desc;
+	*ch = ns_info->channel;
+
+	return 0;
+}
+
+struct spdk_nvmf_ctrlr *spdk_nvmf_request_get_ctrlr(struct spdk_nvmf_request *req)
+{
+	return req->qpair->ctrlr;
+}
+
+struct spdk_nvme_cmd *spdk_nvmf_request_get_cmd(struct spdk_nvmf_request *req)
+{
+	return &req->cmd->nvme_cmd;
+}
+
+struct spdk_nvme_cpl *spdk_nvmf_request_get_response(struct spdk_nvmf_request *req)
+{
+	return &req->rsp->nvme_cpl;
+}
+
+struct spdk_nvmf_subsystem *spdk_nvmf_request_get_subsystem(struct spdk_nvmf_request *req)
+{
+	return req->qpair->ctrlr->subsys;
+}
+
+void spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length)
+{
+	*data = req->data;
+	*length = req->length;
 }
