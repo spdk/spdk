@@ -7,7 +7,7 @@ source $rootdir/test/common/autotest_common.sh
 timing_enter lvol
 
 timing_enter basic
-run_test suite test/lvol/basic.sh
+run_test suite "lvol_basic" test/lvol/basic.sh
 timing_exit basic
 
 timing_exit lvol
