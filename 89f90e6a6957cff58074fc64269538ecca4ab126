@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "082564ea_e28539ed",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T20:20:25Z",
+      "side": 1,
+      "message": "28 (not 27)",
+      "revId": "89f90e6a6957cff58074fc64269538ecca4ab126",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
