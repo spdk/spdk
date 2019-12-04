@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6149ce2e_fa2af08f",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-12-04T12:28:05Z",
+      "side": 1,
+      "message": "Isn\u0027t comparison to 1 (second condition) enough here?\nIf yes, then I suggest to remove this \"-n\" check for simplicity",
+      "range": {
+        "startLine": 53,
+        "startChar": 4,
+        "endLine": 53,
+        "endChar": 26
+      },
+      "revId": "0cf142d5f7f4fef2525011498c9ab286a8b7f024",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7dc2467_9681f38a",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-12-04T12:28:05Z",
+      "side": 1,
+      "message": "Maybe \"Iteration $j failed\" or \"failed after $j iterations\"?",
+      "range": {
+        "startLine": 54,
+        "startChar": 8,
+        "endLine": 54,
+        "endChar": 28
+      },
+      "revId": "0cf142d5f7f4fef2525011498c9ab286a8b7f024",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
