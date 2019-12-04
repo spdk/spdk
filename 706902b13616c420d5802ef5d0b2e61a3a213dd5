@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df37d620_e1990e2c",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T17:16:52Z",
+      "side": 1,
+      "message": "should we remove the partition here?\n\nthis runs in a loop to test multiple filesystems - is the problem that we create the partition for xfs (for example), mkfs and mount, but here when we clean up we don\u0027t delete the partition - we only unmount\n\nthen next time through the loop, for the next fs, we try to create the partition again - won\u0027t it still be there from the previous loop?",
+      "revId": "706902b13616c420d5802ef5d0b2e61a3a213dd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
