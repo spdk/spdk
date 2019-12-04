@@ -38,8 +38,6 @@ function rpc_add_target_node() {
 	$rpc_py -s $1 iscsi_create_target_node target1 target1_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
 }
 
-timing_enter ip_migration
-
 echo "Running ip migration tests"
 for ((i = 0; i < 2; i++)); do
 	timing_enter start_iscsi_tgt_$i
@@ -92,4 +90,3 @@ iscsicleanup
 $rpc_py -s $rpc_second_addr spdk_kill_instance SIGTERM
 iscsitestfini $1 $2
 report_test_completion "iscsi_ip_migration"
-timing_exit ip_migration

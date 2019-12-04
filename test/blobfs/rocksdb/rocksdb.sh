@@ -39,8 +39,6 @@ if [ ! -e $DB_BENCH_DIR ]; then
 	exit 0
 fi
 
-timing_enter rocksdb
-
 timing_enter db_bench_build
 
 pushd $DB_BENCH_DIR
@@ -154,4 +152,3 @@ run_bsdump
 rm -f $ROCKSDB_CONF
 
 report_test_completion "blobfs"
-timing_exit rocksdb

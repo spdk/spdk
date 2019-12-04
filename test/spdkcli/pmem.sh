@@ -8,7 +8,6 @@ source $rootdir/test/spdkcli/common.sh
 MATCH_FILE="spdkcli_pmem.test"
 SPDKCLI_BRANCH="/bdevs/pmemblk"
 
-timing_enter spdkcli_pmem
 trap 'rm -f $testdir/match_files/spdkcli_pmem_info.test; on_error_exit;' ERR
 
 timing_enter run_spdk_tgt
@@ -46,5 +45,4 @@ rm -f $testdir/match_files/spdkcli_pmem_info.test
 timing_exit spdkcli_clear_pmem_config
 
 killprocess $spdk_tgt_pid
-timing_exit spdkcli_pmem
 report_test_completion spdk_cli

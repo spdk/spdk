@@ -9,8 +9,6 @@ source $rootdir/test/iscsi_tgt/common.sh
 # $2 = test type posix or vpp. defaults to posix.
 iscsitestinit $1 $2
 
-timing_enter ext4test
-
 rpc_py="$rootdir/scripts/rpc.py"
 node_base="iqn.2013-06.com.intel.ch.spdk"
 
@@ -132,4 +130,3 @@ fi
 killprocess $pid
 iscsitestfini $1 $2
 report_test_completion "nightly_iscsi_ext4test"
-timing_exit ext4test

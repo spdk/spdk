@@ -28,8 +28,6 @@ if [ -z "$INITIATOR_IP" ]; then
 	exit 1
 fi
 
-timing_enter trace_record
-
 NUM_TRACE_ENTRIES=4096
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096
@@ -135,4 +133,3 @@ done
 
 trap - SIGINT SIGTERM EXIT
 iscsitestfini $1 $2
-timing_exit trace_record

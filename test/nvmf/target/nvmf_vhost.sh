@@ -21,7 +21,6 @@ VHOST_SOCK="/tmp/vhost_rpc.sock"
 VHOST_APP="$rootdir/app/vhost/vhost -p 0 -r $VHOST_SOCK -u"
 VHOST_RPC="$rootdir/scripts/rpc.py -s $VHOST_SOCK"
 
-timing_enter nvmf_vhost
 nvmftestinit
 
 # Start Apps
@@ -68,4 +67,3 @@ trap - SIGINT SIGTERM EXIT
 
 killprocess $vhostpid
 nvmftestfini
-timing_exit nvmf_vhost
