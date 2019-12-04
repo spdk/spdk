@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "00e321bf_cc22e62e",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-04T01:57:23Z",
+      "side": 1,
+      "message": "For the related change at https://review.gerrithub.io/c/spdk/spdk/+/476127/3/test/common/autotest_common.sh\n\nIf the process is not there anymore, it will return error instead of continuing running the script. For this function, it will always try to kill the process however in our current scripts, there are other places called the killprocess already. So this change is to avoid the duplicate calling of killprocess on the same PID. This is to solve the \"leaked file descriptors\" issue. I\u0027ll take a look at Seth\u0027s change.\n\nThanks, Gang",
+      "parentUuid": "bbcb6649_9c88b781",
+      "revId": "77ebad9085d02ee5112c9b000f150b7413fad37a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e861f69d_e781c275",
         "filename": "test/nvmf/target/filesystem.sh",
         "patchSetId": 3
