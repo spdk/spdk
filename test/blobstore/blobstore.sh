@@ -10,8 +10,6 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
-timing_enter blobstore
-
 # Nvme0 target configuration
 $rootdir/scripts/gen_nvme.sh > $testdir/blobcli.conf
 
@@ -33,5 +31,3 @@ rm -rf $testdir/btest.out
 rm -rf $testdir/blobcli.conf
 rm -rf $testdir/*.blob
 rm -rf $testdir/test.pattern
-
-timing_exit blobstore

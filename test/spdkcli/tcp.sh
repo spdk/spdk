@@ -46,7 +46,6 @@ function waitfortcplisten() {
 IP_ADDRESS="127.0.0.1"
 PORT="9998"
 
-timing_enter spdkcli_tcp
 trap 'on_error_exit;' ERR
 
 timing_enter run_spdk_tgt_tcp
@@ -59,7 +58,5 @@ waitfortcplisten $spdk_tgt_pid $IP_ADDRESS $PORT
 timing_exit run_spdk_tgt_tcp
 
 killprocess $spdk_tgt_pid
-
-timing_exit spdkcli_tcp
 
 report_test_completion spdkcli_tcp

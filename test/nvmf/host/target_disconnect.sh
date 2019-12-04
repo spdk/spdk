@@ -32,8 +32,6 @@ if [ $TEST_TRANSPORT == "rdma" ] && check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP;
 	exit 0
 fi
 
-timing_enter target_disconnect
-
 nvmftestinit
 
 # Test to make sure we don't segfault or access null pointers when we try to connect to
@@ -87,4 +85,3 @@ fi
 trap - SIGINT SIGTERM EXIT
 rm -f $PLUGIN_DIR/example_config_extended.fio || true
 nvmftestfini
-timing_exit target_disconnect

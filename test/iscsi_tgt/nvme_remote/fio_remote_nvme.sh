@@ -53,8 +53,6 @@ function run_nvme_remote() {
 	iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 }
 
-timing_enter nvme_remote
-
 # Start the NVMf target
 NVMF_APP="$rootdir/app/nvmf_tgt/nvmf_tgt"
 $NVMF_APP -m 0x2 -p 1 -s 512 --wait-for-rpc &
@@ -102,4 +100,3 @@ $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 report_test_completion "iscsi_nvme_remote"
 iscsitestfini $1 $2
 nvmftestfini
-timing_exit nvme_remote

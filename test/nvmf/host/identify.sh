@@ -12,7 +12,6 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 nvmftestinit
 
-timing_enter identify
 timing_enter start_nvmf_tgt
 
 $NVMF_APP -m 0xF &
@@ -53,4 +52,3 @@ $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit identify
