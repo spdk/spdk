@@ -22,6 +22,30 @@
       "revId": "c10633bbfc64763ea39d99baacf4716cc43a6926",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fdf16605_6b7136df",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-12-04T12:21:52Z",
+      "side": 1,
+      "message": "I can not find that partx support creating gpt pratition table, but find that sgdisk support it.\nMaybe this will be good point to resolve this ?",
+      "parentUuid": "43cd39cb_bdac24cf",
+      "range": {
+        "startLine": 27,
+        "startChar": 2,
+        "endLine": 27,
+        "endChar": 9
+      },
+      "revId": "c10633bbfc64763ea39d99baacf4716cc43a6926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
