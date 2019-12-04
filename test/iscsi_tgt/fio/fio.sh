@@ -54,8 +54,6 @@ if [ -z "$INITIATOR_IP" ]; then
 	exit 1
 fi
 
-timing_enter fio
-
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096
 
@@ -151,5 +149,3 @@ trap - SIGINT SIGTERM EXIT
 killprocess $pid
 
 iscsitestfini $1 $2
-
-timing_exit fio

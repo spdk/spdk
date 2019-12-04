@@ -6,7 +6,6 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/spdkcli/common.sh
 
 trap 'killprocess $virtio_pid; on_error_exit' ERR
-timing_enter spdk_cli_vhost_init
 
 timing_enter run_spdk_tgt
 run_spdk_tgt
@@ -77,5 +76,3 @@ timing_exit spdkcli_clear_virtio_config
 
 killprocess $virtio_pid
 killprocess $spdk_tgt_pid
-
-timing_exit spdk_cli_vhost_init

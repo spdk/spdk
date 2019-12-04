@@ -7,8 +7,6 @@ source $rootdir/test/nvmf/common.sh
 
 nvmftestinit
 
-timing_enter identify_kernel_nvmf_tgt
-
 subsystemname=nqn.2016-06.io.spdk:testnqn
 
 modprobe null_blk nr_devices=1
@@ -71,4 +69,3 @@ rmmod null_blk
 rmmod nvmet
 
 nvmftestfini
-timing_exit identify_kernel_nvmf_tgt

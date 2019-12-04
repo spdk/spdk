@@ -89,8 +89,6 @@ if [ ! -e "$base_img" ]; then
 	exit 0
 fi
 
-timing_enter hotplug
-
 timing_enter start_qemu
 
 qemu-img create -b "$base_img" -f qcow2 "$test_img"
@@ -146,5 +144,3 @@ rm "$test_img"
 
 report_test_completion "nvme_hotplug"
 timing_exit hotplug_test
-
-timing_exit hotplug
