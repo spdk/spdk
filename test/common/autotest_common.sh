@@ -563,6 +563,12 @@ function kill_stub() {
 }
 
 function run_test() {
+	if [ $# -le 2 ]; then
+		echo "Not enough parameters"
+		echo "usage: run_test test_type test_name test_script [script_params]"
+		exit 1
+	fi
+
 	xtrace_disable
 	local test_type
 	test_type="$(echo $1 | tr '[:lower:]' '[:upper:]')"
