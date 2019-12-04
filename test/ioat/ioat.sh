@@ -4,12 +4,8 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
-timing_enter perf
-$rootdir/examples/ioat/perf/ioat_perf -t 1
-timing_exit perf
+run_test "case" "ioat_perf" $rootdir/examples/ioat/perf/ioat_perf -t 1
 
-timing_enter verify
-$rootdir/examples/ioat/verify/verify -t 1
-timing_exit verify
+run_test "case" "ioat_verify" $rootdir/examples/ioat/verify/verify -t 1
 
 report_test_completion "ioat"
