@@ -36,6 +36,29 @@
     },
     {
       "key": {
+        "uuid": "ce90582c_b1ce0a6b",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-04T06:41:52Z",
+      "side": 1,
+      "message": "Hi Haliang,\n\nFor SCSI and iSCSI, I think we are used to use hexadecimal constant rather than base64 constant.",
+      "range": {
+        "startLine": 380,
+        "startChar": 12,
+        "endLine": 380,
+        "endChar": 41
+      },
+      "revId": "096f346dcd515c8029e9ce4f9324026241c3fe9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1e9e025a_df666af1",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 29
