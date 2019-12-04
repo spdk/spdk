@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43cd39cb_bdac24cf",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-04T10:13:26Z",
+      "side": 1,
+      "message": "Instead of adding more \"sleep\" could you maybe try trhis suggestion?\n\n\npartx -u /dev/${dev}\nhttps://unix.stackexchange.com/questions/117949/how-do-i-use-new-fdisk-table-without-reboot-kpartx",
+      "range": {
+        "startLine": 27,
+        "startChar": 2,
+        "endLine": 27,
+        "endChar": 9
+      },
+      "revId": "c10633bbfc64763ea39d99baacf4716cc43a6926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
