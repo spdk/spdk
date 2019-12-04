@@ -231,6 +231,61 @@ function test_clone_snapshot_relations() {
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 }
 
+function test_clone_inflate() {
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+        lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+        # Create lvol bdev
+        lvol_size_mb=$(( LVS_DEFAULT_CAPACITY_MB / 4 ))
+        # Round down lvol size to the nearest cluster size boundary
+        lvol_size_mb=$(( lvol_size_mb / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+        lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+
+        lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb")
+        lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+
+        # Fill lvol bdev with 100% of its space
+        nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
+        run_fio_test /dev/nbd0 0 lvol_size "write" "0xcc"
+        nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
+
+	# Create snapshots of lvol bdev
+        snapshot_uuid=$(rpc_cmd bdev_lvol_snapshot lvs_test/lvol_test lvol_snapshot)
+
+	# Create clone of snapshot
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+	[ "$(jq '.[].driver_specific.lvol.thin_provision' <<< "$lvol")" = "true" ]
+
+	# Fill part of clone with data of known pattern
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
+	first_fill=0
+	second_fill=$(( lvol_size * 3 / 4 ))
+        run_fio_test /dev/nbd0 first_fill $(( 1024*1024 )) "write" "0xdd"
+	run_fio_test /dev/nbd0 second_fill $(( 1024*1024 )) "write" "0xdd"
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
+
+	# Do inflate
+	rpc_cmd bdev_lvol_inflate lvs_test/lvol_test
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+	[ "$(jq '.[].driver_specific.lvol.thin_provision' <<< "$lvol")" = "false" ]
+
+	# Delete snapshot
+	rpc_cmd bdev_lvol_delete "$snapshot_uuid"
+
+	# Check data consistency
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
+	run_fio_test /dev/nbd0 first_fill $(( 1024*1024 )) "read" "0xdd"
+	run_fio_test /dev/nbd0 $(( (first_fill + 1) * 1024 * 1024 )) $(( (second_fill - first_fill - 1) * 1024 * 1024 )) "read" "0xcc"
+	run_fio_test /dev/nbd0 second_fill $(( 1024*1024 )) "read" "0xdd"
+	run_fio_test /dev/nbd0 $(( (second_fill + 1) * 1024 * 1024 )) $(( (lvol_size - second_fill - 1) * 1024 * 1024 )) "read" "0xcc"
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
+
+	# Clean up
+        rpc_cmd bdev_lvol_delete "$lvol_uuid"
+        rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+        rpc_cmd bdev_malloc_delete "$malloc_name"
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -241,6 +296,7 @@ run_lvol_test test_snapshot_compare_with_lvol_bdev
 run_lvol_test test_create_snapshot_with_io
 run_lvol_test test_create_snapshot_of_snapshot
 run_lvol_test test_clone_snapshot_relations
+run_lvol_test test_clone_inflate
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid

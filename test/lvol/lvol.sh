@@ -39,7 +39,6 @@ function usage() {
                                     702: 'tasting_positive_with_different_lvol_store_cluster_size',
                                     750: 'snapshot_readonly',
                                     751: 'snapshot_compare_with_lvol_bdev',
-                                    757: 'clone_inflate',
                                     758: 'clone_decouple_parent',
                                     759: 'clone_decouple_parent_rw',
                                     760: 'set_read_only',
