@@ -126,7 +126,6 @@ def case_message(func):
             654: 'thin_overprovisioning',
             655: 'thin_provisioning_filling_disks_less_than_lvs_size',
             # snapshot and clone
-            757: 'clone_inflate',
             758: 'decouple_parent',
             759: 'decouple_parent_rw',
             760: 'set_read_only',
@@ -936,96 +935,6 @@ class TestCases(object):
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # destroy malloc bdev
         fail_count += self.c.bdev_malloc_delete(base_name)
-        # Expected result:
-        # - calls successful, return code = 0
-        # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case757(self):
-        """
-        clone_inflate
-
-
-        Test inflate rpc method
-        """
-        fail_count = 0
-        snapshot_name = "snapshot"
-        nbd_name = "/dev/nbd0"
-
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-
-        # Create lvol store
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        fail_count += self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                          self.cluster_size)
-        size = self.get_lvs_divided_size(4)
-
-        # Construct thick provisioned lvol bdev
-        uuid_bdev0 = self.c.bdev_lvol_create(uuid_store,
-                                             self.lbd_name, size, thin=False)
-        lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
-
-        # Fill bdev with data of knonw pattern
-        fail_count += self.c.nbd_start_disk(lvol_bdev['name'], nbd_name)
-        fill_size = size * MEGABYTE
-        fail_count += self.run_fio_test(nbd_name, 0, fill_size, "write", "0xcc", 0)
-        self.c.nbd_stop_disk(nbd_name)
-
-        # Create snapshot of thick provisioned lvol bdev
-        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
-        snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
-
-        # Create two clones of created snapshot
-        lvol_clone = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + self.lbd_name)
-        if lvol_clone['driver_specific']['lvol']['thin_provision'] is not True:
-            fail_count += 1
-
-        # Fill part of clone with data of known pattern
-        fail_count += self.c.nbd_start_disk(lvol_clone['name'], nbd_name)
-        first_fill = 0
-        second_fill = int(size * 3 / 4)
-        fail_count += self.run_fio_test(nbd_name, first_fill * MEGABYTE,
-                                        MEGABYTE, "write", "0xdd", 0)
-        fail_count += self.run_fio_test(nbd_name, second_fill * MEGABYTE,
-                                        MEGABYTE, "write", "0xdd", 0)
-        self.c.nbd_stop_disk(nbd_name)
-
-        # Do inflate
-        fail_count += self.c.bdev_lvol_inflate(lvol_clone['name'])
-        lvol_clone = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + self.lbd_name)
-        if lvol_clone['driver_specific']['lvol']['thin_provision'] is not False:
-            fail_count += 1
-
-        # Delete snapshot
-        fail_count += self.c.bdev_lvol_delete(snapshot_bdev['name'])
-
-        # Check data consistency
-        fail_count += self.c.nbd_start_disk(lvol_clone['name'], nbd_name)
-        fail_count += self.run_fio_test(nbd_name, first_fill * MEGABYTE,
-                                        MEGABYTE, "read", "0xdd")
-        fail_count += self.run_fio_test(nbd_name, (first_fill + 1) * MEGABYTE,
-                                        (second_fill - first_fill - 1) * MEGABYTE,
-                                        "read", "0xcc")
-        fail_count += self.run_fio_test(nbd_name, (second_fill) * MEGABYTE,
-                                        MEGABYTE, "read", "0xdd")
-        fail_count += self.run_fio_test(nbd_name, (second_fill + 1) * MEGABYTE,
-                                        (size - second_fill - 1) * MEGABYTE,
-                                        "read", "0xcc")
-        self.c.nbd_stop_disk(nbd_name)
-
-        # Destroy lvol bdev
-        fail_count += self.c.bdev_lvol_delete(lvol_bdev['name'])
-
-        # Destroy lvol store
-        fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
-
-        # Delete malloc
-        fail_count += self.c.bdev_malloc_delete(base_name)
-
         # Expected result:
         # - calls successful, return code = 0
         # - no other operation fails
