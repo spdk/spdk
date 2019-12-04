@@ -11,8 +11,6 @@ MALLOC_BLOCK_SIZE=512
 rpc_py="$rootdir/scripts/rpc.py"
 
 # connect disconnect is geared towards ensuring that we are properly freeing resources after disconnecting qpairs.
-timing_enter connect_disconnect
-
 nvmftestinit
 nvmfappstart "-m 0xF"
 
@@ -43,4 +41,3 @@ set -x
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit connect_disconnect

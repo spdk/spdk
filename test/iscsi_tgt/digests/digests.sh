@@ -57,8 +57,6 @@ function iscsi_header_data_digest_test() {
 	timing_exit both_enabled
 }
 
-timing_enter digests
-
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
@@ -106,4 +104,3 @@ trap - SIGINT SIGTERM EXIT
 iscsicleanup
 killprocess $pid
 iscsitestfini $1 $2
-timing_exit digests

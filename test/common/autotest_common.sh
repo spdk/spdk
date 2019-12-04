@@ -573,6 +573,8 @@ function run_test() {
 	shift
 	test_name="$1"
 	shift
+
+	timing_enter $test_name
 	echo "************************************"
 	echo "START TEST $test_type $*"
 	echo "************************************"
@@ -582,6 +584,8 @@ function run_test() {
 	echo "************************************"
 	echo "END TEST $test_type $*"
 	echo "************************************"
+	timing_exit $test_name
+
 	xtrace_restore
 }
 

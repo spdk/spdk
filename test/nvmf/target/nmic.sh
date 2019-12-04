@@ -10,7 +10,6 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-timing_enter nmic
 nvmftestinit
 nvmfappstart "-m 0xF"
 
@@ -55,4 +54,3 @@ nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit nmic

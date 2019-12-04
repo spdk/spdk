@@ -15,8 +15,6 @@ PMEM_PER_TGT=1
 rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio.py"
 
-timing_enter iscsi_pmem
-
 timing_enter start_iscsi_target
 $ISCSI_APP -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
 pid=$!
@@ -75,4 +73,3 @@ rm -f ./local-job*
 rm -f /tmp/pool_file*
 killprocess $pid
 report_test_completion "nightly_iscsi_pmem"
-timing_exit iscsi_pmem

@@ -9,8 +9,6 @@ source $rootdir/test/iscsi_tgt/common.sh
 # $2 = "iso" - triggers isolation mode (setting up required environment).
 iscsitestinit $2 $1
 
-timing_enter rpc_config
-
 if [ "$1" == "posix" ] || [ "$1" == "vpp" ]; then
 	TEST_TYPE=$1
 else
@@ -63,5 +61,3 @@ iscsicleanup
 killprocess $pid
 
 iscsitestfini $2 $1
-
-timing_exit rpc_config

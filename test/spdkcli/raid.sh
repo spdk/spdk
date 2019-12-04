@@ -11,7 +11,6 @@ SPDKCLI_BRANCH="/bdevs"
 testdir=$(readlink -f $(dirname $0))
 . $testdir/common.sh
 
-timing_enter spdkcli_raid
 trap 'on_error_exit;' ERR
 
 timing_enter run_spdk_tgt
@@ -45,5 +44,4 @@ $spdkcli_job "'/bdevs/malloc delete Malloc1' '' True
 timing_exit spdkcli_delete_malloc
 
 killprocess $spdk_tgt_pid
-timing_exit spdkcli_raid
 report_test_completion spdk_cli
