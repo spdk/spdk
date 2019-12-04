@@ -46,6 +46,91 @@
       "revId": "63c5641ac5deac7dc9510677dba03265a8f2c67e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4322ae58_6ce5db50",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2371,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T20:08:14Z",
+      "side": 1,
+      "message": "let\u0027s make these changes part of a separate commit",
+      "revId": "63c5641ac5deac7dc9510677dba03265a8f2c67e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e68721a5_4f9112bd",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T20:08:14Z",
+      "side": 1,
+      "message": "extra space added",
+      "revId": "63c5641ac5deac7dc9510677dba03265a8f2c67e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a011b64a_876ead51",
+        "filename": "test/unit/lib/nvmf/subsystem.c/subsystem_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 578,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T20:08:14Z",
+      "side": 1,
+      "message": "do we need to first set cmd-\u003ecdw10 \u003d 0?  otherwise the reserved bits are in an unknown state\n\nI think cmd-\u003ecdw10 is 0 whenever this function is called currently, but I don\u0027t see any reason why we shouldn\u0027t still set it to 0 explicitly just to make it clear",
+      "revId": "63c5641ac5deac7dc9510677dba03265a8f2c67e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c9630f9_23b2fe44",
+        "filename": "test/unit/lib/nvmf/subsystem.c/subsystem_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 595,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T20:08:14Z",
+      "side": 1,
+      "message": "do we need to first set cmd-\u003ecdw10 \u003d 0?  otherwise the reserved bits are in an unknown state",
+      "revId": "63c5641ac5deac7dc9510677dba03265a8f2c67e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03f951b3_1cbe8a64",
+        "filename": "test/unit/lib/nvmf/subsystem.c/subsystem_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T20:08:14Z",
+      "side": 1,
+      "message": "do we need to first set cmd-\u003ecdw10 \u003d 0?  otherwise the reserved bits are in an unknown state",
+      "revId": "63c5641ac5deac7dc9510677dba03265a8f2c67e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
