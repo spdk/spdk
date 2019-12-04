@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85f024ba_c5023dbf",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T17:20:45Z",
+      "side": 1,
+      "message": "let\u0027s change this to SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED (I know - it\u0027s long!)\n\ncurrently this is the only fused operation supported by the spec, but more could be added later, and then controllers may support one but not another",
+      "revId": "8d958e35e5824c582681e04bcdfba1d655dd1f4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b7218fb_1e683431",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1230,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T17:20:45Z",
+      "side": 1,
+      "message": "supported \u003d\u003e compare_and_write\n\nsimilar to above, more fused operation types could be added to the spec in the future",
+      "revId": "8d958e35e5824c582681e04bcdfba1d655dd1f4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
