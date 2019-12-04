@@ -112,11 +112,9 @@ function raid_function_test() {
 	return 0
 }
 
-timing_enter bdev_raid
 trap 'on_error_exit;' ERR
 
 raid_function_test
 
 rm -f $tmp_file
 report_test_completion "bdev_raid"
-timing_exit bdev_raid

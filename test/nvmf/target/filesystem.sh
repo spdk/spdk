@@ -10,8 +10,6 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-timing_enter fs_test
-
 nvmftestinit
 
 for incapsule in 0 4096; do
@@ -72,4 +70,3 @@ for incapsule in 0 4096; do
 done
 
 nvmftestfini
-timing_exit fs_test

@@ -50,8 +50,6 @@ if [ -z "$INITIATOR_IP" ]; then
 	exit 1
 fi
 
-timing_enter qos
-
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 IOPS_RESULT=
@@ -145,4 +143,3 @@ trap - SIGINT SIGTERM EXIT
 killprocess $pid
 
 iscsitestfini $1 $2
-timing_exit qos
