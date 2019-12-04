@@ -16,6 +16,24 @@
       "revId": "aad7f9dabea5d5a74c7cc1b42a7fcff63f1a61c2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "775e178a_c71b16e0",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-12-04T07:45:12Z",
+      "side": 1,
+      "message": "Thanks for your review.\nI forgot that $! work only on background process.\nI add second sleep in that case but still looking for better way to resolve it.",
+      "parentUuid": "fbbb8129_3c2be263",
+      "revId": "aad7f9dabea5d5a74c7cc1b42a7fcff63f1a61c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
