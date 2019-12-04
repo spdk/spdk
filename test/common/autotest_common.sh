@@ -563,6 +563,10 @@ function kill_stub() {
 }
 
 function run_test() {
+	if [ $# -le 2 ]; then
+		echo "Invalid parameters supplied to run_test"
+	fi
+
 	xtrace_disable
 	local test_type
 	test_type="$(echo $1 | tr '[:lower:]' '[:upper:]')"
