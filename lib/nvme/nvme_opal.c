@@ -2670,5 +2670,16 @@ spdk_opal_get_max_locking_ranges(struct spdk_opal_dev *dev)
 	return dev->max_ranges;
 }
 
+enum spdk_opal_dev_state
+spdk_opal_get_dev_state(struct spdk_opal_dev *dev) {
+	return dev->state;
+}
+
+const char *
+spdk_opal_get_nvme_ctrlr_name(struct spdk_opal_dev *dev)
+{
+	return dev->nvme_ctrlr_name;
+}
+
 /* Log component for opal submodule */
 SPDK_LOG_REGISTER_COMPONENT("opal", SPDK_LOG_OPAL)

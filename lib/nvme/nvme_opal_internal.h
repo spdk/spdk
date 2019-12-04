@@ -277,6 +277,7 @@ struct spdk_opal_header {
 };
 
 struct spdk_opal_dev {
+	char *nvme_ctrlr_name;
 	bool supported;
 	void *dev_handler;
 
@@ -290,6 +291,7 @@ struct spdk_opal_dev {
 	uint8_t cmd[IO_BUFFER_LENGTH];
 	uint8_t resp[IO_BUFFER_LENGTH];
 
+	enum spdk_opal_dev_state state;
 	struct spdk_opal_resp_parsed parsed_resp;
 	size_t prev_d_len;
 	void *prev_data;
