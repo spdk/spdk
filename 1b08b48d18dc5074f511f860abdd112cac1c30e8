@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91c811d2_80875616",
+        "filename": "lib/nvme/nvme_cuse.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-04T14:22:42Z",
+      "side": 1,
+      "message": "I think you wanted to keep it err2 here as was previously.",
+      "range": {
+        "startLine": 834,
+        "startChar": 3,
+        "endLine": 834,
+        "endChar": 13
+      },
+      "revId": "1b08b48d18dc5074f511f860abdd112cac1c30e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
