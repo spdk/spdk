@@ -1,0 +1,9 @@
+Code-Review+2: Tomasz Zawadzki <tomasz.zawadzki@intel.com>
+Code-Review+2: Shuhei Matsumoto <shuhei.matsumoto.xt@hitachi.com>
+Code-Review+1: Maciej Wawryk <maciejx.wawryk@intel.com>
+Verified+1: SPDK CI Jenkins <sys_sgci@intel.com>
+Submitted-by: Tomasz Zawadzki <tomasz.zawadzki@intel.com>
+Submitted-at: Wed, 04 Dec 2019 15:16:04 +0000
+Reviewed-on: https://review.gerrithub.io/c/spdk/spdk/+/476159
+Project: spdk/spdk
+Branch: refs/heads/master
