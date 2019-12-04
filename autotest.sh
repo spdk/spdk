@@ -144,10 +144,8 @@ fi
 #####################
 
 if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
-	timing_enter unittest
 	run_test suite "unittest" ./test/unit/unittest.sh
 	report_test_completion "unittest"
-	timing_exit unittest
 fi
 
 
@@ -223,12 +221,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_LVOL -eq 1 ]; then
-		timing_enter lvol
 		run_test suite "lvol" ./test/lvol/lvol.sh --test-cases=all
 		run_test suite "lvol2" ./test/lvol/lvol2.sh
 		run_test suite "blob_io_wait" ./test/blobstore/blob_io_wait/blob_io_wait.sh
 		report_test_completion "lvol"
-		timing_exit lvol
 	fi
 
 	if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then

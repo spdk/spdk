@@ -58,7 +58,6 @@ fi
 
 vhosttestinit
 
-timing_enter vhost_boot
 trap 'err_clean "${FUNCNAME}" "${LINENO}"' ERR
 timing_enter start_vhost
 vhost_run 0
@@ -121,7 +120,5 @@ $rpc_py bdev_lvol_delete $lvb_u
 $rpc_py bdev_lvol_delete_lvstore -u $lvs_u
 vhost_kill 0
 timing_exit clean_vhost
-
-timing_exit vhost_boot
 
 vhosttestfini

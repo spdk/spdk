@@ -13,8 +13,6 @@ if [ ! -d /usr/local/calsoft ]; then
 	exit 0
 fi
 
-timing_enter calsoft
-
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
@@ -67,5 +65,4 @@ trap - SIGINT SIGTERM EXIT
 
 killprocess $pid
 delete_tmp_conf_files
-timing_exit calsoft
 exit $failed

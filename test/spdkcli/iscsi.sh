@@ -9,7 +9,6 @@ source $rootdir/test/iscsi_tgt/common.sh
 MATCH_FILE="spdkcli_iscsi.test"
 SPDKCLI_BRANCH="/iscsi"
 
-timing_enter spdkcli_iscsi
 trap 'on_error_exit;' ERR
 
 timing_enter run_iscsi_tgt
@@ -71,5 +70,4 @@ $spdkcli_job "'/iscsi/auth_groups delete_secret 1 test2' 'user=test2'
 timing_exit spdkcli_clear_iscsi_config
 
 killprocess $iscsi_tgt_pid
-timing_exit spdkcli_iscsi
 report_test_completion spdk_cli

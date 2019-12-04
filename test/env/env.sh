@@ -4,8 +4,6 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
-timing_enter env
-
 timing_enter memory
 $testdir/memory/memory_ut
 timing_exit memory
@@ -41,4 +39,3 @@ if [ $(uname) = Linux ]; then
 fi
 
 report_test_completion "env"
-timing_exit env

@@ -143,8 +143,6 @@ function qos_function_test() {
 	fi
 }
 
-timing_enter bdev
-
 # Create a file to be used as an AIO backend
 dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
 
@@ -301,4 +299,3 @@ rm -f /tmp/spdk-pmem-pool
 rm -f $testdir/bdev.conf
 rbd_cleanup
 report_test_completion "bdev"
-timing_exit bdev

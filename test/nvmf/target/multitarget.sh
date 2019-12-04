@@ -8,7 +8,6 @@ source $rootdir/test/nvmf/common.sh
 # multitarget RPCs as the in-tree applications don't support multi-target functionality.
 rpc_py="$rootdir/test/nvmf/target/multitarget_rpc.py"
 
-timing_enter multitarget
 nvmftestinit
 nvmfappstart "-m 0xF"
 
@@ -36,4 +35,3 @@ fi
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit multitarget
