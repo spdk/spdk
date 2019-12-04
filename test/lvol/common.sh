@@ -11,7 +11,7 @@ function rpc_cmd() {
 }
 
 function run_lvol_test() {
-	run_test suite "$@"
+	run_test suite "$*" "$@"
 
 	leftover_bdevs=$(rpc_cmd bdev_get_bdevs)
 	[ "$(jq length <<< "$leftover_bdevs")" == "0" ]
