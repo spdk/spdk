@@ -17,8 +17,6 @@ if [ ! -d $spdk_nvme_cli ]; then
 	exit 0
 fi
 
-timing_enter nvme_cli
-
 if [ $(uname) = Linux ]; then
 	start_stub "-s 2048 -i 0 -m 0xF"
 	trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
@@ -52,4 +50,3 @@ if [ $(uname) = Linux ]; then
 fi
 
 report_test_completion spdk_nvme_cli
-timing_exit nvme_cli

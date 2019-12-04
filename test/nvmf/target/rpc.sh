@@ -19,7 +19,6 @@ function jsum()
     jq "$filter" | awk '{s+=$1}END{print s}'
 }
 
-timing_enter rpc
 nvmftestinit
 nvmfappstart "-m 0xF"
 
@@ -127,4 +126,3 @@ fi
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit rpc
