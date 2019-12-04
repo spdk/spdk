@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "313b5914_9e4f7f11",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 3294,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-04T01:40:51Z",
+      "side": 1,
+      "message": "This is no harm but we can substitute task-\u003escsi.transfer_len here. I may do this change later.",
+      "range": {
+        "startLine": 3294,
+        "startChar": 22,
+        "endLine": 3294,
+        "endChar": 83
+      },
+      "revId": "a760cc694ff2434fa99597d066fea8f3693f1abd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
