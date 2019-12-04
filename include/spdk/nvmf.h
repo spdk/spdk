@@ -45,6 +45,7 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 #include "spdk/uuid.h"
+#include "spdk/bdev.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -113,6 +114,12 @@ struct spdk_nvmf_transport_poll_group_stat {
 		} rdma;
 	};
 };
+
+typedef enum _spdk_nvmf_request_exec_status {
+	SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE,
+	SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS,
+} spdk_nvmf_request_exec_status;
+
 
 /**
  * Construct an NVMe-oF target.
@@ -1010,6 +1017,132 @@ spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
  * \param hooks for initializing global hooks
  */
 void spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
+
+
+/**
+ * \brief Callback function definition for a custom admin command handler.
+ * 
+ * A function of this type is passed to \ref spdk_nvmf_set_custom_admin_cmd_hdlr.
+ * It is called for every admin command that is processed by the NVMe-oF subsystem.
+ * If this function handled the admin command then it must return a value from
+ * \ref spdk_nvmf_request_exec_status. If the function did not handle the
+ * admin command it should return -1. In this case the SPDK default admin
+ * command processing is applied to the request.
+ * 
+ * \param req The NVMF request of the admin command that is currently
+ *            processed
+ * \return \ref spdk_nvmf_request_exec_status if the command has been handled
+ *         by the handler or -1 if the command wasn't handled
+ */
+typedef int (*spdk_nvmf_custom_admin_cmd_hdlr)(struct spdk_nvmf_request *req);
+
+/**
+ * \brief Installs a custom admin command handler.
+ * 
+ * \param hdlr The handler function. See \ref spdk_nvmf_custom_admin_cmd_hdlr.
+ */
+void spdk_nvmf_set_custom_admin_cmd_hdlr(spdk_nvmf_custom_admin_cmd_hdlr hdlr);
+
+/**
+ * \brief Provide access to the underlying bdev that is associated with a namespace.
+ * 
+ * This function can be used to communicate with the bdev. For example,
+ * a \ref spdk_nvmf_custom_admin_cmd_hdlr can use \ref spdk_nvmf_bdev_nvme_passthru_admin
+ * to pass on a \ref spdk_nvmf_request to a NVMe bdev.
+ * 
+ * \param nsid The namespace id of a namespace that is valid for the
+ * underlying subsystem
+ * \param req The NVMF request that is being processed
+ * \param bdev Returns the \ref spdk_bdev corresponding to the namespace id
+ * \param desc Returns the \ref spdk_bdev_desc corresponding to the namespace id
+ * \param ch Returns the \ref spdk_io_channel corresponding to the namespace id
+ * 
+ * \return 0 upon success
+ * \return -EINVAL if the namespace id can't be found
+ */
+int
+spdk_nvmf_request_get_bdev(uint32_t nsid,
+					struct spdk_nvmf_request *req,
+					struct spdk_bdev **bdev,
+					struct spdk_bdev_desc **desc,
+					struct spdk_io_channel **ch);
+
+/**
+ * \brief Get the NVMe-oF controller associated with this request.
+ * 
+ * \param req The NVMe-oF request
+ * 
+ * \return The NVMe-oF controller
+ */
+struct spdk_nvmf_ctrlr*
+spdk_nvmf_request_get_ctrlr(struct spdk_nvmf_request *req);
+
+/**
+ * \brief Get the NVMe-oF subsystem associated with this request.
+ * 
+ * \param req The NVMe-oF request
+ * 
+ * \return The NVMe-oF subsystem
+ */
+struct spdk_nvmf_subsystem*
+spdk_nvmf_request_get_subsystem(struct spdk_nvmf_request *req);
+
+/**
+ * \brief Get the data and length associated with this request.
+ * 
+ * \param req The NVMe-oF request
+ * \param data The data buffer associated with this request
+ * \param length The length of the data buffer
+ */
+void
+spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length);
+
+/**
+ * \brief Get the NVMe-oF command associated with this request.
+ * 
+ * \param req The NVMe-oF request
+ * 
+ * \return The NVMe command
+ */
+struct spdk_nvme_cmd*
+spdk_nvmf_request_get_cmd(struct spdk_nvmf_request *req);
+
+/**
+ * \brief Get the NVMe-oF completion associated with this request.
+ * 
+ * \param req The NVMe-oF request
+ * 
+ * \return The NVMe completion
+ */
+struct spdk_nvme_cpl* 
+spdk_nvmf_request_get_response(struct spdk_nvmf_request *req);
+
+/**
+ * \brief Callback function that is called right before the admin command reply
+ * is sent back to the inititator.
+ *
+ * \param The NVMF request
+ */ 
+typedef void (*spdk_nvmf_nvme_passthru_admin_cb)(struct spdk_nvmf_request *req);
+
+/**
+ * \brief Submits the NVMF request to a bdev.
+ * 
+ * This function can be used in a custom admin handler to send the command contained
+ * in the req to a bdev. Once the bdev completes the command, the specified cb_fn
+ * is called (which can be NULL if not needed).
+ * 
+ * \param bdev The \ref spdk_bdev
+ * \param desc The \ref spdk_bdev_desc
+ * \param ch The \ref spdk_io_channel
+ * \param req The \ref spdk_nvmf_request passed to the bdev for processing
+ * \param cb_fn A callback function (or NULL) that is called before the request
+ * is completed.
+ * 
+ * \return A \ref spdk_nvmf_request_exec_status
+ */
+int spdk_nvmf_bdev_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch, struct spdk_nvmf_request *req, spdk_nvmf_nvme_passthru_admin_cb cb_fn);
 
 #ifdef __cplusplus
 }

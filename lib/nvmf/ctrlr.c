@@ -58,6 +58,8 @@
  */
 #define FW_VERSION SPDK_VERSION_MAJOR_STRING SPDK_VERSION_MINOR_STRING SPDK_VERSION_PATCH_STRING
 
+spdk_nvmf_custom_admin_cmd_hdlr g_custom_admin_cmd_hdlr = NULL;
+
 static inline void
 spdk_nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
 				   uint8_t iattr, uint16_t ipo)
@@ -1908,6 +1910,7 @@ spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
 	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
+
 	switch (feature) {
 	case SPDK_NVME_FEAT_ARBITRATION:
 		return get_features_generic(req, ctrlr->feat.arbitration.raw);
@@ -1948,6 +1951,7 @@ spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
 	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
+
 	switch (feature) {
 	case SPDK_NVME_FEAT_ARBITRATION:
 		return spdk_nvmf_ctrlr_set_features_arbitration(req);
@@ -1999,6 +2003,67 @@ spdk_nvmf_ctrlr_keep_alive(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+void
+spdk_nvmf_set_custom_admin_cmd_hdlr(spdk_nvmf_custom_admin_cmd_hdlr hdlr)
+{
+	g_custom_admin_cmd_hdlr = hdlr;
+}
+
+int
+spdk_nvmf_request_get_bdev(uint32_t nsid, struct spdk_nvmf_request *req,
+			   struct spdk_bdev **bdev, struct spdk_bdev_desc **desc, struct spdk_io_channel **ch)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_poll_group *group = req->qpair->group;
+	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
+
+	*bdev = NULL;
+	*desc = NULL;
+	*ch = NULL;
+
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
+	if (ns == NULL || ns->bdev == NULL) {
+		SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
+		return -EINVAL;
+	}
+
+	assert(group != NULL && group->sgroups != NULL);
+	ns_info = &group->sgroups[ctrlr->subsys->id].ns_info[nsid - 1];
+	*bdev = ns->bdev;
+	*desc = ns->desc;
+	*ch = ns_info->channel;
+
+	return 0;
+}
+
+struct spdk_nvmf_ctrlr *spdk_nvmf_request_get_ctrlr(struct spdk_nvmf_request *req)
+{
+	return req->qpair->ctrlr;
+}
+
+struct spdk_nvme_cmd *spdk_nvmf_request_get_cmd(struct spdk_nvmf_request *req)
+{
+	return &req->cmd->nvme_cmd;
+}
+
+struct spdk_nvme_cpl *spdk_nvmf_request_get_response(struct spdk_nvmf_request *req)
+{
+	return &req->rsp->nvme_cpl;
+}
+
+struct spdk_nvmf_subsystem *spdk_nvmf_request_get_subsystem(struct spdk_nvmf_request *req)
+{
+	return req->qpair->ctrlr->subsys;
+}
+
+void spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length)
+{
+	*data = req->data;
+	*length = req->length;
+}
+
 int
 spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 {
@@ -2032,6 +2097,14 @@ spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 			break;
 		default:
 			goto invalid_opcode;
+		}
+	}
+
+	if (g_custom_admin_cmd_hdlr) {
+		int rc = g_custom_admin_cmd_hdlr(req);
+		if (rc >= 0) {
+			/* The handler took care of this commmand */
+			return rc;
 		}
 	}
 
