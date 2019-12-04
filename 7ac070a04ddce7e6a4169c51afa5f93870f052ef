@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2d5e765_d82e09a8",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-04T13:10:07Z",
+      "side": 1,
+      "message": "Do we really need this if?\nWe need to set disks namespaces to 1 regardless if we use custom emulator or not.\n\nI think this could be modified in the Vagrantfile instead.\nThere\u0027s a condition \"if nvme_namespaces[\"#{index}\".to_i].nil?\" which checks if Nvme namespaces if NULL. Why not add a check for \"if nvme_namespaces \u003d\u003d 1\"?",
+      "range": {
+        "startLine": 174,
+        "startChar": 1,
+        "endLine": 176,
+        "endChar": 3
+      },
+      "revId": "7ac070a04ddce7e6a4169c51afa5f93870f052ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "887181a5_5e5d582b",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-04T13:10:07Z",
+      "side": 1,
+      "message": "possibly here as well",
+      "range": {
+        "startLine": 186,
+        "startChar": 26,
+        "endLine": 186,
+        "endChar": 60
+      },
+      "revId": "7ac070a04ddce7e6a4169c51afa5f93870f052ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
