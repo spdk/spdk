@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2aa98d08_7eb354b3",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T17:44:03Z",
+      "side": 1,
+      "message": "let\u0027s add SPDK_NVME_CMD_FUSE_NONE \u003d 0x0 here too",
+      "revId": "e60efa797242da377a078df93942e8820bcc89f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1cd7cc96_873e055f",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T17:44:03Z",
+      "side": 1,
+      "message": "instead of putting it in the leading comment, you can add a line here like:\n\n/* 0x3 reserved */\n\nor even:\n\nSPDK_NVME_CMD_FUSE_RESERVED \u003d 0x3\n\nI know that the enum just before this one puts the reserved info in the leading comment, but that\u0027s really the exception.  You\u0027ll see it done one of these other ways in the pretty much the rest of this header file.",
+      "revId": "e60efa797242da377a078df93942e8820bcc89f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c146ea1c_12ef6bc5",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 2605,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T17:44:03Z",
+      "side": 1,
+      "message": "How about adding this:\n\n#define SPDK_NVME_IO_FLAGS_FUSE_MASK (3U \u003c\u003c 0)\n\n(then see below...)",
+      "revId": "e60efa797242da377a078df93942e8820bcc89f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b030837c_5b6d9de0",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T17:44:03Z",
+      "side": 1,
+      "message": "Then here you can just do:\n\ncmd-\u003efuse \u003d (io_flags \u0026 SPDK_NVME_IO_FLAGS_FUSE_MASK);\n\nwhich is simpler than the two if statements.",
+      "revId": "e60efa797242da377a078df93942e8820bcc89f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cd3361b_5c9b9f7e",
+        "filename": "test/unit/lib/nvme/nvme_ns_cmd.c/nvme_ns_cmd_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 831,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T17:44:03Z",
+      "side": 1,
+      "message": "if you implement the VALID_MASK idea, then you\u0027d want to confirm that this request fails since there are invalid bits set in the io_flags",
+      "revId": "e60efa797242da377a078df93942e8820bcc89f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
