@@ -563,21 +563,30 @@ function kill_stub() {
 }
 
 function run_test() {
+	if [ $# -le 1 ]; then
+		echo "Invalid parameters supplied to run_test"
+	fi
+
 	xtrace_disable
 	local test_type
 	test_type="$(echo $1 | tr '[:lower:]' '[:upper:]')"
 	shift
 	test_name="$1"
 	shift
-	echo "************************************"
-	echo "START TEST $test_type $*"
-	echo "************************************"
-	xtrace_restore
-	time "$@"
-	xtrace_disable
-	echo "************************************"
-	echo "END TEST $test_type $*"
-	echo "************************************"
+
+	# allows us to call run test on upper level suites.
+	if [ $# -ge 1 ]; then
+		echo "************************************"
+		echo "START TEST $test_type $*"
+		echo "************************************"
+		xtrace_restore
+		time "$@"
+		xtrace_disable
+		echo "************************************"
+		echo "END TEST $test_type $*"
+		echo "************************************"
+	fi
+
 	xtrace_restore
 }
 
