@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d3e7466_74313a0f",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T20:51:25Z",
+      "side": 1,
+      "message": "I would just say \"Reason for qpair disconnect at the transport layer.\"\n\nI think \"potential reasons\" indicates that here are one or more possible reasons why it disconnected.  But really we are only specifying the one reason why we know it disconnected (or unknown).",
+      "revId": "f3e631aaac361df2832295cf774e30333690ed5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a018395_0d2e85e1",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T20:51:25Z",
+      "side": 1,
+      "message": "we should add FAILURE or FAILURE_REASON in these enum value names\n\n\"NONE\" and \"UNKNOWN\" are pretty generic and don\u0027t really indicate what they refer to",
+      "revId": "f3e631aaac361df2832295cf774e30333690ed5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0cc965a3_e6040563",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-04T20:51:25Z",
+      "side": 1,
+      "message": "could you move this to the end of the data structure?\n\nI know there\u0027s room here right now, but there\u0027s an incoming patch from the team in Poland that\u0027s going to use a bit here that will be touched in the primary I/O path.  So putting the reason here will not leave any extra bits.\n\nI guess we could see which patch gets merged first and fix it then.  Maybe that\u0027s better since if you move it, someone else will ask why you didn\u0027t put the bits here instead.  But to avoid that you could push the patch and then add a GerritHub comment explaining why you put it there.",
+      "revId": "f3e631aaac361df2832295cf774e30333690ed5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
