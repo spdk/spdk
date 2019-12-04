@@ -34,6 +34,24 @@
       "revId": "dec6f2609a8cedd91bd7b8d21c40eaec1d31d013",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b835f38f_54d52d1c",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-04T07:26:35Z",
+      "side": 1,
+      "message": "Do we need to change opts.io_queue_requests ?",
+      "parentUuid": "13008406_4beba65d",
+      "revId": "dec6f2609a8cedd91bd7b8d21c40eaec1d31d013",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
