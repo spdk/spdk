@@ -570,13 +570,13 @@ function run_test() {
 	local test_name="$1"
 	shift
 	echo "************************************"
-	echo "START TEST $test_type $*"
+	echo "START TEST $test_type $test_name"
 	echo "************************************"
 	xtrace_restore
 	time "$@"
 	xtrace_disable
 	echo "************************************"
-	echo "END TEST $test_type $*"
+	echo "END TEST $test_type $test_name"
 	echo "************************************"
 	xtrace_restore
 }
