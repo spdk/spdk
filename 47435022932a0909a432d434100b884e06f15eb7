@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34a7c919_72ba31ee",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-04T14:23:57Z",
+      "side": 1,
+      "message": "Looks good, can we move it to the bottom after section that describes how to enable cuse ?",
+      "range": {
+        "startLine": 294,
+        "startChar": 0,
+        "endLine": 298,
+        "endChar": 14
+      },
+      "revId": "47435022932a0909a432d434100b884e06f15eb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
