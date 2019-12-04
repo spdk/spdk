@@ -133,15 +133,6 @@ void
 nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	assert(nvme_bdev_ctrlr->destruct);
-	if (nvme_bdev_ctrlr->opal_dev) {
-		if (nvme_bdev_ctrlr->opal_poller != NULL) {
-			spdk_poller_unregister(&nvme_bdev_ctrlr->opal_poller);
-			/* wait until we get the result */
-			while (spdk_opal_revert_poll(nvme_bdev_ctrlr->opal_dev) == -EAGAIN);
-		}
-		spdk_opal_close(nvme_bdev_ctrlr->opal_dev);
-		nvme_bdev_ctrlr->opal_dev = NULL;
-	}
 
 	spdk_io_device_unregister(nvme_bdev_ctrlr, nvme_bdev_unregister_cb);
 }

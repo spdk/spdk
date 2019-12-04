@@ -48,8 +48,6 @@ DEFINE_STUB(spdk_nvme_ctrlr_is_ocssd_ns, bool, (struct spdk_nvme_ctrlr *ctrlr, u
 	    true);
 DEFINE_STUB(spdk_nvme_ns_get_extended_sector_size, uint32_t, (struct spdk_nvme_ns *ns), 4096);
 DEFINE_STUB(spdk_nvme_ns_is_active, bool, (struct spdk_nvme_ns *ns), true);
-DEFINE_STUB_V(spdk_opal_close, (struct spdk_opal_dev *dev));
-DEFINE_STUB(spdk_opal_revert_poll, int, (struct spdk_opal_dev *dev), 0);
 DEFINE_STUB_V(spdk_bdev_io_complete_nvme_status, (struct spdk_bdev_io *bdev_io, uint32_t cdw0,
 		int sct, int sc));
 
