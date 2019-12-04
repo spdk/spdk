@@ -25,47 +25,40 @@ function disconnect_init()
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $1 -s $NVMF_PORT
 }
 
-# There is an intermittent error relating to this test and Soft-RoCE. for now, just
-# skip this test if we are using rxe. TODO: get to the bottom of GitHub issue #1043
-nvmftestinit
-if [ $TEST_TRANSPORT == "rdma" ] && check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
-	echo "Using software RDMA, skipping the target disconnect tests."
-	nvmftestfini
-	exit 0
-fi
-
 # Test to make sure we don't segfault or access null pointers when we try to connect to
 # a discovery controller that doesn't exist yet.
-set +e
-$rootdir/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
--r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
-# If the program crashes, the high bit of $? will be set so we will get a value in the hundreds.
-# But if the reconnect code detects errors and exits normally it will return 1.
-if [ $? != 1 ]; then
+function nvmf_target_disconnect_tc1 {
+	set +e
+	$rootdir/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
+	-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
+	# If the program crashes, the high bit of $? will be set so we will get a value in the hundreds.
+	# But if the reconnect code detects errors and exits normally it will return 1.
+	if [ $? != 1 ]; then
+		set -e
+		exit 1
+	fi
 	set -e
-	exit 1
-fi
-set -e
+}
 
-disconnect_init $NVMF_FIRST_TARGET_IP
+function nvmf_target_disconnect_tc2 {
+	disconnect_init $NVMF_FIRST_TARGET_IP
 
-# If perf doesn't shut down, this test will time out.
-$rootdir/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
--r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" &
-reconnectpid=$!
+	# If perf doesn't shut down, this test will time out.
+	$rootdir/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
+	-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" &
+	reconnectpid=$!
 
-sleep 2
-kill -9 $nvmfpid
+	sleep 2
+	kill -9 $nvmfpid
 
-sleep 2
-disconnect_init $NVMF_FIRST_TARGET_IP
+	sleep 2
+	disconnect_init $NVMF_FIRST_TARGET_IP
 
-wait $reconnectpid
-sync
+	wait $reconnectpid
+	sync
+}
 
-if [ -n "$NVMF_SECOND_TARGET_IP" ]; then
-	timing_enter failover_test
-
+function nvmf_target_disconnect_tc3 {
 	$rootdir/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
 	-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT alt_traddr:$NVMF_SECOND_TARGET_IP" &
 	reconnectpid=$!
@@ -78,8 +71,20 @@ if [ -n "$NVMF_SECOND_TARGET_IP" ]; then
 
 	wait $reconnectpid
 	sync
+}
 
-	timing_exit failover_test
+nvmftestinit
+# There is an intermittent error relating to this test and Soft-RoCE. for now, just
+# skip this test if we are using rxe. TODO: get to the bottom of GitHub issue #1043
+if [ $TEST_TRANSPORT == "rdma" ] && check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
+	echo "Using software RDMA, skipping the target disconnect tests."
+	exit 0
+fi
+
+run_test "case" "nvmf_target_disconnect_tc1" nvmf_target_disconnect_tc1
+run_test "case" "nvmf_target_disconnect_tc2" nvmf_target_disconnect_tc2
+if [ -n "$NVMF_SECOND_TARGET_IP" ]; then
+	run_test "case" "nvmf_target_disconnect_tc3" nvmf_target_disconnect_tc3
 fi
 
 trap - SIGINT SIGTERM EXIT
