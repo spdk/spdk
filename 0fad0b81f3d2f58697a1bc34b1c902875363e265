@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b47463b_a0d73e96",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-04T14:20:30Z",
+      "side": 1,
+      "message": "please change the name",
+      "range": {
+        "startLine": 8,
+        "startChar": 13,
+        "endLine": 8,
+        "endChar": 26
+      },
+      "revId": "0fad0b81f3d2f58697a1bc34b1c902875363e265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa33d96a_f761e9c9",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-04T14:20:30Z",
+      "side": 1,
+      "message": "Is it required to specify NSID ? Is it just for one of the commands ?",
+      "range": {
+        "startLine": 10,
+        "startChar": 30,
+        "endLine": 10,
+        "endChar": 41
+      },
+      "revId": "0fad0b81f3d2f58697a1bc34b1c902875363e265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "698f77da_06f8175c",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-04T14:20:30Z",
+      "side": 1,
+      "message": "From what I remember from our offline discussion. Was type of device needed to be specified, because the auto-detection depends on some ioctls we do not implement ?\n\nIf we won\u0027t implement those, we can add section to cuse-nvme docs regarding working with tools like smartctl. Note down any caveats and/or required arguments. Can you look",
+      "range": {
+        "startLine": 10,
+        "startChar": 23,
+        "endLine": 10,
+        "endChar": 30
+      },
+      "revId": "0fad0b81f3d2f58697a1bc34b1c902875363e265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "358fc7e3_1bc2822e",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-04T14:20:30Z",
+      "side": 1,
+      "message": "Is providing the namespace here required ? I\u0027ve checked the kernel nvme and it seems to work without it.",
+      "range": {
+        "startLine": 65,
+        "startChar": 34,
+        "endLine": 65,
+        "endChar": 36
+      },
+      "revId": "0fad0b81f3d2f58697a1bc34b1c902875363e265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91a2eebe_af52645b",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-04T14:20:30Z",
+      "side": 1,
+      "message": "What test is being performed here ? Reading docs it looks like ATA test.",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 49
+      },
+      "revId": "0fad0b81f3d2f58697a1bc34b1c902875363e265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e18e605e_07b0cc83",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-04T14:20:30Z",
+      "side": 1,
+      "message": "Isn\u0027t this the same as above ? Manual of smartctl provides two ways to test same set of LBA\u0027s.",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 49
+      },
+      "revId": "0fad0b81f3d2f58697a1bc34b1c902875363e265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d459be4e_e157ff15",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-04T14:20:30Z",
+      "side": 1,
+      "message": "Change name please",
+      "range": {
+        "startLine": 84,
+        "startChar": 23,
+        "endLine": 84,
+        "endChar": 41
+      },
+      "revId": "0fad0b81f3d2f58697a1bc34b1c902875363e265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0bae0fc_b9b821da",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-04T14:20:30Z",
+      "side": 1,
+      "message": "Change name please",
+      "range": {
+        "startLine": 85,
+        "startChar": 12,
+        "endLine": 85,
+        "endChar": 25
+      },
+      "revId": "0fad0b81f3d2f58697a1bc34b1c902875363e265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
