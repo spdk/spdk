@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1498749_63a27765",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-04T14:22:20Z",
+      "side": 1,
+      "message": "Please use full SHA to identify mentioned change.\nUsing Gerrithub reference numbers in case we migrate to another review board will make it impossible to figure out which change you had in mind.",
+      "range": {
+        "startLine": 9,
+        "startChar": 9,
+        "endLine": 9,
+        "endChar": 16
+      },
+      "revId": "6fbb3984ebc025c72b40fdd95f7825a907459069",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
