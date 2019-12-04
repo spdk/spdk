@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be88fbae_8796f19c",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1419,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-04T00:03:18Z",
+      "side": 1,
+      "message": "Maybe \"Enable delaying NVMe command submission to allow batching of multiple commands.\" ?\nThis implies the default value is false.",
+      "range": {
+        "startLine": 1419,
+        "startChar": 54,
+        "endLine": 1419,
+        "endChar": 122
+      },
+      "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75bbce74_9d290bcc",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-04T00:03:18Z",
+      "side": 1,
+      "message": "Single letter option is convenient. How about \u0027-b\u0027?",
+      "range": {
+        "startLine": 385,
+        "startChar": 19,
+        "endLine": 385,
+        "endChar": 20
+      },
+      "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc85a1a3_0dbc75a7",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-04T00:03:18Z",
+      "side": 1,
+      "message": "\"Enable delaying NVMe command submission to allow batching of multiple commands\" may cover both.",
+      "range": {
+        "startLine": 386,
+        "startChar": 24,
+        "endLine": 386,
+        "endChar": 94
+      },
+      "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec56d0f0_b650d732",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-04T00:03:18Z",
+      "side": 1,
+      "message": "This is not necessary?",
+      "range": {
+        "startLine": 387,
+        "startChar": 63,
+        "endLine": 387,
+        "endChar": 77
+      },
+      "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5f4af00_9b4dfb19",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-04T00:03:18Z",
+      "side": 1,
+      "message": "I think only --delay-cmd-submit is enough and easy to use.",
+      "range": {
+        "startLine": 388,
+        "startChar": 3,
+        "endLine": 390,
+        "endChar": 65
+      },
+      "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
