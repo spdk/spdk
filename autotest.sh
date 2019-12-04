@@ -96,13 +96,14 @@ if [ $(uname -s) = Linux ]; then
 	# automatic grabbing these devices when we add device/vendor ID to
 	# proper driver.
 	if [[ -n "$PCI_BLACKLIST" ]]; then
+		# shellcheck disable=SC2097,SC2098
 		PCI_WHITELIST="$PCI_BLACKLIST" \
 		PCI_BLACKLIST="" \
 		DRIVER_OVERRIDE="pci-stub" \
 			./scripts/setup.sh
 
 		# Export our blacklist so it will take effect during next setup.sh
-		export PCI_BLACKLIST
+		export PCI_BLACKLIST=""
 	fi
 fi
 
