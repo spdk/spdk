@@ -36,7 +36,6 @@
 
 #include "spdk/nvme.h"
 #include "spdk/bdev_module.h"
-#include "spdk/opal.h"
 
 TAILQ_HEAD(nvme_bdev_ctrlrs, nvme_bdev_ctrlr);
 extern struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs;
@@ -87,9 +86,6 @@ struct nvme_bdev_ctrlr {
 	uint32_t			num_ns;
 	/** Array of pointers to namespaces indexed by nsid - 1 */
 	struct nvme_bdev_ns		**namespaces;
-
-	struct spdk_opal_dev		*opal_dev;
-	struct spdk_poller		*opal_poller;
 
 	struct spdk_poller		*adminq_timer_poller;
 

@@ -151,6 +151,12 @@ enum spdk_opal_locking_range {
 	OPAL_LOCKING_RANGE_10,
 };
 
+enum spdk_opal_dev_state {
+	OPAL_DEV_STATE_DEFAULT,     /* default factory setting */
+	OPAL_DEV_STATE_ENABLED,     /* after taking ownership and activating, opal is enabled */
+	OPAL_DEV_STATE_BUSY,        /* wait for opal response from ctrlr */
+};
+
 struct spdk_opal_locking_range_info {
 	uint8_t locking_range_id;
 	uint8_t _padding[7];
@@ -201,6 +207,13 @@ int spdk_opal_cmd_revert_tper_async(struct spdk_opal_dev *dev, const char *passw
  */
 int spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd);
 
+/**
+ * Explicitly run the callback function defined when revert async was called.
+ *
+ * This should be called when revert poll was interrupted before getting the result.
+ */
+void spdk_opal_revert_callback(struct spdk_opal_dev *dev, int rc);
+
 int spdk_opal_cmd_activate_locking_sp(struct spdk_opal_dev *dev, const char *passwd);
 int spdk_opal_cmd_lock_unlock(struct spdk_opal_dev *dev, enum spdk_opal_user user,
 			      enum spdk_opal_lock_state flag, enum spdk_opal_locking_range locking_range,
@@ -228,5 +241,7 @@ struct spdk_opal_locking_range_info *spdk_opal_get_locking_range_info(struct spd
 void spdk_opal_free_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_locking_range id);
 
 uint8_t spdk_opal_get_max_locking_ranges(struct spdk_opal_dev *dev);
+enum spdk_opal_dev_state spdk_opal_get_dev_state(struct spdk_opal_dev *dev);
+const char *spdk_opal_get_nvme_ctrlr_name(struct spdk_opal_dev *dev);
 
 #endif
