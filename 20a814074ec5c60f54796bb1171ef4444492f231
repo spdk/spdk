@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d85ee12e_e0555e09",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1017166
+      },
+      "writtenOn": "2019-12-04T06:35:56Z",
+      "side": 1,
+      "message": "should be \"capacity\"? Is a typo?",
+      "range": {
+        "startLine": 10,
+        "startChar": 12,
+        "endLine": 10,
+        "endChar": 22
+      },
+      "revId": "20a814074ec5c60f54796bb1171ef4444492f231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
