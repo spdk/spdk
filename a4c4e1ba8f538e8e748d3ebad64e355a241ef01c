@@ -22,6 +22,30 @@
       "revId": "a4c4e1ba8f538e8e748d3ebad64e355a241ef01c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48d76c4a_d77b8f91",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3874,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-04T16:41:43Z",
+      "side": 1,
+      "message": "Ah of course, thank you! That is much simpler.",
+      "parentUuid": "0969e4ef_a71e59c4",
+      "range": {
+        "startLine": 3869,
+        "startChar": 0,
+        "endLine": 3874,
+        "endChar": 0
+      },
+      "revId": "a4c4e1ba8f538e8e748d3ebad64e355a241ef01c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
