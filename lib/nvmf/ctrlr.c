@@ -292,17 +292,9 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->feat.volatile_write_cache.bits.wce = 1;
 
 	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
-		/* Don't accept keep-alive timeout for discovery controllers */
-		if (ctrlr->feat.keep_alive_timer.bits.kato != 0) {
-			SPDK_ERRLOG("Discovery controller don't accept keep-alive timeout\n");
-			spdk_bit_array_free(&ctrlr->qpair_mask);
-			free(ctrlr);
-			return NULL;
-		}
-
 		/*
-		 * Discovery controllers use some arbitrary high value in order
-		 * to cleanup stale discovery sessions
+		 * If keep-alive timeout is not set, discovery controllers use some
+		 * arbitrary high value in order to cleanup stale discovery sessions
 		 *
 		 * From the 1.0a nvme-of spec:
 		 * "The Keep Alive command is reserved for
@@ -314,7 +306,9 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		 * actions for Keep Alive Timer expiration".
 		 * kato is in millisecond.
 		 */
-		ctrlr->feat.keep_alive_timer.bits.kato = NVMF_DISC_KATO_IN_MS;
+		if (ctrlr->feat.keep_alive_timer.bits.kato == 0) {
+			ctrlr->feat.keep_alive_timer.bits.kato = NVMF_DISC_KATO_IN_MS;
+		}
 	}
 
 	/* Subtract 1 for admin queue, 1 for 0's based */
