@@ -22,6 +22,30 @@
       "revId": "63c5641ac5deac7dc9510677dba03265a8f2c67e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c92202cf_195aee16",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-04T04:26:08Z",
+      "side": 1,
+      "message": "This is OK to me. My question was resolved by Changpeng\u0027s comment.",
+      "parentUuid": "f20bb082_0ea931e0",
+      "range": {
+        "startLine": 616,
+        "startChar": 0,
+        "endLine": 618,
+        "endChar": 0
+      },
+      "revId": "63c5641ac5deac7dc9510677dba03265a8f2c67e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
