@@ -8,7 +8,6 @@ source $rootdir/test/spdkcli/common.sh
 MATCH_FILE="spdkcli_vhost.test"
 SPDKCLI_BRANCH="/"
 
-timing_enter spdk_cli_vhost
 trap 'on_error_exit' ERR
 timing_enter run_vhost_tgt
 run_vhost_tgt
@@ -144,5 +143,4 @@ timing_exit spdkcli_load_config
 
 killprocess $vhost_tgt_pid
 
-timing_exit spdk_cli_vhost
 report_test_completion spdk_cli_vhost

@@ -73,7 +73,6 @@ function run_bdevperf() {
 	killprocess $bdevperf_pid
 }
 
-timing_enter compress_test
 mkdir -p /tmp/pmem
 
 # per patch bdevperf uses slightly different params than nightly
@@ -110,4 +109,3 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 fi
 
 rm -rf /tmp/pmem
-timing_exit compress_test

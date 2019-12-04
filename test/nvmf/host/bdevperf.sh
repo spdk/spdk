@@ -23,8 +23,6 @@ function tgt_init()
 
 nvmftestinit
 
-timing_enter bdevperf
-
 tgt_init
 
 echo "[Nvme]" > $testdir/bdevperf.conf
@@ -48,4 +46,3 @@ $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit bdevperf

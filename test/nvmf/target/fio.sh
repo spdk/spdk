@@ -10,7 +10,6 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-timing_enter fio
 nvmftestinit
 nvmfappstart "-m 0xF"
 
@@ -78,4 +77,3 @@ rm -f ./local-job2-2-verify.state
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit fio

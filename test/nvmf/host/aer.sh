@@ -7,7 +7,6 @@ source $rootdir/test/nvmf/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-timing_enter aer
 nvmftestinit
 nvmfappstart "-m 0xF"
 
@@ -49,4 +48,3 @@ $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit aer

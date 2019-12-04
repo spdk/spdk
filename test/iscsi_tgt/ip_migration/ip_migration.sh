@@ -75,8 +75,6 @@ function rpc_add_target_node() {
 	$rpc_py -s $1 net_interface_delete_ip_address 1 $MIGRATION_ADDRESS
 }
 
-timing_enter ip_migration
-
 echo "Running ip migration tests"
 for ((i = 0; i < 2; i++)); do
 	timing_enter start_iscsi_tgt_$i
@@ -130,4 +128,3 @@ iscsicleanup
 $rpc_py -s $rpc_second_addr spdk_kill_instance SIGTERM
 iscsitestfini $1 $2
 report_test_completion "iscsi_ip_migration"
-timing_exit ip_migration

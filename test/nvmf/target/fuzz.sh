@@ -9,8 +9,6 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 nvmftestinit
 
-timing_enter fuzz_test
-
 $NVMF_APP -m 0xF >$output_dir/nvmf_fuzz_tgt_output.txt 2>&1 &
 nvmfpid=$!
 
@@ -42,4 +40,3 @@ nvmfcleanup
 killprocess $nvmfpid
 
 nvmftestfini
-timing_exit fuzz_test

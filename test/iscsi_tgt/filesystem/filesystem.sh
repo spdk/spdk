@@ -10,8 +10,6 @@ source $rootdir/scripts/common.sh
 # $2 = test type posix or vpp. defaults to posix.
 iscsitestinit $1 $2
 
-timing_enter filesystem
-
 rpc_py="$rootdir/scripts/rpc.py"
 # Remove lvol bdevs and stores.
 function remove_backends() {
@@ -144,4 +142,3 @@ iscsicleanup
 remove_backends
 killprocess $pid
 iscsitestfini $1 $2
-timing_exit filesystem

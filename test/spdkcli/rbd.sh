@@ -8,7 +8,6 @@ source $rootdir/test/spdkcli/common.sh
 MATCH_FILE="spdkcli_rbd.test"
 SPDKCLI_BRANCH="/bdevs/rbd"
 
-timing_enter spdk_cli_rbd
 trap 'on_error_exit' ERR
 timing_enter run_spdk_tgt
 run_spdk_tgt
@@ -32,5 +31,4 @@ timing_exit spdkcli_clear_rbd_config
 
 killprocess $spdk_tgt_pid
 
-timing_exit spdk_cli_rbd
 report_test_completion spdk_cli_rbd
