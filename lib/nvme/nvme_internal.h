@@ -890,6 +890,10 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_request *req;
 
+	if (qpair == NULL) {
+		return NULL;
+	}
+
 	req = STAILQ_FIRST(&qpair->free_req);
 	if (req == NULL) {
 		return req;
