@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2406c4e_fd61a206",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 705,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-04T06:25:52Z",
+      "side": 1,
+      "message": "typo for tim.",
+      "revId": "9a37e12c46515e5702686eedc04fdaf09cba4279",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "18de8515_ac2d7221",
+        "filename": "module/blobfs/bdev/blobfs_fuse.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-04T06:25:52Z",
+      "side": 1,
+      "message": "unnecessary empty line.",
+      "revId": "9a37e12c46515e5702686eedc04fdaf09cba4279",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
