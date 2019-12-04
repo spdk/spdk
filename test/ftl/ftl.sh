@@ -48,30 +48,30 @@ fi
 timing_enter ftl
 timing_enter bdevperf
 
-run_test suite $testdir/bdevperf.sh $device
+run_test suite "ftl_bdevperf" $testdir/bdevperf.sh $device
 
 timing_exit bdevperf
 
 timing_enter restore
-run_test suite $testdir/restore.sh $device
+run_test suite "ftl_restore" $testdir/restore.sh $device
 if [ -n "$nv_cache" ]; then
-	run_test suite $testdir/restore.sh -c $nv_cache $device
+	run_test suite "ftl_restore_nv_cache" $testdir/restore.sh -c $nv_cache $device
 fi
 timing_exit restore
 
 if [ -n "$nv_cache" ]; then
 	timing_enter dirty_shutdown
-	run_test suite $testdir/dirty_shutdown.sh -c $nv_cache $device
+	run_test suite "ftl_dirty_shutdown" $testdir/dirty_shutdown.sh -c $nv_cache $device
 	timing_exit dirty_shutdown
 fi
 
 timing_enter json
-run_test suite $testdir/json.sh $device
+run_test suite "ftl_json" $testdir/json.sh $device
 timing_exit json
 
 if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
 	timing_enter fio_basic
-	run_test suite $testdir/fio.sh $device basic
+	run_test suite "ftl_fio_basic" $testdir/fio.sh $device basic
 	timing_exit fio_basic
 
 	$rootdir/app/spdk_tgt/spdk_tgt &
@@ -86,7 +86,7 @@ if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
 	trap - SIGINT SIGTERM EXIT
 
 	timing_enter fio_extended
-	run_test suite $testdir/fio.sh $device extended $uuid
+	run_test suite "ftl_fio_extended" $testdir/fio.sh $device extended $uuid
 	timing_exit fio_extended
 fi
 
