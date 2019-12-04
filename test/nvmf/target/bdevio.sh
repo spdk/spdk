@@ -10,7 +10,6 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-timing_enter bdevio
 nvmftestinit
 # Don't use cores 0 - 2 to avoid overlap with bdevio.
 nvmfappstart "-m 0x78"
@@ -32,4 +31,3 @@ $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 trap - SIGINT SIGTERM EXIT
 
 nvmftestfini
-timing_exit bdev_io_wait

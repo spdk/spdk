@@ -15,7 +15,6 @@ if [ ! -d /usr/src/fio ]; then
 	exit 1
 fi
 
-timing_enter fio
 timing_enter start_nvmf_tgt
 
 $NVMF_APP -m 0xF &
@@ -81,4 +80,3 @@ trap - SIGINT SIGTERM EXIT
 
 rm -f ./local-test-0-verify.state
 nvmftestfini
-timing_exit fio

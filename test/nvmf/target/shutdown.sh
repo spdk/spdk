@@ -34,7 +34,6 @@ function waitforio() {
 	return $ret
 }
 
-timing_enter shutdown
 nvmftestinit
 nvmfappstart "-m 0x1E"
 
@@ -140,4 +139,3 @@ trap - SIGINT SIGTERM EXIT
 timing_enter testfini
 nvmftestfini
 timing_exit testfini
-timing_exit shutdown
