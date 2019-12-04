@@ -3018,15 +3018,6 @@ static const char *CM_EVENT_STR[] = {
 #endif /* DEBUG */
 
 static void
-nvmf_rdma_handle_last_wqe_reached(void *ctx)
-{
-	struct spdk_nvmf_rdma_qpair *rqpair = ctx;
-	rqpair->last_wqe_reached = true;
-
-	nvmf_rdma_destroy_drained_qpair(rqpair);
-}
-
-static void
 spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
@@ -3107,6 +3098,13 @@ spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn c
 }
 
 static void
+nvmf_rdma_handle_last_wqe_reached(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	rqpair->last_wqe_reached = true;
+	nvmf_rdma_destroy_drained_qpair(rqpair);
+}
+
+static void
 spdk_nvmf_rdma_qpair_process_ibv_event(void *ctx)
 {
 	struct spdk_nvmf_rdma_ibv_event_ctx *event_ctx = ctx;
@@ -3172,14 +3170,10 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		/* This event only occurs for shared receive queues. */
 		rqpair = event.element.qp->qp_context;
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Last WQE reached event received for rqpair %p\n", rqpair);
-		/* This must be handled on the polling thread if it exists. Otherwise the timeout will catch it. */
-		if (rqpair->qpair.group) {
-			spdk_thread_send_msg(rqpair->qpair.group->thread, nvmf_rdma_handle_last_wqe_reached, rqpair);
-		} else {
-			SPDK_ERRLOG("Unable to destroy the qpair %p since it does not have a poll group.\n", rqpair);
+		if (spdk_nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_last_wqe_reached)) {
+			SPDK_ERRLOG("Failed to send LAST_WQE_REACHED event for rqpair %p\n", rqpair);
 			rqpair->last_wqe_reached = true;
 		}
-
 		break;
 	case IBV_EVENT_SQ_DRAINED:
 		/* This event occurs frequently in both error and non-error states.
