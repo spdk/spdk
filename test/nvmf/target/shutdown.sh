@@ -34,6 +34,67 @@ function waitforio() {
 	return $ret
 }
 
+# Test 1: Kill the initiator unexpectedly with no I/O outstanding
+function nvmf_shutdown_tc1 {
+	# Run bdev_svc, which connects but does not issue I/O
+	$rootdir/test/app/bdev_svc/bdev_svc -m 0x1 -i 1 -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf &
+	perfpid=$!
+	waitforlisten $perfpid /var/tmp/bdevperf.sock
+	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
+
+	# Kill bdev_svc
+	kill -9 $perfpid || true
+	rm -f /var/run/spdk_bdev1
+
+	# Verify the target stays up
+	sleep 1
+	kill -0 $nvmfpid
+
+	# Connect with bdevperf and confirm it works
+	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 1
+}
+
+# Test 2: Kill initiator unexpectedly with I/O outstanding
+function nvmf_shutdown_tc2 {
+	# Run bdevperf
+	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
+	perfpid=$!
+	waitforlisten $perfpid /var/tmp/bdevperf.sock
+	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
+
+	waitforio /var/tmp/bdevperf.sock Nvme1n1
+
+	# Kill bdevperf half way through
+	killprocess $perfpid
+
+	# Verify the target stays up
+	sleep 1
+	kill -0 $nvmfpid
+}
+
+# Test 3: Kill the target unexpectedly with I/O outstanding
+function nvmf_shutdown_tc3 {
+	# Run bdevperf
+	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
+	perfpid=$!
+	waitforlisten $perfpid /var/tmp/bdevperf.sock
+	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
+
+	# Expand the trap to clean up bdevperf if something goes wrong
+	trap 'process_shm --id $NVMF_APP_SHM_ID; kill -9 $perfpid || true; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+
+	waitforio /var/tmp/bdevperf.sock Nvme1n1
+
+	# Kill the target half way through
+	killprocess $nvmfpid
+
+	# Verify bdevperf exits successfully
+	sleep 1
+	# TODO: Right now the NVMe-oF initiator will not correctly detect broken connections
+	# and so it will never shut down. Just kill it.
+	kill -9 $perfpid || true
+}
+
 nvmftestinit
 nvmfappstart "-m 0x1E"
 
@@ -67,75 +128,13 @@ done
 $rpc_py < $testdir/rpcs.txt
 timing_exit create_subsystems
 
-# Test 1: Kill the initiator unexpectedly with no I/O outstanding
-
-timing_enter test1
-# Run bdev_svc, which connects but does not issue I/O
-$rootdir/test/app/bdev_svc/bdev_svc -m 0x1 -i 1 -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf &
-perfpid=$!
-waitforlisten $perfpid /var/tmp/bdevperf.sock
-$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
-
-# Kill bdev_svc
-kill -9 $perfpid || true
-rm -f /var/run/spdk_bdev1
-
-# Verify the target stays up
-sleep 1
-kill -0 $nvmfpid
-
-# Connect with bdevperf and confirm it works
-$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 1
-timing_exit test1
-
-# Test 2: Kill initiator unexpectedly with I/O outstanding
-
-timing_enter test2
-# Run bdevperf
-$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
-perfpid=$!
-waitforlisten $perfpid /var/tmp/bdevperf.sock
-$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
-
-waitforio /var/tmp/bdevperf.sock Nvme1n1
-
-# Kill bdevperf half way through
-killprocess $perfpid
-
-# Verify the target stays up
-sleep 1
-kill -0 $nvmfpid
-timing_exit test2
-
-# Test 3: Kill the target unexpectedly with I/O outstanding
-
-timing_enter test3
-# Run bdevperf
-$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
-perfpid=$!
-waitforlisten $perfpid /var/tmp/bdevperf.sock
-$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
-
-# Expand the trap to clean up bdevperf if something goes wrong
-trap 'process_shm --id $NVMF_APP_SHM_ID; kill -9 $perfpid || true; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
-
-waitforio /var/tmp/bdevperf.sock Nvme1n1
-
-# Kill the target half way through
-killprocess $nvmfpid
-
-# Verify bdevperf exits successfully
-sleep 1
-# TODO: Right now the NVMe-oF initiator will not correctly detect broken connections
-# and so it will never shut down. Just kill it.
-kill -9 $perfpid || true
-timing_exit test3
+run_test "case" "nvmf_shutdown_tc1" nvmf_shutdown_tc1
+run_test "case" "nvmf_shutdown_tc2" nvmf_shutdown_tc2
+run_test "case" "nvmf_shutdown_tc3" nvmf_shutdown_tc3
 
 rm -f ./local-job0-0-verify.state
 rm -rf $testdir/bdevperf.conf
 rm -rf $testdir/rpcs.txt
 trap - SIGINT SIGTERM EXIT
 
-timing_enter testfini
 nvmftestfini
-timing_exit testfini
