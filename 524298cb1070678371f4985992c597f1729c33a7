@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "479a84e9_6a0cee13",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2117,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-04T11:55:34Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "dfd84e78_8604f6dc",
+      "range": {
+        "startLine": 2117,
+        "startChar": 7,
+        "endLine": 2117,
+        "endChar": 22
+      },
+      "revId": "524298cb1070678371f4985992c597f1729c33a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e783a26f_acabb553",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 16
@@ -96,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "5896395c_3992072d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2126,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-04T11:55:34Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e56dd343_3f56e3de",
+      "range": {
+        "startLine": 2126,
+        "startChar": 34,
+        "endLine": 2126,
+        "endChar": 41
+      },
+      "revId": "524298cb1070678371f4985992c597f1729c33a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0ddf49c_f2b228fd",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 16
@@ -110,6 +158,24 @@
       "revId": "524298cb1070678371f4985992c597f1729c33a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "598e77f4_76e743b3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2138,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-04T11:55:34Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e0ddf49c_f2b228fd",
+      "revId": "524298cb1070678371f4985992c597f1729c33a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -130,6 +196,24 @@
     },
     {
       "key": {
+        "uuid": "e0c8ce6d_7f8024fd",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2197,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-04T11:55:34Z",
+      "side": 1,
+      "message": "Ack. Actually I consided that, but I thought it\u0027s hard to control desc and poller. I will update it.",
+      "parentUuid": "64dc6bf6_fa35403c",
+      "revId": "524298cb1070678371f4985992c597f1729c33a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e469642a_9cd5a9b3",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 16
@@ -147,6 +231,24 @@
     },
     {
       "key": {
+        "uuid": "a5eb0c41_bea4bdb3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2814,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-04T11:55:34Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e469642a_9cd5a9b3",
+      "revId": "524298cb1070678371f4985992c597f1729c33a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aab46502_4aef3c65",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 16
@@ -161,6 +263,24 @@
       "revId": "524298cb1070678371f4985992c597f1729c33a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0584028e_e365535f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2818,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-04T11:55:34Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "aab46502_4aef3c65",
+      "revId": "524298cb1070678371f4985992c597f1729c33a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
