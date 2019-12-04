@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f20bb082_0ea931e0",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-04T03:53:15Z",
+      "side": 1,
+      "message": "Why nested union is necessary here?\nDeclaring\n union spdk_nvme_cmd_cdw10 cdw10\nhere and can we use cdw10.raw if raw value is necessary?",
+      "range": {
+        "startLine": 616,
+        "startChar": 0,
+        "endLine": 618,
+        "endChar": 0
+      },
+      "revId": "63c5641ac5deac7dc9510677dba03265a8f2c67e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
