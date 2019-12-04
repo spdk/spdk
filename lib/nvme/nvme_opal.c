@@ -796,6 +796,10 @@ opal_check_lock(struct spdk_opal_dev *dev, const void *data)
 	opal_info->locking_mbr_done = lock->mbr_done;
 	opal_info->locking_mbr_enabled = lock->mbr_enabled;
 	opal_info->locking_media_encrypt = lock->media_encryption;
+
+	if (opal_info->locking_locking_enabled) {
+		dev->state = OPAL_DEV_STATE_ENABLED;
+	}
 }
 
 static void
@@ -1006,6 +1010,7 @@ spdk_opal_close(struct spdk_opal_dev *dev)
 			spdk_opal_free_locking_range_info(dev, i);
 		}
 	}
+	free(dev->nvme_ctrlr_name);
 	free(dev->opal_info);
 	free(dev);
 }
@@ -1836,6 +1841,16 @@ spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 		return -ENODEV;
 	}
 
+	if (dev->state == OPAL_DEV_STATE_BUSY) {
+		SPDK_ERRLOG("Device Busy\n");
+		return -EBUSY;
+	}
+
+	if (dev->state == OPAL_DEV_STATE_ENABLED) {
+		SPDK_ERRLOG("Opal already enabled on this drive\n");
+		return -EACCES;
+	}
+
 	pthread_mutex_lock(&dev->mutex_lock);
 	opal_setup_dev(dev);
 	ret = opal_start_anybody_adminsp_session(dev);
@@ -1884,6 +1899,7 @@ spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
 		goto end;
 	}
 
+	dev->state = OPAL_DEV_STATE_ENABLED;
 end:
 	pthread_mutex_unlock(&dev->mutex_lock);
 	return ret;
@@ -1902,6 +1918,7 @@ spdk_opal_init_dev(void *dev_handler)
 	}
 
 	dev->dev_handler = dev_handler;
+	dev->state = OPAL_DEV_STATE_DEFAULT;
 
 	info = calloc(1, sizeof(struct spdk_opal_info));
 	if (info == NULL) {
@@ -2078,6 +2095,15 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 		return -ENODEV;
 	}
 
+	if (dev->state == OPAL_DEV_STATE_BUSY) {
+		SPDK_ERRLOG("Device Busy\n");
+		return -EBUSY;
+	}
+
+	if (dev->state == OPAL_DEV_STATE_DEFAULT) {
+		return 0;
+	}
+
 	ret = opal_init_key(&opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
 	if (ret) {
 		SPDK_ERRLOG("Init key failed\n");
@@ -2111,6 +2137,7 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 	}
 
 	/* Controller will terminate session. No "end session" here needed. */
+	dev->state = OPAL_DEV_STATE_DEFAULT;
 
 end:
 	pthread_mutex_unlock(&dev->mutex_lock);
@@ -2125,11 +2152,13 @@ spdk_opal_revert_poll(struct spdk_opal_dev *dev)
 	int ret;
 
 	assert(dev->revert_cb_fn);
+	assert(dev->state == OPAL_DEV_STATE_BUSY);
 
 	ret = spdk_nvme_ctrlr_security_receive(dev->dev_handler, SPDK_SCSI_SECP_TCG, dev->comid,
 					       0, dev->resp, IO_BUFFER_LENGTH);
 	if (ret) {
 		SPDK_ERRLOG("Security Receive Error on dev = %p\n", dev);
+		dev->state = OPAL_DEV_STATE_ENABLED;
 		dev->revert_cb_fn(dev, dev->ctx, ret);
 		return 0;
 	}
@@ -2137,6 +2166,7 @@ spdk_opal_revert_poll(struct spdk_opal_dev *dev)
 	if (header->com_packet.outstanding_data == 0 &&
 	    header->com_packet.min_transfer == 0) {
 		ret = opal_parse_and_check_status(dev, NULL);
+		dev->state = OPAL_DEV_STATE_DEFAULT;
 		dev->revert_cb_fn(dev, dev->ctx, ret);
 		return 0;
 	} else {
@@ -2155,6 +2185,15 @@ spdk_opal_cmd_revert_tper_async(struct spdk_opal_dev *dev, const char *passwd,
 
 	if (!dev || dev->supported == false) {
 		return -ENODEV;
+	}
+
+	if (dev->state == OPAL_DEV_STATE_BUSY) {
+		SPDK_ERRLOG("Device Busy\n");
+		return -EBUSY;
+	}
+
+	if (dev->state == OPAL_DEV_STATE_DEFAULT) {
+		return 0;
 	}
 
 	if (cb_fn == NULL) {
@@ -2200,6 +2239,8 @@ spdk_opal_cmd_revert_tper_async(struct spdk_opal_dev *dev, const char *passwd,
 	if (ret) {
 		SPDK_ERRLOG("Error sending opal command: %d\n", ret);
 	}
+
+	dev->state = OPAL_DEV_STATE_BUSY;
 
 	/* Controller will terminate session. No "end session" here needed. */
 
@@ -2668,6 +2709,25 @@ uint8_t
 spdk_opal_get_max_locking_ranges(struct spdk_opal_dev *dev)
 {
 	return dev->max_ranges;
+}
+
+enum spdk_opal_dev_state
+spdk_opal_get_dev_state(struct spdk_opal_dev *dev) {
+	return dev->state;
+}
+
+const char *
+spdk_opal_get_nvme_ctrlr_name(struct spdk_opal_dev *dev)
+{
+	return dev->nvme_ctrlr_name;
+}
+
+void
+spdk_opal_revert_callback(struct spdk_opal_dev *dev, int rc)
+{
+	assert(dev->revert_cb_fn);
+
+	dev->revert_cb_fn(dev, dev->ctx, rc);
 }
 
 /* Log component for opal submodule */

@@ -72,39 +72,31 @@ spdk_rpc_bdev_nvme_opal_init(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	/* check if opal supported */
 	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(req.nvme_ctrlr_name);
-	if (nvme_ctrlr == NULL || nvme_ctrlr->opal_dev == NULL ||
-	    !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
-		SPDK_ERRLOG("%s not support opal\n", req.nvme_ctrlr_name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("%s not found\n", req.nvme_ctrlr_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		goto out;
 	}
 
-	/* take ownership */
-	rc = spdk_opal_cmd_take_ownership(nvme_ctrlr->opal_dev, req.password);
+	rc = spdk_vbdev_opal_init(req.nvme_ctrlr_name, req.password);
 	if (rc) {
-		SPDK_ERRLOG("Take ownership failure: %d\n", rc);
+		SPDK_ERRLOG("Opal init failure: %d\n", rc);
 		switch (rc) {
 		case -EBUSY:
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							 "SP Busy, try again later");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Device busy");
 			break;
-		case -EACCES:
+		case -EINVAL:
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							 "This drive is already enabled");
+							 "Already initialized");
+			break;
+		case -ENODEV:
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "Opal not supported");
 			break;
 		default:
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		}
-		goto out;
-	}
-
-	/* activate locking SP */
-	rc = spdk_opal_cmd_activate_locking_sp(nvme_ctrlr->opal_dev, req.password);
-	if (rc) {
-		SPDK_ERRLOG("Activate locking SP failure: %d\n", rc);
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		goto out;
 	}
 
@@ -137,14 +129,13 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_opal_revert_decoders[
 static void
 revert_tper_done(struct spdk_opal_dev *dev, void *data, int rc)
 {
-	struct nvme_bdev_ctrlr *ctrlr = data;
-
 	if (rc != 0) {
-		SPDK_ERRLOG("%s revert TPer failed\n", ctrlr->name);
+		SPDK_ERRLOG("%s revert TPer failed\n", spdk_opal_get_nvme_ctrlr_name(dev));
 		return;
 	}
 
-	SPDK_NOTICELOG("%s revert TPer done\n", ctrlr->name);
+	SPDK_NOTICELOG("%s revert TPer done\n", spdk_opal_get_nvme_ctrlr_name(dev));
+
 }
 
 static void
@@ -164,11 +155,9 @@ spdk_rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	/* check if opal supported */
 	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(req.nvme_ctrlr_name);
-	if (nvme_ctrlr == NULL || nvme_ctrlr->opal_dev == NULL ||
-	    !spdk_opal_supported(nvme_ctrlr->opal_dev)) {
-		SPDK_ERRLOG("%s not support opal\n", req.nvme_ctrlr_name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("%s not found\n", req.nvme_ctrlr_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		goto out;
 	}
@@ -179,7 +168,13 @@ spdk_rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 					 nvme_ctrlr);
 	if (rc) {
 		SPDK_ERRLOG("Revert TPer failure: %d\n", rc);
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		switch (rc) {
+		case -EBUSY:
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Device busy");
+			break;
+		default:
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		}
 		goto out;
 	}
 

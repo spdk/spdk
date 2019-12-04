@@ -733,14 +733,6 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_object_end(w);
 
-	if (cdata->oacs.security) {
-		spdk_json_write_named_object_begin(w, "security");
-
-		spdk_json_write_named_bool(w, "opal", spdk_opal_supported(nvme_bdev_ctrlr->opal_dev));
-
-		spdk_json_write_object_end(w);
-	}
-
 	spdk_json_write_object_end(w);
 
 	return 0;
@@ -1166,14 +1158,6 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 
 	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, nvme_bdev_ctrlr);
 
-	if (spdk_nvme_ctrlr_get_flags(nvme_bdev_ctrlr->ctrlr) &
-	    SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
-		nvme_bdev_ctrlr->opal_dev = spdk_opal_init_dev(nvme_bdev_ctrlr->ctrlr);
-		if (nvme_bdev_ctrlr->opal_dev == NULL) {
-			SPDK_ERRLOG("Failed to initialize Opal\n");
-			return -ENOMEM;
-		}
-	}
 	return 0;
 }
 
