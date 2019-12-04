@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dada0d38_569eddb5",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-12-04T06:19:23Z",
+      "side": 1,
+      "message": "feel a little strange of these naming.",
+      "range": {
+        "startLine": 113,
+        "startChar": 12,
+        "endLine": 113,
+        "endChar": 17
+      },
+      "revId": "9c906a2e60d5c20c77892167b5bf5e840652c8de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ac40b12_73daf733",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-12-04T06:19:23Z",
+      "side": 1,
+      "message": "please put this comment in an extra line.",
+      "revId": "9c906a2e60d5c20c77892167b5bf5e840652c8de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b86dc041_495cb256",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-12-04T06:19:23Z",
+      "side": 1,
+      "message": "these three items should not shared the same \"Only display nvme status\" I think,should be more detail. for a reader is\nnot very clear.",
+      "revId": "9c906a2e60d5c20c77892167b5bf5e840652c8de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0412cb74_e0ec6e28",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-12-04T06:19:23Z",
+      "side": 1,
+      "message": "we often use this default：4420，",
+      "revId": "9c906a2e60d5c20c77892167b5bf5e840652c8de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
