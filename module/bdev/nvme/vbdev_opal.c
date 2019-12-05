@@ -379,6 +379,68 @@ static struct spdk_bdev_module opal_if = {
 SPDK_BDEV_MODULE_REGISTER(opal, &opal_if)
 
 int
+spdk_vbdev_opal_discovery(const char *nvme_ctrlr_name, enum spdk_opal_dev_state *state)
+{
+	struct opal_bdev_ctrlr *opal_ctrlr;
+	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	struct spdk_opal_dev *opal_dev;
+	int rc;
+
+	opal_ctrlr = opal_ctrlr_get_by_nvme_ctrlr_name(nvme_ctrlr_name);
+	if (opal_ctrlr) {
+		/* ctrlr is already in the list, update state */
+		*state = spdk_opal_get_dev_state(opal_ctrlr->opal_dev);
+		return 0;
+	}
+
+	/* this is a new controller */
+	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(nvme_ctrlr_name);
+	if (!nvme_ctrlr) {
+		SPDK_ERRLOG("get nvme ctrlr failed\n");
+		return -ENODEV;
+	}
+
+	opal_ctrlr = calloc(1, sizeof(struct opal_bdev_ctrlr));
+	if (opal_ctrlr == NULL) {
+		SPDK_ERRLOG("memory allocation failure\n");
+		return -ENOMEM;
+	}
+	opal_ctrlr->nvme_ctrlr = nvme_ctrlr;
+	opal_ctrlr->opal_dev = NULL;
+
+	if (spdk_nvme_ctrlr_get_flags(nvme_ctrlr->ctrlr) &
+	    SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		opal_dev = spdk_opal_init_dev(nvme_ctrlr->ctrlr);
+		if (opal_dev == NULL) {
+			SPDK_ERRLOG("Failed to initialize Opal\n");
+			free(opal_ctrlr);
+			return -ENOMEM;
+		}
+		opal_ctrlr->opal_dev = opal_dev;
+	}
+
+	if (opal_ctrlr->opal_dev == NULL) { /* security send receive not supported */
+		free(opal_ctrlr);
+		return -ENODEV;
+	} else if (!spdk_opal_supported(opal_ctrlr->opal_dev)) {
+		spdk_opal_close(opal_ctrlr->opal_dev);
+		free(opal_ctrlr);
+		return -ENODEV;
+	} else { /* Opal supported */
+		rc = spdk_opal_alloc_nvme_ctrlr_name(opal_ctrlr->opal_dev, nvme_ctrlr_name);
+		if (rc) {
+			spdk_opal_close(opal_ctrlr->opal_dev);
+			free(opal_ctrlr);
+			return rc;
+		}
+
+		TAILQ_INSERT_TAIL(&g_opal_ctrlr, opal_ctrlr, tailq);
+		*state = spdk_opal_get_dev_state(opal_ctrlr->opal_dev);
+		return 0;
+	}
+}
+
+int
 spdk_vbdev_opal_init(const char *nvme_ctrlr_name, char *password)
 {
 	struct opal_bdev_ctrlr *opal_ctrlr;
