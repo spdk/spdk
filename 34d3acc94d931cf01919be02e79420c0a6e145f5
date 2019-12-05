@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "af949c0a_a179c74f",
+        "filename": "test/nvmf/host/target_disconnect.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:38:28Z",
+      "side": 0,
+      "message": "Will you mention about this swap of if block and nvmftestinit?",
+      "revId": "34d3acc94d931cf01919be02e79420c0a6e145f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
