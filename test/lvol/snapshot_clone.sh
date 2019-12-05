@@ -368,6 +368,41 @@ function test_clone_decouple_parent() {
 	check_leftover_devices
 }
 
+# Set lvol bdev as read only and perform clone on it.
+function test_lvol_bdev_readonly() {
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Calculate size and create lvol bdev
+	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 2 )) )
+
+	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb")
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+
+	# Set lvol bdev as read only
+	rpc_cmd bdev_lvol_set_read_only lvs_test/lvol_test
+
+	# Try to perform write operation on lvol marked as read only
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
+	run_fio_test /dev/nbd0 0 lvol_size "write" "0xcc" && false
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
+
+	# Create clone of lvol set to read only
+	clone_uuid=$(rpc_cmd bdev_lvol_clone lvs_test/lvol_test clone_test)
+
+	# Try to perform write operation on lvol clone
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$clone_uuid" /dev/nbd0
+	run_fio_test /dev/nbd0 0 lvol_size "write" "0xcc"
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
+
+	# Clean up
+	rpc_cmd bdev_lvol_delete "$clone_uuid"
+	rpc_cmd bdev_lvol_delete "$lvol_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -380,6 +415,7 @@ run_test "test_create_snapshot_of_snapshot" test_create_snapshot_of_snapshot
 run_test "test_clone_snapshot_relations" test_clone_snapshot_relations
 run_test "test_clone_inflate" test_clone_inflate
 run_test "test_clone_decouple_parent" test_clone_decouple_parent
+run_test "test_lvol_bdev_readonly" test_lvol_bdev_readonly
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
