@@ -304,82 +304,6 @@ read_task_split_reverse_order_case(void)
 }
 
 static void
-propagate_scsi_error_status_for_split_read_tasks(void)
-{
-	struct spdk_iscsi_task primary = {};
-	struct spdk_iscsi_task task1 = {}, task2 = {}, task3 = {}, task4 = {}, task5 = {}, task6 = {};
-
-	primary.scsi.transfer_len = 512 * 6;
-	primary.rsp_scsi_status = SPDK_SCSI_STATUS_GOOD;
-	TAILQ_INIT(&primary.subtask_list);
-	primary.scsi.ref = 7;
-
-	task1.scsi.offset = 0;
-	task1.scsi.length = 512;
-	task1.scsi.status = SPDK_SCSI_STATUS_GOOD;
-	task1.scsi.ref = 1;
-	task1.parent = &primary;
-
-	task2.scsi.offset = 512;
-	task2.scsi.length = 512;
-	task2.scsi.status = SPDK_SCSI_STATUS_CHECK_CONDITION;
-	task2.scsi.ref = 1;
-	task2.parent = &primary;
-
-	task3.scsi.offset = 512 * 2;
-	task3.scsi.length = 512;
-	task3.scsi.status = SPDK_SCSI_STATUS_GOOD;
-	task3.scsi.ref = 1;
-	task3.parent = &primary;
-
-	task4.scsi.offset = 512 * 3;
-	task4.scsi.length = 512;
-	task4.scsi.status = SPDK_SCSI_STATUS_GOOD;
-	task4.scsi.ref = 1;
-	task4.parent = &primary;
-
-	task5.scsi.offset = 512 * 4;
-	task5.scsi.length = 512;
-	task5.scsi.status = SPDK_SCSI_STATUS_GOOD;
-	task5.scsi.ref = 1;
-	task5.parent = &primary;
-
-	task6.scsi.offset = 512 * 5;
-	task6.scsi.length = 512;
-	task6.scsi.status = SPDK_SCSI_STATUS_GOOD;
-	task6.scsi.ref = 1;
-	task6.parent = &primary;
-
-	/* task2 has check condition status, and verify if the check condition
-	 * status is propagated to remaining tasks correctly when these tasks complete
-	 * by the following order, task4, task3, task2, task1, primary, task5, and task6.
-	 */
-	process_read_task_completion(NULL, &task4, &primary);
-	process_read_task_completion(NULL, &task3, &primary);
-	process_read_task_completion(NULL, &task2, &primary);
-	process_read_task_completion(NULL, &task1, &primary);
-	process_read_task_completion(NULL, &task5, &primary);
-	process_read_task_completion(NULL, &task6, &primary);
-
-	CU_ASSERT(primary.rsp_scsi_status == SPDK_SCSI_STATUS_CHECK_CONDITION);
-	CU_ASSERT(task1.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
-	CU_ASSERT(task2.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
-	CU_ASSERT(task3.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
-	CU_ASSERT(task4.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
-	CU_ASSERT(task5.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
-	CU_ASSERT(task6.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
-	CU_ASSERT(primary.bytes_completed == primary.scsi.transfer_len);
-	CU_ASSERT(TAILQ_EMPTY(&primary.subtask_list));
-	CU_ASSERT(primary.scsi.ref == 0);
-	CU_ASSERT(task1.scsi.ref == 0);
-	CU_ASSERT(task2.scsi.ref == 0);
-	CU_ASSERT(task3.scsi.ref == 0);
-	CU_ASSERT(task4.scsi.ref == 0);
-	CU_ASSERT(task5.scsi.ref == 0);
-	CU_ASSERT(task6.scsi.ref == 0);
-}
-
-static void
 process_non_read_task_completion_test(void)
 {
 	struct spdk_iscsi_conn conn = {};
@@ -700,8 +624,6 @@ main(int argc, char **argv)
 		CU_add_test(suite, "read task split in order", read_task_split_in_order_case) == NULL ||
 		CU_add_test(suite, "read task split reverse order",
 			    read_task_split_reverse_order_case) == NULL ||
-		CU_add_test(suite, "propagate_scsi_error_status_for_split_read_tasks",
-			    propagate_scsi_error_status_for_split_read_tasks) == NULL ||
 		CU_add_test(suite, "process_non_read_task_completion_test",
 			    process_non_read_task_completion_test) == NULL ||
 		CU_add_test(suite, "recursive_flush_pdus_calls", recursive_flush_pdus_calls) == NULL ||
