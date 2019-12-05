@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba781462_2c3454ad",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T04:37:23Z",
+      "side": 1,
+      "message": "I think we can remove the third parameter, and then we can check\n\nspdk_interface_ip_is_valid(ifc_index, addr) \u003d\u003d false if we add, and\nspdk_interface_ip_is_valid(ifc_index, addr) \u003d\u003d true if we delete.",
+      "range": {
+        "startLine": 424,
+        "startChar": 67,
+        "endLine": 424,
+        "endChar": 77
+      },
+      "revId": "6ac5c51cfe0f68c4997dfc25e90783939d27dbee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "acc35292_8724e80b",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T04:37:23Z",
+      "side": 1,
+      "message": "Then we can remove if (add \u003d\u003d true) block.",
+      "revId": "6ac5c51cfe0f68c4997dfc25e90783939d27dbee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa733ed3_a4d55050",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T04:37:23Z",
+      "side": 1,
+      "message": "I think \n\nuint32_t addr;\n\naddr \u003d inet_addr(ip_addr);\n\nis OK because SPDK usually separates variable definition and manipulation.",
+      "range": {
+        "startLine": 489,
+        "startChar": 1,
+        "endLine": 489,
+        "endChar": 36
+      },
+      "revId": "6ac5c51cfe0f68c4997dfc25e90783939d27dbee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da516a8b_fba0fd75",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T04:37:23Z",
+      "side": 1,
+      "message": "Maybe spdk_interface_net_interface_is_ip_address_valid() but too long and the current name is fine to me.",
+      "range": {
+        "startLine": 491,
+        "startChar": 5,
+        "endLine": 491,
+        "endChar": 31
+      },
+      "revId": "6ac5c51cfe0f68c4997dfc25e90783939d27dbee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f122ae0_b489b1f4",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T04:37:23Z",
+      "side": 1,
+      "message": "EEXIST?",
+      "range": {
+        "startLine": 492,
+        "startChar": 10,
+        "endLine": 492,
+        "endChar": 16
+      },
+      "revId": "6ac5c51cfe0f68c4997dfc25e90783939d27dbee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
