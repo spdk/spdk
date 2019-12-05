@@ -117,4 +117,3 @@ trap 'on_error_exit;' ERR
 raid_function_test
 
 rm -f $tmp_file
-report_test_completion "bdev_raid"

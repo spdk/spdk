@@ -96,7 +96,6 @@ trap '-' SIGINT SIGTERM EXIT
 # NOTE: socat returns code 143 on SIGINT
 killprocess $server_pid || true
 
-report_test_completion "sock_client"
 timing_exit sock_client
 
 # ----------------
@@ -123,5 +122,4 @@ trap - SIGINT SIGTERM EXIT
 killprocess $server_pid
 
 iscsitestfini $1 $2
-report_test_completion "sock_server"
 timing_exit sock_server

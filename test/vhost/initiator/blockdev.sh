@@ -99,7 +99,6 @@ timing_exit create_bdev_config
 timing_enter run_spdk_fio
 run_spdk_fio $testdir/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
 	--section=job_write --section=job_rw --spdk_conf=$testdir/bdev.conf
-report_test_completion "vhost_run_spdk_fio"
 timing_exit run_spdk_fio
 
 timing_enter run_spdk_fio_unmap
