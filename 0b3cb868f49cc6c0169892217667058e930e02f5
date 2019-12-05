@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a997269_f25f0d05",
+        "filename": "test/iscsi_tgt/digests/digests.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:39:37Z",
+      "side": 1,
+      "message": "iscsi_tgt_header_digest?",
+      "revId": "0b3cb868f49cc6c0169892217667058e930e02f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
