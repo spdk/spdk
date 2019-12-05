@@ -994,10 +994,9 @@ nvme_qpair_set_state(struct spdk_nvme_qpair *qpair, enum nvme_qpair_state state)
 	qpair->state = state;
 }
 
-static inline bool
-nvme_qpair_state_equals(struct spdk_nvme_qpair *qpair, enum nvme_qpair_state state)
-{
-	return qpair->state == state;
+static inline enum nvme_qpair_state
+nvme_qpair_get_state(struct spdk_nvme_qpair *qpair) {
+	return qpair->state;
 }
 
 static inline void
