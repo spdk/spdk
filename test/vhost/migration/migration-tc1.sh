@@ -119,5 +119,3 @@ function migration_tc1()
 
 	notice "Migration TC1 SUCCESS"
 }
-
-migration_tc1
