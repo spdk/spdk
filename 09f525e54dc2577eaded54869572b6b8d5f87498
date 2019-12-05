@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4fd2afd0_9dd37c28",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-05T22:14:44Z",
+      "side": 1,
+      "message": "I added this value to the end of the qpair struct because there is a competing change from the poland team that uses the open hole higher up in the struct.",
+      "revId": "09f525e54dc2577eaded54869572b6b8d5f87498",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
