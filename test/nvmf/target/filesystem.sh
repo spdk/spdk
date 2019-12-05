@@ -24,40 +24,39 @@ for incapsule in 0 4096; do
 
 	nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
+	# TODO: fix this to wait for the proper NVMe device.
+	# if we are hosting the local filesystem on an NVMe drive, this test will fail
+	# because it relies on the no other NVMe drives being present in the system.
 	waitforblk "nvme0n1"
 
 	mkdir -p /mnt/device
 
-	devs=$(lsblk -l -o NAME | grep nvme)
+	timing_enter parted
+	parted -s /dev/nvme0n1 mklabel msdos  mkpart primary '0%' '100%'
+	partprobe
+	timing_exit parted
+	sleep 1
 
-	for dev in $devs; do
-		timing_enter parted
-		parted -s /dev/$dev mklabel msdos  mkpart primary '0%' '100%'
-		partprobe
-		timing_exit parted
-		sleep 1
+	for fstype in "ext4" "btrfs" "xfs"; do
+		timing_enter $fstype
+		if [ $fstype = ext4 ]; then
+			force=-F
+		else
+			force=-f
+		fi
 
-		for fstype in "ext4" "btrfs" "xfs"; do
-			timing_enter $fstype
-			if [ $fstype = ext4 ]; then
-				force=-F
-			else
-				force=-f
-			fi
+		mkfs.${fstype} $force /dev/nvme0n1p1
 
-			mkfs.${fstype} $force /dev/${dev}p1
-
-			mount /dev/${dev}p1 /mnt/device
-			touch /mnt/device/aaa
-			sync
-			rm /mnt/device/aaa
-			sync
-			umount /mnt/device
-			timing_exit $fstype
-		done
-
-		parted -s /dev/$dev rm 1
+		mount /dev/nvme0n1p1 /mnt/device
+		touch /mnt/device/aaa
+		sync
+		rm /mnt/device/aaa
+		sync
+		umount /mnt/device
+		timing_exit $fstype
 	done
+
+	parted -s /dev/nvme0n1 rm 1
 
 	sync
 	nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
