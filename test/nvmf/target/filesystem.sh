@@ -23,10 +23,13 @@ for incapsule in 0 4096; do
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 	nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+<<<<<<< HEAD
 
 	# TODO: fix this to wait for the proper NVMe device.
 	# if we are hosting the local filesystem on an NVMe drive, this test will fail
 	# because it relies on the no other NVMe drives being present in the system.
+=======
+>>>>>>> 2451d0c9b... test/nvmf: convert filesystem to use run_test
 	waitforblk "nvme0n1"
 
 	mkdir -p /mnt/device
