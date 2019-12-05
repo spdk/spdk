@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "61b46509_4138d6bf",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-05T13:01:34Z",
+      "side": 1,
+      "message": "This check is different which is to confirm the NIC device is there by the index.\n\nThe newly added is_ip_address_in_use() is to check whether the IP is in-use on an existing NIC (which is always available there).\n\nThese two functions are different. Are you talking about this in your latest comment?\n\nThanks, Gang",
+      "parentUuid": "5864f5d7_9bc84397",
+      "range": {
+        "startLine": 307,
+        "startChar": 11,
+        "endLine": 307,
+        "endChar": 35
+      },
+      "revId": "1992b3fdf587e9880f731b19a7686dc5af06aca0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3e6ddcf5_3f2a168c",
         "filename": "lib/net/interface.c",
         "patchSetId": 6
