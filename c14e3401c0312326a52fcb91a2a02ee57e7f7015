@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "298a2881_25586728",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-12-05T14:24:08Z",
+      "side": 0,
+      "message": "This function returns NULL and is used in several places in a code - since we support hotplug it should be either implemented or removed.",
+      "range": {
+        "startLine": 130,
+        "startChar": 2,
+        "endLine": 130,
+        "endChar": 43
+      },
+      "revId": "c14e3401c0312326a52fcb91a2a02ee57e7f7015",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
