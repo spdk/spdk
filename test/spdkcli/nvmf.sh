@@ -83,4 +83,3 @@ timing_exit spdkcli_clear_nvmf_config
 
 killprocess $nvmf_tgt_pid
 #revert_soft_roce
-report_test_completion spdk_cli_nvmf

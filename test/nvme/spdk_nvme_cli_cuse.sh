@@ -70,5 +70,3 @@ fi
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_tgt_pid
-
-report_test_completion spdk_nvme_cli_cuse

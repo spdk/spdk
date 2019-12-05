@@ -44,4 +44,3 @@ $spdkcli_job "'/bdevs/malloc delete Malloc1' '' True
 timing_exit spdkcli_delete_malloc
 
 killprocess $spdk_tgt_pid
-report_test_completion spdk_cli

@@ -36,5 +36,3 @@ for test in ${tests}; do
 	fio_bdev $testdir/config/fio/$test.fio
 	timing_exit $test
 done
-
-report_test_completion ftl_fio
