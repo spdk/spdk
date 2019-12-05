@@ -4,9 +4,9 @@ First, clone the fio source repository from https://github.com/axboe/fio
 
     git clone https://github.com/axboe/fio
 
-Then check out the fio 3.3:
+Then check out the fio 3.15:
 
-    cd fio && git checkout fio-3.3
+    cd fio && git checkout fio-3.15
 
 Finally, compile the code:
 
