@@ -34,8 +34,6 @@ function usage() {
                                     653: 'thin_provisioning_resize',
                                     654: 'thin_overprovisioning',
                                     655: 'thin_provisioning_filling_disks_less_than_lvs_size',
-                                    758: 'clone_decouple_parent',
-                                    759: 'clone_decouple_parent_rw',
                                     760: 'set_read_only',
                                     761: 'delete_snapshot',
                                     762: 'delete_snapshot_with_snapshot',
