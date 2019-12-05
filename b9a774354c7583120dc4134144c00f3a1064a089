@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ae0de38_c3b15801",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:28:45Z",
+      "side": 1,
+      "message": "This is unrelated but nvme_fio?",
+      "revId": "b9a774354c7583120dc4134144c00f3a1064a089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "105d2fd6_7b62c25d",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:28:45Z",
+      "side": 1,
+      "message": "name_fio?",
+      "revId": "b9a774354c7583120dc4134144c00f3a1064a089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
