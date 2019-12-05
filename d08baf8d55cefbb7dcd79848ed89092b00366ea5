@@ -162,6 +162,30 @@
       "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5569b2ec_178c1148",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-05T10:53:03Z",
+      "side": 1,
+      "message": "My intention was to have a way to not touch the option, because originally I had different defaults for PCIe and RDMA. This is not possible with single option. It will always send some value to SPDK.\nIn this version default is the same for all transports. So, I think, we can go with single option now. And it should disable delayed submit since default value is true.\nWhat about \u0027-d\u0027, \u0027--disable-delayed-cmd-submit\u0027?",
+      "parentUuid": "91c97f1c_870c3a0e",
+      "range": {
+        "startLine": 388,
+        "startChar": 3,
+        "endLine": 390,
+        "endChar": 65
+      },
+      "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
