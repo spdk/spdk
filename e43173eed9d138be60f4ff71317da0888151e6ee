@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3eef6dc0_d205a0a3",
+        "filename": "autotest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-05T20:13:03Z",
+      "side": 1,
+      "message": "I think you\u0027re right. I will want to parse this properly later so I will have to do some kind of trickery here. Either some bash variable grocking or jsut do an explicit if statement. But like you mentioned, I am in kind of deep as far as patch count goes so maybe I\u0027ll do that on top of the changes.",
+      "parentUuid": "dd2e7077_0689b7e0",
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4a9988d3_fee39ff9",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2019-12-05T20:07:18Z",
       "side": 1,
       "message": "test_name\u003d\"$2\"?",
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dce75e46_6223b895",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-05T20:13:03Z",
+      "side": 1,
+      "message": "I do a shift right before this so the test name is the new $1.",
+      "parentUuid": "4a9988d3_fee39ff9",
       "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
