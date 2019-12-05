@@ -243,5 +243,6 @@ void spdk_opal_free_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal
 uint8_t spdk_opal_get_max_locking_ranges(struct spdk_opal_dev *dev);
 enum spdk_opal_dev_state spdk_opal_get_dev_state(struct spdk_opal_dev *dev);
 const char *spdk_opal_get_nvme_ctrlr_name(struct spdk_opal_dev *dev);
+int spdk_opal_alloc_nvme_ctrlr_name(struct spdk_opal_dev *dev, const char *name);
 
 #endif
