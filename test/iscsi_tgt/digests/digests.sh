@@ -23,38 +23,26 @@ function node_login_fio_logout() {
 
 function iscsi_header_digest_test() {
 	# Enable HeaderDigest to CRC32C
-	timing_enter HeaderDigest_enabled
 	node_login_fio_logout "HeaderDigest -v CRC32C"
-	timing_exit HeaderDigest_enabled
 
 	# Let iscsi target to decide its preference on
 	# HeaderDigest based on its capability.
-	timing_enter preferred
 	node_login_fio_logout "HeaderDigest -v CRC32C,None"
-	timing_exit preferred
 }
 
 function iscsi_header_data_digest_test() {
 	# Only enable HeaderDigest to CRC32C
-	timing_enter HeaderDigest_enabled
 	node_login_fio_logout "HeaderDigest -v CRC32C" "DataDigest -v None"
-	timing_exit HeaderDigest_enabled
 
 	# Only enable DataDigest to CRC32C
-	timing_enter DataDigest_enabled
 	node_login_fio_logout "HeaderDigest -v None" "DataDigest -v CRC32C"
-	timing_exit DataDigest_enabled
 
 	# Let iscsi target to decide its preference on both
 	# HeaderDigest and DataDigest based on its capability.
-	timing_enter both_preferred
 	node_login_fio_logout "HeaderDigest -v CRC32C,None" "DataDigest -v CRC32C,None"
-	timing_exit both_preferred
 
 	# Enable HeaderDigest and DataDigest both.
-	timing_enter both_enabled
 	node_login_fio_logout "HeaderDigest -v CRC32C" "DataDigest -v CRC32C"
-	timing_exit both_enabled
 }
 
 MALLOC_BDEV_SIZE=64
@@ -94,9 +82,9 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 # Check and avoid setting DataDigest.
 DataDigestAbility=$(iscsiadm -m node -p $TARGET_IP:$ISCSI_PORT -o update -n node.conn[0].iscsi.DataDigest -v None 2>&1 || true)
 if [ "$DataDigestAbility"x != x ]; then
-	iscsi_header_digest_test
+	run_test "case" "iscsi_tgt_digest" iscsi_header_digest_test
 else
-	iscsi_header_data_digest_test
+	run_test "case" "iscsi_tgt_data_digest" iscsi_header_data_digest_test
 fi
 
 trap - SIGINT SIGTERM EXIT
