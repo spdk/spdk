@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ac15bb6_8ef5ef24",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-05T12:07:22Z",
+      "side": 1,
+      "message": "This is unused here? You wanted to match $1 to $disk_names, right ?",
+      "range": {
+        "startLine": 314,
+        "startChar": 1,
+        "endLine": 314,
+        "endChar": 15
+      },
+      "revId": "f88458a7f787cddb5c44137beee80750af697e65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
