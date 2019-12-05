@@ -16,6 +16,24 @@
       "revId": "f83a905c26abaed6b41fdc2b538eadc4dffed106",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0556ce20_84c75bf7",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-05T17:28:42Z",
+      "side": 1,
+      "message": "Or even a usage string:\n\nInvalid parameters\nusage: run_test [test_type] [test_name] [test_script (optional)]",
+      "parentUuid": "cbed8d52_e3639665",
+      "revId": "f83a905c26abaed6b41fdc2b538eadc4dffed106",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
