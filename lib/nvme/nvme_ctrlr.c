@@ -408,7 +408,7 @@ spdk_nvme_ctrlr_reconnect_io_qpair(struct spdk_nvme_qpair *qpair)
 		goto out;
 	}
 
-	if (!nvme_qpair_state_equals(qpair, NVME_QPAIR_DISABLED)) {
+	if (nvme_qpair_get_state(qpair) != NVME_QPAIR_DISABLED) {
 		rc = 0;
 		goto out;
 	}

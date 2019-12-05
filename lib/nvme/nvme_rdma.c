@@ -1900,7 +1900,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	}
 	nvme_rdma_qpair_process_cm_event(rqpair);
 
-	if (spdk_unlikely(nvme_qpair_state_equals(qpair, NVME_QPAIR_DISABLED))) {
+	if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_DISABLED)) {
 		goto fail;
 	}
 

@@ -269,7 +269,7 @@ static void test_nvme_qpair_process_completions(void)
 	CU_ASSERT(STAILQ_EMPTY(&qpair.queued_req));
 	CU_ASSERT(g_num_cb_passed == 0);
 	CU_ASSERT(g_num_cb_failed == 0);
-	CU_ASSERT(nvme_qpair_state_equals(&qpair, NVME_QPAIR_ENABLED));
+	CU_ASSERT(nvme_qpair_get_state(&qpair) == NVME_QPAIR_ENABLED);
 
 	g_called_transport_process_completions = false;
 	g_transport_process_completions_rc = -ENXIO;
