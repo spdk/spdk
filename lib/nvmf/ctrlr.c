@@ -2358,13 +2358,17 @@ nvmf_ns_reservation_request_check(struct spdk_nvmf_subsystem_pg_ns_info *ns_info
 		}
 		break;
 	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
-	case SPDK_NVME_OPC_RESERVATION_RELEASE:
 		racqa = cmd->cdw10_bits.resv_acquire.racqa;
-		if (cmd->opc == SPDK_NVME_OPC_RESERVATION_ACQUIRE &&
-		    racqa == SPDK_NVME_RESERVE_ACQUIRE) {
+		if (racqa == SPDK_NVME_RESERVE_ACQUIRE) {
 			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
 			goto exit;
 		}
+		if (!is_registrant) {
+			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+			goto exit;
+		}
+		break;
+	case SPDK_NVME_OPC_RESERVATION_RELEASE:
 		if (!is_registrant) {
 			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
 			goto exit;
