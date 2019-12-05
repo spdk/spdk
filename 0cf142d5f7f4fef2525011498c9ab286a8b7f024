@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "87f58734_14014c07",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-05T21:09:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6149ce2e_fa2af08f",
+      "range": {
+        "startLine": 53,
+        "startChar": 4,
+        "endLine": 53,
+        "endChar": 26
+      },
+      "revId": "0cf142d5f7f4fef2525011498c9ab286a8b7f024",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a7dc2467_9681f38a",
         "filename": "test/vhost/hotplug/scsi_stress_test.sh",
         "patchSetId": 24
@@ -45,6 +69,30 @@
       "revId": "0cf142d5f7f4fef2525011498c9ab286a8b7f024",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ffb4f0ee_23adef45",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-05T21:09:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a7dc2467_9681f38a",
+      "range": {
+        "startLine": 54,
+        "startChar": 8,
+        "endLine": 54,
+        "endChar": 28
+      },
+      "revId": "0cf142d5f7f4fef2525011498c9ab286a8b7f024",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
