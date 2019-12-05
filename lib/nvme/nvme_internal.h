@@ -362,6 +362,8 @@ struct spdk_nvme_qpair {
 	 */
 	uint8_t				no_deletion_notification_needed: 1;
 
+	uint8_t				first_fused_submitted: 1;
+
 	enum spdk_nvme_transport_type	trtype;
 
 	STAILQ_HEAD(, nvme_request)	free_req;
