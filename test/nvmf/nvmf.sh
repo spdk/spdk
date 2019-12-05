@@ -13,7 +13,7 @@ trap "exit 1" SIGINT SIGTERM EXIT
 
 TEST_ARGS=( "$@" )
 
-run_test suite "nvmf_filesystem" test/nvmf/target/filesystem.sh "${TEST_ARGS[@]}"
+run_test "suite" "nvmf_filesystem" test/nvmf/target/filesystem.sh "${TEST_ARGS[@]}"
 run_test "case" "nvmf_discovery" test/nvmf/target/discovery.sh "${TEST_ARGS[@]}"
 run_test "case" "nvmf_connect_disconnect" test/nvmf/target/connect_disconnect.sh "${TEST_ARGS[@]}"
 if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
@@ -36,7 +36,7 @@ fi
 run_test "case" "nvmf_nmic" test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
 run_test "case" "nvmf_rpc" test/nvmf/target/rpc.sh "${TEST_ARGS[@]}"
 run_test "case" "nvmf_fio" test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
-run_test suite "nvmf_shutdown" test/nvmf/target/shutdown.sh "${TEST_ARGS[@]}"
+run_test "suite" "nvmf_shutdown" test/nvmf/target/shutdown.sh "${TEST_ARGS[@]}"
 run_test "case" "nvmf_bdevio" test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
 
 timing_enter host
@@ -49,7 +49,7 @@ run_test "case" "nvmf_perf" test/nvmf/host/perf.sh "${TEST_ARGS[@]}"
 #run_test test/nvmf/host/identify_kernel_nvmf.sh $TEST_ARGS
 run_test "case" "nvmf_aer" test/nvmf/host/aer.sh "${TEST_ARGS[@]}"
 run_test "case" "nvmf_fio" test/nvmf/host/fio.sh "${TEST_ARGS[@]}"
-run_test suite "nvmf_target_disconnect" test/nvmf/host/target_disconnect.sh "${TEST_ARGS[@]}"
+run_test "suite" "nvmf_target_disconnect" test/nvmf/host/target_disconnect.sh "${TEST_ARGS[@]}"
 
 timing_exit host
 
