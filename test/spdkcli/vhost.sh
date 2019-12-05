@@ -142,5 +142,3 @@ rm -f /tmp/sample_aio
 timing_exit spdkcli_load_config
 
 killprocess $vhost_tgt_pid
-
-report_test_completion spdk_cli_vhost
