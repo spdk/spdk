@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "396ca1a8_f0eb932f",
+        "filename": "test/nvmf/target/filesystem.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-05T20:19:41Z",
+      "side": 1,
+      "message": "This adds an assumption that we\u0027re testing only one device named nvme0n1 - previously we did lsblk plus a loop for each nvme block device found.\n\nI\u0027m ok if we want to change it, but I\u0027d argue we should pass nvme0n1 in as a parameter to this script then, and do all of that as a separate patch from doing this run_test conversion.",
+      "revId": "2451d0c9b26c32fa67bf6a0187d3c84254ccca6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
