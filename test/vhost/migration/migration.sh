@@ -4,6 +4,9 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
+source $testdir/migration-tc1.sh
+source $testdir/migration-tc2.sh
+
 
 vms=()
 declare -A vms_os
@@ -13,7 +16,6 @@ declare -A vms_ctrlrs_disks
 
 # By default use Guest fio
 fio_bin=""
-test_cases=""
 MGMT_TARGET_IP=""
 MGMT_INITIATOR_IP=""
 RDMA_TARGET_IP=""
@@ -26,8 +28,6 @@ function usage()
 	echo
 	echo "    --os ARGS             VM configuration. This parameter might be used more than once:"
 	echo "    --fio-bin=FIO         Use specific fio binary (will be uploaded to VM)"
-	echo "    --test-cases=TESTS    Coma-separated list of tests to run. Implemented test cases are: 1"
-	echo "                          See test/vhost/test_plan.md for more info."
 	echo "    --mgmt-tgt-ip=IP      IP address of target."
 	echo "    --mgmt-init-ip=IP     IP address of initiator."
 	echo "    --rdma-tgt-ip=IP      IP address of targets rdma capable NIC."
@@ -43,7 +43,6 @@ for param in "$@"; do
 			;;
 		--os=*) os_image="${param#*=}" ;;
 		--fio-bin=*) fio_bin="${param}" ;;
-		--test-cases=*) test_cases="${param#*=}" ;;
 		--mgmt-tgt-ip=*) MGMT_TARGET_IP="${param#*=}" ;;
 		--mgmt-init-ip=*) MGMT_INITIATOR_IP="${param#*=}" ;;
 		--rdma-tgt-ip=*) RDMA_TARGET_IP="${param#*=}" ;;
@@ -57,8 +56,6 @@ for param in "$@"; do
 done
 
 vhosttestinit
-
-[[ -n "$test_cases" ]] || fail "Need '--test-cases=' parameter"
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 
@@ -141,19 +138,8 @@ function is_fio_running()
 	return $ret
 }
 
-for test_case in ${test_cases//,/ }; do
-	assert_number "$test_case"
-	notice "==============================="
-	notice "Running Migration test case ${test_case}"
-	notice "==============================="
-
-	timing_enter migration-tc${test_case}
-	source $testdir/migration-tc${test_case}.sh
-	timing_exit migration-tc${test_case}
-done
-
-notice "Migration Test SUCCESS"
-notice "==============="
+run_test "case" "vhost_migration_tc1" migration_tc1
+run_test "case" "vhost_migration_tc2" migration_tc2
 
 trap - SIGINT ERR EXIT
 
