@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "0c9d53f1_8764b7fe",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-05T20:50:29Z",
+      "side": 1,
+      "message": "I\u0027m confused by this example. If we try to create an nvmf subsystem as on that already exists, we should fail immediately when trying to create it in spdk_nvmf_subsystem_create before the subsystem object is even created. What operations need to be rolled back in that case?",
+      "revId": "9989161263e991195ceac9be1f20ead12bea6d8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "63747dbd_08ff6f06",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 1
@@ -13,6 +30,24 @@
       "writtenOn": "2019-12-05T20:33:39Z",
       "side": 1,
       "message": "Can you describe why this is needed?",
+      "revId": "9989161263e991195ceac9be1f20ead12bea6d8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1cb3bfb_8f56e2c5",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-05T20:50:29Z",
+      "side": 1,
+      "message": "Yeah, I\u0027m also really curious as to why we would need this.\nThis shouldn\u0027t ever hit. We are asserting on line 429 that this will not be the case. I think that if we have broken that functionality we have a bigger problem on our hands in that the state machine is broken.",
+      "parentUuid": "63747dbd_08ff6f06",
       "revId": "9989161263e991195ceac9be1f20ead12bea6d8e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
