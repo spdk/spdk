@@ -29,7 +29,7 @@ if [ "$TEST_TYPE" == "posix" ]; then
 	# situation for VPP and causes that calsoft.sh never PASS.
 	run_test "case" "iscsi_tgt_calsoft" ./test/iscsi_tgt/calsoft/calsoft.sh
 fi
-run_test suite "iscsi_tgt_filesystem" ./test/iscsi_tgt/filesystem/filesystem.sh
+run_test "suite" "iscsi_tgt_filesystem" ./test/iscsi_tgt/filesystem/filesystem.sh
 run_test "case" "iscsi_tgt_reset" ./test/iscsi_tgt/reset/reset.sh
 run_test "case" "iscsi_tgt_rpc_config" ./test/iscsi_tgt/rpc_config/rpc_config.sh $TEST_TYPE
 run_test "case" "iscsi_tgt_iscsi_lvol" ./test/iscsi_tgt/lvol/iscsi_lvol.sh
@@ -48,7 +48,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 		run_test "case" "iscsi_tgt_pmem" ./test/iscsi_tgt/pmem/iscsi_pmem.sh 4096 10
 	fi
 	run_test "case" "iscsi_tgt_ext4test" ./test/iscsi_tgt/ext4test/ext4test.sh
-	run_test suite "iscsi_tgt_digests" ./test/iscsi_tgt/digests/digests.sh
+	run_test "suite" "iscsi_tgt_digests" ./test/iscsi_tgt/digests/digests.sh
 fi
 if [ $SPDK_TEST_RBD -eq 1 ]; then
 	# RBD tests do not support network namespaces,
