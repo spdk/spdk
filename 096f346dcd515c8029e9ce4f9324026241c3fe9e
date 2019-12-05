@@ -186,6 +186,115 @@
     },
     {
       "key": {
+        "uuid": "8f25e60f_fe341360",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 808,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T00:21:21Z",
+      "side": 1,
+      "message": "I don\u0027t think this is correct. We cannot use constant value to data segment length?",
+      "revId": "096f346dcd515c8029e9ce4f9324026241c3fe9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d1f2579_2d1a018f",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 965,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T00:21:21Z",
+      "side": 1,
+      "message": "These IOVs will not be necessary if we test through initiator.",
+      "range": {
+        "startLine": 959,
+        "startChar": 0,
+        "endLine": 965,
+        "endChar": 0
+      },
+      "revId": "096f346dcd515c8029e9ce4f9324026241c3fe9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e93a0b5_de26759d",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 966,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T00:21:21Z",
+      "side": 1,
+      "message": "lun is just a 64 bit ID, and the size is fixed. fuzz_fill_random_bytes() should be used instead?",
+      "range": {
+        "startLine": 966,
+        "startChar": 8,
+        "endLine": 966,
+        "endChar": 37
+      },
+      "revId": "096f346dcd515c8029e9ce4f9324026241c3fe9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "798b8c70_0d52656d",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 973,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T00:21:21Z",
+      "side": 1,
+      "message": "ITT is 4 byte.",
+      "range": {
+        "startLine": 973,
+        "startChar": 35,
+        "endLine": 973,
+        "endChar": 45
+      },
+      "revId": "096f346dcd515c8029e9ce4f9324026241c3fe9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "372c71f3_ddcf8291",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 979,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T00:21:21Z",
+      "side": 1,
+      "message": "CDB is 16 byte and fixed size. So fuzz_fill_random_bytes should be used instead?",
+      "range": {
+        "startLine": 979,
+        "startChar": 8,
+        "endLine": 979,
+        "endChar": 37
+      },
+      "revId": "096f346dcd515c8029e9ce4f9324026241c3fe9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0e3df8d0_7c4c2c18",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 29
