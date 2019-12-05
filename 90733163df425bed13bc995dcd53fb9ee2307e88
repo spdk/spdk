@@ -1,0 +1,276 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8de6a77f_b51ca606",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "Maybe spdkcli_tcp?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afe3f671_a6dec424",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "Maybe nvme_hotplug?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fdae7e32_3fc9c072",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "Maybe spdkcli_iscsi?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "558a3383_321c0f5e",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "Maybe spdkcli_virtio?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7f68c82_49a1ee9b",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "vhost_blk_integrity may be a little clearer",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc742b49_0434bdd9",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "vhost_scsi_integrity?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "574f81c7_adac395c",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "vhost_scsi_fs_integrity?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7728a48c_f50ad19e",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "vhost_blk_fs_integrity?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54f84cd1_20e6c4ff",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "vhost_scsi_2core_2ctrl?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0dcce34d_969acba3",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "vhost_scsi_1core_2ctrl?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72237746_4f1fecb8",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "vhost_scsi_1core_1ctrl?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5a3c846_66b12e54",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "vhost_blk_2core_2ctrl?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7631f055_9a02dae7",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "vhost_blk_1core_2ctrl?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6898586c_507871df",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "vhost_blk_lvol_integrity_1core_1ctrl?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4dddfb90_7dd18729",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "vhost_scsi_lvol_integrity?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6da211ce_f9f8c9db",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:10:09Z",
+      "side": 1,
+      "message": "vhost_blk_lvol_integrity?",
+      "revId": "90733163df425bed13bc995dcd53fb9ee2307e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
