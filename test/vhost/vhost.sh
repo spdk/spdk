@@ -100,7 +100,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 
 	echo 'Running migration suite...'
 	run_test case "vhost_migration" $WORKDIR/migration/migration.sh -x \
-	--fio-bin=$FIO_BIN --os=$VM_IMAGE --test-cases=1,2
+	--fio-bin=$FIO_BIN --os=$VM_IMAGE
 fi
 
 echo 'Running lvol integrity suite...'
