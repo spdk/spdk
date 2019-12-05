@@ -204,5 +204,3 @@ function migration_tc2()
 	migration_tc2_cleanup_vhost_config
 	notice "Migration TC2 SUCCESS"
 }
-
-migration_tc2
