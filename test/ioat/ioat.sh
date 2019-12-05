@@ -7,5 +7,3 @@ source $rootdir/test/common/autotest_common.sh
 run_test "case" "ioat_perf" $rootdir/examples/ioat/perf/ioat_perf -t 1
 
 run_test "case" "ioat_verify" $rootdir/examples/ioat/verify/verify -t 1
-
-report_test_completion "ioat"
