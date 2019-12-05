@@ -18,17 +18,6 @@ function bdev_bounds() {
 	trap - SIGINT SIGTERM EXIT
 }
 
-function run_fio()
-{
-	if [ $RUN_NIGHTLY -eq 0 ]; then
-		fio_bdev --ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio "$@"
-	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
-		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
-		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
-		fio_bdev --ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio "$@"
-	fi
-}
-
 function nbd_function_test() {
 	if [ $(uname -s) = Linux ] && modprobe -n nbd; then
 		local rpc_server=/var/tmp/spdk-nbd.sock
@@ -60,6 +49,45 @@ function nbd_function_test() {
 	fi
 
 	return 0
+}
+
+function fio_test_suite() {
+	# Generate the fio config file given the list of all unclaimed bdevs
+	fio_config_gen $testdir/bdev.fio verify AIO
+	for b in $(echo $bdevs | jq -r '.name'); do
+		fio_config_add_job $testdir/bdev.fio $b
+	done
+
+	local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
+	local fio_ext_params="--ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
+
+	if [ $RUN_NIGHTLY -eq 0 ]; then
+		run_test "case" "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM \
+		--output=$output_dir/blockdev_fio_verify.txt
+	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
+		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
+		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
+		run_test "case" "bdev_fio_rw_verify_ext" fio_bdev $fio_ext_params --spdk_mem=$PRE_RESERVED_MEM \
+		--output=$output_dir/blockdev_fio_verify.txt
+	fi
+	rm -f ./*.state
+	rm -f $testdir/bdev.fio
+
+	# Generate the fio config file given the list of all unclaimed bdevs that support unmap
+	fio_config_gen $testdir/bdev.fio trim
+	for b in $(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name'); do
+		fio_config_add_job $testdir/bdev.fio $b
+	done
+
+	if [ $RUN_NIGHTLY -eq 0 ]; then
+		run_test "case" "bdev_fio_trim" fio_bdev $fio_params --output=$output_dir/blockdev_trim.txt
+	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
+		run_test "case" "bdev_fio_trim_ext" fio_bdev $fio_ext_params --output=$output_dir/blockdev_trim.txt
+	fi
+
+	rm -f ./*.state
+	rm -f $testdir/bdev.fio
+	report_test_completion "bdev_fio"
 }
 
 function get_io_result() {
@@ -242,37 +270,8 @@ fi
 
 run_test "case" "bdev_bounds" bdev_bounds
 run_test "case" "bdev_nbd" nbd_function_test $testdir/bdev.conf "$bdevs_name"
-
 if [ -d /usr/src/fio ]; then
-	timing_enter fio
-
-	timing_enter fio_rw_verify
-	# Generate the fio config file given the list of all unclaimed bdevs
-	fio_config_gen $testdir/bdev.fio verify AIO
-	for b in $(echo $bdevs | jq -r '.name'); do
-		fio_config_add_job $testdir/bdev.fio $b
-	done
-
-	run_fio --spdk_conf=./test/bdev/bdev.conf --spdk_mem=$PRE_RESERVED_MEM --output=$output_dir/blockdev_fio_verify.txt
-
-	rm -f ./*.state
-	rm -f $testdir/bdev.fio
-	timing_exit fio_rw_verify
-
-	timing_enter fio_trim
-	# Generate the fio config file given the list of all unclaimed bdevs that support unmap
-	fio_config_gen $testdir/bdev.fio trim
-	for b in $(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name'); do
-		fio_config_add_job $testdir/bdev.fio $b
-	done
-
-	run_fio --spdk_conf=./test/bdev/bdev.conf --output=$output_dir/blockdev_trim.txt
-
-	rm -f ./*.state
-	rm -f $testdir/bdev.fio
-	timing_exit fio_trim
-	report_test_completion "bdev_fio"
-	timing_exit fio
+	run_test "suite" "bdev_fio" fio_test_suite
 else
 	echo "FIO not available"
 	exit 1
@@ -289,6 +288,8 @@ run_test "suite" "bdev_qos" qos_test_suite
 	# report_test_completion "nightly_bdev_reset"
 # fi
 
+# Bdev and configuration cleanup below this line
+#-----------------------------------------------------
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
 fi
