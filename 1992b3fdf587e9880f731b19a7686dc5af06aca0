@@ -1,0 +1,182 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5864f5d7_9bc84397",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T09:04:37Z",
+      "side": 1,
+      "message": "This check is duplicated with spdk_interface_is_ip_address_in_use(). So we should unify the check.",
+      "range": {
+        "startLine": 307,
+        "startChar": 11,
+        "endLine": 307,
+        "endChar": 35
+      },
+      "revId": "1992b3fdf587e9880f731b19a7686dc5af06aca0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e6ddcf5_3f2a168c",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T09:04:37Z",
+      "side": 1,
+      "message": "Ditto",
+      "range": {
+        "startLine": 338,
+        "startChar": 5,
+        "endLine": 338,
+        "endChar": 29
+      },
+      "revId": "1992b3fdf587e9880f731b19a7686dc5af06aca0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f55ecfca_a0dd2f6e",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T09:04:37Z",
+      "side": 1,
+      "message": "The name of struct is spdk_interface and this function parses array of struct spdk_interface.\n\nI don\u0027t know why such a long prefix \"spdk_interface_net_interface_\" is used to the public APIs but  The prefix \"net_interface\" will not be necessary.\n\nSorry for my fluctuated comment.",
+      "range": {
+        "startLine": 425,
+        "startChar": 0,
+        "endLine": 425,
+        "endChar": 49
+      },
+      "revId": "1992b3fdf587e9880f731b19a7686dc5af06aca0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc94ca3c_63ac3f98",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T09:04:37Z",
+      "side": 1,
+      "message": "If we want to\n* remove duplication of spdk_interface availability check and\n* differentiate two errors, 1) spdk_interface is not available, 2) IP address is already used,\n\nhow about the following?\n\nstatic struct spdk_interface *\nspdk_interface_find_by_index(uint32_t ifc_index)\n{\n\tTAILQ_FOREACH(ifc_entry, \u0026g_interface_head, tailq) {\n\t\tif (ifc_entry-\u003eindex \u003d\u003d ifc_index) {\n\t\t\treturn ifc_entry;\n\t\t}\n\t}\n\treturn NULL;\n}\n\nstatic bool\nspdk_interface_is_ip_address_in_use(struct spdk_interface *ifc_entry, uint32_t addr)\n{\n\tuint32_t idx;\n\n\tfor (idx \u003d 0; idx \u003c ifc_entry-\u003enum_ip_addresses; idx++) {\n\t\tif (ifc_entry-\u003eip_address[idx] \u003d\u003d addr) {\n\t\t\treturn true;\n\t\t}\n\t}\n\n\treturn false;\n}\n\nstatic int\nspdk_interface_and_ip_address_available(uint32_t ifc_index, uint32_t addr,\n\t\t\t\t\tuint32_t create)\n{\n\tstruct spdk_interface *ifc_entry;\n\tbool in_use;\n\n\tpthread_mutex_lock(\u0026interface_lock);\n\n\tifc_entry \u003d spdk_interface_find_by_index(ifc_index);\n\tif (ifc_entry \u003d\u003d NULL) {\n\t\tpthread_mutex_unlock(\u0026interface_lock);\n\t\treturn -ENODEV;\n\t}\n\n\tin_use \u003d spdk_interface_ip_address_in_use(ifc_entry, addr);\n\n\tpthread_mutex_unlock(\u0026interface_lock);\n\n\treturn create ? (in_use ? -EADDRINUSE : 0) : (in_use ? 0 : -EADDRNOTAVAIL);\n}",
+      "revId": "1992b3fdf587e9880f731b19a7686dc5af06aca0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2ec2402_0adaa065",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T09:04:37Z",
+      "side": 1,
+      "message": "EADDRINUSE (Address already in use) may be better.",
+      "range": {
+        "startLine": 484,
+        "startChar": 10,
+        "endLine": 484,
+        "endChar": 16
+      },
+      "revId": "1992b3fdf587e9880f731b19a7686dc5af06aca0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "effa8326_95b1b2cb",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T09:04:37Z",
+      "side": 1,
+      "message": "EADDRNOTAVAIL may avoid confusion.\nThe meaning of EADDRNOTAVAIL is \"Cannot assign requested address\" and slightly different though.",
+      "range": {
+        "startLine": 498,
+        "startChar": 10,
+        "endLine": 498,
+        "endChar": 16
+      },
+      "revId": "1992b3fdf587e9880f731b19a7686dc5af06aca0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44dda925_8c19c8d4",
+        "filename": "lib/net/net_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T09:04:37Z",
+      "side": 1,
+      "message": "IP address %s is already added to interface %d ?",
+      "range": {
+        "startLine": 84,
+        "startChar": 13,
+        "endLine": 84,
+        "endChar": 34
+      },
+      "revId": "1992b3fdf587e9880f731b19a7686dc5af06aca0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9c5421c_88c22f4c",
+        "filename": "lib/net/net_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T09:04:37Z",
+      "side": 1,
+      "message": "IP address %s is not found in interface %d ?",
+      "range": {
+        "startLine": 130,
+        "startChar": 13,
+        "endLine": 130,
+        "endChar": 41
+      },
+      "revId": "1992b3fdf587e9880f731b19a7686dc5af06aca0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
