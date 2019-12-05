@@ -277,6 +277,101 @@ function test_clone_inflate() {
 	check_leftover_devices
 }
 
+# Create chain of snapshot<-snapshot2<-lvol_test lvol bdevs.
+# Decouple lvol_test twice and delete the remaining snapshot lvol.
+# Each time check consistency of snapshot-clone relations and written data.
+function test_clone_decouple_parent() {
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Calculate size and create lvol bdev
+	lvol_size_mb=$(( 5 * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb" -t)
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+
+	# Decouple_parent should fail on lvol bdev without a parent
+	rpc_cmd bdev_lvol_decouple_parent lvs_test/lvol_test && false
+
+	# Fill first four out of 5 clusters of clone with data of known pattern
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
+	begin_fill=0
+	end_fill=$(( lvol_size_mb * 4 * 1024 * 1024 / 5 ))
+	run_fio_test /dev/nbd0 $begin_fill $end_fill "write" "0xdd"
+
+	# Create snapshot (snapshot<-lvol_bdev)
+	snapshot_uuid=$(rpc_cmd bdev_lvol_snapshot lvs_test/lvol_test lvol_snapshot)
+
+	# Fill second and fourth cluster of clone with data of known pattern
+	start_fill=$(( lvol_size_mb * 1024 * 1024 / 5 ))
+	fill_range=$start_fill
+	run_fio_test /dev/nbd0 $start_fill $fill_range "write" "0xcc"
+	start_fill=$(( lvol_size_mb * 3 * 1024 * 1024 / 5 ))
+	run_fio_test /dev/nbd0 $start_fill $fill_range "write" "0xcc"
+
+	# Create snapshot (snapshot<-snapshot2<-lvol_bdev)
+	snapshot_uuid2=$(rpc_cmd bdev_lvol_snapshot lvs_test/lvol_test lvol_snapshot2)
+
+	# Fill second cluster of clone with data of known pattern
+	start_fill=$fill_range
+	run_fio_test /dev/nbd0 $start_fill $fill_range "write" "0xee"
+
+	# Check data consistency
+	pattern=( "0xdd" "0xee" "0xdd" "0xcc" "0x00" )
+	for i in "${!pattern[@]}"; do
+		start_fill=$(( lvol_size_mb * i * 1024 * 1024 / 5 ))
+		run_fio_test /dev/nbd0 $start_fill $fill_range "read" "${pattern[i]}"
+	done
+
+	# Decouple_parent of lvol bdev resulting in two relation chains:
+	#  - snapshot<-lvol_bdev
+	#  - snapshot<-snapshot2
+	rpc_cmd bdev_lvol_decouple_parent lvs_test/lvol_test
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+	snapshot=$(rpc_cmd bdev_get_bdevs -b "$snapshot_uuid")
+	snapshot2=$(rpc_cmd bdev_get_bdevs -b "$snapshot_uuid2")
+	[ "$(jq '.[].driver_specific.lvol.thin_provision' <<< "$lvol")" = "true" ]
+	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$lvol")" = "true" ]
+	[ "$(jq '.[].driver_specific.lvol.snapshot' <<< "$lvol")" = "false" ]
+	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$snapshot")" = "false" ]
+	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$snapshot2")" = "true" ]
+	[ "$(jq '.[].driver_specific.lvol.snapshot' <<< "$snapshot2")" = "true" ]
+
+	# Delete second snapshot
+	rpc_cmd bdev_lvol_delete "$snapshot_uuid2"
+
+	# Check data consistency
+	for i in "${!pattern[@]}"; do
+		start_fill=$(( lvol_size_mb * i * 1024 * 1024 / 5 ))
+		run_fio_test /dev/nbd0 $start_fill $fill_range "read" "${pattern[i]}"
+	done
+
+	# Decouple_parent of lvol bdev again resulting in two relation chains:
+	#  - lvol_bdev
+	#  - snapshot<-snapshot2
+	rpc_cmd bdev_lvol_decouple_parent lvs_test/lvol_test
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+	snapshot=$(rpc_cmd bdev_get_bdevs -b "$snapshot_uuid")
+	[ "$(jq '.[].driver_specific.lvol.thin_provision' <<< "$lvol")" = "true" ]
+	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$lvol")" = "false" ]
+	[ "$(jq '.[].driver_specific.lvol.snapshot' <<< "$lvol")" = "false" ]
+	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$snapshot")" = "false" ]
+
+	# Delete first snapshot
+	rpc_cmd bdev_lvol_delete "$snapshot_uuid"
+
+	# Check data consistency
+	for i in "${!pattern[@]}"; do
+		start_fill=$(( lvol_size_mb * i * 1024 * 1024 / 5 ))
+		run_fio_test /dev/nbd0 $start_fill $fill_range "read" "${pattern[i]}"
+	done
+
+	# Clean up
+	rpc_cmd bdev_lvol_delete "$lvol_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -288,6 +383,7 @@ run_test "test_create_snapshot_with_io" test_create_snapshot_with_io
 run_test "test_create_snapshot_of_snapshot" test_create_snapshot_of_snapshot
 run_test "test_clone_snapshot_relations" test_clone_snapshot_relations
 run_test "test_clone_inflate" test_clone_inflate
+run_test "test_clone_decouple_parent" test_clone_decouple_parent
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
