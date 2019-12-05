@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "97e2abd7_1fc1e63e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2371,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T07:43:50Z",
+      "side": 1,
+      "message": "We can remove the lines 2366 to 2370, this will avoid misunderstanding and be better.",
+      "range": {
+        "startLine": 2366,
+        "startChar": 0,
+        "endLine": 2371,
+        "endChar": 0
+      },
+      "revId": "ac2bd9f58008cc677db925d37a998e686a03ab32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
