@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35db5273_f0524091",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-12-05T06:42:33Z",
+      "side": 1,
+      "message": "delete this line",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 22
+      },
+      "revId": "526e8f94a5ee927c626504fc574d2759cb9b0f51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "53a0ad7f_6aa09546",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-12-05T06:42:33Z",
+      "side": 1,
+      "message": "add comments",
+      "range": {
+        "startLine": 494,
+        "startChar": 20,
+        "endLine": 494,
+        "endChar": 30
+      },
+      "revId": "526e8f94a5ee927c626504fc574d2759cb9b0f51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
