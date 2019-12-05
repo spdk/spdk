@@ -34,6 +34,24 @@
       "revId": "f83a905c26abaed6b41fdc2b538eadc4dffed106",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3490a2b2_d8af794a",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-05T17:42:37Z",
+      "side": 1,
+      "message": "Done Also thanks for pointing out these lines. I should seriously exit with an error if I don\u0027t get enough parameters.",
+      "parentUuid": "0556ce20_84c75bf7",
+      "revId": "f83a905c26abaed6b41fdc2b538eadc4dffed106",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
