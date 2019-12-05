@@ -104,6 +104,24 @@
       "revId": "f3e631aaac361df2832295cf774e30333690ed5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a07c4b43_29e378d2",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-05T21:17:16Z",
+      "side": 1,
+      "message": "Yeah.  I\u0027m not as concerned about the struct extending past 128 bytes.  These structures are allocated off of the standard heap, so they aren\u0027t necessarily cache line aligned anyways.",
+      "parentUuid": "02c31054_4b398505",
+      "revId": "f3e631aaac361df2832295cf774e30333690ed5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
