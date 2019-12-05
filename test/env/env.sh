@@ -25,5 +25,3 @@ if [ $(uname) = Linux ]; then
 	# supported on Linux
 	run_test "env_mem_callbacks" $testdir/mem_callbacks/mem_callbacks
 fi
-
-report_test_completion "env"

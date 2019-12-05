@@ -58,5 +58,3 @@ waitfortcplisten $spdk_tgt_pid $IP_ADDRESS $PORT
 timing_exit run_spdk_tgt_tcp
 
 killprocess $spdk_tgt_pid
-
-report_test_completion spdkcli_tcp
