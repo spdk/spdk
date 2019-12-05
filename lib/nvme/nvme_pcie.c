@@ -1244,6 +1244,12 @@ nvme_pcie_qpair_ring_sq_doorbell(struct spdk_nvme_qpair *qpair)
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
 	bool need_mmio = true;
 
+	if (qpair->first_fused_submitted) {
+		/* This is first cmd of two fused commands - don't ring doorbell */
+		qpair->first_fused_submitted = 0;
+		return;
+	}
+
 	if (spdk_unlikely(pqpair->flags.has_shadow_doorbell)) {
 		need_mmio = nvme_pcie_qpair_update_mmio_required(qpair,
 				pqpair->sq_tail,
@@ -1288,6 +1294,11 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 
 	req = tr->req;
 	assert(req != NULL);
+
+	if (req->cmd.fuse == SPDK_NVME_IO_FLAGS_FUSE_FIRST) {
+		/* This is first cmd of two fused commands - don't ring doorbell */
+		qpair->first_fused_submitted = 1;
+	}
 
 	/* Copy the command from the tracker to the submission queue. */
 	nvme_pcie_copy_command(&pqpair->cmd[pqpair->sq_tail], &req->cmd);
