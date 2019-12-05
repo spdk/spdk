@@ -45,21 +45,21 @@ if [ -z "$nv_cache" ]; then
 	echo "Couldn't find NVMe device to be used as non-volatile cache"
 fi
 
-run_test suite "ftl_bdevperf" $testdir/bdevperf.sh $device
+run_test "case" "ftl_bdevperf" $testdir/bdevperf.sh $device
 
-run_test suite "ftl_restore" $testdir/restore.sh $device
+run_test "case" "ftl_restore" $testdir/restore.sh $device
 if [ -n "$nv_cache" ]; then
-	run_test suite "ftl_restore_nv_cache" $testdir/restore.sh -c $nv_cache $device
+	run_test "case" "ftl_restore_nv_cache" $testdir/restore.sh -c $nv_cache $device
 fi
 
 if [ -n "$nv_cache" ]; then
-	run_test suite "ftl_dirty_shutdown" $testdir/dirty_shutdown.sh -c $nv_cache $device
+	run_test "case" "ftl_dirty_shutdown" $testdir/dirty_shutdown.sh -c $nv_cache $device
 fi
 
-run_test suite "ftl_json" $testdir/json.sh $device
+run_test "case" "ftl_json" $testdir/json.sh $device
 
 if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
-	run_test suite "ftl_fio_basic" $testdir/fio.sh $device basic
+	run_test "case" "ftl_fio_basic" $testdir/fio.sh $device basic
 
 	$rootdir/app/spdk_tgt/spdk_tgt &
 	svc_pid=$!
@@ -72,5 +72,5 @@ if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
 
 	trap - SIGINT SIGTERM EXIT
 
-	run_test suite "ftl_fio_extended" $testdir/fio.sh $device extended $uuid
+	run_test "case" "ftl_fio_extended" $testdir/fio.sh $device extended $uuid
 fi
