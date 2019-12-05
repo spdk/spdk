@@ -153,18 +153,18 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	timing_enter lib
 
 	run_test suite "env" test/env/env.sh
-	run_test suite "rpc_client" test/rpc_client/rpc_client.sh
-	run_test suite "json_config" ./test/json_config/json_config.sh
-	run_test suite "alias_rpc" test/json_config/alias_rpc/alias_rpc.sh
-	run_test suite "spdkcli_tcp" test/spdkcli/tcp.sh
+	run_test "case" "rpc_client" test/rpc_client/rpc_client.sh
+	run_test "case" "json_config" ./test/json_config/json_config.sh
+	run_test "case" "alias_rpc" test/json_config/alias_rpc/alias_rpc.sh
+	run_test "case" "spdkcli_tcp" test/spdkcli/tcp.sh
 
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 		run_test suite "blockdev" test/bdev/blockdev.sh
-		run_test suite "bdev_raid" test/bdev/bdev_raid.sh
+		run_test "case" "bdev_raid" test/bdev/bdev_raid.sh
 	fi
 
 	if [ $SPDK_TEST_JSON -eq 1 ]; then
-		run_test suite "test_converter" test/config_converter/test_converter.sh
+		run_test "case" "test_converter" test/config_converter/test_converter.sh
 	fi
 
 	if [ $SPDK_TEST_EVENT -eq 1 ]; then
@@ -174,17 +174,17 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	if [ $SPDK_TEST_NVME -eq 1 ]; then
 		run_test suite "nvme" test/nvme/nvme.sh
 		if [[ $SPDK_TEST_NVME_CLI -eq 1 ]]; then
-			run_test suite "nvme_cli" test/nvme/spdk_nvme_cli.sh
+			run_test "case" "nvme_cli" test/nvme/spdk_nvme_cli.sh
 		fi
 		if [[ $SPDK_TEST_NVME_CUSE -eq 1 ]]; then
-			run_test suite "nvme_cli_cuse" test/nvme/spdk_nvme_cli_cuse.sh
-			run_test suite "nvme_smartctl_cuse" test/nvme/spdk_smartctl_cuse.sh
+			run_test "case" "nvme_cli_cuse" test/nvme/spdk_nvme_cli_cuse.sh
+			run_test "case" "nvme_smartctl_cuse" test/nvme/spdk_smartctl_cuse.sh
 		fi
 		# Only test hotplug without ASAN enabled. Since if it is
 		# enabled, it catches SEGV earlier than our handler which
 		# breaks the hotplug logic.
 		if [ $SPDK_RUN_ASAN -eq 0 ]; then
-			run_test suite "nvme_hotplug" test/nvme/hotplug.sh intel
+			run_test "case" "nvme_hotplug" test/nvme/hotplug.sh intel
 		fi
 	fi
 
@@ -196,10 +196,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 
 	if [ $SPDK_TEST_ISCSI -eq 1 ]; then
 		run_test suite "iscsi_tgt_posix" ./test/iscsi_tgt/iscsi_tgt.sh posix
-		run_test suite "spdkcli_iscsi" ./test/spdkcli/iscsi.sh
+		run_test "case" "spdkcli_iscsi" ./test/spdkcli/iscsi.sh
 
 		# Run raid spdkcli test under iSCSI since blockdev tests run on systems that can't run spdkcli yet
-		run_test suite "spdkcli_raid" test/spdkcli/raid.sh
+		run_test "case" "spdkcli_raid" test/spdkcli/raid.sh
 	fi
 
 	if [ $SPDK_TEST_VPP -eq 1 ]; then
@@ -208,13 +208,13 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 
 	if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
 		run_test suite "rocksdb" ./test/blobfs/rocksdb/rocksdb.sh
-		run_test suite "blobstore" ./test/blobstore/blobstore.sh
-		run_test suite "blobfs" ./test/blobfs/blobfs.sh
+		run_test "case" "blobstore" ./test/blobstore/blobstore.sh
+		run_test "case" "blobfs" ./test/blobfs/blobfs.sh
 	fi
 
 	if [ $SPDK_TEST_NVMF -eq 1 ]; then
 		run_test suite "nvmf" ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
-		run_test suite "spdkcli_nvmf" ./test/spdkcli/nvmf.sh
+		run_test "case" "spdkcli_nvmf" ./test/spdkcli/nvmf.sh
 	fi
 
 	if [ $SPDK_TEST_VHOST -eq 1 ]; then
@@ -222,33 +222,34 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_LVOL -eq 1 ]; then
-		run_test suite "lvol" ./test/lvol/lvol.sh --test-cases=all
+		#TODO: rewrite lvol tests in bash.
+		run_test "case" "lvol" ./test/lvol/lvol.sh --test-cases=all
 		run_test suite "lvol2" ./test/lvol/lvol2.sh
-		run_test suite "blob_io_wait" ./test/blobstore/blob_io_wait/blob_io_wait.sh
+		run_test "case" "blob_io_wait" ./test/blobstore/blob_io_wait/blob_io_wait.sh
 		report_test_completion "lvol"
 	fi
 
 	if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
 		timing_enter vhost_initiator
-		run_test suite "vhost_blockdev" ./test/vhost/initiator/blockdev.sh
-		run_test suite "spdkcli_virtio" ./test/spdkcli/virtio.sh
-		run_test suite "vhost_shared" ./test/vhost/shared/shared.sh
-		run_test suite "vhost_fuzz" ./test/vhost/fuzz/fuzz.sh
+		run_test "case" "vhost_blockdev" ./test/vhost/initiator/blockdev.sh
+		run_test "case" "spdkcli_virtio" ./test/spdkcli/virtio.sh
+		run_test "case" "vhost_shared" ./test/vhost/shared/shared.sh
+		run_test "case" "vhost_fuzz" ./test/vhost/fuzz/fuzz.sh
 		report_test_completion "vhost initiator"
 		timing_exit vhost_initiator
 	fi
 
 	if [ $SPDK_TEST_PMDK -eq 1 ]; then
-		run_test suite "pmem" ./test/pmem/pmem.sh -x
-		run_test suite "spdkcli_pmem" ./test/spdkcli/pmem.sh
+		run_test "case" "pmem" ./test/pmem/pmem.sh -x
+		run_test "case" "spdkcli_pmem" ./test/spdkcli/pmem.sh
 	fi
 
 	if [ $SPDK_TEST_RBD -eq 1 ]; then
-		run_test suite "spdkcli_rbd" ./test/spdkcli/rbd.sh
+		run_test "case" "spdkcli_rbd" ./test/spdkcli/rbd.sh
 	fi
 
 	if [ $SPDK_TEST_OCF -eq 1 ]; then
-		run_test suite "ocf" ./test/ocf/ocf.sh
+		run_test "case" "ocf" ./test/ocf/ocf.sh
 	fi
 
 	if [ $SPDK_TEST_FTL -eq 1 ]; then
@@ -259,9 +260,9 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test suite "vmd" ./test/vmd/vmd.sh
 	fi
 
-        if [ $SPDK_TEST_REDUCE -eq 1 ]; then
-                run_test suite "compress" ./test/compress/compress.sh
-        fi
+	if [ $SPDK_TEST_REDUCE -eq 1 ]; then
+		run_test "case" "compress" ./test/compress/compress.sh
+	fi
 
 	if [ $SPDK_TEST_OPAL -eq 1 ]; then
 		run_test suite "nvme_opal" ./test/nvme/nvme_opal.sh
