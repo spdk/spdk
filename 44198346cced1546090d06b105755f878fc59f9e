@@ -16,6 +16,24 @@
       "revId": "44198346cced1546090d06b105755f878fc59f9e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae3a27d4_6fff3ec8",
+        "filename": "test/unit/lib/nvme/nvme_ns_cmd.c/nvme_ns_cmd_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 842,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-12-05T19:25:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "05bc33ca_649a67c2",
+      "revId": "44198346cced1546090d06b105755f878fc59f9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
