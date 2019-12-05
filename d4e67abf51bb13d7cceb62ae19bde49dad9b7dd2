@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "979e011d_7f4ea666",
+        "filename": "test/nvmf/target/shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-05T12:35:40Z",
+      "side": 0,
+      "message": "Should we mention about these removals?",
+      "revId": "d4e67abf51bb13d7cceb62ae19bde49dad9b7dd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
