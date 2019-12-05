@@ -57,7 +57,6 @@ case $1 in
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_scsi \
 		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job
-		report_test_completion "vhost_perf"
 		;;
 	-pb|--performance-blk)
 		echo 'Running blk performance suite...'
@@ -65,7 +64,6 @@ case $1 in
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_blk \
 		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job
-		report_test_completion "vhost_perf_blk"
 		;;
 	-hp|--hotplug)
 		echo 'Running hotplug tests suite...'
@@ -76,7 +74,6 @@ case $1 in
 			--vm=3,$VM_IMAGE,Nvme0n1p6:Nvme0n1p7 \
 			--test-type=spdk_vhost_scsi \
 			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
-		report_test_completion "vhost_hotplug"
 		;;
 	-shr|--scsi-hot-remove)
 		echo 'Running scsi hotremove tests suite...'

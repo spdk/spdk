@@ -20,8 +20,6 @@ driver=$3
 declare -i io_time=5
 declare -i kernel_hotplug_time=7
 
-timing_enter hotplug_hw
-
 timing_enter hotplug_hw_cfg
 
 # Configure microcontroller
@@ -74,7 +72,4 @@ timing_exit wait_for_example
 
 trap - SIGINT SIGTERM EXIT
 
-report_test_completion "nvme_hotplug_hw"
 timing_exit hotplug_hw_test
-
-timing_exit hotplug_hw
