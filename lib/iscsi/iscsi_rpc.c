@@ -722,7 +722,6 @@ SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_get_portal_groups, get_portal_groups)
 struct rpc_portal {
 	char *host;
 	char *port;
-	char *cpumask;
 };
 
 struct rpc_portal_list {
@@ -740,7 +739,6 @@ free_rpc_portal(struct rpc_portal *portal)
 {
 	free(portal->host);
 	free(portal->port);
-	free(portal->cpumask);
 }
 
 static void
@@ -763,7 +761,6 @@ free_rpc_portal_group(struct rpc_portal_group *pg)
 static const struct spdk_json_object_decoder rpc_portal_decoders[] = {
 	{"host", offsetof(struct rpc_portal, host), spdk_json_decode_string},
 	{"port", offsetof(struct rpc_portal, port), spdk_json_decode_string},
-	{"cpumask", offsetof(struct rpc_portal, cpumask), spdk_json_decode_string, true},
 };
 
 static int
@@ -814,11 +811,6 @@ spdk_rpc_iscsi_create_portal_group(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 	for (i = 0; i < req.portal_list.num_portals; i++) {
-		if (req.portal_list.portals[i].cpumask) {
-			SPDK_WARNLOG("A portal was specified with a CPU mask which is no longer supported.\n");
-			SPDK_WARNLOG("Ignoring the cpumask.\n");
-		}
-
 		portal = spdk_iscsi_portal_create(req.portal_list.portals[i].host,
 						  req.portal_list.portals[i].port);
 		if (portal == NULL) {
