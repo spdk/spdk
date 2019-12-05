@@ -32,7 +32,7 @@ WORKDIR=$(readlink -f $(dirname $0))
 run_test case "vhost_negative" $WORKDIR/other/negative.sh
 report_test_completion "vhost_negative"
 
-run_test suite "vhost_boot" $WORKDIR/vhost_boot/vhost_boot.sh --vm_image=$VM_IMAGE
+run_test "case" "vhost_boot" $WORKDIR/vhost_boot/vhost_boot.sh --vm_image=$VM_IMAGE
 report_test_completion "vhost_boot"
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
@@ -99,7 +99,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	report_test_completion "vhost_readonly"
 
 	echo 'Running migration suite...'
-	run_test case "vhost_migration" $WORKDIR/migration/migration.sh -x \
+	run_test "suite" "vhost_migration" $WORKDIR/migration/migration.sh -x \
 	--fio-bin=$FIO_BIN --os=$VM_IMAGE
 fi
 
@@ -113,4 +113,4 @@ run_test case "vhost_blk_lvol_integrity" $WORKDIR/lvol/lvol_test.sh -x --fio-bin
 --ctrl-type=spdk_vhost_blk
 report_test_completion "vhost_integrity_lvol_blk"
 
-run_test suite "spdkcli_vhost" ./test/spdkcli/vhost.sh
+run_test "case" "spdkcli_vhost" ./test/spdkcli/vhost.sh
