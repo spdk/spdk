@@ -45,4 +45,3 @@ rm -f $testdir/match_files/spdkcli_pmem_info.test
 timing_exit spdkcli_clear_pmem_config
 
 killprocess $spdk_tgt_pid
-report_test_completion spdk_cli
