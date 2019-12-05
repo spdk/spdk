@@ -16,6 +16,24 @@
       "revId": "a2fde497e90d707dd8bb3ef2d900b351f5d19121",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "758b48d4_9dfe5ae6",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-05T17:37:38Z",
+      "side": 1,
+      "message": "That\u0027s exactly what happens currently. If you look at the logs for the env test suite for example, you will see the following:\n\n************************************\nSTART TEST SUITE env\n************************************\n 02:55:26\t# xtrace_enable\n 02:55:26\t# test/env/env.sh\n  02:55:26\t# xtrace_enable\n\nWe have tracing enabled on the tests so there\u0027s really no information lost. It\u0027s just so much easier to parse through the scripts when you don\u0027t see stuff like this:\n\n************************************\nSTART TEST CASE /var/jenkins/workspace/Vhost_tests/vhost_autotest/spdk/test/vhost/lvol/lvol_test.sh -x --fio-bin\u003d/home/sys_sgsw/fio_ubuntu --ctrl-type\u003dspdk_vhost_blk\n************************************\n 20:10:24\t# xtrace_enable\n 20:10:24\t# /var/jenkins/workspace/Vhost_tests/vhost_autotest/spdk/test/vhost/lvol/lvol_test.sh -x --fio-bin\u003d/home/sys_sgsw/fio_ubuntu --ctrl-type\u003dspdk_vhost_blk\n  20:10:24\t# xtrace_enable",
+      "parentUuid": "0c9eb243_7004b070",
+      "revId": "a2fde497e90d707dd8bb3ef2d900b351f5d19121",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
