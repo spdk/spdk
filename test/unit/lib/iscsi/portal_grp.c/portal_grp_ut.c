@@ -141,7 +141,7 @@ portal_create_twice_case(void)
 static void
 parse_portal_ipv4_normal_case(void)
 {
-	const char *string = "192.168.2.0:3260@1";
+	const char *string = "192.168.2.0:3260";
 	const char *host_str = "192.168.2.0";
 	const char *port_str = "3260";
 	struct spdk_iscsi_portal *p = NULL;
@@ -161,44 +161,6 @@ parse_portal_ipv4_normal_case(void)
 static void
 parse_portal_ipv6_normal_case(void)
 {
-	const char *string = "[2001:ad6:1234::]:3260@1";
-	const char *host_str = "[2001:ad6:1234::]";
-	const char *port_str = "3260";
-	struct spdk_iscsi_portal *p = NULL;
-	int rc;
-
-	rc = iscsi_parse_portal(string, &p, 0);
-	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(p != NULL);
-	CU_ASSERT(strcmp(p->host, host_str) == 0);
-	CU_ASSERT(strcmp(p->port, port_str) == 0);
-
-	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
-}
-
-static void
-parse_portal_ipv4_skip_cpumask_case(void)
-{
-	const char *string = "192.168.2.0:3260";
-	const char *host_str = "192.168.2.0";
-	const char *port_str = "3260";
-	struct spdk_iscsi_portal *p = NULL;
-	int rc;
-
-	rc = iscsi_parse_portal(string, &p, 0);
-	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(p != NULL);
-	CU_ASSERT(strcmp(p->host, host_str) == 0);
-	CU_ASSERT(strcmp(p->port, port_str) == 0);
-
-	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
-}
-
-static void
-parse_portal_ipv6_skip_cpumask_case(void)
-{
 	const char *string = "[2001:ad6:1234::]:3260";
 	const char *host_str = "[2001:ad6:1234::]";
 	const char *port_str = "3260";
@@ -216,7 +178,7 @@ parse_portal_ipv6_skip_cpumask_case(void)
 }
 
 static void
-parse_portal_ipv4_skip_port_and_cpumask_case(void)
+parse_portal_ipv4_skip_port_case(void)
 {
 	const char *string = "192.168.2.0";
 	const char *host_str = "192.168.2.0";
@@ -235,7 +197,7 @@ parse_portal_ipv4_skip_port_and_cpumask_case(void)
 }
 
 static void
-parse_portal_ipv6_skip_port_and_cpumask_case(void)
+parse_portal_ipv6_skip_port_case(void)
 {
 	const char *string = "[2001:ad6:1234::]";
 	const char *host_str = "[2001:ad6:1234::]";
@@ -477,14 +439,10 @@ main(int argc, char **argv)
 			       parse_portal_ipv4_normal_case) == NULL
 		|| CU_add_test(suite, "parse portal ipv6 normal case",
 			       parse_portal_ipv6_normal_case) == NULL
-		|| CU_add_test(suite, "parse portal ipv4 skip cpumask case",
-			       parse_portal_ipv4_skip_cpumask_case) == NULL
-		|| CU_add_test(suite, "parse portal ipv6 skip cpumask case",
-			       parse_portal_ipv6_skip_cpumask_case) == NULL
-		|| CU_add_test(suite, "parse portal ipv4 skip port and cpumask case",
-			       parse_portal_ipv4_skip_port_and_cpumask_case) == NULL
-		|| CU_add_test(suite, "parse portal ipv6 skip port and cpumask case",
-			       parse_portal_ipv6_skip_port_and_cpumask_case) == NULL
+		|| CU_add_test(suite, "parse portal ipv4 skip port case",
+			       parse_portal_ipv4_skip_port_case) == NULL
+		|| CU_add_test(suite, "parse portal ipv6 skip port case",
+			       parse_portal_ipv6_skip_port_case) == NULL
 		|| CU_add_test(suite, "portal group register/unregister case",
 			       portal_grp_register_unregister_case) == NULL
 		|| CU_add_test(suite, "portal group register twice case",

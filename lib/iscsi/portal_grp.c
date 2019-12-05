@@ -242,9 +242,9 @@ static int
 iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip,
 		   int dry_run)
 {
-	char *host = NULL, *port = NULL, *cpumask = NULL;
+	char *host = NULL, *port = NULL;
 	int len, rc = -1;
-	const char *p, *q;
+	const char *p;
 
 	if (portalstring == NULL) {
 		SPDK_ERRLOG("portal error\n");
@@ -290,52 +290,17 @@ iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip,
 			snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
 		}
 	} else {
-		if (p[0] != ':') {
-			SPDK_ERRLOG("portal error\n");
-			goto error_out;
-		}
-		q = strchr(portalstring, '@');
-		if (q == NULL) {
-			q = portalstring + strlen(portalstring);
-		}
-		if (q == p) {
-			SPDK_ERRLOG("no port specified\n");
-			goto error_out;
-		}
-
 		if (!dry_run) {
-			len = q - p - 1;
+			p++;
+			len = strlen(p);
 			port = malloc(len + 1);
 			if (port == NULL) {
 				SPDK_ERRLOG("malloc() failed for port\n");
 				goto error_out;
 			}
-			memcpy(port, p + 1, len);
+			memcpy(port, p, len);
 			port[len] = '\0';
 		}
-	}
-
-	/* Cpumask (IPv4 and IPv6 are the same) */
-	p = strchr(portalstring, '@');
-	if (p != NULL) {
-		q = portalstring + strlen(portalstring);
-		if (q == p) {
-			SPDK_ERRLOG("no cpumask specified\n");
-			goto error_out;
-		}
-		if (!dry_run) {
-			len = q - p - 1;
-			cpumask = malloc(len + 1);
-			if (cpumask == NULL) {
-				SPDK_ERRLOG("malloc() failed for cpumask\n");
-				goto error_out;
-			}
-			memcpy(cpumask, p + 1, len);
-			cpumask[len] = '\0';
-		}
-	}
-	if (cpumask) {
-		SPDK_WARNLOG("The iSCSI target no longer supports setting a per-portal cpumask.\n");
 	}
 
 	if (!dry_run) {
@@ -349,7 +314,6 @@ iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip,
 error_out:
 	free(host);
 	free(port);
-	free(cpumask);
 
 	return rc;
 }
