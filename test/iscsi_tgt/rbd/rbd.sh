@@ -65,4 +65,3 @@ killprocess $pid
 rbd_cleanup
 
 iscsitestfini $1 $2
-report_test_completion "iscsi_rbd"
