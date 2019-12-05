@@ -287,18 +287,18 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			}
 			break;
 		case RDMA_CM_EVENT_DISCONNECTED:
-			rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_REMOTE_FAILURE;
+			rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_REMOTE;
 			nvme_qpair_set_state(&rqpair->qpair, NVME_QPAIR_DISABLED);
 			break;
 		case RDMA_CM_EVENT_DEVICE_REMOVAL:
-			rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_LOCAL_FAILURE;
+			rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 			nvme_qpair_set_state(&rqpair->qpair, NVME_QPAIR_DISABLED);
 			break;
 		case RDMA_CM_EVENT_MULTICAST_JOIN:
 		case RDMA_CM_EVENT_MULTICAST_ERROR:
 			break;
 		case RDMA_CM_EVENT_ADDR_CHANGE:
-			rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_LOCAL_FAILURE;
+			rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 			nvme_qpair_set_state(&rqpair->qpair, NVME_QPAIR_DISABLED);
 			break;
 		case RDMA_CM_EVENT_TIMEWAIT_EXIT:
@@ -1065,7 +1065,7 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 
 	rc = nvme_fabric_qpair_connect(&rqpair->qpair, rqpair->num_entries);
 	if (rc < 0) {
-		rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_UNKNOWN_FAILURE;
+		rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
 		nvme_qpair_set_state(&rqpair->qpair, NVME_QPAIR_DISABLED);
 		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
 		return -1;
@@ -1900,7 +1900,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	}
 	nvme_rdma_qpair_process_cm_event(rqpair);
 
-	if (spdk_unlikely(nvme_qpair_state_equals(qpair, NVME_QPAIR_DISABLED))) {
+	if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_DISABLED)) {
 		goto fail;
 	}
 
@@ -1974,9 +1974,9 @@ fail:
 	 * to call the generic function which will take the lock for us.
 	 */
 	if (rc == IBV_WC_RETRY_EXC_ERR) {
-		qpair->transport_failure_reason = SPDK_NVME_QPAIR_REMOTE_FAILURE;
-	} else if (qpair->transport_failure_reason == SPDK_NVME_QPAIR_NOT_FAILED) {
-		qpair->transport_failure_reason = SPDK_NVME_QPAIR_UNKNOWN_FAILURE;
+		qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_REMOTE;
+	} else if (qpair->transport_failure_reason == SPDK_NVME_QPAIR_FAILURE_NONE) {
+		qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
 	}
 
 	if (nvme_qpair_is_admin_queue(qpair)) {

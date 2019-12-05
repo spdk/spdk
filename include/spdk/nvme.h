@@ -242,10 +242,10 @@ void spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts,
  * qpair is disconnected, but the cause was not apparent.
  */
 enum spdk_nvme_qp_failure_reason {
-	SPDK_NVME_QPAIR_NOT_FAILED = 0,
-	SPDK_NVME_QPAIR_LOCAL_FAILURE,
-	SPDK_NVME_QPAIR_REMOTE_FAILURE,
-	SPDK_NVME_QPAIR_UNKNOWN_FAILURE,
+	SPDK_NVME_QPAIR_FAILURE_NONE = 0,
+	SPDK_NVME_QPAIR_FAILURE_LOCAL,
+	SPDK_NVME_QPAIR_FAILURE_REMOTE,
+	SPDK_NVME_QPAIR_FAILURE_UNKNOWN,
 };
 
 typedef enum spdk_nvme_qp_failure_reason spdk_nvme_qp_failure_reason;
