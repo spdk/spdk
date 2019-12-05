@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05bc33ca_649a67c2",
+        "filename": "test/unit/lib/nvme/nvme_ns_cmd.c/nvme_ns_cmd_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 842,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-05T17:50:48Z",
+      "side": 1,
+      "message": "I was going to say check for -EINVAL here, but unfortunately this would return -ENOMEM when the io flags are invalid.\n\nThat\u0027s really unfortunate.  It\u0027s actually an existing bug (since the same problem was there before your patch.)\n\nCould you add a patch before this one that fixes this issue?  We should do the io_flags check in each of the functions that call _nvme_ns_cmd_rw(), not in _nvme_ns_cmd_rw() itself.\n\nThen here, you can confirm that rc \u003d\u003d -EINVAL.",
+      "revId": "44198346cced1546090d06b105755f878fc59f9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
