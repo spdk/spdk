@@ -73,31 +73,41 @@ function revert() {
 	$rpc_py bdev_nvme_opal_revert -b nvme0 -p test || true
 }
 
-$rootdir/app/spdk_tgt/spdk_tgt &
-spdk_tgt_pid=$!
-trap 'revert; killprocess $spdk_tgt_pid; exit 1' SIGINT SIGTERM EXIT
-waitforlisten $spdk_tgt_pid
-opal_init
-test_opal_cmds
-killprocess $spdk_tgt_pid
+function opal_spdk_tgt() {
+	$rootdir/app/spdk_tgt/spdk_tgt &
+	spdk_tgt_pid=$!
+	trap 'revert; killprocess $spdk_tgt_pid; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $spdk_tgt_pid
+	opal_init
+	test_opal_cmds
+	killprocess $spdk_tgt_pid
+}
 
-$rootdir/test/bdev/bdevio/bdevio -w &
-bdevio_pid=$!
-trap 'revert; killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
-waitforlisten $bdevio_pid
-setup_test_environment
-$rootdir/test/bdev/bdevio/tests.py perform_tests
-clean_up
-trap - SIGINT SIGTERM EXIT
-killprocess $bdevio_pid
+function opal_bdevio() {
+	$rootdir/test/bdev/bdevio/bdevio -w &
+	bdevio_pid=$!
+	trap 'revert; killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $bdevio_pid
+	setup_test_environment
+	$rootdir/test/bdev/bdevio/tests.py perform_tests
+	clean_up
+	trap - SIGINT SIGTERM EXIT
+	killprocess $bdevio_pid
+}
 
-$rootdir/test/bdev/bdevperf/bdevperf -z -q 8 -o 4096 -w verify -t 10 &
-bdevperf_pid=$!
-trap 'revert; killprocess $bdevperf_pid; exit 1' SIGINT SIGTERM EXIT
-waitforlisten $bdevperf_pid
-setup_test_environment
-$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
-clean_up
-revert
-trap - SIGINT SIGTERM EXIT
-killprocess $bdevperf_pid
+function opal_bdevperf() {
+	$rootdir/test/bdev/bdevperf/bdevperf -z -q 8 -o 4096 -w verify -t 10 &
+	bdevperf_pid=$!
+	trap 'revert; killprocess $bdevperf_pid; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $bdevperf_pid
+	setup_test_environment
+	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
+	clean_up
+	revert
+	trap - SIGINT SIGTERM EXIT
+	killprocess $bdevperf_pid
+}
+
+run_test "case" "nvme_opal_spdk_tgt" opal_spdk_tgt
+run_test "case" "nvme_opal_bdevio" opal_bdevio
+run_test "case" "nvme_opal_bdevperf" opal_bdevperf
