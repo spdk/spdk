@@ -38,6 +38,63 @@
 
 #include "vbdev_opal.h"
 
+struct rpc_bdev_nvme_opal_discovery {
+	char *nvme_ctrlr_name;
+};
+
+static void
+free_rpc_bdev_nvme_opal_discovery(struct rpc_bdev_nvme_opal_discovery *req)
+{
+	free(req->nvme_ctrlr_name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_nvme_opal_discovery_decoders[] = {
+	{"nvme_ctrlr_name", offsetof(struct rpc_bdev_nvme_opal_discovery, nvme_ctrlr_name), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_bdev_nvme_opal_discovery(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
+{
+	struct rpc_bdev_nvme_opal_discovery req = {};
+	struct spdk_json_write_ctx *w;
+	int rc;
+	enum spdk_opal_dev_state state;
+
+	if (spdk_json_decode_object(params, rpc_bdev_nvme_opal_discovery_decoders,
+				    SPDK_COUNTOF(rpc_bdev_nvme_opal_discovery_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto out;
+	}
+
+	rc = spdk_vbdev_opal_discovery(req.nvme_ctrlr_name, &state);
+	if (rc) {
+		SPDK_ERRLOG("Opal discovery failure: %d\n", rc);
+		switch (rc) {
+		case -ENODEV:
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "Opal not supported");
+			break;
+		default:
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		}
+		goto out;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_bool(w, "Opal support", true);
+	spdk_json_write_named_string(w, "state", state == OPAL_DEV_STATE_DEFAULT ? "Default" : "Enabled");
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+
+out:
+	free_rpc_bdev_nvme_opal_discovery(&req);
+}
+SPDK_RPC_REGISTER("bdev_nvme_opal_discovery", spdk_rpc_bdev_nvme_opal_discovery, SPDK_RPC_RUNTIME)
+
 struct rpc_bdev_nvme_opal_init {
 	char *nvme_ctrlr_name;
 	char *password;
