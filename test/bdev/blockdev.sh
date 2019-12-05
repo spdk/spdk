@@ -7,15 +7,15 @@ source $testdir/nbd_common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-function run_fio()
-{
-	if [ $RUN_NIGHTLY -eq 0 ]; then
-		fio_bdev --ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio "$@"
-	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
-		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
-		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
-		fio_bdev --ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio "$@"
-	fi
+function bdev_bounds() {
+	$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -c $testdir/bdev.conf &
+	bdevio_pid=$!
+	trap 'killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
+	echo "Process bdevio pid: $bdevio_pid"
+	waitforlisten $bdevio_pid
+	$testdir/bdevio/tests.py perform_tests
+	killprocess $bdevio_pid
+	trap - SIGINT SIGTERM EXIT
 }
 
 function nbd_function_test() {
@@ -49,6 +49,48 @@ function nbd_function_test() {
 	fi
 
 	return 0
+}
+
+function fio_test_suite() {
+	# Generate the fio config file given the list of all unclaimed bdevs
+	fio_config_gen $testdir/bdev.fio verify AIO
+	for b in $(echo $bdevs | jq -r '.name'); do
+		fio_config_add_job $testdir/bdev.fio $b
+	done
+
+	if [ $RUN_NIGHTLY -eq 0 ]; then
+		run_test "case" "bdev_fio_rw_verify" fio_bdev --ioengine=spdk_bdev --iodepth=8 \
+		--bs=4k --runtime=10 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf \
+		--spdk_mem=$PRE_RESERVED_MEM --output=$output_dir/blockdev_fio_verify.txt
+	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
+		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
+		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
+		run_test "case" "bdev_fio_rw_verify_ext" fio_bdev --ioengine=spdk_bdev --iodepth=128 \
+		--bs=192k --runtime=100 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf \
+		--spdk_mem=$PRE_RESERVED_MEM --output=$output_dir/blockdev_fio_verify.txt
+	fi
+	rm -f ./*.state
+	rm -f $testdir/bdev.fio
+
+	# Generate the fio config file given the list of all unclaimed bdevs that support unmap
+	fio_config_gen $testdir/bdev.fio trim
+	for b in $(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name'); do
+		fio_config_add_job $testdir/bdev.fio $b
+	done
+
+	if [ $RUN_NIGHTLY -eq 0 ]; then
+		run_test "case" "bdev_fio_trim" fio_bdev --ioengine=spdk_bdev --iodepth=8 \
+		--bs=4k --runtime=10 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf \
+		--output=$output_dir/blockdev_trim.txt
+	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
+		run_test "case" "bdev_fio_trim_ext" fio_bdev --ioengine=spdk_bdev --iodepth=128 \
+		--bs=192k --runtime=100 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf \
+		--output=$output_dir/blockdev_trim.txt
+	fi
+
+	rm -f ./*.state
+	rm -f $testdir/bdev.fio
+	report_test_completion "bdev_fio"
 }
 
 function get_io_result() {
@@ -119,7 +161,7 @@ function qos_function_test() {
 
 		# Run bdevperf with IOPS rate limit on bdev 1
 		$rpc_py bdev_set_qos_limit --rw_ios_per_sec $iops_limit $QOS_DEV_1
-		run_qos_test $iops_limit IOPS $QOS_DEV_1
+		run_test "case" "bdev_qos_iops" run_qos_test $iops_limit IOPS $QOS_DEV_1
 
 		# Run bdevperf with bandwidth rate limit on bdev 2
 		# Set the bandwidth limit as 1/10 of the measure performance without QoS
@@ -129,14 +171,36 @@ function qos_function_test() {
 			bw_limit=$qos_lower_bw_limit
 		fi
 		$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec $bw_limit $QOS_DEV_2
-		run_qos_test $bw_limit BANDWIDTH $QOS_DEV_2
+		run_test "case" "bdev_qos_bw" run_qos_test $bw_limit BANDWIDTH $QOS_DEV_2
 
 		# Run bdevperf with additional read only bandwidth rate limit on bdev 1
 		$rpc_py bdev_set_qos_limit --r_mbytes_per_sec $qos_lower_bw_limit $QOS_DEV_1
-		run_qos_test $qos_lower_bw_limit BANDWIDTH $QOS_DEV_1
+		run_test "case" "bdev_qos_ro_bw" run_qos_test $qos_lower_bw_limit BANDWIDTH $QOS_DEV_1
 	else
 		echo "Actual IOPS without limiting is too low - exit testing"
 	fi
+}
+
+function qos_test_suite() {
+	# Run bdevperf with QoS disabled first
+	$testdir/bdevperf/bdevperf -z -m 0x2 -q 256 -o 4096 -w randread -t 60 &
+	QOS_PID=$!
+	echo "Process qos testing pid: $QOS_PID"
+	trap 'killprocess $QOS_PID; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $QOS_PID
+
+	$rpc_py bdev_null_create $QOS_DEV_1 128 512
+	waitforbdev $QOS_DEV_1
+	$rpc_py bdev_null_create $QOS_DEV_2 128 512
+	waitforbdev $QOS_DEV_2
+
+	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests &
+	qos_function_test
+
+	$rpc_py bdev_null_delete $QOS_DEV_1
+	$rpc_py bdev_null_delete $QOS_DEV_2
+	killprocess $QOS_PID
+	trap - SIGINT SIGTERM EXIT
 }
 
 # Inital bdev creation and configuration
@@ -202,104 +266,38 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 #-----------------------------------------------------
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	timing_enter hello_bdev
 	if grep -q Nvme0 $testdir/bdev.conf; then
-		$rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Nvme0n1p1
+		run_test "case" "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Nvme0n1p1
 	fi
-	timing_exit hello_bdev
 fi
 
-timing_enter bounds
-$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -c $testdir/bdev.conf &
-bdevio_pid=$!
-trap 'killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
-echo "Process bdevio pid: $bdevio_pid"
-waitforlisten $bdevio_pid
-$testdir/bdevio/tests.py perform_tests
-killprocess $bdevio_pid
-trap - SIGINT SIGTERM EXIT
-timing_exit bounds
-
-timing_enter nbd
-nbd_function_test $testdir/bdev.conf "$bdevs_name"
-timing_exit nbd
-
+run_test "case" "bdev_bounds" bdev_bounds
+run_test "case" "bdev_nbd" nbd_function_test $testdir/bdev.conf "$bdevs_name"
 if [ -d /usr/src/fio ]; then
-	timing_enter fio
-
-	timing_enter fio_rw_verify
-	# Generate the fio config file given the list of all unclaimed bdevs
-	fio_config_gen $testdir/bdev.fio verify AIO
-	for b in $(echo $bdevs | jq -r '.name'); do
-		fio_config_add_job $testdir/bdev.fio $b
-	done
-
-	run_fio --spdk_conf=./test/bdev/bdev.conf --spdk_mem=$PRE_RESERVED_MEM --output=$output_dir/blockdev_fio_verify.txt
-
-	rm -f ./*.state
-	rm -f $testdir/bdev.fio
-	timing_exit fio_rw_verify
-
-	timing_enter fio_trim
-	# Generate the fio config file given the list of all unclaimed bdevs that support unmap
-	fio_config_gen $testdir/bdev.fio trim
-	for b in $(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name'); do
-		fio_config_add_job $testdir/bdev.fio $b
-	done
-
-	run_fio --spdk_conf=./test/bdev/bdev.conf --output=$output_dir/blockdev_trim.txt
-
-	rm -f ./*.state
-	rm -f $testdir/bdev.fio
-	timing_exit fio_trim
-	report_test_completion "bdev_fio"
-	timing_exit fio
+	run_test "suite" "bdev_fio" fio_test_suite
 else
 	echo "FIO not available"
 	exit 1
 fi
 
 # Run bdevperf with gpt
-$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
-$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
-rm -f $testdir/bdev_gpt.conf
+run_test "case" "bdev_gpt_verify" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
+run_test "case" "bdev_gpt_write_zeroes" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
+run_test "suite" "bdev_qos" qos_test_suite
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	# Temporarily disabled - infinite loop
-	timing_enter reset
-	#$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -o 4096 -t 60
-	timing_exit reset
-	report_test_completion "nightly_bdev_reset"
-fi
+# Temporarily disabled - infinite loop
+# if [ $RUN_NIGHTLY -eq 1 ]; then
+	# run_test "case" "bdev_gpt_reset" $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -o 4096 -t 60
+	# report_test_completion "nightly_bdev_reset"
+# fi
 
-timing_enter qos
-
-# Run bdevperf with QoS disabled first
-$testdir/bdevperf/bdevperf -z -m 0x2 -q 256 -o 4096 -w randread -t 60 &
-QOS_PID=$!
-echo "Process qos testing pid: $QOS_PID"
-trap 'killprocess $QOS_PID; exit 1' SIGINT SIGTERM EXIT
-waitforlisten $QOS_PID
-
-$rpc_py bdev_null_create $QOS_DEV_1 128 512
-waitforbdev $QOS_DEV_1
-$rpc_py bdev_null_create $QOS_DEV_2 128 512
-waitforbdev $QOS_DEV_2
-
-$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests &
-qos_function_test
-
-$rpc_py bdev_null_delete $QOS_DEV_1
-$rpc_py bdev_null_delete $QOS_DEV_2
-killprocess $QOS_PID
-trap - SIGINT SIGTERM EXIT
-
-timing_exit qos
-
+# Bdev and configuration cleanup below this line
+#-----------------------------------------------------
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
 fi
 
+rm -f $testdir/bdev_gpt.conf
 rm -f /tmp/aiofile
 rm -f /tmp/spdk-pmem-pool
 rm -f $testdir/bdev.conf
