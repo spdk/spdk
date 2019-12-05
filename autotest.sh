@@ -213,8 +213,19 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_NVMF -eq 1 ]; then
-		run_test "nvmf" ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
-		run_test "spdkcli_nvmf" ./test/spdkcli/nvmf.sh
+		if [ "$SPDK_TEST_NVMF_TRANSPORT" = "rdma" ]; then
+			run_test "nvmf_rdma" ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
+			run_test "spdkcli_nvmf_rdma" ./test/spdkcli/nvmf.sh
+		elif [ "$SPDK_TEST_NVMF_TRANSPORT" = "tcp" ]; then
+			run_test "nvmf_tcp" ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
+			run_test "spdkcli_nvmf_tcp" ./test/spdkcli/nvmf.sh
+		elif [ "$SPDK_TEST_NVMF_TRANSPORT" = "fc" ]; then
+				run_test "nvmf_fc" ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
+				run_test "spdkcli_nvmf_fc" ./test/spdkcli/nvmf.sh
+		else
+			echo "unknown NVMe transport, please specify rdma, tcp, or fc."
+			exit 1
+		fi
 	fi
 
 	if [ $SPDK_TEST_VHOST -eq 1 ]; then
