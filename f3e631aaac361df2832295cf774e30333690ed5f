@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f471ced5_f1b6a648",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-05T15:36:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6d3e7466_74313a0f",
+      "revId": "f3e631aaac361df2832295cf774e30333690ed5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a018395_0d2e85e1",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "ba38c7c1_be7df95b",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-05T15:36:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a018395_0d2e85e1",
+      "revId": "f3e631aaac361df2832295cf774e30333690ed5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0cc965a3_e6040563",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 3
@@ -47,6 +83,24 @@
       "writtenOn": "2019-12-04T20:51:25Z",
       "side": 1,
       "message": "could you move this to the end of the data structure?\n\nI know there\u0027s room here right now, but there\u0027s an incoming patch from the team in Poland that\u0027s going to use a bit here that will be touched in the primary I/O path.  So putting the reason here will not leave any extra bits.\n\nI guess we could see which patch gets merged first and fix it then.  Maybe that\u0027s better since if you move it, someone else will ask why you didn\u0027t put the bits here instead.  But to avoid that you could push the patch and then add a GerritHub comment explaining why you put it there.",
+      "revId": "f3e631aaac361df2832295cf774e30333690ed5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02c31054_4b398505",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-05T15:36:50Z",
+      "side": 1,
+      "message": "Thanks for the heads up. I\u0027ll move mine to the end. (FYI even though I\u0027m sure you already thought about this, this adds a third cache line to the qpair struct).",
+      "parentUuid": "0cc965a3_e6040563",
       "revId": "f3e631aaac361df2832295cf774e30333690ed5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
