@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c9eb243_7004b070",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-05T17:26:02Z",
+      "side": 1,
+      "message": "would it be helpful to log readers to have both?  so something like:\n\nSTART TEST suite iscsi_fio (./test/iscsi_tgt/fio/fio.sh)\n\nOr even put the script name on separate line after this one",
+      "revId": "a2fde497e90d707dd8bb3ef2d900b351f5d19121",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
