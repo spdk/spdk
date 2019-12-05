@@ -53,7 +53,7 @@ WORKDIR=$(readlink -f $(dirname $0))
 case $1 in
 	-p|--performance)
 		echo 'Running performance suite...'
-		run_test case "vhost_manual_1" $WORKDIR/fiotest/fio.sh --fio-bin=$FIO_BIN \
+		run_test "case" "vhost_manual_1" $WORKDIR/fiotest/fio.sh --fio-bin=$FIO_BIN \
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_scsi \
 		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job
@@ -61,7 +61,7 @@ case $1 in
 		;;
 	-pb|--performance-blk)
 		echo 'Running blk performance suite...'
-		run_test case "vhost_manual_2" $WORKDIR/fiotest/fio.sh --fio-bin=$FIO_BIN \
+		run_test "case" "vhost_manual_2" $WORKDIR/fiotest/fio.sh --fio-bin=$FIO_BIN \
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_blk \
 		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job
@@ -69,7 +69,7 @@ case $1 in
 		;;
 	-hp|--hotplug)
 		echo 'Running hotplug tests suite...'
-		run_test case "vhost_manual_3" $WORKDIR/hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
+		run_test "case" "vhost_manual_3" $WORKDIR/hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
 			--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
 			--vm=1,$VM_IMAGE,Nvme0n1p2:Nvme0n1p3 \
 			--vm=2,$VM_IMAGE,Nvme0n1p4:Nvme0n1p5 \
@@ -80,7 +80,7 @@ case $1 in
 		;;
 	-shr|--scsi-hot-remove)
 		echo 'Running scsi hotremove tests suite...'
-		run_test case "vhost_manual_4" $WORKDIR/hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
+		run_test "case" "vhost_manual_4" $WORKDIR/hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
 			--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
 			--vm=1,$VM_IMAGE,Nvme0n1p2:Nvme0n1p3 \
 			--test-type=spdk_vhost_scsi \
@@ -89,7 +89,7 @@ case $1 in
 		;;
 	-bhr|--blk-hot-remove)
 		echo 'Running blk hotremove tests suite...'
-		run_test case "vhost_manual_5" $WORKDIR/hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
+		run_test "case" "vhost_manual_5" $WORKDIR/hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
 			--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
 			--vm=1,$VM_IMAGE,Nvme0n1p2:Nvme0n1p3 \
 			--test-type=spdk_vhost_blk \
