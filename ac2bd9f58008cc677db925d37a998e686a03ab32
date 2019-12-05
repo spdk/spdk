@@ -22,6 +22,30 @@
       "revId": "ac2bd9f58008cc677db925d37a998e686a03ab32",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94ebea90_f08e0337",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2371,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-05T08:02:47Z",
+      "side": 1,
+      "message": "nice suggestion, actually I\u0027m planning to remove some goto in this file, this can be done with that patch.  BTW, sometimes we are suggested not to combine case/break, looks like SPDK doesn\u0027t have such recommendation.",
+      "parentUuid": "97e2abd7_1fc1e63e",
+      "range": {
+        "startLine": 2366,
+        "startChar": 0,
+        "endLine": 2371,
+        "endChar": 0
+      },
+      "revId": "ac2bd9f58008cc677db925d37a998e686a03ab32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
