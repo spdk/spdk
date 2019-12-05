@@ -59,5 +59,3 @@ sync
 rm -rf $testdir/bdevperf.conf
 rm -rf $testdir/aio.bdev
 trap - SIGINT SIGTERM EXIT
-
-report_test_completion "blob_io_wait"

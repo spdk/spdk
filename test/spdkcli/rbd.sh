@@ -30,5 +30,3 @@ rbd_cleanup
 timing_exit spdkcli_clear_rbd_config
 
 killprocess $spdk_tgt_pid
-
-report_test_completion spdk_cli_rbd

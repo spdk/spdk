@@ -72,4 +72,3 @@ trap - SIGINT SIGTERM EXIT
 rm -f ./local-job*
 rm -f /tmp/pool_file*
 killprocess $pid
-report_test_completion "nightly_iscsi_pmem"
