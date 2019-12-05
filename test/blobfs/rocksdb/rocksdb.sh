@@ -134,5 +134,3 @@ trap - SIGINT SIGTERM EXIT
 
 run_bsdump
 rm -f $ROCKSDB_CONF
-
-report_test_completion "blobfs"
