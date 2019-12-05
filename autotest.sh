@@ -144,7 +144,7 @@ fi
 #####################
 
 if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
-	run_test suite "unittest" ./test/unit/unittest.sh
+	run_test "suite" "unittest" ./test/unit/unittest.sh
 	report_test_completion "unittest"
 fi
 
@@ -152,14 +152,14 @@ fi
 if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	timing_enter lib
 
-	run_test suite "env" test/env/env.sh
+	run_test "suite" "env" test/env/env.sh
 	run_test "case" "rpc_client" test/rpc_client/rpc_client.sh
 	run_test "case" "json_config" ./test/json_config/json_config.sh
 	run_test "case" "alias_rpc" test/json_config/alias_rpc/alias_rpc.sh
 	run_test "case" "spdkcli_tcp" test/spdkcli/tcp.sh
 
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
-		run_test suite "blockdev" test/bdev/blockdev.sh
+		run_test "suite" "blockdev" test/bdev/blockdev.sh
 		run_test "case" "bdev_raid" test/bdev/bdev_raid.sh
 	fi
 
@@ -168,11 +168,11 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_EVENT -eq 1 ]; then
-		run_test suite "event" test/event/event.sh
+		run_test "suite" "event" test/event/event.sh
 	fi
 
 	if [ $SPDK_TEST_NVME -eq 1 ]; then
-		run_test suite "nvme" test/nvme/nvme.sh
+		run_test "suite" "nvme" test/nvme/nvme.sh
 		if [[ $SPDK_TEST_NVME_CLI -eq 1 ]]; then
 			run_test "case" "nvme_cli" test/nvme/spdk_nvme_cli.sh
 		fi
@@ -189,13 +189,13 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_IOAT -eq 1 ]; then
-		run_test suite "ioat" test/ioat/ioat.sh
+		run_test "suite" "ioat" test/ioat/ioat.sh
 	fi
 
 	timing_exit lib
 
 	if [ $SPDK_TEST_ISCSI -eq 1 ]; then
-		run_test suite "iscsi_tgt_posix" ./test/iscsi_tgt/iscsi_tgt.sh posix
+		run_test "suite" "iscsi_tgt_posix" ./test/iscsi_tgt/iscsi_tgt.sh posix
 		run_test "case" "spdkcli_iscsi" ./test/spdkcli/iscsi.sh
 
 		# Run raid spdkcli test under iSCSI since blockdev tests run on systems that can't run spdkcli yet
@@ -203,28 +203,28 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_VPP -eq 1 ]; then
-		run_test suite "iscsi_tgt_vpp" ./test/iscsi_tgt/iscsi_tgt.sh vpp
+		run_test "suite" "iscsi_tgt_vpp" ./test/iscsi_tgt/iscsi_tgt.sh vpp
 	fi
 
 	if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
-		run_test suite "rocksdb" ./test/blobfs/rocksdb/rocksdb.sh
+		run_test "suite" "rocksdb" ./test/blobfs/rocksdb/rocksdb.sh
 		run_test "case" "blobstore" ./test/blobstore/blobstore.sh
 		run_test "case" "blobfs" ./test/blobfs/blobfs.sh
 	fi
 
 	if [ $SPDK_TEST_NVMF -eq 1 ]; then
-		run_test suite "nvmf" ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
+		run_test "suite" "nvmf" ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
 		run_test "case" "spdkcli_nvmf" ./test/spdkcli/nvmf.sh
 	fi
 
 	if [ $SPDK_TEST_VHOST -eq 1 ]; then
-		run_test suite "vhost" ./test/vhost/vhost.sh
+		run_test "suite" "vhost" ./test/vhost/vhost.sh
 	fi
 
 	if [ $SPDK_TEST_LVOL -eq 1 ]; then
 		#TODO: rewrite lvol tests in bash.
 		run_test "case" "lvol" ./test/lvol/lvol.sh --test-cases=all
-		run_test suite "lvol2" ./test/lvol/lvol2.sh
+		run_test "suite" "lvol2" ./test/lvol/lvol2.sh
 		run_test "case" "blob_io_wait" ./test/blobstore/blob_io_wait/blob_io_wait.sh
 		report_test_completion "lvol"
 	fi
@@ -253,11 +253,11 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_FTL -eq 1 ]; then
-		run_test suite "ftl" ./test/ftl/ftl.sh
+		run_test "suite" "ftl" ./test/ftl/ftl.sh
 	fi
 
 	if [ $SPDK_TEST_VMD -eq 1 ]; then
-		run_test suite "vmd" ./test/vmd/vmd.sh
+		run_test "suite" "vmd" ./test/vmd/vmd.sh
 	fi
 
 	if [ $SPDK_TEST_REDUCE -eq 1 ]; then
@@ -265,7 +265,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_OPAL -eq 1 ]; then
-		run_test suite "nvme_opal" ./test/nvme/nvme_opal.sh
+		run_test "suite" "nvme_opal" ./test/nvme/nvme_opal.sh
 	fi
 fi
 
