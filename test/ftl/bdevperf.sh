@@ -15,5 +15,3 @@ for (( i=0; i<${#tests[@]}; i++ )) do
 	$rootdir/test/bdev/bdevperf/bdevperf -c $ftl_bdev_conf ${tests[$i]}
 	timing_exit "${tests[$i]}"
 done
-
-report_test_completion ftl_bdevperf
