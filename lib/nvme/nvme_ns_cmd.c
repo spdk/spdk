@@ -136,6 +136,8 @@ _nvme_ns_cmd_setup_request(struct spdk_nvme_ns *ns, struct nvme_request *req,
 {
 	struct spdk_nvme_cmd	*cmd;
 
+	assert((io_flags & 0xFFFF) == 0);
+
 	cmd = &req->cmd;
 	cmd->opc = opc;
 	cmd->nsid = ns->id;
@@ -375,13 +377,6 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	uint32_t		sectors_per_max_io;
 	uint32_t		sectors_per_stripe;
 
-	if (io_flags & 0xFFFF) {
-		/* The bottom 16 bits must be empty */
-		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
-			    io_flags);
-		return NULL;
-	}
-
 	sector_size = ns->extended_lba_size;
 	sectors_per_max_io = ns->sectors_per_max_io;
 	sectors_per_stripe = ns->sectors_per_stripe;
@@ -444,6 +439,13 @@ spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
+			    io_flags);
+		return -EINVAL;
+	}
+
 	payload = NVME_PAYLOAD_CONTIG(buffer, NULL);
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg,
@@ -473,6 +475,13 @@ spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
+			    io_flags);
+		return -EINVAL;
+	}
+
 	payload = NVME_PAYLOAD_CONTIG(buffer, metadata);
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg,
@@ -500,6 +509,13 @@ spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
+			    io_flags);
+		return -EINVAL;
+	}
 
 	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
 		return -EINVAL;
@@ -531,6 +547,13 @@ spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, vo
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
+			    io_flags);
+		return -EINVAL;
+	}
+
 	payload = NVME_PAYLOAD_CONTIG(buffer, NULL);
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
@@ -558,6 +581,13 @@ spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
+			    io_flags);
+		return -EINVAL;
+	}
+
 	payload = NVME_PAYLOAD_CONTIG(buffer, metadata);
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
@@ -584,6 +614,13 @@ spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
+			    io_flags);
+		return -EINVAL;
+	}
 
 	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
 		return -EINVAL;
@@ -616,6 +653,13 @@ spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
+			    io_flags);
+		return -EINVAL;
+	}
+
 	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
 		return -EINVAL;
 	}
@@ -645,6 +689,13 @@ spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
+			    io_flags);
+		return -EINVAL;
+	}
+
 	payload = NVME_PAYLOAD_CONTIG(buffer, NULL);
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
@@ -669,6 +720,13 @@ spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
+			    io_flags);
+		return -EINVAL;
+	}
 
 	payload = NVME_PAYLOAD_CONTIG(buffer, metadata);
 
@@ -695,6 +753,13 @@ spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
+			    io_flags);
+		return -EINVAL;
+	}
 
 	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
 		return -EINVAL;
@@ -727,6 +792,13 @@ spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
+			    io_flags);
+		return -EINVAL;
+	}
+
 	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
 		return -EINVAL;
 	}
@@ -756,6 +828,13 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	struct nvme_request	*req;
 	struct spdk_nvme_cmd	*cmd;
 	uint64_t		*tmp_lba;
+
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags 0x%x bottom 16 bits is not empty\n",
+			    io_flags);
+		return -EINVAL;
+	}
 
 	if (lba_count == 0 || lba_count > UINT16_MAX + 1) {
 		return -EINVAL;
