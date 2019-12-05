@@ -20,7 +20,6 @@ function nvme_perf {
 	if [ -b /dev/ram0 ]; then
 		# Test perf with AIO device
 		$rootdir/examples/nvme/perf/perf /dev/ram0 -q 128 -w read -o 12288 -t 1 -LL -i 0
-		report_test_completion "nvme_perf"
 	fi
 }
 
@@ -29,7 +28,6 @@ function nvme_fio_test {
 	for bdf in $(iter_pci_class_code 01 08 02); do
 		for blkname in $(get_nvme_name_from_bdf $bdf); do
 			fio_nvme $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=${blkname##*n}"
-			report_test_completion "nvme_fio"
 		done
 	done
 }
@@ -42,7 +40,6 @@ function nvme_multi_secondary {
 	$rootdir/examples/nvme/perf/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x4
 	wait $pid0
 	wait $pid1
-	report_test_completion "nvme_multi_secondary"
 }
 
 if [ $(uname) = Linux ]; then

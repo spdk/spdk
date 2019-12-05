@@ -129,4 +129,3 @@ fi
 
 killprocess $pid
 iscsitestfini $1 $2
-report_test_completion "nightly_iscsi_ext4test"
