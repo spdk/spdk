@@ -51,10 +51,6 @@ function nbd_function_test() {
 	return 0
 }
 
-QOS_DEV_1="Null_0"
-QOS_DEV_2="Null_1"
-QOS_RUN_TIME=5
-
 function get_io_result() {
 	local limit_type=$1
 	local qos_dev=$2
@@ -143,6 +139,20 @@ function qos_function_test() {
 	fi
 }
 
+# Inital bdev creation and configuration
+#-----------------------------------------------------
+QOS_DEV_1="Null_0"
+QOS_DEV_2="Null_1"
+QOS_RUN_TIME=5
+
+if [ $(uname -s) = Linux ]; then
+	# Test dynamic memory management. All hugepages will be reserved at runtime
+	PRE_RESERVED_MEM=0
+else
+	# Dynamic memory management is not supported on BSD
+	PRE_RESERVED_MEM=2048
+fi
+
 # Create a file to be used as an AIO backend
 dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
 
@@ -168,32 +178,6 @@ if hash pmempool; then
 	echo "  Blk /tmp/spdk-pmem-pool Pmem0" >> $testdir/bdev.conf
 fi
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	timing_enter hello_bdev
-	if grep -q Nvme0 $testdir/bdev.conf; then
-		$rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Nvme0n1
-	fi
-	timing_exit hello_bdev
-fi
-
-timing_enter bounds
-if [ $(uname -s) = Linux ]; then
-	# Test dynamic memory management. All hugepages will be reserved at runtime
-	PRE_RESERVED_MEM=0
-else
-	# Dynamic memory management is not supported on BSD
-	PRE_RESERVED_MEM=2048
-fi
-$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -c $testdir/bdev.conf &
-bdevio_pid=$!
-trap 'killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
-echo "Process bdevio pid: $bdevio_pid"
-waitforlisten $bdevio_pid
-$testdir/bdevio/tests.py perform_tests
-killprocess $bdevio_pid
-trap - SIGINT SIGTERM EXIT
-timing_exit bounds
-
 timing_enter nbd_gpt
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir
@@ -204,8 +188,39 @@ timing_enter bdev_svc
 bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf | jq -r '.[] | select(.claimed == false)')
 timing_exit bdev_svc
 
-timing_enter nbd
 bdevs_name=$(echo $bdevs | jq -r '.name')
+
+# Create conf file for bdevperf with gpt
+cat > $testdir/bdev_gpt.conf << EOL
+[Gpt]
+  Disable No
+EOL
+
+# Get Nvme info through filtering gen_nvme.sh's result
+$rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
+# End bdev configuration
+#-----------------------------------------------------
+
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	timing_enter hello_bdev
+	if grep -q Nvme0 $testdir/bdev.conf; then
+		$rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Nvme0n1p1
+	fi
+	timing_exit hello_bdev
+fi
+
+timing_enter bounds
+$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -c $testdir/bdev.conf &
+bdevio_pid=$!
+trap 'killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
+echo "Process bdevio pid: $bdevio_pid"
+waitforlisten $bdevio_pid
+$testdir/bdevio/tests.py perform_tests
+killprocess $bdevio_pid
+trap - SIGINT SIGTERM EXIT
+timing_exit bounds
+
+timing_enter nbd
 nbd_function_test $testdir/bdev.conf "$bdevs_name"
 timing_exit nbd
 
@@ -243,15 +258,6 @@ else
 	echo "FIO not available"
 	exit 1
 fi
-
-# Create conf file for bdevperf with gpt
-cat > $testdir/bdev_gpt.conf << EOL
-[Gpt]
-  Disable No
-EOL
-
-# Get Nvme info through filtering gen_nvme.sh's result
-$rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 
 # Run bdevperf with gpt
 $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
