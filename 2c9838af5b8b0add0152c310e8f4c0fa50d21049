@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3846c3e_22ad8c3e",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 2621,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-05T21:32:44Z",
+      "side": 1,
+      "message": "let\u0027s add this to previous patch (as 0xFFFF0000) - and then use that for the comparison instead of hardcoded 0xFFFF",
+      "revId": "2c9838af5b8b0add0152c310e8f4c0fa50d21049",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "acdf4370_f1fd2270",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-05T21:32:44Z",
+      "side": 1,
+      "message": "let\u0027s put this in previous patch (after putting the VALID_MASK #define in the previous patch too)",
+      "revId": "2c9838af5b8b0add0152c310e8f4c0fa50d21049",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b396e72_27f128b7",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-05T21:32:44Z",
+      "side": 1,
+      "message": "let\u0027s make these changes in the previous patch (same for other spdk_nvme_ns_cmd_* functions below)",
+      "revId": "2c9838af5b8b0add0152c310e8f4c0fa50d21049",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
