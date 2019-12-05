@@ -2722,6 +2722,20 @@ spdk_opal_get_nvme_ctrlr_name(struct spdk_opal_dev *dev)
 	return dev->nvme_ctrlr_name;
 }
 
+int
+spdk_opal_alloc_nvme_ctrlr_name(struct spdk_opal_dev *dev, const char *name)
+{
+	char *nvme_ctrlr_name;
+
+	nvme_ctrlr_name = strdup(name);
+	if (nvme_ctrlr_name == NULL) {
+		SPDK_ERRLOG("Memory allocation failed\n");
+		return -ENOMEM;
+	}
+	dev->nvme_ctrlr_name = nvme_ctrlr_name;
+	return 0;
+}
+
 void
 spdk_opal_revert_callback(struct spdk_opal_dev *dev, int rc)
 {

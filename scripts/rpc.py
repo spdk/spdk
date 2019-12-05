@@ -2104,6 +2104,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=ioat_scan_copy_engine)
 
     # opal
+    def bdev_nvme_opal_discovery(args):
+        print_json(rpc.nvme.bdev_nvme_opal_discovery(args.client,
+                   nvme_ctrlr_name=args.nvme_ctrlr_name))
+
+    p = subparsers.add_parser('bdev_nvme_opal_discovery', help='Opal discovery and check support')
+    p.add_argument('-b', '--nvme-ctrlr-name', help='nvme ctrlr name')
+    p.set_defaults(func=bdev_nvme_opal_discovery)
+
     def bdev_nvme_opal_init(args):
         rpc.nvme.bdev_nvme_opal_init(args.client,
                                      nvme_ctrlr_name=args.nvme_ctrlr_name,
