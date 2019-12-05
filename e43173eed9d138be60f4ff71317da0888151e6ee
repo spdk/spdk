@@ -69,6 +69,24 @@
       "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a044187c_f5b5da2a",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-05T20:14:58Z",
+      "side": 1,
+      "message": "I totally missed that.",
+      "parentUuid": "dce75e46_6223b895",
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
