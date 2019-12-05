@@ -60,7 +60,6 @@ case $1 in
 			--vm=3,$VM_IMAGE,Nvme0n1p6:Nvme0n1p7 \
 			--test-type=spdk_vhost_scsi \
 			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
-		report_test_completion "vhost_hotplug"
 		;;
 	-shr|--scsi-hot-remove)
 		echo 'Running scsi hotremove tests suite...'

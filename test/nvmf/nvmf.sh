@@ -55,5 +55,3 @@ timing_exit host
 
 trap - SIGINT SIGTERM EXIT
 revert_soft_roce
-
-report_test_completion "nvmf"
