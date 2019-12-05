@@ -75,7 +75,8 @@ parted -s /dev/$dev mklabel msdos
 parted -s /dev/$dev mkpart primary '0%' '100%'
 sleep 1
 
-for fstype in "ext4" "btrfs" "xfs"; do
+function filesystem_test {
+	fstype=$1
 
 	if [ "$fstype" == "ext4" ]; then
 		mkfs.${fstype} -F /dev/${dev}1
@@ -132,7 +133,11 @@ for fstype in "ext4" "btrfs" "xfs"; do
 		rm -rf /mnt/device/aaa
 		umount /mnt/device
 	fi
-done
+}
+
+run_test "case" "iscsi_tgt_filesystem_ext4" filesystem_test "ext4"
+run_test "case" "iscsi_tgt_filesystem_btrfs" filesystem_test "btrfs"
+run_test "case" "iscsi_tgt_filesystem_xfs" filesystem_test "xfs"
 
 rm -rf /mnt/device
 
