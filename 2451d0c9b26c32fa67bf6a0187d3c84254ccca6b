@@ -16,6 +16,24 @@
       "revId": "2451d0c9b26c32fa67bf6a0187d3c84254ccca6b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "604138b9_a18b0af0",
+        "filename": "test/nvmf/target/filesystem.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-05T20:28:52Z",
+      "side": 1,
+      "message": "The reason I changed it to explicitly call nvme0n1 directly is because we explicitly wait for nvme0n1. At least on the linux kernel this implies that the only NVMe controller on the system is nvme0. And we know that there is only a single subsystem on that controller (because we created it). So the test has always (implicitly) only used nvme0n1. I just made that explicit.\n\nI agree that the change looks confusing though. I can split it into two steps if you think that\u0027s more straightforward or add a comment to the commit message.",
+      "parentUuid": "396ca1a8_f0eb932f",
+      "revId": "2451d0c9b26c32fa67bf6a0187d3c84254ccca6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
