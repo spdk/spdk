@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4600e832_c4f30e21",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-05T21:21:18Z",
+      "side": 1,
+      "message": "Sorry - I know this might be pedantic, but it should be SPDK_NVME_QPAIR_FAILURE_NONE, SPDK_NVME_QPAIR_FAILURE_LOCAL, etc.  Similar to how we do SPDK_NVME_OPC_ABORT instead of SPDK_NVME_ABORT_OPC, SPDK_NVME_SC_COMPARE_FAILURE instead of SPDK_NVME_COMPARE_FAILURE_SC and SPDK_NVME_SGL_TYPE_SEGMENT instead of SPDK_NVME_SEGMENT_SGL_TYPE.",
+      "revId": "2c1d213a4864c0cc48e3f325c30499f08542cdd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e865c475_90374912",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-05T21:21:18Z",
+      "side": 1,
+      "message": "This looks good.  When you push the next version of the patch, please put a GerritHub review comment here explaining why you put it here so that Ben doesn\u0027t tell you to put it back.  :-)",
+      "revId": "2c1d213a4864c0cc48e3f325c30499f08542cdd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
