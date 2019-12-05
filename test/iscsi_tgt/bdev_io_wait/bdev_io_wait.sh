@@ -52,4 +52,3 @@ trap - SIGINT SIGTERM EXIT
 killprocess $pid
 
 iscsitestfini $1 $2
-report_test_completion "bdev_io_wait"

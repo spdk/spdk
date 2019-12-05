@@ -72,5 +72,3 @@ $rpc_py bdev_nvme_detach_controller Nvme0
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_tgt_pid
-
-report_test_completion spdk_nvme_cli_cuse
