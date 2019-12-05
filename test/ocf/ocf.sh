@@ -12,5 +12,3 @@ run_test "case" "ocf_create_destruct" "$testdir/management/create-destruct.sh"
 run_test "case" "ocf_multicore" "$testdir/management/multicore.sh"
 run_test "case" "ocf_persistent_metadata" "$testdir/management/persistent-metadata.sh"
 run_test "case" "ocf_remove" "$testdir/management/remove.sh"
-
-report_test_completion "ocf"

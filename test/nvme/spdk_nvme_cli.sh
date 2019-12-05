@@ -48,5 +48,3 @@ if [ $(uname) = Linux ]; then
 	trap - SIGINT SIGTERM EXIT
 	kill_stub
 fi
-
-report_test_completion spdk_nvme_cli

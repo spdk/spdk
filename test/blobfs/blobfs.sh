@@ -143,4 +143,3 @@ blobfs_fuse_test
 
 rm -rf $mount_dir
 rm -f $tmp_file
-report_test_completion "blobfs"
