@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70f968aa_bf718a37",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-05T16:57:04Z",
+      "side": 1,
+      "message": "should we allow unmap on a zoned device?\n\nI don\u0027t think in general this is very useful.  If UNMAP does not describe an entire zone, then it will always fail - and what should user do in that case?\n\nI think it\u0027s OK to just not support UNMAP here, but would like to hear your input.\n\n(Marking -1 for now while we work through this question.  The code itself looks fine if we decide to keep UNMAP here.)",
+      "revId": "fb398ac3f0611149d67afb4c21e5491290252900",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
