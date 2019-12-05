@@ -146,7 +146,6 @@ fi
 
 if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 	run_test "unittest" ./test/unit/unittest.sh
-	report_test_completion "unittest"
 fi
 
 
@@ -236,10 +235,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_LVOL -eq 1 ]; then
+		#TODO: rewrite lvol tests in bash.
 		run_test "lvol" ./test/lvol/lvol.sh --test-cases=all
 		run_test "lvol2" ./test/lvol/lvol2.sh
 		run_test "blob_io_wait" ./test/blobstore/blob_io_wait/blob_io_wait.sh
-		report_test_completion "lvol"
 	fi
 
 	if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
@@ -248,7 +247,6 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test "spdkcli_virtio" ./test/spdkcli/virtio.sh
 		run_test "vhost_shared" ./test/vhost/shared/shared.sh
 		run_test "vhost_fuzz" ./test/vhost/fuzz/fuzz.sh
-		report_test_completion "vhost initiator"
 		timing_exit vhost_initiator
 	fi
 

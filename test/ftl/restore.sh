@@ -92,7 +92,5 @@ echo 3 > /proc/sys/vm/drop_caches
 md5sum -c $testdir/testfile.md5
 md5sum -c $testdir/testfile2.md5
 
-report_test_completion occsd_restore
-
 trap - SIGINT SIGTERM EXIT
 restore_kill

@@ -330,11 +330,11 @@ function timing_finish() {
 }
 
 function create_test_list() {
-	grep -rshI --exclude="autotest_common.sh" --exclude="$rootdir/test/common/autotest_common.sh" -e "report_test_completion" $rootdir | sed 's/report_test_completion//g; s/[[:blank:]]//g; s/"//g;' > $output_dir/all_tests.txt || true
-}
-
-function report_test_completion() {
-	echo "$1" >> $output_dir/test_completions.txt
+	grep -rshI --exclude="autotest_common.sh" \
+	--exclude="$rootdir/test/common/autotest_common.sh" \
+	-e "run_test " $rootdir | grep -v "#" \
+	| sed 's/^.*run_test/run_test/' | awk '{print $2}' | \
+	sed 's/\"//g' | sort > $output_dir/all_tests.txt || true
 }
 
 function process_core() {
@@ -602,6 +602,7 @@ function run_test() {
 	echo "END TEST $test_name"
 	echo "************************************"
 
+	echo "$test_name" >> $output_dir/test_completions.txt
 	timing_exit $test_name
 	xtrace_restore
 }

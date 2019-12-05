@@ -127,4 +127,3 @@ iscsicleanup
 
 $rpc_py -s $rpc_second_addr spdk_kill_instance SIGTERM
 iscsitestfini $1 $2
-report_test_completion "iscsi_ip_migration"

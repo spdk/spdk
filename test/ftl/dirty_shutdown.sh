@@ -86,7 +86,5 @@ echo 3 > /proc/sys/vm/drop_caches
 dd if=/dev/nbd0 bs=4K count=$data_size | md5sum -c $testdir/testfile.md5
 dd if=/dev/nbd0 bs=4K count=$chunk_size skip=$data_size | md5sum -c $testdir/testfile2.md5
 
-report_test_completion ftl_dirty_shutdown
-
 trap - SIGINT SIGTERM EXIT
 restore_kill

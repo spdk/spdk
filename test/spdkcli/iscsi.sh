@@ -70,4 +70,3 @@ $spdkcli_job "'/iscsi/auth_groups delete_secret 1 test2' 'user=test2'
 timing_exit spdkcli_clear_iscsi_config
 
 killprocess $iscsi_tgt_pid
-report_test_completion spdk_cli
