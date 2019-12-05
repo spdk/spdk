@@ -30,7 +30,6 @@ function vmd_fio {
 	PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 	for bdf in $pci_devs; do
 		fio_nvme $testdir/config/config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=1"
-		report_test_completion "bdev_fio"
 	done
 }
 

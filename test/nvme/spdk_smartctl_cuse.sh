@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
-timing_enter nvme_smartctl_cuse
-
 SMARTCTL_CMD='smartctl -d nvme'
 rpc_py=$rootdir/scripts/rpc.py
 
@@ -80,6 +78,3 @@ fi
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_tgt_pid
-
-report_test_completion spdk_nvme_smartctl_cuse
-timing_exit nvme_smartctl_cuse

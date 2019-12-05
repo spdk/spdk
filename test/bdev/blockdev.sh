@@ -87,7 +87,6 @@ function fio_test_suite() {
 
 	rm -f ./*.state
 	rm -f $testdir/bdev.fio
-	report_test_completion "bdev_fio"
 }
 
 function get_io_result() {
@@ -280,7 +279,6 @@ run_test "bdev_qos" qos_test_suite
 # Temporarily disabled - infinite loop
 # if [ $RUN_NIGHTLY -eq 1 ]; then
 	# run_test "bdev_gpt_reset" $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -o 4096 -t 60
-	# report_test_completion "nightly_bdev_reset"
 # fi
 
 # Bdev and configuration cleanup below this line
@@ -294,4 +292,3 @@ rm -f /tmp/aiofile
 rm -f /tmp/spdk-pmem-pool
 rm -f $testdir/bdev.conf
 rbd_cleanup
-report_test_completion "bdev"
