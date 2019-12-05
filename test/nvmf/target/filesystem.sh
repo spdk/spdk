@@ -12,11 +12,31 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 nvmftestinit
 
-for incapsule in 0 4096; do
+function nvmf_filesystem_create {
+	fstype=$1
+
+	if [ $fstype = ext4 ]; then
+		force=-F
+	else
+		force=-f
+	fi
+
+	mkfs.${fstype} $force /dev/nvme0n1p1
+
+	mount /dev/nvme0n1p1 /mnt/device
+	touch /mnt/device/aaa
+	sync
+	rm /mnt/device/aaa
+	sync
+	umount /mnt/device
+}
+
+function nvmf_filesystem_part {
+	incapsule=$1
+
 	nvmfappstart "-m 0xF"
 
 	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -c $incapsule
-
 	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc1
 	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
@@ -31,30 +51,19 @@ for incapsule in 0 4096; do
 
 	mkdir -p /mnt/device
 
-	timing_enter parted
 	parted -s /dev/nvme0n1 mklabel msdos  mkpart primary '0%' '100%'
 	partprobe
-	timing_exit parted
 	sleep 1
 
-	for fstype in "ext4" "btrfs" "xfs"; do
-		timing_enter $fstype
-		if [ $fstype = ext4 ]; then
-			force=-F
-		else
-			force=-f
-		fi
-
-		mkfs.${fstype} $force /dev/nvme0n1p1
-
-		mount /dev/nvme0n1p1 /mnt/device
-		touch /mnt/device/aaa
-		sync
-		rm /mnt/device/aaa
-		sync
-		umount /mnt/device
-		timing_exit $fstype
-	done
+	if [ $incapsule -eq 0 ]; then
+		run_test "case" "filesystem_ext4" nvmf_filesystem_create "ext4"
+		run_test "case" "filesystem_btrfs" nvmf_filesystem_create "btrfs"
+		run_test "case" "filesystem_xfs" nvmf_filesystem_create "xfs"
+	else
+		run_test "case" "filesystem_incapsule_ext4" nvmf_filesystem_create "ext4"
+		run_test "case" "filesystem_incapsule_btrfs" nvmf_filesystem_create "btrfs"
+		run_test "case" "filesystem_incapsule_xfs" nvmf_filesystem_create "xfs"
+	fi
 
 	parted -s /dev/nvme0n1 rm 1
 
@@ -66,6 +75,9 @@ for incapsule in 0 4096; do
 	trap - SIGINT SIGTERM EXIT
 
 	killprocess $nvmfpid
-done
+}
+
+run_test "suite" "nvmf_filesystem_no_incapsule" nvmf_filesystem_part 0
+run_test "suite" "nvmf_filesystem_incapsule" nvmf_filesystem_part 4096
 
 nvmftestfini
