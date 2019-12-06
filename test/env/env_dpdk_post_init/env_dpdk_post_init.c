@@ -104,7 +104,7 @@ main(int argc, char **argv)
 	}
 
 	printf("Starting SPDK post initialization...\n");
-	ret = spdk_env_dpdk_post_init();
+	ret = spdk_env_dpdk_post_init(false);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to initialize SPDK\n");
 		return -1;
