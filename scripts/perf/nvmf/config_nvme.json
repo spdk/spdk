@@ -1,0 +1,46 @@
+{
+  "general": {
+    "username": "root",
+    "password": "tester",
+    "transport": "rdma"
+  },
+  "target": {
+    "nic_ips": ["192.168.35.11"],
+    "mode": "spdk",
+    "use_null_block": false,
+    "nvmet_dir": "/path/to/nvmetcli",
+    "num_cores": "1",
+    "num_shared_buffers": 4096
+  },
+  "initiator1": {
+    "ip": "10.67.110.195",
+    "nic_ips": ["192.168.35.11"],
+    "mode": "spdk",
+    "nvmecli_dir": "",
+    "fio_dir": "/usr/src/fio",
+    "driver": "nvme"
+  },
+  "initiator2": {
+    "ip": "10.67.111.120",
+    "nic_ips": ["192.168.35.11"],
+    "mode": "spdk",
+    "nvmecli_dir": "",
+    "fio_dir": "/usr/src/fio",
+    "driver": "nvme"
+  },
+
+  "fio": {
+    "bs": ["4k"],
+    "qd": [128],
+    "rw": ["randrw"],
+    "rwmixread": 100,
+    "run_time": 10,
+    "ramp_time": 1,
+    "run_num": 3,
+    "num_jobs": 3,
+    "mem_size_mb": 2048
+  }
+
+
+
+}
