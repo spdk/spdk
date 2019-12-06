@@ -75,6 +75,7 @@ DEPDIRS-event := log util conf thread $(JSON_LIBS) trace
 DEPDIRS-ftl := log util nvme thread trace bdev
 DEPDIRS-nbd := log util thread $(JSON_LIBS) bdev
 DEPDIRS-nvmf := log sock util nvme thread $(JSON_LIBS) trace bdev
+DEPDIRS-ftp := log sock util nvme thread $(JSON_LIBS) trace bdev
 DEPDIRS-scsi := log util thread $(JSON_LIBS) trace bdev
 
 DEPDIRS-iscsi := log sock util conf thread $(JSON_LIBS) trace event scsi
@@ -152,6 +153,7 @@ DEPDIRS-event_bdev := bdev event event_copy event_vmd
 
 DEPDIRS-event_nbd := event nbd event_bdev
 DEPDIRS-event_nvmf := $(BDEV_DEPS_CONF_THREAD) event nvme nvmf event_bdev
+DEPDIRS-event_ftp := $(BDEV_DEPS_CONF_THREAD) event nvme ftp event_bdev
 DEPDIRS-event_scsi := event scsi event_bdev
 
 DEPDIRS-event_iscsi := event iscsi event_scsi
