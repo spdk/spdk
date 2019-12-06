@@ -16,6 +16,24 @@
       "revId": "fb398ac3f0611149d67afb4c21e5491290252900",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "065976bc_53a53b5c",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-06T08:31:43Z",
+      "side": 1,
+      "message": "Is there a reason for not wanting to support it? As you\u0027ve said, it\u0027s very similar to a zone reset, but requires some extra parameter checks. I\u0027d expect the user to be aware he\u0027s using a zoned device and not a regular block one, so he should understand the additional requirements imposed on the unmap command.\n\nThe reason I\u0027ve decided to implement it is because the unmap command is pretty standard, which makes it possible to use existing tools to send it - I\u0027ve used blkdiscard(8) on an nbd device to test the zone reset/unmap implementation.",
+      "parentUuid": "70f968aa_bf718a37",
+      "revId": "fb398ac3f0611149d67afb4c21e5491290252900",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
