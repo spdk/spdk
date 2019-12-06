@@ -559,6 +559,10 @@ spdk_nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 	rc = nvme_transport_ctrlr_scan(probe_ctx, direct_connect);
 	if (rc != 0) {
 		SPDK_ERRLOG("NVMe ctrlr scan failed\n");
+		TAILQ_FOREACH(ctrlr, &probe_ctx->init_ctrlrs, tailq) {
+			TAILQ_REMOVE(&probe_ctx->init_ctrlrs, ctrlr, tailq);
+			nvme_transport_ctrlr_destruct(ctrlr);
+		}
 		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 		return -1;
 	}
