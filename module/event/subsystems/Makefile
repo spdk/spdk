@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += bdev copy iscsi net nvmf scsi vmd
+DIRS-y += bdev copy iscsi net ftp nvmf scsi vmd
 
 ifeq ($(OS),Linux)
 DIRS-y += nbd
@@ -50,6 +50,7 @@ DEPDIRS-bdev := copy vmd
 DEPDIRS-iscsi := scsi
 DEPDIRS-nbd := bdev
 DEPDIRS-nvmf := bdev
+DEPDIRS-ftp := bdev
 DEPDIRS-scsi := bdev
 DEPDIRS-vhost := scsi
 

@@ -89,7 +89,26 @@ get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
 
 #define __posix_sock(sock) (struct spdk_posix_sock *)sock
 #define __posix_group_impl(group) (struct spdk_posix_sock_group_impl *)group
+static int
+spdk_posix_sock_getclientport(struct spdk_sock *_sock, uint16_t *cport)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	struct sockaddr_in addr;
+	socklen_t salen;
+	int rc;
+	assert(sock != NULL);
 
+	memset(&addr, 0, sizeof addr);
+	salen = sizeof addr;
+	rc = getsockname(sock->fd, (struct sockaddr *) &addr, &salen);
+	if (rc != 0) {
+		SPDK_ERRLOG("getsockname() failed (errno=%d)\n", errno);
+		return -1;
+	}
+	*cport = ntohs(addr.sin_port);
+	return 0;
+
+}
 static int
 spdk_posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *sport,
 			char *caddr, int clen, uint16_t *cport)
@@ -699,6 +718,7 @@ spdk_posix_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 static struct spdk_net_impl g_posix_net_impl = {
 	.name		= "posix",
 	.getaddr	= spdk_posix_sock_getaddr,
+	.getclientport	= spdk_posix_sock_getclientport,
 	.connect	= spdk_posix_sock_connect,
 	.listen		= spdk_posix_sock_listen,
 	.accept		= spdk_posix_sock_accept,

@@ -167,6 +167,10 @@ spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport
 {
 	return sock->net_impl->getaddr(sock, saddr, slen, sport, caddr, clen, cport);
 }
+int spdk_sock_getclientport(struct spdk_sock *sock, uint16_t *cport)
+{
+	return sock->net_impl->getclientport(sock, cport);
+}
 
 struct spdk_sock *
 spdk_sock_connect(const char *ip, int port)

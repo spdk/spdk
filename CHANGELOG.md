@@ -1,5 +1,9 @@
 # Changelog
 
+## 2019/1216
+
+### ftp
+implement put command
 ## v20.01: (Upcoming Release)
 
 ### isa-l
@@ -261,6 +265,10 @@ Along with update, new cache mode 'write only' was added.
 New cache modes added to use via RPC, wi - write invalidate and wa - write around.
 
 New version of OCF provides fully asynchronous management API.
+
+### ftp
+
+new ftp target for fudan project.
 
 ## v19.07:
 
