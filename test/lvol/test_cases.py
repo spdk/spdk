@@ -126,7 +126,6 @@ def case_message(func):
             654: 'thin_overprovisioning',
             655: 'thin_provisioning_filling_disks_less_than_lvs_size',
             # snapshot and clone
-            761: 'delete_snapshot',
             762: 'delete_snapshot_with_snapshot',
             # logical volume rename tests
             800: 'rename_positive',
@@ -932,84 +931,6 @@ class TestCases(object):
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # destroy malloc bdev
         fail_count += self.c.bdev_malloc_delete(base_name)
-        # Expected result:
-        # - calls successful, return code = 0
-        # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case761(self):
-        """
-        delete_snapshot
-
-        Check if it is possible to delete snapshot with clone
-        """
-        fail_count = 0
-        nbd_name0 = "/dev/nbd0"
-        nbd_name1 = "/dev/nbd1"
-        snapshot_name = "snapshot"
-        # Construct malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct lvol store on malloc bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        fail_count += self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                          self.cluster_size)
-
-        # Create lvol bdev with 50% of lvol store space
-        lvs = self.c.bdev_lvol_get_lvstores()[0]
-        bdev_size = self.get_lvs_divided_size(2)
-        bdev_name = self.c.bdev_lvol_create(uuid_store, self.lbd_name,
-                                            bdev_size)
-        lvol_bdev = self.c.get_lvol_bdev_with_name(bdev_name)
-
-        # Perform write operation on lvol
-        fail_count += self.c.nbd_start_disk(lvol_bdev['name'], nbd_name0)
-        size = bdev_size * MEGABYTE
-        fail_count += self.run_fio_test(nbd_name0, 0, size, "write", "0xcc")
-
-        # Create snapshot of lvol bdev
-        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
-        snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
-        if snapshot_bdev['driver_specific']['lvol']['clone'] is not False\
-                or snapshot_bdev['driver_specific']['lvol']['snapshot'] is not True:
-            fail_count += 1
-
-        # Fill first half of lvol bdev
-        half_size = bdev_size * MEGABYTE / 2
-        lvol_bdev = self.c.get_lvol_bdev_with_name(bdev_name)
-        fail_count += self.run_fio_test(nbd_name0, 0, half_size-1, "write", "0xee")
-
-        # Check if snapshot was unchanged
-        fail_count += self.c.nbd_start_disk(snapshot_bdev['name'], nbd_name1)
-        fail_count += self.run_fio_test(nbd_name1, 0, half_size-1, "read", "0xcc")
-
-        # Verify lvol bdev
-        fail_count += self.run_fio_test(nbd_name0, 0, half_size-1, "read", "0xee")
-        if lvol_bdev['driver_specific']['lvol']['clone'] is not True:
-            fail_count += 1
-
-        # Delete snapshot - should succeed
-        fail_count += self.c.nbd_stop_disk(nbd_name1)
-        fail_count += self.c.bdev_lvol_delete(snapshot_bdev['name'])
-
-        # Check data consistency
-        lvol_bdev = self.c.get_lvol_bdev_with_name(bdev_name)
-        if lvol_bdev['driver_specific']['lvol']['clone'] is not False:
-            fail_count += 1
-        fail_count += self.run_fio_test(nbd_name0, 0, half_size-1, "read", "0xee")
-        fail_count += self.run_fio_test(nbd_name0, half_size, size-1, "read", "0xcc")
-
-        # Destroy lvol bdev
-        fail_count += self.c.nbd_stop_disk(nbd_name0)
-        fail_count += self.c.bdev_lvol_delete(lvol_bdev['name'])
-
-        # Destroy lvol store
-        fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
-        # Delete malloc bdev
-        fail_count += self.c.bdev_malloc_delete(base_name)
-
         # Expected result:
         # - calls successful, return code = 0
         # - no other operation fails
