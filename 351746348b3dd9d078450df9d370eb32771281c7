@@ -25,6 +25,23 @@
     },
     {
       "key": {
+        "uuid": "c3f45084_6e00f013",
+        "filename": "module/bdev/ocf/volume.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T08:06:00Z",
+      "side": 1,
+      "message": "We can take part of Vitaliy\u0027s suggestion just now.\n\nCombining offset and num_blocks into a function will be better as done in bdev.c and other files.\nPlease copy bdev_bytes_to_blocks() in lib/bdev/bdev.c here.\n\n\nBut other data structure in ocf_vbdev have used byte address. So this change may make the code complex. Adding spdk_bdev_readv/writev_with_md() may be better.",
+      "revId": "351746348b3dd9d078450df9d370eb32771281c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1f92537f_de196619",
         "filename": "module/bdev/ocf/volume.c",
         "patchSetId": 2
