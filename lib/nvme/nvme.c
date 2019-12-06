@@ -547,7 +547,7 @@ spdk_nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 			 bool direct_connect)
 {
 	int rc;
-	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
 	if (!spdk_nvme_transport_available(probe_ctx->trid.trtype)) {
 		SPDK_ERRLOG("NVMe trtype %u not available\n", probe_ctx->trid.trtype);
@@ -559,6 +559,10 @@ spdk_nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 	rc = nvme_transport_ctrlr_scan(probe_ctx, direct_connect);
 	if (rc != 0) {
 		SPDK_ERRLOG("NVMe ctrlr scan failed\n");
+		TAILQ_FOREACH_SAFE(ctrlr, &probe_ctx->init_ctrlrs, tailq, ctrlr_tmp) {
+			TAILQ_REMOVE(&probe_ctx->init_ctrlrs, ctrlr, tailq);
+			nvme_transport_ctrlr_destruct(ctrlr);
+		}
 		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 		return -1;
 	}
