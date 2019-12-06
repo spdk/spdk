@@ -135,17 +135,20 @@ vhost_log_used_vring_elem(struct spdk_vhost_session *vsession,
 			  uint16_t idx)
 {
 	uint64_t offset, len;
-	uint16_t vq_idx;
 
 	if (spdk_likely(!vhost_dev_has_feature(vsession, VHOST_F_LOG_ALL))) {
 		return;
 	}
 
-	offset = offsetof(struct vring_used, ring[idx]);
-	len = sizeof(virtqueue->vring.used->ring[idx]);
-	vq_idx = virtqueue - vsession->virtqueue;
+	if (spdk_unlikely(virtqueue->packed.packed_ring)) {
+		offset = idx * sizeof(struct vring_packed_desc);
+		len = sizeof(struct vring_packed_desc);
+	} else {
+		offset = offsetof(struct vring_used, ring[idx]);
+		len = sizeof(virtqueue->vring.used->ring[idx]);
+	}
 
-	rte_vhost_log_used_vring(vsession->vid, vq_idx, offset, len);
+	rte_vhost_log_used_vring(vsession->vid, virtqueue->vring_idx, offset, len);
 }
 
 static void
@@ -210,6 +213,12 @@ vhost_vring_desc_is_indirect(struct vring_desc *cur_desc)
 	return !!(cur_desc->flags & VRING_DESC_F_INDIRECT);
 }
 
+static bool
+vhost_vring_packed_desc_is_indirect(struct vring_packed_desc *cur_desc)
+{
+	return (cur_desc->flags & VRING_DESC_F_INDIRECT) != 0;
+}
+
 int
 vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *virtqueue,
 		  uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
@@ -235,6 +244,35 @@ vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_virtque
 
 	*desc_table = virtqueue->vring.desc;
 	*desc_table_size = virtqueue->vring.size;
+
+	return 0;
+}
+
+int
+vhost_vq_get_desc_packed(struct spdk_vhost_session *vsession,
+			 struct spdk_vhost_virtqueue *virtqueue,
+			 uint16_t req_idx, struct vring_packed_desc **desc,
+			 struct vring_packed_desc **desc_table, uint32_t *desc_table_size)
+{
+	*desc =  &virtqueue->vring.desc_packed[req_idx];
+
+	/* In packed ring when the desc is non-indirect we get next desc
+	 * by judging (desc->flag & VRING_DESC_F_NEXT) != 0. When the desc
+	 * is indirect we get next desc by idx and desc_table_size. It's
+	 * different from split ring.
+	 */
+	if (vhost_vring_packed_desc_is_indirect(*desc)) {
+		*desc_table_size = (*desc)->len / sizeof(struct vring_packed_desc);
+		*desc_table = vhost_gpa_to_vva(vsession, (*desc)->addr,
+					       (*desc)->len);
+		*desc = *desc_table;
+		if (spdk_unlikely(*desc == NULL)) {
+			return -1;
+		}
+	} else {
+		*desc_table = NULL;
+		*desc_table_size  = 0;
+	}
 
 	return 0;
 }
@@ -295,6 +333,22 @@ check_session_io_stats(struct spdk_vhost_session *vsession, uint64_t now)
 	}
 }
 
+static inline bool
+vhost_vq_event_is_suppressed(struct spdk_vhost_virtqueue *vq)
+{
+	if (spdk_unlikely(vq->packed.packed_ring)) {
+		if (vq->vring.driver_event->flags & VRING_PACKED_EVENT_FLAG_DISABLE) {
+			return true;
+		}
+	} else {
+		if (vq->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void
 vhost_session_used_signal(struct spdk_vhost_session *vsession)
 {
@@ -306,8 +360,11 @@ vhost_session_used_signal(struct spdk_vhost_session *vsession)
 		for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
 			virtqueue = &vsession->virtqueue[q_idx];
 
-			if (virtqueue->vring.desc == NULL ||
-			    (virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
+			if (virtqueue->vring.desc == NULL) {
+				continue;
+			}
+
+			if (vhost_vq_event_is_suppressed(virtqueue)) {
 				continue;
 			}
 
@@ -321,8 +378,11 @@ vhost_session_used_signal(struct spdk_vhost_session *vsession)
 			virtqueue = &vsession->virtqueue[q_idx];
 
 			/* No need for event right now */
-			if (now < virtqueue->next_event_time ||
-			    (virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
+			if (now < virtqueue->next_event_time) {
+				continue;
+			}
+
+			if (vhost_vq_event_is_suppressed(virtqueue)) {
 				continue;
 			}
 
@@ -434,32 +494,122 @@ vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 	virtqueue->used_req_cnt++;
 }
 
-int
-vhost_vring_desc_get_next(struct vring_desc **desc,
-			  struct vring_desc *desc_table, uint32_t desc_table_size)
+void
+vhost_vq_packed_ring_enqueue(struct spdk_vhost_session *vsession,
+			     struct spdk_vhost_virtqueue *virtqueue,
+			     uint16_t num_descs, uint16_t buffer_id,
+			     uint32_t length)
 {
-	struct vring_desc *old_desc = *desc;
-	uint16_t next_idx;
+	struct vring_packed_desc *desc = &virtqueue->vring.desc_packed[virtqueue->last_used_idx];
+	bool used, avail;
 
-	if ((old_desc->flags & VRING_DESC_F_NEXT) == 0) {
-		*desc = NULL;
-		return 0;
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
+		      "Queue %td - RING: buffer_id=%"PRIu16"\n",
+		      virtqueue - vsession->virtqueue, buffer_id);
+
+	/* When the descriptor is used, two flags in descriptor
+	 * avail flag and used flag are set to equal
+	 * and used flag value == used_wrap_counter.
+	 */
+	used = !!(desc->flags & VRING_DESC_F_USED);
+	avail = !!(desc->flags & VRING_DESC_F_AVAIL);
+	if (spdk_unlikely(used == virtqueue->packed.used_phase && used == avail)) {
+		SPDK_ERRLOG("descriptor has been used before\n");
+		return;
 	}
 
-	next_idx = old_desc->next;
-	if (spdk_unlikely(next_idx >= desc_table_size)) {
-		*desc = NULL;
-		return -1;
+	/* In used desc addr is unused and len specifies the buffer length
+	 * that has been written to by the device.
+	 */
+	desc->addr = 0;
+	desc->len = length;
+
+	/* This bit specifies whether any data has been written by the device */
+	if (length != 0) {
+		desc->flags |= VRING_DESC_F_WRITE;
 	}
 
-	*desc = &desc_table[next_idx];
-	return 0;
+	/* Buffer ID is included in the last descriptor in the list.
+	 * The driver needs to keep track of the size of the list corresponding
+	 * to each buffer ID.
+	 */
+	desc->id = buffer_id;
+
+	/* A device MUST NOT make the descriptor used before buffer_id is
+	 * written to the descriptor.
+	 */
+	spdk_smp_wmb();
+	/* To mark a desc as used, the device sets the F_USED bit in flags to match
+	 * the internal Device ring wrap counter. It also sets the F_AVAIL bit to
+	 * match the same value.
+	 */
+	if (virtqueue->packed.used_phase) {
+		desc->flags |= VRING_DESC_F_AVAIL_USED;
+	} else {
+		desc->flags &= ~VRING_DESC_F_AVAIL_USED;
+	}
+
+	vhost_log_used_vring_elem(vsession, virtqueue, virtqueue->last_used_idx);
+	virtqueue->last_used_idx += num_descs;
+	if (virtqueue->last_used_idx >= virtqueue->vring.size) {
+		virtqueue->last_used_idx -= virtqueue->vring.size;
+		virtqueue->packed.used_phase = !virtqueue->packed.used_phase;
+	}
+
+	virtqueue->used_req_cnt++;
 }
 
 bool
-vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
+vhost_vq_packed_ring_is_avail(struct spdk_vhost_virtqueue *virtqueue)
 {
-	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
+	uint16_t flags = virtqueue->vring.desc_packed[virtqueue->last_avail_idx].flags;
+
+	/* To mark a desc as available, the driver sets the F_AVAIL bit in flags
+	 * to match the internal avail wrap counter. It also sets the F_USED bit to
+	 * match the inverse value but it's not mandatory.
+	 */
+	return (!!(flags & VRING_DESC_F_AVAIL) == virtqueue->packed.avail_phase);
+}
+
+bool
+vhost_vring_packed_desc_is_wr(struct vring_packed_desc *cur_desc)
+{
+	return (cur_desc->flags & VRING_DESC_F_WRITE) != 0;
+}
+
+int
+vhost_vring_packed_desc_get_next(struct vring_packed_desc **desc, uint16_t *req_idx,
+				 struct spdk_vhost_virtqueue *vq,
+				 struct vring_packed_desc *desc_table,
+				 uint32_t desc_table_size)
+{
+	if (desc_table != NULL) {
+		/* When the desc_table isn't NULL means it's indirect and we get the next
+		 * desc by req_idx and desc_table_size. The return value is NULL means
+		 * we reach the last desc of this request.
+		 */
+		(*req_idx)++;
+		if (*req_idx < desc_table_size) {
+			*desc = &desc_table[*req_idx];
+		} else {
+			*desc = NULL;
+		}
+	} else {
+		/* When the desc_table is NULL means it's non-indirect and we get the next
+		 * desc by req_idx and F_NEXT in flags. The return value is NULL means
+		 * we reach the last desc of this request. When return new desc
+		 * we update the req_idx too.
+		 */
+		if (((*desc)->flags & VRING_DESC_F_NEXT) == 0) {
+			*desc = NULL;
+			return 0;
+		}
+
+		*req_idx = (*req_idx + 1) % vq->vring.size;
+		*desc = &vq->vring.desc_packed[*req_idx];
+	}
+
+	return 0;
 }
 
 static int
@@ -488,6 +638,76 @@ vhost_vring_desc_payload_to_iov(struct spdk_vhost_session *vsession, struct iove
 	} while (remaining);
 
 	return 0;
+}
+
+int
+vhost_vring_packed_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
+			       uint16_t *iov_index, const struct vring_packed_desc *desc)
+{
+	return vhost_vring_desc_payload_to_iov(vsession, iov, iov_index,
+					       desc->addr, desc->len);
+}
+
+/* 1, Traverse the desc chain to get the buffer_id and return buffer_id as task_idx.
+ * 2, Update the vq->last_avail_idx to point next available desc chain.
+ * 3, Update the avail_wrap_counter if last_avail_idx overturn.
+ */
+uint16_t
+vhost_vring_packed_desc_get_buffer_id(struct spdk_vhost_virtqueue *vq, uint16_t req_idx,
+				      uint16_t *num_descs)
+{
+	struct vring_packed_desc *desc;
+	uint16_t desc_head = req_idx;
+
+	*num_descs = 1;
+
+	desc =  &vq->vring.desc_packed[req_idx];
+	if (!vhost_vring_packed_desc_is_indirect(desc)) {
+		while ((desc->flags & VRING_DESC_F_NEXT) != 0) {
+			req_idx = (req_idx + 1) % vq->vring.size;
+			desc = &vq->vring.desc_packed[req_idx];
+			(*num_descs)++;
+		}
+	}
+
+	/* Queue Size doesn't have to be a power of 2
+	 * Device maintains last_avail_idx so we can make sure
+	 * the value is valid(0 ~ vring.size - 1)
+	 */
+	vq->last_avail_idx = (req_idx + 1) % vq->vring.size;
+	if (vq->last_avail_idx < desc_head) {
+		vq->packed.avail_phase = !vq->packed.avail_phase;
+	}
+
+	return desc->id;
+}
+
+int
+vhost_vring_desc_get_next(struct vring_desc **desc,
+			  struct vring_desc *desc_table, uint32_t desc_table_size)
+{
+	struct vring_desc *old_desc = *desc;
+	uint16_t next_idx;
+
+	if ((old_desc->flags & VRING_DESC_F_NEXT) == 0) {
+		*desc = NULL;
+		return 0;
+	}
+
+	next_idx = old_desc->next;
+	if (spdk_unlikely(next_idx >= desc_table_size)) {
+		*desc = NULL;
+		return -1;
+	}
+
+	*desc = &desc_table[next_idx];
+	return 0;
+}
+
+bool
+vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
+{
+	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
 }
 
 int
