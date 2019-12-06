@@ -54,6 +54,13 @@
 #define MAX_NUM_DRV_TYPES 2
 #define AESNI_MB "crypto_aesni_mb"
 #define QAT "crypto_qat"
+/* The VF spread is the number of queue pairs between virtual functions, we use this to
+ * load balance the QAT device.
+ */
+#define QAT_VF_SPREAD 32
+static uint8_t g_qat_total_qp = 0;
+static uint8_t g_next_index;
+
 const char *g_driver_names[MAX_NUM_DRV_TYPES] = { AESNI_MB, QAT };
 
 /* Global list of available crypto devices. */
@@ -64,11 +71,15 @@ struct vbdev_dev {
 };
 static TAILQ_HEAD(, vbdev_dev) g_vbdev_devs = TAILQ_HEAD_INITIALIZER(g_vbdev_devs);
 
-/* Global list and lock for unique device/queue pair combos */
+/* Global list and lock for unique device/queue pair combos. We keep 1 list per supported PMD
+ * so that we can optimize per PMD where it make sense. For example, with QAT there an optimal
+ * pattern for assigning queue paris where with AESNI there is not.
+ */
 struct device_qp {
 	struct vbdev_dev		*device;	/* ptr to crypto device */
 	uint8_t				qp;		/* queue pair for this node */
 	bool				in_use;		/* whether this node is in use or not */
+	uint8_t				index;		/* used by QAT to load balance placement of qpairs */
 	TAILQ_ENTRY(device_qp)		link;
 };
 static TAILQ_HEAD(, device_qp) g_device_qp_qat = TAILQ_HEAD_INITIALIZER(g_device_qp_qat);
@@ -319,6 +330,9 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 		dev_qp->device = device;
 		dev_qp->qp = j;
 		dev_qp->in_use = false;
+		if (strcmp(device->cdev_info.driver_name, QAT) == 0) {
+			g_qat_total_qp++;
+		}
 		TAILQ_INSERT_TAIL(dev_qp_head, dev_qp, link);
 	}
 
@@ -350,6 +364,7 @@ vbdev_crypto_init_crypto_drivers(void)
 	int rc = 0;
 	struct vbdev_dev *device;
 	struct vbdev_dev *tmp_dev;
+	struct device_qp *dev_qp;
 	unsigned int max_sess_size = 0, sess_size;
 	uint16_t num_lcores = rte_lcore_count();
 
@@ -441,6 +456,15 @@ vbdev_crypto_init_crypto_drivers(void)
 			goto err;
 		}
 	}
+
+	/* Assign index values to the QAT device qp nodes so that we can
+	 * assign them for optimal performance.
+	 */
+	i = 0;
+	TAILQ_FOREACH(dev_qp, &g_device_qp_qat, link) {
+		dev_qp->index = i++;
+	}
+
 	return 0;
 
 	/* Error cleanup paths. */
@@ -1244,11 +1268,19 @@ _assign_device_qp(struct vbdev_crypto *crypto_bdev, struct device_qp *device_qp,
 {
 	pthread_mutex_lock(&g_device_qp_lock);
 	if (strcmp(crypto_bdev->drv_name, QAT) == 0) {
+		/* For some QAT devices, the optimal qp to use is every 32nd as this spreads the
+		 * workload out over the multiple virtual functions in the device. For the devices
+		 * where this isn't the case, it doesn't hurt.
+		 */
 		TAILQ_FOREACH(device_qp, &g_device_qp_qat, link) {
-			if (device_qp->in_use == false) {
+			if ((device_qp->in_use == false) && (device_qp->index == g_next_index)) {
 				crypto_ch->device_qp = device_qp;
 				device_qp->in_use = true;
+				g_next_index = (g_next_index + QAT_VF_SPREAD) % g_qat_total_qp;
 				break;
+			} else if ((device_qp->in_use == true) && (device_qp->index == g_next_index)) {
+				/* if the preferred index is used, skip to the next one in this set. */
+				g_next_index = (g_next_index + 1) % g_qat_total_qp;
 			}
 		}
 	} else if (strcmp(crypto_bdev->drv_name, AESNI_MB) == 0) {
