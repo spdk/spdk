@@ -37,6 +37,8 @@ Vagrant.configure(2) do |config|
   when "arch-linux"
     #See: https://app.vagrantup.com/generic/boxes/arch
     config.vm.box = "generic/arch"
+  when "spdk_fedora30"
+    config.vm.box = "spdk_fedora30"
   else
     "Invalid argument #{distro}"
     abort("Invalid argument!")
@@ -112,6 +114,8 @@ Vagrant.configure(2) do |config|
 
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
+  config.ssh.username = "vagrant"
+  config.ssh.password = "vagrant"
 
   config.vm.provider "virtualbox" do |vb|
     vb.customize ["modifyvm", :id, "--ioapic", "on"]
@@ -203,11 +207,10 @@ Vagrant.configure(2) do |config|
 
   # provision the vm with all of the necessary spdk dependencies for running the autorun.sh tests
   if ENV['DEPLOY_TEST_VM'] == "1" && spdk_dir != "none"
-    config.vm.provision "shell" do |setup|
-      setup.path = "#{spdk_dir}/test/common/config/vm_setup.sh"
-      setup.privileged = false
-      setup.args = ["-u", "-i"]
-    end
+    config.vm.provision "shell", inline: "mkdir -p /home/vagrant/spdk_repo/output", privileged: true
+    config.vm.provision "shell", inline: "chown -R vagrant:vagrant /home/vagrant/spdk_repo/output", privileged: true
+    config.vm.provision "shell", inline: "cd /home/vagrant/spdk_repo/spdk ; ./scripts/pkgdep.sh", privileged: true
+    config.vm.provision "shell", inline: "cd /home/vagrant/spdk_repo/spdk ; ./test/common/config/vm_setup.sh -u -i", privileged: false
   end
 
   if vhost_host_dir != "none"
