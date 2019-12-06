@@ -181,8 +181,8 @@ function configure_linux_pci {
 			driver_path=""
 		fi
 	elif [[ -n "$(ls /sys/kernel/iommu_groups)" || \
-	     (-e /sys/module/vfio/parameters/enable_unsafe_noiommu_mode && \
-	     "$(cat /sys/module/vfio/parameters/enable_unsafe_noiommu_mode)" == "Y") ]]; then
+		(-e /sys/module/vfio/parameters/enable_unsafe_noiommu_mode && \
+		"$(cat /sys/module/vfio/parameters/enable_unsafe_noiommu_mode)" == "Y") ]]; then
 		driver_name=vfio-pci
 	elif modinfo uio_pci_generic >/dev/null 2>&1; then
 		driver_name=uio_pci_generic
@@ -291,7 +291,7 @@ function configure_linux_pci {
 			fi
 
 			linux_bind_driver "$bdf" "$driver_name"
-                        echo " VMD generic kdrv: " "$bdf" "$driver_name"
+			echo " VMD generic kdrv: " "$bdf" "$driver_name"
 		done
 	done < $TMP
 	rm $TMP
