@@ -117,6 +117,19 @@ spdk_nvme_qpair_process_completions().
 @sa spdk_nvme_ns_cmd_read, spdk_nvme_ns_cmd_write, spdk_nvme_ns_cmd_dataset_management,
 spdk_nvme_ns_cmd_flush, spdk_nvme_qpair_process_completions
 
+### Fused operations {#nvme_fuses}
+
+To "fuse" two commands, the first command should have the SPDK_NVME_IO_FLAGS_FUSE_FIRST
+io flag set, and the next one should have the SPDK_NVME_IO_FLAGS_FUSE_SECOND.
+
+In addition, the following rules must be met to execute two commands as an atomic unit:
+
+ - No other operations should be executed between these two commands.
+ - The LBA range, should be the same for the two commands.
+ - The commands shall be inserted next to each other in the same submission queue.
+
+Fused operation support is reported by controller flag SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED.
+
 ### Scaling Performance {#nvme_scaling}
 
 NVMe queue pairs (struct spdk_nvme_qpair) provide parallel submission paths for
