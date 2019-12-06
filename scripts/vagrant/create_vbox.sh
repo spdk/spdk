@@ -37,6 +37,7 @@ display_help() {
 	echo "  --vhost-vm-dir=<path>           directory where to put vhost dependencies in VM"
 	echo "  --qemu-emulator=<path>          directory path with emulator, default: ${SPDK_QEMU_EMULATOR}"
 	echo "  --vagrantfiles-dir=<path>       directory to put vagrantfile"
+	echo "  -u                              allow password authentication to vagrant box"
 	echo "  -r dry-run"
 	echo "  -l use a local copy of spdk, don't try to rsync from the host."
 	echo "  -d deploy a test vm by provisioning all prerequisites for spdk autotest"
@@ -75,8 +76,9 @@ NVME_DISKS_NAMESPACES=""
 NVME_FILE=""
 NVME_AUTO_CREATE=0
 VAGRANTFILE_DIR=""
+VAGRANT_PASSWORD_AUTH=0
 
-while getopts ":b:n:s:x:p:vcrldh-:" opt; do
+while getopts ":b:n:s:x:p:u:vcrldh-:" opt; do
 	case "${opt}" in
 		-)
 		case "${OPTARG}" in
@@ -122,6 +124,9 @@ while getopts ":b:n:s:x:p:vcrldh-:" opt; do
 		;;
 		b)
 			NVME_FILE+="${OPTARG#*=} "
+		;;
+		u)
+			VAGRANT_PASSWORD_AUTH=1
 		;;
 		*)
 			echo "  Invalid argument: -$OPTARG" >&2
@@ -232,6 +237,7 @@ export DEPLOY_TEST_VM
 export NVME_DISKS_TYPE
 export NVME_DISKS_NAMESPACES
 export NVME_FILE
+export VAGRANT_PASSWORD_AUTH
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
     provider="--provider=${SPDK_VAGRANT_PROVIDER}"
