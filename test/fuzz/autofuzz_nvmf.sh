@@ -11,10 +11,10 @@ TEST_TIMEOUT=1200
 
 # This argument is used in addition to the test arguments in autotest_common.sh
 for i in "$@"; do
-        case "$i" in
-                --timeout=*)
-                        TEST_TIMEOUT="${i#*=}"
-        esac
+	case "$i" in
+		--timeout=*)
+			TEST_TIMEOUT="${i#*=}"
+	esac
 done
 
 nvmftestinit
