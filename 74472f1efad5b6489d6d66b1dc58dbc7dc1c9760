@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b7ba6a2_2ae5f935",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 617,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-06T22:08:11Z",
+      "side": 1,
+      "message": "this doesn\u0027t need to be set to NULL",
+      "revId": "74472f1efad5b6489d6d66b1dc58dbc7dc1c9760",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c10162b_c41b37a9",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-06T22:08:11Z",
+      "side": 1,
+      "message": "I don\u0027t see where this was registered as an io_device.",
+      "revId": "74472f1efad5b6489d6d66b1dc58dbc7dc1c9760",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecac5224_1919e23b",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-06T22:08:11Z",
+      "side": 1,
+      "message": "I\u0027d be OK removing this \"busy\" code, or even enabling it by default since this isn\u0027t really a performance critical code path.  I\u0027m sure it was helpful for initial development, but it required some extra thinking to understand why it was needed and how it worked with and without DEBUG set.\n\nYou may also want to consider calling this field \"filled\", and switch the logic (default \u003d false, set to true once filled).  I think that would make it more clear?  I\u0027m guessing this flag is only going to be used during init, otherwise it wouldn\u0027t be under a DEBUG flag.",
+      "revId": "74472f1efad5b6489d6d66b1dc58dbc7dc1c9760",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19950881_bc85391c",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 782,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-06T22:08:11Z",
+      "side": 1,
+      "message": "let\u0027s do this finish \u003d\u003e error label rename in a separate patch before this one",
+      "revId": "74472f1efad5b6489d6d66b1dc58dbc7dc1c9760",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
