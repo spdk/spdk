@@ -28,6 +28,7 @@ function test_construct_lvs() {
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
 	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
 	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
 }
 
 # create lvs + lvol on top, verify lvol's parameters
@@ -66,6 +67,7 @@ function test_construct_lvol() {
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
 	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
 	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
 }
 
 # create lvs + multiple lvols, verify their params
@@ -127,6 +129,7 @@ function test_construct_multi_lvols() {
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
 	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
 	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
 }
 
 $rootdir/app/spdk_tgt/spdk_tgt &
@@ -134,9 +137,9 @@ spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
-run_lvol_test test_construct_lvs
-run_lvol_test test_construct_lvol
-run_lvol_test test_construct_multi_lvols
+run_test "case" "test_construct_lvs" test_construct_lvs
+run_test "case" "test_construct_lvol" test_construct_lvol
+run_test "case" "test_construct_multi_lvols" test_construct_multi_lvols
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
