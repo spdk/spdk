@@ -452,6 +452,91 @@ function test_delete_snapshot_with_clone() {
 	check_leftover_devices
 }
 
+# Check if it is possible to delete snapshot with one snapshot on it
+function test_delete_snapshot_with_snapshot() {
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Calculate size and create lvol bdev
+	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 5 )) )
+	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+
+	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb")
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+
+	# Perform write operation on lvol
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
+	run_fio_test /dev/nbd0 0 $lvol_size "write" "0xcc"
+
+	# Create snapshot of lvol bdev
+	snapshot_uuid=$(rpc_cmd bdev_lvol_snapshot lvs_test/lvol_test lvol_snapshot)
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+	[ "$(jq '.[].driver_specific.lvol.base_snapshot' <<< "$lvol")" = '"lvol_snapshot"' ]
+
+	# Fill second 1/3 of lvol bdev
+	first_part=$(( lvol_size / 3 ))
+	second_part=$(( lvol_size *2 / 3 ))
+	run_fio_test /dev/nbd0 $first_part $(( second_part - first_part )) "write" "0xee"
+
+	# Check if snapshot was unchanged
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$snapshot_uuid" /dev/nbd1
+	run_fio_test /dev/nbd1 0 lvol_size "read" "0xcc"
+
+	# Create second snapshot of lvol_bdev
+	# First snapshot becomes snapshot of second snapshot
+	snapshot_uuid2=$(rpc_cmd bdev_lvol_snapshot lvs_test/lvol_test lvol_snapshot2)
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+	snapshot=$(rpc_cmd bdev_get_bdevs -b "$snapshot_uuid")
+	snapshot2=$(rpc_cmd bdev_get_bdevs -b "$snapshot_uuid2")
+	[ "$(jq '.[].driver_specific.lvol.base_snapshot' <<< "$snapshot2")" = '"lvol_snapshot"' ]
+	[ "$(jq '.[].driver_specific.lvol.clones|sort' <<< "$snapshot2")" = "$(jq '.|sort' <<< '["lvol_test"]')" ]
+	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$snapshot2")" = "true" ]
+	[ "$(jq '.[].driver_specific.lvol.snapshot' <<< "$snapshot2")" = "true" ]
+	[ "$(jq '.[].driver_specific.lvol.clones|sort' <<< "$snapshot")" = "$(jq '.|sort' <<< '["lvol_snapshot2"]')" ]
+
+	# Verify snapshots
+	run_fio_test /dev/nbd1 0 $size "read" "0xcc"
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$snapshot_uuid2" /dev/nbd2
+	run_fio_test /dev/nbd2 0 $(( first_part - 1 )) "read" "0xcc"
+	run_fio_test /dev/nbd2 $first_part $(( second_part - first_part )) "read" "0xee"
+	run_fio_test /dev/nbd2 $second_part $(( lvol_size - second_part )) "read" "0xcc"
+
+	# Verify lvol bdev
+	run_fio_test /dev/nbd0 $first_part $(( second_part - first_part )) "read" "0xee"
+	run_fio_test /dev/nbd0 $second_part $(( lvol_size - second_part )) "read" "0xcc"
+	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$lvol")" = "true" ]
+	[ "$(jq '.[].driver_specific.lvol.base_snapshot' <<< "$lvol")" = '"lvol_snapshot2"' ]
+
+	# Fill third part of lvol bdev
+	run_fio_test /dev/nbd0 $second_part $(( lvol_size - second_part )) "write" "0xdd"
+
+	# Verify snapshots
+	run_fio_test /dev/nbd1 0 size "read" "0xcc"
+	run_fio_test /dev/nbd0 $second_part $(( lvol_size - second_part )) "read" "0xcc"
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd2
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd1
+
+	# Delete snapshot - should succeed
+	rpc_cmd bdev_lvol_delete "$snapshot_uuid2"
+
+	# Check data consistency
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+	snapshot=$(rpc_cmd bdev_get_bdevs -b "$snapshot_uuid")
+	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$lvol")" = "true" ]
+	[ "$(jq '.[].driver_specific.lvol.base_snapshot' <<< "$lvol")" = '"lvol_snapshot"' ]
+	[ "$(jq '.[].driver_specific.lvol.clones|sort' <<< "$snapshot")" = "$(jq '.|sort' <<< '["lvol_test"]')" ]
+	run_fio_test /dev/nbd0 $first_part $(( second_part - first_part )) "read" "0xee"
+	run_fio_test /dev/nbd0 $second_part $(( lvol_size - second_part )) "read" "0xdd"
+
+	# Clean up
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
+	rpc_cmd bdev_lvol_delete "$snapshot_uuid"
+	rpc_cmd bdev_lvol_delete "$lvol_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -466,6 +551,7 @@ run_test "test_clone_inflate" test_clone_inflate
 run_test "test_clone_decouple_parent" test_clone_decouple_parent
 run_test "test_lvol_bdev_readonly" test_lvol_bdev_readonly
 run_test "test_delete_snapshot_with_clone" test_delete_snapshot_with_clone
+run_test "test_delete_snapshot_with_snapshot" test_delete_snapshot_with_snapshot
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
