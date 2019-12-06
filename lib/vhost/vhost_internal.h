@@ -79,6 +79,10 @@
 #define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VIRTIO_RING_F_EVENT_IDX) | \
 	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY))
 
+#define VRING_DESC_F_AVAIL	(1ULL << VRING_PACKED_DESC_F_AVAIL)
+#define VRING_DESC_F_USED	(1ULL << VRING_PACKED_DESC_F_USED)
+#define VRING_DESC_F_AVAIL_USED	(VRING_DESC_F_AVAIL | VRING_DESC_F_USED)
+
 struct vhost_poll_group {
 	struct spdk_thread *thread;
 	unsigned ref;
@@ -244,7 +248,7 @@ uint16_t vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs
 				 uint16_t reqs_len);
 
 /**
- * Get a virtio descriptor at given index in given virtqueue.
+ * Get a virtio split descriptor at given index in given virtqueue.
  * The descriptor will provide access to the entire descriptor
  * chain. The subsequent descriptors are accesible via
  * \c spdk_vhost_vring_desc_get_next.
@@ -263,6 +267,27 @@ uint16_t vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs
 int vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *vq,
 		      uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
 		      uint32_t *desc_table_size);
+
+/**
+ * Get a virtio packed descriptor at given index in given virtqueue.
+ * The descriptor will provide access to the entire descriptor
+ * chain. The subsequent descriptors are accesible via
+ * \c vhost_vring_packed_desc_get_next.
+ * \param vsession vhost session
+ * \param vq virtqueue
+ * \param req_idx descriptor index
+ * \param desc pointer to be set to the descriptor
+ * \param desc_table descriptor table to be used with
+ * \c spdk_vhost_vring_desc_get_next. This might be either
+ * \c NULL or per-chain indirect table.
+ * \param desc_table_size size of the *desc_table*
+ * \return 0 on success, -1 if given index is invalid.
+ * If -1 is returned, the content of params is undefined.
+ */
+int vhost_vq_get_desc_packed(struct spdk_vhost_session *vsession,
+			     struct spdk_vhost_virtqueue *virtqueue,
+			     uint16_t req_idx, struct vring_packed_desc **desc,
+			     struct vring_packed_desc **desc_table, uint32_t *desc_table_size);
 
 /**
  * Send IRQ/call client (if pending) for \c vq.
@@ -287,6 +312,19 @@ void vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 				uint16_t id, uint32_t len);
 
 /**
+ * Enqeuee the entry to the used ring when device complete the request.
+ * \param vsession vhost session
+ * \param vq virtqueue
+ * \req_idx descriptor index. It's the first index of this descriptor chain.
+ * \last_idx descriptor index. It's the last index of this descriptor chain.
+ * \c If this descriptor is indirect then this last_idx should be equal to req_idx.
+ * \buffer_id descriptor buffer ID.
+ */
+void vhost_vq_packed_ring_complete(struct spdk_vhost_session *vsession,
+				   struct spdk_vhost_virtqueue *virtqueue,
+				   uint16_t req_idx, uint16_t last_idx, uint16_t buffer_id);
+
+/**
  * Get subsequent descriptor from given table.
  * \param desc current descriptor, will be set to the
  * next descriptor (NULL in case this is the last
@@ -303,6 +341,36 @@ bool vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
 int vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
 			    uint16_t *iov_index, const struct vring_desc *desc);
+
+bool vhost_vq_packed_ring_is_avail(struct spdk_vhost_virtqueue *virtqueue);
+
+/**
+ * Get subsequent descriptor from vq or desc table.
+ * \param desc current descriptor, will be set to the
+ * next descriptor (NULL in case this is the last
+ * descriptor in the chain or the next desc is invalid)
+ * \req_idx index of current desc, will be set to the next
+ * index. If desc_table != NULL the req_idx is the the vring index
+ * or the req_idx is the desc_table index.
+ * \param desc_table descriptor table
+ * \param desc_table_size size of the *desc_table*
+ * \return 0 on success, -1 if given index is invalid
+ * The *desc* param will be set regardless of the
+ * return value.
+ */
+int vhost_vring_packed_desc_get_next(struct vring_packed_desc **desc, uint16_t *req_idx,
+				     struct spdk_vhost_virtqueue *vq,
+				     struct vring_packed_desc *desc_table,
+				     uint32_t desc_table_size);
+
+bool vhost_vring_packed_desc_is_wr(struct vring_packed_desc *cur_desc);
+
+int vhost_vring_packed_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
+				   uint16_t *iov_index, const struct vring_packed_desc *desc);
+
+uint16_t vhost_vring_packed_desc_get_buffer_id(struct spdk_vhost_virtqueue *vq, uint16_t req_idx,
+		uint16_t *last_idx);
+
 
 static inline bool __attribute__((always_inline))
 vhost_dev_has_feature(struct spdk_vhost_session *vsession, unsigned feature_id)
