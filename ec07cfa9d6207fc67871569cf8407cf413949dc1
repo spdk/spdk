@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7e08c29_61211b87",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-06T22:18:50Z",
+      "side": 1,
+      "message": "Should you keep a global list of the existing ocssd_bdev structures?  It seems like that would be not much effort, and avoid having to walk the whole list of nvme controllers and their namespaces and the filtering out the non-ocssd ones.\n\nI\u0027m curious if you\u0027ve tested restart from a generated RPC config file.  I\u0027m looking at bdev_nvme_config_json(), and it is still skipping the bdev_nvme_attach_controller call for OCSSDs.  I think that needs to be removed - or maybe you\u0027re planning to do this later in the series?",
+      "revId": "ec07cfa9d6207fc67871569cf8407cf413949dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
