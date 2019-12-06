@@ -29,8 +29,8 @@ in Test Case 3 of performance report.
 ### num_cores
 List of CPU cores to assign for running SPDK NVMe-OF Target process. Can specify exact core numbers or ranges, eg:
 [0, 1, 10-15].
-### nvmet_dir
-Path to directory with nvmetcli application. If not provided then system-wide package will be used
+### nvmet_bin
+Path to nvmetcli application executable. If not provided then system-wide package will be used
 by default. Not used if "mode" is set to "spdk".
 ### num_shared_buffers
 Number of shared buffers to use when creating transport layer.
@@ -51,9 +51,9 @@ If not specified then by default each connected subsystem gets its own CPU core.
 ### nvmecli_dir
 Path to directory with nvme-cli application. If not provided then system-wide package will be used
 by default. Not used if "mode" is set to "spdk".
-### fio_dir
+### fio_bin
 Path to the fio binary that will be used to compile SPDK and run the test.
-If not specified, then the script will use /usr/src/fio as the default.
+If not specified, then the script will use /usr/src/fio/fio as the default.
 
 ## fio
 Fio job parameters.
