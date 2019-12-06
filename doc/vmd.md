@@ -117,3 +117,6 @@ To support hot plugs spdk_vmd_hotplug_monitor() needs to be called periodically.
 
 VMD LED utility in the [examples/vmd/led](https://github.com/spdk/spdk/tree/master/examples/vmd/led)
 could be used to set LED states.
+
+In order to verify that a platform is correctly configured to support LED management, ledctl(8) can
+be utilized.  For instructions on how to use it, consult the manual page of this utility.
