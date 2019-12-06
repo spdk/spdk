@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "58ee0692_f342db74",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 1419,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-06T16:49:50Z",
+      "side": 1,
+      "message": "Done\nRephrased to disable",
+      "parentUuid": "be88fbae_8796f19c",
+      "range": {
+        "startLine": 1419,
+        "startChar": 54,
+        "endLine": 1419,
+        "endChar": 122
+      },
+      "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "75bbce74_9d290bcc",
         "filename": "scripts/rpc.py",
         "patchSetId": 6
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "95513e99_57f47c4c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-06T16:49:50Z",
+      "side": 1,
+      "message": "Done\nUse -d",
+      "parentUuid": "75bbce74_9d290bcc",
+      "range": {
+        "startLine": 385,
+        "startChar": 19,
+        "endLine": 385,
+        "endChar": 20
+      },
+      "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cc85a1a3_0dbc75a7",
         "filename": "scripts/rpc.py",
         "patchSetId": 6
@@ -68,6 +116,30 @@
       "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b71f952c_a2ae590f",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-06T16:49:50Z",
+      "side": 1,
+      "message": "Done\nRephrased to disable",
+      "parentUuid": "cc85a1a3_0dbc75a7",
+      "range": {
+        "startLine": 386,
+        "startChar": 24,
+        "endLine": 386,
+        "endChar": 94
+      },
+      "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -115,6 +187,30 @@
       "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34c9d448_56c48b23",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-06T16:49:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f2a0ec0_db579d31",
+      "range": {
+        "startLine": 387,
+        "startChar": 63,
+        "endLine": 387,
+        "endChar": 77
+      },
+      "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -210,6 +306,30 @@
       "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "baaf4d41_fe39deed",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-06T16:49:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "71b95b68_253405ff",
+      "range": {
+        "startLine": 388,
+        "startChar": 3,
+        "endLine": 390,
+        "endChar": 65
+      },
+      "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
