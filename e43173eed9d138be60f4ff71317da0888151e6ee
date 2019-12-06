@@ -87,6 +87,144 @@
       "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "275c3ebd_e38797db",
+        "filename": "test/ocf/ocf.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-06T12:32:08Z",
+      "side": 1,
+      "message": "this will result in, for example, with \"ocf_fio-modes.sh\"\nYou should use basename with suffix option, like ocf_$(basename \"$@\" .sh) -\u003e this removes .sh from the filename",
+      "range": {
+        "startLine": 11,
+        "startChar": 16,
+        "endLine": 11,
+        "endChar": 38
+      },
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d87260b0_24cb8d73",
+        "filename": "test/vhost/manual.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-06T12:32:08Z",
+      "side": 1,
+      "message": "IMO you can skip modifying this.\n\"manual.sh\" is a bunch of test scripts which are either totally unused or used outside normal autotest.sh flow.\n\nFor example this --performance case isn\u0027t run at all, never.\nI have a patch out that removes this bit here https://review.gerrithub.io/c/spdk/spdk/+/476601 so you might want to consider not modifying these lines. Will save us the trouble of merge conflicts.",
+      "range": {
+        "startLine": 56,
+        "startChar": 17,
+        "endLine": 56,
+        "endChar": 31
+      },
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27ddac1d_4ba24141",
+        "filename": "test/vhost/manual.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-06T12:32:08Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 64,
+        "startChar": 17,
+        "endLine": 64,
+        "endChar": 31
+      },
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1da75ffe_0e864993",
+        "filename": "test/vhost/manual.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-06T12:32:08Z",
+      "side": 1,
+      "message": "This case and 2 below are used, but as stand-alones in CI, outside normal autotest.sh flow.\nHowever, I\u0027m OK with modifying these lines - Pawel is working on modifying these tests in order to attach them to autotest.sh.\n\nSuggested name here \"vhost_hotplug\"",
+      "range": {
+        "startLine": 72,
+        "startChar": 17,
+        "endLine": 72,
+        "endChar": 31
+      },
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5bc46664_3bbbc50e",
+        "filename": "test/vhost/manual.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-06T12:32:08Z",
+      "side": 1,
+      "message": "Suggested name here - \"vhost_scsi_hot_remove\"",
+      "range": {
+        "startLine": 83,
+        "startChar": 17,
+        "endLine": 83,
+        "endChar": 31
+      },
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22ca9760_9ae7cee3",
+        "filename": "test/vhost/manual.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-06T12:32:08Z",
+      "side": 1,
+      "message": "vhost_blk_hot_remove",
+      "range": {
+        "startLine": 92,
+        "startChar": 17,
+        "endLine": 92,
+        "endChar": 31
+      },
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
