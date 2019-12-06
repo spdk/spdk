@@ -83,6 +83,45 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 }
 
 static bool ut_check_trtype = false;
+static bool ut_test_probe_internal = false;
+
+static int
+ut_nvme_pcie_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
+			bool direct_connect)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_qpair qpair = {};
+	int rc;
+
+	if (probe_ctx->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+		return -1;
+	}
+
+	ctrlr = calloc(1, sizeof(*ctrlr));
+	CU_ASSERT(ctrlr != NULL);
+	ctrlr->adminq = &qpair;
+
+	/* happy path with first controller */
+	MOCK_SET(nvme_transport_ctrlr_construct, ctrlr);
+	rc = nvme_ctrlr_probe(&probe_ctx->trid, probe_ctx, NULL);
+	CU_ASSERT(rc == 0);
+
+	/* failed with the second controller */
+	MOCK_SET(nvme_transport_ctrlr_construct, NULL);
+	rc = nvme_ctrlr_probe(&probe_ctx->trid, probe_ctx, NULL);
+	CU_ASSERT(rc != 0);
+	MOCK_CLEAR_P(nvme_transport_ctrlr_construct);
+
+	return -1;
+}
+
+int
+nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
+{
+	free(ctrlr);
+	return 0;
+}
+
 int
 nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 			  bool direct_connect)
@@ -91,6 +130,10 @@ nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 
 	if (ut_check_trtype == true) {
 		CU_ASSERT(probe_ctx->trid.trtype == SPDK_NVME_TRANSPORT_PCIE);
+	}
+
+	if (ut_test_probe_internal) {
+		return ut_nvme_pcie_ctrlr_scan(probe_ctx, direct_connect);
 	}
 
 	if (direct_connect == true && probe_ctx->probe_cb) {
@@ -1198,6 +1241,35 @@ test_nvme_wait_for_completion(void)
 	CU_ASSERT(rc == 0);
 }
 
+static void
+test_nvme_ctrlr_probe_internal(void)
+{
+	struct spdk_nvme_probe_ctx *probe_ctx;
+	struct spdk_nvme_transport_id trid = {};
+	struct nvme_driver dummy;
+	int rc;
+
+	probe_ctx = calloc(1, sizeof(*probe_ctx));
+	CU_ASSERT(probe_ctx != NULL);
+
+	MOCK_SET(spdk_process_is_primary, true);
+	MOCK_SET(spdk_memzone_reserve, (void *)&dummy);
+	g_spdk_nvme_driver = NULL;
+	rc = nvme_driver_init();
+	CU_ASSERT(rc == 0);
+
+	ut_test_probe_internal = true;
+	MOCK_SET(dummy_probe_cb, true);
+	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	spdk_nvme_probe_ctx_init(probe_ctx, &trid, NULL, dummy_probe_cb, NULL, NULL);
+	rc = spdk_nvme_probe_internal(probe_ctx, false);
+	CU_ASSERT(rc < 0);
+	CU_ASSERT(TAILQ_EMPTY(&probe_ctx->init_ctrlrs));
+
+	free(probe_ctx);
+	ut_test_probe_internal = false;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1232,6 +1304,8 @@ int main(int argc, char **argv)
 			    test_spdk_nvme_probe) == NULL ||
 		CU_add_test(suite, "test_spdk_nvme_connect",
 			    test_spdk_nvme_connect) == NULL ||
+		CU_add_test(suite, "test_nvme_pci_probe_internal",
+			    test_nvme_ctrlr_probe_internal) == NULL ||
 		CU_add_test(suite, "test_nvme_init_controllers",
 			    test_nvme_init_controllers) == NULL ||
 		CU_add_test(suite, "test_nvme_driver_init",
