@@ -234,23 +234,23 @@ export NVME_DISKS_NAMESPACES
 export NVME_FILE
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
-    provider="--provider=${SPDK_VAGRANT_PROVIDER}"
+	provider="--provider=${SPDK_VAGRANT_PROVIDER}"
 fi
 
 if [ -n "$VHOST_HOST_DIR" ]; then
-    export VHOST_HOST_DIR
+	export VHOST_HOST_DIR
 fi
 
 if [ -n "$VHOST_VM_DIR" ]; then
-    export VHOST_VM_DIR
+	export VHOST_VM_DIR
 fi
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
-    export SPDK_VAGRANT_PROVIDER
+	export SPDK_VAGRANT_PROVIDER
 fi
 
 if [ -n "$SPDK_QEMU_EMULATOR" ] && [ "$SPDK_VAGRANT_PROVIDER" == "libvirt"  ]; then
-    export SPDK_QEMU_EMULATOR
+	export SPDK_QEMU_EMULATOR
 fi
 
 if [ ${DRY_RUN} = 1 ]; then

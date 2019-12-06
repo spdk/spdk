@@ -46,18 +46,18 @@ $rpc_py nvmf_get_subsystems
 
 # Discovered values
 nvmf_serial_number=$($rootdir/examples/nvme/identify/identify -r "\
-        trtype:$TEST_TRANSPORT \
-        adrfam:IPv4 \
-        traddr:$NVMF_FIRST_TARGET_IP \
-        trsvcid:$NVMF_PORT \
-        subnqn:nqn.2016-06.io.spdk:cnode1" | grep "Serial Number:" | awk '{print $3}')
+	trtype:$TEST_TRANSPORT \
+	adrfam:IPv4 \
+	traddr:$NVMF_FIRST_TARGET_IP \
+	trsvcid:$NVMF_PORT \
+	subnqn:nqn.2016-06.io.spdk:cnode1" | grep "Serial Number:" | awk '{print $3}')
 
 nvmf_model_number=$($rootdir/examples/nvme/identify/identify -r "\
-        trtype:$TEST_TRANSPORT \
-        adrfam:IPv4 \
-        traddr:$NVMF_FIRST_TARGET_IP \
-        trsvcid:$NVMF_PORT \
-        subnqn:nqn.2016-06.io.spdk:cnode1" | grep "Model Number:" | awk '{print $3}')
+	trtype:$TEST_TRANSPORT \
+	adrfam:IPv4 \
+	traddr:$NVMF_FIRST_TARGET_IP \
+	trsvcid:$NVMF_PORT \
+	subnqn:nqn.2016-06.io.spdk:cnode1" | grep "Model Number:" | awk '{print $3}')
 
 if [ ${nvme_serial_number} != ${nvmf_serial_number} ] ; then
 	echo "Serial number doesn't match"

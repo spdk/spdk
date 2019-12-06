@@ -59,41 +59,41 @@ function tgt_check_notification_types() {
 }
 
 function tgt_check_notifications() {
-        local event_line event ev_type ev_ctx
-        local rc=""
+	local event_line event ev_type ev_ctx
+	local rc=""
 
-        while read -r event_line; do
-                # remove ID
-                event="${event_line%:*}"
+	while read -r event_line; do
+		# remove ID
+		event="${event_line%:*}"
 
-                ev_type=${event%:*}
-                ev_ctx=${event#*:}
+		ev_type=${event%:*}
+		ev_ctx=${event#*:}
 
-                ex_ev_type=${1%%:*}
-                ex_ev_ctx=${1#*:}
+		ex_ev_type=${1%%:*}
+		ex_ev_ctx=${1#*:}
 
-                last_event_id=${event_line##*:}
+		last_event_id=${event_line##*:}
 
-                # set rc=false in case of failure so all errors can be printed
-                if (( $# == 0 )); then
-                        echo "ERROR: got extra event: $event_line"
-                        rc=false
-                        continue
-                elif ! echo "$ev_type" | grep -E -q  "^${ex_ev_type}\$" || ! echo "$ev_ctx" | grep -E -q "^${ex_ev_ctx}\$"; then
-                        echo "ERROR: expected event '$1' but got '$event' (whole event line: $event_line)"
-                        rc=false
-                fi
+		# set rc=false in case of failure so all errors can be printed
+		if (( $# == 0 )); then
+			echo "ERROR: got extra event: $event_line"
+			rc=false
+			continue
+		elif ! echo "$ev_type" | grep -E -q  "^${ex_ev_type}\$" || ! echo "$ev_ctx" | grep -E -q "^${ex_ev_ctx}\$"; then
+			echo "ERROR: expected event '$1' but got '$event' (whole event line: $event_line)"
+			rc=false
+		fi
 
-                shift
-        done < <(tgt_rpc notify_get_notifications -i ${last_event_id} | jq -r '.[] | "\(.type):\(.ctx):\(.id)"')
+		shift
+	done < <(tgt_rpc notify_get_notifications -i ${last_event_id} | jq -r '.[] | "\(.type):\(.ctx):\(.id)"')
 
-        $rc
+	$rc
 
-        if (( $# != 0 )); then
-                echo "ERROR: missing events:"
-                echo "$@"
-                return 1
-        fi
+	if (( $# != 0 )); then
+		echo "ERROR: missing events:"
+		echo "$@"
+		return 1
+	fi
 }
 
 # $1 - target / initiator
