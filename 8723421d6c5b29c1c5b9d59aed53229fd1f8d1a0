@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6b4c1b4_1ca703fe",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-06T17:00:59Z",
+      "side": 1,
+      "message": "Is it valid for user to force specify vm number 256 (or higher)?\n\nI\u0027m thinking maybe this check should go inside of the else statement instead, since the error condition and comment really only applies when $force_num is not set.",
+      "revId": "8723421d6c5b29c1c5b9d59aed53229fd1f8d1a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
