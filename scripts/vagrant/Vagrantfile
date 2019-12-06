@@ -112,6 +112,10 @@ Vagrant.configure(2) do |config|
 
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
+  if ENV['VAGRANT_PASSWORD_AUTH'] == "1"
+    config.ssh.username = "vagrant"
+    config.ssh.password = "vagrant"
+  end
 
   config.vm.provider "virtualbox" do |vb|
     vb.customize ["modifyvm", :id, "--ioapic", "on"]
