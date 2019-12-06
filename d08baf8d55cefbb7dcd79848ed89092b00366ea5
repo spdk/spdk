@@ -186,6 +186,30 @@
       "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71b95b68_253405ff",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T03:04:42Z",
+      "side": 1,
+      "message": "Thank you. I\u0027m fine with \u0027-d\u0027, \u0027--disable-delay-cmd-submit\u0027.",
+      "parentUuid": "5569b2ec_178c1148",
+      "range": {
+        "startLine": 388,
+        "startChar": 3,
+        "endLine": 390,
+        "endChar": 65
+      },
+      "revId": "d08baf8d55cefbb7dcd79848ed89092b00366ea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
