@@ -48,9 +48,11 @@ extern "C" {
  * instead of spdk_env_init, prior to using any other functions in SPDK
  * env library.
  *
+ * \param legacy_mem Indicates whether DPDK was initialized with --legacy-mem
+ *                   eal parameter.
  * \return 0 on success, or negative errno on failure.
  */
-int spdk_env_dpdk_post_init(void);
+int spdk_env_dpdk_post_init(bool legacy_mem);
 
 /**
  * Release any resources of the environment library that were alllocated with

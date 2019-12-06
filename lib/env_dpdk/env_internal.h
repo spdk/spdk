@@ -79,7 +79,7 @@ int spdk_pci_device_fini(struct rte_pci_device *device);
 
 void spdk_pci_init(void);
 void spdk_pci_fini(void);
-int spdk_mem_map_init(void);
+int spdk_mem_map_init(bool legacy_mem);
 int spdk_vtophys_init(void);
 
 /**

@@ -146,6 +146,8 @@ static struct spdk_mem_map *g_mem_reg_map;
 static TAILQ_HEAD(, spdk_mem_map) g_spdk_mem_maps = TAILQ_HEAD_INITIALIZER(g_spdk_mem_maps);
 static pthread_mutex_t g_spdk_mem_map_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+static bool g_legacy_mem;
+
 /*
  * Walk the currently registered memory via the main memory registration map
  * and call the new map's notify callback for each virtually contiguous region.
@@ -700,8 +702,10 @@ memory_iter_cb(const struct rte_memseg_list *msl,
 #endif
 
 int
-spdk_mem_map_init(void)
+spdk_mem_map_init(bool legacy_mem)
 {
+	g_legacy_mem = legacy_mem;
+
 	g_mem_reg_map = spdk_mem_map_alloc(0, NULL, NULL);
 	if (g_mem_reg_map == NULL) {
 		DEBUG_PRINT("memory registration map allocation failed\n");

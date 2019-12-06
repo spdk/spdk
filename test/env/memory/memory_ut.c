@@ -489,7 +489,7 @@ main(int argc, char **argv)
 	g_page_array = spdk_bit_array_create(PAGE_ARRAY_SIZE);
 
 	/* Initialize the memory map */
-	if (spdk_mem_map_init() < 0) {
+	if (spdk_mem_map_init(false) < 0) {
 		return CUE_NOMEMORY;
 	}
 
