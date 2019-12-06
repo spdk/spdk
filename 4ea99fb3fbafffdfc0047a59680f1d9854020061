@@ -16,6 +16,24 @@
       "revId": "4ea99fb3fbafffdfc0047a59680f1d9854020061",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a425fd66_ce1cd462",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-06T10:04:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e9f57de6_73eb0b14",
+      "revId": "4ea99fb3fbafffdfc0047a59680f1d9854020061",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
