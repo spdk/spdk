@@ -37,9 +37,9 @@ timing_exit spdkcli_create_virtio_pci_config
 
 timing_enter spdkcli_check_match
 if [ -n "$pci_blk" ]  && [ -n "$pci_scsi" ]; then
-        MATCH_FILE="spdkcli_virtio_pci.test"
-        SPDKCLI_BRANCH="/bdevs"
-        check_match
+	MATCH_FILE="spdkcli_virtio_pci.test"
+	SPDKCLI_BRANCH="/bdevs"
+	check_match
 fi
 timing_exit spdkcli_check_match
 

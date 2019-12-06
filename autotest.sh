@@ -273,9 +273,9 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test "vmd" ./test/vmd/vmd.sh
 	fi
 
-        if [ $SPDK_TEST_REDUCE -eq 1 ]; then
-                run_test "compress" ./test/compress/compress.sh
-        fi
+	if [ $SPDK_TEST_REDUCE -eq 1 ]; then
+		run_test "compress" ./test/compress/compress.sh
+	fi
 
 	if [ $SPDK_TEST_OPAL -eq 1 ]; then
 		run_test "nvme_opal" ./test/nvme/nvme_opal.sh
