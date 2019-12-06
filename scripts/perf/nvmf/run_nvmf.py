@@ -34,7 +34,9 @@ class Server:
 
 
 class Target(Server):
-    def __init__(self, name, username, password, mode, nic_ips, transport="rdma", use_null_block=False, sar_settings=None):
+    def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
+                 use_null_block=False, sar_settings=None):
+
         super(Target, self).__init__(name, username, password, mode, nic_ips, transport)
         self.null_block = bool(use_null_block)
         self.enable_sar = False
@@ -176,18 +178,15 @@ class Target(Server):
 
 
 class Initiator(Server):
-    def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma", nvmecli_dir=None, workspace="/tmp/spdk",
-                 fio_dir="/usr/src/fio"):
+    def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma",
+                 nvmecli_bin="nvme", workspace="/tmp/spdk", fio_bin="/usr/src/fio/fio"):
+
         super(Initiator, self).__init__(name, username, password, mode, nic_ips, transport)
+
         self.ip = ip
         self.spdk_dir = workspace
-        self.fio_dir = fio_dir
-
-        if nvmecli_dir:
-            self.nvmecli_bin = os.path.join(nvmecli_dir, "nvme")
-        else:
-            self.nvmecli_bin = "nvme"  # Use system-wide nvme-cli
-
+        self.fio_bin = fio_bin
+        self.nvmecli_bin = nvmecli_bin
         self.ssh_connection = paramiko.SSHClient()
         self.ssh_connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh_connection.connect(self.ip, username=self.username, password=self.password)
@@ -309,18 +308,17 @@ runtime={run_time}
     def run_fio(self, fio_config_file, run_num=None):
         job_name, _ = os.path.splitext(fio_config_file)
         self.log_print("Starting FIO run for job: %s" % job_name)
-        fio_bin = os.path.join(self.fio_dir, "fio")
-        self.log_print("Using FIO: %s" % fio_bin)
+        self.log_print("Using FIO: %s" % self.fio_bin)
         if run_num:
             for i in range(1, run_num + 1):
                 output_filename = job_name + "_run_" + str(i) + "_" + self.name + ".json"
-                cmd = "sudo %s %s --output-format=json --output=%s" % (fio_bin, fio_config_file, output_filename)
+                cmd = "sudo %s %s --output-format=json --output=%s" % (self.fio_bin, fio_config_file, output_filename)
                 output, error = self.remote_call(cmd)
                 self.log_print(output)
                 self.log_print(error)
         else:
             output_filename = job_name + "_" + self.name + ".json"
-            cmd = "sudo %s %s --output-format=json --output=%s" % (fio_bin, fio_config_file, output_filename)
+            cmd = "sudo %s %s --output-format=json --output=%s" % (self.fio_bin, fio_config_file, output_filename)
             output, error = self.remote_call(cmd)
             self.log_print(output)
             self.log_print(error)
@@ -328,15 +326,13 @@ runtime={run_time}
 
 
 class KernelTarget(Target):
-    def __init__(self, name, username, password, mode, nic_ips,
-                 use_null_block=False, sar_settings=None, transport="rdma", nvmet_dir=None, **kwargs):
-        super(KernelTarget, self).__init__(name, username, password, mode, nic_ips,
-                                           transport, use_null_block, sar_settings)
+    def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
+                 use_null_block=False, sar_settings=None,
+                 nvmet_bin="nvmetcli", **kwargs):
 
-        if nvmet_dir:
-            self.nvmet_bin = os.path.join(nvmet_dir, "nvmetcli")
-        else:
-            self.nvmet_bin = "nvmetcli"
+        super(KernelTarget, self).__init__(name, username, password, mode, nic_ips, transport,
+                                           use_null_block, sar_settings)
+        self.nvmet_bin = nvmet_bin
 
     def __del__(self):
         nvmet_command(self.nvmet_bin, "clear")
@@ -457,9 +453,13 @@ class KernelTarget(Target):
 
 
 class SPDKTarget(Target):
-    def __init__(self, name, username, password, mode, nic_ips, num_cores, num_shared_buffers=4096,
-                 use_null_block=False, sar_settings=None, transport="rdma", **kwargs):
-        super(SPDKTarget, self).__init__(name, username, password, mode, nic_ips, transport, use_null_block, sar_settings)
+
+    def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
+                 use_null_block=False, sar_settings=None,
+                 num_shared_buffers=4096, num_cores=1, **kwargs):
+
+        super(SPDKTarget, self).__init__(name, username, password, mode, nic_ips, transport,
+                                         use_null_block, sar_settings)
         self.num_cores = num_cores
         self.num_shared_buffers = num_shared_buffers
 
@@ -567,8 +567,11 @@ class SPDKTarget(Target):
 
 
 class KernelInitiator(Initiator):
-    def __init__(self, name, username, password, mode, nic_ips, ip, transport, **kwargs):
-        super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport, fio_dir)
+    def __init__(self, name, username, password, mode, nic_ips, ip, transport,
+                 fio_bin="/usr/src/fio/fio", **kwargs):
+
+        super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport,
+                                              fio_bin=fio_bin)
 
     def __del__(self):
         self.ssh_connection.close()
@@ -601,10 +604,12 @@ class KernelInitiator(Initiator):
 
 
 class SPDKInitiator(Initiator):
-    def __init__(self, name, username, password, mode, nic_ips, ip, num_cores=None, transport="rdma", **kwargs):
-        super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport, fio_dir)
-        if num_cores:
-            self.num_cores = num_cores
+    def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma",
+                 num_cores=1, fio_bin="/usr/src/fio/fio", **kwargs):
+        super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport,
+                                            fio_bin=fio_bin)
+
+        self.num_cores = num_cores
 
     def install_spdk(self, local_spdk_zip):
         self.put_file(local_spdk_zip, "/tmp/spdk_drop.zip")
@@ -612,9 +617,9 @@ class SPDKInitiator(Initiator):
         self.remote_call("unzip -qo /tmp/spdk_drop.zip -d %s" % self.spdk_dir)
 
         self.log_print("Sources unpacked")
-        self.log_print("Using fio directory %s" % self.fio_dir)
+        self.log_print("Using fio binary %s" % self.fio_bin)
         self.remote_call("cd %s; git submodule update --init; ./configure --with-rdma --with-fio=%s;"
-                         "make clean; make -j$(($(nproc)*2))" % (self.spdk_dir, self.fio_dir))
+                         "make clean; make -j$(($(nproc)*2))" % (self.spdk_dir, os.path.dirname(self.fio_bin)))
 
         self.log_print("SPDK built")
         self.remote_call("sudo %s/scripts/setup.sh" % self.spdk_dir)
