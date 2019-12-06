@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dacd452c_0c63ef49",
+        "filename": "test/iscsi_tgt/ip_migration/ip_migration.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T07:26:58Z",
+      "side": 1,
+      "message": "existing",
+      "range": {
+        "startLine": 39,
+        "startChar": 15,
+        "endLine": 39,
+        "endChar": 22
+      },
+      "revId": "e80e3c1ecc6290d4f17241f5507b0275e8d54d7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b45a47d0_7ccd5629",
+        "filename": "test/iscsi_tgt/ip_migration/ip_migration.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T07:26:58Z",
+      "side": 1,
+      "message": "did not exist",
+      "range": {
+        "startLine": 41,
+        "startChar": 33,
+        "endLine": 41,
+        "endChar": 47
+      },
+      "revId": "e80e3c1ecc6290d4f17241f5507b0275e8d54d7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76f5a159_1d63885c",
+        "filename": "test/iscsi_tgt/ip_migration/ip_migration.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T07:26:58Z",
+      "side": 1,
+      "message": "existing",
+      "range": {
+        "startLine": 59,
+        "startChar": 15,
+        "endLine": 59,
+        "endChar": 23
+      },
+      "revId": "e80e3c1ecc6290d4f17241f5507b0275e8d54d7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f798beca_316af2d8",
+        "filename": "test/iscsi_tgt/ip_migration/ip_migration.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T07:26:58Z",
+      "side": 1,
+      "message": "existing",
+      "range": {
+        "startLine": 61,
+        "startChar": 15,
+        "endLine": 61,
+        "endChar": 23
+      },
+      "revId": "e80e3c1ecc6290d4f17241f5507b0275e8d54d7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
