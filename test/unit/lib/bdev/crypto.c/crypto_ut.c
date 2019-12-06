@@ -48,6 +48,9 @@ uint16_t g_dequeue_mock;
 uint16_t g_enqueue_mock;
 unsigned ut_rte_crypto_op_bulk_alloc;
 int ut_rte_crypto_op_attach_sym_session = 0;
+#define MOCK_INFO_GET_1QP_AESNI 0
+#define MOCK_INFO_GET_1QP_QAT 1
+#define MOCK_INFO_GET_1QP_BOGUS_PMD 2
 int ut_rte_cryptodev_info_get = 0;
 bool ut_rte_cryptodev_info_get_mocked = false;
 
@@ -211,8 +214,14 @@ struct device_qp g_dev_qp;
 void
 rte_cryptodev_info_get(uint8_t dev_id, struct rte_cryptodev_info *dev_info)
 {
-	dev_info->max_nb_queue_pairs = ut_rte_cryptodev_info_get;
-	dev_info->driver_name = g_driver_names[0];
+	dev_info->max_nb_queue_pairs = 1;
+	if (ut_rte_cryptodev_info_get == MOCK_INFO_GET_1QP_AESNI) {
+		dev_info->driver_name = g_driver_names[0];
+	} else if (ut_rte_cryptodev_info_get == MOCK_INFO_GET_1QP_QAT) {
+		dev_info->driver_name = g_driver_names[1];
+	} else if (ut_rte_cryptodev_info_get == MOCK_INFO_GET_1QP_BOGUS_PMD) {
+		dev_info->driver_name = "junk";
+	}
 }
 
 unsigned int
@@ -709,6 +718,19 @@ test_reset(void)
 }
 
 static void
+init_cleanup(void)
+{
+	spdk_mempool_free(g_mbuf_mp);
+	rte_mempool_free(g_session_mp);
+	g_mbuf_mp = NULL;
+	g_session_mp = NULL;
+	if (g_session_mp_priv != NULL) {
+		/* g_session_mp_priv may or may not be set depending on the DPDK version */
+		rte_mempool_free(g_session_mp_priv);
+	}
+}
+
+static void
 test_initdrivers(void)
 {
 	int rc;
@@ -772,7 +794,7 @@ test_initdrivers(void)
 
 	/* Test crypto dev configure failure. */
 	MOCK_SET(rte_cryptodev_device_count_by_driver, 2);
-	MOCK_SET(rte_cryptodev_info_get, 1);
+	MOCK_SET(rte_cryptodev_info_get, MOCK_INFO_GET_1QP_AESNI);
 	MOCK_SET(rte_cryptodev_configure, -1);
 	MOCK_CLEARED_ASSERT(spdk_mempool_create);
 	rc = vbdev_crypto_init_crypto_drivers();
@@ -802,18 +824,28 @@ test_initdrivers(void)
 	CU_ASSERT(g_session_mp_priv == NULL);
 	MOCK_SET(rte_cryptodev_start, 0);
 
-	/* Test happy path. */
+	/* Test bogus PMD */
 	MOCK_CLEARED_ASSERT(spdk_mempool_create);
+	MOCK_SET(rte_cryptodev_info_get, MOCK_INFO_GET_1QP_BOGUS_PMD);
 	rc = vbdev_crypto_init_crypto_drivers();
-	/* We don't have spdk_mempool_create mocked right now, so make sure to free the mempools. */
+	CU_ASSERT(g_mbuf_mp == NULL);
+	CU_ASSERT(g_session_mp == NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* Test happy path QAT. */
+	MOCK_CLEARED_ASSERT(spdk_mempool_create);
+	MOCK_SET(rte_cryptodev_info_get, MOCK_INFO_GET_1QP_QAT);
+	rc = vbdev_crypto_init_crypto_drivers();
 	CU_ASSERT(g_mbuf_mp != NULL);
 	CU_ASSERT(g_session_mp != NULL);
-	spdk_mempool_free(g_mbuf_mp);
-	rte_mempool_free(g_session_mp);
-	if (g_session_mp_priv != NULL) {
-		/* g_session_mp_priv may or may not be set depending on the DPDK version */
-		rte_mempool_free(g_session_mp_priv);
-	}
+	init_cleanup();
+	CU_ASSERT(rc == 0);
+
+	/* Test happy path AESNI. */
+	MOCK_CLEARED_ASSERT(spdk_mempool_create);
+	MOCK_SET(rte_cryptodev_info_get, MOCK_INFO_GET_1QP_AESNI);
+	rc = vbdev_crypto_init_crypto_drivers();
+	init_cleanup();
 	CU_ASSERT(rc == 0);
 
 	/* restore our initial values. */
@@ -950,6 +982,12 @@ test_poller(void)
 	CU_ASSERT(rc == 2);
 }
 
+static void
+test_assign_device_qp(void)
+{
+	/* WIP */
+}
+
 int
 main(int argc, char **argv)
 {
@@ -989,7 +1027,9 @@ main(int argc, char **argv)
 	    CU_add_test(suite, "test_reset",
 			test_reset) == NULL ||
 	    CU_add_test(suite, "test_poller",
-			test_poller) == NULL
+			test_poller) == NULL ||
+	    CU_add_test(suite, "test_assign_device_qp",
+			test_assign_device_qp) == NULL
 	   ) {
 		CU_cleanup_registry();
 		return CU_get_error();
