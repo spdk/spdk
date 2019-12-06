@@ -147,9 +147,15 @@ vhost_log_used_vring_elem(struct spdk_vhost_session *vsession,
 		return;
 	}
 
-	offset = offsetof(struct vring_used, ring[idx]);
-	len = sizeof(virtqueue->vring.used->ring[idx]);
-	vq_idx = virtqueue - vsession->virtqueue;
+	if (vsession->packed_ring) {
+		offset = idx * sizeof(struct vring_packed_desc);
+		len = sizeof(struct vring_packed_desc);
+	} else {
+		offset = offsetof(struct vring_used, ring[idx]);
+		len = sizeof(virtqueue->vring.used->ring[idx]);
+	}
+
+	vq_idx = virtqueue->vring_idx;
 
 	rte_vhost_log_used_vring(vsession->vid, vq_idx, offset, len);
 }
@@ -216,6 +222,12 @@ vhost_vring_desc_is_indirect(struct vring_desc *cur_desc)
 	return !!(cur_desc->flags & VRING_DESC_F_INDIRECT);
 }
 
+static bool
+vhost_vring_packed_desc_is_indirect(struct vring_packed_desc *cur_desc)
+{
+	return !!(cur_desc->flags & VRING_DESC_F_INDIRECT);
+}
+
 int
 vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *virtqueue,
 		  uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
@@ -244,6 +256,38 @@ vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_virtque
 
 	return 0;
 }
+
+int
+vhost_vq_get_desc_packed(struct spdk_vhost_session *vsession,
+			 struct spdk_vhost_virtqueue *virtqueue,
+			 uint16_t req_idx, struct vring_packed_desc **desc,
+			 struct vring_packed_desc **desc_table, uint32_t *desc_table_size)
+{
+	if (spdk_unlikely(req_idx >= virtqueue->vring.size)) {
+		return -1;
+	}
+
+	*desc =  &virtqueue->vring.desc_packed[req_idx];
+
+	if (vhost_vring_packed_desc_is_indirect(*desc)) {
+		*desc_table_size = (*desc)->len / sizeof(**desc);
+		*desc_table = vhost_gpa_to_vva(vsession, (*desc)->addr,
+					       (*desc)->len);
+		*desc = *desc_table;
+		if (*desc == NULL) {
+			return -1;
+		}
+
+		return 0;
+	}
+
+	/* If the desc is not seted with indirect flag the table should be NULL */
+	*desc_table = NULL;
+	*desc_table_size  = 0;
+
+	return 0;
+}
+
 
 int
 vhost_vq_used_signal(struct spdk_vhost_session *vsession,
@@ -312,9 +356,16 @@ vhost_session_used_signal(struct spdk_vhost_session *vsession)
 		for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
 			virtqueue = &vsession->virtqueue[q_idx];
 
-			if (virtqueue->vring.desc == NULL ||
-			    (virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
-				continue;
+			if (vsession->packed_ring) {
+				if (virtqueue->vring.desc_packed == NULL ||
+				    (virtqueue->vring.driver_event->flags & VRING_EVENT_F_DISABLE)) {
+					continue;
+				}
+			} else {
+				if (virtqueue->vring.desc == NULL ||
+				    (virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
+					continue;
+				}
 			}
 
 			vhost_vq_used_signal(vsession, virtqueue);
@@ -328,8 +379,22 @@ vhost_session_used_signal(struct spdk_vhost_session *vsession)
 
 			/* No need for event right now */
 			if (now < virtqueue->next_event_time ||
-			    (virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
+			    (virtqueue->vring.driver_event->flags & VRING_EVENT_F_DISABLE)) {
 				continue;
+			}
+
+			if (now < virtqueue->next_event_time) {
+				continue;
+			}
+
+			if (vsession->packed_ring) {
+				if ((virtqueue->vring.driver_event->flags & VRING_EVENT_F_DISABLE)) {
+					continue;
+				}
+			} else {
+				if ((virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
+					continue;
+				}
 			}
 
 			if (!vhost_vq_used_signal(vsession, virtqueue)) {
@@ -433,6 +498,122 @@ vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 	vhost_log_used_vring_idx(vsession, virtqueue);
 
 	virtqueue->used_req_cnt++;
+}
+
+void
+vhost_vq_packed_ring_enqueue(struct spdk_vhost_session *vsession,
+			     struct spdk_vhost_virtqueue *virtqueue,
+			     uint16_t req_idx, uint16_t last_idx, uint16_t buffer_id)
+{
+	struct rte_vhost_vring *vring = &virtqueue->vring;
+	uint16_t *last_used_idx = &virtqueue->last_used_idx;
+	uint16_t *flags = &virtqueue->vring.desc_packed[*last_used_idx].flags;
+	bool *used_wrap_counter = &virtqueue->used_wrap_counter;
+
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
+		      "Queue %td - RING: req_idx=%"PRIu16" last_id=%"PRIu16" "
+		      "buffer_id=%"PRIu16"\n",
+		      virtqueue - vsession->virtqueue, req_idx, last_idx,
+		      buffer_id);
+
+	vring->desc_packed[virtqueue->last_used_idx].id = buffer_id;
+	spdk_smp_wmb();
+
+	if ((!!(*flags & VRING_DESC_F_AVAIL) == *used_wrap_counter) &&
+	    (!!(*flags & VRING_DESC_F_USED) == *used_wrap_counter)) {
+		SPDK_ERRLOG("descriptor has been set to used before\n");
+		return;
+	}
+
+	if (used_wrap_counter) {
+		*flags |= VRING_DESC_F_AVAIL | VRING_DESC_F_USED;
+	} else {
+		*flags &= ~(VRING_DESC_F_AVAIL | VRING_DESC_F_USED);
+	}
+
+	vhost_log_used_vring_elem(vsession, virtqueue, *last_used_idx);
+	*last_used_idx += (last_idx - req_idx + 1 + vring->size) % vring->size;
+	if (*last_used_idx >= vring->size) {
+		*last_used_idx -= vring->size;
+		*used_wrap_counter = !virtqueue->used_wrap_counter;
+	}
+
+	virtqueue->used_req_cnt++;
+}
+
+bool
+vhost_vq_packed_desc_is_avail(struct spdk_vhost_virtqueue *virtqueue, uint16_t req_idx,
+			      bool avail_wrap_counter)
+{
+	uint16_t flags = virtqueue->vring.desc_packed[req_idx].flags;
+
+	return (!!(flags & VRING_DESC_F_AVAIL) == avail_wrap_counter) &&
+	       (!!(flags & VRING_DESC_F_USED) != avail_wrap_counter);
+}
+
+bool
+vhost_vring_packed_desc_is_wr(struct vring_packed_desc *cur_desc)
+{
+	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
+}
+
+int
+vhost_vring_packed_desc_get_next(struct vring_packed_desc **desc, uint16_t next_idx,
+				 struct spdk_vhost_virtqueue *vq,
+				 struct vring_packed_desc *desc_table,
+				 uint32_t desc_table_size)
+{
+	if (desc_table != NULL) {
+		if (next_idx < desc_table_size) {
+			*desc = &desc_table[next_idx];
+		} else {
+			*desc = NULL;
+		}
+	} else {
+		if (spdk_unlikely(next_idx >= vq->vring.size)) {
+			*desc = NULL;
+			return -EINVAL;
+		}
+
+		if (((*desc)->flags & VRING_DESC_F_NEXT) == 0) {
+			*desc = NULL;
+			return 0;
+		}
+
+		*desc = &vq->vring.desc_packed[next_idx];
+	}
+
+	return 0;
+}
+
+int
+vhost_vring_packed_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
+			       uint16_t *iov_index, const struct vring_packed_desc *desc)
+{
+	uint64_t len;
+	uint64_t remaining = desc->len;
+	uintptr_t payload = desc->addr;
+	uintptr_t vva;
+
+	do {
+		if (*iov_index >= SPDK_VHOST_IOVS_MAX) {
+			SPDK_ERRLOG("SPDK_VHOST_IOVS_MAX(%d) reached\n", SPDK_VHOST_IOVS_MAX);
+			return -1;
+		}
+		len = remaining;
+		vva = (uintptr_t)rte_vhost_va_from_guest_pa(vsession->mem, payload, &len);
+		if (vva == 0 || len == 0) {
+			SPDK_ERRLOG("gpa_to_vva(%p) == NULL\n", (void *)payload);
+			return -1;
+		}
+		iov[*iov_index].iov_base = (void *)vva;
+		iov[*iov_index].iov_len = len;
+		remaining -= len;
+		payload += len;
+		(*iov_index)++;
+	} while (remaining);
+
+	return 0;
 }
 
 int
