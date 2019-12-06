@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcdedb2f_2a8afd30",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T04:24:14Z",
+      "side": 1,
+      "message": "Is this while loop necessary? bad_send_wr is local variable and is not copied anywhere.",
+      "revId": "4dde24556c40e10094e6cd965549a6fdc8466c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10ff8ecf_d1f6f3d9",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T04:24:14Z",
+      "side": 1,
+      "message": "Do we have any value to print bad_recv_wr here?",
+      "range": {
+        "startLine": 546,
+        "startChar": 65,
+        "endLine": 546,
+        "endChar": 66
+      },
+      "revId": "4dde24556c40e10094e6cd965549a6fdc8466c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b12eaae_fb00086d",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 575,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T04:24:14Z",
+      "side": 1,
+      "message": "_nvme_rdma_qpair_submit_sends() here? (we ensure rqpair-\u003esends_to_post.first is not NULL here?)",
+      "range": {
+        "startLine": 575,
+        "startChar": 9,
+        "endLine": 575,
+        "endChar": 37
+      },
+      "revId": "4dde24556c40e10094e6cd965549a6fdc8466c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20b42e19_8ff9e9e4",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T04:24:14Z",
+      "side": 1,
+      "message": "return code of this failure is not ENOMEM? Should we keep real return code?",
+      "range": {
+        "startLine": 693,
+        "startChar": 2,
+        "endLine": 693,
+        "endChar": 12
+      },
+      "revId": "4dde24556c40e10094e6cd965549a6fdc8466c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
