@@ -138,10 +138,13 @@ spdk_subsystem_init_next(int rc)
 	}
 
 	if (!g_next_subsystem) {
+		printf("subsysetm is initiatlied\n");
 		g_subsystems_initialized = true;
 		g_subsystem_start_fn(0, g_subsystem_start_arg);
 		return;
 	}
+
+	printf("g_next_subsystem->name=%s\n", g_next_subsystem->name);
 
 	if (g_next_subsystem->init) {
 		g_next_subsystem->init();

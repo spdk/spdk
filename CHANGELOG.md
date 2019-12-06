@@ -253,6 +253,10 @@ New cache modes added to use via RPC, wi - write invalidate and wa - write aroun
 
 New version of OCF provides fully asynchronous management API.
 
+### ftp
+
+new ftp target for fudan project.
+
 ## v19.07:
 
 ### ftl
