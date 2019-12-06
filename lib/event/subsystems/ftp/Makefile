@@ -31,24 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += trace
-DIRS-y += trace_record
-DIRS-y += ftp_tgt
-DIRS-y += nvmf_tgt
-DIRS-y += iscsi_top
-DIRS-y += iscsi_tgt
-DIRS-y += spdk_tgt
-DIRS-y += spdk_lspci
-ifeq ($(OS),Linux)
-DIRS-$(CONFIG_VHOST) += vhost
-endif
+C_SRCS = conf.c ftp_tgt.c
+LIBNAME = event_ftp
 
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
