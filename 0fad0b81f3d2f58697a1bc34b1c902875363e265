@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "312ba4d3_52e0a1dd",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-12-06T12:32:29Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6b47463b_a0d73e96",
+      "range": {
+        "startLine": 8,
+        "startChar": 13,
+        "endLine": 8,
+        "endChar": 26
+      },
+      "revId": "0fad0b81f3d2f58697a1bc34b1c902875363e265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa33d96a_f761e9c9",
         "filename": "test/nvme/spdk_smartctl_cuse.sh",
         "patchSetId": 8
@@ -71,6 +95,54 @@
     },
     {
       "key": {
+        "uuid": "ba777917_8d5bfa0e",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-12-06T12:32:29Z",
+      "side": 1,
+      "message": "Yes, first it identifies by path (what will not work in our case), and second uses scsi translation layer. I\u0027ll update docs in a new patch.",
+      "parentUuid": "698f77da_06f8175c",
+      "range": {
+        "startLine": 10,
+        "startChar": 23,
+        "endLine": 10,
+        "endChar": 30
+      },
+      "revId": "0fad0b81f3d2f58697a1bc34b1c902875363e265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfeb265f_a4105999",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-12-06T12:32:29Z",
+      "side": 1,
+      "message": "It should to work also without it.",
+      "parentUuid": "fa33d96a_f761e9c9",
+      "range": {
+        "startLine": 10,
+        "startChar": 30,
+        "endLine": 10,
+        "endChar": 41
+      },
+      "revId": "0fad0b81f3d2f58697a1bc34b1c902875363e265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "358fc7e3_1bc2822e",
         "filename": "test/nvme/spdk_smartctl_cuse.sh",
         "patchSetId": 8
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "70f54996_2546f331",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-12-06T12:32:29Z",
+      "side": 1,
+      "message": "No, is not required, but also not permitted. We should test both paths.",
+      "parentUuid": "358fc7e3_1bc2822e",
+      "range": {
+        "startLine": 65,
+        "startChar": 34,
+        "endLine": 65,
+        "endChar": 36
+      },
+      "revId": "0fad0b81f3d2f58697a1bc34b1c902875363e265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "91a2eebe_af52645b",
         "filename": "test/nvme/spdk_smartctl_cuse.sh",
         "patchSetId": 8
@@ -105,6 +201,30 @@
       "writtenOn": "2019-12-04T14:20:30Z",
       "side": 1,
       "message": "What test is being performed here ? Reading docs it looks like ATA test.",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 49
+      },
+      "revId": "0fad0b81f3d2f58697a1bc34b1c902875363e265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f4ba87f_0f1821b4",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-12-06T12:32:29Z",
+      "side": 1,
+      "message": "Yes, initially I\u0027ve wanted to check if something crash for this case, but it seems that forcing smartctl to use nvme commands this command is ignored. I\u0027ll remove this and next one.",
+      "parentUuid": "91a2eebe_af52645b",
       "range": {
         "startLine": 68,
         "startChar": 0,
