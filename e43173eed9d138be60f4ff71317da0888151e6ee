@@ -160,6 +160,30 @@
     },
     {
       "key": {
+        "uuid": "11284381_9c0a9fa6",
+        "filename": "test/vhost/manual.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-06T16:09:46Z",
+      "side": 1,
+      "message": "OK, thanks for the heads up. I\u0027ll remove this modification since I have to rebase now anyways. Also, I\u0027m glad to hear you are removing the unused tests and moving the ones you do use into the autotest framework.",
+      "parentUuid": "d87260b0_24cb8d73",
+      "range": {
+        "startLine": 56,
+        "startChar": 17,
+        "endLine": 56,
+        "endChar": 31
+      },
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "27ddac1d_4ba24141",
         "filename": "test/vhost/manual.sh",
         "patchSetId": 4
@@ -180,6 +204,30 @@
       "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "147f578d_ac8d73f5",
+        "filename": "test/vhost/manual.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-06T16:09:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "27ddac1d_4ba24141",
+      "range": {
+        "startLine": 64,
+        "startChar": 17,
+        "endLine": 64,
+        "endChar": 31
+      },
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -206,6 +254,30 @@
     },
     {
       "key": {
+        "uuid": "b3dcb27c_2aae2f65",
+        "filename": "test/vhost/manual.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-06T16:09:46Z",
+      "side": 1,
+      "message": "OK will do.",
+      "parentUuid": "1da75ffe_0e864993",
+      "range": {
+        "startLine": 72,
+        "startChar": 17,
+        "endLine": 72,
+        "endChar": 31
+      },
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5bc46664_3bbbc50e",
         "filename": "test/vhost/manual.sh",
         "patchSetId": 4
@@ -229,6 +301,30 @@
     },
     {
       "key": {
+        "uuid": "d7aaa14e_ca6c1bc5",
+        "filename": "test/vhost/manual.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-06T16:09:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5bc46664_3bbbc50e",
+      "range": {
+        "startLine": 83,
+        "startChar": 17,
+        "endLine": 83,
+        "endChar": 31
+      },
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22ca9760_9ae7cee3",
         "filename": "test/vhost/manual.sh",
         "patchSetId": 4
@@ -249,6 +345,30 @@
       "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a44ea0b5_d11a739c",
+        "filename": "test/vhost/manual.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-06T16:09:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "22ca9760_9ae7cee3",
+      "range": {
+        "startLine": 92,
+        "startChar": 17,
+        "endLine": 92,
+        "endChar": 31
+      },
+      "revId": "e43173eed9d138be60f4ff71317da0888151e6ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
