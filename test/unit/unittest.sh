@@ -2,7 +2,7 @@
 #
 # Environment variables:
 #  $valgrind    Specify the valgrind command line, if not
-#               then a default command line is used
+#	       then a default command line is used
 
 set -xe
 

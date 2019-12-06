@@ -3,7 +3,7 @@
 set -e
 
 if ! hash ceph &> /dev/null; then
-        exit 0
+	exit 0
 fi
 
 echo
