@@ -509,7 +509,7 @@ spdk_nvmf_parse_subsystems(void)
 	while (sp != NULL) {
 		if (spdk_conf_section_match_prefix(sp, "Subsystem")) {
 			rc = spdk_nvmf_parse_subsystem(sp);
-			if (rc < 0) {
+			if (rc <= 0) {
 				return -1;
 			}
 		}

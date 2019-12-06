@@ -93,7 +93,7 @@ _spdk_nvmf_shutdown_cb(void *arg1)
 	if (g_tgt_state < NVMF_TGT_RUNNING) {
 		spdk_thread_send_msg(spdk_get_thread(), _spdk_nvmf_shutdown_cb, NULL);
 		return;
-	} else if (g_tgt_state > NVMF_TGT_RUNNING) {
+	} else if (g_tgt_state > NVMF_TGT_RUNNING && g_tgt_state != NVMF_TGT_ERROR) {
 		/* Already in Shutdown status, ignore the signal */
 		return;
 	}

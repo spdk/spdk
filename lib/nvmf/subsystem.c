@@ -378,6 +378,10 @@ spdk_nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 	enum spdk_nvmf_subsystem_state actual_old_state, expected_old_state;
 	bool exchanged;
 
+	if (subsystem->state == state) {
+		return 0;
+	}
+
 	switch (state) {
 	case SPDK_NVMF_SUBSYSTEM_INACTIVE:
 		expected_old_state = SPDK_NVMF_SUBSYSTEM_DEACTIVATING;
@@ -525,10 +529,12 @@ spdk_nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 		return -ENOMEM;
 	}
 
-	rc = spdk_nvmf_subsystem_set_state(subsystem, intermediate_state);
-	if (rc) {
-		free(ctx);
-		return rc;
+	if (subsystem->state != requested_state) {
+		rc = spdk_nvmf_subsystem_set_state(subsystem, intermediate_state);
+		if (rc) {
+			free(ctx);
+			return rc;
+		}
 	}
 
 	ctx->subsystem = subsystem;
