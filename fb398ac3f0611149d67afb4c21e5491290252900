@@ -34,6 +34,24 @@
       "revId": "fb398ac3f0611149d67afb4c21e5491290252900",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32a3f167_c94c006a",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-06T21:49:11Z",
+      "side": 1,
+      "message": "The reason to not support it is that it\u0027s not clear to me that it\u0027s a requirement for SPDK to allow.  That\u0027s always a big reason for me.  :-)\n\nIf the user is aware he\u0027s using a zoned device, then he can just use zone reset.  It\u0027s OK for us to dictate things like this to the user.\n\nI\u0027m reading the latest NVMe ZNS spec, and it\u0027s not really clear on whether DSM deallocate is supported is supported for zoned namespaces.  I\u0027ve sent an e-mail out to Matias for clarification.  If it\u0027s supported for NVMe ZNS, then I agree we should add it in SPDK.  If not, I\u0027d say we don\u0027t allow it and force users to zone reset.\n\nAnd if it is supported by NVMe, we should consider putting this code up in the generic bdev layer, since it would be common to all zoned bdevs.\n\nDoes that sound OK with you?",
+      "parentUuid": "065976bc_53a53b5c",
+      "revId": "fb398ac3f0611149d67afb4c21e5491290252900",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
