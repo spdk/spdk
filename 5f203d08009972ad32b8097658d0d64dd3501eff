@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c8264ebd_5b96a714",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-06T09:19:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e49f77b4_ef7e758b",
+      "revId": "5f203d08009972ad32b8097658d0d64dd3501eff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1349d6fb_a648d25f",
         "filename": "lib/vmd/vmd.c",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "8669f31e_c4f7e007",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-06T09:19:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1349d6fb_a648d25f",
+      "revId": "5f203d08009972ad32b8097658d0d64dd3501eff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "82555ce8_5ec57411",
         "filename": "lib/vmd/vmd.c",
         "patchSetId": 2
@@ -50,6 +86,24 @@
       "revId": "5f203d08009972ad32b8097658d0d64dd3501eff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b41792f3_2634678a",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-06T09:19:23Z",
+      "side": 1,
+      "message": "Yeah, you\u0027re completely right, we need to remove the device first, otherwise this condition is always false. Good catch, thanks!",
+      "parentUuid": "82555ce8_5ec57411",
+      "revId": "5f203d08009972ad32b8097658d0d64dd3501eff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
