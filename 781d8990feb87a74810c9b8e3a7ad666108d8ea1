@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19628246_55219b26",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-06T20:43:38Z",
+      "side": 1,
+      "message": "current",
+      "revId": "781d8990feb87a74810c9b8e3a7ad666108d8ea1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
