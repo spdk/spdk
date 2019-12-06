@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2fb69ec5_71489bca",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-12-06T07:10:51Z",
+      "side": 1,
+      "message": "Why You don\u0027t use lvremove and vgremove in the same loop ?",
+      "range": {
+        "startLine": 307,
+        "startChar": 0,
+        "endLine": 316,
+        "endChar": 6
+      },
+      "revId": "01f84cf3e139d9210a490671228905c9cad755bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
