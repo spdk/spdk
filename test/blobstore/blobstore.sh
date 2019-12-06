@@ -2,8 +2,8 @@
 
 SYSTEM=$(uname -s)
 if [ $SYSTEM = "FreeBSD" ] ; then
-    echo "blobstore.sh cannot run on FreeBSD currently."
-    exit 0
+	echo "blobstore.sh cannot run on FreeBSD currently."
+	exit 0
 fi
 
 testdir=$(readlink -f $(dirname $0))

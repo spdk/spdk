@@ -2,8 +2,8 @@
 
 SYSTEM=$(uname -s)
 if [ $SYSTEM = "FreeBSD" ] ; then
-    echo "blobfs.sh cannot run on FreeBSD currently."
-    exit 0
+	echo "blobfs.sh cannot run on FreeBSD currently."
+	exit 0
 fi
 
 testdir=$(readlink -f $(dirname $0))

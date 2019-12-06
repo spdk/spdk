@@ -35,17 +35,17 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 $rpc_py nvmf_get_subsystems
 
 $rootdir/examples/nvme/identify/identify -r "\
-        trtype:$TEST_TRANSPORT \
-        adrfam:IPv4 \
-        traddr:$NVMF_FIRST_TARGET_IP \
-        trsvcid:$NVMF_PORT \
-        subnqn:nqn.2014-08.org.nvmexpress.discovery" -L all
+	trtype:$TEST_TRANSPORT \
+	adrfam:IPv4 \
+	traddr:$NVMF_FIRST_TARGET_IP \
+	trsvcid:$NVMF_PORT \
+	subnqn:nqn.2014-08.org.nvmexpress.discovery" -L all
 $rootdir/examples/nvme/identify/identify -r "\
-        trtype:$TEST_TRANSPORT \
-        adrfam:IPv4 \
-        traddr:$NVMF_FIRST_TARGET_IP \
-        trsvcid:$NVMF_PORT \
-        subnqn:nqn.2016-06.io.spdk:cnode1" -L all
+	trtype:$TEST_TRANSPORT \
+	adrfam:IPv4 \
+	traddr:$NVMF_FIRST_TARGET_IP \
+	trsvcid:$NVMF_PORT \
+	subnqn:nqn.2016-06.io.spdk:cnode1" -L all
 sync
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 

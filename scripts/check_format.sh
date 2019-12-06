@@ -301,6 +301,20 @@ else
 	echo "You do not have shellcheck installed so your Bash style is not being checked!"
 fi
 
+echo "Checking indentations ..."
+error_count=0
+for bash_file in $(git ls-files '*.sh'); do
+	if grep -P "^\t* {4,}" $bash_file > /dev/null 2>&1; then
+		echo " Indentation error in $bash_file"
+		error_count=$(( error_count + 1 ))
+	fi
+done
+if [[ $error_count -gt 0 ]]; then
+	echo " Bash indentation errors detected in $error_count files"
+	rc=1
+fi
+
+
 # Check if any of the public interfaces were modified by this patch.
 # Warn the user to consider updating the changelog any changes
 # are detected.

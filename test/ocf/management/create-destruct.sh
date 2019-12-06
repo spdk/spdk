@@ -8,11 +8,11 @@ rpc_py=$rootdir/scripts/rpc.py
 
 function bdev_check_claimed()
 {
-       if [ "$($rpc_py get_bdevs -b "$@" | jq '.[0].claimed')" = "true" ]; then
-               return 0;
-       else
-               return 1;
-       fi
+	if [ "$($rpc_py get_bdevs -b "$@" | jq '.[0].claimed')" = "true" ]; then
+		return 0;
+	else
+		return 1;
+	fi
 }
 
 $rootdir/app/iscsi_tgt/iscsi_tgt &
