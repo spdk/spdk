@@ -16,6 +16,24 @@
       "revId": "878336f0afb9ddb6c17d066082221a717d3d3e11",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c4d9ca3_baa6f656",
+        "filename": "test/iscsi_tgt/ip_migration/ip_migration.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T05:44:53Z",
+      "side": 1,
+      "message": "Got it. I saw the update.",
+      "parentUuid": "bf8f3f9a_07b8f9b3",
+      "revId": "878336f0afb9ddb6c17d066082221a717d3d3e11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
