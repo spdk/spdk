@@ -306,6 +306,19 @@ else
 	echo "You do not have shellcheck installed so your Bash style is not being checked!"
 fi
 
+# Check if unexpected spaces are used instead of tabs
+echo -n "Checking indentations..."
+error=1
+git ls-files '*.sh' | xargs -P$(nproc) grep -P "^\t* {4,}" &> identcheck.log || error=0
+if [ $error -ne 0 ]; then
+	echo " Indentation errors!"
+	cat identcheck.log
+	rc=1
+else
+	echo " OK"
+fi
+rm -f identcheck.log
+
 # Check if any of the public interfaces were modified by this patch.
 # Warn the user to consider updating the changelog any changes
 # are detected.
