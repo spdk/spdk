@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba0bf5fa_ce918e47",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-06T22:39:58Z",
+      "side": 1,
+      "message": "let\u0027s make this change in the original reset/unmap patch instead (so we don\u0027t add the code and then change it a few patches later)",
+      "revId": "def3cac1b7c767b9a8ad54efc661ca3ef9a3cdd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
