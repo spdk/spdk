@@ -16,6 +16,24 @@
       "revId": "ec07cfa9d6207fc67871569cf8407cf413949dc1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "867c3e24_cd05ad47",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-06T22:23:19Z",
+      "side": 1,
+      "message": "Also in the next patch, we allow for user to set up a config for an OCSSD bdev before the associated nvme controller is attached.  This code here won\u0027t write out JSON functions for those cases.",
+      "parentUuid": "a7e08c29_61211b87",
+      "revId": "ec07cfa9d6207fc67871569cf8407cf413949dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
