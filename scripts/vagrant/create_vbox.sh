@@ -166,6 +166,9 @@ case "${SPDK_VAGRANT_DISTRO}" in
 	arch-linux)
 		export SPDK_VAGRANT_DISTRO
 	;;
+	f30_spdk)
+		export SPDK_VAGRANT_DISTRO
+	;;
 	*)
 		echo "  Invalid argument \"${SPDK_VAGRANT_DISTRO}\""
 		echo "  Try: \"$0 -h\"" >&2
