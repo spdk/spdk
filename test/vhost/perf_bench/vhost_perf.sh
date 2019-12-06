@@ -33,40 +33,40 @@ function usage()
 	echo "Shortcut script for doing automated test"
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo
-	echo "-h, --help                  Print help and exit"
-	echo "    --fio-bin=PATH          Path to FIO binary on host.;"
-	echo "                            Binary will be copied to VM, static compilation"
-	echo "                            of binary is recommended."
-	echo "    --fio-job=PATH          Fio config to use for test."
-	echo "    --fio-iterations=INT    Number of times to run specified workload."
-	echo "    --vm-count=INT          Total number of virtual machines to launch in this test;"
-	echo "                            Each VM will get one bdev (lvol or split vbdev)"
-	echo "                            to run FIO test."
-	echo "                            Default: 1"
-	echo "    --vm-memory=INT         Amount of RAM memory (in MB) to pass to a single VM."
-	echo "                            Default: 2048 MB"
-	echo "    --vm-image=PATH         OS image to use for running the VMs."
-	echo "                            Default: \$HOME/vhost_vm_image.qcow2"
-	echo "    --vm-sar-enable         Measure CPU utilization in guest VMs using sar."
-	echo "    --host-sar-enable       Measure CPU utilization on host using sar."
-	echo "    --sar-delay=INT         Wait for X seconds before starting SAR measurement. Default: 0."
-	echo "    --sar-interval=INT      Interval (seconds) argument for SAR. Default: 1s."
-	echo "    --sar-count=INT         Count argument for SAR. Default: 10."
-	echo "    --vm-throttle-iops=INT  I/Os throttle rate in IOPS for each device on the VMs."
-	echo "    --max-disks=INT         Maximum number of NVMe drives to use in test."
-	echo "                            Default: will use all available NVMes."
-	echo "    --ctrl-type=TYPE        Controller type to use for test:"
-	echo "                            spdk_vhost_scsi - use spdk vhost scsi"
-	echo "                            spdk_vhost_blk - use spdk vhost block"
-	echo "                            kernel_vhost - use kernel vhost scsi"
-	echo "                            Default: spdk_vhost_scsi"
-	echo "    --use-split             Use split vbdevs instead of Logical Volumes"
-	echo "    --limit-kernel-vhost=INT  Limit kernel vhost to run only on a number of CPU cores."
-	echo "    --run-precondition      Precondition lvols after creating. Default: true."
-	echo "    --precond-fio-bin       FIO binary used for SPDK fio plugin precondition. Default: /usr/src/fio/fio."
-	echo "    --custom-cpu-cfg=PATH   Custom CPU config for test."
-	echo "                            Default: spdk/test/vhost/common/autotest.config"
-	echo "-x                          set -x for script debug"
+	echo "-h, --help				  Print help and exit"
+	echo "	--fio-bin=PATH		  Path to FIO binary on host.;"
+	echo "							Binary will be copied to VM, static compilation"
+	echo "							of binary is recommended."
+	echo "	--fio-job=PATH		  Fio config to use for test."
+	echo "	--fio-iterations=INT	Number of times to run specified workload."
+	echo "	--vm-count=INT		  Total number of virtual machines to launch in this test;"
+	echo "							Each VM will get one bdev (lvol or split vbdev)"
+	echo "							to run FIO test."
+	echo "							Default: 1"
+	echo "	--vm-memory=INT		 Amount of RAM memory (in MB) to pass to a single VM."
+	echo "							Default: 2048 MB"
+	echo "	--vm-image=PATH		 OS image to use for running the VMs."
+	echo "							Default: \$HOME/vhost_vm_image.qcow2"
+	echo "	--vm-sar-enable		 Measure CPU utilization in guest VMs using sar."
+	echo "	--host-sar-enable	   Measure CPU utilization on host using sar."
+	echo "	--sar-delay=INT		 Wait for X seconds before starting SAR measurement. Default: 0."
+	echo "	--sar-interval=INT	  Interval (seconds) argument for SAR. Default: 1s."
+	echo "	--sar-count=INT		 Count argument for SAR. Default: 10."
+	echo "	--vm-throttle-iops=INT  I/Os throttle rate in IOPS for each device on the VMs."
+	echo "	--max-disks=INT		 Maximum number of NVMe drives to use in test."
+	echo "							Default: will use all available NVMes."
+	echo "	--ctrl-type=TYPE		Controller type to use for test:"
+	echo "							spdk_vhost_scsi - use spdk vhost scsi"
+	echo "							spdk_vhost_blk - use spdk vhost block"
+	echo "							kernel_vhost - use kernel vhost scsi"
+	echo "							Default: spdk_vhost_scsi"
+	echo "	--use-split			 Use split vbdevs instead of Logical Volumes"
+	echo "	--limit-kernel-vhost=INT  Limit kernel vhost to run only on a number of CPU cores."
+	echo "	--run-precondition	  Precondition lvols after creating. Default: true."
+	echo "	--precond-fio-bin	   FIO binary used for SPDK fio plugin precondition. Default: /usr/src/fio/fio."
+	echo "	--custom-cpu-cfg=PATH   Custom CPU config for test."
+	echo "							Default: spdk/test/vhost/common/autotest.config"
+	echo "-x						  set -x for script debug"
 	exit 0
 }
 
@@ -193,15 +193,15 @@ notice "Nvme split list: ${splits[*]}"
 if [[ $run_precondition == true ]]; then
 	# Using the same precondition routine possible for lvols thanks
 	# to --clear-method option. Lvols should not UNMAP on creation.
-    $rootdir/scripts/gen_nvme.sh > $rootdir/nvme.cfg
-    mapfile -t nvmes < <(cat $rootdir/nvme.cfg | grep -oP "Nvme\d+")
-    fio_filename=$(printf ":%sn1" "${nvmes[@]}")
-    fio_filename=${fio_filename:1}
-    $precond_fio_bin --name="precondition" \
-    --ioengine="${rootdir}/examples/bdev/fio_plugin/fio_plugin" \
-    --rw="write" --spdk_conf="${rootdir}/nvme.cfg" --thread="1" \
-    --group_reporting --direct="1" --size="100%" --loops="2" --bs="256k" \
-    --iodepth=32 --filename="${fio_filename}" || true
+	$rootdir/scripts/gen_nvme.sh > $rootdir/nvme.cfg
+	mapfile -t nvmes < <(cat $rootdir/nvme.cfg | grep -oP "Nvme\d+")
+	fio_filename=$(printf ":%sn1" "${nvmes[@]}")
+	fio_filename=${fio_filename:1}
+	$precond_fio_bin --name="precondition" \
+	--ioengine="${rootdir}/examples/bdev/fio_plugin/fio_plugin" \
+	--rw="write" --spdk_conf="${rootdir}/nvme.cfg" --thread="1" \
+	--group_reporting --direct="1" --size="100%" --loops="2" --bs="256k" \
+	--iodepth=32 --filename="${fio_filename}" || true
 fi
 
 # ===== Prepare NVMe splits & run vhost process =====

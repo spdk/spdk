@@ -11,7 +11,7 @@ fi
 if [[ $SPDK_TEST_VHOST -ne 1 && $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
 	SPDK_TEST_VHOST=1
 	echo "WARNING: Virtio initiator JSON_config test requires vhost target."
-	echo "         Setting SPDK_TEST_VHOST=1 for duration of current script."
+	echo "	 Setting SPDK_TEST_VHOST=1 for duration of current script."
 fi
 
 if (( SPDK_TEST_BLOCKDEV + \
@@ -59,41 +59,41 @@ function tgt_check_notification_types() {
 }
 
 function tgt_check_notifications() {
-        local event_line event ev_type ev_ctx
-        local rc=""
+	local event_line event ev_type ev_ctx
+	local rc=""
 
-        while read -r event_line; do
-                # remove ID
-                event="${event_line%:*}"
+	while read -r event_line; do
+		# remove ID
+		event="${event_line%:*}"
 
-                ev_type=${event%:*}
-                ev_ctx=${event#*:}
+		ev_type=${event%:*}
+		ev_ctx=${event#*:}
 
-                ex_ev_type=${1%%:*}
-                ex_ev_ctx=${1#*:}
+		ex_ev_type=${1%%:*}
+		ex_ev_ctx=${1#*:}
 
-                last_event_id=${event_line##*:}
+		last_event_id=${event_line##*:}
 
-                # set rc=false in case of failure so all errors can be printed
-                if (( $# == 0 )); then
-                        echo "ERROR: got extra event: $event_line"
-                        rc=false
-                        continue
-                elif ! echo "$ev_type" | grep -E -q  "^${ex_ev_type}\$" || ! echo "$ev_ctx" | grep -E -q "^${ex_ev_ctx}\$"; then
-                        echo "ERROR: expected event '$1' but got '$event' (whole event line: $event_line)"
-                        rc=false
-                fi
+		# set rc=false in case of failure so all errors can be printed
+		if (( $# == 0 )); then
+			echo "ERROR: got extra event: $event_line"
+			rc=false
+			continue
+		elif ! echo "$ev_type" | grep -E -q  "^${ex_ev_type}\$" || ! echo "$ev_ctx" | grep -E -q "^${ex_ev_ctx}\$"; then
+			echo "ERROR: expected event '$1' but got '$event' (whole event line: $event_line)"
+			rc=false
+		fi
 
-                shift
-        done < <(tgt_rpc notify_get_notifications -i ${last_event_id} | jq -r '.[] | "\(.type):\(.ctx):\(.id)"')
+		shift
+	done < <(tgt_rpc notify_get_notifications -i ${last_event_id} | jq -r '.[] | "\(.type):\(.ctx):\(.id)"')
 
-        $rc
+	$rc
 
-        if (( $# != 0 )); then
-                echo "ERROR: missing events:"
-                echo "$@"
-                return 1
-        fi
+	if (( $# != 0 )); then
+		echo "ERROR: missing events:"
+		echo "$@"
+		return 1
+	fi
 }
 
 # $1 - target / initiator
@@ -202,7 +202,7 @@ function create_bdev_subsystem_config() {
 		tgt_rpc bdev_lvol_create -l lvs_test lvol0 32
 		tgt_rpc bdev_lvol_create -l lvs_test -t lvol1 32
 		tgt_rpc bdev_lvol_snapshot     lvs_test/lvol0 snapshot0
-		tgt_rpc bdev_lvol_clone        lvs_test/snapshot0 clone0
+		tgt_rpc bdev_lvol_clone	lvs_test/snapshot0 clone0
 
 		expected_notifications+=(
 			"bdev_register:$RE_UUID"
@@ -288,7 +288,7 @@ function create_vhost_subsystem_config() {
 
 # FIXME: enable after vhost-nvme is properly implemented against the latest rte_vhost (DPDK 19.05+)
 #	tgt_rpc vhost_create_nvme_controller   VhostNvmeCtrlr0 16
-#	tgt_rpc vhost_nvme_controller_add_ns                 VhostNvmeCtrlr0 MallocForVhost0p6
+#	tgt_rpc vhost_nvme_controller_add_ns		 VhostNvmeCtrlr0 MallocForVhost0p6
 
 	timing_exit "${FUNCNAME[0]}"
 }
