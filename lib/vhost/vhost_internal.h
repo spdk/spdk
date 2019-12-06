@@ -68,13 +68,13 @@
  */
 #define SPDK_VHOST_COALESCING_DELAY_BASE_US 0
 
-
 #define SPDK_VHOST_FEATURES ((1ULL << VHOST_F_LOG_ALL) | \
 	(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \
 	(1ULL << VIRTIO_F_VERSION_1) | \
 	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) | \
 	(1ULL << VIRTIO_RING_F_EVENT_IDX) | \
-	(1ULL << VIRTIO_RING_F_INDIRECT_DESC))
+	(1ULL << VIRTIO_RING_F_INDIRECT_DESC) | \
+	(1ULL << VIRTIO_F_RING_PACKED))
 
 #define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VIRTIO_RING_F_EVENT_IDX) | \
 	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY))
@@ -93,6 +93,19 @@ struct spdk_vhost_virtqueue {
 	struct rte_vhost_ring_inflight vring_inflight;
 	uint16_t last_avail_idx;
 	uint16_t last_used_idx;
+
+	struct {
+		/* To mark a descriptor as available in packed ring
+		 * Equal to avail_wrap_counter in spec.
+		 */
+		uint8_t avail_phase	: 1;
+		/* To mark a descriptor as used in packed ring
+		 * Equal to used_wrap_counter in spec.
+		 */
+		uint8_t used_phase	: 1;
+		uint8_t padding		: 5;
+		bool packed_ring	: 1;
+	} packed;
 
 	void *tasks;
 
