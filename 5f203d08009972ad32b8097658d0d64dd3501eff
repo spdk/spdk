@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e49f77b4_ef7e758b",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T07:19:06Z",
+      "side": 1,
+      "message": "Can we replace this ifdef block by adding assert like\n  assert(prev-\u003eaddr + prev-\u003esize \u003c\u003d region-\u003eaddr);\n  assert(current \u003d\u003d NULL || (region-\u003eaddr + region-\u003esize \u003c\u003d current-\u003eaddr));\nto if (prev !\u003d NULL) {} ?",
+      "revId": "5f203d08009972ad32b8097658d0d64dd3501eff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1349d6fb_a648d25f",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T07:19:06Z",
+      "side": 1,
+      "message": "Is this tricky? the mem array has all areas.\nCan we have another list alloc_mem_queue and parse it here?",
+      "revId": "5f203d08009972ad32b8097658d0d64dd3501eff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82555ce8_5ec57411",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-06T07:19:06Z",
+      "side": 1,
+      "message": "Very preliminary question.\n\nvmd_device is removed at the line 903.\nIs it possible for TAILQ_EMPTY(\u0026bus-\u003edev_list) to return true here?",
+      "revId": "5f203d08009972ad32b8097658d0d64dd3501eff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
