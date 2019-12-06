@@ -68,13 +68,13 @@
  */
 #define SPDK_VHOST_COALESCING_DELAY_BASE_US 0
 
-
 #define SPDK_VHOST_FEATURES ((1ULL << VHOST_F_LOG_ALL) | \
 	(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \
 	(1ULL << VIRTIO_F_VERSION_1) | \
 	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) | \
 	(1ULL << VIRTIO_RING_F_EVENT_IDX) | \
-	(1ULL << VIRTIO_RING_F_INDIRECT_DESC))
+	(1ULL << VIRTIO_RING_F_INDIRECT_DESC) | \
+	(1ULL << VIRTIO_F_RING_PACKED))
 
 #define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VIRTIO_RING_F_EVENT_IDX) | \
 	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY))
@@ -94,6 +94,11 @@ struct spdk_vhost_virtqueue {
 	uint16_t last_avail_idx;
 	uint16_t last_used_idx;
 
+	/* To mark a descriptor as available in packed ring */
+	uint8_t avail_wrap_counter;
+	/* To mark a descriptor as used in packed ring */
+	uint8_t used_wrap_counter;
+
 	void *tasks;
 
 	/* Request count from last stats check */
@@ -110,6 +115,8 @@ struct spdk_vhost_virtqueue {
 
 	/* Associated vhost_virtqueue in the virtio device's virtqueue list */
 	uint32_t vring_idx;
+
+	bool packed_ring;
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct spdk_vhost_session {
