@@ -419,6 +419,57 @@ function test_lvol_bdev_readonly() {
         rpc_cmd bdev_malloc_delete "$malloc_name"
 }
 
+# Check if it is possible to delete snapshot with clone
+function test_delete_snapshot_with_clone() {
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Create lvol bdev
+	lvol_size_mb=$(( LVS_DEFAULT_CAPACITY_MB / 2 ))
+	# Round down lvol size to the nearest cluster size boundary
+	lvol_size_mb=$(( lvol_size_mb / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+
+	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb")
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+
+	# Perform write operation on lvol
+        nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
+        run_fio_test /dev/nbd0 0 lvol_size "write" "0xcc"
+
+	# Create snapshots of lvol bdev
+	snapshot_uuid=$(rpc_cmd bdev_lvol_snapshot lvs_test/lvol_test lvol_snapshot)
+
+	# Fill first half of lvol bdev
+	half_size=$(( lvol_size / 2 - 1 ))
+	run_fio_test /dev/nbd0 0 half_size "write" "0xee"
+
+	# Check if snapshot was unchanged
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$snapshot_uuid" /dev/nbd1
+        run_fio_test /dev/nbd0 0 half_size "read" "0xcc"
+
+	# Verify lvol bdev
+	run_fio_test /dev/nbd0 0 half_size "read" "0xee"
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+	[ "$(jq '.[].driver_specific.lvol.clone' <<< "$lvol")" = "true" ]
+
+	# Delete snapshot - should succeed
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd1
+	rpc_cmd bdev_lvol_delete "$snapshot_uuid"
+
+	# Check data consistency
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+        [ "$(jq '.[].driver_specific.lvol.clone' <<< "$lvol")" = "false" ]
+	run_fio_test /dev/nbd0 0 half_size "read" "0xee"
+	run_fio_test /dev/nbd0 $(( half_size + 1 )) $lvol_size "read" "0xcc"
+
+	# Clean up
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
+	rpc_cmd bdev_lvol_delete "$lvol_uuid"
+        rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+        rpc_cmd bdev_malloc_delete "$malloc_name"
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -432,6 +483,7 @@ run_lvol_test test_clone_snapshot_relations
 run_lvol_test test_clone_inflate
 run_lvol_test test_clone_decouple_parent
 run_lvol_test test_lvol_bdev_readonly
+run_lvol_test test_delete_snapshot_with_clone
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
