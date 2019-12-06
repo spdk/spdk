@@ -100,10 +100,44 @@ struct vhost_poll_group {
 	TAILQ_ENTRY(vhost_poll_group) tailq;
 };
 
+/* Declare packed ring related bits for older kernels */
+#ifndef VIRTIO_F_RING_PACKED
+
+#define VIRTIO_F_RING_PACKED 34
+
+struct vring_packed_desc {
+	uint64_t addr;
+	uint32_t len;
+	uint16_t id;
+	uint16_t flags;
+};
+
+struct vring_packed_desc_event {
+	uint16_t off_wrap;
+	uint16_t flags;
+};
+#endif
+
+/*
+ * Declare below packed ring defines unconditionally
+ * as Kernel header might use different names.
+ */
+#define VRING_DESC_F_AVAIL	(1ULL << 7)
+#define VRING_DESC_F_USED	(1ULL << 15)
+
+#define VRING_EVENT_F_ENABLE	0x0
+#define VRING_EVENT_F_DISABLE	0x1
+#define VRING_EVENT_F_DESC	0x2
+
+
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
 	uint16_t last_avail_idx;
 	uint16_t last_used_idx;
+
+	/* paccked ring wrap counter referring to available desrciptor */
+	bool avail_wrap_counter;
+	bool used_wrap_counter;
 
 	void *tasks;
 
@@ -140,6 +174,7 @@ struct spdk_vhost_session {
 	bool started;
 	bool needs_restart;
 	bool forced_polling;
+	bool packed_ring;
 
 	struct rte_vhost_memory *mem;
 
