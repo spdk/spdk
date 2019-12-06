@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4c7de80_19b54678",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 23
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-06T22:27:44Z",
+      "side": 1,
+      "message": "What if instead. we removed the bdev_ocssd_config_json function completely.  Instead add a new ns-type-specific function (similar to populate_namespace functions) that the main bdev_nvme_config_json function can call for each namespace.  For \"normal\" namespaces, it would be a nop.  Your version would add the bdev_ocssd_create RPC calls.\n\nThen you\u0027d know for sure that bdev_nvme_attach_controller was always called before bdev_ocssd_create.\n\nI think it would also simplify the previous patch, because then your function would only get called for OC namespaces and you wouldn\u0027t have to iterate through all of the controller and namespaces yourself.",
+      "revId": "3f5db2b987c84e9a3dfcd3e9b918e77968b454b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
