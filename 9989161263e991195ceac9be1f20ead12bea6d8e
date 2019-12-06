@@ -68,6 +68,24 @@
       "revId": "9989161263e991195ceac9be1f20ead12bea6d8e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b81fd34d_2a7f35ee",
+        "filename": "module/event/subsystems/nvmf/conf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-06T01:43:46Z",
+      "side": 1,
+      "message": "yes, this error path has never been executed. For example, if the second subsystem with same subnqn and should fail the subsystem initialization which is expected.",
+      "parentUuid": "3907df44_05bda512",
+      "revId": "9989161263e991195ceac9be1f20ead12bea6d8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
