@@ -94,6 +94,11 @@
 #define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VIRTIO_RING_F_EVENT_IDX) | \
 	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY))
 
+#define VRING_DESC_F_AVAIL	(1ULL << VRING_PACKED_DESC_F_AVAIL)
+#define VRING_DESC_F_USED	(1ULL << VRING_PACKED_DESC_F_USED)
+
+#define VRING_DESC_F_AVAIL_USED	(VRING_DESC_F_AVAIL | VRING_DESC_F_USED)
+
 struct vhost_poll_group {
 	struct spdk_thread *thread;
 	unsigned ref;
@@ -267,6 +272,11 @@ int vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_vir
 		      uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
 		      uint32_t *desc_table_size);
 
+int vhost_vq_get_desc_packed(struct spdk_vhost_session *vsession,
+			     struct spdk_vhost_virtqueue *virtqueue,
+			     uint16_t req_idx, struct vring_packed_desc **desc,
+			     struct vring_packed_desc **desc_table, uint32_t *desc_table_size);
+
 /**
  * Send IRQ/call client (if pending) for \c vq.
  * \param vsession vhost session
@@ -289,6 +299,10 @@ void vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 				struct spdk_vhost_virtqueue *vq,
 				uint16_t id, uint32_t len);
 
+void vhost_vq_packed_ring_enqueue(struct spdk_vhost_session *vsession,
+				  struct spdk_vhost_virtqueue *virtqueue,
+				  uint16_t req_idx, uint16_t last_idx, uint16_t buffer_id);
+
 /**
  * Get subsequent descriptor from given table.
  * \param desc current descriptor, will be set to the
@@ -306,6 +320,20 @@ bool vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
 int vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
 			    uint16_t *iov_index, const struct vring_desc *desc);
+
+bool vhost_vq_packed_desc_is_avail(struct spdk_vhost_virtqueue *virtqueue,
+				   uint16_t req_idx,
+				   bool avail_wrap_counter);
+
+int vhost_vring_packed_desc_get_next(struct vring_packed_desc **desc, uint16_t *req_idx,
+				     struct spdk_vhost_virtqueue *vq,
+				     struct vring_packed_desc *desc_table,
+				     uint32_t desc_table_size);
+
+bool vhost_vring_packed_desc_is_wr(struct vring_packed_desc *cur_desc);
+
+int vhost_vring_packed_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
+				   uint16_t *iov_index, const struct vring_packed_desc *desc);
 
 static inline bool __attribute__((always_inline))
 vhost_dev_has_feature(struct spdk_vhost_session *vsession, unsigned feature_id)
