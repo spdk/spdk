@@ -988,9 +988,23 @@ _stop_session(struct spdk_vhost_session *vsession)
 
 	for (i = 0; i < vsession->max_queues; i++) {
 		q = &vsession->virtqueue[i];
-		if (q->vring.desc == NULL) {
-			continue;
+
+		if (q->packed_ring) {
+			if (q->vring.desc_packed == NULL) {
+				continue;
+			}
+
+			uint16_t temp;
+			temp = (uint16_t)q->avail_wrap_counter << 15;
+			q->last_avail_idx = temp | q->last_avail_idx;
+			temp = (uint16_t)q->used_wrap_counter << 15;
+			q->last_used_idx = temp | q->last_used_idx;
+		} else {
+			if (q->vring.desc == NULL) {
+				continue;
+			}
 		}
+
 		rte_vhost_set_vring_base(vsession->vid, i, q->last_avail_idx, q->last_used_idx);
 	}
 
@@ -1033,6 +1047,7 @@ vhost_start_device_cb(int vid)
 	struct spdk_vhost_session *vsession;
 	int rc = -1;
 	uint16_t i;
+	bool packed_ring;
 
 	pthread_mutex_lock(&g_vhost_mutex);
 
@@ -1049,6 +1064,14 @@ vhost_start_device_cb(int vid)
 		goto out;
 	}
 
+	if (vhost_get_negotiated_features(vid, &vsession->negotiated_features) != 0) {
+		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
+		goto out;
+	}
+
+	packed_ring = !!(vsession->negotiated_features &
+			 (1ULL << VIRTIO_F_RING_PACKED));
+
 	vsession->max_queues = 0;
 	memset(vsession->virtqueue, 0, sizeof(vsession->virtqueue));
 	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
@@ -1060,23 +1083,38 @@ vhost_start_device_cb(int vid)
 		}
 		q->vring_idx = i;
 
-		if (q->vring.desc == NULL || q->vring.size == 0) {
-			continue;
+		if (packed_ring) {
+			if (q->vring.desc_packed == NULL || q->vring.size == 0) {
+				continue;
+			}
+
+			if (rte_vhost_get_vring_base(vid, i, &q->last_avail_idx,
+						     &q->last_used_idx)) {
+				q->vring.desc_packed = NULL;
+				continue;
+			}
+
+			/* get counter first then get idx */
+			q->avail_wrap_counter = !!(q->last_avail_idx & (1 << 15));
+			q->last_avail_idx = q->last_avail_idx & 0x7fff;
+			q->used_wrap_counter = !!(q->last_used_idx & (1 << 15));
+			q->last_used_idx = q->last_used_idx & 0x7fff;
+		} else {
+			if (q->vring.desc == NULL || q->vring.size == 0) {
+				continue;
+			}
+
+			if (rte_vhost_get_vring_base(vsession->vid, i, &q->last_avail_idx, &q->last_used_idx)) {
+				q->vring.desc = NULL;
+				continue;
+			}
 		}
 
-		if (rte_vhost_get_vring_base(vsession->vid, i, &q->last_avail_idx, &q->last_used_idx)) {
-			q->vring.desc = NULL;
-			continue;
-		}
+		q->packed_ring = packed_ring;
 
 		/* Disable I/O submission notifications, we'll be polling. */
 		q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
 		vsession->max_queues = i + 1;
-	}
-
-	if (vhost_get_negotiated_features(vid, &vsession->negotiated_features) != 0) {
-		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
-		goto out;
 	}
 
 	if (vhost_get_mem_table(vid, &vsession->mem) != 0) {
@@ -1096,8 +1134,14 @@ vhost_start_device_cb(int vid)
 	for (i = 0; i < vsession->max_queues; i++) {
 		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
 
-		if (q->vring.desc != NULL && q->vring.size > 0) {
-			rte_vhost_vring_call(vsession->vid, q->vring_idx);
+		if (packed_ring) {
+			if (q->vring.desc_packed != NULL && q->vring.size > 0) {
+				rte_vhost_vring_call(vsession->vid, q->vring_idx);
+			}
+		} else {
+			if (q->vring.desc != NULL && q->vring.size > 0) {
+				rte_vhost_vring_call(vsession->vid, q->vring_idx);
+			}
 		}
 	}
 
