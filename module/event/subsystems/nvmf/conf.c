@@ -496,7 +496,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	spdk_nvmf_subsystem_set_allow_any_host(subsystem, allow_any_host);
 
 done:
-	return (subsystem != NULL);
+	return (subsystem != NULL) ? 0 : -1;
 }
 
 static int
