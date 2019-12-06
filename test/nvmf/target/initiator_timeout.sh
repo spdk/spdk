@@ -55,11 +55,11 @@ wait $fio_pid || fio_status=$?
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
 
 if [ $fio_status -eq 0 ]; then
-        echo "nvmf hotplug test: fio successful as expected"
+	echo "nvmf hotplug test: fio successful as expected"
 else
-        echo "nvmf hotplug test: fio failed, expected success"
-        nvmftestfini
-        exit 1
+	echo "nvmf hotplug test: fio failed, expected success"
+	nvmftestfini
+	exit 1
 fi
 
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1

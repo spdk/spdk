@@ -5,10 +5,10 @@ function xtrace_disable() {
 			XTRACE_DISABLED="yes"
 		fi
 		set +x
-        elif [ -z $XTRACE_NESTING_LEVEL ]; then
-                XTRACE_NESTING_LEVEL=1
-        else
-                XTRACE_NESTING_LEVEL=$((++XTRACE_NESTING_LEVEL))
+	elif [ -z $XTRACE_NESTING_LEVEL ]; then
+		XTRACE_NESTING_LEVEL=1
+	else
+		XTRACE_NESTING_LEVEL=$((++XTRACE_NESTING_LEVEL))
 	fi
 }
 
@@ -29,7 +29,7 @@ function xtrace_enable() {
 # that "called" xtrace_restore.
 alias xtrace_restore=\
 'if [ -z $XTRACE_NESTING_LEVEL ]; then
-        if [[ "$PREV_BASH_OPTS" == *"x"* ]]; then
+	if [[ "$PREV_BASH_OPTS" == *"x"* ]]; then
 		XTRACE_DISABLED="no"; PREV_BASH_OPTS=""; set -x; xtrace_enable;
 	fi
 else
