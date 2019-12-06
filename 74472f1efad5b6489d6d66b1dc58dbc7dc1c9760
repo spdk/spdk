@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "ab61baab_1fc75d9e",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-06T22:32:39Z",
+      "side": 1,
+      "message": "I was wrong.  I see now that all of the busy flags end up getting set to false here.  And \"busy\" is the right name with how it\u0027s used later in this series for the write pointers.\n\nI\u0027d vote for just removing the DEBUG flag below and obviously keep it called \"busy\".",
+      "parentUuid": "ecac5224_1919e23b",
+      "revId": "74472f1efad5b6489d6d66b1dc58dbc7dc1c9760",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "19950881_bc85391c",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 25
