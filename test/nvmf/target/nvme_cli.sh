@@ -6,8 +6,8 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
 if [ -z "${DEPENDENCY_DIR}" ]; then
-        echo DEPENDENCY_DIR not defined!
-        exit 1
+	echo DEPENDENCY_DIR not defined!
+	exit 1
 fi
 
 spdk_nvme_cli="${DEPENDENCY_DIR}/nvme-cli"
