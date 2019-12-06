@@ -2589,7 +2589,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				break;
 			}
 
-			STAILQ_REMOVE(&group->pending_buf_queue, &tcp_req->req, spdk_nvmf_request, buf_link);
+			STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
 
 			/* If data is transferring from host to controller, we need to do a transfer from the host. */
 			if (tcp_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
