@@ -71,7 +71,8 @@ struct device_qp {
 	bool				in_use;		/* whether this node is in use or not */
 	TAILQ_ENTRY(device_qp)		link;
 };
-static TAILQ_HEAD(, device_qp) g_device_qp = TAILQ_HEAD_INITIALIZER(g_device_qp);
+static TAILQ_HEAD(, device_qp) g_device_qp_qat = TAILQ_HEAD_INITIALIZER(g_device_qp_qat);
+static TAILQ_HEAD(, device_qp) g_device_qp_aesni_mb = TAILQ_HEAD_INITIALIZER(g_device_qp_aesni_mb);
 static pthread_mutex_t g_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
@@ -295,7 +296,7 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 		goto err;
 	}
 
-	/* Build up list of device/qp combinations */
+	/* Build up lists of device/qp combinations per PMD */
 	for (j = 0; j < device->cdev_info.max_nb_queue_pairs; j++) {
 		dev_qp = calloc(1, sizeof(struct device_qp));
 		if (!dev_qp) {
@@ -305,7 +306,15 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 		dev_qp->device = device;
 		dev_qp->qp = j;
 		dev_qp->in_use = false;
-		TAILQ_INSERT_TAIL(&g_device_qp, dev_qp, link);
+		if (strcmp(device->cdev_info.driver_name, QAT) == 0) {
+			TAILQ_INSERT_TAIL(&g_device_qp_qat, dev_qp, link);
+		} else if (strcmp(device->cdev_info.driver_name, AESNI_MB) == 0) {
+			TAILQ_INSERT_TAIL(&g_device_qp_aesni_mb, dev_qp, link);
+		} else {
+			rc = -EINVAL;
+			free(dev_qp);
+			goto err;
+		}
 	}
 
 	/* Add to our list of available crypto devices. */
@@ -313,8 +322,12 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 
 	return 0;
 err:
-	TAILQ_FOREACH_SAFE(dev_qp, &g_device_qp, link, tmp_qp) {
-		TAILQ_REMOVE(&g_device_qp, dev_qp, link);
+	TAILQ_FOREACH_SAFE(dev_qp, &g_device_qp_qat, link, tmp_qp) {
+		TAILQ_REMOVE(&g_device_qp_qat, dev_qp, link);
+		free(dev_qp);
+	}
+	TAILQ_FOREACH_SAFE(dev_qp, &g_device_qp_aesni_mb, link, tmp_qp) {
+		TAILQ_REMOVE(&g_device_qp_aesni_mb, dev_qp, link);
 		free(dev_qp);
 	}
 	free(device);
@@ -1241,12 +1254,21 @@ crypto_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	crypto_ch->device_qp = NULL;
 
 	pthread_mutex_lock(&g_device_qp_lock);
-	TAILQ_FOREACH(device_qp, &g_device_qp, link) {
-		if ((strcmp(device_qp->device->cdev_info.driver_name, crypto_bdev->drv_name) == 0) &&
-		    (device_qp->in_use == false)) {
-			crypto_ch->device_qp = device_qp;
-			device_qp->in_use = true;
-			break;
+	if (strcmp(crypto_bdev->drv_name, QAT) == 0) {
+		TAILQ_FOREACH(device_qp, &g_device_qp_qat, link) {
+			if (device_qp->in_use == false) {
+				crypto_ch->device_qp = device_qp;
+				device_qp->in_use = true;
+				break;
+			}
+		}
+	} else if (strcmp(crypto_bdev->drv_name, AESNI_MB) == 0) {
+		TAILQ_FOREACH(device_qp, &g_device_qp_aesni_mb, link) {
+			if (device_qp->in_use == false) {
+				crypto_ch->device_qp = device_qp;
+				device_qp->in_use = true;
+				break;
+			}
 		}
 	}
 	pthread_mutex_unlock(&g_device_qp_lock);
@@ -1498,8 +1520,13 @@ vbdev_crypto_finish(void)
 		SPDK_ERRLOG("%d from rte_vdev_uninit\n", rc);
 	}
 
-	while ((dev_qp = TAILQ_FIRST(&g_device_qp))) {
-		TAILQ_REMOVE(&g_device_qp, dev_qp, link);
+	while ((dev_qp = TAILQ_FIRST(&g_device_qp_qat))) {
+		TAILQ_REMOVE(&g_device_qp_qat, dev_qp, link);
+		free(dev_qp);
+	}
+
+	while ((dev_qp = TAILQ_FIRST(&g_device_qp_aesni_mb))) {
+		TAILQ_REMOVE(&g_device_qp_aesni_mb, dev_qp, link);
 		free(dev_qp);
 	}
 
