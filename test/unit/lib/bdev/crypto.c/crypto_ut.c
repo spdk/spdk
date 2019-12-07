@@ -217,6 +217,7 @@ void
 rte_cryptodev_info_get(uint8_t dev_id, struct rte_cryptodev_info *dev_info)
 {
 	dev_info->max_nb_queue_pairs = ut_rte_cryptodev_info_get;
+	dev_info->driver_name = g_driver_names[0];
 }
 
 unsigned int
