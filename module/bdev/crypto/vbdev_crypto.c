@@ -71,7 +71,8 @@ struct device_qp {
 	bool				in_use;		/* whether this node is in use or not */
 	TAILQ_ENTRY(device_qp)		link;
 };
-static TAILQ_HEAD(, device_qp) g_device_qp = TAILQ_HEAD_INITIALIZER(g_device_qp);
+static TAILQ_HEAD(, device_qp) g_device_qp_qat = TAILQ_HEAD_INITIALIZER(g_device_qp_qat);
+static TAILQ_HEAD(, device_qp) g_device_qp_aesni_mb = TAILQ_HEAD_INITIALIZER(g_device_qp_aesni_mb);
 static pthread_mutex_t g_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
@@ -221,6 +222,7 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 	struct device_qp *dev_qp;
 	struct device_qp *tmp_qp;
 	int rc;
+	TAILQ_HEAD(device_qps, device_qp) *dev_qp_head;
 
 	device = calloc(1, sizeof(struct vbdev_dev));
 	if (!device) {
@@ -295,32 +297,44 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 		goto err;
 	}
 
-	/* Build up list of device/qp combinations */
+	/* Select the right device/qp list based on driver name
+	 * or error if it does not exist.
+	 */
+	if (strcmp(device->cdev_info.driver_name, QAT) == 0) {
+		dev_qp_head = (struct device_qps *)&g_device_qp_qat;
+	} else if (strcmp(device->cdev_info.driver_name, AESNI_MB) == 0) {
+		dev_qp_head = (struct device_qps *)&g_device_qp_aesni_mb;
+	} else {
+		rc = -EINVAL;
+		goto err;
+	}
+
+	/* Build up lists of device/qp combinations per PMD */
 	for (j = 0; j < device->cdev_info.max_nb_queue_pairs; j++) {
 		dev_qp = calloc(1, sizeof(struct device_qp));
 		if (!dev_qp) {
 			rc = -ENOMEM;
-			goto err;
+			goto err_qp_alloc;
 		}
 		dev_qp->device = device;
 		dev_qp->qp = j;
 		dev_qp->in_use = false;
-		TAILQ_INSERT_TAIL(&g_device_qp, dev_qp, link);
+		TAILQ_INSERT_TAIL(dev_qp_head, dev_qp, link);
 	}
 
 	/* Add to our list of available crypto devices. */
 	TAILQ_INSERT_TAIL(&g_vbdev_devs, device, link);
 
 	return 0;
-err:
-	TAILQ_FOREACH_SAFE(dev_qp, &g_device_qp, link, tmp_qp) {
-		TAILQ_REMOVE(&g_device_qp, dev_qp, link);
+err_qp_alloc:
+	TAILQ_FOREACH_SAFE(dev_qp, dev_qp_head, link, tmp_qp) {
+		TAILQ_REMOVE(dev_qp_head, dev_qp, link);
 		free(dev_qp);
 	}
+err:
 	free(device);
 
 	return rc;
-
 }
 
 /* This is called from the module's init function. We setup all crypto devices early on as we are unable
@@ -1241,12 +1255,21 @@ crypto_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	crypto_ch->device_qp = NULL;
 
 	pthread_mutex_lock(&g_device_qp_lock);
-	TAILQ_FOREACH(device_qp, &g_device_qp, link) {
-		if ((strcmp(device_qp->device->cdev_info.driver_name, crypto_bdev->drv_name) == 0) &&
-		    (device_qp->in_use == false)) {
-			crypto_ch->device_qp = device_qp;
-			device_qp->in_use = true;
-			break;
+	if (strcmp(crypto_bdev->drv_name, QAT) == 0) {
+		TAILQ_FOREACH(device_qp, &g_device_qp_qat, link) {
+			if (device_qp->in_use == false) {
+				crypto_ch->device_qp = device_qp;
+				device_qp->in_use = true;
+				break;
+			}
+		}
+	} else if (strcmp(crypto_bdev->drv_name, AESNI_MB) == 0) {
+		TAILQ_FOREACH(device_qp, &g_device_qp_aesni_mb, link) {
+			if (device_qp->in_use == false) {
+				crypto_ch->device_qp = device_qp;
+				device_qp->in_use = true;
+				break;
+			}
 		}
 	}
 	pthread_mutex_unlock(&g_device_qp_lock);
@@ -1498,8 +1521,13 @@ vbdev_crypto_finish(void)
 		SPDK_ERRLOG("%d from rte_vdev_uninit\n", rc);
 	}
 
-	while ((dev_qp = TAILQ_FIRST(&g_device_qp))) {
-		TAILQ_REMOVE(&g_device_qp, dev_qp, link);
+	while ((dev_qp = TAILQ_FIRST(&g_device_qp_qat))) {
+		TAILQ_REMOVE(&g_device_qp_qat, dev_qp, link);
+		free(dev_qp);
+	}
+
+	while ((dev_qp = TAILQ_FIRST(&g_device_qp_aesni_mb))) {
+		TAILQ_REMOVE(&g_device_qp_aesni_mb, dev_qp, link);
 		free(dev_qp);
 	}
 
