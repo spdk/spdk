@@ -1526,6 +1526,8 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 {
 	struct spdk_nvme_tcp_ic_req *ic_req;
 	struct nvme_tcp_pdu *pdu;
+	uint64_t sleep_timeout_tsc;
+	int rc;
 
 	pdu = &tqpair->send_pdu;
 	memset(&tqpair->send_pdu, 0, sizeof(tqpair->send_pdu));
@@ -1543,9 +1545,11 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 
 	nvme_tcp_qpair_write_pdu(tqpair, pdu, nvme_tcp_send_icreq_complete, tqpair);
 
-	while (tqpair->state == NVME_TCP_QPAIR_STATE_INVALID) {
-		nvme_tcp_qpair_process_completions(&tqpair->qpair, 0);
-	}
+	sleep_timeout_tsc = spdk_get_ticks() + (SPDK_NVME_TCP_QPAIR_EXIT_TIMEOUT * spdk_get_ticks_hz());
+	do {
+		rc = nvme_tcp_qpair_process_completions(&tqpair->qpair, 0);
+	} while ((tqpair->state == NVME_TCP_QPAIR_STATE_INVALID) &&
+		 (rc == 0) && (spdk_get_ticks() <= sleep_timeout_tsc));
 
 	if (tqpair->state != NVME_TCP_QPAIR_STATE_RUNNING) {
 		SPDK_ERRLOG("Failed to construct the tqpair=%p via correct icresp\n", tqpair);
