@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c59ea9c4_8c817337",
+        "filename": "test/env/memory/memory_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1016937
+      },
+      "writtenOn": "2019-12-07T03:35:51Z",
+      "side": 1,
+      "message": "I guess we revert these changes now, memory_ut will now continue to allocate the map_1gb page using malloc anyways.",
+      "revId": "420e7030b8e98b953fb95a76052da6d46fb6dfc7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
