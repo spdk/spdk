@@ -52,6 +52,7 @@
 #include "spdk_internal/nvme_tcp.h"
 
 #define NVME_TCP_RW_BUFFER_SIZE 131072
+#define NVME_TCP_CONN_TIME_OUT_IN_SECONDS 2
 
 #define NVME_TCP_HPDA_DEFAULT			0
 #define NVME_TCP_MAX_R2T_DEFAULT		1
@@ -1524,6 +1525,8 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 {
 	struct spdk_nvme_tcp_ic_req *ic_req;
 	struct nvme_tcp_pdu *pdu;
+	uint64_t sleep_timeout_tsc;
+	int rc;
 
 	pdu = &tqpair->send_pdu;
 	memset(&tqpair->send_pdu, 0, sizeof(tqpair->send_pdu));
@@ -1541,8 +1544,12 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 
 	nvme_tcp_qpair_write_pdu(tqpair, pdu, nvme_tcp_send_icreq_complete, tqpair);
 
-	while (tqpair->state == NVME_TCP_QPAIR_STATE_INVALID) {
-		nvme_tcp_qpair_process_completions(&tqpair->qpair, 0);
+	sleep_timeout_tsc = spdk_get_ticks() + (NVME_TCP_CONN_TIME_OUT_IN_SECONDS * spdk_get_ticks_hz());
+
+	rc = 0;
+	while ((rc == 0) && (spdk_get_ticks() <= sleep_timeout_tsc) &&
+	       (tqpair->state == NVME_TCP_QPAIR_STATE_INVALID)) {
+		rc = nvme_tcp_qpair_process_completions(&tqpair->qpair, 0);
 	}
 
 	if (tqpair->state != NVME_TCP_QPAIR_STATE_RUNNING) {
