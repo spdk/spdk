@@ -173,11 +173,14 @@ static void
 rpc_thread_get_stats(void *arg)
 {
 	struct rpc_thread_get_stats_ctx *ctx = arg;
+	struct spdk_thread *thread = spdk_get_thread();
 	struct spdk_thread_stats stats;
 
 	if (0 == spdk_thread_get_stats(&stats)) {
 		spdk_json_write_object_begin(ctx->w);
-		spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(spdk_get_thread()));
+		spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(thread));
+		spdk_json_write_named_string(ctx->w, "cpumask",
+					     spdk_cpuset_fmt(spdk_thread_get_cpumask(thread)));
 		spdk_json_write_named_uint64(ctx->w, "busy", stats.busy_tsc);
 		spdk_json_write_named_uint64(ctx->w, "idle", stats.idle_tsc);
 		spdk_json_write_object_end(ctx->w);
