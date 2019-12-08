@@ -518,7 +518,8 @@ Example response:
     "ticks": 2523538189523655,
     "threads": [
       {
-        "name": "reactor_0",
+        "name": "app_thread",
+	"cpumask": "1",
         "busy": 139223208,
         "idle": 8641080608
       }
