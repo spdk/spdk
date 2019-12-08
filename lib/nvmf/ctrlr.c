@@ -2484,6 +2484,8 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_qpair *qpair;
 	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
+	bool is_connect = req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC &&
+			  req->cmd->nvmf_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT;
 
 	rsp->sqid = 0;
 	rsp->status.p = 0;
@@ -2505,9 +2507,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	}
 
 	/* AER cmd and fabric connect are exceptions */
-	if (sgroup != NULL && qpair->ctrlr->aer_req != req &&
-	    !(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC &&
-	      req->cmd->nvmf_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT)) {
+	if (sgroup != NULL && qpair->ctrlr->aer_req != req && !is_connect) {
 		assert(sgroup->io_outstanding > 0);
 		sgroup->io_outstanding--;
 		if (sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSING &&
