@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed2c5c24_1e840d12",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-08T23:19:53Z",
+      "side": 1,
+      "message": "This is duplicated, and I don\u0027t feel comfortable about changing region\u0027s size after enqueueing it.\nHow about the following?\n\nTAILQ_REMOVE(\u0026hp-\u003efree_mem_queue, region, tailq);\n\nif (size \u003c region-\u003esize) {\n\tfree_region \u003d TAILQ_FIRST(\u0026hp-\u003eunused_mem_queue);\n\tif (free_region \u003d\u003d NULL) {\n\t\tSPDK_DEBUGLOG();\n\t} else {\n\t\tTAILQ_REMOVE(\u0026hp-\u003eunused_mem_queue, free_region, tailq);\n\t\tfree_region-\u003esize \u003d region-\u003esize - size;\n\t\tfree_region-\u003eaddr \u003d region-\u003eaddr + size;\n\t\tvmd_hotplug_free_region(hp, free_region);\n\n\t\tregion-\u003esize \u003d size;\n\t}\n}\n\nTAILQ_INSERT_TAIL(\u0026hp-\u003ealloc_mem_queue, region, tailq);",
+      "range": {
+        "startLine": 197,
+        "startChar": 0,
+        "endLine": 197,
+        "endChar": 58
+      },
+      "revId": "ecc51c5768554e1708c8f453c8cea1877b316f50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31b9ee00_03bbd4e8",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-08T23:19:53Z",
+      "side": 1,
+      "message": "If we setup hp-\u003emem[0], is it better to fill 0 to remaining hp-\u003emem entries here for just in case?",
+      "revId": "ecc51c5768554e1708c8f453c8cea1877b316f50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43310c6b_e9423d2a",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 878,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-08T23:19:53Z",
+      "side": 1,
+      "message": "Can we cache bus-\u003eself to another local variable?\ndev_on_bus \u003d bus-\u003eself is OK?\nDo you have any idea?",
+      "range": {
+        "startLine": 878,
+        "startChar": 5,
+        "endLine": 878,
+        "endChar": 14
+      },
+      "revId": "ecc51c5768554e1708c8f453c8cea1877b316f50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
