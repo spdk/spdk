@@ -108,6 +108,30 @@
     },
     {
       "key": {
+        "uuid": "81605a2d_09fa8fe1",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-09T13:57:00Z",
+      "side": 1,
+      "message": "Done. Added bad_wr print here and for send case.",
+      "parentUuid": "cdec8a22_aa87d5fa",
+      "range": {
+        "startLine": 546,
+        "startChar": 65,
+        "endLine": 546,
+        "endChar": 66
+      },
+      "revId": "4dde24556c40e10094e6cd965549a6fdc8466c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0b12eaae_fb00086d",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 6
@@ -223,6 +247,30 @@
       "revId": "4dde24556c40e10094e6cd965549a6fdc8466c9a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "507f10c8_9e841416",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-09T13:57:00Z",
+      "side": 1,
+      "message": "Done. Added one more patch to the series with fix.",
+      "parentUuid": "12ab247a_991f26c3",
+      "range": {
+        "startLine": 693,
+        "startChar": 2,
+        "endLine": 693,
+        "endChar": 12
+      },
+      "revId": "4dde24556c40e10094e6cd965549a6fdc8466c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

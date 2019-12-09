@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f51c3d95_dcc57b54",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-09T13:57:00Z",
+      "side": 1,
+      "message": "Do we really need this?\nIt is configurable. So, we can\u0027t really say that it is unlikely. Someone may choose alternative configuration for performance reasons and we slow it down with unlikely macro.",
+      "parentUuid": "c214688b_e7444b25",
+      "range": {
+        "startLine": 577,
+        "startChar": 4,
+        "endLine": 577,
+        "endChar": 5
+      },
+      "revId": "b7743b9daecd46e6410f42b7c78c00938cf89097",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b9aadec3_70de0fef",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 7
@@ -36,6 +60,30 @@
       "writtenOn": "2019-12-09T00:47:37Z",
       "side": 1,
       "message": "Add spdk_unlikely() ?",
+      "range": {
+        "startLine": 594,
+        "startChar": 4,
+        "endLine": 594,
+        "endChar": 5
+      },
+      "revId": "b7743b9daecd46e6410f42b7c78c00938cf89097",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b93af0e3_c65a0f01",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-09T13:57:00Z",
+      "side": 1,
+      "message": "Same as above",
+      "parentUuid": "b9aadec3_70de0fef",
       "range": {
         "startLine": 594,
         "startChar": 4,
