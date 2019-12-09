@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d99fc0d_563b6881",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T20:41:34Z",
+      "side": 1,
+      "message": "Can we remove this test code?  If it\u0027s needed, I\u0027d suggest we add some unit tests instead for it.  We normally try to avoid using the DEBUG flag like this in our libraries.",
+      "revId": "700d318b4f8bff8ad104e86c9a3bdfd981e1773b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
