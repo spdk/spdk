@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "baec6572_1c0d072e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T15:29:15Z",
+      "side": 1,
+      "message": "I think I\u0027d prefer a flag that is only for fused purposes.  Allowing it to be used for other purposes seems highly dependent on those other purposes.\n\nThis code is all part of the internal API, so if there are other use cases in the future, we could always refactor it then.  For now, I think making it fused-specific makes it clearer to read.",
+      "revId": "bb3f94025d0be1709defa7ba536c66d4f46c75ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3d83411_c25a9a11",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T15:29:15Z",
+      "side": 1,
+      "message": "\"no_doorbell_ring\" is too PCIe specific, and doesn\u0027t really explain the \"why\" for the flag.  I\u0027d suggest a name that is a bit more \"fused\" specific.  Something like \"first_fused_submitted\".  Then it makes it clear that this flag is only to be used for that purpose.  We really don\u0027t want future developers of this code to think that this flag can be used at any time to keep the doorbell from being rung - we only want it to be used for this specific fused purpose.",
+      "revId": "bb3f94025d0be1709defa7ba536c66d4f46c75ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4aceb5f7_7e349423",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1248,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T15:29:15Z",
+      "side": 1,
+      "message": "Once you change the name of this flag, let\u0027s also add a bit more descriptive comment on why this is postponing the ringing.",
+      "revId": "bb3f94025d0be1709defa7ba536c66d4f46c75ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
