@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "66bfa9b9_9da3fa5f",
+        "filename": "autotest.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-09T16:35:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d32d37d1_09c30d74",
+      "range": {
+        "startLine": 240,
+        "startChar": 2,
+        "endLine": 240,
+        "endChar": 44
+      },
+      "revId": "949201f8844029cf0484eeb190bfe1b72f467da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7955c6b_7f4ec958",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 15
@@ -36,6 +60,30 @@
       "writtenOn": "2019-12-04T12:35:08Z",
       "side": 1,
       "message": "What\u0027s \"$2\"?\nLooking at test/vhost/manual.sh#103 I see that we\u0027re running virtio_hotremove.sh script only with \"--\" params which are removed from $@ in hotplug/common.sh after doing getopts.\n\nSo my suspicion is that $2 is actually an empty string.\nAlso check_fio_retcode() seems to not make any use of it\u0027s first argument as it\u0027s only used for \"echo $1\".",
+      "range": {
+        "startLine": 18,
+        "startChar": 19,
+        "endLine": 18,
+        "endChar": 23
+      },
+      "revId": "949201f8844029cf0484eeb190bfe1b72f467da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a0a1113_8207a294",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-09T16:35:06Z",
+      "side": 1,
+      "message": "$2 is \"Virtio blk hotremove\" and \"Virtio scsi hotremove\"",
+      "parentUuid": "c7955c6b_7f4ec958",
       "range": {
         "startLine": 18,
         "startChar": 19,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "b4bf9bf1_512a1843",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-09T16:35:06Z",
+      "side": 1,
+      "message": "We don\u0027t remove trap in other tests. I don\u0027t think it is needed.",
+      "parentUuid": "102777cb_858a0129",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 5
+      },
+      "revId": "949201f8844029cf0484eeb190bfe1b72f467da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a317400f_1735dbe2",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 15
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "d805d4be_0a7f4c1e",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-09T16:35:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a317400f_1735dbe2",
+      "range": {
+        "startLine": 26,
+        "startChar": 37,
+        "endLine": 26,
+        "endChar": 56
+      },
+      "revId": "949201f8844029cf0484eeb190bfe1b72f467da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8f44795d_94d3b2fa",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 15
@@ -108,6 +204,24 @@
       "revId": "949201f8844029cf0484eeb190bfe1b72f467da0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f75c6c1_1c9e3301",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-09T16:35:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8f44795d_94d3b2fa",
+      "revId": "949201f8844029cf0484eeb190bfe1b72f467da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -134,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "5ce82cb8_dc8ed8fd",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-09T16:35:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d57d13ec_1239c315",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 12
+      },
+      "revId": "949201f8844029cf0484eeb190bfe1b72f467da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8b4ed714_5ab11f1d",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 15
@@ -157,6 +295,30 @@
     },
     {
       "key": {
+        "uuid": "02a472db_cd392f9a",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-09T16:35:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8b4ed714_5ab11f1d",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 51
+      },
+      "revId": "949201f8844029cf0484eeb190bfe1b72f467da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f56216c_a4498cef",
         "filename": "test/vhost/manual.sh",
         "patchSetId": 15
@@ -177,6 +339,30 @@
       "revId": "949201f8844029cf0484eeb190bfe1b72f467da0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25be6c79_ad9f31b9",
+        "filename": "test/vhost/manual.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-09T16:35:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7f56216c_a4498cef",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 60
+      },
+      "revId": "949201f8844029cf0484eeb190bfe1b72f467da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
