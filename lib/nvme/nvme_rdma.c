@@ -667,12 +667,13 @@ fail:
 static int
 nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 {
-	int i;
+	int i, rc;
 
 	rqpair->rsp_mr = rdma_reg_msgs(rqpair->cm_id, rqpair->rsps,
 				       rqpair->num_entries * sizeof(*rqpair->rsps));
 	if (rqpair->rsp_mr == NULL) {
-		SPDK_ERRLOG("Unable to register rsp_mr\n");
+		rc = -errno;
+		SPDK_ERRLOG("Unable to register rsp_mr: %s (%d)\n", spdk_strerror(errno), errno);
 		goto fail;
 	}
 
@@ -688,12 +689,14 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 		rqpair->rsp_recv_wrs[i].sg_list = rsp_sgl;
 		rqpair->rsp_recv_wrs[i].num_sge = 1;
 
-		if (nvme_rdma_post_recv(rqpair, i)) {
+		rc = nvme_rdma_post_recv(rqpair, i);
+		if (0 != rc) {
 			goto fail;
 		}
 	}
 
-	if (nvme_rdma_qpair_submit_recvs(rqpair)) {
+	rc = nvme_rdma_qpair_submit_recvs(rqpair);
+	if (0 != rc) {
 		goto fail;
 	}
 
@@ -701,7 +704,7 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 
 fail:
 	nvme_rdma_unregister_rsps(rqpair);
-	return -ENOMEM;
+	return rc;
 }
 
 static void
