@@ -38,16 +38,13 @@
 
 #include <rte_vhost.h>
 
+#include "spdk_internal/vhost_user.h"
 #include "spdk_internal/log.h"
 #include "spdk/event.h"
 #include "spdk/rpc.h"
 #include "spdk/config.h"
 
 #define SPDK_CACHE_LINE_SIZE RTE_CACHE_LINE_SIZE
-
-#ifndef VHOST_USER_F_PROTOCOL_FEATURES
-#define VHOST_USER_F_PROTOCOL_FEATURES	30
-#endif
 
 #ifndef VIRTIO_F_VERSION_1
 #define VIRTIO_F_VERSION_1 32
