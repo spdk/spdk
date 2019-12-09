@@ -16,6 +16,24 @@
       "revId": "3f5db2b987c84e9a3dfcd3e9b918e77968b454b9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8fa1618a_24f54dd5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 23
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-09T14:09:56Z",
+      "side": 1,
+      "message": "I\u0027m not sure I fully understand your idea. How would we tie bdev_ocssd_create RPC calls to bdev_nvme_attach_controller ones? Would we be relying on the fact that bdev_ocssd_create calls are always present in the config after all of the bdev_nvme_attach_controller calls?",
+      "parentUuid": "d4c7de80_19b54678",
+      "revId": "3f5db2b987c84e9a3dfcd3e9b918e77968b454b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
