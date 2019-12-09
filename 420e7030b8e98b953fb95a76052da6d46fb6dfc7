@@ -16,6 +16,24 @@
       "revId": "420e7030b8e98b953fb95a76052da6d46fb6dfc7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05c88b72_62c74b6a",
+        "filename": "test/env/memory/memory_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T14:57:24Z",
+      "side": 1,
+      "message": "I don\u0027t think we can revert them - otherwise memory_ut will fail to link.",
+      "parentUuid": "c59ea9c4_8c817337",
+      "revId": "420e7030b8e98b953fb95a76052da6d46fb6dfc7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
