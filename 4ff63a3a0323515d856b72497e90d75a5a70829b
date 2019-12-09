@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "979c0bdc_aa41b394",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-09T18:14:07Z",
+      "side": 1,
+      "message": "Shouldn\u0027t it be drive-status and \"only display drive status\"? For example, when I run the NVMe-oF target, and run this script with -d, I get stats for Malloc0 which is not an NVMe drive.",
+      "revId": "4ff63a3a0323515d856b72497e90d75a5a70829b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31705ca3_4ce3e0a5",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-09T18:14:07Z",
+      "side": 1,
+      "message": "\"Only display nvme status\" -\u003e \"Display drive stats in KiB\"\n\nAlso, if you are going to fail if bot h-k and -m are specified, you should indicate that in the help. Another option would be to just have -k and -m control the same boolean \"display_kb\" and then they could both be specified and the last one would determine the behavior of the script.",
+      "revId": "4ff63a3a0323515d856b72497e90d75a5a70829b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52ce268b_481e79b0",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-09T18:14:07Z",
+      "side": 1,
+      "message": "\"Only display NVMe bdev io status\" -\u003e \"Display drive stats in MiB\"",
+      "revId": "4ff63a3a0323515d856b72497e90d75a5a70829b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7461320e_efb9f4c2",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-09T18:14:07Z",
+      "side": 1,
+      "message": "You should probably specify that -i is in seconds and also indicate that if -i is specified -t is also required. For example:\n\nhelp\u003d\"time interval (in seconds) on which to poll I/O stats. Used in conjunction with -t\"",
+      "revId": "4ff63a3a0323515d856b72497e90d75a5a70829b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5044ee52_c140b505",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-09T18:14:07Z",
+      "side": 1,
+      "message": "Maybe: help\u003d\"The number of times to display stats before returning. Used in conjunction with -i\".",
+      "revId": "4ff63a3a0323515d856b72497e90d75a5a70829b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
