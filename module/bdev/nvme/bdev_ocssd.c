@@ -563,6 +563,28 @@ bdev_ocssd_reset_zone(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io
 	return rc;
 }
 
+static int
+bdev_ocssd_unmap(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
+{
+	struct nvme_bdev *bdev = bdev_io->bdev->ctxt;
+	uint64_t zone_size = bdev->disk.zone_size;
+	uint64_t num_zones = bdev_io->u.bdev.num_blocks / zone_size;
+
+	if (bdev_io->u.bdev.offset_blocks % zone_size != 0) {
+		SPDK_ERRLOG("Unaligned zone address for unmap request: %"PRIu64"\n",
+			    bdev_io->u.bdev.offset_blocks);
+		return -EINVAL;
+	}
+
+	if (bdev_io->u.bdev.num_blocks % zone_size != 0) {
+		SPDK_ERRLOG("Unaligned length for zone unmap request: %"PRIu64"\n",
+			    bdev_io->u.bdev.num_blocks);
+		return -EINVAL;
+	}
+
+	return bdev_ocssd_reset_zone(ioch, bdev_io, bdev_io->u.bdev.offset_blocks, num_zones);
+}
+
 static int _bdev_ocssd_get_zone_info(struct spdk_bdev_io *bdev_io);
 
 static void
@@ -709,6 +731,10 @@ bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bde
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		rc = bdev_ocssd_write(ioch, bdev_io);
+		break;
+
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		rc = bdev_ocssd_unmap(ioch, bdev_io);
 		break;
 
 	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
