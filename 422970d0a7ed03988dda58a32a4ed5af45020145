@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a8f9b9f_244aea4b",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-09T20:45:15Z",
+      "side": 1,
+      "message": "This can also probably just be an assert - this is an example.",
+      "revId": "422970d0a7ed03988dda58a32a4ed5af45020145",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3adb82ba_4bc52c90",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-09T20:45:15Z",
+      "side": 1,
+      "message": "Change this to:\n\n/* Send a message to the thread assigned to the master reactor that continues initialization. This is how we bootstrap the program so that all code from here on is running on an SPDK thread. */",
+      "revId": "422970d0a7ed03988dda58a32a4ed5af45020145",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33f2bd98_9b275278",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-09T20:45:15Z",
+      "side": 1,
+      "message": "This can probably just be an assert - the condition will never fail.",
+      "revId": "422970d0a7ed03988dda58a32a4ed5af45020145",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
