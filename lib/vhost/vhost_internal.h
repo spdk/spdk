@@ -33,6 +33,7 @@
 
 #ifndef SPDK_VHOST_INTERNAL_H
 #define SPDK_VHOST_INTERNAL_H
+#include <linux/virtio_config.h>
 
 #include "spdk/stdinc.h"
 
@@ -44,10 +45,6 @@
 #include "spdk/config.h"
 
 #define SPDK_CACHE_LINE_SIZE RTE_CACHE_LINE_SIZE
-
-#ifndef VIRTIO_F_VERSION_1
-#define VIRTIO_F_VERSION_1 32
-#endif
 
 #define SPDK_VHOST_MAX_VQUEUES	256
 #define SPDK_VHOST_MAX_VQ_SIZE	1024
