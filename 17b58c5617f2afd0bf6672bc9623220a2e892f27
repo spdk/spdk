@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77698041_5290bc78",
+        "filename": "test/unit/lib/blobfs/blobfs_async_ut/blobfs_async_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-09T05:42:50Z",
+      "side": 1,
+      "message": "extra empty line.",
+      "revId": "17b58c5617f2afd0bf6672bc9623220a2e892f27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4101feff_e7e6c13d",
+        "filename": "test/unit/lib/blobfs/blobfs_async_ut/blobfs_async_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-09T05:42:50Z",
+      "side": 1,
+      "message": "extra empty line.",
+      "revId": "17b58c5617f2afd0bf6672bc9623220a2e892f27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
