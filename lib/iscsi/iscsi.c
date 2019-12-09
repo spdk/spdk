@@ -76,9 +76,6 @@ struct spdk_iscsi_globals g_spdk_iscsi = {
 	.poll_group_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.poll_group_head),
 };
 
-#define DMIN32(A,B) ((uint32_t) ((uint32_t)(A) > (uint32_t)(B) ? (uint32_t)(B) : (uint32_t)(A)))
-#define DMIN64(A,B) ((uint64_t) ((A) > (B) ? (B) : (A)))
-
 #define MATCH_DIGEST_WORD(BUF, CRC32C) \
 	(    ((((uint32_t) *((uint8_t *)(BUF)+0)) << 0)		\
 	    | (((uint32_t) *((uint8_t *)(BUF)+1)) << 8)		\
@@ -2667,8 +2664,8 @@ iscsi_send_r2t_recovery(struct spdk_iscsi_conn *conn,
 
 		/* still need to increase the acked r2tsn */
 		task->acked_r2tsn++;
-		len = DMIN32(conn->sess->MaxBurstLength, (transfer_len -
-				task->next_expected_r2t_offset));
+		len = spdk_min(conn->sess->MaxBurstLength,
+			       (transfer_len - task->next_expected_r2t_offset));
 
 		/* remove the old_r2t_pdu */
 		spdk_iscsi_conn_free_pdu(conn, pdu);
@@ -2729,7 +2726,7 @@ add_transfer_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	task->ttt = conn->ttt;
 
 	while (data_len != transfer_len) {
-		len = DMIN32(max_burst_len, (transfer_len - data_len));
+		len = spdk_min(max_burst_len, (transfer_len - data_len));
 		rc = iscsi_send_r2t(conn, task, data_len, len,
 				    task->ttt, &task->R2TSN);
 		if (rc < 0) {
@@ -3035,12 +3032,12 @@ iscsi_transfer_in(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	datain_seq_cnt = 1 + ((transfer_len - 1) / (int)conn->sess->MaxBurstLength);
 	for (i = 0; i < datain_seq_cnt; i++) {
 		offset = i * conn->sess->MaxBurstLength;
-		sequence_end = DMIN32(((i + 1) * conn->sess->MaxBurstLength),
-				      transfer_len);
+		sequence_end = spdk_min(((i + 1) * conn->sess->MaxBurstLength),
+					transfer_len);
 
 		/* send data splitted by segment_len */
 		for (; offset < sequence_end; offset += segment_len) {
-			len = DMIN32(segment_len, (sequence_end - offset));
+			len = spdk_min(segment_len, (sequence_end - offset));
 
 			datain_flag &= ~ISCSI_FLAG_FINAL;
 			datain_flag &= ~ISCSI_DATAIN_STATUS;
@@ -3243,7 +3240,7 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 				return 0;
 			}
 
-			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
+			subtask->scsi.length = spdk_min(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
 			task->current_datain_offset += subtask->scsi.length;
 			iscsi_queue_task(conn, subtask);
 		}
@@ -4378,8 +4375,8 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		task->acked_r2tsn++;
 	} else if (F_bit && (task->next_r2t_offset < transfer_len)) {
 		task->acked_r2tsn++;
-		len = DMIN32(conn->sess->MaxBurstLength, (transfer_len -
-				task->next_r2t_offset));
+		len = spdk_min(conn->sess->MaxBurstLength,
+			       (transfer_len - task->next_r2t_offset));
 		rc = iscsi_send_r2t(conn, task, task->next_r2t_offset, len,
 				    task->ttt, &task->R2TSN);
 		if (rc < 0) {
@@ -4485,7 +4482,7 @@ remove_acked_pdu(struct spdk_iscsi_conn *conn, uint32_t ExpStatSN)
 	struct spdk_iscsi_pdu *pdu, *pdu_temp;
 	uint32_t stat_sn;
 
-	conn->exp_statsn = DMIN32(ExpStatSN, conn->StatSN);
+	conn->exp_statsn = spdk_min(ExpStatSN, conn->StatSN);
 	TAILQ_FOREACH_SAFE(pdu, &conn->snack_pdu_list, tailq, pdu_temp) {
 		stat_sn = from_be32(&pdu->bhs.stat_sn);
 		if (SN32_LT(stat_sn, conn->exp_statsn)) {

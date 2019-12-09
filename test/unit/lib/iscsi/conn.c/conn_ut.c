@@ -42,8 +42,6 @@
 
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
-#define DMIN32(A,B) ((uint32_t) ((uint32_t)(A) > (uint32_t)(B) ? (uint32_t)(B) : (uint32_t)(A)))
-
 struct spdk_scsi_lun {
 	uint8_t reserved;
 };
@@ -216,7 +214,7 @@ static void
 ut_conn_create_read_tasks(struct spdk_iscsi_task *primary)
 {
 	struct spdk_iscsi_task *subtask;
-	int32_t remaining_size = 0;
+	uint32_t remaining_size = 0;
 
 	while (1) {
 		if (primary->current_datain_offset < primary->scsi.transfer_len) {
@@ -225,7 +223,7 @@ ut_conn_create_read_tasks(struct spdk_iscsi_task *primary)
 			subtask = ut_conn_task_get(primary);
 
 			subtask->scsi.offset = primary->current_datain_offset;
-			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
+			subtask->scsi.length = spdk_min(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
 			subtask->scsi.status = SPDK_SCSI_STATUS_GOOD;
 
 			primary->current_datain_offset += subtask->scsi.length;
