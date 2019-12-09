@@ -201,6 +201,8 @@ struct spdk_iscsi_conn {
 
 extern struct spdk_iscsi_conn *g_conns_array;
 
+void spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task);
+
 int spdk_initialize_iscsi_conns(void);
 void spdk_shutdown_iscsi_conns(void);
 void spdk_iscsi_conns_request_logout(struct spdk_iscsi_tgt_node *target);
