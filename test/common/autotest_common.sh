@@ -318,8 +318,8 @@ function timing_finish() {
 function create_test_list() {
 	grep -rshI --exclude="autotest_common.sh" \
 	--exclude="$rootdir/test/common/autotest_common.sh" \
-	-e "run_test " $rootdir | grep -v "#" \
-	| sed 's/^.*run_test/run_test/' | awk '{print $2, $3}' | \
+	-e 'run_test "case"' $rootdir | grep -v "#" \
+	| sed 's/^.*run_test/run_test/' | awk '{print $3}' | \
 	sed 's/\"//g' | sort > $output_dir/all_tests.txt || true
 }
 
@@ -576,9 +576,17 @@ function run_test() {
 	local test_name="$1"
 	shift
 
+	if [ "$test_type" = "suite" ];then
+		if [ -n "$test_domain" ]; then
+			test_domain="${test_domain}.${test_name}"
+		else
+			test_domain="$test_name"
+		fi
+	fi
+
 	timing_enter $test_name
 	echo "************************************"
-	echo "START TEST $test_type $test_name"
+	echo "START TEST $test_type $test_domain $test_name"
 	echo "************************************"
 	xtrace_restore
 	time "$@"
@@ -587,7 +595,19 @@ function run_test() {
 	echo "END TEST $test_type $test_name"
 	echo "************************************"
 
-	echo "$test_type $test_name" >> $output_dir/test_completions.txt
+	if [ "$test_type" = "case" ]; then
+		if [ -z "$test_domain" ]; then
+			echo "$test_name: top_level" >> $output_dir/test_completions.txt
+		else
+			echo "$test_name: $test_domain" >> $output_dir/test_completions.txt
+		fi
+
+	elif [ "$test_type" = "suite" ]; then
+		test_domain=${test_doamin%"$test_name"}
+		if [ -n $test_domain ]; then
+			test_domain=${test_domain%?}
+		fi
+	fi
 	timing_exit $test_name
 	xtrace_restore
 }
