@@ -1227,6 +1227,45 @@ iscsi_get_pdu_length(struct spdk_iscsi_pdu *pdu, int header_digest,
 	return total;
 }
 
+static void
+iscsi_conn_send_nopin(struct spdk_iscsi_conn *conn)
+{
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_nop_in *rsp;
+	/* Only send nopin if we have logged in and are in a normal session. */
+	if (conn->sess == NULL ||
+	    !conn->full_feature ||
+	    !spdk_iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
+		return;
+	}
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "send NOPIN isid=%"PRIx64", tsih=%u, cid=%u\n",
+		      conn->sess->isid, conn->sess->tsih, conn->cid);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
+		      conn->StatSN, conn->sess->ExpCmdSN,
+		      conn->sess->MaxCmdSN);
+	rsp_pdu = spdk_get_pdu();
+	rsp = (struct iscsi_bhs_nop_in *) &rsp_pdu->bhs;
+	rsp_pdu->data = NULL;
+	/*
+	 * spdk_get_pdu() memset's the PDU for us, so only fill out the needed
+	 *  fields.
+	 */
+	rsp->opcode = ISCSI_OP_NOPIN;
+	rsp->flags = 0x80;
+	/*
+	 * Technically the to_be32() is not needed here, since
+	 *  to_be32(0xFFFFFFFU) returns 0xFFFFFFFFU.
+	 */
+	to_be32(&rsp->itt, 0xFFFFFFFFU);
+	to_be32(&rsp->ttt, conn->id);
+	to_be32(&rsp->stat_sn, conn->StatSN);
+	to_be32(&rsp->exp_cmd_sn, conn->sess->ExpCmdSN);
+	to_be32(&rsp->max_cmd_sn, conn->sess->MaxCmdSN);
+	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
+	conn->last_nopin = spdk_get_ticks();
+	conn->nop_outstanding = true;
+}
+
 void
 spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 {
@@ -1253,7 +1292,7 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 			conn->state = ISCSI_CONN_STATE_EXITING;
 		}
 	} else if (tsc - conn->last_nopin > conn->nopininterval) {
-		spdk_iscsi_send_nopin(conn);
+		iscsi_conn_send_nopin(conn);
 	}
 }
 
