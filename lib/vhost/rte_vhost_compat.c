@@ -66,7 +66,7 @@ vhost_session_mem_register(struct rte_vhost_memory *mem)
 		}
 		previous_start = start;
 		len = end - start;
-		SPDK_INFOLOG(SPDK_LOG_VHOST, "Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
+		SPDK_NOTICELOG("Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
 			     start, len);
 
 		if (spdk_mem_register((void *)start, len) != 0) {
@@ -98,6 +98,9 @@ vhost_session_mem_unregister(struct rte_vhost_memory *mem)
 		if (spdk_vtophys((void *) start, NULL) == SPDK_VTOPHYS_ERROR) {
 			continue; /* region has not been registered */
 		}
+
+		SPDK_NOTICELOG("Unregistering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
+			     start, len);
 
 		if (spdk_mem_unregister((void *)start, len) != 0) {
 			assert(false);
