@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "840f3ea6_2742ffd1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3188,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-09T20:54:46Z",
+      "side": 1,
+      "message": "What\u0027s the scenario where this gets called from two threads at the same time? Something exotic like having multiple nvmf_tgt in the same process?",
+      "revId": "6e248705a055e93f5bdea61c6f26b763d414edf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
