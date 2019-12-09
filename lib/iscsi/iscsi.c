@@ -4955,17 +4955,3 @@ spdk_iscsi_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 
 	return i;
 }
-
-bool spdk_iscsi_is_deferred_free_pdu(struct spdk_iscsi_pdu *pdu)
-{
-	if (pdu == NULL) {
-		return false;
-	}
-
-	if (pdu->bhs.opcode == ISCSI_OP_R2T ||
-	    pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
-		return true;
-	}
-
-	return false;
-}
