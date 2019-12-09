@@ -22,6 +22,30 @@
       "revId": "2ae5d7a44d49eb43a773481c47ccbf6890f6d575",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "708d48b1_4662e43f",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 1419,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-09T22:38:42Z",
+      "side": 1,
+      "message": "I missed that bdev_get_options() creates the default value in the handler of bdev_nvme_set_options().\nJim kindly taught me offline.",
+      "parentUuid": "b0df44b4_7ff3891e",
+      "range": {
+        "startLine": 1419,
+        "startChar": 134,
+        "endLine": 1419,
+        "endChar": 148
+      },
+      "revId": "2ae5d7a44d49eb43a773481c47ccbf6890f6d575",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
