@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/nvmf/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/nvmf/common.sh
 
 PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 
@@ -18,17 +18,17 @@ function disconnect_init()
 
 	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 
-	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
+	$rpc_py nvmf_create_transport "$NVMF_TRANSPORT_OPTS"
 	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $1 -s $NVMF_PORT
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t "$TEST_TRANSPORT" -a "$1" -s "$NVMF_PORT"
 }
 
 # There is an intermittent error relating to this test and Soft-RoCE. for now, just
 # skip this test if we are using rxe. TODO: get to the bottom of GitHub issue #1043
 nvmftestinit
-if [ $TEST_TRANSPORT == "rdma" ] && check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
+if [ "$TEST_TRANSPORT" == "rdma" ] && check_ip_is_soft_roce "$NVMF_FIRST_TARGET_IP"; then
 	echo "Using software RDMA, skipping the target disconnect tests."
 	nvmftestfini
 	exit 0
@@ -40,7 +40,7 @@ timing_enter target_disconnect
 # Test to make sure we don't segfault or access null pointers when we try to connect to
 # a discovery controller that doesn't exist yet.
 set +e
-$rootdir/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
+"$rootdir"/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 # If the program crashes, the high bit of $? will be set so we will get a value in the hundreds.
 # But if the reconnect code detects errors and exits normally it will return 1.
@@ -50,18 +50,18 @@ if [ $? != 1 ]; then
 fi
 set -e
 
-disconnect_init $NVMF_FIRST_TARGET_IP
+disconnect_init "$NVMF_FIRST_TARGET_IP"
 
 # If perf doesn't shut down, this test will time out.
-$rootdir/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
+"$rootdir"/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" &
 reconnectpid=$!
 
 sleep 2
-kill -9 $nvmfpid
+kill -9 "$nvmfpid"
 
 sleep 2
-disconnect_init $NVMF_FIRST_TARGET_IP
+disconnect_init "$NVMF_FIRST_TARGET_IP"
 
 wait $reconnectpid
 sync
@@ -69,15 +69,15 @@ sync
 if [ -n "$NVMF_SECOND_TARGET_IP" ]; then
 	timing_enter failover_test
 
-	$rootdir/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
+	"$rootdir"/examples/nvme/reconnect/reconnect -q 32 -o 4096 -w randrw -M 50 -t 10 -c 0xF \
 	-r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT alt_traddr:$NVMF_SECOND_TARGET_IP" &
 	reconnectpid=$!
 
 	sleep 2
-	kill -9 $nvmfpid
+	kill -9 "$nvmfpid"
 
 	sleep 2
-	disconnect_init $NVMF_SECOND_TARGET_IP
+	disconnect_init "$NVMF_SECOND_TARGET_IP"
 
 	wait $reconnectpid
 	sync
@@ -86,6 +86,6 @@ if [ -n "$NVMF_SECOND_TARGET_IP" ]; then
 fi
 
 trap - SIGINT SIGTERM EXIT
-rm -f $PLUGIN_DIR/example_config_extended.fio || true
+rm -f "$PLUGIN_DIR"/example_config_extended.fio || true
 nvmftestfini
 timing_exit target_disconnect

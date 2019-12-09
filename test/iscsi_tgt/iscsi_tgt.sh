@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
-source $rootdir/test/common/autotest_common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
+source "$rootdir"/test/common/autotest_common.sh
 
 if [ ! $(uname -s) = Linux ]; then
 	exit 0
 fi
 
-source $rootdir/test/iscsi_tgt/common.sh
+source "$rootdir"/test/iscsi_tgt/common.sh
 
 timing_enter iscsi_tgt
 
@@ -20,11 +20,11 @@ else
 fi
 
 # Network configuration
-create_veth_interfaces $TEST_TYPE
+create_veth_interfaces "$TEST_TYPE"
 
 trap 'cleanup_veth_interfaces $TEST_TYPE; exit 1' SIGINT SIGTERM EXIT
 
-run_test suite ./test/iscsi_tgt/sock/sock.sh $TEST_TYPE
+run_test suite ./test/iscsi_tgt/sock/sock.sh "$TEST_TYPE"
 if [ "$TEST_TYPE" == "posix" ]; then
 	# calsoft doesn't handle TCP stream properly and fails decoding iSCSI
 	# requests when are divided by TCP segmentation. This is very common
@@ -33,7 +33,7 @@ if [ "$TEST_TYPE" == "posix" ]; then
 fi
 run_test suite ./test/iscsi_tgt/filesystem/filesystem.sh
 run_test suite ./test/iscsi_tgt/reset/reset.sh
-run_test suite ./test/iscsi_tgt/rpc_config/rpc_config.sh $TEST_TYPE
+run_test suite ./test/iscsi_tgt/rpc_config/rpc_config.sh "$TEST_TYPE"
 run_test suite ./test/iscsi_tgt/lvol/iscsi_lvol.sh
 run_test suite ./test/iscsi_tgt/fio/fio.sh
 run_test suite ./test/iscsi_tgt/qos/qos.sh
@@ -45,14 +45,14 @@ if [ "$TEST_TYPE" == "posix" ]; then
 fi
 run_test suite ./test/iscsi_tgt/trace_record/trace_record.sh
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	if [ $SPDK_TEST_PMDK -eq 1 ]; then
+if [ "$RUN_NIGHTLY" -eq 1 ]; then
+	if [ "$SPDK_TEST_PMDK" -eq 1 ]; then
 		run_test suite ./test/iscsi_tgt/pmem/iscsi_pmem.sh 4096 10
 	fi
 	run_test suite ./test/iscsi_tgt/ext4test/ext4test.sh
 	run_test suite ./test/iscsi_tgt/digests/digests.sh
 fi
-if [ $SPDK_TEST_RBD -eq 1 ]; then
+if [ "$SPDK_TEST_RBD" -eq 1 ]; then
 	# RBD tests do not support network namespaces,
 	# they can only be run on posix sockets.
 	if [ "$TEST_TYPE" == "posix" ]; then
@@ -62,7 +62,7 @@ fi
 
 trap 'cleanup_veth_interfaces $TEST_TYPE; exit 1' SIGINT SIGTERM EXIT
 
-if [ $SPDK_TEST_NVMF -eq 1 ]; then
+if [ "$SPDK_TEST_NVMF" -eq 1 ]; then
 	# NVMe-oF tests do not support network namespaces,
 	# they can only be run on posix sockets.
 	if [ "$TEST_TYPE" == "posix" ]; then
@@ -71,15 +71,15 @@ if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	fi
 fi
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
+if [ "$RUN_NIGHTLY" -eq 1 ]; then
 	run_test suite ./test/iscsi_tgt/multiconnection/multiconnection.sh
 fi
 
-if [ $SPDK_TEST_ISCSI_INITIATOR -eq 1 ]; then
+if [ "$SPDK_TEST_ISCSI_INITIATOR" -eq 1 ]; then
 	run_test suite ./test/iscsi_tgt/initiator/initiator.sh
 	run_test suite ./test/iscsi_tgt/bdev_io_wait/bdev_io_wait.sh
 fi
 
-cleanup_veth_interfaces $TEST_TYPE
+cleanup_veth_interfaces "$TEST_TYPE"
 trap - SIGINT SIGTERM EXIT
 timing_exit iscsi_tgt

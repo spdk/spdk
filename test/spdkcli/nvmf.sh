@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/spdkcli/common.sh
-source $rootdir/test/nvmf/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/spdkcli/common.sh
+source "$rootdir"/test/nvmf/common.sh
 
 MATCH_FILE="spdkcli_nvmf.test"
 SPDKCLI_BRANCH="/nvmf"
@@ -82,7 +82,7 @@ $spdkcli_job "'/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/namespaces delete nsi
 "
 timing_exit spdkcli_clear_nvmf_config
 
-killprocess $nvmf_tgt_pid
+killprocess "$nvmf_tgt_pid"
 #revert_soft_roce
 timing_exit spdkcli_nvmf
 report_test_completion spdk_cli_nvmf

@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/vhost/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/vhost/common.sh
 
 function usage()
 {
 	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Shortcut script for running vhost app."
-	echo "Usage: $(basename $1) [-x] [-h|--help] [--clean-build]"
+	echo "Usage: $(basename "$1") [-x] [-h|--help] [--clean-build]"
 	echo "-h, --help           print help and exit"
 	echo "-x                   Set -x for script debug"
 
@@ -21,14 +21,14 @@ while getopts 'xh-:' optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
-			help) usage $0 ;;
+			help) usage "$0" ;;
 			conf-dir=*) CONF_DIR="${OPTARG#*=}" ;;
-			*) usage $0 echo "Invalid argument '$OPTARG'" ;;
+			*) usage "$0" echo "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
-	h) usage $0 ;;
+	h) usage "$0" ;;
 	x) set -x ;;
-	*) usage $0 "Invalid argument '$optchar'" ;;
+	*) usage "$0" "Invalid argument '$optchar'" ;;
 	esac
 done
 
@@ -40,16 +40,16 @@ VHOST_APP="$rootdir/app/vhost/vhost"
 
 notice "Testing vhost command line arguments"
 # Printing help will force vhost to exit without error
-$VHOST_APP -c /path/to/non_existing_file/conf -S $testdir -e 0x0 -s 1024 -d -h --silence-noticelog
+$VHOST_APP -c /path/to/non_existing_file/conf -S "$testdir" -e 0x0 -s 1024 -d -h --silence-noticelog
 
 # Testing vhost create pid file option. Vhost will exit with error as invalid config path is given
-if $VHOST_APP -c /path/to/non_existing_file/conf -f $VHOST_DIR/vhost/vhost.pid; then
+if $VHOST_APP -c /path/to/non_existing_file/conf -f "$VHOST_DIR"/vhost/vhost.pid; then
 	fail "vhost started when specifying invalid config file"
 fi
-rm -f $VHOST_DIR/vhost/vhost.pid
+rm -f "$VHOST_DIR"/vhost/vhost.pid
 
 # Testing vhost start with invalid config. Vhost will exit with error as bdev module init failed
-if $VHOST_APP -c $testdir/invalid.config; then
+if $VHOST_APP -c "$testdir"/invalid.config; then
 	fail "vhost started when specifying invalid config file"
 fi
 
@@ -70,7 +70,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	notice "running SPDK"
 	notice ""
 	vhost_run 0
-	vhost_load_config 0 $testdir/conf.json
+	vhost_load_config 0 "$testdir"/conf.json
 	notice ""
 
 	rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"

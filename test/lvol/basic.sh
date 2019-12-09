@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/lvol/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/lvol/common.sh
 
 # create empty lvol store and verify its parameters
 function test_construct_lvs() {
 	# create an lvol store
-	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	malloc_name=$(rpc_cmd bdev_malloc_create "$MALLOC_SIZE_MB" "$MALLOC_BS")
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 	lvs=$(rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid")
 
@@ -33,7 +33,7 @@ function test_construct_lvs() {
 # create lvs + lvol on top, verify lvol's parameters
 function test_construct_lvol() {
 	# create an lvol store
-	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	malloc_name=$(rpc_cmd bdev_malloc_create "$MALLOC_SIZE_MB" "$MALLOC_BS")
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# create an lvol on top
@@ -71,7 +71,7 @@ function test_construct_lvol() {
 # create lvs + multiple lvols, verify their params
 function test_construct_multi_lvols() {
 	# create an lvol store
-	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	malloc_name=$(rpc_cmd bdev_malloc_create "$MALLOC_SIZE_MB" "$MALLOC_BS")
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
 	# create 4 lvols
@@ -129,7 +129,7 @@ function test_construct_multi_lvols() {
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 }
 
-$rootdir/app/spdk_tgt/spdk_tgt &
+"$rootdir"/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid

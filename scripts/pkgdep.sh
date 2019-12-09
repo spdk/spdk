@@ -34,8 +34,8 @@ done
 
 trap 'set +e; trap - ERR; echo "Error!"; exit 1;' ERR
 
-scriptsdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $scriptsdir/..)
+scriptsdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$scriptsdir"/..)
 
 if [ -s /etc/redhat-release ]; then
 	. /etc/os-release
@@ -151,7 +151,7 @@ elif [ -f /etc/arch-release ]; then
 
 	#fakeroot needed to instal via makepkg
 	pacman -Sy --needed --noconfirm fakeroot
-	su - $SUDO_USER -c "pushd /tmp;
+	su - "$SUDO_USER" -c "pushd /tmp;
 		git clone https://aur.archlinux.org/perl-perlio-gzip.git;
 		cd perl-perlio-gzip;
 		yes y | makepkg -si --needed;
@@ -161,7 +161,7 @@ elif [ -f /etc/arch-release ]; then
 	# sed is to modify sources section in PKGBUILD
 	# By default it uses git:// which will fail behind proxy, so
 	# redirect it to http:// source instead
-	su - $SUDO_USER -c "pushd /tmp;
+	su - "$SUDO_USER" -c "pushd /tmp;
 		git clone https://aur.archlinux.org/lcov-git.git;
 		cd lcov-git;
 		sed -i 's/git:/git+http:/' PKGBUILD;
@@ -171,7 +171,7 @@ elif [ -f /etc/arch-release ]; then
 
 	# Additional dependency for building docs
 	pacman -S --noconfirm --needed gd ttf-font
-	su - $SUDO_USER -c "pushd /tmp;
+	su - "$SUDO_USER" -c "pushd /tmp;
 		git clone https://aur.archlinux.org/mscgen.git;
 		cd mscgen;
 		makepkg -si --needed --noconfirm;
@@ -182,8 +182,8 @@ elif [ -f /etc/arch-release ]; then
 	if [[ -n "$http_proxy" ]]; then
 		gpg_options=" --keyserver hkp://keyserver.ubuntu.com:80 --keyserver-options \"http-proxy=$http_proxy\""
 	fi
-	su - $SUDO_USER -c "gpg $gpg_options --recv-keys 29F0D86B9C1019B1"
-	su - $SUDO_USER -c "pushd /tmp;
+	su - "$SUDO_USER" -c "gpg $gpg_options --recv-keys 29F0D86B9C1019B1"
+	su - "$SUDO_USER" -c "pushd /tmp;
 		git clone https://aur.archlinux.org/rdma-core.git;
 		cd rdma-core;
 		makepkg -si --needed --noconfirm;

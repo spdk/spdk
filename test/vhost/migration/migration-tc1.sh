@@ -8,8 +8,8 @@ function migration_tc1_clean_vhost_config()
 	$rpc bdev_malloc_delete Malloc0
 
 	# Delete controllers
-	$rpc vhost_delete_controller $incoming_vm_ctrlr
-	$rpc vhost_delete_controller $target_vm_ctrlr
+	$rpc vhost_delete_controller "$incoming_vm_ctrlr"
+	$rpc vhost_delete_controller "$target_vm_ctrlr"
 
 	unset -v incoming_vm target_vm incoming_vm_ctrlr target_vm_ctrlr rpc
 }
@@ -74,14 +74,14 @@ function migration_tc1()
 	notice "Starting FIO"
 
 	vm_check_scsi_location $incoming_vm
-	run_fio $fio_bin --job-file="$job_file" --local --vm="${incoming_vm}$(printf ':/dev/%s' $SCSI_DISK)"
+	run_fio "$fio_bin" --job-file="$job_file" --local --vm="${incoming_vm}$(printf ':/dev/%s' "$SCSI_DISK")"
 
 	# Wait a while to let the FIO time to issue some IO
 	sleep 5
 
 	# Check if fio is still running before migration
 	if ! is_fio_running $incoming_vm; then
-		vm_exec $incoming_vm "cat /root/$(basename ${job_file}).out"
+		vm_exec $incoming_vm "cat /root/$(basename "${job_file}").out"
 		error "FIO is not running before migration: process crashed or finished too early"
 	fi
 
@@ -90,7 +90,7 @@ function migration_tc1()
 
 	# Check if fio is still running after migration
 	if ! is_fio_running $target_vm; then
-		vm_exec $target_vm "cat /root/$(basename ${job_file}).out"
+		vm_exec $target_vm "cat /root/$(basename "${job_file}").out"
 		error "FIO is not running after migration: process crashed or finished too early"
 	fi
 
@@ -105,7 +105,7 @@ function migration_tc1()
 	done
 
 	notice "Fio result is:"
-	vm_exec $target_vm "cat /root/$(basename ${job_file}).out"
+	vm_exec $target_vm "cat /root/$(basename "${job_file}").out"
 
 	notice "Migration DONE"
 

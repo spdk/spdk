@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/iscsi_tgt/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/iscsi_tgt/common.sh
 
 # $1 = test type posix or vpp.
 # $2 = "iso" - triggers isolation mode (setting up required environment).
-iscsitestinit $2 $1
+iscsitestinit "$2" "$1"
 
 timing_enter rpc_config
 
@@ -53,7 +53,7 @@ sleep 1
 
 timing_exit start_iscsi_tgt
 
-$rpc_config_py $rpc_py $TARGET_IP $INITIATOR_IP $ISCSI_PORT $NETMASK $TARGET_NAMESPACE $TEST_TYPE
+$rpc_config_py "$rpc_py" "$TARGET_IP" "$INITIATOR_IP" "$ISCSI_PORT" "$NETMASK" "$TARGET_NAMESPACE" "$TEST_TYPE"
 
 $rpc_py bdev_get_bdevs
 
@@ -62,6 +62,6 @@ trap - SIGINT SIGTERM EXIT
 iscsicleanup
 killprocess $pid
 
-iscsitestfini $2 $1
+iscsitestfini "$2" "$1"
 
 timing_exit rpc_config

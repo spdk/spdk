@@ -2,8 +2,8 @@
 
 set -e
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
 plugindir=$rootdir/examples/bdev/fio_plugin
 rpc_py="$rootdir/scripts/rpc.py"
 source "$rootdir/scripts/common.sh"
@@ -13,7 +13,7 @@ source "$rootdir/test/nvmf/common.sh"
 function error_cleanup() {
 	# force delete pmem file and wipe on-disk metadata
 	rm -rf /tmp/pmem
-	$rootdir/examples/nvme/perf/perf -q 1 -o 131072 -w write -t 2
+	"$rootdir"/examples/nvme/perf/perf -q 1 -o 131072 -w write -t 2
 }
 
 function destroy_vols() {
@@ -26,7 +26,7 @@ function destroy_vols() {
 }
 
 function create_vols() {
-	$rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
+	"$rootdir"/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
 	waitforbdev Nvme0n1
 
 	$rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs0
@@ -50,24 +50,24 @@ function create_vols() {
 }
 
 function run_bdevio() {
-	$rootdir/test/bdev/bdevio/bdevio -w &
+	"$rootdir"/test/bdev/bdevio/bdevio -w &
 	bdevio_pid=$!
 	trap 'killprocess $bdevio_pid; error_cleanup; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $bdevio_pid
 	create_vols
-	$rootdir/test/bdev/bdevio/tests.py perform_tests
+	"$rootdir"/test/bdev/bdevio/tests.py perform_tests
 	destroy_vols
 	trap - SIGINT SIGTERM EXIT
 	killprocess $bdevio_pid
 }
 
 function run_bdevperf() {
-	$rootdir/test/bdev/bdevperf/bdevperf -z -q $1 -o $2 -w verify -t $3 &
+	"$rootdir"/test/bdev/bdevperf/bdevperf -z -q "$1" -o "$2" -w verify -t "$3" &
 	bdevperf_pid=$!
 	trap 'killprocess $bdevperf_pid; error_cleanup; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $bdevperf_pid
 	create_vols
-	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
+	"$rootdir"/test/bdev/bdevperf/bdevperf.py perform_tests
 	destroy_vols
 	trap - SIGINT SIGTERM EXIT
 	killprocess $bdevperf_pid
@@ -79,7 +79,7 @@ mkdir -p /tmp/pmem
 # per patch bdevperf uses slightly different params than nightly
 run_bdevperf 32 4096 3
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
+if [ "$RUN_NIGHTLY" -eq 1 ]; then
 	run_bdevio
 	run_bdevperf 64 16384 30
 
@@ -94,10 +94,10 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode0 -a -s SPDK0
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 COMP_lvs0/lv0
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 COMP_lvs0/lv1
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 	# Start random read writes in the background
-	$rootdir/examples/nvme/perf/perf -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -o 4096 -q 64 -s 512 -w randrw -t 30 -c 0x18 -M 50 &
+	"$rootdir"/examples/nvme/perf/perf -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -o 4096 -q 64 -s 512 -w randrw -t 30 -c 0x18 -M 50 &
 	perf_pid=$!
 
 	# Wait for I/O to complete

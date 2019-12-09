@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/spdkcli/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/spdkcli/common.sh
 
 trap 'killprocess $virtio_pid; on_error_exit' ERR
 timing_enter spdk_cli_vhost_init
@@ -13,7 +13,7 @@ run_spdk_tgt
 timing_exit run_spdk_tgt
 
 timing_enter run_spdk_virtio
-$rootdir/app/spdk_tgt/spdk_tgt -m 0x4 -p 0 -g -u -s 1024 -r /var/tmp/virtio.sock &
+"$rootdir"/app/spdk_tgt/spdk_tgt -m 0x4 -p 0 -g -u -s 1024 -r /var/tmp/virtio.sock &
 virtio_pid=$!
 waitforlisten $virtio_pid /var/tmp/virtio.sock
 timing_exit run_spdk_virtio
@@ -76,6 +76,6 @@ $spdkcli_job "'/bdevs/malloc delete Malloc0' 'Malloc0'
 timing_exit spdkcli_clear_virtio_config
 
 killprocess $virtio_pid
-killprocess $spdk_tgt_pid
+killprocess "$spdk_tgt_pid"
 
 timing_exit spdk_cli_vhost_init

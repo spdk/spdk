@@ -7,7 +7,7 @@ LVS_DEFAULT_CAPACITY_MB=$(( MALLOC_SIZE_MB - LVS_DEFAULT_CLUSTER_SIZE_MB ))
 LVS_DEFAULT_CAPACITY=$(( LVS_DEFAULT_CAPACITY_MB * 1024 * 1024 ))
 
 function rpc_cmd() {
-	$rootdir/scripts/rpc.py "$@"
+	"$rootdir"/scripts/rpc.py "$@"
 }
 
 function run_lvol_test() {
