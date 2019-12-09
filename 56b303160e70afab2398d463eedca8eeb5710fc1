@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93e5e98d_8b5f8506",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-09T20:38:49Z",
+      "side": 1,
+      "message": "If i \u003d\u003d spdk_env_get_core_count(), this failed to schedule the thread and should return an error.",
+      "revId": "56b303160e70afab2398d463eedca8eeb5710fc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
