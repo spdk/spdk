@@ -2990,17 +2990,17 @@ static int
 iscsi_transfer_in(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 {
 	uint32_t DataSN;
-	int transfer_len;
-	int data_len;
-	int segment_len;
-	int offset;
-	int residual_len = 0;
+	uint32_t transfer_len;
+	uint32_t data_len;
+	uint32_t segment_len;
+	uint32_t offset;
+	uint32_t residual_len = 0;
 	int sent_status;
-	int len;
+	uint32_t len;
 	int datain_flag = 0;
 	int datain_seq_cnt;
 	int i;
-	int sequence_end;
+	uint32_t sequence_end;
 	struct spdk_iscsi_task *primary;
 
 	primary = spdk_iscsi_task_get_primary(task);
