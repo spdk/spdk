@@ -93,6 +93,14 @@ struct nvme_bdev_ctrlr {
 
 	struct spdk_poller		*adminq_timer_poller;
 
+	/**
+	 * Temporary workaround to distinguish between controllers managed by
+	 * bdev_ocssd and those used by bdev_ftl.  Once bdev_ftl becomes a
+	 * virtual bdev and starts using bdevs instead of controllers, this flag
+	 * can be removed.
+	 */
+	bool				ftl_managed;
+
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;
 };
