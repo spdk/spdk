@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80047342_2965a2ec",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T16:30:29Z",
+      "side": 1,
+      "message": "does this need to be /dev/${nvme_name} instead of /dev/nvme0?",
+      "revId": "3488a6a0cb996167c3739d9ba4f15d26e25f6803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
