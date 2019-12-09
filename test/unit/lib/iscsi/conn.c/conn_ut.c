@@ -153,9 +153,6 @@ DEFINE_STUB(spdk_iscsi_build_iovs, int,
 	     struct spdk_iscsi_pdu *pdu, uint32_t *mapped_length),
 	    0);
 
-DEFINE_STUB(spdk_iscsi_is_deferred_free_pdu, bool,
-	    (struct spdk_iscsi_pdu *pdu), false);
-
 DEFINE_STUB_V(spdk_iscsi_task_response,
 	      (struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task));
 

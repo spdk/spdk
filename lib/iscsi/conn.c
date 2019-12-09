@@ -1257,6 +1257,21 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 	}
 }
 
+static bool
+iscsi_is_free_pdu_deferred(struct spdk_iscsi_pdu *pdu)
+{
+	if (pdu == NULL) {
+		return false;
+	}
+
+	if (pdu->bhs.opcode == ISCSI_OP_R2T ||
+	    pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
+		return true;
+	}
+
+	return false;
+}
+
 /**
  * \brief Makes one attempt to flush response PDUs back to the initiator.
  *
@@ -1355,7 +1370,7 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 		TAILQ_REMOVE(&completed_pdus_list, pdu, tailq);
 		if ((conn->full_feature) &&
 		    (conn->sess->ErrorRecoveryLevel >= 1) &&
-		    spdk_iscsi_is_deferred_free_pdu(pdu)) {
+		    iscsi_is_free_pdu_deferred(pdu)) {
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "stat_sn=%d\n",
 				      from_be32(&pdu->bhs.stat_sn));
 			TAILQ_INSERT_TAIL(&conn->snack_pdu_list, pdu,
