@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7806b0d4_c4c360ef",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2162,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-09T03:24:34Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a645a00a_45d2050d",
+      "revId": "afde80af6bfed1e1e4a1f8aec82b502ff027d9fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81f63948_d86693e0",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 18
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "8fc1bb4c_0b1cefdc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2167,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-09T03:24:34Z",
+      "side": 1,
+      "message": "Ack. We must use the spdk_get_io_channel not the spdk_io_channel_iter_get_channel. Because the channel may be destroyed when we run bdev_channel_poll_timeout_io.",
+      "parentUuid": "81f63948_d86693e0",
+      "revId": "afde80af6bfed1e1e4a1f8aec82b502ff027d9fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34d45c6d_779f876e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 18
@@ -47,6 +83,24 @@
       "writtenOn": "2019-12-06T23:52:22Z",
       "side": 1,
       "message": "I think you can make this a lot simpler.  Just increment desc-\u003erefs here.  Then if it gets closed, refs \u003e 0 and it won\u0027t try to free it.\n\nThen all you need to do is decrement refs in bdev_channel_poll_timeout_io_done.  If it\u0027s 0, call bdev_desc_free on it.\n\nThen you don\u0027t need any of this STATE code.\n\n(Note: bdev resize uses a similar mechanism to what I\u0027ve described here, for when a notify event is outstanding when a descriptor gets closed).",
+      "revId": "afde80af6bfed1e1e4a1f8aec82b502ff027d9fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1978820_35359d28",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2193,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-09T03:24:34Z",
+      "side": 1,
+      "message": "Hi  Jim. I have thought about this method but abandon it at last. \nsdpk_bdev_set_timeout not only set the poller but also change and unregister. So this func may run concurrently with the bdev_channel_poll_timeout_io. I don\u0027t think we want to add the mutex in the TAILQ_FOREACH when we change the timeout. Also the change should work in the next poll not this one.\nAlso we don\u0027t use any mutex.☺",
+      "parentUuid": "34d45c6d_779f876e",
       "revId": "afde80af6bfed1e1e4a1f8aec82b502ff027d9fd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
