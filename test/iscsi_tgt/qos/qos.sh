@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/iscsi_tgt/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/iscsi_tgt/common.sh
 
 # $1 = "iso" - triggers isolation mode (setting up required environment).
 # $2 = test type posix or vpp. defaults to posix.
-iscsitestinit $1 $2
+iscsitestinit "$1" "$2"
 
 function run_fio() {
 	local bdev_name=$1
@@ -18,13 +18,13 @@ function run_fio() {
 	local end_bytes_read
 	local run_time=5
 
-	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	iostats=$($rpc_py bdev_get_iostat -b "$bdev_name")
 	start_io_count=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
 	start_bytes_read=$(jq -r '.bdevs[0].bytes_read' <<< "$iostats")
 
 	$fio_py -p iscsi -i 1024 -d 128 -t randread -r $run_time
 
-	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	iostats=$($rpc_py bdev_get_iostat -b "$bdev_name")
 	end_io_count=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
 	end_bytes_read=$(jq -r '.bdevs[0].bytes_read' <<< "$iostats")
 
@@ -70,18 +70,18 @@ echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
-$rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
-$rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+$rpc_py iscsi_create_portal_group "$PORTAL_TAG" "$TARGET_IP":"$ISCSI_PORT"
+$rpc_py iscsi_create_initiator_group "$INITIATOR_TAG" "$INITIATOR_NAME" "$NETMASK"
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "Malloc0:0" ==> use Malloc0 blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "-d" ==> disable CHAP authentication
-$rpc_py iscsi_create_target_node Target1 Target1_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+$rpc_py iscsi_create_target_node Target1 Target1_alias 'Malloc0:0' "$PORTAL_TAG":"$INITIATOR_TAG" 64 -d
 sleep 1
 
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
-iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+iscsiadm -m discovery -t sendtargets -p "$TARGET_IP":"$ISCSI_PORT"
+iscsiadm -m node --login -p "$TARGET_IP":"$ISCSI_PORT"
 
 trap 'iscsicleanup; killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
@@ -144,5 +144,5 @@ rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
 killprocess $pid
 
-iscsitestfini $1 $2
+iscsitestfini "$1" "$2"
 timing_exit qos

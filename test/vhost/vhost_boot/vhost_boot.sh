@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -xe
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/vhost/common.sh
-source $rootdir/test/bdev/nbd_common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/vhost/common.sh
+source "$rootdir"/test/bdev/nbd_common.sh
 
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 vm_no="0"
@@ -19,8 +19,8 @@ function err_clean
 	vm_kill_all
 	$rpc_py vhost_scsi_controller_remove_target naa.vhost_vm.$vm_no 0
 	$rpc_py vhost_delete_controller naa.vhost_vm.$vm_no
-	$rpc_py bdev_lvol_delete $lvb_u
-	$rpc_py bdev_lvol_delete_lvstore -u $lvs_u
+	$rpc_py bdev_lvol_delete "$lvb_u"
+	$rpc_py bdev_lvol_delete_lvstore -u "$lvs_u"
 	vhost_kill 0
 	exit 1
 }
@@ -28,7 +28,7 @@ function err_clean
 function usage()
 {
 	[[ -n $2 ]] && ( echo "$2"; echo ""; )
-	echo "Usage: $(basename $1) vm_image=PATH [-h|--help]"
+	echo "Usage: $(basename "$1") vm_image=PATH [-h|--help]"
 	echo "-h, --help            Print help and exit"
 	echo "    --vm_image=PATH   Path to VM image used in these tests"
 }
@@ -38,11 +38,11 @@ while getopts 'h-:' optchar; do
 		-)
 		case "$OPTARG" in
 			vm_image=*) os_image="${OPTARG#*=}" ;;
-			*) usage $0 echo "Invalid argument '$OPTARG'" && exit 1 ;;
+			*) usage "$0" echo "Invalid argument '$OPTARG'" && exit 1 ;;
 		esac
 		;;
-		h) usage $0 && exit 0 ;;
-		*) usage $0 "Invalid argument '$optchar'" && exit 1 ;;
+		h) usage "$0" && exit 0 ;;
+		*) usage "$0" "Invalid argument '$optchar'" && exit 1 ;;
 	esac
 done
 
@@ -75,14 +75,14 @@ if [[ $nvme_bdev_bs != 512 ]]; then
 fi
 
 lvs_u=$($rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs0)
-lvb_u=$($rpc_py bdev_lvol_create -u $lvs_u lvb0 20000)
+lvb_u=$($rpc_py bdev_lvol_create -u "$lvs_u" lvb0 20000)
 timing_exit create_lvol
 
 timing_enter convert_vm_image
 modprobe nbd
 trap 'nbd_stop_disks $(get_vhost_dir 0)/rpc.sock /dev/nbd0; err_clean "${FUNCNAME}" "${LINENO}"' ERR
-nbd_start_disks "$(get_vhost_dir 0)/rpc.sock" $lvb_u /dev/nbd0
-qemu-img convert $os_image -O raw /dev/nbd0
+nbd_start_disks "$(get_vhost_dir 0)/rpc.sock" "$lvb_u" /dev/nbd0
+qemu-img convert "$os_image" -O raw /dev/nbd0
 sync
 nbd_stop_disks $(get_vhost_dir 0)/rpc.sock /dev/nbd0
 sleep 1
@@ -91,7 +91,7 @@ timing_exit convert_vm_image
 trap 'err_clean "${FUNCNAME}" "${LINENO}"' ERR
 timing_enter create_vhost_controller
 $rpc_py vhost_create_scsi_controller naa.vhost_vm.$vm_no
-$rpc_py vhost_scsi_controller_add_target naa.vhost_vm.$vm_no 0 $lvb_u
+$rpc_py vhost_scsi_controller_add_target naa.vhost_vm.$vm_no 0 "$lvb_u"
 timing_exit create_vhost_controller
 
 timing_enter setup_vm
@@ -117,8 +117,8 @@ vm_shutdown_all
 timing_enter clean_vhost
 $rpc_py vhost_scsi_controller_remove_target naa.vhost_vm.$vm_no 0
 $rpc_py vhost_delete_controller naa.vhost_vm.$vm_no
-$rpc_py bdev_lvol_delete $lvb_u
-$rpc_py bdev_lvol_delete_lvstore -u $lvs_u
+$rpc_py bdev_lvol_delete "$lvb_u"
+$rpc_py bdev_lvol_delete_lvstore -u "$lvs_u"
 vhost_kill 0
 timing_exit clean_vhost
 

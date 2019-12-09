@@ -2,7 +2,7 @@
 
 set -xe
 
-testdir=$(readlink -f $(dirname $0))
+testdir=$(readlink -f $(dirname "$0"))
 
 disk_name="vda"
 test_folder_name="readonly_test"

@@ -1,4 +1,4 @@
-source $rootdir/test/nvmf/common.sh
+source "$rootdir"/test/nvmf/common.sh
 
 function migration_tc2_cleanup_nvmf_tgt()
 {
@@ -11,26 +11,26 @@ function migration_tc2_cleanup_nvmf_tgt()
 
 	if [[ -n "$1" ]]; then
 		trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
-		pkill --signal $1 -F $nvmf_dir/nvmf_tgt.pid || true
+		pkill --signal "$1" -F "$nvmf_dir"/nvmf_tgt.pid || true
 		sleep 5
-		if ! pkill -F $nvmf_dir/nvmf_tgt.pid; then
+		if ! pkill -F "$nvmf_dir"/nvmf_tgt.pid; then
 			fail "failed to kill nvmf_tgt app"
 		fi
 	else
-		pkill --signal SIGTERM -F $nvmf_dir/nvmf_tgt.pid || true
+		pkill --signal SIGTERM -F "$nvmf_dir"/nvmf_tgt.pid || true
 		for (( i=0; i<20; i++ )); do
-			if ! pkill --signal 0 -F $nvmf_dir/nvmf_tgt.pid; then
+			if ! pkill --signal 0 -F "$nvmf_dir"/nvmf_tgt.pid; then
 				break
 			fi
 			sleep 0.5
 		done
 
-		if pkill --signal 0 -F $nvmf_dir/nvmf_tgt.pid; then
+		if pkill --signal 0 -F "$nvmf_dir"/nvmf_tgt.pid; then
 			error "nvmf_tgt failed to shutdown"
 		fi
 	fi
 
-	rm $nvmf_dir/nvmf_tgt.pid
+	rm "$nvmf_dir"/nvmf_tgt.pid
 	unset -v nvmf_dir rpc_nvmf
 }
 
@@ -46,10 +46,10 @@ function migration_tc2_cleanup_vhost_config()
 	notice "Removing vhost devices & controllers via RPC ..."
 	# Delete bdev first to remove all LUNs and SCSI targets
 	$rpc_0 bdev_nvme_detach_controller Nvme0
-	$rpc_0 vhost_delete_controller $incoming_vm_ctrlr
+	$rpc_0 vhost_delete_controller "$incoming_vm_ctrlr"
 
 	$rpc_1 delete_nvme_controller Nvme0
-	$rpc_1 vhost_delete_controller $target_vm_ctrlr
+	$rpc_1 vhost_delete_controller "$target_vm_ctrlr"
 
 	notice "killing vhost app"
 	vhost_kill 0
@@ -91,15 +91,15 @@ function migration_tc2_configure_vhost()
 	# This force to use VM 1 and 2.
 	timing_enter start_nvmf_tgt
 	notice "Running nvmf_tgt..."
-	mkdir -p $nvmf_dir
-	rm -f $nvmf_dir/*
-	$rootdir/app/nvmf_tgt/nvmf_tgt -s 512 -m 0x4 -r $nvmf_dir/rpc.sock --wait-for-rpc &
+	mkdir -p "$nvmf_dir"
+	rm -f "$nvmf_dir"/*
+	"$rootdir"/app/nvmf_tgt/nvmf_tgt -s 512 -m 0x4 -r "$nvmf_dir"/rpc.sock --wait-for-rpc &
 	local nvmf_tgt_pid=$!
-	echo $nvmf_tgt_pid > $nvmf_dir/nvmf_tgt.pid
+	echo $nvmf_tgt_pid > "$nvmf_dir"/nvmf_tgt.pid
 	waitforlisten "$nvmf_tgt_pid" "$nvmf_dir/rpc.sock"
 	$rpc_nvmf framework_start_init
 	$rpc_nvmf nvmf_create_transport -t RDMA -u 8192
-	$rootdir/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
+	"$rootdir"/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
 	timing_exit start_nvmf_tgt
 
 	vhost_run 0 "-m 0x1 -s 512 -u"
@@ -119,13 +119,13 @@ function migration_tc2_configure_vhost()
 	# Construct shared bdevs and controllers
 	$rpc_nvmf nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 	$rpc_nvmf nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Nvme0n1
-	$rpc_nvmf nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $nvmf_target_ip -s 4420
+	$rpc_nvmf nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a "$nvmf_target_ip" -s 4420
 
-	$rpc_0 bdev_nvme_attach_controller -b Nvme0 -t rdma -f ipv4 -a $nvmf_target_ip -s 4420 -n "nqn.2016-06.io.spdk:cnode1"
+	$rpc_0 bdev_nvme_attach_controller -b Nvme0 -t rdma -f ipv4 -a "$nvmf_target_ip" -s 4420 -n "nqn.2016-06.io.spdk:cnode1"
 	$rpc_0 vhost_create_scsi_controller $incoming_vm_ctrlr
 	$rpc_0 vhost_scsi_controller_add_target $incoming_vm_ctrlr 0 Nvme0n1
 
-	$rpc_1 bdev_nvme_attach_controller -b Nvme0 -t rdma -f ipv4 -a $nvmf_target_ip -s 4420 -n "nqn.2016-06.io.spdk:cnode1"
+	$rpc_1 bdev_nvme_attach_controller -b Nvme0 -t rdma -f ipv4 -a "$nvmf_target_ip" -s 4420 -n "nqn.2016-06.io.spdk:cnode1"
 	$rpc_1 vhost_create_scsi_controller $target_vm_ctrlr
 	$rpc_1 vhost_scsi_controller_add_target $target_vm_ctrlr 0 Nvme0n1
 
@@ -168,14 +168,14 @@ function migration_tc2()
 	# Run fio before migration
 	notice "Starting FIO"
 	vm_check_scsi_location $incoming_vm
-	run_fio $fio_bin --job-file="$job_file" --local --vm="${incoming_vm}$(printf ':/dev/%s' $SCSI_DISK)"
+	run_fio "$fio_bin" --job-file="$job_file" --local --vm="${incoming_vm}$(printf ':/dev/%s' "$SCSI_DISK")"
 
 	# Wait a while to let the FIO time to issue some IO
 	sleep 5
 
 	# Check if fio is still running before migration
 	if ! is_fio_running $incoming_vm; then
-		vm_exec $incoming_vm "cat /root/$(basename ${job_file}).out"
+		vm_exec $incoming_vm "cat /root/$(basename "${job_file}").out"
 		error "FIO is not running before migration: process crashed or finished too early"
 	fi
 
@@ -184,7 +184,7 @@ function migration_tc2()
 
 	# Check if fio is still running after migration
 	if ! is_fio_running $target_vm; then
-		vm_exec $target_vm "cat /root/$(basename ${job_file}).out"
+		vm_exec $target_vm "cat /root/$(basename "${job_file}").out"
 		error "FIO is not running after migration: process crashed or finished too early"
 	fi
 
@@ -199,7 +199,7 @@ function migration_tc2()
 	done
 
 	notice "Fio result is:"
-	vm_exec $target_vm "cat /root/$(basename ${job_file}).out"
+	vm_exec $target_vm "cat /root/$(basename "${job_file}").out"
 
 	migration_tc2_cleanup_vhost_config
 	notice "Migration TC2 SUCCESS"

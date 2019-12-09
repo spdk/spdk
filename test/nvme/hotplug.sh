@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
-source $rootdir/test/common/autotest_common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
+source "$rootdir"/test/common/autotest_common.sh
 
 if [ -z "${DEPENDENCY_DIR}" ]; then
 	echo DEPENDENCY_DIR not defined!
@@ -35,7 +35,7 @@ function get_online_devices_count() {
 function wait_for_devices_ready() {
 	count=$(get_online_devices_count)
 
-	while [ $count -ne 4 ]; do
+	while [ "$count" -ne 4 ]; do
 		echo "waitting for all devices online"
 		count=$(get_online_devices_count)
 	done
@@ -140,7 +140,7 @@ timing_exit wait_for_example
 trap - SIGINT SIGTERM EXIT
 
 qemupid=$(cat "$qemu_pidfile" | awk '{printf $0}')
-kill -9 $qemupid
+kill -9 "$qemupid"
 rm "$qemu_pidfile"
 rm "$test_img"
 

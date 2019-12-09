@@ -45,13 +45,13 @@ if [ ! "${SYSTEM}" = "FreeBSD" ]; then
 	WHICH_OS=$(lsb_release -i | awk '{print $3}')
 	case $type in
 		"nvme")
-			qemu-img create -f raw $nvme_disk ${size}
+			qemu-img create -f raw "$nvme_disk" "${size}"
 		;;
 		"ocssd")
-			if [ ${size} == "1024M" ]; then
+			if [ "${size}" == "1024M" ]; then
 				size="9G"
 			fi
-			fallocate -l ${size} $nvme_disk
+			fallocate -l ${size} "$nvme_disk"
 			touch /var/lib/libvirt/images/ocssd_md
 		;;
 		*)
@@ -60,10 +60,10 @@ if [ ! "${SYSTEM}" = "FreeBSD" ]; then
 		;;
 	esac
 	#Change SE Policy on Fedora
-	if [ $WHICH_OS == "Fedora" ]; then
-		sudo chcon -t svirt_image_t $nvme_disk
+	if [ "$WHICH_OS" == "Fedora" ]; then
+		sudo chcon -t svirt_image_t "$nvme_disk"
 	fi
 
-	chmod 777 $nvme_disk
-	chown qemu:qemu $nvme_disk
+	chmod 777 "$nvme_disk"
+	chown qemu:qemu "$nvme_disk"
 fi

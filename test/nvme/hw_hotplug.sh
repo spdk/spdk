@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
-source $rootdir/test/common/autotest_common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
+source "$rootdir"/test/common/autotest_common.sh
 
 function insert_device() {
-	ssh root@$ip 'Beetle --SetGpio "$gpio" HIGH'
-	waitforblk $name
-	DRIVER_OVERRIDE=$driver $rootdir/scripts/setup.sh
+	ssh root@"$ip" 'Beetle --SetGpio "$gpio" HIGH'
+	waitforblk "$name"
+	DRIVER_OVERRIDE=$driver "$rootdir"/scripts/setup.sh
 }
 
 function remove_device() {
-	ssh root@$ip 'Beetle --SetGpio "$gpio" LOW'
+	ssh root@"$ip" 'Beetle --SetGpio "$gpio" LOW'
 }
 
 ip=$1
@@ -25,12 +25,12 @@ timing_enter hotplug_hw
 timing_enter hotplug_hw_cfg
 
 # Configure microcontroller
-ssh root@$ip 'Beetle --SetGpioDirection "$gpio" OUT'
+ssh root@"$ip" 'Beetle --SetGpioDirection "$gpio" OUT'
 
 # Get blk dev name connected to interposer
-ssh root@$ip 'Beetle --SetGpio "$gpio" HIGH'
+ssh root@"$ip" 'Beetle --SetGpio "$gpio" HIGH'
 sleep $kernel_hotplug_time
-$rootdir/scripts/setup.sh reset
+"$rootdir"/scripts/setup.sh reset
 blk_list1=$(lsblk -d --output NAME | grep "^nvme")
 remove_device
 sleep $kernel_hotplug_time
@@ -43,7 +43,7 @@ timing_exit hotplug_hw_cfg
 
 timing_enter hotplug_hw_test
 
-$rootdir/examples/nvme/hotplug/hotplug -i 0 -t 100 -n 2 -r 2 2>&1 | tee -a log.txt &
+"$rootdir"/examples/nvme/hotplug/hotplug -i 0 -t 100 -n 2 -r 2 2>&1 | tee -a log.txt &
 example_pid=$!
 trap 'killprocess $example_pid; exit 1' SIGINT SIGTERM EXIT
 

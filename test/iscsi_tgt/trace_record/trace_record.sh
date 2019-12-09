@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/iscsi_tgt/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/iscsi_tgt/common.sh
 
 # $1 = "iso" - triggers isolation mode (setting up required environment).
 # $2 = test type posix or vpp. defaults to posix.
-iscsitestinit $1 $2
+iscsitestinit "$1" "$2"
 
 TRACE_TMP_FOLDER=./tmp-trace
 TRACE_RECORD_OUTPUT=${TRACE_TMP_FOLDER}/record.trace
@@ -67,12 +67,12 @@ for i in $(seq 0 $CONNECTION_NUMBER); do
 	RPCS+="bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i\n"
 	RPCS+="iscsi_create_target_node Target$i Target${i}_alias "Malloc$i:0" $PORTAL_TAG:$INITIATOR_TAG 256 -d\n"
 done
-echo -e $RPCS | $rpc_py
+echo -e "$RPCS" | $rpc_py
 
 sleep 1
 
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
-iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+iscsiadm -m discovery -t sendtargets -p "$TARGET_IP":"$ISCSI_PORT"
+iscsiadm -m node --login -p "$TARGET_IP":"$ISCSI_PORT"
 waitforiscsidevices $(( CONNECTION_NUMBER + 1 ))
 
 trap 'iscsicleanup; killprocess $iscsi_pid; killprocess $record_pid; delete_tmp_files; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
@@ -88,7 +88,7 @@ for i in $(seq 0 $CONNECTION_NUMBER); do
 	RPCS+="iscsi_delete_target_node iqn.2016-06.io.spdk:Target$i\n"
 	RPCS+="bdev_malloc_delete Malloc$i\n"
 done
-echo -e $RPCS | $rpc_py
+echo -e "$RPCS" | $rpc_py
 
 trap 'delete_tmp_files; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
@@ -105,8 +105,8 @@ trace_tool_num="$(grep "Trace Size of lcore" ${TRACE_TOOL_LOG} | cut -d ' ' -f 6
 
 delete_tmp_files
 
-echo "entries numbers from trace record are:" $record_num
-echo "entries numbers from trace tool are:" $trace_tool_num
+echo "entries numbers from trace record are:" "$record_num"
+echo "entries numbers from trace tool are:" "$trace_tool_num"
 
 arr_record_num=($record_num)
 arr_trace_tool_num=($trace_tool_num)
@@ -114,19 +114,19 @@ len_arr_record_num=${#arr_record_num[@]}
 len_arr_trace_tool_num=${#arr_trace_tool_num[@]}
 
 #lcore num check
-if [  $len_arr_record_num -ne $len_arr_trace_tool_num ]; then
+if [  "$len_arr_record_num" -ne "$len_arr_trace_tool_num" ]; then
 	echo "trace record test on iscsi: failure on lcore number check"
 	set -e
 	exit 1
 fi
 #trace entries num check
 for i in $(seq 0 $((len_arr_record_num - 1))); do
-if [  ${arr_record_num[$i]} -le ${NUM_TRACE_ENTRIES} ]; then
+if [  "${arr_record_num[$i]}" -le ${NUM_TRACE_ENTRIES} ]; then
 	echo "trace record test on iscsi: failure on inefficient entries number check"
 	set -e
 	exit 1
 fi
-if [  ${arr_record_num[$i]} -ne ${arr_trace_tool_num[$i]} ]; then
+if [  "${arr_record_num[$i]}" -ne "${arr_trace_tool_num[$i]}" ]; then
 	echo "trace record test on iscsi: failure on entries number check"
 	set -e
 	exit 1
@@ -134,5 +134,5 @@ fi
 done
 
 trap - SIGINT SIGTERM EXIT
-iscsitestfini $1 $2
+iscsitestfini "$1" "$2"
 timing_exit trace_record

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/nvmf/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/nvmf/common.sh
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
@@ -14,7 +14,7 @@ timing_enter fio
 nvmftestinit
 nvmfappstart "-m 0xF"
 
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport "$NVMF_TRANSPORT_OPTS" -u 8192
 
 malloc_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
 malloc_bdevs+="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
@@ -27,26 +27,26 @@ $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK0000000000000
 for malloc_bdev in $malloc_bdevs; do
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 "$malloc_bdev"
 done
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 # Append the raid0 bdev into subsystem
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 raid0
 
-nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+nvme connect -t "$TEST_TRANSPORT" -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 waitforblk "nvme0n1"
 waitforblk "nvme0n2"
 waitforblk "nvme0n3"
 
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 1 -t write -r 1 -v
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 1 -t randwrite -r 1 -v
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 128 -t write -r 1 -v
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 128 -t randwrite -r 1 -v
+"$rootdir"/scripts/fio.py -p nvmf -i 4096 -d 1 -t write -r 1 -v
+"$rootdir"/scripts/fio.py -p nvmf -i 4096 -d 1 -t randwrite -r 1 -v
+"$rootdir"/scripts/fio.py -p nvmf -i 4096 -d 128 -t write -r 1 -v
+"$rootdir"/scripts/fio.py -p nvmf -i 4096 -d 128 -t randwrite -r 1 -v
 
 sync
 
 #start hotplug test case
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 1 -t read -r 10 &
+"$rootdir"/scripts/fio.py -p nvmf -i 4096 -d 1 -t read -r 10 &
 fio_pid=$!
 
 sleep 3

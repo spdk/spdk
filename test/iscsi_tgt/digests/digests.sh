@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/iscsi_tgt/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/iscsi_tgt/common.sh
 
 # $1 = "iso" - triggers isolation mode (setting up required environment).
 # $2 = test type posix or vpp. defaults to posix.
-iscsitestinit $1 $2
+iscsitestinit "$1" "$2"
 
 function node_login_fio_logout() {
 	for arg in "$@"; do
-		iscsiadm -m node -p $TARGET_IP:$ISCSI_PORT -o update -n node.conn[0].iscsi.$arg
+		iscsiadm -m node -p "$TARGET_IP":"$ISCSI_PORT" -o update -n node.conn[0].iscsi."$arg"
 	done
-	iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+	iscsiadm -m node --login -p "$TARGET_IP":"$ISCSI_PORT"
 	waitforiscsidevices 1
 	$fio_py -p iscsi -i 512 -d 1 -t write -r 2
 	$fio_py -p iscsi -i 512 -d 1 -t read -r 2
-	iscsiadm -m node --logout -p $TARGET_IP:$ISCSI_PORT
+	iscsiadm -m node --logout -p "$TARGET_IP":"$ISCSI_PORT"
 	waitforiscsidevices 0
 }
 
@@ -67,7 +67,7 @@ fio_py="$rootdir/scripts/fio.py"
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
+$ISCSI_APP -m "$ISCSI_TEST_CORE_MASK" --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
@@ -80,21 +80,21 @@ echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
-$rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
-$rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+$rpc_py iscsi_create_portal_group "$PORTAL_TAG" "$TARGET_IP":"$ISCSI_PORT"
+$rpc_py iscsi_create_initiator_group "$INITIATOR_TAG" "$INITIATOR_NAME" "$NETMASK"
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "Malloc0:0" ==> use Malloc0 blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "-d" ==> disable CHAP authentication
-$rpc_py iscsi_create_target_node Target3 Target3_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+$rpc_py iscsi_create_target_node Target3 Target3_alias 'Malloc0:0' "$PORTAL_TAG":"$INITIATOR_TAG" 64 -d
 sleep 1
 
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
+iscsiadm -m discovery -t sendtargets -p "$TARGET_IP":"$ISCSI_PORT"
 
 # iscsiadm installed by some Fedora releases loses the ability to set DataDigest parameter.
 # Check and avoid setting DataDigest.
-DataDigestAbility=$(iscsiadm -m node -p $TARGET_IP:$ISCSI_PORT -o update -n node.conn[0].iscsi.DataDigest -v None 2>&1 || true)
+DataDigestAbility=$(iscsiadm -m node -p "$TARGET_IP":"$ISCSI_PORT" -o update -n node.conn[0].iscsi.DataDigest -v None 2>&1 || true)
 if [ "$DataDigestAbility"x != x ]; then
 	iscsi_header_digest_test
 else
@@ -105,5 +105,5 @@ trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
 killprocess $pid
-iscsitestfini $1 $2
+iscsitestfini "$1" "$2"
 timing_exit digests
