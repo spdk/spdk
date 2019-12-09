@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 SYSTEM=$(uname -s)
-if [ $SYSTEM = "FreeBSD" ] ; then
+if [ "$SYSTEM" = "FreeBSD" ] ; then
     echo "blobfs.sh cannot run on FreeBSD currently."
     exit 0
 fi
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
 rpc_server=/var/tmp/spdk-blobfs.sock
 rpc_py="$rootdir/scripts/rpc.py -s $rpc_server"
 tmp_file=/tmp/blobfs_file
@@ -16,11 +16,11 @@ bdevname=BlobfsBdev
 mount_dir=/tmp/spdk_tmp_mount
 test_cache_size=512
 
-source $rootdir/test/common/autotest_common.sh
+source "$rootdir"/test/common/autotest_common.sh
 
 function on_error_exit() {
 	if [ -n "$blobfs_pid" ]; then
-		killprocess $blobfs_pid
+		killprocess "$blobfs_pid"
 	fi
 
 	rm -rf $mount_dir
@@ -31,7 +31,7 @@ function on_error_exit() {
 }
 
 function blobfs_start_app {
-	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -c ${conf_file} &
+	"$rootdir"/test/app/bdev_svc/bdev_svc -r $rpc_server -c ${conf_file} &
 	blobfs_pid=$!
 
 	echo "Process blobfs pid: $blobfs_pid"
@@ -54,7 +54,7 @@ function blobfs_detect_test() {
 	killprocess $blobfs_pid
 
 	# Create blobfs on test bdev
-	$rootdir/test/blobfs/mkfs/mkfs ${conf_file} ${bdevname}
+	"$rootdir"/test/blobfs/mkfs/mkfs ${conf_file} ${bdevname}
 
 	# Detect out there is a blobfs on test bdev
 	blobfs_start_app
@@ -88,7 +88,7 @@ function blobfs_fuse_test() {
 	fi
 
 	# mount blobfs on test dir
-	$rootdir/test/blobfs/fuse/fuse ${conf_file} ${bdevname} $mount_dir &
+	"$rootdir"/test/blobfs/fuse/fuse ${conf_file} ${bdevname} $mount_dir &
 	blobfs_pid=$!
 	echo "Process blobfs pid: $blobfs_pid"
 

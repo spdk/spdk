@@ -3,7 +3,7 @@
 function configure_performance() {
 	echo -n "Placing all CPUs in performance mode..."
 	for governor in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
-		echo -n performance > $governor
+		echo -n performance > "$governor"
 	done
 	echo "Done"
 
@@ -27,22 +27,22 @@ function configure_performance() {
 		cpumask="f$cpumask"
 	done
 	for file in /proc/irq/*/smp_affinity; do
-		echo "$cpumask" > $file 2> /dev/null
+		echo "$cpumask" > "$file" 2> /dev/null
 	done
 	echo "Done"
 
 	echo -n "Configuring kernel blk-mq for NVMe SSDs..."
 	for queue in /sys/block/nvme*n*/queue; do
 		if [ -f "$queue/nomerges" ]; then
-			echo "1" > $queue/nomerges
+			echo "1" > "$queue"/nomerges
 		fi
 
 		if [ -f "$queue/io_poll" ]; then
-			echo "1" > $queue/io_poll
+			echo "1" > "$queue"/io_poll
 		fi
 
 		if [ -f "$queue/io_poll_delay" ]; then
-			echo "-1" > $queue/io_poll_delay
+			echo "-1" > "$queue"/io_poll_delay
 		fi
 	done
 	echo "Done"
@@ -51,7 +51,7 @@ function configure_performance() {
 function reset_performance() {
 	echo -n "Placing all CPUs in powersave mode..."
 	for governor in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
-		echo -n powersave > $governor
+		echo -n powersave > "$governor"
 	done
 	echo "Done"
 

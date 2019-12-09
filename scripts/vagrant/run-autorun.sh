@@ -45,7 +45,7 @@ if [ -z "${READLINK}" ]; then
 	export READLINK=readlink
 fi
 
-AUTOTEST_DRIVER_PATH=$($READLINK -f ${BASH_SOURCE%/*})
+AUTOTEST_DRIVER_PATH=$($READLINK -f "${BASH_SOURCE%/*}")
 SPDK_AUTOTEST_LOCAL_PATH=$PWD
 TIMESTAMP=$(date +"%Y%m%d%H%M%S")
 BUILD_NAME="build-${TIMESTAMP}"
@@ -73,8 +73,8 @@ V=1
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
 while getopts "d:qhn" opt; do
 	case "$opt" in
-		d)  SPDK_SOURCE_PATH=$($READLINK -f $OPTARG)
-			echo Using SPDK source at ${SPDK_SOURCE_PATH}
+		d)  SPDK_SOURCE_PATH=$($READLINK -f "$OPTARG")
+			echo Using SPDK source at "${SPDK_SOURCE_PATH}"
 			METHOD=1
 		;;
 		q)  V=0
@@ -129,7 +129,7 @@ case "$METHOD" in
 		popd
 
 		if [ "${SPDK_AUTOTEST_LOCAL_PATH}" = "${SPDK_SOURCE_PATH}" ]; then
-			SPDK_AUTOTEST_LOCAL_PATH=$($READLINK -f ${SPDK_AUTOTEST_LOCAL_PATH}/..)
+			SPDK_AUTOTEST_LOCAL_PATH=$($READLINK -f "${SPDK_AUTOTEST_LOCAL_PATH}"/..)
 			echo "Set SPDK_AUTOTEST_LOCAL_PATH to ${SPDK_AUTOTEST_LOCAL_PATH}"
 		fi
 
@@ -183,7 +183,7 @@ fi
 
 mkdir -pv --mode=775 "${AUTOTEST_OUTPUT_PATH}"
 rm -f latest
-ln -sv ${GIT_REPO_PATH} latest
+ln -sv "${GIT_REPO_PATH}" latest
 
 if [[ ${NOOP} -eq 0 ]]; then
 	echo V=$V
@@ -191,7 +191,7 @@ if [[ ${NOOP} -eq 0 ]]; then
 		echo Quieting output
 		exec 3>&1 4>&2 > "${BUILD_LOG_FILE}" 2>&1
 	else
-		echo Teeing to ${BUILD_LOG_FILE}
+		echo Teeing to "${BUILD_LOG_FILE}"
 		exec > >(tee -a "${BUILD_LOG_FILE}") 2>&1
 	fi
 
@@ -222,7 +222,7 @@ if [[ ${NOOP} -eq 0 ]]; then
 	"${rootdir}/autopackage.sh" "$conf"
 	sudo -E "${rootdir}/autorun_post.py" -d "${AUTOTEST_OUTPUT_PATH}" -r "${rootdir}"
 
-	echo "All Tests Passed" > ${GIT_REPO_PATH}/passed
+	echo "All Tests Passed" > "${GIT_REPO_PATH}"/passed
 
 	# Redirect back to screen
 	if [[ $V -eq 0 ]]; then
@@ -236,5 +236,5 @@ fi
 
 echo "all tests passed"
 
-echo Output directory: ${GIT_REPO_PATH}
+echo Output directory: "${GIT_REPO_PATH}"
 echo Build log: "${BUILD_LOG_FILE}"

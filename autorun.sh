@@ -2,7 +2,7 @@
 
 set -e
 
-rootdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $(dirname "$0"))
 
 conf=~/autorun-spdk.conf
 
@@ -16,6 +16,6 @@ echo "Test configuration:"
 cat "$conf"
 
 # Runs agent scripts
-$rootdir/autobuild.sh "$conf"
-sudo -E WITH_DPDK_DIR="$WITH_DPDK_DIR" $rootdir/autotest.sh "$conf"
-$rootdir/autopackage.sh "$conf"
+"$rootdir"/autobuild.sh "$conf"
+sudo -E WITH_DPDK_DIR="$WITH_DPDK_DIR" "$rootdir"/autotest.sh "$conf"
+"$rootdir"/autopackage.sh "$conf"

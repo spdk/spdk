@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/vhost/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/vhost/common.sh
 
 ctrl_type="spdk_vhost_scsi"
 vm_fs="ext4"
@@ -12,7 +12,7 @@ function usage()
 {
 	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Shortcut script for doing automated test"
-	echo "Usage: $(basename $1) [OPTIONS]"
+	echo "Usage: $(basename "$1") [OPTIONS]"
 	echo
 	echo "-h, --help                Print help and exit"
 	echo "    --ctrl-type=TYPE      Controller type to use for test:"
@@ -36,22 +36,22 @@ while getopts 'xh-:' optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
-			help) usage $0 ;;
+			help) usage "$0" ;;
 			ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
 			fs=*) vm_fs="${OPTARG#*=}" ;;
-			*) usage $0 "Invalid argument '$OPTARG'" ;;
+			*) usage "$0" "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
-	h) usage $0 ;;
+	h) usage "$0" ;;
 	x) set -x
 		x="-x" ;;
-	*) usage $0 "Invalid argument '$OPTARG'"
+	*) usage "$0" "Invalid argument '$OPTARG'"
 	esac
 done
 
 vhosttestinit
 
-. $(readlink -e "$(dirname $0)/../common.sh") || exit 1
+. $(readlink -e "$(dirname "$0")/../common.sh") || exit 1
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
@@ -87,7 +87,7 @@ vm_run 0
 vm_wait_for_boot 300 0
 
 # Run tests on VM
-vm_scp 0 $testdir/integrity_vm.sh root@127.0.0.1:/root/integrity_vm.sh
+vm_scp 0 "$testdir"/integrity_vm.sh root@127.0.0.1:/root/integrity_vm.sh
 vm_exec 0 "/root/integrity_vm.sh $ctrl_type \"$vm_fs\""
 
 notice "Shutting down virtual machine..."

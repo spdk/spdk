@@ -13,7 +13,7 @@ INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 PORTAL_TAG=1
 ISCSI_APP="$TARGET_NS_CMD ./app/iscsi_tgt/iscsi_tgt"
-if [ $SPDK_TEST_VPP -eq 1 ]; then
+if [ "$SPDK_TEST_VPP" -eq 1 ]; then
 	ISCSI_APP+=" -L sock_vpp"
 fi
 ISCSI_TEST_CORE_MASK=0xFF
@@ -65,9 +65,9 @@ function cleanup_veth_interfaces() {
 
 function iscsitestinit() {
 	if [ "$1" == "iso" ]; then
-		$rootdir/scripts/setup.sh
+		"$rootdir"/scripts/setup.sh
 		if [ -n "$2" ]; then
-			create_veth_interfaces $2
+			create_veth_interfaces "$2"
 		else
 			# default to posix
 			create_veth_interfaces "posix"
@@ -80,7 +80,7 @@ function waitforiscsidevices() {
 
 	for ((i=1; i<=20; i++)); do
 		n=$( iscsiadm -m session -P 3 | grep -c "Attached scsi disk sd[a-z]*" || true)
-		if [ $n -ne $num ]; then
+		if [ "$n" -ne "$num" ]; then
 			sleep 0.1
 		else
 			return 0
@@ -93,12 +93,12 @@ function waitforiscsidevices() {
 function iscsitestfini() {
 	if [ "$1" == "iso" ]; then
 		if [ -n "$2" ]; then
-			cleanup_veth_interfaces $2
+			cleanup_veth_interfaces "$2"
 		else
 			# default to posix
 			cleanup_veth_interfaces "posix"
 		fi
-		$rootdir/scripts/setup.sh reset
+		"$rootdir"/scripts/setup.sh reset
 	fi
 }
 
@@ -117,7 +117,7 @@ function gdb_attach() {
 		-ex 'thread apply all bt' \
 		-ex 'quit' \
 		--tty=/dev/stdout \
-		-p $1
+		-p "$1"
 }
 
 function start_vpp() {

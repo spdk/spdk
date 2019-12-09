@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-rootdir=$(readlink -f $(dirname $0))/../..
-source $rootdir/test/common/autotest_common.sh
+rootdir=$(readlink -f $(dirname "$0"))/../..
+source "$rootdir"/test/common/autotest_common.sh
 source "$rootdir/scripts/common.sh"
 
 TEST_TIMEOUT=1200
@@ -26,16 +26,16 @@ timing_enter vhost_fuzz_test
 
 #todo refactor this to use the vhosttestinit function when it becomes available.
 timing_enter setup
-$rootdir/scripts/setup.sh
+"$rootdir"/scripts/setup.sh
 timing_exit setup
 
-$VHOST_APP &>$output_dir/vhost_fuzz_tgt_output.txt &
+$VHOST_APP &>"$output_dir"/vhost_fuzz_tgt_output.txt &
 vhostpid=$!
 waitforlisten $vhostpid
 
 trap 'killprocess $vhostpid; exit 1' SIGINT SIGTERM exit
 
-$FUZZ_APP -t $TEST_TIMEOUT 2>$output_dir/vhost_autofuzz_output1.txt &
+$FUZZ_APP -t "$TEST_TIMEOUT" 2>"$output_dir"/vhost_autofuzz_output1.txt &
 fuzzpid=$!
 waitforlisten $fuzzpid $FUZZ_RPC_SOCK
 

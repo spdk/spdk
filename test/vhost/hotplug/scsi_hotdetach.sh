@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/vhost/common.sh
-source $rootdir/test/vhost/hotplug/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/vhost/common.sh
+source "$rootdir"/test/vhost/hotplug/common.sh
 
 function get_first_disk() {
-    vm_check_scsi_location $1
+    vm_check_scsi_location "$1"
     disk_array=( $SCSI_DISK )
     eval "$2=${disk_array[0]}"
 }
@@ -23,15 +23,15 @@ function prepare_fio_cmd_tc1_iter1() {
 
     run_fio="$fio_bin --eta=never "
     for vm_num in $1; do
-        cp $fio_job $tmp_detach_job
-        vm_check_scsi_location $vm_num
+        cp "$fio_job" "$tmp_detach_job"
+        vm_check_scsi_location "$vm_num"
         for disk in $SCSI_DISK; do
-            echo "[nvme-host$disk]" >> $tmp_detach_job
-            echo "filename=/dev/$disk" >> $tmp_detach_job
+            echo "[nvme-host$disk]" >> "$tmp_detach_job"
+            echo "filename=/dev/$disk" >> "$tmp_detach_job"
         done
-        vm_scp "$vm_num" $tmp_detach_job 127.0.0.1:/root/default_integrity_4discs.job
-        run_fio+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/default_integrity_4discs.job "
-        rm $tmp_detach_job
+        vm_scp "$vm_num" "$tmp_detach_job" 127.0.0.1:/root/default_integrity_4discs.job
+        run_fio+="--client=127.0.0.1,$(vm_fio_socket "$vm_num") --remote-config /root/default_integrity_4discs.job "
+        rm "$tmp_detach_job"
     done
 }
 
@@ -40,15 +40,15 @@ function prepare_fio_cmd_tc2_iter1() {
 
     run_fio="$fio_bin --eta=never "
     for vm_num in $1; do
-        cp $fio_job $tmp_detach_job
-        vm_check_scsi_location $vm_num
+        cp "$fio_job" "$tmp_detach_job"
+        vm_check_scsi_location "$vm_num"
         disk_array=($SCSI_DISK)
         disk=${disk_array[0]}
-        echo "[nvme-host$disk]" >> $tmp_detach_job
-        echo "filename=/dev/$disk" >> $tmp_detach_job
-        vm_scp "$vm_num" $tmp_detach_job 127.0.0.1:/root/default_integrity.job
-        run_fio+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/default_integrity.job "
-        rm $tmp_detach_job
+        echo "[nvme-host$disk]" >> "$tmp_detach_job"
+        echo "filename=/dev/$disk" >> "$tmp_detach_job"
+        vm_scp "$vm_num" "$tmp_detach_job" 127.0.0.1:/root/default_integrity.job
+        run_fio+="--client=127.0.0.1,$(vm_fio_socket "$vm_num") --remote-config /root/default_integrity.job "
+        rm "$tmp_detach_job"
     done
 }
 
@@ -57,20 +57,20 @@ function prepare_fio_cmd_tc2_iter2() {
 
     run_fio="$fio_bin --eta=never "
     for vm_num in $1; do
-        cp $fio_job $tmp_detach_job
-        if [ $vm_num == 2 ]; then
+        cp "$fio_job" "$tmp_detach_job"
+        if [ "$vm_num" == 2 ]; then
             vm_job_name=default_integrity_3discs.job
         else
             vm_job_name=default_integrity_4discs.job
         fi
-        vm_check_scsi_location $vm_num
+        vm_check_scsi_location "$vm_num"
         for disk in $SCSI_DISK; do
-            echo "[nvme-host$disk]" >> $tmp_detach_job
-            echo "filename=/dev/$disk" >> $tmp_detach_job
+            echo "[nvme-host$disk]" >> "$tmp_detach_job"
+            echo "filename=/dev/$disk" >> "$tmp_detach_job"
         done
-        vm_scp "$vm_num" $tmp_detach_job  127.0.0.1:/root/$vm_job_name
-        run_fio+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/${vm_job_name} "
-        rm $tmp_detach_job
+        vm_scp "$vm_num" "$tmp_detach_job"  127.0.0.1:/root/$vm_job_name
+        run_fio+="--client=127.0.0.1,$(vm_fio_socket "$vm_num") --remote-config /root/${vm_job_name} "
+        rm "$tmp_detach_job"
     done
 }
 
@@ -80,28 +80,28 @@ function prepare_fio_cmd_tc3_iter1() {
 
     run_fio="$fio_bin --eta=never "
     for vm_num in $1; do
-        cp $fio_job $tmp_detach_job
-        if [ $vm_num == 2 ]; then
+        cp "$fio_job" "$tmp_detach_job"
+        if [ "$vm_num" == 2 ]; then
             vm_job_name=default_integrity_3discs.job
         else
             vm_job_name=default_integrity_4discs.job
         fi
-        vm_check_scsi_location $vm_num
+        vm_check_scsi_location "$vm_num"
         j=1
         for disk in $SCSI_DISK; do
-            if [ $vm_num == 2 ]; then
+            if [ "$vm_num" == 2 ]; then
                 if [ $j == 1 ]; then
                     (( j++ ))
                     continue
                 fi
             fi
-            echo "[nvme-host$disk]" >> $tmp_detach_job
-            echo "filename=/dev/$disk" >> $tmp_detach_job
+            echo "[nvme-host$disk]" >> "$tmp_detach_job"
+            echo "filename=/dev/$disk" >> "$tmp_detach_job"
             (( j++ ))
         done
-        vm_scp "$vm_num" $tmp_detach_job 127.0.0.1:/root/$vm_job_name
-        run_fio+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/$vm_job_name "
-        rm $tmp_detach_job
+        vm_scp "$vm_num" "$tmp_detach_job" 127.0.0.1:/root/$vm_job_name
+        run_fio+="--client=127.0.0.1,$(vm_fio_socket "$vm_num") --remote-config /root/$vm_job_name "
+        rm "$tmp_detach_job"
     done
 }
 

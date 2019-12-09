@@ -9,7 +9,7 @@
 
 VAGRANT_TARGET="$PWD"
 
-DIR="$( cd "$( dirname $0 )" && pwd )"
+DIR="$( cd "$( dirname "$0" )" && pwd )"
 SPDK_DIR="$( cd "${DIR}/../../" && pwd )"
 
 # The command line help
@@ -193,32 +193,32 @@ else
 			fi
 			NVME_DISKS_NAMESPACES+="$namespace,";
 			if [ ${NVME_AUTO_CREATE} = 1 ]; then
-				$SPDK_DIR/scripts/vagrant/create_nvme_img.sh -t $type -n $path
+				"$SPDK_DIR"/scripts/vagrant/create_nvme_img.sh -t $type -n "$path"
 			fi
-		done <<< $args
+		done <<< "$args"
 	done
 fi
 NVME_FILE=$TMP
 
 if [ ${VERBOSE} = 1 ]; then
 	echo
-	echo DIR=${DIR}
-	echo SPDK_DIR=${SPDK_DIR}
-	echo VAGRANT_TARGET=${VAGRANT_TARGET}
+	echo DIR="${DIR}"
+	echo SPDK_DIR="${SPDK_DIR}"
+	echo VAGRANT_TARGET="${VAGRANT_TARGET}"
 	echo HELP=$HELP
 	echo DRY_RUN=$DRY_RUN
-	echo NVME_FILE=$NVME_FILE
+	echo NVME_FILE="$NVME_FILE"
 	echo NVME_DISKS_TYPE=$NVME_DISKS_TYPE
 	echo NVME_AUTO_CREATE=$NVME_AUTO_CREATE
 	echo NVME_DISKS_NAMESPACES=$NVME_DISKS_NAMESPACES
-	echo SPDK_VAGRANT_DISTRO=$SPDK_VAGRANT_DISTRO
-	echo SPDK_VAGRANT_VMCPU=$SPDK_VAGRANT_VMCPU
-	echo SPDK_VAGRANT_VMRAM=$SPDK_VAGRANT_VMRAM
-	echo SPDK_VAGRANT_PROVIDER=$SPDK_VAGRANT_PROVIDER
-	echo SPDK_VAGRANT_HTTP_PROXY=$SPDK_VAGRANT_HTTP_PROXY
-	echo VHOST_HOST_DIR=$VHOST_HOST_DIR
-	echo VHOST_VM_DIR=$VHOST_VM_DIR
-	echo SPDK_QEMU_EMULATOR=$SPDK_QEMU_EMULATOR
+	echo SPDK_VAGRANT_DISTRO="$SPDK_VAGRANT_DISTRO"
+	echo SPDK_VAGRANT_VMCPU="$SPDK_VAGRANT_VMCPU"
+	echo SPDK_VAGRANT_VMRAM="$SPDK_VAGRANT_VMRAM"
+	echo SPDK_VAGRANT_PROVIDER="$SPDK_VAGRANT_PROVIDER"
+	echo SPDK_VAGRANT_HTTP_PROXY="$SPDK_VAGRANT_HTTP_PROXY"
+	echo VHOST_HOST_DIR="$VHOST_HOST_DIR"
+	echo VHOST_VM_DIR="$VHOST_VM_DIR"
+	echo SPDK_QEMU_EMULATOR="$SPDK_QEMU_EMULATOR"
 	echo
 fi
 
@@ -277,7 +277,7 @@ fi
 
 if [ ${DRY_RUN} != 1 ]; then
 	mkdir -vp "${VAGRANTFILE_DIR}"
-	cp ${DIR}/Vagrantfile ${VAGRANTFILE_DIR}
+	cp "${DIR}"/Vagrantfile "${VAGRANTFILE_DIR}"
 	pushd "${VAGRANTFILE_DIR}"
 	if [ -n "${http_proxy}" ]; then
 		export http_proxy
@@ -295,7 +295,7 @@ http_proxy: ${http_proxy}
 EOF
 		fi
 	fi
-	vagrant up $provider
+	vagrant up "$provider"
 	echo ""
 	echo "  SUCCESS!"
 	echo ""

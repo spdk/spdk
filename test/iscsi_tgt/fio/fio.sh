@@ -1,29 +1,29 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/iscsi_tgt/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$rootdir"/test/iscsi_tgt/common.sh
 
 # $1 = "iso" - triggers isolation mode (setting up required environment).
 # $2 = test type posix or vpp. defaults to posix.
-iscsitestinit $1 $2
+iscsitestinit "$1" "$2"
 
 delete_tmp_files() {
-	rm -f $testdir/iscsi2.json
+	rm -f "$testdir"/iscsi2.json
 	rm -f ./local-job0-0-verify.state
 	rm -f ./local-job1-1-verify.state
 }
 
 function running_config() {
 	# dump a config file from the running iscsi_tgt
-	$rpc_py save_config > $testdir/iscsi2.json
+	$rpc_py save_config > "$testdir"/iscsi2.json
 	sleep 1
 
 	# now start iscsi_tgt again using the generated config file
 	# keep the same iscsiadm configuration to confirm that the
 	#  config file matched the running configuration
-	killprocess $pid
+	killprocess "$pid"
 	trap 'iscsicleanup; delete_tmp_files; exit 1' SIGINT SIGTERM EXIT
 
 	timing_enter start_iscsi_tgt2
@@ -34,7 +34,7 @@ function running_config() {
 	trap 'iscsicleanup; killprocess $pid; delete_tmp_files; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $pid
 
-	$rpc_py load_config < $testdir/iscsi2.json
+	$rpc_py load_config < "$testdir"/iscsi2.json
 
 	echo "iscsi_tgt is listening. Running tests..."
 
@@ -72,14 +72,14 @@ trap 'killprocess $pid; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 
-$rpc_py load_config < $testdir/iscsi.json
+$rpc_py load_config < "$testdir"/iscsi.json
 
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
-$rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
-$rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+$rpc_py iscsi_create_portal_group "$PORTAL_TAG" "$TARGET_IP":"$ISCSI_PORT"
+$rpc_py iscsi_create_initiator_group "$INITIATOR_TAG" "$INITIATOR_NAME" "$NETMASK"
 # Create a RAID-0 bdev from two malloc bdevs
 malloc_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
 malloc_bdevs+="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
@@ -89,11 +89,11 @@ bdev=$( $rpc_py bdev_malloc_create 1024 512 )
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "-d" ==> disable CHAP authentication
-$rpc_py iscsi_create_target_node Target3 Target3_alias "raid0:0 ${bdev}:1" $PORTAL_TAG:$INITIATOR_TAG 64 -d
+$rpc_py iscsi_create_target_node Target3 Target3_alias "raid0:0 ${bdev}:1" "$PORTAL_TAG":"$INITIATOR_TAG" 64 -d
 sleep 1
 
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
-iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+iscsiadm -m discovery -t sendtargets -p "$TARGET_IP":"$ISCSI_PORT"
+iscsiadm -m node --login -p "$TARGET_IP":"$ISCSI_PORT"
 waitforiscsidevices 2
 
 trap 'iscsicleanup; killprocess $pid; iscsitestfini $1 $2; delete_tmp_files; exit 1' SIGINT SIGTERM EXIT
@@ -103,7 +103,7 @@ $fio_py -p iscsi -i 131072 -d 32 -t randrw -r 1 -v
 $fio_py -p iscsi -i 524288 -d 128 -t randrw -r 1 -v
 $fio_py -p iscsi -i 1048576 -d 1024 -t read -r 1 -n 4
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
+if [ "$RUN_NIGHTLY" -eq 1 ]; then
 	$fio_py -p iscsi -i 4096 -d 1 -t write -r 300 -v
 
 	# Run the running_config test which will generate a config file from the
@@ -124,11 +124,11 @@ $rpc_py bdev_raid_delete 'raid0'
 
 # Delete all allocated malloc blockdevs
 for malloc_bdev in $malloc_bdevs; do
-	$rpc_py bdev_malloc_delete $malloc_bdev
+	$rpc_py bdev_malloc_delete "$malloc_bdev"
 done
 
 # Delete malloc device
-$rpc_py bdev_malloc_delete ${bdev}
+$rpc_py bdev_malloc_delete "${bdev}"
 
 fio_status=0
 wait $fio_pid || fio_status=$?
@@ -150,6 +150,6 @@ trap - SIGINT SIGTERM EXIT
 
 killprocess $pid
 
-iscsitestfini $1 $2
+iscsitestfini "$1" "$2"
 
 timing_exit fio

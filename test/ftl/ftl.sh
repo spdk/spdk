@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../..)
-source $rootdir/test/common/autotest_common.sh
-source $testdir/common.sh
+testdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$testdir"/../..)
+source "$rootdir"/test/common/autotest_common.sh
+source "$testdir"/common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
 
@@ -22,7 +22,7 @@ if [[ -z "$device" ]]; then
 	exit 1
 fi
 
-ocssd_original_dirver="$(basename $(readlink /sys/bus/pci/devices/$device/driver))"
+ocssd_original_dirver="$(basename $(readlink /sys/bus/pci/devices/"$device"/driver))"
 
 trap 'at_ftl_exit' SIGINT SIGTERM EXIT
 
@@ -30,11 +30,11 @@ trap 'at_ftl_exit' SIGINT SIGTERM EXIT
 PCI_WHITELIST="$device" PCI_BLACKLIST="" DRIVER_OVERRIDE="" ./scripts/setup.sh
 
 # Use first regular NVMe disk (non-OC) as non-volatile cache
-nvme_disks=$($rootdir/scripts/gen_nvme.sh --json | jq -r \
+nvme_disks=$("$rootdir"/scripts/gen_nvme.sh --json | jq -r \
 	   ".config[] | select(.params.traddr != \"$device\").params.traddr")
 
 for disk in $nvme_disks; do
-	if has_separate_md $disk; then
+	if has_separate_md "$disk"; then
 		nv_cache=$disk
 		break
 	fi
@@ -48,45 +48,45 @@ fi
 timing_enter ftl
 timing_enter bdevperf
 
-run_test suite $testdir/bdevperf.sh $device
+run_test suite "$testdir"/bdevperf.sh "$device"
 
 timing_exit bdevperf
 
 timing_enter restore
-run_test suite $testdir/restore.sh $device
+run_test suite "$testdir"/restore.sh "$device"
 if [ -n "$nv_cache" ]; then
-	run_test suite $testdir/restore.sh -c $nv_cache $device
+	run_test suite "$testdir"/restore.sh -c "$nv_cache" "$device"
 fi
 timing_exit restore
 
 if [ -n "$nv_cache" ]; then
 	timing_enter dirty_shutdown
-	run_test suite $testdir/dirty_shutdown.sh -c $nv_cache $device
+	run_test suite "$testdir"/dirty_shutdown.sh -c "$nv_cache" "$device"
 	timing_exit dirty_shutdown
 fi
 
 timing_enter json
-run_test suite $testdir/json.sh $device
+run_test suite "$testdir"/json.sh "$device"
 timing_exit json
 
-if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
+if [ "$SPDK_TEST_FTL_EXTENDED" -eq 1 ]; then
 	timing_enter fio_basic
-	run_test suite $testdir/fio.sh $device basic
+	run_test suite "$testdir"/fio.sh "$device" basic
 	timing_exit fio_basic
 
-	$rootdir/app/spdk_tgt/spdk_tgt &
+	"$rootdir"/app/spdk_tgt/spdk_tgt &
 	svc_pid=$!
 
 	trap 'killprocess $svc_pid; exit 1' SIGINT SIGTERM EXIT
 
 	waitforlisten $svc_pid
-	uuid=$($rpc_py bdev_ftl_create -b nvme0 -a $device -l 0-3 | jq -r '.uuid')
+	uuid=$($rpc_py bdev_ftl_create -b nvme0 -a "$device" -l 0-3 | jq -r '.uuid')
 	killprocess $svc_pid
 
 	trap - SIGINT SIGTERM EXIT
 
 	timing_enter fio_extended
-	run_test suite $testdir/fio.sh $device extended $uuid
+	run_test suite "$testdir"/fio.sh "$device" extended "$uuid"
 	timing_exit fio_extended
 fi
 

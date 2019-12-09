@@ -20,7 +20,7 @@
 
 set -e
 
-VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
+VM_SETUP_PATH=$(readlink -f "${BASH_SOURCE%/*}")
 
 UPGRADE=false
 INSTALL=false
@@ -48,7 +48,7 @@ function install_rxe_cfg()
             fi
 
             ./librxe-dev/configure --libdir=/usr/lib64/ --prefix=
-            make -C librxe-dev -j${jobs}
+            make -C librxe-dev -j"${jobs}"
             sudo make -C librxe-dev install
         fi
     fi
@@ -77,10 +77,10 @@ function install_iscsi_adm()
 
                 git -C open-iscsi-install/open-iscsi checkout 86e8892
                 for patch in $(ls open-iscsi-install/patches); do
-                    git -C open-iscsi-install/open-iscsi am ../patches/$patch
+                    git -C open-iscsi-install/open-iscsi am ../patches/"$patch"
                 done
                 sed -i '427s/.*/-1);/' open-iscsi-install/open-iscsi/usr/session_info.c
-                make -C open-iscsi-install/open-iscsi -j${jobs}
+                make -C open-iscsi-install/open-iscsi -j"${jobs}"
                 sudo make -C open-iscsi-install/open-iscsi install
             else
                 echo "custom open-iscsi install located, not reinstalling"
@@ -99,7 +99,7 @@ function install_qat()
     fi
 
     if echo $CONF | grep -q qat; then
-        qat_tarball=$(basename $DRIVER_LOCATION_QAT)
+        qat_tarball=$(basename "$DRIVER_LOCATION_QAT")
         kernel_maj=$(uname -r | cut -d'.' -f1)
         kernel_min=$(uname -r | cut -d'.' -f2)
 
@@ -110,13 +110,13 @@ function install_qat()
 
         sudo mkdir /QAT
 
-        wget $DRIVER_LOCATION_QAT
-        sudo cp $qat_tarball /QAT/
-        (cd /QAT && sudo tar zxof /QAT/$qat_tarball)
+        wget "$DRIVER_LOCATION_QAT"
+        sudo cp "$qat_tarball" /QAT/
+        (cd /QAT && sudo tar zxof /QAT/"$qat_tarball")
 
         #The driver version 1.7.l.4.3.0-00033 contains a reference to a deprecated function. Remove it so the build won't fail.
-        if [ $kernel_maj -le 4 ]; then
-            if [ $kernel_min -le 17 ]; then
+        if [ "$kernel_maj" -le 4 ]; then
+            if [ "$kernel_min" -le 17 ]; then
                 sudo sed -i 's/rdtscll(timestamp);/timestamp = rdtsc_ordered();/g' \
                 /QAT/quickassist/utilities/osal/src/linux/kernel_space/OsalServices.c || true
             fi
@@ -169,7 +169,7 @@ function install_fio()
                 git -C /usr/src/fio checkout master &&
                 git -C /usr/src/fio pull &&
                 git -C /usr/src/fio checkout $fio_version &&
-                make -C /usr/src/fio -j${jobs} &&
+                make -C /usr/src/fio -j"${jobs}" &&
                 sudo make -C /usr/src/fio install
             )
         else
@@ -235,7 +235,7 @@ function install_qemu()
         # The qemu configure script places several output files in the CWD.
         (cd qemu/$SPDK_QEMU_BRANCH && ./configure "${opt_params[@]}" --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa)
 
-        make -C ./qemu/$SPDK_QEMU_BRANCH -j${jobs}
+        make -C ./qemu/$SPDK_QEMU_BRANCH -j"${jobs}"
         sudo make -C ./qemu/$SPDK_QEMU_BRANCH install
     fi
 }
@@ -255,18 +255,18 @@ function install_vpp()
             git -C ./vpp checkout v19.04.2
 
             if [ "${OSID}" == 'fedora' ]; then
-                if [ ${OSVERSION} -eq 29 ]; then
-                    git -C ./vpp apply ${VM_SETUP_PATH}/patch/vpp/fedora29-fix.patch
+                if [ "${OSVERSION}" -eq 29 ]; then
+                    git -C ./vpp apply "${VM_SETUP_PATH}"/patch/vpp/fedora29-fix.patch
                 fi
-                if [ ${OSVERSION} -eq 30 ]; then
-                    git -C ./vpp apply ${VM_SETUP_PATH}/patch/vpp/fedora30-fix.patch
+                if [ "${OSVERSION}" -eq 30 ]; then
+                    git -C ./vpp apply "${VM_SETUP_PATH}"/patch/vpp/fedora30-fix.patch
                 fi
             fi
 
             # Installing required dependencies for building VPP
             yes | make -C ./vpp install-dep
 
-            make -C ./vpp build -j${jobs}
+            make -C ./vpp build -j"${jobs}"
 
             sudo mv ./vpp /usr/local/src/vpp-19.04
         fi
@@ -303,7 +303,7 @@ function install_libiscsi()
             echo "libiscsi already checked out. Skipping"
         fi
         ( cd libiscsi && ./autogen.sh &&  ./configure --prefix=/usr/local/libiscsi)
-        make -C ./libiscsi -j${jobs}
+        make -C ./libiscsi -j"${jobs}"
         sudo make -C ./libiscsi install
     fi
 }
@@ -347,10 +347,10 @@ else
     echo 'Supported package manager not found. Script supports "dnf" and "apt-get".'
 fi
 
-if [ $PACKAGEMNG == 'apt-get' ] && [ $OSID != 'ubuntu' ]; then
+if [ $PACKAGEMNG == 'apt-get' ] && [ "$OSID" != 'ubuntu' ]; then
     echo 'Located apt-get package manager, but it was tested for Ubuntu only'
 fi
-if [ $PACKAGEMNG == 'dnf' ] && [ $OSID != 'fedora' ]; then
+if [ $PACKAGEMNG == 'dnf' ] && [ "$OSID" != 'fedora' ]; then
     echo 'Located dnf package manager, but it was tested for Fedora only'
 fi
 
@@ -440,7 +440,7 @@ if $INSTALL; then
     sudo spdk_repo/spdk/scripts/pkgdep.sh
 
     if [ $PACKAGEMNG == 'dnf' ]; then
-        if echo $CONF | grep -q tsocks; then
+        if echo "$CONF" | grep -q tsocks; then
             sudo dnf install -y tsocks
         fi
 
@@ -491,7 +491,7 @@ if $INSTALL; then
     elif [ $PACKAGEMNG == 'apt-get' ]; then
         echo "Package perl-open is not available at Ubuntu repositories" >&2
 
-        if echo $CONF | grep -q tsocks; then
+        if echo "$CONF" | grep -q tsocks; then
             sudo apt-get install -y tsocks
         fi
 
@@ -561,7 +561,7 @@ if $INSTALL; then
         # iptables installed by default
 
     elif [ $PACKAGEMNG == 'pacman' ]; then
-        if echo $CONF | grep -q tsocks; then
+        if echo "$CONF" | grep -q tsocks; then
             sudo pacman -Sy --noconfirm --needed tsocks
         fi
 
