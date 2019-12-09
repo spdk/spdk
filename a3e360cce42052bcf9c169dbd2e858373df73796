@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c652b060_989c2dc8",
+        "filename": "test/vmd/vmd.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-09T14:22:10Z",
+      "side": 1,
+      "message": "I think that we should move away from the approach where we silently skip test cases.\nIf FIO is a requirement for vmd.sh - then let\u0027s fail the test if it\u0027s not installed.",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 28
+      },
+      "revId": "a3e360cce42052bcf9c169dbd2e858373df73796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
