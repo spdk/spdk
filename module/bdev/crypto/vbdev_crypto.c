@@ -1237,23 +1237,11 @@ vbdev_crypto_config_json(struct spdk_json_write_ctx *w)
 	return 0;
 }
 
-/* We provide this callback for the SPDK channel code to create a channel using
- * the channel struct we provided in our module get_io_channel() entry point. Here
- * we get and save off an underlying base channel of the device below us so that
- * we can communicate with the base bdev on a per channel basis. We also register the
- * poller used to complete crypto operations from the device.
- */
-static int
-crypto_bdev_ch_create_cb(void *io_device, void *ctx_buf)
+/* Helper function for the channel creation callback. */
+static void
+_assign_device_qp(struct vbdev_crypto *crypto_bdev, struct device_qp *device_qp,
+		  struct crypto_io_channel *crypto_ch)
 {
-	struct crypto_io_channel *crypto_ch = ctx_buf;
-	struct vbdev_crypto *crypto_bdev = io_device;
-	struct device_qp *device_qp;
-
-	crypto_ch->base_ch = spdk_bdev_get_io_channel(crypto_bdev->base_desc);
-	crypto_ch->poller = spdk_poller_register(crypto_dev_poller, crypto_ch, 0);
-	crypto_ch->device_qp = NULL;
-
 	pthread_mutex_lock(&g_device_qp_lock);
 	if (strcmp(crypto_bdev->drv_name, QAT) == 0) {
 		TAILQ_FOREACH(device_qp, &g_device_qp_qat, link) {
@@ -1273,6 +1261,27 @@ crypto_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 		}
 	}
 	pthread_mutex_unlock(&g_device_qp_lock);
+}
+
+/* We provide this callback for the SPDK channel code to create a channel using
+ * the channel struct we provided in our module get_io_channel() entry point. Here
+ * we get and save off an underlying base channel of the device below us so that
+ * we can communicate with the base bdev on a per channel basis. We also register the
+ * poller used to complete crypto operations from the device.
+ */
+static int
+crypto_bdev_ch_create_cb(void *io_device, void *ctx_buf)
+{
+	struct crypto_io_channel *crypto_ch = ctx_buf;
+	struct vbdev_crypto *crypto_bdev = io_device;
+	struct device_qp *device_qp = NULL;
+
+	crypto_ch->base_ch = spdk_bdev_get_io_channel(crypto_bdev->base_desc);
+	crypto_ch->poller = spdk_poller_register(crypto_dev_poller, crypto_ch, 0);
+	crypto_ch->device_qp = NULL;
+
+	/* Assign a device/qp combination that is unique per channel per PMD. */
+	_assign_device_qp(crypto_bdev, device_qp, crypto_ch);
 	assert(crypto_ch->device_qp);
 
 	/* We use this queue to track outstanding IO in our layer. */
