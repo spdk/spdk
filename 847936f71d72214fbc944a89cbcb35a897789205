@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfed316f_8a46145b",
+        "filename": "test/unit/lib/nvmf/tcp.c/tcp_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-09T07:56:27Z",
+      "side": 1,
+      "message": "We can avoid malloc for tgroup too.\n\nstruct spdk_nvmf_transport_poll_group tgroup \u003d {};\n\ntgroup.sock_group \u003d \u0026grp;\nTAILQ_INIT(\u0026tgroup.qpairs);\ngroup \u003d \u0026tgroup.group;\ngroup-\u003etransport \u003d \u0026ttransport.transport.",
+      "range": {
+        "startLine": 619,
+        "startChar": 0,
+        "endLine": 623,
+        "endChar": 0
+      },
+      "revId": "847936f71d72214fbc944a89cbcb35a897789205",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80c31d0e_df390ccd",
+        "filename": "test/unit/lib/nvmf/tcp.c/tcp_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-09T07:56:27Z",
+      "side": 1,
+      "message": "Then we don\u0027t need this.",
+      "range": {
+        "startLine": 696,
+        "startChar": 1,
+        "endLine": 696,
+        "endChar": 33
+      },
+      "revId": "847936f71d72214fbc944a89cbcb35a897789205",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
