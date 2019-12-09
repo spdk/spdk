@@ -2330,7 +2330,6 @@ nvmf_ns_reservation_request_check(struct spdk_nvmf_subsystem_pg_ns_info *ns_info
 		if ((rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_REG_ONLY ||
 		     rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_ALL_REGS) && !is_registrant) {
 			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
-			goto exit;
 		}
 		break;
 	case SPDK_NVME_OPC_FLUSH:
@@ -2345,7 +2344,6 @@ nvmf_ns_reservation_request_check(struct spdk_nvmf_subsystem_pg_ns_info *ns_info
 		}
 		if (!is_registrant) {
 			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
-			goto exit;
 		}
 		break;
 	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
@@ -2356,13 +2354,11 @@ nvmf_ns_reservation_request_check(struct spdk_nvmf_subsystem_pg_ns_info *ns_info
 		}
 		if (!is_registrant) {
 			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
-			goto exit;
 		}
 		break;
 	case SPDK_NVME_OPC_RESERVATION_RELEASE:
 		if (!is_registrant) {
 			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
-			goto exit;
 		}
 		break;
 	default:
