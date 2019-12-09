@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9be25ab_b73714d0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3200,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-09T20:52:26Z",
+      "side": 1,
+      "message": "Won\u0027t this result in a lot of messages being generated? I\u0027m concerned about performance - sending messages is \"fast\" but still requires an atomic instruction.",
+      "revId": "ab8b217c14461a3b1e656896b7529a542ebde78c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
