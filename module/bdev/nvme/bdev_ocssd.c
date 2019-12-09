@@ -150,6 +150,23 @@ static struct spdk_bdev_module ocssd_if = {
 
 SPDK_BDEV_MODULE_REGISTER(ocssd, &ocssd_if);
 
+static struct bdev_ocssd_zone *
+bdev_ocssd_get_zone_by_slba(struct ocssd_bdev *ocssd_bdev, uint64_t slba)
+{
+	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	size_t zone_size = nvme_bdev->disk.zone_size;
+
+	if (slba % zone_size != 0) {
+		return NULL;
+	}
+
+	if (slba >= nvme_bdev->disk.blockcnt) {
+		return NULL;
+	}
+
+	return &ocssd_bdev->zones[slba / zone_size];
+}
+
 static void
 bdev_ocssd_free_bdev(struct ocssd_bdev *ocssd_bdev)
 {
@@ -612,23 +629,6 @@ bdev_ocssd_create_complete(struct bdev_ocssd_create_ctx *create_ctx, int status)
 
 	create_ctx->cb_fn(bdev_name, status, create_ctx->cb_arg);
 	free(create_ctx);
-}
-
-static struct bdev_ocssd_zone *
-bdev_ocssd_get_zone_by_slba(struct ocssd_bdev *ocssd_bdev, uint64_t slba)
-{
-	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	size_t zone_size = nvme_bdev->disk.zone_size;
-
-	if (slba % zone_size != 0) {
-		return NULL;
-	}
-
-	if (slba >= nvme_bdev->disk.blockcnt) {
-		return NULL;
-	}
-
-	return &ocssd_bdev->zones[slba / zone_size];
 }
 
 static int bdev_ocssd_init_zone(struct bdev_ocssd_create_ctx *create_ctx);
