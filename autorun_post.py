@@ -134,7 +134,7 @@ def aggregateCompletedTests(output_dir, repo_dir):
                 test_completion_table.append([agent_name, "valgrind", asan_enabled, ubsan_enabled])
             for line in completions.split('\n'):
                 try:
-                    test_list[line.strip()] = (True, asan_enabled | test_list[line.strip()][1], ubsan_enabled | test_list[line.strip()][1])
+                    test_list[line.strip()] = (True, asan_enabled | test_list[line.strip()][1], ubsan_enabled | test_list[line.strip()][2])
                     test_completion_table.append([agent_name, line.strip(), asan_enabled, ubsan_enabled])
                     try:
                         test_completion_table.remove(["None", line.strip(), False, False])
