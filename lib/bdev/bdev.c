@@ -670,7 +670,7 @@ _bdev_io_unset_bounce_buf(struct spdk_bdev_io *bdev_io)
 		bdev_io->internal.orig_md_buf = NULL;
 	}
 
-	bdev_io_put_buf(bdev_io);
+	/* The bounce buffer at bdev_io->internal.buf will be put back in spdk_bdev_free_io() */
 }
 
 void
