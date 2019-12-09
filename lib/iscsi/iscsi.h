@@ -413,7 +413,6 @@ int spdk_iscsi_auth_group_delete_secret(struct spdk_iscsi_auth_group *group,
 					const char *user);
 void spdk_iscsi_auth_groups_info_json(struct spdk_json_write_ctx *w);
 
-void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 			      struct spdk_iscsi_task *task);
 int spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int iovcnt,
