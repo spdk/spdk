@@ -22,6 +22,30 @@
       "revId": "6330f5515f77b49e151145b04b2efe1f1d9ec625",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c05c930_04d7f085",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-09T13:55:57Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "2de7c3a1_b5dd8b0a",
+      "range": {
+        "startLine": 35,
+        "startChar": 13,
+        "endLine": 35,
+        "endChar": 41
+      },
+      "revId": "6330f5515f77b49e151145b04b2efe1f1d9ec625",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
