@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "653673a7_6546fe8c",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-09T04:08:14Z",
+      "side": 1,
+      "message": "Adding \"#if RTE_VERSION \u003e\u003d RTE_VERSION_NUM(18, 05, 0, 0) \u0026\u0026 RTE_VERSION \u003c RTE_VERSION_NUM(18, 5, 1, 0)\" is necessary here?\n\nEven if user specifies --legacy-mem, env_context will not be pushed for other versions of DPDK.",
+      "revId": "28f8a7d2b8060a23765b4896cfa2ab3da82606ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
