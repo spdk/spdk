@@ -22,6 +22,30 @@
       "revId": "dbf207653b159afd45f53fa68002ae583e0fe823",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14c77c0f_79d1c54b",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T15:00:31Z",
+      "side": 1,
+      "message": "Hi Alexey,\n\nAny text in opts-\u003eenv_context will be passed to the rte_eal_init \"command line\" for all DPDK versions.  I\u0027m not sure I understood your question though, so if this answer is not sufficient, please let me know.\n\nThanks,\n\n-Jim",
+      "parentUuid": "a331f794_f87a9912",
+      "range": {
+        "startLine": 346,
+        "startChar": 54,
+        "endLine": 346,
+        "endChar": 66
+      },
+      "revId": "dbf207653b159afd45f53fa68002ae583e0fe823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
