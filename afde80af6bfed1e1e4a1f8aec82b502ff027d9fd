@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "5a7f8b08_e3b1d246",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2167,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T20:52:20Z",
+      "side": 1,
+      "message": "Hi Jin,\n\nI am not understanding your response.  Can you please clarify?  I really think you can just use spdk_io_channel_iter_get_channel() here.  You do not need to get an additional reference for the channel.\n\nThe cb_fn() routine should not close the channel itself, since there are still I/O outstanding.  And even if it did, spdk_put_io_channel() acts asynchronously, so the channel would still be valid for the rest of the execution of this function.\n\n-Jim",
+      "parentUuid": "8fc1bb4c_0b1cefdc",
+      "revId": "afde80af6bfed1e1e4a1f8aec82b502ff027d9fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34d45c6d_779f876e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 18
