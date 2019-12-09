@@ -1004,13 +1004,8 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		if (paddr == SPDK_VTOPHYS_ERROR) {
 			/* This is not an address that DPDK is managing. */
 #if SPDK_VFIO_ENABLED
-			if (spdk_iommu_is_enabled()) {
-				/* We'll use the virtual address as the iova. DPDK
-				 * currently uses physical addresses as the iovas (or counts
-				 * up from 0 if it can't get physical addresses), so
-				 * the range of user space virtual addresses and physical
-				 * addresses will never overlap.
-				 */
+			if (spdk_iommu_is_enabled() && rte_eal_get_configuration()->iova_mode == RTE_IOVA_VA) {
+				/* We'll use the virtual address as the iova to match DPDK. */
 				paddr = (uint64_t)vaddr;
 				rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, len);
 				if (rc) {
@@ -1062,6 +1057,17 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 						DEBUG_PRINT("invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
 						return -EINVAL;
 					}
+#if SPDK_VFIO_ENABLED
+					/* If the IOMMU is on, but DPDK is using iova-mode=pa, we want to register this memory
+					 * with the IOMMU using the physical address to match. */
+					if (spdk_iommu_is_enabled()) {
+						rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, VALUE_2MB);
+						if (rc) {
+							DEBUG_PRINT("Unable to assign vaddr %p to paddr 0x%" PRIx64 "\n", vaddr, paddr);
+							return -EFAULT;
+						}
+					}
+#endif
 
 					rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, VALUE_2MB, paddr);
 					if (rc != 0) {
@@ -1101,13 +1107,39 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 			 */
 			if (spdk_iommu_is_enabled()) {
 				uint64_t buffer_len = len;
-				paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, &buffer_len);
-				if (buffer_len != len) {
-					return -EINVAL;
-				}
-				rc = vtophys_iommu_unmap_dma(paddr, len);
-				if (rc) {
-					return -EFAULT;
+				/*
+				 * In virtual address mode, the region is contiguous and can be done in
+				 * one unmap.
+				 */
+				if (rte_eal_get_configuration()->iova_mode == RTE_IOVA_VA) {
+					paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, &buffer_len);
+					if (buffer_len != len) {
+						return -EINVAL;
+					}
+					rc = vtophys_iommu_unmap_dma(paddr, len);
+					if (rc) {
+						DEBUG_PRINT("Failed to iommu unmap paddr 0x%" PRIx64 "\n", paddr);
+						return -EFAULT;
+					}
+				} else if (rte_eal_get_configuration()->iova_mode == RTE_IOVA_PA) {
+					/* Get paddr for each 2MB chunk in this address range */
+					while (len > 0) {
+						paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, &buffer_len);
+
+						if (paddr == SPDK_VTOPHYS_ERROR || buffer_len < VALUE_2MB) {
+							DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
+							return -EFAULT;
+						}
+
+						rc = vtophys_iommu_unmap_dma(paddr, VALUE_2MB);
+						if (rc) {
+							DEBUG_PRINT("Failed to iommu unmap paddr 0x%" PRIx64 "\n", paddr);
+							return -EFAULT;
+						}
+
+						vaddr += VALUE_2MB;
+						len -= VALUE_2MB;
+					}
 				}
 			}
 		}
