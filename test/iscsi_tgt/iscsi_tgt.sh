@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../..)
 source "$rootdir"/test/common/autotest_common.sh
 
-if [ ! $(uname -s) = Linux ]; then
+if [ ! "$(uname -s)" = "Linux" ]; then
 	exit 0
 fi
 

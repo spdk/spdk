@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../../..)
 source "$rootdir"/test/common/autotest_common.sh
 source "$rootdir"/test/vhost/common.sh
@@ -51,7 +51,8 @@ done
 
 vhosttestinit
 
-. $(readlink -e "$(dirname "$0")/../common.sh") || exit 1
+dir_name="$(dirname "$0")"
+. "$(readlink -e "$dir_name"/../common.sh)" || exit 1
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR

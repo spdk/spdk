@@ -20,7 +20,7 @@ have_pci_nics=0
 
 function load_ib_rdma_modules()
 {
-	if [ $(uname) != Linux ]; then
+	if [ "$(uname)" != "Linux" ]; then
 		return 0
 	fi
 
@@ -266,7 +266,7 @@ function nvme_connect()
 	if ! nvme connect "$@"; then return $?; fi
 
 	for i in $(seq 1 10); do
-		if [ $(nvme list | wc -l) -gt "$init_count" ]; then
+		if [ "$(nvme list | wc -l)" -gt "$init_count" ]; then
 			return 0
 		else
 			sleep 1s

@@ -10,7 +10,7 @@ fi
 
 source "$1"
 
-rootdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$(dirname "$0")")
 source "$rootdir/test/common/autotest_common.sh"
 
 out=$PWD
@@ -26,7 +26,7 @@ if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	# We compile OCF sources ourselves
 	# They don't need to be checked with scanbuild and code coverage is not applicable
 	# So we precompile OCF now for further use as standalone static library
-	./configure $(echo "$config_params" | sed 's/--enable-coverage//g')
+	./configure "$(echo "$config_params" | sed 's/--enable-coverage//g')"
 	$MAKE "$MAKEFLAGS" include/spdk/config.h
 	CC=gcc CCAR=ar $MAKE "$MAKEFLAGS" -C lib/env_ocf exportlib O="$rootdir"/build/ocf.a
 	# Set config to use precompiled library
@@ -86,7 +86,7 @@ fail=0
 time $scanbuild "$MAKE" "$MAKEFLAGS" || fail=1
 if [ $fail -eq 1 ]; then
 	if [ -d "$out"/scan-build-tmp ]; then
-		scanoutput=$(ls -1 "$out"/scan-build-tmp/)
+		scanoutput="$(ls -1 "$out"/scan-build-tmp/)"
 		mv "$out"/scan-build-tmp/"$scanoutput" "$out"/scan-build
 		rm -rf "$out"/scan-build-tmp
 		chmod -R a+rX "$out"/scan-build
@@ -99,7 +99,7 @@ timing_exit "$make_timing_label"
 
 # Check for generated files that are not listed in .gitignore
 timing_enter generated_files_check
-if [ $(git status --porcelain --ignore-submodules | wc -l) -ne 0 ]; then
+if [ "$(git status --porcelain --ignore-submodules | wc -l)" -ne 0 ]; then
 	echo "Generated files missing from .gitignore:"
 	git status --porcelain --ignore-submodules
 	exit 1

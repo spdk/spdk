@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-rootdir=$(readlink -f $(dirname "$0"))/..
+rootdir=$(readlink -f "$(dirname "$0")")/..
 igb_driverdir=$rootdir/dpdk/build/build/kernel/igb_uio/
 allowed_drivers=("igb_uio" "uio_pci_generic")
 
@@ -56,7 +56,7 @@ fi
 
 # Unbind old driver if necessary.
 for vf in "${qat_vf_bdfs[@]}"; do
-	old_driver=$(basename $(readlink -f /sys/bus/pci/devices/"${vf}"/driver))
+	old_driver=$(basename "$(readlink -f /sys/bus/pci/devices/"${vf}"/driver)")
 	if [ "$old_driver" != "driver" ]; then
 		echo "unbinding driver $old_driver from qat VF at BDF $vf"
 		echo -n "$vf" > /sys/bus/pci/drivers/"$old_driver"/unbind

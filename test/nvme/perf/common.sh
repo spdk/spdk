@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
-BASE_DIR=$(readlink -f $(dirname "$0"))
+BASE_DIR=$(readlink -f "$(dirname "$0")")
 ROOT_DIR=$(readlink -f "$BASE_DIR"/../../..)
 PLUGIN_DIR_NVME=$ROOT_DIR/examples/nvme/fio_plugin
 PLUGIN_DIR_BDEV=$ROOT_DIR/examples/bdev/fio_plugin

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../..)
 source "$rootdir"/scripts/common.sh
 source "$rootdir"/test/common/autotest_common.sh
@@ -19,7 +19,7 @@ fi
 
 timing_enter nvme_cli
 
-if [ $(uname) = Linux ]; then
+if [ "$(uname)" = "Linux" ]; then
 	start_stub "-s 2048 -i 0 -m 0xF"
 	trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
 fi
@@ -29,7 +29,7 @@ rm -f "$spdk_nvme_cli/spdk"
 ln -sf "$rootdir" "$spdk_nvme_cli/spdk"
 
 cd "$spdk_nvme_cli"
-make clean && make -j$(nproc) LDFLAGS="$(make -s -C "$spdk_nvme_cli"/spdk ldflags)"
+make clean && make -j"$(nproc)" LDFLAGS="$(make -s -C "$spdk_nvme_cli"/spdk ldflags)"
 sed -i 's/spdk=0/spdk=1/g' spdk.conf
 sed -i 's/shm_id=.*/shm_id=0/g' spdk.conf
 for bdf in $(iter_pci_class_code 01 08 02); do
@@ -46,7 +46,7 @@ for bdf in $(iter_pci_class_code 01 08 02); do
 	./nvme get-log "$bdf" -i 1 -l 100
 	./nvme reset "$bdf"
 done
-if [ $(uname) = Linux ]; then
+if [ "$(uname)" = "Linux" ]; then
 	trap - SIGINT SIGTERM EXIT
 	kill_stub
 fi

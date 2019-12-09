@@ -10,7 +10,7 @@ fi
 
 source "$1"
 
-rootdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$(dirname "$0")")
 source "$rootdir/test/common/autotest_common.sh"
 
 out=$PWD
@@ -21,7 +21,7 @@ cd "$rootdir"
 timing_enter porcelain_check
 $MAKE clean
 
-if [ $(git status --porcelain --ignore-submodules | wc -l) -ne 0 ]; then
+if [ "$(git status --porcelain --ignore-submodules | wc -l)" -ne 0 ]; then
 	echo make clean left the following files:
 	git status --porcelain --ignore-submodules
 	exit 1

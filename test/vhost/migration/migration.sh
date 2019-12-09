@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../../..)
 source "$rootdir"/test/common/autotest_common.sh
 source "$rootdir"/test/vhost/common.sh
@@ -98,7 +98,7 @@ function vm_migrate()
 	fi
 
 	timing_enter vm_migrate
-	notice "Migrating VM $1 to VM "$(basename "$target_vm_dir")
+	notice "Migrating VM $1 to VM $(basename "$target_vm_dir")"
 	echo -e \
 		"migrate_set_speed 1g\n" \
 		"migrate tcp:$target_ip:$target_vm_migration_port\n" \

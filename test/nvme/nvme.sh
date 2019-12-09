@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../..)
 source "$rootdir"/scripts/common.sh
 source "$rootdir"/test/common/autotest_common.sh
 
 timing_enter nvme
 
-if [ $(uname) = Linux ]; then
+if [ "$(uname)" = "Linux" ]; then
 	# check that our setup.sh script does not bind NVMe devices to uio/vfio if they
 	# have an active mountpoint
 	"$rootdir"/scripts/setup.sh reset
@@ -46,7 +46,7 @@ if [ $(uname) = Linux ]; then
 		mount /dev/"${blkname}"p1 /tmp/nvmetest
 		sleep 1
 		"$rootdir"/scripts/setup.sh
-		driver=$(basename $(readlink /sys/bus/pci/devices/"$bdf"/driver))
+		driver=$(basename "$(readlink /sys/bus/pci/devices/"$bdf"/driver)")
 		# check that the nvme driver is still loaded against the device
 		if [ "$driver" != "nvme" ]; then
 			exit 1
@@ -56,7 +56,7 @@ if [ $(uname) = Linux ]; then
 		# write zeroes to the device to blow away the partition table and filesystem
 		dd if=/dev/zero of=/dev/"$blkname" oflag=direct bs=1M count=1
 		"$rootdir"/scripts/setup.sh
-		driver=$(basename $(readlink /sys/bus/pci/devices/"$bdf"/driver))
+		driver=$(basename "$(readlink /sys/bus/pci/devices/"$bdf"/driver)")
 		# check that the nvme driver is not loaded against the device
 		if [ "$driver" = "nvme" ]; then
 			exit 1
@@ -66,7 +66,7 @@ if [ $(uname) = Linux ]; then
 	fi
 fi
 
-if [ $(uname) = Linux ]; then
+if [ "$(uname)" = "Linux" ]; then
 	start_stub "-s 4096 -i 0 -m 0xF"
 	trap "kill_stub -9; exit 1" SIGINT SIGTERM EXIT
 fi
@@ -117,7 +117,7 @@ timing_enter err_injection
 "$testdir"/err_injection/err_injection
 timing_exit err_injection
 
-if [ $(uname) != "FreeBSD" ]; then
+if [ "$(uname)" != "FreeBSD" ]; then
 	timing_enter startup
 	"$testdir"/startup/startup -t 1000000
 	timing_exit startup
@@ -131,7 +131,7 @@ timing_enter arbitration
 "$rootdir"/examples/nvme/arbitration/arbitration -t 3 -i 0
 timing_exit arbitration
 
-if [ $(uname) = Linux ]; then
+if [ "$(uname)" = "Linux" ]; then
 	timing_enter multi_secondary
 	"$rootdir"/examples/nvme/perf/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x1 &
 	pid0=$!
@@ -144,7 +144,7 @@ if [ $(uname) = Linux ]; then
 	timing_exit multi_secondary
 fi
 
-if [ $(uname) = Linux ]; then
+if [ "$(uname)" = "Linux" ]; then
 	trap - SIGINT SIGTERM EXIT
 	kill_stub
 fi

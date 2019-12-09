@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname "$0"))
-rootdir=$testdir/../../..
+testdir=$(readlink -f "$(dirname "$0")")
+rootdir="$testdir"/../../..
 source "$rootdir"/test/common/autotest_common.sh
 source "$rootdir"/test/nvmf/common.sh
 

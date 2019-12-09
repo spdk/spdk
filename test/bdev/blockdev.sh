@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../..)
 source "$rootdir"/test/common/autotest_common.sh
 source "$testdir"/nbd_common.sh
@@ -19,7 +19,7 @@ function run_fio()
 }
 
 function nbd_function_test() {
-	if [ $(uname -s) = Linux ] && modprobe -n nbd; then
+	if [ "$(uname -s)" = "Linux" ] && modprobe -n nbd; then
 		local rpc_server=/var/tmp/spdk-nbd.sock
 		local conf=$1
 		local nbd_num=6
@@ -179,7 +179,7 @@ if [ "$RUN_NIGHTLY" -eq 1 ]; then
 fi
 
 timing_enter bounds
-if [ $(uname -s) = Linux ]; then
+if [ "$(uname -s)" = "Linux" ]; then
 	# Test dynamic memory management. All hugepages will be reserved at runtime
 	PRE_RESERVED_MEM=0
 else

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../../..)
 source "$rootdir"/test/common/autotest_common.sh
 source "$rootdir"/test/nvmf/common.sh
@@ -25,22 +25,22 @@ nvmfappstart "-m 0xF"
 
 stats=$($rpc_py nvmf_get_stats)
 # Expect 4 poll groups (from CPU mask) and no transports yet
-[ "4" -eq $(jcount .poll_groups[].name <<< "$stats") ]
-[ "null" == $(jq .poll_groups[0].transports[0] <<< "$stats") ]
+[ "4" -eq "$(jcount .poll_groups[].name <<< "$stats")" ]
+[ "null" == "$(jq .poll_groups[0].transports[0] <<< "$stats")" ]
 
 $rpc_py nvmf_create_transport "$NVMF_TRANSPORT_OPTS" -u 8192
 
 stats=$($rpc_py nvmf_get_stats)
 # Expect no QPs
-[ "0" -eq $(jsum .poll_groups[].admin_qpairs <<< "$stats") ]
-[ "0" -eq $(jsum .poll_groups[].io_qpairs <<< "$stats") ]
+[ "0" -eq "$(jsum .poll_groups[].admin_qpairs <<< "$stats")" ]
+[ "0" -eq "$(jsum .poll_groups[].io_qpairs <<< "$stats")" ]
 # Transport statistics is currently implemented for RDMA only
 if [ 'rdma' == "$TEST_TRANSPORT" ]; then
     # Expect RDMA transport and some devices
-    [ "1" -eq $(jcount .poll_groups[0].transports[].trtype <<< "$stats") ]
-    transport_type=$(jq -r .poll_groups[0].transports[0].trtype <<< "$stats")
+    [ "1" -eq "$(jcount .poll_groups[0].transports[].trtype <<< "$stats")" ]
+    transport_type="$(jq -r .poll_groups[0].transports[0].trtype <<< "$stats")"
     [ "${transport_type,,}" == "${TEST_TRANSPORT,,}" ]
-    [ "0" -lt $(jcount .poll_groups[0].transports[0].devices[].name <<< "$stats") ]
+    [ "0" -lt "$(jcount .poll_groups[0].transports[0].devices[].name <<< "$stats")" ]
 fi
 
 # set times for subsystem construct/delete
@@ -115,13 +115,13 @@ done
 
 stats=$($rpc_py nvmf_get_stats)
 # Expect some admin and IO qpairs
-[ "0" -lt $(jsum .poll_groups[].admin_qpairs <<< "$stats") ]
-[ "0" -lt $(jsum .poll_groups[].io_qpairs <<< "$stats") ]
+[ "0" -lt "$(jsum .poll_groups[].admin_qpairs <<< "$stats")" ]
+[ "0" -lt "$(jsum .poll_groups[].io_qpairs <<< "$stats")" ]
 # Transport statistics is currently implemented for RDMA only
 if [ 'rdma' == "$TEST_TRANSPORT" ]; then
     # Expect non-zero completions and request latencies accumulated
-    [ "0" -lt $(jsum .poll_groups[].transports[].devices[].completions <<< "$stats") ]
-    [ "0" -lt $(jsum .poll_groups[].transports[].devices[].request_latency <<< "$stats") ]
+    [ "0" -lt "$(jsum .poll_groups[].transports[].devices[].completions <<< "$stats")" ]
+    [ "0" -lt "$(jsum .poll_groups[].transports[].devices[].request_latency <<< "$stats")" ]
 fi
 
 trap - SIGINT SIGTERM EXIT

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2086
 
-readonly BASEDIR=$(readlink -f $(dirname "$0"))/..
+readonly BASEDIR=$(readlink -f "$(dirname "$0")")/..
 cd "$BASEDIR"
 
 # exit on errors
@@ -16,7 +16,7 @@ function nproc() {
 fi
 
 function version_lt() {
-	[ $( echo -e "$1\n$2" | sort -V | head -1 ) != "$1" ]
+	[ "$( echo -e "$1\n$2" | sort -V | head -1 )" != "$1" ]
 }
 
 rc=0
@@ -78,7 +78,7 @@ if hash astyle; then
 		#  coding standards.
 		git ls-files '*.[ch]' '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' | \
 			grep -v rte_vhost | grep -v cpp_headers | \
-			xargs -P$(nproc) -n10 astyle --options=.astylerc >> astyle.log
+			xargs -P"$(nproc)" -n10 astyle --options=.astylerc >> astyle.log
 		if grep -q "^Formatted" astyle.log; then
 			echo " errors detected"
 			git diff
@@ -173,7 +173,7 @@ rm -f badcunit.log
 echo -n "Checking blank lines at end of file..."
 
 if ! git grep -I -l -e . -z  './*' ':!*.patch' | \
-	xargs -0 -P$(nproc) -n1 scripts/eofnl > eofnl.log; then
+	xargs -0 -P"$(nproc)" -n1 scripts/eofnl > eofnl.log; then
 	echo " Incorrect end-of-file formatting detected"
 	cat eofnl.log
 	rc=1
@@ -216,7 +216,7 @@ if [ -n "${PEP8}" ]; then
 	PEP8_ARGS+=" --max-line-length=140"
 
 	error=0
-	git ls-files '*.py' | xargs -P$(nproc) -n1 $PEP8 "$PEP8_ARGS" > pep8.log || error=1
+	git ls-files '*.py' | xargs -P"$(nproc)" -n1 $PEP8 "$PEP8_ARGS" > pep8.log || error=1
 	if [ $error -ne 0 ]; then
 		echo " Python formatting errors detected"
 		cat pep8.log
@@ -241,7 +241,7 @@ if hash shellcheck 2>/dev/null; then
 	# go to: https://trello.com/c/29Z90j1W
 	# Error descriptions can also be found at: https://github.com/koalaman/shellcheck/wiki
 	# This SHCK_EXCLUDE list is out "to do" and we work to fix all of this errors.
-	SHCK_EXCLUDE="SC1083,SC2002,SC2010,SC2034,SC2045,SC2046"
+	SHCK_EXCLUDE="SC1083,SC2002,SC2010,SC2034,SC2045"
 	# SPDK fails some error checks which have been deprecated in later versions of shellcheck.
 	# We will not try to fix these error checks, but instead just leave the error types here
 	# so that we can still run with older versions of shellcheck.
@@ -275,7 +275,7 @@ SC2174,SC2001,SC2206,SC2207,SC2223"
 	SHCH_ARGS=" -x -e $SHCK_EXCLUDE -f $SHCK_FORMAT"
 
 	error=0
-	git ls-files '*.sh' | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS &> shellcheck.log || error=1
+	git ls-files '*.sh' | xargs -P"$(nproc)" -n1 shellcheck $SHCH_ARGS &> shellcheck.log || error=1
 	if [ $error -ne 0 ]; then
 		echo " Bash formatting errors detected!"
 
@@ -284,7 +284,7 @@ SC2174,SC2001,SC2206,SC2207,SC2223"
 			SHCK_FORMAT="tty"
 			SHCK_APPLY=false
 			SHCH_ARGS=" -e $SHCK_EXCLUDE -f $SHCK_FORMAT"
-			git ls-files '*.sh' | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS > shellcheck.log || error=1
+			git ls-files '*.sh' | xargs -P"$(nproc)" -n1 shellcheck $SHCH_ARGS > shellcheck.log || error=1
 		fi
 
 		cat shellcheck.log

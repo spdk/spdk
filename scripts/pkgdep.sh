@@ -34,7 +34,7 @@ done
 
 trap 'set +e; trap - ERR; echo "Error!"; exit 1;' ERR
 
-scriptsdir=$(readlink -f $(dirname "$0"))
+scriptsdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$scriptsdir"/..)
 
 if [ -s /etc/redhat-release ]; then
@@ -47,9 +47,9 @@ if [ -s /etc/redhat-release ]; then
 			yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 		fi
 
-		if [ $ID = 'rhel' ]; then
+		if [ "$ID" = 'rhel' ]; then
 			subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"
-		elif [ $ID = 'centos' ]; then
+		elif [ "$ID" = 'centos' ]; then
 			yum --enablerepo=extras install -y epel-release
 		fi
 	fi
@@ -117,7 +117,7 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	zypper install -y autoconf automake libtool help2man
 	# Additional dependencies for FUSE and CUSE
 	zypper install -y fuse3-devel
-elif [ $(uname -s) = "FreeBSD" ] ; then
+elif [ "$(uname -s)" = "FreeBSD" ] ; then
 	pkg install -y gmake cunit openssl git devel/astyle bash py27-pycodestyle \
 		python misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
 	# Additional dependencies for building docs
@@ -193,7 +193,7 @@ elif [ -f /etc/arch-release ]; then
 	# Additional dependencies for building pmem based backends
 	pacman -Sy --needed --noconfirm ndctl
 	git clone https://github.com/pmem/pmdk.git /tmp/pmdk -b 1.6.1
-	make -C /tmp/pmdk -j$(nproc)
+	make -C /tmp/pmdk -j"$(nproc)"
 	make install -C /tmp/pmdk
 	echo "/usr/local/lib" > /etc/ld.so.conf.d/pmdk.conf
 	ldconfig

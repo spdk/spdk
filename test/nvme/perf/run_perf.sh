@@ -31,7 +31,7 @@
 # This command will run test using fio plugin for 600 seconds, 60 sec of ram time, randrw job with
 # 100% reads with io depth 256 per disk, on 6 devices and skips preconditioning. Cpu core used for this test is
 # core no 28.
-BASE_DIR=$(readlink -f $(dirname "$0"))
+BASE_DIR=$(readlink -f "$(dirname "$0")")
 . "$BASE_DIR"/common.sh
 
 disk_names=$(get_disks "$PLUGIN")

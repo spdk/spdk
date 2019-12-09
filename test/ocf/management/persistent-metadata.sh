@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-curdir=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
+curdir=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
 rootdir=$(readlink -f "$curdir"/../../..)
 source "$rootdir"/scripts/common.sh
 source "$rootdir"/test/common/autotest_common.sh

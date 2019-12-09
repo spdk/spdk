@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../..)
 source "$rootdir"/test/common/autotest_common.sh
 source "$rootdir"/test/pmem/common.sh
@@ -261,11 +261,11 @@ function bdev_pmem_create_pool_tc5()
 	fi
 
 	if $rpc_py bdev_pmem_get_pool_info "$default_pool_file"; then
-		if [ "$pmem_block_size" != $($rpc_py bdev_pmem_get_pool_info "$default_pool_file" | jq -r '.[] .block_size') ]; then
+		if [ "$pmem_block_size" != "$($rpc_py bdev_pmem_get_pool_info "$default_pool_file" | jq -r '.[] .block_size')" ]; then
 			error "Invalid block size of pmem pool!"
 		fi
 
-		if [ "$pmem_num_block" != $($rpc_py bdev_pmem_get_pool_info "$default_pool_file" | jq -r '.[] .num_blocks') ]; then
+		if [ "$pmem_num_block" != "$($rpc_py bdev_pmem_get_pool_info "$default_pool_file" | jq -r '.[] .num_blocks')" ]; then
 			error "Invalid number of blocks of pmem pool!"
 		fi
 	else

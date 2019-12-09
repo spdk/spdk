@@ -27,8 +27,8 @@ INSTALL=false
 CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,ocf"
 LIBRXE_INSTALL=true
 
-OSID=$(source /etc/os-release && echo $ID)
-OSVERSION=$(source /etc/os-release && echo $VERSION_ID)
+OSID=$(source /etc/os-release && echo "$ID")
+OSVERSION=$(source /etc/os-release && echo "$VERSION_ID")
 PACKAGEMNG='undefined'
 
 function install_rxe_cfg()
@@ -61,13 +61,13 @@ function install_iscsi_adm()
         # The version of iscsiadm that ships with fedora 26 was broken as of November 3 2017.
         # There is already a bug report out about it, and hopefully it is fixed soon, but in the event that
         # that version is still broken when you do your setup, the below steps will fix the issue.
-        CURRENT_VERSION=$(iscsiadm --version)
+        CURRENT_VERSION="$(iscsiadm --version)"
         OPEN_ISCSI_VER='iscsiadm version 6.2.0.874'
         if [ "$CURRENT_VERSION" == "$OPEN_ISCSI_VER" ]; then
             if [ ! -d open-iscsi-install ]; then
                 mkdir -p open-iscsi-install/patches
                 sudo dnf download --downloaddir=./open-iscsi-install --source iscsi-initiator-utils
-                rpm2cpio open-iscsi-install/$(ls ~/open-iscsi-install) | cpio -D open-iscsi-install -idmv
+                rpm2cpio open-iscsi-install/"$(ls ~/open-iscsi-install)" | cpio -D open-iscsi-install -idmv
                 mv open-iscsi-install/00* open-iscsi-install/patches/
                 git clone "${GIT_REPO_OPEN_ISCSI}" open-iscsi-install/open-iscsi
 

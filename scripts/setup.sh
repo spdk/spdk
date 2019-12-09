@@ -2,12 +2,12 @@
 
 set -e
 
-rootdir=$(readlink -f $(dirname "$0"))/..
+rootdir=$(readlink -f "$(dirname "$0")")/..
 source "$rootdir/scripts/common.sh"
 
 function usage()
 {
-	if [ $(uname) = Linux ]; then
+	if [ "$(uname)" = "Linux" ]; then
 		options="[config|reset|status|cleanup|help]"
 	else
 		options="[config|reset|help]"
@@ -22,13 +22,13 @@ function usage()
 	echo
 	echo "$options - as following:"
 	echo "config            Default mode. Allocate hugepages and bind PCI devices."
-	if [ $(uname) = Linux ]; then
+	if [ "$(uname)" = "Linux" ]; then
 		echo "cleanup            Remove any orphaned files that can be left in the system after SPDK application exit"
 	fi
 	echo "reset             Rebind PCI devices back to their original drivers."
 	echo "                  Also cleanup any leftover spdk files/resources."
 	echo "                  Hugepage memory size will remain unchanged."
-	if [ $(uname) = Linux ]; then
+	if [ "$(uname)" = "Linux" ]; then
 		echo "status            Print status of all SPDK-compatible devices on the system."
 	fi
 	echo "help              Print this help message."
@@ -94,7 +94,7 @@ function linux_bind_driver() {
 	ven_dev_id=$(lspci -n -s "$bdf" | cut -d' ' -f3 | sed 's/:/ /')
 
 	if [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
-		old_driver_name=$(basename $(readlink /sys/bus/pci/devices/"$bdf"/driver))
+		old_driver_name=$(basename "$(readlink /sys/bus/pci/devices/"$bdf"/driver)")
 
 		if [ "$driver_name" = "$old_driver_name" ]; then
 			pci_dev_echo "$bdf" "Already using the $old_driver_name driver"
@@ -110,7 +110,7 @@ function linux_bind_driver() {
 	echo "$ven_dev_id" > "/sys/bus/pci/drivers/$driver_name/new_id" 2> /dev/null || true
 	echo "$bdf" > "/sys/bus/pci/drivers/$driver_name/bind" 2> /dev/null || true
 
-	iommu_group=$(basename $(readlink -f /sys/bus/pci/devices/"$bdf"/iommu_group))
+	iommu_group=$(basename "$(readlink -f /sys/bus/pci/devices/"$bdf"/iommu_group)")
 	if [ -e "/dev/vfio/$iommu_group" ]; then
 		if [ -n "$TARGET_USER" ]; then
 			chown "$TARGET_USER" "/dev/vfio/$iommu_group"
@@ -125,7 +125,7 @@ function linux_unbind_driver() {
 	local old_driver_name="no driver"
 
 	if [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
-		old_driver_name=$(basename $(readlink /sys/bus/pci/devices/"$bdf"/driver))
+		old_driver_name=$(basename "$(readlink /sys/bus/pci/devices/"$bdf"/driver)")
 		echo "$ven_dev_id" > "/sys/bus/pci/devices/$bdf/driver/remove_id" 2> /dev/null || true
 		echo "$bdf" > "/sys/bus/pci/devices/$bdf/driver/unbind"
 	fi
@@ -669,7 +669,7 @@ function configure_freebsd {
 	# If contigmem is already loaded but the HUGEMEM specified doesn't match the
 	#  previous value, unload contigmem so that we can reload with the new value.
 	if kldstat -q -m contigmem; then
-		if [ $(kenv hw.contigmem.num_buffers) -ne "$((HUGEMEM / 256))" ]; then
+		if [ "$(kenv hw.contigmem.num_buffers)" -ne "$((HUGEMEM / 256))" ]; then
 			kldunload contigmem.ko
 		fi
 	fi
@@ -710,7 +710,7 @@ if [ -z "$TARGET_USER" ]; then
 	fi
 fi
 
-if [ $(uname) = Linux ]; then
+if [ "$(uname)" = "Linux" ]; then
 	HUGEPGSZ=$(( $(grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9') ))
 	HUGEPGSZ_MB=$(( HUGEPGSZ / 1024 ))
 	: ${NRHUGE=$(( (HUGEMEM + HUGEPGSZ_MB - 1) / HUGEPGSZ_MB ))}

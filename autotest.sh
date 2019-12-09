@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-rootdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$(dirname "$0")")
 
 # In autotest_common.sh all tests are disabled by default.
 # If the configuration of tests is not provided, no tests will be carried out.
@@ -18,7 +18,7 @@ if [ $EUID -ne 0 ]; then
 	exit 1
 fi
 
-if [ $(uname -s) = Linux ]; then
+if [ "$(uname -s)" = "Linux" ]; then
 	# set core_pattern to a known value to avoid ABRT, systemd-coredump, etc.
 	echo "core" > /proc/sys/kernel/core_pattern
 
@@ -33,7 +33,7 @@ timing_enter autotest
 
 create_test_list
 
-src=$(readlink -f $(dirname "$0"))
+src=$(readlink -f "$(dirname "$0")")
 out=$PWD
 cd "$src"
 
@@ -70,7 +70,7 @@ rm -f /var/tmp/spdk*.sock
 # Let the kernel discover any filesystems or partitions
 sleep 10
 
-if [ $(uname -s) = Linux ]; then
+if [ "$(uname -s)" = "Linux" ]; then
 	# OCSSD devices drivers don't support IO issues by kernel so
 	# detect OCSSD devices and blacklist them (unbind from any driver).
 	# If test scripts want to use this device it needs to do this explicitly.
@@ -83,7 +83,7 @@ if [ $(uname -s) = Linux ]; then
 	do
 		# Send Open Channel 2.0 Geometry opcode "0xe2" - not supported by NVMe device.
 		if nvme admin-passthru "$dev" --namespace-id=1 --data-len=4096  --opcode=0xe2 --read >/dev/null; then
-			bdf="$(basename $(readlink -e /sys/class/nvme/"${dev#/dev/}"/device))"
+			bdf=$(basename "$(readlink -e /sys/class/nvme/"${dev#/dev/}"/device)")
 			echo "INFO: blacklisting OCSSD device: $dev ($bdf)"
 			PCI_BLACKLIST+=" $bdf"
 			OCSSD_PCI_DEVICES+=" $bdf"

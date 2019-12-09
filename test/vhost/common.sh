@@ -245,7 +245,7 @@ function vhost_rpc
 	fi
 	shift
 
-	"$rootdir"/scripts/rpc.py -s $(get_vhost_dir "$vhost_name")/rpc.sock "$@"
+	"$rootdir"/scripts/rpc.py -s "$(get_vhost_dir "$vhost_name")"/rpc.sock "$@"
 }
 
 ###
@@ -325,7 +325,7 @@ function vm_exec()
 		-o UserKnownHostsFile=/dev/null \
 		-o StrictHostKeyChecking=no \
 		-o User=root \
-		-p $(vm_ssh_socket "$vm_num") "$VM_SSH_OPTIONS" 127.0.0.1 \
+		-p "$(vm_ssh_socket "$vm_num")" "$VM_SSH_OPTIONS" 127.0.0.1 \
 		"$@"
 }
 
@@ -343,7 +343,7 @@ function vm_scp()
 		-o UserKnownHostsFile=/dev/null \
 		-o StrictHostKeyChecking=no \
 		-o User=root \
-		-P $(vm_ssh_socket "$vm_num") "$VM_SSH_OPTIONS" \
+		-P "$(vm_ssh_socket "$vm_num")" "$VM_SSH_OPTIONS" \
 		"$@"
 }
 
@@ -1112,7 +1112,7 @@ function run_fio()
 	fi
 
 	"$rootdir"/test/vhost/common/run_fio.py --job-file=/root/"$job_fname" \
-		$([[ -n "$fio_bin" ]] && echo "--fio-bin=$fio_bin") \
+		"$([[ -n "$fio_bin" ]] && echo "--fio-bin=$fio_bin")" \
 		--out=$out $json "${fio_disks%,}"
 }
 

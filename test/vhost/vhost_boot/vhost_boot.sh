@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -xe
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../../..)
 source "$rootdir"/test/common/autotest_common.sh
 source "$rootdir"/test/vhost/common.sh
@@ -84,7 +84,7 @@ trap 'nbd_stop_disks $(get_vhost_dir 0)/rpc.sock /dev/nbd0; err_clean "${FUNCNAM
 nbd_start_disks "$(get_vhost_dir 0)/rpc.sock" "$lvb_u" /dev/nbd0
 qemu-img convert "$os_image" -O raw /dev/nbd0
 sync
-nbd_stop_disks $(get_vhost_dir 0)/rpc.sock /dev/nbd0
+nbd_stop_disks "$(get_vhost_dir 0)"/rpc.sock /dev/nbd0
 sleep 1
 timing_exit convert_vm_image
 

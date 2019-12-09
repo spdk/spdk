@@ -5,7 +5,7 @@ if [ "$(uname -s)" = "FreeBSD" ]; then
 	exit 0
 fi
 
-rootdir=$(readlink -f $(dirname "$0")/../..)
+rootdir=$(readlink -f "$(dirname "$0")"/../..)
 source "$rootdir/test/common/autotest_common.sh"
 
 libdir="$rootdir/build/lib"

@@ -6,7 +6,7 @@ if [ "$SYSTEM" = "FreeBSD" ] ; then
     exit 0
 fi
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../..)
 rpc_server=/var/tmp/spdk-blobfs.sock
 rpc_py="$rootdir/scripts/rpc.py -s $rpc_server"

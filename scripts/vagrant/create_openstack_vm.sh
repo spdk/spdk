@@ -2,7 +2,7 @@
 
 set -e
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 SPDK_DIR=$(readlink -f "$testdir"/../..)
 VAGRANT_TARGET="$PWD"
 VAGRANT_DISTRO="ubuntu18"

@@ -7,9 +7,9 @@ if [ $# -ne 2 ]; then
 	exit 1
 fi
 
-rootdir=$(readlink -f $(dirname "$0")/../..)
+rootdir=$(readlink -f "$(dirname "$0")"/../..)
 # FIXME: Remove this when python3 will be on FeeBSD machines
-if [ $(uname -s) = "FreeBSD" ]; then
+if [ "$(uname -s)" = "FreeBSD" ]; then
 	python_cmd=python
 else
 	python_cmd=""
@@ -21,8 +21,8 @@ fi
 # config_filter.py script. Sorted output is used to compare JSON output.
 #
 
-tmp_file_1=$(mktemp /tmp/$(basename "${1}").XXX)
-tmp_file_2=$(mktemp /tmp/$(basename "${2}").XXX)
+tmp_file_1=$(mktemp /tmp/"$(basename "${1}")".XXX)
+tmp_file_2=$(mktemp /tmp/"$(basename "${2}")".XXX)
 ret=0
 
 cat "$1" | $python_cmd "$rootdir"/test/json_config/config_filter.py -method "sort" > "$tmp_file_1"

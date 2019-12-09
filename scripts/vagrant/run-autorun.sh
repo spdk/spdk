@@ -200,7 +200,7 @@ if [[ ${NOOP} -eq 0 ]]; then
 			echo "rsync git repository from ${GIT_REPO_SRC} to ${GIT_REPO_PATH}"
 			rsync -av "${GIT_REPO_SRC}" "${GIT_REPO_PATH}"
 			pushd "${GIT_REPO_PATH}/spdk"
-			sudo "${MAKE}" clean -j $(nproc)
+			sudo "${MAKE}" clean -j "$(nproc)"
 			sudo "${GIT}" clean -d -f
 			popd
 		;;

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../..)
 rpc_py=$rootdir/scripts/rpc.py
 source "$rootdir"/test/common/autotest_common.sh

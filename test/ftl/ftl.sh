@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../..)
 source "$rootdir"/test/common/autotest_common.sh
 source "$testdir"/common.sh
@@ -22,7 +22,7 @@ if [[ -z "$device" ]]; then
 	exit 1
 fi
 
-ocssd_original_dirver="$(basename $(readlink /sys/bus/pci/devices/"$device"/driver))"
+ocssd_original_dirver=$(basename "$(readlink /sys/bus/pci/devices/"$device"/driver)")
 
 trap 'at_ftl_exit' SIGINT SIGTERM EXIT
 

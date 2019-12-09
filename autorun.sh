@@ -2,7 +2,7 @@
 
 set -e
 
-rootdir=$(readlink -f $(dirname "$0"))
+rootdir=$(readlink -f "$(dirname "$0")")
 
 conf=~/autorun-spdk.conf
 

@@ -4,7 +4,7 @@
 set -x
 set -e
 
-script_dir=$(readlink -f $(dirname "$0"))
+script_dir=$(readlink -f "$(dirname "$0")")
 
 base_dir=/var/tmp/ceph
 mon_ip=$1
@@ -128,7 +128,7 @@ mkdir -p ${mnt_dir}
 uuid=$(uuidgen)
 ceph -c ${ceph_conf} osd create "${uuid}" $i
 ceph-osd -c ${ceph_conf} -i $i --mkfs --mkkey --osd-uuid "${uuid}" ${ceph_osd_extra_config}
-ceph -c ${ceph_conf} osd crush add osd.${i} 1.0 host=$(hostname) root=default
+ceph -c ${ceph_conf} osd crush add osd.${i} 1.0 host="$(hostname)" root=default
 ceph -c ${ceph_conf} -i ${mnt_dir}/osd-device-${i}-data/keyring auth add osd.${i} osd "allow *" mon "allow profile osd" mgr "allow *"
 
 # start osd

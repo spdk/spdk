@@ -6,7 +6,7 @@ if [ "$SYSTEM" = "FreeBSD" ] ; then
     exit 0
 fi
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../..)
 source "$rootdir"/test/common/autotest_common.sh
 

@@ -2,7 +2,7 @@
 
 set -e
 
-rootdir=$(readlink -f $(dirname "$0"))/..
+rootdir=$(readlink -f "$(dirname "$0")")/..
 source "$rootdir/scripts/common.sh"
 
 function create_classic_config()

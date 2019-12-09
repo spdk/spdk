@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../..)
 rpc_server=/var/tmp/spdk-raid.sock
 rpc_py="$rootdir/scripts/rpc.py -s $rpc_server"
@@ -73,7 +73,7 @@ function configure_raid_bdev() {
 }
 
 function raid_function_test() {
-	if [ $(uname -s) = Linux ] && modprobe -n nbd; then
+	if [ "$(uname -s)" = "Linux" ] && modprobe -n nbd; then
 		local nbd=/dev/nbd0
 		local raid_bdev
 

@@ -603,7 +603,7 @@ function print_backtrace() {
 }
 
 function part_dev_by_gpt () {
-	if [ $(uname -s) = Linux ] && hash sgdisk && modprobe nbd; then
+	if [ "$(uname -s)" = "Linux" ] && hash sgdisk && modprobe nbd; then
 		conf=$1
 		devname=$2
 		rootdir=$3
@@ -866,7 +866,7 @@ function autotest_cleanup()
 {
 	"$rootdir"/scripts/setup.sh reset
 	"$rootdir"/scripts/setup.sh cleanup
-	if [ $(uname -s) = "Linux" ]; then
+	if [ "$(uname -s)" = "Linux" ]; then
 		if grep -q '#define SPDK_CONFIG_IGB_UIO_DRIVER 1' "$rootdir"/include/spdk/config.h; then
 			rmmod igb_uio
 		else
@@ -878,7 +878,7 @@ function autotest_cleanup()
 
 function freebsd_update_contigmem_mod()
 {
-	if [ $(uname) = FreeBSD ]; then
+	if [ "$(uname)" = "FreeBSD" ]; then
 		kldunload contigmem.ko || true
 		if [ -n "$WITH_DPDK_DIR" ]; then
 			echo "Warning: SPDK only works on FreeBSD with patches that only exist in SPDK's dpdk submodule"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-CONVERTER_DIR=$(readlink -f $(dirname "$0"))
+CONVERTER_DIR=$(readlink -f "$(dirname "$0")")
 SPDK_BUILD_DIR=$CONVERTER_DIR/../../
 source "$CONVERTER_DIR"/../common/autotest_common.sh
 

@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../..)
 
 source "$rootdir"/test/common/autotest_common.sh
 
 function suite()
 {
-	timing_enter $(basename "$@")
+	timing_enter "$(basename "$@")"
 	run_test suite "$@"
-	timing_exit $(basename "$@")
+	timing_exit "$(basename "$@")"
 }
 
 timing_enter ocf

@@ -6,8 +6,8 @@
 
 set -xe
 
-testdir=$(readlink -f $(dirname "$0"))
-rootdir=$(readlink -f $(dirname "$0")/../..)
+testdir=$(readlink -f "$(dirname "$0")")
+rootdir=$(readlink -f "$(dirname "$0")"/../..)
 
 cd "$rootdir"
 
@@ -48,7 +48,7 @@ if [ "$cov_avail" = "yes" ]; then
 fi
 
 # workaround for valgrind v3.13 on arm64
-if [ $(uname -m) = "aarch64" ]; then
+if [ "$(uname -m)" = "aarch64" ]; then
 	export LD_HWCAP_MASK=1
 fi
 
@@ -158,7 +158,7 @@ $valgrind "$testdir"/lib/util/dif.c/dif_ut
 $valgrind "$testdir"/lib/util/iov.c/iov_ut
 $valgrind "$testdir"/lib/util/pipe.c/pipe_ut
 
-if [ $(uname -s) = Linux ]; then
+if [ "$(uname -s)" = "Linux" ]; then
 $valgrind "$testdir"/lib/vhost/vhost.c/vhost_ut
 
 $valgrind "$testdir"/lib/ftl/ftl_rwb.c/ftl_rwb_ut

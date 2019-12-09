@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 ISCSI_PORT=3260
 FIO_PATH=$1
 IP_T=$2

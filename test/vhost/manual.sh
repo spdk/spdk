@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-testdir=$(readlink -f $(dirname "$0"))
+testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir"/../..)
 source "$rootdir"/test/common/autotest_common.sh
 source "$rootdir"/test/vhost/common.sh
@@ -48,7 +48,7 @@ fi
 
 DISKS_NUMBER=$(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}'| wc -l)
 
-WORKDIR=$(readlink -f $(dirname "$0"))
+WORKDIR=$(readlink -f "$(dirname "$0")")
 
 case $1 in
 	-p|--performance)
