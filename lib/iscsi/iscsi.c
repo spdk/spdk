@@ -3202,8 +3202,8 @@ iscsi_compare_pdu_bhs_within_existed_r2t_tasks(struct spdk_iscsi_conn *conn,
 	return false;
 }
 
-static void
-iscsi_queue_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
+void
+spdk_iscsi_queue_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 {
 	spdk_trace_record(TRACE_ISCSI_TASK_QUEUE, conn->id, task->scsi.length,
 			  (uintptr_t)task, (uintptr_t)task->pdu);
@@ -3242,7 +3242,7 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 
 			subtask->scsi.length = spdk_min(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
 			task->current_datain_offset += subtask->scsi.length;
-			iscsi_queue_task(conn, subtask);
+			spdk_iscsi_queue_task(conn, subtask);
 		}
 		if (task->current_datain_offset == task->scsi.transfer_len) {
 			TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
@@ -3260,7 +3260,7 @@ iscsi_pdu_payload_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_t
 		task->scsi.length = task->scsi.transfer_len;
 		spdk_scsi_task_set_data(&task->scsi, NULL, 0);
 
-		iscsi_queue_task(conn, task);
+		spdk_iscsi_queue_task(conn, task);
 		return 0;
 	} else {
 		TAILQ_INIT(&task->subtask_list);
@@ -3318,7 +3318,7 @@ iscsi_pdu_payload_op_scsi_write(struct spdk_iscsi_conn *conn, struct spdk_iscsi_
 		task->scsi.length = transfer_len;
 	}
 
-	iscsi_queue_task(conn, task);
+	spdk_iscsi_queue_task(conn, task);
 	return 0;
 }
 
@@ -3457,7 +3457,7 @@ iscsi_pdu_payload_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	case SPDK_SCSI_DIR_TO_DEV:
 		return iscsi_pdu_payload_op_scsi_write(conn, task);
 	case SPDK_SCSI_DIR_NONE:
-		iscsi_queue_task(conn, task);
+		spdk_iscsi_queue_task(conn, task);
 		return 0;
 	default:
 		assert(false);
@@ -4444,7 +4444,7 @@ iscsi_pdu_payload_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 		return 0;
 	}
 
-	iscsi_queue_task(conn, subtask);
+	spdk_iscsi_queue_task(conn, subtask);
 	return 0;
 }
 
