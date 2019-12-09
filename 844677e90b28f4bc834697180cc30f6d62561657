@@ -22,6 +22,30 @@
       "revId": "844677e90b28f4bc834697180cc30f6d62561657",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "724cdc5f_fabf56f9",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-09T09:24:10Z",
+      "side": 1,
+      "message": "Yeah, I was actually thinking about that, but decided that a function called vmd_hotplug_free_region should be the one removing the region. But you\u0027re probably right, it\u0027s too confusing to insert a region only to remove it in the very next function call. I\u0027ll change it in the way you\u0027ve proposed.",
+      "parentUuid": "1d309205_233c06ba",
+      "range": {
+        "startLine": 198,
+        "startChar": 3,
+        "endLine": 198,
+        "endChar": 63
+      },
+      "revId": "844677e90b28f4bc834697180cc30f6d62561657",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
