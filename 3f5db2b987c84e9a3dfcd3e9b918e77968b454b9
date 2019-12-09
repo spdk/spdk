@@ -34,6 +34,24 @@
       "revId": "3f5db2b987c84e9a3dfcd3e9b918e77968b454b9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1501428_96ab4ec2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 23
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T17:05:28Z",
+      "side": 1,
+      "message": "Yes, we would rely on the bdev_nvme_attach_controller() RPCs always getting written first.  Then anything per-namespace gets written after that.\n\nI\u0027m fine with that assumption.  I think it makes the code a lot simpler and cleaner and avoids having to support things like users purposely calling bdev_ocssd_create on a controller that doesn\u0027t exist yet.",
+      "parentUuid": "8fa1618a_24f54dd5",
+      "revId": "3f5db2b987c84e9a3dfcd3e9b918e77968b454b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
