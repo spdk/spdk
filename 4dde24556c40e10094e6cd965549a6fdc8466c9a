@@ -84,6 +84,30 @@
     },
     {
       "key": {
+        "uuid": "cdec8a22_aa87d5fa",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-09T00:47:37Z",
+      "side": 1,
+      "message": "I think printing pointer value is helpful but this is minor and no change is OK.",
+      "parentUuid": "b9eaaa80_79a65fed",
+      "range": {
+        "startLine": 546,
+        "startChar": 65,
+        "endLine": 546,
+        "endChar": 66
+      },
+      "revId": "4dde24556c40e10094e6cd965549a6fdc8466c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0b12eaae_fb00086d",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 6
@@ -166,6 +190,30 @@
       "side": 1,
       "message": "Neither of failures above is ENOMEM. And in previous implementation failure to post returned the same error. And return value of this function is not forwarded up the stack.\nSo, I would keep the code simple and do not change.\n\nMaybe we can replace ENOMEM with something more suitable? But it is out of scope for this patch.",
       "parentUuid": "20b42e19_8ff9e9e4",
+      "range": {
+        "startLine": 693,
+        "startChar": 2,
+        "endLine": 693,
+        "endChar": 12
+      },
+      "revId": "4dde24556c40e10094e6cd965549a6fdc8466c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12ab247a_991f26c3",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-09T00:47:37Z",
+      "side": 1,
+      "message": "Got it. Just using -1 for all cases may be better when reading the caller. Let\u0027s fix return code separately after this series.",
+      "parentUuid": "6b4008f6_fe025033",
       "range": {
         "startLine": 693,
         "startChar": 2,
