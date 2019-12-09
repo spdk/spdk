@@ -649,7 +649,7 @@ _bdev_io_unset_bounce_buf(struct spdk_bdev_io *bdev_io)
 				  bdev_io->internal.bounce_iov.iov_base,
 				  bdev_io->internal.bounce_iov.iov_len);
 	}
-	/* set orignal buffer for this io */
+	/* set original buffer for this io */
 	bdev_io->u.bdev.iovcnt = bdev_io->internal.orig_iovcnt;
 	bdev_io->u.bdev.iovs = bdev_io->internal.orig_iovs;
 	/* disable bouncing buffer for this io */
@@ -670,7 +670,7 @@ _bdev_io_unset_bounce_buf(struct spdk_bdev_io *bdev_io)
 		bdev_io->internal.orig_md_buf = NULL;
 	}
 
-	bdev_io_put_buf(bdev_io);
+	/* The bounce buffer at bdev_io->internal.buf will be put back in spdk_bdev_free_io() */
 }
 
 void
