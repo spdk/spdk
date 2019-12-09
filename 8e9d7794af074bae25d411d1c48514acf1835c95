@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc22f031_1686822b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-09T20:50:52Z",
+      "side": 1,
+      "message": "Doesn\u0027t this patch change it to handle the event asynchronously?",
+      "revId": "8e9d7794af074bae25d411d1c48514acf1835c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
