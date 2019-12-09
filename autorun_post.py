@@ -19,17 +19,17 @@ def highest_value(inp):
 
 
 def generateTestCompletionTables(output_dir, completion_table):
-    data_table = pd.DataFrame(completion_table, columns=["Agent", "Test", "With Asan", "With UBsan"])
+    data_table = pd.DataFrame(completion_table, columns=["Agent", "Domain", "Test", "With Asan", "With UBsan"])
     data_table.to_html(os.path.join(output_dir, 'completions_table.html'))
     os.makedirs(os.path.join(output_dir, "post_process"), exist_ok=True)
 
-    pivot_by_agent = pd.pivot_table(data_table, index=["Agent", "Test"])
+    pivot_by_agent = pd.pivot_table(data_table, index=["Agent", "Domain", "Test"])
     pivot_by_agent.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_agent.html'))
-    pivot_by_test = pd.pivot_table(data_table, index=["Test", "Agent"])
+    pivot_by_test = pd.pivot_table(data_table, index=["Domain", "Test", "Agent"])
     pivot_by_test.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_test.html'))
-    pivot_by_asan = pd.pivot_table(data_table, index=["Test"], values=["With Asan"], aggfunc=highest_value)
+    pivot_by_asan = pd.pivot_table(data_table, index=["Domain", "Test"], values=["With Asan"], aggfunc=highest_value)
     pivot_by_asan.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_asan.html'))
-    pivot_by_ubsan = pd.pivot_table(data_table, index=["Test"], values=["With UBsan"], aggfunc=highest_value)
+    pivot_by_ubsan = pd.pivot_table(data_table, index=["Domain", "Test"], values=["With UBsan"], aggfunc=highest_value)
     pivot_by_ubsan.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_ubsan.html'))
 
 
@@ -101,12 +101,12 @@ def getCompletions(completionFile, test_list, test_completion_table):
     ubsan_enabled = "ubsan" in completions
 
     for line in completions.splitlines():
-        line = line.strip()
         try:
-            test_list[line] = (True, asan_enabled | test_list[line][1], ubsan_enabled | test_list[line][2])
-            test_completion_table.append([agent_name, line, asan_enabled, ubsan_enabled])
+            domain, test_name = line.strip().split()
+            test_list[test_name] = (True, asan_enabled | test_list[test_name][1], ubsan_enabled | test_list[test_name][2])
+            test_completion_table.append([agent_name, domain, test_name, asan_enabled, ubsan_enabled])
             try:
-                test_completion_table.remove(["None", line, False, False])
+                test_completion_table.remove(["None", "None", test_name, False, False])
             except ValueError:
                 continue
         except KeyError:
@@ -139,8 +139,14 @@ def aggregateCompletedTests(output_dir, repo_dir):
 
     with open(testFiles[0], 'r') as raw_test_list:
         for line in raw_test_list:
-            test_list[line.strip()] = (False, False, False)
-            test_completion_table.append(["None", line.strip(), False, False])
+            try:
+                test_name = line.strip()
+            except Exception:
+                print("Failed to parse a test type.")
+                return 1
+
+            test_list[test_name] = (False, False, False)
+            test_completion_table.append(["None", "None", test_name, False, False])
 
     for completionFile in completionFiles:
         getCompletions(completionFile, test_list, test_completion_table)

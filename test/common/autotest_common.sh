@@ -591,6 +591,12 @@ function run_test() {
 	local test_name="$1"
 	shift
 
+	if [ -n "$test_domain" ]; then
+		export test_domain="${test_domain}.${test_name}"
+	else
+		export test_domain="$test_name"
+	fi
+
 	timing_enter $test_name
 	echo "************************************"
 	echo "START TEST $test_name"
@@ -601,9 +607,18 @@ function run_test() {
 	echo "************************************"
 	echo "END TEST $test_name"
 	echo "************************************"
-
-	echo "$test_name" >> $output_dir/test_completions.txt
 	timing_exit $test_name
+
+	export test_domain=${test_domain%"$test_name"}
+	if [ -n "$test_domain" ]; then
+		export test_domain=${test_domain%?}
+	fi
+
+	if [ -z "$test_domain" ]; then
+		echo "top_level $test_name" >> $output_dir/test_completions.txt
+	else
+		echo "$test_domain $test_name" >> $output_dir/test_completions.txt
+	fi
 	xtrace_restore
 }
 
