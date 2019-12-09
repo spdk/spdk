@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d309205_233c06ba",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-09T09:07:50Z",
+      "side": 1,
+      "message": "This is correct but inserting free_region here and removing it in vmd_hotplug_free_region() is difficult to me.\n\nWill you\n* add TAILQ_REMOVE(\u0026alloc_mem_queue, region) in vmd_hotplug_free_addr(), and\n* remove TAILQ_INSERT_TAIL(\u0026alloc_mem_queue, free_region) here and TAILQ_REMOVE(\u0026alloc_mem_queue, region) in vmd_hotplug_free_region() ?",
+      "range": {
+        "startLine": 198,
+        "startChar": 3,
+        "endLine": 198,
+        "endChar": 63
+      },
+      "revId": "844677e90b28f4bc834697180cc30f6d62561657",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
