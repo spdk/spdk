@@ -40,6 +40,9 @@
 #include <rte_crypto.h>
 #include <rte_cryptodev.h>
 
+/* rte_config is private */
+#include "../../../dpdk/lib/librte_eal/common/eal_private.h"
+
 #define MAX_TEST_BLOCKS 8192
 struct rte_crypto_op *g_test_crypto_ops[MAX_TEST_BLOCKS];
 struct rte_crypto_op *g_test_dev_full_ops[MAX_TEST_BLOCKS];
@@ -156,6 +159,7 @@ DEFINE_STUB(spdk_bdev_module_claim_bdev, int, (struct spdk_bdev *bdev, struct sp
 		struct spdk_bdev_module *module), 0);
 DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
 DEFINE_STUB(spdk_bdev_register, int, (struct spdk_bdev *vbdev), 0);
+DEFINE_STUB(rte_lcore_count, uint32_t, (void), 1);
 
 /* DPDK stubs */
 DEFINE_STUB(rte_cryptodev_count, uint8_t, (void), 0);
@@ -728,7 +732,7 @@ test_initdrivers(void)
 	g_mbuf_mp = NULL;
 
 	/* No drivers available, not an error though */
-	MOCK_SET(rte_eal_get_configuration, g_test_config);
+	/* MOCK_SET(rte_eal_get_configuration, g_test_config); */
 	MOCK_SET(rte_cryptodev_count, 0);
 	rc = vbdev_crypto_init_crypto_drivers();
 	CU_ASSERT(rc == 0);

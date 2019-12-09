@@ -41,6 +41,9 @@
 
 #include <rte_compressdev.h>
 
+/* rte_config is private */
+#include "../../../dpdk/lib/librte_eal/common/eal_private.h"
+
 /* There will be one if the data perfectly matches the chunk size,
  * or there could be an offset into the data and a remainder after
  * the data or both for a max of 3.
