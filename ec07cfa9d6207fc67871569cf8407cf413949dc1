@@ -34,6 +34,24 @@
       "revId": "ec07cfa9d6207fc67871569cf8407cf413949dc1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "726915f9_3ebdb958",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-09T13:45:56Z",
+      "side": 1,
+      "message": "Yeah, you\u0027re right about restarting from config - it stopped working after one of the recent rebases. I think we\u0027ve missed one of Maciek\u0027s patches, which added a workaround to distinguish between bdev_ftl vs. bdev_ocssd NVMe controller. Currently bdev_ftl inserts the controller on the g_nvme_bdev_ctrlrs and relies on the spdk_nvme_ctrlr_is_ocssd_supported check in bdev_nvme_config_json. Without this check we\u0027ll get the same controller listed twice (once for bdev_nvme and once for bdev_ftl).\nI\u0027ve posted a simple patch preceding this one adding a flag allowing for distinguishing between bdev_ocssd\u0027s controllers and those registered by bdev_ftl.",
+      "parentUuid": "867c3e24_cd05ad47",
+      "revId": "ec07cfa9d6207fc67871569cf8407cf413949dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
