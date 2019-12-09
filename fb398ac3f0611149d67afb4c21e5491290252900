@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "72c06579_409ff668",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-09T13:42:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aff082d8_a2eae92f",
+      "revId": "fb398ac3f0611149d67afb4c21e5491290252900",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70f968aa_bf718a37",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 32
@@ -69,6 +87,24 @@
       "revId": "fb398ac3f0611149d67afb4c21e5491290252900",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8171d367_0a91d138",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-09T13:42:54Z",
+      "side": 1,
+      "message": "Oh, I didn\u0027t consider the possibility of sending DSM deallocate, I\u0027ve just assumed that the unmap should behave the same way as zone reset.\nAs you\u0027ve suggested, I\u0027ve split this patch and put the unmap one at the top of the chain.",
+      "parentUuid": "32a3f167_c94c006a",
+      "revId": "fb398ac3f0611149d67afb4c21e5491290252900",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
