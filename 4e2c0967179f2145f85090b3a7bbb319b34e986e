@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6966fe95_2b5fe80e",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T15:31:38Z",
+      "side": 1,
+      "message": "you need to pass apptag_mask and apptag here",
+      "revId": "4e2c0967179f2145f85090b3a7bbb319b34e986e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
