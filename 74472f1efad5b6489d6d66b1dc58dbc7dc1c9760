@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cc914143_fe817e96",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 617,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-09T13:47:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7b7ba6a2_2ae5f935",
+      "revId": "74472f1efad5b6489d6d66b1dc58dbc7dc1c9760",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c10162b_c41b37a9",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 25
@@ -33,6 +51,24 @@
       "revId": "74472f1efad5b6489d6d66b1dc58dbc7dc1c9760",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "effe744f_f47171d3",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-09T13:47:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8c10162b_c41b37a9",
+      "revId": "74472f1efad5b6489d6d66b1dc58dbc7dc1c9760",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "27281bcf_e1614baa",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-09T13:47:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ab61baab_1fc75d9e",
+      "revId": "74472f1efad5b6489d6d66b1dc58dbc7dc1c9760",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19950881_bc85391c",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 25
@@ -82,6 +136,24 @@
       "writtenOn": "2019-12-06T22:08:11Z",
       "side": 1,
       "message": "let\u0027s do this finish \u003d\u003e error label rename in a separate patch before this one",
+      "revId": "74472f1efad5b6489d6d66b1dc58dbc7dc1c9760",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ddbaacd_16e02838",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 782,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-09T13:47:26Z",
+      "side": 1,
+      "message": "Does it make sense to rename it before the changes introduced by this patch? The \"finish\" label was used to denote a part of the function that was supposed to be always executed, regardless of whether the function succeeded or not. This patch changes this behavior - now we only want to jump there in case an error was encountered.",
+      "parentUuid": "19950881_bc85391c",
       "revId": "74472f1efad5b6489d6d66b1dc58dbc7dc1c9760",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
