@@ -311,9 +311,9 @@ int vhost_stop_device_cb(int vid);
 int vhost_destroy_connection_cb(int vid);
 
 #ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
-int vhost_get_config_cb(int vid, uint8_t *config, uint32_t len)
+int vhost_get_config_cb(int vid, uint8_t *config, uint32_t len);
 int vhost_set_config_cb(int vid, uint8_t *config, uint32_t offset,
-			uint32_t size, uint32_t flags)
+			uint32_t size, uint32_t flags);
 #endif
 
 /*
