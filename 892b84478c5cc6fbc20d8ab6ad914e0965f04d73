@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e94bb762_ad77777b",
+        "filename": "test/ocf/ocf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-09T12:42:44Z",
+      "side": 1,
+      "message": "this will result in, for example, with \"ocf_fio-modes.sh\"\nYou should use basename with suffix option, like ocf_$(basename \"$@\" .sh) -\u003e this removes .sh from the filename\n\nPlease keep this in mind and add a fix in the series",
+      "range": {
+        "startLine": 11,
+        "startChar": 16,
+        "endLine": 11,
+        "endChar": 38
+      },
+      "revId": "892b84478c5cc6fbc20d8ab6ad914e0965f04d73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
