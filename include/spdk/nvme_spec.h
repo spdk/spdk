@@ -659,8 +659,6 @@ union spdk_nvme_feat_async_event_configuration {
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_async_event_configuration) == 4, "Incorrect size");
-/* Old name defined for compatibility */
-#define spdk_nvme_async_event_config spdk_nvme_feat_async_event_configuration
 
 /**
  * Data used by Set Features/Get Features \ref SPDK_NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION
