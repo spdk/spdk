@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8c9a298d_417afca5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T15:06:37Z",
+      "side": 1,
+      "message": "Let\u0027s add something a bit more specific here.  It helps explain the change more to the reader/reviewer.  For example:\n\n\"Previously, invalid io_flags would results in -ENOMEM being returned to the user which was incorrect.\"",
+      "revId": "f231d9dce94d30b28e2e5e79ff30cd57b41e4305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8cfaf89_e59d896c",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T15:06:37Z",
+      "side": 1,
+      "message": "assert(_is_io_flags_valid(io_flags));",
+      "revId": "f231d9dce94d30b28e2e5e79ff30cd57b41e4305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
