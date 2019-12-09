@@ -18,19 +18,19 @@ def highest_value(inp):
         return False
 
 
-def generateTestCompletionTables(output_dir, completion_table):
-    data_table = pd.DataFrame(completion_table, columns=["Agent", "Test", "With Asan", "With UBsan"])
-    data_table.to_html(os.path.join(output_dir, 'completions_table.html'))
+def generateTestCompletionTables(output_dir, completion_table, test_type):
+    data_table = pd.DataFrame(completion_table, columns=["Agent", "Domain", "Test", "With Asan", "With UBsan"])
+    data_table.to_html(os.path.join(output_dir, 'completions_table_%s.html' % test_type))
     os.makedirs(os.path.join(output_dir, "post_process"), exist_ok=True)
 
-    pivot_by_agent = pd.pivot_table(data_table, index=["Agent", "Test"])
-    pivot_by_agent.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_agent.html'))
-    pivot_by_test = pd.pivot_table(data_table, index=["Test", "Agent"])
-    pivot_by_test.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_test.html'))
-    pivot_by_asan = pd.pivot_table(data_table, index=["Test"], values=["With Asan"], aggfunc=highest_value)
-    pivot_by_asan.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_asan.html'))
-    pivot_by_ubsan = pd.pivot_table(data_table, index=["Test"], values=["With UBsan"], aggfunc=highest_value)
-    pivot_by_ubsan.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_ubsan.html'))
+    pivot_by_agent = pd.pivot_table(data_table, index=["Agent", "Domain", "Test"])
+    pivot_by_agent.to_html(os.path.join(output_dir, "post_process", 'completions_table_%s_by_agent.html' % test_type))
+    pivot_by_test = pd.pivot_table(data_table, index=["Test", "Domain", "Agent"])
+    pivot_by_test.to_html(os.path.join(output_dir, "post_process", 'completions_table_%s_by_test.html' % test_type))
+    pivot_by_asan = pd.pivot_table(data_table, index=["Test", "Domain"], values=["With Asan"], aggfunc=highest_value)
+    pivot_by_asan.to_html(os.path.join(output_dir, "post_process", 'completions_table_%s_by_asan.html' % test_type))
+    pivot_by_ubsan = pd.pivot_table(data_table, index=["Test", "Domain"], values=["With UBsan"], aggfunc=highest_value)
+    pivot_by_ubsan.to_html(os.path.join(output_dir, "post_process", 'completions_table_%s_by_ubsan.html' % test_type))
 
 
 def generateCoverageReport(output_dir, repo_dir):
@@ -92,7 +92,7 @@ def collectOne(output_dir, dir_name):
         shutil.rmtree(d)
 
 
-def getCompletions(completionFile, test_list, test_completion_table):
+def getCompletions(completionFile, test_list, test_completion_table, approved_test_type):
     agent_name = os.path.split(os.path.split(completionFile)[0])[1]
     with open(completionFile, 'r') as completionList:
         completions = completionList.read()
@@ -102,10 +102,14 @@ def getCompletions(completionFile, test_list, test_completion_table):
 
     for line in completions.splitlines():
         try:
-            test_list[line.strip()] = (True, asan_enabled | test_list[line.strip()][1], ubsan_enabled | test_list[line.strip()][2])
-            test_completion_table.append([agent_name, line.strip(), asan_enabled, ubsan_enabled])
+            test_type, domain, test_name = line.strip().split()
+            if (test_type != approved_test_type):
+                continue
+
+            test_list[test_name] = (True, asan_enabled | test_list[test_name][1], ubsan_enabled | test_list[test_name][2])
+            test_completion_table.append([agent_name, domain, test_name, asan_enabled, ubsan_enabled])
             try:
-                test_completion_table.remove(["None", line.strip(), False, False])
+                test_completion_table.remove(["None", "None", line.strip(), False, False])
             except ValueError:
                 continue
         except KeyError:
@@ -126,8 +130,10 @@ def printListInformation(table_type, test_list):
 
 
 def aggregateCompletedTests(output_dir, repo_dir):
-    test_list = {}
-    test_completion_table = []
+    test_case_list = {}
+    test_case_completion_table = []
+    test_suite_list = {}
+    test_suite_completion_table = []
 
     testFiles = glob.glob(os.path.join(output_dir, '**', 'all_tests.txt'), recursive=True)
     completionFiles = glob.glob(os.path.join(output_dir, '**', 'test_completions.txt'), recursive=True)
@@ -138,14 +144,26 @@ def aggregateCompletedTests(output_dir, repo_dir):
 
     with open(testFiles[0], 'r') as raw_test_list:
         for line in raw_test_list:
-            test_list[line.strip()] = (False, False, False)
-            test_completion_table.append(["None", line.strip(), False, False])
+            try:
+                test_type, test_name = line.strip().split()
+            except Exception:
+                print("Failed to parse a test type.")
+                return 1
+            if test_type.strip() == "case":
+                test_case_list[test_name] = (False, False, False)
+                test_case_completion_table.append(["None", "None", test_name, False, False])
+            elif test_type.strip() == "suite":
+                test_suite_list[test_name] = (False, False, False)
+                test_suite_completion_table.append(["None", "None", test_name, False, False])
 
     for completionFile in completionFiles:
-        getCompletions(completionFile, test_list, test_completion_table)
+        getCompletions(completionFile, test_case_list, test_case_completion_table, "case")
+        getCompletions(completionFile, test_suite_list, test_suite_completion_table, "suite")
 
-    printListInformation("Tests", test_list)
-    generateTestCompletionTables(output_dir, test_completion_table)
+    printListInformation("Test Cases", test_case_list)
+    printListInformation("Test Suites", test_suite_list)
+    generateTestCompletionTables(output_dir, test_case_completion_table, "cases")
+    generateTestCompletionTables(output_dir, test_suite_completion_table, "suites")
 
 
 def main(output_dir, repo_dir):
