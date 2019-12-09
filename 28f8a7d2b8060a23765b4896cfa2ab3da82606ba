@@ -16,6 +16,24 @@
       "revId": "28f8a7d2b8060a23765b4896cfa2ab3da82606ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4712f7e_7974a4f9",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-09T21:57:09Z",
+      "side": 1,
+      "message": "Question was for my old patches. RTE version check was to avoid duplication. So thanks for ignoring my question. Your patch is fine.",
+      "parentUuid": "653673a7_6546fe8c",
+      "revId": "28f8a7d2b8060a23765b4896cfa2ab3da82606ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
