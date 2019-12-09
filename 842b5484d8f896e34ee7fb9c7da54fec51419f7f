@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6156e912_0dd3a848",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T16:55:18Z",
+      "side": 1,
+      "message": "I think you need to remove IO_TYPE_UNMAP.",
+      "revId": "842b5484d8f896e34ee7fb9c7da54fec51419f7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
