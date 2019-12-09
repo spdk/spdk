@@ -199,6 +199,9 @@ struct raid_bdev_io_channel {
 
 	/* Number of IO channels */
 	uint8_t			num_channels;
+
+	/* Private raid module IO channel */
+	struct spdk_io_channel	*module_channel;
 };
 
 /* TAIL heads for various raid bdev lists */
@@ -264,6 +267,12 @@ struct raid_bdev_module {
 
 	/* Handler for requests without payload (flush, unmap). Optional. */
 	void (*submit_null_payload_request)(struct raid_bdev_io *raid_io);
+
+	/*
+	 * Called when the bdev's IO channel is created to get the module's private IO channel.
+	 * Optional.
+	 */
+	struct spdk_io_channel *(*get_io_channel)(struct raid_bdev *raid_bdev);
 
 	TAILQ_ENTRY(raid_bdev_module) link;
 };
