@@ -369,7 +369,6 @@ vhost_register_unix_socket(const char *path, const char *ctrl_name,
 	}
 
 	rte_vhost_driver_get_protocol_features(path, &protocol_features);
-	protocol_features |= (1ULL << VHOST_USER_PROTOCOL_F_CONFIG);
 	rte_vhost_driver_set_protocol_features(path, protocol_features);
 
 	if (rte_vhost_driver_start(path) != 0) {

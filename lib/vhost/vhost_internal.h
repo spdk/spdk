@@ -39,6 +39,7 @@
 
 #include <rte_vhost.h>
 
+#include "spdk_internal/vhost_user.h"
 #include "spdk_internal/log.h"
 #include "spdk/event.h"
 #include "spdk/rpc.h"
@@ -68,9 +69,9 @@
  */
 #define SPDK_VHOST_COALESCING_DELAY_BASE_US 0
 
-
 #define SPDK_VHOST_FEATURES ((1ULL << VHOST_F_LOG_ALL) | \
 	(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \
+	(1ULL << VHOST_USER_PROTOCOL_F_CONFIG) | \
 	(1ULL << VIRTIO_F_VERSION_1) | \
 	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) | \
 	(1ULL << VIRTIO_RING_F_EVENT_IDX) | \
