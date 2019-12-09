@@ -128,8 +128,8 @@ DEFINE_STUB(spdk_scsi_lun_get_dif_ctx, bool,
 static void
 op_login_check_target_test(void)
 {
-	struct spdk_iscsi_conn conn;
-	struct spdk_iscsi_pdu rsp_pdu;
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu rsp_pdu = {};
 	struct spdk_iscsi_tgt_node *target;
 	int rc;
 
@@ -162,12 +162,12 @@ static void
 op_login_session_normal_test(void)
 {
 	struct spdk_iscsi_conn conn = {};
-	struct spdk_iscsi_portal portal;
-	struct spdk_iscsi_portal_grp group;
+	struct spdk_iscsi_portal portal = {};
+	struct spdk_iscsi_portal_grp group = {};
 	struct spdk_iscsi_pdu rsp_pdu = {};
 	struct iscsi_bhs_login_rsp *rsph;
-	struct spdk_iscsi_sess sess;
-	struct iscsi_param param;
+	struct spdk_iscsi_sess sess = {};
+	struct iscsi_param param = {};
 	int rc;
 
 	/* setup related data structures */
@@ -178,7 +178,6 @@ op_login_session_normal_test(void)
 	portal.group = &group;
 	conn.portal->group->tag = 0;
 	conn.params = NULL;
-	memset(&param, 0, sizeof(param));
 
 	/* expect failure: NULL params for target name */
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
@@ -251,21 +250,16 @@ op_login_session_normal_test(void)
 static void
 maxburstlength_test(void)
 {
-	struct spdk_iscsi_sess sess;
-	struct spdk_iscsi_conn conn;
-	struct spdk_scsi_dev dev;
-	struct spdk_scsi_lun lun;
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
 	struct spdk_iscsi_pdu *req_pdu, *data_out_pdu, *r2t_pdu;
 	struct iscsi_bhs_scsi_req *req;
 	struct iscsi_bhs_r2t *r2t;
 	struct iscsi_bhs_data_out *data_out;
 	struct spdk_iscsi_pdu *response_pdu;
 	int rc;
-
-	memset(&sess, 0, sizeof(sess));
-	memset(&conn, 0, sizeof(conn));
-	memset(&dev, 0, sizeof(dev));
-	memset(&lun, 0, sizeof(lun));
 
 	req_pdu = spdk_get_pdu();
 	data_out_pdu = spdk_get_pdu();
@@ -348,21 +342,15 @@ maxburstlength_test(void)
 static void
 underflow_for_read_transfer_test(void)
 {
-	struct spdk_iscsi_sess sess;
-	struct spdk_iscsi_conn conn;
-	struct spdk_iscsi_task task;
-	struct spdk_scsi_dev dev;
-	struct spdk_scsi_lun lun;
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_task task = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
 	struct spdk_iscsi_pdu *pdu;
 	struct iscsi_bhs_scsi_req *scsi_req;
 	struct iscsi_bhs_data_in *datah;
 	uint32_t residual_count = 0;
-
-	memset(&sess, 0, sizeof(sess));
-	memset(&conn, 0, sizeof(conn));
-	memset(&task, 0, sizeof(task));
-	memset(&dev, 0, sizeof(dev));
-	memset(&lun, 0, sizeof(lun));
 
 	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 
@@ -417,21 +405,15 @@ underflow_for_read_transfer_test(void)
 static void
 underflow_for_zero_read_transfer_test(void)
 {
-	struct spdk_iscsi_sess sess;
-	struct spdk_iscsi_conn conn;
-	struct spdk_iscsi_task task;
-	struct spdk_scsi_dev dev;
-	struct spdk_scsi_lun lun;
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_task task = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
 	struct spdk_iscsi_pdu *pdu;
 	struct iscsi_bhs_scsi_req *scsi_req;
 	struct iscsi_bhs_scsi_resp *resph;
 	uint32_t residual_count = 0, data_segment_len;
-
-	memset(&sess, 0, sizeof(sess));
-	memset(&conn, 0, sizeof(conn));
-	memset(&task, 0, sizeof(task));
-	memset(&dev, 0, sizeof(dev));
-	memset(&lun, 0, sizeof(lun));
 
 	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 
@@ -487,22 +469,16 @@ underflow_for_zero_read_transfer_test(void)
 static void
 underflow_for_request_sense_test(void)
 {
-	struct spdk_iscsi_sess sess;
-	struct spdk_iscsi_conn conn;
-	struct spdk_iscsi_task task;
-	struct spdk_scsi_dev dev;
-	struct spdk_scsi_lun lun;
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_task task = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
 	struct spdk_iscsi_pdu *pdu1, *pdu2;
 	struct iscsi_bhs_scsi_req *scsi_req;
 	struct iscsi_bhs_data_in *datah;
 	struct iscsi_bhs_scsi_resp *resph;
 	uint32_t residual_count = 0, data_segment_len;
-
-	memset(&sess, 0, sizeof(sess));
-	memset(&conn, 0, sizeof(conn));
-	memset(&task, 0, sizeof(task));
-	memset(&dev, 0, sizeof(dev));
-	memset(&lun, 0, sizeof(lun));
 
 	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 
@@ -584,21 +560,15 @@ underflow_for_request_sense_test(void)
 static void
 underflow_for_check_condition_test(void)
 {
-	struct spdk_iscsi_sess sess;
-	struct spdk_iscsi_conn conn;
-	struct spdk_iscsi_task task;
-	struct spdk_scsi_dev dev;
-	struct spdk_scsi_lun lun;
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_task task = {};
+	struct spdk_scsi_dev dev = {};
+	struct spdk_scsi_lun lun = {};
 	struct spdk_iscsi_pdu *pdu;
 	struct iscsi_bhs_scsi_req *scsi_req;
 	struct iscsi_bhs_scsi_resp *resph;
 	uint32_t data_segment_len;
-
-	memset(&sess, 0, sizeof(sess));
-	memset(&conn, 0, sizeof(conn));
-	memset(&task, 0, sizeof(task));
-	memset(&dev, 0, sizeof(dev));
-	memset(&lun, 0, sizeof(lun));
 
 	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 
@@ -657,17 +627,13 @@ underflow_for_check_condition_test(void)
 static void
 add_transfer_task_test(void)
 {
-	struct spdk_iscsi_sess sess;
-	struct spdk_iscsi_conn conn;
-	struct spdk_iscsi_task task;
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_task task = {};
 	struct spdk_iscsi_pdu *pdu, *tmp;
 	struct iscsi_bhs_r2t *r2th;
 	int rc, count = 0;
 	uint32_t buffer_offset, desired_xfer_len;
-
-	memset(&sess, 0, sizeof(sess));
-	memset(&conn, 0, sizeof(conn));
-	memset(&task, 0, sizeof(task));
 
 	sess.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;	/* 1M */
 	sess.MaxOutstandingR2T = DEFAULT_MAXR2T;	/* 4 */
@@ -741,16 +707,11 @@ add_transfer_task_test(void)
 static void
 get_transfer_task_test(void)
 {
-	struct spdk_iscsi_sess sess;
-	struct spdk_iscsi_conn conn;
-	struct spdk_iscsi_task task1, task2, *task;
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_task task1 = {}, task2 = {}, *task;
 	struct spdk_iscsi_pdu *pdu1, *pdu2, *pdu;
 	int rc;
-
-	memset(&sess, 0, sizeof(sess));
-	memset(&conn, 0, sizeof(conn));
-	memset(&task1, 0, sizeof(task1));
-	memset(&task2, 0, sizeof(task2));
 
 	sess.MaxBurstLength = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	sess.MaxOutstandingR2T = 1;
@@ -802,19 +763,11 @@ get_transfer_task_test(void)
 static void
 del_transfer_task_test(void)
 {
-	struct spdk_iscsi_sess sess;
-	struct spdk_iscsi_conn conn;
-	struct spdk_iscsi_task task1, task2, task3, task4, task5, *task;
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_task task1 = {}, task2 = {}, task3 = {}, task4 = {}, task5 = {}, *task;
 	struct spdk_iscsi_pdu *pdu1, *pdu2, *pdu3, *pdu4, *pdu5, *pdu;
 	int rc;
-
-	memset(&sess, 0, sizeof(sess));
-	memset(&conn, 0, sizeof(conn));
-	memset(&task1, 0, sizeof(task1));
-	memset(&task2, 0, sizeof(task2));
-	memset(&task3, 0, sizeof(task3));
-	memset(&task4, 0, sizeof(task4));
-	memset(&task5, 0, sizeof(task5));
 
 	sess.MaxBurstLength = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	sess.MaxOutstandingR2T = 1;
@@ -921,19 +874,14 @@ del_transfer_task_test(void)
 static void
 clear_all_transfer_tasks_test(void)
 {
-	struct spdk_iscsi_sess sess;
-	struct spdk_iscsi_conn conn;
+	struct spdk_iscsi_sess sess = {};
+	struct spdk_iscsi_conn conn = {};
 	struct spdk_iscsi_task *task1, *task2, *task3, *task4, *task5, *task6;
 	struct spdk_iscsi_pdu *pdu1, *pdu2, *pdu3, *pdu4, *pdu5, *pdu6, *pdu;
 	struct spdk_iscsi_pdu *mgmt_pdu1, *mgmt_pdu2;
-	struct spdk_scsi_lun lun1, lun2;
+	struct spdk_scsi_lun lun1 = {}, lun2 = {};
 	uint32_t alloc_cmd_sn;
 	int rc;
-
-	memset(&sess, 0, sizeof(sess));
-	memset(&conn, 0, sizeof(conn));
-	memset(&lun1, 0, sizeof(lun1));
-	memset(&lun2, 0, sizeof(lun2));
 
 	sess.MaxBurstLength = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	sess.MaxOutstandingR2T = 1;
@@ -1168,12 +1116,12 @@ datain_task_is_queued(struct spdk_iscsi_conn *conn,
 static void
 abort_queued_datain_tasks_test(void)
 {
-	struct spdk_iscsi_conn conn;
+	struct spdk_iscsi_conn conn = {};
 	struct spdk_iscsi_task *task1, *task2, *task3, *task4, *task5, *task6;
 	struct spdk_iscsi_task *task, *tmp;
 	struct spdk_iscsi_pdu *pdu1, *pdu2, *pdu3, *pdu4, *pdu5, *pdu6;
 	struct spdk_iscsi_pdu *mgmt_pdu1, *mgmt_pdu2;
-	struct spdk_scsi_lun lun1, lun2;
+	struct spdk_scsi_lun lun1 = {}, lun2 = {};
 	uint32_t alloc_cmd_sn;
 	int rc;
 
