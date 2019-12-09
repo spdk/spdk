@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3ed2d9c7_d430f69b",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-09T08:51:42Z",
+      "side": 1,
+      "message": "Oh, this is a mistake, we should be be inserting free_region here, not region (we need to do that because vmd_hotplug_free_region expects the region to be on the alloc_mem_queue as it removes it from that queue). I wonder why it didn\u0027t crash when I was testing it. But you\u0027re right, we should be doing queue insertions/removals once the region size and address is filled.",
+      "parentUuid": "ed2c5c24_1e840d12",
+      "range": {
+        "startLine": 197,
+        "startChar": 0,
+        "endLine": 197,
+        "endChar": 58
+      },
+      "revId": "ecc51c5768554e1708c8f453c8cea1877b316f50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "31b9ee00_03bbd4e8",
         "filename": "lib/vmd/vmd.c",
         "patchSetId": 3
@@ -36,6 +60,24 @@
       "writtenOn": "2019-12-08T23:19:53Z",
       "side": 1,
       "message": "If we setup hp-\u003emem[0], is it better to fill 0 to remaining hp-\u003emem entries here for just in case?",
+      "revId": "ecc51c5768554e1708c8f453c8cea1877b316f50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73f3c1b1_3589eb57",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-09T08:51:42Z",
+      "side": 1,
+      "message": "I don\u0027t think it\u0027s necessary to do that here. The vmd_hot_plug is a part of vmd_pci_device, which is already zeroed during allocation and vmd_init_hotplug is called only once and always after vmd_alloc_dev.",
+      "parentUuid": "31b9ee00_03bbd4e8",
       "revId": "ecc51c5768554e1708c8f453c8cea1877b316f50",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -62,6 +104,30 @@
       "revId": "ecc51c5768554e1708c8f453c8cea1877b316f50",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03b11e7a_7bc0b44e",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 878,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-09T08:51:42Z",
+      "side": 1,
+      "message": "Sure, that makes sense, only I\u0027d call it bus_device, as it refers to the vmd_pci_device describing that bus.",
+      "parentUuid": "43310c6b_e9423d2a",
+      "range": {
+        "startLine": 878,
+        "startChar": 5,
+        "endLine": 878,
+        "endChar": 14
+      },
+      "revId": "ecc51c5768554e1708c8f453c8cea1877b316f50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
