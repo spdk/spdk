@@ -332,9 +332,7 @@ vhost_register_unix_socket(const char *path, const char *ctrl_name,
 			   uint64_t virtio_features, uint64_t disabled_features)
 {
 	struct stat file_stat;
-#ifndef SPDK_CONFIG_VHOST_INTERNAL_LIB
 	uint64_t protocol_features = 0;
-#endif
 
 	/* Register vhost driver to handle vhost messages. */
 	if (stat(path, &file_stat) != -1) {
@@ -370,11 +368,9 @@ vhost_register_unix_socket(const char *path, const char *ctrl_name,
 		return -EIO;
 	}
 
-#ifndef SPDK_CONFIG_VHOST_INTERNAL_LIB
 	rte_vhost_driver_get_protocol_features(path, &protocol_features);
 	protocol_features |= (1ULL << VHOST_USER_PROTOCOL_F_CONFIG);
 	rte_vhost_driver_set_protocol_features(path, protocol_features);
-#endif
 
 	if (rte_vhost_driver_start(path) != 0) {
 		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s\n",
