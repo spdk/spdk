@@ -700,7 +700,7 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 
 fail:
 	nvme_rdma_unregister_rsps(rqpair);
-	return -ENOMEM;
+	return -1;
 }
 
 static void
