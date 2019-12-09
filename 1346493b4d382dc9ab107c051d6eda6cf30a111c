@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a68c4a6_6424664b",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-09T17:40:07Z",
+      "side": 1,
+      "message": "Is ENOMEM to get the bdev layer to retry this I/O?\n\nI\u0027m just wondering if we can just return EINVAL and say that it\u0027s illegal to try to reset a zone with writes in progress.  The NVMe ZNS spec seems to allow reset with writes in progress, but it just seems to add extra complication here in our bdev layer.\n\nENOMEM isn\u0027t really meant to be used to force a retry.  ENOMEM means retry an I/O once some other I/O *on the same channel* are completed.  So if this reset is the only I/O sent on its channel, and it returns ENOMEM here, it will never get retried.\n\nDo we think it\u0027s required to allow this case?  What if we just say for now that it\u0027s not supported?  Does FTL need this support, or is it smart enough to not reset a zone while writes are in progress?  We can always add the support later if there\u0027s a requirement for it.",
+      "revId": "1346493b4d382dc9ab107c051d6eda6cf30a111c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
