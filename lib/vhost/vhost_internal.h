@@ -49,14 +49,6 @@
 #define VIRTIO_F_VERSION_1 32
 #endif
 
-#ifndef VIRTIO_BLK_F_MQ
-#define VIRTIO_BLK_F_MQ		12	/* support more than one vq */
-#endif
-
-#ifndef VIRTIO_BLK_F_CONFIG_WCE
-#define VIRTIO_BLK_F_CONFIG_WCE	11
-#endif
-
 #define SPDK_VHOST_MAX_VQUEUES	256
 #define SPDK_VHOST_MAX_VQ_SIZE	1024
 
