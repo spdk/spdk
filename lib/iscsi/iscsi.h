@@ -427,7 +427,6 @@ void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 				  struct spdk_scsi_lun *lun,
 				  struct spdk_iscsi_pdu *pdu);
 bool spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t CmdSN);
-bool spdk_iscsi_is_deferred_free_pdu(struct spdk_iscsi_pdu *pdu);
 
 uint32_t spdk_iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu);
 uint32_t spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu);
