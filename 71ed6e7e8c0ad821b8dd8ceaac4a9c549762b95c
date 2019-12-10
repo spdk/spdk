@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b1f59fc_f163856c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-10T20:42:39Z",
+      "side": 1,
+      "message": "I don\u0027t think this change is necessary.\n\nBased on the verbs API, the trace you describe below cannot happen. Once thread 2 calls rdma_destroy_qpair, that function will block until all asynchronous events have been acked for that qpair. So,when thread 1 gets the asynchronous event, it will block thread two until after it has already added the rqpair-\u003eibv_events structure.\n\nIt might be worth a comment in the code stating that we need to make sure we don\u0027t move the event acking before we have modified that structure. But as it is, this change is unnecessary.\n\nI agree that adding a lock here probably is not a very large overhead, but remember that there will be other qpairs polling on the poll_group thread and they could be waiting on this lock to process more I/O. Lock contention could do weird things to p99 latency (again not a big deal, but I\u0027d rather not add a lock we don\u0027t need.)",
+      "revId": "71ed6e7e8c0ad821b8dd8ceaac4a9c549762b95c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
