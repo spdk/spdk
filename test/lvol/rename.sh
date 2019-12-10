@@ -91,12 +91,114 @@ function test_rename_positive() {
 	check_leftover_devices
 }
 
+# Negative test case for lvol store rename.
+# Check that error is returned when trying to rename not existing lvol store.
+# Check that error is returned when trying to rename to a name which is already
+# used by another lvol store.
+function test_rename_lvs_negative() {
+	# Call bdev_lvol_rename_lvstore with name pointing to not existing lvol store
+	rpc_cmd bdev_lvol_rename_lvstore NOTEXIST WHATEVER && false
+
+	# Construct two malloc bdevs
+	malloc_name1=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	malloc_name2=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+
+	# Create lvol store on each malloc bdev
+	lvs_uuid1=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name1" lvs_test1)
+	lvs_uuid2=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name2" lvs_test2)
+
+	# Create lists with lvol bdev names and aliases for later use
+	bdev_names_1=()
+	bdev_names_2=()
+	for i in $(seq 0 3); do
+		bdev_names_1+=("lvol_test_1_$i")
+		bdev_names_2+=("lvol_test_2_$i")
+	done
+	bdev_aliases_1=()
+	bdev_aliases_2=()
+	for i in $(seq 0 3); do
+		bdev_aliases_1+=("lvs_test1/lvol_test_1_$i")
+		bdev_aliases_2+=("lvs_test2/lvol_test_2_$i")
+	done
+
+	# Calculate size and create two lvol bdevs on top
+	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 4 )) )
+	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+
+	# # Create 4 lvol bdevs on top of each lvol store
+	bdev_uuids_1=()
+	bdev_uuids_2=()
+	for i in $(seq 0 3); do
+		lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid1" ${bdev_names_1[$i]} "$lvol_size_mb")
+		lvol=$(rpc_cmd bdev_get_bdevs -b $lvol_uuid)
+		[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid1" ]
+		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+		[ "$(jq '.[0].aliases|sort' <<< "$lvol")" = "$(jq '.|sort' <<< '["'${bdev_aliases_1[$i]}'"]')" ]
+		bdev_uuids_1+=($lvol_uuid)
+	done
+	for i in $(seq 0 3); do
+		lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid2" ${bdev_names_2[$i]} "$lvol_size_mb")
+		lvol=$(rpc_cmd bdev_get_bdevs -b $lvol_uuid)
+		[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid2" ]
+		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+		[ "$(jq '.[0].aliases|sort' <<< "$lvol")" = "$(jq '.|sort' <<< '["'${bdev_aliases_2[$i]}'"]')" ]
+		bdev_uuids_2+=($lvol_uuid)
+	done
+
+	# Call bdev_lvol_rename_lvstore on first lvol store and try to change its name to
+	# the same name as used by second lvol store
+	rpc_cmd bdev_lvol_rename_lvstore lvs_test1 lvs_test2 && false
+
+	# Verify that names of lvol stores and lvol bdevs did not change
+	lvs=$(rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid1")
+	[ "$(jq -r '.[0].uuid' <<< "$lvs")" = "$lvs_uuid1" ]
+	[ "$(jq -r '.[0].name' <<< "$lvs")" = "lvs_test1" ]
+	[ "$(jq -r '.[0].base_bdev' <<< "$lvs")" = "$malloc_name1" ]
+	[ "$(jq -r '.[0].cluster_size' <<< "$lvs")" = "$LVS_DEFAULT_CLUSTER_SIZE" ]
+	lvs=$(rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid2")
+	[ "$(jq -r '.[0].uuid' <<< "$lvs")" = "$lvs_uuid2" ]
+	[ "$(jq -r '.[0].name' <<< "$lvs")" = "lvs_test2" ]
+	[ "$(jq -r '.[0].base_bdev' <<< "$lvs")" = "$malloc_name2" ]
+	[ "$(jq -r '.[0].cluster_size' <<< "$lvs")" = "$LVS_DEFAULT_CLUSTER_SIZE" ]
+
+	for i in $(seq 0 3); do
+		lvol=$(rpc_cmd bdev_get_bdevs -b ${bdev_uuids_1[$i]})
+		[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid1" ]
+		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+		[ "$(jq '.[0].aliases|sort' <<< "$lvol")" = "$(jq '.|sort' <<< '["'${bdev_aliases_1[$i]}'"]')" ]
+	done
+	for i in $(seq 0 3); do
+		lvol=$(rpc_cmd bdev_get_bdevs -b ${bdev_uuids_2[$i]})
+		[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid2" ]
+		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+		[ "$(jq '.[0].aliases|sort' <<< "$lvol")" = "$(jq '.|sort' <<< '["'${bdev_aliases_2[$i]}'"]')" ]
+	done
+
+	# Clean up
+	for i in $(seq 0 3); do
+		rpc_cmd bdev_lvol_delete "${bdev_aliases_1[$i]}"
+	done
+	for i in $(seq 0 3); do
+		rpc_cmd bdev_lvol_delete "${bdev_aliases_2[$i]}"
+	done
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid1"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid2"
+	rpc_cmd bdev_malloc_delete "$malloc_name1"
+	rpc_cmd bdev_malloc_delete "$malloc_name2"
+	check_leftover_devices
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
 run_test "test_rename_positive" test_rename_positive
+run_test "test_rename_lvs_negative" test_rename_lvs_negative
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
