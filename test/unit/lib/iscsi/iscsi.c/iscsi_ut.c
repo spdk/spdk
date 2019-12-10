@@ -94,6 +94,9 @@ DEFINE_STUB_V(spdk_iscsi_conn_schedule, (struct spdk_iscsi_conn *conn));
 DEFINE_STUB_V(spdk_iscsi_conn_free_pdu,
 	      (struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu));
 
+DEFINE_STUB(spdk_iscsi_conn_handle_queued_datain_tasks, int,
+	    (struct spdk_iscsi_conn *conn), 0);
+
 DEFINE_STUB(spdk_iscsi_chap_get_authinfo, int,
 	    (struct iscsi_chap_auth *auth, const char *authuser, int ag_tag),
 	    0);

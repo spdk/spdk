@@ -3211,46 +3211,6 @@ spdk_iscsi_queue_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task
 	spdk_scsi_dev_queue_task(conn->dev, &task->scsi);
 }
 
-int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
-{
-	struct spdk_iscsi_task *task;
-
-	while (!TAILQ_EMPTY(&conn->queued_datain_tasks) &&
-	       conn->data_in_cnt < MAX_LARGE_DATAIN_PER_CONNECTION) {
-		task = TAILQ_FIRST(&conn->queued_datain_tasks);
-		assert(task->current_datain_offset <= task->scsi.transfer_len);
-		if (task->current_datain_offset < task->scsi.transfer_len) {
-			struct spdk_iscsi_task *subtask;
-			uint32_t remaining_size = 0;
-
-			remaining_size = task->scsi.transfer_len - task->current_datain_offset;
-			subtask = spdk_iscsi_task_get(conn, task, spdk_iscsi_task_cpl);
-			assert(subtask != NULL);
-			subtask->scsi.offset = task->current_datain_offset;
-			spdk_scsi_task_set_data(&subtask->scsi, NULL, 0);
-
-			if (spdk_scsi_dev_get_lun(conn->dev, task->lun_id) == NULL) {
-				/* Stop submitting split read I/Os for remaining data. */
-				TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
-				task->current_datain_offset += remaining_size;
-				assert(task->current_datain_offset == task->scsi.transfer_len);
-				subtask->scsi.transfer_len = remaining_size;
-				spdk_scsi_task_process_null_lun(&subtask->scsi);
-				spdk_iscsi_task_cpl(&subtask->scsi);
-				return 0;
-			}
-
-			subtask->scsi.length = spdk_min(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
-			task->current_datain_offset += subtask->scsi.length;
-			spdk_iscsi_queue_task(conn, subtask);
-		}
-		if (task->current_datain_offset == task->scsi.transfer_len) {
-			TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
-		}
-	}
-	return 0;
-}
-
 static int
 iscsi_pdu_payload_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 {

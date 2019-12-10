@@ -216,6 +216,7 @@ void spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn);
 int spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn,
 			  const char *conn_match, int drop_all);
+int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn);
 
 int spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int len, void *buf);
 int spdk_iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
