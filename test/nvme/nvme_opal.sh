@@ -14,6 +14,7 @@ function opal_init() {
 
 	# Ignore bdev_nvme_opal_init failure because sometimes revert TPer might fail and
 	# in another run we don't want init to return errors to stop other tests.
+	$rpc_py bdev_nvme_opal_discovery -b nvme0
 	$rpc_py bdev_nvme_opal_init -b nvme0 -p test || true
 }
 
@@ -41,15 +42,22 @@ function test_opal_cmds() {
 	$rpc_py bdev_opal_get_info -b nvme0n1r3 -p test
 	$rpc_py bdev_opal_set_lock_state -b nvme0n1r1 -i 0 -p test -l rwlock
 
-	# $rpc_py bdev_opal_delete -b nvme0n1r2 -p test
-	# $rpc_py bdev_opal_delete -b nvme0n1r3 -p test
-	# $rpc_py bdev_opal_delete -b nvme0n1r1 -p test
-
+	# test hotplug
 	$rpc_py bdev_nvme_detach_controller nvme0
+
+	# test recovery
+	$rpc_py bdev_nvme_attach_controller -b "nvme0" -t "pcie" -a $bdf1
+	$rpc_py bdev_nvme_opal_discovery -b nvme0
+	$rpc_py bdev_opal_recovery -b nvme0 -n 1 -p test
+
+	$rpc_py bdev_opal_delete -b nvme0n1r2 -p test
+	$rpc_py bdev_opal_delete -b nvme0n1r3 -p test
+	$rpc_py bdev_opal_delete -b nvme0n1r1 -p test
 }
 
 function setup_test_environment() {
 	$rpc_py bdev_nvme_attach_controller -b "nvme0" -t "pcie" -a $bdf1
+	$rpc_py bdev_nvme_opal_discovery -b nvme0
 	$rpc_py bdev_opal_create -b nvme0 -n 1 -i 1 -s 0 -l 1024 -p test
 	$rpc_py bdev_opal_create -b nvme0 -n 1 -i 2 -s 1024 -l 512 -p test
 	$rpc_py bdev_opal_create -b nvme0 -n 1 -i 3 -s 4096 -l 4096 -p test
@@ -81,19 +89,6 @@ opal_init
 test_opal_cmds
 killprocess $spdk_tgt_pid
 
-# test recovery
-result="nvme0n1r1 nvme0n1r2 nvme0n1r3"
-$rootdir/app/spdk_tgt/spdk_tgt &
-spdk_tgt_pid=$!
-trap 'revert; killprocess $spdk_tgt_pid; exit 1' SIGINT SIGTERM EXIT
-waitforlisten $spdk_tgt_pid
-$rpc_py bdev_nvme_attach_controller -b "nvme0" -t "pcie" -a $bdf1
-output=$($rpc_py bdev_opal_recovery -b nvme0 -n 1 -p test)
-if [ "$result" != "$output" ]; then
-	revert; killprocess $spdk_tgt_pid; exit 1
-fi
-killprocess $spdk_tgt_pid
-
 $rootdir/test/bdev/bdevio/bdevio -w &
 bdevio_pid=$!
 trap 'revert; killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
@@ -113,4 +108,9 @@ $rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
 clean_up
 revert
 trap - SIGINT SIGTERM EXIT
+
+# Here we just kill the target although the revert process hasn't done
+# Error message will show revert failed. But it is OK. This shouldn't affact
+# other tests. If the user wants to wait for the revert is done,
+# 'sleep 500' can be added.
 killprocess $bdevperf_pid
