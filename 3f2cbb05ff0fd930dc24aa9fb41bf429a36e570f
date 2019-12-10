@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10ea8a00_a34f13ef",
+        "filename": "module/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-10T08:44:30Z",
+      "side": 1,
+      "message": "The NVMF_TGT_ERROR is set when parsing the CONF file met errors (like creating subsystem failed), the proper next state is FINI_FREE_RESOURCES where the subsystem will be destroyed and nvmf_tgt will be cleaned up.\n\nWithout this change, the state machine runs at line 96 and never moves forward.\n\nLogs as below with this change:\n\n./nvmf_tgt -c nvmf.conf\nStarting SPDK v20.01-pre git sha1 1d9bfcb21 / DPDK 19.08.0 initialization...\n[ DPDK EAL parameters: nvmf --no-shconf -c 0x1 --log-level\u003dlib.eal:6 --log-level\u003dlib.cryptodev:5 --log-level\u003duser1:6 --iova-mode\u003dpa --base-virtaddr\u003d0x200000000000 --match-allocations --file-prefix\u003dspdk_pid14206 ]\nEAL: No available hugepages reported in hugepages-1048576kB\napp.c: 642:spdk_app_start: *NOTICE*: Total cores available: 1\nreactor.c: 344:_spdk_reactor_run: *NOTICE*: Reactor started on core 0\nsubsystem.c: 246:spdk_nvmf_subsystem_create: *ERROR*: Subsystem NQN \u0027nqn.2016-06.io.spdk:cnode1\u0027 already exists\nsubsystem.c: 129:spdk_subsystem_init_next: *ERROR*: Init subsystem nvmf failed\napp.c: 720:spdk_app_stop: *WARNING*: spdk_app_stop\u0027d on non-zero",
+      "range": {
+        "startLine": 103,
+        "startChar": 2,
+        "endLine": 103,
+        "endChar": 44
+      },
+      "revId": "3f2cbb05ff0fd930dc24aa9fb41bf429a36e570f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
