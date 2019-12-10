@@ -42,29 +42,49 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
-static const struct spdk_nvmf_transport_ops *const g_transport_ops[] = {
-#ifdef SPDK_CONFIG_RDMA
-	&spdk_nvmf_transport_rdma,
-#endif
-	&spdk_nvmf_transport_tcp,
-#ifdef SPDK_CONFIG_FC
-	&spdk_nvmf_transport_fc,
-#endif
+#define MAX_MEMPOOL_NAME_LENGTH 40
+
+struct nvmf_transport_ops_list_element {
+	struct spdk_nvmf_transport_ops			ops;
+	TAILQ_ENTRY(nvmf_transport_ops_list_element)	link;
 };
 
-#define NUM_TRANSPORTS (SPDK_COUNTOF(g_transport_ops))
-#define MAX_MEMPOOL_NAME_LENGTH 40
+TAILQ_HEAD(nvmf_transport_ops_list, nvmf_transport_ops_list_element)
+g_spdk_nvmf_transport_ops = TAILQ_HEAD_INITIALIZER(g_spdk_nvmf_transport_ops);
 
 static inline const struct spdk_nvmf_transport_ops *
 spdk_nvmf_get_transport_ops(const char *transport_name)
 {
-	size_t i;
-	for (i = 0; i != NUM_TRANSPORTS; i++) {
-		if (strcasecmp(transport_name, g_transport_ops[i]->name) == 0) {
-			return g_transport_ops[i];
+	struct nvmf_transport_ops_list_element *ops;
+	TAILQ_FOREACH(ops, &g_spdk_nvmf_transport_ops, link) {
+		if (strcasecmp(transport_name, ops->ops.name) == 0) {
+			return &ops->ops;
 		}
 	}
 	return NULL;
+}
+
+void
+spdk_nvmf_transport_register(const struct spdk_nvmf_transport_ops *ops)
+{
+	struct nvmf_transport_ops_list_element *new_ops;
+
+	if (spdk_nvmf_get_transport_ops(ops->name) != NULL) {
+		SPDK_ERRLOG("Double registering nvmf transport type %s.\n", ops->name);
+		assert(false);
+		return;
+	}
+
+	new_ops = calloc(1, sizeof(*new_ops));
+	if (new_ops == NULL) {
+		SPDK_ERRLOG("Unable to allocate memory to register new transport type %s.\n", ops->name);
+		assert(false);
+		return;
+	}
+
+	new_ops->ops = *ops;
+
+	TAILQ_INSERT_TAIL(&g_spdk_nvmf_transport_ops, new_ops, link);
 }
 
 const struct spdk_nvmf_transport_opts *

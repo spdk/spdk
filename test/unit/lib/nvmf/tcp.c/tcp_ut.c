@@ -190,6 +190,7 @@ DEFINE_STUB_V(spdk_nvmf_ns_reservation_request, (void *ctx));
 
 DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id *trid,
 		enum spdk_nvme_transport_type trtype));
+DEFINE_STUB_V(spdk_nvmf_transport_register, (const struct spdk_nvmf_transport_ops *ops));
 
 struct spdk_trace_histories *g_trace_histories;
 
