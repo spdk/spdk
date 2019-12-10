@@ -33,8 +33,6 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
-SPDK_LIB_LIST = trace
-
 TEST_FILE = conn_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
