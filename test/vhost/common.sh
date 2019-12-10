@@ -1113,7 +1113,7 @@ function run_fio()
 
 # Shutdown or kill any running VM and SPDK APP.
 #
-function at_app_exit()
+function error_exit()
 {
 	local vhost_name
 
@@ -1123,14 +1123,15 @@ function at_app_exit()
 	# Kill vhost application
 	notice "killing vhost app"
 
-	for vhost_name in $(ls $TARGET_DIR); do
+	for vhost_name in $TARGET_DIR; do
+		[[ -e "$vhost_name" ]] || break
 		vhost_kill $vhost_name
 	done
 
 	notice "EXIT DONE"
 }
 
-function error_exit()
+function at_app_exit()
 {
 	trap - ERR
 	print_backtrace
