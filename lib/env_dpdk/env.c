@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/util.h"
+#include "spdk/env_dpdk.h"
 
 #include "env_internal.h"
 
