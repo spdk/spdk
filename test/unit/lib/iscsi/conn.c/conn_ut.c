@@ -366,6 +366,30 @@ propagate_scsi_error_status_for_split_read_tasks(void)
 }
 
 static void
+ut_init_non_read_subtask(struct spdk_iscsi_task *task, uint32_t length,
+			 enum spdk_scsi_status status,
+			 struct spdk_iscsi_task *primary)
+{
+	task->scsi.length = length;
+	task->scsi.data_transferred = length;
+	task->scsi.status = status;
+	task->scsi.ref = 1;
+	task->parent = primary;
+	primary->scsi.ref++;
+}
+
+static void
+ut_check_non_read_primary_completion(struct spdk_iscsi_task *task,
+				     uint32_t bytes_completed, uint32_t data_transferred,
+				     enum spdk_scsi_status status, uint32_t ref)
+{
+	CU_ASSERT(task->bytes_completed == bytes_completed);
+	CU_ASSERT(task->scsi.data_transferred == data_transferred);
+	CU_ASSERT(task->rsp_scsi_status == status);
+	CU_ASSERT(task->scsi.ref == ref);
+}
+
+static void
 process_non_read_task_completion_test(void)
 {
 	struct spdk_iscsi_conn conn = {};
@@ -382,52 +406,28 @@ process_non_read_task_completion_test(void)
 	primary.is_r2t_active = true;
 
 	/* First subtask which failed. */
-	task.scsi.length = 4096;
-	task.scsi.data_transferred = 4096;
-	task.scsi.status = SPDK_SCSI_STATUS_CHECK_CONDITION;
-	task.scsi.ref = 1;
-	task.parent = &primary;
-	primary.scsi.ref++;
+	ut_init_non_read_subtask(&task, 4096, SPDK_SCSI_STATUS_CHECK_CONDITION, &primary);
 
 	process_non_read_task_completion(&conn, &task, &primary);
 	CU_ASSERT(!TAILQ_EMPTY(&conn.active_r2t_tasks));
-	CU_ASSERT(primary.bytes_completed == 4096);
-	CU_ASSERT(primary.scsi.data_transferred == 0);
-	CU_ASSERT(primary.rsp_scsi_status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT(task.scsi.ref == 0);
-	CU_ASSERT(primary.scsi.ref == 1);
+	ut_check_non_read_primary_completion(&primary, 4096, 0, SPDK_SCSI_STATUS_CHECK_CONDITION, 1);
 
 	/* Second subtask which succeeded. */
-	task.scsi.length = 4096;
-	task.scsi.data_transferred = 4096;
-	task.scsi.status = SPDK_SCSI_STATUS_GOOD;
-	task.scsi.ref = 1;
-	task.parent = &primary;
-	primary.scsi.ref++;
+	ut_init_non_read_subtask(&task, 4096, SPDK_SCSI_STATUS_GOOD, &primary);
 
 	process_non_read_task_completion(&conn, &task, &primary);
 	CU_ASSERT(!TAILQ_EMPTY(&conn.active_r2t_tasks));
-	CU_ASSERT(primary.bytes_completed == 4096 * 2);
-	CU_ASSERT(primary.scsi.data_transferred == 4096);
-	CU_ASSERT(primary.rsp_scsi_status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT(task.scsi.ref == 0);
-	CU_ASSERT(primary.scsi.ref == 1);
+	ut_check_non_read_primary_completion(&primary, 4096 * 2, 4096, SPDK_SCSI_STATUS_CHECK_CONDITION, 1);
 
 	/* Third and final subtask which succeeded. */
-	task.scsi.length = 4096;
-	task.scsi.data_transferred = 4096;
-	task.scsi.status = SPDK_SCSI_STATUS_GOOD;
-	task.scsi.ref = 1;
-	task.parent = &primary;
-	primary.scsi.ref++;
+	ut_init_non_read_subtask(&task, 4096, SPDK_SCSI_STATUS_GOOD, &primary);
 
 	process_non_read_task_completion(&conn, &task, &primary);
 	CU_ASSERT(TAILQ_EMPTY(&conn.active_r2t_tasks));
-	CU_ASSERT(primary.bytes_completed == 4096 * 3);
-	CU_ASSERT(primary.scsi.data_transferred == 4096 * 2);
-	CU_ASSERT(primary.rsp_scsi_status == SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT(task.scsi.ref == 0);
-	CU_ASSERT(primary.scsi.ref == 0);
+	ut_check_non_read_primary_completion(&primary, 4096 * 3, 4096 * 2, SPDK_SCSI_STATUS_CHECK_CONDITION, 0);
 
 	/* Tricky case when the last task completed was the initial task. */
 	primary.scsi.length = 4096;
@@ -442,28 +442,23 @@ process_non_read_task_completion_test(void)
 
 	process_non_read_task_completion(&conn, &primary, &primary);
 	CU_ASSERT(TAILQ_EMPTY(&conn.active_r2t_tasks));
-	CU_ASSERT(primary.bytes_completed == 4096 * 3);
-	CU_ASSERT(primary.scsi.data_transferred == 4096 * 2);
-	CU_ASSERT(primary.rsp_scsi_status == SPDK_SCSI_STATUS_GOOD);
-	CU_ASSERT(primary.scsi.ref == 0);
+	ut_check_non_read_primary_completion(&primary, 4096 * 3, 4096 * 2, SPDK_SCSI_STATUS_GOOD, 0);
 
-	/* Further tricky case when the last task completed ws the initial task,
+	/* Further tricky case when the last task completed was the initial task,
 	 * and the R2T was already terminated.
 	 */
-	primary.scsi.ref = 1;
 	primary.scsi.length = 4096;
 	primary.bytes_completed = 4096 * 2;
 	primary.scsi.data_transferred = 4096 * 2;
 	primary.scsi.transfer_len = 4096 * 3;
 	primary.scsi.status = SPDK_SCSI_STATUS_GOOD;
 	primary.rsp_scsi_status = SPDK_SCSI_STATUS_GOOD;
+	primary.scsi.ref = 1;
 	primary.is_r2t_active = false;
 
 	process_non_read_task_completion(&conn, &primary, &primary);
-	CU_ASSERT(primary.bytes_completed == 4096 * 3);
-	CU_ASSERT(primary.scsi.data_transferred == 4096 * 2);
-	CU_ASSERT(primary.rsp_scsi_status == SPDK_SCSI_STATUS_GOOD);
-	CU_ASSERT(primary.scsi.ref == 0);
+
+	ut_check_non_read_primary_completion(&primary, 4096 * 3, 4096 * 2, SPDK_SCSI_STATUS_GOOD, 0);
 }
 
 static void
