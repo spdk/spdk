@@ -51,4 +51,8 @@ SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi copy trace conf
 SPDK_LIB_LIST += thread util log log_rpc app_rpc
 SPDK_LIB_LIST += event_nbd nbd net sock notify
 
+ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
+SPDK_LIB_LIST += env_dpdk_rpc
+endif
+
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
