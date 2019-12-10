@@ -7,6 +7,17 @@ source $testdir/nbd_common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 
+function bdev_bounds() {
+	$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -c $testdir/bdev.conf &
+	bdevio_pid=$!
+	trap 'killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
+	echo "Process bdevio pid: $bdevio_pid"
+	waitforlisten $bdevio_pid
+	$testdir/bdevio/tests.py perform_tests
+	killprocess $bdevio_pid
+	trap - SIGINT SIGTERM EXIT
+}
+
 function run_fio()
 {
 	if [ $RUN_NIGHTLY -eq 0 ]; then
@@ -202,27 +213,13 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 #-----------------------------------------------------
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	timing_enter hello_bdev
 	if grep -q Nvme0 $testdir/bdev.conf; then
-		$rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Nvme0n1p1
+		run_test "case" "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Nvme0n1p1
 	fi
-	timing_exit hello_bdev
 fi
 
-timing_enter bounds
-$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -c $testdir/bdev.conf &
-bdevio_pid=$!
-trap 'killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
-echo "Process bdevio pid: $bdevio_pid"
-waitforlisten $bdevio_pid
-$testdir/bdevio/tests.py perform_tests
-killprocess $bdevio_pid
-trap - SIGINT SIGTERM EXIT
-timing_exit bounds
-
-timing_enter nbd
-nbd_function_test $testdir/bdev.conf "$bdevs_name"
-timing_exit nbd
+run_test "case" "bdev_bounds" bdev_bounds
+run_test "case" "bdev_nbd" nbd_function_test $testdir/bdev.conf "$bdevs_name"
 
 if [ -d /usr/src/fio ]; then
 	timing_enter fio
@@ -260,17 +257,14 @@ else
 fi
 
 # Run bdevperf with gpt
-$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
-$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
-rm -f $testdir/bdev_gpt.conf
+run_test "case" "bdev_gpt_verify" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
+run_test "case" "bdev_gpt_write_zeroes" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	# Temporarily disabled - infinite loop
-	timing_enter reset
-	#$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -o 4096 -t 60
-	timing_exit reset
-	report_test_completion "nightly_bdev_reset"
-fi
+# Temporarily disabled - infinite loop
+# if [ $RUN_NIGHTLY -eq 1 ]; then
+	# run_test "case" "bdev_gpt_reset" $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -o 4096 -t 60
+	# report_test_completion "nightly_bdev_reset"
+# fi
 
 timing_enter qos
 
@@ -300,6 +294,7 @@ if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
 fi
 
+rm -f $testdir/bdev_gpt.conf
 rm -f /tmp/aiofile
 rm -f /tmp/spdk-pmem-pool
 rm -f $testdir/bdev.conf
