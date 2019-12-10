@@ -105,9 +105,9 @@ cuse_nvme_admin_cmd_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	if (ctx->data_len > 0) {
 		out_iov[1].iov_base = ctx->data;
 		out_iov[1].iov_len = ctx->data_len;
-		fuse_reply_ioctl_iov(ctx->req, 0, out_iov, 2);
+		fuse_reply_ioctl_iov(ctx->req, cpl->status.sc, out_iov, 2);
 	} else {
-		fuse_reply_ioctl_iov(ctx->req, 0, out_iov, 1);
+		fuse_reply_ioctl_iov(ctx->req, cpl->status.sc, out_iov, 1);
 	}
 
 	cuse_io_ctx_free(ctx);
@@ -260,7 +260,7 @@ cuse_nvme_submit_io_write_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct cuse_io_ctx *ctx = (struct cuse_io_ctx *)ref;
 
-	fuse_reply_ioctl_iov(ctx->req, 0, NULL, 0);
+	fuse_reply_ioctl_iov(ctx->req, cpl->status.sc, NULL, 0);
 
 	cuse_io_ctx_free(ctx);
 }
@@ -345,7 +345,7 @@ cuse_nvme_submit_io_read_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	iov.iov_base = ctx->data;
 	iov.iov_len = ctx->data_len;
 
-	fuse_reply_ioctl_iov(ctx->req, 0, &iov, 1);
+	fuse_reply_ioctl_iov(ctx->req, cpl->status.sc, &iov, 1);
 
 	cuse_io_ctx_free(ctx);
 }
