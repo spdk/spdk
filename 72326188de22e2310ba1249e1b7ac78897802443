@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8823f51c_6618d091",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2406,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-10T09:32:36Z",
+      "side": 1,
+      "message": "Please don\u0027t assert here. Some kind of error has to be reported.\nMaybe SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR or SPDK_NVME_SC_ABORTED_MISSING_FUSED is the right one in this case, but please check with the spec.",
+      "range": {
+        "startLine": 2405,
+        "startChar": 3,
+        "endLine": 2406,
+        "endChar": 17
+      },
+      "revId": "72326188de22e2310ba1249e1b7ac78897802443",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e078f7f_5d110f0d",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2414,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-10T09:32:36Z",
+      "side": 1,
+      "message": "Same as above. SPDK_NVME_SC_ABORTED_MISSING_FUSED ?",
+      "range": {
+        "startLine": 2413,
+        "startChar": 0,
+        "endLine": 2414,
+        "endChar": 17
+      },
+      "revId": "72326188de22e2310ba1249e1b7ac78897802443",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
