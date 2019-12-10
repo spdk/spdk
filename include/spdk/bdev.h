@@ -979,6 +979,175 @@ int spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_
 				    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
+ * Submit a compare request to the bdev on the given channel.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param buf Data buffer to compare to.
+ * \param offset The offset, in bytes, from the start of the block device.
+ * \param nbytes The number of bytes to compare. buf must be greater than or equal to this size.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset and/or nbytes are not aligned or out of range
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ */
+int spdk_bdev_compare(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		      void *buf, uint64_t offset, uint64_t nbytes,
+		      spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a compare request to the bdev on the given channel.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param buf Data buffer to compare to.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to compare. buf must be greater than or equal to this size.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset_blocks and/or num_blocks are out of range
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ */
+int spdk_bdev_compare_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			     void *buf, uint64_t offset_blocks, uint64_t num_blocks,
+			     spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a compare request to the bdev on the given channel. This function uses
+ * separate buffer for metadata transfer (valid only if bdev supports this
+ * mode).
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param buf Data buffer to compare to.
+ * \param md Metadata buffer.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to compare. buf must be greater than or equal to this size.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset_blocks and/or num_blocks are out of range or separate
+ *               metadata is not supported
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ */
+int spdk_bdev_compare_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				     void *buf, void *md, uint64_t offset_blocks, uint64_t num_blocks,
+				     spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a compare request to the bdev on the given channel. This differs from
+ * spdk_bdev_compare by allowing the data buffer to be described in a scatter
+ * gather list. Some physical devices place memory alignment requirements on
+ * data and may not be able to directly transfer out of the buffers provided. In
+ * this case, the request may fail.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param iov A scatter gather list of buffers to be compared to.
+ * \param iovcnt The number of elements in iov.
+ * \param offset The offset, in bytes, from the start of the block device.
+ * \param len The size of data to compare.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset and/or nbytes are not aligned or out of range
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ */
+int spdk_bdev_comparev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		       struct iovec *iov, int iovcnt,
+		       uint64_t offset, uint64_t len,
+		       spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a compare request to the bdev on the given channel. This differs from
+ * spdk_bdev_compare by allowing the data buffer to be described in a scatter
+ * gather list. Some physical devices place memory alignment requirements on
+ * data and may not be able to directly transfer out of the buffers provided. In
+ * this case, the request may fail.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param iov A scatter gather list of buffers to be compared to.
+ * \param iovcnt The number of elements in iov.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to compare.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset_blocks and/or num_blocks are out of range
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ */
+int spdk_bdev_comparev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			      struct iovec *iov, int iovcnt,
+			      uint64_t offset_blocks, uint64_t num_blocks,
+			      spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a compare request to the bdev on the given channel. This differs from
+ * spdk_bdev_compare by allowing the data buffer to be described in a scatter
+ * gather list. Some physical devices place memory alignment requirements on
+ * data or metadata and may not be able to directly transfer out of the buffers
+ * provided. In this case, the request may fail.  This function uses separate
+ * buffer for metadata transfer (valid only if bdev supports this mode).
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param iov A scatter gather list of buffers to be compared to.
+ * \param iovcnt The number of elements in iov.
+ * \param md Metadata buffer.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to compare.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset_blocks and/or num_blocks are out of range or separate
+ *               metadata is not supported
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ */
+int spdk_bdev_comparev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				      struct iovec *iov, int iovcnt, void *md,
+				      uint64_t offset_blocks, uint64_t num_blocks,
+				      spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
  * Submit a request to acquire a data buffer that represents the given
  * range of blocks. The data buffer is placed in the spdk_bdev_io structure
  * and can be obtained by calling spdk_bdev_io_get_iovec().
