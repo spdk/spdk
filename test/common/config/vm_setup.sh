@@ -76,7 +76,7 @@ function install_iscsi_adm()
                 git -C open-iscsi-install/open-iscsi config user.email none
 
                 git -C open-iscsi-install/open-iscsi checkout 86e8892
-                for patch in $(ls open-iscsi-install/patches); do
+                for patch in open-iscsi-install/patches/*; do
                     git -C open-iscsi-install/open-iscsi am ../patches/$patch
                 done
                 sed -i '427s/.*/-1);/' open-iscsi-install/open-iscsi/usr/session_info.c
