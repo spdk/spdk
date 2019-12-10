@@ -2139,7 +2139,7 @@ nvmf_fc_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 	return 0;
 }
 
-const struct spdk_nvmf_transport_ops spdk_nvmf_transport_fc = {
+struct spdk_nvmf_transport_ops spdk_nvmf_transport_fc = {
 	.type = (enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC,
 	.opts_init = nvmf_fc_opts_init,
 	.create = nvmf_fc_create,
@@ -3949,5 +3949,6 @@ done:
 	return err;
 }
 
+SPDK_NVMF_TRANSPORT_OPS_REGISTER(fc, &spdk_nvmf_transport_fc);
 SPDK_LOG_REGISTER_COMPONENT("nvmf_fc_adm_api", SPDK_LOG_NVMF_FC_ADM_API);
 SPDK_LOG_REGISTER_COMPONENT("nvmf_fc", SPDK_LOG_NVMF_FC)

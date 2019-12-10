@@ -20,6 +20,11 @@ Added boolean return value for function spdk_fs_set_cache_size to indicate its o
 
 Added `blobfs_set_cache_size` RPC method to set cache size for blobstore filesystem.
 
+### nvmf
+
+Added the `spdk_nvmf_transport_ops` struct and a new api macro `SPDK_NVMF_TRANSPORT_OPS_REGISTER`
+to `include/spdk/nvmf.h`. This enables pluggable NVMe-oF transports on the target side.
+
 ### util
 
 `spdk_pipe`, a new utility for buffering data from sockets or files for parsing

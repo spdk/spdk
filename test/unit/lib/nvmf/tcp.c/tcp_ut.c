@@ -188,6 +188,8 @@ DEFINE_STUB(spdk_sock_set_priority,
 
 DEFINE_STUB_V(spdk_nvmf_ns_reservation_request, (void *ctx));
 
+DEFINE_STUB_V(spdk_nvmf_transport_ops_add, (struct spdk_nvmf_transport_ops *ops));
+
 struct spdk_trace_histories *g_trace_histories;
 
 struct spdk_bdev {

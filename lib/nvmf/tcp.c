@@ -58,6 +58,8 @@
 #define SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY 6
 #define SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR 4
 
+struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
+
 /* spdk nvmf related structure */
 enum spdk_nvmf_tcp_req_state {
 
@@ -2845,8 +2847,7 @@ spdk_nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->dif_insert_or_strip =	SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP;
 	opts->sock_priority =		SPDK_NVMF_TCP_DEFAULT_SOCK_PRIORITY;
 }
-
-const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
+struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 	.type = SPDK_NVME_TRANSPORT_TCP,
 	.opts_init = spdk_nvmf_tcp_opts_init,
 	.create = spdk_nvmf_tcp_create,
@@ -2875,4 +2876,5 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 	.qpair_set_sqsize = spdk_nvmf_tcp_qpair_set_sq_size,
 };
 
+SPDK_NVMF_TRANSPORT_OPS_REGISTER(tcp, &spdk_nvmf_transport_tcp);
 SPDK_LOG_REGISTER_COMPONENT("nvmf_tcp", SPDK_LOG_NVMF_TCP)

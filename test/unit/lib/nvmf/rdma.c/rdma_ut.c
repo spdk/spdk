@@ -53,9 +53,6 @@ struct spdk_nvmf_transport_opts g_rdma_ut_transport_opts = {
 	.num_shared_buffers = SPDK_NVMF_RDMA_DEFAULT_NUM_SHARED_BUFFERS,
 };
 
-const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
-const struct spdk_nvmf_transport_ops spdk_nvmf_transport_fc;
-
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 DEFINE_STUB(spdk_mem_map_set_translation, int, (struct spdk_mem_map *map, uint64_t vaddr,
 		uint64_t size, uint64_t translation), 0);

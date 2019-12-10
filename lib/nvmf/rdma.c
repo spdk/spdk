@@ -52,6 +52,7 @@
 #include "spdk_internal/log.h"
 
 struct spdk_nvme_rdma_hooks g_nvmf_hooks = {};
+struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 
 /*
  RDMA Connection Resource Defaults
@@ -4011,7 +4012,7 @@ spdk_nvmf_rdma_poll_group_free_stat(struct spdk_nvmf_transport_poll_group_stat *
 	free(stat);
 }
 
-const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
+struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.type = SPDK_NVME_TRANSPORT_RDMA,
 	.opts_init = spdk_nvmf_rdma_opts_init,
 	.create = spdk_nvmf_rdma_create,
@@ -4041,4 +4042,5 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.poll_group_free_stat = spdk_nvmf_rdma_poll_group_free_stat,
 };
 
+SPDK_NVMF_TRANSPORT_OPS_REGISTER(rdma, &spdk_nvmf_transport_rdma);
 SPDK_LOG_REGISTER_COMPONENT("rdma", SPDK_LOG_RDMA)

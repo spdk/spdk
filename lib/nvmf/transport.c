@@ -42,26 +42,30 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
-static const struct spdk_nvmf_transport_ops *const g_transport_ops[] = {
-#ifdef SPDK_CONFIG_RDMA
-	&spdk_nvmf_transport_rdma,
-#endif
-	&spdk_nvmf_transport_tcp,
-#ifdef SPDK_CONFIG_FC
-	&spdk_nvmf_transport_fc,
-#endif
-};
-
-#define NUM_TRANSPORTS (SPDK_COUNTOF(g_transport_ops))
 #define MAX_MEMPOOL_NAME_LENGTH 40
 
+TAILQ_HEAD(nvmf_transport_ops_list, spdk_nvmf_transport_ops)
+g_spdk_nvmf_transport_ops = TAILQ_HEAD_INITIALIZER(g_spdk_nvmf_transport_ops);
+
+void
+spdk_nvmf_transport_ops_add(struct spdk_nvmf_transport_ops *ops)
+{
+	struct spdk_nvmf_transport_ops *registered_ops;
+	TAILQ_FOREACH(registered_ops, &g_spdk_nvmf_transport_ops, link) {
+		if (ops->type == registered_ops->type) {
+			SPDK_ERRLOG("Double registering nvmf transport type %d\n", ops->type);
+			assert(false);
+		}
+	}
+	TAILQ_INSERT_TAIL(&g_spdk_nvmf_transport_ops, ops, link);
+}
 static inline const struct spdk_nvmf_transport_ops *
 spdk_nvmf_get_transport_ops(enum spdk_nvme_transport_type type)
 {
-	size_t i;
-	for (i = 0; i != NUM_TRANSPORTS; i++) {
-		if (g_transport_ops[i]->type == type) {
-			return g_transport_ops[i];
+	struct spdk_nvmf_transport_ops *ops;
+	TAILQ_FOREACH(ops, &g_spdk_nvmf_transport_ops, link) {
+		if (ops->type == type) {
+			return ops;
 		}
 	}
 	return NULL;
