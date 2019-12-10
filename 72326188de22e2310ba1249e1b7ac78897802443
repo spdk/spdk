@@ -45,6 +45,29 @@
       "revId": "72326188de22e2310ba1249e1b7ac78897802443",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07905924_7844681f",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2420,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-10T09:56:42Z",
+      "side": 1,
+      "message": "We might want to remove this comment, as it looks that patch ahead in the series implements (at least some) check for data length inside the spdk_nvmf_bdev_ctrlr_compare_and_write_cmd()\nhttps://review.gerrithub.io/c/spdk/spdk/+/476611/",
+      "range": {
+        "startLine": 2416,
+        "startChar": 0,
+        "endLine": 2420,
+        "endChar": 0
+      },
+      "revId": "72326188de22e2310ba1249e1b7ac78897802443",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
