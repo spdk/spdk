@@ -16,6 +16,24 @@
       "revId": "ab8b217c14461a3b1e656896b7529a542ebde78c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9a38ae2_356f84c6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3200,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-12-10T11:34:30Z",
+      "side": 1,
+      "message": "Yes, that seems reasonable. I\u0027ll update this patch - add check for qpair state and send a message if qpair is in IBV_QPS_ERR. With the lock added in the next patch it will be safe to call spdk_nvmf_rdma_update_ibv_state() in this function",
+      "parentUuid": "f9be25ab_b73714d0",
+      "revId": "ab8b217c14461a3b1e656896b7529a542ebde78c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
