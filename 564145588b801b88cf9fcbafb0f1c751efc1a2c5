@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "f1ac9660_3684a388",
+        "filename": "include/spdk_internal/sock.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-10T16:21:14Z",
+      "side": 1,
+      "message": "Yes - this is to catch the case where the user calls spdk_sock_close from within a completion callback for a writev_async. We need to let the stack unwind before releasing the memory in that case because calling spdk_sock_close may actually abort other remaining requests.\n\nI can add a unit test for it.",
+      "parentUuid": "72d4e26b_f8e14752",
+      "range": {
+        "startLine": 141,
+        "startChar": 1,
+        "endLine": 141,
+        "endChar": 16
+      },
+      "revId": "564145588b801b88cf9fcbafb0f1c751efc1a2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b7833daf_ae9a55d7",
         "filename": "include/spdk_internal/sock.h",
         "patchSetId": 20
