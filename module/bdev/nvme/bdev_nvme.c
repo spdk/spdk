@@ -160,6 +160,18 @@ static depopulate_namespace_fn g_depopulate_namespace_fn[] = {
 	bdev_ocssd_depopulate_namespace,
 };
 
+typedef void (*config_json_namespace_fn)(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *ns);
+static void nvme_ctrlr_config_json_standard_namespace(struct spdk_json_write_ctx *w,
+		struct nvme_bdev_ns *ns);
+static void nvme_ctrlr_config_json_ocssd_namespace(struct spdk_json_write_ctx *w,
+		struct nvme_bdev_ns *ns);
+
+static config_json_namespace_fn g_config_json_namespace_fn[] = {
+	NULL,
+	nvme_ctrlr_config_json_standard_namespace,
+	nvme_ctrlr_config_json_ocssd_namespace,
+};
+
 struct spdk_nvme_qpair *
 spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
 {
@@ -2254,12 +2266,31 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 	fprintf(fp, "\n");
 }
 
+static void
+nvme_ctrlr_config_json_standard_namespace(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *ns)
+{
+	/* nop */
+}
+
+static void
+nvme_ctrlr_config_json_ocssd_namespace(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *ns)
+{
+	/* nop */
+}
+
+static void
+nvme_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *ns)
+{
+	g_config_json_namespace_fn[ns->type](w, ns);
+}
+
 static int
 bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 {
 	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
 	struct spdk_nvme_transport_id	*trid;
 	const char			*action;
+	uint32_t			nsid;
 
 	if (g_opts.action_on_timeout == SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET) {
 		action = "reset";
@@ -2311,6 +2342,14 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_object_end(w);
 
 		spdk_json_write_object_end(w);
+
+		for (nsid = 0; nsid < nvme_bdev_ctrlr->num_ns; ++nsid) {
+			if (!nvme_bdev_ctrlr->namespaces[nsid]->populated) {
+				continue;
+			}
+
+			nvme_namespace_config_json(w, nvme_bdev_ctrlr->namespaces[nsid]);
+		}
 	}
 
 	/* Dump as last parameter to give all NVMe bdevs chance to be constructed
