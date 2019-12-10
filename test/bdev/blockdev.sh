@@ -130,7 +130,7 @@ function qos_function_test() {
 
 		# Run bdevperf with IOPS rate limit on bdev 1
 		$rpc_py bdev_set_qos_limit --rw_ios_per_sec $iops_limit $QOS_DEV_1
-		run_qos_test $iops_limit IOPS $QOS_DEV_1
+		run_test "case" "bdev_qos_iops" run_qos_test $iops_limit IOPS $QOS_DEV_1
 
 		# Run bdevperf with bandwidth rate limit on bdev 2
 		# Set the bandwidth limit as 1/10 of the measure performance without QoS
@@ -140,14 +140,36 @@ function qos_function_test() {
 			bw_limit=$qos_lower_bw_limit
 		fi
 		$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec $bw_limit $QOS_DEV_2
-		run_qos_test $bw_limit BANDWIDTH $QOS_DEV_2
+		run_test "case" "bdev_qos_bw" run_qos_test $bw_limit BANDWIDTH $QOS_DEV_2
 
 		# Run bdevperf with additional read only bandwidth rate limit on bdev 1
 		$rpc_py bdev_set_qos_limit --r_mbytes_per_sec $qos_lower_bw_limit $QOS_DEV_1
-		run_qos_test $qos_lower_bw_limit BANDWIDTH $QOS_DEV_1
+		run_test "case" "bdev_qos_ro_bw" run_qos_test $qos_lower_bw_limit BANDWIDTH $QOS_DEV_1
 	else
 		echo "Actual IOPS without limiting is too low - exit testing"
 	fi
+}
+
+function qos_test_suite() {
+	# Run bdevperf with QoS disabled first
+	$testdir/bdevperf/bdevperf -z -m 0x2 -q 256 -o 4096 -w randread -t 60 &
+	QOS_PID=$!
+	echo "Process qos testing pid: $QOS_PID"
+	trap 'killprocess $QOS_PID; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $QOS_PID
+
+	$rpc_py bdev_null_create $QOS_DEV_1 128 512
+	waitforbdev $QOS_DEV_1
+	$rpc_py bdev_null_create $QOS_DEV_2 128 512
+	waitforbdev $QOS_DEV_2
+
+	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests &
+	qos_function_test
+
+	$rpc_py bdev_null_delete $QOS_DEV_1
+	$rpc_py bdev_null_delete $QOS_DEV_2
+	killprocess $QOS_PID
+	trap - SIGINT SIGTERM EXIT
 }
 
 # Inital bdev creation and configuration
@@ -259,36 +281,13 @@ fi
 # Run bdevperf with gpt
 run_test "case" "bdev_gpt_verify" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
 run_test "case" "bdev_gpt_write_zeroes" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
+run_test "suite" "bdev_qos" qos_test_suite
 
 # Temporarily disabled - infinite loop
 # if [ $RUN_NIGHTLY -eq 1 ]; then
 	# run_test "case" "bdev_gpt_reset" $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -o 4096 -t 60
 	# report_test_completion "nightly_bdev_reset"
 # fi
-
-timing_enter qos
-
-# Run bdevperf with QoS disabled first
-$testdir/bdevperf/bdevperf -z -m 0x2 -q 256 -o 4096 -w randread -t 60 &
-QOS_PID=$!
-echo "Process qos testing pid: $QOS_PID"
-trap 'killprocess $QOS_PID; exit 1' SIGINT SIGTERM EXIT
-waitforlisten $QOS_PID
-
-$rpc_py bdev_null_create $QOS_DEV_1 128 512
-waitforbdev $QOS_DEV_1
-$rpc_py bdev_null_create $QOS_DEV_2 128 512
-waitforbdev $QOS_DEV_2
-
-$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests &
-qos_function_test
-
-$rpc_py bdev_null_delete $QOS_DEV_1
-$rpc_py bdev_null_delete $QOS_DEV_2
-killprocess $QOS_PID
-trap - SIGINT SIGTERM EXIT
-
-timing_exit qos
 
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
