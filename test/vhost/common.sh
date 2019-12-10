@@ -1128,7 +1128,8 @@ function at_app_exit()
 	# Kill vhost application
 	notice "killing vhost app"
 
-	for vhost_name in $(ls $TARGET_DIR); do
+	for vhost_name in $TARGET_DIR; do
+		[[ -e "$vhost_name" ]] || break
 		vhost_kill $vhost_name
 	done
 
