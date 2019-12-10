@@ -582,6 +582,18 @@ bdev_ocssd_zone_management(struct spdk_io_channel *ioch, struct spdk_bdev_io *bd
 	}
 }
 
+static void bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io);
+
+static void
+bdev_ocssd_resubmit_request(void *_bdev_io)
+{
+	struct spdk_bdev_io *bdev_io = _bdev_io;
+	struct spdk_io_channel *ioch;
+
+	ioch = spdk_bdev_io_get_io_channel(bdev_io);
+	bdev_ocssd_submit_request(ioch, bdev_io);
+}
+
 static void
 bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
@@ -611,10 +623,16 @@ bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bde
 	}
 
 	if (spdk_unlikely(rc != 0)) {
-		if (rc == -ENOMEM) {
+		switch (rc) {
+		case -ENOMEM:
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
-		} else {
+			break;
+		case -EAGAIN:
+			spdk_thread_send_msg(ioch->thread, bdev_ocssd_resubmit_request, bdev_io);
+			break;
+		default:
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			break;
 		}
 	}
 }
