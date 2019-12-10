@@ -52,6 +52,24 @@
       "revId": "3f5db2b987c84e9a3dfcd3e9b918e77968b454b9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4f57d0c_9cce689a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 23
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-10T12:34:03Z",
+      "side": 1,
+      "message": "Yeah, that simplifies the code a lot. I was worried if we can rely on the order of entries in the config, but if you think this is fine, then it\u0027s a much cleaner solution.\n\nIn that case, I\u0027m dropping this patch and pushing one implementing config_json namespace callbacks.",
+      "parentUuid": "c1501428_96ab4ec2",
+      "revId": "3f5db2b987c84e9a3dfcd3e9b918e77968b454b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
