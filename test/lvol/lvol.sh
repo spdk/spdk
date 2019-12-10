@@ -39,7 +39,6 @@ function usage() {
                                     702: 'tasting_positive_with_different_lvol_store_cluster_size',
                                     750: 'snapshot_readonly',
                                     751: 'snapshot_compare_with_lvol_bdev',
-                                    800: 'rename_positive',
                                     801: 'rename_lvs_nonexistent',
                                     802: 'rename_lvs_EEXIST',
                                     803: 'bdev_lvol_rename_nonexistent',
