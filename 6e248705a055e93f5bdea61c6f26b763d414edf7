@@ -16,6 +16,24 @@
       "revId": "6e248705a055e93f5bdea61c6f26b763d414edf7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49e6dde2_61caca60",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3188,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-12-10T10:45:10Z",
+      "side": 1,
+      "message": "Hi Ben,\nI added this mutex to avoid the following race condition:\n1. thread_2 start qpair_1 destruction process - it enters spdk_nvmf_rdma_qpair_destroy() and executes code until line 966 (approximately)\n2. thread_1 enters spdk_nvmf_process_ib_event function, receives an event for qpair_1 and stop execution at line 3202\n3. thread_2 continues execution, checks the list of linked ibv events (it is empty), destroys qp/cm_id and frees the memory\n4. thread_1 continues execution and sends a message to thread_2. \n5. thread_2 starts to process the message and we\u0027ll get undefined behaviour\n\nI should have added more details about the purpose of adding this lock to the commit message, will fix it in new patchset",
+      "parentUuid": "840f3ea6_2742ffd1",
+      "revId": "6e248705a055e93f5bdea61c6f26b763d414edf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
