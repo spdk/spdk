@@ -14,6 +14,7 @@ function opal_init() {
 
 	# Ignore bdev_nvme_opal_init failure because sometimes revert TPer might fail and
 	# in another run we don't want init to return errors to stop other tests.
+	$rpc_py bdev_nvme_opal_discovery -b nvme0
 	$rpc_py bdev_nvme_opal_init -b nvme0 -p test || true
 }
 
@@ -50,6 +51,7 @@ function test_opal_cmds() {
 
 function setup_test_environment() {
 	$rpc_py bdev_nvme_attach_controller -b "nvme0" -t "pcie" -a $bdf1
+	$rpc_py bdev_nvme_opal_discovery -b nvme0
 	$rpc_py bdev_opal_create -b nvme0 -n 1 -i 1 -s 0 -l 1024 -p test
 	$rpc_py bdev_opal_create -b nvme0 -n 1 -i 2 -s 1024 -l 512 -p test
 	$rpc_py bdev_opal_create -b nvme0 -n 1 -i 3 -s 4096 -l 4096 -p test
@@ -100,4 +102,9 @@ $rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
 clean_up
 revert
 trap - SIGINT SIGTERM EXIT
+
+# Here we just kill the target although the revert process hasn't done
+# Error message will show revert failed. But it is OK. This shouldn't affact
+# other tests. If the user wants to wait for the revert is done,
+# 'sleep 500' can be added.
 killprocess $bdevperf_pid
