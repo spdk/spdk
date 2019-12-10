@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd3f3651_3c267c63",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-10T09:14:14Z",
+      "side": 1,
+      "message": "Please add short description that this function is for case where device has native support for FUSED operations.",
+      "revId": "4a016bb4f116d493fb484119dfc8e60f4ec805ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b78af3c_21bfb28f",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2089,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-10T09:14:14Z",
+      "side": 1,
+      "message": "io_flags with first fused cmd needs to be set here.",
+      "range": {
+        "startLine": 2089,
+        "startChar": 74,
+        "endLine": 2089,
+        "endChar": 75
+      },
+      "revId": "4a016bb4f116d493fb484119dfc8e60f4ec805ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11bae04e_3ae283d8",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2098,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-10T09:14:14Z",
+      "side": 1,
+      "message": "same as above, but 2nd fused command",
+      "range": {
+        "startLine": 2098,
+        "startChar": 72,
+        "endLine": 2098,
+        "endChar": 73
+      },
+      "revId": "4a016bb4f116d493fb484119dfc8e60f4ec805ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
