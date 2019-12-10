@@ -1105,7 +1105,7 @@ static void
 abort_queued_datain_task_test(void)
 {
 	struct spdk_iscsi_conn conn = {};
-	struct spdk_iscsi_task *task, *task2, *task3;
+	struct spdk_iscsi_task *task;
 	int rc;
 
 	TAILQ_INIT(&conn.queued_datain_tasks);
@@ -1124,18 +1124,16 @@ abort_queued_datain_task_test(void)
 	rc = _iscsi_conn_abort_queued_datain_task(&conn, task);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(!TAILQ_EMPTY(&conn.queued_datain_tasks));
-	assert(conn.data_in_cnt == MAX_LARGE_DATAIN_PER_CONNECTION);
 
 	/* havs slots for sub read tasks */
 	conn.data_in_cnt = 0;
 	rc = _iscsi_conn_abort_queued_datain_task(&conn, task);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(TAILQ_EMPTY(&conn.queued_datain_tasks));
-	assert(conn.data_in_cnt == 0);
 
-	/* Case2: Queue one task, and this task is partially executed,
-	 * and the slot of sub read tasks are full
-	 */
+	/* Case2: Queue one task, and this task is partially executed. */
+
+	/* No slots for sub read tasks */
 	conn.data_in_cnt = MAX_LARGE_DATAIN_PER_CONNECTION;
 	task->scsi.transfer_len = SPDK_BDEV_LARGE_BUF_MAX_SIZE * 3;
 	task->current_datain_offset = SPDK_BDEV_LARGE_BUF_MAX_SIZE;
@@ -1143,55 +1141,16 @@ abort_queued_datain_task_test(void)
 
 	rc = _iscsi_conn_abort_queued_datain_task(&conn, task);
 	CU_ASSERT(rc != 0);
+	CU_ASSERT(!TAILQ_EMPTY(&conn.queued_datain_tasks));
 
-	/* Case3: Queue one task, and this task is partially executed,
-	 * and the slot of sub read tasks is not full.
-	 */
-	conn.data_in_cnt = MAX_LARGE_DATAIN_PER_CONNECTION - 2;
+	/* have slots for sub read tasks */
+	conn.data_in_cnt = 0;
 	rc = _iscsi_conn_abort_queued_datain_task(&conn, task);
 	CU_ASSERT(rc == 0);
-	assert(conn.data_in_cnt == MAX_LARGE_DATAIN_PER_CONNECTION - 2);
 	CU_ASSERT(TAILQ_EMPTY(&conn.queued_datain_tasks));
-
-	/* Case4: Queue three tasks and abort each task sequentially */
-	conn.data_in_cnt = 0;
-
-	task->tag = 1;
-	task->scsi.transfer_len = SPDK_BDEV_LARGE_BUF_MAX_SIZE * 3;
-	task->current_datain_offset = 0;
-	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, task, link);
-
-	task2 = spdk_iscsi_task_get(&conn, NULL, NULL);
-	SPDK_CU_ASSERT_FATAL(task2 != NULL);
-	task2->tag = 2;
-	task2->scsi.dxfer_dir = SPDK_SCSI_DIR_FROM_DEV;
-	task2->scsi.transfer_len = SPDK_BDEV_LARGE_BUF_MAX_SIZE * 4;
-	task2->current_datain_offset = SPDK_BDEV_LARGE_BUF_MAX_SIZE;
-	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, task2, link);
-
-	task3 = spdk_iscsi_task_get(&conn, NULL, NULL);
-	SPDK_CU_ASSERT_FATAL(task3 != NULL);
-	task3->tag = 3;
-	task3->scsi.dxfer_dir = SPDK_SCSI_DIR_FROM_DEV;
-	task3->scsi.transfer_len = SPDK_BDEV_LARGE_BUF_MAX_SIZE * 5;
-	task3->current_datain_offset = SPDK_BDEV_LARGE_BUF_MAX_SIZE * 2;
-	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, task3, link);
-
-	rc = iscsi_conn_abort_queued_datain_task(&conn, 1);
-	CU_ASSERT(rc == 0);
-
-	rc = iscsi_conn_abort_queued_datain_task(&conn, 2);
-	CU_ASSERT(rc == 0);
-
-	rc = iscsi_conn_abort_queued_datain_task(&conn, 3);
-	CU_ASSERT(rc == 0);
-
-	CU_ASSERT(TAILQ_EMPTY(&conn.queued_datain_tasks));
-	assert(conn.data_in_cnt == 0);
+	CU_ASSERT(task->current_datain_offset == SPDK_BDEV_LARGE_BUF_MAX_SIZE * 3);
 
 	spdk_iscsi_task_cpl(&task->scsi);
-	spdk_iscsi_task_cpl(&task2->scsi);
-	spdk_iscsi_task_cpl(&task3->scsi);
 }
 
 static bool
