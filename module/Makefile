@@ -35,9 +35,13 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y = bdev blob blobfs copy event sock
+ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
+DIRS-y += env_dpdk
+endif
 
 DEPDIRS-blob :=
 DEPDIRS-copy :=
+DEPDIRS-env_dpdk :=
 DEPDIRS-sock :=
 DEPDIRS-bdev := blob
 DEPDIRS-blobfs := blob
