@@ -400,6 +400,24 @@ vhost_session_mem_unregister(struct rte_vhost_memory *mem)
 }
 
 static int
+vhost_get_mem_table(int vid, struct rte_vhost_memory **mem)
+{
+	return rte_vhost_get_mem_table(vid, mem);
+}
+
+static int
+vhost_driver_unregister(const char *path)
+{
+	return rte_vhost_driver_unregister(path);
+}
+
+static int
+vhost_get_negotiated_features(int vid, uint64_t *negotiated_features)
+{
+	return rte_vhost_get_negotiated_features(vid, negotiated_features);
+}
+
+static int
 vhost_session_set_coalescing(struct spdk_vhost_dev *vdev,
 			     struct spdk_vhost_session *vsession, void *ctx)
 {
