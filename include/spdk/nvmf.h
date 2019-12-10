@@ -1146,6 +1146,25 @@ spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
  */
 void spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
 
+/**
+ * Register the operations for a given transport type.
+ *
+ * This function should be invoked by referencing the macro
+ * SPDK_NVMF_TRANSPORT_REGISTER macro in the transport's .c file.
+ *
+ * \param ops The operations associated with an NVMe-oF transport.
+ */
+void spdk_nvmf_transport_register(const struct spdk_nvmf_transport_ops *ops);
+
+/*
+ * Macro used to register new transports.
+ */
+#define SPDK_NVMF_TRANSPORT_REGISTER(name, transport_ops) \
+static void __attribute__((constructor)) spdk_nvmf_transport_register_##name(void) \
+{ \
+	spdk_nvmf_transport_register(transport_ops); \
+}\
+
 #ifdef __cplusplus
 }
 #endif

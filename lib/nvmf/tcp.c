@@ -58,6 +58,8 @@
 #define SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY 6
 #define SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR 4
 
+const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
+
 /* spdk nvmf related structure */
 enum spdk_nvmf_tcp_req_state {
 
@@ -2772,4 +2774,5 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 	.qpair_set_sqsize = spdk_nvmf_tcp_qpair_set_sq_size,
 };
 
+SPDK_NVMF_TRANSPORT_REGISTER(tcp, &spdk_nvmf_transport_tcp);
 SPDK_LOG_REGISTER_COMPONENT("nvmf_tcp", SPDK_LOG_NVMF_TCP)

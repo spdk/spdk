@@ -3950,5 +3950,6 @@ done:
 	return err;
 }
 
+SPDK_NVMF_TRANSPORT_REGISTER(fc, &spdk_nvmf_transport_fc);
 SPDK_LOG_REGISTER_COMPONENT("nvmf_fc_adm_api", SPDK_LOG_NVMF_FC_ADM_API);
 SPDK_LOG_REGISTER_COMPONENT("nvmf_fc", SPDK_LOG_NVMF_FC)
