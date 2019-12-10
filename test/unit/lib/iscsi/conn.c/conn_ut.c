@@ -427,13 +427,13 @@ process_non_read_task_completion_test(void)
 	process_non_read_task_completion(&conn, &task, &primary);
 	CU_ASSERT(TAILQ_EMPTY(&conn.active_r2t_tasks));
 	CU_ASSERT(task.scsi.ref == 0);
-	ut_check_non_read_primary_completion(&primary, 4096 * 3, 4096 * 2, SPDK_SCSI_STATUS_CHECK_CONDITION, 0);
+	ut_check_non_read_primary_completion(&primary, 4096 * 3, 4096 * 2, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					     0);
 
 	/* Tricky case when the last task completed was the initial task. */
 	primary.scsi.length = 4096;
 	primary.bytes_completed = 4096 * 2;
 	primary.scsi.data_transferred = 4096 * 2;
-	primary.scsi.transfer_len = 4096 * 3;
 	primary.scsi.status = SPDK_SCSI_STATUS_GOOD;
 	primary.rsp_scsi_status = SPDK_SCSI_STATUS_GOOD;
 	primary.scsi.ref = 2;
@@ -450,7 +450,6 @@ process_non_read_task_completion_test(void)
 	primary.scsi.length = 4096;
 	primary.bytes_completed = 4096 * 2;
 	primary.scsi.data_transferred = 4096 * 2;
-	primary.scsi.transfer_len = 4096 * 3;
 	primary.scsi.status = SPDK_SCSI_STATUS_GOOD;
 	primary.rsp_scsi_status = SPDK_SCSI_STATUS_GOOD;
 	primary.scsi.ref = 1;
@@ -462,6 +461,23 @@ process_non_read_task_completion_test(void)
 }
 
 static void
+ut_init_flushed_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
+		    struct spdk_iscsi_task *task, enum iscsi_op opcode,
+		    uint32_t offset, uint32_t data_len)
+{
+	pdu->bhs.opcode = opcode;
+	task->scsi.offset = offset;
+	DSET24(pdu->bhs.data_segment_len, data_len);
+
+	g_sock_writev_bytes += ISCSI_BHS_LEN + data_len;
+
+	pdu->task = task;
+	task->scsi.ref = 1;
+	TAILQ_INSERT_TAIL(&conn->write_pdu_list, pdu, tailq);
+	conn->data_in_cnt++;
+}
+
+static void
 recursive_flush_pdus_calls(void)
 {
 	struct spdk_iscsi_pdu pdu1 = {}, pdu2 = {}, pdu3 = {};
@@ -470,33 +486,10 @@ recursive_flush_pdus_calls(void)
 	int rc;
 
 	TAILQ_INIT(&conn.write_pdu_list);
-	conn.data_in_cnt = 3;
 
-	task1.scsi.ref = 1;
-	task2.scsi.ref = 1;
-	task3.scsi.ref = 1;
-
-	task1.scsi.offset = 512;
-	task2.scsi.offset = 512 * 2;
-	task3.scsi.offset = 512 * 3;
-
-	pdu1.task = &task1;
-	pdu2.task = &task2;
-	pdu3.task = &task3;
-
-	pdu1.bhs.opcode = ISCSI_OP_SCSI_DATAIN;
-	pdu2.bhs.opcode = ISCSI_OP_SCSI_DATAIN;
-	pdu3.bhs.opcode = ISCSI_OP_SCSI_DATAIN;
-
-	DSET24(&pdu1.bhs.data_segment_len, 512);
-	DSET24(&pdu2.bhs.data_segment_len, 512);
-	DSET24(&pdu3.bhs.data_segment_len, 512);
-
-	TAILQ_INSERT_TAIL(&conn.write_pdu_list, &pdu1, tailq);
-	TAILQ_INSERT_TAIL(&conn.write_pdu_list, &pdu2, tailq);
-	TAILQ_INSERT_TAIL(&conn.write_pdu_list, &pdu3, tailq);
-
-	g_sock_writev_bytes = (512 + ISCSI_BHS_LEN) * 3;
+	ut_init_flushed_pdu(&conn, &pdu1, &task1, ISCSI_OP_SCSI_DATAIN, 512, 512);
+	ut_init_flushed_pdu(&conn, &pdu2, &task2, ISCSI_OP_SCSI_DATAIN, 512 * 2, 512);
+	ut_init_flushed_pdu(&conn, &pdu3, &task3, ISCSI_OP_SCSI_DATAIN, 512 * 3, 512);
 
 	rc = iscsi_conn_flush_pdus_internal(&conn);
 	CU_ASSERT(rc == 0);
