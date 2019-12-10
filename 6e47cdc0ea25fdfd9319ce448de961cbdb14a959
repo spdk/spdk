@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69222405_8bb0db7b",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-10T16:07:34Z",
+      "side": 1,
+      "message": "This would work but it could really spend a lot of CPU cycles especially if FTL plans to use this path frequently.\n\nI was thinking about a per-channel list of append IOs waiting for the busy bit to clear, but that doesn\u0027t work since it may be a different thread that issued the currently executing append operation.\n\nI think this is fine for now.  When system is busy, all pollers will get a chance to run until this bdev_ocssd_resubmit_request() function runs again, so I *think* we won\u0027t really notice any performance impact.\n\nI guess another consideration is what happens if we have 20 append IOs that are waiting for their zone to become not busy?  Doing 20 separate messages would have a lot more overhead.  In that case maybe the per-channel list with a poller (instead of thread_send_msg) would be a better way to go.  Or a flag on the channel to keep track if we\u0027ve already sent a resubmit msg.  And then it becomes bdev_ocssd_resubmit_requests() and it retries the whole list.",
+      "revId": "6e47cdc0ea25fdfd9319ce448de961cbdb14a959",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
