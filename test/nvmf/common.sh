@@ -131,8 +131,10 @@ function get_available_rdma_ips()
 
 function get_rdma_if_list()
 {
-	for nic_type in $(ls /sys/class/infiniband); do
-		for nic_name in $(ls /sys/class/infiniband/${nic_type}/device/net); do
+	for nic_type in /sys/class/infiniband/*; do
+		[[ -e "$nic_type" ]] || break
+		for nic_name in /sys/class/infiniband/${nic_type}/device/net; do
+			[[ -e "$nic_name" ]] || break
 			echo "$nic_name"
 		done
 	done
