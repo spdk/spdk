@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b65c12d_3e7f5c42",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3571,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-10T18:29:02Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nOne thing is not clear to me.  Previously, we would check separately for current_datain_offset \u003c transfer_len, and only do the abort in that case.  But here we always do the abort, even if current_data_offset \u003d\u003d transfer_len.\n\nIs the case that it was never valid for current_data_offset \u003d\u003d transfer_len?  Or now we may do an abort for size 0?\n\nI feel like maybe this should be split into multiple tasks - one to remove assumptions around current_data_offset could equal transfer_len, then another that changes the process to just do one abort subtask.\n\n-Jim",
+      "revId": "0494db4a1e2e270f7d0c4faf048bc550fe34c437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
