@@ -2826,6 +2826,9 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fw_commit) == 4, "Incorrect size");
 #define SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS (1U << 30)
 #define SPDK_NVME_IO_FLAGS_LIMITED_RETRY (1U << 31)
 
+/** Mask of valid io flags mask */
+#define SPDK_NVME_IO_FLAGS_VALID_MASK 0xFFFF0000
+
 #ifdef __cplusplus
 }
 #endif
