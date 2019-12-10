@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6dfb2601_743cd650",
+        "filename": "examples/blobfs/fio_plugin/example_config.fio",
+        "patchSetId": 3
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1014723
+      },
+      "writtenOn": "2019-12-10T07:09:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "99936191_3e0635fa",
+      "range": {
+        "startLine": 3,
+        "startChar": 10,
+        "endLine": 3,
+        "endChar": 24
+      },
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f214a5f3_60a146c7",
         "filename": "examples/blobfs/fio_plugin/example_config.fio",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-12-03T23:25:48Z",
       "side": 1,
       "message": "Can we specify which bdev to run by setting the filename as we do in examples/bdev/fio_plugin?",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 9
+      },
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a2c972e_c64b1b53",
+        "filename": "examples/blobfs/fio_plugin/example_config.fio",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1014723
+      },
+      "writtenOn": "2019-12-10T07:09:38Z",
+      "side": 1,
+      "message": "For this is a filesystem based ioengine, the filename is reserved for the real files.\nAn example of multi-file is added to the example_config.fio, such as:\n\n[multifile]\nruntime\u003d5\niodepth\u003d128\nrw\u003drandrw\nbs\u003d4k\nfilesize\u003d512M\nfilename\u003dfile1:file2",
+      "parentUuid": "f214a5f3_60a146c7",
       "range": {
         "startLine": 4,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "151a23cc_048b5a7b",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1014723
+      },
+      "writtenOn": "2019-12-10T07:09:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c077c50c_c19681e1",
+      "range": {
+        "startLine": 94,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 0
+      },
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4ce04be_37e7ced4",
         "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
         "patchSetId": 3
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "f17e61d0_be8b8c06",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1014723
+      },
+      "writtenOn": "2019-12-10T07:09:38Z",
+      "side": 1,
+      "message": "you are right, it‘s useless.\ng_lock and related codes are removed.",
+      "parentUuid": "c4ce04be_37e7ced4",
+      "range": {
+        "startLine": 104,
+        "startChar": 0,
+        "endLine": 104,
+        "endChar": 58
+      },
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e30df5ac_a50aba3c",
         "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
         "patchSetId": 3
@@ -105,6 +201,30 @@
       "writtenOn": "2019-12-03T23:25:48Z",
       "side": 1,
       "message": "do you want to do {;} instead?",
+      "range": {
+        "startLine": 427,
+        "startChar": 1,
+        "endLine": 427,
+        "endChar": 3
+      },
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0d5f542_3559892d",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1014723
+      },
+      "writtenOn": "2019-12-10T07:09:38Z",
+      "side": 1,
+      "message": "sorry i can\u0027t catch you, this is just an empty loop.\nDo you mean to remove the “;” character?\nI just reformat it into one line.",
+      "parentUuid": "e30df5ac_a50aba3c",
       "range": {
         "startLine": 427,
         "startChar": 1,
@@ -134,6 +254,24 @@
     },
     {
       "key": {
+        "uuid": "8c5edab0_720a3edc",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1014723
+      },
+      "writtenOn": "2019-12-10T07:09:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ddd20459_6f863fb8",
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9115bd14_f3b2e3f9",
         "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
         "patchSetId": 3
@@ -148,6 +286,24 @@
       "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "741c9c8e_c7d876d4",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1014723
+      },
+      "writtenOn": "2019-12-10T07:09:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9115bd14_f3b2e3f9",
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -168,6 +324,24 @@
     },
     {
       "key": {
+        "uuid": "d23762a5_961cd615",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1014723
+      },
+      "writtenOn": "2019-12-10T07:09:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e7a17f67_ba5bbf2d",
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f38e1d7a_9e64e9ee",
         "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
         "patchSetId": 3
@@ -179,6 +353,24 @@
       "writtenOn": "2019-12-03T23:25:48Z",
       "side": 1,
       "message": "About iocq_count, the following may be simpler. Please see example/bdev/fio_plugin.\nOr will you let us know if you have any specific reason not to do the following?\n\nfio_thread-\u003eiocq_count \u003d 0;\n\nfor (;;) {\n  spdk_fio_poll_thread(fio_thread);\n\n  if (fio_thread-\u003eiocq_count \u003e\u003d min) {\n    return fio_thread-\u003eiocq_count;\n  }\n\n  (snip)\n}\n\nreturn fio_thread-\u003eiocq_count;",
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45679da0_fafbb26a",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1014723
+      },
+      "writtenOn": "2019-12-10T07:09:38Z",
+      "side": 1,
+      "message": "We can\u0027t set fio_thread-\u003eiocq_count \u003d 0 at the very beginnig of this function.\nWhen we run a test of multi-file, FIO open one file, submit IO, and then open (which calls spdk_fio_poll_thread() function) another file...\nSo, the iocq_count is not 0 when spdk_fio_getevents() is called.\n\nWe refact the code and move the iocq_count clear operation to the spdk_fio_event() to make it more clearly.",
+      "parentUuid": "f38e1d7a_9e64e9ee",
       "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
