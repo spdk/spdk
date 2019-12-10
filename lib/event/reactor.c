@@ -81,7 +81,7 @@ struct spdk_reactor {
 
 	/* The last known rusage values */
 	struct rusage					rusage;
-} __attribute__((aligned(64)));
+} __attribute__((aligned(SPDK_CACHE_LINE_SIZE)));
 
 static struct spdk_reactor *g_reactors;
 static struct spdk_cpuset *g_reactor_core_mask;
