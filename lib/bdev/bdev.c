@@ -565,21 +565,23 @@ static void
 _bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t len)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
-	bool buf_allocated;
+	bool buf_allocated, iovs_aligned;
 	uint64_t md_len, alignment;
 	void *aligned_buf;
 
 	alignment = spdk_bdev_get_buf_align(bdev);
 	buf_allocated = _is_buf_allocated(bdev_io->u.bdev.iovs);
+	iovs_aligned = _are_iovs_aligned(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, alignment);
 	aligned_buf = (void *)(((uintptr_t)buf + (alignment - 1)) & ~(alignment - 1));
 
-	if (buf_allocated) {
+	if (buf_allocated && !iovs_aligned) {
 		_bdev_io_set_bounce_buf(bdev_io, aligned_buf, len);
-	} else {
+	} else if (bdev_io->u.bdev.need_aux_buf == false) {
+		assert(buf_allocated == false);
 		spdk_bdev_io_set_buf(bdev_io, aligned_buf, len);
 	}
 
-	if (spdk_bdev_is_md_separate(bdev)) {
+	if (spdk_bdev_is_md_separate(bdev) && (bdev_io->u.bdev.need_aux_buf == false)) {
 		aligned_buf = (char *)aligned_buf + len;
 		md_len = bdev_io->u.bdev.num_blocks * bdev->md_len;
 
@@ -682,16 +684,35 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
 	uint64_t alignment, md_len;
 	void *buf;
+	bool buf_allocated, iovs_aligned;
 
 	assert(cb != NULL);
 
 	alignment = spdk_bdev_get_buf_align(bdev);
 	md_len = spdk_bdev_is_md_separate(bdev) ? bdev_io->u.bdev.num_blocks * bdev->md_len : 0;
+	buf_allocated = _is_buf_allocated(bdev_io->u.bdev.iovs);
+	iovs_aligned = _are_iovs_aligned(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, alignment);
 
-	if (_is_buf_allocated(bdev_io->u.bdev.iovs) &&
-	    _are_iovs_aligned(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, alignment)) {
+	if (buf_allocated && iovs_aligned && !bdev_io->u.bdev.need_aux_buf) {
 		/* Buffer already present and aligned */
 		cb(spdk_bdev_io_get_io_channel(bdev_io), bdev_io, true);
+		return;
+	}
+
+	if (buf_allocated && !iovs_aligned && bdev_io->u.bdev.need_aux_buf) {
+		/* Buffer already present, not aligned and caller wants an aux
+		 * buf, we fail this because we can't double buffer and provide
+		 * an aux buf at the same time.
+		 */
+		SPDK_ERRLOG("Can't double buffer and provide aux buf at the same time.\n");
+		cb(spdk_bdev_io_get_io_channel(bdev_io), bdev_io, false);
+		return;
+	}
+
+	if (!buf_allocated && bdev_io->u.bdev.need_aux_buf) {
+		/* To request an aux buf you need to provide your own primary data buffer */
+		SPDK_ERRLOG("Can't provide aux buf and primary data buffer at the same time.\n");
+		cb(spdk_bdev_io_get_io_channel(bdev_io), bdev_io, false);
 		return;
 	}
 
@@ -1929,6 +1950,7 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 	     spdk_bdev_io_completion_cb cb)
 {
 	bdev_io->bdev = bdev;
+	bdev_io->u.bdev.need_aux_buf = false;
 	bdev_io->internal.caller_ctx = cb_arg;
 	bdev_io->internal.cb = cb;
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;

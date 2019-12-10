@@ -492,6 +492,13 @@ struct spdk_bdev_io {
 				/** True if this request is in the 'start' phase of zcopy. False if in 'end'. */
 				uint8_t start : 1;
 			} zcopy;
+
+			/**
+			* The caller wants an auxiliary buffer for some reason, we'll use the bounce
+			* vectors to store the buffer info but need this bool to indictate that this
+			* buffer is not being allocated as a primary nor being used to double buffer.
+			*/
+			bool need_aux_buf;
 		} bdev;
 		struct {
 			/** Channel reference held while messages for this reset are in progress. */

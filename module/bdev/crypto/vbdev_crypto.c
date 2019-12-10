@@ -694,19 +694,8 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	 */
 	if (crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT) {
 		io_ctx->cry_iov.iov_len = total_length;
-		/* For now just allocate in the I/O path, not optimal but the current bdev API
-		 * for getting a buffer from the pool won't work if the bdev_io passed in
-		 * has a buffer, which ours always will.  So, until we modify that API
-		 * or better yet the current ZCOPY work lands, this is the best we can do.
-		 */
-		io_ctx->cry_iov.iov_base = spdk_malloc(total_length,
-						       spdk_bdev_get_buf_align(bdev_io->bdev), NULL,
-						       SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-		if (!io_ctx->cry_iov.iov_base) {
-			SPDK_ERRLOG("ERROR trying to allocate write buffer for encryption!\n");
-			rc = -ENOMEM;
-			goto error_get_write_buffer;
-		}
+		// TODO add bdev helper to get this buf */
+		io_ctx->cry_iov.iov_base = bdev_io->internal.buf;
 		io_ctx->cry_offset_blocks = bdev_io->u.bdev.offset_blocks;
 		io_ctx->cry_num_blocks = bdev_io->u.bdev.num_blocks;
 	}
@@ -865,9 +854,6 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 
 	/* Error cleanup paths. */
 error_attach_session:
-error_get_write_buffer:
-	rte_mempool_put_bulk(g_crypto_op_mp, (void **)crypto_ops, cryop_cnt);
-	allocated = 0;
 error_get_ops:
 	if (crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT) {
 		spdk_mempool_put_bulk(g_mbuf_mp, (void **)&dst_mbufs[0],
@@ -945,9 +931,9 @@ _complete_internal_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 {
 	struct spdk_bdev_io *orig_io = cb_arg;
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-	struct crypto_bdev_io *orig_ctx = (struct crypto_bdev_io *)orig_io->driver_ctx;
+	//struct crypto_bdev_io *orig_ctx = (struct crypto_bdev_io *)orig_io->driver_ctx;
 
-	spdk_free(orig_ctx->cry_iov.iov_base);
+	//spdk_free(orig_ctx->cry_iov.iov_base);
 	spdk_bdev_io_complete(orig_io, status);
 	spdk_bdev_free_io(bdev_io);
 }
@@ -1038,6 +1024,36 @@ crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	}
 }
 
+// TODO comment
+static void
+crypto_write_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		       bool success)
+{
+	//struct vbdev_crypto *crypto_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_crypto,
+	//				   crypto_bdev);
+	//struct crypto_io_channel *crypto_ch = spdk_io_channel_get_ctx(ch);
+	struct crypto_bdev_io *io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
+	int rc;
+
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
+	rc = _crypto_operation(bdev_io, RTE_CRYPTO_CIPHER_OP_ENCRYPT);
+
+	if (rc != 0) {
+		if (rc == -ENOMEM) {
+			SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "No memory, queue the IO.\n");
+			io_ctx->ch = ch;
+			vbdev_crypto_queue_io(bdev_io);
+		} else {
+			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+}
+
 /* Called when someone submits IO to this crypto vbdev. For IO's not relevant to crypto,
  * we're simply passing it on here via SPDK IO calls which in turn allocate another bdev IO
  * and call our cpl callback provided below along with the original bdev_io so that we can
@@ -1066,7 +1082,8 @@ vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		rc = _crypto_operation(bdev_io, RTE_CRYPTO_CIPHER_OP_ENCRYPT);
+		spdk_bdev_io_get_buf(bdev_io, crypto_write_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		rc = spdk_bdev_unmap_blocks(crypto_bdev->base_desc, crypto_ch->base_ch,
