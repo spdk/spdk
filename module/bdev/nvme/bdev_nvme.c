@@ -132,6 +132,9 @@ static int bdev_nvme_no_pi_readv(struct nvme_bdev *nbdev, struct spdk_io_channel
 static int bdev_nvme_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 			    struct nvme_bdev_io *bio,
 			    struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba);
+static int bdev_nvme_comparev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+			      struct nvme_bdev_io *bio,
+			      struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba);
 static int bdev_nvme_admin_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
@@ -483,6 +486,16 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 					bdev_io->u.bdev.num_blocks,
 					bdev_io->u.bdev.offset_blocks);
 
+	case SPDK_BDEV_IO_TYPE_COMPARE:
+		return bdev_nvme_comparev(nbdev,
+					  ch,
+					  nbdev_io,
+					  bdev_io->u.bdev.iovs,
+					  bdev_io->u.bdev.iovcnt,
+					  bdev_io->u.bdev.md_buf,
+					  bdev_io->u.bdev.num_blocks,
+					  bdev_io->u.bdev.offset_blocks);
+
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return bdev_nvme_unmap(nbdev,
 				       ch,
@@ -591,6 +604,10 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		 * Until this is resolved, we only claim support for write_zeroes if deallocated blocks return 0's when read.
 		 */
 		return false;
+
+	case SPDK_BDEV_IO_TYPE_COMPARE:
+		cdata = spdk_nvme_ctrlr_get_data(nbdev->nvme_bdev_ctrlr->ctrlr);
+		return cdata->oncs.compare;
 
 	default:
 		return false;
@@ -1888,6 +1905,21 @@ bdev_nvme_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
+bdev_nvme_comparev_done(void *ref, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
+
+	if (spdk_nvme_cpl_is_pi_error(cpl)) {
+		SPDK_ERRLOG("comparev completed with PI error (sct=%d, sc=%d)\n",
+			    cpl->status.sct, cpl->status.sc);
+		/* Run PI verification for compare data buffer if PI error is detected. */
+		bdev_nvme_verify_pi_error(bdev_io);
+	}
+
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+}
+
+static void
 bdev_nvme_queued_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
@@ -2036,6 +2068,33 @@ bdev_nvme_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 
 	if (rc != 0 && rc != -ENOMEM) {
 		SPDK_ERRLOG("writev failed: rc = %d\n", rc);
+	}
+	return rc;
+}
+
+static int
+bdev_nvme_comparev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+		   struct nvme_bdev_io *bio,
+		   struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba)
+{
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	int rc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "compare %lu blocks with offset %#lx\n",
+		      lba_count, lba);
+
+	bio->iovs = iov;
+	bio->iovcnt = iovcnt;
+	bio->iovpos = 0;
+	bio->iov_offset = 0;
+
+	rc = spdk_nvme_ns_cmd_comparev_with_md(nbdev->nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
+					       bdev_nvme_comparev_done, bio, nbdev->disk.dif_check_flags,
+					       bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
+					       md, 0, 0);
+
+	if (rc != 0 && rc != -ENOMEM) {
+		SPDK_ERRLOG("comparev failed: rc = %d\n", rc);
 	}
 	return rc;
 }
