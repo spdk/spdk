@@ -16,6 +16,24 @@
       "revId": "e6ee1990980893c60727786ded6fa9f4b4b0d48b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e56ed72c_05d906dd",
+        "filename": "autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-10T15:57:33Z",
+      "side": 0,
+      "message": "True. That\u0027s my bad. Would you be OK letting it slide though? I remove all of the report_test_completions calls in a later patch in this same series. https://review.gerrithub.io/c/spdk/spdk/+/476962",
+      "parentUuid": "76914974_0496175a",
+      "revId": "e6ee1990980893c60727786ded6fa9f4b4b0d48b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
