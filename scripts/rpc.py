@@ -2245,6 +2245,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'thread_get_stats', help='Display current statistics of all the threads')
     p.set_defaults(func=thread_get_stats)
 
+    def env_get_mem_stats(args):
+        print_dict(rpc.app.env_get_mem_stats(args.client, filename=args.filename))
+
+    p = subparsers.add_parser(
+        'env_get_mem_stats', help='write the dpdk memory stats to a file.')
+    p.add_argument('-f', '--filename', help="The path of a file to write the stats to.")
+    p.set_defaults(func=env_get_mem_stats)
+
     # blobfs
     def blobfs_detect(args):
         print(rpc.blobfs.blobfs_detect(args.client,

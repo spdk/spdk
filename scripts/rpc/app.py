@@ -35,3 +35,18 @@ def thread_get_stats(client):
         Current threads statistics.
     """
     return client.call('thread_get_stats')
+
+def env_get_mem_stats(client, filename=None):
+    """Dump the applications memory stats to a file.
+
+    Args:
+        filename: Custom file name to write stats to. If none, the application will pick. (optional)
+
+    Returns:
+        The path to the file where the stats are written.
+    """
+
+    params = {}
+    if filename is not None:
+        params['filename'] = filename
+    return client.call('env_get_mem_stats', params)

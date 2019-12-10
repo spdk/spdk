@@ -213,3 +213,52 @@ spdk_rpc_thread_get_stats(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("thread_get_stats", spdk_rpc_thread_get_stats, SPDK_RPC_RUNTIME)
+
+struct rpc_env_get_mem_stats {
+	char *filename;
+};
+
+static const struct spdk_json_object_decoder rpc_env_get_mem_stats_decoders[] = {
+	{"filename", offsetof(struct rpc_env_get_mem_stats, filename), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_env_get_mem_stats(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	FILE *file = NULL;
+	struct rpc_env_get_mem_stats req = {};
+	struct spdk_json_write_ctx *w;
+	char default_filename[] = "/tmp/spdk_mem_dump.txt";
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, rpc_env_get_mem_stats_decoders,
+					    SPDK_COUNTOF(rpc_env_get_mem_stats_decoders),
+					    &req)) {
+			SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "spdk_json_decode_object failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+			return;
+		}
+	} else {
+		req.filename = default_filename;
+	}
+
+	file = fopen(req.filename, "w");
+	if (!file) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Unable to open file for writing.\n");
+		return;
+	}
+
+	spdk_dump_env_memory(file);
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "file_path", req.filename);
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+
+	if (params != NULL) {
+		free(req.filename);
+	}
+}
+SPDK_RPC_REGISTER("env_get_mem_stats", spdk_rpc_env_get_mem_stats, SPDK_RPC_RUNTIME)
