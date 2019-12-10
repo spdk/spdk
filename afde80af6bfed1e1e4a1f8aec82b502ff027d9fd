@@ -108,6 +108,24 @@
     },
     {
       "key": {
+        "uuid": "0e3c000d_4a6bc5e7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2167,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-10T14:34:56Z",
+      "side": 1,
+      "message": "See _call_channel() function in lib/thread/thread.c.  It already handles case like this where channel gets destroyed between time0 and time2.\n\nVery good analysis though - this code is tricky and glad you were considering this case.  :-)",
+      "parentUuid": "59fde13e_2bef4ae8",
+      "revId": "afde80af6bfed1e1e4a1f8aec82b502ff027d9fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34d45c6d_779f876e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 18
