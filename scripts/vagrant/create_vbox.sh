@@ -7,6 +7,8 @@
 # This script creates a subdirectory called $PWD/<distro> and copies the Vagrantfile
 # into that directory before running 'vagrant up'
 
+set -e
+
 VAGRANT_TARGET="$PWD"
 
 DIR="$( cd "$( dirname $0 )" && pwd )"
