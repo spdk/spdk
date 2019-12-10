@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef726fb9_60ff4bc9",
+        "filename": "test/vhost/migration/migration.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-10T17:19:01Z",
+      "side": 0,
+      "message": "the --test-cases parameter also needs to be removed from test/vhost/vhost.sh - it didn\u0027t fail since this only gets run during nightly\n\nis there no case where we want to allow only running one test but not the other?  we didn\u0027t do this in the test/vhost/vhost.sh script but not sure if that was intended for people running this script at their desks?  I guess if Karol is OK with it though than I am too :-)",
+      "revId": "a1dbfb3b6060c003084711483d11d2a2f83ae887",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
