@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "14717da5_ee6fe75f",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-10T08:41:01Z",
+      "side": 1,
+      "message": "Thanks for the comment. I\u0027ve found where the problem is from my previous change.",
+      "parentUuid": "b1cb3bfb_8f56e2c5",
+      "revId": "9989161263e991195ceac9be1f20ead12bea6d8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3907df44_05bda512",
         "filename": "module/event/subsystems/nvmf/conf.c",
         "patchSetId": 1
