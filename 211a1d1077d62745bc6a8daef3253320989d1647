@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cacd9cf_b41ea33b",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1548,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-10T18:41:56Z",
+      "side": 1,
+      "message": "This would be better as a do { } while (...) loop. If the thread were interrupted between lines 1547 and 1550, it could hit a case where it never actually processes completions at all and fails.",
+      "revId": "211a1d1077d62745bc6a8daef3253320989d1647",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
