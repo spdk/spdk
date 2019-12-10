@@ -75,7 +75,9 @@ struct bdev_ocssd_io {
 };
 
 struct bdev_ocssd_io_channel {
-	struct nvme_io_channel *nvme_ioch;
+	struct nvme_io_channel		*nvme_ioch;
+	struct spdk_poller		*pending_poller;
+	TAILQ_HEAD(, spdk_bdev_io)	pending_requests;
 };
 
 struct ocssd_bdev {
@@ -593,8 +595,8 @@ bdev_ocssd_zone_management(struct spdk_io_channel *ioch, struct spdk_bdev_io *bd
 	}
 }
 
-static void
-bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
+static int
+_bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
 	int rc = 0;
 
@@ -621,12 +623,64 @@ bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bde
 		break;
 	}
 
-	if (spdk_unlikely(rc != 0)) {
-		if (rc == -ENOMEM) {
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
-		} else {
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	return rc;
+}
+
+static void
+bdev_ocssd_fail_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io, int status)
+{
+	struct bdev_ocssd_io_channel *ocssd_ioch = spdk_io_channel_get_ctx(ioch);
+
+	switch (status) {
+	case -ENOMEM:
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		break;
+	case -EAGAIN:
+		TAILQ_INSERT_TAIL(&ocssd_ioch->pending_requests, bdev_io, module_link);
+		break;
+	default:
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		break;
+	}
+}
+
+static int
+bdev_ocssd_poll_pending(void *ctx)
+{
+	struct spdk_io_channel *ioch = ctx;
+	struct bdev_ocssd_io_channel *ocssd_ioch;
+	struct spdk_bdev_io *bdev_io;
+	int rc, num_requests = 0;
+
+	ocssd_ioch = spdk_io_channel_get_ctx(ioch);
+
+	while ((bdev_io = TAILQ_FIRST(&ocssd_ioch->pending_requests))) {
+		TAILQ_REMOVE(&ocssd_ioch->pending_requests, bdev_io, module_link);
+
+		rc = _bdev_ocssd_submit_request(ioch, bdev_io);
+		if (rc != 0) {
+			bdev_ocssd_fail_request(ioch, bdev_io, rc);
+
+			/* If EAGAIN was received, we have to stop immediately to avoid looping
+			 * through the pending_requests queue indefinitely.
+			 */
+			if (rc == -EAGAIN) {
+				break;
+			}
 		}
+
+		num_requests++;
+	}
+
+	return num_requests;
+}
+
+static void
+bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
+{
+	int rc = _bdev_ocssd_submit_request(ioch, bdev_io);
+	if (spdk_unlikely(rc != 0)) {
+		bdev_ocssd_fail_request(ioch, bdev_io, rc);
 	}
 }
 
@@ -1079,6 +1133,15 @@ bdev_ocssd_create_ioch_cb(void *io_device, void *ctx_buf)
 		return -ENOMEM;
 	}
 
+	TAILQ_INIT(&ocssd_ioch->pending_requests);
+	ocssd_ioch->pending_poller = spdk_poller_register(bdev_ocssd_poll_pending,
+				     spdk_io_channel_from_ctx(ocssd_ioch), 0);
+	if (ocssd_ioch->pending_poller == NULL) {
+		SPDK_ERRLOG("Failed to register pending requests poller\n");
+		spdk_put_io_channel(ioch);
+		return -ENOMEM;
+	}
+
 	ocssd_ioch->nvme_ioch = spdk_io_channel_get_ctx(ioch);
 
 	return 0;
@@ -1089,6 +1152,8 @@ bdev_ocssd_destroy_ioch_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_ocssd_io_channel *ocssd_ioch = ctx_buf;
 	struct spdk_io_channel *ioch;
+
+	spdk_poller_unregister(&ocssd_ioch->pending_poller);
 
 	ioch = spdk_io_channel_from_ctx(ocssd_ioch->nvme_ioch);
 	spdk_put_io_channel(ioch);
