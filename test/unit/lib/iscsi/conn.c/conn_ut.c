@@ -101,6 +101,10 @@ DEFINE_STUB(spdk_sock_group_add_sock, int,
 DEFINE_STUB(spdk_sock_group_remove_sock, int,
 	    (struct spdk_sock_group *group, struct spdk_sock *sock), 0);
 
+DEFINE_STUB(spdk_iscsi_task_get, struct spdk_iscsi_task *,
+	    (struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent,
+	     spdk_scsi_task_cpl cpl_fn), NULL);
+
 void
 spdk_scsi_task_put(struct spdk_scsi_task *scsi_task)
 {
@@ -146,6 +150,10 @@ spdk_scsi_task_copy_status(struct spdk_scsi_task *dst,
 	dst->status = src->status;
 }
 
+DEFINE_STUB_V(spdk_scsi_task_set_data, (struct spdk_scsi_task *task, void *data, uint32_t len));
+
+DEFINE_STUB_V(spdk_scsi_task_process_null_lun, (struct spdk_scsi_task *task));
+
 DEFINE_STUB_V(spdk_put_pdu, (struct spdk_iscsi_pdu *pdu));
 
 DEFINE_STUB_V(spdk_iscsi_param_free, (struct iscsi_param *params));
@@ -161,6 +169,9 @@ DEFINE_STUB(spdk_iscsi_build_iovs, int,
 	     struct spdk_iscsi_pdu *pdu, uint32_t *mapped_length),
 	    0);
 
+DEFINE_STUB_V(spdk_iscsi_queue_task,
+	      (struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task));
+
 DEFINE_STUB_V(spdk_iscsi_task_response,
 	      (struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task));
 
@@ -171,21 +182,6 @@ DEFINE_STUB_V(spdk_iscsi_send_nopin, (struct spdk_iscsi_conn *conn));
 
 DEFINE_STUB(spdk_del_transfer_task, bool,
 	    (struct spdk_iscsi_conn *conn, uint32_t task_tag), true);
-
-int
-spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
-{
-	struct spdk_iscsi_task *task, *tmp;
-
-	TAILQ_FOREACH_SAFE(task, &conn->queued_datain_tasks, link, tmp) {
-		TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
-		if (task->pdu) {
-			TAILQ_INSERT_TAIL(&conn->write_pdu_list, task->pdu, tailq);
-		}
-	}
-
-	return 0;
-}
 
 DEFINE_STUB(spdk_iscsi_handle_incoming_pdus, int, (struct spdk_iscsi_conn *conn), 0);
 
@@ -571,6 +567,7 @@ free_tasks_on_connection(void)
 	TAILQ_INIT(&conn.write_pdu_list);
 	TAILQ_INIT(&conn.snack_pdu_list);
 	TAILQ_INIT(&conn.queued_datain_tasks);
+	conn.data_in_cnt = MAX_LARGE_DATAIN_PER_CONNECTION;
 
 	pdu1.task = &task1;
 	pdu2.task = &task2;
