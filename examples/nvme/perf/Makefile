@@ -35,6 +35,8 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 
 APP = perf
 
+OS:=$(shell uname)
+
 ifeq ($(OS),Linux)
 SYS_LIBS += -laio
 CFLAGS += -DHAVE_LIBAIO
