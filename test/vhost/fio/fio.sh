@@ -15,7 +15,7 @@ vhosttestinit
 
 timing_enter vhost_fio
 
-trap "at_app_exit; process_shm --id 0; exit 1" SIGINT SIGTERM EXIT
+trap "vhost_kill vhost0; process_shm --id 0; exit 1" SIGINT SIGTERM EXIT
 
 vhost_run vhost0 "-m 0x1"
 

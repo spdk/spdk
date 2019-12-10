@@ -211,7 +211,7 @@ done
 if $dry_run; then
 	read -r -p "Enter to kill evething" xx
 	sleep 3
-	at_app_exit
+	vhost_kill vhost0
 	exit 0
 fi
 

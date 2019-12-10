@@ -1111,25 +1111,6 @@ function run_fio()
 		--out=$out $json ${fio_disks%,}
 }
 
-# Shutdown or kill any running VM and SPDK APP.
-#
-function at_app_exit()
-{
-	local vhost_name
-
-	notice "APP EXITING"
-	notice "killing all VMs"
-	vm_kill_all
-	# Kill vhost application
-	notice "killing vhost app"
-
-	for vhost_name in $(ls $TARGET_DIR); do
-		vhost_kill $vhost_name
-	done
-
-	notice "EXIT DONE"
-}
-
 function error_exit()
 {
 	trap - ERR
@@ -1137,6 +1118,6 @@ function error_exit()
 	set +e
 	error "Error on $1 $2"
 
-	at_app_exit
+	vhost_kill vhost0
 	exit 1
 }
