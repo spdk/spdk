@@ -33,7 +33,7 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
-SPDK_LIB_LIST = trace conf util
+SPDK_LIB_LIST = conf util
 
 SCSI_OBJS = port
 ISCSI_OBJS = md5 param
