@@ -1197,36 +1197,6 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 	}
 }
 
-static int
-iscsi_get_pdu_length(struct spdk_iscsi_pdu *pdu, int header_digest,
-		     int data_digest)
-{
-	int data_len, enable_digest, total;
-
-	enable_digest = 1;
-	if (pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) {
-		enable_digest = 0;
-	}
-
-	total = ISCSI_BHS_LEN;
-
-	total += (4 * pdu->bhs.total_ahs_len);
-
-	if (enable_digest && header_digest) {
-		total += ISCSI_DIGEST_LEN;
-	}
-
-	data_len = DGET24(pdu->bhs.data_segment_len);
-	if (data_len > 0) {
-		total += ISCSI_ALIGN(data_len);
-		if (enable_digest && data_digest) {
-			total += ISCSI_DIGEST_LEN;
-		}
-	}
-
-	return total;
-}
-
 static void
 iscsi_conn_send_nopin(struct spdk_iscsi_conn *conn)
 {
@@ -1294,6 +1264,36 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 	} else if (tsc - conn->last_nopin > conn->nopininterval) {
 		iscsi_conn_send_nopin(conn);
 	}
+}
+
+static int
+iscsi_get_pdu_length(struct spdk_iscsi_pdu *pdu, int header_digest,
+		     int data_digest)
+{
+	int data_len, enable_digest, total;
+
+	enable_digest = 1;
+	if (pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) {
+		enable_digest = 0;
+	}
+
+	total = ISCSI_BHS_LEN;
+
+	total += (4 * pdu->bhs.total_ahs_len);
+
+	if (enable_digest && header_digest) {
+		total += ISCSI_DIGEST_LEN;
+	}
+
+	data_len = DGET24(pdu->bhs.data_segment_len);
+	if (data_len > 0) {
+		total += ISCSI_ALIGN(data_len);
+		if (enable_digest && data_digest) {
+			total += ISCSI_DIGEST_LEN;
+		}
+	}
+
+	return total;
 }
 
 static bool
