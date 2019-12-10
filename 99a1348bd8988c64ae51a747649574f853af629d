@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79ad303d_fd890418",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-10T10:17:14Z",
+      "side": 1,
+      "message": "Ahh, vhost migration tests. This is going to be fun.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 47
+      },
+      "revId": "99a1348bd8988c64ae51a747649574f853af629d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79700e0d_79459e0a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-10T10:17:14Z",
+      "side": 1,
+      "message": "Indeed!\nThese tests need 2 physical test systems to work.",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 53
+      },
+      "revId": "99a1348bd8988c64ae51a747649574f853af629d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
