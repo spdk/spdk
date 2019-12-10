@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "59fde13e_2bef4ae8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2167,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-10T08:33:24Z",
+      "side": 1,
+      "message": "A corner case for example, at time0 the core0 send the spdk_for_each_channel msg to core1，at time1 the core1 destroy the io_channel, at time2 the core1 execute the msg. Time2 is bigger than time1 and time1 is bigger than time0. So at time2 when the core1 run the msg the io channel was destroyed. That\u0027s why I use the spdk_get_io_channel(io_device). Because in my code the io device existed at that time.",
+      "parentUuid": "5a7f8b08_e3b1d246",
+      "revId": "afde80af6bfed1e1e4a1f8aec82b502ff027d9fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34d45c6d_779f876e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 18
@@ -137,6 +155,24 @@
       "side": 1,
       "message": "Hi Jin,\n\nThen let\u0027s make some restrictions so that we don\u0027t have to add this extra state.  I am concerned that this state is being added only for this timeout functionality, and will not be generally useful in other cases.  It is much better to keep the code simple and provide clear and well documented restrictions to the user.\n\n(Quick note: please add a note to spdk_bdev_set_timeout comments that it must be called on the same thread as spdk_bdev_open.  We also have this restriction for spdk_bdev_close.)\n\nUnregistering the poller while the spdk_for_each_channel is executing is fine.  The two are unrelated.\n\nYou could modify your timeout_set_ctx struct to remove the timeout value, but add a pointer to the spdk_bdev_desc.  Remove the timeout_set_ctx structs from spdk_bdev_desc but add a cb_fn and cb_arg member.  Then when the timeout fires, allocate one of these ctx structs, set the desc, cb_fn and cb_arg, and pass it around to spdk_for_each_channel (instead of the desc).  Then calling spdk_bdev_set_timeout can still modify the cb_fn and cb_arg, and it doesn\u0027t affect any inflight timeout operations.\n\n-Jim",
       "parentUuid": "c1978820_35359d28",
+      "revId": "afde80af6bfed1e1e4a1f8aec82b502ff027d9fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ab38c96_13bc0075",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2193,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-10T08:33:24Z",
+      "side": 1,
+      "message": "Thanks Jim. I will add the note. I got what you mean. Yes, add a state in desc and only use it in timeout functionality is not a good choice.\nThe spdk_for_each_channel() doesn\u0027t increase the io device or the channel refs so if a msg is sent from core0 to core1 then when the core1 execute this msg. Can we make sure the device and the channel are still alive? I am confused here. I don\u0027t think we can confirm that. If I am wrong please correct me.",
+      "parentUuid": "5a27365c_0bcccc55",
       "revId": "afde80af6bfed1e1e4a1f8aec82b502ff027d9fd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
