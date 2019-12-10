@@ -16,6 +16,24 @@
       "revId": "1346493b4d382dc9ab107c051d6eda6cf30a111c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6aad4bf_6b417c49",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-10T12:44:55Z",
+      "side": 1,
+      "message": "Yes, I think you\u0027re right, it doesn\u0027t make much sense to allow resets while the zone is still busy. And the FTL doesn\u0027t require that too, so we can safely return EINVAL here.\n\nHowever in order to support appends we have to be able to retry requests in case a zone is busy, so we still need some kind of a mechanism for that. For now I\u0027ve implemented a simple retry using spdk_thread_send_msg, please take a look at the next patch in the series.",
+      "parentUuid": "8a68c4a6_6424664b",
+      "revId": "1346493b4d382dc9ab107c051d6eda6cf30a111c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
