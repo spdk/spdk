@@ -45,8 +45,6 @@
 #include "spdk/rpc.h"
 #include "spdk/config.h"
 
-#define SPDK_CACHE_LINE_SIZE RTE_CACHE_LINE_SIZE
-
 #define SPDK_VHOST_MAX_VQUEUES	256
 #define SPDK_VHOST_MAX_VQ_SIZE	1024
 
@@ -107,7 +105,7 @@ struct spdk_vhost_virtqueue {
 
 	/* Associated vhost_virtqueue in the virtio device's virtqueue list */
 	uint32_t vring_idx;
-} __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
+} __attribute((aligned(SPDK_ENV_CACHE_LINE_SIZE)));
 
 struct spdk_vhost_session {
 	struct spdk_vhost_dev *vdev;

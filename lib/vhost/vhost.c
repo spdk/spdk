@@ -1232,7 +1232,7 @@ vhost_new_connection_cb(int vid, const char *ifname)
 		return -EINVAL;
 	}
 
-	if (posix_memalign((void **)&vsession, SPDK_CACHE_LINE_SIZE, sizeof(*vsession) +
+	if (posix_memalign((void **)&vsession, SPDK_ENV_CACHE_LINE_SIZE, sizeof(*vsession) +
 			   vdev->backend->session_ctx_size)) {
 		SPDK_ERRLOG("vsession alloc failed\n");
 		pthread_mutex_unlock(&g_vhost_mutex);
