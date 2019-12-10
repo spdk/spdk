@@ -109,3 +109,4 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 fi
 
 rm -rf /tmp/pmem
+report_test_completion "reduce"
