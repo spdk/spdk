@@ -154,6 +154,8 @@ DEFINE_STUB_V(spdk_scsi_task_set_data, (struct spdk_scsi_task *task, void *data,
 
 DEFINE_STUB_V(spdk_scsi_task_process_null_lun, (struct spdk_scsi_task *task));
 
+DEFINE_STUB_V(spdk_scsi_task_process_abort, (struct spdk_scsi_task *task));
+
 DEFINE_STUB_V(spdk_put_pdu, (struct spdk_iscsi_pdu *pdu));
 
 DEFINE_STUB_V(spdk_iscsi_param_free, (struct iscsi_param *params));
