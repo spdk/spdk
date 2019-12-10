@@ -42,10 +42,9 @@
 #include "spdk_internal/vhost_user.h"
 #include "spdk_internal/log.h"
 #include "spdk/event.h"
+#include "spdk/util.h"
 #include "spdk/rpc.h"
 #include "spdk/config.h"
-
-#define SPDK_CACHE_LINE_SIZE RTE_CACHE_LINE_SIZE
 
 #define SPDK_VHOST_MAX_VQUEUES	256
 #define SPDK_VHOST_MAX_VQ_SIZE	1024

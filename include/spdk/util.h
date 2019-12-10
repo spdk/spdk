@@ -44,6 +44,8 @@
 extern "C" {
 #endif
 
+#define SPDK_CACHE_LINE_SIZE 64
+
 #define spdk_min(a,b) (((a)<(b))?(a):(b))
 #define spdk_max(a,b) (((a)>(b))?(a):(b))
 
