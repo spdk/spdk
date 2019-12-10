@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2c39b50_ffe005c8",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-10T10:16:09Z",
+      "side": 1,
+      "message": "Nitpick: You could put common parameters into a variable here and then use it in run_test fio_bdev.\nCould reduce the number of lines and IMO make it a bit more readable.\n\ne.g:\nlocal fio_common_params\u003d\"--ioengine\u003dspdk_bdev --spdk_conf\u003d./test/bdev/bdev.conf $testdir/bdev.fio\"\n\nMaintainers feel free to remove this -1, it\u0027s just a nitpick. It\u0027s OK other than that",
+      "revId": "a1dbfb3b6060c003084711483d11d2a2f83ae887",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
