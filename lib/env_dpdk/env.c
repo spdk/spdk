@@ -437,3 +437,19 @@ spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count)
 {
 	return rte_ring_dequeue_burst((struct rte_ring *)ring, objs, count, NULL);
 }
+
+void
+spdk_env_dpdk_dump_mem_stats(FILE *file)
+{
+	fprintf(file, "DPDK memory size %lu\n", rte_eal_get_physmem_size());
+	fprintf(file, "DPDK memory layout\n");
+	rte_dump_physmem_layout(file);
+	fprintf(file, "DPDK memzones.\n");
+	rte_memzone_dump(file);
+	fprintf(file, "DPDK mempools.\n");
+	rte_mempool_list_dump(file);
+	fprintf(file, "DPDK malloc stats.\n");
+	rte_malloc_dump_stats(file, NULL);
+	fprintf(file, "DPDK malloc heaps.\n");
+	rte_malloc_dump_heaps(file);
+}
