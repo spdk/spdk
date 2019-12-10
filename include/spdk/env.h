@@ -1241,6 +1241,13 @@ int spdk_mem_register(void *vaddr, size_t len);
  */
 int spdk_mem_unregister(void *vaddr, size_t len);
 
+/**
+ * Dump the env allocated memory to the given file.
+ *
+ * \param file The file object to write to.
+ */
+void spdk_dump_env_memory(FILE *file);
+
 #ifdef __cplusplus
 }
 #endif
