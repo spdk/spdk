@@ -28,13 +28,13 @@ fi
 $rpc_py bdev_get_bdevs
 $rpc_py bdev_nvme_get_controllers
 
-for ns in $(ls /dev/spdk/nvme?n?); do
+for ns in /dev/spdk/nvme?n?; do
 	${NVME_CMD} get-ns-id $ns
 	${NVME_CMD} id-ns $ns
 	${NVME_CMD} list-ns $ns
 done
 
-for ctrlr in $(ls /dev/spdk/nvme?); do
+for ctrlr in /dev/spdk/nvme?; do
 	${NVME_CMD} id-ctrl $ctrlr
 	${NVME_CMD} list-ctrl $ctrlr
 	${NVME_CMD} fw-log $ctrlr
