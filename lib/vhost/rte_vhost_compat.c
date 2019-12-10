@@ -136,7 +136,7 @@ destroy_connection(int vid)
 	vhost_destroy_connection_cb(vid);
 }
 
-const struct vhost_device_ops g_spdk_vhost_ops = {
+static const struct vhost_device_ops g_spdk_vhost_ops = {
 	.new_device =  start_device,
 	.destroy_device = stop_device,
 	.new_connection = new_connection,
