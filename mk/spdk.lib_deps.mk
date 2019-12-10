@@ -103,6 +103,9 @@ DEPDIRS-blobfs_bdev := $(BDEV_DEPS_THREAD) blob_bdev blobfs
 # module/copy
 DEPDIRS-copy_ioat := log ioat conf thread $(JSON_LIBS) copy
 
+# module/env_dpdk
+DEPDIRS-env_dpdk_rpc := log $(JSON_LIBS)
+
 # module/sock
 DEPDIRS-sock_posix := log sock
 DEPDIRS-sock_vpp := log sock util thread
