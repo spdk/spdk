@@ -16,6 +16,24 @@
       "revId": "706902b13616c420d5802ef5d0b2e61a3a213dd5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73271af5_6cd50c8f",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-12-11T05:30:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "df37d620_e1990e2c",
+      "revId": "706902b13616c420d5802ef5d0b2e61a3a213dd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
