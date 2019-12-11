@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "081a6e53_3b252a43",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-11T06:27:24Z",
+      "side": 1,
+      "message": "Please according to the latest Linux kernel header file, add this part to spdk/incluce/linux/virtio_config.h and spdk/include/linux/virtio_ring.h.",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 130,
+        "endChar": 30
+      },
+      "revId": "36eb382e3cd1777b2ce56c9eaa6b0d2281ca1f38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a5e328a_98565ca3",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-11T06:27:24Z",
+      "side": 1,
+      "message": "It\u0027s better to move packed_ring flag to spdk_vhost_virtqueue structure, what do you think?",
+      "range": {
+        "startLine": 177,
+        "startChar": 1,
+        "endLine": 177,
+        "endChar": 18
+      },
+      "revId": "36eb382e3cd1777b2ce56c9eaa6b0d2281ca1f38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
