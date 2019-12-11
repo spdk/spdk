@@ -46,6 +46,57 @@
       "revId": "bd91f896c793cb8378320955dd36beaa65dd9108",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe7cf721_9dfcf427",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T16:01:33Z",
+      "side": 1,
+      "message": "should this be \u003e\u003d?\n\nanother optimization here would be to consider if the last flush attempt fully flushed everything - the normal case would be that everything had flushed last time it was attempted, we get several writev_asyncs and then if we get enough iovs batches, we try to flush here\n\nbut if the last flush attempt didn\u0027t fully flush everything, then trying again here doesn\u0027t really help anything - most likely we would have been better off waiting until the next time the sock poller ran",
+      "revId": "bd91f896c793cb8378320955dd36beaa65dd9108",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06a115e6_0172f546",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 811,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T16:01:33Z",
+      "side": 1,
+      "message": "add a comment here that we need TAILQ_FOREACH_SAFE since it\u0027s possible user will call spdk_sock_group_remove_sock() if an async write failure is sent to the user?",
+      "revId": "bd91f896c793cb8378320955dd36beaa65dd9108",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "acb30cef_1d35c19a",
+        "filename": "module/sock/vpp/vpp.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 974,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T16:01:33Z",
+      "side": 1,
+      "message": "this doesn\u0027t seem right - spdk_vpp_sock_writev returns number of bytes written\n\nI\u0027d rather just put an assert here for now - I really don\u0027t think this will work.  we are testing VPP with NVMe/TCP, so the assert would be fine - we\u0027ll just need to have Tomek or someone put a stopgap in here if and when we extend writev_async for iSCSI",
+      "revId": "bd91f896c793cb8378320955dd36beaa65dd9108",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
