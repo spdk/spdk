@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8713039_59117411",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-11T16:53:26Z",
+      "side": 1,
+      "message": "can you ada a descriptive #define for this, it\u0027s a but confusing seeing this and SPDK_NVME_IO_FLAGS_FUSE_MASK with a different value",
+      "revId": "f77028e7523bb041cb5dcc55689da99c7b8e1842",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f16a7cb7_44e2f73e",
+        "filename": "test/unit/lib/nvme/nvme_ns_cmd.c/nvme_ns_cmd_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 837,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-11T16:53:26Z",
+      "side": 1,
+      "message": "you could use that new #define here",
+      "revId": "f77028e7523bb041cb5dcc55689da99c7b8e1842",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
