@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fd95c761_9d0ccb16",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 1120,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-11T13:57:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "86a60160_5abf74f9",
+      "revId": "0e2ecd21b90117f7562c99db42915d6bec00ab71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "50b36d3c_e61e616e",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 18
@@ -54,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "96270c36_99270e2f",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-11T13:57:32Z",
+      "side": 1,
+      "message": "Yes, it makes it much easier for the bdev module generating those events to have two functions.",
+      "parentUuid": "05563c3c_29126b56",
+      "revId": "0e2ecd21b90117f7562c99db42915d6bec00ab71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92a851b6_d74acc81",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 18
@@ -68,6 +104,24 @@
       "revId": "0e2ecd21b90117f7562c99db42915d6bec00ab71",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c608eacf_649bb0ed",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 4553,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-11T13:57:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "92a851b6_d74acc81",
+      "revId": "0e2ecd21b90117f7562c99db42915d6bec00ab71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
