@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85a129b8_a6e09057",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-11T09:04:43Z",
+      "side": 1,
+      "message": "Please check io_flags here, otherwise this function could run into assert in _nvme_ns_cmd_setup_request()\n\n\tif (!_is_io_flags_valid(io_flags)) {\n\t\treturn -EINVAL;\n\t}",
+      "revId": "4ddee11ed2fa13a3d30ecb873b7b8cd7f21dc71d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
