@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58434494_2dda8e87",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1249,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-12-11T14:09:37Z",
+      "side": 1,
+      "message": "Just a nit - maybe spdk_env_dump_memory will look better? There are many spdk_env_* functions",
+      "range": {
+        "startLine": 1249,
+        "startChar": 5,
+        "endLine": 1249,
+        "endChar": 25
+      },
+      "revId": "d3cff754df7a494523874c634845a2ef3c263c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
