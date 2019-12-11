@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "289d1db3_bce1f1a6",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1099,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-11T13:58:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8bc6d847_4a282f1b",
+      "revId": "14b91b230b3d1153f62b146d35f5d4976f651ea2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e2df019_63c2af3b",
         "filename": "module/bdev/nvme/bdev_ocssd.c",
         "patchSetId": 19
@@ -33,6 +51,24 @@
       "revId": "14b91b230b3d1153f62b146d35f5d4976f651ea2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0622f56c_f5d42f90",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-11T13:58:28Z",
+      "side": 1,
+      "message": "For sure, this explanation is much better.",
+      "parentUuid": "9e2df019_63c2af3b",
+      "revId": "14b91b230b3d1153f62b146d35f5d4976f651ea2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
