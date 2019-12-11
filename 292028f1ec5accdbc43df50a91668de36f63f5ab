@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "de1212c8_404c0a64",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-11T08:23:44Z",
+      "side": 1,
+      "message": "As this is just an example, so we can use the default values for these parameters, since you already wrote this, this part is fine to me.",
+      "revId": "292028f1ec5accdbc43df50a91668de36f63f5ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0c830e2d_6f15bc00",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-11T08:23:44Z",
+      "side": 1,
+      "message": "The 2 lines can be removed.",
+      "range": {
+        "startLine": 447,
+        "startChar": 1,
+        "endLine": 448,
+        "endChar": 8
+      },
+      "revId": "292028f1ec5accdbc43df50a91668de36f63f5ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
