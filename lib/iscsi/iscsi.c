@@ -3260,7 +3260,7 @@ iscsi_pdu_payload_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_t
 	if (task->scsi.transfer_len <= SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
 		task->parent = NULL;
 		task->scsi.offset = 0;
-		task->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, task->scsi.transfer_len);
+		task->scsi.length = task->scsi.transfer_len;
 		spdk_scsi_task_set_data(&task->scsi, NULL, 0);
 
 		iscsi_queue_task(conn, task);
@@ -3562,31 +3562,32 @@ _iscsi_conn_abort_queued_datain_task(struct spdk_iscsi_conn *conn,
 	struct spdk_iscsi_task *subtask;
 	uint32_t remaining_size;
 
-	while (conn->data_in_cnt < MAX_LARGE_DATAIN_PER_CONNECTION) {
-		assert(task->current_datain_offset <= task->scsi.transfer_len);
-		/* If any IO is submitted already, abort all subtasks by repetition. */
-		if (task->current_datain_offset < task->scsi.transfer_len) {
-			remaining_size = task->scsi.transfer_len - task->current_datain_offset;
-			subtask = spdk_iscsi_task_get(conn, task, spdk_iscsi_task_cpl);
-			assert(subtask != NULL);
-			subtask->scsi.offset = task->current_datain_offset;
-			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
-			spdk_scsi_task_set_data(&subtask->scsi, NULL, 0);
-			task->current_datain_offset += subtask->scsi.length;
-
-			subtask->scsi.transfer_len = subtask->scsi.length;
-			spdk_scsi_task_process_abort(&subtask->scsi);
-			spdk_iscsi_task_cpl(&subtask->scsi);
-		}
-
-		/* Remove the primary task from the list if this is the last subtask */
-		if (task->current_datain_offset == task->scsi.transfer_len) {
-			TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
-			return 0;
-		}
+	if (conn->data_in_cnt >= MAX_LARGE_DATAIN_PER_CONNECTION) {
+		return -1;
 	}
 
-	return -1;
+	assert(task->current_datain_offset <= task->scsi.transfer_len);
+	/* Stop split and abort read I/O for remaining data. */
+	if (task->current_datain_offset < task->scsi.transfer_len) {
+		remaining_size = task->scsi.transfer_len - task->current_datain_offset;
+		subtask = spdk_iscsi_task_get(conn, task, spdk_iscsi_task_cpl);
+		assert(subtask != NULL);
+		subtask->scsi.offset = task->current_datain_offset;
+		subtask->scsi.length = remaining_size;
+		spdk_scsi_task_set_data(&subtask->scsi, NULL, 0);
+		task->current_datain_offset += subtask->scsi.length;
+
+		subtask->scsi.transfer_len = subtask->scsi.length;
+		spdk_scsi_task_process_abort(&subtask->scsi);
+		spdk_iscsi_task_cpl(&subtask->scsi);
+	}
+
+	/* Remove the primary task from the list because all subtasks are submitted
+	 *  or aborted.
+	 */
+	assert(task->current_datain_offset == task->scsi.transfer_len);
+	TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
+	return 0;
 }
 
 static int
