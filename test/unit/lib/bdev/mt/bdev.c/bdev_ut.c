@@ -1724,8 +1724,16 @@ bdev_set_io_timeout_mt(void)
 	free_threads();
 }
 
+static bool g_io_done2;
 static bool g_lock_lba_range_done;
 static bool g_unlock_lba_range_done;
+
+static void
+io_done2(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	g_io_done2 = true;
+	spdk_bdev_free_io(bdev_io);
+}
 
 static void
 lock_lba_range_done(void *ctx, int status)
@@ -1761,7 +1769,7 @@ lock_lba_range_then_submit_io(void)
 	struct spdk_bdev_channel *bdev_ch[3];
 	struct lba_range *range;
 	char buf[4096];
-	int ctx0, ctx1;
+	int ctx0, ctx1, ctx2;
 	int rc;
 
 	setup_test();
@@ -1835,6 +1843,23 @@ lock_lba_range_then_submit_io(void)
 	rc = bdev_unlock_lba_range(desc, io_ch[1], 20, 10, unlock_lba_range_done, &ctx1);
 	CU_ASSERT(rc == -EINVAL);
 
+	/* Now create a new channel and submit a write I/O with it.  This should also be queued.
+	 * The new channel should inherit the active locks from the bdev's internal list.
+	 */
+	set_thread(2);
+	io_ch[2] = spdk_bdev_get_io_channel(desc);
+	bdev_ch[2] = spdk_io_channel_get_ctx(io_ch[2]);
+	CU_ASSERT(io_ch[2] != NULL);
+
+	g_io_done2 = false;
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch[2]->io_locked));
+	rc = spdk_bdev_write_blocks(desc, io_ch[2], buf, 22, 2, io_done2, &ctx2);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(stub_channel_outstanding_cnt(io_target) == 0);
+	CU_ASSERT(!TAILQ_EMPTY(&bdev_ch[2]->io_locked));
+	CU_ASSERT(g_io_done2 == false);
+
 	set_thread(0);
 	rc = bdev_unlock_lba_range(desc, io_ch[0], 20, 10, unlock_lba_range_done, &ctx0);
 	CU_ASSERT(rc == 0);
@@ -1843,19 +1868,26 @@ lock_lba_range_then_submit_io(void)
 
 	/* The LBA range is unlocked, so the write IOs should now have started execution. */
 	CU_ASSERT(TAILQ_EMPTY(&bdev_ch[1]->io_locked));
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch[2]->io_locked));
 
 	set_thread(1);
+	CU_ASSERT(stub_channel_outstanding_cnt(io_target) == 1);
+	stub_complete_io(io_target, 1);
+	set_thread(2);
 	CU_ASSERT(stub_channel_outstanding_cnt(io_target) == 1);
 	stub_complete_io(io_target, 1);
 
 	poll_threads();
 	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_done2 == true);
 
 	/* Tear down the channels */
 	set_thread(0);
 	spdk_put_io_channel(io_ch[0]);
 	set_thread(1);
 	spdk_put_io_channel(io_ch[1]);
+	set_thread(2);
+	spdk_put_io_channel(io_ch[2]);
 	poll_threads();
 	set_thread(0);
 	teardown_test();
