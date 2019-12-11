@@ -2336,6 +2336,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 	struct spdk_io_channel		*mgmt_io_ch;
 	struct spdk_bdev_mgmt_channel	*mgmt_ch;
 	struct spdk_bdev_shared_resource *shared_resource;
+	struct lba_range *range;
 
 	ch->bdev = bdev;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
@@ -2414,6 +2415,20 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 
 	pthread_mutex_lock(&bdev->internal.mutex);
 	bdev_enable_qos(bdev, ch);
+
+	TAILQ_FOREACH(range, &bdev->internal.locked_ranges, tailq) {
+		struct lba_range *new_range;
+
+		new_range = calloc(1, sizeof(*new_range));
+		if (new_range == NULL) {
+			bdev_channel_destroy_resource(ch);
+			return -1;
+		}
+		new_range->length = range->length;
+		new_range->offset = range->offset;
+		TAILQ_INSERT_TAIL(&ch->locked_ranges, new_range, tailq);
+	}
+
 	pthread_mutex_unlock(&bdev->internal.mutex);
 
 	return 0;
@@ -4389,6 +4404,7 @@ bdev_init(struct spdk_bdev *bdev)
 	}
 
 	TAILQ_INIT(&bdev->internal.open_descs);
+	TAILQ_INIT(&bdev->internal.locked_ranges);
 
 	TAILQ_INIT(&bdev->aliases);
 
@@ -5414,7 +5430,11 @@ bdev_lock_lba_range_cb(struct spdk_io_channel_iter *i, int status)
 	 */
 	ctx->owner_range->owner_ch = ctx->range.owner_ch;
 	ctx->cb_fn(ctx->cb_arg, status);
-	free(ctx);
+
+	/* Don't free the ctx here.  Its range is in the bdev's global list of
+	 * locked ranges still, and will be removed and freed when this range
+	 * is later unlocked.
+	 */
 }
 
 static int
@@ -5542,6 +5562,10 @@ bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
+	pthread_mutex_lock(&bdev->internal.mutex);
+	TAILQ_INSERT_TAIL(&bdev->internal.locked_ranges, &ctx->range, tailq);
+	pthread_mutex_unlock(&bdev->internal.mutex);
+
 	/* We will add a copy of this range to each channel now. */
 	spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_lock_lba_range_get_channel, ctx,
 			      bdev_lock_lba_range_cb);
@@ -5626,14 +5650,21 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 		return -EINVAL;
 	}
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (ctx == NULL) {
-		return -ENOMEM;
+	pthread_mutex_lock(&bdev->internal.mutex);
+	TAILQ_FOREACH(range, &bdev->internal.locked_ranges, tailq) {
+		if (range->offset == offset && range->length == length) {
+			break;
+		}
 	}
+	if (range == NULL) {
+		assert(false);
+		pthread_mutex_unlock(&bdev->internal.mutex);
+		return -EINVAL;
+	}
+	TAILQ_REMOVE(&bdev->internal.locked_ranges, range, tailq);
+	ctx = SPDK_CONTAINEROF(range, struct locked_lba_range_ctx, range);
+	pthread_mutex_unlock(&bdev->internal.mutex);
 
-	ctx->range.offset = offset;
-	ctx->range.length = length;
-	ctx->range.owner_ch = ch;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
@@ -5641,6 +5672,7 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 			      bdev_unlock_lba_range_cb);
 	return 0;
 }
+
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
 
 SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
