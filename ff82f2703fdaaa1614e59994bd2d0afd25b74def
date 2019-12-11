@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "3bbd749e_eac80c97",
+        "filename": "module/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T16:26:55Z",
+      "side": 1,
+      "message": "I think the filename should be fully qualified - make the user specify exactly where they want the file, otherwise the filename will be resolved relative to the application\u0027s path, not the path of whatever environment invoked this RPC\n\nso maybe just check that the first character is \u0027/\u0027?",
+      "revId": "ff82f2703fdaaa1614e59994bd2d0afd25b74def",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9cbd516_fe04b9e6",
+        "filename": "module/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T16:26:55Z",
+      "side": 1,
+      "message": "can we make the filename mandatory?",
+      "revId": "ff82f2703fdaaa1614e59994bd2d0afd25b74def",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9facae39_1507cff7",
         "filename": "module/event/rpc/app_rpc.c",
         "patchSetId": 1
@@ -66,6 +100,40 @@
         "endLine": 253,
         "endChar": 28
       },
+      "revId": "ff82f2703fdaaa1614e59994bd2d0afd25b74def",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e64f8cab_8239f810",
+        "filename": "module/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T16:26:55Z",
+      "side": 1,
+      "message": "let\u0027s name this filename instead of file_path, to match the input parameter name and the variable name",
+      "revId": "ff82f2703fdaaa1614e59994bd2d0afd25b74def",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9e57bf8_10ffa52f",
+        "filename": "module/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T16:26:55Z",
+      "side": 1,
+      "message": "env_dpdk_get_mem_stats?  (this also means we probably need to put this in a new file rather than app_rpc.c)",
       "revId": "ff82f2703fdaaa1614e59994bd2d0afd25b74def",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
