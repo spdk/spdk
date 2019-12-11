@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46c8f5ee_313aa409",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-12-11T14:42:01Z",
+      "side": 1,
+      "message": "I suggest making a copy of the list and iterating on all elements - requests may be hitting different chunks, so you can clear up more of the queue at the same time.",
+      "range": {
+        "startLine": 657,
+        "startChar": 0,
+        "endLine": 658,
+        "endChar": 68
+      },
+      "revId": "7bc417e015ea3f671807dac8dc2ee674c4a95353",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2785eec_8f198309",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-12-11T14:42:01Z",
+      "side": 1,
+      "message": "You\u0027re reordering requests submissions here. It\u0027s not an error per se, but with a copy of the list you\u0027d avoid the issue here as well.",
+      "range": {
+        "startLine": 660,
+        "startChar": 0,
+        "endLine": 662,
+        "endChar": 46
+      },
+      "revId": "7bc417e015ea3f671807dac8dc2ee674c4a95353",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
