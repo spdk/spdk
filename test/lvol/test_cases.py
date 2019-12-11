@@ -125,9 +125,6 @@ def case_message(func):
             653: 'thin_provisioning_resize',
             654: 'thin_overprovisioning',
             655: 'thin_provisioning_filling_disks_less_than_lvs_size',
-            # logical volume rename tests
-            803: 'bdev_lvol_rename_nonexistent',
-            804: 'bdev_lvol_rename_EEXIST',
             # SIGTERM
             10000: 'SIGTERM',
         }
@@ -928,78 +925,6 @@ class TestCases(object):
         fail_count += self.c.bdev_malloc_delete(base_name)
         # Expected result:
         # - calls successful, return code = 0
-        # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case803(self):
-        """
-        bdev_lvol_rename_nonexistent
-
-        Negative test case for lvol bdev rename.
-        Check that error is returned when trying to rename not existing lvol bdev.
-        """
-        fail_count = 0
-        # Call bdev_lvol_rename with name pointing to not existing lvol bdev
-        if self.c.bdev_lvol_rename("NOTEXIST", "WHATEVER") == 0:
-            fail_count += 1
-
-        # Expected results:
-        # - bdev_lvol_rename return code != 0
-        # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case804(self):
-        """
-        bdev_lvol_rename_EEXIST
-
-        Negative test case for lvol bdev rename.
-        Check that error is returned when trying to rename to a name which is already
-        used by another lvol bdev.
-        """
-        fail_count = 0
-
-        # Construt malloc bdev
-        base_bdev = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Create lvol store on created malloc bdev
-        lvs_uuid = self.c.bdev_lvol_create_lvstore(base_bdev,
-                                                   self.lvs_name)
-        fail_count += self.c.check_bdev_lvol_get_lvstores(base_bdev,
-                                                          lvs_uuid,
-                                                          self.cluster_size,
-                                                          self.lvs_name)
-        # Construct 2 lvol bdevs on lvol store
-        bdev_size = self.get_lvs_divided_size(2)
-        bdev_uuid_1 = self.c.bdev_lvol_create(lvs_uuid,
-                                              self.lbd_name + "1",
-                                              bdev_size)
-        fail_count += self.c.check_bdev_get_bdevs_methods(bdev_uuid_1,
-                                                          bdev_size)
-        bdev_uuid_2 = self.c.bdev_lvol_create(lvs_uuid,
-                                              self.lbd_name + "2",
-                                              bdev_size)
-        fail_count += self.c.check_bdev_get_bdevs_methods(bdev_uuid_2,
-                                                          bdev_size)
-
-        # Call bdev_lvol_rename on first lvol bdev and try to change its name to
-        # the same name as used by second lvol bdev
-        if self.c.bdev_lvol_rename(self.lbd_name + "1", self.lbd_name + "2") == 0:
-            fail_count += 1
-        # Verify that lvol bdev still have the same names as before
-        fail_count += self.c.check_bdev_get_bdevs_methods(bdev_uuid_1,
-                                                          bdev_size,
-                                                          "/".join([self.lvs_name, self.lbd_name + "1"]))
-
-        fail_count += self.c.bdev_lvol_delete(bdev_uuid_1)
-        fail_count += self.c.bdev_lvol_delete(bdev_uuid_2)
-        fail_count += self.c.bdev_lvol_delete_lvstore(lvs_uuid)
-        fail_count += self.c.bdev_malloc_delete(base_bdev)
-
-        # Expected results:
-        # - bdev_lvol_rename return code != 0; not possible to rename to already
-        #   used name
         # - no other operation fails
         return fail_count
 
