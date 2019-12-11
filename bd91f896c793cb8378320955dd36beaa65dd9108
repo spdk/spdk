@@ -22,6 +22,30 @@
       "revId": "bd91f896c793cb8378320955dd36beaa65dd9108",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96f8a18e_a881f56d",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T15:04:32Z",
+      "side": 1,
+      "message": "Hi Or,\n\nReplying with \"ack\" or \"done\" is done sometimes but not required.  I personally do my own comparison and don\u0027t rely on the \"ack\" or \"done\" and prefer to do a version comparison myself through Gerrit.  (I also don\u0027t typically reply with \"ack\" or \"done\" on comments to my patches.)\n\nFor example, just above the file list, you\u0027ll see Base \u003d\u003e Patchset 24.  You can change Base to Patchset 20.  Then you\u0027ll see what\u0027s changed since Patchset 20, including your comments on that revision.\n\nI personally find this the best way to make sure my comments have been addressed.\n\n-Jim",
+      "parentUuid": "c7560436_dc7b8562",
+      "range": {
+        "startLine": 65,
+        "startChar": 33,
+        "endLine": 65,
+        "endChar": 36
+      },
+      "revId": "bd91f896c793cb8378320955dd36beaa65dd9108",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
