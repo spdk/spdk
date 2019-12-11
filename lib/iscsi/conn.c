@@ -930,6 +930,79 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 	return 0;
 }
 
+static int
+_iscsi_conn_abort_queued_datain_task(struct spdk_iscsi_conn *conn,
+				     struct spdk_iscsi_task *task)
+{
+	struct spdk_iscsi_task *subtask;
+	uint32_t remaining_size;
+
+	if (conn->data_in_cnt >= MAX_LARGE_DATAIN_PER_CONNECTION) {
+		return -1;
+	}
+
+	assert(task->current_datain_offset <= task->scsi.transfer_len);
+	/* Stop split and abort read I/O for remaining data. */
+	if (task->current_datain_offset < task->scsi.transfer_len) {
+		remaining_size = task->scsi.transfer_len - task->current_datain_offset;
+		subtask = spdk_iscsi_task_get(conn, task, spdk_iscsi_task_cpl);
+		assert(subtask != NULL);
+		subtask->scsi.offset = task->current_datain_offset;
+		subtask->scsi.length = remaining_size;
+		spdk_scsi_task_set_data(&subtask->scsi, NULL, 0);
+		task->current_datain_offset += subtask->scsi.length;
+
+		subtask->scsi.transfer_len = subtask->scsi.length;
+		spdk_scsi_task_process_abort(&subtask->scsi);
+		spdk_iscsi_task_cpl(&subtask->scsi);
+	}
+
+	/* Remove the primary task from the list because all subtasks are submitted
+	 *  or aborted.
+	 */
+	assert(task->current_datain_offset == task->scsi.transfer_len);
+	TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
+	return 0;
+}
+
+int
+spdk_iscsi_conn_abort_queued_datain_task(struct spdk_iscsi_conn *conn,
+		uint32_t ref_task_tag)
+{
+	struct spdk_iscsi_task *task;
+
+	TAILQ_FOREACH(task, &conn->queued_datain_tasks, link) {
+		if (task->tag == ref_task_tag) {
+			return _iscsi_conn_abort_queued_datain_task(conn, task);
+		}
+	}
+
+	return 0;
+}
+
+int
+spdk_iscsi_conn_abort_queued_datain_tasks(struct spdk_iscsi_conn *conn,
+		struct spdk_scsi_lun *lun,
+		struct spdk_iscsi_pdu *pdu)
+{
+	struct spdk_iscsi_task *task, *task_tmp;
+	struct spdk_iscsi_pdu *pdu_tmp;
+	int rc;
+
+	TAILQ_FOREACH_SAFE(task, &conn->queued_datain_tasks, link, task_tmp) {
+		pdu_tmp = spdk_iscsi_task_get_pdu(task);
+		if ((lun == NULL || lun == task->scsi.lun) &&
+		    (pdu == NULL || (SN32_LT(pdu_tmp->cmd_sn, pdu->cmd_sn)))) {
+			rc = _iscsi_conn_abort_queued_datain_task(conn, task);
+			if (rc != 0) {
+				return rc;
+			}
+		}
+	}
+
+	return 0;
+}
+
 int
 spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 {
@@ -1015,7 +1088,6 @@ process_completed_read_subtask_list(struct spdk_iscsi_conn *conn,
 			break;
 		}
 	}
-
 	if (primary->bytes_completed == primary->scsi.transfer_len) {
 		spdk_iscsi_task_put(primary);
 	}
