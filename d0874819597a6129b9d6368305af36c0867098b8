@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44fd9faa_79396661",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T15:29:41Z",
+      "side": 1,
+      "message": "writev -\u003e sendmsg",
+      "revId": "d0874819597a6129b9d6368305af36c0867098b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
