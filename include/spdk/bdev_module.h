@@ -423,6 +423,9 @@ struct spdk_bdev {
 		/** histogram enabled on this bdev */
 		bool	histogram_enabled;
 		bool	histogram_in_progress;
+
+		/** Currently locked ranges for this bdev.  Used to populate new channels. */
+		TAILQ_HEAD(, lba_range) locked_ranges;
 	} internal;
 };
 
