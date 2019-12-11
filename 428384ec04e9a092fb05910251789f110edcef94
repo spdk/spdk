@@ -16,6 +16,24 @@
       "revId": "428384ec04e9a092fb05910251789f110edcef94",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5acbcb77_d31e917f",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-11T14:00:21Z",
+      "side": 1,
+      "message": "The code is right, but these variable names are pretty terrible, especially when there can be multiple bdevs on a single namespace. The chunks on an Open Channel SSDs are located in the following way (N equals geometry.num_chk):\n\n   pu0       pu1       pu2\n[  chk0  ][ chkN+1 ][ chk2N+1 ]\n[  chk1  ][ chkN+2 ][ chk2N+2 ]\n             ...\n[  chkN  ][ chk2N  ][ chk3N   ]\n\nchunk_offset describes the offset within this table. So to read chunks from a parallel unit 2 we need to start reading them from offset \u003d 2N. This is why bdev B has a higher chunk_offset than bdev A.\n\nAs for num_total_chunks, it doesn\u0027t describe the total number of chunks to be read, but the offset of the last chunk that needs to be read. So, since both bdevs start reading from a different chunk_offset, both of them are actually reading the same number of chunks (bdev-\u003eblockcnt / bdev-\u003ezonesize), but their num_total_chunks are different. So, in the example above, if we wanted to read parallel unit pu2 we would set chunk_offset \u003d 2N and num_total_chunks \u003d 3N.\n\nAnyway, I\u0027ll rename num_total_chunks to end_chunk_offset, so that the name reflects how this variable is actually used.",
+      "parentUuid": "bd501fcc_7bcd1618",
+      "revId": "428384ec04e9a092fb05910251789f110edcef94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
