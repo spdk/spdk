@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e62bf408_7e90c6ef",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-11T08:14:53Z",
+      "side": 1,
+      "message": "nice to name it to g_init_thread.",
+      "revId": "bdb09bca749928d97ca17f029c7c77b40254bcb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
