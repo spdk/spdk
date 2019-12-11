@@ -74,6 +74,8 @@ struct bdev_ocssd_io {
 	};
 };
 
+struct ocssd_io_channel {};
+
 struct ocssd_bdev {
 	struct nvme_bdev	nvme_bdev;
 	struct bdev_ocssd_zone	*zones;
@@ -1052,6 +1054,23 @@ bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *ns)
 	free(ns->type_ctx);
 	ns->populated = false;
 	ns->type_ctx = NULL;
+}
+
+int
+bdev_ocssd_create_io_channel(struct nvme_io_channel *ioch)
+{
+	ioch->ocssd_ioch = calloc(1, sizeof(*ioch->ocssd_ioch));
+	if (ioch->ocssd_ioch == NULL) {
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+void
+bdev_ocssd_destroy_io_channel(struct nvme_io_channel *ioch)
+{
+	free(ioch->ocssd_ioch);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev_ocssd", SPDK_LOG_BDEV_OCSSD)
