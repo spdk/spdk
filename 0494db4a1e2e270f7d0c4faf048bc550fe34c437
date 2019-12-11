@@ -16,6 +16,24 @@
       "revId": "0494db4a1e2e270f7d0c4faf048bc550fe34c437",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f795dca1_e3c2cc8f",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3571,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-11T06:46:10Z",
+      "side": 1,
+      "message": "Thanks for your comment. I forgot recursive case. As you commented, we have to separately for current_datain_offset \u003c transfer_len, and only do the abort in that case. I updated the patch.",
+      "parentUuid": "8b65c12d_3e7f5c42",
+      "revId": "0494db4a1e2e270f7d0c4faf048bc550fe34c437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
