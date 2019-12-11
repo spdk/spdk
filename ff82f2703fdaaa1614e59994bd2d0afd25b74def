@@ -45,6 +45,30 @@
       "revId": "ff82f2703fdaaa1614e59994bd2d0afd25b74def",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f1b1eaa_29eb93b5",
+        "filename": "module/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-12-11T10:08:15Z",
+      "side": 1,
+      "message": "Please ignore this comment, now I see that you log the file name in RPC response",
+      "parentUuid": "b058c4aa_89b24dd3",
+      "range": {
+        "startLine": 253,
+        "startChar": 2,
+        "endLine": 253,
+        "endChar": 28
+      },
+      "revId": "ff82f2703fdaaa1614e59994bd2d0afd25b74def",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
