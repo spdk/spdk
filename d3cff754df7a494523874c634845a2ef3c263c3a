@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "e8e4fc17_a1594af6",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1245,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T16:15:27Z",
+      "side": 1,
+      "message": "A nit, but we\u0027re not dumping the memory to the given file, but we\u0027re dumping stats about the allocated memory to the file.  I really don\u0027t think anyone would really think we\u0027d dump all of the memory contents to the file but better to be clear.  :-)",
+      "revId": "d3cff754df7a494523874c634845a2ef3c263c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "58434494_2dda8e87",
         "filename": "include/spdk/env.h",
         "patchSetId": 1
@@ -13,6 +30,30 @@
       "writtenOn": "2019-12-11T14:09:37Z",
       "side": 1,
       "message": "Just a nit - maybe spdk_env_dump_memory will look better? There are many spdk_env_* functions",
+      "range": {
+        "startLine": 1249,
+        "startChar": 5,
+        "endLine": 1249,
+        "endChar": 25
+      },
+      "revId": "d3cff754df7a494523874c634845a2ef3c263c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b12a6293_7ffcdd80",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1249,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T16:15:27Z",
+      "side": 1,
+      "message": "agreed, or spdk_mem_dump_stats (to keep with the spdk_mem_* format in this file)",
+      "parentUuid": "58434494_2dda8e87",
       "range": {
         "startLine": 1249,
         "startChar": 5,
