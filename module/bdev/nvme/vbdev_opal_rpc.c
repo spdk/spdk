@@ -285,7 +285,7 @@ spdk_rpc_bdev_opal_create(struct spdk_jsonrpc_request *request,
 	}
 
 	rc = spdk_vbdev_opal_create(req.nvme_ctrlr_name, req.nsid, req.locking_range_id, req.range_start,
-				    req.range_length, req.password);
+				    req.range_length, req.password, true);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Failed to create opal vbdev from '%s': %s",

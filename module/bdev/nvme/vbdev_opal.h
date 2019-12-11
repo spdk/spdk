@@ -43,7 +43,7 @@ int spdk_vbdev_opal_discovery(const char *nvme_ctrlr_name, enum spdk_opal_dev_st
 int spdk_vbdev_opal_init(const char *nvme_ctrlr_name, char *password);
 
 int spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_range_id,
-			   uint64_t range_start, uint64_t range_length, const char *password);
+			   uint64_t range_start, uint64_t range_length, const char *password, bool new_range);
 
 struct spdk_opal_locking_range_info *spdk_vbdev_opal_get_info_from_bdev(const char *opal_bdev_name,
 		const char *password);
