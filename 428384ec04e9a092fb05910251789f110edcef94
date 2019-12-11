@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd501fcc_7bcd1618",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T04:20:36Z",
+      "side": 1,
+      "message": "Help me understand this math.  :-)\n\nShouldn\u0027t the num_total_chunks take the num_parallel_units into account?  Using the chunk_offset alone doesn\u0027t seem right.  If we had bdev A using PU 0-3 and bdev B using 4-7, they should have the same num_total_chunks?  I would think bdev-\u003eblockcnt and bdev-\u003ezone_size would be the same for each.  But bdev B would have a higher chunk_offset and would have a bigger num_total_chunks than it really has.",
+      "revId": "428384ec04e9a092fb05910251789f110edcef94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
