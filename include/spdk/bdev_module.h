@@ -244,6 +244,7 @@ struct spdk_bdev_alias {
 
 typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
 typedef STAILQ_HEAD(, spdk_bdev_io) bdev_io_stailq_t;
+typedef TAILQ_HEAD(, lba_range) lba_range_tailq_t;
 
 struct spdk_bdev {
 	/** User context passed in by the backend */
@@ -429,6 +430,9 @@ struct spdk_bdev {
 		/** histogram enabled on this bdev */
 		bool	histogram_enabled;
 		bool	histogram_in_progress;
+
+		/** Currently locked ranges for this bdev.  Used to populate new channels. */
+		lba_range_tailq_t locked_ranges;
 	} internal;
 };
 
