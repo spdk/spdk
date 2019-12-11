@@ -74,6 +74,10 @@ struct bdev_ocssd_io {
 	};
 };
 
+struct bdev_ocssd_io_channel {
+	struct nvme_io_channel *nvme_ioch;
+};
+
 struct ocssd_bdev {
 	struct nvme_bdev	nvme_bdev;
 	struct bdev_ocssd_zone	*zones;
@@ -84,7 +88,9 @@ struct bdev_ocssd_ns {
 	struct bdev_ocssd_lba_offsets	lba_offsets;
 };
 
-struct ocssd_bdev_ctrlr {};
+struct ocssd_bdev_ctrlr {
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+};
 
 static struct bdev_ocssd_ns *
 bdev_ocssd_get_ns_from_nvme(struct nvme_bdev_ns *nvme_ns)
@@ -324,7 +330,8 @@ bdev_ocssd_read(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
 	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct nvme_io_channel *nvme_ioch = spdk_io_channel_get_ctx(ioch);
+	struct bdev_ocssd_io_channel *ocssd_ioch = spdk_io_channel_get_ctx(ioch);
+	struct nvme_io_channel *nvme_ioch = ocssd_ioch->nvme_ioch;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	const size_t zone_size = nvme_bdev->disk.zone_size;
 	uint64_t lba;
@@ -365,7 +372,8 @@ bdev_ocssd_write(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
 	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct nvme_io_channel *nvme_ioch = spdk_io_channel_get_ctx(ioch);
+	struct bdev_ocssd_io_channel *ocssd_ioch = spdk_io_channel_get_ctx(ioch);
+	struct nvme_io_channel *nvme_ioch = ocssd_ioch->nvme_ioch;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	const size_t zone_size = nvme_bdev->disk.zone_size;
 	uint64_t lba;
@@ -433,7 +441,8 @@ bdev_ocssd_reset_zone(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io
 {
 	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct nvme_io_channel *nvme_ioch = spdk_io_channel_get_ctx(ioch);
+	struct bdev_ocssd_io_channel *ocssd_ioch = spdk_io_channel_get_ctx(ioch);
+	struct nvme_io_channel *nvme_ioch = ocssd_ioch->nvme_ioch;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	uint64_t offset, zone_size = nvme_bdev->disk.zone_size;
 	int rc;
@@ -639,8 +648,9 @@ static struct spdk_io_channel *
 bdev_ocssd_get_io_channel(void *ctx)
 {
 	struct ocssd_bdev *ocssd_bdev = ctx;
+	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
 
-	return spdk_get_io_channel(ocssd_bdev->nvme_bdev.nvme_bdev_ctrlr);
+	return spdk_get_io_channel(nvme_bdev->nvme_bdev_ctrlr->ocssd_ctrlr);
 }
 
 static struct spdk_bdev_fn_table ocssdlib_fn_table = {
@@ -1056,6 +1066,34 @@ bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *ns)
 	ns->type_ctx = NULL;
 }
 
+static int
+bdev_ocssd_create_ioch_cb(void *io_device, void *ctx_buf)
+{
+	struct ocssd_bdev_ctrlr *ocssd_ctrlr = io_device;
+	struct bdev_ocssd_io_channel *ocssd_ioch = ctx_buf;
+	struct spdk_io_channel *ioch;
+
+	ioch = spdk_get_io_channel(ocssd_ctrlr->nvme_bdev_ctrlr);
+	if (ioch == NULL) {
+		SPDK_ERRLOG("Failed to get NVMe controller's IO channel\n");
+		return -ENOMEM;
+	}
+
+	ocssd_ioch->nvme_ioch = spdk_io_channel_get_ctx(ioch);
+
+	return 0;
+}
+
+static void
+bdev_ocssd_destroy_ioch_cb(void *io_device, void *ctx_buf)
+{
+	struct bdev_ocssd_io_channel *ocssd_ioch = ctx_buf;
+	struct spdk_io_channel *ioch;
+
+	ioch = spdk_io_channel_from_ctx(ocssd_ioch->nvme_ioch);
+	spdk_put_io_channel(ioch);
+}
+
 int
 bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
@@ -1066,7 +1104,11 @@ bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		return -ENOMEM;
 	}
 
+	spdk_io_device_register(ocssd_ctrlr, bdev_ocssd_create_ioch_cb, bdev_ocssd_destroy_ioch_cb,
+				sizeof(struct bdev_ocssd_io_channel), nvme_bdev_ctrlr->name);
+
 	nvme_bdev_ctrlr->ocssd_ctrlr = ocssd_ctrlr;
+	ocssd_ctrlr->nvme_bdev_ctrlr = nvme_bdev_ctrlr;
 
 	return 0;
 }
@@ -1074,6 +1116,7 @@ bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 void
 bdev_ocssd_fini_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
+	spdk_io_device_unregister(nvme_bdev_ctrlr->ocssd_ctrlr, NULL);
 	free(nvme_bdev_ctrlr->ocssd_ctrlr);
 	nvme_bdev_ctrlr->ocssd_ctrlr = NULL;
 }
