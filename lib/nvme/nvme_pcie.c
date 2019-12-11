@@ -1831,6 +1831,7 @@ nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struc
 
 	length = req->payload_size;
 	virt_addr = req->payload.contig_or_cb_arg + req->payload_offset;
+	mapping_length = length;
 
 	while (length > 0) {
 		if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
