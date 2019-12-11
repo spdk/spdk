@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "f6f36aae_9ca0f0d3",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-11T07:05:50Z",
+      "side": 1,
+      "message": "let\u0027s try not to use rte_vhsot_* structures and APIs directly here, wrapper them in vhost.c first.",
+      "range": {
+        "startLine": 426,
+        "startChar": 1,
+        "endLine": 427,
+        "endChar": 73
+      },
+      "revId": "a8f3d852e0044bb3086e9d242d0c4045361a768d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2ca8b13a_35cb13e7",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 2
