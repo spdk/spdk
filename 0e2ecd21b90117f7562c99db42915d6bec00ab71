@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86a60160_5abf74f9",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 1120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T04:28:17Z",
+      "side": 1,
+      "message": "available",
+      "revId": "0e2ecd21b90117f7562c99db42915d6bec00ab71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50b36d3c_e61e616e",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T04:28:17Z",
+      "side": 1,
+      "message": "Could you describe the use case for needing two different functions?  Just wondering if spdk_bdev_notify_media_management could take the array of events.",
+      "revId": "0e2ecd21b90117f7562c99db42915d6bec00ab71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92a851b6_d74acc81",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 4553,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T04:28:17Z",
+      "side": 1,
+      "message": "A descriptor can be opened as read-only, and later upgraded via spdk_bdev_module_claim_bdev.  So I think you need to do this in all cases - not just when it\u0027s opened with write access.",
+      "revId": "0e2ecd21b90117f7562c99db42915d6bec00ab71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
