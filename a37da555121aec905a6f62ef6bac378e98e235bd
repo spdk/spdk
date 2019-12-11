@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "615e1a2e_5c25aa3c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2734,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T01:06:55Z",
+      "side": 1,
+      "message": "do we also need to set blob-\u003eclear_method here?\n\nmaybe I\u0027m missing it, but I don\u0027t see it - in the current code, blob-\u003eclear_method gets set to opts-\u003eclear_method only in the _spdk_bs_open_blob path",
+      "revId": "a37da555121aec905a6f62ef6bac378e98e235bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f64b63a0_20985f14",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 8
