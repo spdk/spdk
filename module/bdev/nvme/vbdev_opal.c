@@ -491,7 +491,7 @@ vbdev_opal_free_bdev(struct opal_vbdev *opal_bdev)
 
 int
 spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_range_id,
-		       uint64_t range_start, uint64_t range_length, const char *password)
+		       uint64_t range_start, uint64_t range_length, const char *password, bool new_range)
 {
 	int rc;
 	char *opal_vbdev_name;
@@ -628,12 +628,6 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 	}
 
 	opal_bdev->name = opal_vbdev_name;
-	rc = spdk_opal_cmd_setup_locking_range(opal_bdev->ctrlr->opal_dev, OPAL_ADMIN1,
-					       cfg->locking_range_id, cfg->range_start, cfg->range_length, password);
-	if (rc) {
-		SPDK_ERRLOG("Error construct %s\n", opal_vbdev_name);
-		goto err;
-	}
 
 	rc = spdk_bdev_part_construct(part_bdev, cfg->opal_base->part_base, opal_vbdev_name,
 				      cfg->range_start, cfg->range_length, "Opal locking range");
@@ -642,13 +636,22 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 		goto err;
 	}
 
-	/* lock this bdev initially */
-	rc = spdk_opal_cmd_lock_unlock(opal_bdev->ctrlr->opal_dev, OPAL_ADMIN1, OPAL_RWLOCK,
-				       locking_range_id,
-				       password);
-	if (rc) {
-		SPDK_ERRLOG("Error lock %s\n", opal_vbdev_name);
-		goto err;
+	if (new_range) { /* newly created locking range */
+		rc = spdk_opal_cmd_setup_locking_range(opal_bdev->ctrlr->opal_dev, OPAL_ADMIN1,
+						       cfg->locking_range_id, cfg->range_start, cfg->range_length, password);
+		if (rc) {
+			SPDK_ERRLOG("Error construct %s\n", opal_vbdev_name);
+			goto err;
+		}
+
+		/* lock this bdev initially */
+		rc = spdk_opal_cmd_lock_unlock(opal_bdev->ctrlr->opal_dev, OPAL_ADMIN1, OPAL_RWLOCK,
+					       locking_range_id,
+					       password);
+		if (rc) {
+			SPDK_ERRLOG("Error lock %s\n", opal_vbdev_name);
+			goto err;
+		}
 	}
 
 	opal_bdev->bdev_part = part_bdev;
