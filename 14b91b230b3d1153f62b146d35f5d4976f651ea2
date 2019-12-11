@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8bc6d847_4a282f1b",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1099,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T04:36:13Z",
+      "side": 1,
+      "message": "unrelated whitespace changes (including newline below)",
+      "revId": "14b91b230b3d1153f62b146d35f5d4976f651ea2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
