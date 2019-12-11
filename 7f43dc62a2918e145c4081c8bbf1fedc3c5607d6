@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e426aef_b5acba8f",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1065,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T16:40:33Z",
+      "side": 1,
+      "message": "I think this is always going to return NULL since sizeof() is 0.  But I\u0027m fine with that since you populate the struct in the next patches, and this code path isn\u0027t executed yet in the test pool.",
+      "revId": "7f43dc62a2918e145c4081c8bbf1fedc3c5607d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
