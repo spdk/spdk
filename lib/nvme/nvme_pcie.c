@@ -1787,6 +1787,15 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 	return 0;
 }
 
+static int
+nvme_pcie_qpair_build_request_invalid(struct spdk_nvme_qpair *qpair,
+				      struct nvme_request *req, struct nvme_tracker *tr)
+{
+	assert(0);
+	nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+	return -EINVAL;
+}
+
 /**
  * Build PRP list describing physically contiguous payload buffer.
  */
@@ -2023,6 +2032,23 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 	return 0;
 }
 
+typedef int(*build_req_fn)(struct spdk_nvme_qpair *, struct nvme_request *, struct nvme_tracker *);
+
+static build_req_fn const g_nvme_pcie_build_req_table[][2] = {
+	[NVME_PAYLOAD_TYPE_INVALID] = {
+		nvme_pcie_qpair_build_request_invalid,			/* PRP */
+		nvme_pcie_qpair_build_request_invalid			/* SGL */
+	},
+	[NVME_PAYLOAD_TYPE_CONTIG] = {
+		nvme_pcie_qpair_build_contig_request,			/* PRP */
+		nvme_pcie_qpair_build_contig_hw_sgl_request		/* SGL */
+	},
+	[NVME_PAYLOAD_TYPE_SGL] = {
+		nvme_pcie_qpair_build_prps_sgl_request,			/* PRP */
+		nvme_pcie_qpair_build_hw_sgl_request			/* SGL */
+	}
+};
+
 int
 nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
@@ -2031,6 +2057,8 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	void			*md_payload;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
+	enum nvme_payload_type	payload_type;
+	bool			sgl_supported;
 
 	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
@@ -2064,23 +2092,11 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	if (req->payload_size == 0) {
 		/* Null payload - leave PRP fields untouched */
 		rc = 0;
-	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
-		if ((ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) != 0 &&
-		    !nvme_qpair_is_admin_queue(qpair)) {
-			rc = nvme_pcie_qpair_build_contig_hw_sgl_request(qpair, req, tr);
-		} else {
-			rc = nvme_pcie_qpair_build_contig_request(qpair, req, tr);
-		}
-	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL) {
-		if (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) {
-			rc = nvme_pcie_qpair_build_hw_sgl_request(qpair, req, tr);
-		} else {
-			rc = nvme_pcie_qpair_build_prps_sgl_request(qpair, req, tr);
-		}
 	} else {
-		assert(0);
-		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-		rc = -EINVAL;
+		payload_type = nvme_payload_type(&req->payload);
+		sgl_supported = (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) != 0 &&
+				!nvme_qpair_is_admin_queue(qpair);
+		rc = g_nvme_pcie_build_req_table[payload_type][sgl_supported](qpair, req, tr);
 	}
 
 	if (rc < 0) {
