@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2254054a_3c60b0ef",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1243,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-11T19:50:49Z",
+      "side": 1,
+      "message": "I\u0027ve been thinking about our slack conversation this morning. I think you\u0027re right. Keeping this in env_dpdk.h will make the use cases and scope of the resulting cli more clear. And putting the RPC in its own file makes more sense from an architecture perspective.",
+      "parentUuid": "ff55a220_9efbb5d7",
+      "revId": "d3cff754df7a494523874c634845a2ef3c263c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e8e4fc17_a1594af6",
         "filename": "include/spdk/env.h",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "d3cff754df7a494523874c634845a2ef3c263c3a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e92fe7b_5ce00c18",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1245,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-11T19:50:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e8e4fc17_a1594af6",
+      "revId": "d3cff754df7a494523874c634845a2ef3c263c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -80,6 +116,30 @@
       "revId": "d3cff754df7a494523874c634845a2ef3c263c3a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd4a5e8a_cd489925",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1249,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-11T19:50:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b12a6293_7ffcdd80",
+      "range": {
+        "startLine": 1249,
+        "startChar": 5,
+        "endLine": 1249,
+        "endChar": 25
+      },
+      "revId": "d3cff754df7a494523874c634845a2ef3c263c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
