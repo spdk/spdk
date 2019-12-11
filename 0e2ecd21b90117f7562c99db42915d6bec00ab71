@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "05563c3c_29126b56",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T04:40:11Z",
+      "side": 1,
+      "message": "Never mind - I see how you this in the next patch.  Makes sense to have two different functions.",
+      "parentUuid": "50b36d3c_e61e616e",
+      "revId": "0e2ecd21b90117f7562c99db42915d6bec00ab71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "92a851b6_d74acc81",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 18
