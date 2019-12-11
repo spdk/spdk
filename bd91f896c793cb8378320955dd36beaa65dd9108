@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7560436_dc7b8562",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-12-11T13:18:38Z",
+      "side": 1,
+      "message": "cool, I see that you have addressed [1] my comments on V20, but you didn\u0027t comment back, which makes it hard to track the review progress? can you please comment back (e.g \"ack\" \"done\" etc) on review feedback?)\n\n\n[1] https://review.gerrithub.io/c/spdk/spdk/+/470523/20/include/spdk/sock.h#62",
+      "range": {
+        "startLine": 65,
+        "startChar": 33,
+        "endLine": 65,
+        "endChar": 36
+      },
+      "revId": "bd91f896c793cb8378320955dd36beaa65dd9108",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
