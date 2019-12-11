@@ -70,6 +70,24 @@
       "revId": "dec6f2609a8cedd91bd7b8d21c40eaec1d31d013",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0eacf1e_0970385e",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T19:42:22Z",
+      "side": 1,
+      "message": "Changing the default increases the memory usage for all SSDs - not just the ones affected by this bug.  It\u0027s a lot of memory.  Not just the bigger SQ and CQ but also the extra nvme_tracker objects which are 4KiB each.  So that\u0027s (1024 - 256) * (64 + 16 + 4096) \u003d 3MiB per queue pair.\n\nWe really don\u0027t want to change the io_queue_requests.  We only want the bigger queue size (which the HW needs) without allocating extra trackers that are 4KiB each.\n\nHow about I change this such that we only change it if io_queue_size !\u003d DEFAULT_IO_QUEUE_SIZE.  Then if user changes the opts-\u003eio_queue_size, we will keep its value.  If they don\u0027t change it, we\u0027ll bump it up to 1024.",
+      "parentUuid": "c4e7cb19_268d1a45",
+      "revId": "dec6f2609a8cedd91bd7b8d21c40eaec1d31d013",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
