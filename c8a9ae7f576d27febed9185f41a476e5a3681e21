@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33bcd6e9_b518a252",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1115,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T19:06:45Z",
+      "side": 1,
+      "message": "I\u0027d suggest not automatically registering the poller here.  Can you instead only register it when the first pending request is added?  And unregister it when the poller is going to return with an empty TAILQ.",
+      "revId": "c8a9ae7f576d27febed9185f41a476e5a3681e21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
