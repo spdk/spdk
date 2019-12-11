@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82d32277_4b5419f1",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1548,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T19:24:11Z",
+      "side": 1,
+      "message": "30 seconds seems like a long time.  Would 1 second be better?  Or even 5 seconds.  I\u0027m glad we\u0027re adding the timeout here but if this doesn\u0027t respond immediately, this thread is completely blocked until this loop exits.  I\u0027d prefer we fail more quickly and respond with an error.",
+      "revId": "83af80f8c8f43a3a7942897ac9a6a03bf51b1855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
