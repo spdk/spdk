@@ -1119,6 +1119,10 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
 	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
 		nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, NULL);
+	} else if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_VENDOR) &&
+		   (event.bits.log_page_identifier == SPDK_OCSSD_LOG_CHUNK_NOTIFICATION) &&
+		   spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		bdev_ocssd_handle_chunk_notification(nvme_bdev_ctrlr);
 	}
 }
 
@@ -1130,6 +1134,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	uint32_t i;
+	int rc;
 
 	nvme_bdev_ctrlr = calloc(1, sizeof(*nvme_bdev_ctrlr));
 	if (nvme_bdev_ctrlr == NULL) {
@@ -1167,6 +1172,18 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		free(nvme_bdev_ctrlr);
 		return -ENOMEM;
 	}
+
+	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		rc = bdev_ocssd_init_ctrlr(nvme_bdev_ctrlr);
+		if (spdk_unlikely(rc != 0)) {
+			SPDK_ERRLOG("Unable to initialize OCSSD controller\n");
+			free(nvme_bdev_ctrlr->name);
+			free(nvme_bdev_ctrlr->namespaces);
+			free(nvme_bdev_ctrlr);
+			return rc;
+		}
+	}
+
 	nvme_bdev_ctrlr->prchk_flags = prchk_flags;
 
 	spdk_io_device_register(nvme_bdev_ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,

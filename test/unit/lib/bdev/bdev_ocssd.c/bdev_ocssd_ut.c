@@ -55,6 +55,10 @@ DEFINE_STUB_V(spdk_bdev_io_complete_nvme_status, (struct spdk_bdev_io *bdev_io, 
 		int sct, int sc));
 DEFINE_STUB(spdk_bdev_io_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_io *bdev_io),
 	    NULL);
+DEFINE_STUB(spdk_bdev_push_media_events, int, (struct spdk_bdev *bdev,
+		const struct spdk_bdev_media_event *events,
+		size_t num_events), 0);
+DEFINE_STUB_V(spdk_bdev_notify_media_management, (struct spdk_bdev *bdev));
 
 struct nvme_request {
 	spdk_nvme_cmd_cb cb_fn;
