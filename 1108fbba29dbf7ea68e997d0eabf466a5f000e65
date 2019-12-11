@@ -22,6 +22,30 @@
       "revId": "1108fbba29dbf7ea68e997d0eabf466a5f000e65",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "209ebfef_e8ed0304",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-12-11T12:09:42Z",
+      "side": 1,
+      "message": "You think about something like this ?",
+      "parentUuid": "1dce142e_509b9d83",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 6
+      },
+      "revId": "1108fbba29dbf7ea68e997d0eabf466a5f000e65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
