@@ -88,6 +88,24 @@
       "revId": "dec6f2609a8cedd91bd7b8d21c40eaec1d31d013",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a02f2546_c2e434a1",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T19:52:42Z",
+      "side": 1,
+      "message": "I think I misread your comment.  You meant that with this quirk, io_queue_requests will be smaller than io_queue_size.  I think that\u0027s fine.  We don\u0027t want to allocate too many nvme_tracker objects.  It\u0027s a lot of extra memory.\n\nI\u0027m still going to make the change mentioned above.",
+      "parentUuid": "b0eacf1e_0970385e",
+      "revId": "dec6f2609a8cedd91bd7b8d21c40eaec1d31d013",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
