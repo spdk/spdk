@@ -241,7 +241,8 @@ fi
 
 timing_enter nbd_gpt
 if grep -q Nvme0 $testdir/bdev.conf; then
-	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir
+	using_gpt=true
+	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir || using_gpt=false
 fi
 timing_exit nbd_gpt
 
@@ -264,7 +265,12 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	if grep -q Nvme0 $testdir/bdev.conf; then
-		run_test "case" "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Nvme0n1p1
+		if using_gpt; then
+			bdev="Nvme0n1p1"
+		else
+			bdev="Nvme0n1"
+		fi
+		run_test "case" "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b $bdev
 	fi
 fi
 
@@ -278,8 +284,10 @@ else
 fi
 
 # Run bdevperf with gpt
-run_test "case" "bdev_gpt_verify" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
-run_test "case" "bdev_gpt_write_zeroes" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
+if using_gpt; then
+	run_test "case" "bdev_gpt_verify" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
+	run_test "case" "bdev_gpt_write_zeroes" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
+fi
 run_test "suite" "bdev_qos" qos_test_suite
 
 # Temporarily disabled - infinite loop
@@ -291,7 +299,7 @@ run_test "suite" "bdev_qos" qos_test_suite
 # Bdev and configuration cleanup below this line
 #-----------------------------------------------------
 if grep -q Nvme0 $testdir/bdev.conf; then
-	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
+	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset || true
 fi
 
 rm -f $testdir/bdev_gpt.conf
