@@ -262,12 +262,7 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 # End bdev configuration
 #-----------------------------------------------------
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	if grep -q Nvme0 $testdir/bdev.conf; then
-		run_test "case" "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Nvme0n1p1
-	fi
-fi
-
+run_test "case" "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Malloc0
 run_test "case" "bdev_bounds" bdev_bounds
 run_test "case" "bdev_nbd" nbd_function_test $testdir/bdev.conf "$bdevs_name"
 if [ -d /usr/src/fio ]; then
@@ -291,7 +286,7 @@ run_test "suite" "bdev_qos" qos_test_suite
 # Bdev and configuration cleanup below this line
 #-----------------------------------------------------
 if grep -q Nvme0 $testdir/bdev.conf; then
-	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
+	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset || true
 fi
 
 rm -f $testdir/bdev_gpt.conf
