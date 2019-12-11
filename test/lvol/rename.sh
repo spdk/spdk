@@ -192,6 +192,43 @@ function test_rename_lvs_negative() {
 	check_leftover_devices
 }
 
+# Negative test case for lvol bdev rename.
+# Check that error is returned when trying to rename not existing lvol bdev
+# Check that error is returned when trying to rename to a name which is already
+# used by another lvol bdev.
+function test_lvol_rename_negative() {
+	# Call bdev_lvol_rename with name pointing to not existing lvol bdev
+	rpc_cmd bdev_lvol_rename NOTEXIST WHATEVER && false
+
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Calculate lvol bdev size
+	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 2 )) )
+	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+
+	# Create two lvol bdevs on top of previously created lvol store
+	lvol_uuid1=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test1 "$lvol_size_mb")
+	lvol_uuid2=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test2 "$lvol_size_mb")
+
+	# Call bdev_lvol_rename on first lvol bdev and try to change its name to
+	# the same name as used by second lvol bdev
+	rpc_cmd bdev_lvol_rename lvol_test1 lvol_test2 && false
+
+	# Verify that lvol bdev still have the same names as before
+	lvol=$(rpc_cmd bdev_get_bdevs -b $lvol_uuid1)
+	[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid" ]
+	[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
+	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+	[ "$(jq -r '.[0].aliases|sort' <<< "$lvol")" = "$(jq '.|sort' <<< '["lvs_test/lvol_test1"]')" ]
+
+	rpc_cmd bdev_lvol_delete lvs_test/lvol_test1
+	rpc_cmd bdev_lvol_delete lvs_test/lvol_test2
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -199,6 +236,7 @@ waitforlisten $spdk_pid
 
 run_test "test_rename_positive" test_rename_positive
 run_test "test_rename_lvs_negative" test_rename_lvs_negative
+run_test "test_lvol_rename_negative" test_lvol_rename_negative
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
