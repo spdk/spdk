@@ -128,6 +128,8 @@ struct nvme_async_probe_ctx {
 	uint32_t populates_in_progress;
 };
 
+struct ocssd_io_channel;
+
 struct nvme_io_channel {
 	struct spdk_nvme_qpair		*qpair;
 	struct spdk_poller		*poller;
@@ -137,6 +139,8 @@ struct nvme_io_channel {
 	uint64_t			spin_ticks;
 	uint64_t			start_ticks;
 	uint64_t			end_ticks;
+
+	struct ocssd_io_channel		*ocssd_ioch;
 };
 
 void nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,

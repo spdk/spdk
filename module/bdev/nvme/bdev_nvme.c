@@ -628,6 +628,13 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
+	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		if (bdev_ocssd_create_io_channel(ch)) {
+			spdk_nvme_ctrlr_free_io_qpair(ch->qpair);
+			return -1;
+		}
+	}
+
 	ch->poller = spdk_poller_register(bdev_nvme_poll, ch, g_opts.nvme_ioq_poll_period_us);
 
 	TAILQ_INIT(&ch->pending_resets);
@@ -637,7 +644,12 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 static void
 bdev_nvme_destroy_cb(void *io_device, void *ctx_buf)
 {
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = io_device;
 	struct nvme_io_channel *ch = ctx_buf;
+
+	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		bdev_ocssd_destroy_io_channel(ch);
+	}
 
 	spdk_nvme_ctrlr_free_io_qpair(ch->qpair);
 	spdk_poller_unregister(&ch->poller);
