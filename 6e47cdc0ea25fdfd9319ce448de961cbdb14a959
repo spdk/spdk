@@ -16,6 +16,24 @@
       "revId": "6e47cdc0ea25fdfd9319ce448de961cbdb14a959",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b4e2c5f_4191af05",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-11T14:17:02Z",
+      "side": 1,
+      "message": "Yes, I was also thinking about this being pretty inefficient. But Open Channel devices have multiple parallel units, so they basically require the user to write to multiple zones at the same time. Therefore this path should be very rarely taken - the user is supposed to keep the per-chunk queue depth \u003d 1 (the FTL already waits until a zone is not busy to write to it). This is why I initially decided that this simple mechanism should be sufficient.\n\nBut after reading your comment and looking at the code again, it doesn\u0027t seem like that much effort to implement it properly. So I\u0027ve reorganized the code a bit and added a few patches to keep the requests that needs to be retried on a per-IO channel queues.",
+      "parentUuid": "69222405_8bb0db7b",
+      "revId": "6e47cdc0ea25fdfd9319ce448de961cbdb14a959",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
