@@ -2364,6 +2364,100 @@ bdev_open_ext(void)
 	poll_threads();
 }
 
+static void
+lba_range_overlap(void)
+{
+	struct lba_range r1, r2;
+
+	r1.offset = 100;
+	r1.length = 50;
+
+	r2.offset = 0;
+	r2.length = 1;
+	CU_ASSERT(!bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 0;
+	r2.length = 100;
+	CU_ASSERT(!bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 0;
+	r2.length = 110;
+	CU_ASSERT(bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 100;
+	r2.length = 10;
+	CU_ASSERT(bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 110;
+	r2.length = 20;
+	CU_ASSERT(bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 140;
+	r2.length = 150;
+	CU_ASSERT(bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 130;
+	r2.length = 200;
+	CU_ASSERT(bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 150;
+	r2.length = 100;
+	CU_ASSERT(!bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 110;
+	r2.length = 0;
+	CU_ASSERT(!bdev_lba_range_overlapped(&r1, &r2));
+}
+
+static void
+lock_lba_range_done(void *ctx, int status)
+{
+}
+
+static void
+lock_lba_range_check_pending(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *channel;
+	struct lba_range *range;
+	int rc;
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+	channel = spdk_io_channel_get_ctx(io_ch);
+
+	rc = bdev_lock_lba_range(desc, io_ch, 20, 10, lock_lba_range_done, NULL);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	range = TAILQ_FIRST(&channel->locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 20);
+	CU_ASSERT(range->length == 10);
+	CU_ASSERT(range->owner_ch == channel);
+
+	rc = bdev_unlock_lba_range(desc, io_ch, 20, 10, lock_lba_range_done, NULL);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(TAILQ_EMPTY(&channel->locked_ranges));
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2398,7 +2492,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_write_zeroes", bdev_write_zeroes) == NULL ||
 		CU_add_test(suite, "bdev_open_while_hotremove", bdev_open_while_hotremove) == NULL ||
 		CU_add_test(suite, "bdev_close_while_hotremove", bdev_close_while_hotremove) == NULL ||
-		CU_add_test(suite, "bdev_open_ext", bdev_open_ext) == NULL
+		CU_add_test(suite, "bdev_open_ext", bdev_open_ext) == NULL ||
+		CU_add_test(suite, "lba_range_overlap", lba_range_overlap) == NULL ||
+		CU_add_test(suite, "lock_lba_range_check_pending", lock_lba_range_check_pending) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
