@@ -5,9 +5,6 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/spdkcli/common.sh
 
-MATCH_FILE="spdkcli_pmem.test"
-SPDKCLI_BRANCH="/bdevs/pmemblk"
-
 trap 'rm -f $testdir/match_files/spdkcli_pmem_info.test; on_error_exit;' ERR
 
 timing_enter run_spdk_tgt

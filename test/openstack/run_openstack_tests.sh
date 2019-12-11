@@ -5,7 +5,6 @@ rootdir=$(readlink -f $testdir/../..)
 rpc_py=$rootdir/scripts/rpc.py
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
-TEST_TRANSPORT='rdma'
 
 nvmftestinit
 

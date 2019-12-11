@@ -1,7 +1,5 @@
-NVMF_PORT=4420
 NVMF_IP_PREFIX="192.168.100"
 NVMF_IP_LEAST_ADDR=8
-NVMF_TCP_IP_ADDRESS="127.0.0.1"
 NVMF_TRANSPORT_OPTS=""
 
 function build_nvmf_app_args()
@@ -185,7 +183,6 @@ function nvmftestinit()
 	if [ "$TEST_TRANSPORT" == "rdma" ]; then
 		RDMA_IP_LIST=$(get_available_rdma_ips)
 		NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
-		NVMF_SECOND_TARGET_IP=$(echo "$RDMA_IP_LIST" | tail -n +2 | head -n 1)
 		if [ -z $NVMF_FIRST_TARGET_IP ]; then
 			echo "no NIC for nvmf test"
 			exit 0

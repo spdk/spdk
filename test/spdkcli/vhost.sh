@@ -5,9 +5,6 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/spdkcli/common.sh
 
-MATCH_FILE="spdkcli_vhost.test"
-SPDKCLI_BRANCH="/"
-
 trap 'on_error_exit' ERR
 timing_enter run_vhost_tgt
 run_vhost_tgt

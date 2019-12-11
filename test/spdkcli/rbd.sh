@@ -5,9 +5,6 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/spdkcli/common.sh
 
-MATCH_FILE="spdkcli_rbd.test"
-SPDKCLI_BRANCH="/bdevs/rbd"
-
 trap 'on_error_exit' ERR
 timing_enter run_spdk_tgt
 run_spdk_tgt

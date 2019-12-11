@@ -1,7 +1,6 @@
 : ${SPDK_VHOST_VERBOSE=false}
 : ${VHOST_DIR="$HOME/vhost_test"}
 
-TEST_DIR=$(readlink -f $rootdir/..)
 VM_DIR=$VHOST_DIR/vms
 TARGET_DIR=$VHOST_DIR/vhost
 VM_PASSWORD="root"
@@ -529,7 +528,6 @@ function vm_setup()
 	local os_mode=""
 	local qemu_args=""
 	local disk_type_g=NOT_DEFINED
-	local read_only="false"
 	local disks=""
 	local raw_cache=""
 	local vm_incoming=""
@@ -547,7 +545,6 @@ function vm_setup()
 				os-mode=*) os_mode="${OPTARG#*=}" ;;
 				qemu-args=*) qemu_args="${qemu_args} ${OPTARG#*=}" ;;
 				disk-type=*) disk_type_g="${OPTARG#*=}" ;;
-				read-only=*) read_only="${OPTARG#*=}" ;;
 				disks=*) disks="${OPTARG#*=}" ;;
 				raw-cache=*) raw_cache=",cache${OPTARG#*=}" ;;
 				force=*) force_vm=${OPTARG#*=} ;;
@@ -915,7 +912,6 @@ function vm_wait_for_boot()
 	shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
 
-	local all_booted=false
 	local timeout_time=$1
 	[[ $timeout_time -lt 10 ]] && timeout_time=10
 	local timeout_time

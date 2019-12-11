@@ -208,7 +208,6 @@ fi
 if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 	trap 'vm_kill_all; sleep 1; cleanup_kernel_vhost; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
 	# Split disks using parted for kernel vhost
-	newline=$'\n'
 	for (( i=0; i<max_disks; i++ ));do
 		parted -s /dev/nvme${i}n1 mklabel msdos
 		parted -s /dev/nvme${i}n1 mkpart extended 2048s 100%
@@ -256,7 +255,6 @@ else
 		trap 'cleanup_split_cfg; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
 		split_bdevs=()
 		for (( i=0; i<max_disks; i++ ));do
-			out=$($rpc_py bdev_split_create Nvme${i}n1 ${splits[$i]})
 			for s in $(seq 0 $((${splits[$i]}-1))); do
 				split_bdevs+=("Nvme${i}n1p${s}")
 			done
@@ -281,8 +279,6 @@ fi
 
 # Prepare VMs and controllers
 for (( i=0; i<vm_count; i++)); do
-	vm="vm_$i"
-
 	setup_cmd="vm_setup --disk-type=$ctrl_type --force=$i --memory=$vm_memory"
 	setup_cmd+=" --os=$VM_IMAGE"
 

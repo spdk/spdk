@@ -5,33 +5,16 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-vms=()
-declare -A vms_os
-declare -A vms_raw_disks
-declare -A vms_ctrlrs
-declare -A vms_ctrlrs_disks
-
 # By default use Guest fio
-fio_bin=""
 test_cases=""
-MGMT_TARGET_IP=""
-MGMT_INITIATOR_IP=""
-RDMA_TARGET_IP=""
-RDMA_INITIATOR_IP=""
 function usage()
 {
 	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Shortcut script for doing automated test of live migration."
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo
-	echo "    --os ARGS             VM configuration. This parameter might be used more than once:"
-	echo "    --fio-bin=FIO         Use specific fio binary (will be uploaded to VM)"
 	echo "    --test-cases=TESTS    Coma-separated list of tests to run. Implemented test cases are: 1"
 	echo "                          See test/vhost/test_plan.md for more info."
-	echo "    --mgmt-tgt-ip=IP      IP address of target."
-	echo "    --mgmt-init-ip=IP     IP address of initiator."
-	echo "    --rdma-tgt-ip=IP      IP address of targets rdma capable NIC."
-	echo "    --rdma-init-ip=IP     IP address of initiators rdma capable NIC."
 	echo "-x                        set -x for script debug"
 }
 
@@ -41,15 +24,8 @@ for param in "$@"; do
 			usage $0
 			exit 0
 			;;
-		--os=*) os_image="${param#*=}" ;;
-		--fio-bin=*) fio_bin="${param}" ;;
 		--test-cases=*) test_cases="${param#*=}" ;;
-		--mgmt-tgt-ip=*) MGMT_TARGET_IP="${param#*=}" ;;
-		--mgmt-init-ip=*) MGMT_INITIATOR_IP="${param#*=}" ;;
-		--rdma-tgt-ip=*) RDMA_TARGET_IP="${param#*=}" ;;
-		--rdma-init-ip=*) RDMA_INITIATOR_IP="${param#*=}" ;;
 		-x) set -x ;;
-		-v) SPDK_VHOST_VERBOSE=true	;;
 		*)
 			usage $0 "Invalid argument '$param'"
 			exit 1;;
@@ -64,7 +40,6 @@ trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 
 function vm_monitor_send()
 {
-	local vm_num=$1
 	local cmd_result_file="$2"
 	local vm_dir="$VM_DIR/$1"
 	local vm_monitor_port

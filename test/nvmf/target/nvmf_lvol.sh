@@ -20,7 +20,7 @@ nvmfappstart "-m 0x7"
 # If so - lower the number of subsystems for test.
 if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	echo "Using software RDMA, lowering number of NVMeOF subsystems."
-	SUBSYS_NR=1
+	export SUBSYS_NR=1
 fi
 
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192

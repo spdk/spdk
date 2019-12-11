@@ -1,5 +1,4 @@
 function xtrace_disable() {
-	PREV_BASH_OPTS="$-"
 	set +x
 }
 
@@ -121,7 +120,6 @@ if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
 fi
 
 if [ "$(uname -s)" = "Linux" ]; then
-	MAKE="make"
 	MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
 	DPDK_LINUX_DIR=/usr/share/dpdk/x86_64-default-linuxapp-gcc
 	if [ -d $DPDK_LINUX_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
@@ -130,7 +128,6 @@ if [ "$(uname -s)" = "Linux" ]; then
 	# Override the default HUGEMEM in scripts/setup.sh to allocate 8GB in hugepages.
 	export HUGEMEM=8192
 elif [ "$(uname -s)" = "FreeBSD" ]; then
-	MAKE="gmake"
 	MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | grep -E -i 'hw.ncpu' | awk '{print $2}')}
 	DPDK_FREEBSD_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
 	if [ -d $DPDK_FREEBSD_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
@@ -252,21 +249,6 @@ if [ -z "$output_dir" ]; then
 	fi
 	export output_dir
 fi
-
-TEST_MODE=
-for i in "$@"; do
-	case "$i" in
-		--iso)
-			TEST_MODE=iso
-			;;
-		--transport=*)
-			TEST_TRANSPORT="${i#*=}"
-			;;
-		--sock=*)
-			TEST_SOCK="${i#*=}"
-			;;
-	esac
-done
 
 function timing() {
 	direction="$1"

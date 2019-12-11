@@ -4,7 +4,6 @@ source $testdir/autotest.config
 incoming_vm=1
 target_vm=2
 incoming_vm_ctrlr=naa.VhostScsi0.$incoming_vm
-target_vm_ctrlr=naa.VhostScsi0.$target_vm
 share_dir=$TEST_DIR/share
 spdk_repo_share_dir=$TEST_DIR/share_spdk
 job_file=$testdir/migration-tc3.job

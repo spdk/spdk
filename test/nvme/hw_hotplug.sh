@@ -15,7 +15,6 @@ function remove_device() {
 }
 
 ip=$1
-gpio=$2
 driver=$3
 declare -i io_time=5
 declare -i kernel_hotplug_time=7

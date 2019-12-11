@@ -1,6 +1,3 @@
-spdkcli_job="$rootdir/test/spdkcli/spdkcli_job.py"
-spdk_clear_config_py="$rootdir/test/json_config/clear_config.py"
-
 function on_error_exit() {
 	set +e
 	if [ -n "$spdk_tgt_pid" ]; then

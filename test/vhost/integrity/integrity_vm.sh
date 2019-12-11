@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -xe
 
-MAKE="make -j$(( $(nproc)  * 2 ))"
-
 if [[ $1 == "spdk_vhost_scsi" ]]; then
 	devs=""
 	for entry in /sys/block/sd*; do

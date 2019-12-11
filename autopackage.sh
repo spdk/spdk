@@ -13,8 +13,6 @@ source "$1"
 rootdir=$(readlink -f $(dirname $0))
 source "$rootdir/test/common/autotest_common.sh"
 
-out=$PWD
-
 MAKEFLAGS=${MAKEFLAGS:--j16}
 cd $rootdir
 

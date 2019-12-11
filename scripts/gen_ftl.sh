@@ -2,8 +2,6 @@
 
 set -e
 
-rootdir=$(readlink -f $(dirname $0))/..
-
 function usage {
 	echo "Usage: [-j] $0 -a TRANSPORT_ADDR -n BDEV_NAME -l PUNITS [-u UUID] [-c CACHE]"
 	echo "UUID is required when restoring device state"

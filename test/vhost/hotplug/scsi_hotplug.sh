@@ -13,7 +13,6 @@ fi
 # Run spdk by calling run_vhost from hotplug/common.sh.
 # Then prepare vhost with rpc calls and setup and run 4 VMs.
 function pre_hot_attach_detach_test_case() {
-    used_vms=""
     $rpc_py vhost_create_scsi_controller naa.Nvme0n1p0.0
     $rpc_py vhost_create_scsi_controller naa.Nvme0n1p1.0
     $rpc_py vhost_create_scsi_controller naa.Nvme0n1p2.1

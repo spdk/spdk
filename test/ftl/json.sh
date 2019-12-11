@@ -8,7 +8,6 @@ rpc_py=$rootdir/scripts/rpc.py
 
 
 device=$1
-FTL_BDEV_CONF=$testdir/config/ftl.json
 
 json_kill() {
 	killprocess $svcpid

@@ -7,16 +7,8 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py -s $testdir/rpc_iscsi.sock"
 
-BLK_SIZE=4096
-RW=randrw
-MIX=100
-IODEPTH=128
-RUNTIME=60
-RAMP_TIME=10
 FIO_PATH="/usr/src/fio"
 DISKNO="ALL"
-CPUMASK=0x02
-NUM_JOBS=1
 ISCSI_TGT_CM=0x02
 
 # Performance test for iscsi_tgt, run on devices with proper hardware support (target and inititator)
@@ -25,7 +17,6 @@ function usage()
 	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Usage: $(basename $1) [options]"
 	echo "-h, --help                Print help and exit"
-	echo "    --fiopath=PATH        Path to fio directory on initiator. [default=$FIO_PATH]"
 	echo "    --disk_no=INT,ALL     Number of disks to test on, if =ALL then test on all found disks. [default=$DISKNO]"
 	echo "    --target_ip=IP        The IP address of target used for test."
 	echo "    --initiator_ip=IP     The IP address of initiator used for test."
@@ -38,7 +29,6 @@ while getopts 'h-:' optchar; do
 		-)
 		case "$OPTARG" in
 			help) usage $0; exit 0 ;;
-			fiopath=*) FIO_BIN="${OPTARG#*=}" ;;
 			disk_no=*) DISKNO="${OPTARG#*=}" ;;
 			target_ip=*) TARGET_IP="${OPTARG#*=}" ;;
 			initiator_ip=*) INITIATOR_IP="${OPTARG#*=}" ;;

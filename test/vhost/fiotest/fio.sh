@@ -8,13 +8,9 @@ source $rootdir/test/vhost/common.sh
 dry_run=false
 no_shutdown=false
 fio_bin=""
-remote_fio_bin=""
-fio_jobs=""
 test_type=spdk_vhost_scsi
-reuse_vms=false
 vms=()
 used_vms=""
-x=""
 readonly=""
 
 function usage()
@@ -62,8 +58,7 @@ while getopts 'xh-:' optchar; do
 		esac
 		;;
 	h) usage $0 ;;
-	x) set -x
-		x="-x" ;;
+	x) set -x ;;
 	*) usage $0 "Invalid argument '$OPTARG'"
 	esac
 done
@@ -187,12 +182,8 @@ notice "Testing..."
 notice "Running fio jobs ..."
 
 # Check if all VM have disk in tha same location
-DISK=""
-
 fio_disks=""
 for vm_num in $used_vms; do
-	qemu_mask_param="VM_${vm_num}_qemu_mask"
-
 	host_name="VM-$vm_num"
 	notice "Setting up hostname: $host_name"
 	vm_exec $vm_num "hostname $host_name"
@@ -209,7 +200,7 @@ for vm_num in $used_vms; do
 done
 
 if $dry_run; then
-	read -r -p "Enter to kill evething" xx
+	read -r -p "Enter to kill evething"
 	sleep 3
 	at_app_exit
 	exit 0

@@ -6,9 +6,6 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/spdkcli/common.sh
 source $rootdir/test/nvmf/common.sh
 
-MATCH_FILE="spdkcli_nvmf.test"
-SPDKCLI_BRANCH="/nvmf"
-
 trap 'on_error_exit; revert_soft_roce' ERR
 rdma_device_init
 

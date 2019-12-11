@@ -15,8 +15,6 @@ function usage()
 	exit 0
 }
 
-INSTALL_CRYPTO=false
-
 while getopts 'hi-:' optchar; do
 	case "$optchar" in
 		-)
@@ -33,9 +31,6 @@ while getopts 'hi-:' optchar; do
 done
 
 trap 'set +e; trap - ERR; echo "Error!"; exit 1;' ERR
-
-scriptsdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $scriptsdir/..)
 
 if [ -s /etc/redhat-release ]; then
 	. /etc/os-release

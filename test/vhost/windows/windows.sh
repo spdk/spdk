@@ -38,8 +38,7 @@ while getopts 'xh-:' optchar; do
 		esac
 		;;
 	h) usage $0 ;;
-	x) set -x
-		x="-x" ;;
+	x) set -x ;;
 	*) usage $0 "Invalid argument '$OPTARG'"
 	esac
 done

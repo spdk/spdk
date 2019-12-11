@@ -3,7 +3,6 @@
 set -x
 
 base_dir=/var/tmp/ceph
-image=${base_dir}/ceph_raw.img
 dev=/dev/loop200
 
 pkill -9 ceph

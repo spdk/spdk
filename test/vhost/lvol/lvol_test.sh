@@ -11,7 +11,6 @@ rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 vm_count=1
 max_disks=""
 ctrl_type="spdk_vhost_scsi"
-use_fs=false
 nested_lvol=false
 distribute_cores=false
 
@@ -91,8 +90,7 @@ while getopts 'xh-:' optchar; do
         esac
         ;;
     h) usage $0 ;;
-    x) set -x
-        x="-x" ;;
+    x) set -x ;;
     *) usage $0 "Invalid argument '$OPTARG'"
     esac
 done

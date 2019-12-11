@@ -66,8 +66,6 @@ else
 		yum install -y redhat-lsb
 		DISTRIB_ID=$(lsb_release -si)
 		DISTRIB_RELEASE=$(lsb_release -sr)
-		DISTRIB_CODENAME=$(lsb_release -sc)
-		DISTRIB_DESCRIPTION=$(lsb_release -sd)
 	fi
 
 	# Do initial setup for the system

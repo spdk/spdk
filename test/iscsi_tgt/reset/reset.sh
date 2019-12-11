@@ -57,7 +57,8 @@ echo "FIO pid: $fiopid"
 trap 'iscsicleanup; killprocess $pid; killprocess $fiopid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 # Do 3 resets while making sure iscsi_tgt and fio are still running
-for i in 1 2 3; do
+count=0
+while [ $count -lt 3 ]; do
 	sleep 1
 	kill -s 0 $pid
 	kill -s 0 $fiopid
@@ -65,6 +66,7 @@ for i in 1 2 3; do
 	sleep 1
 	kill -s 0 $pid
 	kill -s 0 $fiopid
+	count=$((count+1))
 done
 
 kill $fiopid

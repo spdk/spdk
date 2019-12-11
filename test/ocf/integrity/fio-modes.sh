@@ -2,7 +2,6 @@
 
 curdir=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
 rootdir=$(readlink -f $curdir/../../..)
-plugindir=$rootdir/examples/bdev/fio_plugin
 
 source $rootdir/test/common/autotest_common.sh
 

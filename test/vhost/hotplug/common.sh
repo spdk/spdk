@@ -3,18 +3,10 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-dry_run=false
-no_shutdown=false
 fio_bin="fio"
-fio_jobs="$testdir/fio_jobs/"
 test_type=spdk_vhost_scsi
-reuse_vms=false
 vms=()
 used_vms=""
-disk_split=""
-x=""
-scsi_hot_remove_test=0
-blk_hot_remove_test=0
 readonly=""
 
 
@@ -31,12 +23,10 @@ function usage() {
     echo "                          spdk_vhost_blk - use spdk vhost block"
     echo "-x                        set -x for script debug"
     echo "    --fio-bin=FIO         Use specific fio binary (will be uploaded to VM)"
-    echo "    --fio-jobs=           Fio configs to use for tests. Can point to a directory or"
     echo "    --vm=NUM[,OS][,DISKS] VM configuration. This parameter might be used more than once:"
     echo "                          NUM - VM number (mandatory)"
     echo "                          OS - VM os disk path (optional)"
     echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
-    echo "    --scsi-hotremove-test Run scsi hotremove tests"
     echo "    --readonly            Use readonly for fio"
     exit 0
 }
@@ -47,26 +37,18 @@ while getopts 'xh-:' optchar; do
         case "$OPTARG" in
             help) usage $0 ;;
             fio-bin=*) fio_bin="${OPTARG#*=}" ;;
-            fio-jobs=*) fio_jobs="${OPTARG#*=}" ;;
             test-type=*) test_type="${OPTARG#*=}" ;;
             vm=*) vms+=("${OPTARG#*=}") ;;
-            scsi-hotremove-test) scsi_hot_remove_test=1 ;;
-            blk-hotremove-test) blk_hot_remove_test=1 ;;
             readonly) readonly="--readonly" ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
     h) usage $0 ;;
-    x) set -x
-        x="-x" ;;
+    x) set -x ;;
     *) usage $0 "Invalid argument '$OPTARG'"
     esac
 done
 shift $(( OPTIND - 1 ))
-
-fio_job=$testdir/fio_jobs/default_integrity.job
-tmp_attach_job=$testdir/fio_jobs/fio_attach.job.tmp
-tmp_detach_job=$testdir/fio_jobs/fio_detach.job.tmp
 
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
@@ -159,13 +141,15 @@ function check_fio_retcode() {
 function wait_for_finish() {
     local wait_for_pid=$1
     local sequence=${2:-30}
-    for i in $(seq 1 $sequence); do
+    count=0
+    while [ $count -lt $sequence ]; do
         if kill -0 $wait_for_pid; then
              sleep 0.5
              continue
         else
              break
         fi
+        count=$((count+1))
     done
     if kill -0 $wait_for_pid; then
         error "Timeout for fio command"
@@ -214,6 +198,7 @@ function get_traddr() {
             done
         fi
     done <<< "$nvme"
+    export traddr
 }
 
 function delete_nvme() {

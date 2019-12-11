@@ -16,13 +16,11 @@ function usage()
 	exit 0
 }
 
-run_in_background=false
 while getopts 'xh-:' optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
 			help) usage $0 ;;
-			conf-dir=*) CONF_DIR="${OPTARG#*=}" ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'" ;;
 		esac
 		;;

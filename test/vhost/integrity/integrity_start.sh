@@ -43,8 +43,7 @@ while getopts 'xh-:' optchar; do
 		esac
 		;;
 	h) usage $0 ;;
-	x) set -x
-		x="-x" ;;
+	x) set -x ;;
 	*) usage $0 "Invalid argument '$OPTARG'"
 	esac
 done
@@ -66,7 +65,6 @@ notice "..."
 # Set up lvols and vhost controllers
 trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 notice "Creating lvol store and lvol bdev on top of Nvme0n1"
-lvs_uuid=$($rpc_py bdev_lvol_create_lvstore Nvme0n1 lvol_store)
 $rpc_py bdev_lvol_create lvol_bdev 10000 -l lvol_store
 
 if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then

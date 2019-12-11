@@ -6,8 +6,6 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/spdkcli/common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-MATCH_FILE="spdkcli_raid.test"
-SPDKCLI_BRANCH="/bdevs"
 testdir=$(readlink -f $(dirname $0))
 . $testdir/common.sh
 

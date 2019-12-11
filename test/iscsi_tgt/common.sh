@@ -8,15 +8,10 @@ TARGET_NS_CMD="ip netns exec $TARGET_NAMESPACE"
 TARGET_IP=10.0.0.1
 INITIATOR_IP=10.0.0.2
 ISCSI_PORT=3260
-NETMASK=$INITIATOR_IP/32
-INITIATOR_TAG=2
-INITIATOR_NAME=ANY
-PORTAL_TAG=1
 ISCSI_APP="$TARGET_NS_CMD ./app/iscsi_tgt/iscsi_tgt"
 if [ $SPDK_TEST_VPP -eq 1 ]; then
 	ISCSI_APP+=" -L sock_vpp"
 fi
-ISCSI_TEST_CORE_MASK=0xFF
 
 function create_veth_interfaces() {
 	# $1 = test type (posix/vpp)

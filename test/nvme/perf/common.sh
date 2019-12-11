@@ -10,7 +10,6 @@ BDEVPERF_DIR=$ROOT_DIR/test/bdev/bdevperf
 . $ROOT_DIR/test/common/autotest_common.sh
 NVME_FIO_RESULTS=$BASE_DIR/result.json
 
-PRECONDITIONING=true
 FIO_BIN="/usr/src/fio/fio"
 RUNTIME=600
 PLUGIN="nvme"
@@ -20,7 +19,6 @@ RW=randrw
 MIX=100
 IODEPTH=256
 DISKNO=1
-ONEWORKLOAD=false
 CPUS_ALLOWED=1
 NUMJOBS=1
 REPEAT_NO=3
@@ -360,13 +358,12 @@ while getopts 'h-:' optchar; do
 			ramp-time=*) RAMP_TIME="${OPTARG#*=}" ;;
 			fio-bin=*) FIO_BIN="${OPTARG#*=}" ;;
 			max-disk=*) DISKNO="${OPTARG#*=}" ;;
-			disk-no=*) DISKNO="${OPTARG#*=}"; ONEWORKLOAD=true ;;
+			disk-no=*) DISKNO="${OPTARG#*=}";;
 			driver=*) PLUGIN="${OPTARG#*=}" ;;
 			rw=*) RW="${OPTARG#*=}" ;;
 			rwmixread=*) MIX="${OPTARG#*=}" ;;
 			iodepth=*) IODEPTH="${OPTARG#*=}" ;;
 			block-size=*) BLK_SIZE="${OPTARG#*=}" ;;
-			no-preconditioning) PRECONDITIONING=false ;;
 			no-io-scaling) NOIOSCALING=true ;;
 			cpu-allowed=*) CPUS_ALLOWED="${OPTARG#*=}" ;;
 			numjobs=*) NUMJOBS="${OPTARG#*=}" ;;
@@ -381,7 +378,6 @@ done
 
 trap 'rm -f *.state $BASE_DIR/bdev.conf; print_backtrace' ERR SIGTERM SIGABRT
 mkdir -p $BASE_DIR/results
-date="$(date +'%m_%d_%Y_%H%M%S')"
 if [[ $PLUGIN == "bdev" ]] || [[ $PLUGIN == "bdevperf" ]]; then
 	$ROOT_DIR/scripts/gen_nvme.sh >> $BASE_DIR/bdev.conf
 fi

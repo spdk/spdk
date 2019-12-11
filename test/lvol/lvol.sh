@@ -7,7 +7,6 @@ source $rootdir/test/common/autotest_common.sh
 total_size=256
 block_size=512
 test_cases=all
-x=""
 
 rpc_py="$rootdir/scripts/rpc.py "
 
@@ -96,8 +95,7 @@ while getopts 'xh-:' optchar; do
         esac
         ;;
     h) usage $0 && exit 0 ;;
-    x) set -x
-        x="-x" ;;
+    x) set -x ;;
     *) usage $0 "Invalid argument '$OPTARG'" && exit 1 ;;
     esac
 done

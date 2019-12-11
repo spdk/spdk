@@ -45,7 +45,6 @@ done
 
 trap 'rm -f $aio_file; rm -rf $testdir/results; error_exit' SIGINT SIGTERM ERR
 
-VM_PASSWORD="$ssh_pass"
 mkdir -p $testdir/results
 dd if=/dev/zero of=$aio_file bs=1M count=512
 

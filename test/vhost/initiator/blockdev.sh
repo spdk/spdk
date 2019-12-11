@@ -5,7 +5,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
 FIO_PATH="/usr/src/fio"
 virtio_bdevs=""
 virtio_with_unmap=""
@@ -36,7 +35,6 @@ done
 vhosttestinit
 
 source $testdir/autotest.config
-PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
 RPC_PY="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 if [ ! -x $FIO_PATH ]; then
