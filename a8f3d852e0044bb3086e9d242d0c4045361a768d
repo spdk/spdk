@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ca8b13a_35cb13e7",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1059,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-11T07:02:39Z",
+      "side": 1,
+      "message": "You need add VHOST_USER_PROTOCOL_F_INFLIGHT_SHMFD definition in spdk_internal/vhost_user.h and enable this flag with VHOST_USER_PROTOCOL_F_CONFIG together in rte_vhost_compat.c. This piece of code isn\u0027t required.",
+      "range": {
+        "startLine": 1059,
+        "startChar": 31,
+        "endLine": 1059,
+        "endChar": 67
+      },
+      "revId": "a8f3d852e0044bb3086e9d242d0c4045361a768d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
