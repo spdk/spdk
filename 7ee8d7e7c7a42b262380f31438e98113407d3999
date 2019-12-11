@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "140acf50_2eb8fd66",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-11T09:23:36Z",
+      "side": 1,
+      "message": "This might be nitpick but changing this and next patch in their order would make more sense.\nFirst a bdev layer compare would be added and then bdev nvme would add handling for it. Otherwise you end up with additional type added here, but no way to issue this type of IO.",
+      "range": {
+        "startLine": 133,
+        "startChar": 1,
+        "endLine": 133,
+        "endChar": 27
+      },
+      "revId": "7ee8d7e7c7a42b262380f31438e98113407d3999",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21b17829_a89a5458",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1901,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-11T09:23:36Z",
+      "side": 1,
+      "message": "Should it check the PI too ? (see bdev_nvme_readv_done())",
+      "revId": "7ee8d7e7c7a42b262380f31438e98113407d3999",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
