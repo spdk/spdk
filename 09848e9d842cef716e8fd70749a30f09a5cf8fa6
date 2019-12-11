@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa100854_467cdf33",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-11T07:58:31Z",
+      "side": 1,
+      "message": "thread_name isn\u0027t initialized, you may assign a meaningful name to the threads.",
+      "range": {
+        "startLine": 263,
+        "startChar": 30,
+        "endLine": 263,
+        "endChar": 41
+      },
+      "revId": "09848e9d842cef716e8fd70749a30f09a5cf8fa6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
