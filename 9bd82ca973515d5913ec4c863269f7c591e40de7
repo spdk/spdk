@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4815b8a_78376a87",
+        "filename": "include/spdk_internal/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T00:17:30Z",
+      "side": 1,
+      "message": "I think this is fine to put it here.",
+      "revId": "9bd82ca973515d5913ec4c863269f7c591e40de7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f70e990_abe72482",
+        "filename": "include/spdk_internal/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T00:17:30Z",
+      "side": 1,
+      "message": "I think we can generalize this to just say \"custom command handler\".  We should be able to reuse this typedef if we do custom io cmd handlers in the future.",
+      "revId": "9bd82ca973515d5913ec4c863269f7c591e40de7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17f4a397_e8b1c38e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1949,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T00:17:30Z",
+      "side": 1,
+      "message": "a few nits here - let\u0027s remove this added newline",
+      "revId": "9bd82ca973515d5913ec4c863269f7c591e40de7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1115f512_098a5e60",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1990,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T00:17:30Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "9bd82ca973515d5913ec4c863269f7c591e40de7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34815a97_0b4e2313",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2042,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T00:17:30Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "9bd82ca973515d5913ec4c863269f7c591e40de7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64b64be8_b1bfc753",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2750,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T00:17:30Z",
+      "side": 1,
+      "message": "remove space after !",
+      "revId": "9bd82ca973515d5913ec4c863269f7c591e40de7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "69f6bd8b_df47c47a",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2754,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T00:17:30Z",
+      "side": 1,
+      "message": "put bdev_nsid declaration at top of function",
+      "revId": "9bd82ca973515d5913ec4c863269f7c591e40de7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e1d1e13_5649ee40",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2757,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T00:17:30Z",
+      "side": 1,
+      "message": "same for rc declaration",
+      "revId": "9bd82ca973515d5913ec4c863269f7c591e40de7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
