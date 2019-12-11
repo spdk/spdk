@@ -45,6 +45,30 @@
       "revId": "23820a8fcd0e9432339cd3b027a555725add183d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60752fa7_161fd05b",
+        "filename": "test/lvol/common.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-11T21:29:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7bd6d208_809c953e",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 1
+      },
+      "revId": "23820a8fcd0e9432339cd3b027a555725add183d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
