@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e634340e_b80aa409",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-11T22:53:47Z",
+      "side": 1,
+      "message": "Sorry I overlooked them.",
+      "range": {
+        "startLine": 630,
+        "startChar": 0,
+        "endLine": 633,
+        "endChar": 0
+      },
+      "revId": "cdde1119b03029e7dd6921a7b58b2c8a86fe14b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
