@@ -16,6 +16,23 @@
       "revId": "14b91b230b3d1153f62b146d35f5d4976f651ea2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e2df019_63c2af3b",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T04:50:13Z",
+      "side": 1,
+      "message": "How about:\n\n/* If we filled the full array of events, there may be more still pending.\n * Set the pending flag back to true so that we try to get more events\n * again next time the poller runs.\n */\n\nMaybe the extra wording isn\u0027t needed - but I think drawing the clear line between the pending flag and retrying in the poller helps the reader.",
+      "revId": "14b91b230b3d1153f62b146d35f5d4976f651ea2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
