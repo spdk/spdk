@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0fab6ef_d378ed89",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 2484,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-11T17:00:46Z",
+      "side": 1,
+      "message": "virtual -\u003e Virtual (just a nit but little stuff is an indicator of quality)\nApplication in the next 2 parms should start with A as well",
+      "revId": "2aa6b39c59dbef869977aad0d034f6b49a5bf4c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb3f15bc_5ba71505",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-11T17:00:46Z",
+      "side": 1,
+      "message": "just a suggestion: combine these two ifs into a 3 || if with each condition on its own line",
+      "revId": "2aa6b39c59dbef869977aad0d034f6b49a5bf4c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
