@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c2d651d_59a55d6d",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-11T20:49:50Z",
+      "side": 1,
+      "message": "Can you expand this a bit to say that this enables out-of-tree NVMe-oF transports?",
+      "revId": "abc76d2050bff4f7f5ead2c9ec88d6f0a8b84425",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38cefbac_317d1333",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-11T20:49:50Z",
+      "side": 1,
+      "message": "This enum is fixed. How can we make this extensible? Also, many RPCs reference transport type by a string. Should we make the user provide a string name?",
+      "revId": "abc76d2050bff4f7f5ead2c9ec88d6f0a8b84425",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab878bc2_e9654691",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1148,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-11T20:49:50Z",
+      "side": 1,
+      "message": "You don\u0027t need this forward declaration",
+      "revId": "abc76d2050bff4f7f5ead2c9ec88d6f0a8b84425",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48273677_bacf99d1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 4014,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-11T20:49:50Z",
+      "side": 1,
+      "message": "Is there any way to leave the const on these? Is it the tailq element causing the issue?\n\nTo work around the tailq problem (and possibly a memory lifetime issue if the user fills out the ops structure on the stack), define a second structure internally to transport.c that contains the public ops structure plus the tailq element, then copy the user\u0027s structure to the internal one.",
+      "revId": "abc76d2050bff4f7f5ead2c9ec88d6f0a8b84425",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13952a8a_8e29a868",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2849,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-11T20:49:50Z",
+      "side": 1,
+      "message": "Removed a blank line here. Also leave const",
+      "revId": "abc76d2050bff4f7f5ead2c9ec88d6f0a8b84425",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6516abac_a759a729",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-11T20:49:50Z",
+      "side": 1,
+      "message": "blank line",
+      "revId": "abc76d2050bff4f7f5ead2c9ec88d6f0a8b84425",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
