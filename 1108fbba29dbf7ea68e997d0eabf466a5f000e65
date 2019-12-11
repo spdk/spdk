@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1dce142e_509b9d83",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-11T11:39:52Z",
+      "side": 1,
+      "message": "looks ok, worth a try, but could you add some kind of timeout as well?\nIf this gets stuck then we will be stuck in this place indefinitely or until CI kills the build.\n\nWe can try to exit early after... 10-15 seconds? I think this should be more than enough time to wait for parted operation.",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 6
+      },
+      "revId": "1108fbba29dbf7ea68e997d0eabf466a5f000e65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
