@@ -1118,6 +1118,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	uint32_t i;
+	int rc;
 
 	nvme_bdev_ctrlr = calloc(1, sizeof(*nvme_bdev_ctrlr));
 	if (nvme_bdev_ctrlr == NULL) {
@@ -1155,6 +1156,18 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		free(nvme_bdev_ctrlr);
 		return -ENOMEM;
 	}
+
+	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		rc = bdev_ocssd_init_ctrlr(nvme_bdev_ctrlr);
+		if (spdk_unlikely(rc != 0)) {
+			SPDK_ERRLOG("Unable to initialize OCSSD controller\n");
+			free(nvme_bdev_ctrlr->name);
+			free(nvme_bdev_ctrlr->namespaces);
+			free(nvme_bdev_ctrlr);
+			return rc;
+		}
+	}
+
 	nvme_bdev_ctrlr->prchk_flags = prchk_flags;
 
 	spdk_io_device_register(nvme_bdev_ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,

@@ -49,5 +49,7 @@ void bdev_ocssd_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 				   struct nvme_async_probe_ctx *ctx);
 void bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *ns);
 void bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *ns);
+int bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+void bdev_ocssd_fini_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 
 #endif /* SPDK_BDEV_OCSSD_H */

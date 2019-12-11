@@ -84,6 +84,8 @@ struct bdev_ocssd_ns {
 	struct bdev_ocssd_lba_offsets	lba_offsets;
 };
 
+struct ocssd_bdev_ctrlr {};
+
 static struct bdev_ocssd_ns *
 bdev_ocssd_get_ns_from_nvme(struct nvme_bdev_ns *nvme_ns)
 {
@@ -1053,5 +1055,28 @@ bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *ns)
 	ns->populated = false;
 	ns->type_ctx = NULL;
 }
+
+int
+bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+{
+	struct ocssd_bdev_ctrlr *ocssd_ctrlr;
+
+	ocssd_ctrlr = calloc(1, sizeof(*ocssd_ctrlr));
+	if (!ocssd_ctrlr) {
+		return -ENOMEM;
+	}
+
+	nvme_bdev_ctrlr->ocssd_ctrlr = ocssd_ctrlr;
+
+	return 0;
+}
+
+void
+bdev_ocssd_fini_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+{
+	free(nvme_bdev_ctrlr->ocssd_ctrlr);
+	nvme_bdev_ctrlr->ocssd_ctrlr = NULL;
+}
+
 
 SPDK_LOG_REGISTER_COMPONENT("bdev_ocssd", SPDK_LOG_BDEV_OCSSD)
