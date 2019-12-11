@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c59bb85_e54b8bb6",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-11T20:03:28Z",
+      "side": 1,
+      "message": "ah - yes, the name was confusing me, this all makes sense now",
+      "revId": "8f7e3d3c3ac74b03e7a47e97bb361b5c46efb07f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
