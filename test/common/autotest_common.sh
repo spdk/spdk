@@ -20,8 +20,7 @@ function xtrace_enable() {
 # that "called" xtrace_restore.
 alias xtrace_restore='if [[ "$PREV_BASH_OPTS" == *"x"* ]]; then set -x; xtrace_enable; fi'
 
-: ${RUN_NIGHTLY:=0}
-export RUN_NIGHTLY
+export RUN_NIGHTLY=1
 
 : ${RUN_NIGHTLY_FAILING:=0}
 export RUN_NIGHTLY_FAILING
