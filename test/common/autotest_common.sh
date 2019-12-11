@@ -663,9 +663,11 @@ function part_dev_by_gpt () {
 
 		killprocess $nbd_pid
 		rm -f ${conf}.gpt
+
+		return 0
 	fi
 
-	return 0
+	return 1
 }
 
 function discover_bdevs()
