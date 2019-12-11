@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "be3a2434_e09a8da0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2734,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-11T17:49:11Z",
+      "side": 1,
+      "message": "Actually I think this code is correct.  When we create a blob we only set it in metadata, there\u0027s no reason to set it in the in memory blob struct that is going to be freed after completion anyway.  When the user opens the blob with ext() they can specify the clear method and if it differs from what was in metadata it will be used. Basically there\u0027s no use of blob-\u003eclear_method in the create path",
+      "parentUuid": "0e966b9e_e0b3a2d2",
+      "revId": "a37da555121aec905a6f62ef6bac378e98e235bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f64b63a0_20985f14",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 8
