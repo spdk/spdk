@@ -1392,6 +1392,8 @@ static const struct spdk_nvme_cmds_and_effect_log_page g_cmds_and_effect_log_pag
 		[SPDK_NVME_OPC_WRITE_ZEROES]		= {1, 1, 0, 0, 0, 0, 0, 0},
 		/* DATASET MANAGEMENT */
 		[SPDK_NVME_OPC_DATASET_MANAGEMENT]	= {1, 1, 0, 0, 0, 0, 0, 0},
+		/* COMPARE */
+		[SPDK_NVME_OPC_COMPARE]			= {1, 0, 0, 0, 0, 0, 0, 0},
 	},
 };
 
@@ -2528,6 +2530,8 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		return spdk_nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_WRITE:
 		return spdk_nvmf_bdev_ctrlr_write_cmd(bdev, desc, ch, req);
+	case SPDK_NVME_OPC_COMPARE:
+		return spdk_nvmf_bdev_ctrlr_compare_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_WRITE_ZEROES:
 		return spdk_nvmf_bdev_ctrlr_write_zeroes_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_FLUSH:
