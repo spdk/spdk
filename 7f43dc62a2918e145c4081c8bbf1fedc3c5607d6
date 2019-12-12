@@ -16,6 +16,24 @@
       "revId": "7f43dc62a2918e145c4081c8bbf1fedc3c5607d6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c9ba798_53b1bcbe",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1065,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-12T13:41:50Z",
+      "side": 1,
+      "message": "Actually the manual says it\u0027s implementation defined whether NULL pointer is returned or not in this case. But since we don\u0027t really need this patch that low in the series, I\u0027ll squash it with the media management handling, so we can avoid this problem.",
+      "parentUuid": "0e426aef_b5acba8f",
+      "revId": "7f43dc62a2918e145c4081c8bbf1fedc3c5607d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
