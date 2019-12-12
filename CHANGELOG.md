@@ -7,6 +7,10 @@
 `spdk_thread_send_msg` now returns int indicating if the message was successfully
 sent.
 
+### dpdk
+
+DPDK submodule updated to include fix for vhost CVE-2019-14818.
+
 ## v19.10:
 
 ### rpc
