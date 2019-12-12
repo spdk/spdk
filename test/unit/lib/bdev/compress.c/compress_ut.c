@@ -64,7 +64,6 @@ static struct rte_mbuf g_expected_src_mbufs[UT_MBUFS_PER_OP_BOUND_TEST];
 static struct rte_mbuf g_expected_dst_mbufs[UT_MBUFS_PER_OP];
 struct comp_bdev_io *g_io_ctx;
 struct comp_io_channel *g_comp_ch;
-struct rte_config *g_test_config;
 
 /* Those functions are defined as static inline in DPDK, so we can't
  * mock them straight away. We use defines to redirect them into
@@ -296,7 +295,6 @@ DEFINE_STUB(spdk_reduce_vol_get_params, const struct spdk_reduce_vol_params *,
 
 /* DPDK stubs */
 DEFINE_STUB(rte_socket_id, unsigned, (void), 0);
-DEFINE_STUB(rte_eal_get_configuration, struct rte_config *, (void), NULL);
 DEFINE_STUB(rte_vdev_init, int, (const char *name, const char *args), 0);
 DEFINE_STUB_V(rte_comp_op_free, (struct rte_comp_op *op));
 DEFINE_STUB(rte_comp_op_alloc, struct rte_comp_op *, (struct rte_mempool *mempool), NULL);
@@ -581,9 +579,6 @@ test_setup(void)
 	g_io_ctx->comp_bdev = &g_comp_bdev;
 	g_comp_bdev.device_qp = &g_device_qp;
 
-	g_test_config = calloc(1, sizeof(struct rte_config));
-	g_test_config->lcore_count = 1;
-
 	for (i = 0; i < UT_MBUFS_PER_OP_BOUND_TEST - 1; i++) {
 		g_expected_src_mbufs[i].next = &g_expected_src_mbufs[i + 1];
 	}
@@ -613,7 +608,6 @@ test_cleanup(void)
 	free(g_bdev_io->u.bdev.iovs);
 	free(g_bdev_io);
 	free(g_io_ch);
-	free(g_test_config);
 	return 0;
 }
 
@@ -1023,7 +1017,6 @@ test_initdrivers(void)
 	int rc;
 
 	/* test return values from rte_vdev_init() */
-	MOCK_SET(rte_eal_get_configuration, g_test_config);
 	MOCK_SET(rte_vdev_init, -EEXIST);
 	rc = vbdev_init_compress_drivers();
 	/* This is not an error condition, we already have one */
