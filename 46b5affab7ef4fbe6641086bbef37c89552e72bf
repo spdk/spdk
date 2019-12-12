@@ -335,6 +335,30 @@
     },
     {
       "key": {
+        "uuid": "8fde9b87_9020b32f",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T02:49:08Z",
+      "side": 1,
+      "message": "Please use the following macro in iscsi.h.\n\n#define ISCSI_SECURITY_NEGOTIATION_PHASE        0\n#define ISCSI_OPERATIONAL_NEGOTIATION_PHASE     1\n#define ISCSI_NSG_RESERVED_CODE                 2\n#define ISCSI_FULL_FEATURE_PHASE                3",
+      "parentUuid": "bce51ede_ee1459e8",
+      "range": {
+        "startLine": 620,
+        "startChar": 22,
+        "endLine": 620,
+        "endChar": 25
+      },
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8e4186f1_2cdda43e",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 32
