@@ -229,6 +229,11 @@ struct nvme_request {
 	bool				timed_out;
 
 	/**
+	 * True if the request is in the queued_req list.
+	 */
+	bool				queued;
+
+	/**
 	 * Number of children requests still outstanding for this
 	 *  request which was split into multiple child requests.
 	 */

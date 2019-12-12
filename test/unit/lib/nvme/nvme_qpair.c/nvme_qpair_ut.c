@@ -237,7 +237,9 @@ static void test_nvme_qpair_process_completions(void)
 
 	/* If we are resetting, make sure that we don't call into the transport. */
 	STAILQ_INSERT_TAIL(&qpair.queued_req, &dummy_1, stailq);
+	dummy_1.queued = true;
 	STAILQ_INSERT_TAIL(&qpair.queued_req, &dummy_2, stailq);
+	dummy_2.queued = true;
 	g_num_cb_failed = 0;
 	ctrlr.is_failed = false;
 	ctrlr.is_removed = false;
