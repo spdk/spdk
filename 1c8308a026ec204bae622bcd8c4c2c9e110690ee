@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c71ec860_296d4af4",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T19:26:35Z",
+      "side": 1,
+      "message": "should add S2086 description here",
+      "revId": "1c8308a026ec204bae622bcd8c4c2c9e110690ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
