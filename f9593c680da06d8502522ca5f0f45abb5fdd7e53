@@ -395,6 +395,24 @@
     },
     {
       "key": {
+        "uuid": "9ab44904_bdfb8e05",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1014723
+      },
+      "writtenOn": "2019-12-12T07:08:08Z",
+      "side": 1,
+      "message": "Yes, the original code works, but after your review, we discussed it, and come to the result that it was inappropriate to clear fio_thread-\u003e iocq_count before spdk_fio_getevents() returned. At that time, completed events were not yet consumed by FIO, so it\u0027s better to clear iocq_count at the last call of getevents().",
+      "parentUuid": "cb6b8b4e_2f04a414",
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "42fdebeb_98202cb0",
         "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
         "patchSetId": 3
