@@ -218,6 +218,42 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 	}
 }
 
+static void
+bdev_malloc_comparev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
+		     struct malloc_task *task,
+		     struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
+{
+	void *dst = mdisk->malloc_buf + offset;
+	int i;
+
+	if (bdev_malloc_check_iov_len(iov, iovcnt, len)) {
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task),
+				      SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_MALLOC, "compare %lu bytes to offset %#lx\n",
+		      len, offset);
+
+	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	task->num_outstanding = iovcnt;
+
+	for (i = 0; i < iovcnt; i++) {
+		if (memcmp(dst, iov[i].iov_base, iov[i].iov_len) != 0) {
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task),
+					      SPDK_BDEV_IO_STATUS_FAILED);
+			return;
+		}
+		dst += iov[i].iov_len;
+	}
+
+	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task),
+			      SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	return;
+
+}
+
 static int
 bdev_malloc_unmap(struct malloc_disk *mdisk,
 		  struct spdk_io_channel *ch,
@@ -324,6 +360,17 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bdev_io->driver_ctx),
 				      SPDK_BDEV_IO_STATUS_SUCCESS);
 		return 0;
+
+	case SPDK_BDEV_IO_TYPE_COMPARE:
+		bdev_malloc_comparev((struct malloc_disk *)bdev_io->bdev->ctxt,
+				     ch,
+				     (struct malloc_task *)bdev_io->driver_ctx,
+				     bdev_io->u.bdev.iovs,
+				     bdev_io->u.bdev.iovcnt,
+				     bdev_io->u.bdev.num_blocks * block_size,
+				     bdev_io->u.bdev.offset_blocks * block_size);
+		return 0;
+
 	default:
 		return -1;
 	}
@@ -348,6 +395,7 @@ bdev_malloc_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
+	case SPDK_BDEV_IO_TYPE_COMPARE:
 		return true;
 
 	default:
