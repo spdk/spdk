@@ -54,6 +54,9 @@ by default. Not used if "mode" is set to "spdk".
 ### fio_bin
 Path to the fio binary that will be used to compile SPDK and run the test.
 If not specified, then the script will use /usr/src/fio/fio as the default.
+### extra_params
+Space separated string with additional settings for "nvme connect" command
+other than -t, -s, -n and -a.
 
 ## fio
 Fio job parameters.
