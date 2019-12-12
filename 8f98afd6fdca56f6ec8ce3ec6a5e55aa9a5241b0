@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3b9a1e8_a6a4dc8b",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-12T11:48:21Z",
+      "side": 1,
+      "message": "Suggestion for separate patch: any reason why we run this in nightly?\nIt\u0027s just 2 seconds :)",
+      "range": {
+        "startLine": 266,
+        "startChar": 0,
+        "endLine": 266,
+        "endChar": 31
+      },
+      "revId": "8f98afd6fdca56f6ec8ce3ec6a5e55aa9a5241b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c77dd5c9_d09e9176",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-12T11:48:21Z",
+      "side": 1,
+      "message": "Can we move this block a couple lines up, just before we create GPT partitions, and just run the test aginst plain NVMe BDEV?\n\nI think it would be the simplest solution, removing the need for \"if\" blocks here and on line 287.\nIntroducing these \u0027ifs\u0027 makes the test completion report variable. There\u0027s a possibility you\u0027d get hello_bdev run vs. GPT and the other time you could get it run vs plain NVMe.\n\nFor line 287 on the other hand you\u0027d either get a test completion, or no completion at all, depending on the system in test.",
+      "range": {
+        "startLine": 267,
+        "startChar": 0,
+        "endLine": 274,
+        "endChar": 3
+      },
+      "revId": "8f98afd6fdca56f6ec8ce3ec6a5e55aa9a5241b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
