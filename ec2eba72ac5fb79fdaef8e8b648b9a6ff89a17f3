@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8914e6dc_82ff585b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 673,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T05:17:25Z",
+      "side": 1,
+      "message": "Sorry, I don\u0027t get that. I think I\u0027m missing something but in bdev_free_io(), we check if bdev_io-\u003einternal.buf !\u003d NULL. So double free is unlikely even before this patch?",
+      "revId": "ec2eba72ac5fb79fdaef8e8b648b9a6ff89a17f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
