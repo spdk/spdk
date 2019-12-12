@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7ad54fa5_4600ab06",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2464,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-12T10:03:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dfc27e1b_8cb49a5c",
+      "range": {
+        "startLine": 2464,
+        "startChar": 19,
+        "endLine": 2464,
+        "endChar": 20
+      },
+      "revId": "1bab3adff0d74b845154fa96ed2810c647245e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ffb6c93e_efda198f",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 10
@@ -71,6 +95,54 @@
     },
     {
       "key": {
+        "uuid": "3d32c3e3_028abe63",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2465,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-12T10:03:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ffb6c93e_efda198f",
+      "range": {
+        "startLine": 2465,
+        "startChar": 11,
+        "endLine": 2465,
+        "endChar": 52
+      },
+      "revId": "1bab3adff0d74b845154fa96ed2810c647245e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42cec832_055edfd0",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2465,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-12T10:03:06Z",
+      "side": 1,
+      "message": "Good catch.",
+      "parentUuid": "bfc1ab22_f659980a",
+      "range": {
+        "startLine": 2465,
+        "startChar": 69,
+        "endLine": 2465,
+        "endChar": 98
+      },
+      "revId": "1bab3adff0d74b845154fa96ed2810c647245e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3c86e1fd_27ce9582",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 10
@@ -82,6 +154,30 @@
       "writtenOn": "2019-12-10T09:53:00Z",
       "side": 1,
       "message": "Since bdev will have compare command added, it should be called here. Not just immediately assuming that it is first part of fused command.",
+      "range": {
+        "startLine": 2470,
+        "startChar": 0,
+        "endLine": 2470,
+        "endChar": 52
+      },
+      "revId": "1bab3adff0d74b845154fa96ed2810c647245e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a84ae3ba_0ca8872d",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2470,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-12T10:03:06Z",
+      "side": 1,
+      "message": "We don\u0027t have support for compare cmd on NVMf layer yet. I\u0027ll create patch that adds this support and change this then.",
+      "parentUuid": "3c86e1fd_27ce9582",
       "range": {
         "startLine": 2470,
         "startChar": 0,
