@@ -127,6 +127,13 @@ mock_rte_crypto_op_attach_sym_session(struct rte_crypto_op *op,
 	return ut_rte_crypto_op_attach_sym_session;
 }
 
+#define rte_lcore_count mock_rte_lcore_count
+static inline unsigned
+mock_rte_lcore_count(void)
+{
+	return 1;
+}
+
 #include "bdev/crypto/vbdev_crypto.c"
 
 /* SPDK stubs */
@@ -159,7 +166,6 @@ DEFINE_STUB(spdk_bdev_register, int, (struct spdk_bdev *vbdev), 0);
 
 /* DPDK stubs */
 DEFINE_STUB(rte_cryptodev_count, uint8_t, (void), 0);
-DEFINE_STUB(rte_eal_get_configuration, struct rte_config *, (void), NULL);
 DEFINE_STUB_V(rte_mempool_free, (struct rte_mempool *mp));
 DEFINE_STUB(rte_mempool_create, struct rte_mempool *, (const char *name, unsigned n,
 		unsigned elt_size,
@@ -205,7 +211,6 @@ struct crypto_io_channel *g_crypto_ch;
 struct spdk_io_channel *g_io_ch;
 struct vbdev_dev g_device;
 struct vbdev_crypto g_crypto_bdev;
-struct rte_config *g_test_config;
 struct device_qp g_dev_qp;
 
 void
@@ -310,8 +315,6 @@ test_setup(void)
 	g_io_ctx->crypto_ch = g_crypto_ch;
 	g_io_ctx->crypto_bdev = &g_crypto_bdev;
 	g_crypto_ch->device_qp = &g_dev_qp;
-	g_test_config = calloc(1, sizeof(struct rte_config));
-	g_test_config->lcore_count = 1;
 	TAILQ_INIT(&g_crypto_ch->pending_cry_ios);
 	TAILQ_INIT(&g_crypto_ch->queued_cry_ops);
 
@@ -342,7 +345,6 @@ test_cleanup(void)
 {
 	int i;
 
-	free(g_test_config);
 	spdk_mempool_free(g_mbuf_mp);
 	for (i = 0; i < MAX_TEST_BLOCKS; i++) {
 		free(g_test_crypto_ops[i]);
@@ -728,7 +730,6 @@ test_initdrivers(void)
 	g_mbuf_mp = NULL;
 
 	/* No drivers available, not an error though */
-	MOCK_SET(rte_eal_get_configuration, g_test_config);
 	MOCK_SET(rte_cryptodev_count, 0);
 	rc = vbdev_crypto_init_crypto_drivers();
 	CU_ASSERT(rc == 0);
