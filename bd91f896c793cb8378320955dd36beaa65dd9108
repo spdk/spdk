@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "3f120072_6d3e7838",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-12-12T09:52:21Z",
+      "side": 1,
+      "message": "OK, Jim, got it that ack/done from the developer towards the reviewer are not mandatory. \n\nFrom my experience, replies are very useful for the **developer**. If you respond to each reviewer comment with (say) ack or nak, you know you must not have missed any of them.",
+      "parentUuid": "96f8a18e_a881f56d",
+      "range": {
+        "startLine": 65,
+        "startChar": 33,
+        "endLine": 65,
+        "endChar": 36
+      },
+      "revId": "bd91f896c793cb8378320955dd36beaa65dd9108",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fe7cf721_9dfcf427",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 24
