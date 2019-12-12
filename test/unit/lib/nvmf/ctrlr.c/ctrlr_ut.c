@@ -586,18 +586,6 @@ test_connect(void)
 	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.ipo == 42);
 	CU_ASSERT(qpair.ctrlr == NULL);
 
-	/* I/O connect to discovery controller keep-alive-timeout should be 0 */
-	cmd.connect_cmd.qid = 0;
-	memset(&rsp, 0, sizeof(rsp));
-	subsystem.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
-	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
-	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
-	rc = spdk_nvmf_ctrlr_connect(&req);
-	poll_threads();
-	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
-	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
-	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
-	CU_ASSERT(qpair.ctrlr == NULL);
 	cmd.connect_cmd.qid = 1;
 	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
 
