@@ -240,7 +240,7 @@ if hash shellcheck 2>/dev/null; then
 	# go to: https://trello.com/c/29Z90j1W
 	# Error descriptions can also be found at: https://github.com/koalaman/shellcheck/wiki
 	# This SHCK_EXCLUDE list is out "to do" and we work to fix all of this errors.
-	SHCK_EXCLUDE="SC1083,SC2002,SC2010,SC2034,SC2045,SC2046"
+	SHCK_EXCLUDE="SC1083,SC2002,SC2010,SC2034,SC2045"
 	# SPDK fails some error checks which have been deprecated in later versions of shellcheck.
 	# We will not try to fix these error checks, but instead just leave the error types here
 	# so that we can still run with older versions of shellcheck.
@@ -252,6 +252,7 @@ if hash shellcheck 2>/dev/null; then
 	# SC2001: See if you can use ${variable//search/replace} instead.
 	# SC2015: Note that A && B || C is not if-then-else. C may run when A is true.
 	# SC2016: Expressions don't expand in single quotes, use double quotes for that.
+	# SC2046: Quote this to prevent word splitting.
 	# SC2086: Double quote to prevent globbing and word splitting.
 	# SC2119: Use foo "$@" if function's $1 should mean script's $1.
 	# SC2120: foo references arguments, but none are ever passed.
@@ -264,7 +265,7 @@ if hash shellcheck 2>/dev/null; then
 	#         or split robustly with mapfile or read -a.
 	# SC2207: Prefer mapfile or read -a to split command output (or quote to avoid splitting).
 	# SC2223: This default assignment may cause DoS due to globbing. Quote it.
-	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1090,SC1091,SC2015,SC2016,SC2086,SC2119,SC2120,SC2148,\
+	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1090,SC1091,SC2015,SC2016,SC2046,SC2086,SC2119,SC2120,SC2148,\
 SC2153,SC2154,SC2164,SC2174,SC2001,SC2206,SC2207,SC2223"
 
 	SHCK_FORMAT="diff"
