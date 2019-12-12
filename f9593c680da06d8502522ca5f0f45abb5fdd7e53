@@ -374,6 +374,47 @@
       "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb6b8b4e_2f04a414",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T04:55:22Z",
+      "side": 1,
+      "message": "Thank you Chen. Your original code may be needed.\n\nAs long as I read FIO source code and comment,\ngetevents() returns the number of completed events since the last call,\nand if getevents() returns 3, event() has to return the 3 events.\n\nSo we can\u0027t clear iocq_count in event() hook?\nSorry for bothering you and thanks for kind explanation.",
+      "parentUuid": "45679da0_fafbb26a",
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42fdebeb_98202cb0",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T04:55:22Z",
+      "side": 1,
+      "message": "Can we change this to break as same as the line 792?",
+      "range": {
+        "startLine": 783,
+        "startChar": 3,
+        "endLine": 785,
+        "endChar": 16
+      },
+      "revId": "f9593c680da06d8502522ca5f0f45abb5fdd7e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
