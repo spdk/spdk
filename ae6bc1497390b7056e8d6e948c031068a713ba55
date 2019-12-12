@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa076d7a_53916140",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-12-12T12:23:19Z",
+      "side": 1,
+      "message": "Please change commit message.\nBetter will be something like add rule to excluded.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 61
+      },
+      "revId": "ae6bc1497390b7056e8d6e948c031068a713ba55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
