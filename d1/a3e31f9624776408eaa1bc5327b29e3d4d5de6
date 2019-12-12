@@ -1,0 +1,11 @@
+Code-Review+2: Ben Walker <benjamin.walker@intel.com>
+Code-Review+2: Shuhei Matsumoto <shuhei.matsumoto.xt@hitachi.com>
+Code-Review+2: Alexey Marchuk <alexeymar@mellanox.com>
+Verified+1: SPDK CI Jenkins <sys_sgci@intel.com>
+Community-CI+1: SPDK CI Jenkins <sys_sgci@intel.com>
+Community-CI+1: Broadcom SPDK FC-NVMe CI <spdk-ci.pdl@broadcom.com>
+Submitted-by: Tomasz Zawadzki <tomasz.zawadzki@intel.com>
+Submitted-at: Thu, 12 Dec 2019 14:43:04 +0000
+Reviewed-on: https://review.gerrithub.io/c/spdk/spdk/+/477503
+Project: spdk/spdk
+Branch: refs/heads/master
