@@ -679,6 +679,7 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 	}
 
 	if (spdk_likely(rc == 0)) {
+		req->queued = false;
 		return 0;
 	}
 
@@ -690,6 +691,14 @@ error:
 	if (req->parent != NULL) {
 		nvme_request_remove_child(req->parent, req);
 	}
+
+	/* The request is from queued_req list we should trigger the callback from caller */
+	if (spdk_unlikely(req->queued)) {
+		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
+						   SPDK_NVME_SC_INTERNAL_DEVICE_ERROR, true, true);
+		return rc;
+	}
+
 	nvme_free_request(req);
 
 	return rc;
@@ -707,12 +716,14 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		 * through this path.
 		 */
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		req->queued = true;
 		return 0;
 	}
 
 	rc = _nvme_qpair_submit_request(qpair, req);
 	if (rc == -EAGAIN) {
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		req->queued = true;
 		rc = 0;
 	}
 
@@ -730,6 +741,7 @@ nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *
 	 * completions and resubmissions.
 	 */
 	assert(req->num_children == 0);
+	assert(req->queued);
 	rc = _nvme_qpair_submit_request(qpair, req);
 	if (spdk_unlikely(rc == -EAGAIN)) {
 		STAILQ_INSERT_HEAD(&qpair->queued_req, req, stailq);
