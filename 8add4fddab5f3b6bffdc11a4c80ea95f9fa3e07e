@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "455d61f2_3be8835b",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T19:44:04Z",
+      "side": 1,
+      "message": "let\u0027s add SC2046 description",
+      "revId": "8add4fddab5f3b6bffdc11a4c80ea95f9fa3e07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
