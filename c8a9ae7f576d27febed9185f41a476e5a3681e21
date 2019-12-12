@@ -16,6 +16,24 @@
       "revId": "c8a9ae7f576d27febed9185f41a476e5a3681e21",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "733ac840_6101de49",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1115,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-12T13:25:16Z",
+      "side": 1,
+      "message": "Done.\n\nI have one question though. For some specific workloads (low, but greater than 1, per-zone queue depths) this may lead to constant calls to spdk_poller_(register|unregister). spdk_poller_register allocates memory to store spdk_poller structure, so we would see a severe performance hit on this type of traffic. Perhaps it\u0027s worthwhile to add some kind of spdk_poller_(pause|resume) API for spdk_pollers? It would allow the pollers to handle this type of cases pretty efficiently. What do you think?",
+      "parentUuid": "33bcd6e9_b518a252",
+      "revId": "c8a9ae7f576d27febed9185f41a476e5a3681e21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
