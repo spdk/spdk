@@ -34,6 +34,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test "nvmf_initiator_timeout" test/nvmf/target/initiator_timeout.sh "${TEST_ARGS[@]}"
 fi
 
+run_test "nvmf_fused" test/nvmf/target/fused.sh "${TEST_ARGS[@]}"
 run_test "nvmf_nmic" test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
 run_test "nvmf_rpc" test/nvmf/target/rpc.sh "${TEST_ARGS[@]}"
 run_test "nvmf_fio" test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
