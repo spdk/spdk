@@ -16,6 +16,24 @@
       "revId": "0bbd380a486116a3a5f637acd60efa929f49d6b1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87c75c61_ec70614e",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-12T15:28:33Z",
+      "side": 1,
+      "message": "I decided to add this code to exception for SC2098 and SC2097 rule.",
+      "parentUuid": "b81c7f40_f67bc1cc",
+      "revId": "0bbd380a486116a3a5f637acd60efa929f49d6b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
