@@ -22,6 +22,64 @@
       "revId": "62c0d41e664d63ae786eaa75dec116be8fe869a8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd0e32a1_3ba4282b",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T21:52:45Z",
+      "side": 1,
+      "message": "Good question.  This gets called through the spdk_pci_device_map_bar path, and it does not say it is optional.  All of the callers pass a phys_addr pointer.  So I would say this is required.",
+      "parentUuid": "54da116d_82ade101",
+      "range": {
+        "startLine": 60,
+        "startChar": 23,
+        "endLine": 60,
+        "endChar": 42
+      },
+      "revId": "62c0d41e664d63ae786eaa75dec116be8fe869a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "211fd995_098cc720",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T21:52:45Z",
+      "side": 1,
+      "message": "this would be closer to SPDK style:\n\nif (*mapped_addr \u003d\u003d NULL) {\n        return -1;\n}\n\n(I\u0027m actually surprised that this passed the astyle checker in our CI.)",
+      "revId": "62c0d41e664d63ae786eaa75dec116be8fe869a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f54dd191_5114cc5a",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T21:52:45Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "62c0d41e664d63ae786eaa75dec116be8fe869a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
