@@ -1,5 +1,11 @@
 # Changelog
 
+## v19.10.1: (Upcoming Release)
+
+### dpdk
+
+DPDK submodule updated to include fix for vhost CVE-2019-14818.
+
 ## v19.10:
 
 ### rpc
