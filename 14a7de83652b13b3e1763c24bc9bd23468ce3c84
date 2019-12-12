@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a464af3b_b1e7de0b",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 792,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T06:22:15Z",
+      "side": 1,
+      "message": "Does this mean that we can\u0027t move sock between two sock groups with keeping requests?\nWe don\u0027t have such use cases yet but is this degradation?",
+      "range": {
+        "startLine": 792,
+        "startChar": 1,
+        "endLine": 792,
+        "endChar": 25
+      },
+      "revId": "14a7de83652b13b3e1763c24bc9bd23468ce3c84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
