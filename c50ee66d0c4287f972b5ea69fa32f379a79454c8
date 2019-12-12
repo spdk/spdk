@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fbca9852_27b225cb",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-12T12:00:49Z",
+      "side": 1,
+      "message": "SPDK_BDEV_IO_TYPE_COMPARE type is missing here.",
+      "revId": "c50ee66d0c4287f972b5ea69fa32f379a79454c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
