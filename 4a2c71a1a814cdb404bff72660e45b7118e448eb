@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "199d6cc6_278f060c",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T14:36:45Z",
+      "side": 1,
+      "message": "Let\u0027s change timed_out and queued to 1-bit uint8_t.  Otherwise adding this here will create a hole.  This is a very critical struct so we don\u0027t want to create any holes.  :-)\n\n(You can see the hole if you use pahole with the binary built with this patch.)",
+      "revId": "4a2c71a1a814cdb404bff72660e45b7118e448eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "826a446f_322f9227",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T14:36:45Z",
+      "side": 1,
+      "message": "trigger",
+      "revId": "4a2c71a1a814cdb404bff72660e45b7118e448eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f5c09116_dd69269d",
         "filename": "test/unit/lib/nvme/nvme_qpair.c/nvme_qpair_ut.c",
         "patchSetId": 2
