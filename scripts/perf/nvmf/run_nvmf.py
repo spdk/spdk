@@ -581,7 +581,7 @@ class KernelInitiator(Initiator):
         self.log_print("Below connection attempts may result in error messages, this is expected!")
         for subsystem in subsystems:
             self.log_print("Trying to connect %s %s %s" % subsystem)
-            self.remote_call("sudo %s connect -t %s -s %s -n %s -a %s -i 8" % (self.nvmecli_bin, self.transport, *subsystem))
+            self.remote_call("sudo %s connect -t %s -s %s -n %s -a %s" % (self.nvmecli_bin, self.transport, *subsystem))
             time.sleep(2)
 
     def kernel_init_disconnect(self, address_list, subsys_no):
