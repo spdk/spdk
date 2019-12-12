@@ -1880,6 +1880,7 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_thread *thread = spdk_bdev_io_get_thread(bdev_io);
+	struct spdk_bdev_channel *ch = bdev_io->internal.ch;
 
 	assert(thread != NULL);
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
@@ -1890,8 +1891,7 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	 * we don't try to add it a second time.
 	 */
 	if (bdev_io->internal.cb != bdev_io_split_done) {
-		TAILQ_INSERT_TAIL(&bdev_io->internal.ch->io_submitted, bdev_io,
-				  internal.ch_link);
+		TAILQ_INSERT_TAIL(&ch->io_submitted, bdev_io, internal.ch_link);
 	}
 
 	if (bdev->split_on_optimal_io_boundary && bdev_io_should_split(bdev_io)) {
@@ -1902,11 +1902,11 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 		return;
 	}
 
-	if (bdev_io->internal.ch->flags & BDEV_CH_QOS_ENABLED) {
+	if (ch->flags & BDEV_CH_QOS_ENABLED) {
 		if ((thread == bdev->internal.qos->thread) || !bdev->internal.qos->thread) {
 			_bdev_io_submit(bdev_io);
 		} else {
-			bdev_io->internal.io_submit_ch = bdev_io->internal.ch;
+			bdev_io->internal.io_submit_ch = ch;
 			bdev_io->internal.ch = bdev->internal.qos->ch;
 			spdk_thread_send_msg(bdev->internal.qos->thread, _bdev_io_submit, bdev_io);
 		}
