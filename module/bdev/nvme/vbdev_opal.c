@@ -461,6 +461,15 @@ spdk_vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locki
 		return -EINVAL;
 	}
 
+	/* check if this opal bdev is defined already */
+	TAILQ_FOREACH(opal_bdev, &g_opal_vbdev, tailq) {
+		if (opal_bdev->cfg.locking_range_id == locking_range_id) {
+			SPDK_ERRLOG("This locking range has already been assigned to an Opal vbdev.\nPlease delete first before redefinition.\n");
+			return -EINVAL;
+		}
+	}
+	opal_bdev = NULL;
+
 	state = spdk_opal_get_dev_state(opal_ctrlr->opal_dev);
 	if (state == OPAL_DEV_STATE_BUSY) {
 		SPDK_ERRLOG("SP Busy, try again later");
