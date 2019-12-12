@@ -148,6 +148,7 @@ if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 	report_test_completion "unittest"
 fi
 
+run_test "case" "dpdk_mem_utility" test/dpdk_memory_utility/test_dpdk_mem_info.sh
 
 if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	timing_enter lib
