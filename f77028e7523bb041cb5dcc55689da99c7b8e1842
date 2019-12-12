@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "93b13932_2014b34c",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 2831,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T08:14:35Z",
+      "side": 1,
+      "message": "Just 1U?",
+      "range": {
+        "startLine": 2831,
+        "startChar": 39,
+        "endLine": 2831,
+        "endChar": 46
+      },
+      "revId": "f77028e7523bb041cb5dcc55689da99c7b8e1842",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f11695c_4e851bdb",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 2832,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T08:14:35Z",
+      "side": 1,
+      "message": "Just 2U?",
+      "range": {
+        "startLine": 2832,
+        "startChar": 40,
+        "endLine": 2832,
+        "endChar": 47
+      },
+      "revId": "f77028e7523bb041cb5dcc55689da99c7b8e1842",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52737605_ca53bae3",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 2833,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T08:14:35Z",
+      "side": 1,
+      "message": "this shift may not be necessary.",
+      "range": {
+        "startLine": 2833,
+        "startChar": 40,
+        "endLine": 2833,
+        "endChar": 45
+      },
+      "revId": "f77028e7523bb041cb5dcc55689da99c7b8e1842",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d8713039_59117411",
         "filename": "lib/nvme/nvme_ns_cmd.c",
         "patchSetId": 11
@@ -31,6 +100,52 @@
       "side": 1,
       "message": "Good call.  Let\u0027s name it SPDK_NVME_IO_FLAGS_CDW12_MASK.",
       "parentUuid": "d8713039_59117411",
+      "revId": "f77028e7523bb041cb5dcc55689da99c7b8e1842",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa1ba378_6c3342dd",
+        "filename": "test/unit/lib/nvme/nvme_ns_cmd.c/nvme_ns_cmd_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 770,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T08:14:35Z",
+      "side": 1,
+      "message": "SPDK_NVME_CMD_FUSE_FIRST?",
+      "range": {
+        "startLine": 770,
+        "startChar": 34,
+        "endLine": 770,
+        "endChar": 35
+      },
+      "revId": "f77028e7523bb041cb5dcc55689da99c7b8e1842",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f264776_4f62eb78",
+        "filename": "test/unit/lib/nvme/nvme_ns_cmd.c/nvme_ns_cmd_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T08:14:35Z",
+      "side": 1,
+      "message": "SPDK_NVME_CMD_FUSE_SECOND?",
+      "range": {
+        "startLine": 785,
+        "startChar": 34,
+        "endLine": 785,
+        "endChar": 35
+      },
       "revId": "f77028e7523bb041cb5dcc55689da99c7b8e1842",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
