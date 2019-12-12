@@ -223,7 +223,9 @@ static void test_nvme_qpair_process_completions(void)
 
 	/* If we are resetting, make sure that we don't call into the transport. */
 	STAILQ_INSERT_TAIL(&qpair.queued_req, &dummy_1, stailq);
+	dummy_1.queued = true;
 	STAILQ_INSERT_TAIL(&qpair.queued_req, &dummy_2, stailq);
+	dummy_2.queued = true;
 	g_num_cb_failed = 0;
 	ctrlr.is_failed = false;
 	ctrlr.is_removed = false;
@@ -560,6 +562,34 @@ test_nvme_qpair_submit_request(void)
 	cleanup_submit_request_test(&qpair);
 }
 
+static void
+test_nvme_qpair_resubmit_request_with_transport_failed(void)
+{
+	int				rc;
+	struct spdk_nvme_qpair		qpair = {};
+	struct spdk_nvme_ctrlr		ctrlr = {};
+	struct nvme_request		*req;
+
+	prepare_submit_request_test(&qpair, &ctrlr);
+
+	req = nvme_allocate_request_null(&qpair, expected_failure_callback, NULL);
+	CU_ASSERT(req != NULL);
+	TAILQ_INIT(&req->children);
+
+	STAILQ_INSERT_TAIL(&qpair.queued_req, req, stailq);
+	req->queued = true;
+
+	g_transport_process_completions_rc = 1;
+	qpair.state = NVME_QPAIR_ENABLED;
+	MOCK_SET(nvme_transport_qpair_submit_request, -EINVAL);
+	rc = spdk_nvme_qpair_process_completions(&qpair, g_transport_process_completions_rc);
+	MOCK_CLEAR(nvme_transport_qpair_submit_request);
+	CU_ASSERT(rc == g_transport_process_completions_rc);
+	CU_ASSERT(STAILQ_EMPTY(&qpair.queued_req));
+
+	cleanup_submit_request_test(&qpair);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -588,6 +618,8 @@ int main(int argc, char **argv)
 			   test_nvme_qpair_add_cmd_error_injection) == NULL
 	    || CU_add_test(suite, "spdk_nvme_qpair_submit_request",
 			   test_nvme_qpair_submit_request) == NULL
+	    || CU_add_test(suite, "nvme_qpair_resubmit_request_with_transport_failed",
+			   test_nvme_qpair_resubmit_request_with_transport_failed) == NULL
 	   ) {
 		CU_cleanup_registry();
 		return CU_get_error();

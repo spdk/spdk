@@ -236,7 +236,13 @@ struct nvme_request {
 
 	uint8_t				retries;
 
-	bool				timed_out;
+	uint8_t				timed_out : 1;
+
+	/**
+	 * True if the request is in the queued_req list.
+	 */
+	uint8_t				queued : 1;
+	uint8_t				reserved : 6;
 
 	/**
 	 * Number of children requests still outstanding for this
