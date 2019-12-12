@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5c09116_dd69269d",
+        "filename": "test/unit/lib/nvme/nvme_qpair.c/nvme_qpair_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-12-12T11:10:10Z",
+      "side": 1,
+      "message": "Could you add a test to check that user callback is called by nvme_qpair_submit_request if the controller is in failed state? Something like\n\nstatic void\ntest_nvme_qpair_submit_request_ctrlr_failed(void)\n{\n\tint\t\t\t\trc;\n\tstruct spdk_nvme_qpair\t\tqpair \u003d {};\n\tstruct spdk_nvme_ctrlr\t\tctrlr \u003d {};\n\tstruct nvme_request\t\t*req;\n\n\tg_num_cb_failed \u003d 0;\n\tprepare_submit_request_test(\u0026qpair, \u0026ctrlr);\n\treq \u003d nvme_allocate_request_null(\u0026qpair, dummy_cb_fn, NULL);\n\tCU_ASSERT(req !\u003d NULL);\n\treq-\u003equeued \u003d true;\n\n\tctrlr.is_failed \u003d true;\n\trc \u003d nvme_qpair_submit_request(\u0026qpair, req);\n\tSPDK_CU_ASSERT_FATAL(rc \u003d\u003d -ENXIO);\n\tCU_ASSERT(g_num_cb_failed \u003d\u003d 1);\n\n\tcleanup_submit_request_test(\u0026qpair);\n}",
+      "range": {
+        "startLine": 242,
+        "startChar": 1,
+        "endLine": 242,
+        "endChar": 23
+      },
+      "revId": "4a2c71a1a814cdb404bff72660e45b7118e448eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
