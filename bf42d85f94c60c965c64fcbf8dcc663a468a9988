@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83fd4068_433ca5b1",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-12-12T20:06:03Z",
+      "side": 1,
+      "message": "So what about the crash I came across on earlier version [1], is it gone? or maybe what does this assert serve now when req-\u003einternal.offset is actually the system call index (and 0 is valid value)?\n\n[1] https://review.gerrithub.io/c/spdk/spdk/+/471752/9/module/sock/posix/posix.c#577",
+      "range": {
+        "startLine": 543,
+        "startChar": 3,
+        "endLine": 543,
+        "endChar": 23
+      },
+      "revId": "bf42d85f94c60c965c64fcbf8dcc663a468a9988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
