@@ -109,6 +109,7 @@ if [ $(uname) = Linux ]; then
 	trap "kill_stub -9; exit 1" SIGINT SIGTERM EXIT
 fi
 
+run_test "case" "nvme_fused" $testdir/fused/fused_nvmf.sh --transport=tcp
 run_test "case" "nvme_reset" $testdir/reset/reset -q 64 -w write -s 4096 -t 5
 run_test "case" "nvme_identify" nvme_identify
 run_test "case" "nvme_perf" nvme_perf
