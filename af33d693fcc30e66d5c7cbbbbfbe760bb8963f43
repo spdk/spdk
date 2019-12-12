@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a3284b8_a0e8c7cb",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-12-12T12:02:30Z",
+      "side": 1,
+      "message": "Couldn\u0027t this just check\nTAILQ_EMPTY(\u0026ocssd_ioch-\u003epending_requests)\nIt\u0027d unregister one poll tick earlier this way",
+      "revId": "af33d693fcc30e66d5c7cbbbbfbe760bb8963f43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
