@@ -229,6 +229,126 @@
       "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a634d5c_f7a8bdc0",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T02:24:28Z",
+      "side": 1,
+      "message": "calloc(1, sizeof(*conn));",
+      "range": {
+        "startLine": 553,
+        "startChar": 8,
+        "endLine": 553,
+        "endChar": 14
+      },
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f5c431c_07e2dfea",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T02:24:28Z",
+      "side": 1,
+      "message": "We can remove these memset.",
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed541b78_97ea0c77",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T02:24:28Z",
+      "side": 1,
+      "message": "48 is the size of Basic Header Segment (BHS)?\nWe will not use this variable. So it may be better if we don\u0027t set this.",
+      "range": {
+        "startLine": 600,
+        "startChar": 25,
+        "endLine": 600,
+        "endChar": 27
+      },
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a169fb71_adad3d95",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T02:24:28Z",
+      "side": 1,
+      "message": "Will you use DSET24(req_pdu-\u003ebhs.data_segment_len, data_len) ?",
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bce51ede_ee1459e8",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T02:24:28Z",
+      "side": 1,
+      "message": "135 is correct but (1 \u003c\u003c 7) | (1 \u003c\u003c 2) | 3 or at least 0x85 is easier to understand?\n\nAnd maybe pasting the following excerpts from iSCSI spec will be helpful.\n\n   An initiator that chooses to operate without iSCSI security and with\n   all the operational parameters taking the default values issues the\n   Login with the T bit set to 1, the CSG set to\n   LoginOperationalNegotiation, and the NSG set to FullFeaturePhase.",
+      "range": {
+        "startLine": 620,
+        "startChar": 22,
+        "endLine": 620,
+        "endChar": 25
+      },
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e4186f1_2cdda43e",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T02:24:28Z",
+      "side": 1,
+      "message": "Ditto",
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
