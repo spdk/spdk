@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "38915c2a_8e3a2233",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-12T17:10:32Z",
+      "side": 1,
+      "message": "Agreed. Not sure why this is nightly in the first place.",
+      "parentUuid": "a3b9a1e8_a6a4dc8b",
+      "range": {
+        "startLine": 266,
+        "startChar": 0,
+        "endLine": 266,
+        "endChar": 31
+      },
+      "revId": "8f98afd6fdca56f6ec8ce3ec6a5e55aa9a5241b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c77dd5c9_d09e9176",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2019-12-12T11:48:21Z",
       "side": 1,
       "message": "Can we move this block a couple lines up, just before we create GPT partitions, and just run the test aginst plain NVMe BDEV?\n\nI think it would be the simplest solution, removing the need for \"if\" blocks here and on line 287.\nIntroducing these \u0027ifs\u0027 makes the test completion report variable. There\u0027s a possibility you\u0027d get hello_bdev run vs. GPT and the other time you could get it run vs plain NVMe.\n\nFor line 287 on the other hand you\u0027d either get a test completion, or no completion at all, depending on the system in test.",
+      "range": {
+        "startLine": 267,
+        "startChar": 0,
+        "endLine": 274,
+        "endChar": 3
+      },
+      "revId": "8f98afd6fdca56f6ec8ce3ec6a5e55aa9a5241b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a387b51_0df622d5",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-12T17:10:32Z",
+      "side": 1,
+      "message": "I\u0027d prefer to keep a separation between the test cases and the pre-work.\n\nIn terms of running the hello_world application vs gpt or a standard NVMe, I\u0027m totally fine with reporting the same test completion for both of those cases. In my mind the purpose of the hello_bdev test is to just make sure that test application didn\u0027t break because of change. It\u0027s not trying to verify the functionality of any specific bdev.\n\nAnd I think we should only run the tests on 287-288 if we are using gpt. The titles of the tests are bdev_gpt_verify and bdev_gpt_write_zeroes. If we don\u0027t have gpt on a specific machine, that machine shouldn\u0027t report a completion for that test.",
+      "parentUuid": "c77dd5c9_d09e9176",
       "range": {
         "startLine": 267,
         "startChar": 0,
