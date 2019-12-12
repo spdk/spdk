@@ -52,6 +52,24 @@
       "revId": "83af80f8c8f43a3a7942897ac9a6a03bf51b1855",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe83015e_a497f482",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1548,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-12T23:32:40Z",
+      "side": 1,
+      "message": "The proxy recovers, I restored my patch to version2.",
+      "parentUuid": "8871ffad_82b2493e",
+      "revId": "83af80f8c8f43a3a7942897ac9a6a03bf51b1855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
