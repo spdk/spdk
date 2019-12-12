@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32eb03c5_f49dfb39",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T18:06:53Z",
+      "side": 1,
+      "message": "I don\u0027t think env.h is the right place for this.  The particular env implementation really has nothing to do with the cache line size.  The cache line size is dictated by the architecture instead.  Maybe this should go in util.h instead?  And then it can later by modified to different values based on architecture ifdefs.\n\nNote that DPDK generates the CACHE_LINE_SIZE via config option.  I don\u0027t know that we want to do that yet, but it\u0027s another possibility.",
+      "revId": "dacaf26922eef4f020f8af15d228467a3522438c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
