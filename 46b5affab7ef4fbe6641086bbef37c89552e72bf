@@ -211,6 +211,24 @@
       "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1953dd84_9de5a69b",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 502,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-12-12T02:06:52Z",
+      "side": 1,
+      "message": "Thank you for your prompt. In this way, the previous two schemes will be integrated and the functions will be more perfect.",
+      "parentUuid": "4b4cd174_61bc3672",
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
