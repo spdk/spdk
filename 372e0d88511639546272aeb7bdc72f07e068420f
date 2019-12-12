@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "54366818_92779c28",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 1001,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T17:44:09Z",
+      "side": 1,
+      "message": "let\u0027s not add this one\n\nI know that we have this for read and write, but we decided later that we should have only allowed block-oriented APIs.  But we had to keep the byte-oriented APIs for backward compatibility.  So I think it\u0027s OK to not provide this function - the blocks APIs cover all of the necessary use cases.",
+      "revId": "372e0d88511639546272aeb7bdc72f07e068420f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "631cac77_241be4f7",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 1023,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T17:44:09Z",
+      "side": 1,
+      "message": "compare should not need a writable descriptor since it only reads data, so -EBADF shouldn\u0027t be returned (same for others below)",
+      "revId": "372e0d88511639546272aeb7bdc72f07e068420f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8663d845_ffb02da2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 3213,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T17:44:09Z",
+      "side": 1,
+      "message": "not needed - don\u0027t need write permissions for a compare",
+      "revId": "372e0d88511639546272aeb7bdc72f07e068420f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
