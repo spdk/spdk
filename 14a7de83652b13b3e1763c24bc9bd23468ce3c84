@@ -46,6 +46,30 @@
       "revId": "14a7de83652b13b3e1763c24bc9bd23468ce3c84",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "133dc461_9540ad02",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 792,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-12T17:17:07Z",
+      "side": 1,
+      "message": "I think this is certainly something we\u0027re going to need to work out eventually. iSCSI was written originally to have a fixed number of system threads and then dynamically shift the connections between them. NVMe-oF can\u0027t do that (RDMA can\u0027t move connections between \"groups\" like sockets can), so instead NVMe-oF relies on spawning a bunch of lightweight threads and then load balancing the lightweight threads onto the system threads. Connections are owned by the same lightweight thread for their entire lifetime.\n\nUltimately, I think the NVMe-oF design works out better and there\u0027s no reason iSCSI couldn\u0027t work similarly. iSCSI was just written way before NVMe-oF and lightweight threads existed.",
+      "parentUuid": "e6cd51bd_f7352e89",
+      "range": {
+        "startLine": 792,
+        "startChar": 1,
+        "endLine": 792,
+        "endChar": 25
+      },
+      "revId": "14a7de83652b13b3e1763c24bc9bd23468ce3c84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
