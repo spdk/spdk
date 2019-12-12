@@ -294,12 +294,8 @@ void spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 		return;
 	}
 
+	assert(pdu->ref > 0);
 	pdu->ref--;
-
-	if (pdu->ref < 0) {
-		SPDK_ERRLOG("Negative PDU refcount: %p\n", pdu);
-		pdu->ref = 0;
-	}
 
 	if (pdu->ref == 0) {
 		if (pdu->mobj) {
