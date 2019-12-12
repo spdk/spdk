@@ -34,6 +34,24 @@
       "revId": "c8a9ae7f576d27febed9185f41a476e5a3681e21",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff166e98_646b9965",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1115,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T15:26:22Z",
+      "side": 1,
+      "message": "I like it.  So something like a new TAILQ in the thread called paused_pollers.\n\nI like the pause/resume naming too.  I\u0027d say let\u0027s make sure the implementation is flexible enough so that you can pause an already paused poller (or resume an already \u0027active\u0027 poller).  I could see that being useful too.",
+      "parentUuid": "733ac840_6101de49",
+      "revId": "c8a9ae7f576d27febed9185f41a476e5a3681e21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
