@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9740e90c_e9920166",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2461,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T16:26:33Z",
+      "side": 1,
+      "message": "this doesn\u0027t verify that the I/O was split (although I think your code is correct)\n\nyou could first just do\nstub_complete_io(1)\n\nand then check that bdev_channel_count_submitted_io() still equals 1\n\nthen do stub_complete_io(1) again\n\nYou could also consider simplifying a lot of the code here by doing:\n\nCU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) \u003d\u003d X);\nand avoid the extra assignment to \"count\" which isn\u0027t really necessary",
+      "revId": "1b9ccfc972e551c94fcec6cd89d5ebc8e3fda276",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28928ce8_2b97c559",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2481,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T16:26:33Z",
+      "side": 1,
+      "message": "this comment is incorrect - I don\u0027t see any test case where we do not supply the timeout callback",
+      "revId": "1b9ccfc972e551c94fcec6cd89d5ebc8e3fda276",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc4b8e21_e7444f42",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2511,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T16:26:33Z",
+      "side": 1,
+      "message": "you should first only spdk_delay_us for maybe 5 seconds, and confirm the cb was *not* called",
+      "revId": "1b9ccfc972e551c94fcec6cd89d5ebc8e3fda276",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec93c56a_a7190590",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2518,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-12T16:26:33Z",
+      "side": 1,
+      "message": "memset cb_arg to 0 again here to be safe",
+      "revId": "1b9ccfc972e551c94fcec6cd89d5ebc8e3fda276",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
