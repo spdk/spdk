@@ -34,6 +34,24 @@
       "revId": "83af80f8c8f43a3a7942897ac9a6a03bf51b1855",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8871ffad_82b2493e",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1548,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-12T14:37:35Z",
+      "side": 1,
+      "message": "Hi Shuhei/Jim,\n\nToday I cannot upload the patches due to the proxy issue. Could you do me a favor to rollback my patch to version 2.\n\nThanks.",
+      "parentUuid": "adcb6518_1bf6cfe7",
+      "revId": "83af80f8c8f43a3a7942897ac9a6a03bf51b1855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
