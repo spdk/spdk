@@ -34,6 +34,10 @@ to allow reuse in other transports.
 
 Added optional 'delay_cmd_submit' parameter to 'bdev_nvme_set_options' RPC method.
 
+### dpdk
+
+DPDK submodule updated to include fix for vhost CVE-2019-14818.
+
 ## v19.10:
 
 ### rpc
