@@ -1,0 +1,199 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd8853c2_1ed7b926",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T00:32:20Z",
+      "side": 1,
+      "message": "Maybe char *g_tgt_port \u003d \"3260\";",
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60ae103a_90a2ce08",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T00:32:20Z",
+      "side": 1,
+      "message": "What is the role of this flag?",
+      "range": {
+        "startLine": 126,
+        "startChar": 10,
+        "endLine": 126,
+        "endChar": 19
+      },
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7240aebc_0c1ed7d5",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T00:32:20Z",
+      "side": 1,
+      "message": "We can replace malloc + memset by calloc.",
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95687da1_9e898ece",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T00:32:20Z",
+      "side": 1,
+      "message": "These two lines are not necessary?",
+      "range": {
+        "startLine": 182,
+        "startChar": 0,
+        "endLine": 184,
+        "endChar": 0
+      },
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47e4d3a3_0010279d",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T00:32:20Z",
+      "side": 1,
+      "message": "we can skip creating stubs for mempool?",
+      "range": {
+        "startLine": 196,
+        "startChar": 0,
+        "endLine": 196,
+        "endChar": 27
+      },
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30e186a6_3459b638",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T00:32:20Z",
+      "side": 1,
+      "message": "free(task) is enough here? Then can we remove spdk_iscsi_fuzz_mempool_put() ?",
+      "range": {
+        "startLine": 240,
+        "startChar": 1,
+        "endLine": 240,
+        "endChar": 28
+      },
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e99fb6ac_c116bdc6",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T00:32:20Z",
+      "side": 1,
+      "message": "calloc(1, sizeof(*task)) is enough here? Then can we remove spdk_iscsi_fuzz_mempool_get() ?",
+      "range": {
+        "startLine": 249,
+        "startChar": 7,
+        "endLine": 249,
+        "endChar": 60
+      },
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d8c16c8_44e1f42e",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T00:32:20Z",
+      "side": 1,
+      "message": "spdk_free?",
+      "range": {
+        "startLine": 388,
+        "startChar": 1,
+        "endLine": 388,
+        "endChar": 5
+      },
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c98522f4_5636a733",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-12T00:32:20Z",
+      "side": 1,
+      "message": "we can use strtol(port, NULL, 10) or spdk_strtol(port, 10) here.",
+      "range": {
+        "startLine": 472,
+        "startChar": 38,
+        "endLine": 472,
+        "endChar": 42
+      },
+      "revId": "46b5affab7ef4fbe6641086bbef37c89552e72bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
