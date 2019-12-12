@@ -62,7 +62,15 @@ spdk_map_bar_rte(struct spdk_pci_device *device, uint32_t bar,
 	struct rte_pci_device *dev = device->dev_handle;
 
 	*mapped_addr = dev->mem_resource[bar].addr;
+	if (*mapped_addr == NULL) {
+		return -1;
+	}
+
 	*phys_addr = (uint64_t)dev->mem_resource[bar].phys_addr;
+	if (*phys_addr == 0) {
+		return -1;
+	}
+
 	*size = (uint64_t)dev->mem_resource[bar].len;
 
 	return 0;
