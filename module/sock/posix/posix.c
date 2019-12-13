@@ -528,6 +528,7 @@ _sock_flush(struct spdk_sock *sock)
 		}
 
 		/* Handled a full request. */
+		assert(req->internal.offset == req->len);
 		req->internal.offset = 0;
 		spdk_sock_request_pend(sock, req);
 
