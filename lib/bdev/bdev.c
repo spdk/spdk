@@ -3181,6 +3181,57 @@ spdk_bdev_compare_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_cha
 					   cb, cb_arg);
 }
 
+static void
+bdev_compare_do_read_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	uint8_t *read_buf = bdev_io->u.bdev.iovs[0].iov_base;
+	int i, rc = 0;
+
+	if (!success) {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+		spdk_bdev_free_io(bdev_io);
+		return;
+	}
+
+	for (i = 0; i < bdev_io->u.bdev.iovcnt; i++) {
+		rc = memcmp(read_buf,
+			    bdev_io->u.bdev.iovs[i].iov_base,
+			    bdev_io->u.bdev.iovs[i].iov_len);
+		if (rc) {
+			break;
+		}
+		read_buf += bdev_io->u.bdev.iovs[i].iov_len;
+	}
+
+	if (rc == 0) {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		bdev_io->internal.cb(bdev_io, true, bdev_io->internal.caller_ctx);
+	} else {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_MISCOMPARE;
+		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+	}
+}
+
+static void
+bdev_compare_do_read(void *_bdev_io)
+{
+	struct spdk_bdev_io *bdev_io = _bdev_io;
+	int rc;
+
+	rc = spdk_bdev_read_blocks(bdev_io->internal.desc,
+				   spdk_io_channel_from_ctx(bdev_io->internal.ch), NULL,
+				   bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
+				   bdev_compare_do_read_done, bdev_io);
+
+	if (rc == -ENOMEM) {
+		bdev_queue_io_wait_with_cb(bdev_io, bdev_compare_do_read);
+	} else if (rc != 0) {
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+	}
+}
+
 static int
 bdev_comparev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			     struct iovec *iov, int iovcnt, void *md_buf,
@@ -3210,7 +3261,13 @@ bdev_comparev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	bdev_io_submit(bdev_io);
+	if (bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COMPARE)) {
+		bdev_io_submit(bdev_io);
+		return 0;
+	}
+
+	bdev_compare_do_read(bdev_io);
+
 	return 0;
 }
 
