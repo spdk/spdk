@@ -767,6 +767,7 @@ _sock_close(const char *ip, int port)
 	ctx.sock = server_sock;
 	ctx.called = false;
 	req1->iovcnt = 1;
+	req1->len = 64;
 	req1->cb_fn = _first_close_cb;
 	req1->cb_arg = &ctx;
 	spdk_sock_writev_async(server_sock, req1);
@@ -777,6 +778,7 @@ _sock_close(const char *ip, int port)
 	SPDK_SOCK_REQUEST_IOV(req2, 0)->iov_base = data_buf;
 	SPDK_SOCK_REQUEST_IOV(req2, 0)->iov_len = 64;
 	req2->iovcnt = 1;
+	req2->len = 64;
 	req2->cb_fn = _second_close_cb;
 	req2->cb_arg = &cb_arg2;
 	spdk_sock_writev_async(server_sock, req2);
