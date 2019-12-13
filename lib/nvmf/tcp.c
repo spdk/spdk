@@ -356,7 +356,6 @@ spdk_nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 
 	tcp_req = TAILQ_FIRST(&tqpair->state_queue[TCP_REQUEST_STATE_FREE]);
 	if (!tcp_req) {
-		SPDK_ERRLOG("Cannot allocate tcp_req on tqpair=%p\n", tqpair);
 		return NULL;
 	}
 
@@ -1375,7 +1374,7 @@ spdk_nvmf_tcp_capsule_cmd_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 		}
 
 		/* The host sent more commands than the maximum queue depth. */
-		SPDK_ERRLOG("Cannot allocate tcp_req\n");
+		SPDK_ERRLOG("Cannot allocate tcp_req on tqpair=%p\n", tqpair);
 		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
 		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
 		return;
