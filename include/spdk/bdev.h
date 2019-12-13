@@ -506,6 +506,14 @@ bool spdk_bdev_has_write_cache(const struct spdk_bdev *bdev);
 const struct spdk_uuid *spdk_bdev_get_uuid(const struct spdk_bdev *bdev);
 
 /**
+ * Get block device atomic compare and write unit.
+ *
+ * \param bdev Block device to query.
+ * \return Atomic compare and write unit for this bdev in blocks.
+ */
+uint16_t spdk_bdev_get_acwu(const struct spdk_bdev *bdev);
+
+/**
  * Get block device metadata size.
  *
  * \param bdev Block device to query.
