@@ -92,83 +92,60 @@ def collectOne(output_dir, dir_name):
         shutil.rmtree(d)
 
 
+def getCompletions(completionFile, test_list, test_completion_table):
+    agent_name = os.path.basename(os.path.dirname(completionFile))
+    with open(completionFile, 'r') as completionList:
+        completions = completionList.read()
+
+    asan_enabled = "asan" in completions
+    ubsan_enabled = "ubsan" in completions
+
+    for line in completions.splitlines():
+        line = line.strip()
+        try:
+            test_list[line] = (True, asan_enabled | test_list[line][1], ubsan_enabled | test_list[line][2])
+            test_completion_table.append([agent_name, line, asan_enabled, ubsan_enabled])
+            try:
+                test_completion_table.remove(["None", line, False, False])
+            except ValueError:
+                continue
+        except KeyError:
+            continue
+
+
+def printList(header, test_list, index, condition):
+    print("\n\n-----%s------" % header)
+    executed_tests = [x for x in sorted(test_list) if test_list[x][index] is condition]
+    print(*executed_tests, sep="\n")
+
+
+def printListInformation(table_type, test_list):
+    printList("%s Executed in Build" % table_type, test_list, 0, True)
+    printList("%s Missing From Build" % table_type, test_list, 0, False)
+    printList("%s Missing ASAN" % table_type, test_list, 1, False)
+    printList("%s Missing UBSAN" % table_type, test_list, 2, False)
+
+
 def aggregateCompletedTests(output_dir, repo_dir):
     test_list = {}
-    test_with_asan = {}
-    test_with_ubsan = {}
     test_completion_table = []
-    asan_enabled = False
-    ubsan_enabled = False
-    test_unit_with_valgrind = False
-    testFilePath = os.path.join(output_dir, '**', 'all_tests.txt')
-    completionFilePath = os.path.join(output_dir, '**', 'test_completions.txt')
-    testFiles = glob.glob(testFilePath, recursive=True)
-    completionFiles = glob.glob(completionFilePath, recursive=True)
-    testSummary = os.path.join(output_dir, "test_execution.log")
+
+    testFiles = glob.glob(os.path.join(output_dir, '**', 'all_tests.txt'), recursive=True)
+    completionFiles = glob.glob(os.path.join(output_dir, '**', 'test_completions.txt'), recursive=True)
 
     if len(testFiles) == 0:
         print("Unable to perform test completion aggregator. No input files.")
         return 0
-    item = testFiles[0]
-    with open(item, 'r') as raw_test_list:
+
+    with open(testFiles[0], 'r') as raw_test_list:
         for line in raw_test_list:
             test_list[line.strip()] = (False, False, False)
             test_completion_table.append(["None", line.strip(), False, False])
-    for item in completionFiles:
-        agent_name = os.path.split(os.path.split(item)[0])[1]
-        with open(item, 'r') as completion_list:
-            completions = completion_list.read()
 
-            if "asan" not in completions:
-                asan_enabled = False
-            else:
-                asan_enabled = True
+    for completionFile in completionFiles:
+        getCompletions(completionFile, test_list, test_completion_table)
 
-            if "ubsan" not in completions:
-                ubsan_enabled = False
-            else:
-                ubsan_enabled = True
-
-            if "valgrind" in completions and "unittest" in completions:
-                test_unit_with_valgrind = True
-                test_completion_table.append([agent_name, "valgrind", asan_enabled, ubsan_enabled])
-            for line in completions.split('\n'):
-                try:
-                    test_list[line.strip()] = (True, asan_enabled | test_list[line.strip()][1], ubsan_enabled | test_list[line.strip()][2])
-                    test_completion_table.append([agent_name, line.strip(), asan_enabled, ubsan_enabled])
-                    try:
-                        test_completion_table.remove(["None", line.strip(), False, False])
-                    except ValueError:
-                        continue
-                except KeyError:
-                    continue
-
-    with open(testSummary, 'w') as fh:
-        fh.write("\n\n-----Tests Executed in Build------\n")
-        for item in sorted(test_list):
-            if test_list[item][0]:
-                fh.write(item + "\n")
-
-        fh.write("\n\n-----Tests Missing From Build------\n")
-        if not test_unit_with_valgrind:
-            fh.write("UNITTEST_WITH_VALGRIND\n")
-        for item in sorted(test_list):
-            if test_list[item][0] is False:
-                fh.write(item + "\n")
-
-        fh.write("\n\n-----Tests Missing ASAN------\n")
-        for item in sorted(test_list):
-            if test_list[item][1] is False:
-                fh.write(item + "\n")
-
-        fh.write("\n\n-----Tests Missing UBSAN------\n")
-        for item in sorted(test_list):
-            if test_list[item][2] is False:
-                fh.write(item + "\n")
-
-    with open(testSummary, 'r') as fh:
-        print(fh.read())
-
+    printListInformation("Tests", test_list)
     generateTestCompletionTables(output_dir, test_completion_table)
 
 
