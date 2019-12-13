@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "89ff560c_21c94ddf",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-13T20:23:41Z",
+      "side": 1,
+      "message": "Does this yield the same answer?\n\ngit ls-files \u0027*.sh\u0027 | xargs -P$(nproc) -n1 grep -P \"^\\t {4,}\"\n\nYou could output each of the lines to a file and print them too.",
+      "revId": "b2123806bd90c2e8a6f5d24205766cfd45bf1c38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
