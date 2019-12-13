@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cdf0c9e3_c62e1f58",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-13T18:29:43Z",
+      "side": 1,
+      "message": "Maybe clarify that it is OK to pause a previously paused poller.",
+      "revId": "b53870fb71c32a30ecfaee330e759ad3cf89cd31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce3c2ffc_fe0e75a1",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-13T18:29:43Z",
+      "side": 1,
+      "message": "similar here",
+      "revId": "b53870fb71c32a30ecfaee330e759ad3cf89cd31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
