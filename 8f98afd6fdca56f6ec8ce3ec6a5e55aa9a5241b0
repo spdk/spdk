@@ -141,6 +141,30 @@
       "revId": "8f98afd6fdca56f6ec8ce3ec6a5e55aa9a5241b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1398463e_e9448722",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-13T17:21:40Z",
+      "side": 1,
+      "message": "\u003e I\u0027d tend to agree with Karol that we do not want to be uncertain which tests are ran on which system.\n\nI also agree with this, but I would like to propose a different methodology.\n\n\u003e Goals would be have scripts execute expected tests and fail if its not possible. Avoiding  situations where tests change their meaning or are skipped in unexpected moments. This can \nlead to decreasing test coverage, without anyone even knowing.\n\nI think that there will always be conditionals in the tests. Whether it\u0027s due to a kernel version, a certain package not being installed, or the fact that we are on FreeBSD. Rather than trying to go through all of the test scripts and eliminate every single if statement in them, we should add a step in the post processing script when we read through all of the completed tests. If any test (that doesn\u0027t contain nightly in its name) is not run on an autotest_per_patch job, then we fail that run. Then there is no guessing about whether all of the tests were executed.\nEven if we do get rid of all of the ifs related to system capabilities, there are still nested ifs around test flags that result in the same problem. I just think trying to remove conditionals is a band-aid solution. Standardizing around the test case framework and adding a step to autorun_post.sh gives a sweeping solution that we can be much more confident in.\n\nFor example, even after we settle on what we are doing about GPT, we still have three conditionals in the blockdev tests that determine which bdevs are being used in the tests and significantly affect coverage - \"if [ $SPDK_TEST_RBD -eq 1 ]; then\", \"if [ $SPDK_TEST_CRYPTO -eq 1 ]; then\", \"if hash pmempool; then\". I think all three of these play just as large of a role in affecting coverage.\n\n\u003e 1) Currently all tests are ran against GPT on systems where part_dev_by_gpt succeed. bdev.conf contains the partitioned nvme too, due to line 250. Even fio tests ran against gpt disks. Lets make it clear by having just single bdev.conf.\n2) part_dev_by_gpt should be changed so it works on any system SPDK supports. If it does not, fail blockdev.sh just like with missing fio. This would require to add sgdisk to some systems (ubuntu?) in vm_setup.sh and work out FreeBSD.\n\nI agree with both of these, but like you said, it\u0027s best to address then in another patch. Also, I want to address the other issues silently affecting test coverage in the bdev tests. But I\u0027m trying to do one(ish) thing at a time and was going to save the whole blockdev refactor until after this patch series went through.\n\n\u003e If this one was supposed to address failure on nightly tests, let\u0027s just solve the hello_bdev part.\n\nYes, that is the only purpose of this patch., which I feel like my patch currently accomplishes. But in the interest of progress, I will just switch hello_bdev to 1. run all the time so we know it\u0027s fixed. and 2. run against a malloc bdev because all this test is trying to accomplish is running the application to make sure it didn\u0027t break.\nIn patches on a different thread, we can address the sgdisk dependency and do all the other stuff.",
+      "parentUuid": "9b029e99_20345cb7",
+      "range": {
+        "startLine": 267,
+        "startChar": 0,
+        "endLine": 274,
+        "endChar": 3
+      },
+      "revId": "8f98afd6fdca56f6ec8ce3ec6a5e55aa9a5241b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
