@@ -148,6 +148,7 @@ spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_da
 	nsdata->nuse = num_blocks;
 	nsdata->nlbaf = 0;
 	nsdata->flbas.format = 0;
+	nsdata->nacwu = spdk_bdev_get_acwu(bdev);
 	if (!dif_insert_or_strip) {
 		nsdata->lbaf[0].ms = spdk_bdev_get_md_size(bdev);
 		nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_get_block_size(bdev));
