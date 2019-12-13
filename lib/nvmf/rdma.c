@@ -956,6 +956,11 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 		}
 	}
 
+	/* Warns other event processors that we are about to destroy. */
+	if (rqpair->ibv_state != IBV_QPS_ERR) {
+		spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
+	}
+
 	if (rqpair->cm_id) {
 		if (rqpair->cm_id->qp != NULL) {
 			rdma_destroy_qp(rqpair->cm_id);
@@ -2929,8 +2934,6 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	spdk_trace_record(TRACE_RDMA_QP_DISCONNECT, 0, 0, (uintptr_t)rqpair->cm_id, 0);
-
-	spdk_nvmf_rdma_update_ibv_state(rqpair);
 
 	spdk_nvmf_rdma_start_disconnect(rqpair);
 
