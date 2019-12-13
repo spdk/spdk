@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "efc51477_5cde44d9",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 529,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-13T20:59:04Z",
+      "side": 1,
+      "message": "Do you need this extra layer of functions? I know this is all marked inline so it goes away,and it avoids doing an unnecessary if check in one code path, but I doubt that matters for performance. It might be simpler to just combine this function and _nvme_rdma_qpair_submit_sends and similarly for recvs.",
+      "revId": "e3206fd32232d33926c50178f23afd1af5143942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be1caa9c_9bfe6bab",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 575,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-13T20:59:04Z",
+      "side": 1,
+      "message": "Should you assert that wr-\u003enext is NULL? Or it\u0027s probably simple enough to chase the chain and set last appropriately.",
+      "revId": "e3206fd32232d33926c50178f23afd1af5143942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0103dacf_eaa0c47b",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 580,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-13T20:59:04Z",
+      "side": 1,
+      "message": "We usually place a blank line after a scope closure",
+      "revId": "e3206fd32232d33926c50178f23afd1af5143942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6371cb34_0fe435f8",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-13T20:59:04Z",
+      "side": 1,
+      "message": "Similarly, we usually place a blank line before a control statement unless the line before it is a critical part of the statement itself like initialization of a loop variable.",
+      "revId": "e3206fd32232d33926c50178f23afd1af5143942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3d896b4_f40be5f8",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-13T20:59:04Z",
+      "side": 1,
+      "message": "See comments on send version",
+      "revId": "e3206fd32232d33926c50178f23afd1af5143942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "903ed242_155254ae",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-13T20:59:04Z",
+      "side": 1,
+      "message": "The SPDK project writes these statements the other way around - left to right as they\u0027d be read in English. I know historically writing them as you\u0027ve done was considered a best practice to avoid mistakenly typing \u0027\u003d\u0027 when you meant \u0027\u003d\u003d\u0027. However, modern compilers are smart enough to catch that mistake for you, so we prefer to make it more human readable.",
+      "revId": "e3206fd32232d33926c50178f23afd1af5143942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
