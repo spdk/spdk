@@ -135,6 +135,8 @@ The functions `spdk_reactor_enable_framework_monitor_context_switch()` and
 Added spdk_bdev_io_get_nvme_fused_status function for translating bdev_io status to NVMe status
 code for fused compare-and-write operation.
 
+Added spdk_bdev_get_acwu function for getting block device atomic compare and write unit size.
+
 ## v19.10:
 
 ### rpc
