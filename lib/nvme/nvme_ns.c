@@ -250,6 +250,12 @@ spdk_nvme_ns_supports_extended_lba(struct spdk_nvme_ns *ns)
 	return (ns->flags & SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED) ? true : false;
 }
 
+bool
+spdk_nvme_ns_supports_compare(struct spdk_nvme_ns *ns)
+{
+	return (ns->flags & SPDK_NVME_NS_COMPARE_SUPPORTED) ? true : false;
+}
+
 uint32_t
 spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns)
 {
