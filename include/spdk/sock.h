@@ -73,6 +73,7 @@ struct spdk_sock_request {
 		unsigned int			offset;
 	} internal;
 
+	uint32_t			len; /* The total length of the I/Os */
 	int				iovcnt;
 	/* struct iovec			iov[]; */
 };
