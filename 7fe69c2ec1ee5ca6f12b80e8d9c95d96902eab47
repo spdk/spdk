@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92b5091f_7161a5fb",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2032,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-13T05:07:30Z",
+      "side": 1,
+      "message": "Would it be possible to add a statement here, \nif((tqpair-\u003estate \u003d\u003d NVME_TCP_QPAIR_STATE_EXITING) || !spdk_sock_is_connected(tqpair-\u003esock)\n) {\nreturn NVME_TCP_PDU_FATAL;\n}",
+      "range": {
+        "startLine": 2032,
+        "startChar": 3,
+        "endLine": 2032,
+        "endChar": 4
+      },
+      "revId": "7fe69c2ec1ee5ca6f12b80e8d9c95d96902eab47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad68d154_dfba84e8",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2541,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-13T05:07:30Z",
+      "side": 1,
+      "message": "Would it be possible for the following case:\nrc \u003c 0, spdk_nvmf_tcp_qpair_disconnect is also called, then we call it here \nagain. Though I see your code change in: spdk_nvmf_tcp_send_r2t_pdu, you check the status of tqpair and make it will not call twice, but it is not nice, since you call !spdk_sock_is_connected(tqpair-\u003esock). \nI think that you can still use rc \u003c 0 check, but you can directly add a new check in line 2043.\n\nSecondly, I would like to ask. For the previous code, will it be long time delay?",
+      "range": {
+        "startLine": 2539,
+        "startChar": 1,
+        "endLine": 2541,
+        "endChar": 2
+      },
+      "revId": "7fe69c2ec1ee5ca6f12b80e8d9c95d96902eab47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
