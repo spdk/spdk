@@ -946,7 +946,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 			/* Drop all received but unprocessed commands for this queue and return them to SRQ */
 			STAILQ_FOREACH_SAFE(rdma_recv, &rqpair->resources->incoming_queue, link, recv_tmp) {
 				if (rqpair == rdma_recv->qpair) {
-					STAILQ_REMOVE_HEAD(&rqpair->resources->incoming_queue, link);
+					STAILQ_REMOVE(&rqpair->resources->incoming_queue, rdma_recv, spdk_nvmf_rdma_recv, link);
 					rc = ibv_post_srq_recv(rqpair->srq, &rdma_recv->wr, &bad_recv_wr);
 					if (rc) {
 						SPDK_ERRLOG("Unable to re-post rx descriptor\n");
