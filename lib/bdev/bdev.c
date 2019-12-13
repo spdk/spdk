@@ -2855,6 +2855,12 @@ spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 	return &bdev->uuid;
 }
 
+uint16_t
+spdk_bdev_get_acwu(const struct spdk_bdev *bdev)
+{
+	return bdev->acwu;
+}
+
 uint32_t
 spdk_bdev_get_md_size(const struct spdk_bdev *bdev)
 {
