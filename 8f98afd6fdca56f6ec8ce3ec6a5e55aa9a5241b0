@@ -93,6 +93,30 @@
       "revId": "8f98afd6fdca56f6ec8ce3ec6a5e55aa9a5241b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19e53746_897fef1b",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-13T07:11:09Z",
+      "side": 1,
+      "message": "\u003e I\u0027d prefer to keep a separation between the test cases and the pre-work.\n\nI was suspecting that:)\n\n\u003e If we don\u0027t have gpt on a specific machine, that machine shouldn\u0027t report a completion for that test.\n\nHow about we make sgdisk a hard dependency, install it on all CI systems? That way we could just exit with error if GPT partition was not created and avoid doing \"ifs\"",
+      "parentUuid": "2a387b51_0df622d5",
+      "range": {
+        "startLine": 267,
+        "startChar": 0,
+        "endLine": 274,
+        "endChar": 3
+      },
+      "revId": "8f98afd6fdca56f6ec8ce3ec6a5e55aa9a5241b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
