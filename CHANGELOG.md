@@ -9,6 +9,9 @@ never return EAGAIN, instead queueing internally until the data has all been sen
 simplify many code flows that create pollers to continue attempting to flush writes
 on sockets.
 
+Add len in spdk_sock_request. The value of length represents the sum of all the iov_len in iovs
+array bound to the requst, and must be initialized by the user before calling spdk_sock_writev_async.
+
 ### isa-l
 
 Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and
