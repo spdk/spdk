@@ -480,10 +480,8 @@ function vm_kill_all()
 #
 function vm_shutdown_all()
 {
-	local shell_restore_x
-	shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
-	# XXX: temporally disable to debug shutdown issue
-	# set +x
+	# XXX: temporarily disable to debug shutdown issue
+	# xtrace_disable
 
 	local vms
 	vms=$(vm_list_all)
@@ -506,7 +504,7 @@ function vm_shutdown_all()
 
 		if [[ $all_vms_down == 1 ]]; then
 			notice "All VMs successfully shut down"
-			$shell_restore_x
+			xtrace_restore
 			return 0
 		fi
 
@@ -516,15 +514,12 @@ function vm_shutdown_all()
 
 	rm -rf $VM_DIR
 
-	$shell_restore_x
-	error "Timeout waiting for some VMs to shutdown"
-	return 1
+	xtrace_restore
 }
 
 function vm_setup()
 {
-	local shell_restore_x
-	shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
+	xtrace_disable
 	local OPTIND optchar vm_num
 
 	local os=""
@@ -586,7 +581,7 @@ function vm_setup()
 			local vm_dir="$VM_DIR/$i"
 			[[ ! -d $vm_dir ]] && break
 		done
-		$shell_restore_x
+		xtrace_restore
 
 		vm_num=$i
 	fi
@@ -683,7 +678,7 @@ function vm_setup()
 		queue_number=$cpu_num
 	fi
 
-	$shell_restore_x
+	xtrace_restore
 
 	local node_num=${!qemu_numa_node_param}
 	local boot_disk_present=false
@@ -913,9 +908,7 @@ function vm_wait_for_boot()
 {
 	assert_number $1
 
-	local shell_restore_x
-	shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
-	set +x
+	xtrace_disable
 
 	local all_booted=false
 	local timeout_time=$1
@@ -943,14 +936,14 @@ function vm_wait_for_boot()
 			if ! vm_is_running $vm_num; then
 				warning "VM $vm_num is not running"
 				vm_print_logs $vm_num
-				$shell_restore_x
+				xtrace_restore
 				return 1
 			fi
 
 			if [[ $(date +%s) -gt $timeout_time ]]; then
 				warning "timeout waiting for machines to boot"
 				vm_print_logs $vm_num
-				$shell_restore_x
+				xtrace_restore
 				return 1
 			fi
 			if (( i > 30 )); then
@@ -972,7 +965,7 @@ function vm_wait_for_boot()
 	done
 
 	notice "all VMs ready"
-	$shell_restore_x
+	xtrace_restore
 	return 0
 }
 

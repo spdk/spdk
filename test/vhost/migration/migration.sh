@@ -127,9 +127,7 @@ function vm_migrate()
 
 function is_fio_running()
 {
-	local shell_restore_x
-	shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
-	set +x
+	xtrace_disable
 
 	if vm_exec $1 'kill -0 $(cat /root/fio.pid)'; then
 		local ret=0
@@ -137,7 +135,7 @@ function is_fio_running()
 		local ret=1
 	fi
 
-	$shell_restore_x
+	xtrace_restore
 	return $ret
 }
 
