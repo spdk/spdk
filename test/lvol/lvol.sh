@@ -39,7 +39,6 @@ function usage() {
                                     702: 'tasting_positive_with_different_lvol_store_cluster_size',
                                     750: 'snapshot_readonly',
                                     751: 'snapshot_compare_with_lvol_bdev',
-                                    10000: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,2,19,20\", default: all"

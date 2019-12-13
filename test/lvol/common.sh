@@ -16,6 +16,10 @@ function run_lvol_test() {
 	# run test case in a subshell so it can define its own traps
 	run_test suite $@
 
+	if [ -n "$skip_leftover" ]; then
+		unset skip_leftover
+		return
+	fi
 	leftover_bdevs=$(rpc_cmd bdev_get_bdevs)
 	[ "$(jq length <<< "$leftover_bdevs")" == "0" ]
 	leftover_lvs=$(rpc_cmd bdev_lvol_get_lvstores)
