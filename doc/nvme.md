@@ -301,3 +301,29 @@ must be compiled with "./configure --with-nvme-cuse".
 NVMe CUSE presents character device for controller and namespaces only at the time
 the controller is being attached. Dynamic creation/deletion of namespaces is not
 supported yet.
+
+NVMe namespaces are created as character devices and its use may be limited for
+tools expecting block devices.
+
+Sysfs is not updated by SPDK.
+
+Some tools by defauls are looking NVMe devices in "/dev" directory. Since NVMe CUSE
+creates nodes in unusual directory "/dev/spdk/" nvme device can not be found in default
+directory or not recognized as NVMe.
+
+SCSI to NVMe Translation Layer is not implemented. Tools are using this layer to identify,
+manage or operate device will not work properly or its use may be limited.
+
+### Examples of using smartctl
+
+smartctl tool recognizes device type based on the device path. If none of expected
+patterns match SCSI translation layer is used to identify device.
+
+To use smartctl '-d nvme' parameter must be used in addition with full path to
+the NVMe device.
+
+~~~{.sh}
+    smartctl -d nvme -i /dev/spdk/nvme0
+    smartctl -d nvme -H /dev/spdk/nvme1
+    ...
+~~~
