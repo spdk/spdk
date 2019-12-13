@@ -117,6 +117,30 @@
       "revId": "8f98afd6fdca56f6ec8ce3ec6a5e55aa9a5241b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b029e99_20345cb7",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-13T09:34:26Z",
+      "side": 1,
+      "message": "I\u0027d tend to agree with Karol that we do not want to be uncertain which tests are ran on which system.\n\nFor example looking at the tests right now. lines 288-289 on *current master* execute on FreeBSD. But since part_dev_by_gpt didn\u0027t partition drives there, bdev_gpt.conf only consisted of not partitioned nvme device. This does not seem like an obvious course just by reading this script.\n\nGoals would be have scripts execute expected tests and fail if its not possible. Avoiding situations where tests change their meaning or are skipped in unexpected moments. This can lead to decreasing test coverage, without anyone even knowing.\nIf someone was to uninstall sgdisk from all systems, we wouldn\u0027t notice it in test results. All due to line 245 and 302 masking errors from part_dev_by_gpt.\n\nThe challenge you are undertaking with this patch series is the right direction and to assure we don\u0027t compromise those efforts I\u0027d suggest some modifications.\n\n1) Currently all tests are ran against GPT on systems where part_dev_by_gpt succeed. bdev.conf contains the partitioned nvme too, due to line 250. Even fio tests ran against gpt disks. Lets make it clear by having just single bdev.conf.\n2) part_dev_by_gpt should be changed so it works on any system SPDK supports. If it does not, fail blockdev.sh just like with missing fio. This would require to add sgdisk to some systems (ubuntu?) in vm_setup.sh and work out FreeBSD.\n\nAbove does not have to be part of this patch. If this one was supposed to address failure on nightly tests, let\u0027s just solve the hello_bdev part. Either moving it up before partitioning or taking the bdev it is run against from \u0027bdevs_name\u0027 variable.",
+      "parentUuid": "19e53746_897fef1b",
+      "range": {
+        "startLine": 267,
+        "startChar": 0,
+        "endLine": 274,
+        "endChar": 3
+      },
+      "revId": "8f98afd6fdca56f6ec8ce3ec6a5e55aa9a5241b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
