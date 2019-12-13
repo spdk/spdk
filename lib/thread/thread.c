@@ -88,6 +88,16 @@ enum spdk_poller_state {
 
 	/* The poller was unregistered during the execution of its fn. */
 	SPDK_POLLER_STATE_UNREGISTERED,
+
+	/* The poller is in the process of being paused.  It will be paused
+	 * during the next time it's supposed to be executed.
+	 */
+	SPDK_POLLER_STATE_PAUSING,
+
+	/* The poller is registered but currently paused.  It's on the
+	 * paused_pollers list.
+	 */
+	SPDK_POLLER_STATE_PAUSED,
 };
 
 struct spdk_poller {
@@ -126,6 +136,13 @@ struct spdk_thread {
 	 * Contains pollers running on this thread with a periodic timer.
 	 */
 	TAILQ_HEAD(timer_pollers_head, spdk_poller)	timer_pollers;
+
+	/*
+	 * Contains paused pollers.  Pollers on this queue are waiting until
+	 * they are resumed (in which case they're put onto the active/timer
+	 * queues) or unregistered.
+	 */
+	TAILQ_HEAD(paused_pollers_head, spdk_poller)	paused_pollers;
 
 	struct spdk_ring		*messages;
 
@@ -202,7 +219,7 @@ _free_thread(struct spdk_thread *thread)
 	}
 
 	TAILQ_FOREACH_SAFE(poller, &thread->active_pollers, tailq, ptmp) {
-		if (poller->state == SPDK_POLLER_STATE_WAITING) {
+		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
 			SPDK_WARNLOG("poller %p still registered at thread exit\n",
 				     poller);
 		}
@@ -213,12 +230,18 @@ _free_thread(struct spdk_thread *thread)
 
 
 	TAILQ_FOREACH_SAFE(poller, &thread->timer_pollers, tailq, ptmp) {
-		if (poller->state == SPDK_POLLER_STATE_WAITING) {
+		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
 			SPDK_WARNLOG("poller %p still registered at thread exit\n",
 				     poller);
 		}
 
 		TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
+		free(poller);
+	}
+
+	TAILQ_FOREACH_SAFE(poller, &thread->paused_pollers, tailq, ptmp) {
+		SPDK_WARNLOG("poller %p still registered at thread exit\n", poller);
+		TAILQ_REMOVE(&thread->paused_pollers, poller, tailq);
 		free(poller);
 	}
 
@@ -267,6 +290,7 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 	TAILQ_INIT(&thread->io_channels);
 	TAILQ_INIT(&thread->active_pollers);
 	TAILQ_INIT(&thread->timer_pollers);
+	TAILQ_INIT(&thread->paused_pollers);
 	SLIST_INIT(&thread->msg_cache);
 	thread->msg_cache_count = 0;
 
@@ -444,6 +468,16 @@ _spdk_poller_insert_timer(struct spdk_thread *thread, struct spdk_poller *poller
 	TAILQ_INSERT_HEAD(&thread->timer_pollers, poller, tailq);
 }
 
+static void
+_spdk_thread_insert_poller(struct spdk_thread *thread, struct spdk_poller *poller)
+{
+	if (poller->period_ticks) {
+		_spdk_poller_insert_timer(thread, poller, spdk_get_ticks());
+	} else {
+		TAILQ_INSERT_TAIL(&thread->active_pollers, poller, tailq);
+	}
+}
+
 int
 spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 {
@@ -476,6 +510,11 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 			free(poller);
 			continue;
+		} else if (poller->state == SPDK_POLLER_STATE_PAUSING) {
+			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
+			TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
+			poller->state = SPDK_POLLER_STATE_PAUSED;
+			continue;
 		}
 
 		poller->state = SPDK_POLLER_STATE_RUNNING;
@@ -485,9 +524,9 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 			free(poller);
 			continue;
+		} else if (poller->state != SPDK_POLLER_STATE_PAUSED) {
+			poller->state = SPDK_POLLER_STATE_WAITING;
 		}
-
-		poller->state = SPDK_POLLER_STATE_WAITING;
 
 #ifdef DEBUG
 		if (poller_rc == -1) {
@@ -512,6 +551,11 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
 			free(poller);
 			continue;
+		} else if (poller->state == SPDK_POLLER_STATE_PAUSING) {
+			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
+			TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
+			poller->state = SPDK_POLLER_STATE_PAUSED;
+			continue;
 		}
 
 		if (now < poller->next_run_tick) {
@@ -530,7 +574,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
 			free(poller);
-		} else {
+		} else if (poller->state != SPDK_POLLER_STATE_PAUSED) {
 			poller->state = SPDK_POLLER_STATE_WAITING;
 			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
 			_spdk_poller_insert_timer(thread, poller, now);
@@ -574,8 +618,8 @@ spdk_thread_has_active_pollers(struct spdk_thread *thread)
 	return !TAILQ_EMPTY(&thread->active_pollers);
 }
 
-bool
-spdk_thread_has_pollers(struct spdk_thread *thread)
+static bool
+_spdk_thread_has_unpaused_pollers(struct spdk_thread *thread)
 {
 	if (TAILQ_EMPTY(&thread->active_pollers) &&
 	    TAILQ_EMPTY(&thread->timer_pollers)) {
@@ -586,10 +630,21 @@ spdk_thread_has_pollers(struct spdk_thread *thread)
 }
 
 bool
+spdk_thread_has_pollers(struct spdk_thread *thread)
+{
+	if (!_spdk_thread_has_unpaused_pollers(thread) &&
+	    TAILQ_EMPTY(&thread->paused_pollers)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool
 spdk_thread_is_idle(struct spdk_thread *thread)
 {
 	if (spdk_ring_count(thread->messages) ||
-	    spdk_thread_has_pollers(thread)) {
+	    _spdk_thread_has_unpaused_pollers(thread)) {
 		return false;
 	}
 
@@ -723,11 +778,7 @@ spdk_poller_register(spdk_poller_fn fn,
 		poller->period_ticks = 0;
 	}
 
-	if (poller->period_ticks) {
-		_spdk_poller_insert_timer(thread, poller, spdk_get_ticks());
-	} else {
-		TAILQ_INSERT_TAIL(&thread->active_pollers, poller, tailq);
-	}
+	_spdk_thread_insert_poller(thread, poller);
 
 	return poller;
 }
@@ -751,10 +802,85 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 		return;
 	}
 
+	/* If the poller was paused, put it on the active_pollers list so that
+	 * its unregistration can be processed by spdk_thread_poll().
+	 */
+	if (poller->state == SPDK_POLLER_STATE_PAUSED) {
+		TAILQ_REMOVE(&thread->paused_pollers, poller, tailq);
+		TAILQ_INSERT_TAIL(&thread->active_pollers, poller, tailq);
+		poller->period_ticks = 0;
+	}
+
 	/* Simply set the state to unregistered. The poller will get cleaned up
 	 * in a subsequent call to spdk_thread_poll().
 	 */
 	poller->state = SPDK_POLLER_STATE_UNREGISTERED;
+}
+
+void
+spdk_poller_pause(struct spdk_poller *poller)
+{
+	struct spdk_thread *thread;
+
+	if (poller->state == SPDK_POLLER_STATE_PAUSED ||
+	    poller->state == SPDK_POLLER_STATE_PAUSING) {
+		return;
+	}
+
+	thread = spdk_get_thread();
+	if (!thread) {
+		assert(false);
+		return;
+	}
+
+	/* If a poller is paused from within itself, we can immediately move it
+	 * on the paused_pollers list.  Otherwise we just set its state to
+	 * SPDK_POLLER_STATE_PAUSING and let spdk_thread_poll() move it.  It
+	 * allows a poller to be paused from another one's context without
+	 * breaking the TAILQ_FOREACH_REVERSE_SAFE iteration.
+	 */
+	if (poller->state != SPDK_POLLER_STATE_RUNNING) {
+		poller->state = SPDK_POLLER_STATE_PAUSING;
+	} else {
+		if (poller->period_ticks > 0) {
+			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
+		} else {
+			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
+		}
+
+		TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
+		poller->state = SPDK_POLLER_STATE_PAUSED;
+	}
+}
+
+void
+spdk_poller_resume(struct spdk_poller *poller)
+{
+	struct spdk_thread *thread;
+
+	if (poller->state != SPDK_POLLER_STATE_PAUSED &&
+	    poller->state != SPDK_POLLER_STATE_PAUSING) {
+		return;
+	}
+
+	thread = spdk_get_thread();
+	if (!thread) {
+		assert(false);
+		return;
+	}
+
+	/* If a poller is paused it has to be removed from the paused pollers
+	 * list and put on the active / timer list depending on its
+	 * period_ticks.  If a poller is still in the process of being paused,
+	 * we just need to flip its state back to waiting, as it's already on
+	 * the appropriate list.
+	 */
+	if (poller->state == SPDK_POLLER_STATE_PAUSED) {
+		TAILQ_REMOVE(&thread->paused_pollers, poller, tailq);
+		_spdk_thread_insert_poller(thread, poller);
+	}
+
+	poller->state = SPDK_POLLER_STATE_WAITING;
 }
 
 struct call_thread {
