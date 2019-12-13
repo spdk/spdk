@@ -3546,6 +3546,10 @@ spdk_bdev_comparev_and_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io
 		return -EINVAL;
 	}
 
+	if (num_blocks > bdev->acwu) {
+		return -EINVAL;
+	}
+
 	bdev_io = bdev_channel_get_io(channel);
 	if (!bdev_io) {
 		return -ENOMEM;
@@ -4637,6 +4641,11 @@ bdev_init(struct spdk_bdev *bdev)
 	/* If the user didn't specify a write unit size, set it to one. */
 	if (bdev->write_unit_size == 0) {
 		bdev->write_unit_size = 1;
+	}
+
+	/* Set ACWU value to 1 if bdev module did not set it (does not support it natively) */
+	if (bdev->acwu == 0) {
+		bdev->acwu = 1;
 	}
 
 	TAILQ_INIT(&bdev->internal.open_descs);
