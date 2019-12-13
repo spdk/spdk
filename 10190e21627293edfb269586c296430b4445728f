@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a6299b7_6b85face",
+        "filename": "examples/blobfs/fio_plugin/bdev.conf.in",
+        "patchSetId": 4
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-12-13T01:46:04Z",
+      "side": 1,
+      "message": "It would be good to use Malloc bdev in conf.in, like what bdev/fio_plugin does.\nThen later, when adding test cases, we can copy or directly use bdev.conf.in.\nAlso when considering the performance cost of blobfs stack, conf.in with Malloc bdev can be directly applied.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 53
+      },
+      "revId": "10190e21627293edfb269586c296430b4445728f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4628e6bf_09e37aa5",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 832,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-12-13T01:46:04Z",
+      "side": 1,
+      "message": "Hi, Zhenghua\nYour default g_fs_cache_mb value is good that setting a small fs cache size can help reduce useless memory usage.\nSince the fio test is based on blobfs async API, and they bypass the fs cache, so maybe here it is also better to remove the blobfs_cache configuration.",
+      "range": {
+        "startLine": 824,
+        "startChar": 0,
+        "endLine": 832,
+        "endChar": 3
+      },
+      "revId": "10190e21627293edfb269586c296430b4445728f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "268d2e4b_30c4b2fb",
+        "filename": "examples/blobfs/fio_plugin/fio_plugin.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 851,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-12-13T01:46:04Z",
+      "side": 1,
+      "message": "I\u0027m thinking about adding one more bool config like \"make_new_fs\", as one indicator of forcing creating a new fs on bdev. \nThen you can rename spdk_fio_fs_load_start to be spdk_fio_fs_start, and also call spdk_fs_init or spdk_fs_load based on the config.\nWith this change, test/blobfs/mkfs/mkfs is no longer required, and Malloc bdev can also be applied to blobfs fio test.",
+      "range": {
+        "startLine": 850,
+        "startChar": 3,
+        "endLine": 851,
+        "endChar": 1
+      },
+      "revId": "10190e21627293edfb269586c296430b4445728f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
