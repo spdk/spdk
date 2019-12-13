@@ -73,6 +73,9 @@ struct spdk_sock_request {
 		unsigned int			offset;
 	} internal;
 
+	/* The total length of the I/Os in the I/O vector array(iov) */
+	uint32_t			len;
+	/* The total count of the I/O vector array(iov) */
 	int				iovcnt;
 	/* struct iovec			iov[]; */
 };
