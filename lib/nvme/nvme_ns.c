@@ -83,6 +83,10 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 		ns->flags |= SPDK_NVME_NS_DEALLOCATE_SUPPORTED;
 	}
 
+	if (ns->ctrlr->cdata.oncs.compare) {
+		ns->flags |= SPDK_NVME_NS_COMPARE_SUPPORTED;
+	}
+
 	if (ns->ctrlr->cdata.vwc.present) {
 		ns->flags |= SPDK_NVME_NS_FLUSH_SUPPORTED;
 	}
