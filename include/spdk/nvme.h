@@ -1937,6 +1937,7 @@ enum spdk_nvme_ns_flags {
 							      metadata is transferred as a contiguous
 							      part of the logical block that it is associated with */
 	SPDK_NVME_NS_WRITE_UNCORRECTABLE_SUPPORTED	= 0x40, /**< The write uncorrectable command is supported */
+	SPDK_NVME_NS_COMPARE_SUPPORTED		= 0x80, /**< The compare command is supported */
 };
 
 /**
