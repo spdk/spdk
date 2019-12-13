@@ -1,6 +1,11 @@
 function xtrace_disable() {
-	PREV_BASH_OPTS="$-"
-	set +x
+	if [ "$XTRACE_DISABLED" != "yes" ]; then
+		PREV_BASH_OPTS="$-"
+		if [[ "$PREV_BASH_OPTS" == *"x"* ]]; then
+			XTRACE_DISABLED="yes"
+		fi
+		set +x
+	fi
 }
 
 xtrace_disable
@@ -18,7 +23,7 @@ function xtrace_enable() {
 # Keep it as alias to avoid xtrace_enable backtrace always pointing to xtrace_restore.
 # xtrace_enable will appear as called directly from the user script, from the same line
 # that "called" xtrace_restore.
-alias xtrace_restore='if [[ "$PREV_BASH_OPTS" == *"x"* ]]; then set -x; xtrace_enable; fi'
+alias xtrace_restore='if [[ "$PREV_BASH_OPTS" == *"x"* ]]; then set -x; XTRACE_DISABLED="no"; PREV_BASH_OPTS=""; xtrace_enable; fi'
 
 : ${RUN_NIGHTLY:=0}
 export RUN_NIGHTLY
