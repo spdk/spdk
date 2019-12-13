@@ -2989,8 +2989,6 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 
 	spdk_trace_record(TRACE_RDMA_QP_DISCONNECT, 0, 0, (uintptr_t)rqpair->cm_id, 0);
 
-	spdk_nvmf_rdma_update_ibv_state(rqpair);
-
 	spdk_nvmf_rdma_start_disconnect(rqpair);
 
 	return 0;
