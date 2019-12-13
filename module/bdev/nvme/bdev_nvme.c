@@ -896,15 +896,24 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 		bdev->disk.uuid = *uuid;
 	}
 
+	nsdata = spdk_nvme_ns_get_data(ns);
+
 	bdev->disk.md_len = spdk_nvme_ns_get_md_size(ns);
 	if (bdev->disk.md_len != 0) {
-		nsdata = spdk_nvme_ns_get_data(ns);
 		bdev->disk.md_interleave = nsdata->flbas.extended;
 		bdev->disk.dif_type = (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns);
 		if (bdev->disk.dif_type != SPDK_DIF_DISABLE) {
 			bdev->disk.dif_is_head_of_md = nsdata->dps.md_start;
 			bdev->disk.dif_check_flags = nvme_bdev_ctrlr->prchk_flags;
 		}
+	}
+
+	if (!bdev_nvme_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE)) {
+		bdev->disk.acwu = 0;
+	} else if (nsdata->nsfeat.ns_atomic_write_unit) {
+		bdev->disk.acwu = nsdata->nacwu;
+	} else {
+		bdev->disk.acwu = cdata->acwu;
 	}
 
 	bdev->disk.ctxt = bdev;
