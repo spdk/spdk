@@ -425,6 +425,16 @@ function test_construct_nested_lvol() {
 	check_leftover_devices
 }
 
+# Call CTRL+C (SIGTERM) occurs after creating lvol store
+function test_sigterm() {
+	# create an lvol store
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Send SIGTERM signal to the application
+	killprocess $spdk_pid
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -443,6 +453,9 @@ run_test "test_construct_lvol_inexistent_lvs" test_construct_lvol_inexistent_lvs
 run_test "test_construct_lvol_full_lvs" test_construct_lvol_full_lvs
 run_test "test_construct_lvol_alias_conflict" test_construct_lvol_alias_conflict
 run_test "test_construct_nested_lvol" test_construct_nested_lvol
+run_test "test_sigterm" test_sigterm
 
 trap - SIGINT SIGTERM EXIT
-killprocess $spdk_pid
+if ps -p $spdk_pid; then
+	killprocess $spdk_pid
+fi
