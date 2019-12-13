@@ -125,8 +125,6 @@ def case_message(func):
             653: 'thin_provisioning_resize',
             654: 'thin_overprovisioning',
             655: 'thin_provisioning_filling_disks_less_than_lvs_size',
-            # SIGTERM
-            10000: 'SIGTERM',
         }
         num = int(func.__name__.strip('test_case')[:])
         print("************************************")
@@ -925,32 +923,5 @@ class TestCases(object):
         fail_count += self.c.bdev_malloc_delete(base_name)
         # Expected result:
         # - calls successful, return code = 0
-        # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case10000(self):
-        """
-        SIGTERM
-
-        Call CTRL+C (SIGTERM) occurs after creating lvol store
-        """
-        pid_path = path.join(self.path, 'vhost.pid')
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct lvol store on created malloc bddev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        # Check correct uuid values in response bdev_lvol_get_lvstores command
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-
-        # Send SIGTERM signal to the application
-        fail_count += self._stop_vhost(pid_path)
-
-        # Expected result:
-        # - calls successful, return code = 0
-        # - bdev_get_bdevs: no change
         # - no other operation fails
         return fail_count

@@ -34,7 +34,6 @@ function usage() {
                                     653: 'thin_provisioning_resize',
                                     654: 'thin_overprovisioning',
                                     655: 'thin_provisioning_filling_disks_less_than_lvs_size',
-                                    10000: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,2,19,20\", default: all"
