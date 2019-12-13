@@ -1890,6 +1890,18 @@ uint32_t spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns);
 bool spdk_nvme_ns_supports_extended_lba(struct spdk_nvme_ns *ns);
 
 /**
+ * Check whether if the namespace supports compare operation
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ns Namespace to query.
+ *
+ * \return true if the namespace supports compare operation, or false otherwise.
+ */
+bool spdk_nvme_ns_supports_compare(struct spdk_nvme_ns *ns);
+
+/**
  * Determine the value returned when reading deallocated blocks.
  *
  * If deallocated blocks return 0, the deallocate command can be used as a more
