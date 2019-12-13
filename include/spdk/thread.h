@@ -418,6 +418,24 @@ struct spdk_poller *spdk_poller_register(spdk_poller_fn fn,
 void spdk_poller_unregister(struct spdk_poller **ppoller);
 
 /**
+ * Pause a poller.
+ *
+ * The poller is not run until it is resumed with spdk_poller_resume().
+ *
+ * \param poller The poller to pause.
+ */
+void spdk_poller_pause(struct spdk_poller *poller);
+
+/**
+ * Resume a poller.
+ *
+ * Resumes a poller paused with spdk_poller_pause().
+ *
+ * \param poller The poller to resume.
+ */
+void spdk_poller_resume(struct spdk_poller *poller);
+
+/**
  * Register the opaque io_device context as an I/O device.
  *
  * After an I/O device is registered, it can return I/O channels using the
