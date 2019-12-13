@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3ef53f6_dd0ecaff",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-13T07:23:25Z",
+      "side": 1,
+      "message": "can you just rename it to timeo?\nNot \"timeout\" because it\u0027s a shell builtin",
+      "range": {
+        "startLine": 24,
+        "startChar": 2,
+        "endLine": 24,
+        "endChar": 13
+      },
+      "revId": "6a338f74796deb06b895e2261f1fb43e5ba434ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3631195c_419f5c29",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-13T07:23:25Z",
+      "side": 1,
+      "message": "Yes, this looks OK. However, this loop will end at the moment when parted_time reaches 10 and just proceed to mkfs commands.\nWe\u0027d probably want to move parted_time -lt 10 condition out of the \"while\" statement, so that we can exit with error.\nSMth like:\nif [parterd_time -gt 10]; then\n    echo ERROR MESSAGE\n    false\nfi\n\n\nBTW, you could probably just try using this shell \"timeout\" utility I mentioned.\nHaven\u0027t used it myself yet. Looking at help I imagine it should look something like this:\n\nfunction check_parted_finish() {\n    while [ ! -e \"/dev/${dev}1\" ]; do\n         sleep 0.1\n    done\n    return 0\n}\n\ntimeout check_parted_finish 10",
+      "range": {
+        "startLine": 29,
+        "startChar": 2,
+        "endLine": 29,
+        "endChar": 62
+      },
+      "revId": "6a338f74796deb06b895e2261f1fb43e5ba434ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
