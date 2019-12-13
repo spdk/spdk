@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b383c4d5_bada36ca",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 3121,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-13T14:50:57Z",
+      "side": 1,
+      "message": "could you do some rearranging, and just have this call bdev_comparev_blocks_with_md?\n\nall you should need to do is:\n\nstruct iovec *iov \u003d \u0026bdev_io-\u003eu.bdev.iov;\n\niov-\u003eiov_base \u003d buf;\niov-\u003eiov_len \u003d num_blocks * bdev-\u003eblocklen;\n\nand then pass iov and iovcnt\u003d1 to bdev_comparev_blocks_with_md\n\nit will save some code, especially since you\u0027re going to need to add more code here to check if the bdev supports COMPARE natively, and if not, add in your own callback to do the compare manually",
+      "revId": "4081bd111a7e5d5a0a6915e9e7739710705994ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
