@@ -699,7 +699,7 @@ fail:
 }
 
 static int
-nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, uint64_t rsp_idx)
+nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, uint64_t rsp_idx, int *reaped)
 {
 	struct spdk_nvme_rdma_req *rdma_req;
 	struct spdk_nvme_cpl *rsp;
@@ -713,6 +713,7 @@ nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, uint64_t rsp_idx)
 	nvme_rdma_req_complete(req, rsp);
 
 	if (rdma_req->request_ready_to_put) {
+		(*reaped)++;
 		nvme_rdma_req_put(rqpair, rdma_req);
 	} else {
 		rdma_req->request_ready_to_put = true;
@@ -1936,14 +1937,12 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 			case IBV_WC_RECV:
 				SPDK_DEBUGLOG(SPDK_LOG_NVME, "CQ recv completion\n");
 
-				reaped++;
-
 				if (wc[i].byte_len < sizeof(struct spdk_nvme_cpl)) {
 					SPDK_ERRLOG("recv length %u less than expected response size\n", wc[i].byte_len);
 					goto fail;
 				}
 
-				if (nvme_rdma_recv(rqpair, wc[i].wr_id)) {
+				if (nvme_rdma_recv(rqpair, wc[i].wr_id, &reaped)) {
 					SPDK_ERRLOG("nvme_rdma_recv processing failure\n");
 					goto fail;
 				}
@@ -1953,6 +1952,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 				rdma_req = (struct spdk_nvme_rdma_req *)wc[i].wr_id;
 
 				if (rdma_req->request_ready_to_put) {
+					reaped++;
 					nvme_rdma_req_put(rqpair, rdma_req);
 				} else {
 					rdma_req->request_ready_to_put = true;
