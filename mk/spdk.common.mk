@@ -246,22 +246,22 @@ DEPFLAGS = -MMD -MP -MF $*.d.tmp
 # Compile first input $< (.c) into $@ (.o)
 COMPILE_C=\
 	$(Q)echo "  CC $S/$@"; \
-	$(CC) -o $@ $(DEPFLAGS) $(CFLAGS) -c $< && \
+	$(CC) -o $@ $(DEPFLAGS) $(CPPFLAGS) $(CFLAGS) -c $< && \
 	mv -f $*.d.tmp $*.d && touch -c $@
 
 COMPILE_CXX=\
 	$(Q)echo "  CXX $S/$@"; \
-	$(CXX) -o $@ $(DEPFLAGS) $(CXXFLAGS) -c $< && \
+	$(CXX) -o $@ $(DEPFLAGS) $(CPPFLAGS) $(CXXFLAGS) -c $< && \
 	mv -f $*.d.tmp $*.d && touch -c $@
 
 # Link $(OBJS) and $(LIBS) into $@ (app)
 LINK_C=\
 	$(Q)echo "  LINK $S/$@"; \
-	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LINKER_ARGS) $(SYS_LIBS)
+	$(CC) -o $@ $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LINKER_ARGS) $(SYS_LIBS)
 
 LINK_CXX=\
 	$(Q)echo "  LINK $S/$@"; \
-	$(CXX) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LINKER_ARGS) $(SYS_LIBS)
+	$(CXX) -o $@ $(LDFLAGS) $(OBJS) $(LIBS) $(ENV_LINKER_ARGS) $(SYS_LIBS)
 
 #
 # Variables to use for versioning shared libs
@@ -272,7 +272,7 @@ SO_SUFFIX_ALL := $(SO_VER).$(SO_MINOR)
 
 # Provide function to ease build of a shared lib
 define spdk_build_realname_shared_lib
-	$(CC) -o $@ -shared $(CPPFLAGS) $(LDFLAGS) \
+	$(CC) -o $@ -shared $(LDFLAGS) \
 	    -Wl,--soname,$(patsubst %.so.$(SO_SUFFIX_ALL),%.so.$(SO_SUFFIX_ALL),$(notdir $@)) \
 	    -Wl,--whole-archive $(1) -Wl,--no-whole-archive \
 	    -Wl,--version-script=$(2) \

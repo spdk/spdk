@@ -390,9 +390,9 @@ CC_TYPE=$(cat $rootdir/mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
 arch=$($CC -dumpmachine)
 
 if [[ $arch == x86_64* ]]; then
-	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS -march=native)
+	BUILD_CMD=($CC -o /dev/null -x c $CFLAGS $LDFLAGS -march=native)
 else
-	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS)
+	BUILD_CMD=($CC -o /dev/null -x c $CFLAGS $LDFLAGS)
 fi
 
 # Detect architecture and force no ISA-L if non-x86 or non-aarch64 architecture
