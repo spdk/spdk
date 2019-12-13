@@ -59,7 +59,7 @@ function setup_crypto_conf() {
   NumberOfLuns 2
   LunSizeInMB 32
 EOF
-	$testdir/gen_crypto.sh Malloc0 Malloc1 >> $conf_file
+	run_test "case" "crypto" $testdir/gen_crypto.sh Malloc0 Malloc1 >> $conf_file
 }
 
 function setup_pmem_conf() {
