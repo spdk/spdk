@@ -714,7 +714,7 @@ bdev_ocssd_poll_pending(void *ctx)
 	}
 
 	if (TAILQ_EMPTY(&ocssd_ioch->pending_requests)) {
-		spdk_poller_unregister(&ocssd_ioch->pending_poller);
+		spdk_poller_pause(ocssd_ioch->pending_poller);
 	}
 
 	return num_requests;
@@ -727,23 +727,7 @@ bdev_ocssd_delay_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev
 	struct ocssd_io_channel *ocssd_ioch = nvme_ioch->ocssd_ioch;
 
 	TAILQ_INSERT_TAIL(&ocssd_ioch->pending_requests, bdev_io, module_link);
-
-	if (ocssd_ioch->pending_poller != NULL) {
-		return;
-	}
-
-	ocssd_ioch->pending_poller = spdk_poller_register(bdev_ocssd_poll_pending, ioch, 0);
-	if (ocssd_ioch->pending_poller == NULL) {
-		SPDK_ERRLOG("Failed to register pending requests poller\n");
-
-		/* If the poller cannot be registered, complete all of the pending
-		 * requests immediately, as we have no means of resubmitting them.
-		 */
-		while ((bdev_io = TAILQ_FIRST(&ocssd_ioch->pending_requests))) {
-			TAILQ_REMOVE(&ocssd_ioch->pending_requests, bdev_io, module_link);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		}
-	}
+	spdk_poller_resume(ocssd_ioch->pending_poller);
 }
 
 static void
@@ -1409,12 +1393,26 @@ bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *ns)
 int
 bdev_ocssd_create_io_channel(struct nvme_io_channel *ioch)
 {
-	ioch->ocssd_ioch = calloc(1, sizeof(*ioch->ocssd_ioch));
-	if (ioch->ocssd_ioch == NULL) {
+	struct ocssd_io_channel *ocssd_ioch;
+
+	ocssd_ioch = calloc(1, sizeof(*ocssd_ioch));
+	if (ocssd_ioch == NULL) {
 		return -ENOMEM;
 	}
 
-	TAILQ_INIT(&ioch->ocssd_ioch->pending_requests);
+	ocssd_ioch->pending_poller = spdk_poller_register(bdev_ocssd_poll_pending,
+				     spdk_io_channel_from_ctx(ioch), 0);
+	if (ocssd_ioch->pending_poller == NULL) {
+		SPDK_ERRLOG("Failed to register pending requests poller\n");
+		free(ocssd_ioch);
+		return -ENOMEM;
+	}
+
+	/* Start the poller paused and only resume it once there are pending requests */
+	spdk_poller_pause(ocssd_ioch->pending_poller);
+
+	TAILQ_INIT(&ocssd_ioch->pending_requests);
+	ioch->ocssd_ioch = ocssd_ioch;
 
 	return 0;
 }
@@ -1422,6 +1420,7 @@ bdev_ocssd_create_io_channel(struct nvme_io_channel *ioch)
 void
 bdev_ocssd_destroy_io_channel(struct nvme_io_channel *ioch)
 {
+	spdk_poller_unregister(&ioch->ocssd_ioch->pending_poller);
 	free(ioch->ocssd_ioch);
 }
 
