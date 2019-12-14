@@ -136,8 +136,8 @@ function is_fio_running()
 	return $ret
 }
 
-run_test "case" "vhost_migration_tc1" migration_tc1
-run_test "case" "vhost_migration_tc2" migration_tc2
+run_test "case" "vhost_migration_tc1_nightly" migration_tc1
+run_test "case" "vhost_migration_tc2_nightly" migration_tc2
 
 trap - SIGINT ERR EXIT
 
