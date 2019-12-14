@@ -28,9 +28,9 @@ run_test "case" "nvmf_create_transport." test/nvmf/target/create_transport.sh "$
 run_test "case" "nvmf_multitarget" test/nvmf/target/multitarget.sh "${TEST_ARGS[@]}"
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	run_test "case" "nvmf_fuzz" test/nvmf/target/fuzz.sh "${TEST_ARGS[@]}"
-	run_test "case" "nvmf_multiconnection" test/nvmf/target/multiconnection.sh "${TEST_ARGS[@]}"
-	run_test "case" "nvmf_initiator_timeout" test/nvmf/target/initiator_timeout.sh "${TEST_ARGS[@]}"
+	run_test "case" "nvmf_fuzz_nightly" test/nvmf/target/fuzz.sh "${TEST_ARGS[@]}"
+	run_test "case" "nvmf_multiconnection_nightly" test/nvmf/target/multiconnection.sh "${TEST_ARGS[@]}"
+	run_test "case" "nvmf_initiator_timeout_nightly" test/nvmf/target/initiator_timeout.sh "${TEST_ARGS[@]}"
 fi
 
 run_test "case" "nvmf_nmic" test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
