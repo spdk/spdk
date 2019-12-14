@@ -135,6 +135,15 @@ def getSkippedTests(repo_dir):
             return [x.strip() for x in skipped_test_data.readlines() if "#" not in x and x.strip() != '']
 
 
+def confirmPerPatchTests(test_list, skiplist):
+    missing_tests = [x for x in sorted(test_list) if test_list[x][0] is False
+                     and x not in skiplist]
+    if len(missing_tests) > 0:
+        print("Not all tests were run. Failing the build.")
+        print(missing_tests)
+        exit(1)
+
+
 def aggregateCompletedTests(output_dir, repo_dir):
     test_list = {}
     test_completion_table = []
@@ -163,6 +172,7 @@ def aggregateCompletedTests(output_dir, repo_dir):
     printListInformation("Tests", test_list)
     generateTestCompletionTables(output_dir, test_completion_table)
     skipped_tests = getSkippedTests(repo_dir)
+    confirmPerPatchTests(test_list, skipped_tests)
 
 
 def main(output_dir, repo_dir):
