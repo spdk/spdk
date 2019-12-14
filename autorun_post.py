@@ -129,6 +129,13 @@ def printListInformation(table_type, test_list):
     printList("%s Missing UBSAN" % table_type, test_list, 2, False)
 
 
+def confirmPerPatchTests(test_list, test_type):
+    missing_tests = [x for x in test_list if x[0] is False and "nightly" not in x]
+    if len(missing_tests) > 0:
+        print("Not all test %s were run. Failing the build." % test_type)
+        exit(1)
+
+
 def aggregateCompletedTests(output_dir, repo_dir):
     test_case_list = {}
     test_case_completion_table = []
@@ -164,6 +171,8 @@ def aggregateCompletedTests(output_dir, repo_dir):
     printListInformation("Test Suites", test_suite_list)
     generateTestCompletionTables(output_dir, test_case_completion_table, "cases")
     generateTestCompletionTables(output_dir, test_suite_completion_table, "suites")
+    confirmPerPatchTests(test_case_list, "cases")
+    confirmPerPatchTests(test_suite_list, "suites")
 
 
 def main(output_dir, repo_dir):
