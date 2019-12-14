@@ -45,10 +45,10 @@ run_test "case" "iscsi_tgt_trace_record" ./test/iscsi_tgt/trace_record/trace_rec
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	if [ $SPDK_TEST_PMDK -eq 1 ]; then
-		run_test "case" "iscsi_tgt_pmem" ./test/iscsi_tgt/pmem/iscsi_pmem.sh 4096 10
+		run_test "case" "iscsi_tgt_pmem_nightly" ./test/iscsi_tgt/pmem/iscsi_pmem.sh 4096 10
 	fi
-	run_test "case" "iscsi_tgt_ext4test" ./test/iscsi_tgt/ext4test/ext4test.sh
-	run_test "suite" "iscsi_tgt_digests" ./test/iscsi_tgt/digests/digests.sh
+	run_test "case" "iscsi_tgt_ext4test_nightly" ./test/iscsi_tgt/ext4test/ext4test.sh
+	run_test "suite" "iscsi_tgt_digests_nightly" ./test/iscsi_tgt/digests/digests.sh
 fi
 if [ $SPDK_TEST_RBD -eq 1 ]; then
 	# RBD tests do not support network namespaces,
@@ -70,7 +70,7 @@ if [ $SPDK_TEST_NVMF -eq 1 ]; then
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	run_test "case" "iscsi_tgt_multiconnection" ./test/iscsi_tgt/multiconnection/multiconnection.sh
+	run_test "case" "iscsi_tgt_multiconnection_nightly" ./test/iscsi_tgt/multiconnection/multiconnection.sh
 fi
 
 if [ $SPDK_TEST_ISCSI_INITIATOR -eq 1 ]; then

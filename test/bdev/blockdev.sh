@@ -67,7 +67,7 @@ function fio_test_suite() {
 	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
 		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
 		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
-		run_test "case" "bdev_fio_rw_verify_ext" fio_bdev $fio_ext_params --spdk_mem=$PRE_RESERVED_MEM \
+		run_test "case" "bdev_fio_rw_verify_ext_nightly" fio_bdev $fio_ext_params --spdk_mem=$PRE_RESERVED_MEM \
 		--output=$output_dir/blockdev_fio_verify.txt
 	fi
 	rm -f ./*.state
@@ -82,7 +82,7 @@ function fio_test_suite() {
 	if [ $RUN_NIGHTLY -eq 0 ]; then
 		run_test "case" "bdev_fio_trim" fio_bdev $fio_params --output=$output_dir/blockdev_trim.txt
 	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
-		run_test "case" "bdev_fio_trim_ext" fio_bdev $fio_ext_params --output=$output_dir/blockdev_trim.txt
+		run_test "case" "bdev_fio_trim_ext_nightly" fio_bdev $fio_ext_params --output=$output_dir/blockdev_trim.txt
 	fi
 
 	rm -f ./*.state
@@ -278,7 +278,7 @@ run_test "suite" "bdev_qos" qos_test_suite
 
 # Temporarily disabled - infinite loop
 # if [ $RUN_NIGHTLY -eq 1 ]; then
-	# run_test "case" "bdev_gpt_reset" $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -o 4096 -t 60
+	# run_test "case" "bdev_gpt_reset_nightly" $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -o 4096 -t 60
 # fi
 
 # Bdev and configuration cleanup below this line
