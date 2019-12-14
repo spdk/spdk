@@ -138,6 +138,13 @@ def get_whitelisted_tests(repo_dir):
             return [x.strip() for x in whitelist_data.readlines() if "#" not in x and x.strip() != '']
 
 
+def confirmPerPatchTests(test_list, test_type, whitelist):
+    missing_tests = [x for x in sorted(test_list) if test_list[x][0] is False and "nightly" not in x and x not in whitelist]
+    if len(missing_tests) > 0:
+        print("Not all test %s were run. Failing the build." % test_type)
+        exit(1)
+
+
 def aggregateCompletedTests(output_dir, repo_dir):
     test_case_list = {}
     test_case_completion_table = []
@@ -174,6 +181,8 @@ def aggregateCompletedTests(output_dir, repo_dir):
     generateTestCompletionTables(output_dir, test_case_completion_table, "cases")
     generateTestCompletionTables(output_dir, test_suite_completion_table, "suites")
     whitelisted_tests = get_whitelisted_tests(repo_dir)
+    confirmPerPatchTests(test_case_list, "cases", whitelisted_tests)
+    confirmPerPatchTests(test_suite_list, "suites", whitelisted_tests)
 
 
 def main(output_dir, repo_dir):
