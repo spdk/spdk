@@ -82,9 +82,9 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 # Check and avoid setting DataDigest.
 DataDigestAbility=$(iscsiadm -m node -p $TARGET_IP:$ISCSI_PORT -o update -n node.conn[0].iscsi.DataDigest -v None 2>&1 || true)
 if [ "$DataDigestAbility"x != x ]; then
-	run_test "case" "iscsi_tgt_digest" iscsi_header_digest_test
+	run_test "case" "iscsi_tgt_digest_nightly" iscsi_header_digest_test
 else
-	run_test "case" "iscsi_tgt_data_digest" iscsi_header_data_digest_test
+	run_test "case" "iscsi_tgt_data_digest_nightly" iscsi_header_data_digest_test
 fi
 
 trap - SIGINT SIGTERM EXIT
