@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2da6b958_a1f0feb4",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 529,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-14T19:21:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "efc51477_5cde44d9",
+      "revId": "e3206fd32232d33926c50178f23afd1af5143942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be1caa9c_9bfe6bab",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 9
@@ -33,6 +51,24 @@
       "revId": "e3206fd32232d33926c50178f23afd1af5143942",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "baac5d4a_c864c477",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 575,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-14T19:21:02Z",
+      "side": 1,
+      "message": "Done. There is currently no case where chain can be enqueued. Just adding assert for now. We can add chain follow later if needed.",
+      "parentUuid": "be1caa9c_9bfe6bab",
+      "revId": "e3206fd32232d33926c50178f23afd1af5143942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "e39fb08c_fbf55e1c",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 580,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-14T19:21:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0103dacf_eaa0c47b",
+      "revId": "e3206fd32232d33926c50178f23afd1af5143942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6371cb34_0fe435f8",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 9
@@ -67,6 +121,24 @@
       "revId": "e3206fd32232d33926c50178f23afd1af5143942",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "77285c4e_1926452f",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-14T19:21:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6371cb34_0fe435f8",
+      "revId": "e3206fd32232d33926c50178f23afd1af5143942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "7b0d1bda_0ab5f648",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-14T19:21:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3d896b4_f40be5f8",
+      "revId": "e3206fd32232d33926c50178f23afd1af5143942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "903ed242_155254ae",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 9
@@ -101,6 +191,24 @@
       "revId": "e3206fd32232d33926c50178f23afd1af5143942",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79b23d5e_e94c752a",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-12-14T19:21:02Z",
+      "side": 1,
+      "message": "Done. I just reverted to original form without comparison to minimize changes. Also fixed a couple of similar places below.",
+      "parentUuid": "903ed242_155254ae",
+      "revId": "e3206fd32232d33926c50178f23afd1af5143942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
