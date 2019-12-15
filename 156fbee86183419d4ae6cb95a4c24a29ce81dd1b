@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b06de2f9_bb218add",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-15T01:31:11Z",
+      "side": 1,
+      "message": "Substituting the head pointer to a temporary variable may be simpler\n\nTAILQ_HEAD(device_qps, device_qp) g_device_qp_qat;\nTAILQ_HEAD(device_qps, device_qp) g_device_qp_aesni_mb;\n\nTAILQ_HEAD(device_qps, device_qp) *head;\n\nif (strcmp(device-\u003ecdb_info.driver_name, QAT) \u003d\u003d 0) {\n  head \u003d \u0026g_device_qp_qat;\n} else {\n  head \u003d \u0026g_device_qp_aesni_mb;\n}\n\nfor (j \u003d 0; j \u003c device-\u003ecdev_info.max_nb_queue_pairs; j++) {\n  dev_qp \u003d calloc();\n  TAILQ_INSERT_TAIL(head, dev_qp, link);\n}",
+      "revId": "156fbee86183419d4ae6cb95a4c24a29ce81dd1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0125fbf2_4d45f5b9",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-15T01:31:11Z",
+      "side": 1,
+      "message": "We can use cached head pointer here too.",
+      "revId": "156fbee86183419d4ae6cb95a4c24a29ce81dd1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
