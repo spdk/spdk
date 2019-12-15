@@ -25,11 +25,11 @@ def generateTestCompletionTables(output_dir, completion_table, test_type):
 
     pivot_by_agent = pd.pivot_table(data_table, index=["Agent", "Domain", "Test"])
     pivot_by_agent.to_html(os.path.join(output_dir, "post_process", 'completions_table_%s_by_agent.html' % test_type))
-    pivot_by_test = pd.pivot_table(data_table, index=["Test", "Domain", "Agent"])
+    pivot_by_test = pd.pivot_table(data_table, index=["Domain", "Test", "Agent"])
     pivot_by_test.to_html(os.path.join(output_dir, "post_process", 'completions_table_%s_by_test.html' % test_type))
-    pivot_by_asan = pd.pivot_table(data_table, index=["Test", "Domain"], values=["With Asan"], aggfunc=highest_value)
+    pivot_by_asan = pd.pivot_table(data_table, index=["Domain", "Test"], values=["With Asan"], aggfunc=highest_value)
     pivot_by_asan.to_html(os.path.join(output_dir, "post_process", 'completions_table_%s_by_asan.html' % test_type))
-    pivot_by_ubsan = pd.pivot_table(data_table, index=["Test", "Domain"], values=["With UBsan"], aggfunc=highest_value)
+    pivot_by_ubsan = pd.pivot_table(data_table, index=["Domain", "Test"], values=["With UBsan"], aggfunc=highest_value)
     pivot_by_ubsan.to_html(os.path.join(output_dir, "post_process", 'completions_table_%s_by_ubsan.html' % test_type))
 
 
