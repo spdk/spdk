@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "509dc067_d5e790f0",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T12:46:54Z",
+      "side": 1,
+      "message": "One more thing: all the other management function don\u0027t have the \"_management_\" infix. Could you rename this one as well? Maybe let\u0027s rename the current zone_block_open_zone to _zone_block_open_zone?",
+      "range": {
+        "startLine": 317,
+        "startChar": 9,
+        "endLine": 317,
+        "endChar": 40
+      },
+      "revId": "e04f710d178d8e7023a871a301bcd0ce8f190089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4053786d_ecec88a5",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 27
