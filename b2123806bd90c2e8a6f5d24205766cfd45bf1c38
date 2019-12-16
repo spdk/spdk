@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ef50ac6b_716e3208",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-16T11:28:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "89ff560c_21c94ddf",
+      "revId": "b2123806bd90c2e8a6f5d24205766cfd45bf1c38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4ad5eb5_2acedc9f",
         "filename": "scripts/check_format.sh",
         "patchSetId": 3
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "a69ef47a_df016cdb",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-16T11:28:35Z",
+      "side": 1,
+      "message": "In most of the cases 4 spaces are used instead of tabs similar to python style coding.\nSometimes 8 spaces are used instead of 1 tab.\nOther cases should be skipped as e.g. 2 spaces are used to generate spdk config (test/bdev/blockdev.sh).",
+      "parentUuid": "b4ad5eb5_2acedc9f",
+      "range": {
+        "startLine": 307,
+        "startChar": 13,
+        "endLine": 307,
+        "endChar": 22
+      },
+      "revId": "b2123806bd90c2e8a6f5d24205766cfd45bf1c38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b3545439_2975350f",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 3
@@ -53,6 +95,30 @@
       "writtenOn": "2019-12-16T09:31:06Z",
       "side": 1,
       "message": "I don\u0027t think we want to enforce this rule in comments.\nIMO we should only fix code lines indentations",
+      "range": {
+        "startLine": 15,
+        "startChar": 1,
+        "endLine": 15,
+        "endChar": 2
+      },
+      "revId": "b2123806bd90c2e8a6f5d24205766cfd45bf1c38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70212f53_371c8093",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-16T11:28:35Z",
+      "side": 1,
+      "message": "OK, I agree.",
+      "parentUuid": "b3545439_2975350f",
       "range": {
         "startLine": 15,
         "startChar": 1,
