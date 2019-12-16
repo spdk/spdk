@@ -528,6 +528,50 @@ Example response:
 }
 ~~~
 
+## reactor_get_stats {#rpc_reactor_get_stats}
+
+Retrieve current statistics of all the reactors.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+The response is an array of objects containing reactors statistics.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "reactor_get_stats",
+  "id": 1
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "reactors": [
+      {
+        "lcore": 0,
+        "lw_threads": [
+          {
+            "name": "app_thread",
+            "cpumask": "1"
+          }
+        ]
+      }
+    ]
+  }
+}
+~~~
+
 # Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
 ## bdev_set_options {#rpc_bdev_set_options}
