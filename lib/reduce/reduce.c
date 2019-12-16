@@ -67,6 +67,8 @@ SPDK_STATIC_ASSERT(sizeof(SPDK_REDUCE_SIGNATURE) - 1 ==
 
 #define REDUCE_PATH_MAX 4096
 
+#define REDUCE_ZERO_BUF_SIZE 0x100000
+
 /**
  * Describes a persistent memory file used to hold metadata associated with a
  *  compressed volume.
@@ -401,7 +403,7 @@ _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx
 }
 
 static int
-_alloc_zero_buff(struct spdk_reduce_vol *vol)
+_alloc_zero_buff(void)
 {
 	int rc = 0;
 
@@ -410,7 +412,7 @@ _alloc_zero_buff(struct spdk_reduce_vol *vol)
 	 * allocated when another vol init'd or loaded.
 	 */
 	if (g_vol_count++ == 0) {
-		g_zero_buf = spdk_zmalloc(vol->params.chunk_size,
+		g_zero_buf = spdk_zmalloc(REDUCE_ZERO_BUF_SIZE,
 					  64, NULL, SPDK_ENV_LCORE_ID_ANY,
 					  SPDK_MALLOC_DMA);
 		if (g_zero_buf == NULL) {
@@ -433,7 +435,7 @@ _init_write_super_cpl(void *cb_arg, int reduce_errno)
 		return;
 	}
 
-	rc = _alloc_zero_buff(init_ctx->vol);
+	rc = _alloc_zero_buff();
 	if (rc != 0) {
 		init_ctx->cb_fn(init_ctx->cb_arg, NULL, rc);
 		_init_load_cleanup(init_ctx->vol, init_ctx);
@@ -736,7 +738,7 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 		}
 	}
 
-	rc = _alloc_zero_buff(vol);
+	rc = _alloc_zero_buff();
 	if (rc) {
 		goto error;
 	}
