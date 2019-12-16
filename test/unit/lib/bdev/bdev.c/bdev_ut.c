@@ -2123,14 +2123,14 @@ bdev_histograms(void)
 
 	CU_ASSERT(g_count == 0);
 
-	rc = spdk_bdev_write_blocks(desc, ch, &buf, 0, 1, io_done, NULL);
+	rc = spdk_bdev_write_blocks(desc, ch, buf, 0, 1, io_done, NULL);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(10);
 	stub_complete_io(1);
 	poll_threads();
 
-	rc = spdk_bdev_read_blocks(desc, ch, &buf, 0, 1, io_done, NULL);
+	rc = spdk_bdev_read_blocks(desc, ch, buf, 0, 1, io_done, NULL);
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(10);
