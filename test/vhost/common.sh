@@ -584,7 +584,7 @@ function vm_setup()
 		vm_num=$i
 	fi
 
-	if [[ $i -eq 256 ]]; then
+	if [[ $vm_num -eq 256 ]]; then
 		error "no free VM found. do some cleanup (256 VMs created, are you insane?)"
 		return 1
 	fi
