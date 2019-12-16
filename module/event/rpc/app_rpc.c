@@ -41,6 +41,7 @@
 #include "spdk/thread.h"
 
 #include "spdk_internal/log.h"
+#include "spdk_internal/event.h"
 
 struct rpc_spdk_kill_instance {
 	char *sig_name;
@@ -152,7 +153,7 @@ SPDK_RPC_REGISTER("framework_monitor_context_switch", spdk_rpc_framework_monitor
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_monitor_context_switch, context_switch_monitor)
 
-struct rpc_thread_get_stats_ctx {
+struct rpc_get_stats_ctx {
 	struct spdk_jsonrpc_request *request;
 	struct spdk_json_write_ctx *w;
 };
@@ -160,7 +161,7 @@ struct rpc_thread_get_stats_ctx {
 static void
 rpc_thread_get_stats_done(void *arg)
 {
-	struct rpc_thread_get_stats_ctx *ctx = arg;
+	struct rpc_get_stats_ctx *ctx = arg;
 
 	spdk_json_write_array_end(ctx->w);
 	spdk_json_write_object_end(ctx->w);
@@ -172,7 +173,7 @@ rpc_thread_get_stats_done(void *arg)
 static void
 rpc_thread_get_stats(void *arg)
 {
-	struct rpc_thread_get_stats_ctx *ctx = arg;
+	struct rpc_get_stats_ctx *ctx = arg;
 	struct spdk_thread *thread = spdk_get_thread();
 	struct spdk_thread_stats stats;
 
@@ -191,7 +192,7 @@ static void
 spdk_rpc_thread_get_stats(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_thread_get_stats_ctx *ctx;
+	struct rpc_get_stats_ctx *ctx;
 
 	if (params) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -216,3 +217,72 @@ spdk_rpc_thread_get_stats(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("thread_get_stats", spdk_rpc_thread_get_stats, SPDK_RPC_RUNTIME)
+
+static void
+rpc_reactor_get_stats_done(void *arg1, void *arg2)
+{
+	struct rpc_get_stats_ctx *ctx = arg1;
+
+	spdk_json_write_array_end(ctx->w);
+	spdk_json_write_object_end(ctx->w);
+	spdk_jsonrpc_end_result(ctx->request, ctx->w);
+
+	free(ctx);
+}
+
+static void
+rpc_reactor_get_stats(void *arg1, void *arg2)
+{
+	struct rpc_get_stats_ctx *ctx = arg1;
+	uint32_t current_core;
+	struct spdk_reactor *reactor;
+	struct spdk_lw_thread *lw_thread;
+	struct spdk_thread *thread;
+
+	current_core = spdk_env_get_current_core();
+	reactor = spdk_reactor_get(current_core);
+
+	spdk_json_write_object_begin(ctx->w);
+	spdk_json_write_named_uint32(ctx->w, "lcore", current_core);
+
+	TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
+		thread = spdk_thread_get_from_ctx(lw_thread);
+
+		spdk_json_write_object_begin(ctx->w);
+		spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(thread));
+		spdk_json_write_named_string(ctx->w, "cpumask",
+					     spdk_cpuset_fmt(spdk_thread_get_cpumask(thread)));
+		spdk_json_write_object_end(ctx->w);
+	}
+
+	spdk_json_write_object_end(ctx->w);
+}
+
+static void
+spdk_rpc_reactor_get_stats(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_get_stats_ctx *ctx;
+
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "`reactor_get_stats` requires no arguments");
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation error");
+		return;
+	}
+
+	ctx->request = request;
+	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
+
+	spdk_json_write_named_array_begin(ctx->w, "reactors");
+
+	spdk_for_each_core(rpc_reactor_get_stats, ctx, NULL, rpc_reactor_get_stats_done);
+}
+
+SPDK_RPC_REGISTER("reactor_get_stats", spdk_rpc_reactor_get_stats, SPDK_RPC_RUNTIME)
