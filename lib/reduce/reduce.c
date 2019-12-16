@@ -103,7 +103,7 @@ struct spdk_reduce_vol_request {
 	 *  the decomp engine, they point to a mix of the scratch buffer
 	 *  and user buffer
 	 */
-	struct iovec				decomp_iov[REDUCE_MAX_IOVECS];
+	struct iovec				decomp_iov[REDUCE_MAX_IOVECS + 2];
 	int					decomp_iovcnt;
 
 	/**
@@ -1375,6 +1375,10 @@ _iov_array_is_valid(struct spdk_reduce_vol *vol, struct iovec *iov, int iovcnt,
 {
 	uint64_t size = 0;
 	int i;
+
+	if (iovcnt > REDUCE_MAX_IOVECS) {
+		return false;
+	}
 
 	for (i = 0; i < iovcnt; i++) {
 		size += iov[i].iov_len;

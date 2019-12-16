@@ -986,6 +986,45 @@ read_write(void)
 }
 
 static void
+_readv_writev(uint32_t backing_blocklen)
+{
+	struct spdk_reduce_vol_params params = {};
+	struct spdk_reduce_backing_dev backing_dev = {};
+	struct iovec iov[REDUCE_MAX_IOVECS + 1];
+
+	params.chunk_size = 16 * 1024;
+	params.backing_io_unit_size = 4096;
+	params.logical_block_size = 512;
+	spdk_uuid_generate(&params.uuid);
+
+	backing_dev_init(&backing_dev, &params, backing_blocklen);
+
+	g_vol = NULL;
+	g_reduce_errno = -1;
+	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
+
+	g_reduce_errno = -1;
+	spdk_reduce_vol_writev(g_vol, iov, REDUCE_MAX_IOVECS + 1, 2, REDUCE_MAX_IOVECS + 1, write_cb, NULL);
+	CU_ASSERT(g_reduce_errno == -EINVAL);
+
+	g_reduce_errno = -1;
+	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+
+	persistent_pm_buf_destroy();
+	backing_dev_destroy(&backing_dev);
+}
+
+static void
+readv_writev(void)
+{
+	_readv_writev(512);
+	_readv_writev(4096);
+}
+
+static void
 destroy_cb(void *ctx, int reduce_errno)
 {
 	g_reduce_errno = reduce_errno;
@@ -1257,6 +1296,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "load", load) == NULL ||
 		CU_add_test(suite, "write_maps", write_maps) == NULL ||
 		CU_add_test(suite, "read_write", read_write) == NULL ||
+		CU_add_test(suite, "readv_writev", readv_writev) == NULL ||
 		CU_add_test(suite, "destroy", destroy) == NULL ||
 		CU_add_test(suite, "defer_bdev_io", defer_bdev_io) == NULL ||
 		CU_add_test(suite, "overlapped", overlapped) == NULL ||
