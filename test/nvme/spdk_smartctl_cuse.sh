@@ -17,7 +17,7 @@ sleep 1
 bdf_sysfs_path=$( readlink -f /sys/class/nvme/nvme* | grep "$bdf/nvme/nvme" )
 if [ -z "$bdf_sysfs_path" ]; then
 	echo "setup.sh failed bind kernel driver to ${bdf}"
-	return 1
+	exit 1
 fi
 nvme_name=$( basename $bdf_sysfs_path )
 
@@ -42,7 +42,7 @@ $rpc_py bdev_nvme_cuse_register -n Nvme0
 sleep 5
 
 if [ ! -c /dev/spdk/nvme0 ]; then
-	return 1
+	exit 1
 fi
 
 CUSE_SMART_JSON=$( ${SMARTCTL_CMD} --json=g -a /dev/spdk/nvme0 | grep -v "/dev/spdk/nvme0" | sort || true )
@@ -54,13 +54,13 @@ ERR_SMART_JSON=$( grep -v "json\.nvme_smart_health_information_log\.\|json\.loca
 
 if [ -n "$ERR_SMART_JSON" ] ; then
 	echo "Wrong values for: $ERR_SMART_JSON"
-	return 1
+	exit 1
 fi
 
 CUSE_SMART_ERRLOG=$( ${SMARTCTL_CMD} -l error /dev/spdk/nvme0 )
 if [ "$CUSE_SMART_ERRLOG" != "$KERNEL_SMART_ERRLOG" ]; then
 	echo "Wrong values in NVMe Error log"
-	return 1
+	exit 1
 fi
 
 # Data integity was checked before, now make sure other commads didn't fail
@@ -75,7 +75,7 @@ ${SMARTCTL_CMD} -H /dev/spdk/nvme0 || true
 $rpc_py bdev_nvme_detach_controller Nvme0
 sleep 1
 if [ -c /dev/spdk/nvme1 ]; then
-	return 1
+	exit 1
 fi
 
 trap - SIGINT SIGTERM EXIT

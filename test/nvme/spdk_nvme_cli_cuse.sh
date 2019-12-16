@@ -22,7 +22,7 @@ $rpc_py bdev_nvme_cuse_register -n Nvme0
 sleep 5
 
 if [ ! -c /dev/spdk/nvme0 ]; then
-	return 1
+	exit 1
 fi
 
 $rpc_py bdev_get_bdevs
@@ -46,26 +46,26 @@ for ctrlr in $(ls /dev/spdk/nvme?); do
 done
 
 if [ ! -c /dev/spdk/nvme0 ]; then
-	return 1
+	exit 1
 fi
 
 $rpc_py bdev_nvme_cuse_unregister -n Nvme0
 sleep 1
 if [ -c /dev/spdk/nvme0 ]; then
-	return 1
+	exit 1
 fi
 
 $rpc_py bdev_nvme_cuse_register -n Nvme0
 sleep 1
 
 if [ ! -c /dev/spdk/nvme0 ]; then
-	return 1
+	exit 1
 fi
 
 $rpc_py bdev_nvme_detach_controller Nvme0
 sleep 1
 if [ -c /dev/spdk/nvme0 ]; then
-	return 1
+	exit 1
 fi
 
 trap - SIGINT SIGTERM EXIT
