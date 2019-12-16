@@ -128,6 +128,30 @@
       "revId": "b2123806bd90c2e8a6f5d24205766cfd45bf1c38",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c781196c_8f953a9a",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T18:07:03Z",
+      "side": 1,
+      "message": "The regex seems to be testing for (start of line), (0 to N tabs), (1 to N sets of 4 spaces), so this line shouldn\u0027t have been found by the search.",
+      "parentUuid": "70212f53_371c8093",
+      "range": {
+        "startLine": 15,
+        "startChar": 1,
+        "endLine": 15,
+        "endChar": 2
+      },
+      "revId": "b2123806bd90c2e8a6f5d24205766cfd45bf1c38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
