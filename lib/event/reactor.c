@@ -534,4 +534,67 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 	return 0;
 }
 
+struct call_reactor {
+	uint32_t cur_core;
+	spdk_event_fn fn;
+	void *arg1;
+	void *arg2;
+
+	uint32_t orig_core;
+	spdk_event_fn cpl;
+};
+
+static void
+spdk_on_reactor(void *arg1, void *arg2)
+{
+	struct call_reactor *cr = arg1;
+	struct spdk_event *evt;
+
+	cr->fn(cr->arg1, cr->arg2);
+
+	cr->cur_core = spdk_env_get_next_core(cr->cur_core);
+
+	if (cr->cur_core > spdk_env_get_last_core()) {
+		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Completed reactor iteration\n");
+
+		evt = spdk_event_allocate(cr->orig_core, cr->cpl, cr->arg1, cr->arg2);
+		free(cr);
+	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Continuing reactor iteration to %d\n",
+			      cr->cur_core);
+
+		evt = spdk_event_allocate(cr->cur_core, spdk_on_reactor, arg1, NULL);
+	}
+	assert(evt != NULL);
+	spdk_event_call(evt);
+}
+
+void
+spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cpl)
+{
+	struct call_reactor *cr;
+	struct spdk_event *evt;
+
+	cr = calloc(1, sizeof(*cr));
+	if (!cr) {
+		SPDK_ERRLOG("Unable to perform reactor iteration\n");
+		cpl(arg1, arg2);
+		return;
+	}
+
+	cr->fn = fn;
+	cr->arg1 = arg1;
+	cr->arg2 = arg2;
+	cr->cpl = cpl;
+	cr->orig_core = spdk_env_get_current_core();
+	cr->cur_core = spdk_env_get_first_core();
+
+	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Starting reactor iteration from %d\n", cr->orig_core);
+
+	evt = spdk_event_allocate(cr->cur_core, spdk_on_reactor, cr, NULL);
+	assert(evt != NULL);
+
+	spdk_event_call(evt);
+}
+
 SPDK_LOG_REGISTER_COMPONENT("reactor", SPDK_LOG_REACTOR)
