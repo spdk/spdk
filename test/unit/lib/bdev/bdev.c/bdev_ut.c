@@ -2586,6 +2586,76 @@ lba_range_overlap(void)
 	CU_ASSERT(!bdev_lba_range_overlapped(&r1, &r2));
 }
 
+static bool g_lock_lba_range_done;
+static bool g_unlock_lba_range_done;
+
+static void
+lock_lba_range_done(void *ctx, int status)
+{
+	g_lock_lba_range_done = true;
+}
+
+static void
+unlock_lba_range_done(void *ctx, int status)
+{
+	g_unlock_lba_range_done = true;
+}
+
+static void
+lock_lba_range_check_ranges(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *channel;
+	struct lba_range *range;
+	int ctx1;
+	int rc;
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+	channel = spdk_io_channel_get_ctx(io_ch);
+
+	g_lock_lba_range_done = false;
+	rc = bdev_lock_lba_range(desc, io_ch, 20, 10, lock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_lock_lba_range_done == true);
+	range = TAILQ_FIRST(&channel->locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 20);
+	CU_ASSERT(range->length == 10);
+	CU_ASSERT(range->owner_ch == channel);
+
+	/* Unlocks must exactly match a lock. */
+	g_unlock_lba_range_done = false;
+	rc = bdev_unlock_lba_range(desc, io_ch, 20, 1, unlock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(g_unlock_lba_range_done == false);
+
+	rc = bdev_unlock_lba_range(desc, io_ch, 20, 10, unlock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	spdk_delay_us(100);
+	poll_threads();
+
+	CU_ASSERT(g_unlock_lba_range_done == true);
+	CU_ASSERT(TAILQ_EMPTY(&channel->locked_ranges));
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2622,7 +2692,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_close_while_hotremove", bdev_close_while_hotremove) == NULL ||
 		CU_add_test(suite, "bdev_open_ext", bdev_open_ext) == NULL ||
 		CU_add_test(suite, "bdev_set_io_timeout", bdev_set_io_timeout) == NULL ||
-		CU_add_test(suite, "lba_range_overlap", lba_range_overlap) == NULL
+		CU_add_test(suite, "lba_range_overlap", lba_range_overlap) == NULL ||
+		CU_add_test(suite, "lock_lba_range_check_ranges", lock_lba_range_check_ranges) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
