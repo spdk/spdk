@@ -57,6 +57,20 @@ void spdk_reactors_fini(void);
 void spdk_reactors_start(void);
 void spdk_reactors_stop(void *arg1);
 
+/**
+ * Allocate and pass an event to each reactor, serially.
+ *
+ * The allocated event is processed asynchronously - i.e. spdk_for_each_reactor
+ * will return prior to `fn` being called on each reactor.
+ *
+ * \param fn This is the function that will be called on each reactor.
+ * \param arg1 Argument will be passed to fn when called.
+ * \param arg2 Argument will be passed to fn when called.
+ * \param cpl This will be called on the originating reactor after `fn` has been
+ * called on each reactor.
+ */
+void spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cpl);
+
 struct spdk_subsystem {
 	const char *name;
 	/* User must call spdk_subsystem_init_next() when they are done with their initialization. */
