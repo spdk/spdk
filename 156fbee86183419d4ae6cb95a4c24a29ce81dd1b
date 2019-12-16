@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "57a7c7c4_5019f122",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-16T16:36:24Z",
+      "side": 1,
+      "message": "So I don\u0027t think I can reuse the same struct name for these 2 lists, when I do I get \n\nvbdev_crypto.c:75:12: error: redefinition of ‘struct device_qps’\n TAILQ_HEAD(device_qps, device_qp) g_device_qp_aesni_mb \u003d TAILQ_HEAD_INITIALIZER(g_device_qp_aesni_mb);\n            ^\nvbdev_crypto.c:74:12: note: originally defined here\n TAILQ_HEAD(device_qps, device_qp) g_device_qp_qat \u003d TAILQ_HEAD_INITIALIZER(g_device_qp_qat);\n            ^",
+      "parentUuid": "b06de2f9_bb218add",
+      "revId": "156fbee86183419d4ae6cb95a4c24a29ce81dd1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0125fbf2_4d45f5b9",
         "filename": "module/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 6
