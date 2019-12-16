@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "447092c8_0268e81d",
+        "filename": "doc/nvme.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-16T23:05:00Z",
+      "side": 1,
+      "message": "This line isn\u0027t needed.",
+      "revId": "0962850d2e75874d14589b5e2dfd7e8d238f407a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d42c4be_2f9319b8",
+        "filename": "doc/nvme.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-16T23:05:00Z",
+      "side": 1,
+      "message": "\"commands, first\" --\u003e \"commands, the first\" \n\"have SPDK_NVME_IO_FLAGS_FUSE_FIRS\" --\u003e \"have the SPDK_NVME_IO_FLAGS_FUSE_FIRS\"\n\"and next one SPDK_NVME_IO_FLAGS_FUSE_SECOND\" --\u003e \"and the next one should have the SPDK_NVME_IO_FLAGS_FUSE_SECOND flag set.\"",
+      "revId": "0962850d2e75874d14589b5e2dfd7e8d238f407a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a785fe66_1c96d554",
+        "filename": "doc/nvme.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-16T23:05:00Z",
+      "side": 1,
+      "message": "\"In addition following\" --\u003e \"In addition, the following\"",
+      "revId": "0962850d2e75874d14589b5e2dfd7e8d238f407a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e396a3d_80b75d51",
+        "filename": "doc/nvme.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-16T23:05:00Z",
+      "side": 1,
+      "message": "\"should be\"",
+      "revId": "0962850d2e75874d14589b5e2dfd7e8d238f407a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6fb1a3b_9ff68cd4",
+        "filename": "doc/nvme.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-16T23:05:00Z",
+      "side": 1,
+      "message": "\"range, shall\" --\u003e \"range should\"",
+      "revId": "0962850d2e75874d14589b5e2dfd7e8d238f407a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76682a50_f8ff90a2",
+        "filename": "doc/nvme.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-16T23:05:00Z",
+      "side": 1,
+      "message": "\"Shall\" --\u003e \"should\"\n\nThese last 3 comments are to avoid mixing tense and also to avoid using spec terms like \"shall\" :)",
+      "revId": "0962850d2e75874d14589b5e2dfd7e8d238f407a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0cb1708_1839bacb",
+        "filename": "doc/nvme.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-16T23:05:00Z",
+      "side": 1,
+      "message": "\"Supported fused operations are\" --\u003e \"Fused operation support is\"",
+      "revId": "0962850d2e75874d14589b5e2dfd7e8d238f407a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
