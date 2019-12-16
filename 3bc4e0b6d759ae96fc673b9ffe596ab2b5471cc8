@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "b8aff622_3adad9f9",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-16T12:00:17Z",
+      "side": 0,
+      "message": "Another example.\nPREV_BASH_OPTS set here, appears unused.",
+      "range": {
+        "startLine": 2,
+        "startChar": 1,
+        "endLine": 2,
+        "endChar": 20
+      },
+      "revId": "3bc4e0b6d759ae96fc673b9ffe596ab2b5471cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd76d8ca_a59042ec",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-16T12:00:17Z",
+      "side": 0,
+      "message": "But is actually used here.",
+      "range": {
+        "startLine": 21,
+        "startChar": 28,
+        "endLine": 21,
+        "endChar": 55
+      },
+      "revId": "3bc4e0b6d759ae96fc673b9ffe596ab2b5471cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4b1d7371_57a15046",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 1
