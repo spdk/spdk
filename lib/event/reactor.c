@@ -73,7 +73,7 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 	assert(reactor->events != NULL);
 }
 
-static struct spdk_reactor *
+struct spdk_reactor *
 spdk_reactor_get(uint32_t lcore)
 {
 	struct spdk_reactor *reactor;
