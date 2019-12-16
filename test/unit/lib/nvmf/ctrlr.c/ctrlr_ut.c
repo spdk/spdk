@@ -722,6 +722,10 @@ test_get_ns_id_desc_list(void)
 	req.length = sizeof(buf);
 
 	memset(&cmd, 0, sizeof(cmd));
+
+	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	req.xfer = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
+
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_IDENTIFY;
 	cmd.nvme_cmd.cdw10_bits.identify.cns = SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST;
 
@@ -1321,6 +1325,140 @@ test_identify_ctrlr(void)
 	CU_ASSERT(cdata.nvmf_specific.ioccsz == expected_ioccsz);
 }
 
+#define SETUP_CTRLR() \
+	struct spdk_nvmf_subsystem subsystem = {};	\
+	struct spdk_nvmf_transport transport = {};	\
+	struct spdk_nvmf_qpair qpair = {};		\
+	struct spdk_nvmf_ctrlr ctrlr = {};		\
+	struct spdk_nvmf_request req = {};		\
+	struct spdk_nvmf_ns *ns_ptrs[1];		\
+	struct spdk_nvmf_ns ns = {};			\
+	union nvmf_h2c_msg cmd = {};			\
+	union nvmf_c2h_msg rsp = {};			\
+	struct spdk_bdev bdev;				\
+	uint8_t buf[4096];				\
+							\
+	ns_ptrs[0] = &ns;				\
+	subsystem.ns = ns_ptrs;				\
+	subsystem.max_nsid = 1;				\
+							\
+	ns.opts.nsid = 1;				\
+	ns.bdev = &bdev;				\
+							\
+	transport.opts.max_io_size = 4096;		\
+							\
+	qpair.ctrlr = &ctrlr;				\
+	qpair.transport = &transport;			\
+							\
+	ctrlr.subsys = &subsystem;			\
+	ctrlr.vcprop.cc.bits.en = 1;			\
+	ctrlr.admin_qpair = &qpair;			\
+							\
+	req.qpair = &qpair;				\
+	req.cmd = &cmd;					\
+	req.rsp = &rsp;					\
+	req.data = buf;					\
+	req.length = sizeof(buf);
+
+static void
+test_discovery_ctrlr(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_transport transport = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_request req = {};
+	struct spdk_nvmf_ns *ns_ptrs[1];
+	struct spdk_nvmf_ns ns = {};
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_bdev bdev;
+	uint8_t buf[4096];
+
+	ns_ptrs[0] = &ns;
+	subsystem.ns = ns_ptrs;
+	subsystem.max_nsid = 1;
+	subsystem.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+
+	ns.opts.nsid = 1;
+	ns.bdev = &bdev;
+
+	transport.opts.max_io_size = 4096;
+
+	qpair.ctrlr = &ctrlr;
+	qpair.transport = &transport;
+
+	ctrlr.subsys = &subsystem;
+	ctrlr.vcprop.cc.bits.en = 1;
+	ctrlr.admin_qpair = &qpair;
+
+	req.qpair = &qpair;
+	req.cmd = &cmd;
+	req.rsp = &rsp;
+	req.data = buf;
+	req.length = sizeof(buf);
+	req.xfer = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
+
+	/* For the discovery controller it only support three admin cmds:
+	 * Get Log Page, Identify and Keep Alive
+	 */
+
+	/* Only support the Identify controller */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+	cmd.nvme_cmd.cdw10_bits.identify.cns = SPDK_NVME_IDENTIFY_CTRLR;
+	CU_ASSERT(spdk_nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* The other Identify cmds are invalid */
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+	cmd.nvme_cmd.cdw10_bits.identify.cns = SPDK_NVME_IDENTIFY_NS;
+	CU_ASSERT(spdk_nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* Only support the Log Discovery */
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_DISCOVERY;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = (req.length / 4 - 1);
+	CU_ASSERT(spdk_nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* The other log cmds are invalid */
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_FIRMWARE_SLOT;
+	cmd.nvme_cmd.cdw10_bits.get_log_page.numdl = (req.length / 4 - 1);
+	CU_ASSERT(spdk_nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* Support the keep Alive cmd */
+	ctrlr.last_keep_alive_tick = 0;
+	spdk_delay_us(1000);
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_KEEP_ALIVE;
+	CU_ASSERT(spdk_nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(ctrlr.last_keep_alive_tick == 1000);
+
+	/* Don't support any other cmds now */
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+	CU_ASSERT(spdk_nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_OPCODE);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1351,7 +1489,8 @@ int main(int argc, char **argv)
 			test_reservation_notification_log_page) == NULL ||
 	    CU_add_test(suite, "get_dif_ctx", test_get_dif_ctx) == NULL ||
 	    CU_add_test(suite, "set_get_features", test_set_get_features) == NULL ||
-	    CU_add_test(suite, "identify_ctrlr", test_identify_ctrlr) == NULL) {
+	    CU_add_test(suite, "identify_ctrlr", test_identify_ctrlr) == NULL ||
+	    CU_add_test(suite, "test discovery ctrlr", test_discovery_ctrlr) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
