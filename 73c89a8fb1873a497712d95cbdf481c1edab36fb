@@ -87,6 +87,24 @@
     },
     {
       "key": {
+        "uuid": "ec03ea76_9f7fbf43",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T22:46:58Z",
+      "side": 1,
+      "message": "I\u0027m wrong on this one actually, because you don\u0027t know if the poller is on the active_pollers list or the timed_pollers list. This will need to continue to work basically as you have it where it just sets the state and returns. My comments on spdk_poller_resume() are valid though.",
+      "parentUuid": "d4b2a806_80d51353",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "00a0429b_189e49de",
         "filename": "lib/thread/thread.c",
         "patchSetId": 3
@@ -98,6 +116,24 @@
       "writtenOn": "2019-12-16T22:32:01Z",
       "side": 1,
       "message": "Similarly, you can directly remove the poller from the paused list and place it on the active list here. Then you don\u0027t need to check the paused list every time you poll.",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30d96580_f961e4e7",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T22:46:58Z",
+      "side": 1,
+      "message": "To clarify, if poller-\u003estate \u003d\u003d SPDK_POLLER_STATE_PAUSED, you can immediately remove it from the paused list and add it to the (active|timed) lists as appropriate here. That makes paused pollers \"zero cost\" since you don\u0027t need to poll all of them each time in spdk_thread_poll.",
+      "parentUuid": "00a0429b_189e49de",
       "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
