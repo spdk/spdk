@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9f81dbf_5876d52c",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T17:23:59Z",
+      "side": 1,
+      "message": "\"zone_size\" is very likely a power of two and we can do quick division using shifts. There\u0027s functions in util.h for testing for powers of two I think. It\u0027s worth considering adding that here in a later patch.",
+      "revId": "0b72dc72ce0c3d926faec86fa00a84b87c8e0ad5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90185e0f_1058f5b1",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T17:23:59Z",
+      "side": 1,
+      "message": "Same here - zone_size is very likely a power of two.",
+      "revId": "0b72dc72ce0c3d926faec86fa00a84b87c8e0ad5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
