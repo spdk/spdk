@@ -22,6 +22,30 @@
       "revId": "05a71a17fed2e48aeb8d64c7998b28ce3c4bbcaa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3eca9da2_b6cc3179",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 589,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-16T07:52:44Z",
+      "side": 1,
+      "message": "Thank you Alexey, Done.",
+      "parentUuid": "3c7be39f_5d12725f",
+      "range": {
+        "startLine": 589,
+        "startChar": 40,
+        "endLine": 589,
+        "endChar": 63
+      },
+      "revId": "05a71a17fed2e48aeb8d64c7998b28ce3c4bbcaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
