@@ -87,6 +87,8 @@ void spdk_reactors_fini(void);
 void spdk_reactors_start(void);
 void spdk_reactors_stop(void *arg1);
 
+struct spdk_reactor *spdk_reactor_get(uint32_t lcore);
+
 /**
  * Allocate and pass an event to each core, serially.
  *
