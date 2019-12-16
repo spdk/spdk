@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9baadb4_59abccdf",
+        "filename": "module/bdev/nvme/bdev_ocssd.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T17:31:43Z",
+      "side": 1,
+      "message": "I\u0027m fine with having just a single append per zone right now, but ultimately the purpose of the append command is to allow for increased queue depth to a single zone. We\u0027ll have to come up with something here.\n\nThe challenges are all around I/O failures. I think you can submit multiple appends simultaneously (by making the write pointer atomic or something) but you can only complete them in order. If one fails, you then have to go back and \"shift\" the other appends forward and replay them.",
+      "revId": "c6fbd156d9e7b0f0eeec6aca1ecc0356918bf68a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
