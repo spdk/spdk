@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "820122e5_0a949c7f",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T22:32:01Z",
+      "side": 1,
+      "message": "spdk_poller_register implies the current thread, and spdk_poller_unregister must be called from the thread where the poller was previously registered. Given that, placing the same restrictions on spdk_poller_pause and spdk_poller_resume make sense. Let\u0027s state that here in the comments.\n\nThis is going to help a bit with some comments I have down below.",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5321085c_69503358",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T22:32:01Z",
+      "side": 1,
+      "message": "I think we can make paused pollers \"zero cost\" by shifting this work to spdk_poller_resume. See my comments there.",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ac03018_cc44bff0",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T22:32:01Z",
+      "side": 1,
+      "message": "I don\u0027t think this definition needed to change.",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d654831b_b9b1625c",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T22:32:01Z",
+      "side": 1,
+      "message": "If the poller state is paused here, move it to the active list and then set the state to unregistered.\n\n(Note I also now see what might be a bug with unregistering pollers on long timers. They won\u0027t get cleaned up until they expire with this logic. Really this function should set their period to 0 and mark them unregistered I think.)",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4b2a806_80d51353",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T22:32:01Z",
+      "side": 1,
+      "message": "It\u0027s safe here to just do this:\n\nTAILQ_REMOVE(\u0026thread-\u003eactive_pollers, poller, tailq);\nTAILQ_INSERT_TAIL(\u0026thread-\u003epaused_pollers, poller, tailq);\n\nIn spdk_thread_poll(), it specifically does a safe iteration in reverse over the active_pollers list to allow for modifications inside poller callbacks. The reason spdk_poller_unregister does it the way it does is because it actually needs to release memory.",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00a0429b_189e49de",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T22:32:01Z",
+      "side": 1,
+      "message": "Similarly, you can directly remove the poller from the paused list and place it on the active list here. Then you don\u0027t need to check the paused list every time you poll.",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
