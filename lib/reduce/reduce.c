@@ -829,8 +829,9 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 		return;
 	}
 
-	if (--g_vol_count == 0) {
+	if (g_zero_buf && --g_vol_count == 0) {
 		spdk_free(g_zero_buf);
+		g_zero_buf = NULL;
 	}
 	_init_load_cleanup(vol, NULL);
 	cb_fn(cb_arg, 0);
