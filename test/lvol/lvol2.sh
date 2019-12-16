@@ -13,6 +13,7 @@ run_test suite test/lvol/hotremove.sh
 run_test suite test/lvol/tasting.sh
 run_test suite test/lvol/snapshot_clone.sh
 run_test suite test/lvol/rename.sh
+run_test suite test/lvol/thin_provisioning.sh
 timing_exit basic
 
 timing_exit lvol
