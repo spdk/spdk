@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86ca3a16_e5358226",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T12:39:04Z",
+      "side": 1,
+      "message": "No need for parentheses.",
+      "range": {
+        "startLine": 345,
+        "startChar": 42,
+        "endLine": 345,
+        "endChar": 43
+      },
+      "revId": "70bd5ee7cda87f45226f516bddfce014008034f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd2e659c_40c57b2b",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1160,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T12:39:04Z",
+      "side": 1,
+      "message": "Is there a reason to use the variable instead of just using the constant directly?",
+      "range": {
+        "startLine": 1160,
+        "startChar": 1,
+        "endLine": 1160,
+        "endChar": 9
+      },
+      "revId": "70bd5ee7cda87f45226f516bddfce014008034f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7660429c_53355d61",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1169,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T12:39:04Z",
+      "side": 1,
+      "message": "Is there a reason to distinguish between lba/zone_id here (and in any of the subsequent tests)?",
+      "range": {
+        "startLine": 1168,
+        "startChar": 0,
+        "endLine": 1169,
+        "endChar": 13
+      },
+      "revId": "70bd5ee7cda87f45226f516bddfce014008034f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4658ee00_8c325d74",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1192,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T12:39:04Z",
+      "side": 1,
+      "message": "This isn\u0027t necessary.",
+      "range": {
+        "startLine": 1192,
+        "startChar": 7,
+        "endLine": 1192,
+        "endChar": 14
+      },
+      "revId": "70bd5ee7cda87f45226f516bddfce014008034f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
