@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b02ec6c_74b806fa",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T16:46:36Z",
+      "side": 1,
+      "message": "whoops this math still isn\u0027t right",
+      "revId": "8eb37e73ab513135d2ea7c6e36f325ad81d4af0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "380042c0_f3001ba2",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T16:46:36Z",
+      "side": 1,
+      "message": "I need a comment here that indicates that \"recvbuf\" in this function is now the bulk read size, as opposed to the kernel buffer size.",
+      "revId": "8eb37e73ab513135d2ea7c6e36f325ad81d4af0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
