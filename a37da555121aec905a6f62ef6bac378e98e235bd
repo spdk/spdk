@@ -55,6 +55,41 @@
     },
     {
       "key": {
+        "uuid": "05609799_e451e920",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2734,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-16T17:30:43Z",
+      "side": 1,
+      "message": "but this doesn\u0027t get freed after completion in the snapshot path",
+      "parentUuid": "be3a2434_e09a8da0",
+      "revId": "a37da555121aec905a6f62ef6bac378e98e235bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "915a577b_2936ea7b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 4607,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-16T17:30:43Z",
+      "side": 1,
+      "message": "should first parameter be newblob?  origblob should already have the clear_method set in metadata\n\nI think probably this should also move to _sync_bs_snapshot_freeze_cpl, before we sync the newblob\u0027s metadata",
+      "revId": "a37da555121aec905a6f62ef6bac378e98e235bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f64b63a0_20985f14",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 8
@@ -120,6 +155,23 @@
         "endLine": 280,
         "endChar": 57
       },
+      "revId": "a37da555121aec905a6f62ef6bac378e98e235bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f80d4365_88ae9eb9",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 3985,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-16T17:30:43Z",
+      "side": 1,
+      "message": "I think we need some more unit tests for clear_method for the snapshot path.  Those probably don\u0027t belong in blob_flags(), but the snapshot-specific ones instead.",
       "revId": "a37da555121aec905a6f62ef6bac378e98e235bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
