@@ -540,4 +540,78 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 	return 0;
 }
 
+struct call_core {
+	uint32_t cur_core;
+	spdk_event_fn fn;
+	void *arg1;
+	void *arg2;
+
+	uint32_t orig_core;
+	spdk_event_fn cpl;
+};
+
+static void
+spdk_on_core(void *arg1, void *arg2)
+{
+	struct call_core *cc = arg1;
+	struct spdk_event *evt;
+
+	cc->fn(cc->arg1, cc->arg2);
+
+	pthread_mutex_lock(&g_scheduler_mtx);
+	cc->cur_core = spdk_env_get_next_core(cc->cur_core);
+	pthread_mutex_unlock(&g_scheduler_mtx);
+
+	if (cc->cur_core > spdk_env_get_last_core()) {
+		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Completed core iteration\n");
+
+		evt = spdk_event_allocate(cc->orig_core, cc->cpl, cc->arg1, cc->arg2);
+		assert(evt != NULL);
+
+		spdk_event_call(evt);
+
+		free(cc);
+	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Continuing core iteration to %d\n",
+			      cc->cur_core);
+
+		evt = spdk_event_allocate(cc->cur_core, spdk_on_core, arg1, NULL);
+		assert(evt != NULL);
+
+		spdk_event_call(evt);
+	}
+}
+
+void
+spdk_for_each_core(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cpl)
+{
+	struct call_core *cc;
+	struct spdk_event *evt;
+
+	cc = calloc(1, sizeof(*cc));
+	if (!cc) {
+		SPDK_ERRLOG("Unable to perform core iteration\n");
+		cpl(arg1, arg2);
+		return;
+	}
+
+	cc->fn = fn;
+	cc->arg1 = arg1;
+	cc->arg2 = arg2;
+	cc->cpl = cpl;
+
+	cc->orig_core = spdk_env_get_current_core();
+
+	pthread_mutex_lock(&g_scheduler_mtx);
+	cc->cur_core = spdk_env_get_first_core();
+	pthread_mutex_unlock(&g_scheduler_mtx);
+
+	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Starting core iteration from %d\n", cc->orig_core);
+
+	evt = spdk_event_allocate(cc->cur_core, spdk_on_core, cc, NULL);
+	assert(evt != NULL);
+
+	spdk_event_call(evt);
+}
+
 SPDK_LOG_REGISTER_COMPONENT("reactor", SPDK_LOG_REACTOR)
