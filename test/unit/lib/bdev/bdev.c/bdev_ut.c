@@ -2541,6 +2541,51 @@ bdev_set_io_timeout(void)
 	poll_threads();
 }
 
+static void
+lba_range_overlap(void)
+{
+	struct lba_range r1, r2;
+
+	r1.offset = 100;
+	r1.length = 50;
+
+	r2.offset = 0;
+	r2.length = 1;
+	CU_ASSERT(!bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 0;
+	r2.length = 100;
+	CU_ASSERT(!bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 0;
+	r2.length = 110;
+	CU_ASSERT(bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 100;
+	r2.length = 10;
+	CU_ASSERT(bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 110;
+	r2.length = 20;
+	CU_ASSERT(bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 140;
+	r2.length = 150;
+	CU_ASSERT(bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 130;
+	r2.length = 200;
+	CU_ASSERT(bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 150;
+	r2.length = 100;
+	CU_ASSERT(!bdev_lba_range_overlapped(&r1, &r2));
+
+	r2.offset = 110;
+	r2.length = 0;
+	CU_ASSERT(!bdev_lba_range_overlapped(&r1, &r2));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2576,7 +2621,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_open_while_hotremove", bdev_open_while_hotremove) == NULL ||
 		CU_add_test(suite, "bdev_close_while_hotremove", bdev_close_while_hotremove) == NULL ||
 		CU_add_test(suite, "bdev_open_ext", bdev_open_ext) == NULL ||
-		CU_add_test(suite, "bdev_set_io_timeout", bdev_set_io_timeout) == NULL
+		CU_add_test(suite, "bdev_set_io_timeout", bdev_set_io_timeout) == NULL ||
+		CU_add_test(suite, "lba_range_overlap", lba_range_overlap) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
