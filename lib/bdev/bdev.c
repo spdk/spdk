@@ -124,12 +124,16 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.mutex = PTHREAD_MUTEX_INITIALIZER,
 };
 
+typedef void (*lock_range_cb)(void *ctx, int status);
+
 struct lba_range {
 	uint64_t			offset;
 	uint64_t			length;
 	struct spdk_bdev_channel	*owner_ch;
 	TAILQ_ENTRY(lba_range)		tailq;
 };
+
+typedef TAILQ_HEAD(, lba_range) lba_range_tailq_t;
 
 static struct spdk_bdev_opts	g_bdev_opts = {
 	.bdev_io_pool_size = SPDK_BDEV_IO_POOL_SIZE,
@@ -282,6 +286,8 @@ struct spdk_bdev_channel {
 #endif
 
 	bdev_io_tailq_t		queued_resets;
+
+	lba_range_tailq_t	locked_ranges;
 };
 
 struct media_event_entry {
@@ -2102,6 +2108,13 @@ static void
 bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 {
 	struct spdk_bdev_shared_resource *shared_resource;
+	struct lba_range *range;
+
+	while (!TAILQ_EMPTY(&ch->locked_ranges)) {
+		range = TAILQ_FIRST(&ch->locked_ranges);
+		TAILQ_REMOVE(&ch->locked_ranges, range, tailq);
+		free(range);
+	}
 
 	spdk_put_io_channel(ch->channel);
 
@@ -2358,6 +2371,7 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 	ch->stat.ticks_rate = spdk_get_ticks_hz();
 	ch->io_outstanding = 0;
 	TAILQ_INIT(&ch->queued_resets);
+	TAILQ_INIT(&ch->locked_ranges);
 	ch->flags = 0;
 	ch->shared_resource = shared_resource;
 
@@ -5649,6 +5663,206 @@ spdk_bdev_notify_media_management(struct spdk_bdev *bdev)
 		}
 	}
 	pthread_mutex_unlock(&bdev->internal.mutex);
+}
+
+struct locked_lba_range_ctx {
+	struct lba_range		range;
+	struct spdk_bdev		*bdev;
+	struct lba_range		*owner_range;
+	struct spdk_poller		*poller;
+	lock_range_cb			cb_fn;
+	void				*cb_arg;
+};
+
+static void
+bdev_lock_error_cleanup_cb(struct spdk_io_channel_iter *i, int status)
+{
+	struct locked_lba_range_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	ctx->cb_fn(ctx->cb_arg, -ENOMEM);
+	free(ctx);
+}
+
+static void
+bdev_unlock_lba_range_get_channel(struct spdk_io_channel_iter *i);
+
+static void
+bdev_lock_lba_range_cb(struct spdk_io_channel_iter *i, int status)
+{
+	struct locked_lba_range_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev *bdev = ctx->bdev;
+
+	if (status == -ENOMEM) {
+		/* One of the channels could not allocate a range object.
+		 * So we have to go back and clean up any ranges that were
+		 * allocated successfully before we return error status to
+		 * the caller.  We can reuse the unlock function to do that
+		 * clean up.
+		 */
+		spdk_for_each_channel(__bdev_to_io_dev(bdev),
+				      bdev_unlock_lba_range_get_channel, ctx,
+				      bdev_lock_error_cleanup_cb);
+		return;
+	}
+
+	/* All channels have locked this range and no I/O overlapping the range
+	 * are outstanding!  Set the owner_ch for the range object for the
+	 * locking channel, so that this channel will know that it is allowed
+	 * to write to this range.
+	 */
+	ctx->owner_range->owner_ch = ctx->range.owner_ch;
+	ctx->cb_fn(ctx->cb_arg, status);
+	free(ctx);
+}
+
+static void
+bdev_lock_lba_range_get_channel(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct locked_lba_range_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct lba_range *range;
+
+	range = calloc(1, sizeof(*range));
+	if (range == NULL) {
+		spdk_for_each_channel_continue(i, -ENOMEM);
+		return;
+	}
+
+	range->length = ctx->range.length;
+	range->offset = ctx->range.offset;
+	if (ctx->range.owner_ch == ch) {
+		/* This is the range object for the channel that will hold
+		 * the lock.  Store it in the ctx object so that we can easily
+		 * set its owner_ch after the lock is finally acquired.
+		 */
+		ctx->owner_range = range;
+	}
+	TAILQ_INSERT_TAIL(&ch->locked_ranges, range, tailq);
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+bdev_lock_lba_range_ctx(struct spdk_bdev *bdev, struct locked_lba_range_ctx *ctx)
+{
+	/* We will add a copy of this range to each channel now. */
+	spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_lock_lba_range_get_channel, ctx,
+			      bdev_lock_lba_range_cb);
+}
+
+int
+bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
+		    uint64_t offset, uint64_t length,
+		    lock_range_cb cb_fn, void *cb_arg);
+
+int
+bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
+		    uint64_t offset, uint64_t length,
+		    lock_range_cb cb_fn, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct locked_lba_range_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	ctx->range.offset = offset;
+	ctx->range.length = length;
+	ctx->range.owner_ch = ch;
+	ctx->bdev = bdev;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	bdev_lock_lba_range_ctx(bdev, ctx);
+	return 0;
+}
+
+static void
+bdev_unlock_lba_range_cb(struct spdk_io_channel_iter *i, int status)
+{
+	struct locked_lba_range_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	ctx->cb_fn(ctx->cb_arg, status);
+	free(ctx);
+}
+
+static void
+bdev_unlock_lba_range_get_channel(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct locked_lba_range_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct lba_range *range;
+
+	TAILQ_FOREACH(range, &ch->locked_ranges, tailq) {
+		if (ctx->range.offset == range->offset &&
+		    ctx->range.length == range->length) {
+			TAILQ_REMOVE(&ch->locked_ranges, range, tailq);
+			free(range);
+			break;
+		}
+	}
+
+	/* Note: we should almost always be able to assert that the range specified
+	 * was found.  But there are some very rare corner cases where a new channel
+	 * gets created simultaneously with a range unlock, where this function
+	 * would execute on that new channel and wouldn't have the range.
+	 * We also use this to clean up range allocations when a later allocation
+	 * fails in the locking path.
+	 * So we can't actually assert() here.
+	 */
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+int
+bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
+		      uint64_t offset, uint64_t length,
+		      lock_range_cb cb_fn, void *cb_arg);
+
+int
+bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
+		      uint64_t offset, uint64_t length,
+		      lock_range_cb cb_fn, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct locked_lba_range_ctx *ctx;
+	struct lba_range *range;
+	bool range_found = false;
+
+	/* Let's make sure the specified channel actually has a lock on
+	 * the specified range.  Note that the range must match exactly.
+	 */
+	TAILQ_FOREACH(range, &ch->locked_ranges, tailq) {
+		if (range->offset == offset && range->length == length &&
+		    range->owner_ch == ch) {
+			range_found = true;
+			break;
+		}
+	}
+
+	if (!range_found) {
+		return -EINVAL;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	ctx->range.offset = offset;
+	ctx->range.length = length;
+	ctx->range.owner_ch = ch;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_unlock_lba_range_get_channel, ctx,
+			      bdev_unlock_lba_range_cb);
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
