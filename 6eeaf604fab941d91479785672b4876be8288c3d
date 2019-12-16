@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ada40d0_3369b867",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-16T22:29:50Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 693,
+        "startChar": 6,
+        "endLine": 693,
+        "endChar": 13
+      },
+      "revId": "6eeaf604fab941d91479785672b4876be8288c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7dd3248_d93f3121",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-16T22:29:50Z",
+      "side": 1,
+      "message": "rc !\u003d 0 or just rc will be better according to the Ben\u0027s previous comment.\nMy old colleague liked this manner too but I agree with Ben.",
+      "range": {
+        "startLine": 699,
+        "startChar": 5,
+        "endLine": 699,
+        "endChar": 12
+      },
+      "revId": "6eeaf604fab941d91479785672b4876be8288c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
