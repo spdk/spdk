@@ -155,6 +155,69 @@ test_schedule_thread(void)
 	free_cores();
 }
 
+static void
+for_each_reactor_done(void *arg1, void *arg2)
+{
+	uint32_t *count = arg1;
+	bool *done = arg2;
+
+	(*count)++;
+	*done = true;
+}
+
+static void
+for_each_reactor_cb(void *arg1, void *arg2)
+{
+	uint32_t *count = arg1;
+
+	(*count)++;
+}
+
+static void
+test_for_each_reactor(void)
+{
+	uint32_t count = 0, i;
+	bool done = false;
+	struct spdk_reactor *reactor;
+
+	allocate_cores(5);
+
+	CU_ASSERT(spdk_reactors_init() == 0);
+
+	MOCK_SET(spdk_env_get_current_core, 0);
+
+	spdk_for_each_reactor(for_each_reactor_cb, &count, &done, for_each_reactor_done);
+
+	MOCK_CLEAR(spdk_env_get_current_core);
+
+	/* We have not processed any event yet, so count and done should be 0 and false,
+	 *  respectively.
+	 */
+	CU_ASSERT(count == 0);
+
+	/* Poll each reactor to verify the event is passed to each */
+	for (i = 0; i < 5; i++) {
+		reactor = spdk_reactor_get(i);
+		CU_ASSERT(reactor != NULL);
+
+		_spdk_event_queue_run_batch(reactor);
+		CU_ASSERT(count == (i + 1));
+		CU_ASSERT(done == false);
+	}
+
+	/* After each reactor is called, the completion calls it one more time. */
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+
+	_spdk_event_queue_run_batch(reactor);
+	CU_ASSERT(count == 6);
+	CU_ASSERT(done == true);
+
+	spdk_reactors_fini();
+
+	free_cores();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -175,7 +238,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "test_create_reactor", test_create_reactor) == NULL ||
 		CU_add_test(suite, "test_init_reactors", test_init_reactors) == NULL ||
 		CU_add_test(suite, "test_event_call", test_event_call) == NULL ||
-		CU_add_test(suite, "test_schedule_thread", test_schedule_thread) == NULL
+		CU_add_test(suite, "test_schedule_thread", test_schedule_thread) == NULL ||
+		CU_add_test(suite, "test_for_each_reactor", test_for_each_reactor) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
