@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53301081_b63211e8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-16T21:21:44Z",
+      "side": 1,
+      "message": "Can you clarify \"during volume load in the destroy path\" here in the comment?  I\u0027m guessing this means when spdk_reduce_vol_destroy calls spdk_reduce_vol_load.\n\nBut I guess I\u0027m still not following.  spdk_reduce_vol_load will do a readv with completion callback _load_read_super_and_path_cpl.  That callback will eventually call _alloc_zero_buff() which increments the g_vol_count.",
+      "revId": "c516082e00873b4a5dd6c1b4458c09a2eca9bbd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "087f8c81_76da2093",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-16T21:21:44Z",
+      "side": 1,
+      "message": "I would remove this note.  We shouldn\u0027t try to protect against apps misusing the library.  It\u0027s kind of a slippery slope - we want to force users to use the library the right way.  Putting in checks to allow them to misuse the library makes things more difficult in the long run.  Think of all of the places where we don\u0027t check for NULL parameters in our drivers.",
+      "revId": "c516082e00873b4a5dd6c1b4458c09a2eca9bbd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
