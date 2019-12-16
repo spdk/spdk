@@ -22,6 +22,30 @@
       "revId": "d8a36b5fee71a3e6c3d7dbf644eb64fd3c8f6b2f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a09227b_1765e35f",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-16T13:00:09Z",
+      "side": 1,
+      "message": "No, this part was commented out like this in the original code. I didn\u0027t want to change that.",
+      "parentUuid": "2b7f5b86_f31ba905",
+      "range": {
+        "startLine": 481,
+        "startChar": 0,
+        "endLine": 482,
+        "endChar": 17
+      },
+      "revId": "d8a36b5fee71a3e6c3d7dbf644eb64fd3c8f6b2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
