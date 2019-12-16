@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1027b52_78e0d154",
+        "filename": "test/nvmf/target/filesystem.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T22:52:03Z",
+      "side": 1,
+      "message": "Can you explain what this line does?",
+      "revId": "72f395fc06cbf7fda17913a84566561337eeab0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
