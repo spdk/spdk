@@ -28,7 +28,6 @@ function usage() {
                                     551: 'delete_lvol_bdev',
                                     552: 'bdev_lvol_delete_lvstore_with_clones',
                                     553: 'unregister_lvol_bdev',
-                                    650: 'thin_provisioning_check_space',
                                     651: 'thin_provisioning_read_empty_bdev',
                                     652: 'thin_provisioning_data_integrity_test',
                                     653: 'thin_provisioning_resize',
