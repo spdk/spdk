@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5f613201_9bf4c556",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-16T15:34:50Z",
+      "side": 1,
+      "message": "Ok, I will add get_addr if we decide to delete hotplug/common.sh.",
+      "parentUuid": "2092228c_e6cf7c15",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 23
+      },
+      "revId": "3bc5d0d45fd3b72d6abce4f987acc33bbfc5ce78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5f6d150d_7accc6f7",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 22
@@ -36,6 +60,30 @@
       "writtenOn": "2019-12-16T08:34:21Z",
       "side": 1,
       "message": "error_exit kills vhost AND VM qemu process.\nThere are no VMs in this test.",
+      "range": {
+        "startLine": 28,
+        "startChar": 6,
+        "endLine": 28,
+        "endChar": 16
+      },
+      "revId": "3bc5d0d45fd3b72d6abce4f987acc33bbfc5ce78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51f5d54b_fa317cc3",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-16T15:34:50Z",
+      "side": 1,
+      "message": "Added custom trap",
+      "parentUuid": "5f6d150d_7accc6f7",
       "range": {
         "startLine": 28,
         "startChar": 6,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "db810047_bef7333b",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-16T15:34:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7f21b350_f5df86e4",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 94
+      },
+      "revId": "3bc5d0d45fd3b72d6abce4f987acc33bbfc5ce78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "645cddab_9e166660",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 22
@@ -91,6 +163,30 @@
       "revId": "3bc5d0d45fd3b72d6abce4f987acc33bbfc5ce78",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "04a8e1ab_1cbe0865",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-16T15:34:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "645cddab_9e166660",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 15
+      },
+      "revId": "3bc5d0d45fd3b72d6abce4f987acc33bbfc5ce78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
