@@ -22,6 +22,30 @@
       "revId": "1c67cc5804fc826e13a5f31e5a1139a1f30310dd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7f28ab5_853e4141",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2019,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-16T06:35:52Z",
+      "side": 1,
+      "message": "Ack. Thanks.",
+      "parentUuid": "27d8ab8f_8b7bad3f",
+      "range": {
+        "startLine": 2019,
+        "startChar": 65,
+        "endLine": 2019,
+        "endChar": 66
+      },
+      "revId": "1c67cc5804fc826e13a5f31e5a1139a1f30310dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
