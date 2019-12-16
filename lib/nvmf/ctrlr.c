@@ -2016,10 +2016,11 @@ spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	}
 
 	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
-		/* Discovery controllers only support Get Log Page and Identify */
+		/* Discovery controllers only support Get Log Page, Identify and Keep Alive. */
 		switch (cmd->opc) {
 		case SPDK_NVME_OPC_IDENTIFY:
 		case SPDK_NVME_OPC_GET_LOG_PAGE:
+		case SPDK_NVME_OPC_KEEP_ALIVE:
 			break;
 		default:
 			goto invalid_opcode;
