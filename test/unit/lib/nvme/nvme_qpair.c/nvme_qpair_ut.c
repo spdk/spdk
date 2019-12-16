@@ -48,6 +48,11 @@ struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 };
 
+DEFINE_STUB_V(nvme_transport_qpair_abort_reqs, (struct spdk_nvme_qpair *qpair, uint32_t dnr));
+DEFINE_STUB(nvme_transport_qpair_submit_request, int,
+	    (struct spdk_nvme_qpair *qpair, struct nvme_request *req), 0);
+DEFINE_STUB(spdk_nvme_ctrlr_free_io_qpair, int, (struct spdk_nvme_qpair *qpair), 0);
+
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
@@ -57,19 +62,6 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 	ctrlr->is_failed = true;
 }
 
-void
-nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
-{
-}
-
-int
-nvme_transport_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
-{
-	/* TODO */
-	return 0;
-}
-
-
 static bool g_called_transport_process_completions = false;
 static int32_t g_transport_process_completions_rc = 0;
 int32_t
@@ -77,12 +69,6 @@ nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t
 {
 	g_called_transport_process_completions = true;
 	return g_transport_process_completions_rc;
-}
-
-int
-spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
-{
-	return 0;
 }
 
 static void
