@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2092228c_e6cf7c15",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-16T08:34:21Z",
+      "side": 1,
+      "message": "That\u0027s 1:1 copy of a function which is already in hotplug/common.sh\n\nIs that on purpose? Will we later remove common.sh?",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 23
+      },
+      "revId": "3bc5d0d45fd3b72d6abce4f987acc33bbfc5ce78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f6d150d_7accc6f7",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-16T08:34:21Z",
+      "side": 1,
+      "message": "error_exit kills vhost AND VM qemu process.\nThere are no VMs in this test.",
+      "range": {
+        "startLine": 28,
+        "startChar": 6,
+        "endLine": 28,
+        "endChar": 16
+      },
+      "revId": "3bc5d0d45fd3b72d6abce4f987acc33bbfc5ce78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f21b350_f5df86e4",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-16T08:34:21Z",
+      "side": 1,
+      "message": "We last mentioned bdevperf to use -z + perform_tests RPC combination, so that bdev perf process keeps running. \nThis is still not used here.",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 94
+      },
+      "revId": "3bc5d0d45fd3b72d6abce4f987acc33bbfc5ce78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "645cddab_9e166660",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-16T08:34:21Z",
+      "side": 1,
+      "message": "Bdevperf pid should be probably tracked and added to trap to kill it automatically.",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 15
+      },
+      "revId": "3bc5d0d45fd3b72d6abce4f987acc33bbfc5ce78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
