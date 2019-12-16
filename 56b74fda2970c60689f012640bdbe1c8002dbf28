@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffbda376_7f99edc1",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1139,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-16T16:58:39Z",
+      "side": 1,
+      "message": "Modifying len/vaddr here results in the translation never clearing below.",
+      "revId": "56b74fda2970c60689f012640bdbe1c8002dbf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
