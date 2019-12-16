@@ -1,0 +1,170 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05da4aed_51b327b0",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T11:33:20Z",
+      "side": 1,
+      "message": "Could we get rid of this newline? I think keeping lock/unlock calls together makes it more readable.",
+      "revId": "e04f710d178d8e7023a871a301bcd0ce8f190089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4053786d_ecec88a5",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T11:33:20Z",
+      "side": 1,
+      "message": "I know I asked for this in one of my previous comments, but since then we\u0027ve had a discussion with Jim about supporting unamps in zoned bdevs and the conclusion was *not* to support them by treating them as zone resets with a different API. This is because the ZNS spec doesn\u0027t mention the deallocate DSM command, so it\u0027s expected to work similarly to the regular NVMe SSDs (so it should be valid to send it on any number of blocks, not necessarily full zones). Therefore, I think we should remove the code responsible for handling unmaps.",
+      "range": {
+        "startLine": 355,
+        "startChar": 0,
+        "endLine": 357,
+        "endChar": 8
+      },
+      "revId": "e04f710d178d8e7023a871a301bcd0ce8f190089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44cb6794_4a061696",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 622,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T11:33:20Z",
+      "side": 1,
+      "message": "I think you should store the result of this call in rc. Otherwise, if this fails you\u0027ll return 0, even though the initialization failed.",
+      "range": {
+        "startLine": 622,
+        "startChar": 2,
+        "endLine": 622,
+        "endChar": 45
+      },
+      "revId": "e04f710d178d8e7023a871a301bcd0ce8f190089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c30694e1_586f6d0f",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T11:33:20Z",
+      "side": 1,
+      "message": "Is there a reason for this to be _FATAL?",
+      "range": {
+        "startLine": 625,
+        "startChar": 1,
+        "endLine": 625,
+        "endChar": 45
+      },
+      "revId": "e04f710d178d8e7023a871a301bcd0ce8f190089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ece1fad_c011a86b",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T11:33:20Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "e04f710d178d8e7023a871a301bcd0ce8f190089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "884d2ebe_34407e7b",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 882,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T11:33:20Z",
+      "side": 1,
+      "message": "I think this should be a SPDK_CU_ASSERT_FATAL.",
+      "range": {
+        "startLine": 882,
+        "startChar": 1,
+        "endLine": 882,
+        "endChar": 10
+      },
+      "revId": "e04f710d178d8e7023a871a301bcd0ce8f190089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e34e71f3_3cdc3883",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 937,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T11:33:20Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 937,
+        "startChar": 1,
+        "endLine": 937,
+        "endChar": 10
+      },
+      "revId": "e04f710d178d8e7023a871a301bcd0ce8f190089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86131254_90a58623",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1027,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T11:33:20Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "e04f710d178d8e7023a871a301bcd0ce8f190089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
