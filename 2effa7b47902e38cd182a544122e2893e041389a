@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5582361e_be395b4c",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T15:29:00Z",
+      "side": 0,
+      "message": "Would it be that much work to keep this function? It\u0027d allow us to use tools that don\u0027t accept JSON configs (fio).",
+      "range": {
+        "startLine": 504,
+        "startChar": 0,
+        "endLine": 504,
+        "endChar": 25
+      },
+      "revId": "2effa7b47902e38cd182a544122e2893e041389a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e404f82a_953f7cde",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 2347,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T15:29:00Z",
+      "side": 0,
+      "message": "Let\u0027s remove this in a separate patch (along with its definition in struct nvme_bdev_ctrlr).",
+      "range": {
+        "startLine": 2345,
+        "startChar": 0,
+        "endLine": 2347,
+        "endChar": 3
+      },
+      "revId": "2effa7b47902e38cd182a544122e2893e041389a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

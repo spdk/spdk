@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b88d34ae_504a1910",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 29
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T15:29:00Z",
+      "side": 1,
+      "message": "I\u0027ve only noticed it now, is there a reason to keep this as an offset and not as ftl_addr? This is how the ZNS returns zone information and we could easily track the write pointer on as an address, not offset within a zone.",
+      "range": {
+        "startLine": 60,
+        "startChar": 1,
+        "endLine": 60,
+        "endChar": 13
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbb10370_31203124",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T15:29:00Z",
+      "side": 1,
+      "message": "I think if just stored a copy of the entire spdk_ftl_dev_init_opts instead, it\u0027d make the code a bit simpler.",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 21
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15ee0463_d911abee",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 833,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T15:29:00Z",
+      "side": 1,
+      "message": "I think an error/warning log would better fit here.",
+      "range": {
+        "startLine": 833,
+        "startChar": 3,
+        "endLine": 833,
+        "endChar": 16
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e07d5045_99aa7ef6",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T15:29:00Z",
+      "side": 1,
+      "message": "I\u0027m not suggesting to do this in this patch, but can we merge this structure with the new one (ftl_dev_init_ctx)?",
+      "range": {
+        "startLine": 1092,
+        "startChar": 0,
+        "endLine": 1094,
+        "endChar": 42
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32119b8e_e605a334",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T15:29:00Z",
+      "side": 1,
+      "message": "Let\u0027s keep the options in alphabetical order.",
+      "range": {
+        "startLine": 41,
+        "startChar": 15,
+        "endLine": 41,
+        "endChar": 25
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0719274_8aeb8d5f",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T15:29:00Z",
+      "side": 1,
+      "message": "Another benefit of keeping text config is that we could simply generate appropriate configuration instead of having to manually issue all those RPCs.",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 34
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a0b6f9e_fe88f66d",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-16T15:29:00Z",
+      "side": 1,
+      "message": "I don\u0027t think there\u0027s any point in calling these RPCs, killing spdk_tgt will take care of this. Additionally, if any of these fail, none of the subsequent commands will get executed, so you might end up with spdk_tgt running.",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 37
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
