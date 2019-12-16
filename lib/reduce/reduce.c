@@ -662,6 +662,11 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 	uint32_t j;
 	int rc;
 
+	rc = _alloc_zero_buff();
+	if (rc) {
+		goto error;
+	}
+
 	if (memcmp(vol->backing_super->signature,
 		   SPDK_REDUCE_SIGNATURE,
 		   sizeof(vol->backing_super->signature)) != 0) {
@@ -736,11 +741,6 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 				spdk_bit_array_set(vol->allocated_backing_io_units, chunk->io_unit_index[j]);
 			}
 		}
-	}
-
-	rc = _alloc_zero_buff();
-	if (rc) {
-		goto error;
 	}
 
 	load_ctx->cb_fn(load_ctx->cb_arg, vol, 0);
@@ -834,6 +834,7 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 	if (--g_vol_count == 0) {
 		spdk_free(g_zero_buf);
 	}
+	assert(g_vol_count >= 0);
 	_init_load_cleanup(vol, NULL);
 	cb_fn(cb_arg, 0);
 }
