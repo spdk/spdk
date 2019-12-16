@@ -409,7 +409,7 @@ _alloc_zero_buff(struct spdk_reduce_vol *vol)
 	 * for reads so allocate one global instance here if not already
 	 * allocated when another vol init'd or loaded.
 	 */
-	if (g_vol_count++ == 0) {
+	if (g_vol_count == 1) {
 		g_zero_buf = spdk_zmalloc(vol->params.chunk_size,
 					  64, NULL, SPDK_ENV_LCORE_ID_ANY,
 					  SPDK_MALLOC_DMA);
@@ -425,6 +425,8 @@ _init_write_super_cpl(void *cb_arg, int reduce_errno)
 {
 	struct reduce_init_load_ctx *init_ctx = cb_arg;
 	int rc;
+
+	g_vol_count++;
 
 	rc = _allocate_vol_requests(init_ctx->vol);
 	if (rc != 0) {
@@ -668,6 +670,7 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 		goto error;
 	}
 
+	g_vol_count++;
 	/* If the cb_fn is destroy_load_cb, it means we are wanting to destroy this compress bdev.
 	 *  So don't bother getting the volume ready to use - invoke the callback immediately
 	 *  so destroy_load_cb can delete the metadata off of the block device and delete the
@@ -831,7 +834,9 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 
 	if (--g_vol_count == 0) {
 		spdk_free(g_zero_buf);
+		g_zero_buf = NULL;
 	}
+	assert(g_vol_count >= 0);
 	_init_load_cleanup(vol, NULL);
 	cb_fn(cb_arg, 0);
 }
