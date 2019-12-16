@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ce64175_636328c7",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-16T11:58:41Z",
+      "side": 1,
+      "message": "But is actually used here.",
+      "range": {
+        "startLine": 175,
+        "startChar": 1,
+        "endLine": 175,
+        "endChar": 34
+      },
+      "revId": "7ebdae7f499edbaa73d54a9ff000832264a1009e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
