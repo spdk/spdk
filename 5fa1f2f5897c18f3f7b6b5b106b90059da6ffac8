@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "76d50330_def4548e",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-16T23:10:16Z",
+      "side": 1,
+      "message": "can you explain in the commit message why the previous test didn\u0027t work?  it\u0027s not clear whether this is a temporary workaround because of some GPT issue, or if the previous test was invalid, or something else\n\nif it\u0027s a temporary workaround, let\u0027s put a comment here explaining that",
+      "revId": "5fa1f2f5897c18f3f7b6b5b106b90059da6ffac8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc61b96f_002402ae",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-16T23:10:16Z",
+      "side": 1,
+      "message": "maybe explain with a comment here why it\u0027s ok for part_dev_by_gpt to fail?  or put something more specific in the comments",
+      "revId": "5fa1f2f5897c18f3f7b6b5b106b90059da6ffac8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
