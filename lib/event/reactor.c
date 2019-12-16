@@ -53,36 +53,6 @@
 
 #define SPDK_EVENT_BATCH_SIZE		8
 
-enum spdk_reactor_state {
-	SPDK_REACTOR_STATE_UNINITIALIZED = 0,
-	SPDK_REACTOR_STATE_INITIALIZED = 1,
-	SPDK_REACTOR_STATE_RUNNING = 2,
-	SPDK_REACTOR_STATE_EXITING = 3,
-	SPDK_REACTOR_STATE_SHUTDOWN = 4,
-};
-
-struct spdk_lw_thread {
-	TAILQ_ENTRY(spdk_lw_thread)	link;
-};
-
-struct spdk_reactor {
-	/* Lightweight threads running on this reactor */
-	TAILQ_HEAD(, spdk_lw_thread)			threads;
-
-	/* Logical core number for this reactor. */
-	uint32_t					lcore;
-
-	struct {
-		uint32_t				is_valid : 1;
-		uint32_t				reserved : 31;
-	} flags;
-
-	struct spdk_ring				*events;
-
-	/* The last known rusage values */
-	struct rusage					rusage;
-} __attribute__((aligned(64)));
-
 static struct spdk_reactor *g_reactors;
 static struct spdk_cpuset *g_reactor_core_mask;
 static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_UNINITIALIZED;

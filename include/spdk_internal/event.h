@@ -51,11 +51,55 @@ struct spdk_event {
 	void			*arg2;
 };
 
+enum spdk_reactor_state {
+	SPDK_REACTOR_STATE_UNINITIALIZED = 0,
+	SPDK_REACTOR_STATE_INITIALIZED = 1,
+	SPDK_REACTOR_STATE_RUNNING = 2,
+	SPDK_REACTOR_STATE_EXITING = 3,
+	SPDK_REACTOR_STATE_SHUTDOWN = 4,
+};
+
+struct spdk_lw_thread {
+	TAILQ_ENTRY(spdk_lw_thread)	link;
+};
+
+struct spdk_reactor {
+	/* Lightweight threads running on this reactor */
+	TAILQ_HEAD(, spdk_lw_thread)	threads;
+
+	/* Logical core number for this reactor. */
+	uint32_t			lcore;
+
+	struct {
+		uint32_t		is_valid : 1;
+		uint32_t		reserved : 31;
+	} flags;
+
+	struct spdk_ring		*events;
+
+	/* The last known rusage values */
+	struct rusage			rusage;
+} __attribute__((aligned(64)));
+
 int spdk_reactors_init(void);
 void spdk_reactors_fini(void);
 
 void spdk_reactors_start(void);
 void spdk_reactors_stop(void *arg1);
+
+/**
+ * Allocate and pass an event to each core, serially.
+ *
+ * The allocated event is processed asynchronously - i.e. spdk_reactor_for_each_core
+ * will return prior to `fn` being called on each core.
+ *
+ * \param fn This is the function that will be called on each core.
+ * \param arg1 Argument will be passed to fn when called.
+ * \param arg2 Argument will be passed to fn when called.
+ * \param cpl This will be called on the originating thread after `fn` has been
+ * called on each thread.
+ */
+void spdk_for_each_core(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cpl);
 
 struct spdk_subsystem {
 	const char *name;
