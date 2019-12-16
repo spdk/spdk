@@ -119,7 +119,6 @@ def case_message(func):
             600: 'bdev_lvol_create_lvstore_with_cluster_size_max',
             601: 'bdev_lvol_create_lvstore_with_cluster_size_min',
             # Provisioning
-            650: 'thin_provisioning_check_space',
             651: 'thin_provisioning_read_empty_bdev',
             652: 'thin_provisioning_data_integrity_test',
             653: 'thin_provisioning_resize',
@@ -540,86 +539,6 @@ class TestCases(object):
 
         # Expected result:
         # - bdev_lvol_get_lvstores: response should be of no value after destroyed lvol store
-        # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case650(self):
-        """
-        thin_provisioning_check_space
-
-        Check if free clusters number on lvol store decreases
-        if we write to created thin provisioned lvol bdev
-        """
-        # create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # create lvol store on mamloc bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-        lvs = self.c.bdev_lvol_get_lvstores(self.lvs_name)[0]
-        free_clusters_start = int(lvs['free_clusters'])
-        bdev_size = self.get_lvs_size()
-        # create thin provisioned lvol bdev with size equals to lvol store free space
-        bdev_name = self.c.bdev_lvol_create(uuid_store, self.lbd_name,
-                                            bdev_size, thin=True)
-        lvs = self.c.bdev_lvol_get_lvstores(self.lvs_name)[0]
-        free_clusters_create_lvol = int(lvs['free_clusters'])
-        # check and save number of free clusters for lvol store
-        if free_clusters_start != free_clusters_create_lvol:
-            fail_count += 1
-        lvol_bdev = self.c.get_lvol_bdev_with_name(bdev_name)
-        nbd_name = "/dev/nbd0"
-        fail_count += self.c.nbd_start_disk(bdev_name, nbd_name)
-
-        size = int(lvs['cluster_size'])
-        # write data (lvs cluster size) to created lvol bdev starting from offset 0.
-        fail_count += self.run_fio_test("/dev/nbd0", 0, size, "write", "0xcc")
-        lvs = self.c.bdev_lvol_get_lvstores(self.lvs_name)[0]
-        free_clusters_first_fio = int(lvs['free_clusters'])
-        # check that free clusters on lvol store was decremented by 1
-        if free_clusters_start != free_clusters_first_fio + 1:
-            fail_count += 1
-
-        size = int(lvs['cluster_size'])
-        # calculate size of one and half cluster
-        offset = int((int(lvol_bdev['num_blocks']) * int(lvol_bdev['block_size']) /
-                      free_clusters_create_lvol) * 1.5)
-        # write data (lvs cluster size) to lvol bdev with offset set to one and half of cluster size
-        fail_count += self.run_fio_test(nbd_name, offset, size, "write", "0xcc")
-        lvs = self.c.bdev_lvol_get_lvstores(self.lvs_name)[0]
-        free_clusters_second_fio = int(lvs['free_clusters'])
-        # check that free clusters on lvol store was decremented by 2
-        if free_clusters_start != free_clusters_second_fio + 3:
-            fail_count += 1
-
-        size = (free_clusters_create_lvol - 3) * int(lvs['cluster_size'])
-        offset = int(int(lvol_bdev['num_blocks']) * int(lvol_bdev['block_size']) /
-                     free_clusters_create_lvol * 3)
-        # write data to lvol bdev to the end of its size
-        fail_count += self.run_fio_test(nbd_name, offset, size, "write", "0xcc")
-        lvs = self.c.bdev_lvol_get_lvstores(self.lvs_name)[0]
-        free_clusters_third_fio = int(lvs['free_clusters'])
-        # check that lvol store free clusters number equals to 0
-        if free_clusters_third_fio != 0:
-            fail_count += 1
-
-        fail_count += self.c.nbd_stop_disk(nbd_name)
-        # destroy thin provisioned lvol bdev
-        fail_count += self.c.bdev_lvol_delete(lvol_bdev['name'])
-        lvs = self.c.bdev_lvol_get_lvstores(self.lvs_name)[0]
-        free_clusters_end = int(lvs['free_clusters'])
-        # check that saved number of free clusters equals to current free clusters
-        if free_clusters_start != free_clusters_end:
-            fail_count += 1
-        # destroy lvol store
-        fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
-        # destroy malloc bdev
-        fail_count += self.c.bdev_malloc_delete(base_name)
-        # Expected result:
-        # - calls successful, return code = 0
         # - no other operation fails
         return fail_count
 
