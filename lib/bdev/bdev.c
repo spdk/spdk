@@ -124,6 +124,12 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.mutex = PTHREAD_MUTEX_INITIALIZER,
 };
 
+struct lba_range {
+	uint64_t			offset;
+	uint64_t			length;
+	struct spdk_bdev_channel	*owner_ch;
+	TAILQ_ENTRY(lba_range)		tailq;
+};
 
 static struct spdk_bdev_opts	g_bdev_opts = {
 	.bdev_io_pool_size = SPDK_BDEV_IO_POOL_SIZE,
@@ -1892,6 +1898,27 @@ _bdev_io_submit(void *ctx)
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 	bdev_io->internal.in_submit_request = false;
+}
+
+bool
+bdev_lba_range_overlapped(struct lba_range *range1, struct lba_range *range2);
+
+bool
+bdev_lba_range_overlapped(struct lba_range *range1, struct lba_range *range2)
+{
+	if (range1->length == 0 || range2->length == 0) {
+		return false;
+	}
+
+	if (range1->offset + range1->length <= range2->offset) {
+		return false;
+	}
+
+	if (range2->offset + range2->length <= range1->offset) {
+		return false;
+	}
+
+	return true;
 }
 
 void
