@@ -36,7 +36,7 @@ Added optional 'delay_cmd_submit' parameter to 'bdev_nvme_set_options' RPC metho
 
 ### dpdk
 
-DPDK submodule updated to include fix for vhost CVE-2019-14818.
+Updated DPDK submodule to DPDK 19.11.
 
 ## v19.10:
 
