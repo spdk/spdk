@@ -521,25 +521,23 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		poller->state = SPDK_POLLER_STATE_RUNNING;
 		timer_rc = poller->fn(poller->arg);
 
-		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
-			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
-			free(poller);
-			continue;
-		}
-
-		poller->state = SPDK_POLLER_STATE_WAITING;
-		TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
-		_spdk_poller_insert_timer(thread, poller, now);
-
 #ifdef DEBUG
 		if (timer_rc == -1) {
 			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Timed poller %p returned -1\n", poller);
 		}
 #endif
 
+		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
+			free(poller);
+		} else {
+			poller->state = SPDK_POLLER_STATE_WAITING;
+			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
+			_spdk_poller_insert_timer(thread, poller, now);
+		}
+
 		if (timer_rc > rc) {
 			rc = timer_rc;
-
 		}
 	}
 
