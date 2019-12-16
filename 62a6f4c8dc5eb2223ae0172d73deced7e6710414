@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9fb343dc_3d0ce335",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-16T09:11:43Z",
+      "side": 1,
+      "message": "Thanks Yidong.\n\nWe can add the issue https://github.com/spdk/spdk/issues/1111 link here.",
+      "range": {
+        "startLine": 9,
+        "startChar": 1,
+        "endLine": 9,
+        "endChar": 14
+      },
+      "revId": "62a6f4c8dc5eb2223ae0172d73deced7e6710414",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
