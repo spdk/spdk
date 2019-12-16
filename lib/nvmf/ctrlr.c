@@ -2020,6 +2020,7 @@ spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		switch (cmd->opc) {
 		case SPDK_NVME_OPC_IDENTIFY:
 		case SPDK_NVME_OPC_GET_LOG_PAGE:
+		case SPDK_NVME_OPC_KEEP_ALIVE:
 			break;
 		default:
 			goto invalid_opcode;
