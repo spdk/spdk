@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba180219_146546df",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-12-16T09:05:57Z",
+      "side": 1,
+      "message": "thread",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 6
+      },
+      "revId": "9b81e5013e36c46d8599e782d93cc260c9db5ae0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34efd9eb_cfe82702",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 961,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-12-16T09:05:57Z",
+      "side": 1,
+      "message": "I\u0027m not sure that this is the right place to update ibv_state since we almost destroy the qpair. If to go through the calls stack of nvmf_rdma_disconnect, there will be the following chain which explicitly sets the state to IBV_QPS_ERR:\n\n0. [acceptor] nvmf_rdma_disconnect\n1. [acceptor] spdk_nvmf_rdma_start_disconnect\n2. [acceptor] _nvmf_rdma_try_disconnect - \n3. [pg thread] _nvmf_rdma_qpair_disconnect - \n4. [pg thread] spdk_nvmf_qpair_disconnect\n5. [pg thread] _spdk_nvmf_qpair_destroy\n6. [pg thread] spdk_nvmf_transport_qpair_fini\n7. [pg thread] spdk_nvmf_rdma_close_qpair:\n\n\tif (rqpair-\u003eibv_state !\u003d IBV_QPS_ERR) {\n\t\tspdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);\n\t}\nI think it is safe to update ibv state here since it always done on the same thread. I think we can remove spdk_nvmf_rdma_update_ibv_state on line 2933 and it will be enough to fix the issue.",
+      "range": {
+        "startLine": 961,
+        "startChar": 2,
+        "endLine": 961,
+        "endChar": 51
+      },
+      "revId": "9b81e5013e36c46d8599e782d93cc260c9db5ae0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
