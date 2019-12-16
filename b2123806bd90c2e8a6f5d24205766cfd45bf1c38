@@ -16,6 +16,52 @@
       "revId": "b2123806bd90c2e8a6f5d24205766cfd45bf1c38",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4ad5eb5_2acedc9f",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-16T09:31:06Z",
+      "side": 1,
+      "message": "I that correct? This will only find lines where there are more than four spaces.\nIf there\u0027s a line anywhere that\u0027s a:\n[tab][space][space] then in will not work\n\nBTW, instead of regexing for space with \" \" you should probably use \\s or \\S, or similar.",
+      "range": {
+        "startLine": 307,
+        "startChar": 13,
+        "endLine": 307,
+        "endChar": 22
+      },
+      "revId": "b2123806bd90c2e8a6f5d24205766cfd45bf1c38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3545439_2975350f",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-16T09:31:06Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to enforce this rule in comments.\nIMO we should only fix code lines indentations",
+      "range": {
+        "startLine": 15,
+        "startChar": 1,
+        "endLine": 15,
+        "endChar": 2
+      },
+      "revId": "b2123806bd90c2e8a6f5d24205766cfd45bf1c38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
