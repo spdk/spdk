@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc5dfa65_af61728e",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-17T21:39:31Z",
+      "side": 1,
+      "message": "the comment change is a bit misleading here\n\nI think this could all be done more simply but just putting this one new line at the beginning of this function, i.e.\n\n# make sure we can\u0027t create love store on nonexistent bdev\n! rpc_cmd bdev_lvol_create_lvstore NotMalloc lvs_test\n\n# create an lvol store\nmalloc_name\u003d...\n\u003cthe rest of this function\u003e",
+      "revId": "0370c7d9bced331fbbd848a6f8dee06cdd70cb6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
