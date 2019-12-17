@@ -97,6 +97,29 @@ function test_thin_lvol_check_zeroes() {
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 }
 
+# Check if data written to thin provisioned lvol bdev
+# were properly written (fio test with verification)
+function test_thin_lvol_check_integrity() {
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Create thin provisioned lvol bdev with size equals to lvol store space
+	lvol_size_mb=$(( LVS_DEFAULT_CAPACITY_MB ))
+	# Round down lvol size to the nearest cluster size boundary
+	lvol_size_mb=$(( lvol_size_mb / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb" -t)
+
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
+	run_fio_test /dev/nbd0 0 $lvol_size "write" "0xcc"
+
+	# Clean up
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
+	rpc_cmd bdev_lvol_delete "$lvol_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -104,6 +127,7 @@ waitforlisten $spdk_pid
 
 run_test "test_thin_lvol_check_space" test_thin_lvol_check_space
 run_test "test_thin_lvol_check_zeroes" test_thin_lvol_check_zeroes
+run_test "test_thin_lvol_check_integrity" test_thin_lvol_check_integrity
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
