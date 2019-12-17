@@ -1251,6 +1251,8 @@ vl_api_application_attach_reply_t_handler(vl_api_application_attach_reply_t *mp)
 	assert(mp->app_event_queue_address);
 	g_svm.app_event_queue = uword_to_pointer(mp->app_event_queue_address, svm_msg_q_t *);
 
+	SPDK_ERRLOG("mp->n_fds = %d\n", (int)mp->n_fds);
+
 	if (mp->n_fds) {
 		int fds[mp->n_fds];
 
