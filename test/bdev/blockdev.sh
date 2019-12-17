@@ -40,6 +40,43 @@ dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
 	EOF
 }
 
+function setup_nvme_conf() {
+	$rootdir/scripts/gen_nvme.sh >> $conf_file
+}
+
+function setup_gpt_conf() {
+	timing_enter nbd_gpt
+	if grep -q Nvme0 $conf_file; then
+		part_dev_by_gpt $conf_file Nvme0n1 $rootdir
+	fi
+	timing_exit nbd_gpt
+}
+
+function setup_crypto_conf() {
+	if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
+		$testdir/gen_crypto.sh Malloc6 Malloc7 >> $conf_file
+	fi
+}
+
+function setup_pmem_conf() {
+	if hash pmempool; then
+		rm -f /tmp/spdk-pmem-pool
+		pmempool create blk --size=32M 512 /tmp/spdk-pmem-pool
+		echo "[Pmem]" >> $conf_file
+		echo "  Blk /tmp/spdk-pmem-pool Pmem0" >> $conf_file
+	fi
+}
+
+function setup_rbd_conf() {
+	if [ $SPDK_TEST_RBD -eq 1 ]; then
+		timing_enter rbd_setup
+		rbd_setup 127.0.0.1
+		timing_exit rbd_setup
+
+		$rootdir/scripts/gen_rbd.sh >> $conf_file
+	fi
+}
+
 function bdev_bounds() {
 	$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -c $conf_file &
 	bdevio_pid=$!
@@ -247,32 +284,11 @@ else
 fi
 
 setup_bdev_conf
-$rootdir/scripts/gen_nvme.sh >> $conf_file
-
-if [ $SPDK_TEST_RBD -eq 1 ]; then
-	timing_enter rbd_setup
-	rbd_setup 127.0.0.1
-	timing_exit rbd_setup
-
-	$rootdir/scripts/gen_rbd.sh >> $conf_file
-fi
-
-if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
-	$testdir/gen_crypto.sh Malloc6 Malloc7 >> $conf_file
-fi
-
-if hash pmempool; then
-	rm -f /tmp/spdk-pmem-pool
-	pmempool create blk --size=32M 512 /tmp/spdk-pmem-pool
-	echo "[Pmem]" >> $conf_file
-	echo "  Blk /tmp/spdk-pmem-pool Pmem0" >> $conf_file
-fi
-
-timing_enter nbd_gpt
-if grep -q Nvme0 $conf_file; then
-	part_dev_by_gpt $conf_file Nvme0n1 $rootdir
-fi
-timing_exit nbd_gpt
+setup_nvme_conf
+setup_gpt_conf
+setup_crypto_conf
+setup_pmem_conf
+setup_rbd_conf
 
 timing_enter bdev_svc
 bdevs=$(discover_bdevs $rootdir $conf_file | jq -r '.[] | select(.claimed == false)')
