@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7bef4b74_0d0dfa16",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T12:17:27Z",
+      "side": 1,
+      "message": "struct spdk_sock_request is also new for v20.01. So I think the line 7 to 10 is enough.",
+      "revId": "8bd2812800e06aa9fd773d28cd7641fb3cf711a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7293fc9_c44a472e",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T12:17:27Z",
+      "side": 1,
+      "message": "Please put the comment above the code like\n /* comment */\n uint32_t len;",
+      "revId": "8bd2812800e06aa9fd773d28cd7641fb3cf711a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d28b74f_7cd1ef57",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T12:17:27Z",
+      "side": 1,
+      "message": "I think if we check this, we should do before using this, i.e., should we move the check to the line between 506 and 507?",
+      "revId": "8bd2812800e06aa9fd773d28cd7641fb3cf711a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
