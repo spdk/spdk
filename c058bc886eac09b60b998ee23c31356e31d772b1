@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4636b5e0_bbc282e6",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T02:23:04Z",
+      "side": 1,
+      "message": "lib/nvme/nvme_rdma.c uses\n NVME_RDMA_TIME_OUT_IN_MS 2000\nto the corresponding value.\nSo just NVME_TCP_TIME_OUT_IN_SECONDS may sound good.",
+      "range": {
+        "startLine": 55,
+        "startChar": 8,
+        "endLine": 55,
+        "endChar": 42
+      },
+      "revId": "c058bc886eac09b60b998ee23c31356e31d772b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72ad616d_7fe4cac2",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1530,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T02:23:04Z",
+      "side": 1,
+      "message": "icreq_timeout_tsc or conn_timeout_tsc is better?",
+      "range": {
+        "startLine": 1530,
+        "startChar": 10,
+        "endLine": 1530,
+        "endChar": 27
+      },
+      "revId": "c058bc886eac09b60b998ee23c31356e31d772b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
