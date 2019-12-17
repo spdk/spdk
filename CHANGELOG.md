@@ -45,6 +45,8 @@ processing function. Batching is controlled by 'delay_cmd_submit' qpair option.
 
 Added optional 'delay_cmd_submit' parameter to 'bdev_nvme_set_options' RPC method.
 
+An new RPC `framework_get_reactors` has been added to retrieve list of all reactors.
+
 ### dpdk
 
 Updated DPDK submodule to DPDK 19.11.

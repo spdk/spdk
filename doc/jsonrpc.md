@@ -485,6 +485,50 @@ Example response:
 }
 ~~~
 
+## framework_get_reactors {#rpc_framework_get_reactors}
+
+Retrieve an array of all reactors.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+The response is an array of all reactors.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "framework_get_reactors",
+  "id": 1
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "reactors": [
+      {
+        "lcore": 0,
+        "lw_threads": [
+          {
+            "name": "app_thread",
+            "cpumask": "1"
+          }
+        ]
+      }
+    ]
+  }
+}
+~~~
+
 ## thread_get_stats {#rpc_thread_get_stats}
 
 Retrieve current statistics of all the threads.
