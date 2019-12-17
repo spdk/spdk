@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5ff6f8e_1190827f",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-17T10:31:57Z",
+      "side": 1,
+      "message": "Is grep really necessary?\nI imagine \"perform_tests\" RPC should return 0 if all went well and !\u003d0 if there were errors. If it\u0027s different then it\u0027s probably a bug and needs to be fixed.",
+      "range": {
+        "startLine": 12,
+        "startChar": 58,
+        "endLine": 12,
+        "endChar": 72
+      },
+      "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a0acff8_4dbaa44b",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-17T10:31:57Z",
+      "side": 1,
+      "message": "This seems to be unused anywhere.",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 18
+      },
+      "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7cecccfe_b77c4a1e",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-17T10:31:57Z",
+      "side": 1,
+      "message": "There\u0027s a comment for hotremove, but nothing for hot attach.\nEither remove this one or add another for attach.",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 14
+      },
+      "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5de32334_bb388c84",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-17T10:31:57Z",
+      "side": 1,
+      "message": "Is retcode really needed?\n\nI think that doing just this would be fine:\n\nwait $perftest_pid\nif [[ $? \u003d\u003d 0 ]]; then [...]",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 9
+      },
+      "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08e55568_3c974f84",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-17T10:31:57Z",
+      "side": 1,
+      "message": "Don\u0027t exit directly if there\u0027s trap in place. Trap won\u0027t get executed.\nThis should be \"false\"",
+      "range": {
+        "startLine": 40,
+        "startChar": 1,
+        "endLine": 40,
+        "endChar": 7
+      },
+      "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff3ae6fe_e5233e0a",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-17T10:31:57Z",
+      "side": 1,
+      "message": "bdevperf is not killed here in case of error",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 31
+      },
+      "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
