@@ -84,7 +84,7 @@ struct spdk_reactor {
 } __attribute__((aligned(SPDK_CACHE_LINE_SIZE)));
 
 static struct spdk_reactor *g_reactors;
-static struct spdk_cpuset *g_reactor_core_mask;
+static struct spdk_cpuset g_reactor_core_mask;
 static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_UNINITIALIZED;
 
 static bool g_framework_monitor_context_switch_enabled = true;
@@ -419,27 +419,19 @@ spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 struct spdk_cpuset *
 spdk_app_get_core_mask(void)
 {
-	return g_reactor_core_mask;
+	return &g_reactor_core_mask;
 }
 
 void
 spdk_reactors_start(void)
 {
 	struct spdk_reactor *reactor;
-	struct spdk_cpuset *tmp_cpumask;
+	struct spdk_cpuset tmp_cpumask = {};
 	uint32_t i, current_core;
 	int rc;
 	char thread_name[32];
 
-	tmp_cpumask = spdk_cpuset_alloc();
-	if (tmp_cpumask == NULL) {
-		SPDK_ERRLOG("spdk_cpuset_alloc() failed\n");
-		assert(false);
-		return;
-	}
-
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
-	g_reactor_core_mask = spdk_cpuset_alloc();
 
 	current_core = spdk_env_get_current_core();
 	SPDK_ENV_FOREACH_CORE(i) {
@@ -459,15 +451,13 @@ spdk_reactors_start(void)
 			/* For now, for each reactor spawn one thread. */
 			snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
 
-			spdk_cpuset_zero(tmp_cpumask);
-			spdk_cpuset_set_cpu(tmp_cpumask, i, true);
+			spdk_cpuset_zero(&tmp_cpumask);
+			spdk_cpuset_set_cpu(&tmp_cpumask, i, true);
 
-			spdk_thread_create(thread_name, tmp_cpumask);
+			spdk_thread_create(thread_name, &tmp_cpumask);
 		}
-		spdk_cpuset_set_cpu(g_reactor_core_mask, i, true);
+		spdk_cpuset_set_cpu(&g_reactor_core_mask, i, true);
 	}
-
-	spdk_cpuset_free(tmp_cpumask);
 
 	/* Start the master reactor */
 	reactor = spdk_reactor_get(current_core);
@@ -477,8 +467,6 @@ spdk_reactors_start(void)
 	spdk_env_thread_wait_all();
 
 	g_reactor_state = SPDK_REACTOR_STATE_SHUTDOWN;
-	spdk_cpuset_free(g_reactor_core_mask);
-	g_reactor_core_mask = NULL;
 }
 
 void
