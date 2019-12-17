@@ -35,3 +35,12 @@ def thread_get_stats(client):
         Current threads statistics.
     """
     return client.call('thread_get_stats')
+
+
+def reactor_get_stats(client):
+    """Query reactors statistics.
+
+    Returns:
+        Current reactors statistics.
+    """
+    return client.call('reactor_get_stats')
