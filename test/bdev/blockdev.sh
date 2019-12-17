@@ -92,9 +92,12 @@ function nbd_function_test() {
 	if [ $(uname -s) = Linux ] && modprobe -n nbd; then
 		local rpc_server=/var/tmp/spdk-nbd.sock
 		local conf=$1
-		local nbd_num=6
 		local nbd_all=($(ls /dev/nbd* | grep -v p))
 		local bdev_all=($bdevs_name)
+		local nbd_num=${#bdevs_all[@]}
+		if [ ${#nbd_all[@]} -le $nbd_num ]; then
+			nbd_num=${#nbd_all[@]}
+		fi
 		local nbd_list=(${nbd_all[@]:0:$nbd_num})
 		local bdev_list=(${bdev_all[@]:0:$nbd_num})
 
@@ -111,8 +114,6 @@ function nbd_function_test() {
 
 		nbd_rpc_start_stop_verify $rpc_server "${bdev_list[*]}"
 		nbd_rpc_data_verify $rpc_server "${bdev_list[*]}" "${nbd_list[*]}"
-
-		$rpc_py -s $rpc_server bdev_passthru_delete TestPT
 
 		killprocess $nbd_pid
 		trap - SIGINT SIGTERM EXIT
