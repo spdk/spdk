@@ -370,7 +370,7 @@ _sock(const char *ip, int port)
 	struct iovec iov;
 	int rc;
 
-	listen_sock = spdk_sock_listen(ip, port);
+	listen_sock = spdk_sock_listen(ip, port, NULL);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
 	server_sock = spdk_sock_accept(listen_sock);
@@ -488,7 +488,7 @@ _sock_group(const char *ip, int port)
 	struct iovec iov;
 	int rc;
 
-	listen_sock = spdk_sock_listen(ip, port);
+	listen_sock = spdk_sock_listen(ip, port, NULL);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
 	server_sock = spdk_sock_accept(listen_sock);
@@ -612,7 +612,7 @@ posix_sock_group_fairness(void)
 	struct iovec iov;
 	int i, rc;
 
-	listen_sock = spdk_sock_listen("127.0.0.1", UT_PORT);
+	listen_sock = spdk_sock_listen("127.0.0.1", UT_PORT, NULL);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
 	group = spdk_sock_group_create(NULL);
@@ -740,7 +740,7 @@ _sock_close(const char *ip, int port)
 	bool cb_arg2 = false;
 	int rc;
 
-	listen_sock = spdk_sock_listen(ip, port);
+	listen_sock = spdk_sock_listen(ip, port, NULL);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
 	client_sock = spdk_sock_connect(ip, port);

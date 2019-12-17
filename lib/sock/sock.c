@@ -188,12 +188,16 @@ spdk_sock_connect(const char *ip, int port)
 }
 
 struct spdk_sock *
-spdk_sock_listen(const char *ip, int port)
+spdk_sock_listen(const char *ip, int port, char *sock_impl_name)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
 
 	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
+		if (sock_impl_name && strcmp(sock_impl_name, impl->name)) {
+			continue;
+		}
+
 		sock = impl->listen(ip, port);
 		if (sock != NULL) {
 			sock->net_impl = impl;
