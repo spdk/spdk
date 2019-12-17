@@ -2656,6 +2656,101 @@ lock_lba_range_check_ranges(void)
 	poll_threads();
 }
 
+static void
+lock_lba_range_with_io_outstanding(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *channel;
+	struct lba_range *range;
+	char buf[4096];
+	int ctx1;
+	int rc;
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+	channel = spdk_io_channel_get_ctx(io_ch);
+
+	g_io_done = false;
+	rc = spdk_bdev_read_blocks(desc, io_ch, buf, 20, 1, io_done, &ctx1);
+	CU_ASSERT(rc == 0);
+
+	g_lock_lba_range_done = false;
+	rc = bdev_lock_lba_range(desc, io_ch, 20, 10, lock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	/* The lock should immediately become valid, since there are no outstanding
+	 * write I/O.
+	 */
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_lock_lba_range_done == true);
+	range = TAILQ_FIRST(&channel->locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 20);
+	CU_ASSERT(range->length == 10);
+	CU_ASSERT(range->owner_ch == channel);
+	CU_ASSERT(range->locked_ctx == &ctx1);
+
+	rc = bdev_unlock_lba_range(desc, io_ch, 20, 10, lock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	stub_complete_io(1);
+	spdk_delay_us(100);
+	poll_threads();
+
+	CU_ASSERT(TAILQ_EMPTY(&channel->locked_ranges));
+
+	/* Now try again, but with a write I/O. */
+	g_io_done = false;
+	rc = spdk_bdev_write_blocks(desc, io_ch, buf, 20, 1, io_done, &ctx1);
+	CU_ASSERT(rc == 0);
+
+	g_lock_lba_range_done = false;
+	rc = bdev_lock_lba_range(desc, io_ch, 20, 10, lock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	/* The lock should not be fully valid yet, since a write I/O is outstanding.
+	 * But note that the range should be on the channel's locked_list, to make sure no
+	 * new write I/O are started.
+	 */
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_lock_lba_range_done == false);
+	range = TAILQ_FIRST(&channel->locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 20);
+	CU_ASSERT(range->length == 10);
+
+	/* Complete the write I/O.  This should make the lock valid (checked by confirming
+	 * our callback was invoked).
+	 */
+	stub_complete_io(1);
+	spdk_delay_us(100);
+	poll_threads();
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_lock_lba_range_done == true);
+
+	rc = bdev_unlock_lba_range(desc, io_ch, 20, 10, unlock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(TAILQ_EMPTY(&channel->locked_ranges));
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2693,7 +2788,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_open_ext", bdev_open_ext) == NULL ||
 		CU_add_test(suite, "bdev_set_io_timeout", bdev_set_io_timeout) == NULL ||
 		CU_add_test(suite, "lba_range_overlap", lba_range_overlap) == NULL ||
-		CU_add_test(suite, "lock_lba_range_check_ranges", lock_lba_range_check_ranges) == NULL
+		CU_add_test(suite, "lock_lba_range_check_ranges", lock_lba_range_check_ranges) == NULL ||
+		CU_add_test(suite, "lock_lba_range_with_io_outstanding", lock_lba_range_with_io_outstanding) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
