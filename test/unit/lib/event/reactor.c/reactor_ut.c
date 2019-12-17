@@ -71,6 +71,44 @@ test_init_reactors(void)
 	free_cores();
 }
 
+static void
+ut_event_fn(void *arg1, void *arg2)
+{
+	uint8_t *test1 = arg1;
+	uint8_t *test2 = arg2;
+
+	*test1 = 1;
+	*test2 = 0xFF;
+}
+
+static void
+test_event_call(void)
+{
+	uint8_t test1 = 0, test2 = 0;
+	struct spdk_event *evt;
+	struct spdk_reactor *reactor;
+
+	allocate_cores(1);
+
+	CU_ASSERT(spdk_reactors_init() == 0);
+
+	evt = spdk_event_allocate(0, ut_event_fn, &test1, &test2);
+	CU_ASSERT(evt != NULL);
+
+	spdk_event_call(evt);
+
+	reactor = spdk_reactor_get(0);
+	CU_ASSERT(reactor != NULL);
+
+	CU_ASSERT(_spdk_event_queue_run_batch(reactor) == 1);
+	CU_ASSERT(test1 == 1);
+	CU_ASSERT(test2 == 0xFF);
+
+	spdk_reactors_fini();
+
+	free_cores();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -89,7 +127,8 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "test_create_reactor", test_create_reactor) == NULL ||
-		CU_add_test(suite, "test_init_reactors", test_init_reactors) == NULL
+		CU_add_test(suite, "test_init_reactors", test_init_reactors) == NULL ||
+		CU_add_test(suite, "test_event_call", test_event_call) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
