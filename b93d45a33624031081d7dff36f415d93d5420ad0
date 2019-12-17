@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "212cbc7a_43116db3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-17T15:31:54Z",
+      "side": 1,
+      "message": "otherwise",
+      "revId": "b93d45a33624031081d7dff36f415d93d5420ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c33c9e2_57ad3cc6",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 885,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-17T15:31:54Z",
+      "side": 1,
+      "message": "nit - too many spaces after \u003d sign",
+      "revId": "b93d45a33624031081d7dff36f415d93d5420ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
