@@ -1612,7 +1612,7 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 		return -1;
 	}
 
-	tqpair->sock = spdk_sock_connect(ctrlr->trid.traddr, port);
+	tqpair->sock = spdk_sock_connect(ctrlr->trid.traddr, port, NULL);
 	if (!tqpair->sock) {
 		SPDK_ERRLOG("sock connection error of tqpair=%p with addr=%s, port=%ld\n",
 			    tqpair, ctrlr->trid.traddr, port);
