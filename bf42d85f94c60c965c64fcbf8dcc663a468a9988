@@ -93,6 +93,30 @@
       "revId": "bf42d85f94c60c965c64fcbf8dcc663a468a9988",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05087d91_541a5b88",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-17T15:16:53Z",
+      "side": 1,
+      "message": "The offset is still a byte offset into the request when the request is on the queued_reqs list. It only becomes a system call index when the request is moved to the pending list. My understanding of how the zero copy API works is that we should never get a partial send, so this assert is validating that. However, this assert is hitting in the tests somewhere, so I need to go figure out how that\u0027s possible.",
+      "parentUuid": "83fd4068_433ca5b1",
+      "range": {
+        "startLine": 543,
+        "startChar": 3,
+        "endLine": 543,
+        "endChar": 23
+      },
+      "revId": "bf42d85f94c60c965c64fcbf8dcc663a468a9988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
