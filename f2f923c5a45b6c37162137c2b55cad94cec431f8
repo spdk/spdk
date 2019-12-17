@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d55334fc_33a8fa01",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1649,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T08:27:12Z",
+      "side": 1,
+      "message": "bdev_channel_poll_timeout_io_done() is not called yet. So still g_desc-\u003erefs !\u003d 0.\n\nI we add set_thread(0) and poll_thread(0) here, g_desc-\u003erefs becomes 0.",
+      "revId": "f2f923c5a45b6c37162137c2b55cad94cec431f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aecff4fd_d7da2dad",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1650,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T08:27:12Z",
+      "side": 1,
+      "message": "I think this comment is not correct due to the above reason.",
+      "range": {
+        "startLine": 1650,
+        "startChar": 1,
+        "endLine": 1650,
+        "endChar": 32
+      },
+      "revId": "f2f923c5a45b6c37162137c2b55cad94cec431f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "898b1a58_fb56e214",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1654,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T08:27:12Z",
+      "side": 1,
+      "message": "We should advance 1 seconds after executing bdev_channel_poll_timeout_io_done(), i.e. after g_desc-\u003erefs \u003d\u003d 0.\n\nAnd this advance only 1 second. So the timeout poller doesn\u0027t start the next interval yet.",
+      "range": {
+        "startLine": 1654,
+        "startChar": 1,
+        "endLine": 1654,
+        "endChar": 40
+      },
+      "revId": "f2f923c5a45b6c37162137c2b55cad94cec431f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "259a8c99_e85e3d8c",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1658,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T08:27:12Z",
+      "side": 1,
+      "message": "I think we should check !\u003d 0 but \u003d\u003d 1.",
+      "range": {
+        "startLine": 1658,
+        "startChar": 11,
+        "endLine": 1658,
+        "endChar": 28
+      },
+      "revId": "f2f923c5a45b6c37162137c2b55cad94cec431f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06a740cf_7b452e5d",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1660,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T08:27:12Z",
+      "side": 1,
+      "message": "What is this poller? timeout poller? If timeout poller, it waits for next timeout, and doesn\u0027t run yet.",
+      "range": {
+        "startLine": 1660,
+        "startChar": 23,
+        "endLine": 1660,
+        "endChar": 33
+      },
+      "revId": "f2f923c5a45b6c37162137c2b55cad94cec431f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
