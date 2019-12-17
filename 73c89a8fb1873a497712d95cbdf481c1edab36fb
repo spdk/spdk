@@ -71,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "76cac4c0_0975a462",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-17T15:43:47Z",
+      "side": 1,
+      "message": "Yeah - I guess that makes the most logical sense. This was only being used in that idle check before so it could have ignored paused pollers and given the right answer. But your change here makes sense.",
+      "parentUuid": "a68d7ee9_974b1537",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d654831b_b9b1625c",
         "filename": "lib/thread/thread.c",
         "patchSetId": 3
@@ -153,6 +171,24 @@
       "side": 1,
       "message": "Couldn\u0027t we check the poller-\u003eperiod_ticks \u003d\u003d 0 to distinguish timed poller from an acitve one though?\n\nI can see another potential problem with removing the poller from the active/timer pollers here. Let\u0027s say there are two active pollers and while executing the first one (1), a user tries to pause the other one (2). It\u0027d cause spdk_poller_pause to remove poller (2) from active_pollers and put it on the paused_pollers list. The code would then return to spdk_thread_poll from current poller\u0027s (1) poller_fn and continue executing other pollers. But since the next poller (2) was removed from the active_pollers list, the TAILQ_FOREACH_REVERSE_SAFE macro would set current poller to the poller that was just removed (2) and would start executing pollers from the paused_pollers list.\nPerhaps just a comment in the header stating that a poller cannot be paused from the execution context of another one would be enough? It does seem a little cryptic though. What do you think?",
       "parentUuid": "ec03ea76_9f7fbf43",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ffc61280_89f3f218",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-17T15:43:47Z",
+      "side": 1,
+      "message": "Ouch - this is a tough one and I\u0027m not sure we\u0027ll find our way out of it. You\u0027re right that we can use period_ticks to distinguish which list it\u0027s on. We can also use poller-\u003estate \u003d\u003d SPDK_POLLER_STATE_RUNNING to determine if a poller is the currently executing one. It may be possible to combine those two things to solve this.\n\n1) If poller-\u003estate \u003d\u003d SPDK_POLLER_STATE_RUNNING and the user pauses it, then it\u0027s safe to immediately move it to the paused list without breaking the TAILQ_FOREACH_REVERSE_SAFE.\n2) If the user is pausing a poller from outside of that poller\u0027s context, I think we need a new state \u003d SPDK_POLLER_STATE_PAUSING. In this state, the poller is requested to pause but is still on the active/timed list.\n3) Within the TAILQ_FOREACH_REVERSE_SAFE in spdk_thread_poll(), if a poller is encountered in the SPDK_POLLER_STATE_PAUSING state, it can move it to the paused state and list. For active pollers it checks them all in succession, so it\u0027ll find it either later in the current loop iterator, or on the next time spdk_thread_poll is called. For timed pollers, they\u0027ll remain in the SPDK_POLLER_STATE_PAUSING state until they expire once.\n4) If the user attempts to resume a thread in the SPDK_POLLER_STATE_PAUSING state, it can simply move it back to the active state since it\u0027s already on the correct list. If the user attempts to resume a thread in the SPDK_POLLER_STATE_PAUSED state, it can move it to the right list and set the state to active.\n\nDo you see any holes in that strategy? The only thing I see is around timed pollers. If a timed poller is set to expire at time 10 and is paused at time 0 from another poller\u0027s context, it sits in the timed pollers list until time 10. If it is instead resumed at time 5, it sees that it is still in the process of pausing and just flips its state back, meaning it expires at time 10 still. Should pausing have pushed out the next expiration to time 15? In the grand scheme of things, I don\u0027t think this actually matters - it\u0027s not the absolute time of pollers that is important but rather the delta between successive poller calls, and that is maintained here well enough.",
+      "parentUuid": "9756de5d_f27d6edd",
       "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
