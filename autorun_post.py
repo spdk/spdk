@@ -126,6 +126,15 @@ def printListInformation(table_type, test_list):
     printList("%s Missing UBSAN" % table_type, test_list, 2, False)
 
 
+def getSkippedTests(repo_dir):
+    skipped_test_file = os.path.join(repo_dir, "test", "common", "skipped_tests.txt")
+    if not os.path.exists(skipped_test_file):
+        return []
+    else:
+        with open(skipped_test_file, "r") as skipped_test_data:
+            return [x.strip() for x in skipped_test_data.readlines() if "#" not in x and x.strip() != '']
+
+
 def aggregateCompletedTests(output_dir, repo_dir):
     test_list = {}
     test_completion_table = []
@@ -153,6 +162,7 @@ def aggregateCompletedTests(output_dir, repo_dir):
 
     printListInformation("Tests", test_list)
     generateTestCompletionTables(output_dir, test_completion_table)
+    skipped_tests = getSkippedTests(repo_dir)
 
 
 def main(output_dir, repo_dir):

@@ -1,0 +1,65 @@
+# This file represents the tests we are intentionally skipping in CI testing.
+
+# cases
+ftl_dirty_shutdown
+ftl_fio_basic
+ftl_fio_extended
+ftl_restore_nv_cache
+
+# Waiting for test refactor
+iscsi_tgt_fio_remote_nvme
+
+# Waiting on significant test rewrite
+nvme_opal
+nvme_opal_bdevio
+nvme_opal_bdevperf
+nvme_opal_spdk_tgt
+
+# CI doesn't have FC hardware
+nvmf_fc
+spdkcli_nvmf_fc
+unittest_nvmf_fc
+unittest_nvmf_fc_ls
+
+# These tests are currently only run manually
+vhost_blk_fs_integrity
+vhost_blk_hot_remove
+vhost_scsi_hot_remove
+vhost_hotplug
+
+# Waiting on hardware
+vmd
+vmd_bdev_svc
+vmd_fio
+vmd_hello_world
+vmd_identify
+vmd_perf
+
+# nightly tests
+bdev_fio_rw_verify_ext
+bdev_fio_trim_ext
+bdev_gpt_reset
+iscsi_tgt_digest
+iscsi_tgt_data_digest
+iscsi_tgt_pmem
+iscsi_tgt_ext4test
+iscsi_tgt_digests
+iscsi_tgt_multiconnection
+nvmf_fuzz
+nvmf_multiconnection
+nvmf_initiator_timeout
+vhost_blk_2core_2ctrl
+vhost_blk_1core_2ctrl
+vhost_blk_fs_integrity
+vhost_blk_nightly
+vhost_lvol_integrity_1core_1ctrl
+vhost_migration
+vhost_migration_tc1
+vhost_migration_tc2
+vhost_readonly
+vhost_scsi_fs_integrity
+vhost_scsi_integrity
+vhost_scsi_nightly
+vhost_scsi_2core_2ctrl
+vhost_scsi_1core_2ctrl
+vhost_scsi_1core_1ctrl
