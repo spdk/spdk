@@ -367,10 +367,7 @@ _spdk_reactor_run(void *arg)
 			thread = spdk_thread_get_from_ctx(lw_thread);
 
 			rc = spdk_thread_poll(thread, 0, now);
-			if (rc < 0) {
-				TAILQ_REMOVE(&reactor->threads, lw_thread, link);
-				spdk_thread_destroy(thread);
-			}
+			assert(rc >= 0);
 		}
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
