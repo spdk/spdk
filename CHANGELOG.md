@@ -9,6 +9,12 @@ never return EAGAIN, instead queueing internally until the data has all been sen
 simplify many code flows that create pollers to continue attempting to flush writes
 on sockets.
 
+Added impl_name paramaeter in spdk_sock_listen and spdk_sock_connect functions.
+Thus users can use designated sock implementation to listen/connect on the provided ip address
+and port if impl_name is not NULL. If sock implementation is not specified (i.e., NULL value),
+the default behaviour will still be used,  i.e., the first succeeded sock implementation which
+can listen/connect will be used.
+
 ### isa-l
 
 Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and
