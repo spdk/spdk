@@ -41,6 +41,8 @@ to allow reuse in other transports.
 
 Added optional 'delay_cmd_submit' parameter to 'bdev_nvme_set_options' RPC method.
 
+An new RPC `reactor_get_stats` has been added to retrieve current statistics of all the reactors.
+
 ### dpdk
 
 DPDK submodule updated to include fix for vhost CVE-2019-14818.
