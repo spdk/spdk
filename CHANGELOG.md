@@ -25,6 +25,10 @@ never return EAGAIN, instead queueing internally until the data has all been sen
 simplify many code flows that create pollers to continue attempting to flush writes
 on sockets.
 
+Added `impl_name` parameter in spdk_sock_listen and spdk_sock_connect functions. Users may now
+specify the sock layer implementation they'd prefer to use. Valid implementations are currently
+"vpp" and "posix" and NULL, where NULL results in the previous behavior of the functions.
+
 ### isa-l
 
 Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and
