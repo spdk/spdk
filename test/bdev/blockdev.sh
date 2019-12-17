@@ -6,9 +6,42 @@ source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
+conf_file="$testdir/bdev.conf"
+
+function setup_bdev_conf() {
+# Create a file to be used as an AIO backend
+dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
+
+	cat >$conf_file <<-EOF
+		[AIO]
+		  AIO /tmp/aiofile AIO0 2048
+
+		[Malloc]
+		  NumberOfLuns 8
+		  LunSizeInMB 32
+
+		[Split]
+		  Split Malloc1 2
+		  Split Malloc2 8 4
+
+		[Passthru]
+		  PT Malloc3 TestPT
+
+		[QoS]
+		  Limit_IOPS Malloc0 20000
+		  Limit_BPS Malloc3 100
+
+		[RAID0]
+		  Name raid0
+		  StripSize 64
+		  NumDevices 2
+		  RaidLevel 0
+		  Devices Malloc4 Malloc5
+	EOF
+}
 
 function bdev_bounds() {
-	$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -c $testdir/bdev.conf &
+	$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -c $conf_file &
 	bdevio_pid=$!
 	trap 'killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
 	echo "Process bdevio pid: $bdevio_pid"
@@ -206,39 +239,36 @@ else
 	PRE_RESERVED_MEM=2048
 fi
 
-# Create a file to be used as an AIO backend
-dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
-
-cp $testdir/bdev.conf.in $testdir/bdev.conf
-$rootdir/scripts/gen_nvme.sh >> $testdir/bdev.conf
+setup_bdev_conf
+$rootdir/scripts/gen_nvme.sh >> $conf_file
 
 if [ $SPDK_TEST_RBD -eq 1 ]; then
 	timing_enter rbd_setup
 	rbd_setup 127.0.0.1
 	timing_exit rbd_setup
 
-	$rootdir/scripts/gen_rbd.sh >> $testdir/bdev.conf
+	$rootdir/scripts/gen_rbd.sh >> $conf_file
 fi
 
 if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
-	$testdir/gen_crypto.sh Malloc6 Malloc7 >> $testdir/bdev.conf
+	$testdir/gen_crypto.sh Malloc6 Malloc7 >> $conf_file
 fi
 
 if hash pmempool; then
 	rm -f /tmp/spdk-pmem-pool
 	pmempool create blk --size=32M 512 /tmp/spdk-pmem-pool
-	echo "[Pmem]" >> $testdir/bdev.conf
-	echo "  Blk /tmp/spdk-pmem-pool Pmem0" >> $testdir/bdev.conf
+	echo "[Pmem]" >> $conf_file
+	echo "  Blk /tmp/spdk-pmem-pool Pmem0" >> $conf_file
 fi
 
 timing_enter nbd_gpt
-if grep -q Nvme0 $testdir/bdev.conf; then
-	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir
+if grep -q Nvme0 $conf_file; then
+	part_dev_by_gpt $conf_file Nvme0n1 $rootdir
 fi
 timing_exit nbd_gpt
 
 timing_enter bdev_svc
-bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf | jq -r '.[] | select(.claimed == false)')
+bdevs=$(discover_bdevs $rootdir $conf_file | jq -r '.[] | select(.claimed == false)')
 timing_exit bdev_svc
 
 bdevs_name=$(echo $bdevs | jq -r '.name')
@@ -254,9 +284,9 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 # End bdev configuration
 #-----------------------------------------------------
 
-run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Malloc0
+run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $conf_file -b Malloc0
 run_test "bdev_bounds" bdev_bounds
-run_test "bdev_nbd" nbd_function_test $testdir/bdev.conf "$bdevs_name"
+run_test "bdev_nbd" nbd_function_test $conf_file "$bdevs_name"
 if [ -d /usr/src/fio ]; then
 	run_test "bdev_fio" fio_test_suite
 else
@@ -271,17 +301,17 @@ run_test "bdev_qos" qos_test_suite
 
 # Temporarily disabled - infinite loop
 # if [ $RUN_NIGHTLY -eq 1 ]; then
-	# run_test "bdev_gpt_reset" $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -o 4096 -t 60
+	# run_test "bdev_gpt_reset" $testdir/bdevperf/bdevperf -c $conf_file -q 16 -w reset -o 4096 -t 60
 # fi
 
 # Bdev and configuration cleanup below this line
 #-----------------------------------------------------
-if grep -q Nvme0 $testdir/bdev.conf; then
-	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
+if grep -q Nvme0 $conf_file; then
+	part_dev_by_gpt $conf_file Nvme0n1 $rootdir reset
 fi
 
 rm -f $testdir/bdev_gpt.conf
 rm -f /tmp/aiofile
 rm -f /tmp/spdk-pmem-pool
-rm -f $testdir/bdev.conf
+rm -f $conf_file
 rbd_cleanup
