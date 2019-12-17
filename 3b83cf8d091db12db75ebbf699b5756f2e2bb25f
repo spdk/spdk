@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6fa2ba7_1f739662",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-17T16:14:38Z",
+      "side": 1,
+      "message": "This changes the way we are using nvme_cli. Which I am fine with, but want to point out in case anyone has a problem with it. For example get-ns-id /dev/spdk/nvme0 vs get-ns-id nvme0",
+      "revId": "3b83cf8d091db12db75ebbf699b5756f2e2bb25f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1e6a5ee_9f9bd0e4",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-17T16:14:38Z",
+      "side": 1,
+      "message": "This is going to break calls to vhost_kill. $vhost_name will now resolve to a full path instead of just the basename. You will need to apply the same trick you did in nvmf or just fix the way vhost_kill uses this variable (which would be a simplification). A third option would be to just remove this at_app_exit function entirely since it\u0027s only used in the error path in a single file and could easily be replaced with calls to vhost_kill vhost0. That\u0027s actually my favorite solution.\n\nThe reason this didn\u0027t come up is at_app_exit only gets called in the error path.",
+      "revId": "3b83cf8d091db12db75ebbf699b5756f2e2bb25f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
