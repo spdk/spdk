@@ -109,6 +109,52 @@ test_event_call(void)
 	free_cores();
 }
 
+static void
+test_schedule_thread(void)
+{
+	struct spdk_cpuset cpuset = {};
+	struct spdk_thread *thread;
+	struct spdk_reactor *reactor;
+	struct spdk_lw_thread *lw_thread;
+
+	allocate_cores(5);
+
+	CU_ASSERT(spdk_reactors_init() == 0);
+
+	spdk_cpuset_set_cpu(&cpuset, 3, true);
+	g_next_core = 4;
+
+	/* spdk_reactor_schedule_thread() will be called in spdk_thread_create()
+	 * at its end because it is passed to SPDK thread library by
+	 * spdk_thread_lib_init().
+	 */
+	thread = spdk_thread_create(NULL, &cpuset);
+	CU_ASSERT(thread != NULL);
+
+	reactor = spdk_reactor_get(3);
+	CU_ASSERT(reactor != NULL);
+
+	MOCK_SET(spdk_env_get_current_core, 3);
+
+	CU_ASSERT(_spdk_event_queue_run_batch(reactor) == 1);
+
+	MOCK_CLEAR(spdk_env_get_current_core);
+
+	lw_thread = TAILQ_FIRST(&reactor->threads);
+	CU_ASSERT(lw_thread != NULL);
+	CU_ASSERT(spdk_thread_get_from_ctx(lw_thread) == thread);
+
+	TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+	spdk_set_thread(thread);
+	spdk_thread_exit(thread);
+	spdk_thread_destroy(thread);
+	spdk_set_thread(NULL);
+
+	spdk_reactors_fini();
+
+	free_cores();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -128,7 +174,8 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "test_create_reactor", test_create_reactor) == NULL ||
 		CU_add_test(suite, "test_init_reactors", test_init_reactors) == NULL ||
-		CU_add_test(suite, "test_event_call", test_event_call) == NULL
+		CU_add_test(suite, "test_event_call", test_event_call) == NULL ||
+		CU_add_test(suite, "test_schedule_thread", test_schedule_thread) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
