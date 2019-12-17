@@ -127,6 +127,15 @@ def printListInformation(table_type, test_list):
     printList("%s Missing UBSAN" % table_type, test_list, 2, False)
 
 
+def getWhitelistedTests(repo_dir):
+    whitelist_file = os.path.join(repo_dir, "test", "common", "whitelisted_tests.txt")
+    if not os.path.exists(whitelist_file):
+        return []
+    else:
+        with open(whitelist_file, "r") as whitelist_data:
+            return [x.strip() for x in whitelist_data.readlines() if "#" not in x and x.strip() != '']
+
+
 def aggregateCompletedTests(output_dir, repo_dir):
     test_list = {}
     test_completion_table = []
@@ -154,6 +163,7 @@ def aggregateCompletedTests(output_dir, repo_dir):
 
     printListInformation("Tests", test_list)
     generateTestCompletionTables(output_dir, test_completion_table)
+    whitelisted_tests = getWhitelistedTests(repo_dir)
 
 
 def main(output_dir, repo_dir):
