@@ -16,6 +16,23 @@
       "revId": "ec2eba72ac5fb79fdaef8e8b648b9a6ff89a17f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1013f9cf_ae3e4c3a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1321,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T23:13:19Z",
+      "side": 1,
+      "message": "If so, as Jim said, is it possible to remove this instead?",
+      "revId": "ec2eba72ac5fb79fdaef8e8b648b9a6ff89a17f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
