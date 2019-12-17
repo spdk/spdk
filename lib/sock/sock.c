@@ -207,6 +207,33 @@ spdk_sock_listen(const char *ip, int port)
 }
 
 struct spdk_sock *
+spdk_sock_listen_by_impl(const char *ip, int port, char *sock_impl_name)
+{
+	struct spdk_net_impl *impl = NULL;
+	struct spdk_sock *sock;
+
+	if (!sock_impl_name) {
+		return spdk_sock_listen(ip, port);
+	}
+
+	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
+		if (strcmp(sock_impl_name, impl->name)) {
+			continue;
+		}
+
+		sock = impl->listen(ip, port);
+		if (sock != NULL) {
+			sock->net_impl = impl;
+			/* Don't need to initialize the request queues for listen
+			 * sockets. */
+			return sock;
+		}
+	}
+
+	return NULL;
+}
+
+struct spdk_sock *
 spdk_sock_accept(struct spdk_sock *sock)
 {
 	struct spdk_sock *new_sock;
