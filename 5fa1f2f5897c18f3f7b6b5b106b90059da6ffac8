@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4c7a077d_745d25b7",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-17T00:11:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "76d50330_def4548e",
+      "revId": "5fa1f2f5897c18f3f7b6b5b106b90059da6ffac8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc61b96f_002402ae",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 6
@@ -33,6 +51,24 @@
       "revId": "5fa1f2f5897c18f3f7b6b5b106b90059da6ffac8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d9c6fb86_8f4ad5e6",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-17T00:11:14Z",
+      "side": 1,
+      "message": "Sorry, this part is actually vestigial from an earlier version of the patch as well.",
+      "parentUuid": "bc61b96f_002402ae",
+      "revId": "5fa1f2f5897c18f3f7b6b5b106b90059da6ffac8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
