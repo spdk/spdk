@@ -288,15 +288,6 @@ bdevs=$(discover_bdevs $rootdir $conf_file | jq -r '.[] | select(.claimed == fal
 timing_exit bdev_svc
 
 bdevs_name=$(echo $bdevs | jq -r '.name')
-
-# Create conf file for bdevperf with gpt
-cat > $testdir/bdev_gpt.conf << EOL
-[Gpt]
-  Disable No
-EOL
-
-# Get Nvme info through filtering gen_nvme.sh's result
-$rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 # End bdev configuration
 #-----------------------------------------------------
 
@@ -310,14 +301,13 @@ else
 	exit 1
 fi
 
-# Run bdevperf with gpt
-run_test "bdev_gpt_verify" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
-run_test "bdev_gpt_write_zeroes" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
+run_test "bdev_verify" $testdir/bdevperf/bdevperf -c $conf_file -q 128 -o 4096 -w verify -t 5
+run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf -c $conf_file -q 128 -o 4096 -w write_zeroes -t 1
 run_test "bdev_qos" qos_test_suite
 
 # Temporarily disabled - infinite loop
 # if [ $RUN_NIGHTLY -eq 1 ]; then
-	# run_test "bdev_gpt_reset" $testdir/bdevperf/bdevperf -c $conf_file -q 16 -w reset -o 4096 -t 60
+	# run_test "bdev_reset" $testdir/bdevperf/bdevperf -c $conf_file -q 16 -w reset -o 4096 -t 60
 # fi
 
 # Bdev and configuration cleanup below this line
@@ -326,7 +316,6 @@ if grep -q Nvme0 $conf_file; then
 	part_dev_by_gpt $conf_file Nvme0n1 $rootdir reset
 fi
 
-rm -f $testdir/bdev_gpt.conf
 rm -f /tmp/aiofile
 rm -f /tmp/spdk-pmem-pool
 rm -f $conf_file
