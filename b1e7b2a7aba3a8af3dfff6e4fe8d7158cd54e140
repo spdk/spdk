@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4e5dbce_4ef4c706",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1790,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-17T21:22:32Z",
+      "side": 1,
+      "message": "style nit - \"static int\" should be on its own line (see function just after this one)",
+      "revId": "b1e7b2a7aba3a8af3dfff6e4fe8d7158cd54e140",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a2bf3d1_abf08b83",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2098,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-17T21:22:32Z",
+      "side": 1,
+      "message": "I agree that this new code is more precise.  Would you mind splitting these code changes out into a separate patch though?  This is part of the hyper-optimized NVMe code path - I don\u0027t *think* this should have any performance impacts (i.e. for benchmarks with 10M+ IO on one CPU core), but better to break out into a separate patch so we can easily bisect if needed.",
+      "revId": "b1e7b2a7aba3a8af3dfff6e4fe8d7158cd54e140",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
