@@ -359,7 +359,7 @@ static struct spdk_net_impl g_ut_net_impl = {
 SPDK_NET_IMPL_REGISTER(ut, &g_ut_net_impl);
 
 static void
-_sock(const char *ip, int port)
+_sock(const char *ip, int port, char *impl_name)
 {
 	struct spdk_sock *listen_sock;
 	struct spdk_sock *server_sock;
@@ -370,14 +370,14 @@ _sock(const char *ip, int port)
 	struct iovec iov;
 	int rc;
 
-	listen_sock = spdk_sock_listen(ip, port);
+	listen_sock = spdk_sock_listen(ip, port, impl_name);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
 	server_sock = spdk_sock_accept(listen_sock);
 	CU_ASSERT(server_sock == NULL);
 	CU_ASSERT(errno == EAGAIN || errno == EWOULDBLOCK);
 
-	client_sock = spdk_sock_connect(ip, port);
+	client_sock = spdk_sock_connect(ip, port, impl_name);
 	SPDK_CU_ASSERT_FATAL(client_sock != NULL);
 
 	/*
@@ -456,13 +456,13 @@ _sock(const char *ip, int port)
 static void
 posix_sock(void)
 {
-	_sock("127.0.0.1", UT_PORT);
+	_sock("127.0.0.1", UT_PORT, "posix");
 }
 
 static void
 ut_sock(void)
 {
-	_sock(UT_IP, UT_PORT);
+	_sock(UT_IP, UT_PORT, "ut");
 }
 
 static void
@@ -477,7 +477,7 @@ read_data(void *cb_arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 }
 
 static void
-_sock_group(const char *ip, int port)
+_sock_group(const char *ip, int port, char *impl_name)
 {
 	struct spdk_sock_group *group;
 	struct spdk_sock *listen_sock;
@@ -488,14 +488,14 @@ _sock_group(const char *ip, int port)
 	struct iovec iov;
 	int rc;
 
-	listen_sock = spdk_sock_listen(ip, port);
+	listen_sock = spdk_sock_listen(ip, port, impl_name);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
 	server_sock = spdk_sock_accept(listen_sock);
 	CU_ASSERT(server_sock == NULL);
 	CU_ASSERT(errno == EAGAIN || errno == EWOULDBLOCK);
 
-	client_sock = spdk_sock_connect(ip, port);
+	client_sock = spdk_sock_connect(ip, port, impl_name);
 	SPDK_CU_ASSERT_FATAL(client_sock != NULL);
 
 	usleep(1000);
@@ -576,13 +576,13 @@ _sock_group(const char *ip, int port)
 static void
 posix_sock_group(void)
 {
-	_sock_group("127.0.0.1", UT_PORT);
+	_sock_group("127.0.0.1", UT_PORT, "posix");
 }
 
 static void
 ut_sock_group(void)
 {
-	_sock_group(UT_IP, UT_PORT);
+	_sock_group(UT_IP, UT_PORT, "ut");
 }
 
 static void
@@ -612,14 +612,14 @@ posix_sock_group_fairness(void)
 	struct iovec iov;
 	int i, rc;
 
-	listen_sock = spdk_sock_listen("127.0.0.1", UT_PORT);
+	listen_sock = spdk_sock_listen("127.0.0.1", UT_PORT, "posix");
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
 	group = spdk_sock_group_create(NULL);
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 
 	for (i = 0; i < 3; i++) {
-		client_sock[i] = spdk_sock_connect("127.0.0.1", UT_PORT);
+		client_sock[i] = spdk_sock_connect("127.0.0.1", UT_PORT, "posix");
 		SPDK_CU_ASSERT_FATAL(client_sock[i] != NULL);
 
 		usleep(1000);
@@ -728,7 +728,7 @@ _second_close_cb(void *cb_arg, int err)
 }
 
 static void
-_sock_close(const char *ip, int port)
+_sock_close(const char *ip, int port, char *impl_name)
 {
 	struct spdk_sock_group *group;
 	struct spdk_sock *listen_sock;
@@ -740,10 +740,10 @@ _sock_close(const char *ip, int port)
 	bool cb_arg2 = false;
 	int rc;
 
-	listen_sock = spdk_sock_listen(ip, port);
+	listen_sock = spdk_sock_listen(ip, port, impl_name);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
-	client_sock = spdk_sock_connect(ip, port);
+	client_sock = spdk_sock_connect(ip, port, impl_name);
 	SPDK_CU_ASSERT_FATAL(client_sock != NULL);
 
 	usleep(1000);
@@ -807,7 +807,7 @@ _sock_close(const char *ip, int port)
 static void
 posix_sock_close(void)
 {
-	_sock_close("127.0.0.1", UT_PORT);
+	_sock_close("127.0.0.1", UT_PORT, "posix");
 }
 
 int
