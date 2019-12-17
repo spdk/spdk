@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "eec97da4_fc3a9640",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 12
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-17T15:08:13Z",
+      "side": 1,
+      "message": "There is a patch out from Ziye that removes this error message. I will confirm, but I believe what happens is that the initiator side sees the completion and sends a new command that the target then receives and processes before the target has processed the zero copy ack and released the previous request. The code just holds the incoming request until a new request becomes available, so everything works fine. Also the tcp transport has other accounting on the target side to ensure the queue depth requirements haven\u0027t been violated (in a way that allows for the above scenario), so if that isn\u0027t asserting then it\u0027s just this ordering thing you\u0027re seeing.\n\nI think maybe flipping the order of processing EPOLLIN vs EPOLLERR messages on a socket would greatly reduce or even eliminate this entirely. I\u0027ll also do that.",
+      "parentUuid": "61e07b0f_cacb8065",
+      "revId": "bf42d85f94c60c965c64fcbf8dcc663a468a9988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "83fd4068_433ca5b1",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 12
