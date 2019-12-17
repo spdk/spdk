@@ -39,16 +39,111 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
+static uint32_t g_ut_num_cores;
+static uint8_t *g_ut_coremask;
+
+void allocate_cores(uint32_t num_cores);
+void free_cores(void);
+
 DEFINE_STUB(spdk_process_is_primary, bool, (void), true)
 DEFINE_STUB(spdk_memzone_lookup, void *, (const char *name), NULL)
 DEFINE_STUB(spdk_pci_nvme_get_driver, struct spdk_pci_driver *, (void), NULL)
 DEFINE_STUB(spdk_pci_ioat_get_driver, struct spdk_pci_driver *, (void), NULL)
 DEFINE_STUB(spdk_pci_virtio_get_driver, struct spdk_pci_driver *, (void), NULL)
-DEFINE_STUB(spdk_env_get_first_core, uint32_t, (void), UINT32_MAX);
-DEFINE_STUB(spdk_env_get_next_core, uint32_t, (uint32_t prev_core), UINT32_MAX);
-DEFINE_STUB(spdk_env_get_last_core, uint32_t, (void), UINT32_MAX);
-DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), UINT32_MAX);
-DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), SPDK_ENV_SOCKET_ID_ANY);
+
+void
+allocate_cores(uint32_t num_cores)
+{
+	uint32_t i;
+
+	g_ut_num_cores = num_cores;
+
+	g_ut_coremask = calloc(1, (g_ut_num_cores + 7) / 8);
+	assert(g_ut_coremask != NULL);
+
+	for (i = 0; i < num_cores; i++) {
+		g_ut_coremask[i / 8] |= ((uint8_t)1 << (i % 8));
+	}
+}
+
+void
+free_cores(void)
+{
+	free(g_ut_coremask);
+	g_ut_coremask = NULL;
+	g_ut_num_cores = 0;
+}
+
+#define ut_core_is_enabled(coremask, i)	(coremask[i / 8] & ((uint8_t)1 << (i % 8)))
+
+static uint32_t
+ut_get_next_core(uint32_t i)
+{
+	i++;
+
+	while (i < g_ut_num_cores) {
+		if (!ut_core_is_enabled(g_ut_coremask, i)) {
+			i++;
+			continue;
+		}
+		break;
+	}
+
+	if (i < g_ut_num_cores) {
+		return i;
+	} else {
+		return UINT32_MAX;
+	}
+}
+
+uint32_t
+spdk_env_get_first_core(void)
+{
+	return ut_get_next_core(-1);
+}
+
+uint32_t
+spdk_env_get_next_core(uint32_t prev_core)
+{
+	return ut_get_next_core(prev_core);
+}
+
+uint32_t
+spdk_env_get_core_count(void)
+{
+	return g_ut_num_cores;
+}
+
+uint32_t
+spdk_env_get_last_core(void)
+{
+	uint32_t i;
+	uint32_t last_core = UINT32_MAX;
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		last_core = i;
+	}
+
+	return last_core;
+}
+
+DEFINE_RETURN_MOCK(spdk_env_get_current_core, uint32_t);
+uint32_t
+spdk_env_get_current_core(void)
+{
+	HANDLE_RETURN_MOCK(spdk_env_get_current_core);
+
+	return UINT32_MAX;
+}
+
+DEFINE_RETURN_MOCK(spdk_env_get_socket_id, uint32_t);
+uint32_t
+spdk_env_get_socket_id(uint32_t core)
+{
+	HANDLE_RETURN_MOCK(spdk_env_get_socket_id);
+
+	return SPDK_ENV_SOCKET_ID_ANY;
+}
 
 /*
  * These mocks don't use the DEFINE_STUB macros because
