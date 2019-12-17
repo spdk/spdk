@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f05e85bd_45e36d91",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-17T15:35:23Z",
+      "side": 1,
+      "message": "you need to add COMPARE_AND_WRITE here (only return true if the controller actually supports it)",
+      "revId": "551e0a9f9e0b4696ed413ea1bd2afc83d6ed494e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
