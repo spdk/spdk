@@ -254,6 +254,14 @@ the setting by the global parameters for the iSCSI portal group.
 Added `spdk_sock_is_connected` to check whether the socket is currently connected.
 `spdk_sock_group_poll` now returns number of events on success.
 
+Added spdk_sock_listen_by_impl and spdk_sock_connect_by_impl functions.
+The two functions are used for users to use designated sock implementation to
+listen/connect on the provided ip address and port. If sock implementation is
+not specified, they will be as same as spdk_sock_listen and spdk_sock_connect,
+i.e., the first succeeded sock implementation will be used. If sock implementation
+is specified, they will use the sock implementation to listen/connect on the
+provided IP address and port.
+
 ### env
 
 Added `spdk_pci_device_unclaim()` function to cleanup pci claim file.

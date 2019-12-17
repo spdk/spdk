@@ -107,8 +107,24 @@ int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *s
 struct spdk_sock *spdk_sock_connect(const char *ip, int port);
 
 /**
- * Create a socket, bind the socket to the specified address and port and listen
- * on the socket, and then return the socket. This function is used by server.
+ * By using the specified sock implementation, create a socket, connect the socket
+ * to the specified address and port (of the server), and then return the socket.
+ * This function is used by client.
+ *
+ * \param ip IP address of the server.
+ * \param port Port number of the server.
+ * \param sock_impl_name The sock_implementation name. If this parameter is NULL,
+ * it will try all the sock implementations by order, and the implementation
+ * can firstly connect on the socket will be the selected sock implemenation.
+ *
+ * \return a pointer to the connected socket on success, or NULL on failure.
+ */
+struct spdk_sock *spdk_sock_connect_by_impl(const char *ip, int port, char *sock_impl_name);
+
+/**
+ * By using the specified sock implementation, create a socket, bind the socket to
+ * the specified address and port and listen on the socket, and then return the socket.
+ * This function is used by server.
  *
  * \param ip IP address to listen on.
  * \param port Port number.
@@ -116,6 +132,21 @@ struct spdk_sock *spdk_sock_connect(const char *ip, int port);
  * \return a pointer to the listened socket on success, or NULL on failure.
  */
 struct spdk_sock *spdk_sock_listen(const char *ip, int port);
+
+/**
+ * Create a socket, bind the socket to the specified address and port and listen
+ * on the socket by the designated impl, and then return the socket. This function
+ * is used by server.
+ *
+ * \param ip IP address to listen on.
+ * \param port Port number.
+ * \param sock_impl_name The sock_implementation name. If this parameter is NULL,
+ * it will try all the sock implementations by order, and the implementation
+ * can firstly listen on the socket will be the selected sock implemenation.
+ *
+ * \return a pointer to the listened socket on success, or NULL on failure.
+ */
+struct spdk_sock *spdk_sock_listen_by_impl(const char *ip, int port, char *sock_impl_name);
 
 /**
  * Accept a new connection from a client on the specified socket and return a
