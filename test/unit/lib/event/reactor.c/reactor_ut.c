@@ -52,6 +52,25 @@ test_create_reactor(void)
 	g_reactors = NULL;
 }
 
+static void
+test_init_reactors(void)
+{
+	uint32_t core;
+
+	allocate_cores(3);
+
+	CU_ASSERT(spdk_reactors_init() == 0);
+
+	CU_ASSERT(g_reactor_state == SPDK_REACTOR_STATE_INITIALIZED);
+	for (core = 0; core < 3; core++) {
+		CU_ASSERT(spdk_reactor_get(core) != NULL);
+	}
+
+	spdk_reactors_fini();
+
+	free_cores();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -69,7 +88,8 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "test_create_reactor", test_create_reactor) == NULL
+		CU_add_test(suite, "test_create_reactor", test_create_reactor) == NULL ||
+		CU_add_test(suite, "test_init_reactors", test_init_reactors) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
