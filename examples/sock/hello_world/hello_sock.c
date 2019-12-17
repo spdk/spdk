@@ -340,7 +340,7 @@ hello_sock_group_poll(void *arg)
 static int
 hello_sock_listen(struct hello_context_t *ctx)
 {
-	ctx->sock = spdk_sock_listen(ctx->host, ctx->port);
+	ctx->sock = spdk_sock_listen_by_impl(ctx->host, ctx->port, "posix");
 	if (ctx->sock == NULL) {
 		SPDK_ERRLOG("Cannot create server socket\n");
 		return -1;
