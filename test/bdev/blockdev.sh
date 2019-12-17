@@ -17,7 +17,7 @@ dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
   AIO /tmp/aiofile AIO0 2048
 
 [Malloc]
-  NumberOfLuns 8
+  NumberOfLuns 6
   LunSizeInMB 32
 
 [Split]
@@ -45,17 +45,21 @@ function setup_nvme_conf() {
 }
 
 function setup_gpt_conf() {
-	timing_enter nbd_gpt
+	setup_nvme_conf
 	if grep -q Nvme0 $conf_file; then
 		part_dev_by_gpt $conf_file Nvme0n1 $rootdir
+	else
+		return 1
 	fi
-	timing_exit nbd_gpt
 }
 
 function setup_crypto_conf() {
-	if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
-		$testdir/gen_crypto.sh Malloc6 Malloc7 >> $conf_file
-	fi
+	cat >$conf_file <<EOF
+[Malloc]
+  NumberOfLuns 2
+  LunSizeInMB 32
+EOF
+	$testdir/gen_crypto.sh Malloc0 Malloc1 >> $conf_file
 }
 
 function setup_pmem_conf() {
@@ -64,17 +68,17 @@ function setup_pmem_conf() {
 		pmempool create blk --size=32M 512 /tmp/spdk-pmem-pool
 		echo "[Pmem]" >> $conf_file
 		echo "  Blk /tmp/spdk-pmem-pool Pmem0" >> $conf_file
+	else
+		return 1
 	fi
 }
 
 function setup_rbd_conf() {
-	if [ $SPDK_TEST_RBD -eq 1 ]; then
-		timing_enter rbd_setup
-		rbd_setup 127.0.0.1
-		timing_exit rbd_setup
+	timing_enter rbd_setup
+	rbd_setup 127.0.0.1
+	timing_exit rbd_setup
 
-		$rootdir/scripts/gen_rbd.sh >> $conf_file
-	fi
+	$rootdir/scripts/gen_rbd.sh >> $conf_file
 }
 
 function bdev_bounds() {
@@ -289,17 +293,28 @@ else
 	PRE_RESERVED_MEM=2048
 fi
 
-setup_bdev_conf
-setup_nvme_conf
-setup_gpt_conf
-setup_crypto_conf
-setup_pmem_conf
-setup_rbd_conf
+test_type=$1
+[ -z "$test_type" ] && setup_bdev_conf
+if [ -n "$test_type" ]; then
+	case "$test_type" in
+	nvme )
+		setup_nvme_conf;;
+	gpt )
+		setup_gpt_conf;;
+	crypto )
+		setup_crypto_conf;;
+	pmem )
+		setup_pmem_conf;;
+	rbd )
+		setup_rbd_conf;;
+	* )
+		echo "invalid test name"
+		exit 1
+		;;
+	esac
+fi
 
-timing_enter bdev_svc
 bdevs=$(discover_bdevs $rootdir $conf_file | jq -r '.[] | select(.claimed == false)')
-timing_exit bdev_svc
-
 bdevs_name=$(echo $bdevs | jq -r '.name')
 bdev_list=($bdevs_name)
 hello_world_bdev=${bdev_list[0]}
@@ -310,7 +325,12 @@ run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $co
 run_test "bdev_bounds" bdev_bounds
 run_test "bdev_nbd" nbd_function_test $conf_file "$bdevs_name"
 if [ -d /usr/src/fio ]; then
-	run_test "bdev_fio" fio_test_suite
+        if [ "$test_type" = "nvme" ]; then
+                # TODO: once we get real multi-ns drives, re-enable this test for NVMe.
+                echo "skipping fio tests on NVMe due to multi-ns failures."
+        else
+	        run_test "bdev_fio" fio_test_suite
+        fi
 else
 	echo "FIO not available"
 	exit 1
@@ -319,7 +339,10 @@ fi
 # Run bdevperf with gpt
 run_test "bdev_verify" $testdir/bdevperf/bdevperf -c $conf_file -q 128 -o 4096 -w verify -t 5
 run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf -c $conf_file -q 128 -o 4096 -w write_zeroes -t 1
-run_test "bdev_qos" qos_test_suite
+
+if [ -z $test_type ]; then
+	run_test "bdev_qos" qos_test_suite
+fi
 
 # Temporarily disabled - infinite loop
 # if [ $RUN_NIGHTLY -eq 1 ]; then
@@ -328,7 +351,7 @@ run_test "bdev_qos" qos_test_suite
 
 # Bdev and configuration cleanup below this line
 #-----------------------------------------------------
-if grep -q Nvme0 $conf_file; then
+if [ "$test_type" = "gpt" ]; then
 	part_dev_by_gpt $conf_file Nvme0n1 $rootdir reset
 fi
 
