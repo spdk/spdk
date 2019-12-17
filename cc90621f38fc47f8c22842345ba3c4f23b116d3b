@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66955ee2_844213ac",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1656,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T23:09:51Z",
+      "side": 1,
+      "message": "I think this comment is not correct. Correctly the following?\n\nTrigger timeout poller to run again. desc-\u003erefs is incremented.\nIn thread 0, we destroy IO channel before timeout poller runs. timeout callback is not called on thread 0.",
+      "range": {
+        "startLine": 1653,
+        "startChar": 0,
+        "endLine": 1656,
+        "endChar": 0
+      },
+      "revId": "cc90621f38fc47f8c22842345ba3c4f23b116d3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aefe52d8_d47b2591",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1662,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T23:09:51Z",
+      "side": 1,
+      "message": "Also this should be the following?\n\nIn thread 1, timeout poller runs and then we destroy IO channel. Timeout callback is called on thread 1.\n\nSo should we check cb_arg here again?",
+      "range": {
+        "startLine": 1662,
+        "startChar": 1,
+        "endLine": 1662,
+        "endChar": 72
+      },
+      "revId": "cc90621f38fc47f8c22842345ba3c4f23b116d3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "771bf42c_6d5c9255",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1670,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T23:09:51Z",
+      "side": 1,
+      "message": "Something like?\n\nClose the desc.\nUnregister timeout poller first.\nThen decrement desc-\u003erefs but it is not zero yet, and so desc is not freed.",
+      "range": {
+        "startLine": 1668,
+        "startChar": 3,
+        "endLine": 1670,
+        "endChar": 37
+      },
+      "revId": "cc90621f38fc47f8c22842345ba3c4f23b116d3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10df706c_c5e35ccb",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1680,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T23:09:51Z",
+      "side": 1,
+      "message": "Timeout poller runs on thread 2.\nFinally bdev_channel_poll_timeout_io_done() is called, and desc-\u003erefs is decremented and desc is freed.\nThen destroy IO channel.",
+      "range": {
+        "startLine": 1677,
+        "startChar": 0,
+        "endLine": 1680,
+        "endChar": 0
+      },
+      "revId": "cc90621f38fc47f8c22842345ba3c4f23b116d3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
