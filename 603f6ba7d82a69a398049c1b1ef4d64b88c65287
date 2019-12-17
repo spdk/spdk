@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3eef24d6_a40365cc",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1577,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-17T02:22:11Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0b9b5749_019bf15f",
+      "revId": "603f6ba7d82a69a398049c1b1ef4d64b88c65287",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "526a0674_79d0fcb4",
         "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
         "patchSetId": 5
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "f168fd2d_528ab08b",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1586,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-17T02:22:11Z",
+      "side": 1,
+      "message": "Hi Changpeng. I think It\u0027s ok because in UT it don\u0027t really wait for 30s and we use the spdk_delay_us() to delay the running time. But I still will fix it. Thanks.",
+      "parentUuid": "526a0674_79d0fcb4",
+      "range": {
+        "startLine": 1586,
+        "startChar": 41,
+        "endLine": 1586,
+        "endChar": 44
+      },
+      "revId": "603f6ba7d82a69a398049c1b1ef4d64b88c65287",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "09dac183_92337517",
         "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
         "patchSetId": 5
@@ -53,6 +95,30 @@
       "writtenOn": "2019-12-16T08:36:34Z",
       "side": 1,
       "message": "still 1 for the splitted request?",
+      "range": {
+        "startLine": 1611,
+        "startChar": 1,
+        "endLine": 1611,
+        "endChar": 61
+      },
+      "revId": "603f6ba7d82a69a398049c1b1ef4d64b88c65287",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34763d17_9afb6f7f",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1611,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-17T02:22:11Z",
+      "side": 1,
+      "message": "Yes, We just count the user to submit IO. For this case, the user submits the parent IO and it splits to two child IOs but we only count the parent IO. You can also check this in UT of the timeout IO.",
+      "parentUuid": "09dac183_92337517",
       "range": {
         "startLine": 1611,
         "startChar": 1,
