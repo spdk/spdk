@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9b9ca08_dfc81a3a",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-17T21:54:36Z",
+      "side": 1,
+      "message": "so using ! doesn\u0027t work like we want it to for negative tests\n\nif this rpc_cmd runs successfully, it will *not* result in the script exiting - it will silently continue\n\nfor example, look at this script; if ! did what we thought, then ! echo print1 should immediately exit\n\nbut we see that it doesn\u0027t, we get the print1 and print2, but not the print3, since the ls fails as expected\n\n#!/bin/bash\nset -e\nfunction lvol_test() {\n        ! echo print1\n        echo print2\n        ls /a/b/c/d/e\n        echo print3\n}\n\nlvol_test",
+      "revId": "910116fee16740a4316fdec597c01cafdf2875a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
