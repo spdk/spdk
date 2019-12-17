@@ -38,7 +38,7 @@ vmd_perf
 # nightly tests
 bdev_fio_rw_verify_ext
 bdev_fio_trim_ext
-bdev_gpt_reset
+bdev_reset
 iscsi_tgt_digest
 iscsi_tgt_data_digest
 iscsi_tgt_pmem
