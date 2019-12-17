@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "eaea4f5f_88688ed8",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-17T13:41:34Z",
+      "side": 1,
+      "message": "In this test perform_test returns:\nrequest:\n{\n  \"req_id\": 1,\n  \"method\": \"perform_tests\"\n}\nGot JSON-RPC error response\nresponse:\n{\n  \"code\": -32603,\n  \"message\": \"bdevperf failed with error Unknown error -1\"\n}\nShould we change this message?",
+      "parentUuid": "a5ff6f8e_1190827f",
+      "range": {
+        "startLine": 12,
+        "startChar": 58,
+        "endLine": 12,
+        "endChar": 72
+      },
+      "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1a0acff8_4dbaa44b",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 23
@@ -45,6 +69,30 @@
       "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff8d05f1_3247ff4a",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-17T13:41:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a0acff8_4dbaa44b",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 18
+      },
+      "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "af4b6806_7c4800e7",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-17T13:41:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7cecccfe_b77c4a1e",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 14
+      },
+      "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5de32334_bb388c84",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 23
@@ -91,6 +163,30 @@
       "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "854c94fd_52b55fbe",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-17T13:41:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5de32334_bb388c84",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 9
+      },
+      "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "8b7a4235_8f9ef44d",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-17T13:41:34Z",
+      "side": 1,
+      "message": "error should be enough",
+      "parentUuid": "08e55568_3c974f84",
+      "range": {
+        "startLine": 40,
+        "startChar": 1,
+        "endLine": 40,
+        "endChar": 7
+      },
+      "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ff3ae6fe_e5233e0a",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 23
@@ -128,6 +248,30 @@
       "writtenOn": "2019-12-17T10:31:57Z",
       "side": 1,
       "message": "bdevperf is not killed here in case of error",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 31
+      },
+      "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5429892_c6ab64b5",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-17T13:41:34Z",
+      "side": 1,
+      "message": "Left previously defined trap",
+      "parentUuid": "ff3ae6fe_e5233e0a",
       "range": {
         "startLine": 49,
         "startChar": 0,
