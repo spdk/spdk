@@ -28,6 +28,15 @@ def framework_monitor_context_switch(client, enabled=None):
     return client.call('framework_monitor_context_switch', params)
 
 
+def framework_get_reactors(client):
+    """Query list of all reactors.
+
+    Returns:
+        List of all reactors.
+    """
+    return client.call('framework_get_reactors')
+
+
 def thread_get_stats(client):
     """Query threads statistics.
 
