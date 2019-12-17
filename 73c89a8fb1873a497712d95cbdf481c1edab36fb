@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "a68d7ee9_974b1537",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-17T12:13:26Z",
+      "side": 1,
+      "message": "What do you mean? Shouldn\u0027t spdk_thread_has_pollers return true if all pollers are paused on that thread, while spdk_thread_is_idle return false in that case?",
+      "parentUuid": "7ac03018_cc44bff0",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d654831b_b9b1625c",
         "filename": "lib/thread/thread.c",
         "patchSetId": 3
@@ -64,6 +82,24 @@
       "writtenOn": "2019-12-16T22:32:01Z",
       "side": 1,
       "message": "If the poller state is paused here, move it to the active list and then set the state to unregistered.\n\n(Note I also now see what might be a bug with unregistering pollers on long timers. They won\u0027t get cleaned up until they expire with this logic. Really this function should set their period to 0 and mark them unregistered I think.)",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c7d7a5f_89717012",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-17T12:13:26Z",
+      "side": 1,
+      "message": "Take a look at my comment in spdk_poller_resume. I think this proposal also requires the poller to be inserted/removed from the paused_pollers queue immediatly in spdk_poller_(pause|resume).\n\nAs for the other observation, I can post a fix once we figure out how we want to proceed with this patch.",
+      "parentUuid": "d654831b_b9b1625c",
       "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -105,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "9756de5d_f27d6edd",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-17T12:13:26Z",
+      "side": 1,
+      "message": "Couldn\u0027t we check the poller-\u003eperiod_ticks \u003d\u003d 0 to distinguish timed poller from an acitve one though?\n\nI can see another potential problem with removing the poller from the active/timer pollers here. Let\u0027s say there are two active pollers and while executing the first one (1), a user tries to pause the other one (2). It\u0027d cause spdk_poller_pause to remove poller (2) from active_pollers and put it on the paused_pollers list. The code would then return to spdk_thread_poll from current poller\u0027s (1) poller_fn and continue executing other pollers. But since the next poller (2) was removed from the active_pollers list, the TAILQ_FOREACH_REVERSE_SAFE macro would set current poller to the poller that was just removed (2) and would start executing pollers from the paused_pollers list.\nPerhaps just a comment in the header stating that a poller cannot be paused from the execution context of another one would be enough? It does seem a little cryptic though. What do you think?",
+      "parentUuid": "ec03ea76_9f7fbf43",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "00a0429b_189e49de",
         "filename": "lib/thread/thread.c",
         "patchSetId": 3
@@ -134,6 +188,24 @@
       "side": 1,
       "message": "To clarify, if poller-\u003estate \u003d\u003d SPDK_POLLER_STATE_PAUSED, you can immediately remove it from the paused list and add it to the (active|timed) lists as appropriate here. That makes paused pollers \"zero cost\" since you don\u0027t need to poll all of them each time in spdk_thread_poll.",
       "parentUuid": "00a0429b_189e49de",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "598c0d8b_e33979d8",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-17T12:13:26Z",
+      "side": 1,
+      "message": "I don\u0027t think we can rely on the poller-\u003estate \u003d\u003d SPDK_POLLER_STATE_PAUSED to remove the poller from the paused list if spdk_poller_pause just sets the poller\u0027s state. Let\u0027s say a user pauses a poller and then immediately resumes it before returning to spdk_thread_poll. In that case, it wouldn\u0027t have had a chance to be added on the paused_poller queue, so we would remove it from a wrong queue.\nI think we either have to add/remove the pollers in both spdk_poller_pause/spdk_poller_resume or we don\u0027t do it from neither one of these.",
+      "parentUuid": "30d96580_f961e4e7",
       "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
