@@ -40,7 +40,7 @@ function run_fio_test() {
 	fi
 
 	pattern_template=""
-	if [ ! $pattern ]; then
+	if [ $pattern ]; then
 		pattern_template="--do_verify=1 --verify=pattern --verify_pattern=$pattern --verify_state_save=0"
 	fi
 

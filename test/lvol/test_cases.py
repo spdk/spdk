@@ -119,7 +119,6 @@ def case_message(func):
             600: 'bdev_lvol_create_lvstore_with_cluster_size_max',
             601: 'bdev_lvol_create_lvstore_with_cluster_size_min',
             # Provisioning
-            652: 'thin_provisioning_data_integrity_test',
             653: 'thin_provisioning_resize',
             654: 'thin_overprovisioning',
             655: 'thin_provisioning_filling_disks_less_than_lvs_size',
@@ -538,49 +537,6 @@ class TestCases(object):
 
         # Expected result:
         # - bdev_lvol_get_lvstores: response should be of no value after destroyed lvol store
-        # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case652(self):
-        """
-        thin_provisioning_data_integrity_test
-
-        Check if data written to thin provisioned lvol bdev
-        were properly written (fio test with verification).
-        """
-        # create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # construct lvol store on malloc bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-        lvs = self.c.bdev_lvol_get_lvstores(self.lvs_name)[0]
-        free_clusters_start = int(lvs['free_clusters'])
-        bdev_size = self.get_lvs_size()
-        # construct thin provisioned lvol bdev with size equal to lvol store
-        bdev_name = self.c.bdev_lvol_create(uuid_store, self.lbd_name,
-                                            bdev_size, thin=True)
-
-        lvol_bdev = self.c.get_lvol_bdev_with_name(bdev_name)
-        nbd_name = "/dev/nbd0"
-        fail_count += self.c.nbd_start_disk(lvol_bdev['name'], nbd_name)
-        size = bdev_size * MEGABYTE
-        # on the whole lvol bdev perform write operation with verification
-        fail_count += self.run_fio_test(nbd_name, 0, size, "write", "0xcc")
-
-        fail_count += self.c.nbd_stop_disk(nbd_name)
-        # destroy thin provisioned lvol bdev
-        fail_count += self.c.bdev_lvol_delete(lvol_bdev['name'])
-        # destroy lvol store
-        fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
-        # destroy malloc bdev
-        fail_count += self.c.bdev_malloc_delete(base_name)
-        # Expected result:
-        # - calls successful, return code = 0
-        # - verification ends with success
         # - no other operation fails
         return fail_count
 
