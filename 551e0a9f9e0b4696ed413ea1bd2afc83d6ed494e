@@ -16,6 +16,57 @@
       "revId": "551e0a9f9e0b4696ed413ea1bd2afc83d6ed494e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0a43ee6_1a3c1dbf",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2151,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-17T15:41:35Z",
+      "side": 1,
+      "message": "you shouldn\u0027t modify the dif_check_flags here directly\n\ninstead you should create a local uint32_t, construct the flags there, and pass that to the nvme_ns_cmd functions instead",
+      "revId": "551e0a9f9e0b4696ed413ea1bd2afc83d6ed494e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "625b735f_43bb047b",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2158,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-17T15:41:35Z",
+      "side": 1,
+      "message": "compare failed",
+      "revId": "551e0a9f9e0b4696ed413ea1bd2afc83d6ed494e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a049052d_b8bff933",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2170,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-17T15:41:35Z",
+      "side": 1,
+      "message": "write failed (or something like \"write from compare+write failed\")\n\nalso what happens if the comparev succeeds but the writev fails?  in that case you\u0027ll return failure but the comparev operation will return at some point and try to access memory that\u0027s been reallocated for something else\n\n(this case is a bit tricky...)",
+      "revId": "551e0a9f9e0b4696ed413ea1bd2afc83d6ed494e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
