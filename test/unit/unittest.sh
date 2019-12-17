@@ -87,6 +87,7 @@ $valgrind $testdir/lib/blobfs/blobfs_bdev.c/blobfs_bdev_ut
 
 $valgrind $testdir/lib/event/subsystem.c/subsystem_ut
 $valgrind $testdir/lib/event/app.c/app_ut
+$valgrind $testdir/lib/event/reactor.c/reactor_ut
 
 $valgrind $testdir/lib/sock/sock.c/sock_ut
 
