@@ -288,10 +288,12 @@ bdevs=$(discover_bdevs $rootdir $conf_file | jq -r '.[] | select(.claimed == fal
 timing_exit bdev_svc
 
 bdevs_name=$(echo $bdevs | jq -r '.name')
+bdev_list=($bdevs_name)
+hello_world_bdev=${bdev_list[0]}
 # End bdev configuration
 #-----------------------------------------------------
 
-run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $conf_file -b Malloc0
+run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $conf_file -b $hello_world_bdev
 run_test "bdev_bounds" bdev_bounds
 run_test "bdev_nbd" nbd_function_test $conf_file "$bdevs_name"
 if [ -d /usr/src/fio ]; then
