@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c9cc1e13_0bb1f998",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 12
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-12-17T09:20:33Z",
+      "side": 1,
+      "message": "I added accounting for the number of queued (writev_async) and pending (zcopy) requests, and dumped that on the writev async flush and zcopy completion handling -- for some reason the pending list goes way above the queue depth. \n\nThis doesn\u0027t make sense to me -- it was a 4KB read test with QD\u003d32 and the C2H success optimization was set as always (by default) -- so for each IO we expect one item from the target side to be on the pending list -- do you agree?\n\n\ntcp.c: 358:spdk_nvmf_tcp_req_get: *ERROR*: Cannot allocate tcp_req on tqpair\u003d0x3300f00\n_sock_flush 26 queued reqs\n_sock_check_zcopy 64 pending reqs range [12483..12485]\n_sock_flush 6 queued reqs\n_sock_check_zcopy 32 pending reqs range [12486..12486]\n_sock_flush 26 queued reqs\n_sock_check_zcopy 32 pending reqs range [12487..12487]\n_sock_flush 6 queued reqs\n_sock_check_zcopy 32 pending reqs range [12488..12489]\n_sock_flush 32 queued reqs\n_sock_flush 7 queued reqs\n_sock_check_zcopy 39 pending reqs range [12490..12491]\n_sock_flush 32 queued reqs\n_sock_flush 30 queued reqs\n_sock_check_zcopy 62 pending reqs range [12492..12492]\n_sock_flush 2 queued reqs\n_sock_flush 7 queued reqs\n_sock_flush 23 queued reqs\n_sock_check_zcopy 62 pending reqs range [12493..12495]\n_sock_flush 9 queued reqs\n_sock_check_zcopy 32 pending reqs range [12496..12497]\n_sock_flush 32 queued reqs\n_sock_flush 15 queued reqs\n_sock_check_zcopy 47 pending reqs range [12498..12499]\n_sock_flush 32 queued reqs\n_sock_check_zcopy 32 pending reqs range [12500..12500]\n_sock_flush 32 queued reqs\n_sock_flush 7 queued reqs\n_sock_flush 23 queued reqs\n_sock_check_zcopy 62 pending reqs range [12501..12502]\n_sock_flush 9 queued reqs\n_sock_flush 23 queued reqs\n_sock_check_zcopy 55 pending reqs range [12503..12504]\n_sock_flush 9 queued reqs\n_sock_check_zcopy 32 pending reqs range [12505..12506]\n_sock_flush 32 queued reqs\n_sock_flush 32 queued reqs\n_sock_check_zcopy 64 pending reqs range [12507..12507]\n_sock_flush 7 queued reqs\n_sock_flush 23 queued reqs\n_sock_check_zcopy 62 pending reqs range [12508..12509]\n_sock_flush 9 queued reqs\n_sock_check_zcopy 32 pending reqs range [12510..12511]\n_sock_flush 32 queued reqs\n_sock_flush 7 queued reqs\ntcp.c: 358:spdk_nvmf_tcp_req_get: *ERROR*: Cannot allocate tcp_req on tqpair\u003d0x3300f00\n_sock_flush 25 queued reqs\n_sock_check_zcopy 64 pending reqs range [12512..12513]\n_sock_flush 7 queued reqs\n_sock_check_zcopy 32 pending reqs range [12514..12514]\n_sock_flush 25 queued reqs",
+      "parentUuid": "c50029f2_5d18b850",
+      "revId": "bf42d85f94c60c965c64fcbf8dcc663a468a9988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "83fd4068_433ca5b1",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 12
