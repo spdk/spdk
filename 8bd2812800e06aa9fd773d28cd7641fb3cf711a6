@@ -50,6 +50,24 @@
       "revId": "8bd2812800e06aa9fd773d28cd7641fb3cf711a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "585c5f3e_696d31dc",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-17T13:50:13Z",
+      "side": 1,
+      "message": "No. It should be checked here. The internal .offset is used to check how many real len of the iovs are finished. checking between 506 is not needed",
+      "parentUuid": "4d28b74f_7cd1ef57",
+      "revId": "8bd2812800e06aa9fd773d28cd7641fb3cf711a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
