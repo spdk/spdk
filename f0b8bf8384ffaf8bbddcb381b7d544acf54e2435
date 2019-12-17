@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "884c096d_a4fcab50",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-17T23:40:38Z",
+      "side": 1,
+      "message": "Should we insert \n spdk_set_thread(thread);\n spdk_thread_exit(thread);\n spdk_set_thread(NULL)\nhere?\nOtherwise, thread-\u003eexit is false and spdk_thread_destroy() gets assertion.\n\nThis is due that you followed lib/event/reactor.c.\nI added a patch to fix this https://review.gerrithub.io/c/spdk/spdk/+/478237.\n\nIt\u0027s OK for me to fix this later in the series.",
+      "revId": "f0b8bf8384ffaf8bbddcb381b7d544acf54e2435",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
