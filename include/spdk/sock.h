@@ -112,10 +112,13 @@ struct spdk_sock *spdk_sock_connect(const char *ip, int port);
  *
  * \param ip IP address to listen on.
  * \param port Port number.
+ * \param sock_impl The sock_implementation name. If this parameter is NULL,
+ * it will try all the sock implementations by order, and the implementation
+ * can firstly listen on the socket will be the selected sock implemenation.
  *
  * \return a pointer to the listened socket on success, or NULL on failure.
  */
-struct spdk_sock *spdk_sock_listen(const char *ip, int port);
+struct spdk_sock *spdk_sock_listen(const char *ip, int port, char *sock_impl_name);
 
 /**
  * Accept a new connection from a client on the specified socket and return a
