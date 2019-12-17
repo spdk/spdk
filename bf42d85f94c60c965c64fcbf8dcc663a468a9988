@@ -135,6 +135,30 @@
       "revId": "bf42d85f94c60c965c64fcbf8dcc663a468a9988",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a70a348_124dd9fc",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-12-17T16:29:54Z",
+      "side": 1,
+      "message": "Not sure to follow on your comment \"[..] My understanding of how the zero copy API works is that we should never get a partial send\". AFAIK, the behaviour of sendmsg w.r.t partial sends of IOVs should be invariant to the flags (e.g yes or no zcopy). What made you think otherwise?",
+      "parentUuid": "05087d91_541a5b88",
+      "range": {
+        "startLine": 543,
+        "startChar": 3,
+        "endLine": 543,
+        "endChar": 23
+      },
+      "revId": "bf42d85f94c60c965c64fcbf8dcc663a468a9988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
