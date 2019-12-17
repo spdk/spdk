@@ -213,7 +213,7 @@ hello_sock_connect(struct hello_context_t *ctx)
 
 	SPDK_NOTICELOG("Connecting to the server on %s:%d\n", ctx->host, ctx->port);
 
-	ctx->sock = spdk_sock_connect(ctx->host, ctx->port);
+	ctx->sock = spdk_sock_connect(ctx->host, ctx->port, NULL);
 	if (ctx->sock == NULL) {
 		SPDK_ERRLOG("connect error(%d): %s\n", errno, spdk_strerror(errno));
 		return -1;
@@ -340,7 +340,7 @@ hello_sock_group_poll(void *arg)
 static int
 hello_sock_listen(struct hello_context_t *ctx)
 {
-	ctx->sock = spdk_sock_listen(ctx->host, ctx->port);
+	ctx->sock = spdk_sock_listen(ctx->host, ctx->port, NULL);
 	if (ctx->sock == NULL) {
 		SPDK_ERRLOG("Cannot create server socket\n");
 		return -1;
