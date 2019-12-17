@@ -1794,6 +1794,8 @@ bdev_nvme_library_fini(void)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, *tmp;
 	struct nvme_probe_skip_entry *entry, *entry_tmp;
+	struct nvme_bdev_ns *ns;
+	uint32_t i;
 
 	spdk_poller_unregister(&g_hotplug_poller);
 	free(g_hotplug_probe_ctx);
@@ -1820,6 +1822,17 @@ bdev_nvme_library_fini(void)
 
 		nvme_bdev_ctrlr->destruct = true;
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+		for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
+			uint32_t nsid = i + 1;
+
+			ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
+			if (ns->populated) {
+				assert(ns->id == nsid);
+				nvme_ctrlr_depopulate_namespace(nvme_bdev_ctrlr, ns);
+			}
+		}
+
 		nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
 		pthread_mutex_lock(&g_bdev_nvme_mutex);
 	}
