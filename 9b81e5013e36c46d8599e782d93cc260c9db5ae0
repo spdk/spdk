@@ -45,6 +45,30 @@
       "revId": "9b81e5013e36c46d8599e782d93cc260c9db5ae0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0c29d41c_223a39ff",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 961,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-17T15:50:03Z",
+      "side": 1,
+      "message": "Yeah, I think you are right. The one path that I was worried about is spdk_nvmf_rdma_poll_group_destroy, but looking at the way lib/nvmf is architected, we should really have called disconnect on all of the qpairs associated with the poll group before we call that function so I am comfortable removing this call.",
+      "parentUuid": "34efd9eb_cfe82702",
+      "range": {
+        "startLine": 961,
+        "startChar": 2,
+        "endLine": 961,
+        "endChar": 51
+      },
+      "revId": "9b81e5013e36c46d8599e782d93cc260c9db5ae0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
