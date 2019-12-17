@@ -158,7 +158,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	run_test "case" "spdkcli_tcp" test/spdkcli/tcp.sh
 
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
-		run_test "suite" "blockdev" test/bdev/blockdev.sh
+		run_test "suite" "blockdev_general" test/bdev/blockdev.sh
 		run_test "case" "bdev_raid" test/bdev/bdev_raid.sh
 	fi
 
@@ -171,6 +171,8 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_NVME -eq 1 ]; then
+		run_test "suite" "blockdev_nvme" test/bdev/blockdev.sh "nvme"
+		run_test "suite" "blockdev_nvme_gpt" test/bdev/blockdev.sh "gpt"
 		run_test "suite" "nvme" test/nvme/nvme.sh
 		if [[ $SPDK_TEST_NVME_CLI -eq 1 ]]; then
 			run_test "case" "nvme_cli" test/nvme/spdk_nvme_cli.sh
@@ -245,11 +247,13 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_PMDK -eq 1 ]; then
+		run_test "suite" "blockdev_pmem" ./test/bdev/blockdev.sh "pmem"
 		run_test "case" "pmem" ./test/pmem/pmem.sh -x
 		run_test "case" "spdkcli_pmem" ./test/spdkcli/pmem.sh
 	fi
 
 	if [ $SPDK_TEST_RBD -eq 1 ]; then
+		run_test "suite" "blockdev_rbd" ./test/bdev/blockdev.sh "rbd"
 		run_test "case" "spdkcli_rbd" ./test/spdkcli/rbd.sh
 	fi
 
@@ -271,6 +275,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 
 	if [ $SPDK_TEST_OPAL -eq 1 ]; then
 		run_test "suite" "nvme_opal" ./test/nvme/nvme_opal.sh
+	fi
+
+	if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
+		run_test "suite" "blockdev_crypto" ./test/bdev/blockdev.sh "crypto"
 	fi
 fi
 
