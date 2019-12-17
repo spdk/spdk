@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6b3cbbd_c8d4b17c",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-17T20:36:04Z",
+      "side": 1,
+      "message": "should we run this under SPDK_RUN_FUNCTIONAL_TEST?\n\nI don\u0027t see autotest.sh calling run_test anywhere else outside of SPDK_TEST_UNITTEST/FUNCTIONAL_TEST, so wasn\u0027t sure if you meant this to be an exception.",
+      "revId": "ac0623ca6472004c2a872214c4933c45d5d45de2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
