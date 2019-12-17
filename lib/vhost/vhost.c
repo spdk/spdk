@@ -45,6 +45,9 @@
 
 static TAILQ_HEAD(, vhost_poll_group) g_poll_groups = TAILQ_HEAD_INITIALIZER(g_poll_groups);
 
+/* Exclusive access to g_poll_groups */
+static pthread_mutex_t g_poll_groups_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 /* Temporary cpuset for poll group assignment */
 static struct spdk_cpuset g_tmp_cpuset;
 
@@ -706,6 +709,16 @@ spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev)
 	return &vdev->cpumask;
 }
 
+static struct spdk_thread *
+create_thread_for_poll_group(struct spdk_cpuset *cpumask)
+{
+	char thread_name[32];
+
+	snprintf(thread_name, sizeof(thread_name),
+		 "vhost_thread_0x%s", spdk_cpuset_fmt(cpumask));
+	return spdk_thread_create(thread_name, cpumask);
+}
+
 struct vhost_poll_group *
 vhost_get_poll_group(struct spdk_cpuset *cpumask)
 {
@@ -730,7 +743,20 @@ vhost_get_poll_group(struct spdk_cpuset *cpumask)
 		}
 	}
 
-	assert(selected_pg != NULL);
+	if (selected_pg == NULL) {
+		selected_pg = calloc(1, sizeof(*selected_pg));
+		if (selected_pg == NULL) {
+			SPDK_ERRLOG("Not enough memory to allocate poll groups\n");
+			return NULL;
+		}
+
+		selected_pg->thread = create_thread_for_poll_group(cpumask);
+
+		pthread_mutex_lock(&g_poll_groups_mutex);
+		TAILQ_INSERT_TAIL(&g_poll_groups, selected_pg, tailq);
+		pthread_mutex_unlock(&g_poll_groups_mutex);
+	}
+
 	return selected_pg;
 }
 
@@ -740,11 +766,16 @@ _get_current_poll_group(void)
 	struct vhost_poll_group *pg;
 	struct spdk_thread *cur_thread = spdk_get_thread();
 
+	pthread_mutex_lock(&g_poll_groups_mutex);
+
 	TAILQ_FOREACH(pg, &g_poll_groups, tailq) {
 		if (pg->thread == cur_thread) {
+			pthread_mutex_unlock(&g_poll_groups_mutex);
 			return pg;
 		}
 	}
+
+	pthread_mutex_unlock(&g_poll_groups_mutex);
 
 	return NULL;
 }
@@ -1312,12 +1343,6 @@ vhost_create_poll_group_done(void *ctx)
 	spdk_vhost_init_cb init_cb = ctx;
 	int ret;
 
-	if (TAILQ_EMPTY(&g_poll_groups)) {
-		/* No threads? Iteration failed? */
-		init_cb(-ECHILD);
-		return;
-	}
-
 	ret = vhost_scsi_controller_construct();
 	if (ret != 0) {
 		SPDK_ERRLOG("Cannot construct vhost controllers\n");
@@ -1340,22 +1365,6 @@ vhost_create_poll_group_done(void *ctx)
 
 out:
 	init_cb(ret);
-}
-
-static void
-vhost_create_poll_group(void *ctx)
-{
-	struct vhost_poll_group *pg;
-
-	pg = calloc(1, sizeof(*pg));
-	if (!pg) {
-		SPDK_ERRLOG("Not enough memory to allocate poll groups\n");
-		spdk_app_stop(-ENOMEM);
-		return;
-	}
-
-	pg->thread = spdk_get_thread();
-	TAILQ_INSERT_TAIL(&g_poll_groups, pg, tailq);
 }
 
 void
@@ -1389,9 +1398,7 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 		goto err_out;
 	}
 
-	spdk_for_each_thread(vhost_create_poll_group,
-			     init_cb,
-			     vhost_create_poll_group_done);
+	vhost_create_poll_group_done(init_cb);
 	return;
 err_out:
 	init_cb(ret);
