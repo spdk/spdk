@@ -22,6 +22,30 @@
       "revId": "1db89098d3f662a10207ac91a28191c23a4d0269",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "023029b8_93062951",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-12-17T15:19:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dea07678_93f013a4",
+      "range": {
+        "startLine": 198,
+        "startChar": 3,
+        "endLine": 198,
+        "endChar": 21
+      },
+      "revId": "1db89098d3f662a10207ac91a28191c23a4d0269",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
