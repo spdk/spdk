@@ -119,7 +119,6 @@ def case_message(func):
             600: 'bdev_lvol_create_lvstore_with_cluster_size_max',
             601: 'bdev_lvol_create_lvstore_with_cluster_size_min',
             # Provisioning
-            651: 'thin_provisioning_read_empty_bdev',
             652: 'thin_provisioning_data_integrity_test',
             653: 'thin_provisioning_resize',
             654: 'thin_overprovisioning',
@@ -539,64 +538,6 @@ class TestCases(object):
 
         # Expected result:
         # - bdev_lvol_get_lvstores: response should be of no value after destroyed lvol store
-        # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case651(self):
-        """
-        thin_provisioning_read_empty_bdev
-
-        Check if we can create thin provisioned bdev on empty lvol store
-        and check if we can read from this device and it returns zeroes.
-        """
-        # create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # construct lvol store on malloc bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-        lvs = self.c.bdev_lvol_get_lvstores(self.lvs_name)[0]
-        free_clusters_start = int(lvs['free_clusters'])
-        lbd_name0 = self.lbd_name + str("0")
-        lbd_name1 = self.lbd_name + str("1")
-        # calculate bdev size in megabytes
-        bdev_size = self.get_lvs_size()
-        # create thick provisioned lvol bvdev with size equal to lvol store
-        bdev_name0 = self.c.bdev_lvol_create(uuid_store, lbd_name0,
-                                             bdev_size, thin=False)
-        # create thin provisioned lvol bdev with the same size
-        bdev_name1 = self.c.bdev_lvol_create(uuid_store, lbd_name1,
-                                             bdev_size, thin=True)
-        lvol_bdev0 = self.c.get_lvol_bdev_with_name(bdev_name0)
-        lvol_bdev1 = self.c.get_lvol_bdev_with_name(bdev_name1)
-        nbd_name0 = "/dev/nbd0"
-        fail_count += self.c.nbd_start_disk(lvol_bdev0['name'], nbd_name0)
-        nbd_name1 = "/dev/nbd1"
-        fail_count += self.c.nbd_start_disk(lvol_bdev1['name'], nbd_name1)
-
-        size = bdev_size * MEGABYTE
-        # fill the whole thick provisioned lvol bdev
-        fail_count += self.run_fio_test(nbd_name0, 0, size, "write", False)
-
-        size = bdev_size * MEGABYTE
-        # perform read operations on thin provisioned lvol bdev
-        # and check if they return zeroes
-        fail_count += self.run_fio_test(nbd_name1, 0, size, "read", "0x00")
-
-        fail_count += self.c.nbd_stop_disk(nbd_name0)
-        fail_count += self.c.nbd_stop_disk(nbd_name1)
-        # destroy thin provisioned lvol bdev
-        fail_count += self.c.bdev_lvol_delete(lvol_bdev0['name'])
-        fail_count += self.c.bdev_lvol_delete(lvol_bdev1['name'])
-        # destroy lvol store
-        fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
-        # destroy malloc bdev
-        fail_count += self.c.bdev_malloc_delete(base_name)
-        # Expected result:
-        # - calls successful, return code = 0
         # - no other operation fails
         return fail_count
 
