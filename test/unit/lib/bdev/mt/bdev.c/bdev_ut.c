@@ -1544,9 +1544,12 @@ bdev_channel_io_timeout_cb(void *cb_arg, struct spdk_bdev_io *bdev_io)
 	ctx->iov.iov_len = bdev_io->iov.iov_len;
 }
 
+static bool g_io_done;
+
 static void
 io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
+	g_io_done = true;
 	spdk_bdev_free_io(bdev_io);
 }
 
@@ -1721,6 +1724,143 @@ bdev_set_io_timeout_mt(void)
 	free_threads();
 }
 
+static bool g_lock_lba_range_done;
+static bool g_unlock_lba_range_done;
+
+static void
+lock_lba_range_done(void *ctx, int status)
+{
+	g_lock_lba_range_done = true;
+}
+
+static void
+unlock_lba_range_done(void *ctx, int status)
+{
+	g_unlock_lba_range_done = true;
+}
+
+static uint32_t
+stub_channel_outstanding_cnt(void *io_target)
+{
+	struct spdk_io_channel *_ch = spdk_get_io_channel(io_target);
+	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	uint32_t outstanding_cnt;
+
+	outstanding_cnt = ch->outstanding_cnt;
+
+	spdk_put_io_channel(_ch);
+	return outstanding_cnt;
+}
+
+static void
+lock_lba_range_then_submit_io(void)
+{
+	struct spdk_bdev_desc *desc = NULL;
+	void *io_target;
+	struct spdk_io_channel *io_ch[3];
+	struct spdk_bdev_channel *bdev_ch[3];
+	struct lba_range *range;
+	char buf[4096];
+	int ctx0, ctx1;
+	int rc;
+
+	setup_test();
+
+	io_target = g_bdev.io_target;
+	desc = g_desc;
+
+	set_thread(0);
+	io_ch[0] = spdk_bdev_get_io_channel(desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	CU_ASSERT(io_ch[0] != NULL);
+
+	set_thread(1);
+	io_ch[1] = spdk_bdev_get_io_channel(desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	CU_ASSERT(io_ch[1] != NULL);
+
+	set_thread(0);
+	g_lock_lba_range_done = false;
+	rc = bdev_lock_lba_range(desc, io_ch[0], 20, 10, lock_lba_range_done, &ctx0);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	/* The lock should immediately become valid, since there are no outstanding
+	 * write I/O.
+	 */
+	CU_ASSERT(g_lock_lba_range_done == true);
+	range = TAILQ_FIRST(&bdev_ch[0]->locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 20);
+	CU_ASSERT(range->length == 10);
+	CU_ASSERT(range->owner_ch == bdev_ch[0]);
+
+	g_io_done = false;
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch[0]->io_locked));
+	rc = spdk_bdev_read_blocks(desc, io_ch[0], buf, 20, 1, io_done, &ctx0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(stub_channel_outstanding_cnt(io_target) == 1);
+
+	stub_complete_io(io_target, 1);
+	poll_threads();
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch[0]->io_locked));
+
+	/* Try a write I/O.  This should actually be allowed to execute, since the channel
+	 * holding the lock is submitting the write I/O.
+	 */
+	g_io_done = false;
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch[0]->io_locked));
+	rc = spdk_bdev_write_blocks(desc, io_ch[0], buf, 20, 1, io_done, &ctx0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(stub_channel_outstanding_cnt(io_target) == 1);
+
+	stub_complete_io(io_target, 1);
+	poll_threads();
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch[0]->io_locked));
+
+	/* Try a write I/O.  This should get queued in the io_locked tailq. */
+	set_thread(1);
+	g_io_done = false;
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch[1]->io_locked));
+	rc = spdk_bdev_write_blocks(desc, io_ch[1], buf, 20, 1, io_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(stub_channel_outstanding_cnt(io_target) == 0);
+	CU_ASSERT(!TAILQ_EMPTY(&bdev_ch[1]->io_locked));
+	CU_ASSERT(g_io_done == false);
+
+	/* Try to unlock the lba range using thread 1's io_ch.  This should fail. */
+	rc = bdev_unlock_lba_range(desc, io_ch[1], 20, 10, unlock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == -EINVAL);
+
+	set_thread(0);
+	rc = bdev_unlock_lba_range(desc, io_ch[0], 20, 10, unlock_lba_range_done, &ctx0);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch[0]->locked_ranges));
+
+	/* The LBA range is unlocked, so the write IOs should now have started execution. */
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch[1]->io_locked));
+
+	set_thread(1);
+	CU_ASSERT(stub_channel_outstanding_cnt(io_target) == 1);
+	stub_complete_io(io_target, 1);
+
+	poll_threads();
+	CU_ASSERT(g_io_done == true);
+
+	/* Tear down the channels */
+	set_thread(0);
+	spdk_put_io_channel(io_ch[0]);
+	set_thread(1);
+	spdk_put_io_channel(io_ch[1]);
+	poll_threads();
+	set_thread(0);
+	teardown_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1751,7 +1891,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "enomem_multi_io_target", enomem_multi_io_target) == NULL ||
 		CU_add_test(suite, "qos_dynamic_enable", qos_dynamic_enable) == NULL ||
 		CU_add_test(suite, "bdev_histograms_mt", bdev_histograms_mt) == NULL ||
-		CU_add_test(suite, "bdev_set_io_timeout_mt", bdev_set_io_timeout_mt) == NULL
+		CU_add_test(suite, "bdev_set_io_timeout_mt", bdev_set_io_timeout_mt) == NULL ||
+		CU_add_test(suite, "lock_lba_range_then_submit_io", lock_lba_range_then_submit_io) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
