@@ -135,6 +135,13 @@ if __name__ == "__main__":
     p.add_argument('-d', '--disable', action='store_true', help='Disable context switch monitoring')
     p.set_defaults(func=framework_monitor_context_switch)
 
+    def framework_get_reactors(args):
+        print_dict(rpc.app.framework_get_reactors(args.client))
+
+    p = subparsers.add_parser(
+        'framework_get_reactors', help='Display list of all reactors')
+    p.set_defaults(func=framework_get_reactors)
+
     # bdev
     def bdev_set_options(args):
         rpc.bdev.bdev_set_options(args.client,
