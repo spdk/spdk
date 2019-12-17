@@ -188,12 +188,66 @@ spdk_sock_connect(const char *ip, int port)
 }
 
 struct spdk_sock *
+spdk_sock_connect_by_impl(const char *ip, int port, char *sock_impl_name)
+{
+	struct spdk_net_impl *impl = NULL;
+	struct spdk_sock *sock;
+
+	if (!sock_impl_name) {
+		return spdk_sock_connect(ip, port);
+	}
+
+	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
+		if (strcmp(sock_impl_name, impl->name)) {
+			continue;
+		}
+
+		sock = impl->connect(ip, port);
+		if (sock != NULL) {
+			sock->net_impl = impl;
+			TAILQ_INIT(&sock->queued_reqs);
+			TAILQ_INIT(&sock->pending_reqs);
+			return sock;
+		}
+	}
+
+	return NULL;
+}
+
+struct spdk_sock *
 spdk_sock_listen(const char *ip, int port)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
 
 	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
+		sock = impl->listen(ip, port);
+		if (sock != NULL) {
+			sock->net_impl = impl;
+			/* Don't need to initialize the request queues for listen
+			 * sockets. */
+			return sock;
+		}
+	}
+
+	return NULL;
+}
+
+struct spdk_sock *
+spdk_sock_listen_by_impl(const char *ip, int port, char *sock_impl_name)
+{
+	struct spdk_net_impl *impl = NULL;
+	struct spdk_sock *sock;
+
+	if (!sock_impl_name) {
+		return spdk_sock_listen(ip, port);
+	}
+
+	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
+		if (strcmp(sock_impl_name, impl->name)) {
+			continue;
+		}
+
 		sock = impl->listen(ip, port);
 		if (sock != NULL) {
 			sock->net_impl = impl;
