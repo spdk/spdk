@@ -44,11 +44,11 @@ DEFINE_STUB(spdk_memzone_lookup, void *, (const char *name), NULL)
 DEFINE_STUB(spdk_pci_nvme_get_driver, struct spdk_pci_driver *, (void), NULL)
 DEFINE_STUB(spdk_pci_ioat_get_driver, struct spdk_pci_driver *, (void), NULL)
 DEFINE_STUB(spdk_pci_virtio_get_driver, struct spdk_pci_driver *, (void), NULL)
-DEFINE_STUB(spdk_env_get_first_core, uint32_t, (void), 0);
-DEFINE_STUB(spdk_env_get_next_core, uint32_t, (uint32_t prev_core), 0);
-DEFINE_STUB(spdk_env_get_last_core, uint32_t, (void), 1);
-DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
-DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
+DEFINE_STUB(spdk_env_get_first_core, uint32_t, (void), UINT32_MAX);
+DEFINE_STUB(spdk_env_get_next_core, uint32_t, (uint32_t prev_core), UINT32_MAX);
+DEFINE_STUB(spdk_env_get_last_core, uint32_t, (void), UINT32_MAX);
+DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), UINT32_MAX);
+DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), SPDK_ENV_SOCKET_ID_ANY);
 
 /*
  * These mocks don't use the DEFINE_STUB macros because
