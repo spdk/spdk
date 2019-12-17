@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82af25cc_13a6a8a0",
+        "filename": "scripts/dpdk_mem_info.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-17T20:32:37Z",
+      "side": 1,
+      "message": "I\u0027m being very anal here - but could this be right-justified, so that the decimal points line up?  for example:\n\n141.914612\n 76.499390\n 72.062256\n\ninstead of\n\n141.914612\n76.499390\n72.062256",
+      "revId": "bb150cdf759e7f444e61bf1440173ef214d6dc71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
