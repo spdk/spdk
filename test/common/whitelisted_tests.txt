@@ -1,0 +1,41 @@
+# This file represents the tests we are intentionally skipping in CI testing.
+# suites
+# Waiting on hardware
+vmd
+# Waiting on significant test rewrite
+nvme_opal
+
+# cases
+ftl_dirty_shutdown
+ftl_fio_basic
+ftl_fio_extended
+ftl_restore_nv_cache
+
+# Waiting for test refactor
+iscsi_tgt_fio_remote_nvme
+
+# Waiting on significant test rewrite
+nvme_opal_bdevio
+nvme_opal_bdevperf
+nvme_opal_spdk_tgt
+
+# Waiting for patches that stabilize these tests.
+unittest_bdev_reduce
+unittest_reduce
+
+# CI doesn't have FC hardware
+unittest_nvmf_fc
+unittest_nvmf_fc_ls
+
+# These tests are currently only run manually
+vhost_blk_fs_integrity
+vhost_blk_hot_remove
+vhost_scsi_hot_remove
+vhost_hotplug
+
+# Waiting on hardware
+vmd_bdev_svc
+vmd_fio
+vmd_hello_world
+vmd_identify
+vmd_perf
