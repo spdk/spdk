@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e594b5f_901a6417",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-17T16:28:11Z",
+      "side": 1,
+      "message": "why do these need to be switched?",
+      "revId": "267e6922dc75454fc2245d4b4ebbdfd155c66a44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
