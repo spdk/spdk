@@ -2679,7 +2679,7 @@ spdk_nvmf_tcp_qpair_get_trid(struct spdk_nvmf_qpair *qpair,
 
 	if (spdk_sock_is_ipv4(tqpair->sock)) {
 		trid->adrfam = SPDK_NVMF_ADRFAM_IPV4;
-	} else if (spdk_sock_is_ipv4(tqpair->sock)) {
+	} else if (spdk_sock_is_ipv6(tqpair->sock)) {
 		trid->adrfam = SPDK_NVMF_ADRFAM_IPV6;
 	} else {
 		return -1;
