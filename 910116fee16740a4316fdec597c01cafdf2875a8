@@ -52,6 +52,24 @@
       "revId": "910116fee16740a4316fdec597c01cafdf2875a8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf365690_b1695075",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-18T20:46:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "db6160d3_0d5f1bb3",
+      "revId": "910116fee16740a4316fdec597c01cafdf2875a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
