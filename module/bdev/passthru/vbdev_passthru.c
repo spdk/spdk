@@ -180,6 +180,29 @@ _pt_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 }
 
 static void
+_pt_complete_zcopy_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	struct passthru_bdev_io *io_ctx = (struct passthru_bdev_io *)orig_io->driver_ctx;
+
+	/* We setup this value in the submission routine, just showing here that it is
+	 * passed back to us.
+	 */
+	if (io_ctx->test != 0x5a) {
+		SPDK_ERRLOG("Error, original IO device_ctx is wrong! 0x%x\n",
+			    io_ctx->test);
+	}
+
+	/* Complete the original IO and then free the one that we created here
+	 * as a result of issuing an IO via submit_request.
+	 */
+	spdk_bdev_io_set_buf(orig_io, bdev_io->u.bdev.iovs[0].iov_base, bdev_io->u.bdev.iovs[0].iov_len);
+	spdk_bdev_io_complete(orig_io, status);
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
 vbdev_passthru_resubmit_io(void *arg)
 {
 	struct spdk_bdev_io *bdev_io = (struct spdk_bdev_io *)arg;
@@ -309,6 +332,11 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	case SPDK_BDEV_IO_TYPE_RESET:
 		rc = spdk_bdev_reset(pt_node->base_desc, pt_ch->base_ch,
 				     _pt_complete_io, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_ZCOPY:
+		rc = spdk_bdev_zcopy_start(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.offset_blocks,
+					   bdev_io->u.bdev.num_blocks, bdev_io->u.bdev.zcopy.populate,
+					   _pt_complete_zcopy_io, bdev_io);
 		break;
 	default:
 		SPDK_ERRLOG("passthru: unknown I/O type %d\n", bdev_io->type);

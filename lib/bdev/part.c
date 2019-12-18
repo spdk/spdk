@@ -279,6 +279,17 @@ spdk_bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_
 	spdk_bdev_free_io(bdev_io);
 }
 
+static void
+spdk_bdev_part_complete_zcopy_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *part_io = cb_arg;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+
+	spdk_bdev_io_set_buf(part_io, bdev_io->u.bdev.iovs[0].iov_base, bdev_io->u.bdev.iovs[0].iov_len);
+	spdk_bdev_io_complete(part_io, status);
+	spdk_bdev_free_io(bdev_io);
+}
+
 int
 spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io)
 {
@@ -346,6 +357,11 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 	case SPDK_BDEV_IO_TYPE_RESET:
 		rc = spdk_bdev_reset(base_desc, base_ch,
 				     spdk_bdev_part_complete_io, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_ZCOPY:
+		rc = spdk_bdev_zcopy_start(base_desc, base_ch, remapped_offset,
+					   bdev_io->u.bdev.num_blocks, bdev_io->u.bdev.zcopy.populate,
+					   spdk_bdev_part_complete_zcopy_io, bdev_io);
 		break;
 	default:
 		SPDK_ERRLOG("unknown I/O type %d\n", bdev_io->type);
