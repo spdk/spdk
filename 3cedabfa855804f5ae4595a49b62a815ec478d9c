@@ -34,6 +34,24 @@
       "revId": "3cedabfa855804f5ae4595a49b62a815ec478d9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41901aba_36d483a0",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-18T11:03:42Z",
+      "side": 1,
+      "message": "I only saw standard nvme bdev was unregistered first before module_fini was called as you said, and I had no knowledge about OCSSD bdev.  Thanks for your detailed and kind comment, I have better knowledge for this patch now.\n\nSo I accept your explanation. Will you update only the commit message? I believe that will be helpful for you to get enough review from Ben, Jim, Tomeo, and others.\n\n-1 came from my shortage of knowledge. So I remove it.",
+      "parentUuid": "2b4e99d5_6578cbe3",
+      "revId": "3cedabfa855804f5ae4595a49b62a815ec478d9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
