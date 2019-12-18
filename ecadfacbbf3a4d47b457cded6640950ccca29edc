@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f55a6a3a_0d532024",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 5566,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-18T13:08:43Z",
+      "side": 1,
+      "message": "I see one issue here. Example scenario:\n1. We add range here to the locked ranges list\n2. It will stuck on pending list because we have overlapping range(s) locked/pending\n3. We create new channel\n4. The range is added to locked ranges despite overlapping range will be added on this list as well\n\nWe probably need two lists in bdev internal structure - locked and pending - and switch range from one list to another when it lands in locked channel list.",
+      "range": {
+        "startLine": 5566,
+        "startChar": 1,
+        "endLine": 5566,
+        "endChar": 70
+      },
+      "revId": "ecadfacbbf3a4d47b457cded6640950ccca29edc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
