@@ -22,6 +22,30 @@
       "revId": "ecadfacbbf3a4d47b457cded6640950ccca29edc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e3070df_aabafaed",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 5566,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-18T14:55:41Z",
+      "side": 1,
+      "message": "It\u0027s actually even worse and can happen without overlapping:\n\nThread B locks range X and puts in the global list.\nThread B starts a for_each_channel().\nThread A for_each_channel() executes.\nThread C creates a new channel.  It inherits range X into its initial list.\nThread B for_each_channel() executes.\nThread C for_each_channel() executes.  Range X gets added to the initial list again.\n\nBased on our conversation on previous patch, I think I\u0027m going to move the pending list to the bdev itself.  And then I need to compare the ranges (including the locked_ctx) in the for_each_channel() routine before adding it, to make sure it\u0027s not getting duplicated.",
+      "parentUuid": "f55a6a3a_0d532024",
+      "range": {
+        "startLine": 5566,
+        "startChar": 1,
+        "endLine": 5566,
+        "endChar": 70
+      },
+      "revId": "ecadfacbbf3a4d47b457cded6640950ccca29edc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
