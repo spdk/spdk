@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "252a209a_2840eb38",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 587,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-18T22:34:53Z",
+      "side": 1,
+      "message": "I get it. I changed the whole to use the term \"reactor\" except core ID.",
+      "parentUuid": "f09bdc6a_28dbabb6",
+      "revId": "508180020a64f6d5f7b94e5fc33ad7c2aeca029e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "11f1a13d_46566665",
         "filename": "lib/event/reactor.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2019-12-18T21:55:40Z",
       "side": 1,
       "message": "The cores never change after start up, so is this mutex necessary?",
+      "revId": "508180020a64f6d5f7b94e5fc33ad7c2aeca029e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6bc8a0d9_8ca29daa",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-18T22:34:53Z",
+      "side": 1,
+      "message": "No. I removed the mutex from here and the above spdk_on_reactor (renamed from spdk_on_core).",
+      "parentUuid": "11f1a13d_46566665",
       "revId": "508180020a64f6d5f7b94e5fc33ad7c2aeca029e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
