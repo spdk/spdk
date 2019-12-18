@@ -146,9 +146,14 @@ function fio_test_suite() {
 
 	# Generate the fio config file given the list of all unclaimed bdevs that support unmap
 	fio_config_gen $testdir/bdev.fio trim
-	for b in $(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name'); do
-		fio_config_add_job $testdir/bdev.fio $b
-	done
+	if [ "$(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name')" != "" ]; then
+		for b in $(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name'); do
+			fio_config_add_job $testdir/bdev.fio $b
+		done
+	else
+		rm -f $testdir/bdev.fio
+		return 0
+	fi
 
 	if [ $RUN_NIGHTLY -eq 0 ]; then
 		run_test "bdev_fio_trim" fio_bdev $fio_params --output=$output_dir/blockdev_trim.txt
