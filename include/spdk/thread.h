@@ -382,6 +382,23 @@ int spdk_thread_get_stats(struct spdk_thread_stats *stats);
 int spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx);
 
 /**
+ * Send a message to the given thread. Only one critical message can be outstanding at the same
+ * time. It's intended to use this function in any cases that might interrupt the execution of the
+ * application, such as signal handlers.
+ *
+ * The message will be sent asynchronously - i.e. spdk_thread_send_critical_msg will always return
+ * prior to `fn` being called.
+ *
+ * \param thread The target thread.
+ * \param fn This function will be called on the given thread.
+ *
+ * \return 0 on success
+ * \return -EIO if the message could not be sent to the destination thread, due to an already
+ * outstanding critical message
+ */
+int spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn);
+
+/**
  * Send a message to each thread, serially.
  *
  * The message is sent asynchronously - i.e. spdk_for_each_thread will return
