@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d38dc1cd_657fcc94",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-18T00:37:41Z",
+      "side": 1,
+      "message": "What I said was wrong. I thought again and I think 1) is better than 2) now.\n\n1) Create a connection, and then continue dev_submit_requests() until runtime expires or the connection was disconnected.\n\n2) Create a connection, send a PDU, destroy the connection. Repeat this until runtime expires.\n\nWill you change the design?\n\nIn the mean time, I\u0027m investigating how to decode discovery output and login to all found targets.",
+      "revId": "fdc2a426d735a5da4e9bd907cdf4d6efd578d602",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4211fda1_8c09d6ae",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 991,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-18T00:37:41Z",
+      "side": 1,
+      "message": "If calling spdk_thread_exit(), we have to do spdk_set_thread(dev_ctx-\u003ethread), spdk_thread_exit(dev_ctx-\u003ethread), spdk_set_thread(NULL).",
+      "range": {
+        "startLine": 991,
+        "startChar": 3,
+        "endLine": 991,
+        "endChar": 19
+      },
+      "revId": "fdc2a426d735a5da4e9bd907cdf4d6efd578d602",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48e60d7f_7a21a2fa",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-18T00:37:41Z",
+      "side": 1,
+      "message": "check_app_completion instead?",
+      "range": {
+        "startLine": 1022,
+        "startChar": 0,
+        "endLine": 1022,
+        "endChar": 14
+      },
+      "revId": "fdc2a426d735a5da4e9bd907cdf4d6efd578d602",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6f4eba3_9ec14baa",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 1030,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-18T00:37:41Z",
+      "side": 1,
+      "message": "Please move up this comment before cleanup().",
+      "range": {
+        "startLine": 1030,
+        "startChar": 2,
+        "endLine": 1030,
+        "endChar": 71
+      },
+      "revId": "fdc2a426d735a5da4e9bd907cdf4d6efd578d602",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7284cfbb_22166e7e",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 1050,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-18T00:37:41Z",
+      "side": 1,
+      "message": "g_app_completion_poller instead? (Can we follow nvme_fuzz.c as much as possible?)",
+      "range": {
+        "startLine": 1050,
+        "startChar": 1,
+        "endLine": 1050,
+        "endChar": 14
+      },
+      "revId": "fdc2a426d735a5da4e9bd907cdf4d6efd578d602",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
