@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "152b0f23_8cf449ed",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2746,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-18T12:55:50Z",
+      "side": 1,
+      "message": "Repetition",
+      "range": {
+        "startLine": 2746,
+        "startChar": 27,
+        "endLine": 2746,
+        "endChar": 44
+      },
+      "revId": "1d94e132039fbe19ff69554ce5ccc35abe24bbd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
