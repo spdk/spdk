@@ -456,6 +456,17 @@ struct spdk_bdev {
 typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 					bool success);
 
+/**
+ * Callback when an auxiliary buffer is allocated for the bdev I/O.
+ *
+ * \param ch The I/O channel the bdev I/O was handled on.
+ * \param bdev_io The bdev I/O
+ * \param buf Pointer to the allocated buffer.  NULL if there was a failuer such as
+ * the size of the buffer to allocate is greater than the permitted maximum.
+ */
+typedef void (*spdk_bdev_io_get_aux_buf_cb)(struct spdk_io_channel *ch,
+		struct spdk_bdev_io *bdev_io, void *aux_buf);
+
 #define BDEV_IO_NUM_CHILD_IOV 32
 
 struct spdk_bdev_io {
@@ -628,6 +639,9 @@ struct spdk_bdev_io {
 		struct iovec *orig_iovs;
 		int           orig_iovcnt;
 		void	     *orig_md_buf;
+
+		/** Callback for when the aux buf is allocated */
+		spdk_bdev_io_get_aux_buf_cb get_aux_buf_cb;
 
 		/** Callback for when buf is allocated */
 		spdk_bdev_io_get_buf_cb get_buf_cb;
@@ -817,6 +831,26 @@ const struct spdk_bdev_aliases_list *spdk_bdev_get_aliases(const struct spdk_bde
  * \c SPDK_BDEV_LARGE_BUF_MAX_SIZE.
  */
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len);
+
+/**
+ * Allocate an auxillary buffer for given bdev_io. The length of the
+ * buffer will be the same size as the bdev_io primary buffer. The buffer
+ * must be freed using \c spdk_bdev_io_put_aux_buf() before completing
+ * the associated bdev_io.  This call will never fail. In case of lack of
+ * memory given callback \c cb will be deferred until enough memory is freed.
+ *
+ * \param bdev_io I/O to allocate buffer for.
+ * \param cb callback to be called when the buffer is allocated
+ */
+void spdk_bdev_io_get_aux_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_aux_buf_cb cb);
+
+/**
+ * Free an auxiliary buffer previously allocated by \c spdk_bdev_io_get_aux_buf().
+ *
+ * \param bdev_io bdev_io specified when the aux_buf was allocated.
+ * \param buf auxiliary buffer to free
+ */
+void spdk_bdev_io_put_aux_buf(struct spdk_bdev_io *bdev_io, void *aux_buf);
 
 /**
  * Set the given buffer as the data buffer described by this bdev_io.
