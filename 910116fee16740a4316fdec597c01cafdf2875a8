@@ -16,6 +16,24 @@
       "revId": "910116fee16740a4316fdec597c01cafdf2875a8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad6185cf_2786fc79",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-18T13:17:14Z",
+      "side": 1,
+      "message": "As solution to this problem I created rpc_cmd_negative.",
+      "parentUuid": "a9b9ca08_dfc81a3a",
+      "revId": "910116fee16740a4316fdec597c01cafdf2875a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
