@@ -149,6 +149,8 @@ struct spdk_thread {
 	SLIST_HEAD(, spdk_msg)		msg_cache;
 	size_t				msg_cache_count;
 
+	spdk_msg_fn			critical_msg;
+
 	/* User context allocated at the end */
 	uint8_t				ctx[0];
 };
@@ -484,6 +486,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 	uint32_t msg_count;
 	struct spdk_thread *orig_thread;
 	struct spdk_poller *poller, *tmp;
+	spdk_msg_fn critical_msg;
 	int rc = 0;
 
 	orig_thread = _get_thread();
@@ -491,6 +494,12 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 
 	if (now == 0) {
 		now = spdk_get_ticks();
+	}
+
+	critical_msg = __atomic_load_n(&thread->critical_msg, __ATOMIC_SEQ_CST);
+	if (critical_msg) {
+		critical_msg(NULL);
+		__atomic_store_n(&thread->critical_msg, NULL, __ATOMIC_SEQ_CST);
 	}
 
 	msg_count = _spdk_msg_queue_run_batch(thread, max_msgs);
@@ -642,7 +651,8 @@ bool
 spdk_thread_is_idle(struct spdk_thread *thread)
 {
 	if (spdk_ring_count(thread->messages) ||
-	    _spdk_thread_has_unpaused_pollers(thread)) {
+	    _spdk_thread_has_unpaused_pollers(thread) ||
+	    __atomic_load_n(&thread->critical_msg, __ATOMIC_SEQ_CST)) {
 		return false;
 	}
 
@@ -739,6 +749,18 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 	}
 
 	return 0;
+}
+
+int
+spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn)
+{
+	spdk_msg_fn expected = NULL;
+	if (__atomic_compare_exchange_n(&thread->critical_msg, &expected, fn, false, __ATOMIC_SEQ_CST,
+					__ATOMIC_SEQ_CST)) {
+		return 0;
+	}
+
+	return -EIO;
 }
 
 struct spdk_poller *
