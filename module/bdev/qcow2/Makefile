@@ -31,31 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += delay error gpt lvol malloc null nvme passthru qcow2 raid rpc split zone_block
+C_SRCS = qcow2.c vbdev_qcow2.c
+LIBNAME = bdev_qcow2
 
-DIRS-$(CONFIG_CRYPTO) += crypto
-
-DIRS-$(CONFIG_OCF) += ocf
-
-DIRS-$(CONFIG_REDUCE) += compress
-
-DIRS-$(CONFIG_URING) += uring
-
-ifeq ($(OS),Linux)
-DIRS-y += aio
-DIRS-$(CONFIG_ISCSI_INITIATOR) += iscsi
-DIRS-$(CONFIG_VIRTIO) += virtio
-DIRS-$(CONFIG_PMDK) += pmem
-endif
-
-DIRS-$(CONFIG_RBD) += rbd
-
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -658,12 +658,14 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 	fdisk->disk.blocklen = block_size;
 	fdisk->disk.required_alignment = spdk_u32log2(block_size);
 
+#if 0
 	if (disk_size % fdisk->disk.blocklen != 0) {
 		SPDK_ERRLOG("Disk size %" PRIu64 " is not a multiple of block size %" PRIu32 "\n",
 			    disk_size, fdisk->disk.blocklen);
 		rc = -EINVAL;
 		goto error_return;
 	}
+#endif
 
 	fdisk->disk.blockcnt = disk_size / fdisk->disk.blocklen;
 	fdisk->disk.ctxt = fdisk;
