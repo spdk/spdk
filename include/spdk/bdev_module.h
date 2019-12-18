@@ -511,6 +511,9 @@ struct spdk_bdev_io {
 			/** count of outstanding batched split I/Os */
 			uint32_t split_outstanding;
 
+			/** the aux buffer if requested by the caller. */
+			void *aux_buf;
+
 			struct {
 				/** Whether the buffer should be populated with the real data */
 				uint8_t populate : 1;
@@ -628,6 +631,16 @@ struct spdk_bdev_io {
 		struct iovec *orig_iovs;
 		int           orig_iovcnt;
 		void	     *orig_md_buf;
+
+		/**
+		 * The caller wants an auxiliary buffer for their own private use. It is requested
+		 * by calling spdk_bdev_io_get_aux_buf(). The length is fixed at the same size
+		 * as the bdev_io primary buffer.
+		 */
+		bool need_aux_buf;
+
+		/** Callback for when the aux buf is allocated */
+		spdk_bdev_io_get_buf_cb get_aux_buf_cb;
 
 		/** Callback for when buf is allocated */
 		spdk_bdev_io_get_buf_cb get_buf_cb;
@@ -817,6 +830,20 @@ const struct spdk_bdev_aliases_list *spdk_bdev_get_aliases(const struct spdk_bde
  * \c SPDK_BDEV_LARGE_BUF_MAX_SIZE.
  */
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len);
+
+/**
+ * Allocate an auxillary buffer for given bdev_io. The length of the
+ * buffer will be the same size as the bdev_io primar buffer. The buffer
+ * will be freed automatically on \c spdk_bdev_free_io() call. This
+ * call will never fail. In case of lack of memory given callback \c cb
+ * will be deferred until enough memory is freed.
+ *
+ * \param bdev_io I/O to allocate buffer for.
+ * \param cb callback to be called when the buffer is allocated
+ * or the bdev_io has an SGL assigned already.
+ */
+void spdk_bdev_io_get_aux_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb);
+
 
 /**
  * Set the given buffer as the data buffer described by this bdev_io.
