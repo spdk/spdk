@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "967b1ca6_de48280c",
+        "filename": "test/nvmf/target/nvmf_example.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-18T05:52:00Z",
+      "side": 1,
+      "message": "please remove the unnecessary code here.",
+      "range": {
+        "startLine": 26,
+        "startChar": 8,
+        "endLine": 27,
+        "endChar": 31
+      },
+      "revId": "e875d8f2c057b052833c9eecfd392a51396e596c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d13f47bb_ce88bc0b",
+        "filename": "test/nvmf/target/nvmf_example.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-18T05:52:00Z",
+      "side": 1,
+      "message": "same here.",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 27
+      },
+      "revId": "e875d8f2c057b052833c9eecfd392a51396e596c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
