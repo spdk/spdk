@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "1cbee0bb_cd3657cc",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-18T02:50:08Z",
+      "side": 1,
+      "message": "I\u0027m trying to stop using this fixed strings by iscsi_append_param().\nIt will take time and so please go with your way. It\u0027s OK if you work this too.",
+      "revId": "fdc2a426d735a5da4e9bd907cdf4d6efd578d602",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d38dc1cd_657fcc94",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 35
