@@ -16,6 +16,24 @@
       "revId": "3cedabfa855804f5ae4595a49b62a815ec478d9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b4e99d5_6578cbe3",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-18T10:42:10Z",
+      "side": 1,
+      "message": "I don\u0027t think we depopulate the namespace during shutdown. Currently the only way a namespace is depopulated is from remove_cb when the whole controller is being removed (either from hotplug monitor or from direct RPC call to detach it) or from nvme_ctrlr_populate namespaces called because of AER (SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED). AFAIK none of these cases should happen during shutdown.\nSince depopulating a standard namespace just means unregistering bdevs created on that namespace, it doesn\u0027t really matter that much the a namespace doesn\u0027t get depopulated. But this isn\u0027t the case for OCSSD bdev - it allocates its own nvme_bdev_ns.type_ctx, which isn\u0027t freed if the namespace doesn\u0027t get depopulated. This is the purpose of this patch.\nBut you\u0027re right the commit message should be extended. If you accept this explanation, I\u0027ll update it.",
+      "parentUuid": "76cc812d_5674a49d",
+      "revId": "3cedabfa855804f5ae4595a49b62a815ec478d9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
