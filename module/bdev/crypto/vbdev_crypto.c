@@ -733,8 +733,8 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		/* Set the mbuf elements address and length. Null out the next pointer. */
 		src_mbufs[crypto_index]->buf_addr = current_iov;
 		src_mbufs[crypto_index]->data_len = updated_length = crypto_len;
+		/* TODO: Make this assignment conditional on QAT usage and add an assert. */
 		src_mbufs[crypto_index]->buf_iova = spdk_vtophys((void *)current_iov, &updated_length);
-		assert(updated_length == crypto_len);
 		src_mbufs[crypto_index]->next = NULL;
 		/* Store context in every mbuf as we don't know anything about completion order */
 		src_mbufs[crypto_index]->userdata = bdev_io;
@@ -767,9 +767,9 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 			/* Set the relevant destination en_mbuf elements. */
 			dst_mbufs[crypto_index]->buf_addr = io_ctx->cry_iov.iov_base + en_offset;
 			dst_mbufs[crypto_index]->data_len = updated_length = crypto_len;
+			/* TODO: Make this assignment conditional on QAT usage and add an assert. */
 			dst_mbufs[crypto_index]->buf_iova = spdk_vtophys(dst_mbufs[crypto_index]->buf_addr,
 							    &updated_length);
-			assert(updated_length == crypto_len);
 			crypto_ops[crypto_index]->sym->m_dst = dst_mbufs[crypto_index];
 			en_offset += crypto_len;
 			dst_mbufs[crypto_index]->next = NULL;
