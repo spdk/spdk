@@ -52,6 +52,24 @@
       "revId": "3cedabfa855804f5ae4595a49b62a815ec478d9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f443538_b85e14d2",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-18T14:53:28Z",
+      "side": 1,
+      "message": "No worries Shuhei, I appreciate your thorough code review. And I agree this is a little tricky and maybe could be done in a different way, perhaps someone will propose a better solution.\n\nAnyway, I\u0027ve updated the commit message, hopefully it\u0027ll be clearer now :-)",
+      "parentUuid": "41901aba_36d483a0",
+      "revId": "3cedabfa855804f5ae4595a49b62a815ec478d9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
