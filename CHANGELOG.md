@@ -2,6 +2,13 @@
 
 ## v20.01: (Upcoming Release)
 
+### bdev
+
+New elements were added to the `bdev_io` structure allowing the caller to request
+an auxiliary buffer for its own private use.  The caller requests the buffer by first
+setting the `need_aux_buf` flag to `true` then calling `spdk_bdev_io_get_buf(). The
+buffer will be described by `aux_buf` and `aux_buf_len`.
+
 ### sock
 
 Added spdk_sock_writev_async for performing asynchronous writes to sockets. This call will
