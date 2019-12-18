@@ -333,8 +333,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		return NULL;
 	}
 
-	/* Only the low 2 bits (values 0, 1, 2, 3) of QPRIO are valid. */
-	if ((opts.qprio & 3) != opts.qprio) {
+	if (opts.qprio & ~SPDK_NVME_CREATE_IO_SQ_QPRIO_MASK) {
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
