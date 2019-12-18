@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "887624b3_4f878d43",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 5531,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-18T08:04:36Z",
+      "side": 1,
+      "message": "Just a preliminary question.\n\nCan\u0027t we unlock or the range from ch-\u003epending_locked_range?\nOr can\u0027t we abort bdev_lock_lba_range()?\n\nbdev_unlock_lba_range will not return until completion, and so this may be fine.",
+      "revId": "7c9600fa97f05ccdb51c19a34b335ef108ce31b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
