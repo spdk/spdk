@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b163e4d_97eb3b17",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-18T13:11:36Z",
+      "side": 1,
+      "message": "Not enough info.\n\n\"Hot-remove exited with success when error was expected\", or something like that.",
+      "range": {
+        "startLine": 36,
+        "startChar": 8,
+        "endLine": 36,
+        "endChar": 41
+      },
+      "revId": "996ad7a01e45b6114d52b64ec331dec53010413d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62f23964_480a78f6",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-18T13:11:36Z",
+      "side": 1,
+      "message": "ACtually, should we kill it?\nWe\u0027ve run it with \"-z\" flag and in the background (\u0026), and then we\u0027d like to perform_tests again after hot attach.\n\nHere on this line we could only check if the bdevperf process is still actually running. If it\u0027s running then it means it didn\u0027t crash  - that\u0027s good. If it\u0027s not then we should fail the test.",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 2
+      },
+      "revId": "996ad7a01e45b6114d52b64ec331dec53010413d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49ac3c24_63fdd296",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-18T13:11:36Z",
+      "side": 1,
+      "message": "This line is possibly not needed if we decide not to kill the process on line 38 and re-use bdevperf process started at line 25",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 91
+      },
+      "revId": "996ad7a01e45b6114d52b64ec331dec53010413d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

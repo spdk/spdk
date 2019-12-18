@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "700378e8_44a17e62",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-18T13:11:36Z",
+      "side": 1,
+      "message": "Uhh not really.\nWhat we care about is the return code of the \"perform_tests\". Output is rather not relevant.",
+      "parentUuid": "eaea4f5f_88688ed8",
+      "range": {
+        "startLine": 12,
+        "startChar": 58,
+        "endLine": 12,
+        "endChar": 72
+      },
+      "revId": "edf4829d3f6c056a483d37ca969d31269ec60dc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1a0acff8_4dbaa44b",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 23
