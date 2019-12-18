@@ -34,6 +34,24 @@
       "revId": "910116fee16740a4316fdec597c01cafdf2875a8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db6160d3_0d5f1bb3",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-18T14:25:27Z",
+      "side": 1,
+      "message": "That\u0027s funny, it actually should work. Or maybe this just works with system commands (like grep, ls, etc) and not functions?\n\nAnyways, do we prefer rpc_cmd_negative, or keep it in bash and try smth like this? \" [ ] \" adds \"test\" statement to the line.\n[ ! rpc_cmd bdev_lvol_get_lvstores -u \"$lvs2_uuid\" ]",
+      "parentUuid": "ad6185cf_2786fc79",
+      "revId": "910116fee16740a4316fdec597c01cafdf2875a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
