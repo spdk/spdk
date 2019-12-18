@@ -145,9 +145,12 @@ struct spdk_thread {
 	TAILQ_HEAD(paused_pollers_head, spdk_poller)	paused_pollers;
 
 	struct spdk_ring		*messages;
+	struct spdk_ring		*crit_message;
 
 	SLIST_HEAD(, spdk_msg)		msg_cache;
 	size_t				msg_cache_count;
+
+	spdk_msg_fn			critical_msg;
 
 	/* User context allocated at the end */
 	uint8_t				ctx[0];
@@ -264,6 +267,7 @@ _free_thread(struct spdk_thread *thread)
 
 	assert(thread->msg_cache_count == 0);
 
+	spdk_ring_free(thread->crit_message);
 	spdk_ring_free(thread->messages);
 	free(thread);
 }
@@ -296,9 +300,17 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 
 	thread->tsc_last = spdk_get_ticks();
 
+	thread->crit_message = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 1, SPDK_ENV_SOCKET_ID_ANY);
+	if (!thread->crit_message) {
+		SPDK_ERRLOG("Unable to allocate memory for message ring\n");
+		free(thread);
+		return NULL;
+	}
+
 	thread->messages = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
 	if (!thread->messages) {
 		SPDK_ERRLOG("Unable to allocate memory for message ring\n");
+		spdk_ring_free(thread->crit_message);
 		free(thread);
 		return NULL;
 	}
@@ -484,6 +496,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 	uint32_t msg_count;
 	struct spdk_thread *orig_thread;
 	struct spdk_poller *poller, *tmp;
+	spdk_msg_fn critical_msg;
 	int rc = 0;
 
 	orig_thread = _get_thread();
@@ -491,6 +504,11 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 
 	if (now == 0) {
 		now = spdk_get_ticks();
+	}
+
+	if (spdk_ring_dequeue(thread->crit_message, (void **)&critical_msg, 1)) {
+		critical_msg(NULL);
+		__atomic_store_n(&thread->critical_msg, NULL, __ATOMIC_SEQ_CST);
 	}
 
 	msg_count = _spdk_msg_queue_run_batch(thread, max_msgs);
@@ -642,7 +660,8 @@ bool
 spdk_thread_is_idle(struct spdk_thread *thread)
 {
 	if (spdk_ring_count(thread->messages) ||
-	    _spdk_thread_has_unpaused_pollers(thread)) {
+	    _spdk_thread_has_unpaused_pollers(thread) ||
+	    spdk_ring_count(thread->crit_message)) {
 		return false;
 	}
 
@@ -739,6 +758,25 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 	}
 
 	return 0;
+}
+
+int
+spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn)
+{
+	spdk_msg_fn expected = NULL;
+	int rc;
+
+	if (__atomic_compare_exchange_n(&thread->critical_msg, &expected, fn, false, __ATOMIC_SEQ_CST,
+					__ATOMIC_SEQ_CST)) {
+		rc = spdk_ring_enqueue(thread->crit_message, (void **)&thread->critical_msg, 1, NULL);
+		if (rc != 1) {
+			__atomic_store_n(&thread->critical_msg, NULL, __ATOMIC_SEQ_CST);
+			return -EIO;
+		}
+		return 0;
+	}
+
+	return -EIO;
 }
 
 struct spdk_poller *
