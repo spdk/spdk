@@ -132,6 +132,12 @@ struct spdk_thread {
 	SLIST_HEAD(, spdk_msg)		msg_cache;
 	size_t				msg_cache_count;
 
+	volatile struct spdk_msg	critical_msg;
+
+	/* Set when critical_msg is claimed, only one critical_msg may be used at the same time */
+	bool				outstanding_critical_msg;
+	/* Doorbell, set when message function and context is set */
+	bool				critical_msg_db;
 	/* User context allocated at the end */
 	uint8_t				ctx[0];
 };
@@ -450,6 +456,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 	uint32_t msg_count;
 	struct spdk_thread *orig_thread;
 	struct spdk_poller *poller, *tmp;
+	volatile struct spdk_msg *msg;
 	int rc = 0;
 
 	orig_thread = _get_thread();
@@ -457,6 +464,14 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 
 	if (now == 0) {
 		now = spdk_get_ticks();
+	}
+
+	if (__atomic_load_n(&thread->outstanding_critical_msg, __ATOMIC_SEQ_CST)) {
+		if (__atomic_load_n(&thread->critical_msg_db, __ATOMIC_SEQ_CST)) {
+			msg = &thread->critical_msg;
+			msg->fn(msg->arg);
+			__atomic_store_n(&thread->outstanding_critical_msg, false, __ATOMIC_SEQ_CST);
+		}
 	}
 
 	msg_count = _spdk_msg_queue_run_batch(thread, max_msgs);
@@ -589,7 +604,8 @@ bool
 spdk_thread_is_idle(struct spdk_thread *thread)
 {
 	if (spdk_ring_count(thread->messages) ||
-	    spdk_thread_has_pollers(thread)) {
+	    spdk_thread_has_pollers(thread) ||
+	    __atomic_load_n(&thread->outstanding_critical_msg, __ATOMIC_SEQ_CST)) {
 		return false;
 	}
 
@@ -684,6 +700,21 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 		spdk_mempool_put(g_spdk_msg_mempool, msg);
 		return -EIO;
 	}
+
+	return 0;
+}
+
+int
+spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn, void *ctx)
+{
+	volatile struct spdk_msg *msg = &thread->critical_msg;
+	if (__atomic_exchange_n(&thread->outstanding_critical_msg, true, __ATOMIC_SEQ_CST)) {
+		return -EIO;
+	}
+
+	msg->fn = fn;
+	msg->arg = ctx;
+	__atomic_store_n(&thread->critical_msg_db, true, __ATOMIC_SEQ_CST);
 
 	return 0;
 }
