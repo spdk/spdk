@@ -26,7 +26,7 @@ function test_construct_lvs() {
 
 	# remove it and verify it's gone
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
-	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
+	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 	check_leftover_devices
 }
@@ -50,7 +50,7 @@ function test_construct_lvol() {
 
 	# clean up and create another lvol, this time use lvs alias instead of uuid
 	rpc_cmd bdev_lvol_delete "$lvol_uuid"
-	! rpc_cmd bdev_get_bdevs -b "$lvol_uuid"
+	rpc_cmd bdev_get_bdevs -b "$lvol_uuid" && false
 	lvol_uuid=$(rpc_cmd bdev_lvol_create -l lvs_test lvol_test "$LVS_DEFAULT_CAPACITY_MB")
 	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
 
@@ -63,9 +63,9 @@ function test_construct_lvol() {
 
 	# clean up
 	rpc_cmd bdev_lvol_delete "$lvol_uuid"
-	! rpc_cmd bdev_get_bdevs -b "$lvol_uuid"
+	rpc_cmd bdev_get_bdevs -b "$lvol_uuid" && false
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
-	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
+	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 	check_leftover_devices
 }
@@ -127,7 +127,7 @@ function test_construct_multi_lvols() {
 	[ "$(jq length <<< "$lvols")" == "0" ]
 
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
-	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
+	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 	check_leftover_devices
 }
