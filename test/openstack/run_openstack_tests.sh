@@ -7,24 +7,21 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 TEST_TRANSPORT='rdma'
 
-nvmftestinit
-
-function finish_test {
+function test_cleanup {
 	$rpc_py bdev_lvol_delete_lvstore -l lvs0
 	kill -9 $rpc_proxy_pid
-	killprocess $nvmfpid
-	rm $testdir/conf.json
 }
 
-trap "finish_test" SIGINT SIGTERM EXIT
+function test_cleanup_trap {
+	set +e
+	test_cleanup
+	set -e
+}
 
-timing_enter run_spdk_tgt
-$rootdir/scripts/gen_nvme.sh >> $testdir/conf.json
-$rootdir/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 1024 -c $testdir/conf.json &
-nvmfpid=$!
-waitforlisten $nvmfpid
-$rpc_py bdev_nvme_set_hotplug -e
-timing_exit run_spdk_tgt
+nvmftestinit
+nvmfappstart "-m 0x3 -p 0 -s 1024"
+$rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
+trap 'process_shm --id $NVMF_APP_SHM_ID; test_cleanup_trap; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 
 timing_enter run_rpc_proxy
 $rootdir/scripts/rpc_http_proxy.py 127.0.0.1 3333 secret secret &
@@ -68,8 +65,7 @@ cd $current_dir
 timing_exit tempest_tests
 
 timing_enter test_cleanup
-finish_test
-
+test_cleanup
 trap - SIGINT SIGTERM EXIT
 nvmftestfini
 timing_exit test_cleanup
