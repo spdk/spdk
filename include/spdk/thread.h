@@ -272,7 +272,8 @@ struct spdk_thread *spdk_thread_get_from_ctx(void *ctx);
 
 /**
  * Perform one iteration worth of processing on the thread. This includes
- * both expired and continuous pollers as well as messages.
+ * both expired and continuous pollers as well as messages. If the thread
+ * has exited, return immediately.
  *
  * \param thread The thread to process
  * \param max_msgs The maximum number of messages that will be processed.
@@ -280,7 +281,7 @@ struct spdk_thread *spdk_thread_get_from_ctx(void *ctx);
  * \param now The current time, in ticks. Optional. If 0 is passed, this
  *            function may call spdk_get_ticks() to get the current time.
  *
- * \return 1 if work was done. 0 if no work was done. -1 if thread has exited.
+ * \return 1 if work was done. 0 if no work was done.
  */
 int spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now);
 
