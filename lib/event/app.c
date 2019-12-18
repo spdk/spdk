@@ -235,7 +235,7 @@ app_start_shutdown(void *ctx)
 void
 spdk_app_start_shutdown(void)
 {
-	spdk_thread_send_msg(g_app_thread, app_start_shutdown, NULL);
+	spdk_thread_send_critical_msg(g_app_thread, app_start_shutdown);
 }
 
 static void
