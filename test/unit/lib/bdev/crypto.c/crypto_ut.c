@@ -236,6 +236,13 @@ rte_cryptodev_sym_get_private_session_size(uint8_t dev_id)
 }
 
 void
+spdk_bdev_io_get_aux_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb)
+{
+	g_bdev_io->u.bdev.aux_buf = (void *)0xDEADBEEF;
+	cb(g_io_ch, g_bdev_io, true);
+}
+
+void
 spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
 {
 	cb(g_io_ch, g_bdev_io, true);
@@ -447,7 +454,6 @@ test_simple_write(void)
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst->buf_addr != NULL);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst->data_len == 512);
 
-	spdk_free(g_io_ctx->cry_iov.iov_base);
 	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_src);
 	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_dst);
 }
@@ -542,7 +548,6 @@ test_large_rw(void)
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_dst);
 	}
-	spdk_free(g_io_ctx->cry_iov.iov_base);
 }
 
 static void
@@ -678,7 +683,6 @@ test_crazy_rw(void)
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_dst);
 	}
-	spdk_free(g_io_ctx->cry_iov.iov_base);
 }
 
 static void
@@ -857,10 +861,6 @@ test_initdrivers(void)
 static void
 test_crypto_op_complete(void)
 {
-	/* Need to prove to scan-build that we are setting iov_bases properly. */
-	void *old_iov_base;
-	struct crypto_bdev_io *orig_ctx;
-
 	/* Make sure completion code respects failure. */
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 	g_completion_called = false;
@@ -881,11 +881,6 @@ test_crypto_op_complete(void)
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	g_completion_called = false;
 	MOCK_SET(spdk_bdev_writev_blocks, 0);
-	/* Code under test will free this, if not ASAN will complain. */
-	g_io_ctx->cry_iov.iov_base = spdk_malloc(16, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
-				     SPDK_MALLOC_DMA);
-	orig_ctx = (struct crypto_bdev_io *)g_bdev_io->driver_ctx;
-	old_iov_base = orig_ctx->cry_iov.iov_base;
 	_crypto_operation_complete(g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_completion_called == true);
@@ -895,13 +890,6 @@ test_crypto_op_complete(void)
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	g_completion_called = false;
 	MOCK_SET(spdk_bdev_writev_blocks, -1);
-	/* Code under test will free this, if not ASAN will complain. */
-	g_io_ctx->cry_iov.iov_base = spdk_malloc(16, 0x40, NULL, SPDK_ENV_LCORE_ID_ANY,
-				     SPDK_MALLOC_DMA);
-	/* To Do: remove this garbage assert as soon as scan-build stops throwing a
-	 * heap use after free error.
-	 */
-	SPDK_CU_ASSERT_FATAL(old_iov_base != orig_ctx->cry_iov.iov_base);
 	_crypto_operation_complete(g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
 	CU_ASSERT(g_completion_called == true);
