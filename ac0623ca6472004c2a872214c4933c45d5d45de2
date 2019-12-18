@@ -16,6 +16,24 @@
       "revId": "ac0623ca6472004c2a872214c4933c45d5d45de2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19a7cf75_8ee3e2de",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-18T17:06:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b6b3cbbd_c8d4b17c",
+      "revId": "ac0623ca6472004c2a872214c4933c45d5d45de2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
