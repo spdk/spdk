@@ -16,6 +16,24 @@
       "revId": "aa30b55c0253f58bc09c5f12776ef8e761336fa1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51796f24_93d6ecc1",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-18T21:58:15Z",
+      "side": 1,
+      "message": "No. So I changed the patch to assert(rc \u003e\u003d 0).",
+      "parentUuid": "85319fd0_b7b57b57",
+      "revId": "aa30b55c0253f58bc09c5f12776ef8e761336fa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
