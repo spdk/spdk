@@ -440,6 +440,8 @@ enum spdk_nvme_qprio {
 	SPDK_NVME_QPRIO_LOW		= 0x3
 };
 
+#define SPDK_NVME_CREATE_IO_SQ_QPRIO_MASK	0x3
+
 /**
  * Optional Arbitration Mechanism Supported by the controller.
  *
@@ -484,6 +486,8 @@ union spdk_nvme_feat_arbitration {
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_arbitration) == 4, "Incorrect size");
+
+#define SPDK_NVME_ARBITRATION_BURST_UNLIMITED	0x7
 
 /**
  * Data used by Set Features/Get Features \ref SPDK_NVME_FEAT_POWER_MANAGEMENT

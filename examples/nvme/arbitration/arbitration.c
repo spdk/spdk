@@ -138,11 +138,6 @@ static struct arb_context g_arbitration = {
 #define USER_SPECIFIED_HIGH_PRIORITY_WEIGHT	32
 #define USER_SPECIFIED_MEDIUM_PRIORITY_WEIGHT	16
 #define USER_SPECIFIED_LOW_PRIORITY_WEIGHT	8
-#define USER_SPECIFIED_ARBITRATION_BURST	7	/* No limit */
-
-#define SPDK_NVME_ARB_BURST_MASK		0x7
-
-#define SPDK_NVME_QPRIO_MAX			(SPDK_NVME_QPRIO_LOW + 1)
 
 static void task_complete(struct arb_task *task);
 
@@ -855,7 +850,7 @@ register_workers(void)
 			qprio++;
 		}
 
-		worker->qprio = qprio % SPDK_NVME_QPRIO_MAX;
+		worker->qprio = qprio & SPDK_NVME_CREATE_IO_SQ_QPRIO_MASK;
 	}
 
 	return 0;
@@ -1010,7 +1005,7 @@ get_arb_feature(struct spdk_nvme_ctrlr *ctrlr)
 		printf("Current Arbitration Configuration\n");
 		printf("===========\n");
 		printf("Arbitration Burst:           ");
-		if (arb.feat_arbitration.bits.ab == SPDK_NVME_ARB_BURST_MASK) {
+		if (arb.feat_arbitration.bits.ab == SPDK_NVME_ARBITRATION_BURST_UNLIMITED) {
 			printf("no limit\n");
 		} else {
 			printf("%u\n", 1u << arb.feat_arbitration.bits.ab);
@@ -1051,7 +1046,7 @@ set_arb_feature(struct spdk_nvme_ctrlr *ctrlr)
 	g_arbitration.outstanding_commands = 0;
 
 	if (features[SPDK_NVME_FEAT_ARBITRATION].valid) {
-		cmd.cdw11_bits.feat_arbitration.bits.ab = USER_SPECIFIED_ARBITRATION_BURST;
+		cmd.cdw11_bits.feat_arbitration.bits.ab = SPDK_NVME_ARBITRATION_BURST_UNLIMITED;
 		cmd.cdw11_bits.feat_arbitration.bits.lpw = USER_SPECIFIED_LOW_PRIORITY_WEIGHT;
 		cmd.cdw11_bits.feat_arbitration.bits.mpw = USER_SPECIFIED_MEDIUM_PRIORITY_WEIGHT;
 		cmd.cdw11_bits.feat_arbitration.bits.hpw = USER_SPECIFIED_HIGH_PRIORITY_WEIGHT;
