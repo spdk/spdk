@@ -150,9 +150,9 @@ function fio_test_suite() {
 		fio_config_add_job $testdir/bdev.fio $b
 	done
 
-	if [ $RUN_NIGHTLY -eq 0 ]; then
+	if [ $RUN_NIGHTLY -eq 0 ] && [ -f $testdir/bdev.fio ]; then
 		run_test "case" "bdev_fio_trim" fio_bdev $fio_params --output=$output_dir/blockdev_trim.txt
-	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
+	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]&& [ -f $testdif/bdev.fio ]; then
 		run_test "case" "bdev_fio_trim_ext_nightly" fio_bdev $fio_ext_params --output=$output_dir/blockdev_trim.txt
 	fi
 
