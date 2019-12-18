@@ -497,6 +497,14 @@ struct spdk_bdev_io {
 				/** True if this request is in the 'start' phase of zcopy. False if in 'end'. */
 				uint8_t start : 1;
 			} zcopy;
+
+			/**
+			 * The caller wants an auxiliary buffer for their own private use. It is requested
+			 * by setting the boolean and the buf info stored in these variables.
+			 */
+			bool need_aux_buf;
+			void *aux_buf;
+			uint64_t aux_buf_len;
 		} bdev;
 		struct {
 			/** Channel reference held while messages for this reset are in progress. */
