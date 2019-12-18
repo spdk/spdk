@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a30b5a2f_0f0a5eb0",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-18T21:45:20Z",
+      "side": 1,
+      "message": "possibly move this out of the if statement so you can use it below (see my next comment).",
+      "revId": "6387ddd258fa11a65d4b58715e21bb5ae56020b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66f0f5dc_32634df7",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-18T21:45:20Z",
+      "side": 1,
+      "message": "You should use the generalized value upt instead of upt_cur here. On the default, you are currently dividing by the number of clock cycles since boot which is an insanely large number and causes the value to always be zero.",
+      "revId": "6387ddd258fa11a65d4b58715e21bb5ae56020b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a02d663f_e6b449a4",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-18T21:45:20Z",
+      "side": 1,
+      "message": "This should be _stat.wr_sectors",
+      "revId": "6387ddd258fa11a65d4b58715e21bb5ae56020b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
