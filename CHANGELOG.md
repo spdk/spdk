@@ -36,6 +36,14 @@ specified during NVMF subsystem creation RPC will be overwritten).
 This handler can be enabled via the `nvmf_set_config` RPC.
 Note: In a future version of SPDK, this handler will be enabled by default.
 
+### bdev
+
+A new API was added `spdk_bdev_io_get_aux_buf` allowing the caller to request
+an auxiliary buffer for its own private use. The API is used in the same manner that
+`spdk_bdev_io_get_buf` is used and the length of the buffer is always the same as the
+bdev_io primary buffer. 'spdk_bdev_io_put_aux_buf' frees the allocated auxiliary
+buffer.
+
 ### sock
 
 Added spdk_sock_writev_async for performing asynchronous writes to sockets. This call will
