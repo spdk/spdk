@@ -140,20 +140,6 @@ static struct arb_context g_arbitration = {
 #define USER_SPECIFIED_LOW_PRIORITY_WEIGHT	8
 #define USER_SPECIFIED_ARBITRATION_BURST	7	/* No limit */
 
-/*
- * Description of dword for priority weight and arbitration burst
- * ------------------------------------------------------------------------------
- *     31 : 24      |       23 : 16      |    15 : 08      | 07 : 03  | 02 : 00
- * ------------------------------------------------------------------------------
- * High Prio Weight | Medium Prio Weight | Low Prio Weight | Reserved | Arb Burst
- * ------------------------------------------------------------------------------
- *
- * The priority weights are zero based value.
- */
-#define SPDK_NVME_HIGH_PRIO_WEIGHT_SHIFT	24
-#define SPDK_NVME_MED_PRIO_WEIGHT_SHIFT		16
-#define SPDK_NVME_LOW_PRIO_WEIGHT_SHIFT		8
-#define SPDK_NVME_PRIO_WEIGHT_MASK		0xFF
 #define SPDK_NVME_ARB_BURST_MASK		0x7
 
 #define SPDK_NVME_QPRIO_MAX			(SPDK_NVME_QPRIO_LOW + 1)
@@ -1018,26 +1004,21 @@ get_arb_feature(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (features[SPDK_NVME_FEAT_ARBITRATION].valid) {
-		uint32_t arb = features[SPDK_NVME_FEAT_ARBITRATION].result;
-		unsigned ab, lpw, mpw, hpw;
-
-		ab = arb & SPDK_NVME_ARB_BURST_MASK;
-		lpw = ((arb >> SPDK_NVME_LOW_PRIO_WEIGHT_SHIFT) & SPDK_NVME_PRIO_WEIGHT_MASK) + 1;
-		mpw = ((arb >> SPDK_NVME_MED_PRIO_WEIGHT_SHIFT) & SPDK_NVME_PRIO_WEIGHT_MASK) + 1;
-		hpw = ((arb >> SPDK_NVME_HIGH_PRIO_WEIGHT_SHIFT) & SPDK_NVME_PRIO_WEIGHT_MASK) + 1;
+		union spdk_nvme_cmd_cdw11 arb;
+		arb.feat_arbitration.raw = features[SPDK_NVME_FEAT_ARBITRATION].result;
 
 		printf("Current Arbitration Configuration\n");
 		printf("===========\n");
 		printf("Arbitration Burst:           ");
-		if (ab == SPDK_NVME_ARB_BURST_MASK) {
+		if (arb.feat_arbitration.bits.ab == SPDK_NVME_ARB_BURST_MASK) {
 			printf("no limit\n");
 		} else {
-			printf("%u\n", 1u << ab);
+			printf("%u\n", 1u << arb.feat_arbitration.bits.ab);
 		}
 
-		printf("Low Priority Weight:         %u\n", lpw);
-		printf("Medium Priority Weight:      %u\n", mpw);
-		printf("High Priority Weight:        %u\n", hpw);
+		printf("Low Priority Weight:         %u\n", arb.feat_arbitration.bits.lpw + 1);
+		printf("Medium Priority Weight:      %u\n", arb.feat_arbitration.bits.mpw + 1);
+		printf("High Priority Weight:        %u\n", arb.feat_arbitration.bits.hpw + 1);
 		printf("\n");
 	}
 }
