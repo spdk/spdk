@@ -2065,7 +2065,10 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 		/* Null payload - leave PRP fields untouched */
 		rc = 0;
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
-		if (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) {
+		/* Some NVME drives can't handle SGL request submitted to the admin qpair
+		 * even if they report SGL support */
+		if ((ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) != 0 &&
+		    !nvme_qpair_is_admin_queue(qpair)) {
 			rc = nvme_pcie_qpair_build_contig_hw_sgl_request(qpair, req, tr);
 		} else {
 			rc = nvme_pcie_qpair_build_contig_request(qpair, req, tr);
