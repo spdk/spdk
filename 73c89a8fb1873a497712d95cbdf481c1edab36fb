@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "dbabe775_96b7e6cb",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-18T13:49:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "820122e5_0a949c7f",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5321085c_69503358",
         "filename": "lib/thread/thread.c",
         "patchSetId": 3
@@ -33,6 +51,24 @@
       "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8407ac65_d82b4d5b",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-18T13:49:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5321085c_69503358",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -189,6 +225,24 @@
       "side": 1,
       "message": "Ouch - this is a tough one and I\u0027m not sure we\u0027ll find our way out of it. You\u0027re right that we can use period_ticks to distinguish which list it\u0027s on. We can also use poller-\u003estate \u003d\u003d SPDK_POLLER_STATE_RUNNING to determine if a poller is the currently executing one. It may be possible to combine those two things to solve this.\n\n1) If poller-\u003estate \u003d\u003d SPDK_POLLER_STATE_RUNNING and the user pauses it, then it\u0027s safe to immediately move it to the paused list without breaking the TAILQ_FOREACH_REVERSE_SAFE.\n2) If the user is pausing a poller from outside of that poller\u0027s context, I think we need a new state \u003d SPDK_POLLER_STATE_PAUSING. In this state, the poller is requested to pause but is still on the active/timed list.\n3) Within the TAILQ_FOREACH_REVERSE_SAFE in spdk_thread_poll(), if a poller is encountered in the SPDK_POLLER_STATE_PAUSING state, it can move it to the paused state and list. For active pollers it checks them all in succession, so it\u0027ll find it either later in the current loop iterator, or on the next time spdk_thread_poll is called. For timed pollers, they\u0027ll remain in the SPDK_POLLER_STATE_PAUSING state until they expire once.\n4) If the user attempts to resume a thread in the SPDK_POLLER_STATE_PAUSING state, it can simply move it back to the active state since it\u0027s already on the correct list. If the user attempts to resume a thread in the SPDK_POLLER_STATE_PAUSED state, it can move it to the right list and set the state to active.\n\nDo you see any holes in that strategy? The only thing I see is around timed pollers. If a timed poller is set to expire at time 10 and is paused at time 0 from another poller\u0027s context, it sits in the timed pollers list until time 10. If it is instead resumed at time 5, it sees that it is still in the process of pausing and just flips its state back, meaning it expires at time 10 still. Should pausing have pushed out the next expiration to time 15? In the grand scheme of things, I don\u0027t think this actually matters - it\u0027s not the absolute time of pollers that is important but rather the delta between successive poller calls, and that is maintained here well enough.",
       "parentUuid": "9756de5d_f27d6edd",
+      "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20d7d2a5_24a30895",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-18T13:49:08Z",
+      "side": 1,
+      "message": "Yeah, I think it works and allows us to get rid of checking the paused_pollers list each time we poll. The latest patchset implements this, please take a look.\n\nI haven\u0027t done anything about pushing timed pollers\u0027 expiration times though. If we really wanted to be precise about it, we could probably add a resume_tick to spdk_poller that would be updated during spdk_poller_resume and then checked for each timed poller in spdk_thread_poll. If it was non-zero (meaning the poller was paused/resumed) we would reschedule it at a later time. But it\u0027s a lot of extra code for doing something that, as you\u0027ve said, shouldn\u0027t really matter. Moreover, I think if the user resumes a poller, it probably means that the poller has some kind of work to do, so executing it a bit early for the first time should probably be fine.",
+      "parentUuid": "ffc61280_89f3f218",
       "revId": "73c89a8fb1873a497712d95cbdf481c1edab36fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
