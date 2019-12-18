@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85319fd0_b7b57b57",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-18T19:12:46Z",
+      "side": 1,
+      "message": "Is it possible for spdk_thread_poll() to return \u003c0 now? Looking over the code in spdk_thread_poll(), I actually think it isn\u0027t possible anymore. Further, if spdk_thread_poll() detected an unrecoverable error, I think it should just spdk_thread_exit() itself rather than returning an error. Can we just change this to an assert that rc \u003e\u003d 0?",
+      "revId": "aa30b55c0253f58bc09c5f12776ef8e761336fa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
