@@ -1019,7 +1019,7 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 				io_per_second = get_ema_io_per_second(target, ema_period);
 			}
 			mb_per_second = io_per_second * g_io_size / (1024 * 1024);
-			printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
+			printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
 			       target->name, io_per_second, mb_per_second);
 			total_io_per_second += io_per_second;
 			total_mb_per_second += mb_per_second;
@@ -1028,7 +1028,7 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 	}
 
 	printf("\r =====================================================\n");
-	printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
+	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
 	       "Total", total_io_per_second, total_mb_per_second);
 	fflush(stdout);
 
