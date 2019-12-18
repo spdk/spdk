@@ -159,6 +159,53 @@
       "revId": "bf42d85f94c60c965c64fcbf8dcc663a468a9988",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97d85e99_07694036",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-12-18T10:19:52Z",
+      "side": 1,
+      "message": "As I said, regardless of the MSG_ZEROCOPY flag, sendmsg can send part of the payload spanned by the provided IOV. On my system read test of 4KB with QD of 50 get this to happen in few seconds with 100% -- and we\u0027re asserting..\n\nBottom line -- you just need to delete the assert.. longer story, keep reading:\n\nSince we move the request to the pending list only when it\u0027s fully sent and use the index of the \"last\" system call where it happened, there\u0027s no problem to get ZC working under \"partial\" sends.\n\nHere you can see a case where a request was partially sent on invocation #14656 -- this is IO write test of 4KB so the size of target request is 4120 bytes (\u003d 24 (C2H) + 4096 (data)). \n\n_sock_flush idx 14656 sent 16992 bytes out of 20600\n_sock_flush idx 14656 req 0x201015075ae8 partially sent rc 488 len 4096 current offset 24\n_sock_flush idx 14656 5 queued reqs, 4 moved to pending\n\nWe sent only 512 (\u003d24+488) bytes for this request, so the next time we get to flush, on invocation #14657 we have another 3608 (\u003d4120-512) bytes to send:\n\n_sock_flush idx 14657 req 0x201015075ae8 has offset 512\n_sock_flush idx 14657 iovcnt 0 req 0x201015075ae8 len 3608\n_sock_flush idx 14657 sent 3608 bytes out of 3608\n_sock_flush idx 14657 1 queued reqs, 1 moved to pending\n\nand we perfectly do that, move it to pending with the right index, later get completion for it, etc.",
+      "parentUuid": "3a70a348_124dd9fc",
+      "range": {
+        "startLine": 543,
+        "startChar": 3,
+        "endLine": 543,
+        "endChar": 23
+      },
+      "revId": "bf42d85f94c60c965c64fcbf8dcc663a468a9988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57a531d4_61969a44",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 551,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-12-18T10:19:52Z",
+      "side": 1,
+      "message": "I suggest to remove this -- the code properly addresses this case below, it\u0027s just confusing.",
+      "range": {
+        "startLine": 546,
+        "startChar": 2,
+        "endLine": 551,
+        "endChar": 3
+      },
+      "revId": "bf42d85f94c60c965c64fcbf8dcc663a468a9988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
