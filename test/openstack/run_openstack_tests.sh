@@ -13,12 +13,9 @@ function finish_test {
 	{
 	  "$rpc_py" bdev_lvol_delete_lvstore -l lvs0
 	  kill -9 $rpc_proxy_pid
-	  killprocess $nvmfpid
 	  rm "$testdir/conf.json"
 	} || :
 }
-
-trap "finish_test" SIGINT SIGTERM EXIT
 
 cat <<-JSON >"$testdir/conf.json"
 	{"subsystems":[
@@ -26,13 +23,11 @@ cat <<-JSON >"$testdir/conf.json"
 	]}
 JSON
 
-timing_enter run_spdk_tgt
-"$rootdir/app/spdk_tgt/spdk_tgt" -m 0x3 -p 0 -s 1024 --json "$testdir/conf.json" &
-nvmfpid=$!
-waitforlisten $nvmfpid
-$rpc_py bdev_nvme_set_hotplug -e
-timing_exit run_spdk_tgt
+nvmfappstart "-m 0x3 -p 0 -s 1024 --json $testdir/conf.json"
 
+trap 'finish_test; process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+
+$rpc_py bdev_nvme_set_hotplug -e
 timing_enter run_rpc_proxy
 $rootdir/scripts/rpc_http_proxy.py 127.0.0.1 3333 secret secret &
 rpc_proxy_pid=$!
