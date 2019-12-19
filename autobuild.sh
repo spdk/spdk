@@ -114,6 +114,17 @@ function build_doc {
 	rm -rf "$rootdir"/doc/output
 }
 
+function autobuild_test_suite {
+	run_test "autobuild_check_format" ./scripts/check_format.sh
+	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh
+	run_test "scanbuild_make" $scanbuild $MAKE $MAKEFLAGS && rm -rf $out/scan-build-tmp || make_fail_cleanup
+	run_test "autobuild_generated_files_check" porcelain_check
+	run_test "autobuild_header_dependency_check" header_dependency_check
+	run_test "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk prefix=/usr
+	run_test "autobuild_make_uninstall" test_make_uninstall
+	run_test "autobuild_build_doc" build_doc
+}
+
 if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
 	run_test "valgrind" echo "using valgrind"
 fi
@@ -126,33 +137,12 @@ if [ $SPDK_RUN_UBSAN -eq 1 ]; then
 	run_test "ubsan" echo "using ubsan"
 fi
 
-timing_enter autobuild
 if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	run_test "autobuild_ocf_precompile" ocf_precompile
 fi
 
-if [ $SPDK_RUN_CHECK_FORMAT -eq 1 ]; then
-	run_test "autobuild_check_format" ./scripts/check_format.sh
-fi
-
-$MAKE $MAKEFLAGS clean
-if [ $SPDK_BUILD_SHARED_OBJECT -eq 1 ]; then
-	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh
-fi
-
-run_test "configure" ./configure $config_params
-if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then
-	run_test "scanbuild_make" $scanbuild $MAKE $MAKEFLAGS && rm -rf $out/scan-build-tmp || make_fail_cleanup
+if [ "$SPDK_TEST_AUTOBUILD" -eq 1 ]; then
+	run_test "autobuild" autobuild_test_suite
 else
 	run_test "make" $MAKE $MAKEFLAGS
 fi
-
-run_test "autobuild_generated_files_check" porcelain_check
-run_test "autobuild_header_dependency_check" header_dependency_check
-run_test "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk prefix=/usr
-run_test "autobuild_make_uninstall" test_make_uninstall
-if [ $SPDK_BUILD_DOC -eq 1 ] && hash doxygen; then
-	run_test "autobuild_build_doc" build_doc
-fi
-
-timing_exit autobuild
