@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92cee995_15cb9360",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T20:42:23Z",
+      "side": 1,
+      "message": "this can be slightly more concise:\n\nif (cr-\u003ecur_core \u003e spdk_env_get_last_core()) {\n  SPDK_DEBUGLOG\n  evt \u003d spdk_event_allocate\n  free(cr);\n} else {\n  SPDK_DEBUGLOG\n  evt \u003d spdk_event_allocate\n}\nassert(evt !\u003d NULL);\nspdk_event_call(evt);",
+      "revId": "2f58c75ae68f0c852cf89e17f8019fabccf55906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc441aa4_a3656aaa",
+        "filename": "test/unit/lib/event/reactor.c/reactor_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T20:42:23Z",
+      "side": 1,
+      "message": "the test could be made more precise by providing a separate \"done\" callback that maybe sets count to UINT32_MAX or something",
+      "revId": "2f58c75ae68f0c852cf89e17f8019fabccf55906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
