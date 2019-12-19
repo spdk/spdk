@@ -110,6 +110,17 @@ function build_doc {
 	rm -rf "$rootdir"/doc/output
 }
 
+function autobuild_test_suite {
+	run_test "case" "autobuild_check_format" ./scripts/check_format.sh
+	run_test "case" "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh
+	run_test "case" "scanbuild_make" ./configure $config_params && $scanbuild $MAKE $MAKEFLAGS && rm -rf $out/scan-build-tmp || make_fail_cleanup
+	run_test "case" "autobuild_generated_files_check" porcelain_check
+	run_test "case" "autobuild_header_dependency_check" header_dependency_check
+	run_test "case" "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk prefix=/usr
+	run_test "case" "autobuild_make_uninstall" test_make_uninstall
+	run_test "case" "autobuild_build_doc" build_doc
+}
+
 if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
 	run_test "case" "valgrind" echo "using valgrind"
 fi
@@ -122,11 +133,6 @@ if [ $SPDK_RUN_UBSAN -eq 1 ]; then
 	run_test "case" "ubsan" echo "using ubsan"
 fi
 
-timing_enter autobuild
-if [ $SPDK_RUN_CHECK_FORMAT -eq 1 ]; then
-	run_test "case" "autobuild_check_format" ./scripts/check_format.sh
-fi
-
 if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	run_test "case" "autobuild_ocf_precompile" ocf_precompile
 	# Set config to use precompiled library
@@ -134,23 +140,8 @@ if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	./configure $config_params
 fi
 
-$MAKE $MAKEFLAGS clean
-if [ $SPDK_BUILD_SHARED_OBJECT -eq 1 ]; then
-	run_test "case" "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh
-fi
-
-./configure $config_params
-if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then
-	run_test "case" "scanbuild_make" $scanbuild $MAKE $MAKEFLAGS && rm -rf $out/scan-build-tmp || make_fail_cleanup
+if [ "$SPDK_TEST_AUTOBUILD" -eq 1 ]; then
+	run_test "suite" "autobuild" autobuild_test_suite
 else
-	run_test "case" "make" $MAKE $MAKEFLAGS
+	run_test "case" "make" ./configure $config_params && $MAKE $MAKEFLAGS
 fi
-
-run_test "case" "autobuild_generated_files_check" porcelain_check
-run_test "case" "autobuild_header_dependency_check" header_dependency_check
-run_test "case" "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk prefix=/usr
-run_test "case" "autobuild_make_uninstall" test_make_uninstall
-if [ $SPDK_BUILD_DOC -eq 1 ] && hash doxygen; then
-	run_test "case" "autobuild_build_doc" build_doc
-fi
-timing_exit autobuild
