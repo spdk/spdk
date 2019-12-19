@@ -137,9 +137,9 @@ spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
-run_test "case" "test_construct_lvs" test_construct_lvs
-run_test "case" "test_construct_lvol" test_construct_lvol
-run_test "case" "test_construct_multi_lvols" test_construct_multi_lvols
+run_test "test_construct_lvs" test_construct_lvs
+run_test "test_construct_lvol" test_construct_lvol
+run_test "test_construct_multi_lvols" test_construct_multi_lvols
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
