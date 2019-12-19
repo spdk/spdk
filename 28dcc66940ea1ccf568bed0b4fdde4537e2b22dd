@@ -16,6 +16,24 @@
       "revId": "28dcc66940ea1ccf568bed0b4fdde4537e2b22dd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a037004e_b6772663",
+        "filename": "autotest.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-19T23:43:29Z",
+      "side": 1,
+      "message": "Good deal. I can do that.",
+      "parentUuid": "486175f2_47b3c12f",
+      "revId": "28dcc66940ea1ccf568bed0b4fdde4537e2b22dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
