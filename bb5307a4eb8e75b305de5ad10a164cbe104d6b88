@@ -16,6 +16,24 @@
       "revId": "bb5307a4eb8e75b305de5ad10a164cbe104d6b88",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "77bdbe00_77f9af67",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-19T02:23:09Z",
+      "side": 1,
+      "message": "This case is very unlikely now and honestly I added this check for the unit test I add in the next patch.\n\nYes I agree with that we can do something here but that will require not a little change.\nAfter this patch series, we will have unit test framework for reactor.\nThen we will be able to add something here.\n\nSo I want to add your suggestion to my action items.",
+      "parentUuid": "841cb26d_520dd9e4",
+      "revId": "bb5307a4eb8e75b305de5ad10a164cbe104d6b88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
