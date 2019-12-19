@@ -96,6 +96,19 @@ function unittest_scsi {
 	$valgrind $testdir/lib/scsi/scsi_pr.c/scsi_pr_ut
 }
 
+function unittest_util {
+	$valgrind $testdir/lib/util/base64.c/base64_ut
+	$valgrind $testdir/lib/util/bit_array.c/bit_array_ut
+	$valgrind $testdir/lib/util/cpuset.c/cpuset_ut
+	$valgrind $testdir/lib/util/crc16.c/crc16_ut
+	$valgrind $testdir/lib/util/crc32_ieee.c/crc32_ieee_ut
+	$valgrind $testdir/lib/util/crc32c.c/crc32c_ut
+	$valgrind $testdir/lib/util/string.c/string_ut
+	$valgrind $testdir/lib/util/dif.c/dif_ut
+	$valgrind $testdir/lib/util/iov.c/iov_ut
+	$valgrind $testdir/lib/util/pipe.c/pipe_ut
+}
+
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
@@ -196,16 +209,7 @@ fi
 
 $valgrind $testdir/lib/thread/thread.c/thread_ut
 
-$valgrind $testdir/lib/util/base64.c/base64_ut
-$valgrind $testdir/lib/util/bit_array.c/bit_array_ut
-$valgrind $testdir/lib/util/cpuset.c/cpuset_ut
-$valgrind $testdir/lib/util/crc16.c/crc16_ut
-$valgrind $testdir/lib/util/crc32_ieee.c/crc32_ieee_ut
-$valgrind $testdir/lib/util/crc32c.c/crc32c_ut
-$valgrind $testdir/lib/util/string.c/string_ut
-$valgrind $testdir/lib/util/dif.c/dif_ut
-$valgrind $testdir/lib/util/iov.c/iov_ut
-$valgrind $testdir/lib/util/pipe.c/pipe_ut
+run_test "unittest_util" unittest_util
 
 if [ $(uname -s) = Linux ]; then
 $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
