@@ -34,6 +34,12 @@ function unittest_blob {
 	$valgrind $testdir/lib/blobfs/blobfs_bdev.c/blobfs_bdev_ut
 }
 
+function unittest_event {
+	$valgrind $testdir/lib/event/subsystem.c/subsystem_ut
+	$valgrind $testdir/lib/event/app.c/app_ut
+	$valgrind $testdir/lib/event/reactor.c/reactor_ut
+}
+
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
@@ -90,10 +96,7 @@ if grep -q '#define SPDK_CONFIG_PMDK 1' $rootdir/include/spdk/config.h; then
 fi
 
 run_test "unittest_blob_blobfs" unittest_blob
-
-$valgrind $testdir/lib/event/subsystem.c/subsystem_ut
-$valgrind $testdir/lib/event/app.c/app_ut
-$valgrind $testdir/lib/event/reactor.c/reactor_ut
+run_test "unittest_event" unittest_event
 
 $valgrind $testdir/lib/sock/sock.c/sock_ut
 
