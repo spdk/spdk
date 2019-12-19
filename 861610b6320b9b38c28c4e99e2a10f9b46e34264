@@ -16,6 +16,24 @@
       "revId": "861610b6320b9b38c28c4e99e2a10f9b46e34264",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6219c9df_4c56f49b",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-19T23:43:30Z",
+      "side": 1,
+      "message": "No, not necessarily. I changed it to array of bools. About naming, I felt g_ut_enabled_cores is a little bit long and so used simply g_ut_cores.",
+      "parentUuid": "71d7d7bc_92e2519e",
+      "revId": "861610b6320b9b38c28c4e99e2a10f9b46e34264",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
