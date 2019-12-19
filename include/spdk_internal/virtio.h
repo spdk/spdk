@@ -48,10 +48,6 @@
 #include "spdk/pci_ids.h"
 #include "spdk/env.h"
 
-#ifndef VHOST_USER_F_PROTOCOL_FEATURES
-#define VHOST_USER_F_PROTOCOL_FEATURES	30
-#endif
-
 /**
  * The maximum virtqueue size is 2^15. Use that value as the end of
  * descriptor chain terminator since it will never be a valid index
