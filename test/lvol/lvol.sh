@@ -28,7 +28,6 @@ function usage() {
                                     551: 'delete_lvol_bdev',
                                     552: 'bdev_lvol_delete_lvstore_with_clones',
                                     553: 'unregister_lvol_bdev',
-                                    654: 'thin_overprovisioning',
                                     655: 'thin_provisioning_filling_disks_less_than_lvs_size',
                                     or
                                     all: This parameter runs all tests

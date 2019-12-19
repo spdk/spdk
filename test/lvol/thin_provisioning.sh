@@ -182,6 +182,53 @@ function test_thin_lvol_resize() {
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 }
 
+function test_thin_overprovisioning() {
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Construct two thin provisioned lvol bdevs on created lvol store
+	# with size equal to free lvol store size
+	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB )) )
+	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	lvol_uuid1=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test1 "$lvol_size_mb" -t)
+	lvol_uuid2=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test2 "$lvol_size_mb" -t)
+
+	lvs=$(rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid")
+	free_clusters_start="$(jq -r '.[0].free_clusters' <<< "$lvs")"
+
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid1" /dev/nbd0
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid2" /dev/nbd1
+	# Fill first bdev to 75% of its space with specific pattern
+	fill_size=$(( lvol_size * 75 / 100 ))
+	run_fio_test /dev/nbd0 0 $fill_size "write" "0xcc"
+
+	# Fill second bdev up to 75% of its space
+	# Check that error message occured while filling second bdev with data
+	ret_value=0
+	if ! run_fio_test /dev/nbd1 0 $fill_size "write" "0xcc"; then
+		ret_value=1
+	fi
+
+	# Check if data on first disk stayed unchanged
+	run_fio_test /dev/nbd0 0 $fill_size "read" "0xcc"
+
+	offset=$(( lvol_size * 75 / 100 ))
+	fill_size=$(( lvol_size * 25 / 100 ))
+	run_fio_test /dev/nbd0 $offset $fill_size "read" "0x00"
+
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd1
+
+	rpc_cmd bdev_lvol_delete "$lvol_uuid2"
+	rpc_cmd bdev_lvol_delete "$lvol_uuid1"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	if [ $ret_value -eq 0 ]; then
+		echo "Writing to second lvol bdev should fail."
+		return 1
+	fi
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -191,6 +238,7 @@ run_test "test_thin_lvol_check_space" test_thin_lvol_check_space
 run_test "test_thin_lvol_check_zeroes" test_thin_lvol_check_zeroes
 run_test "test_thin_lvol_check_integrity" test_thin_lvol_check_integrity
 run_test "test_thin_lvol_resize"test_thin_lvol_resize
+run_test "test_thin_overprovisioning" test_thin_overprovisioning
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
