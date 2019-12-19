@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "a51c7432_35af5af8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3127,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-19T11:22:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c363a4e8_78060997",
+      "revId": "ce2f203b100c886d260ce0d80e090cd6a484baed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a94f5e1b_b4c0cbe6",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 9
@@ -47,6 +65,24 @@
       "writtenOn": "2019-12-16T15:40:45Z",
       "side": 1,
       "message": "I\u0027m not sure how this works.  You should be comparing read_buf against the iovs from the bdev_io represented by cb_arg.\n\nPlease add unit tests to this patch, including tests for negative cases.  It doesn\u0027t seem this was tested at all.",
+      "revId": "ce2f203b100c886d260ce0d80e090cd6a484baed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0ce1118_f0d03076",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3134,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-19T11:22:27Z",
+      "side": 1,
+      "message": "I\u0027ll add unit tests in next patch set",
+      "parentUuid": "a94f5e1b_b4c0cbe6",
       "revId": "ce2f203b100c886d260ce0d80e090cd6a484baed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -67,6 +103,24 @@
       "revId": "ce2f203b100c886d260ce0d80e090cd6a484baed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "caef2773_be8f9bbc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3250,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-19T11:22:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "abf4ab76_3fc077d8",
+      "revId": "ce2f203b100c886d260ce0d80e090cd6a484baed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
