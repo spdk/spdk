@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71d7d7bc_92e2519e",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T21:00:20Z",
+      "side": 1,
+      "message": "does this need to be a bit mask?\n\nI looked at the rest of this patch set, and I didn\u0027t seem like it was required.  The bit mask is very concise, but I think an array of bools would be much easier to read and understand.\n\nmost of the rest of this series looks good though, so I\u0027m adding my +1 - if you want to change it that\u0027s fine but I\u0027m also OK if you leave it as-is since it\u0027s only a few extra lines of code",
+      "revId": "861610b6320b9b38c28c4e99e2a10f9b46e34264",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
