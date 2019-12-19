@@ -22,6 +22,30 @@
       "revId": "ab843ceb13f79b633a3dc6b67c888ba2375e9597",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bddc6474_aff4750b",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-19T11:48:19Z",
+      "side": 1,
+      "message": "Tried many different ways to use your proposal. Unfortunately without success. Removed your comment.",
+      "parentUuid": "5848b4ba_60a23140",
+      "range": {
+        "startLine": 29,
+        "startChar": 1,
+        "endLine": 29,
+        "endChar": 55
+      },
+      "revId": "ab843ceb13f79b633a3dc6b67c888ba2375e9597",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
