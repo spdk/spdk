@@ -109,25 +109,25 @@ if [ $(uname) = Linux ]; then
 	trap "kill_stub -9; exit 1" SIGINT SIGTERM EXIT
 fi
 
-run_test "case" "nvme_reset" $testdir/reset/reset -q 64 -w write -s 4096 -t 5
-run_test "case" "nvme_identify" nvme_identify
-run_test "case" "nvme_perf" nvme_perf
-run_test "case" "nvme_reserve" $rootdir/examples/nvme/reserve/reserve
-run_test "case" "nvme_hello_world" $rootdir/examples/nvme/hello_world/hello_world
-run_test "case" "nvme_deallocated_value" $testdir/deallocated_value/deallocated_value
-run_test "case" "nvme_sgl" $testdir/sgl/sgl
-run_test "case" "nvme_e2edp" $testdir/e2edp/nvme_dp
-run_test "case" "nvme_err_injection" $testdir/err_injection/err_injection
-run_test "case" "nvme_overhead" $testdir/overhead/overhead -s 4096 -t 1 -H
-run_test "case" "nvme_arbitration" $rootdir/examples/nvme/arbitration/arbitration -t 3 -i 0
+run_test "nvme_reset" $testdir/reset/reset -q 64 -w write -s 4096 -t 5
+run_test "nvme_identify" nvme_identify
+run_test "nvme_perf" nvme_perf
+run_test "nvme_reserve" $rootdir/examples/nvme/reserve/reserve
+run_test "nvme_hello_world" $rootdir/examples/nvme/hello_world/hello_world
+run_test "nvme_deallocated_value" $testdir/deallocated_value/deallocated_value
+run_test "nvme_sgl" $testdir/sgl/sgl
+run_test "nvme_e2edp" $testdir/e2edp/nvme_dp
+run_test "nvme_err_injection" $testdir/err_injection/err_injection
+run_test "nvme_overhead" $testdir/overhead/overhead -s 4096 -t 1 -H
+run_test "nvme_arbitration" $rootdir/examples/nvme/arbitration/arbitration -t 3 -i 0
 
 if [ $(uname) != "FreeBSD" ]; then
-	run_test "case" "nvme_startup" $testdir/startup/startup -t 1000000
-	run_test "case" "nvme_multi_secondary" nvme_multi_secondary
+	run_test "nvme_startup" $testdir/startup/startup -t 1000000
+	run_test "nvme_multi_secondary" nvme_multi_secondary
 	trap - SIGINT SIGTERM EXIT
 	kill_stub
 fi
 
 if [ -d /usr/src/fio ]; then
-	run_test "case" "nvme_fio" nvme_fio_test
+	run_test "nvme_fio" nvme_fio_test
 fi

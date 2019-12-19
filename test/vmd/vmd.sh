@@ -52,11 +52,11 @@ function vmd_bdev_svc {
 	killprocess $svcpid
 }
 
-run_test "case" "vmd_identify" vmd_identify
-run_test "case" "vmd_hello_world" $rootdir/examples/nvme/hello_world/hello_world -V
-run_test "case" "vmd_perf" vmd_perf
+run_test "vmd_identify" vmd_identify
+run_test "vmd_hello_world" $rootdir/examples/nvme/hello_world/hello_world -V
+run_test "vmd_perf" vmd_perf
 if [ -d /usr/src/fio ]; then
-	run_test "case" "vmd_fio" vmd_fio
+	run_test "vmd_fio" vmd_fio
 fi
 
-run_test "case" "vmd_bdev_svc" vmd_bdev_svc
+run_test "vmd_bdev_svc" vmd_bdev_svc

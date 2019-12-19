@@ -58,7 +58,7 @@ echo "TpointGroupMask 0x80" >> $ROCKSDB_CONF
 trap 'run_bsdump; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 
 if [ -z "$SKIP_MKFS" ]; then
-	run_test "case" "blobfs_mkfs" $rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
+	run_test "blobfs_mkfs" $rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
 fi
 
 mkdir -p $output_dir/rocksdb
@@ -124,11 +124,11 @@ cat << EOL >> writesync_flags.txt
 --num=$NUM_KEYS
 EOL
 
-run_test "case" "rocksdb_insert" run_step insert
-run_test "case" "rocksdb_overwrite" run_step overwrite
-run_test "case" "rocksdb_readwrite" run_step readwrite
-run_test "case" "rocksdb_writesync" run_step writesync
-run_test "case" "rocksdb_randread" run_step randread
+run_test "rocksdb_insert" run_step insert
+run_test "rocksdb_overwrite" run_step overwrite
+run_test "rocksdb_readwrite" run_step readwrite
+run_test "rocksdb_writesync" run_step writesync
+run_test "rocksdb_randread" run_step randread
 
 trap - SIGINT SIGTERM EXIT
 
