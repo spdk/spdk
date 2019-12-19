@@ -16,6 +16,24 @@
       "revId": "3090c2ab0748af9f8e897b7251b24ea595d95846",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a43973e3_230d904e",
+        "filename": "module/event/rpc/app_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-19T23:43:14Z",
+      "side": 1,
+      "message": "That\u0027s a nice name. I moved the location in python script and jsonrpc.md to be close to other framework RPCs as well.",
+      "parentUuid": "3ed36bd8_ee59ce35",
+      "revId": "3090c2ab0748af9f8e897b7251b24ea595d95846",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
