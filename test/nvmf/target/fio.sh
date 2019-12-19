@@ -22,7 +22,7 @@ raid_malloc_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_
 raid_malloc_bdevs+="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 $rpc_py bdev_raid_create -n raid0 -z 64 -r 0 -b "$raid_malloc_bdevs"
 
-$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s $NVMF_SERIAL
 for malloc_bdev in $malloc_bdevs; do
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 "$malloc_bdev"
 done
@@ -33,9 +33,17 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 raid0
 
 nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
-waitforblk "nvme0n1"
-waitforblk "nvme0n2"
-waitforblk "nvme0n3"
+i=0
+until lsblk -o NAME,SERIAL | grep -q $NVMF_SERIAL; do
+	[[ $i -lt 100 ]] || break
+	i=$((i+1))
+	echo "Waiting for devices"
+	sleep 0.1
+done
+nvme_names=$(lsblk -o NAME,SERIAL | grep $NVMF_SERIAL | awk '{ print $1 }')
+for nvme_name in $nvme_names; do
+	waitforblk "${nvme_name}"
+done
 
 $rootdir/scripts/fio.py -p nvmf -i 4096 -d 1 -t write -r 1 -v
 $rootdir/scripts/fio.py -p nvmf -i 4096 -d 1 -t randwrite -r 1 -v
