@@ -4633,6 +4633,7 @@ bdev_init(struct spdk_bdev *bdev)
 
 	TAILQ_INIT(&bdev->internal.open_descs);
 	TAILQ_INIT(&bdev->internal.locked_ranges);
+	TAILQ_INIT(&bdev->internal.pending_locked_ranges);
 
 	TAILQ_INIT(&bdev->aliases);
 
@@ -5869,6 +5870,19 @@ bdev_lock_lba_range_ctx(struct spdk_bdev *bdev, struct locked_lba_range_ctx *ctx
 			      bdev_lock_lba_range_cb);
 }
 
+static bool
+bdev_lba_range_overlaps_tailq(struct lba_range *range, lba_range_tailq_t *tailq)
+{
+	struct lba_range *r;
+
+	TAILQ_FOREACH(r, tailq, tailq) {
+		if (bdev_lba_range_overlapped(range, r)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 int
 bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 		    uint64_t offset, uint64_t length,
@@ -5902,8 +5916,16 @@ bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 	ctx->cb_arg = cb_arg;
 
 	pthread_mutex_lock(&bdev->internal.mutex);
-	TAILQ_INSERT_TAIL(&bdev->internal.locked_ranges, &ctx->range, tailq);
-	bdev_lock_lba_range_ctx(bdev, ctx);
+	if (bdev_lba_range_overlaps_tailq(&ctx->range, &bdev->internal.locked_ranges)) {
+		/* There is an active lock overlapping with this range.
+		 * Put it on the pending list until this range no
+		 * longer overlaps with another.
+		 */
+		TAILQ_INSERT_TAIL(&bdev->internal.pending_locked_ranges, &ctx->range, tailq);
+	} else {
+		TAILQ_INSERT_TAIL(&bdev->internal.locked_ranges, &ctx->range, tailq);
+		bdev_lock_lba_range_ctx(bdev, ctx);
+	}
 	pthread_mutex_unlock(&bdev->internal.mutex);
 	return 0;
 }
@@ -5912,6 +5934,27 @@ static void
 bdev_unlock_lba_range_cb(struct spdk_io_channel_iter *i, int status)
 {
 	struct locked_lba_range_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct locked_lba_range_ctx *pending_ctx;
+	struct spdk_bdev_channel *ch = ctx->range.owner_ch;
+	struct spdk_bdev *bdev = ch->bdev;
+	struct lba_range *range, *tmp;
+
+	pthread_mutex_lock(&bdev->internal.mutex);
+	/* Check if there are any pending locked ranges that overlap with this range
+	 * that was just unlocked.  If there are, check that it doesn't overlap with any
+	 * other locked ranges before calling bdev_lock_lba_range_ctx which will start
+	 * the lock process.
+	 */
+	TAILQ_FOREACH_SAFE(range, &bdev->internal.pending_locked_ranges, tailq, tmp) {
+		if (bdev_lba_range_overlapped(range, &ctx->range) &&
+		    !bdev_lba_range_overlaps_tailq(range, &bdev->internal.locked_ranges)) {
+			TAILQ_REMOVE(&bdev->internal.pending_locked_ranges, range, tailq);
+			pending_ctx = SPDK_CONTAINEROF(range, struct locked_lba_range_ctx, range);
+			TAILQ_INSERT_TAIL(&bdev->internal.locked_ranges, range, tailq);
+			bdev_lock_lba_range_ctx(bdev, pending_ctx);
+		}
+	}
+	pthread_mutex_unlock(&bdev->internal.mutex);
 
 	ctx->cb_fn(ctx->cb_arg, status);
 	free(ctx);
