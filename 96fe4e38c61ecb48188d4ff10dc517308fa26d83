@@ -16,6 +16,24 @@
       "revId": "96fe4e38c61ecb48188d4ff10dc517308fa26d83",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "665fcc65_8b755a56",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-19T23:41:50Z",
+      "side": 1,
+      "message": "Thanks! I have refactored this patch into several different patches.",
+      "parentUuid": "2db42101_43161869",
+      "revId": "96fe4e38c61ecb48188d4ff10dc517308fa26d83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
