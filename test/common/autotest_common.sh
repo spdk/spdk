@@ -717,6 +717,45 @@ function discover_bdevs()
 	rm -f /var/run/spdk_bdev0
 }
 
+function waitforserial()
+{
+	local i=0
+	local nvme_device_counter=1
+	if [[ -n "$2" ]]; then
+		nvme_device_counter=$2
+	fi
+
+	while [ $(lsblk -l -o NAME,SERIAL | grep -c $1) -lt $nvme_device_counter ]; do
+		[ $i -lt 15 ] || break
+		i=$((i+1))
+		echo "Waiting for devices"
+		sleep 1
+	done
+
+	if [[ $(lsblk -l -o NAME,SERIAL | grep -c $1) -lt $nvme_device_counter ]]; then
+		return 1
+	fi
+
+        return 0
+}
+
+function waitforserial_disconnect()
+{
+	local i=0
+	while lsblk -o NAME,SERIAL | grep -q -w $1; do
+		[ $i -lt 15 ] || break
+		i=$((i+1))
+		echo "Waiting for disconnect devices"
+		sleep 1
+	done
+
+	if lsblk -l -o NAME | grep -q -w $1; then
+		return 1
+	fi
+
+	return 0
+}
+
 function waitforblk()
 {
 	local i=0
