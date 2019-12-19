@@ -8,9 +8,22 @@ set -xe
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $(dirname $0)/../..)
+source "$rootdir/test/common/autotest_common.sh"
 
 cd "$rootdir"
 
+function unittest_bdev {
+	$valgrind $testdir/lib/bdev/bdev.c/bdev_ut
+	$valgrind $testdir/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut
+	$valgrind $testdir/lib/bdev/bdev_raid.c/bdev_raid_ut
+	$valgrind $testdir/lib/bdev/bdev_zone.c/bdev_zone_ut
+	$valgrind $testdir/lib/bdev/gpt/gpt.c/gpt_ut
+	$valgrind $testdir/lib/bdev/part.c/part_ut
+	$valgrind $testdir/lib/bdev/scsi_nvme.c/scsi_nvme_ut
+	$valgrind $testdir/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut
+	$valgrind $testdir/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut
+	$valgrind $testdir/lib/bdev/mt/bdev.c/bdev_ut
+}
 
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
@@ -54,28 +67,18 @@ fi
 
 $valgrind $testdir/include/spdk/histogram_data.h/histogram_ut
 
-$valgrind $testdir/lib/bdev/bdev.c/bdev_ut
-$valgrind $testdir/lib/bdev/bdev_raid.c/bdev_raid_ut
-$valgrind $testdir/lib/bdev/bdev_zone.c/bdev_zone_ut
-$valgrind $testdir/lib/bdev/part.c/part_ut
-$valgrind $testdir/lib/bdev/scsi_nvme.c/scsi_nvme_ut
-$valgrind $testdir/lib/bdev/gpt/gpt.c/gpt_ut
-$valgrind $testdir/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut
-$valgrind $testdir/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut
-
+run_test "unittest_bdev" unittest_bdev
 if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
-	$valgrind $testdir/lib/bdev/crypto.c/crypto_ut
+	run_test "unittest_bdev_crypto" $valgrind $testdir/lib/bdev/crypto.c/crypto_ut
 fi
 
 if grep -q '#define SPDK_CONFIG_REDUCE 1' $rootdir/include/spdk/config.h; then
-        $valgrind $testdir/lib/bdev/compress.c/compress_ut
+	run_test "unittest_bdev_reduce" $valgrind $testdir/lib/bdev/compress.c/compress_ut
 fi
 
 if grep -q '#define SPDK_CONFIG_PMDK 1' $rootdir/include/spdk/config.h; then
-	$valgrind $testdir/lib/bdev/pmem/bdev_pmem_ut
+	run_test "unittest_bdev_pmem" $valgrind $testdir/lib/bdev/pmem/bdev_pmem_ut
 fi
-
-$valgrind $testdir/lib/bdev/mt/bdev.c/bdev_ut
 
 $valgrind $testdir/lib/blob/blob.c/blob_ut
 $valgrind $testdir/lib/blobfs/tree.c/tree_ut
@@ -178,8 +181,6 @@ fi
 if [ -e $testdir/lib/nvmf/fc_ls.c/fc_ls_ut ]; then
 	$valgrind $testdir/lib/nvmf/fc_ls.c/fc_ls_ut
 fi
-
-$valgrind $testdir/lib/bdev/bdev_ocssd.c/bdev_ocssd_ut
 
 # local unit test coverage
 if [ "$cov_avail" = "yes" ]; then
