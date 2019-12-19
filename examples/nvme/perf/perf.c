@@ -1040,7 +1040,7 @@ print_periodic_performance(void)
 	}
 
 	mb_this_second = (double)io_this_second * g_io_size_bytes / (1024 * 1024);
-	printf("%9ju IO/s, %8.2f MiB/s\r", io_this_second, mb_this_second);
+	printf("%9ju IOPS, %8.2f MiB/s\r", io_this_second, mb_this_second);
 	fflush(stdout);
 }
 
