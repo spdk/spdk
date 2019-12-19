@@ -1792,6 +1792,18 @@ __get_page_parameters(struct spdk_file *file, uint64_t offset, uint64_t length,
 	*num_lba = (end_lba - *start_lba + 1);
 }
 
+static bool
+__is_lba_aligned(struct spdk_file *file, uint64_t offset, uint64_t length)
+{
+	uint32_t lba_size = spdk_bs_get_io_unit_size(file->fs->bs);
+
+	if ((offset % lba_size == 0) && (length % lba_size == 0)) {
+		return true;
+	}
+
+	return false;
+}
+
 static void
 _fs_request_setup_iovs(struct spdk_fs_request *req, struct iovec *iovs, uint32_t iovcnt)
 {
@@ -1854,6 +1866,12 @@ __readvwritev(struct spdk_file *file, struct spdk_io_channel *_channel,
 
 	if (!is_read && file->length < offset + length) {
 		spdk_file_truncate_async(file, offset + length, __do_blob_read, req);
+	} else if (!is_read && __is_lba_aligned(file, offset, length)) {
+		_copy_iovs_to_buf(args->op.rw.pin_buf, args->op.rw.length, args->iovs, args->iovcnt);
+		spdk_blob_io_write(args->file->blob, args->op.rw.channel,
+				   args->op.rw.pin_buf,
+				   args->op.rw.start_lba, args->op.rw.num_lba,
+				   __rw_done, req);
 	} else {
 		__do_blob_read(req, 0);
 	}

@@ -490,6 +490,32 @@ fs_writev_readv_async(void)
 	CU_ASSERT(g_fserrno == 0);
 	CU_ASSERT(memcmp(r_buf, w_buf, sizeof(r_buf)) == 0);
 
+	/* Overwrite file with block aligned */
+	g_fserrno = 1;
+	memset(w_buf, 0x6a, sizeof(w_buf));
+	w_iov[0].iov_base = w_buf;
+	w_iov[0].iov_len = 2048;
+	w_iov[1].iov_base = w_buf + 2048;
+	w_iov[1].iov_len = 2048;
+	spdk_file_writev_async(g_file, fs->sync_target.sync_io_channel,
+			       w_iov, 2, 0, 4096, fs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_fserrno == 0);
+	CU_ASSERT(g_file->length == 4096);
+
+	/* Read file to verify the overwritten data */
+	g_fserrno = 1;
+	memset(r_buf, 0x0, sizeof(r_buf));
+	r_iov[0].iov_base = r_buf;
+	r_iov[0].iov_len = 2048;
+	r_iov[1].iov_base = r_buf + 2048;
+	r_iov[1].iov_len = 2048;
+	spdk_file_readv_async(g_file, fs->sync_target.sync_io_channel,
+			      r_iov, 2, 0, 4096, fs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_fserrno == 0);
+	CU_ASSERT(memcmp(r_buf, w_buf, sizeof(r_buf)) == 0);
+
 	g_fserrno = 1;
 	spdk_file_close_async(g_file, fs_op_complete, NULL);
 	poll_threads();
