@@ -1465,6 +1465,8 @@ enum spdk_nvme_flush_broadcast {
 	SPDK_NVME_FLUSH_BROADCAST_SUPPORTED		= 3
 };
 
+#define SPDK_NVME_NQN_FIELD_SIZE 256
+
 struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
@@ -1808,7 +1810,7 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 
 	uint8_t			reserved4[228];
 
-	uint8_t			subnqn[256];
+	uint8_t			subnqn[SPDK_NVME_NQN_FIELD_SIZE];
 
 	uint8_t			reserved5[768];
 

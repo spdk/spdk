@@ -218,8 +218,8 @@ struct spdk_nvmf_fabric_connect_data {
 	uint8_t		hostid[16];
 	uint16_t	cntlid;
 	uint8_t		reserved5[238];
-	uint8_t		subnqn[256];
-	uint8_t		hostnqn[256];
+	uint8_t		subnqn[SPDK_NVME_NQN_FIELD_SIZE];
+	uint8_t		hostnqn[SPDK_NVME_NQN_FIELD_SIZE];
 	uint8_t		reserved6[256];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fabric_connect_data) == 1024, "Incorrect size");
