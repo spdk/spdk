@@ -25,6 +25,15 @@ function unittest_bdev {
 	$valgrind $testdir/lib/bdev/mt/bdev.c/bdev_ut
 }
 
+function unittest_blob {
+	$valgrind $testdir/lib/blob/blob.c/blob_ut
+	$valgrind $testdir/lib/blobfs/tree.c/tree_ut
+	$valgrind $testdir/lib/blobfs/blobfs_async_ut/blobfs_async_ut
+	# blobfs_sync_ut hangs when run under valgrind, so don't use $valgrind
+	$testdir/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut
+	$valgrind $testdir/lib/blobfs/blobfs_bdev.c/blobfs_bdev_ut
+}
+
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
@@ -80,13 +89,7 @@ if grep -q '#define SPDK_CONFIG_PMDK 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_bdev_pmem" $valgrind $testdir/lib/bdev/pmem/bdev_pmem_ut
 fi
 
-$valgrind $testdir/lib/blob/blob.c/blob_ut
-$valgrind $testdir/lib/blobfs/tree.c/tree_ut
-
-$valgrind $testdir/lib/blobfs/blobfs_async_ut/blobfs_async_ut
-# blobfs_sync_ut hangs when run under valgrind, so don't use $valgrind
-$testdir/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut
-$valgrind $testdir/lib/blobfs/blobfs_bdev.c/blobfs_bdev_ut
+run_test "unittest_blob_blobfs" unittest_blob
 
 $valgrind $testdir/lib/event/subsystem.c/subsystem_ut
 $valgrind $testdir/lib/event/app.c/app_ut
