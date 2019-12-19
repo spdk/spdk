@@ -40,6 +40,16 @@ function unittest_event {
 	$valgrind $testdir/lib/event/reactor.c/reactor_ut
 }
 
+function unittest_ftl {
+	$valgrind $testdir/lib/ftl/ftl_rwb.c/ftl_rwb_ut
+	$valgrind $testdir/lib/ftl/ftl_ppa/ftl_ppa_ut
+	$valgrind $testdir/lib/ftl/ftl_band.c/ftl_band_ut
+	$valgrind $testdir/lib/ftl/ftl_reloc.c/ftl_reloc_ut
+	$valgrind $testdir/lib/ftl/ftl_wptr/ftl_wptr_ut
+	$valgrind $testdir/lib/ftl/ftl_md/ftl_md_ut
+	$valgrind $testdir/lib/ftl/ftl_io.c/ftl_io_ut
+}
+
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
@@ -97,6 +107,9 @@ fi
 
 run_test "unittest_blob_blobfs" unittest_blob
 run_test "unittest_event" unittest_event
+if [ $(uname -s) = Linux ]; then
+	run_test "unittest_ftl" unittest_ftl
+fi
 
 $valgrind $testdir/lib/sock/sock.c/sock_ut
 
@@ -170,14 +183,6 @@ $valgrind $testdir/lib/util/pipe.c/pipe_ut
 
 if [ $(uname -s) = Linux ]; then
 $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
-
-$valgrind $testdir/lib/ftl/ftl_rwb.c/ftl_rwb_ut
-$valgrind $testdir/lib/ftl/ftl_ppa/ftl_ppa_ut
-$valgrind $testdir/lib/ftl/ftl_band.c/ftl_band_ut
-$valgrind $testdir/lib/ftl/ftl_reloc.c/ftl_reloc_ut
-$valgrind $testdir/lib/ftl/ftl_wptr/ftl_wptr_ut
-$valgrind $testdir/lib/ftl/ftl_md/ftl_md_ut
-$valgrind $testdir/lib/ftl/ftl_io.c/ftl_io_ut
 fi
 
 if [ -e $testdir/lib/nvmf/fc.c/fc_ut ]; then
