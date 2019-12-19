@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e85e1328_318b91b9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T22:06:11Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nI think this commit message needs to be updated.  It is not very clear how this code change helps with the issue described here.\n\nFor example, this patch does not change anything related to failing when the second subsystem is created.  It is only changing the shutdown_cb function.\n\nI am sure the patch is correct - but the commit message needs to explain it better.  :-)\n\n-Jim",
+      "revId": "33bf5c369f390ff94d5c4339eba6b3d493464afc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
