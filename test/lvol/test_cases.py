@@ -119,7 +119,6 @@ def case_message(func):
             600: 'bdev_lvol_create_lvstore_with_cluster_size_max',
             601: 'bdev_lvol_create_lvstore_with_cluster_size_min',
             # Provisioning
-            653: 'thin_provisioning_resize',
             654: 'thin_overprovisioning',
             655: 'thin_provisioning_filling_disks_less_than_lvs_size',
         }
@@ -537,78 +536,6 @@ class TestCases(object):
 
         # Expected result:
         # - bdev_lvol_get_lvstores: response should be of no value after destroyed lvol store
-        # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case653(self):
-        """
-        thin_provisioning_resize
-
-        Check thin provisioned bdev resize.
-        """
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct lvol store on malloc bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name, self.lvs_name)
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-        # Construct thin provisioned lvol bdevs on created lvol store
-        # with size equal to 50% of lvol store
-        size = self.get_lvs_divided_size(2)
-        uuid_bdev = self.c.bdev_lvol_create(uuid_store,
-                                            self.lbd_name, size, thin=True)
-        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size)
-        # Fill all free space of lvol bdev with data
-        nbd_name = "/dev/nbd0"
-        fail_count += self.c.nbd_start_disk(uuid_bdev, nbd_name)
-        fail_count += self.run_fio_test(nbd_name, 0, size*MEGABYTE, "write", "0xcc", 0)
-        fail_count += self.c.nbd_stop_disk(nbd_name)
-        # Save number of free clusters for lvs
-        lvs = self.c.bdev_lvol_get_lvstores()[0]
-        free_clusters_start = int(lvs['free_clusters'])
-        # Resize bdev to full size of lvs
-        full_size = int(lvs['total_data_clusters'] * lvs['cluster_size'] / MEGABYTE)
-        fail_count += self.c.bdev_lvol_resize(uuid_bdev, full_size)
-        # Check if bdev size changed (total_data_clusters*cluster_size
-        # equals to num_blocks*block_size)
-        lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev)
-        lbd_size = int(lvol_bdev['num_blocks'] * lvol_bdev['block_size'] / MEGABYTE)
-        if full_size != lbd_size:
-            fail_count += 1
-        # Check if free_clusters on lvs remain unaffected
-        lvs = self.c.bdev_lvol_get_lvstores()[0]
-        free_clusters_resize = int(lvs['free_clusters'])
-        if free_clusters_start != free_clusters_resize:
-            fail_count += 1
-        # Perform write operation with verification
-        # to newly created free space of lvol bdev
-        nbd_name = "/dev/nbd0"
-        fail_count += self.c.nbd_start_disk(uuid_bdev, nbd_name)
-        fail_count += self.run_fio_test(nbd_name, int(lbd_size * MEGABYTE / 2),
-                                        int(lbd_size * MEGABYTE / 2), "write", "0xcc", 0)
-        fail_count += self.c.nbd_stop_disk(nbd_name)
-        # Check if free clusters on lvs equals to zero
-        lvs = self.c.bdev_lvol_get_lvstores()[0]
-        if int(lvs['free_clusters']) != 0:
-            fail_count += 1
-        # Resize bdev to 25% of lvs and check if it ended with success
-        size = self.get_lvs_divided_size(4)
-        fail_count += self.c.bdev_lvol_resize(uuid_bdev, size)
-        # Check free clusters on lvs
-        lvs = self.c.bdev_lvol_get_lvstores()[0]
-        free_clusters_resize2 = int(lvs['free_clusters'])
-        free_clusters_expected = int((full_size - size) * MEGABYTE / lvs['cluster_size'])
-        if free_clusters_expected != free_clusters_resize2:
-            fail_count += 1
-
-        self.c.bdev_lvol_delete(uuid_bdev)
-        self.c.bdev_lvol_delete_lvstore(uuid_store)
-        self.c.bdev_malloc_delete(base_name)
-
-        # Expected result:
-        # - calls successful, return code = 0
         # - no other operation fails
         return fail_count
 

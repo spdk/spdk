@@ -120,6 +120,68 @@ function test_thin_lvol_check_integrity() {
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 }
 
+# Check thin provisioned bdev resize
+function test_thin_lvol_resize() {
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# Construct thin provisioned lvol bdevs on created lvol store
+	# with size equal to 50% of lvol store
+	lvol_size_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 2 )) )
+	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$lvol_size_mb" -t)
+
+	# Fill all free space of lvol bdev with data
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
+	run_fio_test /dev/nbd0 0 $lvol_size "write" "0xcc"
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
+
+	# Save number of free clusters for lvs
+	lvs=$(rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid")
+	free_clusters_start="$(jq -r '.[0].free_clusters' <<< "$lvs")"
+	# Resize bdev to full size of lvs
+	lvol_size_full_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB )) )
+	lvol_size_full=$(( lvol_size_full_mb * 1024 * 1024 ))
+	rpc_cmd bdev_lvol_resize $lvol_uuid $lvol_size_full_mb
+
+	# Check if bdev size changed (total_data_clusters*cluster_size
+	# equals to num_blocks*block_size)
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+	[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
+	echo "asdasd $lvol_size_full"
+	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = $(( lvol_size_full / MALLOC_BS )) ]
+
+	# Check if free_clusters on lvs remain unaffected
+	lvs=$(rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid")
+	free_clusters_resize="$(jq -r '.[0].free_clusters' <<< "$lvs")"
+	[ $free_clusters_start == $free_clusters_resize ]
+
+	# Perform write operation with verification
+	# to newly created free space of lvol bdev
+	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid" /dev/nbd0
+	run_fio_test /dev/nbd0 0 $lvol_size_full "write" "0xcc"
+	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
+
+	# Check if free clusters on lvs equals to zero
+	lvs=$(rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid")
+	free_clusters_start="$(jq -r '.[0].free_clusters' <<< "$lvs")"
+	[ $free_clusters_start == 0 ]
+
+	# Resize bdev to 25% of lvs and check if it ended with success
+	lvol_size_quarter_mb=$( round_down $(( LVS_DEFAULT_CAPACITY_MB / 4 )) )
+	rpc_cmd bdev_lvol_resize $lvol_uuid $lvol_size_quarter_mb
+
+	# Check free clusters on lvs
+	lvs=$(rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid")
+	free_clusters_resize_quarter="$(jq -r '.[0].free_clusters' <<< "$lvs")"
+	free_clusters_expected=$(( (lvol_size_full_mb - lvol_size_quarter_mb) / LVS_DEFAULT_CLUSTER_SIZE_MB ))
+	[ $free_clusters_resize_quarter == $free_clusters_expected ]
+
+	rpc_cmd bdev_lvol_delete "$lvol_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -128,6 +190,7 @@ waitforlisten $spdk_pid
 run_test "test_thin_lvol_check_space" test_thin_lvol_check_space
 run_test "test_thin_lvol_check_zeroes" test_thin_lvol_check_zeroes
 run_test "test_thin_lvol_check_integrity" test_thin_lvol_check_integrity
+run_test "test_thin_lvol_resize"test_thin_lvol_resize
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
