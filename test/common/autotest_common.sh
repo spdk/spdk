@@ -710,13 +710,13 @@ function discover_bdevs()
 function waitforblk()
 {
 	local i=0
-	while ! lsblk -l -o NAME | grep -q -w $1; do
+	while ! lsblk -l -o NAME,SERIAL | grep -q -w $1; do
 		[ $i -lt 15 ] || break
 		i=$((i+1))
 		sleep 1
 	done
 
-	if ! lsblk -l -o NAME | grep -q -w $1; then
+	if ! lsblk -l -o NAME,SERIAL | grep -q -w $1; then
 		return 1
 	fi
 
@@ -726,13 +726,13 @@ function waitforblk()
 function waitforblk_disconnect()
 {
 	local i=0
-	while lsblk -l -o NAME | grep -q -w $1; do
+	while lsblk -l -o NAME,SERIAL | grep -q -w $1; do
 		[ $i -lt 15 ] || break
 		i=$((i+1))
 		sleep 1
 	done
 
-	if lsblk -l -o NAME | grep -q -w $1; then
+	if lsblk -l -o NAME,SERIAL | grep -q -w $1; then
 		return 1
 	fi
 
