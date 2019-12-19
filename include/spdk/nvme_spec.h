@@ -353,6 +353,17 @@ struct spdk_nvme_registers {
 	} doorbell[1];
 };
 
+#define CC \
+	offsetof(struct spdk_nvme_registers, cc)
+
+#define SQ0TBDL \
+	offsetof(struct spdk_nvme_registers, doorbell[0].sq_tdbl)
+
+#define CQ0HDBL \
+	offsetof(struct spdk_nvme_registers, doorbell[0].cq_hdbl)
+
+#define DOORBELLS 0x1000
+
 /* NVMe controller register space offsets */
 SPDK_STATIC_ASSERT(0x00 == offsetof(struct spdk_nvme_registers, cap),
 		   "Incorrect register offset");
@@ -376,6 +387,9 @@ SPDK_STATIC_ASSERT(0x40 == offsetof(struct spdk_nvme_registers, bpinfo),
 SPDK_STATIC_ASSERT(0x44 == offsetof(struct spdk_nvme_registers, bprsel),
 		   "Incorrect register offset");
 SPDK_STATIC_ASSERT(0x48 == offsetof(struct spdk_nvme_registers, bpmbl),
+		   "Incorrect register offset");
+
+SPDK_STATIC_ASSERT(DOORBELLS == offsetof(struct spdk_nvme_registers, doorbell[0].sq_tdbl),
 		   "Incorrect register offset");
 
 enum spdk_nvme_sgl_descriptor_type {
@@ -462,6 +476,17 @@ enum spdk_nvme_cc_ams {
 	SPDK_NVME_CC_AMS_VS		= 0x7,	/**< vendor specific */
 };
 
+/* dword 6-9: data pointer */
+union spdk_nvme_dptr {
+	struct {
+		uint64_t prp1;		/* prp entry 1 */
+		uint64_t prp2;		/* prp entry 2 */
+	} prp;
+
+	struct spdk_nvme_sgl_descriptor sgl1;
+};
+
+
 struct spdk_nvme_cmd {
 	/* dword 0 */
 	uint16_t opc	:  8;	/* opcode */
@@ -481,14 +506,7 @@ struct spdk_nvme_cmd {
 	uint64_t mptr;		/* metadata pointer */
 
 	/* dword 6-9: data pointer */
-	union {
-		struct {
-			uint64_t prp1;		/* prp entry 1 */
-			uint64_t prp2;		/* prp entry 2 */
-		} prp;
-
-		struct spdk_nvme_sgl_descriptor sgl1;
-	} dptr;
+	union spdk_nvme_dptr dptr;
 
 	/* dword 10-15 */
 	uint32_t cdw10;		/* command-specific */
