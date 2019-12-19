@@ -50,6 +50,15 @@ function unittest_ftl {
 	$valgrind $testdir/lib/ftl/ftl_io.c/ftl_io_ut
 }
 
+function unittest_iscsi {
+	$valgrind $testdir/lib/iscsi/conn.c/conn_ut
+	$valgrind $testdir/lib/iscsi/param.c/param_ut
+	$valgrind $testdir/lib/iscsi/tgt_node.c/tgt_node_ut $testdir/lib/iscsi/tgt_node.c/tgt_node.conf
+	$valgrind $testdir/lib/iscsi/iscsi.c/iscsi_ut
+	$valgrind $testdir/lib/iscsi/init_grp.c/init_grp_ut $testdir/lib/iscsi/init_grp.c/init_grp.conf
+	$valgrind $testdir/lib/iscsi/portal_grp.c/portal_grp_ut $testdir/lib/iscsi/portal_grp.c/portal_grp.conf
+}
+
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
@@ -111,6 +120,8 @@ if [ $(uname -s) = Linux ]; then
 	run_test "unittest_ftl" unittest_ftl
 fi
 
+run_test "unittest_iscsi" unittest_iscsi
+
 $valgrind $testdir/lib/sock/sock.c/sock_ut
 
 $valgrind $testdir/lib/nvme/nvme.c/nvme_ut
@@ -156,13 +167,6 @@ $valgrind $testdir/lib/scsi/scsi_pr.c/scsi_pr_ut
 $valgrind $testdir/lib/lvol/lvol.c/lvol_ut
 
 $valgrind $testdir/lib/notify/notify.c/notify_ut
-
-$valgrind $testdir/lib/iscsi/conn.c/conn_ut
-$valgrind $testdir/lib/iscsi/param.c/param_ut
-$valgrind $testdir/lib/iscsi/tgt_node.c/tgt_node_ut $testdir/lib/iscsi/tgt_node.c/tgt_node.conf
-$valgrind $testdir/lib/iscsi/iscsi.c/iscsi_ut
-$valgrind $testdir/lib/iscsi/init_grp.c/init_grp_ut $testdir/lib/iscsi/init_grp.c/init_grp.conf
-$valgrind $testdir/lib/iscsi/portal_grp.c/portal_grp_ut $testdir/lib/iscsi/portal_grp.c/portal_grp.conf
 
 if grep -q '#define SPDK_CONFIG_REDUCE 1' $rootdir/config.h; then
 	$valgrind $testdir/lib/reduce/reduce.c/reduce_ut
