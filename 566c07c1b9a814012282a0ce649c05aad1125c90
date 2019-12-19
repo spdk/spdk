@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92a41865_5d0e01f9",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-19T01:16:34Z",
+      "side": 1,
+      "message": "Maybe \n } else if (poller-\u003estate !\u003d SPDK_POLLER_STATE_PAUSED) {\n    poller-\u003estate \u003d SPDK_POLLER_STATE_WAITING;\n }\n\nThis will avoid discarding poller_rc of newly paused poller and will match newly paused timer poller.\nWe don\u0027t discard timer_rc of newly paused timer poller.",
+      "revId": "566c07c1b9a814012282a0ce649c05aad1125c90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
