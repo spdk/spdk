@@ -88,6 +88,14 @@ function unittest_nvmf {
 	$valgrind $testdir/lib/nvmf/tcp.c/tcp_ut
 }
 
+function unittest_scsi {
+	$valgrind $testdir/lib/scsi/dev.c/dev_ut
+	$valgrind $testdir/lib/scsi/lun.c/lun_ut
+	$valgrind $testdir/lib/scsi/scsi.c/scsi_ut
+	$valgrind $testdir/lib/scsi/scsi_bdev.c/scsi_bdev_ut
+	$valgrind $testdir/lib/scsi/scsi_pr.c/scsi_pr_ut
+}
+
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
@@ -176,12 +184,7 @@ if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_nvmf_rdma" $valgrind $testdir/lib/nvmf/rdma.c/rdma_ut
 fi
 
-
-$valgrind $testdir/lib/scsi/dev.c/dev_ut
-$valgrind $testdir/lib/scsi/lun.c/lun_ut
-$valgrind $testdir/lib/scsi/scsi.c/scsi_ut
-$valgrind $testdir/lib/scsi/scsi_bdev.c/scsi_bdev_ut
-$valgrind $testdir/lib/scsi/scsi_pr.c/scsi_pr_ut
+run_test "unittest_scsi" unittest_scsi
 
 $valgrind $testdir/lib/lvol/lvol.c/lvol_ut
 
