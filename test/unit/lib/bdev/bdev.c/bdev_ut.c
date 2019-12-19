@@ -2751,6 +2751,144 @@ lock_lba_range_with_io_outstanding(void)
 	poll_threads();
 }
 
+static void
+lock_lba_range_overlapped(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *channel;
+	struct lba_range *range;
+	int ctx1;
+	int rc;
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+	channel = spdk_io_channel_get_ctx(io_ch);
+
+	/* Lock range 20-29. */
+	g_lock_lba_range_done = false;
+	rc = bdev_lock_lba_range(desc, io_ch, 20, 10, lock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_lock_lba_range_done == true);
+	range = TAILQ_FIRST(&channel->locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 20);
+	CU_ASSERT(range->length == 10);
+
+	/* Try to lock range 25-39.  It should not lock immediately, since it overlaps with
+	 * 20-29.
+	 */
+	g_lock_lba_range_done = false;
+	rc = bdev_lock_lba_range(desc, io_ch, 25, 15, lock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_lock_lba_range_done == false);
+	range = TAILQ_FIRST(&bdev->internal.pending_locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 25);
+	CU_ASSERT(range->length == 15);
+
+	/* Unlock 20-29.  This should result in range 25-39 now getting locked since it
+	 * no longer overlaps with an active lock.
+	 */
+	g_unlock_lba_range_done = false;
+	rc = bdev_unlock_lba_range(desc, io_ch, 20, 10, unlock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_unlock_lba_range_done == true);
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.pending_locked_ranges));
+	range = TAILQ_FIRST(&channel->locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 25);
+	CU_ASSERT(range->length == 15);
+
+	/* Lock 40-59.  This should immediately lock since it does not overlap with the
+	 * currently active 25-39 lock.
+	 */
+	g_lock_lba_range_done = false;
+	rc = bdev_lock_lba_range(desc, io_ch, 40, 20, lock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_lock_lba_range_done == true);
+	range = TAILQ_FIRST(&bdev->internal.locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	range = TAILQ_NEXT(range, tailq);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 40);
+	CU_ASSERT(range->length == 20);
+
+	/* Try to lock 35-44.  Note that this overlaps with both 25-39 and 40-59. */
+	g_lock_lba_range_done = false;
+	rc = bdev_lock_lba_range(desc, io_ch, 35, 10, lock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_lock_lba_range_done == false);
+	range = TAILQ_FIRST(&bdev->internal.pending_locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 35);
+	CU_ASSERT(range->length == 10);
+
+	/* Unlock 25-39.  Make sure that 35-44 is still in the pending list, since
+	 * the 40-59 lock is still active.
+	 */
+	g_unlock_lba_range_done = false;
+	rc = bdev_unlock_lba_range(desc, io_ch, 25, 15, unlock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_unlock_lba_range_done == true);
+	CU_ASSERT(g_lock_lba_range_done == false);
+	range = TAILQ_FIRST(&bdev->internal.pending_locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 35);
+	CU_ASSERT(range->length == 10);
+
+	/* Unlock 40-59.  This should result in 35-44 now getting locked, since there are
+	 * no longer any active overlapping locks.
+	 */
+	g_unlock_lba_range_done = false;
+	rc = bdev_unlock_lba_range(desc, io_ch, 40, 20, unlock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_unlock_lba_range_done == true);
+	CU_ASSERT(g_lock_lba_range_done == true);
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.pending_locked_ranges));
+	range = TAILQ_FIRST(&bdev->internal.locked_ranges);
+	SPDK_CU_ASSERT_FATAL(range != NULL);
+	CU_ASSERT(range->offset == 35);
+	CU_ASSERT(range->length == 10);
+
+	/* Finally, unlock 35-44. */
+	g_unlock_lba_range_done = false;
+	rc = bdev_unlock_lba_range(desc, io_ch, 35, 10, unlock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_unlock_lba_range_done == true);
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.locked_ranges));
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2789,7 +2927,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_set_io_timeout", bdev_set_io_timeout) == NULL ||
 		CU_add_test(suite, "lba_range_overlap", lba_range_overlap) == NULL ||
 		CU_add_test(suite, "lock_lba_range_check_ranges", lock_lba_range_check_ranges) == NULL ||
-		CU_add_test(suite, "lock_lba_range_with_io_outstanding", lock_lba_range_with_io_outstanding) == NULL
+		CU_add_test(suite, "lock_lba_range_with_io_outstanding",
+			    lock_lba_range_with_io_outstanding) == NULL ||
+		CU_add_test(suite, "lock_lba_range_overlapped", lock_lba_range_overlapped) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
