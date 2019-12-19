@@ -62,12 +62,12 @@ function fio_test_suite() {
 	local fio_ext_params="--ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
 
 	if [ $RUN_NIGHTLY -eq 0 ]; then
-		run_test "case" "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM \
+		run_test "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM \
 		--output=$output_dir/blockdev_fio_verify.txt
 	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
 		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
 		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
-		run_test "case" "bdev_fio_rw_verify_ext" fio_bdev $fio_ext_params --spdk_mem=$PRE_RESERVED_MEM \
+		run_test "bdev_fio_rw_verify_ext" fio_bdev $fio_ext_params --spdk_mem=$PRE_RESERVED_MEM \
 		--output=$output_dir/blockdev_fio_verify.txt
 	fi
 	rm -f ./*.state
@@ -80,9 +80,9 @@ function fio_test_suite() {
 	done
 
 	if [ $RUN_NIGHTLY -eq 0 ]; then
-		run_test "case" "bdev_fio_trim" fio_bdev $fio_params --output=$output_dir/blockdev_trim.txt
+		run_test "bdev_fio_trim" fio_bdev $fio_params --output=$output_dir/blockdev_trim.txt
 	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
-		run_test "case" "bdev_fio_trim_ext" fio_bdev $fio_ext_params --output=$output_dir/blockdev_trim.txt
+		run_test "bdev_fio_trim_ext" fio_bdev $fio_ext_params --output=$output_dir/blockdev_trim.txt
 	fi
 
 	rm -f ./*.state
@@ -158,7 +158,7 @@ function qos_function_test() {
 
 		# Run bdevperf with IOPS rate limit on bdev 1
 		$rpc_py bdev_set_qos_limit --rw_ios_per_sec $iops_limit $QOS_DEV_1
-		run_test "case" "bdev_qos_iops" run_qos_test $iops_limit IOPS $QOS_DEV_1
+		run_test "bdev_qos_iops" run_qos_test $iops_limit IOPS $QOS_DEV_1
 
 		# Run bdevperf with bandwidth rate limit on bdev 2
 		# Set the bandwidth limit as 1/10 of the measure performance without QoS
@@ -168,11 +168,11 @@ function qos_function_test() {
 			bw_limit=$qos_lower_bw_limit
 		fi
 		$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec $bw_limit $QOS_DEV_2
-		run_test "case" "bdev_qos_bw" run_qos_test $bw_limit BANDWIDTH $QOS_DEV_2
+		run_test "bdev_qos_bw" run_qos_test $bw_limit BANDWIDTH $QOS_DEV_2
 
 		# Run bdevperf with additional read only bandwidth rate limit on bdev 1
 		$rpc_py bdev_set_qos_limit --r_mbytes_per_sec $qos_lower_bw_limit $QOS_DEV_1
-		run_test "case" "bdev_qos_ro_bw" run_qos_test $qos_lower_bw_limit BANDWIDTH $QOS_DEV_1
+		run_test "bdev_qos_ro_bw" run_qos_test $qos_lower_bw_limit BANDWIDTH $QOS_DEV_1
 	else
 		echo "Actual IOPS without limiting is too low - exit testing"
 	fi
@@ -262,24 +262,24 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 # End bdev configuration
 #-----------------------------------------------------
 
-run_test "case" "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Malloc0
-run_test "case" "bdev_bounds" bdev_bounds
-run_test "case" "bdev_nbd" nbd_function_test $testdir/bdev.conf "$bdevs_name"
+run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Malloc0
+run_test "bdev_bounds" bdev_bounds
+run_test "bdev_nbd" nbd_function_test $testdir/bdev.conf "$bdevs_name"
 if [ -d /usr/src/fio ]; then
-	run_test "suite" "bdev_fio" fio_test_suite
+	run_test "bdev_fio" fio_test_suite
 else
 	echo "FIO not available"
 	exit 1
 fi
 
 # Run bdevperf with gpt
-run_test "case" "bdev_gpt_verify" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
-run_test "case" "bdev_gpt_write_zeroes" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
-run_test "suite" "bdev_qos" qos_test_suite
+run_test "bdev_gpt_verify" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
+run_test "bdev_gpt_write_zeroes" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
+run_test "bdev_qos" qos_test_suite
 
 # Temporarily disabled - infinite loop
 # if [ $RUN_NIGHTLY -eq 1 ]; then
-	# run_test "case" "bdev_gpt_reset" $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -o 4096 -t 60
+	# run_test "bdev_gpt_reset" $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -o 4096 -t 60
 	# report_test_completion "nightly_bdev_reset"
 # fi
 

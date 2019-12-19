@@ -81,10 +81,10 @@ if [ $TEST_TRANSPORT == "rdma" ] && check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP;
 	exit 0
 fi
 
-run_test "case" "nvmf_target_disconnect_tc1" nvmf_target_disconnect_tc1
-run_test "case" "nvmf_target_disconnect_tc2" nvmf_target_disconnect_tc2
+run_test "nvmf_target_disconnect_tc1" nvmf_target_disconnect_tc1
+run_test "nvmf_target_disconnect_tc2" nvmf_target_disconnect_tc2
 if [ -n "$NVMF_SECOND_TARGET_IP" ]; then
-	run_test "case" "nvmf_target_disconnect_tc3" nvmf_target_disconnect_tc3
+	run_test "nvmf_target_disconnect_tc3" nvmf_target_disconnect_tc3
 fi
 
 trap - SIGINT SIGTERM EXIT

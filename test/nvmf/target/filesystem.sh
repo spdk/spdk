@@ -56,13 +56,13 @@ function nvmf_filesystem_part {
 	sleep 1
 
 	if [ $incapsule -eq 0 ]; then
-		run_test "case" "filesystem_ext4" nvmf_filesystem_create "ext4"
-		run_test "case" "filesystem_btrfs" nvmf_filesystem_create "btrfs"
-		run_test "case" "filesystem_xfs" nvmf_filesystem_create "xfs"
+		run_test "filesystem_ext4" nvmf_filesystem_create "ext4"
+		run_test "filesystem_btrfs" nvmf_filesystem_create "btrfs"
+		run_test "filesystem_xfs" nvmf_filesystem_create "xfs"
 	else
-		run_test "case" "filesystem_incapsule_ext4" nvmf_filesystem_create "ext4"
-		run_test "case" "filesystem_incapsule_btrfs" nvmf_filesystem_create "btrfs"
-		run_test "case" "filesystem_incapsule_xfs" nvmf_filesystem_create "xfs"
+		run_test "filesystem_incapsule_ext4" nvmf_filesystem_create "ext4"
+		run_test "filesystem_incapsule_btrfs" nvmf_filesystem_create "btrfs"
+		run_test "filesystem_incapsule_xfs" nvmf_filesystem_create "xfs"
 	fi
 
 	parted -s /dev/nvme0n1 rm 1
@@ -78,7 +78,7 @@ function nvmf_filesystem_part {
 	nvmfpid=
 }
 
-run_test "suite" "nvmf_filesystem_no_incapsule" nvmf_filesystem_part 0
-run_test "suite" "nvmf_filesystem_incapsule" nvmf_filesystem_part 4096
+run_test "nvmf_filesystem_no_incapsule" nvmf_filesystem_part 0
+run_test "nvmf_filesystem_incapsule" nvmf_filesystem_part 4096
 
 nvmftestfini

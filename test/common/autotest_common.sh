@@ -572,28 +572,25 @@ function kill_stub() {
 }
 
 function run_test() {
-	if [ $# -le 2 ]; then
+	if [ $# -le 1 ]; then
 		echo "Not enough parameters"
-		echo "usage: run_test test_type test_name test_script [script_params]"
+		echo "usage: run_test test_name test_script [script_params]"
 		exit 1
 	fi
 
 	xtrace_disable
-	local test_type
-	test_type="$(echo $1 | tr '[:lower:]' '[:upper:]')"
-	shift
 	local test_name="$1"
 	shift
 
 	timing_enter $test_name
 	echo "************************************"
-	echo "START TEST $test_type $test_name"
+	echo "START TEST $test_name"
 	echo "************************************"
 	xtrace_restore
 	time "$@"
 	xtrace_disable
 	echo "************************************"
-	echo "END TEST $test_type $test_name"
+	echo "END TEST $test_name"
 	echo "************************************"
 
 	timing_exit $test_name

@@ -7,7 +7,7 @@ source $rootdir/test/common/autotest_common.sh
 
 function suite()
 {
-	run_test suite "ocf_$(basename "$@")" "$@"
+	run_test "ocf_$(basename "$@")" "$@"
 }
 
 suite "$testdir/integrity/fio-modes.sh"

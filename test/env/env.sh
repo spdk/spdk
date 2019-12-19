@@ -4,9 +4,9 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
-run_test "case" "env_memory" $testdir/memory/memory_ut
-run_test "case" "env_vtophys" $testdir/vtophys/vtophys
-run_test "case" "env_pci" $testdir/pci/pci_ut
+run_test "env_memory" $testdir/memory/memory_ut
+run_test "env_vtophys" $testdir/vtophys/vtophys
+run_test "env_pci" $testdir/pci/pci_ut
 
 argv="-c 0x1 "
 if [ $(uname) = Linux ]; then
@@ -18,12 +18,12 @@ if [ $(uname) = Linux ]; then
 	# this implicitly.
 	argv+="--base-virtaddr=0x200000000000"
 fi
-run_test "case" "env_dpdk_post_init" $testdir/env_dpdk_post_init/env_dpdk_post_init $argv
+run_test "env_dpdk_post_init" $testdir/env_dpdk_post_init/env_dpdk_post_init $argv
 
 if [ $(uname) = Linux ]; then
 	# This tests the --match-allocations DPDK parameter which is only
 	# supported on Linux
-	run_test "case" "env_mem_callbacks" $testdir/mem_callbacks/mem_callbacks
+	run_test "env_mem_callbacks" $testdir/mem_callbacks/mem_callbacks
 fi
 
 report_test_completion "env"
