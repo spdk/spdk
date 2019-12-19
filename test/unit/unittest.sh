@@ -150,7 +150,6 @@ if [ $(uname -m) = "aarch64" ]; then
 fi
 
 run_test "unittest_include" $valgrind $testdir/include/spdk/histogram_data.h/histogram_ut
-
 run_test "unittest_bdev" unittest_bdev
 if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_bdev_crypto" $valgrind $testdir/lib/bdev/crypto.c/crypto_ut
@@ -170,19 +169,16 @@ if [ $(uname -s) = Linux ]; then
 	run_test "unittest_ftl" unittest_ftl
 fi
 
+run_test "unittest_ioat" $valgrind $testdir/lib/ioat/ioat.c/ioat_ut
 run_test "unittest_iscsi" unittest_iscsi
 run_test "unittest_json" unittest_json
-
-run_test "unittest_sock" $valgrind $testdir/lib/sock/sock.c/sock_ut
-
+run_test "unittest_notify" $valgrind $testdir/lib/notify/notify.c/notify_ut
 run_test "unittest_nvme" unittest_nvme
+run_test "unittest_log" $valgrind $testdir/lib/log/log.c/log_ut
+run_test "unittest_lvol" $valgrind $testdir/lib/lvol/lvol.c/lvol_ut
 if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_nvme_rdma" $valgrind $testdir/lib/nvme/nvme_rdma.c/nvme_rdma_ut
 fi
-
-run_test "unittest_ioat" $valgrind $testdir/lib/ioat/ioat.c/ioat_ut
-
-run_test "unittest_log" $valgrind $testdir/lib/log/log.c/log_ut
 
 run_test "unittest_nvmf" unittest_nvmf
 if [ -e $testdir/lib/nvmf/fc.c/fc_ut ]; then
@@ -197,20 +193,14 @@ if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_nvmf_rdma" $valgrind $testdir/lib/nvmf/rdma.c/rdma_ut
 fi
 
-run_test "unittest_scsi" unittest_scsi
-
-run_test "unittest_lvol" $valgrind $testdir/lib/lvol/lvol.c/lvol_ut
-
-run_test "unittest_notify" $valgrind $testdir/lib/notify/notify.c/notify_ut
-
 if grep -q '#define SPDK_CONFIG_REDUCE 1' $rootdir/config.h; then
 	run_test "unittest_bdev_reduce" $valgrind $testdir/lib/reduce/reduce.c/reduce_ut
 fi
 
+run_test "unittest_scsi" unittest_scsi
+run_test "unittest_sock" $valgrind $testdir/lib/sock/sock.c/sock_ut
 run_test "unittest_thread" $valgrind $testdir/lib/thread/thread.c/thread_ut
-
 run_test "unittest_util" unittest_util
-
 if [ $(uname -s) = Linux ]; then
 	run_test "unittest_vhost" $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
 fi
