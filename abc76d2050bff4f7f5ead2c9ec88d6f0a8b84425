@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "238d89e2_57b2732e",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-19T16:28:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3c2d651d_59a55d6d",
+      "revId": "abc76d2050bff4f7f5ead2c9ec88d6f0a8b84425",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "38cefbac_317d1333",
         "filename": "include/spdk/nvmf.h",
         "patchSetId": 1
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "dbbd8aa7_56905ca7",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1148,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-19T16:28:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ab878bc2_e9654691",
+      "revId": "abc76d2050bff4f7f5ead2c9ec88d6f0a8b84425",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48273677_bacf99d1",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
@@ -67,6 +103,24 @@
       "revId": "abc76d2050bff4f7f5ead2c9ec88d6f0a8b84425",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a93fb18_5f64b88a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 4014,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-19T16:28:57Z",
+      "side": 1,
+      "message": "It is the tailq element. Thanks for the suggestion. Done",
+      "parentUuid": "48273677_bacf99d1",
+      "revId": "abc76d2050bff4f7f5ead2c9ec88d6f0a8b84425",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "493fe6ae_f6bffaa0",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2849,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-19T16:28:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "13952a8a_8e29a868",
+      "revId": "abc76d2050bff4f7f5ead2c9ec88d6f0a8b84425",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6516abac_a759a729",
         "filename": "lib/nvmf/transport.c",
         "patchSetId": 1
@@ -101,6 +173,24 @@
       "revId": "abc76d2050bff4f7f5ead2c9ec88d6f0a8b84425",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f9a5a65_13178c98",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-19T16:28:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6516abac_a759a729",
+      "revId": "abc76d2050bff4f7f5ead2c9ec88d6f0a8b84425",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
