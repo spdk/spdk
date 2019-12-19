@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "509eec50_265dc02c",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T16:54:11Z",
+      "side": 1,
+      "message": "I think adding the aux_buf pointer here is OK.  But I think I\u0027d prefer need_aux_buf to be a private flag, and add a new API, something like spdk_bdev_io_get_aux_buf().  Then we can change the flag implementation in the future if needed, and it also avoids overloading spdk_bdev_io_get_buf() to mean two different things.\n\nFor aux_buf_len, do we need to keep this?  I\u0027m just wondering if we can always calculate this value based on num_blocks * blocklen.  I know that for spdk_bdev_io_get_buf(), we keep this value separately, but I don\u0027t see anywhere that we don\u0027t call it with num_blocks * blocklen.  I think it would make the API simpler and avoid having to track this separately.",
+      "revId": "7253454dab752826e5ae66be10007dc1b3e63bc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3a7c3cc_9d43efb3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T16:54:11Z",
+      "side": 1,
+      "message": "it would be nice to avoid an almost exact duplicate of the _bdev_io_put_buf() code here\n\nhave you also thought about having aux_md_buf?  I know in your crypto case you may not need an aux buffer for separate metadata, but I don\u0027t think we should necessarily exclude that case\n\nand if we do allow that case, then I think it\u0027s easier to reuse code here",
+      "revId": "7253454dab752826e5ae66be10007dc1b3e63bc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
