@@ -4,6 +4,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
+nvme_serial=SPDK00000000000001
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
@@ -38,7 +39,7 @@ function nvmf_filesystem_part {
 
 	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -c $incapsule
 	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc1
-	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s $nvme_serial
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
@@ -47,7 +48,7 @@ function nvmf_filesystem_part {
 	# TODO: fix this to wait for the proper NVMe device.
 	# if we are hosting the local filesystem on an NVMe drive, this test will fail
 	# because it relies on the no other NVMe drives being present in the system.
-	waitforblk "nvme0n1"
+	waitforblk "$nvme_serial"
 
 	mkdir -p /mnt/device
 

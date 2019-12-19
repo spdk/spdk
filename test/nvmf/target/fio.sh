@@ -4,6 +4,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
+nvme_serial=SPDK00000000000001
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
@@ -22,7 +23,7 @@ raid_malloc_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_
 raid_malloc_bdevs+="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 $rpc_py bdev_raid_create -n raid0 -z 64 -r 0 -b "$raid_malloc_bdevs"
 
-$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s $nvme_serial
 for malloc_bdev in $malloc_bdevs; do
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 "$malloc_bdev"
 done
@@ -33,9 +34,11 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 raid0
 
 nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
-waitforblk "nvme0n1"
-waitforblk "nvme0n2"
-waitforblk "nvme0n3"
+nvme_name=$(basename $(sudo nvme list | grep $nvme_serial | head -1 | awk '{ print $1 }'))
+nvme_name=${nvme_name%?}
+waitforblk "${nvme_name}1"
+waitforblk "${nvme_name}2"
+waitforblk "${nvme_name}3"
 
 $rootdir/scripts/fio.py -p nvmf -i 4096 -d 1 -t write -r 1 -v
 $rootdir/scripts/fio.py -p nvmf -i 4096 -d 1 -t randwrite -r 1 -v
