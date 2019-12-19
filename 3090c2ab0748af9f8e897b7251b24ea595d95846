@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ed36bd8_ee59ce35",
+        "filename": "module/event/rpc/app_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T20:49:00Z",
+      "side": 1,
+      "message": "how about framework_get_reactors for the RPC name?\n\nI think that matches better with some of the other RPCs described in this file.\n\nThis RPC returns all of the reactors, and currently doesn\u0027t really print any stats.  So I feel like framework_get_reactors may be a better name.",
+      "revId": "3090c2ab0748af9f8e897b7251b24ea595d95846",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
