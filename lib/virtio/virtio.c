@@ -33,26 +33,8 @@
 
 #include "spdk/stdinc.h"
 
-#include <linux/virtio_scsi.h>
-#include <linux/virtio_pci.h>
-#include <linux/virtio_config.h>
-
-#include <rte_config.h>
-#include <rte_memcpy.h>
-#include <rte_string_fns.h>
-#include <rte_memzone.h>
-#include <rte_malloc.h>
-#include <rte_atomic.h>
-#include <rte_branch_prediction.h>
-#include <rte_pci.h>
-#include <rte_common.h>
-#include <rte_errno.h>
-
-#include <rte_eal.h>
-#include <rte_dev.h>
-#include <rte_prefetch.h>
-
 #include "spdk/env.h"
+#include "spdk/util.h"
 #include "spdk/barrier.h"
 
 #include "spdk_internal/virtio.h"
@@ -133,7 +115,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 		return -EINVAL;
 	}
 
-	if (!rte_is_power_of_2(vq_size)) {
+	if (!spdk_u32_is_pow2(vq_size)) {
 		SPDK_ERRLOG("virtqueue %"PRIu16" size (%u) is not powerof 2\n",
 			    vtpci_queue_idx, vq_size);
 		return -EINVAL;
@@ -141,7 +123,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 
 	size = sizeof(*vq) + vq_size * sizeof(struct vq_desc_extra);
 
-	if (posix_memalign((void **)&vq, RTE_CACHE_LINE_SIZE, size)) {
+	if (posix_memalign((void **)&vq, SPDK_CACHE_LINE_SIZE, size)) {
 		SPDK_ERRLOG("can not allocate vq\n");
 		return -ENOMEM;
 	}
@@ -156,7 +138,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	 * Reserve a memzone for vring elements
 	 */
 	size = vring_size(vq_size, VIRTIO_PCI_VRING_ALIGN);
-	vq->vq_ring_size = RTE_ALIGN_CEIL(size, VIRTIO_PCI_VRING_ALIGN);
+	vq->vq_ring_size = SPDK_ALIGN_CEIL(size, VIRTIO_PCI_VRING_ALIGN);
 	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "vring_size: %u, rounded_vring_size: %u\n",
 		      size, vq->vq_ring_size);
 
@@ -402,7 +384,8 @@ virtqueue_dequeue_burst_rx(struct virtqueue *vq, void **rx_pkts,
 			break;
 		}
 
-		rte_prefetch0(cookie);
+		__builtin_prefetch(cookie);
+
 		rx_pkts[i]  = cookie;
 		vq->vq_used_cons_idx++;
 		vq_ring_free_chain(vq, desc_idx);
@@ -558,7 +541,7 @@ virtqueue_req_add_iovs(struct virtqueue *vq, struct iovec *iovs, uint16_t iovcnt
 	}
 }
 
-#define DESC_PER_CACHELINE (RTE_CACHE_LINE_SIZE / sizeof(struct vring_desc))
+#define DESC_PER_CACHELINE (SPDK_CACHE_LINE_SIZE / sizeof(struct vring_desc))
 uint16_t
 virtio_recv_pkts(struct virtqueue *vq, void **io, uint32_t *len, uint16_t nb_pkts)
 {
