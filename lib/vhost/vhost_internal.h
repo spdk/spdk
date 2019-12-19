@@ -38,6 +38,7 @@
 #include "spdk/stdinc.h"
 
 #include <rte_vhost.h>
+#include <rte_interrupts.h>
 
 #include "spdk_internal/vhost_user.h"
 #include "spdk_internal/log.h"
@@ -95,6 +96,16 @@ struct vhost_poll_group {
 typedef struct rte_vhost_resubmit_desc spdk_vhost_resubmit_desc;
 typedef struct rte_vhost_resubmit_info spdk_vhost_resubmit_info;
 
+struct sdpk_vhost_virtqueue_intr_ctx {
+	struct rte_intr_handle intr_handle;
+	struct spdk_vhost_session *vsession;
+	int vq_idx;
+	/* Used to identify whether there is a kick_msg is waitting for handle */
+	bool kick_pending;
+	bool registered;
+	pthread_mutex_t mutex;
+};
+
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
 	struct rte_vhost_ring_inflight vring_inflight;
@@ -124,6 +135,7 @@ struct spdk_vhost_virtqueue {
 	uint32_t vring_idx;
 
 	bool packed_ring;
+	struct sdpk_vhost_virtqueue_intr_ctx *intr_ctx;
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct spdk_vhost_session {
@@ -143,6 +155,9 @@ struct spdk_vhost_session {
 	bool started;
 	bool needs_restart;
 	bool forced_polling;
+
+	uint16_t kick_handle_refs;
+	pthread_mutex_t mutex;
 
 	struct rte_vhost_memory *mem;
 
@@ -173,6 +188,7 @@ struct spdk_vhost_dev {
 
 	struct spdk_cpuset cpumask;
 	bool registered;
+	bool interrupt;
 
 	uint64_t virtio_features;
 	uint64_t disabled_features;
@@ -234,10 +250,16 @@ struct spdk_vhost_dev_backend {
 	int (*vhost_set_config)(struct spdk_vhost_dev *vdev, uint8_t *config,
 				uint32_t offset, uint32_t size, uint32_t flags);
 
+	void (*intr_handler)(struct spdk_vhost_session *vsession, int vq_idx);
+
 	void (*dump_info_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 	void (*write_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 	int (*remove_device)(struct spdk_vhost_dev *vdev);
 };
+
+int vhost_session_register_vqs_kick(struct spdk_vhost_session *vsession);
+int vhost_session_unregister_vqs_kick(struct spdk_vhost_session *vsession);
+int vhost_session_free_vqs_intr_ctx(struct spdk_vhost_session *vsession);
 
 void *vhost_gpa_to_vva(struct spdk_vhost_session *vsession, uint64_t addr, uint64_t len);
 

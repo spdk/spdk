@@ -953,6 +953,161 @@ vhost_session_cb_done(int rc)
 	sem_post(&g_dpdk_sem);
 }
 
+static void
+vhost_vq_kick_handling_msg(void *arg)
+{
+	struct sdpk_vhost_virtqueue_intr_ctx *ctx = arg;
+	struct spdk_vhost_session *vsession = ctx->vsession;
+	struct spdk_vhost_dev *vdev = vsession->vdev;
+
+	pthread_mutex_lock(&ctx->mutex);
+	ctx->kick_pending = false;
+	pthread_mutex_unlock(&ctx->mutex);
+
+	vdev->backend->intr_handler(vsession, ctx->vq_idx);
+
+	pthread_mutex_lock(&vsession->mutex);
+	vsession->kick_handle_refs--;
+	pthread_mutex_unlock(&vsession->mutex);
+}
+
+static void
+vhost_vq_kick_handler(void *param)
+{
+	struct sdpk_vhost_virtqueue_intr_ctx *ctx = param;
+	struct spdk_vhost_session *vsession = ctx->vsession;
+
+	pthread_mutex_lock(&vsession->mutex);
+	pthread_mutex_lock(&ctx->mutex);
+	if (ctx->kick_pending) {
+		pthread_mutex_unlock(&ctx->mutex);
+		pthread_mutex_unlock(&vsession->mutex);
+		return;
+	}
+	ctx->kick_pending = true;
+	vsession->kick_handle_refs++;
+	pthread_mutex_unlock(&ctx->mutex);
+	pthread_mutex_unlock(&vsession->mutex);
+
+	spdk_thread_send_msg(vsession->poll_group->thread, vhost_vq_kick_handling_msg, ctx);
+}
+
+int
+vhost_session_register_vqs_kick(struct spdk_vhost_session *vsession)
+{
+	struct spdk_vhost_dev *vdev = vsession->vdev;
+	struct spdk_vhost_virtqueue *vq;
+	int i, rc;
+
+	if (vdev->interrupt != true) {
+		return 0;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING, "Register virtqueues interrupt\n");
+
+	/* Enable I/O submission notifications */
+	for (i = 0; i < vsession->max_queues; i++) {
+		vq = &vsession->virtqueue[i];
+
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING, "Register vq[%d]'s kickfd is %d\n",
+			      i, vq->vring.kickfd);
+		if (!vq->intr_ctx) {
+			vq->intr_ctx = calloc(1, sizeof(struct sdpk_vhost_virtqueue_intr_ctx));
+			if (vq->intr_ctx == NULL) {
+				SPDK_ERRLOG("Failed to allocate vq interrupt ctx\n");
+				goto error;
+			}
+		}
+
+		vq->intr_ctx->intr_handle.fd = vq->vring.kickfd;
+		/* Here we need to revise the DPDK code as DPDK intr doesn't
+		 * support kickfd or this kind of event style.
+		 * It seems we need to relize the interrupt handling in vhost
+		 * but here I just use the DPDK module to verify my design fast.
+		 */
+		vq->intr_ctx->intr_handle.type = RTE_INTR_HANDLE_VDEV;
+		vq->intr_ctx->vsession = vsession;
+		vq->intr_ctx->vq_idx = i;
+		vq->intr_ctx->kick_pending = false;
+
+		rc = rte_intr_callback_register(&vq->intr_ctx->intr_handle,
+						vhost_vq_kick_handler,
+						(void *)vq->intr_ctx);
+		if (rc) {
+			SPDK_ERRLOG("Fail to register req notifier handler.\n");
+			return -EINVAL;;
+		}
+
+		vq->intr_ctx->registered = true;
+		pthread_mutex_init(&vq->intr_ctx->mutex, NULL);
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING, "Successfully register virtqueues interrupt\n");
+	return 0;
+
+error:
+	for (; i >= 0; i--) {
+		vq = &vsession->virtqueue[i];
+		free(vq->intr_ctx);
+		vq->intr_ctx = NULL;
+	}
+	return -EINVAL;
+}
+
+int
+vhost_session_unregister_vqs_kick(struct spdk_vhost_session *vsession)
+{
+	int i, rc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING, "Unregister virtqueues interrupt\n");
+
+	for (i = 0; i < vsession->max_queues; i++) {
+		struct spdk_vhost_virtqueue *vq = &vsession->virtqueue[i];
+
+		if (!vq->intr_ctx || vq->intr_ctx->registered == false) {
+			continue;
+		}
+
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING, "Unregister vq[%d]'s kickfd is %d\n",
+			      i, vq->vring.kickfd);
+
+		rc = rte_intr_callback_unregister(&vq->intr_ctx->intr_handle,
+						  vhost_vq_kick_handler,
+						  (void *)vq->intr_ctx);
+		if (rc < 0) {
+			SPDK_ERRLOG("Fail to register req notifier handler, errno--%d.\n", rc);
+			return rc;
+		}
+
+		vq->intr_ctx->registered = false;
+		pthread_mutex_destroy(&vq->intr_ctx->mutex);
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING, "Successfully unregister virtqueues interrupt\n");
+	return 0;
+}
+
+int
+vhost_session_free_vqs_intr_ctx(struct spdk_vhost_session *vsession)
+{
+	int i;
+
+	for (i = 0; i < vsession->max_queues; i++) {
+		struct spdk_vhost_virtqueue *vq = &vsession->virtqueue[i];
+
+		if (!vq->intr_ctx) {
+			continue;
+		}
+
+		free(vq->intr_ctx);
+		vq->intr_ctx = NULL;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING, "Destroy vqs intr_ctx successfully\n");
+	return 0;
+}
+
+
 void
 vhost_session_start_done(struct spdk_vhost_session *vsession, int response)
 {
@@ -965,6 +1120,10 @@ vhost_session_start_done(struct spdk_vhost_session *vsession, int response)
 
 		assert(vsession->vdev->active_session_num < UINT32_MAX);
 		vsession->vdev->active_session_num++;
+
+		if (vsession->vdev->interrupt) {
+			response = vhost_session_register_vqs_kick(vsession);
+		}
 	}
 
 	vhost_session_cb_done(response);
@@ -1285,8 +1444,11 @@ vhost_start_device_cb(int vid)
 			/* Disable I/O submission notifications, we'll be polling. */
 			q->vring.device_event->flags = VRING_PACKED_EVENT_FLAG_DISABLE;
 		} else {
-			/* Disable I/O submission notifications, we'll be polling. */
-			q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
+			/* If device don't support interrupt then disable notify */
+			if (!vdev->interrupt) {
+				/* Disable I/O submission notifications, we'll be polling. */
+				q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
+			}
 		}
 
 		q->packed_ring = packed_ring;
@@ -1474,6 +1636,7 @@ vhost_new_connection_cb(int vid, const char *ifname)
 	vsession->stats_check_interval = SPDK_VHOST_STATS_CHECK_INTERVAL_MS *
 					 spdk_get_ticks_hz() / 1000UL;
 	TAILQ_INSERT_TAIL(&vdev->vsessions, vsession, tailq);
+	pthread_mutex_init(&vsession->mutex, NULL);
 
 	vhost_session_install_rte_compat_hooks(vsession);
 	pthread_mutex_unlock(&g_vhost_mutex);
@@ -1498,6 +1661,7 @@ vhost_destroy_connection_cb(int vid)
 		rc = _stop_session(vsession);
 	}
 
+	pthread_mutex_destroy(&vsession->mutex);
 	TAILQ_REMOVE(&vsession->vdev->vsessions, vsession, tailq);
 	free(vsession->name);
 	free(vsession);

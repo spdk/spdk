@@ -602,7 +602,7 @@ submit_inflight_desc(struct spdk_vhost_blk_session *bvsession,
 	resubmit->resubmit_list = NULL;
 }
 
-static void
+static int
 process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq)
 {
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
@@ -639,7 +639,7 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 
 		reqs_cnt = vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
 		if (!reqs_cnt) {
-			return;
+			return 0;
 		}
 
 		for (i = 0; i < reqs_cnt; i++) {
@@ -658,6 +658,8 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 			process_blk_task(vq, reqs[i]);
 		}
 	}
+
+	return i;
 }
 
 static int
@@ -677,7 +679,7 @@ vdev_worker(void *arg)
 	return -1;
 }
 
-static void
+static int
 no_bdev_process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq)
 {
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
@@ -688,7 +690,7 @@ no_bdev_process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_v
 		uint16_t req_idx = vq->last_avail_idx;
 
 		if (!vhost_vq_packed_desc_is_avail(vq, req_idx)) {
-			return;
+			return 0;
 		}
 
 		task = &((struct spdk_vhost_blk_task *)vq->tasks)[req_idx];
@@ -697,7 +699,7 @@ no_bdev_process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_v
 				    vsession->name, req_idx);
 			vhost_vq_packed_ring_enqueue(vsession, vq, req_idx,
 						     task->last_idx, task->buffer_id);
-			return;
+			return 0;
 		}
 
 		task->used = true;
@@ -715,7 +717,7 @@ no_bdev_process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_v
 		uint16_t iovcnt, req_idx;
 
 		if (vhost_vq_avail_ring_get(vq, &req_idx, 1) != 1) {
-			return;
+			return 0;
 		}
 
 		iovcnt = SPDK_COUNTOF(iovs);
@@ -726,6 +728,8 @@ no_bdev_process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_v
 
 		vhost_vq_used_ring_enqueue(vsession, vq, req_idx, 0);
 	}
+
+	return 1;
 }
 
 static int
@@ -747,6 +751,26 @@ no_bdev_vdev_worker(void *arg)
 	}
 
 	return -1;
+}
+
+/* Can be replaced */
+static int
+vdev_session_used_signal(void *arg)
+{
+	struct spdk_vhost_blk_session *bvsession = arg;
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
+
+	vhost_session_used_signal(vsession);
+
+	if (!bvdev->bdev) {
+		if (vsession->task_cnt == 0 && bvsession->io_channel) {
+			spdk_put_io_channel(bvsession->io_channel);
+			bvsession->io_channel = NULL;
+		}
+	}
+
+	return 0;
 }
 
 static struct spdk_vhost_blk_session *
@@ -926,10 +950,20 @@ vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 		}
 	}
 
-	bvsession->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
-				     bvsession, 0);
-	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: started poller on lcore %d\n",
-		     vsession->name, spdk_env_get_current_core());
+	if (vdev->interrupt) {
+		/* This poller is only used for used ring signal
+		 * In interrupt mode we may don't want to register a poller so
+		 * can do this in blk_task_enqueu(). When a request enqueued we
+		 * call the used signal.
+		 */
+		bvsession->requestq_poller = spdk_poller_register(vdev_session_used_signal,
+					     bvsession, 0);
+	} else {
+		bvsession->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
+					     bvsession, 0);
+		SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: started poller on lcore %d\n",
+			     vsession->name, spdk_env_get_current_core());
+	}
 out:
 	vhost_session_start_done(vsession, rc);
 	return rc;
@@ -973,6 +1007,20 @@ destroy_session_poller_cb(void *arg)
 		bvsession->io_channel = NULL;
 	}
 
+	if (vhost_session_unregister_vqs_kick(vsession) != 0) {
+		return -1;
+	}
+
+	pthread_mutex_lock(&vsession->mutex);
+	/* Wait until there are no vq kick msgs outside */
+	if (vsession->kick_handle_refs > 0) {
+		pthread_mutex_unlock(&vsession->mutex);
+		return -1;
+	}
+	pthread_mutex_unlock(&vsession->mutex);
+
+	assert(vhost_session_free_vqs_intr_ctx(vsession) == 0);
+
 	free_task_pool(bvsession);
 	spdk_poller_unregister(&bvsession->stop_poller);
 	vhost_session_stop_done(vsession, 0);
@@ -990,6 +1038,7 @@ vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 	spdk_poller_unregister(&bvsession->requestq_poller);
 	bvsession->stop_poller = spdk_poller_register(destroy_session_poller_cb,
 				 bvsession, 1000);
+
 	return 0;
 }
 
@@ -1113,6 +1162,26 @@ vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 	return 0;
 }
 
+static void
+vhost_blk_intr_handler(struct spdk_vhost_session *vsession, int vq_idx)
+{
+	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
+	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
+	struct spdk_vhost_virtqueue *vq = &vsession->virtqueue[vq_idx];
+
+	assert(bvdev != NULL);
+
+	if (bvdev->bdev) {
+		/* process_vq was designed for the polling mode.
+		 * It restricts the max requests to 32 per polling.
+		 * In interrupt mode we want it handles all the available requests.
+		 */
+		while (process_vq(bvsession, vq));
+	} else {
+		while (no_bdev_process_vq(bvsession, vq));
+	}
+}
+
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.session_ctx_size = sizeof(struct spdk_vhost_blk_session) - sizeof(struct spdk_vhost_session),
 	.start_session =  vhost_blk_start,
@@ -1121,6 +1190,7 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.dump_info_json = vhost_blk_dump_info_json,
 	.write_config_json = vhost_blk_write_config_json,
 	.remove_device = vhost_blk_destroy,
+	.intr_handler = vhost_blk_intr_handler,
 };
 
 int
