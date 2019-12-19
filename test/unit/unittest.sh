@@ -80,6 +80,14 @@ function unittest_nvme {
 	$valgrind $testdir/lib/nvme/nvme_tcp.c/nvme_tcp_ut
 }
 
+function unittest_nvmf {
+	$valgrind $testdir/lib/nvmf/ctrlr.c/ctrlr_ut
+	$valgrind $testdir/lib/nvmf/ctrlr_bdev.c/ctrlr_bdev_ut
+	$valgrind $testdir/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut
+	$valgrind $testdir/lib/nvmf/subsystem.c/subsystem_ut
+	$valgrind $testdir/lib/nvmf/tcp.c/tcp_ut
+}
+
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
@@ -155,14 +163,19 @@ $valgrind $testdir/lib/ioat/ioat.c/ioat_ut
 
 $valgrind $testdir/lib/log/log.c/log_ut
 
-$valgrind $testdir/lib/nvmf/ctrlr.c/ctrlr_ut
-$valgrind $testdir/lib/nvmf/ctrlr_bdev.c/ctrlr_bdev_ut
-$valgrind $testdir/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut
-if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
-	$valgrind $testdir/lib/nvmf/rdma.c/rdma_ut
+run_test "unittest_nvmf" unittest_nvmf
+if [ -e $testdir/lib/nvmf/fc.c/fc_ut ]; then
+	run_test "unittest_nvmf_fc" $valgrind $testdir/lib/nvmf/fc.c/fc_ut
 fi
-$valgrind $testdir/lib/nvmf/subsystem.c/subsystem_ut
-$valgrind $testdir/lib/nvmf/tcp.c/tcp_ut
+
+if [ -e $testdir/lib/nvmf/fc_ls.c/fc_ls_ut ]; then
+	run_test "unittest_nvmf_fc_ls" $valgrind $testdir/lib/nvmf/fc_ls.c/fc_ls_ut
+fi
+
+if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
+	run_test "unittest_nvmf_rdma" $valgrind $testdir/lib/nvmf/rdma.c/rdma_ut
+fi
+
 
 $valgrind $testdir/lib/scsi/dev.c/dev_ut
 $valgrind $testdir/lib/scsi/lun.c/lun_ut
@@ -193,14 +206,6 @@ $valgrind $testdir/lib/util/pipe.c/pipe_ut
 
 if [ $(uname -s) = Linux ]; then
 $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
-fi
-
-if [ -e $testdir/lib/nvmf/fc.c/fc_ut ]; then
-	$valgrind $testdir/lib/nvmf/fc.c/fc_ut
-fi
-
-if [ -e $testdir/lib/nvmf/fc_ls.c/fc_ls_ut ]; then
-	$valgrind $testdir/lib/nvmf/fc_ls.c/fc_ls_ut
 fi
 
 # local unit test coverage
