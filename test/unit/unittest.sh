@@ -59,6 +59,13 @@ function unittest_iscsi {
 	$valgrind $testdir/lib/iscsi/portal_grp.c/portal_grp_ut $testdir/lib/iscsi/portal_grp.c/portal_grp.conf
 }
 
+function unittest_json {
+	$valgrind $testdir/lib/json/json_parse.c/json_parse_ut
+	$valgrind $testdir/lib/json/json_util.c/json_util_ut
+	$valgrind $testdir/lib/json/json_write.c/json_write_ut
+	$valgrind $testdir/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut
+}
+
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
@@ -121,6 +128,7 @@ if [ $(uname -s) = Linux ]; then
 fi
 
 run_test "unittest_iscsi" unittest_iscsi
+run_test "unittest_json" unittest_json
 
 $valgrind $testdir/lib/sock/sock.c/sock_ut
 
@@ -140,12 +148,6 @@ if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 fi
 
 $valgrind $testdir/lib/ioat/ioat.c/ioat_ut
-
-$valgrind $testdir/lib/json/json_parse.c/json_parse_ut
-$valgrind $testdir/lib/json/json_util.c/json_util_ut
-$valgrind $testdir/lib/json/json_write.c/json_write_ut
-
-$valgrind $testdir/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut
 
 $valgrind $testdir/lib/log/log.c/log_ut
 
