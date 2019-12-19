@@ -4,6 +4,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
+nvme_serial=SPDK00000000000001
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
@@ -18,7 +19,7 @@ $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -c 0
 
 bdev="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
-$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s $nvme_serial
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
@@ -32,9 +33,9 @@ fi
 set +x
 for i in $(seq 1 $num_iterations); do
 	nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" $IO_QUEUES
-	waitforblk "nvme0n1"
+	waitforblk "$nvme_serial"
 	nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
-	waitforblk_disconnect "nvme0n1"
+	waitforblk_disconnect "$nvme_serial"
 done
 set -x
 
