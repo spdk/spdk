@@ -433,6 +433,11 @@ struct spdk_bdev {
 
 		/** Currently locked ranges for this bdev.  Used to populate new channels. */
 		lba_range_tailq_t locked_ranges;
+
+		/** Pending locked ranges for this bdev.  These ranges are not currently
+		 *  locked due to overlapping with another locked range.
+		 */
+		lba_range_tailq_t pending_locked_ranges;
 	} internal;
 };
 
