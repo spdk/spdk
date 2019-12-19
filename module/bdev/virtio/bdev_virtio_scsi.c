@@ -46,6 +46,7 @@
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 #include "spdk_internal/virtio.h"
+#include "spdk_internal/vhost_user.h"
 
 #include <linux/virtio_scsi.h>
 
