@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "23ea788d_fa10689c",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 1026,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T14:45:50Z",
+      "side": 1,
+      "message": "EBADF not a valid return for this function\n\n(I commented on this in previous revision too)",
+      "revId": "7ced69f88fcd51e697eef619927f1fa7bcc62e1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9470b29_1812862a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 3261,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T14:45:50Z",
+      "side": 1,
+      "message": "This can still get leaked, if bdev_comparev_blocks_with_md returns an error (including -ENOMEM).\n\nI think you need to avoid allocating an extra bdev_io, only for its iov.  Probably you can just follow how bdev_read and bdev_readv are done.  This function would essentially be mostly a duplicate of bdev_comparev_blocks_with_md, and does the bdev_io_type_supported check and bdev_compare_do_read call here directly.\n\nI know you were trying to avoid duplicating code here which I appreciate it.  :)  But in this case I think it\u0027s better to just duplicate some code, and it ends up being consistent with how we handle single-buffer v. vectored-buffer for read and write too.",
+      "revId": "7ced69f88fcd51e697eef619927f1fa7bcc62e1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
