@@ -129,9 +129,9 @@ done
 $rpc_py < $testdir/rpcs.txt
 timing_exit create_subsystems
 
-run_test "case" "nvmf_shutdown_tc1" nvmf_shutdown_tc1
-run_test "case" "nvmf_shutdown_tc2" nvmf_shutdown_tc2
-run_test "case" "nvmf_shutdown_tc3" nvmf_shutdown_tc3
+run_test "nvmf_shutdown_tc1" nvmf_shutdown_tc1
+run_test "nvmf_shutdown_tc2" nvmf_shutdown_tc2
+run_test "nvmf_shutdown_tc3" nvmf_shutdown_tc3
 
 rm -f ./local-job0-0-verify.state
 rm -rf $testdir/bdevperf.conf
