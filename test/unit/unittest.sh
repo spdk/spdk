@@ -66,6 +66,20 @@ function unittest_json {
 	$valgrind $testdir/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut
 }
 
+function unittest_nvme {
+	$valgrind $testdir/lib/nvme/nvme.c/nvme_ut
+	$valgrind $testdir/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut
+	$valgrind $testdir/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut
+	$valgrind $testdir/lib/nvme/nvme_ctrlr_ocssd_cmd.c/nvme_ctrlr_ocssd_cmd_ut
+	$valgrind $testdir/lib/nvme/nvme_ns.c/nvme_ns_ut
+	$valgrind $testdir/lib/nvme/nvme_ns_cmd.c/nvme_ns_cmd_ut
+	$valgrind $testdir/lib/nvme/nvme_ns_ocssd_cmd.c/nvme_ns_ocssd_cmd_ut
+	$valgrind $testdir/lib/nvme/nvme_qpair.c/nvme_qpair_ut
+	$valgrind $testdir/lib/nvme/nvme_pcie.c/nvme_pcie_ut
+	$valgrind $testdir/lib/nvme/nvme_quirks.c/nvme_quirks_ut
+	$valgrind $testdir/lib/nvme/nvme_tcp.c/nvme_tcp_ut
+}
+
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
@@ -132,19 +146,9 @@ run_test "unittest_json" unittest_json
 
 $valgrind $testdir/lib/sock/sock.c/sock_ut
 
-$valgrind $testdir/lib/nvme/nvme.c/nvme_ut
-$valgrind $testdir/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut
-$valgrind $testdir/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut
-$valgrind $testdir/lib/nvme/nvme_ctrlr_ocssd_cmd.c/nvme_ctrlr_ocssd_cmd_ut
-$valgrind $testdir/lib/nvme/nvme_ns.c/nvme_ns_ut
-$valgrind $testdir/lib/nvme/nvme_ns_cmd.c/nvme_ns_cmd_ut
-$valgrind $testdir/lib/nvme/nvme_ns_ocssd_cmd.c/nvme_ns_ocssd_cmd_ut
-$valgrind $testdir/lib/nvme/nvme_qpair.c/nvme_qpair_ut
-$valgrind $testdir/lib/nvme/nvme_pcie.c/nvme_pcie_ut
-$valgrind $testdir/lib/nvme/nvme_quirks.c/nvme_quirks_ut
-$valgrind $testdir/lib/nvme/nvme_tcp.c/nvme_tcp_ut
+run_test "unittest_nvme" unittest_nvme
 if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
-	$valgrind $testdir/lib/nvme/nvme_rdma.c/nvme_rdma_ut
+	run_test "unittest_nvme_rdma" $valgrind $testdir/lib/nvme/nvme_rdma.c/nvme_rdma_ut
 fi
 
 $valgrind $testdir/lib/ioat/ioat.c/ioat_ut
