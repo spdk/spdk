@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbdc207b_fae7e2b1",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2715,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-12-19T09:05:25Z",
+      "side": 1,
+      "message": "put this brace to an extra line.",
+      "revId": "312af5514d21e09470156cf3fdbc68a280f4e3c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
