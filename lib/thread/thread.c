@@ -520,24 +520,22 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		poller->state = SPDK_POLLER_STATE_RUNNING;
 		poller_rc = poller->fn(poller->arg);
 
-		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
-			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
-			free(poller);
-			continue;
-		} else if (poller->state != SPDK_POLLER_STATE_PAUSED) {
-			poller->state = SPDK_POLLER_STATE_WAITING;
-		}
-
 #ifdef DEBUG
 		if (poller_rc == -1) {
 			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Poller %p returned -1\n", poller);
 		}
 #endif
 
+		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
+			free(poller);
+		} else if (poller->state != SPDK_POLLER_STATE_PAUSED) {
+			poller->state = SPDK_POLLER_STATE_WAITING;
+		}
+
 		if (poller_rc > rc) {
 			rc = poller_rc;
 		}
-
 	}
 
 	TAILQ_FOREACH_SAFE(poller, &thread->timer_pollers, tailq, tmp) {
