@@ -94,6 +94,30 @@
       "revId": "201effede3f9d329ba76adf73feda3028175e8df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cdab45c9_945b086c",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-19T08:01:29Z",
+      "side": 1,
+      "message": "Hi Jin,\n\nI want to suggest to change the line 310 to \"goto exit\" and insert the label \"exit:\" between the line 314 and 315.\nThis will avoid our misunderstanding.\n\n-Shuhei",
+      "parentUuid": "23e36bb4_297bf821",
+      "range": {
+        "startLine": 310,
+        "startChar": 2,
+        "endLine": 310,
+        "endChar": 25
+      },
+      "revId": "201effede3f9d329ba76adf73feda3028175e8df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
