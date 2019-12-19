@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10dc2497_ee1d7fa1",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T19:50:10Z",
+      "side": 1,
+      "message": "I\u0027d suggest moving this to muser.c.",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec26c759_71046f26",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T19:50:10Z",
+      "side": 1,
+      "message": "It doesn\u0027t look like SQ0TBDL/CQ0HDBL are used anywhere.  I think this can be removed.",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b618cb9b_bcef34f8",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T19:50:10Z",
+      "side": 1,
+      "message": "I would suggest moving this to muser.c.",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd73092f_5fab14a6",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T19:50:10Z",
+      "side": 1,
+      "message": "I think you can remove this.",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e30ed903_075aa9b1",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T19:50:10Z",
+      "side": 1,
+      "message": "I don\u0027t think these changes are actually used anywhere in the muser code.  Or at least I was able to revert this part of the patch, and muser still built fine.",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f685c1d7_f9178582",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T19:50:10Z",
+      "side": 1,
+      "message": "I pushed a patch that I think will help with this:\n\nhttps://review.gerrithub.io/c/spdk/spdk/+/478496\n\nI wanted to base whatever we do around nqn (NVMe Qualified Name) - not subnqn.  Since we use nqns in other places - i.e. the hostnqn that\u0027s also in this data structure, as well as other places in nvme_spec.h and the FC code.\n\nThis requires a few changes to your muser.c code, but it wasn\u0027t too bad.",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3980cb77_53f3c469",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T19:50:10Z",
+      "side": 1,
+      "message": "is this required?  I\u0027m guessing this was used to try for debug purposes, but in general we shouldn\u0027t need to zero the buffer before freeing it.",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c86201c5_4e854359",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T19:50:10Z",
+      "side": 1,
+      "message": "This gets set just below, if spdk_nvmf_transport_poll_group_add() succeeds.  I\u0027m guessing we shouldn\u0027t do this here, and just rely on the spdk_nvmf_qpair_set_state() call below.",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47666f24_c7292154",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T19:50:10Z",
+      "side": 1,
+      "message": "We should make this function more generally usable as part of a separate patch.  I think we (Intel) can help with that.  Changpeng - could you take a look?  I see Thanos put the implementation in nvme_ctrlr.c, but I think this is really target functionality, not host functionality.\n\nMaybe we put this somewhere in lib/nvmf instead?  That would make vhost_nvme depend on nvmf, but I think I\u0027m OK with that (probably vhost_nvme will go away long term once nvmf_muser is ready).",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
