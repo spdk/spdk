@@ -29,7 +29,6 @@ function usage() {
                                     552: 'bdev_lvol_delete_lvstore_with_clones',
                                     553: 'unregister_lvol_bdev',
                                     602: 'bdev_lvol_create_lvstore_with_all_clear_methods',
-                                    654: 'thin_overprovisioning',
                                     655: 'thin_provisioning_filling_disks_less_than_lvs_size',
                                     850: 'clear_method_none',
                                     851: 'clear_method_unmap',
