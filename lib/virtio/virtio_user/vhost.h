@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _VHOST_NET_USER_H
-#define _VHOST_NET_USER_H
+#ifndef _VHOST_H
+#define _VHOST_H
 
 #include "spdk/stdinc.h"
 
