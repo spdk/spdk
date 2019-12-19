@@ -1,6 +1,6 @@
 # Changelog
 
-## v19.10.1: (Upcoming Release)
+## v19.10.1:
 
 ### thread
 
