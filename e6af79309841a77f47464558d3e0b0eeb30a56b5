@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5eea3b69_1c268768",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T20:17:32Z",
+      "side": 1,
+      "message": "This should say that the message *will* be sent asynchronously.  This function will always return before fn is called.\n\nThe comment on spdk_thread_send_msg is also wrong.  We always send the message asynchronously (and in a lot of cases we actually rely on that, to allow thread contexts to unwind).  Would you mind fixing that in a separate patch?",
+      "revId": "e6af79309841a77f47464558d3e0b0eeb30a56b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c09032d_a329c68e",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T20:17:32Z",
+      "side": 1,
+      "message": "So the only place we use this currently is to shutdown the application.  And in that case we always use NULL for the argument.\n\nWhat if we simplified this, and had this new function *only* take the function as a parameter?  And don\u0027t allow a context pointer.  That would benefit in two ways:\n\n1) it would discourage abuse of this API for reasons other than shutdown\n2) it would simplify the implementation a lot, since you could just do a compare and exchange on the fn ptr itself and wouldn\u0027t need any of the flags",
+      "revId": "e6af79309841a77f47464558d3e0b0eeb30a56b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06a29e45_e60c3f17",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 711,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-19T20:17:32Z",
+      "side": 1,
+      "message": "just a nit - we always put a newline between the last variable declaration and the first line of code",
+      "revId": "e6af79309841a77f47464558d3e0b0eeb30a56b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
