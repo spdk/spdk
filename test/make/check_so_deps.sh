@@ -100,6 +100,7 @@ if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	config_params="$config_params --with-ocf=$rootdir/build/ocf.a"
 fi
 
+$MAKE $MAKEFLAGS clean
 ./configure $config_params --with-shared
 $MAKE $MAKEFLAGS
 
