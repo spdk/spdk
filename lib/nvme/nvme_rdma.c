@@ -70,7 +70,7 @@
 #define NVME_RDMA_NUM_CM_EVENTS			256
 
 /* CM event processing timeout */
-#define NVME_RDMA_QPAIR_CM_EVENT_TIMEOUT_US	100000
+#define NVME_RDMA_QPAIR_CM_EVENT_TIMEOUT_US	1000000
 
 /*
  * In the special case of a stale connection we don't expose a mechanism
