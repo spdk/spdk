@@ -115,6 +115,7 @@ struct io_target {
 
 struct io_target_group {
 	TAILQ_HEAD(, io_target)		targets;
+	uint32_t			lcore;
 };
 
 struct io_target_group *g_io_target_group;
@@ -247,8 +248,9 @@ bdevperf_init_target_group(void)
 	}
 
 	SPDK_ENV_FOREACH_CORE(i) {
-		g_coremap[idx++] = i;
-
+		g_coremap[idx] = i;
+		g_io_target_group[idx].lcore = i;
+		idx++;
 	}
 
 	return 0;
@@ -1009,9 +1011,8 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 	total_mb_per_second = 0;
 	for (index = 0; index < spdk_env_get_core_count(); index++) {
 		group = &g_io_target_group[index];
-		target = TAILQ_FIRST(&group->targets);
-		if (target) {
-			lcore_id = target->lcore;
+		if (TAILQ_FIRST(&group->targets)) {
+			lcore_id = group->lcore;
 			printf("\r Logical core: %u\n", lcore_id);
 		}
 		TAILQ_FOREACH(target, &group->targets, link) {
@@ -1263,7 +1264,6 @@ static int
 bdevperf_test(void)
 {
 	uint32_t i;
-	struct io_target *target;
 	struct io_target_group *group;
 	struct spdk_event *event;
 	int rc;
@@ -1287,11 +1287,10 @@ bdevperf_test(void)
 	/* Send events to start all I/O */
 	for (i = 0; i < core_count; i++) {
 		group = &g_io_target_group[i];
-		target = TAILQ_FIRST(&group->targets);
-		if (target == NULL) {
+		if (TAILQ_FIRST(&group->targets) == NULL) {
 			return -1;
 		}
-		event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
+		event = spdk_event_allocate(group->lcore, bdevperf_submit_on_core,
 					    group, NULL);
 		spdk_event_call(event);
 	}
@@ -1347,7 +1346,6 @@ static void
 spdk_bdevperf_shutdown_cb(void)
 {
 	uint32_t i;
-	struct io_target *target;
 	struct io_target_group *group;
 	struct spdk_event *event;
 
@@ -1366,11 +1364,10 @@ spdk_bdevperf_shutdown_cb(void)
 			break;
 		}
 		group = &g_io_target_group[i];
-		target = TAILQ_FIRST(&group->targets);
-		if (target == NULL) {
+		if (TAILQ_FIRST(&group->targets) == NULL) {
 			break;
 		}
-		event = spdk_event_allocate(target->lcore, bdevperf_stop_io_on_core,
+		event = spdk_event_allocate(group->lcore, bdevperf_stop_io_on_core,
 					    group, NULL);
 		spdk_event_call(event);
 	}
