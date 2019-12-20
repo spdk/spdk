@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "73f793df_fe84e3d4",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-20T07:58:09Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "be8a6dd4_c75d82fc",
+      "revId": "dd3d9b484c806ebb7b394906fd0dd97726bf9967",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "04fea12e_d5b573bd",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 14
@@ -33,6 +51,24 @@
       "revId": "dd3d9b484c806ebb7b394906fd0dd97726bf9967",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6b82a08_7b3828cb",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-20T07:58:09Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "04fea12e_d5b573bd",
+      "revId": "dd3d9b484c806ebb7b394906fd0dd97726bf9967",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "eeb47375_f3094e10",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-20T07:58:09Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9c3ef9bf_ff912206",
+      "revId": "dd3d9b484c806ebb7b394906fd0dd97726bf9967",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a8feab3_e6f921b5",
         "filename": "test/nvmf/target/nvmf_example.sh",
         "patchSetId": 14
@@ -64,6 +118,24 @@
       "writtenOn": "2019-12-20T03:01:09Z",
       "side": 1,
       "message": "you can use killprocess here.",
+      "revId": "dd3d9b484c806ebb7b394906fd0dd97726bf9967",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36c4827a_8364008a",
+        "filename": "test/nvmf/target/nvmf_example.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-20T07:58:09Z",
+      "side": 1,
+      "message": "Hi Changpeng. I tried but the autotest would report error. In the next patch I delete these two lines and use the killprocess in the nvmftestfini to kill the nvmf_example.",
+      "parentUuid": "7a8feab3_e6f921b5",
       "revId": "dd3d9b484c806ebb7b394906fd0dd97726bf9967",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
