@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "dfdcd039_a1fe1b2d",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2032,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-20T17:25:58Z",
+      "side": 1,
+      "message": "What\u0027s your reasoning? If the state is EXITING but the recv state is ERROR, that means it\u0027s a target-driven disconnect. The socket is still valid and it may be flushing out completions before disconnecting. I believe the right thing to do here is to simply confirm that the socket is still alive and return.",
+      "parentUuid": "92b5091f_7161a5fb",
+      "range": {
+        "startLine": 2032,
+        "startChar": 3,
+        "endLine": 2032,
+        "endChar": 4
+      },
+      "revId": "7fe69c2ec1ee5ca6f12b80e8d9c95d96902eab47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ad68d154_dfba84e8",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 17
@@ -36,6 +60,30 @@
       "writtenOn": "2019-12-13T05:07:30Z",
       "side": 1,
       "message": "Would it be possible for the following case:\nrc \u003c 0, spdk_nvmf_tcp_qpair_disconnect is also called, then we call it here \nagain. Though I see your code change in: spdk_nvmf_tcp_send_r2t_pdu, you check the status of tqpair and make it will not call twice, but it is not nice, since you call !spdk_sock_is_connected(tqpair-\u003esock). \nI think that you can still use rc \u003c 0 check, but you can directly add a new check in line 2043.\n\nSecondly, I would like to ask. For the previous code, will it be long time delay?",
+      "range": {
+        "startLine": 2539,
+        "startChar": 1,
+        "endLine": 2541,
+        "endChar": 2
+      },
+      "revId": "7fe69c2ec1ee5ca6f12b80e8d9c95d96902eab47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e88b3110_bf505f49",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2541,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-20T17:25:58Z",
+      "side": 1,
+      "message": "spdk_nvmf_tcp_sock_process only returns an error if there was something wrong. Simply being in the RECV_STATE_ERROR state is not an error - it could be due to an intentional disconnect started by the target. I think what I have here is the right logic.\n\nIn the previous code, on some error paths the target would decide something went wrong and transition to the exiting state. That made it simply stop responding to the initiator. It then waiting for the initiator to disconnect before continuing. But the initiator may take a long time to disconnect, or may disconnect without sending an official close. There\u0027s no reason on the target side to wait in this case.",
+      "parentUuid": "ad68d154_dfba84e8",
       "range": {
         "startLine": 2539,
         "startChar": 1,
