@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a4f0281_07de26a8",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-20T09:09:21Z",
+      "side": 1,
+      "message": "Looking at one of the errors I linked it seems that this while loop should be after \"mklabel gpt\". However the condition for while would be different then",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 6
+      },
+      "revId": "34c1a8d66453a79b25bff10e49c7a26fe766f791",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
