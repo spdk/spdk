@@ -156,6 +156,24 @@
     },
     {
       "key": {
+        "uuid": "a8db5e3b_b12fb838",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-20T16:57:24Z",
+      "side": 1,
+      "message": "Got it.  So we need this to be able to send the fake fabrics CONNECT command.\n\nLet\u0027s try to find a more elegant way to handle this.  Things like muser shouldn\u0027t have to construct a fake fabrics command - we just haven\u0027t needed an alternate solution until now.",
+      "parentUuid": "af7f101c_4963a8a6",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "47666f24_c7292154",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 2
