@@ -289,14 +289,14 @@ void spdk_event_call(struct spdk_event *event);
  *
  * \param enabled True to enable, false to disable.
  */
-void spdk_reactor_enable_framework_monitor_context_switch(bool enabled);
+void spdk_framework_enable_context_switch_monitor(bool enabled);
 
 /**
  * Return whether context switch monitoring is enabled.
  *
  * \return true if enabled or false otherwise.
  */
-bool spdk_reactor_framework_monitor_context_switch_enabled(void);
+bool spdk_framework_context_switch_monitor_enabled(void);
 
 #ifdef __cplusplus
 }
