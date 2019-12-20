@@ -118,6 +118,30 @@
       "revId": "ab843ceb13f79b633a3dc6b67c888ba2375e9597",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "806b6e8f_3260726b",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-20T14:14:05Z",
+      "side": 1,
+      "message": "I decided to use:\n  rpc_cmd \u0026\u0026 return 1",
+      "parentUuid": "e3a84ada_801a0351",
+      "range": {
+        "startLine": 29,
+        "startChar": 1,
+        "endLine": 29,
+        "endChar": 55
+      },
+      "revId": "ab843ceb13f79b633a3dc6b67c888ba2375e9597",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
