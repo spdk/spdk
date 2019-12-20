@@ -135,6 +135,9 @@ static int bdev_nvme_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 static int bdev_nvme_comparev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 			      struct nvme_bdev_io *bio,
 			      struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba);
+static int bdev_nvme_comparev_and_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+		struct nvme_bdev_io *bio,
+		struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba);
 static int bdev_nvme_admin_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
@@ -506,6 +509,16 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 					  bdev_io->u.bdev.num_blocks,
 					  bdev_io->u.bdev.offset_blocks);
 
+	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
+		return bdev_nvme_comparev_and_writev(nbdev,
+						     ch,
+						     nbdev_io,
+						     bdev_io->u.bdev.iovs,
+						     bdev_io->u.bdev.iovcnt,
+						     bdev_io->u.bdev.md_buf,
+						     bdev_io->u.bdev.num_blocks,
+						     bdev_io->u.bdev.offset_blocks);
+
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return bdev_nvme_unmap(nbdev,
 				       ch,
@@ -616,6 +629,13 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		 * If a user submits an arbitrarily large write_zeroes request to the controller, the request will fail.
 		 * Until this is resolved, we only claim support for write_zeroes if deallocated blocks return 0's when read.
 		 */
+		return false;
+
+	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
+		if (spdk_nvme_ctrlr_get_flags(nbdev->nvme_bdev_ctrlr->ctrlr) &
+		    SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED) {
+			return true;
+		}
 		return false;
 
 	default:
@@ -1973,6 +1993,27 @@ bdev_nvme_comparev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
+bdev_nvme_comparev_and_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_bdev_io *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+
+	/* We need to check if compare operation failed to make sure that in such case
+	 * write operation failed as well. We don't need to know if we are in compare
+	 * or write callback because for compare callback below check will always result
+	 * as false. */
+	if (spdk_nvme_cpl_is_error(&bio->cpl)) {
+		assert(spdk_nvme_cpl_is_error(cpl));
+	}
+
+	/* Save compare result for write callback. In case this is write callback this
+	 * line does not matter */
+	bio->cpl = *cpl;
+
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+}
+
+static void
 bdev_nvme_queued_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
@@ -2149,6 +2190,53 @@ bdev_nvme_comparev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 	if (rc != 0 && rc != -ENOMEM) {
 		SPDK_ERRLOG("comparev failed: rc = %d\n", rc);
 	}
+	return rc;
+}
+
+static int
+bdev_nvme_comparev_and_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+			      struct nvme_bdev_io *bio,
+			      struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba)
+{
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	uint32_t flags = nbdev->disk.dif_check_flags;
+	int rc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "compare and write %lu blocks with offset %#lx\n",
+		      lba_count, lba);
+
+	bio->iovs = iov;
+	bio->iovcnt = iovcnt;
+	bio->iovpos = 0;
+	bio->iov_offset = 0;
+
+	if (bdev_io->num_retries == 0) {
+		flags |= SPDK_NVME_IO_FLAGS_FUSE_FIRST;
+
+		rc = spdk_nvme_ns_cmd_comparev_with_md(nbdev->nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
+						       bdev_nvme_comparev_and_writev_done, bio, flags,
+						       bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge, md, 0, 0);
+		if (rc != 0) {
+			if (rc != -ENOMEM) {
+				SPDK_ERRLOG("compare failed: rc = %d\n", rc);
+			}
+			return rc;
+		}
+
+		flags &= ~SPDK_NVME_IO_FLAGS_FUSE_FIRST;
+	}
+
+	flags |= SPDK_NVME_IO_FLAGS_FUSE_SECOND;
+
+	rc = spdk_nvme_ns_cmd_writev_with_md(nbdev->nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
+					     bdev_nvme_comparev_and_writev_done, bio, flags,
+					     bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge, md, 0, 0);
+	if (rc != 0 && rc != -ENOMEM) {
+		SPDK_ERRLOG("write failed: rc = %d\n", rc);
+		rc = 0;
+	}
+
 	return rc;
 }
 
