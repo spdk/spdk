@@ -22,7 +22,15 @@ cd $rootdir
 date -u
 git describe --tags
 
-if [ "$SPDK_TEST_OCF" -eq 1 ]; then
+./configure $config_params
+# Print some test system info out for the log
+echo "** START ** Info for Hostname: $HOSTNAME"
+uname -a
+$MAKE cc_version
+$MAKE cxx_version
+echo "** END ** Info for Hostname: $HOSTNAME"
+
+function ocf_precompile {
 	# We compile OCF sources ourselves
 	# They don't need to be checked with scanbuild and code coverage is not applicable
 	# So we precompile OCF now for further use as standalone static library
@@ -31,16 +39,10 @@ if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	CC=gcc CCAR=ar $MAKE $MAKEFLAGS -C lib/env_ocf exportlib O=$rootdir/build/ocf.a
 	# Set config to use precompiled library
 	config_params="$config_params --with-ocf=/$rootdir/build/ocf.a"
-fi
+	# need to reconfigure to avoid clearing ocf related files on future make clean.
+	./configure $config_params
+}
 
-./configure $config_params
-
-# Print some test system info out for the log
-echo "** START ** Info for Hostname: $HOSTNAME"
-uname -a
-$MAKE cc_version
-$MAKE cxx_version
-echo "** END ** Info for Hostname: $HOSTNAME"
 
 if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
 	run_test "valgrind" echo "using valgrind"
@@ -55,11 +57,16 @@ if [ $SPDK_RUN_UBSAN -eq 1 ]; then
 fi
 
 timing_enter autobuild
+if [ "$SPDK_TEST_OCF" -eq 1 ]; then
+	run_test "autobuild_ocf_precompile" ocf_precompile
+fi
+
 if [ $SPDK_RUN_CHECK_FORMAT -eq 1 ]; then
 	run_test "autobuild_check_format" ./scripts/check_format.sh
 fi
 
 scanbuild=''
+./configure $config_params
 make_timing_label='make'
 if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then
 	scanbuild="scan-build -o $out/scan-build-tmp --status-bugs"
