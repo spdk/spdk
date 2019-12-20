@@ -152,6 +152,30 @@
       "revId": "b2123806bd90c2e8a6f5d24205766cfd45bf1c38",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "506b92e8_2ea9bbec",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-12-20T13:25:44Z",
+      "side": 1,
+      "message": "This change I have made by my local script that was not ideal. It is not detected by check_format.sh",
+      "parentUuid": "c781196c_8f953a9a",
+      "range": {
+        "startLine": 15,
+        "startChar": 1,
+        "endLine": 15,
+        "endChar": 2
+      },
+      "revId": "b2123806bd90c2e8a6f5d24205766cfd45bf1c38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
