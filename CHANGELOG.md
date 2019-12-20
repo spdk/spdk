@@ -47,6 +47,13 @@ An new RPC `framework_get_reactors` has been added to retrieve list of all react
 
 DPDK submodule updated to include fix for vhost CVE-2019-14818.
 
+### event
+
+The functions `spdk_reactor_enable_framework_monitor_context_switch()` and
+`spdk_reactor_framework_monitor_context_switch_enabled()` have been changed to
+`spdk_framework_enable_context_switch_monitor()` and
+`spdk_framework_context_switch_monitor_enabled()`, respectively.
+
 ## v19.10:
 
 ### rpc
