@@ -62,6 +62,22 @@ function porcelain_check {
 	fi
 }
 
+# Check that header file dependencies are working correctly by
+#  capturing a binary's stat data before and after touching a
+#  header file and re-making.
+function header_dependency_check {
+	STAT1=$(stat examples/nvme/identify/identify)
+	sleep 1
+	touch lib/nvme/nvme_internal.h
+	$MAKE $MAKEFLAGS
+	STAT2=$(stat examples/nvme/identify/identify)
+
+	if [ "$STAT1" == "$STAT2" ]; then
+		echo "Header dependency check failed"
+		false
+	fi
+}
+
 if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
 	run_test "valgrind" echo "using valgrind"
 fi
@@ -96,22 +112,8 @@ else
 fi
 
 run_test "autobuild_generated_files_check" porcelain_check
+run_test "autobuild_header_dependency_check" header_dependency_check
 
-# Check that header file dependencies are working correctly by
-#  capturing a binary's stat data before and after touching a
-#  header file and re-making.
-timing_enter dependency_check
-STAT1=$(stat examples/nvme/identify/identify)
-sleep 1
-touch lib/nvme/nvme_internal.h
-$MAKE $MAKEFLAGS
-STAT2=$(stat examples/nvme/identify/identify)
-
-if [ "$STAT1" == "$STAT2" ]; then
-	echo "Header dependency check failed"
-	exit 1
-fi
-timing_exit dependency_check
 
 # Test 'make install'
 timing_enter make_install
