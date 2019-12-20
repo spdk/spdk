@@ -77,8 +77,7 @@ fi
 
 $MAKE $MAKEFLAGS clean
 if [ $SPDK_BUILD_SHARED_OBJECT -eq 1 ]; then
-	$rootdir/test/make/check_so_deps.sh
-	report_test_completion "shared_object_build"
+	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh
 fi
 
 if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then
