@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f21477c9_15af2ddf",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1871,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-20T05:03:34Z",
+      "side": 1,
+      "message": "if the input buffer is aligned, for this case we don\u0027t need a data copy here.",
+      "range": {
+        "startLine": 1871,
+        "startChar": 2,
+        "endLine": 1871,
+        "endChar": 86
+      },
+      "revId": "86bc7d4147e16781f1e2952153a0cd287097bbc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
