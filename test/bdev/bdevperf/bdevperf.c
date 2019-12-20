@@ -119,9 +119,16 @@ struct io_target_group {
 	TAILQ_ENTRY(io_target_group)	link;
 };
 
-TAILQ_HEAD(, io_target_group)	g_io_target_group;
+struct spdk_bdevperf {
+	TAILQ_HEAD(, io_target_group)	groups;
+	uint32_t			target_count;
+};
+
+struct spdk_bdevperf		g_bdevperf = {
+	.groups = TAILQ_HEAD_INITIALIZER(g_bdevperf.groups),
+	.target_count = 0,
+};
 struct io_target_group		*g_next_target_group;
-static uint32_t g_target_count = 0;
 
 /*
  * Used to determine how the I/O buffers should be aligned.
@@ -237,14 +244,14 @@ bdevperf_init_target_group(void)
 		}
 		group->lcore = i;
 		TAILQ_INIT(&group->targets);
-		TAILQ_INSERT_TAIL(&g_io_target_group, group, link);
+		TAILQ_INSERT_TAIL(&g_bdevperf.groups, group, link);
 	}
 
 	return 0;
 
 error:
-	TAILQ_FOREACH_SAFE(group, &g_io_target_group, link, tmp) {
-		TAILQ_REMOVE(&g_io_target_group, group, link);
+	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp) {
+		TAILQ_REMOVE(&g_bdevperf.groups, group, link);
 		free(group);
 	}
 	return -1;
@@ -272,8 +279,8 @@ bdevperf_destroy_target_group(void)
 	struct io_target_group *group, *tmp_group;
 	struct io_target *target, *tmp_target;
 
-	TAILQ_FOREACH_SAFE(group, &g_io_target_group, link, tmp_group) {
-		TAILQ_REMOVE(&g_io_target_group, group, link);
+	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
+		TAILQ_REMOVE(&g_bdevperf.groups, group, link);
 		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
 			TAILQ_REMOVE(&group->targets, target, link);
 			bdevperf_free_target(target);
@@ -373,14 +380,14 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 
 	/* Mapping each created target to target group */
 	if (g_next_target_group == NULL) {
-		g_next_target_group = TAILQ_FIRST(&g_io_target_group);
+		g_next_target_group = TAILQ_FIRST(&g_bdevperf.groups);
 		assert(g_next_target_group != NULL);
 	}
 	group = g_next_target_group;
 	g_next_target_group = TAILQ_NEXT(g_next_target_group, link);
 	target->lcore = group->lcore;
 	TAILQ_INSERT_TAIL(&group->targets, target, link);
-	g_target_count++;
+	g_bdevperf.target_count++;
 
 	return 0;
 }
@@ -434,7 +441,7 @@ end_run(void *ctx)
 
 	spdk_put_io_channel(target->ch);
 	spdk_bdev_close(target->bdev_desc);
-	if (--g_target_count == 0) {
+	if (--g_bdevperf.target_count == 0) {
 		if (g_show_performance_real_time) {
 			spdk_poller_unregister(&g_perf_timer);
 		}
@@ -922,7 +929,7 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 		if (!target->ch) {
 			printf("Skip this device (%s) as IO channel not setup.\n",
 			       spdk_bdev_get_name(target->bdev));
-			g_target_count--;
+			g_bdevperf.target_count--;
 			g_run_failed = true;
 			spdk_bdev_close(target->bdev_desc);
 			continue;
@@ -997,7 +1004,7 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 
 	total_io_per_second = 0;
 	total_mb_per_second = 0;
-	TAILQ_FOREACH(group, &g_io_target_group, link) {
+	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
 		if (TAILQ_FIRST(&group->targets)) {
 			continue;
 		}
@@ -1087,7 +1094,7 @@ bdevperf_construct_targets_tasks(void)
 	}
 
 	/* Initialize task list for each target */
-	TAILQ_FOREACH(group, &g_io_target_group, link) {
+	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
 		TAILQ_FOREACH(target, &group->targets, link) {
 			for (j = 0; j < task_num; j++) {
 				task = bdevperf_construct_task_on_target(target);
@@ -1272,7 +1279,7 @@ bdevperf_test(void)
 	}
 
 	/* Send events to start all I/O */
-	TAILQ_FOREACH(group, &g_io_target_group, link) {
+	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
 		if (TAILQ_FIRST(&group->targets) == NULL) {
 			continue;
 		}
@@ -1303,7 +1310,7 @@ bdevperf_run(void *arg1)
 
 	bdevperf_construct_targets();
 
-	if (g_target_count == 0) {
+	if (g_bdevperf.target_count == 0) {
 		fprintf(stderr, "No valid bdevs found.\n");
 		spdk_app_stop(1);
 		return;
@@ -1336,7 +1343,7 @@ spdk_bdevperf_shutdown_cb(void)
 
 	g_shutdown = true;
 
-	if (g_target_count == 0) {
+	if (g_bdevperf.target_count == 0) {
 		spdk_app_stop(0);
 		return;
 	}
@@ -1344,7 +1351,7 @@ spdk_bdevperf_shutdown_cb(void)
 	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
 
 	/* Send events to stop all I/O on each core */
-	TAILQ_FOREACH(group, &g_io_target_group, link) {
+	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
 		if (TAILQ_FIRST(&group->targets) == NULL) {
 			break;
 		}
@@ -1448,7 +1455,7 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 	g_request = request;
 
 	bdevperf_construct_targets();
-	if (g_target_count == 0) {
+	if (g_bdevperf.target_count == 0) {
 		g_request = NULL;
 		fprintf(stderr, "No valid bdevs found.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
