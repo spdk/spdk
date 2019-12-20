@@ -367,7 +367,7 @@ int spdk_thread_get_stats(struct spdk_thread_stats *stats);
 /**
  * Send a message to the given thread.
  *
- * The message may be sent asynchronously - i.e. spdk_thread_send_msg may return
+ * The message will be sent asynchronously - i.e. spdk_thread_send_msg will always return
  * prior to `fn` being called.
  *
  * \param thread The target thread.
