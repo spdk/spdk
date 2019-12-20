@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "90469210_e835539f",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2099,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-20T01:24:33Z",
+      "side": 1,
+      "message": "is it better to use \"use_sgl\" instead of \"sgl_supported\", because here we only use SGL for I/O queues.",
+      "revId": "2d7523d07616b850e5661f1ed4c75de7b5b37d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b555c2a2_5f2a1d99",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 3
