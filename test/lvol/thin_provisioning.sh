@@ -182,7 +182,12 @@ function test_thin_lvol_resize() {
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 }
 
-function test_thin_overprovisioning() {
+# Create two thin provisioned lvol bdevs with 70% size of lvs.
+# Check if writing to two thin provisioned lvol bdevs
+# less than total size of lvol store will end with success.
+# Check if writting more than total size of lvol store
+# will cause failures.
+function test_thin_lvol_provisioning() {
 	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 
@@ -193,28 +198,28 @@ function test_thin_overprovisioning() {
 	lvol_uuid1=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test1 "$lvol_size_mb" -t)
 	lvol_uuid2=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test2 "$lvol_size_mb" -t)
 
-	lvs=$(rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid")
-	free_clusters_start="$(jq -r '.[0].free_clusters' <<< "$lvs")"
-
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid1" /dev/nbd0
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid2" /dev/nbd1
-	# Fill first bdev to 75% of its space with specific pattern
-	fill_size=$(( lvol_size * 75 / 100 ))
+	# Fill first bdev to 50% of its space with specific pattern
+	fill_size=$(( lvol_size_mb * 5 / 10 / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+	fill_size=$(( fill_size * 1024 * 1024))
 	run_fio_test /dev/nbd0 0 $fill_size "write" "0xcc"
 
-	# Fill second bdev up to 75% of its space
+	# Fill second bdev up to 50% of its space
+	run_fio_test /dev/nbd1 0 $fill_size "write" "0xcc"
+
+	# Fill rest of second bdev
 	# Check that error message occured while filling second bdev with data
+	offset=$fill_size
+	fill_size_rest=$(( size - fill_size ))
 	ret_value=0
-	if ! run_fio_test /dev/nbd1 0 $fill_size "write" "0xcc"; then
-		ret_value=1
-	fi
+        if ! run_fio_test /dev/nbd1 $offset $fill_size_rest "write" "0xcc"; then
+                ret_value=1
+        fi
 
 	# Check if data on first disk stayed unchanged
 	run_fio_test /dev/nbd0 0 $fill_size "read" "0xcc"
-
-	offset=$(( lvol_size * 75 / 100 ))
-	fill_size=$(( lvol_size * 25 / 100 ))
-	run_fio_test /dev/nbd0 $offset $fill_size "read" "0x00"
+	run_fio_test /dev/nbd0 $offset $fill_size_rest "read" "0x00"
 
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd0
 	nbd_stop_disks "$DEFAULT_RPC_ADDR" /dev/nbd1
