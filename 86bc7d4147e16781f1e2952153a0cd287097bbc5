@@ -22,6 +22,30 @@
       "revId": "86bc7d4147e16781f1e2952153a0cd287097bbc5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "855467d7_5c659d74",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1871,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-20T08:01:54Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f21477c9_15af2ddf",
+      "range": {
+        "startLine": 1871,
+        "startChar": 2,
+        "endLine": 1871,
+        "endChar": 86
+      },
+      "revId": "86bc7d4147e16781f1e2952153a0cd287097bbc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
