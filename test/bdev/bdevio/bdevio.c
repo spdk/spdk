@@ -1131,22 +1131,15 @@ __construct_targets(void *arg)
 static void
 test_main(void *arg1)
 {
-	struct spdk_cpuset *tmpmask, *appmask;
+	struct spdk_cpuset tmpmask = {}, *appmask;
 	uint32_t cpu, init_cpu;
 
 	pthread_mutex_init(&g_test_mutex, NULL);
 	pthread_cond_init(&g_test_cond, NULL);
 
-	tmpmask = spdk_cpuset_alloc();
-	if (tmpmask == NULL) {
-		spdk_app_stop(-1);
-		return;
-	}
-
 	appmask = spdk_app_get_core_mask();
 
 	if (spdk_cpuset_count(appmask) < 3) {
-		spdk_cpuset_free(tmpmask);
 		spdk_app_stop(-1);
 		return;
 	}
@@ -1156,35 +1149,31 @@ test_main(void *arg1)
 
 	for (cpu = 0; cpu < SPDK_ENV_LCORE_ID_ANY; cpu++) {
 		if (cpu != init_cpu && spdk_cpuset_get_cpu(appmask, cpu)) {
-			spdk_cpuset_zero(tmpmask);
-			spdk_cpuset_set_cpu(tmpmask, cpu, true);
-			g_thread_ut = spdk_thread_create("ut_thread", tmpmask);
+			spdk_cpuset_zero(&tmpmask);
+			spdk_cpuset_set_cpu(&tmpmask, cpu, true);
+			g_thread_ut = spdk_thread_create("ut_thread", &tmpmask);
 			break;
 		}
 	}
 
 	if (cpu == SPDK_ENV_LCORE_ID_ANY) {
-		spdk_cpuset_free(tmpmask);
 		spdk_app_stop(-1);
 		return;
 	}
 
 	for (cpu++; cpu < SPDK_ENV_LCORE_ID_ANY; cpu++) {
 		if (cpu != init_cpu && spdk_cpuset_get_cpu(appmask, cpu)) {
-			spdk_cpuset_zero(tmpmask);
-			spdk_cpuset_set_cpu(tmpmask, cpu, true);
-			g_thread_io = spdk_thread_create("io_thread", tmpmask);
+			spdk_cpuset_zero(&tmpmask);
+			spdk_cpuset_set_cpu(&tmpmask, cpu, true);
+			g_thread_io = spdk_thread_create("io_thread", &tmpmask);
 			break;
 		}
 	}
 
 	if (cpu == SPDK_ENV_LCORE_ID_ANY) {
-		spdk_cpuset_free(tmpmask);
 		spdk_app_stop(-1);
 		return;
 	}
-
-	spdk_cpuset_free(tmpmask);
 
 	if (g_wait_for_tests) {
 		/* Do not perform any tests until RPC is received */
