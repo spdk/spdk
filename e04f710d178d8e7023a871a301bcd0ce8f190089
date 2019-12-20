@@ -225,6 +225,30 @@
     },
     {
       "key": {
+        "uuid": "db33f0dd_b02f4a10",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-20T08:13:52Z",
+      "side": 1,
+      "message": "But bdev_io-\u003ebdev isn\u0027t referenced anywhere in this function. Could you check if adding the SPDK_CU_ASSERT_FATAL after all create_and_get_vbdev() calls would shut scanbuild?",
+      "parentUuid": "370d5296_327dd2c2",
+      "range": {
+        "startLine": 625,
+        "startChar": 1,
+        "endLine": 625,
+        "endChar": 45
+      },
+      "revId": "e04f710d178d8e7023a871a301bcd0ce8f190089",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4ece1fad_c011a86b",
         "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
         "patchSetId": 27
