@@ -47,8 +47,7 @@
 #include "spdk/string.h"
 
 #include "spdk_internal/log.h"
-
-#include <liburing.h>
+#include "spdk_internal/uring.h"
 
 struct bdev_uring_io_channel {
 	struct bdev_uring_group_channel		*group_ch;
@@ -250,15 +249,15 @@ bdev_uring_group_poll(void *arg)
 	ret = 0;
 	if (to_submit > 0) {
 		/* If there are I/O to submit, use io_uring_submit here.
-		 * It will automatically call io_uring_enter appropriately. */
+		 * It will automatically call spdk_io_uring_enter appropriately. */
 		ret = io_uring_submit(&group_ch->uring);
 		group_ch->io_pending = 0;
 		group_ch->io_inflight += to_submit;
 	} else if (to_complete > 0) {
 		/* If there are I/O in flight but none to submit, we need to
 		 * call io_uring_enter ourselves. */
-		ret = io_uring_enter(group_ch->uring.ring_fd, 0, 0,
-				     IORING_ENTER_GETEVENTS, NULL);
+		ret = spdk_io_uring_enter(group_ch->uring.ring_fd, 0, 0,
+					  IORING_ENTER_GETEVENTS);
 	}
 
 	if (ret < 0) {
