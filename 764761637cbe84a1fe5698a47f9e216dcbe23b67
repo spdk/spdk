@@ -138,6 +138,24 @@
     },
     {
       "key": {
+        "uuid": "af7f101c_4963a8a6",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2019-12-20T09:45:08Z",
+      "side": 1,
+      "message": "it is because connect request in transport poll_group_add which needs to have qpair active\npossible solution is to send message with connect to unwind the stack and relay on set_state below",
+      "parentUuid": "c86201c5_4e854359",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "47666f24_c7292154",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 2
