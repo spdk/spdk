@@ -251,6 +251,7 @@ struct spdk_vhost_dev_backend {
 				uint32_t offset, uint32_t size, uint32_t flags);
 
 	void (*intr_handler)(struct spdk_vhost_session *vsession, int vq_idx);
+	int (*session_set_handle_mode)(struct spdk_vhost_session *vsession, bool interrupt);
 
 	void (*dump_info_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 	void (*write_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);

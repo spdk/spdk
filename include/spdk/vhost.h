@@ -200,6 +200,8 @@ const struct spdk_cpuset *spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev
 int spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 			      uint32_t iops_threshold);
 
+int spdk_vhost_dev_set_handle_mode(struct spdk_vhost_dev *vdev, bool interrupt);
+
 /**
  * Get coalescing parameters.
  *

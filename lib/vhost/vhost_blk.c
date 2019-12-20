@@ -1182,6 +1182,63 @@ vhost_blk_intr_handler(struct spdk_vhost_session *vsession, int vq_idx)
 	}
 }
 
+static int
+vhost_blk_set_handle_mode(struct spdk_vhost_session *vsession, bool interrupt)
+{
+	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
+	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
+	int i;
+
+	spdk_poller_unregister(&bvsession->requestq_poller);
+
+	if (interrupt) {
+		fprintf(stderr, "enable interrupt\n");
+		for (i  = 0; i < vsession->max_queues; i++) {
+			struct spdk_vhost_virtqueue *vq = &vsession->virtqueue[i];
+
+			/* enable submission notify */
+			vq->vring.used->flags = 0;
+
+			/* A corner case is that when we change to interrupt
+			 * mode but driver don't submit request any more.
+			 * We need to handle left requests.
+			 */
+			if (bvdev->bdev) {
+				while (process_vq(bvsession, vq));
+			} else {
+				while (no_bdev_process_vq(bvsession, vq));
+			};
+		}
+
+		if (vhost_session_register_vqs_kick(vsession) != 0) {
+			return -1;
+		}
+
+		bvsession->requestq_poller = spdk_poller_register(vdev_session_used_signal,
+					     bvsession, 0);
+		SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: started interrupt on lcore %d\n",
+			     vsession->name, spdk_env_get_current_core());
+	} else {
+		fprintf(stderr, "enable polling\n");
+		for (i  = 0; i < vsession->max_queues; i++) {
+			struct spdk_vhost_virtqueue *vq  = &vsession->virtqueue[i];
+
+			/* disable submission notify */
+			vq->vring.used->flags = VRING_USED_F_NO_NOTIFY;
+		}
+
+		/* loop until unregisterd all the interrputs */
+		while (vhost_session_unregister_vqs_kick(vsession) != 0);
+
+		bvsession->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
+					     bvsession, 0);
+		SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: started poller on lcore %d\n",
+			     vsession->name, spdk_env_get_current_core());
+	}
+
+	return 0;
+}
+
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.session_ctx_size = sizeof(struct spdk_vhost_blk_session) - sizeof(struct spdk_vhost_session),
 	.start_session =  vhost_blk_start,
@@ -1191,6 +1248,7 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.write_config_json = vhost_blk_write_config_json,
 	.remove_device = vhost_blk_destroy,
 	.intr_handler = vhost_blk_intr_handler,
+	.session_set_handle_mode = vhost_blk_set_handle_mode,
 };
 
 int

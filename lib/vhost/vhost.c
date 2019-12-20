@@ -1146,6 +1146,51 @@ vhost_session_stop_done(struct spdk_vhost_session *vsession, int response)
 	vhost_session_cb_done(response);
 }
 
+static int
+vhost_dev_session_set_handler(struct spdk_vhost_dev *vdev,
+			      struct spdk_vhost_session *vsession, void *arg)
+{
+	assert(vdev != NULL);
+	assert(arg != NULL);
+
+	return vdev->backend->session_set_handle_mode(vsession, *(bool *)arg);
+}
+
+static void
+vhost_dev_session_set_handler_done(struct spdk_vhost_dev *vdev, void *arg)
+{
+	free(arg);
+	fprintf(stderr, "vhost dev set handle mode done\n");
+}
+
+/* It's used for the RPC cmd to set interrupt or polling */
+int
+spdk_vhost_dev_set_handle_mode(struct spdk_vhost_dev *vdev, bool interrupt)
+{
+	bool *arg;
+
+	fprintf(stderr, "interrupt is %d\n", interrupt);
+	fprintf(stderr, "vdev->interrupt is %d\n", vdev->interrupt);
+
+	if (vdev->interrupt == interrupt) {
+		return 0;
+	}
+
+	vdev->interrupt = interrupt;
+
+	arg = calloc(1, sizeof(bool));
+	if (!arg) {
+		SPDK_ERRLOG("failed to allocate memory\n");
+		return -ENOMEM;
+	}
+	*arg = vdev->interrupt;
+
+	vhost_dev_foreach_session(vdev, vhost_dev_session_set_handler,
+				  vhost_dev_session_set_handler_done, arg);
+
+	return 0;
+}
+
 static void
 vhost_event_cb(void *arg1)
 {
