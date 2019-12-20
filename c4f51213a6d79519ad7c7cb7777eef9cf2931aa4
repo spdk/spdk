@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f9256f5_48dc554e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 23
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-20T17:58:52Z",
+      "side": 1,
+      "message": "could you update this commit message to reflect the latest status?\n\nyou should also add your signed-off-by",
+      "revId": "c4f51213a6d79519ad7c7cb7777eef9cf2931aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef2bafba_4de833ac",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-20T17:58:52Z",
+      "side": 1,
+      "message": "I know this was my doing :) but could you break some of these non-compare-and-write changes to a separate patch?  I would appreciate it.\n\nThanks.",
+      "revId": "c4f51213a6d79519ad7c7cb7777eef9cf2931aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
