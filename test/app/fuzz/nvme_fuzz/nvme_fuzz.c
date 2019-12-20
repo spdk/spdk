@@ -426,6 +426,7 @@ exit_handler:
 	spdk_poller_unregister(&ns_entry->req_poller);
 	__sync_sub_and_fetch(&g_num_active_threads, 1);
 	spdk_thread_exit(ns_entry->thread);
+	spdk_set_thread(NULL);
 	return 0;
 }
 
@@ -758,6 +759,7 @@ begin_fuzz(void *ctx)
 			fprintf(stderr, "Failed to allocate thread for namespace.\n");
 			goto out;
 		}
+		spdk_set_thread(dev_ctx->thread);
 	}
 
 	TAILQ_FOREACH(ns_entry, &g_ns_list, tailq) {
