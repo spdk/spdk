@@ -45,7 +45,7 @@ struct rpc_create_ocssd_bdev {
 	char		*ctrlr_name;
 	char		*bdev_name;
 	uint32_t	nsid;
-	const char	*range;
+	char		*range;
 };
 
 static const struct spdk_json_object_decoder rpc_create_ocssd_bdev_decoders[] = {
@@ -60,6 +60,7 @@ free_rpc_create_ocssd_bdev(struct rpc_create_ocssd_bdev *rpc)
 {
 	free(rpc->ctrlr_name);
 	free(rpc->bdev_name);
+	free(rpc->range);
 }
 
 struct rpc_bdev_ocssd_create_ctx {
