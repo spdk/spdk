@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "04f3e80b_e76c7c36",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-20T10:02:33Z",
+      "side": 1,
+      "message": "Can you start 2 instances of bdevperf then?\nOne for the scsi controller and the other for blk. If you kill the bdev process then the script after line 43 doesn\u0027t test vhost scsi hot-attach.\nThe other one for the blk controller could be killed then just after hot-remove test.",
+      "parentUuid": "227222b1_bfb29752",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 2
+      },
+      "revId": "996ad7a01e45b6114d52b64ec331dec53010413d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "49ac3c24_63fdd296",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 24

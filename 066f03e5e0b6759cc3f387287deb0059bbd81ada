@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c8c9a2ed_cc9f526e",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-20T10:02:33Z",
+      "side": 1,
+      "message": "I still don\u0027t get it. Why do we need all of these pipes \u0026 greps if \"bdevperf.py perform_tests\" returns 0 or 1 depending if it succeeded or not?\n\nIt\u0027s the same as you\u0027d do: \"rpc.py get_bdevs UNEXISTING_BDEV\".\n$? would be 1 after that beceause of an error.",
+      "range": {
+        "startLine": 12,
+        "startChar": 1,
+        "endLine": 12,
+        "endChar": 114
+      },
+      "revId": "066f03e5e0b6759cc3f387287deb0059bbd81ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d89d004_87e84ad7",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-20T10:02:33Z",
+      "side": 1,
+      "message": "This doesn\u0027t actually do anything. Setting this option would matter if you did a unbind/bind operation of NVMe drive in the background.",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 32
+      },
+      "revId": "066f03e5e0b6759cc3f387287deb0059bbd81ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "69d90546_09f17903",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-20T10:02:33Z",
+      "side": 1,
+      "message": "We\u0027re not actually hot plugging a NVMe drive, so the name can stay the same as in the first steps of the script - Nvme0",
+      "range": {
+        "startLine": 50,
+        "startChar": 40,
+        "endLine": 50,
+        "endChar": 50
+      },
+      "revId": "066f03e5e0b6759cc3f387287deb0059bbd81ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
