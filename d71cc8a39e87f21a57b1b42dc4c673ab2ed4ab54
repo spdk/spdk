@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e5d3a61_5344018a",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-20T05:59:15Z",
+      "side": 1,
+      "message": "g_max_namespaces ?",
+      "range": {
+        "startLine": 140,
+        "startChar": 3,
+        "endLine": 140,
+        "endChar": 19
+      },
+      "revId": "d71cc8a39e87f21a57b1b42dc4c673ab2ed4ab54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7dbf8bf2_538dc6af",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-20T05:59:15Z",
+      "side": 1,
+      "message": "same comment for this as the global variable is used?",
+      "range": {
+        "startLine": 436,
+        "startChar": 39,
+        "endLine": 436,
+        "endChar": 49
+      },
+      "revId": "d71cc8a39e87f21a57b1b42dc4c673ab2ed4ab54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef2d58bc_da218c0b",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-20T05:59:15Z",
+      "side": 1,
+      "message": "Is this parameter needed as you are using a global variable here?",
+      "range": {
+        "startLine": 483,
+        "startChar": 25,
+        "endLine": 483,
+        "endChar": 35
+      },
+      "revId": "d71cc8a39e87f21a57b1b42dc4c673ab2ed4ab54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
