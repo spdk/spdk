@@ -153,7 +153,7 @@ struct spdk_vhost_dev {
 	char *name;
 	char *path;
 
-	struct spdk_cpuset *cpumask;
+	struct spdk_cpuset cpumask;
 	bool registered;
 
 	const struct spdk_vhost_dev_backend *backend;

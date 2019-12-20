@@ -372,7 +372,7 @@ _spdk_rpc_get_vhost_controller(struct spdk_json_write_ctx *w, struct spdk_vhost_
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_named_string(w, "ctrlr", spdk_vhost_dev_get_name(vdev));
-	spdk_json_write_named_string_fmt(w, "cpumask", "0x%s", spdk_cpuset_fmt(vdev->cpumask));
+	spdk_json_write_named_string_fmt(w, "cpumask", "0x%s", spdk_cpuset_fmt(&vdev->cpumask));
 	spdk_json_write_named_uint32(w, "delay_base_us", delay_base_us);
 	spdk_json_write_named_uint32(w, "iops_threshold", iops_threshold);
 	spdk_json_write_named_string(w, "socket", vdev->path);
