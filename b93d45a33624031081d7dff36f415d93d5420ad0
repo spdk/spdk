@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "80162a3c_713ab91b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-20T12:24:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "212cbc7a_43116db3",
+      "revId": "b93d45a33624031081d7dff36f415d93d5420ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c8b34b36_70bb6f70",
         "filename": "module/bdev/nvme/bdev_nvme.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2019-12-17T15:34:25Z",
       "side": 1,
       "message": "maybe we should only set this if the controller supports compare-and-write?",
+      "revId": "b93d45a33624031081d7dff36f415d93d5420ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58d55ed2_8b4456f1",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 882,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-20T12:24:25Z",
+      "side": 1,
+      "message": "According to spec this (and acwu)should be set to 0 if controller does not support compare and write operation, so there should be no problem here.",
+      "parentUuid": "c8b34b36_70bb6f70",
       "revId": "b93d45a33624031081d7dff36f415d93d5420ad0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -50,6 +86,24 @@
       "revId": "b93d45a33624031081d7dff36f415d93d5420ad0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6cdad184_83a0339a",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 885,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-20T12:24:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2c33c9e2_57ad3cc6",
+      "revId": "b93d45a33624031081d7dff36f415d93d5420ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
