@@ -2190,6 +2190,30 @@
     },
     {
       "key": {
+        "uuid": "84255ffd_69849eae",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-12-20T11:18:51Z",
+      "side": 1,
+      "message": "I will merge it into one function.",
+      "parentUuid": "1a8b0f72_4367e12c",
+      "range": {
+        "startLine": 864,
+        "startChar": 0,
+        "endLine": 874,
+        "endChar": 1
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "535449c3_49b60cdc",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 18
@@ -2735,6 +2759,30 @@
     },
     {
       "key": {
+        "uuid": "639cddb1_ac969e03",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1079,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-12-20T11:18:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "60ee9fc0_45baad25",
+      "range": {
+        "startLine": 1076,
+        "startChar": 0,
+        "endLine": 1079,
+        "endChar": 2
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a7e13594_1140ddc5",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 18
@@ -3135,6 +3183,30 @@
       "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72e4efb3_4a0f26e2",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-12-20T11:18:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55eb8e69_38c4096d",
+      "range": {
+        "startLine": 466,
+        "startChar": 0,
+        "endLine": 466,
+        "endChar": 34
+      },
+      "revId": "a584df67dd69d2236c731b3d01eff57ca3fad9e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {

@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "38e96619_4fd6111c",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-12-20T11:18:51Z",
+      "side": 0,
+      "message": "I was thinking that text config will be deprecated. It will also reacquire that bdevs below support text config which is not true for ocssd bdev.",
+      "parentUuid": "5582361e_be395b4c",
+      "range": {
+        "startLine": 504,
+        "startChar": 0,
+        "endLine": 504,
+        "endChar": 25
+      },
+      "revId": "2effa7b47902e38cd182a544122e2893e041389a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e404f82a_953f7cde",
         "filename": "module/bdev/nvme/bdev_nvme.c",
         "patchSetId": 29
@@ -45,6 +69,30 @@
       "revId": "2effa7b47902e38cd182a544122e2893e041389a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c34290fc_fd291c77",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 2347,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-12-20T11:18:51Z",
+      "side": 0,
+      "message": "Ack",
+      "parentUuid": "e404f82a_953f7cde",
+      "range": {
+        "startLine": 2345,
+        "startChar": 0,
+        "endLine": 2347,
+        "endChar": 3
+      },
+      "revId": "2effa7b47902e38cd182a544122e2893e041389a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

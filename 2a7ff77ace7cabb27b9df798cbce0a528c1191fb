@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d6d83f18_9df08013",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 29
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-12-20T11:18:51Z",
+      "side": 1,
+      "message": "This is done in next patches.",
+      "parentUuid": "b88d34ae_504a1910",
+      "range": {
+        "startLine": 60,
+        "startChar": 1,
+        "endLine": 60,
+        "endChar": 13
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cbb10370_31203124",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 29
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "dc9edd1d_0ea56c7b",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-12-20T11:18:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cbb10370_31203124",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 21
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15ee0463_d911abee",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 29
@@ -59,6 +107,30 @@
       "writtenOn": "2019-12-16T15:29:00Z",
       "side": 1,
       "message": "I think an error/warning log would better fit here.",
+      "range": {
+        "startLine": 833,
+        "startChar": 3,
+        "endLine": 833,
+        "endChar": 16
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d986b0f4_10bd85eb",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 833,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-12-20T11:18:51Z",
+      "side": 1,
+      "message": "We don\u0027t support this right now so it is better to fail at this point.",
+      "parentUuid": "15ee0463_d911abee",
       "range": {
         "startLine": 833,
         "startChar": 3,
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "de141ecb_6ff161e6",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-12-20T11:18:51Z",
+      "side": 1,
+      "message": "Yah, I have already propose it earlier - I will add such patch in future.",
+      "parentUuid": "e07d5045_99aa7ef6",
+      "range": {
+        "startLine": 1092,
+        "startChar": 0,
+        "endLine": 1094,
+        "endChar": 42
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "32119b8e_e605a334",
         "filename": "scripts/gen_ftl.sh",
         "patchSetId": 29
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "39dac31b_b79e0c2b",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-12-20T11:18:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "32119b8e_e605a334",
+      "range": {
+        "startLine": 41,
+        "startChar": 15,
+        "endLine": 41,
+        "endChar": 25
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d0719274_8aeb8d5f",
         "filename": "test/ftl/bdevperf.sh",
         "patchSetId": 29
@@ -128,6 +248,30 @@
       "writtenOn": "2019-12-16T15:29:00Z",
       "side": 1,
       "message": "Another benefit of keeping text config is that we could simply generate appropriate configuration instead of having to manually issue all those RPCs.",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 34
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22a0985b_af08090f",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-12-20T11:18:51Z",
+      "side": 1,
+      "message": "I think it could be also achieved with json config - I\u0027m adding examine config support in later patches so I could also add some json config generation.",
+      "parentUuid": "d0719274_8aeb8d5f",
       "range": {
         "startLine": 13,
         "startChar": 0,
@@ -160,6 +304,30 @@
       "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "701e6f22_6045e442",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-12-20T11:18:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a0b6f9e_fe88f66d",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 37
+      },
+      "revId": "2a7ff77ace7cabb27b9df798cbce0a528c1191fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
