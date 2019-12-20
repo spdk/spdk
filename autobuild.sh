@@ -92,6 +92,28 @@ function test_make_uninstall {
 	fi
 }
 
+function build_doc {
+	$MAKE -C "$rootdir"/doc --no-print-directory $MAKEFLAGS &> "$out"/doxygen.log
+	if [ -s "$out"/doxygen.log ]; then
+		cat "$out"/doxygen.log
+		echo "Doxygen errors found!"
+		exit 1
+	fi
+	if hash pdflatex 2>/dev/null; then
+		$MAKE -C "$rootdir"/doc/output/latex --no-print-directory $MAKEFLAGS &>> "$out"/doxygen.log
+	fi
+	mkdir -p "$out"/doc
+	mv "$rootdir"/doc/output/html "$out"/doc
+	if [ -f "$rootdir"/doc/output/latex/refman.pdf ]; then
+		mv "$rootdir"/doc/output/latex/refman.pdf "$out"/doc/spdk.pdf
+	fi
+	$MAKE -C "$rootdir"/doc --no-print-directory $MAKEFLAGS clean &>> "$out"/doxygen.log
+	if [ -s "$out"/doxygen.log ]; then
+		rm "$out"/doxygen.log
+	fi
+	rm -rf "$rootdir"/doc/output
+}
+
 if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
 	run_test "valgrind" echo "using valgrind"
 fi
@@ -129,30 +151,8 @@ run_test "autobuild_generated_files_check" porcelain_check
 run_test "autobuild_header_dependency_check" header_dependency_check
 run_test "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk prefix=/usr
 run_test "autobuild_make_uninstall" test_make_uninstall
-
-
-timing_enter doxygen
 if [ $SPDK_BUILD_DOC -eq 1 ] && hash doxygen; then
-	$MAKE -C "$rootdir"/doc --no-print-directory $MAKEFLAGS &> "$out"/doxygen.log
-	if [ -s "$out"/doxygen.log ]; then
-		cat "$out"/doxygen.log
-		echo "Doxygen errors found!"
-		exit 1
-	fi
-	if hash pdflatex 2>/dev/null; then
-		$MAKE -C "$rootdir"/doc/output/latex --no-print-directory $MAKEFLAGS &>> "$out"/doxygen.log
-	fi
-	mkdir -p "$out"/doc
-	mv "$rootdir"/doc/output/html "$out"/doc
-	if [ -f "$rootdir"/doc/output/latex/refman.pdf ]; then
-		mv "$rootdir"/doc/output/latex/refman.pdf "$out"/doc/spdk.pdf
-	fi
-	$MAKE -C "$rootdir"/doc --no-print-directory $MAKEFLAGS clean &>> "$out"/doxygen.log
-	if [ -s "$out"/doxygen.log ]; then
-		rm "$out"/doxygen.log
-	fi
-	rm -rf "$rootdir"/doc/output
+	run_test "autobuild_build_doc" build_doc
 fi
-timing_exit doxygen
 
 timing_exit autobuild
