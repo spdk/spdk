@@ -118,8 +118,6 @@ def case_message(func):
             553: 'unregister_lvol_bdev',
             600: 'bdev_lvol_create_lvstore_with_cluster_size_max',
             601: 'bdev_lvol_create_lvstore_with_cluster_size_min',
-            # Provisioning
-            655: 'thin_provisioning_filling_disks_less_than_lvs_size',
         }
         num = int(func.__name__.strip('test_case')[:])
         print("************************************")
@@ -535,63 +533,5 @@ class TestCases(object):
 
         # Expected result:
         # - bdev_lvol_get_lvstores: response should be of no value after destroyed lvol store
-        # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case655(self):
-        """
-        thin_provisioning_filling_disks_less_than_lvs_size
-
-        Check if writing to two thin provisioned lvol bdevs
-        less than total size of lvol store will end with success
-        """
-        # create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # construct lvol store on malloc bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name, self.lvs_name)
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-        lvs = self.c.bdev_lvol_get_lvstores(self.lvs_name)[0]
-        free_clusters_start = int(lvs['free_clusters'])
-        lbd_name0 = self.lbd_name + str("0")
-        lbd_name1 = self.lbd_name + str("1")
-        lvs_size = self.get_lvs_size()
-        bdev_size = int(lvs_size * 0.7)
-        # construct two thin provisioned lvol bdevs on created lvol store
-        # with size equal to 70% of lvs size
-        bdev_name0 = self.c.bdev_lvol_create(uuid_store, lbd_name0,
-                                             bdev_size, thin=True)
-        bdev_name1 = self.c.bdev_lvol_create(uuid_store, lbd_name1,
-                                             bdev_size, thin=True)
-
-        lvol_bdev0 = self.c.get_lvol_bdev_with_name(bdev_name0)
-        lvol_bdev1 = self.c.get_lvol_bdev_with_name(bdev_name1)
-        # check if bdevs are available and size of every disk is equal to 70% of lvs size
-        nbd_name0 = "/dev/nbd0"
-        nbd_name1 = "/dev/nbd1"
-        fail_count += self.c.nbd_start_disk(lvol_bdev0['name'], nbd_name0)
-        fail_count += self.c.nbd_start_disk(lvol_bdev1['name'], nbd_name1)
-        size = int(int(lvol_bdev0['num_blocks']) * int(lvol_bdev0['block_size']) * 0.7)
-        # fill first disk with 70% of its size
-        # check if operation didn't fail
-        fail_count += self.run_fio_test(nbd_name0, 0, size, "write", "0xcc")
-        size = int(int(lvol_bdev1['num_blocks']) * int(lvol_bdev1['block_size']) * 0.7)
-        # fill second disk also with 70% of its size
-        # check if operation didn't fail
-        fail_count += self.run_fio_test(nbd_name1, 0, size, "write", "0xee")
-
-        fail_count += self.c.nbd_stop_disk(nbd_name0)
-        fail_count += self.c.nbd_stop_disk(nbd_name1)
-        # destroy thin provisioned lvol bdevs
-        fail_count += self.c.bdev_lvol_delete(lvol_bdev0['name'])
-        fail_count += self.c.bdev_lvol_delete(lvol_bdev1['name'])
-        # destroy lvol store
-        fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
-        # destroy malloc bdev
-        fail_count += self.c.bdev_malloc_delete(base_name)
-        # Expected result:
-        # - calls successful, return code = 0
         # - no other operation fails
         return fail_count
