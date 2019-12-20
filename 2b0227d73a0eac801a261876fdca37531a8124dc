@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0fade5d7_5600629a",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1230,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-12-20T08:22:18Z",
+      "side": 1,
+      "message": "Similarly to one of the patches below, this should be taken care by test_cleanup().\n\nAlso, is there a reason we actually need to poll here in test_cleanup()? Maybe we should remove it from there and make sure each test is responsible for making sure there are no outstanding messages/running pollers?",
+      "range": {
+        "startLine": 1230,
+        "startChar": 1,
+        "endLine": 1230,
+        "endChar": 48
+      },
+      "revId": "2b0227d73a0eac801a261876fdca37531a8124dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
