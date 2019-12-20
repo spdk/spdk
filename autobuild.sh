@@ -78,6 +78,20 @@ function header_dependency_check {
 	fi
 }
 
+function test_make_uninstall {
+	# Create empty file to check if it is not deleted by target uninstall
+	touch /tmp/spdk/usr/lib/sample_xyz.a
+	$MAKE $MAKEFLAGS uninstall DESTDIR=/tmp/spdk prefix=/usr
+	if [[ $(find /tmp/spdk/usr -maxdepth 1 -mindepth 1 | wc -l) -ne 2 ]] || [[ $(find /tmp/spdk/usr/lib/ -maxdepth 1 -mindepth 1 | wc -l) -ne 1 ]]; then
+		ls -lR /tmp/spdk
+		rm -rf /tmp/spdk
+		echo "Make uninstall failed"
+		exit 1
+	else
+		rm -rf /tmp/spdk
+	fi
+}
+
 if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
 	run_test "valgrind" echo "using valgrind"
 fi
@@ -113,27 +127,9 @@ fi
 
 run_test "autobuild_generated_files_check" porcelain_check
 run_test "autobuild_header_dependency_check" header_dependency_check
+run_test "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk prefix=/usr
+run_test "autobuild_make_uninstall" test_make_uninstall
 
-
-# Test 'make install'
-timing_enter make_install
-$MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk prefix=/usr
-timing_exit make_install
-
-# Test 'make uninstall'
-timing_enter make_uninstall
-# Create empty file to check if it is not deleted by target uninstall
-touch /tmp/spdk/usr/lib/sample_xyz.a
-$MAKE $MAKEFLAGS uninstall DESTDIR=/tmp/spdk prefix=/usr
-if [[ $(find /tmp/spdk/usr -maxdepth 1 -mindepth 1 | wc -l) -ne 2 ]] || [[ $(find /tmp/spdk/usr/lib/ -maxdepth 1 -mindepth 1 | wc -l) -ne 1 ]]; then
-	ls -lR /tmp/spdk
-	rm -rf /tmp/spdk
-	echo "Make uninstall failed"
-	exit 1
-else
-	rm -rf /tmp/spdk
-fi
-timing_exit make_uninstall
 
 timing_enter doxygen
 if [ $SPDK_BUILD_DOC -eq 1 ] && hash doxygen; then
