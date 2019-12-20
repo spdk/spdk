@@ -94,6 +94,30 @@
       "revId": "ab843ceb13f79b633a3dc6b67c888ba2375e9597",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3a84ada_801a0351",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-20T09:59:20Z",
+      "side": 1,
+      "message": "From readability standpoint I think proposal to use [] makes sense.\nAll lines starting with rpc_cmd execute a command, usually affecting flow of the test script. \nRest of \u0027test\u0027 statements already are in []. Why make checking return code of rpc any different.\n@Pawel can you take a further look if it would work ?",
+      "parentUuid": "a6db9cc9_2f91005f",
+      "range": {
+        "startLine": 29,
+        "startChar": 1,
+        "endLine": 29,
+        "endChar": 55
+      },
+      "revId": "ab843ceb13f79b633a3dc6b67c888ba2375e9597",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
