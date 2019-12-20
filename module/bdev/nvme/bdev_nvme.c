@@ -2423,10 +2423,6 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		if (nvme_bdev_ctrlr->ftl_managed) {
-			continue;
-		}
-
 		trid = &nvme_bdev_ctrlr->trid;
 
 		spdk_json_write_object_begin(w);
