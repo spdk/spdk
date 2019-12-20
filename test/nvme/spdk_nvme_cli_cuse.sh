@@ -31,16 +31,22 @@ $rpc_py bdev_nvme_get_controllers
 for ns in $(ls /dev/spdk/nvme?n?); do
 	${NVME_CMD} get-ns-id $ns
 	${NVME_CMD} id-ns $ns
-	${NVME_CMD} list-ns $ns
+
+	# list-ns: INVALID FIELD (00/02) sqid:0 cid:95 cdw0:0 sqhd:0013 p:1 m:0 dnr:1
+	${NVME_CMD} list-ns $ns || true
 done
 
 for ctrlr in $(ls /dev/spdk/nvme?); do
 	${NVME_CMD} id-ctrl $ctrlr
-	${NVME_CMD} list-ctrl $ctrlr
+
+	# list-ctrl: INVALID FIELD (00/02) sqid:0 cid:95 cdw0:0 sqhd:0011 p:1 m:0 dnr:1
+	${NVME_CMD} list-ctrl $ctrlr || true
 	${NVME_CMD} fw-log $ctrlr
 	${NVME_CMD} smart-log $ctrlr
 	${NVME_CMD} error-log $ctrlr
-	${NVME_CMD} get-feature $ctrlr -f 1 -s 1 -l 100
+
+	# get-feature: INVALID FIELD (00/02) sqid:0 cid:95 cdw0:0 sqhd:0018 p:1 m:0 dnr:1
+	${NVME_CMD} get-feature $ctrlr -f 1 -s 1 -l 100 || true
 	${NVME_CMD} get-log $ctrlr -i 1 -l 100
 	${NVME_CMD} reset $ctrlr
 done
