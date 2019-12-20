@@ -333,6 +333,7 @@ fuzz_vhost_dev_init(const char *socket_path, bool is_blk_dev, bool use_bogus_buf
 		rc = -ENOMEM;
 		goto error_out;
 	}
+	spdk_set_thread(dev_ctx->thread);
 
 	if (is_blk_dev) {
 		rc = blk_dev_init(&dev_ctx->virtio_dev, socket_path, FUZZ_MAX_QUEUES);
@@ -988,6 +989,7 @@ poll_dev(void *ctx)
 				g_run = 0;
 			}
 			spdk_thread_exit(dev_ctx->thread);
+			spdk_set_thread(NULL);
 		}
 		return 0;
 	}
