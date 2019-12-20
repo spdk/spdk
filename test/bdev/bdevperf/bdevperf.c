@@ -262,7 +262,7 @@ bdevperf_free_target(struct io_target *target)
 }
 
 static void
-bdevperf_free_targets(void)
+bdevperf_destroy_target_group(void)
 {
 	uint32_t i, core_count;
 	struct io_target *target, *next_target;
@@ -281,12 +281,7 @@ bdevperf_free_targets(void)
 			target = next_target;
 		}
 	}
-}
 
-static void
-bdevperf_destroy_target_group(void)
-{
-	bdevperf_free_targets();
 	free(g_head);
 	free(g_coremap);
 }
@@ -1448,7 +1443,7 @@ rpc_perform_tests_cb(int rc)
 						     "bdevperf failed with error %s", spdk_strerror(-rc));
 	}
 
-	bdevperf_free_targets();
+	bdevperf_destroy_target_group();
 }
 
 static void
@@ -1481,7 +1476,7 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 	rc = bdevperf_test();
 	if (rc) {
 		g_request = NULL;
-		bdevperf_free_targets();
+		bdevperf_destroy_target_group();
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Could not perform tests due to error: %s", spdk_strerror(-rc));
 		return;
