@@ -46,7 +46,7 @@
 static TAILQ_HEAD(, vhost_poll_group) g_poll_groups = TAILQ_HEAD_INITIALIZER(g_poll_groups);
 
 /* Temporary cpuset for poll group assignment */
-static struct spdk_cpuset *g_tmp_cpuset;
+static struct spdk_cpuset g_tmp_cpuset;
 
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
@@ -716,11 +716,11 @@ vhost_get_poll_group(struct spdk_cpuset *cpumask)
 	selected_pg = TAILQ_FIRST(&g_poll_groups);
 
 	TAILQ_FOREACH(pg, &g_poll_groups, tailq) {
-		spdk_cpuset_copy(g_tmp_cpuset, cpumask);
-		spdk_cpuset_and(g_tmp_cpuset, spdk_thread_get_cpumask(pg->thread));
+		spdk_cpuset_copy(&g_tmp_cpuset, cpumask);
+		spdk_cpuset_and(&g_tmp_cpuset, spdk_thread_get_cpumask(pg->thread));
 
 		/* ignore threads which could be relocated to a non-masked cpu. */
-		if (!spdk_cpuset_equal(g_tmp_cpuset, spdk_thread_get_cpumask(pg->thread))) {
+		if (!spdk_cpuset_equal(&g_tmp_cpuset, spdk_thread_get_cpumask(pg->thread))) {
 			continue;
 		}
 
@@ -1381,16 +1381,10 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 		}
 	}
 
-	g_tmp_cpuset = spdk_cpuset_alloc();
-	if (g_tmp_cpuset == NULL) {
-		ret = -1;
-		goto err_out;
-	}
 
 	ret = sem_init(&g_dpdk_sem, 0, 0);
 	if (ret != 0) {
 		SPDK_ERRLOG("Failed to initialize semaphore for rte_vhost pthread.\n");
-		spdk_cpuset_free(g_tmp_cpuset);
 		ret = -1;
 		goto err_out;
 	}
@@ -1421,7 +1415,6 @@ _spdk_vhost_fini(void *arg1)
 
 	/* All devices are removed now. */
 	sem_destroy(&g_dpdk_sem);
-	spdk_cpuset_free(g_tmp_cpuset);
 	TAILQ_FOREACH_SAFE(pg, &g_poll_groups, tailq, tpg) {
 		TAILQ_REMOVE(&g_poll_groups, pg, tailq);
 		free(pg);
