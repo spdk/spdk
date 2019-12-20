@@ -8,22 +8,22 @@ if [[ ! -f $1 ]]; then
 	exit 1
 fi
 
-source "$1"
-
-rootdir=$(readlink -f $(dirname $0))
-source "$rootdir/test/common/autotest_common.sh"
 
 out=$PWD
+rootdir=$(readlink -f $(dirname $0))
 scanbuild="scan-build -o $out/scan-build-tmp --status-bugs"
 
-umask 022
+source "$1"
+source "$rootdir/test/common/autotest_common.sh"
 
+rm -rf /tmp/spdk
+mkdir /tmp/spdk
+umask 022
 cd $rootdir
 
+# Print some test system info out for the log
 date -u
 git describe --tags
-
-# Print some test system info out for the log
 echo "** START ** Info for Hostname: $HOSTNAME"
 uname -a
 $MAKE cc_version
@@ -114,8 +114,6 @@ run_test "autobuild_header_dependency_check" header_dependency_check
 
 # Test 'make install'
 timing_enter make_install
-rm -rf /tmp/spdk
-mkdir /tmp/spdk
 $MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk prefix=/usr
 timing_exit make_install
 
