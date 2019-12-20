@@ -218,7 +218,7 @@ verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len, int bloc
 }
 
 static int
-blockdev_heads_init(void)
+bdevperf_init_target_group(void)
 {
 	uint32_t i, idx = 0;
 	uint32_t core_count = spdk_env_get_core_count();
@@ -284,7 +284,7 @@ bdevperf_free_targets(void)
 }
 
 static void
-blockdev_heads_destroy(void)
+bdevperf_destroy_target_group(void)
 {
 	bdevperf_free_targets();
 	free(g_head);
@@ -1305,7 +1305,7 @@ bdevperf_run(void *arg1)
 {
 	int rc;
 
-	rc = blockdev_heads_init();
+	rc = bdevperf_init_target_group();
 	if (rc) {
 		spdk_app_stop(1);
 		return;
@@ -1523,7 +1523,7 @@ main(int argc, char **argv)
 		g_run_failed = true;
 	}
 
-	blockdev_heads_destroy();
+	bdevperf_destroy_target_group();
 	spdk_app_fini();
 	return g_run_failed;
 }
