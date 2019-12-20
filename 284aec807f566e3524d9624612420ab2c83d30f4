@@ -16,6 +16,24 @@
       "revId": "284aec807f566e3524d9624612420ab2c83d30f4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96cbb9a8_e95c408e",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1202,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-20T09:32:00Z",
+      "side": 1,
+      "message": "Done here:\nhttps://review.gerrithub.io/c/spdk/spdk/+/478584",
+      "parentUuid": "f1b7730b_5d50ae23",
+      "revId": "284aec807f566e3524d9624612420ab2c83d30f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
