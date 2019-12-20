@@ -14,6 +14,7 @@ rootdir=$(readlink -f $(dirname $0))
 source "$rootdir/test/common/autotest_common.sh"
 
 out=$PWD
+scanbuild="scan-build -o $out/scan-build-tmp --status-bugs"
 
 umask 022
 
@@ -43,6 +44,15 @@ function ocf_precompile {
 	./configure $config_params
 }
 
+function make_fail_cleanup {
+	if [ -d $out/scan-build-tmp ]; then
+		scanoutput=$(ls -1 $out/scan-build-tmp/)
+		mv $out/scan-build-tmp/$scanoutput $out/scan-build
+		rm -rf $out/scan-build-tmp
+		chmod -R a+rX $out/scan-build
+	fi
+	false
+}
 
 if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
 	run_test "valgrind" echo "using valgrind"
@@ -65,41 +75,18 @@ if [ $SPDK_RUN_CHECK_FORMAT -eq 1 ]; then
 	run_test "autobuild_check_format" ./scripts/check_format.sh
 fi
 
-scanbuild=''
-./configure $config_params
-make_timing_label='make'
-if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then
-	scanbuild="scan-build -o $out/scan-build-tmp --status-bugs"
-	make_timing_label='scanbuild_make'
-	report_test_completion "scanbuild"
-
-fi
-
-echo $scanbuild
-
-timing_enter "$make_timing_label"
-
 $MAKE $MAKEFLAGS clean
 if [ $SPDK_BUILD_SHARED_OBJECT -eq 1 ]; then
 	$rootdir/test/make/check_so_deps.sh
 	report_test_completion "shared_object_build"
 fi
 
-fail=0
-./configure $config_params
-time $scanbuild $MAKE $MAKEFLAGS || fail=1
-if [ $fail -eq 1 ]; then
-	if [ -d $out/scan-build-tmp ]; then
-		scanoutput=$(ls -1 $out/scan-build-tmp/)
-		mv $out/scan-build-tmp/$scanoutput $out/scan-build
-		rm -rf $out/scan-build-tmp
-		chmod -R a+rX $out/scan-build
-	fi
-	exit 1
+run_test "configure" ./configure $config_params
+if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then
+	run_test "scanbuild_make" $scanbuild $MAKE $MAKEFLAGS && rm -rf $out/scan-build-tmp || make_fail_cleanup
 else
-	rm -rf $out/scan-build-tmp
+	run_test "make" $MAKE $MAKEFLAGS
 fi
-timing_exit "$make_timing_label"
 
 # Check for generated files that are not listed in .gitignore
 timing_enter generated_files_check
