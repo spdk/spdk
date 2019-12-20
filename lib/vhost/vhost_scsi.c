@@ -1367,7 +1367,7 @@ vhost_scsi_start(struct spdk_vhost_session *vsession)
 	svsession->svdev = svdev;
 
 	if (svdev->vdev.active_session_num == 0) {
-		svdev->poll_group = vhost_get_poll_group(svdev->vdev.cpumask);
+		svdev->poll_group = vhost_get_poll_group(&svdev->vdev.cpumask);
 	}
 
 	return vhost_session_send_event(svdev->poll_group, vsession,
@@ -1521,7 +1521,7 @@ vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "ctrlr", vdev->name);
-	spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(vdev->cpumask));
+	spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(&vdev->cpumask));
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

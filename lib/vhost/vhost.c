@@ -592,7 +592,7 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 		   const struct spdk_vhost_dev_backend *backend)
 {
 	char path[PATH_MAX];
-	struct spdk_cpuset *cpumask;
+	struct spdk_cpuset cpumask = {};
 	int rc;
 
 	assert(vdev);
@@ -601,13 +601,7 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 		return -EINVAL;
 	}
 
-	cpumask = spdk_cpuset_alloc();
-	if (!cpumask) {
-		SPDK_ERRLOG("spdk_cpuset_alloc failed\n");
-		return -ENOMEM;
-	}
-
-	if (vhost_parse_core_mask(mask_str, cpumask) != 0) {
+	if (vhost_parse_core_mask(mask_str, &cpumask) != 0) {
 		SPDK_ERRLOG("cpumask %s is invalid (app mask is 0x%s)\n",
 			    mask_str, spdk_cpuset_fmt(spdk_app_get_core_mask()));
 		rc = -EINVAL;
@@ -636,7 +630,7 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 		goto out;
 	}
 
-	vdev->cpumask = cpumask;
+	spdk_cpuset_copy(&vdev->cpumask, &cpumask);
 	vdev->registered = true;
 	vdev->backend = backend;
 	TAILQ_INIT(&vdev->vsessions);
@@ -658,7 +652,6 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 	return 0;
 
 out:
-	spdk_cpuset_free(cpumask);
 	return rc;
 }
 
@@ -681,7 +674,6 @@ vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 
 	free(vdev->name);
 	free(vdev->path);
-	spdk_cpuset_free(vdev->cpumask);
 	TAILQ_REMOVE(&g_vhost_devices, vdev, tailq);
 	return 0;
 }
@@ -711,7 +703,7 @@ const struct spdk_cpuset *
 spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev)
 {
 	assert(vdev != NULL);
-	return vdev->cpumask;
+	return &vdev->cpumask;
 }
 
 struct vhost_poll_group *

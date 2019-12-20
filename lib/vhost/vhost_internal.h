@@ -157,7 +157,7 @@ struct spdk_vhost_dev {
 	char *name;
 	char *path;
 
-	struct spdk_cpuset *cpumask;
+	struct spdk_cpuset cpumask;
 	bool registered;
 
 	uint64_t virtio_features;
