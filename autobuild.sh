@@ -54,6 +54,14 @@ function make_fail_cleanup {
 	exit 1
 }
 
+function porcelain_check {
+	if [ $(git status --porcelain --ignore-submodules | wc -l) -ne 0 ]; then
+		echo "Generated files missing from .gitignore:"
+		git status --porcelain --ignore-submodules
+		exit 1
+	fi
+}
+
 if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
 	run_test "valgrind" echo "using valgrind"
 fi
@@ -87,14 +95,7 @@ else
 	run_test "make" $MAKE $MAKEFLAGS
 fi
 
-# Check for generated files that are not listed in .gitignore
-timing_enter generated_files_check
-if [ $(git status --porcelain --ignore-submodules | wc -l) -ne 0 ]; then
-	echo "Generated files missing from .gitignore:"
-	git status --porcelain --ignore-submodules
-	exit 1
-fi
-timing_exit generated_files_check
+run_test "autobuild_generated_files_check" porcelain_check
 
 # Check that header file dependencies are working correctly by
 #  capturing a binary's stat data before and after touching a
