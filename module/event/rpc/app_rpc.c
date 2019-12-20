@@ -137,13 +137,13 @@ spdk_rpc_framework_monitor_context_switch(struct spdk_jsonrpc_request *request,
 			return;
 		}
 
-		spdk_reactor_enable_framework_monitor_context_switch(req.enabled);
+		spdk_framework_enable_context_switch_monitor(req.enabled);
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_bool(w, "enabled", spdk_reactor_framework_monitor_context_switch_enabled());
+	spdk_json_write_named_bool(w, "enabled", spdk_framework_context_switch_monitor_enabled());
 
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
