@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2117168c_fa3944db",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1870,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-21T00:08:07Z",
+      "side": 1,
+      "message": "UT added and has covered this change.\n\nhttps://dqtibwqq6s6ux.cloudfront.net/assets/html/untar.html?file\u003d../../results/autotest-per-patch/builds/53642/archive/ut_coverage_autotest-per-patch_53642.tar.gz\u0026page\u003dlib/blobfs/blobfs.c.gcov.html",
+      "range": {
+        "startLine": 1870,
+        "startChar": 12,
+        "endLine": 1870,
+        "endChar": 68
+      },
+      "revId": "56704ce729553485949aec3a69d5b5651de6dc00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
