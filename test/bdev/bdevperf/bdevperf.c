@@ -792,9 +792,8 @@ bdevperf_target_get_task(struct io_target *target)
 static __thread unsigned int seed = 0;
 
 static void
-bdevperf_prep_task(struct bdevperf_task *task)
+bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 {
-	struct io_target *target = task->target;
 	uint64_t offset_in_ios;
 
 	if (g_is_random) {
@@ -844,20 +843,13 @@ bdevperf_prep_task(struct bdevperf_task *task)
 }
 
 static void
-bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
-{
-	if (!task) {
-		task = bdevperf_target_get_task(target);
-	}
-
-	bdevperf_prep_task(task);
-}
-
-static void
 bdevperf_submit_io(struct io_target *target, int queue_depth)
 {
+	struct bdevperf_task *task;
+
 	while (queue_depth-- > 0) {
-		bdevperf_submit_single(target, NULL);
+		task = bdevperf_target_get_task(target);
+		bdevperf_submit_single(target, task);
 	}
 }
 
