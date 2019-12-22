@@ -774,6 +774,21 @@ bdevperf_prep_zcopy_write_task(void *arg)
 	target->current_queue_depth++;
 }
 
+static struct bdevperf_task *
+bdevperf_target_get_task(struct io_target *target)
+{
+	struct bdevperf_task *task;
+
+	task = TAILQ_FIRST(&target->task_list);
+	if (!task) {
+		printf("Task allocation failed\n");
+		abort();
+	}
+
+	TAILQ_REMOVE(&target->task_list, task, link);
+	return task;
+}
+
 static __thread unsigned int seed = 0;
 
 static void
@@ -832,13 +847,7 @@ static void
 bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 {
 	if (!task) {
-		if (!TAILQ_EMPTY(&target->task_list)) {
-			task = TAILQ_FIRST(&target->task_list);
-			TAILQ_REMOVE(&target->task_list, task, link);
-		} else {
-			printf("Task allocation failed\n");
-			abort();
-		}
+		task = bdevperf_target_get_task(target);
 	}
 
 	bdevperf_prep_task(task);
@@ -892,19 +901,13 @@ static int
 reset_target(void *arg)
 {
 	struct io_target *target = arg;
-	struct bdevperf_task	*task = NULL;
+	struct bdevperf_task *task;
 	int rc;
 
 	spdk_poller_unregister(&target->reset_timer);
 
 	/* Do reset. */
-	task = TAILQ_FIRST(&target->task_list);
-	if (!task) {
-		printf("Task allocation failed\n");
-		abort();
-	}
-	TAILQ_REMOVE(&target->task_list, task, link);
-
+	task = bdevperf_target_get_task(target);
 	rc = spdk_bdev_reset(target->bdev_desc, target->ch,
 			     reset_cb, task);
 	if (rc) {
