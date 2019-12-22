@@ -22,6 +22,29 @@
       "revId": "56704ce729553485949aec3a69d5b5651de6dc00",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54f0abf5_d19d42d7",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1872,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-12-22T14:03:56Z",
+      "side": 1,
+      "message": "The payload of iovs probably exists in general memory. But seems spdk_blob_io_writev requires hugepage memory.",
+      "range": {
+        "startLine": 1872,
+        "startChar": 8,
+        "endLine": 1872,
+        "endChar": 12
+      },
+      "revId": "56704ce729553485949aec3a69d5b5651de6dc00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
