@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb547a9e_9a43ddce",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 13
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-12-22T17:02:30Z",
+      "side": 1,
+      "message": "Reviewed-by: Or Gerlitz \u003cogerlitz@mellanox.com\u003e\n\nOk, also with the order change between handling POLLERR (zcopy buffer reclaim notifications) to POLLIN (new commands, etc) -- we still get a flood of \"Cannot allocate tcp_req on qpair\" prints once ZC is used. I don\u0027t think it\u0027s a bug so I suggest for to just make it a debug print (as below) and push the zcopy support in.\n\ndiff --git a/lib/nvmf/tcp.c b/lib/nvmf/tcp.c\nindex 44dc7d7ab..81a97b48c 100644\n--- a/lib/nvmf/tcp.c\n+++ b/lib/nvmf/tcp.c\n@@ -355,7 +355,7 @@ spdk_nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)\n \n        tcp_req \u003d TAILQ_FIRST(\u0026tqpair-\u003estate_queue[TCP_REQUEST_STATE_FREE]);\n        if (!tcp_req) {\n-               SPDK_ERRLOG(\"Cannot allocate tcp_req on tqpair\u003d%p\\n\", tqpair);\n+               SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, \"Cannot allocate tcp_req on tqpair\u003d%p\\n\", tqpair);\n                return NULL;\n        }",
+      "revId": "af85f0300714e9ea13563ac95f1b97bcf976f9c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
