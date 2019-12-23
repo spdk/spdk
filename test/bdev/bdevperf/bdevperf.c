@@ -72,19 +72,20 @@ struct spdk_bdevperf_opts {
 	int		io_size;
 	int		queue_depth;
 	int		time_in_sec;
+	int		show_performance_real_time;
+	uint64_t	show_performance_period_in_usec;
 };
 
 static struct spdk_bdevperf_opts g_opts = {
 	/* initialize to invalid value so we can detect if user overrides it. */
 	.rw_percentage = -1,
 	.zcopy = true,
+	.show_performance_period_in_usec = 1000000,
 };
 
 static uint64_t g_buf_size = 0;
 static bool g_continue_on_failure = false;
 static uint64_t g_time_in_usec;
-static int g_show_performance_real_time = 0;
-static uint64_t g_show_performance_period_in_usec = 1000000;
 static uint64_t g_show_performance_period_num = 0;
 static uint64_t g_show_performance_ema_period = 0;
 static bool g_run_failed = false;
@@ -448,7 +449,7 @@ end_run(void *arg1, void *arg2)
 	spdk_put_io_channel(target->ch);
 	spdk_bdev_close(target->bdev_desc);
 	if (--g_target_count == 0) {
-		if (g_show_performance_real_time) {
+		if (g_opts.show_performance_real_time) {
 			spdk_poller_unregister(&g_perf_timer);
 		}
 		if (g_shutdown) {
@@ -990,7 +991,7 @@ get_ema_io_per_second(struct io_target *target, uint64_t ema_period)
 
 	io_completed = target->io_completed;
 	io_per_second = (double)(io_completed - target->prev_io_completed) * 1000000
-			/ g_show_performance_period_in_usec;
+			/ g_opts.show_performance_period_in_usec;
 	target->prev_io_completed = io_completed;
 
 	target->ema_io_per_second += (io_per_second - target->ema_io_per_second) * 2
@@ -1041,7 +1042,7 @@ static int
 performance_statistics_thread(void *arg)
 {
 	g_show_performance_period_num++;
-	performance_dump(g_show_performance_period_num * g_show_performance_period_in_usec,
+	performance_dump(g_show_performance_period_num * g_opts.show_performance_period_in_usec,
 			 g_show_performance_ema_period);
 	return -1;
 }
@@ -1157,7 +1158,7 @@ verify_test_params(struct spdk_app_opts *opts)
 	g_time_in_usec = g_opts.time_in_sec * 1000000LL;
 
 	if (g_show_performance_ema_period > 0 &&
-	    g_show_performance_real_time == 0) {
+	    g_opts.show_performance_real_time == 0) {
 		fprintf(stderr, "-P option must be specified with -S option\n");
 		return 1;
 	}
@@ -1285,9 +1286,9 @@ bdevperf_test(void)
 
 	/* Start a timer to dump performance numbers */
 	g_shutdown_tsc = spdk_get_ticks();
-	if (g_show_performance_real_time) {
+	if (g_opts.show_performance_real_time) {
 		g_perf_timer = spdk_poller_register(performance_statistics_thread, NULL,
-						    g_show_performance_period_in_usec);
+						    g_opts.show_performance_period_in_usec);
 	}
 
 	/* Send events to start all I/O */
@@ -1422,8 +1423,8 @@ bdevperf_parse_arg(int ch, char *arg)
 			g_show_performance_ema_period = tmp;
 			break;
 		case 'S':
-			g_show_performance_real_time = 1;
-			g_show_performance_period_in_usec = tmp * 1000000;
+			g_opts.show_performance_real_time = 1;
+			g_opts.show_performance_period_in_usec = tmp * 1000000;
 			break;
 		default:
 			return -EINVAL;
