@@ -87,6 +87,9 @@ spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
 
 	case SPDK_NVME_TRANSPORT_FC:
 		return false;
+
+	default:
+		return false;
 	}
 
 	return false;
