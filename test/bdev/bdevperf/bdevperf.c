@@ -430,7 +430,6 @@ end_run(void *arg1, void *arg2)
 	struct io_target *target = arg1;
 	int rc = 0;
 
-	spdk_put_io_channel(target->ch);
 	spdk_bdev_close(target->bdev_desc);
 	if (--g_target_count == 0) {
 		if (g_show_performance_real_time) {
@@ -527,6 +526,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	} else {
 		TAILQ_INSERT_TAIL(&target->task_list, task, link);
 		if (target->current_queue_depth == 0) {
+			spdk_put_io_channel(target->ch);
 			complete = spdk_event_allocate(g_master_core, end_run, target, NULL);
 			spdk_event_call(complete);
 		}
