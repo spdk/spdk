@@ -294,11 +294,6 @@ bdevperf_target_gone(void *arg)
 {
 	struct io_target *target = arg;
 
-	spdk_poller_unregister(&target->run_timer);
-	if (g_opts.reset) {
-		spdk_poller_unregister(&target->reset_timer);
-	}
-
 	target->is_draining = true;
 }
 
@@ -536,6 +531,10 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		TAILQ_INSERT_TAIL(&target->task_list, task, link);
 		if (target->current_queue_depth == 0) {
 			spdk_put_io_channel(target->ch);
+			spdk_poller_unregister(&target->run_timer);
+			if (g_opts.reset) {
+				spdk_poller_unregister(&target->reset_timer);
+			}
 			complete = spdk_event_allocate(g_master_core, end_run, target, NULL);
 			spdk_event_call(complete);
 		}
