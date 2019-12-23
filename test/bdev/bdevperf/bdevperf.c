@@ -71,6 +71,7 @@ struct spdk_bdevperf_opts {
 	bool		every_core_for_each_bdev;
 	int		io_size;
 	int		queue_depth;
+	int		time_in_sec;
 };
 
 static struct spdk_bdevperf_opts g_opts = {
@@ -90,7 +91,6 @@ static bool g_run_failed = false;
 static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
 static unsigned g_master_core;
-static int g_time_in_sec;
 static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
 
@@ -1149,12 +1149,12 @@ verify_test_params(struct spdk_app_opts *opts)
 		bdevperf_usage();
 		return 1;
 	}
-	if (g_time_in_sec <= 0) {
+	if (g_opts.time_in_sec <= 0) {
 		spdk_app_usage();
 		bdevperf_usage();
 		return 1;
 	}
-	g_time_in_usec = g_time_in_sec * 1000000LL;
+	g_time_in_usec = g_opts.time_in_sec * 1000000LL;
 
 	if (g_show_performance_ema_period > 0 &&
 	    g_show_performance_real_time == 0) {
@@ -1412,7 +1412,7 @@ bdevperf_parse_arg(int ch, char *arg)
 			g_opts.io_size = tmp;
 			break;
 		case 't':
-			g_time_in_sec = tmp;
+			g_opts.time_in_sec = tmp;
 			break;
 		case 'M':
 			g_opts.rw_percentage = tmp;
@@ -1501,9 +1501,6 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.reactor_mask = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
-
-	/* default value */
-	g_time_in_sec = 0;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zfq:o:t:w:CM:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
