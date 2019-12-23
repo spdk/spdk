@@ -45,6 +45,30 @@
       "revId": "56704ce729553485949aec3a69d5b5651de6dc00",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6fa5e79_eed1ab78",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1872,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-23T01:42:33Z",
+      "side": 1,
+      "message": "In this case, we still need the memory copy here.",
+      "parentUuid": "54f0abf5_d19d42d7",
+      "range": {
+        "startLine": 1872,
+        "startChar": 8,
+        "endLine": 1872,
+        "endChar": 12
+      },
+      "revId": "56704ce729553485949aec3a69d5b5651de6dc00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
