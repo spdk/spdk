@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b38ca6ce_cf73a26f",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 1116,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-23T13:59:12Z",
+      "side": 0,
+      "message": "Contradictory to Seth\u0027s opinion I think that this function should stay as-is.",
+      "range": {
+        "startLine": 1116,
+        "startChar": 0,
+        "endLine": 1116,
+        "endChar": 22
+      },
+      "revId": "82f60376ae5ae6145bf972c69992f694f54c50b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "163fd610_da18fa1f",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 1122,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-23T13:59:12Z",
+      "side": 0,
+      "message": "You removed the whole function and replaced it with \"vhost_kill\", but it was also responsible for killing the VMs.",
+      "range": {
+        "startLine": 1122,
+        "startChar": 1,
+        "endLine": 1122,
+        "endChar": 12
+      },
+      "revId": "82f60376ae5ae6145bf972c69992f694f54c50b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58b2065e_586de277",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-23T13:59:12Z",
+      "side": 0,
+      "message": "Your changes assume \"vhost_kill vhost0\" as if only a single vhost instance was run.\nMeanwhile this loop allows to kill multiple vhost instances in the working directory, because scripts do allow to run multiple vhosts (take a look at migration tests)",
+      "range": {
+        "startLine": 1126,
+        "startChar": 0,
+        "endLine": 1128,
+        "endChar": 5
+      },
+      "revId": "82f60376ae5ae6145bf972c69992f694f54c50b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

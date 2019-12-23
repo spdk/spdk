@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fc2c9fc_b6a085f2",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 1121,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-23T13:59:12Z",
+      "side": 1,
+      "message": "Are you 100% sure that it\u0027s always \"vhost0\"?",
+      "range": {
+        "startLine": 1121,
+        "startChar": 12,
+        "endLine": 1121,
+        "endChar": 18
+      },
+      "revId": "cb5b23f330184f3880cf33469c490ded9201f775",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee13d14a_6bf999a9",
+        "filename": "test/vhost/fiotest/fio.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-23T13:59:12Z",
+      "side": 1,
+      "message": "Changing at_app_exit to vhost_kill does not include killing spawned VMs",
+      "range": {
+        "startLine": 214,
+        "startChar": 1,
+        "endLine": 214,
+        "endChar": 12
+      },
+      "revId": "cb5b23f330184f3880cf33469c490ded9201f775",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a592bcba_f380b4c9",
+        "filename": "test/vhost/fiotest/fio.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-23T13:59:12Z",
+      "side": 1,
+      "message": "vhost instance name is not \"vhost0\".\nLook for \"vhost_run\" lines in this file.",
+      "range": {
+        "startLine": 214,
+        "startChar": 12,
+        "endLine": 214,
+        "endChar": 18
+      },
+      "revId": "cb5b23f330184f3880cf33469c490ded9201f775",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
