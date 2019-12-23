@@ -45,13 +45,18 @@ function confirm_deps() {
 	lib_make_deps=($(cat $libdeps_file | grep "DEPDIRS-${lib_shortname}" | cut -d "=" -f 2 | xargs))
 	lib_make_deps=($(replace_defined_variables "${lib_make_deps[@]}"))
 
-	for ign_dep in "${IGNORED_LIBS[@]}"; do
+	#Ignore rte_vhost and nvmf library when CONFIG_VHOST_INTERNAL_LIB=n
+	if [ $lib_shortname == "vhost" ] && [ $IGNORED_LIBS == "rte_vhost" ]; then
 		for i in "${!lib_make_deps[@]}"; do
-			if [[ ${lib_make_deps[i]} == "$ign_dep" ]]; then
+			if [[ ${lib_make_deps[i]} == "rte_vhost" ]]; then
+				unset 'lib_make_deps[i]'
+			fi
+
+			if [[ ${lib_make_deps[i]} == "nvmf" ]]; then
 				unset 'lib_make_deps[i]'
 			fi
 		done
-	done
+	fi
 
 	symbols=$(readelf -s $lib | grep -E "NOTYPE.*GLOBAL.*UND" | awk '{print $8}' | sort | uniq)
 	for symbol in $symbols; do
