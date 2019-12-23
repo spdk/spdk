@@ -529,7 +529,7 @@ const char *spdk_nvme_prchk_flags_str(uint32_t prchk_flags);
  *
  * \return true if trtype is supported or false if it is not supported.
  */
-bool spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype);
+bool spdk_nvme_transport_available(const struct spdk_nvme_transport_id *transport_id);
 
 /**
  * Callback for spdk_nvme_probe() enumeration.
