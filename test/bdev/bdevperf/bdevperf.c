@@ -68,6 +68,7 @@ struct spdk_bdevperf_opts {
 	bool		mix_specified;
 	bool		zcopy;
 	const char	*target_bdev_name;
+	bool		every_core_for_each_bdev;
 };
 
 static struct spdk_bdevperf_opts g_opts = {
@@ -92,7 +93,6 @@ static unsigned g_master_core;
 static int g_time_in_sec;
 static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
-static bool g_every_core_for_each_bdev = false;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
@@ -405,7 +405,7 @@ bdevperf_construct_targets(void)
 	int rc;
 	uint8_t core_idx, core_count_for_each_bdev;
 
-	if (g_every_core_for_each_bdev == false) {
+	if (g_opts.every_core_for_each_bdev == false) {
 		core_count_for_each_bdev = 1;
 	} else {
 		core_count_for_each_bdev = spdk_env_get_core_count();
@@ -1391,7 +1391,7 @@ bdevperf_parse_arg(int ch, char *arg)
 	} else if (ch == 'z') {
 		g_wait_for_tests = true;
 	} else if (ch == 'C') {
-		g_every_core_for_each_bdev = true;
+		g_opts.every_core_for_each_bdev = true;
 	} else if (ch == 'f') {
 		g_continue_on_failure = true;
 	} else {
