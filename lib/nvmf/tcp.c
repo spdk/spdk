@@ -2743,6 +2743,7 @@ spdk_nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
+	.name = "TCP",
 	.type = SPDK_NVME_TRANSPORT_TCP,
 	.opts_init = spdk_nvmf_tcp_opts_init,
 	.create = spdk_nvmf_tcp_create,
