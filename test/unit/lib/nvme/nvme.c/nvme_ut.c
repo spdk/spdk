@@ -45,7 +45,7 @@ DEFINE_STUB_V(nvme_ctrlr_proc_get_ref, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB_V(nvme_ctrlr_proc_put_ref, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB_V(nvme_ctrlr_fail, (struct spdk_nvme_ctrlr *ctrlr, bool hotremove));
 DEFINE_STUB(spdk_nvme_transport_available, bool,
-	    (enum spdk_nvme_transport_type trtype), true);
+	    (const struct spdk_nvme_transport_id *transport_id), true);
 /* return anything non-NULL, this won't be deferenced anywhere in this test */
 DEFINE_STUB(spdk_nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
 	    (struct spdk_nvme_ctrlr *ctrlr), (struct spdk_nvme_ctrlr_process *)(uintptr_t)0x1);
