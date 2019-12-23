@@ -367,8 +367,8 @@ struct spdk_nvmf_fc_association {
 	enum spdk_nvmf_fc_object_state assoc_state;
 
 	char host_id[FCNVME_ASSOC_HOSTID_LEN];
-	char host_nqn[FCNVME_ASSOC_HOSTNQN_LEN];
-	char sub_nqn[FCNVME_ASSOC_HOSTNQN_LEN];
+	char host_nqn[SPDK_NVME_NQN_FIELD_SIZE];
+	char sub_nqn[SPDK_NVME_NQN_FIELD_SIZE];
 
 	struct spdk_nvmf_fc_conn *aq_conn; /* connection for admin queue */
 
