@@ -81,11 +81,13 @@ spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
 	case SPDK_NVME_TRANSPORT_PCIE:
 	case SPDK_NVME_TRANSPORT_TCP:
 		return true;
-
 	case SPDK_NVME_TRANSPORT_RDMA:
 		return TRANSPORT_RDMA_AVAILABLE;
-
 	case SPDK_NVME_TRANSPORT_FC:
+		return false;
+	case SPDK_NVME_TRANSPORT_CUSTOM:
+		return false;
+	default:
 		return false;
 	}
 
