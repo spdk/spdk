@@ -71,26 +71,27 @@ struct spdk_bdevperf_opts {
 	bool		every_core_for_each_bdev;
 	int		io_size;
 	int		queue_depth;
+	int		time_in_sec;
+	int		show_performance_real_time;
+	uint64_t	show_performance_period_in_usec;
+	uint64_t	show_performance_ema_period;
 };
 
 static struct spdk_bdevperf_opts g_opts = {
 	.zcopy = true,
 	/* initialize to invalid value so we can detect if user overrides it. */
 	.rw_percentage = -1,
+	.show_performance_period_in_usec = 1000000,
 };
 
 static uint64_t g_buf_size = 0;
 static bool g_continue_on_failure = false;
 static uint64_t g_time_in_usec;
-static int g_show_performance_real_time = 0;
-static uint64_t g_show_performance_period_in_usec = 1000000;
 static uint64_t g_show_performance_period_num = 0;
-static uint64_t g_show_performance_ema_period = 0;
 static bool g_run_failed = false;
 static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
 static unsigned g_master_core;
-static int g_time_in_sec;
 static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
 
@@ -448,7 +449,7 @@ end_run(void *arg1, void *arg2)
 	spdk_put_io_channel(target->ch);
 	spdk_bdev_close(target->bdev_desc);
 	if (--g_target_count == 0) {
-		if (g_show_performance_real_time) {
+		if (g_opts.show_performance_real_time) {
 			spdk_poller_unregister(&g_perf_timer);
 		}
 		if (g_shutdown) {
@@ -990,7 +991,7 @@ get_ema_io_per_second(struct io_target *target, uint64_t ema_period)
 
 	io_completed = target->io_completed;
 	io_per_second = (double)(io_completed - target->prev_io_completed) * 1000000
-			/ g_show_performance_period_in_usec;
+			/ g_opts.show_performance_period_in_usec;
 	target->prev_io_completed = io_completed;
 
 	target->ema_io_per_second += (io_per_second - target->ema_io_per_second) * 2
@@ -1041,8 +1042,8 @@ static int
 performance_statistics_thread(void *arg)
 {
 	g_show_performance_period_num++;
-	performance_dump(g_show_performance_period_num * g_show_performance_period_in_usec,
-			 g_show_performance_ema_period);
+	performance_dump(g_show_performance_period_num * g_opts.show_performance_period_in_usec,
+			 g_opts.show_performance_ema_period);
 	return -1;
 }
 
@@ -1149,15 +1150,15 @@ verify_test_params(struct spdk_app_opts *opts)
 		bdevperf_usage();
 		return 1;
 	}
-	if (g_time_in_sec <= 0) {
+	if (g_opts.time_in_sec <= 0) {
 		spdk_app_usage();
 		bdevperf_usage();
 		return 1;
 	}
-	g_time_in_usec = g_time_in_sec * 1000000LL;
+	g_time_in_usec = g_opts.time_in_sec * 1000000LL;
 
-	if (g_show_performance_ema_period > 0 &&
-	    g_show_performance_real_time == 0) {
+	if (g_opts.show_performance_ema_period > 0 &&
+	    g_opts.show_performance_real_time == 0) {
 		fprintf(stderr, "-P option must be specified with -S option\n");
 		return 1;
 	}
@@ -1285,9 +1286,9 @@ bdevperf_test(void)
 
 	/* Start a timer to dump performance numbers */
 	g_shutdown_tsc = spdk_get_ticks();
-	if (g_show_performance_real_time) {
+	if (g_opts.show_performance_real_time) {
 		g_perf_timer = spdk_poller_register(performance_statistics_thread, NULL,
-						    g_show_performance_period_in_usec);
+						    g_opts.show_performance_period_in_usec);
 	}
 
 	/* Send events to start all I/O */
@@ -1412,18 +1413,18 @@ bdevperf_parse_arg(int ch, char *arg)
 			g_opts.io_size = tmp;
 			break;
 		case 't':
-			g_time_in_sec = tmp;
+			g_opts.time_in_sec = tmp;
 			break;
 		case 'M':
 			g_opts.rw_percentage = tmp;
 			g_opts.mix_specified = true;
 			break;
 		case 'P':
-			g_show_performance_ema_period = tmp;
+			g_opts.show_performance_ema_period = tmp;
 			break;
 		case 'S':
-			g_show_performance_real_time = 1;
-			g_show_performance_period_in_usec = tmp * 1000000;
+			g_opts.show_performance_real_time = 1;
+			g_opts.show_performance_period_in_usec = tmp * 1000000;
 			break;
 		default:
 			return -EINVAL;
@@ -1501,9 +1502,6 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.reactor_mask = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
-
-	/* default value */
-	g_time_in_sec = 0;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zfq:o:t:w:CM:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
