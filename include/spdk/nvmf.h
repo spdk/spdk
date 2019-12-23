@@ -124,6 +124,11 @@ typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair, void *cb_arg);
 
 struct spdk_nvmf_transport_ops {
 	/**
+	 * Transport name
+	 */
+	char name[SPDK_NVMF_TRSTRING_MAX_LEN];
+
+	/**
 	 * Transport type
 	 */
 	enum spdk_nvme_transport_type type;
@@ -970,25 +975,25 @@ enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *
 /**
  * Initialize transport options
  *
- * \param type The transport type to create
+ * \param transport_name The transport type to create
  * \param opts The transport options (e.g. max_io_size)
  *
  * \return bool. true if successful, false if transport type
  *	   not found.
  */
 bool
-spdk_nvmf_transport_opts_init(enum spdk_nvme_transport_type type,
+spdk_nvmf_transport_opts_init(const char *transport_name,
 			      struct spdk_nvmf_transport_opts *opts);
 
 /**
  * Create a protocol transport
  *
- * \param type The transport type to create
+ * \param transport_name The transport type to create
  * \param opts The transport options (e.g. max_io_size)
  *
  * \return new transport or NULL if create fails
  */
-struct spdk_nvmf_transport *spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
+struct spdk_nvmf_transport *spdk_nvmf_transport_create(const char *transport_name,
 		struct spdk_nvmf_transport_opts *opts);
 
 /**
