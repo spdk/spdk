@@ -283,45 +283,42 @@ create_transport_test(void)
 	ops->opts_init(&opts);
 
 	g_lld_init_called = false;
-	g_nvmf_tprt = spdk_nvmf_transport_create((enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC,
-			&opts);
-	SPDK_CU_ASSERT_FATAL(g_nvmf_tprt != NULL);
+	g_nvmf_tprt = spdk_nvmf_transport_create(("FC", &opts);
+			SPDK_CU_ASSERT_FATAL(g_nvmf_tprt != NULL);
 
-	CU_ASSERT(g_lld_init_called == true);
-	CU_ASSERT(opts.max_queue_depth == g_nvmf_tprt->opts.max_queue_depth);
-	CU_ASSERT(opts.max_qpairs_per_ctrlr == g_nvmf_tprt->opts.max_qpairs_per_ctrlr);
-	CU_ASSERT(opts.in_capsule_data_size == g_nvmf_tprt->opts.in_capsule_data_size);
-	CU_ASSERT(opts.max_io_size == g_nvmf_tprt->opts.max_io_size);
-	CU_ASSERT(opts.io_unit_size == g_nvmf_tprt->opts.io_unit_size);
-	CU_ASSERT(opts.max_aq_depth == g_nvmf_tprt->opts.max_aq_depth);
+			CU_ASSERT(g_lld_init_called == true);
+			CU_ASSERT(opts.max_queue_depth == g_nvmf_tprt->opts.max_queue_depth);
+			CU_ASSERT(opts.max_qpairs_per_ctrlr == g_nvmf_tprt->opts.max_qpairs_per_ctrlr);
+			CU_ASSERT(opts.in_capsule_data_size == g_nvmf_tprt->opts.in_capsule_data_size);
+			CU_ASSERT(opts.max_io_size == g_nvmf_tprt->opts.max_io_size);
+			CU_ASSERT(opts.io_unit_size == g_nvmf_tprt->opts.io_unit_size);
+			CU_ASSERT(opts.max_aq_depth == g_nvmf_tprt->opts.max_aq_depth);
 
-	set_thread(0);
+			set_thread(0);
 
-	spdk_nvmf_tgt_add_transport(g_nvmf_tgt, g_nvmf_tprt,
-				    _add_transport_done, 0);
-	poll_thread(0);
+			spdk_nvmf_tgt_add_transport(g_nvmf_tgt, g_nvmf_tprt,
+					_add_transport_done, 0);
+			poll_thread(0);
 
-	/* Add transport again - should get error */
-	spdk_nvmf_tgt_add_transport(g_nvmf_tgt, g_nvmf_tprt,
-				    _add_transport_done_dup_err, 0);
-	poll_thread(0);
+			/* Add transport again - should get error */
+			spdk_nvmf_tgt_add_transport(g_nvmf_tgt, g_nvmf_tprt,
+					_add_transport_done_dup_err, 0);
+			poll_thread(0);
 
-	/* create transport with bad args/options */
+			/* create transport with bad args/options */
 #ifndef SPDK_CONFIG_RDMA
-	CU_ASSERT(spdk_nvmf_transport_create(SPDK_NVMF_TRTYPE_RDMA, &opts) == NULL);
+			CU_ASSERT(spdk_nvmf_transport_create("RDMA", &opts) == NULL);
 #endif
-	CU_ASSERT(spdk_nvmf_transport_create(998, &opts) == NULL);
-	opts.max_io_size = 1024 ^ 3;
-	CU_ASSERT(spdk_nvmf_transport_create((enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC,
-					     &opts) == NULL);
-	opts.max_io_size = 999;
-	opts.io_unit_size = 1024;
-	CU_ASSERT(spdk_nvmf_transport_create((enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC,
-					     &opts) == NULL);
+			CU_ASSERT(spdk_nvmf_transport_create("Bogus Transport", &opts) == NULL);
+			opts.max_io_size = 1024 ^ 3;
+			CU_ASSERT(spdk_nvmf_transport_create("FC", &opts) == NULL);
+			opts.max_io_size = 999;
+			opts.io_unit_size = 1024;
+			CU_ASSERT(spdk_nvmf_transport_create("FC", &opts) == NULL);
 }
 
-static void
-port_init_cb(uint8_t port_handle, enum spdk_fc_event event_type, void *arg, int err)
+	      static void
+	      port_init_cb(uint8_t port_handle, enum spdk_fc_event event_type, void *arg, int err)
 {
 	CU_ASSERT(err == 0);
 	CU_ASSERT(port_handle == 2);
