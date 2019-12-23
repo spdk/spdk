@@ -1416,8 +1416,6 @@ bdevperf_parse_arg(int ch, char *arg)
 		case 'S':
 			g_show_performance_real_time = 1;
 			g_show_performance_period_in_usec = tmp * 1000000;
-			g_show_performance_period_in_usec = spdk_max(g_show_performance_period_in_usec,
-							    g_show_performance_period_in_usec);
 			break;
 		default:
 			return -EINVAL;
