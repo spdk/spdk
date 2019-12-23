@@ -188,6 +188,9 @@ DEFINE_STUB(spdk_sock_set_priority,
 
 DEFINE_STUB_V(spdk_nvmf_ns_reservation_request, (void *ctx));
 
+DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id *trid,
+		enum spdk_nvme_transport_type trtype));
+
 struct spdk_trace_histories *g_trace_histories;
 
 struct spdk_bdev {
@@ -221,12 +224,47 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 {
 }
 
+const char *
+spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
+{
+	switch (trtype) {
+	case SPDK_NVME_TRANSPORT_PCIE:
+		return "PCIe";
+	case SPDK_NVME_TRANSPORT_RDMA:
+		return "RDMA";
+	case SPDK_NVME_TRANSPORT_FC:
+		return "FC";
+	default:
+		return NULL;
+	}
+}
+
+int
+spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid, const char *trstring)
+{
+	int len, i;
+
+	if (trstring == NULL) {
+		return -EINVAL;
+	}
+
+	len = strnlen(trstring, SPDK_NVMF_TRSTRING_MAX_LEN);
+	if (len == SPDK_NVMF_TRSTRING_MAX_LEN) {
+		return -EINVAL;
+	}
+
+	/* cast official trstring to uppercase version of input. */
+	for (i = 0; i < len; i++) {
+		trid->trstring[i] = toupper(trstring[i]);
+	}
+	return 0;
+}
+
 int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
 {
 	return 0;
 }
-
 
 int
 spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,

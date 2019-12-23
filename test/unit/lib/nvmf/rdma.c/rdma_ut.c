@@ -82,6 +82,44 @@ DEFINE_STUB(spdk_nvme_transport_id_compare, int, (const struct spdk_nvme_transpo
 DEFINE_STUB_V(spdk_nvmf_ctrlr_abort_aer, (struct spdk_nvmf_ctrlr *ctrlr));
 DEFINE_STUB(spdk_nvmf_request_get_dif_ctx, bool, (struct spdk_nvmf_request *req,
 		struct spdk_dif_ctx *dif_ctx), false);
+DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id *trid,
+		enum spdk_nvme_transport_type trtype));
+
+const char *
+spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
+{
+	switch (trtype) {
+	case SPDK_NVME_TRANSPORT_PCIE:
+		return "PCIe";
+	case SPDK_NVME_TRANSPORT_RDMA:
+		return "RDMA";
+	case SPDK_NVME_TRANSPORT_FC:
+		return "FC";
+	default:
+		return NULL;
+	}
+}
+
+int
+spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid, const char *trstring)
+{
+	int len, i;
+
+	if (trstring == NULL) {
+		return -EINVAL;
+	}
+
+	len = strnlen(trstring, SPDK_NVMF_TRSTRING_MAX_LEN);
+	if (len == SPDK_NVMF_TRSTRING_MAX_LEN) {
+		return -EINVAL;
+	}
+
+	/* cast official trstring to uppercase version of input. */
+	for (i = 0; i < len; i++) {
+		trid->trstring[i] = toupper(trstring[i]);
+	}
+	return 0;
+}
 
 uint64_t
 spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t *size)
