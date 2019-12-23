@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "776bb306_295776a1",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-23T08:28:51Z",
+      "side": 1,
+      "message": "SO if nvmftestfini does kill $nvmf_pid for you - then why manually do killprocess here?\nYou could just have function finish_test() to kill the proxy process.",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 22
+      },
+      "revId": "f1073cf4ccb4bb48e3d7a121cf1d7f9c89b6a94f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f939db9_21b65ff6",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-23T08:28:51Z",
+      "side": 1,
+      "message": "Since you\u0027re already using nvmftestfini then why not just use nvmfappstart here?\nnvmfappstart() allows you to pass 1 additional parameter to the function but this can be easily extended if needed.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 23
+      },
+      "revId": "f1073cf4ccb4bb48e3d7a121cf1d7f9c89b6a94f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
