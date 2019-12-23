@@ -417,6 +417,7 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 
 			if (probe_ctx->attach_cb) {
 				nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+				SPDK_NOTICELOG("Attaching Controller. %d\n", ctrlr->trid.trtype);
 				probe_ctx->attach_cb(probe_ctx->cb_ctx, &ctrlr->trid, ctrlr, &ctrlr->opts);
 				nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 			}
@@ -492,6 +493,7 @@ nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 
 	if (probe_ctx->attach_cb) {
+		SPDK_NOTICELOG("Attaching Controller. %d\n", ctrlr->trid.trtype);
 		probe_ctx->attach_cb(probe_ctx->cb_ctx, &ctrlr->trid, ctrlr, &ctrlr->opts);
 		return 0;
 	}
@@ -558,7 +560,7 @@ spdk_nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 	int rc;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
-	if (!spdk_nvme_transport_available(probe_ctx->trid.trtype)) {
+	if (!spdk_nvme_transport_available(&probe_ctx->trid)) {
 		SPDK_ERRLOG("NVMe trtype %u not available\n", probe_ctx->trid.trtype);
 		return -1;
 	}
@@ -600,6 +602,7 @@ spdk_nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 			 */
 			if (probe_ctx->attach_cb) {
 				nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+				SPDK_NOTICELOG("Attaching Controller. %d\n", ctrlr->trid.trtype);
 				probe_ctx->attach_cb(probe_ctx->cb_ctx, &ctrlr->trid, ctrlr, &ctrlr->opts);
 				nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 			}
