@@ -270,6 +270,15 @@ spdk_rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+	/* Parse trstring */
+	rc = spdk_nvme_transport_id_populate_trstring(&trid, ctx->req.trtype);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to parse trtype: %s\n", ctx->req.trtype);
+		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse trtype: %s",
+						     ctx->req.trtype);
+		goto cleanup;
+	}
+
 	/* Parse trtype */
 	rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, ctx->req.trtype);
 	if (rc < 0) {
