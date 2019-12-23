@@ -83,6 +83,39 @@ DEFINE_STUB_V(spdk_nvmf_ctrlr_abort_aer, (struct spdk_nvmf_ctrlr *ctrlr));
 DEFINE_STUB(spdk_nvmf_request_get_dif_ctx, bool, (struct spdk_nvmf_request *req,
 		struct spdk_dif_ctx *dif_ctx), false);
 
+const char *
+spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
+{
+	switch (trtype) {
+	case SPDK_NVME_TRANSPORT_PCIE:
+		return "PCIe";
+	case SPDK_NVME_TRANSPORT_RDMA:
+		return "RDMA";
+	case SPDK_NVME_TRANSPORT_FC:
+		return "FC";
+	default:
+		return NULL;
+	}
+}
+
+int
+spdk_nvme_transport_id_parse_trstring(char *dst, const char *src)
+{
+	int rc;
+
+	if (dst == NULL || src == NULL) {
+		return -EINVAL;
+	}
+
+	if (strnlen(src, SPDK_NVMF_TRSTRING_MAX_LEN) == SPDK_NVMF_TRSTRING_MAX_LEN) {
+		return -EINVAL;
+	}
+
+	rc = snprintf(dst, SPDK_NVMF_TRSTRING_MAX_LEN, "%s", src);
+
+	return rc < 0 ? rc : 0;
+}
+
 uint64_t
 spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t *size)
 {
