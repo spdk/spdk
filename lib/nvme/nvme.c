@@ -745,7 +745,7 @@ spdk_nvme_transport_id_parse_trtype(enum spdk_nvme_transport_type *trtype, const
 	} else if (strcasecmp(str, "TCP") == 0) {
 		*trtype = SPDK_NVME_TRANSPORT_TCP;
 	} else {
-		return -ENOENT;
+		*trtype = SPDK_NVME_TRANSPORT_CUSTOM;
 	}
 	return 0;
 }
