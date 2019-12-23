@@ -848,7 +848,7 @@ spdk_nvmf_fc_req_in_xfer(struct spdk_nvmf_fc_request *fc_req)
 static inline void
 spdk_nvmf_fc_create_trid(struct spdk_nvme_transport_id *trid, uint64_t n_wwn, uint64_t p_wwn)
 {
-	trid->trtype = (enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC;
+	spdk_nvme_trid_populate_transport(trid, SPDK_NVME_TRANSPORT_FC);
 	trid->adrfam = SPDK_NVMF_ADRFAM_FC;
 	snprintf(trid->trsvcid, sizeof(trid->trsvcid), "none");
 	snprintf(trid->traddr, sizeof(trid->traddr), "nn-0x%lx:pn-0x%lx", n_wwn, p_wwn);

@@ -2642,7 +2642,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 	/* Selectively copy the trid. Things like NQN don't matter here - that
 	 * mapping is enforced elsewhere.
 	 */
-	port->trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	spdk_nvme_trid_populate_transport(&port->trid, SPDK_NVME_TRANSPORT_RDMA);
 	port->trid.adrfam = trid->adrfam;
 	snprintf(port->trid.traddr, sizeof(port->trid.traddr), "%s", trid->traddr);
 	snprintf(port->trid.trsvcid, sizeof(port->trid.trsvcid), "%s", trid->trsvcid);
@@ -2762,7 +2762,7 @@ spdk_nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
 	/* Selectively copy the trid. Things like NQN don't matter here - that
 	 * mapping is enforced elsewhere.
 	 */
-	trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	spdk_nvme_trid_populate_transport(&trid, SPDK_NVME_TRANSPORT_RDMA);
 	trid.adrfam = _trid->adrfam;
 	snprintf(trid.traddr, sizeof(port->trid.traddr), "%s", _trid->traddr);
 	snprintf(trid.trsvcid, sizeof(port->trid.trsvcid), "%s", _trid->trsvcid);
@@ -3928,7 +3928,7 @@ spdk_nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
 	struct sockaddr *saddr;
 	uint16_t port;
 
-	trid->trtype = SPDK_NVME_TRANSPORT_RDMA;
+	spdk_nvme_trid_populate_transport(trid, SPDK_NVME_TRANSPORT_RDMA);
 
 	if (peer) {
 		saddr = rdma_get_peer_addr(id);

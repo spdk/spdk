@@ -637,7 +637,7 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 
 	if (trid == NULL) {
 		memset(&trid_pcie, 0, sizeof(trid_pcie));
-		trid_pcie.trtype = SPDK_NVME_TRANSPORT_PCIE;
+		spdk_nvme_trid_populate_transport(&trid_pcie, SPDK_NVME_TRANSPORT_PCIE);
 		trid = &trid_pcie;
 	}
 
@@ -699,6 +699,59 @@ spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 	ctrlr = spdk_nvme_get_ctrlr_by_trid(trid);
 
 	return ctrlr;
+}
+
+void
+spdk_nvme_trid_populate_transport(struct spdk_nvme_transport_id *trid,
+				  enum spdk_nvme_transport_type trtype)
+{
+	const char *trstring;
+
+	trid->trtype = trtype;
+	switch (trtype) {
+	case SPDK_NVME_TRANSPORT_FC:
+		trstring = SPDK_NVME_TRANSPORT_NAME_FC;
+		break;
+	case SPDK_NVME_TRANSPORT_PCIE:
+		trstring = SPDK_NVME_TRANSPORT_NAME_PCIE;
+		break;
+	case SPDK_NVME_TRANSPORT_RDMA:
+		trstring = SPDK_NVME_TRANSPORT_NAME_RDMA;
+		break;
+	case SPDK_NVME_TRANSPORT_TCP:
+		trstring = SPDK_NVME_TRANSPORT_NAME_TCP;
+		break;
+	default:
+		SPDK_ERRLOG("don't use this for custom transports\n");
+		break;
+	}
+	snprintf(trid->trstring, SPDK_NVMF_TRSTRING_MAX_LEN, "%s", trstring);
+}
+
+int
+spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid, const char *trstring)
+{
+	int len, i, rc;
+
+	if (trstring == NULL) {
+		return -EINVAL;
+	}
+
+	len = strnlen(trstring, SPDK_NVMF_TRSTRING_MAX_LEN);
+	if (len == SPDK_NVMF_TRSTRING_MAX_LEN) {
+		return -EINVAL;
+	}
+
+	rc = snprintf(trid->trstring, SPDK_NVMF_TRSTRING_MAX_LEN, "%s", trstring);
+	if (rc < 0) {
+		return rc;
+	}
+
+	/* cast official trstring to uppercase version of input. */
+	for (i = 0; i < len; i++) {
+		trid->trstring[i] = toupper(trid->trstring[i]);
+	}
+	return 0;
 }
 
 int
@@ -853,6 +906,10 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 		}
 
 		if (strcasecmp(key, "trtype") == 0) {
+			if (spdk_nvme_transport_id_populate_trstring(trid, val) != 0) {
+				SPDK_ERRLOG("invalid transport '%s'\n", val);
+				return -EINVAL;
+			}
 			if (spdk_nvme_transport_id_parse_trtype(&trid->trtype, val) != 0) {
 				SPDK_ERRLOG("Unknown trtype '%s'\n", val);
 				return -EINVAL;

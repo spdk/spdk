@@ -610,7 +610,7 @@ _spdk_nvmf_tcp_canon_listen_trid(struct spdk_nvme_transport_id *canon_trid,
 	}
 
 	memset(canon_trid, 0, sizeof(*canon_trid));
-	canon_trid->trtype = SPDK_NVME_TRANSPORT_TCP;
+	spdk_nvme_trid_populate_transport(canon_trid, SPDK_NVME_TRANSPORT_TCP);
 	canon_trid->adrfam = trid->adrfam;
 	snprintf(canon_trid->traddr, sizeof(canon_trid->traddr), "%s", trid->traddr);
 	snprintf(canon_trid->trsvcid, sizeof(canon_trid->trsvcid), "%d", trsvcid_int);
@@ -2651,7 +2651,7 @@ spdk_nvmf_tcp_qpair_get_trid(struct spdk_nvmf_qpair *qpair,
 	uint16_t			port;
 
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
-	trid->trtype = SPDK_NVME_TRANSPORT_TCP;
+	spdk_nvme_trid_populate_transport(trid, SPDK_NVME_TRANSPORT_TCP);
 
 	if (peer) {
 		snprintf(trid->traddr, sizeof(trid->traddr), "%s", tqpair->initiator_addr);
