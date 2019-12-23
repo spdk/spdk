@@ -58,6 +58,12 @@ struct bdevperf_task {
 
 struct spdk_bdevperf_opts {
 	const char	*workload_type;
+	int		is_random;
+	bool		verify;
+	bool		reset;
+	bool		unmap;
+	bool		write_zeroes;
+	bool		flush;
 };
 
 static struct spdk_bdevperf_opts g_opts;
@@ -66,13 +72,7 @@ static int g_io_size = 0;
 static uint64_t g_buf_size = 0;
 /* initialize to invalid value so we can detect if user overrides it. */
 static int g_rw_percentage = -1;
-static int g_is_random;
-static bool g_verify = false;
-static bool g_reset = false;
 static bool g_continue_on_failure = false;
-static bool g_unmap = false;
-static bool g_write_zeroes = false;
-static bool g_flush = false;
 static int g_queue_depth;
 static uint64_t g_time_in_usec;
 static int g_show_performance_real_time = 0;
@@ -302,7 +302,7 @@ bdevperf_target_gone(void *arg)
 	struct io_target *target = arg;
 
 	spdk_poller_unregister(&target->run_timer);
-	if (g_reset) {
+	if (g_opts.reset) {
 		spdk_poller_unregister(&target->reset_timer);
 	}
 
@@ -317,7 +317,7 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	int block_size, data_block_size;
 	int rc, index;
 
-	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+	if (g_opts.unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
 		return 0;
 	}
@@ -499,13 +499,13 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	md_check = spdk_bdev_get_dif_type(target->bdev) == SPDK_DIF_DISABLE;
 
 	if (!success) {
-		if (!g_reset && !g_continue_on_failure) {
+		if (!g_opts.reset && !g_continue_on_failure) {
 			target->is_draining = true;
 			g_run_failed = true;
 			printf("task offset: %lu on target bdev=%s fails\n",
 			       task->offset_blocks, target->name);
 		}
-	} else if (g_verify || g_reset) {
+	} else if (g_opts.verify || g_opts.reset) {
 		spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
 		assert(iovcnt == 1);
 		assert(iovs != NULL);
@@ -655,7 +655,7 @@ bdevperf_submit_task(void *arg)
 			rc = bdevperf_generate_dif(task);
 		}
 		if (rc == 0) {
-			cb_fn = (g_verify || g_reset) ? bdevperf_verify_write_complete : bdevperf_complete;
+			cb_fn = (g_opts.verify || g_opts.reset) ? bdevperf_verify_write_complete : bdevperf_complete;
 
 			if (g_zcopy) {
 				spdk_bdev_zcopy_end(task->bdev_io, true, cb_fn, task);
@@ -740,8 +740,8 @@ bdevperf_zcopy_get_buf_complete(struct spdk_bdev_io *bdev_io, bool success, void
 	task->bdev_io = bdev_io;
 	task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 
-	if (g_verify || g_reset) {
-		/* When g_verify or g_reset is enabled, task->buf is used for
+	if (g_opts.verify || g_opts.reset) {
+		/* When g_opts.verify or g_opts.reset is enabled, task->buf is used for
 		 *  verification of read after write.  For write I/O, when zcopy APIs
 		 *  are used, task->buf cannot be used, and data must be written to
 		 *  the data buffer allocated underneath bdev layer instead.
@@ -801,7 +801,7 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 {
 	uint64_t offset_in_ios;
 
-	if (g_is_random) {
+	if (g_opts.is_random) {
 		offset_in_ios = rand_r(&seed) % target->size_in_ios;
 	} else {
 		offset_in_ios = target->offset_in_ios++;
@@ -811,7 +811,7 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 	}
 
 	task->offset_blocks = offset_in_ios * target->io_size_blocks;
-	if (g_verify || g_reset) {
+	if (g_opts.verify || g_opts.reset) {
 		generate_data(task->buf, g_buf_size,
 			      spdk_bdev_get_block_size(target->bdev),
 			      task->md_buf, spdk_bdev_get_md_size(target->bdev),
@@ -824,11 +824,11 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 			task->iov.iov_len = g_buf_size;
 			task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 		}
-	} else if (g_flush) {
+	} else if (g_opts.flush) {
 		task->io_type = SPDK_BDEV_IO_TYPE_FLUSH;
-	} else if (g_unmap) {
+	} else if (g_opts.unmap) {
 		task->io_type = SPDK_BDEV_IO_TYPE_UNMAP;
-	} else if (g_write_zeroes) {
+	} else if (g_opts.write_zeroes) {
 		task->io_type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
 	} else if ((g_rw_percentage == 100) ||
 		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
@@ -864,7 +864,7 @@ end_target(void *arg)
 	struct io_target *target = arg;
 
 	spdk_poller_unregister(&target->run_timer);
-	if (g_reset) {
+	if (g_opts.reset) {
 		spdk_poller_unregister(&target->reset_timer);
 	}
 
@@ -939,7 +939,7 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 		/* Start a timer to stop this I/O chain when the run is over */
 		target->run_timer = spdk_poller_register(end_target, target,
 				    g_time_in_usec);
-		if (g_reset) {
+		if (g_opts.reset) {
 			target->reset_timer = spdk_poller_register(reset_target, target,
 					      10 * 1000000);
 		}
@@ -1091,7 +1091,7 @@ bdevperf_construct_targets_tasks(void)
 	 *  the min buffer alignment.  Some backends such as AIO have alignment restrictions
 	 *  that must be accounted for.
 	 */
-	if (g_reset) {
+	if (g_opts.reset) {
 		task_num += 1;
 	}
 
@@ -1187,15 +1187,15 @@ verify_test_params(struct spdk_app_opts *opts)
 	}
 
 	if (!strcmp(g_opts.workload_type, "unmap")) {
-		g_unmap = true;
+		g_opts.unmap = true;
 	}
 
 	if (!strcmp(g_opts.workload_type, "write_zeroes")) {
-		g_write_zeroes = true;
+		g_opts.write_zeroes = true;
 	}
 
 	if (!strcmp(g_opts.workload_type, "flush")) {
-		g_flush = true;
+		g_opts.flush = true;
 	}
 
 	if (!strcmp(g_opts.workload_type, "verify") ||
@@ -1210,9 +1210,9 @@ verify_test_params(struct spdk_app_opts *opts)
 			fprintf(stderr, "Ignoring -m option. Verify can only run with a single core.\n");
 			opts->reactor_mask = NULL;
 		}
-		g_verify = true;
+		g_opts.verify = true;
 		if (!strcmp(g_opts.workload_type, "reset")) {
-			g_reset = true;
+			g_opts.reset = true;
 		}
 	}
 
@@ -1248,9 +1248,9 @@ verify_test_params(struct spdk_app_opts *opts)
 	    !strcmp(g_opts.workload_type, "reset") ||
 	    !strcmp(g_opts.workload_type, "unmap") ||
 	    !strcmp(g_opts.workload_type, "write_zeroes")) {
-		g_is_random = 0;
+		g_opts.is_random = 0;
 	} else {
-		g_is_random = 1;
+		g_opts.is_random = 1;
 	}
 
 	if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
