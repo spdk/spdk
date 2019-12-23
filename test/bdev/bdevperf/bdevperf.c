@@ -291,9 +291,9 @@ bdevperf_free_targets(void)
 }
 
 static void
-bdevperf_target_gone(void *arg)
+_end_target(void *arg1, void *arg2)
 {
-	struct io_target *target = arg;
+	struct io_target *target = arg1;
 
 	spdk_poller_unregister(&target->run_timer);
 	if (g_opts.reset) {
@@ -301,6 +301,12 @@ bdevperf_target_gone(void *arg)
 	}
 
 	target->is_draining = true;
+}
+
+static void
+bdevperf_target_gone(void *arg)
+{
+	_end_target(arg, NULL);
 }
 
 static int
@@ -860,14 +866,7 @@ bdevperf_submit_io(struct io_target *target, int queue_depth)
 static int
 end_target(void *arg)
 {
-	struct io_target *target = arg;
-
-	spdk_poller_unregister(&target->run_timer);
-	if (g_opts.reset) {
-		spdk_poller_unregister(&target->reset_timer);
-	}
-
-	target->is_draining = true;
+	_end_target(arg, NULL);
 
 	return -1;
 }
