@@ -76,6 +76,7 @@ struct spdk_bdevperf_opts {
 	uint64_t	show_performance_period_in_usec;
 	uint64_t	show_performance_ema_period;
 	bool		wait_for_tests;
+	bool		continue_on_failure;
 };
 
 static struct spdk_bdevperf_opts g_opts = {
@@ -86,7 +87,6 @@ static struct spdk_bdevperf_opts g_opts = {
 };
 
 static uint64_t g_buf_size = 0;
-static bool g_continue_on_failure = false;
 static uint64_t g_time_in_usec;
 static uint64_t g_show_performance_period_num = 0;
 static bool g_run_failed = false;
@@ -503,7 +503,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	md_check = spdk_bdev_get_dif_type(target->bdev) == SPDK_DIF_DISABLE;
 
 	if (!success) {
-		if (!g_opts.reset && !g_continue_on_failure) {
+		if (!g_opts.reset && !g_opts.continue_on_failure) {
 			target->is_draining = true;
 			g_run_failed = true;
 			printf("task offset: %lu on target bdev=%s fails\n",
@@ -1394,7 +1394,7 @@ bdevperf_parse_arg(int ch, char *arg)
 	} else if (ch == 'C') {
 		g_opts.every_core_for_each_bdev = true;
 	} else if (ch == 'f') {
-		g_continue_on_failure = true;
+		g_opts.continue_on_failure = true;
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
