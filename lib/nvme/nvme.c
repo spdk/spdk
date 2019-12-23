@@ -638,6 +638,8 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 	if (trid == NULL) {
 		memset(&trid_pcie, 0, sizeof(trid_pcie));
 		trid_pcie.trtype = SPDK_NVME_TRANSPORT_PCIE;
+		spdk_nvme_transport_id_parse_trstring(trid_pcie.trstring,
+						      spdk_nvme_transport_id_trtype_str(SPDK_NVME_TRANSPORT_PCIE));
 		trid = &trid_pcie;
 	}
 
@@ -699,6 +701,32 @@ spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 	ctrlr = spdk_nvme_get_ctrlr_by_trid(trid);
 
 	return ctrlr;
+}
+
+int
+spdk_nvme_transport_id_parse_trstring(char *dst, const char *src)
+{
+	int len, rc, i;
+
+	if (dst == NULL || src == NULL) {
+		return -EINVAL;
+	}
+
+	len = strlen(src);
+	if (len > SPDK_NVMF_TRSTRING_MAX_LEN) {
+		return -EINVAL;
+	}
+
+	rc = snprintf(dst, SPDK_NVMF_TRSTRING_MAX_LEN, "%s", src);
+	if (rc < 0) {
+		return rc;
+	}
+
+	/* cast official trstring to uppercase. */
+	for (i = 0; i < len; i++) {
+		dst[i] = toupper(dst[i]);
+	}
+	return 0;
 }
 
 int
