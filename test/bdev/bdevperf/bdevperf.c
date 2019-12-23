@@ -128,7 +128,6 @@ struct io_target_group {
 };
 
 struct io_target_group *g_head;
-uint32_t *g_coremap;
 static uint32_t g_target_count = 0;
 
 /*
@@ -248,18 +247,8 @@ blockdev_heads_init(void)
 		TAILQ_INIT(&g_head[i].targets);
 	}
 
-	g_coremap = calloc(core_count, sizeof(uint32_t));
-	if (!g_coremap) {
-		free(g_head);
-		fprintf(stderr, "Cannot allocate coremap array with size=%u\n",
-			core_count);
-		return -1;
-	}
-
 	SPDK_ENV_FOREACH_CORE(i) {
-		g_coremap[idx] = i;
-		g_head[idx].lcore = i;
-		idx++;
+		g_head[idx++].lcore = i;
 	}
 
 	return 0;
@@ -307,7 +296,6 @@ blockdev_heads_destroy(void)
 {
 	bdevperf_free_targets();
 	free(g_head);
-	free(g_coremap);
 }
 
 static void
@@ -401,8 +389,8 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 
 	/* Mapping each created target to lcore */
 	index = g_target_count % spdk_env_get_core_count();
-	target->lcore = g_coremap[index];
 	TAILQ_INSERT_TAIL(&g_head[index].targets, target, link);
+	target->lcore = g_head[index].lcore;
 	g_target_count++;
 
 	return 0;
