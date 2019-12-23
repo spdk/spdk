@@ -69,6 +69,7 @@ struct spdk_bdevperf_opts {
 	bool		zcopy;
 	const char	*target_bdev_name;
 	bool		every_core_for_each_bdev;
+	int		io_size;
 };
 
 static struct spdk_bdevperf_opts g_opts = {
@@ -77,7 +78,6 @@ static struct spdk_bdevperf_opts g_opts = {
 	.zcopy = true,
 };
 
-static int g_io_size = 0;
 static uint64_t g_buf_size = 0;
 static bool g_continue_on_failure = false;
 static int g_queue_depth;
@@ -355,10 +355,10 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 
 	block_size = spdk_bdev_get_block_size(bdev);
 	data_block_size = spdk_bdev_get_data_block_size(bdev);
-	target->io_size_blocks = g_io_size / data_block_size;
-	if ((g_io_size % data_block_size) != 0) {
+	target->io_size_blocks = g_opts.io_size / data_block_size;
+	if ((g_opts.io_size % data_block_size) != 0) {
 		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
-			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
+			    g_opts.io_size, spdk_bdev_get_name(bdev), data_block_size);
 		spdk_bdev_close(target->bdev_desc);
 		free(target->name);
 		free(target);
@@ -1021,7 +1021,7 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 			} else {
 				io_per_second = get_ema_io_per_second(target, ema_period);
 			}
-			mb_per_second = io_per_second * g_io_size / (1024 * 1024);
+			mb_per_second = io_per_second * g_opts.io_size / (1024 * 1024);
 			printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
 			       target->name, io_per_second, mb_per_second);
 			total_io_per_second += io_per_second;
@@ -1056,7 +1056,7 @@ static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target 
 		return NULL;
 	}
 
-	task->buf = spdk_zmalloc(g_io_size, g_min_alignment, NULL, SPDK_ENV_LCORE_ID_ANY,
+	task->buf = spdk_zmalloc(g_opts.io_size, g_min_alignment, NULL, SPDK_ENV_LCORE_ID_ANY,
 				 SPDK_MALLOC_DMA);
 	if (!task->buf) {
 		fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
@@ -1139,7 +1139,7 @@ verify_test_params(struct spdk_app_opts *opts)
 		bdevperf_usage();
 		return 1;
 	}
-	if (g_io_size <= 0) {
+	if (g_opts.io_size <= 0) {
 		spdk_app_usage();
 		bdevperf_usage();
 		return 1;
@@ -1204,9 +1204,9 @@ verify_test_params(struct spdk_app_opts *opts)
 	if (!strcmp(g_opts.workload_type, "verify") ||
 	    !strcmp(g_opts.workload_type, "reset")) {
 		g_opts.rw_percentage = 50;
-		if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
+		if (g_opts.io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
 			fprintf(stderr, "Unable to exceed max I/O size of %d for verify. (%d provided).\n",
-				SPDK_BDEV_LARGE_BUF_MAX_SIZE, g_io_size);
+				SPDK_BDEV_LARGE_BUF_MAX_SIZE, g_opts.io_size);
 			return 1;
 		}
 		if (opts->reactor_mask) {
@@ -1256,9 +1256,9 @@ verify_test_params(struct spdk_app_opts *opts)
 		g_opts.is_random = 1;
 	}
 
-	if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
+	if (g_opts.io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
 		printf("I/O size of %d is greater than zero copy threshold (%d).\n",
-		       g_io_size, SPDK_BDEV_LARGE_BUF_MAX_SIZE);
+		       g_opts.io_size, SPDK_BDEV_LARGE_BUF_MAX_SIZE);
 		printf("Zero copy mechanism will not be used.\n");
 		g_opts.zcopy = false;
 	}
@@ -1409,7 +1409,7 @@ bdevperf_parse_arg(int ch, char *arg)
 			g_queue_depth = tmp;
 			break;
 		case 'o':
-			g_io_size = tmp;
+			g_opts.io_size = tmp;
 			break;
 		case 't':
 			g_time_in_sec = tmp;
@@ -1504,7 +1504,6 @@ main(int argc, char **argv)
 
 	/* default value */
 	g_queue_depth = 0;
-	g_io_size = 0;
 	g_time_in_sec = 0;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zfq:o:t:w:CM:P:S:T:", NULL,
