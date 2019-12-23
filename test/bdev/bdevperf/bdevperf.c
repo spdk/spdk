@@ -56,7 +56,12 @@ struct bdevperf_task {
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 };
 
-static const char *g_workload_type;
+struct spdk_bdevperf_opts {
+	const char	*workload_type;
+};
+
+static struct spdk_bdevperf_opts g_opts;
+
 static int g_io_size = 0;
 static uint64_t g_buf_size = 0;
 /* initialize to invalid value so we can detect if user overrides it. */
@@ -1136,7 +1141,7 @@ verify_test_params(struct spdk_app_opts *opts)
 		bdevperf_usage();
 		return 1;
 	}
-	if (!g_workload_type) {
+	if (!g_opts.workload_type) {
 		spdk_app_usage();
 		bdevperf_usage();
 		return 1;
@@ -1154,47 +1159,47 @@ verify_test_params(struct spdk_app_opts *opts)
 		return 1;
 	}
 
-	if (strcmp(g_workload_type, "read") &&
-	    strcmp(g_workload_type, "write") &&
-	    strcmp(g_workload_type, "randread") &&
-	    strcmp(g_workload_type, "randwrite") &&
-	    strcmp(g_workload_type, "rw") &&
-	    strcmp(g_workload_type, "randrw") &&
-	    strcmp(g_workload_type, "verify") &&
-	    strcmp(g_workload_type, "reset") &&
-	    strcmp(g_workload_type, "unmap") &&
-	    strcmp(g_workload_type, "write_zeroes") &&
-	    strcmp(g_workload_type, "flush")) {
+	if (strcmp(g_opts.workload_type, "read") &&
+	    strcmp(g_opts.workload_type, "write") &&
+	    strcmp(g_opts.workload_type, "randread") &&
+	    strcmp(g_opts.workload_type, "randwrite") &&
+	    strcmp(g_opts.workload_type, "rw") &&
+	    strcmp(g_opts.workload_type, "randrw") &&
+	    strcmp(g_opts.workload_type, "verify") &&
+	    strcmp(g_opts.workload_type, "reset") &&
+	    strcmp(g_opts.workload_type, "unmap") &&
+	    strcmp(g_opts.workload_type, "write_zeroes") &&
+	    strcmp(g_opts.workload_type, "flush")) {
 		fprintf(stderr,
 			"io pattern type must be one of\n"
 			"(read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)\n");
 		return 1;
 	}
 
-	if (!strcmp(g_workload_type, "read") ||
-	    !strcmp(g_workload_type, "randread")) {
+	if (!strcmp(g_opts.workload_type, "read") ||
+	    !strcmp(g_opts.workload_type, "randread")) {
 		g_rw_percentage = 100;
 	}
 
-	if (!strcmp(g_workload_type, "write") ||
-	    !strcmp(g_workload_type, "randwrite")) {
+	if (!strcmp(g_opts.workload_type, "write") ||
+	    !strcmp(g_opts.workload_type, "randwrite")) {
 		g_rw_percentage = 0;
 	}
 
-	if (!strcmp(g_workload_type, "unmap")) {
+	if (!strcmp(g_opts.workload_type, "unmap")) {
 		g_unmap = true;
 	}
 
-	if (!strcmp(g_workload_type, "write_zeroes")) {
+	if (!strcmp(g_opts.workload_type, "write_zeroes")) {
 		g_write_zeroes = true;
 	}
 
-	if (!strcmp(g_workload_type, "flush")) {
+	if (!strcmp(g_opts.workload_type, "flush")) {
 		g_flush = true;
 	}
 
-	if (!strcmp(g_workload_type, "verify") ||
-	    !strcmp(g_workload_type, "reset")) {
+	if (!strcmp(g_opts.workload_type, "verify") ||
+	    !strcmp(g_opts.workload_type, "reset")) {
 		g_rw_percentage = 50;
 		if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
 			fprintf(stderr, "Unable to exceed max I/O size of %d for verify. (%d provided).\n",
@@ -1206,28 +1211,28 @@ verify_test_params(struct spdk_app_opts *opts)
 			opts->reactor_mask = NULL;
 		}
 		g_verify = true;
-		if (!strcmp(g_workload_type, "reset")) {
+		if (!strcmp(g_opts.workload_type, "reset")) {
 			g_reset = true;
 		}
 	}
 
-	if (!strcmp(g_workload_type, "read") ||
-	    !strcmp(g_workload_type, "randread") ||
-	    !strcmp(g_workload_type, "write") ||
-	    !strcmp(g_workload_type, "randwrite") ||
-	    !strcmp(g_workload_type, "verify") ||
-	    !strcmp(g_workload_type, "reset") ||
-	    !strcmp(g_workload_type, "unmap") ||
-	    !strcmp(g_workload_type, "write_zeroes") ||
-	    !strcmp(g_workload_type, "flush")) {
+	if (!strcmp(g_opts.workload_type, "read") ||
+	    !strcmp(g_opts.workload_type, "randread") ||
+	    !strcmp(g_opts.workload_type, "write") ||
+	    !strcmp(g_opts.workload_type, "randwrite") ||
+	    !strcmp(g_opts.workload_type, "verify") ||
+	    !strcmp(g_opts.workload_type, "reset") ||
+	    !strcmp(g_opts.workload_type, "unmap") ||
+	    !strcmp(g_opts.workload_type, "write_zeroes") ||
+	    !strcmp(g_opts.workload_type, "flush")) {
 		if (g_mix_specified) {
 			fprintf(stderr, "Ignoring -M option... Please use -M option"
 				" only when using rw or randrw.\n");
 		}
 	}
 
-	if (!strcmp(g_workload_type, "rw") ||
-	    !strcmp(g_workload_type, "randrw")) {
+	if (!strcmp(g_opts.workload_type, "rw") ||
+	    !strcmp(g_opts.workload_type, "randrw")) {
 		if (g_rw_percentage < 0 || g_rw_percentage > 100) {
 			fprintf(stderr,
 				"-M must be specified to value from 0 to 100 "
@@ -1236,13 +1241,13 @@ verify_test_params(struct spdk_app_opts *opts)
 		}
 	}
 
-	if (!strcmp(g_workload_type, "read") ||
-	    !strcmp(g_workload_type, "write") ||
-	    !strcmp(g_workload_type, "rw") ||
-	    !strcmp(g_workload_type, "verify") ||
-	    !strcmp(g_workload_type, "reset") ||
-	    !strcmp(g_workload_type, "unmap") ||
-	    !strcmp(g_workload_type, "write_zeroes")) {
+	if (!strcmp(g_opts.workload_type, "read") ||
+	    !strcmp(g_opts.workload_type, "write") ||
+	    !strcmp(g_opts.workload_type, "rw") ||
+	    !strcmp(g_opts.workload_type, "verify") ||
+	    !strcmp(g_opts.workload_type, "reset") ||
+	    !strcmp(g_opts.workload_type, "unmap") ||
+	    !strcmp(g_opts.workload_type, "write_zeroes")) {
 		g_is_random = 0;
 	} else {
 		g_is_random = 1;
@@ -1377,7 +1382,7 @@ bdevperf_parse_arg(int ch, char *arg)
 	long long tmp;
 
 	if (ch == 'w') {
-		g_workload_type = optarg;
+		g_opts.workload_type = optarg;
 	} else if (ch == 'T') {
 		g_target_bdev_name = optarg;
 	} else if (ch == 'z') {
@@ -1497,7 +1502,6 @@ main(int argc, char **argv)
 	/* default value */
 	g_queue_depth = 0;
 	g_io_size = 0;
-	g_workload_type = NULL;
 	g_time_in_sec = 0;
 	g_mix_specified = false;
 
