@@ -124,6 +124,7 @@ struct io_target {
 
 struct io_target_group {
 	TAILQ_HEAD(, io_target)		targets;
+	uint32_t			lcore;
 };
 
 struct io_target_group *g_head;
@@ -256,7 +257,9 @@ blockdev_heads_init(void)
 	}
 
 	SPDK_ENV_FOREACH_CORE(i) {
-		g_coremap[idx++] = i;
+		g_coremap[idx] = i;
+		g_head[idx].lcore = i;
+		idx++;
 	}
 
 	return 0;
@@ -1017,9 +1020,8 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 	total_mb_per_second = 0;
 	for (index = 0; index < spdk_env_get_core_count(); index++) {
 		group = &g_head[index];
-		target = TAILQ_FIRST(&group->targets);
-		if (target != NULL) {
-			lcore_id = target->lcore;
+		if (!TAILQ_EMPTY(&group->targets)) {
+			lcore_id = group->lcore;
 			printf("\r Logical core: %u\n", lcore_id);
 		}
 		TAILQ_FOREACH(target, &group->targets, link) {
@@ -1272,7 +1274,6 @@ bdevperf_test(void)
 {
 	uint32_t i;
 	struct io_target_group *group;
-	struct io_target *target;
 	struct spdk_event *event;
 	int rc;
 	uint32_t core_count = spdk_min(g_target_count, spdk_env_get_core_count());
@@ -1295,9 +1296,8 @@ bdevperf_test(void)
 	/* Send events to start all I/O */
 	for (i = 0; i < core_count; i++) {
 		group = &g_head[i];
-		target = TAILQ_FIRST(&group->targets);
-		if (target != NULL) {
-			event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
+		if (!TAILQ_EMPTY(&group->targets)) {
+			event = spdk_event_allocate(group->lcore, bdevperf_submit_on_core,
 						    group, NULL);
 			spdk_event_call(event);
 		}
@@ -1355,7 +1355,6 @@ spdk_bdevperf_shutdown_cb(void)
 {
 	uint32_t i;
 	struct io_target_group *group;
-	struct io_target *target;
 	struct spdk_event *event;
 
 	g_shutdown = true;
@@ -1374,9 +1373,8 @@ spdk_bdevperf_shutdown_cb(void)
 	/* Send events to stop all I/O on each core */
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
 		group = &g_head[i];
-		target = TAILQ_FIRST(&group->targets);
-		if (target != NULL) {
-			event = spdk_event_allocate(target->lcore, bdevperf_stop_io_on_core,
+		if (!TAILQ_EMPTY(&group->targets)) {
+			event = spdk_event_allocate(group->lcore, bdevperf_stop_io_on_core,
 						    group, NULL);
 			spdk_event_call(event);
 		}
