@@ -160,6 +160,8 @@ nvme_fabric_discover_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
 	}
 
 	trid.trtype = entry->trtype;
+	spdk_nvme_transport_id_parse_trstring(trid.trstring,
+					      spdk_nvme_transport_id_trtype_str(entry->trtype));
 	if (!spdk_nvme_transport_available(trid.trtype)) {
 		SPDK_WARNLOG("NVMe transport type %u not available; skipping probe\n",
 			     trid.trtype);

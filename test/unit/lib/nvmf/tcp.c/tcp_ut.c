@@ -221,12 +221,44 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 {
 }
 
+const char *
+spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
+{
+	switch (trtype) {
+	case SPDK_NVME_TRANSPORT_PCIE:
+		return "PCIe";
+	case SPDK_NVME_TRANSPORT_RDMA:
+		return "RDMA";
+	case SPDK_NVME_TRANSPORT_FC:
+		return "FC";
+	default:
+		return NULL;
+	}
+}
+
+int
+spdk_nvme_transport_id_parse_trstring(char *dst, const char *src)
+{
+	int rc;
+
+	if (dst == NULL || src == NULL) {
+		return -EINVAL;
+	}
+
+	if (strnlen(src, SPDK_NVMF_TRSTRING_MAX_LEN) == SPDK_NVMF_TRSTRING_MAX_LEN) {
+		return -EINVAL;
+	}
+
+	rc = snprintf(dst, SPDK_NVMF_TRSTRING_MAX_LEN, "%s", src);
+
+	return rc < 0 ? rc : 0;
+}
+
 int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
 {
 	return 0;
 }
-
 
 int
 spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,

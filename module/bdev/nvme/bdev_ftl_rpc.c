@@ -180,6 +180,15 @@ spdk_rpc_bdev_ftl_create(struct spdk_jsonrpc_request *request,
 	opts.cache_bdev = req.cache_bdev;
 	opts.ftl_conf = req.ftl_conf;
 
+	/* Parse trstring */
+	rc = spdk_nvme_transport_id_parse_trstring(opts.trid.trstring, req.trtype);
+	if (rc) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Failed to parse trstring: %s, rc: %s",
+						     req.trtype, spdk_strerror(-rc));
+		goto invalid;
+	}
+
 	/* Parse trtype */
 	rc = spdk_nvme_transport_id_parse_trtype(&opts.trid.trtype, req.trtype);
 	if (rc) {
