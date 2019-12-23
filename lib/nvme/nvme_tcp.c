@@ -1718,6 +1718,8 @@ struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_transpor
 	}
 
 	tctrlr->ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_TCP;
+	spdk_nvme_transport_id_parse_trstring(tctrlr->ctrlr.trid.trstring,
+					      spdk_nvme_transport_id_trtype_str(SPDK_NVME_TRANSPORT_TCP));
 	tctrlr->ctrlr.opts = *opts;
 	tctrlr->ctrlr.trid = *trid;
 
