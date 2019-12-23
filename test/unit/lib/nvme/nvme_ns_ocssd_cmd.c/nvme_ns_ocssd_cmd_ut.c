@@ -85,7 +85,7 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 }
 
 bool
-spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
+spdk_nvme_transport_available_by_name(const char *transport_name)
 {
 	return true;
 }

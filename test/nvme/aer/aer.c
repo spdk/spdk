@@ -308,7 +308,7 @@ parse_args(int argc, char **argv)
 	int op, rc;
 	long int val;
 
-	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
 	while ((op = getopt(argc, argv, "n:r:t:HL:T")) != -1) {

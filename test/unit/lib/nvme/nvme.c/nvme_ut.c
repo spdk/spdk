@@ -44,8 +44,8 @@
 DEFINE_STUB_V(nvme_ctrlr_proc_get_ref, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB_V(nvme_ctrlr_proc_put_ref, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB_V(nvme_ctrlr_fail, (struct spdk_nvme_ctrlr *ctrlr, bool hotremove));
-DEFINE_STUB(spdk_nvme_transport_available, bool,
-	    (enum spdk_nvme_transport_type trtype), true);
+DEFINE_STUB(spdk_nvme_transport_available_by_name, bool,
+	    (const char *transport_name), true);
 /* return anything non-NULL, this won't be deferenced anywhere in this test */
 DEFINE_STUB(spdk_nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
 	    (struct spdk_nvme_ctrlr *ctrlr), (struct spdk_nvme_ctrlr_process *)(uintptr_t)0x1);
@@ -178,7 +178,7 @@ test_spdk_nvme_probe(void)
 	 * called for any controllers already initialized by the primary
 	 * process.
 	 */
-	MOCK_SET(spdk_nvme_transport_available, false);
+	MOCK_SET(spdk_nvme_transport_available_by_name, false);
 	MOCK_SET(spdk_process_is_primary, true);
 	dummy.initialized = true;
 	g_spdk_nvme_driver = &dummy;
@@ -186,7 +186,7 @@ test_spdk_nvme_probe(void)
 	CU_ASSERT(rc == -1);
 
 	/* driver init passes, transport available, secondary call attach_cb */
-	MOCK_SET(spdk_nvme_transport_available, true);
+	MOCK_SET(spdk_nvme_transport_available_by_name, true);
 	MOCK_SET(spdk_process_is_primary, false);
 	MOCK_SET(spdk_memzone_lookup, g_spdk_nvme_driver);
 	dummy.initialized = true;
@@ -240,7 +240,7 @@ test_spdk_nvme_connect(void)
 	/* driver init passes, transport available, secondary process connects ctrlr */
 	MOCK_SET(spdk_process_is_primary, false);
 	MOCK_SET(spdk_memzone_lookup, g_spdk_nvme_driver);
-	MOCK_SET(spdk_nvme_transport_available, true);
+	MOCK_SET(spdk_nvme_transport_available_by_name, true);
 	memset(&trid, 0, sizeof(trid));
 	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	ret_ctrlr = spdk_nvme_connect(&trid, NULL, 0);
