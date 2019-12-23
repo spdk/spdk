@@ -1141,6 +1141,29 @@ spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
  */
 void spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
 
+typedef void *(*spdk_nvmf_mmap_fn)(void *cb_arg, uint64_t addr, uint64_t len);
+
+/**
+ * \brief Map memory address embedded in the NVMe command to process's virtual address.
+ *
+ * This call is used to map the PRPs embedded in the NVMe command to local process's
+ * virtual memory space.
+ *
+ * This function can be used for virtual NVMe controller.
+ *
+ * \param cmd NVMe command.
+ * \param len Total data length of the NVMe command.
+ * \param mps Memory page size in bytes.
+ * \param iovs IO vectors.
+ * \param max_iovcnt Maximum count of IO vectors.
+ * \param mmap_fn Memory map function callback.
+ * \param arg Memory map callback argument.
+ * \return int. Negative if failed or number of vectors used for memory map.
+ */
+int spdk_nvmf_map_prps(struct spdk_nvme_cmd *cmd, uint32_t len, size_t mps,
+		       struct iovec *iovs, uint32_t max_iovcnt,
+		       spdk_nvmf_mmap_fn mmap_fn, void *arg);
+
 #ifdef __cplusplus
 }
 #endif

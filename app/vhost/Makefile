@@ -44,6 +44,7 @@ SPDK_LIB_LIST += vhost event_vhost
 
 ifeq ($(CONFIG_VHOST_INTERNAL_LIB),y)
 SPDK_LIB_LIST += rte_vhost
+SPDK_LIB_LIST += nvmf
 endif
 
 SPDK_LIB_LIST += event_bdev event_copy event_net event_scsi event_vmd event
