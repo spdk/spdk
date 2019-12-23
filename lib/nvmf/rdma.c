@@ -4080,6 +4080,7 @@ spdk_nvmf_rdma_poll_group_free_stat(struct spdk_nvmf_transport_poll_group_stat *
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
+	.name = "RDMA",
 	.type = SPDK_NVME_TRANSPORT_RDMA,
 	.opts_init = spdk_nvmf_rdma_opts_init,
 	.create = spdk_nvmf_rdma_create,
