@@ -1093,9 +1093,6 @@ bdevperf_construct_targets_tasks(void)
 	/* Initialize task list for each target */
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
 		target = g_head[i];
-		if (!target) {
-			break;
-		}
 		while (target != NULL) {
 			for (j = 0; j < task_num; j++) {
 				task = bdevperf_construct_task_on_target(target);
@@ -1285,12 +1282,11 @@ bdevperf_test(void)
 	/* Send events to start all I/O */
 	for (i = 0; i < core_count; i++) {
 		target = g_head[i];
-		if (target == NULL) {
-			return -1;
+		if (target != NULL) {
+			event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
+						    target, NULL);
+			spdk_event_call(event);
 		}
-		event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
-					    target, NULL);
-		spdk_event_call(event);
 	}
 	return 0;
 }
@@ -1354,20 +1350,21 @@ spdk_bdevperf_shutdown_cb(void)
 		return;
 	}
 
+	if (g_head == NULL) {
+		spdk_app_stop(0);
+		return;
+	}
+
 	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
 
 	/* Send events to stop all I/O on each core */
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
-		if (g_head == NULL) {
-			break;
-		}
 		target = g_head[i];
-		if (target == NULL) {
-			break;
+		if (target != NULL) {
+			event = spdk_event_allocate(target->lcore, bdevperf_stop_io_on_core,
+						    target, NULL);
+			spdk_event_call(event);
 		}
-		event = spdk_event_allocate(target->lcore, bdevperf_stop_io_on_core,
-					    target, NULL);
-		spdk_event_call(event);
 	}
 }
 
