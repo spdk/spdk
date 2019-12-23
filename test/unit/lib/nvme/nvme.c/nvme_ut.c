@@ -988,7 +988,8 @@ test_spdk_nvme_transport_id_parse_trtype(void)
 	/* test function returned value when str and strtype not NULL, but str value
 	 * not "PCIe" or "RDMA" */
 	str = "unit_test";
-	CU_ASSERT(spdk_nvme_transport_id_parse_trtype(trtype, str) == (-ENOENT));
+	CU_ASSERT(spdk_nvme_transport_id_parse_trtype(trtype, str) == 0);
+	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_CUSTOM);
 
 	/* test trtype value when use function "strcasecmp" to compare str and "PCIe"，not case-sensitive */
 	str = "PCIe";
