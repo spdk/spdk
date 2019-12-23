@@ -266,6 +266,11 @@ enum spdk_nvme_transport_type {
 	SPDK_NVME_TRANSPORT_PCIE = 256,
 
 	/**
+	 * Custom Transport (Not spec defined)
+	 */
+	SPDK_NVME_TRANSPORT_CUSTOM = 4096,
+
+	/**
 	 * RDMA Transport (RoCE, iWARP, etc.)
 	 */
 	SPDK_NVME_TRANSPORT_RDMA = SPDK_NVMF_TRTYPE_RDMA,
