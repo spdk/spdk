@@ -287,8 +287,8 @@ nvmf_fc_ls_new_association(uint32_t s_id,
 	assoc->subsystem = subsys;
 	assoc->assoc_state = SPDK_NVMF_FC_OBJECT_CREATED;
 	memcpy(assoc->host_id, a_cmd->hostid, FCNVME_ASSOC_HOSTID_LEN);
-	memcpy(assoc->host_nqn, a_cmd->hostnqn, FCNVME_ASSOC_HOSTNQN_LEN);
-	memcpy(assoc->sub_nqn, a_cmd->subnqn, FCNVME_ASSOC_HOSTNQN_LEN);
+	memcpy(assoc->host_nqn, a_cmd->hostnqn, SPDK_NVME_NQN_FIELD_SIZE);
+	memcpy(assoc->sub_nqn, a_cmd->subnqn, SPDK_NVME_NQN_FIELD_SIZE);
 	TAILQ_INIT(&assoc->fc_conns);
 	TAILQ_INIT(&assoc->avail_fc_conns);
 	assoc->ls_del_op_ctx = NULL;
