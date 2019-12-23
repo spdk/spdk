@@ -297,7 +297,11 @@ _end_target(void *arg1, void *arg2)
 static void
 bdevperf_target_gone(void *arg)
 {
-	_end_target(arg, NULL);
+	struct io_target *target = arg;
+	struct spdk_event *event;
+
+	event = spdk_event_allocate(target->lcore, _end_target, target, NULL);
+	spdk_event_call(event);
 }
 
 static int
