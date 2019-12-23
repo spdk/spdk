@@ -294,6 +294,11 @@ typedef enum spdk_nvme_transport_type spdk_nvme_transport_type_t;
  */
 struct spdk_nvme_transport_id {
 	/**
+	 * NVMe transport string.
+	 */
+	char trstring[SPDK_NVMF_TRSTRING_MAX_LEN + 1];
+
+	/**
 	 * NVMe transport type.
 	 */
 	enum spdk_nvme_transport_type trtype;
@@ -418,6 +423,17 @@ int spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char
  * values on failure.
  */
 int spdk_nvme_host_id_parse(struct spdk_nvme_host_id *hostid, const char *str);
+
+/**
+ * Parse the string representation of a transport ID tranport type into the trid struct.
+ *
+ * \param dst The output string to write the qualified transport type to.
+ * \param src Input string representation of transport type (e.g. "PCIe", "RDMA").
+ *
+ * \return 0 if parsing was successful and trtype is filled out, or negated errno
+ * values if the provided string was an invalid transport string.
+ */
+int spdk_nvme_transport_id_parse_trstring(char *dst, const char *src);
 
 /**
  * Parse the string representation of a transport ID tranport type.
