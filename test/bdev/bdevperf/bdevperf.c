@@ -67,6 +67,7 @@ struct spdk_bdevperf_opts {
 	int		rw_percentage;
 	bool		mix_specified;
 	bool		zcopy;
+	const char	*target_bdev_name;
 };
 
 static struct spdk_bdevperf_opts g_opts = {
@@ -89,7 +90,6 @@ static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
 static unsigned g_master_core;
 static int g_time_in_sec;
-static const char *g_target_bdev_name;
 static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
 static bool g_every_core_for_each_bdev = false;
@@ -411,10 +411,10 @@ bdevperf_construct_targets(void)
 		core_count_for_each_bdev = spdk_env_get_core_count();
 	}
 
-	if (g_target_bdev_name != NULL) {
-		bdev = spdk_bdev_get_by_name(g_target_bdev_name);
+	if (g_opts.target_bdev_name != NULL) {
+		bdev = spdk_bdev_get_by_name(g_opts.target_bdev_name);
 		if (!bdev) {
-			fprintf(stderr, "Unable to find bdev '%s'\n", g_target_bdev_name);
+			fprintf(stderr, "Unable to find bdev '%s'\n", g_opts.target_bdev_name);
 			return;
 		}
 
@@ -1387,7 +1387,7 @@ bdevperf_parse_arg(int ch, char *arg)
 	if (ch == 'w') {
 		g_opts.workload_type = optarg;
 	} else if (ch == 'T') {
-		g_target_bdev_name = optarg;
+		g_opts.target_bdev_name = optarg;
 	} else if (ch == 'z') {
 		g_wait_for_tests = true;
 	} else if (ch == 'C') {
