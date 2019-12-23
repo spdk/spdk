@@ -286,7 +286,7 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 				struct spdk_nvme_transport_id trid;
 
 				memset(&trid, 0, sizeof(trid));
-				trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+				spdk_nvme_trid_populate_transport(&trid, SPDK_NVME_TRANSPORT_PCIE);
 				snprintf(trid.traddr, sizeof(trid.traddr), "%s", event.traddr);
 
 				ctrlr = spdk_nvme_get_ctrlr_by_trid_unsafe(&trid);
@@ -729,7 +729,7 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 
 	pci_addr = spdk_pci_device_get_addr(pci_dev);
 
-	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	spdk_nvme_trid_populate_transport(&trid, SPDK_NVME_TRANSPORT_PCIE);
 	spdk_pci_addr_fmt(trid.traddr, sizeof(trid.traddr), &pci_addr);
 
 	ctrlr = spdk_nvme_get_ctrlr_by_trid_unsafe(&trid);
@@ -828,7 +828,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 
 	pctrlr->is_remapped = false;
 	pctrlr->ctrlr.is_removed = false;
-	pctrlr->ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	spdk_nvme_trid_populate_transport(&pctrlr->ctrlr.trid, SPDK_NVME_TRANSPORT_PCIE);
 	pctrlr->devhandle = devhandle;
 	pctrlr->ctrlr.opts = *opts;
 	memcpy(&pctrlr->ctrlr.trid, trid, sizeof(pctrlr->ctrlr.trid));

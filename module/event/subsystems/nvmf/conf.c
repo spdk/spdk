@@ -435,7 +435,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 	/* Parse Listen sections */
 	for (i = 0; ; i++) {
-		struct spdk_nvme_transport_id trid = {0};
+		struct spdk_nvme_transport_id trid = {{0}};
 		const char *transport;
 		const char *address;
 		char *address_dup;
@@ -443,6 +443,11 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		transport = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
 		if (!transport) {
 			break;
+		}
+
+		if (spdk_nvme_transport_id_populate_trstring(&trid, transport)) {
+			SPDK_ERRLOG("Invalid listen address transport type '%s'\n", transport);
+			continue;
 		}
 
 		if (spdk_nvme_transport_id_parse_trtype(&trid.trtype, transport)) {

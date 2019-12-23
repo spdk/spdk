@@ -211,23 +211,18 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 	for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
 	     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
 		const struct spdk_nvme_transport_id *trid;
-		const char *trtype;
 		const char *adrfam;
 
 		trid = spdk_nvmf_listener_get_trid(listener);
 
 		spdk_json_write_object_begin(w);
-		trtype = spdk_nvme_transport_id_trtype_str(trid->trtype);
-		if (trtype == NULL) {
-			trtype = "unknown";
-		}
 		adrfam = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
 		if (adrfam == NULL) {
 			adrfam = "unknown";
 		}
 		/* NOTE: "transport" is kept for compatibility; new code should use "trtype" */
-		spdk_json_write_named_string(w, "transport", trtype);
-		spdk_json_write_named_string(w, "trtype", trtype);
+		spdk_json_write_named_string(w, "transport", trid->trstring);
+		spdk_json_write_named_string(w, "trtype", trid->trstring);
 		spdk_json_write_named_string(w, "adrfam", adrfam);
 		spdk_json_write_named_string(w, "traddr", trid->traddr);
 		spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
@@ -688,6 +683,11 @@ rpc_listen_address_to_trid(const struct rpc_listen_address *address,
 	size_t len;
 
 	memset(trid, 0, sizeof(*trid));
+
+	if (spdk_nvme_transport_id_populate_trstring(trid, address->transport)) {
+		SPDK_ERRLOG("Invalid transport string: %s\n", address->transport);
+		return -EINVAL;
+	}
 
 	if (spdk_nvme_transport_id_parse_trtype(&trid->trtype, address->transport)) {
 		SPDK_ERRLOG("Invalid transport type: %s\n", address->transport);
