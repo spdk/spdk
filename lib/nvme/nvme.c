@@ -1035,6 +1035,11 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 		return spdk_pci_addr_compare(&pci_addr1, &pci_addr2);
 	}
 
+	cmp = strcasecmp(trid1->trstring, trid2->trstring);
+	if (cmp) {
+		return cmp;
+	}
+
 	cmp = strcasecmp(trid1->traddr, trid2->traddr);
 	if (cmp) {
 		return cmp;
