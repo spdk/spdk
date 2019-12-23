@@ -74,6 +74,7 @@ struct spdk_bdevperf_opts {
 	int		time_in_sec;
 	int		show_performance_real_time;
 	uint64_t	show_performance_period_in_usec;
+	uint64_t	show_performance_ema_period;
 };
 
 static struct spdk_bdevperf_opts g_opts = {
@@ -87,7 +88,6 @@ static uint64_t g_buf_size = 0;
 static bool g_continue_on_failure = false;
 static uint64_t g_time_in_usec;
 static uint64_t g_show_performance_period_num = 0;
-static uint64_t g_show_performance_ema_period = 0;
 static bool g_run_failed = false;
 static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
@@ -1043,7 +1043,7 @@ performance_statistics_thread(void *arg)
 {
 	g_show_performance_period_num++;
 	performance_dump(g_show_performance_period_num * g_opts.show_performance_period_in_usec,
-			 g_show_performance_ema_period);
+			 g_opts.show_performance_ema_period);
 	return -1;
 }
 
@@ -1157,7 +1157,7 @@ verify_test_params(struct spdk_app_opts *opts)
 	}
 	g_time_in_usec = g_opts.time_in_sec * 1000000LL;
 
-	if (g_show_performance_ema_period > 0 &&
+	if (g_opts.show_performance_ema_period > 0 &&
 	    g_opts.show_performance_real_time == 0) {
 		fprintf(stderr, "-P option must be specified with -S option\n");
 		return 1;
@@ -1420,7 +1420,7 @@ bdevperf_parse_arg(int ch, char *arg)
 			g_opts.mix_specified = true;
 			break;
 		case 'P':
-			g_show_performance_ema_period = tmp;
+			g_opts.show_performance_ema_period = tmp;
 			break;
 		case 'S':
 			g_opts.show_performance_real_time = 1;
