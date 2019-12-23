@@ -40,6 +40,39 @@
 
 #include "nvme/nvme_pcie.c"
 
+const char *
+spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
+{
+	switch (trtype) {
+	case SPDK_NVME_TRANSPORT_PCIE:
+		return "PCIe";
+	case SPDK_NVME_TRANSPORT_RDMA:
+		return "RDMA";
+	case SPDK_NVME_TRANSPORT_FC:
+		return "FC";
+	default:
+		return NULL;
+	}
+}
+
+int
+spdk_nvme_transport_id_parse_trstring(char *dst, const char *src)
+{
+	int rc;
+
+	if (dst == NULL || src == NULL) {
+		return -EINVAL;
+	}
+
+	if (strlen(src) > SPDK_NVMF_TRSTRING_MAX_LEN) {
+		return -EINVAL;
+	}
+
+	rc = snprintf(dst, SPDK_NVMF_TRSTRING_MAX_LEN, "%s", src);
+
+	return rc < 0 ? rc : 0;
+}
+
 struct spdk_log_flag SPDK_LOG_NVME = {
 	.name = "nvme",
 	.enabled = false,

@@ -1894,7 +1894,7 @@ static void
 test_spdk_nvme_ctrlr_set_trid(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {0};
-	struct spdk_nvme_transport_id	new_trid = {0};
+	struct spdk_nvme_transport_id	new_trid = {{0}};
 
 	ctrlr.is_failed = false;
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
