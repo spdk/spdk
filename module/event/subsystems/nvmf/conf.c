@@ -445,6 +445,11 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			break;
 		}
 
+		if (spdk_nvme_transport_id_parse_trstring(trid.trstring, transport)) {
+			SPDK_ERRLOG("Invalid listen address transport type '%s'\n", transport);
+			continue;
+		}
+
 		if (spdk_nvme_transport_id_parse_trtype(&trid.trtype, transport)) {
 			SPDK_ERRLOG("Invalid listen address transport type '%s'\n", transport);
 			continue;
