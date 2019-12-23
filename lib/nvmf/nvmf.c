@@ -371,7 +371,6 @@ spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 	struct spdk_nvmf_ns_opts ns_opts;
 	uint32_t max_namespaces;
 	char uuid_str[SPDK_UUID_STRING_LEN];
-	const char *trtype;
 	const char *adrfam;
 
 	if (spdk_nvmf_subsystem_get_type(subsystem) != SPDK_NVMF_SUBTYPE_NVME) {
@@ -404,7 +403,6 @@ spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 	     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
 		trid = spdk_nvmf_listener_get_trid(listener);
 
-		trtype = spdk_nvme_transport_id_trtype_str(trid->trtype);
 		adrfam = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
 
 		spdk_json_write_object_begin(w);
@@ -418,7 +416,7 @@ spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 		/*     "listen_address" : { */
 		spdk_json_write_named_object_begin(w, "listen_address");
 
-		spdk_json_write_named_string(w, "trtype", trtype);
+		spdk_json_write_named_string(w, "trtype", trid->trstring);
 		if (adrfam) {
 			spdk_json_write_named_string(w, "adrfam", adrfam);
 		}
