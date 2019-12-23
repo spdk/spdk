@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ed8a437_fc6281cb",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-12-23T15:10:37Z",
+      "side": 1,
+      "message": "should we also have:\n\nif (paddr !\u003d va) {\n  return -EINVAL;\n}",
+      "revId": "6c7549464785aac5c0fd351a6709de7676ddcb78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
