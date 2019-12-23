@@ -48,6 +48,11 @@ extern "C" {
 #include "spdk/nvme_spec.h"
 #include "spdk/nvmf_spec.h"
 
+#define SPDK_NVME_TRANSPORT_NAME_FC	"FC"
+#define SPDK_NVME_TRANSPORT_NAME_PCIE	"PCIE"
+#define SPDK_NVME_TRANSPORT_NAME_RDMA	"RDMA"
+#define SPDK_NVME_TRANSPORT_NAME_TCP	"TCP"
+
 /**
  * Opaque handle to a controller. Returned by spdk_nvme_probe()'s attach_cb.
  */
@@ -294,6 +299,11 @@ typedef enum spdk_nvme_transport_type spdk_nvme_transport_type_t;
  */
 struct spdk_nvme_transport_id {
 	/**
+	 * NVMe transport string.
+	 */
+	char trstring[SPDK_NVMF_TRSTRING_MAX_LEN + 1];
+
+	/**
 	 * NVMe transport type.
 	 */
 	enum spdk_nvme_transport_type trtype;
@@ -394,6 +404,17 @@ enum spdk_nvme_ctrlr_flags {
  */
 int spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *str);
 
+
+/**
+ * Fill in the trtype and trstring fields of this trid based on a known transport type.
+ *
+ * \param trid The trid to fill out.
+ * \param trtype The transport type to use for filling the trid fields. Only valid for
+ * transport types referenced in the NVMe-oF spec.
+ */
+void spdk_nvme_trid_populate_transport(struct spdk_nvme_transport_id *trid,
+				       enum spdk_nvme_transport_type trtype);
+
 /**
  * Parse the string representation of a host ID.
  *
@@ -418,6 +439,18 @@ int spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char
  * values on failure.
  */
 int spdk_nvme_host_id_parse(struct spdk_nvme_host_id *hostid, const char *str);
+
+/**
+ * Parse the string representation of a transport ID tranport type into the trid struct.
+ *
+ * \param trid The trid to write to
+ * \param trstring Input string representation of transport type (e.g. "PCIe", "RDMA").
+ *
+ * \return 0 if parsing was successful and trtype is filled out, or negated errno
+ * values if the provided string was an invalid transport string.
+ */
+int spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid,
+		const char *trstring);
 
 /**
  * Parse the string representation of a transport ID tranport type.
