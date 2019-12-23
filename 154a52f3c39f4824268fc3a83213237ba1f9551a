@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b3debb0_846d661b",
+        "filename": "autorun_post.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-23T12:46:14Z",
+      "side": 1,
+      "message": "This works, but IMO can be hard to read.\nConsider using filter() function, or add line breaks between conditions",
+      "range": {
+        "startLine": 140,
+        "startChar": 20,
+        "endLine": 140,
+        "endChar": 124
+      },
+      "revId": "154a52f3c39f4824268fc3a83213237ba1f9551a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
