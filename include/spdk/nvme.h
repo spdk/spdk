@@ -284,6 +284,11 @@ enum spdk_nvme_transport_type {
 	 * TCP Transport
 	 */
 	SPDK_NVME_TRANSPORT_TCP = SPDK_NVMF_TRTYPE_TCP,
+
+	/**
+	 * Custom Transport (Not spec defined)
+	 */
+	SPDK_NVME_TRANSPORT_CUSTOM = 4096,
 };
 
 /* typedef added for coding style reasons */
