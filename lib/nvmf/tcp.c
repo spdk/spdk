@@ -1295,7 +1295,6 @@ spdk_nvmf_tcp_capsule_cmd_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	pdu->req = tcp_req;
 	assert(tcp_req->state == TCP_REQUEST_STATE_NEW);
 	spdk_nvmf_tcp_req_process(ttransport, tcp_req);
-	return;
 }
 
 static void
@@ -1558,7 +1557,6 @@ spdk_nvmf_tcp_h2c_term_req_hdr_handle(struct spdk_nvmf_tcp_qpair *tqpair,
 	return;
 end:
 	spdk_nvmf_tcp_send_c2h_term_req(tqpair, pdu, fes, error_offset);
-	return;
 }
 
 static void
@@ -1569,7 +1567,6 @@ spdk_nvmf_tcp_h2c_term_req_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair,
 
 	spdk_nvmf_tcp_h2c_term_req_dump(h2c_term_req);
 	spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
-	return;
 }
 
 static void
@@ -1686,7 +1683,6 @@ spdk_nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	return;
 end:
 	spdk_nvmf_tcp_send_c2h_term_req(tqpair, pdu, fes, error_offset);
-	return;
 }
 
 static void
