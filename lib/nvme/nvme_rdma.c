@@ -1715,6 +1715,8 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 	}
 
 	rctrlr->ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	spdk_nvme_transport_id_parse_trstring(rctrlr->ctrlr.trid.trstring,
+					      spdk_nvme_transport_id_trtype_str(SPDK_NVME_TRANSPORT_RDMA));
 	rctrlr->ctrlr.opts = *opts;
 	memcpy(&rctrlr->ctrlr.trid, trid, sizeof(rctrlr->ctrlr.trid));
 
