@@ -525,11 +525,11 @@ const char *spdk_nvme_prchk_flags_str(uint32_t prchk_flags);
  * Determine whether the NVMe library can handle a specific NVMe over Fabrics
  * transport type.
  *
- * \param trtype NVMe over Fabrics transport type to check.
+ * \param transport_id NVMe over Fabrics transport type to check.
  *
- * \return true if trtype is supported or false if it is not supported.
+ * \return true if transport_id is supported or false if it is not supported.
  */
-bool spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype);
+bool spdk_nvme_transport_available(const struct spdk_nvme_transport_id *transport_id);
 
 /**
  * Callback for spdk_nvme_probe() enumeration.
