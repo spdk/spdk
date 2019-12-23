@@ -66,11 +66,13 @@ struct spdk_bdevperf_opts {
 	bool		flush;
 	int		rw_percentage;
 	bool		mix_specified;
+	bool		zcopy;
 };
 
 static struct spdk_bdevperf_opts g_opts = {
 	/* initialize to invalid value so we can detect if user overrides it. */
 	.rw_percentage = -1,
+	.zcopy = true,
 };
 
 static int g_io_size = 0;
@@ -85,7 +87,6 @@ static uint64_t g_show_performance_ema_period = 0;
 static bool g_run_failed = false;
 static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
-static bool g_zcopy = true;
 static unsigned g_master_core;
 static int g_time_in_sec;
 static const char *g_target_bdev_name;
@@ -659,7 +660,7 @@ bdevperf_submit_task(void *arg)
 		if (rc == 0) {
 			cb_fn = (g_opts.verify || g_opts.reset) ? bdevperf_verify_write_complete : bdevperf_complete;
 
-			if (g_zcopy) {
+			if (g_opts.zcopy) {
 				spdk_bdev_zcopy_end(task->bdev_io, true, cb_fn, task);
 				return;
 			} else {
@@ -691,7 +692,7 @@ bdevperf_submit_task(void *arg)
 						   target->io_size_blocks, bdevperf_complete, task);
 		break;
 	case SPDK_BDEV_IO_TYPE_READ:
-		if (g_zcopy) {
+		if (g_opts.zcopy) {
 			rc = spdk_bdev_zcopy_start(desc, ch, task->offset_blocks, target->io_size_blocks,
 						   true, bdevperf_zcopy_populate_complete, task);
 		} else {
@@ -818,7 +819,7 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 			      spdk_bdev_get_block_size(target->bdev),
 			      task->md_buf, spdk_bdev_get_md_size(target->bdev),
 			      target->io_size_blocks, rand_r(&seed) % 256);
-		if (g_zcopy) {
+		if (g_opts.zcopy) {
 			bdevperf_prep_zcopy_write_task(task);
 			return;
 		} else {
@@ -836,7 +837,7 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 		   (g_opts.rw_percentage != 0 && ((rand_r(&seed) % 100) < g_opts.rw_percentage))) {
 		task->io_type = SPDK_BDEV_IO_TYPE_READ;
 	} else {
-		if (g_zcopy) {
+		if (g_opts.zcopy) {
 			bdevperf_prep_zcopy_write_task(task);
 			return;
 		} else {
@@ -1259,7 +1260,7 @@ verify_test_params(struct spdk_app_opts *opts)
 		printf("I/O size of %d is greater than zero copy threshold (%d).\n",
 		       g_io_size, SPDK_BDEV_LARGE_BUF_MAX_SIZE);
 		printf("Zero copy mechanism will not be used.\n");
-		g_zcopy = false;
+		g_opts.zcopy = false;
 	}
 
 	return 0;
