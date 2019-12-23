@@ -2140,6 +2140,7 @@ nvmf_fc_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_fc = {
+	.name = "FC",
 	.type = (enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC,
 	.opts_init = nvmf_fc_opts_init,
 	.create = nvmf_fc_create,
