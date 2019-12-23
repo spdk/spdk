@@ -282,8 +282,7 @@ create_transport_test(void)
 	ops->opts_init(&opts);
 
 	g_lld_init_called = false;
-	g_nvmf_tprt = spdk_nvmf_transport_create((enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC,
-			&opts);
+	g_nvmf_tprt = spdk_nvmf_transport_create("FC", &opts);
 	SPDK_CU_ASSERT_FATAL(g_nvmf_tprt != NULL);
 
 	CU_ASSERT(g_lld_init_called == true);
@@ -307,16 +306,14 @@ create_transport_test(void)
 
 	/* create transport with bad args/options */
 #ifndef SPDK_CONFIG_RDMA
-	CU_ASSERT(spdk_nvmf_transport_create(SPDK_NVMF_TRTYPE_RDMA, &opts) == NULL);
+	CU_ASSERT(spdk_nvmf_transport_create("RDMA", &opts) == NULL);
 #endif
-	CU_ASSERT(spdk_nvmf_transport_create(998, &opts) == NULL);
+	CU_ASSERT(spdk_nvmf_transport_create("Bogus Transport", &opts) == NULL);
 	opts.max_io_size = 1024 ^ 3;
-	CU_ASSERT(spdk_nvmf_transport_create((enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC,
-					     &opts) == NULL);
+	CU_ASSERT(spdk_nvmf_transport_create("FC", &opts) == NULL);
 	opts.max_io_size = 999;
 	opts.io_unit_size = 1024;
-	CU_ASSERT(spdk_nvmf_transport_create((enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC,
-					     &opts) == NULL);
+	CU_ASSERT(spdk_nvmf_transport_create("FC", &opts) == NULL);
 }
 
 static void
