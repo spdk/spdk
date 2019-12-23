@@ -2667,3 +2667,90 @@ spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx
 
 	return spdk_nvmf_ctrlr_get_dif_ctx(ctrlr, &req->cmd->nvme_cmd, dif_ctx);
 }
+
+int
+spdk_nvmf_map_prps(struct spdk_nvme_cmd *cmd, uint32_t len, size_t mps,
+		   struct iovec *iovs, uint32_t max_iovcnt,
+		   spdk_nvmf_mmap_fn mmap_fn, void *arg)
+{
+	uint64_t prp1, prp2;
+	void *vva;
+	uint32_t i;
+	uint32_t residue_len, nents;
+	uint64_t *prp_list;
+	uint32_t iovcnt = 0;
+
+	if (cmd->psdt != SPDK_NVME_PSDT_PRP) {
+		return -EINVAL;
+	}
+	assert(max_iovcnt >= 1);
+
+	prp1 = cmd->dptr.prp.prp1;
+	prp2 = cmd->dptr.prp.prp2;
+
+	/* PRP1 may start with unaligned page address */
+	residue_len = mps - (prp1 % mps);
+	residue_len = spdk_min(len, residue_len);
+
+	vva = mmap_fn(arg, prp1, residue_len);
+	if (spdk_unlikely(vva == NULL)) {
+		SPDK_ERRLOG("Map PRP1 %#lx failed with len %#x\n",
+			    prp1, residue_len);
+		return -EINVAL;
+	}
+	iovs[0].iov_base = vva;
+	iovs[0].iov_len = residue_len;
+	len -= residue_len;
+
+	if (len) {
+		if (spdk_unlikely(prp2 == 0)) {
+			SPDK_ERRLOG("No PRP2, %#x remaining\n", len);
+			return -EINVAL;
+		}
+
+		if (len <= mps) {
+			/* 2 PRP used */
+			iovcnt = 2;
+			assert(max_iovcnt >= iovcnt);
+			vva = mmap_fn(arg, prp2, len);
+			if (spdk_unlikely(vva == NULL)) {
+				SPDK_ERRLOG("Map PRP2 %#lx failed with len %#x\n",
+					    prp2, len);
+				return -EINVAL;
+			}
+			iovs[1].iov_base = vva;
+			iovs[1].iov_len = len;
+		} else {
+			/* PRP list used */
+			nents = (len + mps - 1) / mps;
+			vva = mmap_fn(arg, prp2, nents * sizeof(*prp_list));
+			if (spdk_unlikely(vva == NULL)) {
+				SPDK_ERRLOG("Map PRP2 list %#lx failed, nents %#x\n",
+					    prp2, nents);
+				return -EINVAL;
+			}
+			prp_list = vva;
+			i = 0;
+			while (len != 0) {
+				residue_len = spdk_min(len, mps);
+				vva = mmap_fn(arg, prp_list[i], residue_len);
+				if (spdk_unlikely(vva == NULL)) {
+					SPDK_ERRLOG("Map PRP2 nent %#lx failed, residue_len %#x\n",
+						    prp_list[i], residue_len);
+					return -EINVAL;
+				}
+				assert(max_iovcnt >= i + 1);
+				iovs[i + 1].iov_base = vva;
+				iovs[i + 1].iov_len = residue_len;
+				len -= residue_len;
+				i++;
+			}
+			iovcnt = i + 1;
+		}
+	} else {
+		/* 1 PRP used */
+		iovcnt = 1;
+	}
+
+	return iovcnt;
+}
