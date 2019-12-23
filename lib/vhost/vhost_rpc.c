@@ -522,6 +522,69 @@ SPDK_RPC_REGISTER("vhost_controller_set_coalescing", spdk_rpc_vhost_controller_s
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_controller_set_coalescing, set_vhost_controller_coalescing)
 
+struct rpc_vhost_ctrlr_intr {
+	char *ctrlr;
+	bool interrupt;
+};
+
+static const struct spdk_json_object_decoder rpc_set_vhost_ctrlr_interrupt[] = {
+	{"ctrlr", offsetof(struct rpc_vhost_ctrlr_intr, ctrlr), spdk_json_decode_string },
+	{"interrupt", offsetof(struct rpc_vhost_ctrlr_intr, interrupt), spdk_json_decode_bool, true},
+};
+
+static void
+free_rpc_set_vhost_controller_interrupt(struct rpc_vhost_ctrlr_intr *req)
+{
+	free(req->ctrlr);
+}
+
+static void
+spdk_rpc_vhost_controller_set_interrupt(struct spdk_jsonrpc_request *request,
+					const struct spdk_json_val *params)
+{
+	struct rpc_vhost_ctrlr_intr req = {0};
+	struct spdk_json_write_ctx *w;
+	struct spdk_vhost_dev *vdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_set_vhost_ctrlr_interrupt,
+				    SPDK_COUNTOF(rpc_set_vhost_ctrlr_interrupt), &req)) {
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	spdk_vhost_lock();
+	vdev = spdk_vhost_dev_find(req.ctrlr);
+	if (vdev == NULL) {
+		spdk_vhost_unlock();
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	rc = spdk_vhost_dev_set_handle_mode(vdev, req.interrupt);
+	spdk_vhost_unlock();
+	if (rc) {
+		goto invalid;
+	}
+
+	free_rpc_set_vhost_controller_interrupt(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+	return;
+
+invalid:
+	free_rpc_set_vhost_controller_interrupt(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("vhost_controller_set_interrupt", spdk_rpc_vhost_controller_set_interrupt,
+		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_controller_set_interrupt, set_vhost_controller_interrupt)
+
 #ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
 
 struct rpc_vhost_nvme_ctrlr {

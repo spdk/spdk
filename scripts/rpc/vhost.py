@@ -17,6 +17,20 @@ def vhost_controller_set_coalescing(client, ctrlr, delay_base_us, iops_threshold
     return client.call('vhost_controller_set_coalescing', params)
 
 
+@deprecated_alias('set_vhost_controller_interrupt')
+def vhost_controller_set_interrupt(client, ctrlr, mode):
+    """Set vhost controller vq handle mode(polling or interrupt mode).
+    Args:
+        ctrlr: controller name
+        mode: True or false(True:interrupt mode)
+    """
+    params = {
+        'ctrlr': ctrlr,
+        'mode': mode,
+    }
+    return client.call('vhost_controller_set_interrupt', params)
+
+
 @deprecated_alias('construct_vhost_scsi_controller')
 def vhost_create_scsi_controller(client, ctrlr, cpumask=None):
     """Create a vhost scsi controller.

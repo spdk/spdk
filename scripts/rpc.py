@@ -1936,6 +1936,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('iops_threshold', help='IOPS threshold when coalescing is enabled', type=int)
     p.set_defaults(func=vhost_controller_set_coalescing)
 
+    def vhost_controller_set_interrupt(args):
+        rpc.vhost.vhost_controller_set_interrupt(args.client,
+                                                 ctrlr=args.ctrlr,
+                                                 mode=args.mode)
+
+    p = subparsers.add_parser('vhost_controller_set_interrupt', aliases=['set_vhost_controller_interrupt'],
+                              help='Set vhost controller interrupt')
+    p.add_argument('ctrlr', help='controller name')
+    p.add_argument('-d', '--disable', dest='mode', action='store_false', help="Disable interrupt (polling mode)")
+    p.add_argument('-e', '--enable', dest='mode', default=True, action='store_true', help="Enable interrupt (default)")
+    p.set_defaults(func=vhost_controller_set_interrupt)
+
     def vhost_create_scsi_controller(args):
         rpc.vhost.vhost_create_scsi_controller(args.client,
                                                ctrlr=args.ctrlr,
