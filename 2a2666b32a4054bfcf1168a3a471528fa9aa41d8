@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00474c59_61314d8d",
+        "filename": "autotest.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-23T09:52:46Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we add FC option here as well?",
+      "range": {
+        "startLine": 216,
+        "startChar": 0,
+        "endLine": 216,
+        "endChar": 51
+      },
+      "revId": "2a2666b32a4054bfcf1168a3a471528fa9aa41d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
