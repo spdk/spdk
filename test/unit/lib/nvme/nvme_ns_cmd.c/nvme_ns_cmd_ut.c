@@ -70,7 +70,7 @@ static int nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
 }
 
 bool
-spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
+spdk_nvme_transport_available_by_name(const char *transport_name)
 {
 	return true;
 }
