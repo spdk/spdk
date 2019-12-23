@@ -64,14 +64,17 @@ struct spdk_bdevperf_opts {
 	bool		unmap;
 	bool		write_zeroes;
 	bool		flush;
+	int		rw_percentage;
+	bool		mix_specified;
 };
 
-static struct spdk_bdevperf_opts g_opts;
+static struct spdk_bdevperf_opts g_opts = {
+	/* initialize to invalid value so we can detect if user overrides it. */
+	.rw_percentage = -1,
+};
 
 static int g_io_size = 0;
 static uint64_t g_buf_size = 0;
-/* initialize to invalid value so we can detect if user overrides it. */
-static int g_rw_percentage = -1;
 static bool g_continue_on_failure = false;
 static int g_queue_depth;
 static uint64_t g_time_in_usec;
@@ -85,7 +88,6 @@ static uint64_t g_shutdown_tsc;
 static bool g_zcopy = true;
 static unsigned g_master_core;
 static int g_time_in_sec;
-static bool g_mix_specified;
 static const char *g_target_bdev_name;
 static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
@@ -830,8 +832,8 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 		task->io_type = SPDK_BDEV_IO_TYPE_UNMAP;
 	} else if (g_opts.write_zeroes) {
 		task->io_type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
-	} else if ((g_rw_percentage == 100) ||
-		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
+	} else if ((g_opts.rw_percentage == 100) ||
+		   (g_opts.rw_percentage != 0 && ((rand_r(&seed) % 100) < g_opts.rw_percentage))) {
 		task->io_type = SPDK_BDEV_IO_TYPE_READ;
 	} else {
 		if (g_zcopy) {
@@ -1178,12 +1180,12 @@ verify_test_params(struct spdk_app_opts *opts)
 
 	if (!strcmp(g_opts.workload_type, "read") ||
 	    !strcmp(g_opts.workload_type, "randread")) {
-		g_rw_percentage = 100;
+		g_opts.rw_percentage = 100;
 	}
 
 	if (!strcmp(g_opts.workload_type, "write") ||
 	    !strcmp(g_opts.workload_type, "randwrite")) {
-		g_rw_percentage = 0;
+		g_opts.rw_percentage = 0;
 	}
 
 	if (!strcmp(g_opts.workload_type, "unmap")) {
@@ -1200,7 +1202,7 @@ verify_test_params(struct spdk_app_opts *opts)
 
 	if (!strcmp(g_opts.workload_type, "verify") ||
 	    !strcmp(g_opts.workload_type, "reset")) {
-		g_rw_percentage = 50;
+		g_opts.rw_percentage = 50;
 		if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
 			fprintf(stderr, "Unable to exceed max I/O size of %d for verify. (%d provided).\n",
 				SPDK_BDEV_LARGE_BUF_MAX_SIZE, g_io_size);
@@ -1225,7 +1227,7 @@ verify_test_params(struct spdk_app_opts *opts)
 	    !strcmp(g_opts.workload_type, "unmap") ||
 	    !strcmp(g_opts.workload_type, "write_zeroes") ||
 	    !strcmp(g_opts.workload_type, "flush")) {
-		if (g_mix_specified) {
+		if (g_opts.mix_specified) {
 			fprintf(stderr, "Ignoring -M option... Please use -M option"
 				" only when using rw or randrw.\n");
 		}
@@ -1233,7 +1235,7 @@ verify_test_params(struct spdk_app_opts *opts)
 
 	if (!strcmp(g_opts.workload_type, "rw") ||
 	    !strcmp(g_opts.workload_type, "randrw")) {
-		if (g_rw_percentage < 0 || g_rw_percentage > 100) {
+		if (g_opts.rw_percentage < 0 || g_opts.rw_percentage > 100) {
 			fprintf(stderr,
 				"-M must be specified to value from 0 to 100 "
 				"for rw or randrw.\n");
@@ -1412,8 +1414,8 @@ bdevperf_parse_arg(int ch, char *arg)
 			g_time_in_sec = tmp;
 			break;
 		case 'M':
-			g_rw_percentage = tmp;
-			g_mix_specified = true;
+			g_opts.rw_percentage = tmp;
+			g_opts.mix_specified = true;
 			break;
 		case 'P':
 			g_show_performance_ema_period = tmp;
@@ -1503,7 +1505,6 @@ main(int argc, char **argv)
 	g_queue_depth = 0;
 	g_io_size = 0;
 	g_time_in_sec = 0;
-	g_mix_specified = false;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zfq:o:t:w:CM:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
