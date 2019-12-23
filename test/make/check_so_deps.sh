@@ -116,6 +116,7 @@ DEP_LIBS=$(ls -1 $libdir/libspdk_*.so)
 IGNORED_LIBS=()
 if grep -q 'CONFIG_VHOST_INTERNAL_LIB?=n' $rootdir/mk/config.mk; then
 	IGNORED_LIBS+=("rte_vhost")
+	IGNORED_LIBS+=("nvmf")
 fi
 
 fail_file=$output_dir/check_so_deps_fail

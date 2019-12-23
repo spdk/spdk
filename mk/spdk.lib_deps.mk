@@ -80,7 +80,7 @@ DEPDIRS-scsi := log util thread $(JSON_LIBS) trace bdev
 DEPDIRS-iscsi := log sock util conf thread $(JSON_LIBS) trace event scsi
 DEPDIRS-vhost = log util conf thread $(JSON_LIBS) bdev event scsi
 ifeq ($(CONFIG_VHOST_INTERNAL_LIB),y)
-DEPDIRS-vhost += rte_vhost
+DEPDIRS-vhost += nvmf rte_vhost
 endif
 
 # ------------------------------------------------------------------------
