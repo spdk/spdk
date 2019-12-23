@@ -77,8 +77,11 @@ nvme_transport_unknown(enum spdk_nvme_transport_type trtype)
 	} while (0)
 
 bool
-spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
+spdk_nvme_transport_available(const char *transport_name)
 {
+	enum spdk_nvme_transport_type trtype;
+
+	spdk_nvme_transport_id_parse_trtype(&trtype, transport_name);
 	switch (trtype) {
 	case SPDK_NVME_TRANSPORT_PCIE:
 	case SPDK_NVME_TRANSPORT_TCP:

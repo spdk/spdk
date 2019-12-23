@@ -1685,6 +1685,7 @@ parse_args(int argc, char **argv)
 	int op, rc;
 
 	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	snprintf(g_trid.trstring, SPDK_NVMF_TRSTRING_MAX_LEN, SPDK_NVME_PCIE_TRANSPORT_NAME);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
 	while ((op = getopt(argc, argv, "d:i:p:r:xHL:V")) != -1) {
