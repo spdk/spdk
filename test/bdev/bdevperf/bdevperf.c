@@ -70,6 +70,7 @@ struct spdk_bdevperf_opts {
 	const char	*target_bdev_name;
 	bool		every_core_for_each_bdev;
 	int		io_size;
+	int		queue_depth;
 };
 
 static struct spdk_bdevperf_opts g_opts = {
@@ -80,7 +81,6 @@ static struct spdk_bdevperf_opts g_opts = {
 
 static uint64_t g_buf_size = 0;
 static bool g_continue_on_failure = false;
-static int g_queue_depth;
 static uint64_t g_time_in_usec;
 static int g_show_performance_real_time = 0;
 static uint64_t g_show_performance_period_in_usec = 1000000;
@@ -946,7 +946,7 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 			target->reset_timer = spdk_poller_register(reset_target, target,
 					      10 * 1000000);
 		}
-		bdevperf_submit_io(target, g_queue_depth);
+		bdevperf_submit_io(target, g_opts.queue_depth);
 		target = target->next;
 	}
 }
@@ -1087,7 +1087,7 @@ bdevperf_construct_targets_tasks(void)
 	uint32_t i;
 	struct io_target *target;
 	struct bdevperf_task *task;
-	int j, task_num = g_queue_depth;
+	int j, task_num = g_opts.queue_depth;
 
 	/*
 	 * Create the task pool after we have enumerated the targets, so that we know
@@ -1134,7 +1134,7 @@ verify_test_params(struct spdk_app_opts *opts)
 		opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 	}
 
-	if (g_queue_depth <= 0) {
+	if (g_opts.queue_depth <= 0) {
 		spdk_app_usage();
 		bdevperf_usage();
 		return 1;
@@ -1406,7 +1406,7 @@ bdevperf_parse_arg(int ch, char *arg)
 
 		switch (ch) {
 		case 'q':
-			g_queue_depth = tmp;
+			g_opts.queue_depth = tmp;
 			break;
 		case 'o':
 			g_opts.io_size = tmp;
@@ -1503,7 +1503,6 @@ main(int argc, char **argv)
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
 	/* default value */
-	g_queue_depth = 0;
 	g_time_in_sec = 0;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zfq:o:t:w:CM:P:S:T:", NULL,
