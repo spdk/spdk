@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9940a153_885682df",
+        "filename": "autorun_post.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-23T12:25:30Z",
+      "side": 1,
+      "message": "Can be replaced with\nagent_name \u003d os.path.basename(os.path.dirname(completionFile))\nto avoid accessing elements by index.",
+      "range": {
+        "startLine": 96,
+        "startChar": 4,
+        "endLine": 96,
+        "endChar": 67
+      },
+      "revId": "f0759708ae61db62a6bc7daaa44721d5b7105125",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef8f31fd_e974687f",
+        "filename": "autorun_post.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-23T12:25:30Z",
+      "side": 1,
+      "message": "To avoid repeating .strip() you could just probably do:\nline \u003d line.strip() just before \"try\".\nIn this loop we don\u0027t rely on \"unstripped\" line, so I guess it\u0027s safe to overwrite it\u0027s value in the local scope.",
+      "range": {
+        "startLine": 105,
+        "startChar": 22,
+        "endLine": 105,
+        "endChar": 34
+      },
+      "revId": "f0759708ae61db62a6bc7daaa44721d5b7105125",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19e6614f_7b4e01e9",
+        "filename": "autorun_post.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-23T12:25:30Z",
+      "side": 1,
+      "message": "I\u0027m not sure if I read and understand and read that correctly.\nIf a signle entry fot the initial test_list is (False,False,False) (on line 141) then do we need this \"|\" or operation?\nCan\u0027t we just leave this as test_list[line] \u003d (True, asan_enabled, ubsan_enabled)?",
+      "range": {
+        "startLine": 105,
+        "startChar": 45,
+        "endLine": 105,
+        "endChar": 86
+      },
+      "revId": "f0759708ae61db62a6bc7daaa44721d5b7105125",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
