@@ -104,6 +104,23 @@
     },
     {
       "key": {
+        "uuid": "d023ca25_66788feb",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3164,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-23T05:46:35Z",
+      "side": 1,
+      "message": "I will submit a separate patch for this API.",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3980cb77_53f3c469",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 2
@@ -185,6 +202,24 @@
       "writtenOn": "2019-12-19T19:50:10Z",
       "side": 1,
       "message": "We should make this function more generally usable as part of a separate patch.  I think we (Intel) can help with that.  Changpeng - could you take a look?  I see Thanos put the implementation in nvme_ctrlr.c, but I think this is really target functionality, not host functionality.\n\nMaybe we put this somewhere in lib/nvmf instead?  That would make vhost_nvme depend on nvmf, but I think I\u0027m OK with that (probably vhost_nvme will go away long term once nvmf_muser is ready).",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25b1302d_183a06e2",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-23T05:46:35Z",
+      "side": 1,
+      "message": "Agreed, I will move this part to lib/nvmf library for now, and I\u0027m thinking if we can move most of the code in nvmf/ctrlr.c nvme/ctrlr_bdev.c to a separate directory such as emulated_nvme, in case we may build a muser target in future to serve NVMe/Virtio_BLK/SCSI PCI interfaces.  For now I think lib/nvmf is the right place.",
+      "parentUuid": "47666f24_c7292154",
       "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
