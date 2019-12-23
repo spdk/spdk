@@ -22,6 +22,30 @@
       "revId": "2a2666b32a4054bfcf1168a3a471528fa9aa41d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac133759_c06137e6",
+        "filename": "autotest.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-23T16:35:26Z",
+      "side": 1,
+      "message": "Yep, thanks!",
+      "parentUuid": "00474c59_61314d8d",
+      "range": {
+        "startLine": 216,
+        "startChar": 0,
+        "endLine": 216,
+        "endChar": 51
+      },
+      "revId": "2a2666b32a4054bfcf1168a3a471528fa9aa41d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
