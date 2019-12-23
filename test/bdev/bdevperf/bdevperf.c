@@ -75,6 +75,7 @@ struct spdk_bdevperf_opts {
 	int		show_performance_real_time;
 	uint64_t	show_performance_period_in_usec;
 	uint64_t	show_performance_ema_period;
+	bool		wait_for_tests;
 };
 
 static struct spdk_bdevperf_opts g_opts = {
@@ -92,7 +93,6 @@ static bool g_run_failed = false;
 static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
 static unsigned g_master_core;
-static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
 
 static struct spdk_poller *g_perf_timer = NULL;
@@ -1131,7 +1131,7 @@ verify_test_params(struct spdk_app_opts *opts)
 	/* When RPC is used for starting tests and
 	 * no rpc_addr was configured for the app,
 	 * use the default address. */
-	if (g_wait_for_tests && opts->rpc_addr == NULL) {
+	if (g_opts.wait_for_tests && opts->rpc_addr == NULL) {
 		opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 	}
 
@@ -1317,7 +1317,7 @@ bdevperf_run(void *arg1)
 
 	g_master_core = spdk_env_get_current_core();
 
-	if (g_wait_for_tests) {
+	if (g_opts.wait_for_tests) {
 		/* Do not perform any tests until RPC is received */
 		return;
 	}
@@ -1390,7 +1390,7 @@ bdevperf_parse_arg(int ch, char *arg)
 	} else if (ch == 'T') {
 		g_opts.target_bdev_name = optarg;
 	} else if (ch == 'z') {
-		g_wait_for_tests = true;
+		g_opts.wait_for_tests = true;
 	} else if (ch == 'C') {
 		g_opts.every_core_for_each_bdev = true;
 	} else if (ch == 'f') {
