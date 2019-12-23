@@ -56,11 +56,11 @@ static const struct spdk_nvmf_transport_ops *const g_transport_ops[] = {
 #define MAX_MEMPOOL_NAME_LENGTH 40
 
 static inline const struct spdk_nvmf_transport_ops *
-spdk_nvmf_get_transport_ops(enum spdk_nvme_transport_type type)
+spdk_nvmf_get_transport_ops(const char *transport_name)
 {
 	size_t i;
 	for (i = 0; i != NUM_TRANSPORTS; i++) {
-		if (g_transport_ops[i]->type == type) {
+		if (strcasecmp(transport_name, g_transport_ops[i]->name) == 0) {
 			return g_transport_ops[i];
 		}
 	}
@@ -80,32 +80,29 @@ spdk_nvmf_get_transport_type(struct spdk_nvmf_transport *transport)
 }
 
 struct spdk_nvmf_transport *
-spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
-			   struct spdk_nvmf_transport_opts *opts)
+spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opts *opts)
 {
 	const struct spdk_nvmf_transport_ops *ops = NULL;
 	struct spdk_nvmf_transport *transport;
 	char spdk_mempool_name[MAX_MEMPOOL_NAME_LENGTH];
 	int chars_written;
 
-	ops = spdk_nvmf_get_transport_ops(type);
+	ops = spdk_nvmf_get_transport_ops(transport_name);
 	if (!ops) {
-		SPDK_ERRLOG("Transport type '%s' unavailable.\n",
-			    spdk_nvme_transport_id_trtype_str(type));
+		SPDK_ERRLOG("Transport type '%s' unavailable.\n", transport_name);
 		return NULL;
 	}
 
 	transport = ops->create(opts);
 	if (!transport) {
-		SPDK_ERRLOG("Unable to create new transport of type %s\n",
-			    spdk_nvme_transport_id_trtype_str(type));
+		SPDK_ERRLOG("Unable to create new transport of type %s\n", transport_name);
 		return NULL;
 	}
 
 	transport->ops = ops;
 	transport->opts = *opts;
 	chars_written = snprintf(spdk_mempool_name, MAX_MEMPOOL_NAME_LENGTH, "%s_%s_%s", "spdk_nvmf",
-				 spdk_nvme_transport_id_trtype_str(type), "data");
+				 transport_name, "data");
 	if (chars_written < 0) {
 		SPDK_ERRLOG("Unable to generate transport data buffer pool name.\n");
 		ops->destroy(transport);
@@ -318,15 +315,14 @@ spdk_nvmf_transport_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 }
 
 bool
-spdk_nvmf_transport_opts_init(enum spdk_nvme_transport_type type,
+spdk_nvmf_transport_opts_init(const char *transport_name,
 			      struct spdk_nvmf_transport_opts *opts)
 {
 	const struct spdk_nvmf_transport_ops *ops;
 
-	ops = spdk_nvmf_get_transport_ops(type);
+	ops = spdk_nvmf_get_transport_ops(transport_name);
 	if (!ops) {
-		SPDK_ERRLOG("Transport type %s unavailable.\n",
-			    spdk_nvme_transport_id_trtype_str(type));
+		SPDK_ERRLOG("Transport type %s unavailable.\n", transport_name);
 		return false;
 	}
 
