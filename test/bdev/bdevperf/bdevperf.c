@@ -468,6 +468,7 @@ end_run(void *arg1, void *arg2)
 		if (g_request && !g_shutdown) {
 			rpc_perform_tests_cb(rc);
 		} else {
+			bdevperf_free_targets();
 			spdk_app_stop(rc);
 		}
 	}
@@ -1314,6 +1315,7 @@ bdevperf_run(void *arg1)
 
 	rc = bdevperf_test();
 	if (rc) {
+		bdevperf_free_targets();
 		spdk_app_stop(1);
 		return;
 	}
@@ -1340,6 +1342,7 @@ spdk_bdevperf_shutdown_cb(void)
 	g_shutdown = true;
 
 	if (g_target_count == 0) {
+		bdevperf_free_targets();
 		spdk_app_stop(0);
 		return;
 	}
@@ -1490,7 +1493,6 @@ main(int argc, char **argv)
 		g_run_failed = true;
 	}
 
-	bdevperf_free_targets();
 	spdk_app_fini();
 	return g_run_failed;
 }
