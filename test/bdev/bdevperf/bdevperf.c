@@ -964,10 +964,14 @@ reset_target(void *arg)
 }
 
 static void
-bdevperf_submit_on_core(void *arg1, void *arg2)
+bdevperf_submit_on_group(struct spdk_io_channel_iter *i)
 {
-	struct io_target_group *group = arg1;
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
 	struct io_target *target;
+
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
 
 	/* Submit initial I/O for each block device. Each time one
 	 * completes, another will be submitted. */
@@ -991,6 +995,8 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 		}
 		bdevperf_submit_io(target, g_queue_depth);
 	}
+
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
@@ -1304,8 +1310,6 @@ verify_test_params(struct spdk_app_opts *opts)
 static int
 bdevperf_test(void)
 {
-	struct io_target_group *group;
-	struct spdk_event *event;
 	int rc;
 
 	if (g_target_count == 0) {
@@ -1328,14 +1332,9 @@ bdevperf_test(void)
 						    g_show_performance_period_in_usec);
 	}
 
-	/* Send events to start all I/O */
-	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
-		if (!TAILQ_EMPTY(&group->targets)) {
-			event = spdk_event_allocate(group->lcore, bdevperf_submit_on_core,
-						    &group->targets, NULL);
-			spdk_event_call(event);
-		}
-	}
+	/* Iterate target groups to start all I/O */
+	spdk_for_each_channel(&g_bdevperf, bdevperf_submit_on_group, NULL, NULL);
+
 	return 0;
 }
 
