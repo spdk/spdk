@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8eadc095_f22dd455",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-24T06:17:48Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "88dbbb2c_09d22b5e",
+      "range": {
+        "startLine": 45,
+        "startChar": 8,
+        "endLine": 45,
+        "endChar": 13
+      },
+      "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65f7bd42_97e2259a",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 20
@@ -36,6 +60,30 @@
       "writtenOn": "2019-12-24T02:15:32Z",
       "side": 1,
       "message": "g_max_subsystems?",
+      "range": {
+        "startLine": 57,
+        "startChar": 11,
+        "endLine": 57,
+        "endChar": 27
+      },
+      "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "612fd35f_03da2168",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-24T06:17:48Z",
+      "side": 1,
+      "message": "Yes. I made a mistake. Thanks.",
+      "parentUuid": "65f7bd42_97e2259a",
       "range": {
         "startLine": 57,
         "startChar": 11,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "8ccaa338_bd613f42",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-24T06:17:48Z",
+      "side": 1,
+      "message": "Should be max_subsystems. This opts is for nvmf target, max_namespaces should be the opts for the subsystem.",
+      "parentUuid": "e6d1cacf_01f995b5",
+      "range": {
+        "startLine": 83,
+        "startChar": 6,
+        "endLine": 83,
+        "endChar": 20
+      },
+      "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "11d42f80_5a57e113",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 20
@@ -91,6 +163,30 @@
       "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9bf81bcd_84ff72ad",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-24T06:17:48Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "11d42f80_5a57e113",
+      "range": {
+        "startLine": 110,
+        "startChar": 19,
+        "endLine": 110,
+        "endChar": 28
+      },
+      "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "38f4cffd_d3d763bb",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-24T06:17:48Z",
+      "side": 1,
+      "message": "Hi shuhei. I just think about this. I found that maybe I am wrong I should just think this as a single targets, Gang is right I should remove this args.\nIn this example I just support the rpc cmd so if we add another target the process should like this:\nrpc nvmf_create_target\nrpc nvmf_create_subsystems\nrpc nvmf_create_transport\nrpc nvmf_subsystem_add_ns\nIt will create a spdk_nvmf_tgt and this target don\u0027t have to go through the nvmf_target_advance_state().\nAnd it seems I can\u0027t put the g_target_state into struct nvmf_target because we init the bdev subsystem before contructing nvmf target. If we think it as a single target the g_target_state should be ok.",
+      "parentUuid": "b6414d98_814c545b",
+      "range": {
+        "startLine": 362,
+        "startChar": 22,
+        "endLine": 362,
+        "endChar": 53
+      },
+      "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "441e5ab6_14ab9526",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 20
@@ -128,6 +248,30 @@
       "writtenOn": "2019-12-24T02:20:22Z",
       "side": 1,
       "message": "Is this state transition correct for error cases?",
+      "range": {
+        "startLine": 444,
+        "startChar": 1,
+        "endLine": 444,
+        "endChar": 35
+      },
+      "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8da838a3_c8c5b9e6",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-24T06:17:48Z",
+      "side": 1,
+      "message": "Yes it\u0027s right. spdk_nvmf_tgt_destroy would destroy all the subsystems and transports in this target and also we checked the g_nvmf_tgt, you see the nvmf_destroy_nvmf_tgt().",
+      "parentUuid": "441e5ab6_14ab9526",
       "range": {
         "startLine": 444,
         "startChar": 1,
