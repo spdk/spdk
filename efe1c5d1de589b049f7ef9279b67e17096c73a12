@@ -237,6 +237,30 @@
     },
     {
       "key": {
+        "uuid": "bcf604fd_466381f6",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-24T09:45:27Z",
+      "side": 1,
+      "message": "Thank you Jin for your comment.\nSo i get it now. It may be better to give different name but this patch is fine for now",
+      "parentUuid": "38f4cffd_d3d763bb",
+      "range": {
+        "startLine": 362,
+        "startChar": 22,
+        "endLine": 362,
+        "endChar": 53
+      },
+      "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "441e5ab6_14ab9526",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 20
