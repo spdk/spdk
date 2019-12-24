@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27b0dfbd_7ae0c5ba",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1007,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-24T07:59:45Z",
+      "side": 1,
+      "message": "With DPDK 19.11 this function was made private (fyi our DPDK submodule was updated to that yesterday).\nTo get the iova_mode please use rte_eal_iova_mode().",
+      "range": {
+        "startLine": 1007,
+        "startChar": 34,
+        "endLine": 1007,
+        "endChar": 59
+      },
+      "revId": "ddd0d71ecf6cb714c0d0b697f0b71ee51dcd896d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
