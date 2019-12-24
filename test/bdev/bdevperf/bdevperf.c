@@ -281,9 +281,9 @@ bdevperf_free_targets(void)
 }
 
 static void
-bdevperf_target_gone(void *arg)
+_target_gone(void *arg1, void *arg2)
 {
-	struct io_target *target = arg;
+	struct io_target *target = arg1;
 
 	spdk_poller_unregister(&target->run_timer);
 	if (g_reset) {
@@ -291,6 +291,16 @@ bdevperf_target_gone(void *arg)
 	}
 
 	target->is_draining = true;
+}
+
+static void
+bdevperf_target_gone(void *arg)
+{
+	struct io_target *target = arg;
+	struct spdk_event *event;
+
+	event = spdk_event_allocate(target->lcore, _target_gone, target, NULL);
+	spdk_event_call(event);
 }
 
 static int
