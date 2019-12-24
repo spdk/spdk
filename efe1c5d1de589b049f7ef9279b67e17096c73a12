@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88dbbb2c_09d22b5e",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-24T02:15:32Z",
+      "side": 1,
+      "message": "The prefix \"SPDK_\" is not necessary, and this should be NVMF_DEFAULT_SUBSYSTEMS?",
+      "range": {
+        "startLine": 45,
+        "startChar": 8,
+        "endLine": 45,
+        "endChar": 13
+      },
+      "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65f7bd42_97e2259a",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-24T02:15:32Z",
+      "side": 1,
+      "message": "g_max_subsystems?",
+      "range": {
+        "startLine": 57,
+        "startChar": 11,
+        "endLine": 57,
+        "endChar": 27
+      },
+      "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6d1cacf_01f995b5",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-24T02:15:32Z",
+      "side": 1,
+      "message": "max_namespaces?",
+      "range": {
+        "startLine": 83,
+        "startChar": 6,
+        "endLine": 83,
+        "endChar": 20
+      },
+      "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11d42f80_5a57e113",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-24T02:15:32Z",
+      "side": 1,
+      "message": "subsystem?",
+      "range": {
+        "startLine": 110,
+        "startChar": 19,
+        "endLine": 110,
+        "endChar": 28
+      },
+      "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6414d98_814c545b",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-24T02:15:32Z",
+      "side": 1,
+      "message": "I assume that this parameter is to support multiple targets.\nIf so, I think we can not use g_target_state too.\n\nCan we move g_target_state into struct nvmf_target?",
+      "range": {
+        "startLine": 362,
+        "startChar": 22,
+        "endLine": 362,
+        "endChar": 53
+      },
+      "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
