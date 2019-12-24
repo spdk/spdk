@@ -359,13 +359,12 @@ spdk_nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 		return NULL;
 	}
 
-	memset(&tcp_req->cmd, 0, sizeof(tcp_req->cmd));
 	memset(&tcp_req->rsp, 0, sizeof(tcp_req->rsp));
 	tcp_req->next_expected_r2t_offset = 0;
 	tcp_req->r2tl_remain = 0;
 	tcp_req->c2h_data_offset = 0;
 	tcp_req->has_incapsule_data = false;
-	memset(&tcp_req->req.dif, 0, sizeof(tcp_req->req.dif));
+	tcp_req->req.dif.dif_insert_or_strip = false;
 
 	spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_NEW);
 	return tcp_req;
