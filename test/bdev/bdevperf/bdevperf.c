@@ -1453,11 +1453,7 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 
 	rc = bdevperf_test();
 	if (rc) {
-		g_request = NULL;
-		bdevperf_free_targets();
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Could not perform tests due to error: %s", spdk_strerror(-rc));
-		return;
+		rpc_perform_tests_cb(rc);
 	}
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
