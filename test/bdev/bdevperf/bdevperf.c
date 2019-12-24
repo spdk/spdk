@@ -120,7 +120,14 @@ struct io_target_group {
 	TAILQ_ENTRY(io_target_group)	link;
 };
 
-TAILQ_HEAD(, io_target_group) g_head = TAILQ_HEAD_INITIALIZER(g_head);
+struct spdk_bdevperf {
+	TAILQ_HEAD(, io_target_group)	groups;
+};
+
+static struct spdk_bdevperf g_bdevperf = {
+	.groups = TAILQ_HEAD_INITIALIZER(g_bdevperf.groups),
+};
+
 struct io_target_group *g_next_tg;
 static uint32_t g_target_count = 0;
 
@@ -238,13 +245,13 @@ blockdev_heads_init(void)
 		}
 		group->lcore = i;
 		TAILQ_INIT(&group->targets);
-		TAILQ_INSERT_TAIL(&g_head, group, link);
+		TAILQ_INSERT_TAIL(&g_bdevperf.groups, group, link);
 	}
 	return 0;
 
 error:
-	TAILQ_FOREACH_SAFE(group, &g_head, link, tmp) {
-		TAILQ_REMOVE(&g_head, group, link);
+	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp) {
+		TAILQ_REMOVE(&g_bdevperf.groups, group, link);
 		free(group);
 	}
 	return -1;
@@ -272,8 +279,8 @@ bdevperf_free_targets(void)
 	struct io_target_group *group, *tmp_group;
 	struct io_target *target, *tmp_target;
 
-	TAILQ_FOREACH_SAFE(group, &g_head, link, tmp_group) {
-		TAILQ_REMOVE(&g_head, group, link);
+	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
+		TAILQ_REMOVE(&g_bdevperf.groups, group, link);
 		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
 			TAILQ_REMOVE(&group->targets, target, link);
 			bdevperf_free_target(target);
@@ -384,7 +391,7 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 
 	/* Mapping each created target to target group */
 	if (g_next_tg == NULL) {
-		g_next_tg = TAILQ_FIRST(&g_head);
+		g_next_tg = TAILQ_FIRST(&g_bdevperf.groups);
 		assert(g_next_tg != NULL);
 	}
 	group = g_next_tg;
@@ -1008,7 +1015,7 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 
 	total_io_per_second = 0;
 	total_mb_per_second = 0;
-	TAILQ_FOREACH(group, &g_head, link) {
+	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
 		if (!TAILQ_EMPTY(&group->targets)) {
 			lcore_id = group->lcore;
 			printf("\r Logical core: %u\n", lcore_id);
@@ -1096,7 +1103,7 @@ bdevperf_construct_targets_tasks(void)
 	}
 
 	/* Initialize task list for each target */
-	TAILQ_FOREACH(group, &g_head, link) {
+	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
 		TAILQ_FOREACH(target, &group->targets, link) {
 			for (i = 0; i < task_num; i++) {
 				task = bdevperf_construct_task_on_target(target);
@@ -1286,7 +1293,7 @@ bdevperf_test(void)
 	}
 
 	/* Send events to start all I/O */
-	TAILQ_FOREACH(group, &g_head, link) {
+	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
 		if (!TAILQ_EMPTY(&group->targets)) {
 			event = spdk_event_allocate(group->lcore, bdevperf_submit_on_core,
 						    group, NULL);
@@ -1352,7 +1359,7 @@ spdk_bdevperf_shutdown_cb(void)
 	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
 
 	/* Send events to stop all I/O on each target group */
-	TAILQ_FOREACH(group, &g_head, link) {
+	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
 		if (!TAILQ_EMPTY(&group->targets)) {
 			event = spdk_event_allocate(group->lcore, bdevperf_stop_io_on_core,
 						    group, NULL);
