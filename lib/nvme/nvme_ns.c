@@ -109,20 +109,21 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 static int
 nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 {
-	struct nvme_completion_poll_status	status;
 	struct spdk_nvme_ns_data		*nsdata;
+	struct spdk_nvme_ctrlr			*ctrlr = ns->ctrlr;
 	int					rc;
 
 	nsdata = _nvme_ns_get_data(ns);
-	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id,
+	memset(&ctrlr->admin_req_st, 0, sizeof(ctrlr->admin_req_st));
+	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id,
 				     nsdata, sizeof(*nsdata),
-				     nvme_completion_poll_cb, &status);
+				     nvme_completion_poll_cb, &ctrlr->admin_req_st);
 	if (rc != 0) {
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, &status,
-			&ns->ctrlr->ctrlr_lock)) {
+	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, &ctrlr->admin_req_st,
+			&ctrlr->ctrlr_lock)) {
 		/* This can occur if the namespace is not active. Simply zero the
 		 * namespace data and continue. */
 		nvme_ns_destruct(ns);
@@ -137,26 +138,28 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 static int
 nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 {
-	struct nvme_completion_poll_status      status;
 	int                                     rc;
+	struct spdk_nvme_ctrlr			*ctrlr = ns->ctrlr;
 
 	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
 
-	if (ns->ctrlr->vs.raw < SPDK_NVME_VERSION(1, 3, 0) ||
-	    (ns->ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
+	if (ctrlr->vs.raw < SPDK_NVME_VERSION(1, 3, 0) ||
+	    (ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Version < 1.3; not attempting to retrieve NS ID Descriptor List\n");
 		return 0;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Attempting to retrieve NS ID Descriptor List\n");
-	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST, 0, ns->id,
+	memset(&ctrlr->admin_req_st, 0, sizeof(ctrlr->admin_req_st));
+	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST, 0, ns->id,
 				     ns->id_desc_list, sizeof(ns->id_desc_list),
-				     nvme_completion_poll_cb, &status);
+				     nvme_completion_poll_cb, &ctrlr->admin_req_st);
 	if (rc < 0) {
 		return rc;
 	}
 
-	rc = spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, &status, &ns->ctrlr->ctrlr_lock);
+	rc = spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, &ctrlr->admin_req_st,
+			&ctrlr->ctrlr_lock);
 	if (rc != 0) {
 		SPDK_WARNLOG("Failed to retrieve NS ID Descriptor List\n");
 		memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
