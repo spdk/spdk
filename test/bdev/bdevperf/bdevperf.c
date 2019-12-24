@@ -121,10 +121,12 @@ struct io_target_group {
 
 struct spdk_bdevperf {
 	TAILQ_HEAD(, io_target_group)	groups;
+	pthread_mutex_t			mutex;
 };
 
 static struct spdk_bdevperf g_bdevperf = {
 	.groups = TAILQ_HEAD_INITIALIZER(g_bdevperf.groups),
+	.mutex = PTHREAD_MUTEX_INITIALIZER,
 };
 
 struct io_target_group *g_next_tg;
@@ -137,6 +139,10 @@ static uint32_t g_target_count = 0;
  *  AIO blockdevs.
  */
 static size_t g_min_alignment = 8;
+
+struct bdevperf_cb_ctx {
+	int	rc;
+};
 
 static void
 generate_data(void *buf, int buf_len, int block_size, void *md_buf, int md_size,
@@ -230,32 +236,6 @@ verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len, int bloc
 	return true;
 }
 
-static int
-blockdev_heads_init(void)
-{
-	uint32_t i;
-	struct io_target_group *group, *tmp;
-
-	SPDK_ENV_FOREACH_CORE(i) {
-		group = calloc(1, sizeof(*group));
-		if (!group) {
-			fprintf(stderr, "Cannot allocate io_target_group\n");
-			goto error;
-		}
-		group->lcore = i;
-		TAILQ_INIT(&group->targets);
-		TAILQ_INSERT_TAIL(&g_bdevperf.groups, group, link);
-	}
-	return 0;
-
-error:
-	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp) {
-		TAILQ_REMOVE(&g_bdevperf.groups, group, link);
-		free(group);
-	}
-	return -1;
-}
-
 static void
 bdevperf_free_target(struct io_target *target)
 {
@@ -279,12 +259,10 @@ bdevperf_free_targets(void)
 	struct io_target *target, *tmp_target;
 
 	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
-		TAILQ_REMOVE(&g_bdevperf.groups, group, link);
 		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
 			TAILQ_REMOVE(&group->targets, target, link);
 			bdevperf_free_target(target);
 		}
-		free(group);
 	}
 }
 
@@ -444,6 +422,53 @@ bdevperf_construct_targets(void)
 }
 
 static void
+_bdevperf_fini_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct bdevperf_cb_ctx *ctx;
+	int rc;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+	rc = ctx->rc;
+
+	free(ctx);
+
+	spdk_io_device_unregister(&g_bdevperf, NULL);
+	spdk_app_stop(rc);
+}
+
+static void
+_bdevperf_fini_thread(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	pthread_mutex_lock(&g_bdevperf.mutex);
+	TAILQ_REMOVE(&g_bdevperf.groups, group, link);
+	pthread_mutex_unlock(&g_bdevperf.mutex);
+
+	spdk_put_io_channel(ch);
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+bdevperf_fini(int rc)
+{
+	struct bdevperf_cb_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	assert(ctx != NULL);
+
+	ctx->rc = rc;
+
+	spdk_for_each_channel(&g_bdevperf, _bdevperf_fini_thread, ctx,
+			      _bdevperf_fini_done);
+}
+
+static void
 end_run(void *arg1, void *arg2)
 {
 	struct io_target *target = arg1;
@@ -477,7 +502,7 @@ end_run(void *arg1, void *arg2)
 		if (g_request && !g_shutdown) {
 			rpc_perform_tests_cb(rc);
 		} else {
-			spdk_app_stop(rc);
+			bdevperf_fini(rc);
 		}
 	}
 }
@@ -1301,16 +1326,40 @@ bdevperf_test(void)
 	return 0;
 }
 
+static int
+io_target_group_create(void *io_device, void *ctx_buf)
+{
+	struct io_target_group *group = ctx_buf;
+
+	TAILQ_INIT(&group->targets);
+	group->lcore = spdk_env_get_current_core();
+
+	return 0;
+}
+
 static void
-bdevperf_run(void *arg1)
+io_target_group_destroy(void *io_device, void *ctx_buf)
+{
+}
+
+static void
+_bdevperf_init_thread(void *ctx)
+{
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+
+	ch = spdk_get_io_channel(&g_bdevperf);
+	group = spdk_io_channel_get_ctx(ch);
+
+	pthread_mutex_lock(&g_bdevperf.mutex);
+	TAILQ_INSERT_TAIL(&g_bdevperf.groups, group, link);
+	pthread_mutex_unlock(&g_bdevperf.mutex);
+}
+
+static void
+io_target_group_create_done(void *ctx)
 {
 	int rc;
-
-	rc = blockdev_heads_init();
-	if (rc) {
-		spdk_app_stop(1);
-		return;
-	}
 
 	g_master_core = spdk_env_get_current_core();
 
@@ -1324,9 +1373,19 @@ bdevperf_run(void *arg1)
 	rc = bdevperf_test();
 	if (rc) {
 		bdevperf_free_targets();
-		spdk_app_stop(1);
+		bdevperf_fini(1);
 		return;
 	}
+}
+
+static void
+bdevperf_run(void *arg1)
+{
+	spdk_io_device_register(&g_bdevperf, io_target_group_create, io_target_group_destroy,
+				sizeof(struct io_target_group), "bdevperf");
+
+	/* Send a message to each thread and create a target group */
+	spdk_for_each_thread(_bdevperf_init_thread, NULL, io_target_group_create_done);
 }
 
 static void
@@ -1350,7 +1409,7 @@ spdk_bdevperf_shutdown_cb(void)
 	g_shutdown = true;
 
 	if (g_target_count == 0) {
-		spdk_app_stop(0);
+		bdevperf_fini(0);
 		return;
 	}
 
