@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f42546f9_ee17d9b1",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-24T04:44:44Z",
+      "side": 1,
+      "message": "It looks that the following doesn\u0027t use only i but uses resubmit_list[resubmit-\u003eresubmit_num].index.\nSo caching resubmit_list[resubmit-\u003eresubmit_num].index will be better.\n\nwhile (resubmit_list \u0026\u0026 resubmit-\u003eresubmit_num-- \u003e 0) {\n  i or req_idx \u003d resubmit_list[resubmit-\u003eresubmit_num].index;\n\n  use i or req_idx;\n}",
+      "range": {
+        "startLine": 444,
+        "startChar": 0,
+        "endLine": 446,
+        "endChar": 0
+      },
+      "revId": "3aa1fac263822092c51b28835162ba2c5a46c419",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dcffa0e8_df8b66ad",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-24T04:44:44Z",
+      "side": 1,
+      "message": "Maybe \"Start processing request idx\"",
+      "range": {
+        "startLine": 446,
+        "startChar": 44,
+        "endLine": 446,
+        "endChar": 63
+      },
+      "revId": "3aa1fac263822092c51b28835162ba2c5a46c419",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
