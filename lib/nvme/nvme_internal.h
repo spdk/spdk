@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -738,6 +738,8 @@ struct spdk_nvme_ctrlr {
 	struct spdk_ring		*external_io_msgs;
 
 	STAILQ_HEAD(, nvme_io_msg_producer) io_producers;
+
+	struct nvme_completion_poll_status	admin_req_st;
 };
 
 struct spdk_nvme_probe_ctx {
