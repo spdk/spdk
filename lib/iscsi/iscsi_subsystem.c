@@ -1395,7 +1395,6 @@ spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg)
 
 	spdk_iscsi_portal_grp_close_all();
 	spdk_shutdown_iscsi_conns();
-	free(g_spdk_iscsi.session);
 }
 
 static void
@@ -1413,6 +1412,7 @@ _iscsi_fini_dev_unreg(struct spdk_io_channel_iter *i, int status)
 {
 	iscsi_check_pools();
 	iscsi_free_pools();
+	free(g_spdk_iscsi.session);
 
 	assert(TAILQ_EMPTY(&g_spdk_iscsi.poll_group_head));
 
