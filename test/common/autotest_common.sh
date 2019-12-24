@@ -337,6 +337,24 @@ function create_test_list() {
 	sed 's/\"//g' | sort > $output_dir/all_tests.txt || true
 }
 
+function gdb_attach() {
+	gdb -q --batch \
+		-ex 'handle SIGHUP nostop pass' \
+		-ex 'handle SIGQUIT nostop pass' \
+		-ex 'handle SIGPIPE nostop pass' \
+		-ex 'handle SIGALRM nostop pass' \
+		-ex 'handle SIGTERM nostop pass' \
+		-ex 'handle SIGUSR1 nostop pass' \
+		-ex 'handle SIGUSR2 nostop pass' \
+		-ex 'handle SIGCHLD nostop pass' \
+		-ex 'set print thread-events off' \
+		-ex 'cont' \
+		-ex 'thread apply all bt' \
+		-ex 'quit' \
+		--tty=/dev/stdout \
+		-p $1
+}
+
 function process_core() {
 	ret=0
 	while IFS= read -r -d '' core;
