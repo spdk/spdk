@@ -465,6 +465,8 @@ end_run(void *arg1, void *arg2)
 			rc = 1;
 		}
 
+		bdevperf_free_targets();
+
 		if (g_request && !g_shutdown) {
 			rpc_perform_tests_cb(rc);
 		} else {
@@ -1314,6 +1316,7 @@ bdevperf_run(void *arg1)
 
 	rc = bdevperf_test();
 	if (rc) {
+		bdevperf_free_targets();
 		spdk_app_stop(1);
 		return;
 	}
@@ -1425,8 +1428,6 @@ rpc_perform_tests_cb(int rc)
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "bdevperf failed with error %s", spdk_strerror(-rc));
 	}
-
-	bdevperf_free_targets();
 }
 
 static void
@@ -1451,6 +1452,7 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 
 	rc = bdevperf_test();
 	if (rc) {
+		bdevperf_free_targets();
 		rpc_perform_tests_cb(rc);
 	}
 }
@@ -1490,7 +1492,6 @@ main(int argc, char **argv)
 		g_run_failed = true;
 	}
 
-	bdevperf_free_targets();
 	spdk_app_fini();
 	return g_run_failed;
 }
