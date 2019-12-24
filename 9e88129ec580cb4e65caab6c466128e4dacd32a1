@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "549d1d35_3f2c20c4",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2674,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-24T02:29:55Z",
+      "side": 1,
+      "message": "sounds good.",
+      "parentUuid": "c801a46b_3833fe64",
+      "range": {
+        "startLine": 2674,
+        "startChar": 5,
+        "endLine": 2674,
+        "endChar": 61
+      },
+      "revId": "9e88129ec580cb4e65caab6c466128e4dacd32a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cdcc2942_64dd2227",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-12-23T10:33:52Z",
       "side": 1,
       "message": "Could you move this code a separate (inline) function? Similar construction is used 3 times in this patch",
+      "range": {
+        "startLine": 2713,
+        "startChar": 0,
+        "endLine": 2721,
+        "endChar": 25
+      },
+      "revId": "9e88129ec580cb4e65caab6c466128e4dacd32a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9aa062ba_229eebe0",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2721,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-24T02:29:55Z",
+      "side": 1,
+      "message": "I would like to keep this part as this is more clear to users when iterating PRP lists.",
+      "parentUuid": "cdcc2942_64dd2227",
       "range": {
         "startLine": 2713,
         "startChar": 0,
