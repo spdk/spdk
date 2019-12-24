@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0051016c_2f4700b1",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1433,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-24T05:42:52Z",
+      "side": 1,
+      "message": "Same here",
+      "range": {
+        "startLine": 1433,
+        "startChar": 2,
+        "endLine": 1433,
+        "endChar": 41
+      },
+      "revId": "5cde0b71a973c61efabf1bcc1c0e66a74b542695",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36d27d17_410bfd18",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1670,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-24T05:42:52Z",
+      "side": 1,
+      "message": "I checked the code again, \n\nFor spdk_nvmf_tcp_pdu_get(), it should never return NULL since it will not NULL. We allocate enough pdu in the free queue. You can see it will call abort directly. So the internal pdu get failure will never happen in our code (See the initialization code: spdk_nvmf_tcp_qpair_init_mem_resource). I suggest that we can just remove the check. And your patch to solve the internal failure in out target side is not needed.",
+      "range": {
+        "startLine": 1670,
+        "startChar": 2,
+        "endLine": 1670,
+        "endChar": 32
+      },
+      "revId": "5cde0b71a973c61efabf1bcc1c0e66a74b542695",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
