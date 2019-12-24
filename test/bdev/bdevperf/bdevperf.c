@@ -1388,10 +1388,14 @@ bdevperf_run(void *arg1)
 }
 
 static void
-bdevperf_stop_io_on_core(void *arg1, void *arg2)
+bdevperf_stop_io_on_core(struct spdk_io_channel_iter *i)
 {
-	struct io_target_group *group = arg1;
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
 	struct io_target *target;
+
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
 
 	/* Stop I/O for each block device. */
 	TAILQ_FOREACH(target, &group->targets, link) {
@@ -1402,9 +1406,6 @@ bdevperf_stop_io_on_core(void *arg1, void *arg2)
 static void
 spdk_bdevperf_shutdown_cb(void)
 {
-	struct io_target_group *group;
-	struct spdk_event *event;
-
 	g_shutdown = true;
 
 	if (g_target_count == 0) {
@@ -1415,13 +1416,7 @@ spdk_bdevperf_shutdown_cb(void)
 	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
 
 	/* Send events to stop all I/O on each target group */
-	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
-		if (!TAILQ_EMPTY(&group->targets)) {
-			event = spdk_event_allocate(group->lcore, bdevperf_stop_io_on_core,
-						    &group->targets, NULL);
-			spdk_event_call(event);
-		}
-	}
+	spdk_for_each_channel(&g_bdevperf, bdevperf_stop_io_on_core, NULL, NULL);
 }
 
 static int
