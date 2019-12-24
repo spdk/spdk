@@ -1263,6 +1263,11 @@ bdevperf_test(void)
 	struct spdk_event *event;
 	int rc;
 
+	if (g_target_count == 0) {
+		fprintf(stderr, "No valid bdevs found.\n");
+		return -ENODEV;
+	}
+
 	rc = bdevperf_construct_targets_tasks();
 	if (rc) {
 		return rc;
@@ -1308,12 +1313,6 @@ bdevperf_run(void *arg1)
 	}
 
 	bdevperf_construct_targets();
-
-	if (g_target_count == 0) {
-		fprintf(stderr, "No valid bdevs found.\n");
-		spdk_app_stop(1);
-		return;
-	}
 
 	rc = bdevperf_test();
 	if (rc) {
@@ -1456,13 +1455,6 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 	g_request = request;
 
 	bdevperf_construct_targets();
-	if (g_target_count == 0) {
-		g_request = NULL;
-		fprintf(stderr, "No valid bdevs found.\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 spdk_strerror(-ENODEV));
-		return;
-	}
 
 	rc = bdevperf_test();
 	if (rc) {
