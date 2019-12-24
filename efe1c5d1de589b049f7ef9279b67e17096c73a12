@@ -114,6 +114,29 @@
       "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "441e5ab6_14ab9526",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-24T02:20:22Z",
+      "side": 1,
+      "message": "Is this state transition correct for error cases?",
+      "range": {
+        "startLine": 444,
+        "startChar": 1,
+        "endLine": 444,
+        "endChar": 35
+      },
+      "revId": "efe1c5d1de589b049f7ef9279b67e17096c73a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
