@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5bb392f_b2862eab",
+        "filename": "test/nvmf/nvmf.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-24T09:59:11Z",
+      "side": 1,
+      "message": "what are they?",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 1
+      },
+      "revId": "7dba1f3a7c44e2ce310b52426718e81596e35ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
