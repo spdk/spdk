@@ -271,26 +271,38 @@ _bdevperf_free_targets(struct spdk_io_channel_iter *i)
 }
 
 static void
-_target_gone(void *arg1, void *arg2)
+_target_gone(struct spdk_io_channel_iter *i)
 {
-	struct io_target *target = arg1;
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+	struct io_target *target, *tmp = NULL;
 
-	spdk_poller_unregister(&target->run_timer);
-	if (g_reset) {
-		spdk_poller_unregister(&target->reset_timer);
+	ch = spdk_io_channel_iter_get_channel(i);
+	target = spdk_io_channel_iter_get_ctx(i);
+
+	group = spdk_io_channel_get_ctx(ch);
+
+	TAILQ_FOREACH(tmp, &group->targets, link) {
+		if (target == tmp) {
+			spdk_poller_unregister(&target->run_timer);
+			if (g_reset) {
+				spdk_poller_unregister(&target->reset_timer);
+			}
+
+			target->is_draining = true;
+			break;
+		}
 	}
 
-	target->is_draining = true;
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
 bdevperf_target_gone(void *arg)
 {
 	struct io_target *target = arg;
-	struct spdk_event *event;
 
-	event = spdk_event_allocate(target->lcore, _target_gone, target, NULL);
-	spdk_event_call(event);
+	spdk_for_each_channel(&g_bdevperf, _target_gone, target, NULL);
 }
 
 static int
