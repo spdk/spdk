@@ -34,6 +34,24 @@
       "revId": "ad0dfd0e45184fed45a4a250f7f4937a8ff29514",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89b17475_407c4e0e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-25T07:52:44Z",
+      "side": 1,
+      "message": "Thank you for detailed comment, Changpeng.\n\nHonestly I understood little of your comment yet.\nBut your comment is nice hint for me and I will continue learning 😊\n\n-Shuhei",
+      "parentUuid": "fe2ecde1_a4646ab4",
+      "revId": "ad0dfd0e45184fed45a4a250f7f4937a8ff29514",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
