@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2490f17_1ebd2593",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1801,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-25T07:30:03Z",
+      "side": 1,
+      "message": "Is it better using : ((offset % lba_size \u003d\u003d 0) \u0026\u0026 (length % lba_size \u003d\u003d0))",
+      "revId": "5687be9ea8ec9ba9736885b64cc47497ad739f89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
