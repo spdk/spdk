@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "6f1b2244_6a875395",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-25T09:04:19Z",
+      "side": 1,
+      "message": "Ack. I think it\u0027s a better choice. Thanks Shuhei.",
+      "parentUuid": "46664755_63a03c04",
+      "range": {
+        "startLine": 567,
+        "startChar": 8,
+        "endLine": 567,
+        "endChar": 25
+      },
+      "revId": "a15d800f6c0362c4eedb24cf6aea20c5de58d7d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b335d821_4450d47d",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 21
@@ -134,6 +158,24 @@
       "revId": "a15d800f6c0362c4eedb24cf6aea20c5de58d7d2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8dcb548_2105eb25",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-25T09:04:19Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b335d821_4450d47d",
+      "revId": "a15d800f6c0362c4eedb24cf6aea20c5de58d7d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
