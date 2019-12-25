@@ -254,6 +254,29 @@
     },
     {
       "key": {
+        "uuid": "f23abed8_3692704c",
+        "filename": "lib/nvmf/transport.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-25T07:50:29Z",
+      "side": 1,
+      "message": "I am confused with this in NVMe-oF target side. There is no specification to describe muser transport in NVMe-oF spec? Should we really need this transport?\n\nCould we do not support this? But only support muser transport in NVMe host side, and the NVMe muser transport can be wrapped in bdev nvme and connect to vhost NVMe? \n\nOr does it mean with this muser transport in both host and target side, then we can replace vhost NVMe solution in vhost application(blk/SCSI/NVMe).",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 230,
+        "endChar": 69
+      },
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "47666f24_c7292154",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 2
