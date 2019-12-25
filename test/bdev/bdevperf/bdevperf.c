@@ -141,7 +141,7 @@ static uint32_t g_target_count = 0;
 static size_t g_min_alignment = 8;
 
 struct bdevperf_cb_ctx {
-	int	rc;
+	int		rc;
 };
 
 static void
@@ -253,17 +253,21 @@ bdevperf_free_target(struct io_target *target)
 }
 
 static void
-bdevperf_free_targets(void)
+_bdevperf_free_targets(struct spdk_io_channel_iter *i)
 {
-	struct io_target_group *group, *tmp_group;
-	struct io_target *target, *tmp_target;
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+	struct io_target *target, *tmp;
 
-	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
-		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
-			TAILQ_REMOVE(&group->targets, target, link);
-			bdevperf_free_target(target);
-		}
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp) {
+		TAILQ_REMOVE(&group->targets, target, link);
+		bdevperf_free_target(target);
 	}
+
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
@@ -455,19 +459,28 @@ _bdevperf_fini_thread(struct spdk_io_channel_iter *i)
 }
 
 static void
-bdevperf_fini(int rc)
+_bdevperf_fini(struct spdk_io_channel_iter *i, int status)
 {
 	struct bdevperf_cb_ctx *ctx;
 
-	bdevperf_free_targets();
+	ctx = spdk_io_channel_iter_get_ctx(i);
+
+	spdk_for_each_channel(&g_bdevperf, _bdevperf_fini_thread, ctx,
+			      _bdevperf_fini_done);
+}
+
+static void
+bdevperf_fini(int rc)
+{
+	struct bdevperf_cb_ctx *ctx;
 
 	ctx = calloc(1, sizeof(*ctx));
 	assert(ctx != NULL);
 
 	ctx->rc = rc;
 
-	spdk_for_each_channel(&g_bdevperf, _bdevperf_fini_thread, ctx,
-			      _bdevperf_fini_done);
+	spdk_for_each_channel(&g_bdevperf, _bdevperf_free_targets, ctx,
+			      _bdevperf_fini);
 }
 
 static void
@@ -1494,7 +1507,7 @@ rpc_perform_tests_cb(int rc)
 						     "bdevperf failed with error %s", spdk_strerror(-rc));
 	}
 
-	bdevperf_free_targets();
+	spdk_for_each_channel(&g_bdevperf, _bdevperf_free_targets, NULL, NULL);
 }
 
 static void
