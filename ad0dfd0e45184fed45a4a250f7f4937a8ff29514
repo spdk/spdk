@@ -16,6 +16,24 @@
       "revId": "ad0dfd0e45184fed45a4a250f7f4937a8ff29514",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe2ecde1_a4646ab4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-25T07:30:37Z",
+      "side": 1,
+      "message": "DPDK and QEMU treat them as different socket messages, and there are bits conflicts with virtio features definition.  Actually we should also remove the vhost feature bits from  SPDK_VHOST_BLK_ENABLED_FEATURES, since it can work and also need to update DPDK.",
+      "parentUuid": "288c18d7_c2b7ac18",
+      "revId": "ad0dfd0e45184fed45a4a250f7f4937a8ff29514",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
