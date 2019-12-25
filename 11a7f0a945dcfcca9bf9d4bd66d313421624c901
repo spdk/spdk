@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "74cac753_4ead9e93",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 708,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-25T04:38:24Z",
+      "side": 1,
+      "message": "Maybe we can have an array like\n\nint nvmf_signals \u003d [SIGINT, SINGTERM];\n\nAnd then loop the array for the same sigaction and sigaddset operation.\n\nIn this case, if we later to add a new signal, we just extend the array.",
+      "range": {
+        "startLine": 708,
+        "startChar": 33,
+        "endLine": 708,
+        "endChar": 51
+      },
+      "revId": "11a7f0a945dcfcca9bf9d4bd66d313421624c901",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "347cc18e_b40e48f2",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 20
