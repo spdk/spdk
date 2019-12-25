@@ -121,6 +121,29 @@
     },
     {
       "key": {
+        "uuid": "6f7db61c_9ad45afe",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-25T07:53:24Z",
+      "side": 1,
+      "message": "nvme_muser.c is missing. It means that Nutanix will upstream it?",
+      "range": {
+        "startLine": 56,
+        "startChar": 54,
+        "endLine": 56,
+        "endChar": 79
+      },
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3980cb77_53f3c469",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 2
