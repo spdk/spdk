@@ -439,6 +439,13 @@ bdevperf_construct_targets(void)
 }
 
 static void
+bdevperf_fini(int rc)
+{
+	bdevperf_free_targets();
+	spdk_app_stop(rc);
+}
+
+static void
 end_run(void *arg1, void *arg2)
 {
 	struct io_target *target = arg1;
@@ -470,8 +477,7 @@ end_run(void *arg1, void *arg2)
 		if (g_request && !g_shutdown) {
 			rpc_perform_tests_cb(rc);
 		} else {
-			bdevperf_free_targets();
-			spdk_app_stop(rc);
+			bdevperf_fini(rc);
 		}
 	}
 }
@@ -1317,8 +1323,7 @@ bdevperf_run(void *arg1)
 
 	rc = bdevperf_test();
 	if (rc) {
-		bdevperf_free_targets();
-		spdk_app_stop(1);
+		bdevperf_fini(1);
 		return;
 	}
 }
@@ -1344,8 +1349,7 @@ spdk_bdevperf_shutdown_cb(void)
 	g_shutdown = true;
 
 	if (g_target_count == 0) {
-		bdevperf_free_targets();
-		spdk_app_stop(0);
+		bdevperf_fini(0);
 		return;
 	}
 
