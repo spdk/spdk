@@ -49,23 +49,29 @@
 #include "spdk_internal/vhost_user.h"
 #include "spdk_internal/memory.h"
 
+static inline void
+vhost_session_mem_region_calc(uint64_t *previous_start, uint64_t *start, uint64_t *end,
+			      uint64_t *len, struct rte_vhost_mem_region *region)
+{
+	*start = FLOOR_2MB(region->mmap_addr);
+	*end = CEIL_2MB(region->mmap_addr + region->mmap_size);
+	if (*start == *previous_start) {
+		*start += (size_t) VALUE_2MB;
+	}
+	*previous_start = *start;
+	*len = *end - *start;
+}
+
 void
 vhost_session_mem_register(struct rte_vhost_memory *mem)
 {
-	struct rte_vhost_mem_region *region;
+	uint64_t start, end, len;
 	uint32_t i;
 	uint64_t previous_start = UINT64_MAX;
 
+
 	for (i = 0; i < mem->nregions; i++) {
-		uint64_t start, end, len;
-		region = &mem->regions[i];
-		start = FLOOR_2MB(region->mmap_addr);
-		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
-		if (start == previous_start) {
-			start += (size_t) VALUE_2MB;
-		}
-		previous_start = start;
-		len = end - start;
+		vhost_session_mem_region_calc(&previous_start, &start, &end, &len, &mem->regions[i]);
 		SPDK_INFOLOG(SPDK_LOG_VHOST, "Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
 			     start, len);
 
@@ -80,21 +86,12 @@ vhost_session_mem_register(struct rte_vhost_memory *mem)
 void
 vhost_session_mem_unregister(struct rte_vhost_memory *mem)
 {
-	struct rte_vhost_mem_region *region;
+	uint64_t start, end, len;
 	uint32_t i;
 	uint64_t previous_start = UINT64_MAX;
 
 	for (i = 0; i < mem->nregions; i++) {
-		uint64_t start, end, len;
-		region = &mem->regions[i];
-		start = FLOOR_2MB(region->mmap_addr);
-		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
-		if (start == previous_start) {
-			start += (size_t) VALUE_2MB;
-		}
-		previous_start = start;
-		len = end - start;
-
+		vhost_session_mem_region_calc(&previous_start, &start, &end, &len, &mem->regions[i]);
 		if (spdk_vtophys((void *) start, NULL) == SPDK_VTOPHYS_ERROR) {
 			continue; /* region has not been registered */
 		}
