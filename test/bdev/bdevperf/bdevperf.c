@@ -140,8 +140,11 @@ static uint32_t g_target_count = 0;
  */
 static size_t g_min_alignment = 8;
 
+typedef void (*bdevperf_cb)(int rc);
+
 struct bdevperf_cb_ctx {
-	int	rc;
+	bdevperf_cb	cb_fn;
+	int		rc;
 };
 
 static void
@@ -253,17 +256,51 @@ bdevperf_free_target(struct io_target *target)
 }
 
 static void
-bdevperf_free_targets(void)
+_bdevperf_free_targets_done(struct spdk_io_channel_iter *i, int status)
 {
-	struct io_target_group *group, *tmp_group;
-	struct io_target *target, *tmp_target;
+	struct bdevperf_cb_ctx *ctx;
 
-	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
-		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
-			TAILQ_REMOVE(&group->targets, target, link);
-			bdevperf_free_target(target);
-		}
+	ctx = spdk_io_channel_iter_get_ctx(i);
+
+	ctx->cb_fn(ctx->rc);
+
+	free(ctx);
+}
+
+static void
+_bdevperf_free_targets(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+	struct io_target *target, *tmp;
+
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp) {
+		TAILQ_REMOVE(&group->targets, target, link);
+		bdevperf_free_target(target);
 	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+bdevperf_free_targets(bdevperf_cb cb_fn, int rc)
+{
+	struct bdevperf_cb_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		cb_fn(-ENOMEM);
+		return;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->rc = rc;
+
+	spdk_for_each_channel(&g_bdevperf, _bdevperf_free_targets, ctx,
+			      _bdevperf_free_targets_done);
 }
 
 static void
@@ -472,6 +509,7 @@ static void
 end_run(void *arg1, void *arg2)
 {
 	struct io_target *target = arg1;
+	bdevperf_cb cb_fn;
 	int rc = 0;
 
 	spdk_bdev_close(target->bdev_desc);
@@ -497,13 +535,12 @@ end_run(void *arg1, void *arg2)
 			rc = 1;
 		}
 
-		bdevperf_free_targets();
-
 		if (g_request && !g_shutdown) {
-			rpc_perform_tests_cb(rc);
+			cb_fn = rpc_perform_tests_cb;
 		} else {
-			bdevperf_fini(rc);
+			cb_fn = bdevperf_fini;
 		}
+		bdevperf_free_targets(cb_fn, rc);
 	}
 }
 
@@ -1372,8 +1409,7 @@ io_target_group_create_done(void *ctx)
 
 	rc = bdevperf_test();
 	if (rc) {
-		bdevperf_free_targets();
-		bdevperf_fini(1);
+		bdevperf_free_targets(bdevperf_fini, 1);
 		return;
 	}
 }
@@ -1518,8 +1554,7 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 
 	rc = bdevperf_test();
 	if (rc) {
-		bdevperf_free_targets();
-		rpc_perform_tests_cb(rc);
+		bdevperf_free_targets(rpc_perform_tests_cb, rc);
 	}
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
