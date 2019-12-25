@@ -262,9 +262,9 @@ bdevperf_free_targets(void)
 }
 
 static void
-_target_gone(void *arg1, void *arg2)
+_target_gone(void *ctx)
 {
-	struct io_target *target = arg1;
+	struct io_target *target = ctx;
 
 	spdk_poller_unregister(&target->run_timer);
 	if (g_reset) {
@@ -278,10 +278,10 @@ static void
 bdevperf_target_gone(void *arg)
 {
 	struct io_target *target = arg;
-	struct spdk_event *event;
+	struct io_target_group *group = target->group;
 
-	event = spdk_event_allocate(target->lcore, _target_gone, target, NULL);
-	spdk_event_call(event);
+	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(group)),
+			     _target_gone, target);
 }
 
 static int
