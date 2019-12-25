@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "288c18d7_c2b7ac18",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-25T07:20:49Z",
+      "side": 1,
+      "message": "If so can we add inflight to SPDK_VHOST_SCSI_DISABLED_FEATURES ?",
+      "revId": "ad0dfd0e45184fed45a4a250f7f4937a8ff29514",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
