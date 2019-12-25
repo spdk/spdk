@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "88ccb6d8_779326d2",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-12-25T09:32:15Z",
+      "side": 1,
+      "message": "Thanks,done",
+      "parentUuid": "7ebd1523_6d38cc20",
+      "range": {
+        "startLine": 78,
+        "startChar": 25,
+        "endLine": 78,
+        "endChar": 59
+      },
+      "revId": "007d8ce42b69e2ea2f29d08eb575f40590a48105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "802fdd48_edf06a46",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 38
@@ -45,6 +69,30 @@
       "revId": "007d8ce42b69e2ea2f29d08eb575f40590a48105",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9cfceda4_3b50bd7c",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-12-25T09:32:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "802fdd48_edf06a46",
+      "range": {
+        "startLine": 96,
+        "startChar": 20,
+        "endLine": 96,
+        "endChar": 21
+      },
+      "revId": "007d8ce42b69e2ea2f29d08eb575f40590a48105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "e054992e_eaed97be",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-12-25T09:32:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "73fbb5f8_6ea858cd",
+      "range": {
+        "startLine": 322,
+        "startChar": 1,
+        "endLine": 322,
+        "endChar": 50
+      },
+      "revId": "007d8ce42b69e2ea2f29d08eb575f40590a48105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0cfb039c_925977ce",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 38
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "87322138_bca880d0",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-12-25T09:32:15Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "0cfb039c_925977ce",
+      "range": {
+        "startLine": 329,
+        "startChar": 1,
+        "endLine": 329,
+        "endChar": 16
+      },
+      "revId": "007d8ce42b69e2ea2f29d08eb575f40590a48105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cef3dcf8_2bee91aa",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 38
@@ -108,6 +204,24 @@
       "revId": "007d8ce42b69e2ea2f29d08eb575f40590a48105",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5576648_8f7086a3",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-12-25T09:32:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cef3dcf8_2bee91aa",
+      "revId": "007d8ce42b69e2ea2f29d08eb575f40590a48105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -134,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "58b38267_b5ee75b7",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-12-25T09:32:15Z",
+      "side": 1,
+      "message": "Sorry, I don’t quite understand. Shall we put \"if (current_ticks \u003e g_runtime_ticks)\" outside?",
+      "parentUuid": "23e5d65f_ac2abc3c",
+      "range": {
+        "startLine": 1035,
+        "startChar": 0,
+        "endLine": 1041,
+        "endChar": 1
+      },
+      "revId": "007d8ce42b69e2ea2f29d08eb575f40590a48105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4c263e37_0ce822a8",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 38
@@ -145,6 +283,30 @@
       "writtenOn": "2019-12-25T06:36:15Z",
       "side": 1,
       "message": "I don\u0027t think this is necessary.\n\nlib/reactor.c do this instead.",
+      "range": {
+        "startLine": 1048,
+        "startChar": 0,
+        "endLine": 1050,
+        "endChar": 0
+      },
+      "revId": "007d8ce42b69e2ea2f29d08eb575f40590a48105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9167e5a3_cc4bde9b",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 1050,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-12-25T09:32:15Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "4c263e37_0ce822a8",
       "range": {
         "startLine": 1048,
         "startChar": 0,
