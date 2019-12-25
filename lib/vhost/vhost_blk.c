@@ -58,6 +58,9 @@
 		(1ULL << VIRTIO_BLK_F_GEOMETRY) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) | \
 		(1ULL << VIRTIO_BLK_F_BARRIER)  | (1ULL << VIRTIO_BLK_F_SCSI))
 
+/* Vhost-blk support protocol features */
+#define SPDK_VHOST_BLK_PROTOCOL_FEATURES ((1ULL << VHOST_USER_PROTOCOL_F_CONFIG))
+
 struct spdk_vhost_blk_task {
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_vhost_blk_session *bvsession;
@@ -978,6 +981,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	vdev = &bvdev->vdev;
 	vdev->virtio_features = SPDK_VHOST_BLK_FEATURES_BASE;
 	vdev->disabled_features = SPDK_VHOST_BLK_DISABLED_FEATURES;
+	vdev->protocol_features = SPDK_VHOST_BLK_PROTOCOL_FEATURES;
 
 	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_DISCARD);

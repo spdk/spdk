@@ -329,11 +329,11 @@ vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession)
 
 int
 vhost_register_unix_socket(const char *path, const char *ctrl_name,
-			   uint64_t virtio_features, uint64_t disabled_features)
+			   uint64_t virtio_features, uint64_t disabled_features, uint64_t protocol_features)
 {
 	struct stat file_stat;
 #ifndef SPDK_CONFIG_VHOST_INTERNAL_LIB
-	uint64_t protocol_features = 0;
+	uint64_t features = 0;
 #endif
 
 	/* Register vhost driver to handle vhost messages. */
@@ -371,9 +371,9 @@ vhost_register_unix_socket(const char *path, const char *ctrl_name,
 	}
 
 #ifndef SPDK_CONFIG_VHOST_INTERNAL_LIB
-	rte_vhost_driver_get_protocol_features(path, &protocol_features);
-	protocol_features |= (1ULL << VHOST_USER_PROTOCOL_F_CONFIG);
-	rte_vhost_driver_set_protocol_features(path, protocol_features);
+	rte_vhost_driver_get_protocol_features(path, &features);
+	features |= protocol_features;
+	rte_vhost_driver_set_protocol_features(path, features);
 #endif
 
 	if (rte_vhost_driver_start(path) != 0) {

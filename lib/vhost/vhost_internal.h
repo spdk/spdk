@@ -158,6 +158,7 @@ struct spdk_vhost_dev {
 
 	uint64_t virtio_features;
 	uint64_t disabled_features;
+	uint64_t protocol_features;
 
 	const struct spdk_vhost_dev_backend *backend;
 
@@ -392,7 +393,7 @@ void vhost_session_stop_done(struct spdk_vhost_session *vsession, int response);
 struct spdk_vhost_session *vhost_session_find_by_vid(int vid);
 void vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession);
 int vhost_register_unix_socket(const char *path, const char *ctrl_name,
-			       uint64_t virtio_features, uint64_t disabled_features);
+			       uint64_t virtio_features, uint64_t disabled_features, uint64_t protocol_features);
 int vhost_driver_unregister(const char *path);
 int vhost_get_mem_table(int vid, struct rte_vhost_memory **mem);
 int vhost_get_negotiated_features(int vid, uint64_t *negotiated_features);

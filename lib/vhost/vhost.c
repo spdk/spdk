@@ -640,7 +640,8 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 	vhost_dev_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
 				 SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
 
-	if (vhost_register_unix_socket(path, name, vdev->virtio_features, vdev->disabled_features)) {
+	if (vhost_register_unix_socket(path, name, vdev->virtio_features, vdev->disabled_features,
+				       vdev->protocol_features)) {
 		TAILQ_REMOVE(&g_vhost_devices, vdev, tailq);
 		free(vdev->name);
 		free(vdev->path);
