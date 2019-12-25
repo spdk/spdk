@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "323d7477_b55e969c",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-25T08:00:06Z",
+      "side": 1,
+      "message": "_bdevperf_fini_thread_done will be better.",
+      "range": {
+        "startLine": 425,
+        "startChar": 0,
+        "endLine": 425,
+        "endChar": 19
+      },
+      "revId": "876521b85e93b5d7119ef65b2bd420903c64d1bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3e7407c_beadb29a",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1387,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-25T08:00:06Z",
+      "side": 1,
+      "message": "_bdevperf_init_thread_done will be better.",
+      "range": {
+        "startLine": 1387,
+        "startChar": 51,
+        "endLine": 1387,
+        "endChar": 78
+      },
+      "revId": "876521b85e93b5d7119ef65b2bd420903c64d1bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
