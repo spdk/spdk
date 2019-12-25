@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "447c7135_07f81ea9",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-25T08:20:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6704940d_2dbcee49",
+      "range": {
+        "startLine": 496,
+        "startChar": 0,
+        "endLine": 498,
+        "endChar": 0
+      },
+      "revId": "a15d800f6c0362c4eedb24cf6aea20c5de58d7d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "66ac9b79_cf869706",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 21
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "17d88290_6f40a268",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-25T08:20:52Z",
+      "side": 1,
+      "message": "I think both are ok. Here is the error handler so we can use a simple method as nvmf_tgt_get_next_pg() needs to update nvmf_tgt-\u003enext_pg.",
+      "parentUuid": "66ac9b79_cf869706",
+      "range": {
+        "startLine": 567,
+        "startChar": 8,
+        "endLine": 567,
+        "endChar": 25
+      },
+      "revId": "a15d800f6c0362c4eedb24cf6aea20c5de58d7d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "740136b4_1637411b",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 21
@@ -59,6 +107,30 @@
       "writtenOn": "2019-12-25T06:59:51Z",
       "side": 1,
       "message": "default case should be asserted?",
+      "range": {
+        "startLine": 600,
+        "startChar": 1,
+        "endLine": 600,
+        "endChar": 9
+      },
+      "revId": "a15d800f6c0362c4eedb24cf6aea20c5de58d7d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5dac9ac_997d7c1f",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-25T08:20:52Z",
+      "side": 1,
+      "message": "ack. I fixed it in the nvmf_tgt_init() where we set the conn_sched value. So here the value  must be right.",
+      "parentUuid": "740136b4_1637411b",
       "range": {
         "startLine": 600,
         "startChar": 1,
