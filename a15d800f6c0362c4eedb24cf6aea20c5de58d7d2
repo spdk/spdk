@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6704940d_2dbcee49",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-25T06:59:51Z",
+      "side": 1,
+      "message": "this is not necessary",
+      "range": {
+        "startLine": 496,
+        "startChar": 0,
+        "endLine": 498,
+        "endChar": 0
+      },
+      "revId": "a15d800f6c0362c4eedb24cf6aea20c5de58d7d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66ac9b79_cf869706",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-25T06:59:51Z",
+      "side": 1,
+      "message": "should we use nvmf_tgt_get_next_pg() here?",
+      "range": {
+        "startLine": 567,
+        "startChar": 8,
+        "endLine": 567,
+        "endChar": 25
+      },
+      "revId": "a15d800f6c0362c4eedb24cf6aea20c5de58d7d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "740136b4_1637411b",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-25T06:59:51Z",
+      "side": 1,
+      "message": "default case should be asserted?",
+      "range": {
+        "startLine": 600,
+        "startChar": 1,
+        "endLine": 600,
+        "endChar": 9
+      },
+      "revId": "a15d800f6c0362c4eedb24cf6aea20c5de58d7d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
