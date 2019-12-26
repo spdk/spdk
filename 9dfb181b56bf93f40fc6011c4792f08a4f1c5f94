@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aaefb099_55369e5a",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-26T03:06:03Z",
+      "side": 1,
+      "message": "Not critical but vq-\u003evring_inflight.resubmit_inflight is cached to resubmit again in submit_inflight_desc().\n\nSo how about the following?\n\nstatic bool\nsubmit_inflight_desc(bvsession, vq)\n{\n  (snip)\n  if (!resubmit || resubmit-\u003eresubmit_num) {\n    return false;\n  }\n  (snip)\n  return true;\n}\n\nprocess_vq()\n{\n  (snip)\n  if (!submit_inflight_desc(bvsession, vq)) {\n    return;\n  }\n  (snip)\n}",
+      "revId": "9dfb181b56bf93f40fc6011c4792f08a4f1c5f94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
