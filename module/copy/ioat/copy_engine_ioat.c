@@ -45,6 +45,7 @@
 #include "spdk/ioat.h"
 
 static bool g_ioat_enable = false;
+static bool g_ioat_initialized = false;
 
 struct ioat_probe_ctx {
 	int num_whitelist_devices;
@@ -127,21 +128,6 @@ copy_engine_ioat_get_ctx_size(void)
 SPDK_COPY_MODULE_REGISTER(copy_engine_ioat_init, copy_engine_ioat_exit,
 			  copy_engine_ioat_config_text,
 			  copy_engine_ioat_get_ctx_size)
-
-static void
-copy_engine_ioat_exit(void *ctx)
-{
-	struct ioat_device *dev;
-
-	while (!TAILQ_EMPTY(&g_devices)) {
-		dev = TAILQ_FIRST(&g_devices);
-		TAILQ_REMOVE(&g_devices, dev, tailq);
-		spdk_ioat_detach(dev->ioat);
-		ioat_free_device(dev);
-		free(dev);
-	}
-	spdk_copy_engine_module_finish();
-}
 
 static void
 ioat_done(void *cb_arg)
@@ -383,11 +369,31 @@ copy_engine_ioat_init(void)
 		return -1;
 	}
 
+	g_ioat_initialized = true;
 	SPDK_INFOLOG(SPDK_LOG_COPY_IOAT, "Ioat Copy Engine Offload Enabled\n");
 	spdk_copy_engine_register(&ioat_copy_engine);
 	spdk_io_device_register(&ioat_copy_engine, ioat_create_cb, ioat_destroy_cb,
 				sizeof(struct ioat_io_channel), "ioat_copy_engine");
 	return 0;
+}
+
+static void
+copy_engine_ioat_exit(void *ctx)
+{
+	struct ioat_device *dev;
+
+	if (g_ioat_initialized) {
+		spdk_io_device_unregister(&ioat_copy_engine, NULL);
+	}
+
+	while (!TAILQ_EMPTY(&g_devices)) {
+		dev = TAILQ_FIRST(&g_devices);
+		TAILQ_REMOVE(&g_devices, dev, tailq);
+		spdk_ioat_detach(dev->ioat);
+		ioat_free_device(dev);
+		free(dev);
+	}
+	spdk_copy_engine_module_finish();
 }
 
 #define COPY_ENGINE_IOAT_HEADER_TMPL \
