@@ -40,6 +40,45 @@
 
 #include "nvme/nvme_pcie.c"
 
+pid_t g_spdk_nvme_pid;
+DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
+DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
+
+DEFINE_STUB(spdk_nvme_wait_for_completion, int,
+	    (struct spdk_nvme_qpair *qpair,
+	     struct nvme_completion_poll_status *status), 0);
+DEFINE_STUB_V(nvme_completion_poll_cb, (void *arg, const struct spdk_nvme_cpl *cpl));
+DEFINE_STUB(nvme_request_check_timeout, int, (struct nvme_request *req, uint16_t cid,
+		struct spdk_nvme_ctrlr_process *active_proc, uint64_t now_tick), 0);
+
+DEFINE_STUB(nvme_ctrlr_submit_admin_request, int, (struct spdk_nvme_ctrlr *ctrlr,
+		struct nvme_request *req), 0);
+DEFINE_STUB_V(nvme_ctrlr_destruct_finish, (struct spdk_nvme_ctrlr *ctrlr));
+DEFINE_STUB_V(nvme_ctrlr_free_processes, (struct spdk_nvme_ctrlr *ctrlr));
+DEFINE_STUB(nvme_ctrlr_proc_get_devhandle, struct spdk_pci_device *,
+	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
+
+DEFINE_STUB(nvme_qpair_init, int, (struct spdk_nvme_qpair *qpair, uint16_t id,
+				   struct spdk_nvme_ctrlr *ctrlr,
+				   enum spdk_nvme_qprio qprio,
+				   uint32_t num_requests), 0);
+DEFINE_STUB_V(nvme_qpair_deinit, (struct spdk_nvme_qpair *qpair));
+
+DEFINE_STUB(spdk_pci_device_unmap_bar, int, (struct spdk_pci_device *dev, uint32_t bar, void *addr),
+	    0);
+DEFINE_STUB(spdk_pci_device_attach, int, (struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb,
+		void *enum_ctx, struct spdk_pci_addr *pci_address), 0)
+DEFINE_STUB_V(spdk_pci_device_unclaim, (struct spdk_pci_device *dev));
+DEFINE_STUB_V(spdk_pci_device_detach, (struct spdk_pci_device *device));
+
+DEFINE_STUB(spdk_uevent_connect, int, (void), 0);
+
+DEFINE_STUB_V(spdk_nvme_transport_add, (const struct spdk_nvme_transport_ops *ops));
+DEFINE_STUB(nvme_transport_ctrlr_connect_qpair, int, (struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair), 0);
+
+
+
 const char *
 spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
 {

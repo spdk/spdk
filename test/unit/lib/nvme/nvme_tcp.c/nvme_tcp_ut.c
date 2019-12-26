@@ -47,11 +47,33 @@ DEFINE_STUB(nvme_request_check_timeout, int, (struct nvme_request *req, uint16_t
 
 DEFINE_STUB(nvme_qpair_submit_request,
 	    int, (struct spdk_nvme_qpair *qpair, struct nvme_request *req), 0);
+DEFINE_STUB_V(nvme_qpair_deinit, (struct spdk_nvme_qpair *qpair));
+DEFINE_STUB(nvme_qpair_init, int, (struct spdk_nvme_qpair *qpair, uint16_t id,
+				   struct spdk_nvme_ctrlr *ctrlr,
+				   enum spdk_nvme_qprio qprio,
+				   uint32_t num_requests), 0);
+
+DEFINE_STUB(nvme_transport_ctrlr_connect_qpair, int, (struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair), 0);
+DEFINE_STUB_V(spdk_nvme_transport_add, (const struct spdk_nvme_transport_ops *ops));
 
 DEFINE_STUB(spdk_nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
 	    (struct spdk_nvme_ctrlr *ctrlr), (struct spdk_nvme_ctrlr_process *)(uintptr_t)0x1);
-
+DEFINE_STUB_V(nvme_ctrlr_destruct_finish, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB_V(nvme_ctrlr_disconnect_qpair, (struct spdk_nvme_qpair *qpair));
+
+DEFINE_STUB(nvme_fabric_ctrlr_set_reg_4, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+		uint32_t value), 0);
+DEFINE_STUB(nvme_fabric_ctrlr_set_reg_8, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+		uint64_t value), 0);
+DEFINE_STUB(nvme_fabric_ctrlr_get_reg_4, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+		uint32_t *value), 0);
+DEFINE_STUB(nvme_fabric_ctrlr_get_reg_8, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+		uint64_t *value), 0);
+DEFINE_STUB(nvme_fabric_ctrlr_scan, int, (struct spdk_nvme_probe_ctx *probe_ctx,
+		bool direct_connect), 0);
+DEFINE_STUB(nvme_fabric_qpair_connect, int, (struct spdk_nvme_qpair *qpair, uint32_t num_entries),
+	    0);
 
 static void
 test_nvme_tcp_pdu_set_data_buf(void)
