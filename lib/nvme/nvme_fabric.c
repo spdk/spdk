@@ -168,6 +168,8 @@ nvme_fabric_discover_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
 		return;
 	}
 
+
+
 	trid.adrfam = entry->adrfam;
 
 	/* Ensure that subnqn is null terminated. */
