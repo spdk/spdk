@@ -379,12 +379,29 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	return 0;
 }
 
+static int
+_bdevperf_construct_targets(struct spdk_bdev *bdev,
+			    uint8_t core_count_for_each_bdev)
+{
+	uint8_t core_idx;
+	int rc;
+
+	for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
+		rc = bdevperf_construct_target(bdev);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
 static void
 bdevperf_construct_targets(void)
 {
 	struct spdk_bdev *bdev;
 	int rc;
-	uint8_t core_idx, core_count_for_each_bdev;
+	uint8_t core_count_for_each_bdev;
 
 	if (g_every_core_for_each_bdev == false) {
 		core_count_for_each_bdev = 1;
@@ -399,20 +416,16 @@ bdevperf_construct_targets(void)
 			return;
 		}
 
-		for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
-			rc = bdevperf_construct_target(bdev);
-			if (rc != 0) {
-				return;
-			}
+		rc = _bdevperf_construct_targets(bdev, core_count_for_each_bdev);
+		if (rc != 0) {
+			return;
 		}
 	} else {
 		bdev = spdk_bdev_first_leaf();
 		while (bdev != NULL) {
-			for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
-				rc = bdevperf_construct_target(bdev);
-				if (rc != 0) {
-					return;
-				}
+			rc = _bdevperf_construct_targets(bdev, core_count_for_each_bdev);
+			if (rc != 0) {
+				return;
 			}
 
 			bdev = spdk_bdev_next_leaf(bdev);
