@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8405bbf3_0278274c",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-26T05:04:42Z",
+      "side": 1,
+      "message": "maybe: num_signals",
+      "range": {
+        "startLine": 695,
+        "startChar": 7,
+        "endLine": 695,
+        "endChar": 12
+      },
+      "revId": "c09dd4574be739073662320c677c37f437d313ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60d3c882_0088d4c1",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 716,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-26T05:04:42Z",
+      "side": 1,
+      "message": "this one can be removed.",
+      "range": {
+        "startLine": 716,
+        "startChar": 39,
+        "endLine": 716,
+        "endChar": 47
+      },
+      "revId": "c09dd4574be739073662320c677c37f437d313ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
