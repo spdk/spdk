@@ -1574,12 +1574,14 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 
 	rqpair->num_entries = qsize;
 	rqpair->delay_cmd_submit = delay_cmd_submit;
-
 	qpair = &rqpair->qpair;
-
 	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests);
 	if (rc != 0) {
 		return NULL;
+	}
+
+	if (!nvme_qpair_is_admin_queue(qpair)) {
+		qpair->transport = nvme_get_transport(ctrlr->trid.trstring);
 	}
 
 	rc = nvme_rdma_alloc_reqs(rqpair);

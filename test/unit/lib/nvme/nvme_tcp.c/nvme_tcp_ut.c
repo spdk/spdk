@@ -42,6 +42,8 @@
 
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME);
 
+DEFINE_STUB(nvme_get_transport, const struct nvme_transport *, (const char *transport_name), NULL);
+
 DEFINE_STUB(nvme_request_check_timeout, int, (struct nvme_request *req, uint16_t cid,
 		struct spdk_nvme_ctrlr_process *active_proc, uint64_t now_tick), 1);
 
