@@ -45,6 +45,7 @@ DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 
 DEFINE_STUB(nvme_get_quirks, uint64_t, (const struct spdk_pci_id *id), 0);
+DEFINE_STUB(nvme_get_transport, const struct nvme_transport *, (const char *transport_name), NULL);
 
 DEFINE_STUB(spdk_nvme_wait_for_completion, int,
 	    (struct spdk_nvme_qpair *qpair,
