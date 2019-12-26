@@ -98,7 +98,6 @@ struct io_target {
 	struct spdk_bdev_desc		*bdev_desc;
 	struct spdk_io_channel		*ch;
 	TAILQ_ENTRY(io_target)		link;
-	unsigned			lcore;
 	uint64_t			io_completed;
 	uint64_t			prev_io_completed;
 	double				ema_io_per_second;
@@ -390,7 +389,6 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 
 	/* Mapping each created target to lcore */
 	index = g_target_count % spdk_env_get_core_count();
-	target->lcore = g_coremap[index];
 	TAILQ_INSERT_HEAD(&g_head[index].targets, target, link);
 	g_target_count++;
 
