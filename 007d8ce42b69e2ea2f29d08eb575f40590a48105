@@ -296,6 +296,30 @@
     },
     {
       "key": {
+        "uuid": "e27733f2_759867ff",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-12-26T02:00:51Z",
+      "side": 1,
+      "message": "Oh, thank you very much for your answer.",
+      "parentUuid": "d2a13c20_04ef3ad8",
+      "range": {
+        "startLine": 1035,
+        "startChar": 0,
+        "endLine": 1041,
+        "endChar": 1
+      },
+      "revId": "007d8ce42b69e2ea2f29d08eb575f40590a48105",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4c263e37_0ce822a8",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 38
