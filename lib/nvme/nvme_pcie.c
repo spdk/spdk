@@ -707,6 +707,7 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 	pqpair->flags.delay_cmd_submit = 0;
 
 	ctrlr->adminq = &pqpair->qpair;
+	ctrlr->adminq->transport = ctrlr->transport;
 
 	rc = nvme_qpair_init(ctrlr->adminq,
 			     0, /* qpair ID */
@@ -837,6 +838,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 					      spdk_nvme_transport_id_trtype_str(SPDK_NVME_TRANSPORT_PCIE));
 	pctrlr->devhandle = devhandle;
 	pctrlr->ctrlr.opts = *opts;
+	pctrlr->ctrlr.transport = nvme_get_transport(pctrlr->ctrlr.trid.trstring);
 	memcpy(&pctrlr->ctrlr.trid, trid, sizeof(pctrlr->ctrlr.trid));
 
 	rc = nvme_ctrlr_construct(&pctrlr->ctrlr);
@@ -1622,6 +1624,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 	pqpair->flags.delay_cmd_submit = opts->delay_cmd_submit;
 
 	qpair = &pqpair->qpair;
+	qpair->transport = ctrlr->transport;
 
 	rc = nvme_qpair_init(qpair, qid, ctrlr, opts->qprio, opts->io_queue_requests);
 	if (rc != 0) {

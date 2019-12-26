@@ -47,6 +47,7 @@ DEFINE_STUB(spdk_mem_map_alloc, struct spdk_mem_map *, (uint64_t default_transla
 		const struct spdk_mem_map_ops *ops, void *cb_ctx), NULL);
 DEFINE_STUB_V(spdk_mem_map_free, (struct spdk_mem_map **pmap));
 
+DEFINE_STUB(nvme_get_transport, const struct nvme_transport *, (const char *transport_name), NULL);
 DEFINE_STUB_V(spdk_nvme_transport_add, (const struct spdk_nvme_transport_ops *ops));
 DEFINE_STUB(nvme_transport_ctrlr_connect_qpair, int, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair), 0);
