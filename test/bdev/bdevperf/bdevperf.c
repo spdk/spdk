@@ -98,7 +98,6 @@ struct io_target {
 	struct spdk_bdev_desc		*bdev_desc;
 	struct spdk_io_channel		*ch;
 	TAILQ_ENTRY(io_target)		link;
-	unsigned			lcore;
 	uint64_t			io_completed;
 	uint64_t			prev_io_completed;
 	double				ema_io_per_second;
@@ -385,7 +384,6 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	}
 	group = g_next_tg;
 	g_next_tg = TAILQ_NEXT(g_next_tg, link);
-	target->lcore = group->lcore;
 	TAILQ_INSERT_TAIL(&group->targets, target, link);
 	g_target_count++;
 
