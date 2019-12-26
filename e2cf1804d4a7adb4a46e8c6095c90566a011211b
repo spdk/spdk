@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9b4a03b_d4aa803c",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-26T05:14:54Z",
+      "side": 1,
+      "message": "this may not be necessary.",
+      "range": {
+        "startLine": 257,
+        "startChar": 61,
+        "endLine": 257,
+        "endChar": 65
+      },
+      "revId": "e2cf1804d4a7adb4a46e8c6095c90566a011211b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d562a63_8a28f3f9",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-26T05:14:54Z",
+      "side": 1,
+      "message": "Maybe we can say a little simpler. The following is just an idea.\n\n\"If sock implementation is not specified, they will be as same as spdk_sock_listen and spdk_sock_connect, i.e., the first succeeded sock implementation will be used. If sock implementation is specified, they will use the sock implementation to listen/connect on the provided IP address and port\".",
+      "revId": "e2cf1804d4a7adb4a46e8c6095c90566a011211b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9fad5ac0_21dd99be",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-26T05:14:54Z",
+      "side": 1,
+      "message": "Maybe\n\n\"By using the specified sock implementation, create a socket, connect the socket to the specified ...\"",
+      "revId": "e2cf1804d4a7adb4a46e8c6095c90566a011211b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a73b14e_1030831e",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-26T05:14:54Z",
+      "side": 1,
+      "message": "Same as above.",
+      "revId": "e2cf1804d4a7adb4a46e8c6095c90566a011211b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
