@@ -22,6 +22,30 @@
       "revId": "2b393fdce9dad011cc3f20040f06a4f0d58f7f9e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b482999_7a7e962b",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-26T06:49:38Z",
+      "side": 1,
+      "message": "Thanks Shuhei. Nice comments and I would like to chose spdk_likely(). In SPDK we would complete all the submitted IOs before destorying the target so it\u0027s hard to have the inflight IOs.",
+      "parentUuid": "7571c353_0d0fe077",
+      "range": {
+        "startLine": 448,
+        "startChar": 5,
+        "endLine": 448,
+        "endChar": 56
+      },
+      "revId": "2b393fdce9dad011cc3f20040f06a4f0d58f7f9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
