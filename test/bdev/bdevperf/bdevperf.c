@@ -90,7 +90,7 @@ static struct spdk_poller *g_perf_timer = NULL;
 
 static void bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task);
 static void performance_dump(uint64_t io_time_in_usec, uint64_t ema_period);
-static void rpc_perform_tests_cb(int rc);
+static void rpc_perform_tests_cb(void);
 
 struct io_target {
 	char				*name;
@@ -439,10 +439,10 @@ bdevperf_construct_targets(void)
 }
 
 static void
-bdevperf_fini(int rc)
+bdevperf_fini(void)
 {
 	bdevperf_free_targets();
-	spdk_app_stop(rc);
+	spdk_app_stop(g_run_rc);
 }
 
 static void
@@ -470,9 +470,9 @@ end_run(void *arg1, void *arg2)
 		}
 
 		if (g_request && !g_shutdown) {
-			rpc_perform_tests_cb(g_run_rc);
+			rpc_perform_tests_cb();
 		} else {
-			bdevperf_fini(g_run_rc);
+			bdevperf_fini();
 		}
 	}
 }
@@ -1318,7 +1318,8 @@ bdevperf_run(void *arg1)
 
 	rc = bdevperf_test();
 	if (rc) {
-		bdevperf_fini(rc);
+		g_run_rc = rc;
+		bdevperf_fini();
 		return;
 	}
 }
@@ -1344,7 +1345,7 @@ spdk_bdevperf_shutdown_cb(void)
 	g_shutdown = true;
 
 	if (g_target_count == 0) {
-		bdevperf_fini(g_run_rc);
+		bdevperf_fini();
 		return;
 	}
 
@@ -1414,20 +1415,20 @@ bdevperf_parse_arg(int ch, char *arg)
 }
 
 static void
-rpc_perform_tests_cb(int rc)
+rpc_perform_tests_cb(void)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = g_request;
 
 	g_request = NULL;
 
-	if (rc == 0) {
+	if (g_run_rc == 0) {
 		w = spdk_jsonrpc_begin_result(request);
-		spdk_json_write_uint32(w, rc);
+		spdk_json_write_uint32(w, 0);
 		spdk_jsonrpc_end_result(request, w);
 	} else {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "bdevperf failed with error %s", spdk_strerror(-rc));
+						     "bdevperf failed with error %s", spdk_strerror(-g_run_rc));
 	}
 
 	bdevperf_free_targets();
@@ -1455,7 +1456,8 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 
 	rc = bdevperf_test();
 	if (rc) {
-		rpc_perform_tests_cb(rc);
+		g_run_rc = rc;
+		rpc_perform_tests_cb();
 	}
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
