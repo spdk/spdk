@@ -2895,6 +2895,25 @@ struct spdk_nvme_transport_ops {
 	void (*admin_qpair_abort_aers)(struct spdk_nvme_qpair *qpair);
 };
 
+/**
+ * Register the operations for a given transport type.
+ *
+ * This function should be invoked by referencing the macro
+ * SPDK_NVME_TRANSPORT_REGISTER macro in the transport's .c file.
+ *
+ * \param ops The operations associated with an NVMe-oF transport.
+ */
+void spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops);
+
+/*
+ * Macro used to register new transports.
+ */
+#define SPDK_NVME_TRANSPORT_REGISTER(name, transport_ops) \
+static void __attribute__((constructor)) spdk_nvme_transport_register_##name(void) \
+{ \
+	spdk_nvme_transport_register(transport_ops); \
+}\
+
 #ifdef __cplusplus
 }
 #endif
