@@ -1066,12 +1066,13 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	cache_size = BUF_SMALL_POOL_SIZE / (2 * spdk_thread_get_count());
 	snprintf(mempool_name, sizeof(mempool_name), "buf_small_pool_%d", getpid());
 
-	g_bdev_mgr.buf_small_pool = spdk_mempool_create(mempool_name,
+	/*g_bdev_mgr.buf_small_pool = spdk_mempool_create(mempool_name,
 				    BUF_SMALL_POOL_SIZE,
 				    SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) +
 				    SPDK_BDEV_POOL_ALIGNMENT,
 				    cache_size,
-				    SPDK_ENV_SOCKET_ID_ANY);
+				    SPDK_ENV_SOCKET_ID_ANY);*/
+	g_bdev_mgr.buf_small_pool = NULL;
 	if (!g_bdev_mgr.buf_small_pool) {
 		SPDK_ERRLOG("create rbuf small pool failed\n");
 		bdev_init_complete(-1);
@@ -1125,24 +1126,30 @@ bdev_mgr_unregister_cb(void *io_device)
 {
 	spdk_bdev_fini_cb cb_fn = g_fini_cb_fn;
 
-	if (spdk_mempool_count(g_bdev_mgr.bdev_io_pool) != g_bdev_opts.bdev_io_pool_size) {
-		SPDK_ERRLOG("bdev IO pool count is %zu but should be %u\n",
-			    spdk_mempool_count(g_bdev_mgr.bdev_io_pool),
-			    g_bdev_opts.bdev_io_pool_size);
+	if (g_bdev_mgr.bdev_io_pool) {
+		if (spdk_mempool_count(g_bdev_mgr.bdev_io_pool) != g_bdev_opts.bdev_io_pool_size) {
+			SPDK_ERRLOG("bdev IO pool count is %zu but should be %u\n",
+				    spdk_mempool_count(g_bdev_mgr.bdev_io_pool),
+				    g_bdev_opts.bdev_io_pool_size);
+		}
 	}
 
-	if (spdk_mempool_count(g_bdev_mgr.buf_small_pool) != BUF_SMALL_POOL_SIZE) {
-		SPDK_ERRLOG("Small buffer pool count is %zu but should be %u\n",
-			    spdk_mempool_count(g_bdev_mgr.buf_small_pool),
-			    BUF_SMALL_POOL_SIZE);
-		assert(false);
+	if (g_bdev_mgr.buf_small_pool) {
+		if (spdk_mempool_count(g_bdev_mgr.buf_small_pool) != BUF_SMALL_POOL_SIZE) {
+			SPDK_ERRLOG("Small buffer pool count is %zu but should be %u\n",
+				    spdk_mempool_count(g_bdev_mgr.buf_small_pool),
+				    BUF_SMALL_POOL_SIZE);
+			assert(false);
+		}
 	}
 
-	if (spdk_mempool_count(g_bdev_mgr.buf_large_pool) != BUF_LARGE_POOL_SIZE) {
-		SPDK_ERRLOG("Large buffer pool count is %zu but should be %u\n",
-			    spdk_mempool_count(g_bdev_mgr.buf_large_pool),
-			    BUF_LARGE_POOL_SIZE);
-		assert(false);
+	if (g_bdev_mgr.buf_large_pool) {
+		if (spdk_mempool_count(g_bdev_mgr.buf_large_pool) != BUF_LARGE_POOL_SIZE) {
+			SPDK_ERRLOG("Large buffer pool count is %zu but should be %u\n",
+				    spdk_mempool_count(g_bdev_mgr.buf_large_pool),
+				    BUF_LARGE_POOL_SIZE);
+			assert(false);
+		}
 	}
 
 	spdk_mempool_free(g_bdev_mgr.bdev_io_pool);
