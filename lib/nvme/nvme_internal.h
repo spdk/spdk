@@ -355,6 +355,11 @@ enum nvme_qpair_state {
 	NVME_QPAIR_ENABLED,
 };
 
+struct nvme_transport {
+	struct spdk_nvme_transport_ops	ops;
+	TAILQ_ENTRY(nvme_transport)		link;
+};
+
 struct spdk_nvme_qpair {
 	struct spdk_nvme_ctrlr		*ctrlr;
 
@@ -397,6 +402,8 @@ struct spdk_nvme_qpair {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
 	void				*req_buf;
+
+	struct nvme_transport		*transport;
 
 	uint8_t				transport_failure_reason: 2;
 };
@@ -631,6 +638,8 @@ struct spdk_nvme_ctrlr {
 	struct spdk_nvme_ns		*ns;
 
 	struct spdk_nvme_transport_id	trid;
+
+	struct nvme_transport		*transport;
 
 	uint32_t			num_ns;
 
