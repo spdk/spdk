@@ -1672,7 +1672,6 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	tqpair->num_entries = qsize;
 	qpair = &tqpair->qpair;
 	tqpair->recv_pdu.hdr = &tqpair->recv_pdu.hdr_mem;
-
 	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests);
 	if (rc != 0) {
 		free(tqpair);
