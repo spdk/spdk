@@ -1117,6 +1117,8 @@ bool	nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl);
 struct spdk_nvme_ctrlr *spdk_nvme_get_ctrlr_by_trid_unsafe(
 	const struct spdk_nvme_transport_id *trid);
 
+const struct nvme_transport *nvme_get_transport(const char *transport_name);
+
 /* Transport specific functions */
 #define DECLARE_TRANSPORT(name) \
 	struct spdk_nvme_ctrlr *nvme_ ## name ## _ctrlr_construct(const struct spdk_nvme_transport_id *trid, const struct spdk_nvme_ctrlr_opts *opts, \
