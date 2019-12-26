@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ccccd28_dc9a3cce",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-26T14:33:04Z",
+      "side": 1,
+      "message": "These are spec defined values ad it could get messy if another transport is added to the spec. Please see my comment on nvme_spec.h",
+      "revId": "5b03a3b57dac09690de54681d35ab50b88799783",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5fcf951b_428faac8",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-26T14:33:04Z",
+      "side": 1,
+      "message": "This enum and the corresponding one in nvme.h are built based on spec compliant values. It\u0027s probably best to avoid setting this value here in case new transports are added in a different order. I have a patch series out that aims to enable pluggable NVMe-oF transports that aren\u0027t necessarily in the spec. It switches to using string comparison instead of coding in new enum values for non-spec transports.\nThe only real change to your muser code would be to add a name field to the ops structure and it would allow you to avoid modifying this enum.\nThe head of my series is here. https://review.gerrithub.io/c/spdk/spdk/+/477504.",
+      "revId": "5b03a3b57dac09690de54681d35ab50b88799783",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
