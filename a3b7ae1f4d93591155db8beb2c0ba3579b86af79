@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "490d4d50_28d5fc2a",
+        "filename": "lib/vhost/rte_vhost_compat.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-26T05:20:29Z",
+      "side": 1,
+      "message": "Are you saying this change need to be made to the DPDK rte_vhost upstream?",
+      "range": {
+        "startLine": 375,
+        "startChar": 1,
+        "endLine": 375,
+        "endChar": 31
+      },
+      "revId": "a3b7ae1f4d93591155db8beb2c0ba3579b86af79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
