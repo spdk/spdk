@@ -1576,6 +1576,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	rqpair->delay_cmd_submit = delay_cmd_submit;
 
 	qpair = &rqpair->qpair;
+	qpair->transport = ctrlr->transport;
 
 	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests);
 	if (rc != 0) {
@@ -1717,6 +1718,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 	rctrlr->ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	spdk_nvme_transport_id_parse_trstring(rctrlr->ctrlr.trid.trstring,
 					      spdk_nvme_transport_id_trtype_str(SPDK_NVME_TRANSPORT_RDMA));
+	rctrlr->ctrlr.transport = nvme_get_transport(rctrlr->ctrlr.trid.trstring);
 	rctrlr->ctrlr.opts = *opts;
 	memcpy(&rctrlr->ctrlr.trid, trid, sizeof(rctrlr->ctrlr.trid));
 

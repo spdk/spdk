@@ -1671,6 +1671,7 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 
 	tqpair->num_entries = qsize;
 	qpair = &tqpair->qpair;
+	qpair->transport = ctrlr->transport;
 	tqpair->recv_pdu.hdr = &tqpair->recv_pdu.hdr_mem;
 
 	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests);
@@ -1720,6 +1721,7 @@ struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_transpor
 	tctrlr->ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_TCP;
 	spdk_nvme_transport_id_parse_trstring(tctrlr->ctrlr.trid.trstring,
 					      spdk_nvme_transport_id_trtype_str(SPDK_NVME_TRANSPORT_TCP));
+	tctrlr->ctrlr.transport = nvme_get_transport(tctrlr->ctrlr.trid.trstring);
 	tctrlr->ctrlr.opts = *opts;
 	tctrlr->ctrlr.trid = *trid;
 
