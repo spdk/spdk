@@ -370,6 +370,8 @@ ioat_channel_destruct(struct spdk_ioat_chan *ioat)
 		spdk_free((void *)ioat->comp_update);
 		ioat->comp_update = NULL;
 	}
+
+	spdk_pci_device_detach(ioat->device);
 }
 
 static int
