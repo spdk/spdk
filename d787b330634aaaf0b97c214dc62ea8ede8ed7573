@@ -46,6 +46,30 @@
       "revId": "d787b330634aaaf0b97c214dc62ea8ede8ed7573",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c05d44cd_e95befd0",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-12-26T02:10:38Z",
+      "side": 1,
+      "message": "Oops, so sorry, I saw the other way around...\nIf reading vhost is more comfortable, I will not do such mistake.\nAnd I knew the reason why rte_vhost_resubmit_* have not been used unintentionally.",
+      "parentUuid": "cf928f5c_ba3a6586",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 0
+      },
+      "revId": "d787b330634aaaf0b97c214dc62ea8ede8ed7573",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
