@@ -2161,3 +2161,36 @@ spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
 {
 	g_nvme_hooks = *hooks;
 }
+
+const struct spdk_nvme_transport_ops rdma_ops = {
+	.name = "RDMA",
+	.type = SPDK_NVME_TRANSPORT_RDMA,
+	.ctrlr_construct = nvme_rdma_ctrlr_construct,
+	.ctrlr_scan = nvme_fabric_ctrlr_scan,
+	.ctrlr_destruct = nvme_rdma_ctrlr_destruct,
+	.ctrlr_enable = nvme_rdma_ctrlr_enable,
+
+	.ctrlr_set_reg_4 = nvme_fabric_ctrlr_set_reg_4,
+	.ctrlr_set_reg_8 = nvme_fabric_ctrlr_set_reg_8,
+	.ctrlr_get_reg_4 = nvme_fabric_ctrlr_get_reg_4,
+	.ctrlr_get_reg_8 = nvme_fabric_ctrlr_get_reg_8,
+
+	.ctrlr_get_max_xfer_size = nvme_rdma_ctrlr_get_max_xfer_size,
+	.ctrlr_get_max_sges = nvme_rdma_ctrlr_get_max_sges,
+
+	.ctrlr_alloc_cmb_io_buffer = nvme_rdma_ctrlr_alloc_cmb_io_buffer,
+	.ctrlr_free_cmb_io_buffer = nvme_rdma_ctrlr_free_cmb_io_buffer,
+
+	.ctrlr_create_io_qpair = nvme_rdma_ctrlr_create_io_qpair,
+	.ctrlr_delete_io_qpair = nvme_rdma_ctrlr_delete_io_qpair,
+	.ctrlr_connect_qpair = nvme_rdma_ctrlr_connect_qpair,
+	.ctrlr_disconnect_qpair = nvme_rdma_ctrlr_disconnect_qpair,
+
+	.qpair_abort_reqs = nvme_rdma_qpair_abort_reqs,
+	.qpair_reset = nvme_rdma_qpair_reset,
+	.qpair_submit_request = nvme_rdma_qpair_submit_request,
+	.qpair_process_completions = nvme_rdma_qpair_process_completions,
+	.admin_qpair_abort_aers = nvme_rdma_admin_qpair_abort_aers,
+};
+
+SPDK_NVME_TRANSPORT_REGISTER(rdma, &rdma_ops);

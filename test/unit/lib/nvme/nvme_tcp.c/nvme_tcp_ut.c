@@ -42,16 +42,8 @@
 
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME);
 
-DEFINE_STUB(nvme_request_check_timeout, int, (struct nvme_request *req, uint16_t cid,
-		struct spdk_nvme_ctrlr_process *active_proc, uint64_t now_tick), 1);
-
 DEFINE_STUB(nvme_qpair_submit_request,
 	    int, (struct spdk_nvme_qpair *qpair, struct nvme_request *req), 0);
-
-DEFINE_STUB(spdk_nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
-	    (struct spdk_nvme_ctrlr *ctrlr), (struct spdk_nvme_ctrlr_process *)(uintptr_t)0x1);
-
-DEFINE_STUB_V(nvme_ctrlr_disconnect_qpair, (struct spdk_nvme_qpair *qpair));
 
 static void
 test_nvme_tcp_pdu_set_data_buf(void)

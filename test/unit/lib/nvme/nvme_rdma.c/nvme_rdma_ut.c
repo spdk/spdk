@@ -40,9 +40,15 @@ SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 
 DEFINE_STUB(spdk_mem_map_set_translation, int, (struct spdk_mem_map *map, uint64_t vaddr,
 		uint64_t size, uint64_t translation), 0);
-
 DEFINE_STUB(spdk_mem_map_clear_translation, int, (struct spdk_mem_map *map, uint64_t vaddr,
 		uint64_t size), 0);
+
+DEFINE_STUB(spdk_mem_map_alloc, struct spdk_mem_map *, (uint64_t default_translation,
+		const struct spdk_mem_map_ops *ops, void *cb_ctx), NULL);
+DEFINE_STUB_V(spdk_mem_map_free, (struct spdk_mem_map **pmap));
+
+DEFINE_STUB_V(nvme_transport_ctrlr_disconnect_qpair, (struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair));
 
 /* used to mock out having to split an SGL over a memory region */
 uint64_t g_mr_size;
