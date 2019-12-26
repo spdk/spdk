@@ -74,7 +74,7 @@ static int g_show_performance_real_time = 0;
 static uint64_t g_show_performance_period_in_usec = 1000000;
 static uint64_t g_show_performance_period_num = 0;
 static uint64_t g_show_performance_ema_period = 0;
-static bool g_run_failed = false;
+static int g_run_rc = 0;
 static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
 static bool g_zcopy = true;
@@ -449,7 +449,6 @@ static void
 end_run(void *arg1, void *arg2)
 {
 	struct io_target *target = arg1;
-	int rc = 0;
 
 	spdk_bdev_close(target->bdev_desc);
 	if (--g_target_count == 0) {
@@ -463,21 +462,17 @@ end_run(void *arg1, void *arg2)
 		}
 
 		if (g_time_in_usec) {
-			if (!g_run_failed) {
+			if (!g_run_rc) {
 				performance_dump(g_time_in_usec, 0);
 			}
 		} else {
 			printf("Test time less than one microsecond, no performance data will be shown\n");
 		}
 
-		if (g_run_failed) {
-			rc = -1;
-		}
-
 		if (g_request && !g_shutdown) {
-			rpc_perform_tests_cb(rc);
+			rpc_perform_tests_cb(g_run_rc);
 		} else {
-			bdevperf_fini(rc);
+			bdevperf_fini(g_run_rc);
 		}
 	}
 }
@@ -509,7 +504,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	if (!success) {
 		if (!g_reset && !g_continue_on_failure) {
 			target->is_draining = true;
-			g_run_failed = true;
+			g_run_rc = -1;
 			printf("task offset: %lu on target bdev=%s fails\n",
 			       task->offset_blocks, target->name);
 		}
@@ -524,7 +519,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 				 target->io_size_blocks, md_check)) {
 			printf("Buffer mismatch! Disk Offset: %lu\n", task->offset_blocks);
 			target->is_draining = true;
-			g_run_failed = true;
+			g_run_rc = -1;
 		}
 	}
 
@@ -579,7 +574,7 @@ bdevperf_verify_submit_read(void *cb_arg)
 	} else if (rc != 0) {
 		printf("Failed to submit read: %d\n", rc);
 		target->is_draining = true;
-		g_run_failed = true;
+		g_run_rc = rc;
 	}
 }
 
@@ -725,7 +720,7 @@ bdevperf_submit_task(void *arg)
 	} else if (rc != 0) {
 		printf("Failed to submit bdev_io: %d\n", rc);
 		target->is_draining = true;
-		g_run_failed = true;
+		g_run_rc = rc;
 		return;
 	}
 
@@ -742,7 +737,7 @@ bdevperf_zcopy_get_buf_complete(struct spdk_bdev_io *bdev_io, bool success, void
 
 	if (!success) {
 		target->is_draining = true;
-		g_run_failed = true;
+		g_run_rc = -1;
 		return;
 	}
 
@@ -893,7 +888,7 @@ reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	if (!success) {
 		printf("Reset blockdev=%s failed\n", spdk_bdev_get_name(target->bdev));
 		target->is_draining = true;
-		g_run_failed = true;
+		g_run_rc = -1;
 	}
 
 	TAILQ_INSERT_TAIL(&target->task_list, task, link);
@@ -919,7 +914,7 @@ reset_target(void *arg)
 	if (rc) {
 		printf("Reset failed: %d\n", rc);
 		target->is_draining = true;
-		g_run_failed = true;
+		g_run_rc = -1;
 	}
 
 	return -1;
@@ -939,7 +934,7 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 			printf("Skip this device (%s) as IO channel not setup.\n",
 			       spdk_bdev_get_name(target->bdev));
 			g_target_count--;
-			g_run_failed = true;
+			g_run_rc = -1;
 			spdk_bdev_close(target->bdev_desc);
 			continue;
 		}
@@ -1349,7 +1344,7 @@ spdk_bdevperf_shutdown_cb(void)
 	g_shutdown = true;
 
 	if (g_target_count == 0) {
-		bdevperf_fini(0);
+		bdevperf_fini(g_run_rc);
 		return;
 	}
 
@@ -1495,10 +1490,7 @@ main(int argc, char **argv)
 	}
 
 	rc = spdk_app_start(&opts, bdevperf_run, NULL);
-	if (rc) {
-		g_run_failed = true;
-	}
 
 	spdk_app_fini();
-	return g_run_failed;
+	return rc;
 }
