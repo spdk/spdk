@@ -1574,9 +1574,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 
 	rqpair->num_entries = qsize;
 	rqpair->delay_cmd_submit = delay_cmd_submit;
-
 	qpair = &rqpair->qpair;
-
 	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests);
 	if (rc != 0) {
 		return NULL;
