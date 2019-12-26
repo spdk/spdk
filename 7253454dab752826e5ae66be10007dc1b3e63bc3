@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9be88d1f_86520858",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-26T23:02:50Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "509eec50_265dc02c",
+      "revId": "7253454dab752826e5ae66be10007dc1b3e63bc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3a7c3cc_9d43efb3",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-12-19T16:54:11Z",
       "side": 1,
       "message": "it would be nice to avoid an almost exact duplicate of the _bdev_io_put_buf() code here\n\nhave you also thought about having aux_md_buf?  I know in your crypto case you may not need an aux buffer for separate metadata, but I don\u0027t think we should necessarily exclude that case\n\nand if we do allow that case, then I think it\u0027s easier to reuse code here",
+      "revId": "7253454dab752826e5ae66be10007dc1b3e63bc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ec6618c_ccc64bea",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-12-26T23:02:50Z",
+      "side": 1,
+      "message": "Well its not an *exact* duplicate and conditionals were needed in multiple places making it sorta ugly so I did it this way. Let me get it working with the new API and I\u0027ll take another go at it.  Thanks.  Oh, on the md buffer, yeah I punted on that since the \u0027aux\u0027 buffer is just generic. We can always add one later but w/o any need for it now it seemed odd.",
+      "parentUuid": "c3a7c3cc_9d43efb3",
       "revId": "7253454dab752826e5ae66be10007dc1b3e63bc3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
