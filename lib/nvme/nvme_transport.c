@@ -100,14 +100,26 @@ spdk_nvme_transport_available(const struct spdk_nvme_transport_id *transport_id)
 TAILQ_HEAD(nvme_transport_list, nvme_transport)
 g_spdk_nvme_transports = TAILQ_HEAD_INITIALIZER(g_spdk_nvme_transports);
 
+inline const struct nvme_transport *
+nvme_get_transport(const char *transport_name)
+{
+	struct nvme_transport *registered_transport;
+	TAILQ_FOREACH(registered_transport, &g_spdk_nvme_transports, link) {
+		if (strcasecmp(transport_name, registered_transport->ops.name) == 0) {
+			return registered_transport;
+		}
+	}
+
+	return NULL;
+}
+
 void spdk_nvme_transport_add(const struct spdk_nvme_transport_ops *ops)
 {
-	struct nvme_transport *registered_transport, *new_transport;
-	TAILQ_FOREACH(registered_transport, &g_spdk_nvme_transports, link) {
-		if (strcasecmp(ops->name, registered_transport->ops.name) == 0) {
-			SPDK_ERRLOG("Double registering NVMe transport %s is prohibited.\n", ops->name);
-			assert(false);
-		}
+	struct nvme_transport *new_transport;
+
+	if (nvme_get_transport(ops->name)) {
+		SPDK_ERRLOG("Double registering NVMe transport %s is prohibited.\n", ops->name);
+		assert(false);
 	}
 
 	new_transport = calloc(1, sizeof(*new_transport));
