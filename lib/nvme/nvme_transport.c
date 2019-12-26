@@ -36,6 +36,7 @@
  */
 
 #include "nvme_internal.h"
+#include "spdk/queue.h"
 
 #ifdef DEBUG
 static __attribute__((noreturn)) void
@@ -94,6 +95,29 @@ spdk_nvme_transport_available(const struct spdk_nvme_transport_id *transport_id)
 	}
 
 	return false;
+}
+
+TAILQ_HEAD(nvme_transport_list, nvme_transport)
+g_spdk_nvme_transports = TAILQ_HEAD_INITIALIZER(g_spdk_nvme_transports);
+
+void spdk_nvme_transport_add(const struct spdk_nvme_transport_ops *ops)
+{
+	struct nvme_transport *registered_transport, *new_transport;
+	TAILQ_FOREACH(registered_transport, &g_spdk_nvme_transports, link) {
+		if (strcasecmp(ops->name, registered_transport->ops.name) == 0) {
+			SPDK_ERRLOG("Double registering NVMe transport %s is prohibited.\n", ops->name);
+			assert(false);
+		}
+	}
+
+	new_transport = calloc(1, sizeof(*new_transport));
+	if (new_transport == NULL) {
+		SPDK_ERRLOG("Unable to allocate memory to register new NVMe transport.\n");
+		assert(false);
+	}
+
+	new_transport->ops = *ops;
+	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, new_transport, link);
 }
 
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
