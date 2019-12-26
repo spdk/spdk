@@ -40,6 +40,64 @@
 
 #include "nvme/nvme_pcie.c"
 
+pid_t g_spdk_nvme_pid;
+DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
+DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
+
+DEFINE_STUB(nvme_get_quirks, uint64_t, (const struct spdk_pci_id *id), 0);
+
+DEFINE_STUB(spdk_nvme_wait_for_completion, int,
+	    (struct spdk_nvme_qpair *qpair,
+	     struct nvme_completion_poll_status *status), 0);
+DEFINE_STUB_V(nvme_completion_poll_cb, (void *arg, const struct spdk_nvme_cpl *cpl));
+DEFINE_STUB(nvme_request_check_timeout, int, (struct nvme_request *req, uint16_t cid,
+		struct spdk_nvme_ctrlr_process *active_proc, uint64_t now_tick), 0);
+
+DEFINE_STUB(nvme_ctrlr_submit_admin_request, int, (struct spdk_nvme_ctrlr *ctrlr,
+		struct nvme_request *req), 0);
+DEFINE_STUB_V(nvme_ctrlr_destruct_finish, (struct spdk_nvme_ctrlr *ctrlr));
+DEFINE_STUB_V(nvme_ctrlr_free_processes, (struct spdk_nvme_ctrlr *ctrlr));
+DEFINE_STUB(nvme_ctrlr_proc_get_devhandle, struct spdk_pci_device *,
+	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
+DEFINE_STUB(nvme_ctrlr_construct, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
+DEFINE_STUB_V(nvme_ctrlr_destruct, (struct spdk_nvme_ctrlr *ctrlr));
+DEFINE_STUB_V(nvme_ctrlr_init_cap, (struct spdk_nvme_ctrlr *ctrlr,
+				    const union spdk_nvme_cap_register *cap,
+				    const union spdk_nvme_vs_register *vs));
+DEFINE_STUB(nvme_ctrlr_get_vs, int, (struct spdk_nvme_ctrlr *ctrlr,
+				     union spdk_nvme_vs_register *vs), 0);
+DEFINE_STUB(nvme_ctrlr_get_cap, int, (struct spdk_nvme_ctrlr *ctrlr,
+				      union spdk_nvme_cap_register *cap), 0);
+
+DEFINE_STUB(nvme_qpair_init, int, (struct spdk_nvme_qpair *qpair, uint16_t id,
+				   struct spdk_nvme_ctrlr *ctrlr,
+				   enum spdk_nvme_qprio qprio,
+				   uint32_t num_requests), 0);
+DEFINE_STUB_V(nvme_qpair_deinit, (struct spdk_nvme_qpair *qpair));
+
+DEFINE_STUB(spdk_pci_device_map_bar, int, (struct spdk_pci_device *dev, uint32_t bar,
+		void **mapped_addr, uint64_t *phys_addr, uint64_t *size), 0);
+DEFINE_STUB(spdk_pci_device_unmap_bar, int, (struct spdk_pci_device *dev, uint32_t bar, void *addr),
+	    0);
+DEFINE_STUB(spdk_pci_device_attach, int, (struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb,
+		void *enum_ctx, struct spdk_pci_addr *pci_address), 0);
+DEFINE_STUB(spdk_pci_device_claim, int, (struct spdk_pci_device *dev), 0);
+DEFINE_STUB_V(spdk_pci_device_unclaim, (struct spdk_pci_device *dev));
+DEFINE_STUB_V(spdk_pci_device_detach, (struct spdk_pci_device *device));
+DEFINE_STUB(spdk_pci_device_cfg_write32, int, (struct spdk_pci_device *dev, uint32_t value,
+		uint32_t offset), 0);
+DEFINE_STUB(spdk_pci_device_cfg_read32, int, (struct spdk_pci_device *dev, uint32_t *value,
+		uint32_t offset), 0);
+DEFINE_STUB(spdk_pci_device_get_id, struct spdk_pci_id, (struct spdk_pci_device *dev), {0})
+
+DEFINE_STUB(spdk_uevent_connect, int, (void), 0);
+
+DEFINE_STUB_V(spdk_nvme_transport_add, (const struct spdk_nvme_transport_ops *ops));
+DEFINE_STUB(nvme_transport_ctrlr_connect_qpair, int, (struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair), 0);
+
+
+
 const char *
 spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
 {
