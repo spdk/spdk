@@ -1622,6 +1622,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 	pqpair->flags.delay_cmd_submit = opts->delay_cmd_submit;
 
 	qpair = &pqpair->qpair;
+	qpair->transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	rc = nvme_qpair_init(qpair, qid, ctrlr, opts->qprio, opts->io_queue_requests);
 	if (rc != 0) {
