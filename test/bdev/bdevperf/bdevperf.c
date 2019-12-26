@@ -469,7 +469,7 @@ end_run(void *arg1, void *arg2)
 		}
 
 		if (g_run_failed) {
-			rc = 1;
+			rc = -1;
 		}
 
 		if (g_request && !g_shutdown) {
@@ -1306,7 +1306,7 @@ bdevperf_run(void *arg1)
 
 	rc = blockdev_heads_init();
 	if (rc) {
-		spdk_app_stop(1);
+		spdk_app_stop(rc);
 		return;
 	}
 
@@ -1321,7 +1321,7 @@ bdevperf_run(void *arg1)
 
 	rc = bdevperf_test();
 	if (rc) {
-		bdevperf_fini(1);
+		bdevperf_fini(rc);
 		return;
 	}
 }
