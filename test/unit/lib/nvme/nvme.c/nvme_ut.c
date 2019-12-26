@@ -44,8 +44,6 @@
 DEFINE_STUB_V(nvme_ctrlr_proc_get_ref, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB_V(nvme_ctrlr_proc_put_ref, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB_V(nvme_ctrlr_fail, (struct spdk_nvme_ctrlr *ctrlr, bool hotremove));
-DEFINE_STUB(spdk_nvme_transport_available, bool,
-	    (const struct spdk_nvme_transport_id *transport_id), true);
 /* return anything non-NULL, this won't be deferenced anywhere in this test */
 DEFINE_STUB(spdk_nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
 	    (struct spdk_nvme_ctrlr *ctrlr), (struct spdk_nvme_ctrlr_process *)(uintptr_t)0x1);
@@ -61,6 +59,9 @@ DEFINE_STUB(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr *,
 	     const struct spdk_nvme_ctrlr_opts *opts,
 	     void *devhandle), NULL);
 DEFINE_STUB_V(nvme_io_msg_ctrlr_detach, (struct spdk_nvme_ctrlr *ctrlr));
+DEFINE_STUB(spdk_nvme_transport_available, bool,
+        (const struct spdk_nvme_transport_id *transport_id), true);
+ 
 
 static bool ut_destruct_called = false;
 void

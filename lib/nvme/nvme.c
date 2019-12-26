@@ -559,8 +559,8 @@ spdk_nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
 	if (!spdk_nvme_transport_available(&probe_ctx->trid)) {
-		SPDK_ERRLOG("NVMe trtype %u not available\n", probe_ctx->trid.trtype);
-		return -1;
+			SPDK_ERRLOG("NVMe trtype %u not available\n", probe_ctx->trid.trtype);
+			return -1;
 	}
 
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
