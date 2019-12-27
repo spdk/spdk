@@ -66,7 +66,9 @@ DEFINE_STUB(spdk_nvmf_transport_stop_listen,
 
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
-			   const struct spdk_nvme_transport_id *trid)
+			   const struct spdk_nvme_transport_id *trid,
+			   spdk_nvmf_tgt_listen_done_fn cb_fn,
+			   void *cb_arg)
 {
 	return 0;
 }
