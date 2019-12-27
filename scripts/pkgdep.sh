@@ -96,7 +96,7 @@ elif [ -f /etc/debian_version ]; then
 	# Additional dependencies for ISA-L used in compression
 	apt-get install -y autoconf automake libtool help2man
 	# Additional dependencies for FUSE and CUSE
-	apt-get install -y libfuse3-dev
+	apt-get install -y libfuse-dev
 	# Additional dependecies for nvmf performance test script
 	apt-get install -y python3-paramiko
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
