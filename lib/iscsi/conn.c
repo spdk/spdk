@@ -1660,12 +1660,80 @@ iscsi_conn_full_feature_migrate(void *arg)
 	iscsi_poll_group_add_conn(conn->pg, conn);
 }
 
-static struct spdk_iscsi_poll_group *g_next_pg = NULL;
+static int
+_schedule_connection(struct spdk_iscsi_poll_group_ctx *pg_ctx,
+		     struct spdk_iscsi_conn *conn)
+{
+	struct spdk_iscsi_scheduled_conn *sch_conn;
+
+	sch_conn = calloc(1, sizeof(*sch_conn));
+	if (sch_conn == NULL) {
+		return -ENOMEM;
+	}
+
+	sch_conn->conn = conn;
+
+	TAILQ_INSERT_TAIL(&pg_ctx->initial_connections, sch_conn, tailq);
+	return 0;
+}
+
+static void
+_init_conn_thread(void *ctx)
+{
+	struct spdk_io_channel *ch;
+	struct spdk_iscsi_poll_group *pg;
+	struct spdk_iscsi_scheduled_conn *sch_conn;
+	struct spdk_iscsi_poll_group_ctx *pg_ctx = ctx;
+
+	ch = spdk_get_io_channel(&g_spdk_iscsi);
+	pg = spdk_io_channel_get_ctx(ch);
+
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	TAILQ_INSERT_TAIL(&g_spdk_iscsi.poll_group_head, pg, link);
+	pg_ctx->pg = pg;
+	TAILQ_FOREACH(sch_conn, &pg_ctx->initial_connections, tailq) {
+		sch_conn->conn->pg = pg;
+		iscsi_conn_full_feature_migrate(sch_conn->conn);
+	}
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+}
+
+static int
+_schedule_new(struct spdk_iscsi_conn *conn)
+{
+	struct spdk_iscsi_poll_group_ctx *pg_ctx;
+	char thread_name[32];
+	int rc;
+
+	pg_ctx = calloc(1, sizeof(*pg_ctx));
+	if (pg_ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	TAILQ_INIT(&pg_ctx->initial_connections);
+
+	rc = _schedule_connection(pg_ctx, conn);
+	if (rc) {
+		free(pg_ctx);
+		return rc;
+	}
+
+	snprintf(thread_name, sizeof(thread_name), "iscsi_conn_%d", conn->id);
+	pg_ctx->thread = spdk_thread_create(thread_name, spdk_app_get_core_mask());
+	if (pg_ctx->thread == NULL) {
+		free(TAILQ_FIRST(&pg_ctx->initial_connections));
+		free(pg_ctx);
+		return -ENOMEM;
+	}
+
+	spdk_thread_send_msg(pg_ctx->thread, _init_conn_thread, pg_ctx);
+
+	return 0;
+}
 
 void
 spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group	*pg;
 	struct spdk_iscsi_tgt_node	*target;
 
 	if (conn->sess->session_type != SESSION_TYPE_NORMAL) {
@@ -1675,45 +1743,24 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 	}
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 
-	target = conn->sess->target;
-	pthread_mutex_lock(&target->mutex);
-	target->num_active_conns++;
-	if (target->num_active_conns == 1) {
-		/**
-		 * This is the only active connection for this target node.
-		 *  Pick a poll group using round-robin.
-		 */
-		if (g_next_pg == NULL) {
-			g_next_pg = TAILQ_FIRST(&g_spdk_iscsi.poll_group_head);
-			assert(g_next_pg != NULL);
-		}
-
-		pg = g_next_pg;
-		g_next_pg = TAILQ_NEXT(g_next_pg, link);
-
-		/* Save the pg in the target node so it can be used for any other connections to this target node. */
-		target->pg = pg;
-	} else {
-		/**
-		 * There are other active connections for this target node.
-		 */
-		pg = target->pg;
-	}
-
-	pthread_mutex_unlock(&target->mutex);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-
-	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg)) ==
-	       spdk_get_thread());
-
 	/* Remove this connection from the previous poll group */
 	iscsi_poll_group_remove_conn(conn->pg, conn);
 
 	conn->last_nopin = spdk_get_ticks();
-	conn->pg = pg;
 
-	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(pg)),
-			     iscsi_conn_full_feature_migrate, conn);
+	target = conn->sess->target;
+	pthread_mutex_lock(&target->mutex);
+	target->num_active_conns++;
+	if (target->num_active_conns == 1) {
+		target->pg = NULL;
+		_schedule_new(conn);
+	} else {
+		conn->pg = target->pg;
+		_schedule_new(conn);
+	}
+
+	pthread_mutex_unlock(&target->mutex);
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }
 
 static int
