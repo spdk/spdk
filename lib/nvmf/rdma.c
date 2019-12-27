@@ -2622,7 +2622,9 @@ spdk_nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
 
 static int
 spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
-		      const struct spdk_nvme_transport_id *trid)
+		      const struct spdk_nvme_transport_id *trid,
+		      spdk_nvmf_tgt_listen_done_fn cb_fn,
+		      void *cb_arg)
 {
 	struct spdk_nvmf_rdma_transport	*rtransport;
 	struct spdk_nvmf_rdma_device	*device;
@@ -2680,9 +2682,9 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 			port_tmp->ref++;
 			freeaddrinfo(res);
 			free(port);
-			/* Already listening at this address */
-			pthread_mutex_unlock(&rtransport->lock);
-			return 0;
+			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Already listening on %s port %s\n",
+				      trid->traddr, trid->trsvcid);
+			goto success;
 		}
 	}
 
@@ -2744,8 +2746,10 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 	port->ref = 1;
 
 	TAILQ_INSERT_TAIL(&rtransport->ports, port, link);
-	pthread_mutex_unlock(&rtransport->lock);
 
+success:
+	pthread_mutex_unlock(&rtransport->lock);
+	cb_fn(cb_arg, 0);
 	return 0;
 }
 
