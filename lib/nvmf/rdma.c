@@ -2627,16 +2627,26 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 {
 	struct spdk_nvmf_rdma_transport	*rtransport;
 	struct spdk_nvmf_rdma_device	*device;
-	struct spdk_nvmf_rdma_port	*port_tmp, *port;
+	struct spdk_nvmf_rdma_port	*port;
 	struct addrinfo			*res;
 	struct addrinfo			hints;
 	int				family;
 	int				rc;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
+	assert(rtransport->event_channel != NULL);
+
+	pthread_mutex_lock(&rtransport->lock);
+	TAILQ_FOREACH(port, &rtransport->ports, link) {
+		if (spdk_nvme_transport_id_compare(&port->trid, trid) == 0) {
+			goto success;
+		}
+	}
 
 	port = calloc(1, sizeof(*port));
 	if (!port) {
+		SPDK_ERRLOG("Port allocation failed\n");
+		pthread_mutex_unlock(&rtransport->lock);
 		return -ENOMEM;
 	}
 
@@ -2658,6 +2668,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 	default:
 		SPDK_ERRLOG("Unhandled ADRFAM %d\n", port->trid.adrfam);
 		free(port);
+		pthread_mutex_unlock(&rtransport->lock);
 		return -EINVAL;
 	}
 
@@ -2671,20 +2682,8 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 	if (rc) {
 		SPDK_ERRLOG("getaddrinfo failed: %s (%d)\n", gai_strerror(rc), rc);
 		free(port);
+		pthread_mutex_unlock(&rtransport->lock);
 		return -EINVAL;
-	}
-
-	pthread_mutex_lock(&rtransport->lock);
-	assert(rtransport->event_channel != NULL);
-	TAILQ_FOREACH(port_tmp, &rtransport->ports, link) {
-		if (spdk_nvme_transport_id_compare(&port_tmp->trid, &port->trid) == 0) {
-			port_tmp->ref++;
-			freeaddrinfo(res);
-			free(port);
-			/* Already listening at this address */
-			pthread_mutex_unlock(&rtransport->lock);
-			return 0;
-		}
 	}
 
 	rc = rdma_create_id(rtransport->event_channel, &port->id, port, RDMA_PS_TCP);
@@ -2739,14 +2738,14 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		return -EINVAL;
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_RDMA, "*** NVMf Target Listening on %s port %d ***\n",
-		     port->trid.traddr, ntohs(rdma_get_src_port(port->id)));
-
-	port->ref = 1;
+	SPDK_NOTICELOG("*** NVMe/RDMA Target Listening on %s port %s ***\n",
+		       trid->traddr, trid->trsvcid);
 
 	TAILQ_INSERT_TAIL(&rtransport->ports, port, link);
-	pthread_mutex_unlock(&rtransport->lock);
 
+success:
+	port->ref++;
+	pthread_mutex_unlock(&rtransport->lock);
 	return 0;
 }
 

@@ -663,25 +663,17 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 	}
 
 	pthread_mutex_lock(&ttransport->lock);
-
 	port = _spdk_nvmf_tcp_find_port(ttransport, trid);
 	if (port) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Already listening on %s port %s\n",
-			      trid->traddr, trid->trsvcid);
-		port->ref++;
-		pthread_mutex_unlock(&ttransport->lock);
-		return 0;
+		goto success;
 	}
 
 	port = calloc(1, sizeof(*port));
 	if (!port) {
 		SPDK_ERRLOG("Port allocation failed\n");
-		free(port);
 		pthread_mutex_unlock(&ttransport->lock);
 		return -ENOMEM;
 	}
-
-	port->ref = 1;
 
 	if (_spdk_nvmf_tcp_canon_listen_trid(&port->trid, trid) != 0) {
 		SPDK_ERRLOG("Invalid traddr %s / trsvcid %s\n",
@@ -718,12 +710,14 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 		return -EINVAL;
 	}
 
-	SPDK_NOTICELOG("*** NVMe/TCP Target Listening on %s port %d ***\n",
-		       trid->traddr, trsvcid_int);
+	SPDK_NOTICELOG("*** NVMe/TCP Target Listening on %s port %s ***\n",
+		       trid->traddr, trid->trsvcid);
 
 	TAILQ_INSERT_TAIL(&ttransport->ports, port, link);
-	pthread_mutex_unlock(&ttransport->lock);
 
+success:
+	port->ref++;
+	pthread_mutex_unlock(&ttransport->lock);
 	return 0;
 }
 
