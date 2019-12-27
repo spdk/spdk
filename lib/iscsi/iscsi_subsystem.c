@@ -1208,27 +1208,11 @@ iscsi_poll_group_destroy(void *io_device, void *ctx_buf)
 }
 
 static void
-_iscsi_init_thread(void *ctx)
-{
-	struct spdk_io_channel *ch;
-	struct spdk_iscsi_poll_group *pg;
-
-	ch = spdk_get_io_channel(&g_spdk_iscsi);
-	pg = spdk_io_channel_get_ctx(ch);
-
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_INSERT_TAIL(&g_spdk_iscsi.poll_group_head, pg, link);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-}
-
-static void
 initialize_iscsi_poll_group(spdk_msg_fn cpl)
 {
 	spdk_io_device_register(&g_spdk_iscsi, iscsi_poll_group_create, iscsi_poll_group_destroy,
 				sizeof(struct spdk_iscsi_poll_group), "iscsi_tgt");
-
-	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(_iscsi_init_thread, NULL, cpl);
+	cpl(NULL);
 }
 
 static void
@@ -1374,6 +1358,26 @@ _iscsi_fini_dev_unreg(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
+_free_poll_group_ctx(struct spdk_iscsi_poll_group_ctx *pg_ctx)
+{
+	struct spdk_iscsi_scheduled_conn *sch_conn, *tmp;
+	struct spdk_iscsi_poll_group_ctx *ctx, *ctx_tmp;
+
+	TAILQ_FOREACH_SAFE(sch_conn, &pg_ctx->initial_connections, tailq, tmp) {
+		free(sch_conn);
+	}
+
+	/* Remove only if pg_ctx was added to global list */
+	TAILQ_FOREACH_SAFE(ctx, &g_spdk_iscsi.poll_group_ctx_head, tailq, ctx_tmp) {
+		if (ctx == pg_ctx) {
+			TAILQ_REMOVE(&g_spdk_iscsi.poll_group_ctx_head, ctx, tailq);
+		}
+	}
+
+	free(pg_ctx);
+}
+
+static void
 _iscsi_fini_thread(struct spdk_io_channel_iter *i)
 {
 	struct spdk_io_channel *ch;
@@ -1394,7 +1398,13 @@ _iscsi_fini_thread(struct spdk_io_channel_iter *i)
 void
 spdk_shutdown_iscsi_conns_done(void)
 {
+	struct spdk_iscsi_poll_group_ctx *pg_ctx, *ctx_tmp;
+
 	spdk_for_each_channel(&g_spdk_iscsi, _iscsi_fini_thread, NULL, _iscsi_fini_dev_unreg);
+
+	TAILQ_FOREACH_SAFE(pg_ctx, &g_spdk_iscsi.poll_group_ctx_head, tailq, ctx_tmp) {
+		_free_poll_group_ctx(pg_ctx);
+	}
 }
 
 void
