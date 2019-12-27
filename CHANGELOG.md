@@ -52,6 +52,16 @@ Added `blobfs_set_cache_size` RPC method to set cache size for blobstore filesys
 Add SockPriority option in [Transport] section, this can be used for NVMe-oF target
 on TCP transport to set sock priority for the incomming TCP connections.
 
+The NVMe-oF target now supports plugging out of tree NVMe-oF transports. In order
+to facilitate this feature, several small API changes have been made:
+
+The `spdk_nvme_transport_id` struct now contains a trstring member used to identify the transport.
+`spdk_nvmf_tgt_get_transport`, `spdk_nvmf_transport_opts_init`, and `spdk_nvmf_transport_create` all have been
+modified to take a string.
+A function table, `spdk_nvmf_transport_ops`, and macro, `SPDK_NVMF_TRANSPORT_REGISTER`, have been added which
+enable registering out of tree transports.
+
+
 ### util
 
 `spdk_pipe`, a new utility for buffering data from sockets or files for parsing
@@ -65,6 +75,14 @@ to allow reuse in other transports.
 Added RDMA WR batching to NVMf RDMA initiator. Send and receive WRs are chained together
 and posted with a single call to ibv_post_send(receive) in the next call to qpair completion
 processing function. Batching is controlled by 'delay_cmd_submit' qpair option.
+
+The NVMe-oF initiator now supports plugging out of tree NVMe-oF transports. In order
+to facilitate this feature, several small API changes have been made:
+
+The `spdk_nvme_transport_id` struct now contains a trstring member used to identify the transport.
+A new function, `spdk_nvme_transport_available_by_name`, has been added.
+A function table, `spdk_nvme_transport_ops`, and macro, `SPDK_NVME_TRANSPORT_REGISTER`, have been added which
+enable registering out of tree transports.
 
 ### rpc
 
