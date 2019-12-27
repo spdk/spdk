@@ -210,7 +210,7 @@ static const char *rdma_cm_event_str[] = {
 static LIST_HEAD(, spdk_nvme_rdma_mr_map) g_rdma_mr_maps = LIST_HEAD_INITIALIZER(&g_rdma_mr_maps);
 static pthread_mutex_t g_rdma_mr_maps_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static int nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair);
+static int nvme_rdma_qpair_destroy(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
 
 static inline struct nvme_rdma_qpair *
 nvme_rdma_qpair(struct spdk_nvme_qpair *qpair)
@@ -1073,17 +1073,17 @@ nvme_rdma_unregister_mem(struct nvme_rdma_qpair *rqpair)
 }
 
 static int
-nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
+nvme_rdma_qpair_connect(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct sockaddr_storage dst_addr;
 	struct sockaddr_storage src_addr;
 	bool src_addr_specified;
 	int rc;
-	struct spdk_nvme_ctrlr *ctrlr;
 	struct nvme_rdma_ctrlr *rctrlr;
+	struct nvme_rdma_qpair *rqpair;
 	int family;
 
-	ctrlr = rqpair->qpair.ctrlr;
+	rqpair = nvme_rdma_qpair(qpair);
 	rctrlr = nvme_rdma_ctrlr(ctrlr);
 	assert(rctrlr != NULL);
 
@@ -1616,7 +1616,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	if (rc < 0) {
-		nvme_rdma_qpair_destroy(qpair);
+		nvme_rdma_qpair_destroy(ctrlr, qpair);
 		return NULL;
 	}
 
@@ -1624,7 +1624,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static void
-nvme_rdma_qpair_disconnect(struct spdk_nvme_qpair *qpair)
+nvme_rdma_qpair_disconnect(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
 
@@ -1653,14 +1653,14 @@ nvme_rdma_qpair_disconnect(struct spdk_nvme_qpair *qpair)
 }
 
 static int
-nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair)
+nvme_rdma_qpair_destroy(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_rdma_qpair *rqpair;
 
 	if (!qpair) {
 		return -1;
 	}
-	nvme_rdma_qpair_disconnect(qpair);
+	nvme_rdma_qpair_disconnect(ctrlr, qpair);
 	nvme_rdma_qpair_abort_reqs(qpair, 1);
 	nvme_qpair_deinit(qpair);
 
@@ -1687,14 +1687,6 @@ nvme_rdma_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
 	/* do nothing here */
 	return 0;
-}
-
-/* This function must only be called while holding g_spdk_nvme_driver->lock */
-int
-nvme_rdma_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
-		     bool direct_connect)
-{
-	return nvme_fabric_ctrlr_scan(probe_ctx, direct_connect);
 }
 
 struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
@@ -1817,7 +1809,7 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_rdma_cm_event_entry *entry;
 
 	if (ctrlr->adminq) {
-		nvme_rdma_qpair_destroy(ctrlr->adminq);
+		nvme_rdma_qpair_destroy(ctrlr, ctrlr->adminq);
 	}
 
 	STAILQ_FOREACH(entry, &rctrlr->pending_cm_events, link) {
@@ -1838,30 +1830,6 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	free(rctrlr);
 
 	return 0;
-}
-
-int
-nvme_rdma_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
-{
-	return nvme_fabric_ctrlr_set_reg_4(ctrlr, offset, value);
-}
-
-int
-nvme_rdma_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value)
-{
-	return nvme_fabric_ctrlr_set_reg_8(ctrlr, offset, value);
-}
-
-int
-nvme_rdma_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value)
-{
-	return nvme_fabric_ctrlr_get_reg_4(ctrlr, offset, value);
-}
-
-int
-nvme_rdma_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value)
-{
-	return nvme_fabric_ctrlr_get_reg_8(ctrlr, offset, value);
 }
 
 int
@@ -1892,24 +1860,6 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	wr->next = NULL;
 	nvme_rdma_trace_ibv_sge(wr->sg_list);
 	return nvme_rdma_qpair_queue_send_wr(rqpair, wr);
-}
-
-int
-nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
-{
-	return nvme_rdma_qpair_destroy(qpair);
-}
-
-int
-nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
-{
-	return nvme_rdma_qpair_connect(nvme_rdma_qpair(qpair));
-}
-
-void
-nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
-{
-	nvme_rdma_qpair_disconnect(qpair);
 }
 
 int
@@ -2089,7 +2039,7 @@ fail:
 	}
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
-		nvme_rdma_qpair_disconnect(qpair);
+		nvme_rdma_qpair_disconnect(qpair->ctrlr, qpair);
 	} else {
 		nvme_ctrlr_disconnect_qpair(qpair);
 	}
@@ -2184,9 +2134,9 @@ const struct spdk_nvme_transport_ops rdma_ops = {
 	.ctrlr_free_cmb_io_buffer = nvme_rdma_ctrlr_free_cmb_io_buffer,
 
 	.ctrlr_create_io_qpair = nvme_rdma_ctrlr_create_io_qpair,
-	.ctrlr_delete_io_qpair = nvme_rdma_ctrlr_delete_io_qpair,
-	.ctrlr_connect_qpair = nvme_rdma_ctrlr_connect_qpair,
-	.ctrlr_disconnect_qpair = nvme_rdma_ctrlr_disconnect_qpair,
+	.ctrlr_delete_io_qpair = nvme_rdma_qpair_destroy,
+	.ctrlr_connect_qpair = nvme_rdma_qpair_connect,
+	.ctrlr_disconnect_qpair = nvme_rdma_qpair_disconnect,
 
 	.qpair_abort_reqs = nvme_rdma_qpair_abort_reqs,
 	.qpair_reset = nvme_rdma_qpair_reset,
