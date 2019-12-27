@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "324fe45e_ea3419e5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T18:52:50Z",
+      "side": 1,
+      "message": "Do we need to be able to use two at the same time? Or do they just need to both be compiled in but then at initialization time the preferred order is set.",
+      "revId": "e2cf1804d4a7adb4a46e8c6095c90566a011211b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "262fd300_cfd94c46",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T18:52:50Z",
+      "side": 1,
+      "message": "Do we need to be able to select the order preference per IP, or just globally for the application? I think we really only need to do it for a given run of the application.",
+      "revId": "e2cf1804d4a7adb4a46e8c6095c90566a011211b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a9b4a03b_d4aa803c",
         "filename": "CHANGELOG.md",
         "patchSetId": 8
@@ -53,6 +87,23 @@
       "writtenOn": "2019-12-26T05:14:54Z",
       "side": 1,
       "message": "Maybe\n\n\"By using the specified sock implementation, create a socket, connect the socket to the specified ...\"",
+      "revId": "e2cf1804d4a7adb4a46e8c6095c90566a011211b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61f792fb_5219af88",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T18:52:50Z",
+      "side": 1,
+      "message": "How does the application know which implementations are available?",
       "revId": "e2cf1804d4a7adb4a46e8c6095c90566a011211b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
