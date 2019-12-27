@@ -122,6 +122,14 @@ struct spdk_nvmf_transport_poll_group_stat {
  */
 typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair, void *cb_arg);
 
+/**
+ * Function to be called once the target is listening.
+ *
+ * \param ctx Context argument passed to this function.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
+typedef void (*spdk_nvmf_tgt_listen_done_fn)(void *ctx, int status);
+
 struct spdk_nvmf_transport_ops {
 	/**
 	 * Transport type
@@ -148,7 +156,9 @@ struct spdk_nvmf_transport_ops {
 	  * provided. This may be called multiple times.
 	  */
 	int (*listen)(struct spdk_nvmf_transport *transport,
-		      const struct spdk_nvme_transport_id *trid);
+		      const struct spdk_nvme_transport_id *trid,
+		      spdk_nvmf_tgt_listen_done_fn cb_fn,
+		      void *cb_arg);
 
 	/**
 	  * Stop accepting new connections at the given address.
@@ -323,14 +333,6 @@ struct spdk_nvmf_tgt *spdk_nvmf_get_next_tgt(struct spdk_nvmf_tgt *prev);
  * \param tgt The NVMe-oF target
  */
 void spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt);
-
-/**
- * Function to be called once the target is listening.
- *
- * \param ctx Context argument passed to this function.
- * \param status 0 if it completed successfully, or negative errno if it failed.
- */
-typedef void (*spdk_nvmf_tgt_listen_done_fn)(void *ctx, int status);
 
 /**
  * Begin accepting new connections at the address provided.
@@ -1083,7 +1085,9 @@ void spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
  */
 
 int spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
-			       const struct spdk_nvme_transport_id *trid);
+			       const struct spdk_nvme_transport_id *trid,
+			       spdk_nvmf_tgt_listen_done_fn cb_fn,
+			       void *cb_arg);
 
 /**
  * Write NVMe-oF target's transport configurations into provided JSON context.

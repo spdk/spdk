@@ -780,6 +780,8 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 
 	TAILQ_INSERT_HEAD(&subsystem->listeners, listener, link);
 
+	subsystem->tgt->discovery_genctr++;
+
 	return 0;
 }
 
