@@ -79,6 +79,7 @@ static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
 static bool g_zcopy = true;
 static unsigned g_master_core;
+static struct spdk_thread *g_master_thread;
 static int g_time_in_sec;
 static bool g_mix_specified;
 static const char *g_target_bdev_name;
@@ -99,6 +100,7 @@ struct io_target {
 	struct spdk_io_channel		*ch;
 	struct io_target		*next;
 	unsigned			lcore;
+	unsigned			thread_idx;
 	uint64_t			io_completed;
 	uint64_t			prev_io_completed;
 	double				ema_io_per_second;
@@ -115,6 +117,7 @@ struct io_target {
 
 struct io_target **g_head;
 uint32_t *g_coremap;
+struct spdk_thread **g_thread;
 static uint32_t g_target_count = 0;
 
 /*
@@ -238,10 +241,45 @@ blockdev_heads_init(void)
 		return -1;
 	}
 
-	SPDK_ENV_FOREACH_CORE(i) {
-		g_coremap[idx++] = i;
+	g_thread = calloc(core_count, sizeof(*g_thread));
+	if (!g_thread) {
+		free(g_coremap);
+		free(g_head);
+		fprintf(stderr, "Cannot allocate thread array with size=%u\n",
+			core_count);
+		return -1;
 	}
 
+	SPDK_ENV_FOREACH_CORE(i) {
+		g_coremap[idx] = i;
+
+		char *thread_name = spdk_sprintf_alloc("bdevperf_thread_on_core_%d", i);
+		if (!thread_name) {
+			free(g_coremap);
+			free(g_head);
+			free(g_thread);
+			fprintf(stderr, "Cannot allocate thread %d name\n", idx);
+			return -1;
+		}
+
+		struct spdk_cpuset cpu_set;
+
+		spdk_cpuset_zero(&cpu_set);
+		spdk_cpuset_set_cpu(&cpu_set, i, true);
+
+		g_thread[idx] = spdk_thread_create(thread_name, &cpu_set);
+		if (!g_thread[idx]) {
+			free(g_coremap);
+			free(g_head);
+			free(g_thread);
+			fprintf(stderr, "Cannot allocate thread %d\n", idx);
+			return -1;
+		}
+
+		printf("allocated thread %s on core %d\n", thread_name, i);
+		free(thread_name);
+		idx ++;
+	}
 	return 0;
 }
 
@@ -289,6 +327,7 @@ blockdev_heads_destroy(void)
 	bdevperf_free_targets();
 	free(g_head);
 	free(g_coremap);
+	free(g_thread);
 }
 
 static void
@@ -384,6 +423,7 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	index = g_target_count % spdk_env_get_core_count();
 	target->next = g_head[index];
 	target->lcore = g_coremap[index];
+	target->thread_idx = index;
 	g_head[index] = target;
 	g_target_count++;
 
@@ -432,7 +472,7 @@ bdevperf_construct_targets(void)
 }
 
 static void
-end_run(void *arg1, void *arg2)
+end_run(void *arg1)
 {
 	struct io_target *target = arg1;
 	int rc = 0;
@@ -485,7 +525,6 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct io_target	*target;
 	struct bdevperf_task	*task = cb_arg;
-	struct spdk_event	*complete;
 	struct iovec		*iovs;
 	int			iovcnt;
 	bool			md_check;
@@ -534,8 +573,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	} else {
 		TAILQ_INSERT_TAIL(&target->task_list, task, link);
 		if (target->current_queue_depth == 0) {
-			complete = spdk_event_allocate(g_master_core, end_run, target, NULL);
-			spdk_event_call(complete);
+			spdk_thread_send_msg(g_master_thread, end_run, target);
 		}
 	}
 }
@@ -640,6 +678,8 @@ bdevperf_submit_task(void *arg)
 	struct spdk_io_channel	*ch;
 	spdk_bdev_io_completion_cb cb_fn;
 	int			rc = 0;
+
+	assert(spdk_get_thread() == g_thread[target->thread_idx]);
 
 	desc = target->bdev_desc;
 	ch = target->ch;
@@ -917,7 +957,7 @@ reset_target(void *arg)
 }
 
 static void
-bdevperf_submit_on_core(void *arg1, void *arg2)
+bdevperf_submit_on_core(void *arg1)
 {
 	struct io_target *target = arg1;
 
@@ -1268,7 +1308,6 @@ bdevperf_test(void)
 {
 	uint32_t i;
 	struct io_target *target;
-	struct spdk_event *event;
 	int rc;
 	uint32_t core_count = spdk_min(g_target_count, spdk_env_get_core_count());
 
@@ -1293,9 +1332,7 @@ bdevperf_test(void)
 		if (target == NULL) {
 			return -1;
 		}
-		event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
-					    target, NULL);
-		spdk_event_call(event);
+		spdk_thread_send_msg(g_thread[target->thread_idx], bdevperf_submit_on_core, target);
 	}
 	return 0;
 }
@@ -1312,6 +1349,7 @@ bdevperf_run(void *arg1)
 	}
 
 	g_master_core = spdk_env_get_current_core();
+	g_master_thread = spdk_get_thread();
 
 	if (g_wait_for_tests) {
 		/* Do not perform any tests until RPC is received */
@@ -1334,7 +1372,7 @@ bdevperf_run(void *arg1)
 }
 
 static void
-bdevperf_stop_io_on_core(void *arg1, void *arg2)
+bdevperf_stop_io_on_core(void *arg1)
 {
 	struct io_target *target = arg1;
 
@@ -1350,7 +1388,6 @@ spdk_bdevperf_shutdown_cb(void)
 {
 	uint32_t i;
 	struct io_target *target;
-	struct spdk_event *event;
 
 	g_shutdown = true;
 
@@ -1370,9 +1407,8 @@ spdk_bdevperf_shutdown_cb(void)
 		if (target == NULL) {
 			break;
 		}
-		event = spdk_event_allocate(target->lcore, bdevperf_stop_io_on_core,
-					    target, NULL);
-		spdk_event_call(event);
+
+		spdk_thread_send_msg(g_thread[target->thread_idx], bdevperf_stop_io_on_core, target);
 	}
 }
 
