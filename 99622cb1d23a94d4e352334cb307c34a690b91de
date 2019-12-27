@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3bb98223_60a8178f",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T17:59:40Z",
+      "side": 1,
+      "message": "This doesn\u0027t need to be a pointer - just make the whole structure a global.",
+      "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecc36334_31b6066b",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T17:59:40Z",
+      "side": 1,
+      "message": "Put some comments here describing why you\u0027re making this call.",
+      "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "105bb6f3_2afbef1e",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T17:59:40Z",
+      "side": 1,
+      "message": "Comments",
+      "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ded6d71_9aebe174",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T17:59:40Z",
+      "side": 1,
+      "message": "Instead of having multiple functions here (nvmf_tgt_init and nvmf_tgt_add_discovery_subsystem), can we just combine these three functions into one? If a function is only called in one place and it\u0027s relatively small, I find it easier to read the code if it\u0027s just inlined.",
+      "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df59fe8e_d33d2fd3",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T17:59:40Z",
+      "side": 1,
+      "message": "Please add comments around this call - this is documentation after all. Describe what a target is and why we\u0027re making one.",
+      "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19d2ca72_942cf8bc",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T17:59:40Z",
+      "side": 1,
+      "message": "Can you leave a comment here temporarily that says that this example creates and then immediately destroys the target?",
+      "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
