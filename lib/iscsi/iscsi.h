@@ -294,6 +294,24 @@ struct spdk_iscsi_poll_group {
 	TAILQ_ENTRY(spdk_iscsi_poll_group)		link;
 };
 
+/* List of connections scheduled on to be created poll group
+ * It's used for initialization of new poll group
+ */
+struct spdk_iscsi_scheduled_conn {
+	struct spdk_iscsi_conn *conn;
+	TAILQ_ENTRY(spdk_iscsi_scheduled_conn) tailq;
+};
+
+/* Holds references to poll group thread and its "initial connections"
+ * Used for initialization of new poll group
+ */
+struct spdk_iscsi_poll_group_ctx {
+	struct spdk_thread *thread;
+	struct spdk_iscsi_poll_group *pg;
+	TAILQ_HEAD(, spdk_iscsi_scheduled_conn) initial_connections;
+	TAILQ_ENTRY(spdk_iscsi_poll_group_ctx) tailq;
+};
+
 struct spdk_iscsi_opts {
 	char *authfile;
 	char *nodebase;
@@ -325,6 +343,7 @@ struct spdk_iscsi_globals {
 	TAILQ_HEAD(, spdk_iscsi_tgt_node)	target_head;
 	TAILQ_HEAD(, spdk_iscsi_auth_group)	auth_group_head;
 	TAILQ_HEAD(, spdk_iscsi_poll_group)	poll_group_head;
+	TAILQ_HEAD(, spdk_iscsi_poll_group_ctx) poll_group_ctx_head;
 
 	int32_t timeout;
 	int32_t nopininterval;
