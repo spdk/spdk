@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c21e4fbc_728f1829",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T18:05:19Z",
+      "side": 1,
+      "message": "You\u0027re accessing this list from multiple threads. You either need to explain why this is safe (spdk_for_each_thread runs in serial), or avoid doing this.",
+      "revId": "27a33cf2086543ef546cf25738884f80fcc16a0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "edb1650d_899f43e4",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T18:05:19Z",
+      "side": 1,
+      "message": "Expand the comments here. Explain why you used an spdk_for_each_thread. Explain other valid choices that you didn\u0027t make. This is of course assuming that there\u0027s already a lightweight thread per core - but you could remove that from the initialization and instead spawn the lightweight threads here.",
+      "revId": "27a33cf2086543ef546cf25738884f80fcc16a0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a56f940f_039e64e6",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T18:05:19Z",
+      "side": 1,
+      "message": "Go verify this in the code, but I think poll groups are io_channels on the spdk_nvmf_tgt object. So you can iterate all the poll groups by doing spdk_for_each_channel(g_nvmf_tgt-\u003etgt, ...). Then you don\u0027t need to keep your own list.",
+      "revId": "27a33cf2086543ef546cf25738884f80fcc16a0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
