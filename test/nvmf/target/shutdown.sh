@@ -56,6 +56,8 @@ function nvmf_shutdown_tc1 {
 
 # Test 2: Kill initiator unexpectedly with I/O outstanding
 function nvmf_shutdown_tc2 {
+	sleep 2
+
 	# Run bdevperf
 	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
 	perfpid=$!
