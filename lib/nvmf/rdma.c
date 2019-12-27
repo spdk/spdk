@@ -2961,7 +2961,11 @@ spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn c
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct rdma_cm_event		*event;
+	struct spdk_nvmf_rdma_port	*port;
+	struct spdk_nvme_transport_id	trid;
+	uint32_t			ref, i;
 	int				rc;
+	bool				event_acked;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
@@ -2970,6 +2974,7 @@ spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn c
 	}
 
 	while (1) {
+		event_acked = false;
 		rc = rdma_get_cm_event(rtransport->event_channel, &event);
 		if (rc == 0) {
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Acceptor Event: %s\n", CM_EVENT_STR[event->event]);
@@ -3016,7 +3021,26 @@ spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn c
 				/* Multicast is not used */
 				break;
 			case RDMA_CM_EVENT_ADDR_CHANGE:
-				/* Not utilizing this event */
+				TAILQ_FOREACH(port, &rtransport->ports, link) {
+					if (port->id == event->id) {
+						SPDK_ERRLOG("ADDR_CHANGE: IP %s:%s migrated\n", port->trid.traddr, port->trid.trsvcid);
+						rdma_ack_cm_event(event);
+						event_acked = true;
+						trid = port->trid;
+						ref = port->ref;
+						break;
+					}
+
+					if (event_acked) {
+						for (i = 0; i < ref; i++) {
+							spdk_nvmf_rdma_stop_listen(transport, &trid);
+						}
+						while (ref > 0) {
+							spdk_nvmf_rdma_listen(transport, &trid);
+							ref--;
+						}
+					}
+				}
 				break;
 			case RDMA_CM_EVENT_TIMEWAIT_EXIT:
 				/* For now, do nothing. The target never re-uses queue pairs. */
@@ -3025,8 +3049,9 @@ spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn c
 				SPDK_ERRLOG("Unexpected Acceptor Event [%d]\n", event->event);
 				break;
 			}
-
-			rdma_ack_cm_event(event);
+			if (!event_acked) {
+				rdma_ack_cm_event(event);
+			}
 		} else {
 			if (errno != EAGAIN && errno != EWOULDBLOCK) {
 				SPDK_ERRLOG("Acceptor Event Error: %s\n", spdk_strerror(errno));
