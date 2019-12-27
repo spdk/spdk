@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26702e5a_65ca67e9",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T18:57:39Z",
+      "side": 1,
+      "message": "Put this at the end of the enum",
+      "revId": "575367c5bac0a2a07eba6a623a1b6f327ce22da9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
