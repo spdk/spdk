@@ -1238,11 +1238,7 @@ spdk_nvmf_tcp_send_c2h_term_req(struct spdk_nvmf_tcp_qpair *tqpair, struct nvme_
 	uint32_t copy_len;
 
 	rsp_pdu = spdk_nvmf_tcp_pdu_get(tqpair);
-	if (!rsp_pdu) {
-		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
-		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
-		return;
-	}
+	assert(rsp_pdu != NULL);
 
 	c2h_term_req = &rsp_pdu->hdr->term_req;
 	c2h_term_req->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ;
@@ -1420,11 +1416,7 @@ spdk_nvmf_tcp_send_capsule_resp_pdu(struct spdk_nvmf_tcp_req *tcp_req,
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter, tqpair=%p\n", tqpair);
 	rsp_pdu = spdk_nvmf_tcp_pdu_get(tqpair);
-	if (!rsp_pdu) {
-		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
-		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
-		return;
-	}
+	assert(rsp_pdu != NULL);
 
 	capsule_resp = &rsp_pdu->hdr->capsule_resp;
 	capsule_resp->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_RESP;
@@ -1468,11 +1460,7 @@ spdk_nvmf_tcp_send_r2t_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 	struct spdk_nvme_tcp_r2t_hdr *r2t;
 
 	rsp_pdu = spdk_nvmf_tcp_pdu_get(tqpair);
-	if (!rsp_pdu) {
-		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
-		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
-		return;
-	}
+	assert(rsp_pdu != NULL);
 
 	r2t = &rsp_pdu->hdr->r2t;
 	r2t->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_R2T;
@@ -1657,11 +1645,7 @@ spdk_nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "cpda of tqpair=(%p) is : %u\n", tqpair, tqpair->cpda);
 
 	rsp_pdu = spdk_nvmf_tcp_pdu_get(tqpair);
-	if (!rsp_pdu) {
-		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
-		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
-		return;
-	}
+	assert(rsp_pdu != NULL);
 
 	ic_resp = &rsp_pdu->hdr->ic_resp;
 	ic_resp->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;
