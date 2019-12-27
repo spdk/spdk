@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93245548_8144f329",
+        "filename": "app/vhost/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-12-27T18:40:51Z",
+      "side": 1,
+      "message": "This makes the vhost target depend on the nvmf library, which I think is confusing and a bit tangled up.\n\nDoes it make more sense to put the PRP map function into the nvme driver?",
+      "revId": "734ba969065cc3d630edffb713a0b029dcb12b8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
