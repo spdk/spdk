@@ -646,7 +646,9 @@ _spdk_nvmf_tcp_find_port(struct spdk_nvmf_tcp_transport *ttransport,
 
 static int
 spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
-		     const struct spdk_nvme_transport_id *trid)
+		     const struct spdk_nvme_transport_id *trid,
+		     spdk_nvmf_tgt_listen_done_fn cb_fn,
+		     void *cb_arg)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct spdk_nvmf_tcp_port *port;
@@ -667,9 +669,7 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 	if (port) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Already listening on %s port %s\n",
 			      trid->traddr, trid->trsvcid);
-		port->ref++;
-		pthread_mutex_unlock(&ttransport->lock);
-		return 0;
+		goto success;
 	}
 
 	port = calloc(1, sizeof(*port));
@@ -679,8 +679,6 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 		pthread_mutex_unlock(&ttransport->lock);
 		return -ENOMEM;
 	}
-
-	port->ref = 1;
 
 	if (_spdk_nvmf_tcp_canon_listen_trid(&port->trid, trid) != 0) {
 		SPDK_ERRLOG("Invalid traddr %s / trsvcid %s\n",
@@ -721,8 +719,11 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 		       trid->traddr, trsvcid_int);
 
 	TAILQ_INSERT_TAIL(&ttransport->ports, port, link);
-	pthread_mutex_unlock(&ttransport->lock);
 
+success:
+	port->ref++;
+	pthread_mutex_unlock(&ttransport->lock);
+	cb_fn(cb_arg, 0);
 	return 0;
 }
 
