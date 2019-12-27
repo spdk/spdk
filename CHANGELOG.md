@@ -32,6 +32,18 @@ Added `blobfs_set_cache_size` RPC method to set cache size for blobstore filesys
 Add SockPriority option in [Transport] section, this can be used for NVMe-oF target
 on TCP transport to set sock priority for the incomming TCP connections.
 
+Both the NVMe-oF iniator and target now support plugging out of tree NVMe-oF transports. In order
+to facilitate this feature, several small API changes have been made:
+
+The `spdk_nvme_transport_id` struct now contains a trstring member used to identify the transport.
+Function tables have been made public for both the initiator (`spdk_nvme_transport_ops`) and target
+(`spdk_nvmf_transport_ops`). There are also new macros used to register a transport,
+`SPDK_NVMF_TRANSPORT_OPS_REGISTER` and `SPDK_NVME_TRANSPORT_REGISTER`.
+`spdk_nvme_transport_id` now accepts a string, `transport_name`, as its only argument.
+`spdk_nvmf_tgt_get_transport` now accepts an `spdk_nvmf_tgt` struct and a sting as its two arguments.
+`spdk_nvmf_transport_opts_init` now accepts a string, `transport_name`, as its only argument.
+`spdk_nvmf_transport_create` now accepts a string, `transport_name`, as its only argument.
+
 ### util
 
 `spdk_pipe`, a new utility for buffering data from sockets or files for parsing
