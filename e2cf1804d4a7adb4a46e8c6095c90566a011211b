@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ad95c37d_95a5ecc1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-12-30T07:15:56Z",
+      "side": 1,
+      "message": "I think that it need support. For example, if the provider want to provide differentiated service. With this approach, two different NVMe-oF subsystems can use different socket implementations. \nSo I do not think a preferred order can well address this issue.",
+      "parentUuid": "324fe45e_ea3419e5",
+      "revId": "e2cf1804d4a7adb4a46e8c6095c90566a011211b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "262fd300_cfd94c46",
         "filename": "/COMMIT_MSG",
         "patchSetId": 8
