@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06605a2d_f9ec81e3",
+        "filename": "test/make/check_so_deps.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-30T10:04:56Z",
+      "side": 1,
+      "message": "Not 100% sure if that\u0027s related to current commit. How does that work with new test flag?",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 22
+      },
+      "revId": "d8bce5a83da9aa763a4665f549bac4b76a71de58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
