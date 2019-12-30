@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d47eda6d_ddc1cbb2",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1366,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-30T04:27:39Z",
+      "side": 1,
+      "message": "Should this be \u0026g_head[i] here?",
+      "range": {
+        "startLine": 1366,
+        "startChar": 10,
+        "endLine": 1366,
+        "endChar": 28
+      },
+      "revId": "c03fa0362444cd5f850439e7061475ca3cc5e6e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
