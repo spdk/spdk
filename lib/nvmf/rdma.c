@@ -342,7 +342,7 @@ struct spdk_nvmf_rdma_ibv_event_ctx {
 struct spdk_nvmf_rdma_qpair {
 	struct spdk_nvmf_qpair			qpair;
 
-	struct spdk_nvmf_rdma_port		*port;
+	struct spdk_nvmf_rdma_device		*device;
 	struct spdk_nvmf_rdma_poller		*poller;
 
 	struct rdma_cm_id			*cm_id;
@@ -1024,7 +1024,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	struct ibv_qp_init_attr			ibv_init_attr;
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
-	device = rqpair->port->device;
+	device = rqpair->device;
 
 	memset(&ibv_init_attr, 0, sizeof(struct ibv_qp_init_attr));
 	ibv_init_attr.qp_context	= rqpair;
@@ -1049,7 +1049,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		goto error;
 	}
 
-	rc = rdma_create_qp(rqpair->cm_id, rqpair->port->device->pd, &ibv_init_attr);
+	rc = rdma_create_qp(rqpair->cm_id, device->pd, &ibv_init_attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed: errno %d: %s\n", errno, spdk_strerror(errno));
 		goto error;
@@ -1350,7 +1350,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 		return -1;
 	}
 
-	rqpair->port = port;
+	rqpair->device = port->device;
 	rqpair->max_queue_depth = max_queue_depth;
 	rqpair->max_read_depth = max_read_depth;
 	rqpair->cm_id = event->id;
@@ -2011,7 +2011,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 	uint32_t			num_blocks;
 
 	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-	device = rqpair->port->device;
+	device = rqpair->device;
 	rgroup = rqpair->poller->group;
 
 	assert(rdma_req->state != RDMA_REQUEST_STATE_FREE);
@@ -3456,7 +3456,7 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
-	device = rqpair->port->device;
+	device = rqpair->device;
 
 	TAILQ_FOREACH(poller, &rgroup->pollers, link) {
 		if (poller->device == device) {
