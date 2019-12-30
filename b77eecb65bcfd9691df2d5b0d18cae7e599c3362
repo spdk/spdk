@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcdb0ba5_aad613ee",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-30T10:21:52Z",
+      "side": 1,
+      "message": "their",
+      "range": {
+        "startLine": 305,
+        "startChar": 53,
+        "endLine": 305,
+        "endChar": 57
+      },
+      "revId": "b77eecb65bcfd9691df2d5b0d18cae7e599c3362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "253068fe_42717ee2",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-30T10:21:52Z",
+      "side": 1,
+      "message": "Just FYI in case you haven\u0027t noticed, this might be changing in the future - https://review.gerrithub.io/c/spdk/spdk/+/475309\n\nRight now its correct, and lets leave it as such.",
+      "range": {
+        "startLine": 308,
+        "startChar": 0,
+        "endLine": 308,
+        "endChar": 29
+      },
+      "revId": "b77eecb65bcfd9691df2d5b0d18cae7e599c3362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83a2a49c_91c7eda7",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-30T10:21:52Z",
+      "side": 1,
+      "message": "I propose changing the sentences around.\n\"SPDK NVMe CUSE creates nodes in \"/dev/spdk/\" directory to explicitly differentiate from other devices. Tools that only search in the \"/dev\" directory might not work with SPDK NVMe CUSE.\"",
+      "range": {
+        "startLine": 309,
+        "startChar": 0,
+        "endLine": 312,
+        "endChar": 36
+      },
+      "revId": "b77eecb65bcfd9691df2d5b0d18cae7e599c3362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc9cdf26_51aa2b92",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-30T10:21:52Z",
+      "side": 1,
+      "message": "Tools that are",
+      "range": {
+        "startLine": 314,
+        "startChar": 50,
+        "endLine": 314,
+        "endChar": 61
+      },
+      "revId": "b77eecb65bcfd9691df2d5b0d18cae7e599c3362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76806797_88bead02",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-30T10:21:52Z",
+      "side": 1,
+      "message": "might not",
+      "range": {
+        "startLine": 315,
+        "startChar": 25,
+        "endLine": 315,
+        "endChar": 33
+      },
+      "revId": "b77eecb65bcfd9691df2d5b0d18cae7e599c3362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d2557f7_69b16fae",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-30T10:21:52Z",
+      "side": 1,
+      "message": "their",
+      "range": {
+        "startLine": 315,
+        "startChar": 51,
+        "endLine": 315,
+        "endChar": 55
+      },
+      "revId": "b77eecb65bcfd9691df2d5b0d18cae7e599c3362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8443e998_cb9b3ef0",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-30T10:21:52Z",
+      "side": 1,
+      "message": "match, SCSI",
+      "range": {
+        "startLine": 320,
+        "startChar": 9,
+        "endLine": 320,
+        "endChar": 19
+      },
+      "revId": "b77eecb65bcfd9691df2d5b0d18cae7e599c3362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2adfd04e_c6aaa0e2",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-30T10:21:52Z",
+      "side": 1,
+      "message": "to",
+      "range": {
+        "startLine": 322,
+        "startChar": 61,
+        "endLine": 322,
+        "endChar": 66
+      },
+      "revId": "b77eecb65bcfd9691df2d5b0d18cae7e599c3362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
