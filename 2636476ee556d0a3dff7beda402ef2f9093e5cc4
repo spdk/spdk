@@ -22,6 +22,30 @@
       "revId": "2636476ee556d0a3dff7beda402ef2f9093e5cc4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e6de464_b2491244",
+        "filename": "autobuild.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-30T18:45:15Z",
+      "side": 1,
+      "message": "Good call! Thanks!",
+      "parentUuid": "2d93da17_18368811",
+      "range": {
+        "startLine": 77,
+        "startChar": 2,
+        "endLine": 77,
+        "endChar": 8
+      },
+      "revId": "2636476ee556d0a3dff7beda402ef2f9093e5cc4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
