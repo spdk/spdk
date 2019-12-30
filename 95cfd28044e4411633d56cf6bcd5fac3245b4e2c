@@ -69,6 +69,24 @@
       "revId": "95cfd28044e4411633d56cf6bcd5fac3245b4e2c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bbccf484_b4bfba7f",
+        "filename": "lib/vhost/rte_vhost_compat.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-30T03:01:30Z",
+      "side": 1,
+      "message": "mem----\u003e\u0026mem-\u003eregions[i], then you can remove the parameter \"i\".",
+      "parentUuid": "6b92bfaa_bb5de0e3",
+      "revId": "95cfd28044e4411633d56cf6bcd5fac3245b4e2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
