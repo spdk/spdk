@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec01f368_fe624204",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2019-12-30T11:33:46Z",
+      "side": 1,
+      "message": "seems like multiple declaration is not needed here",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 62
+      },
+      "revId": "3b3165437a25fa70b63520eb9242c68222a60752",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
