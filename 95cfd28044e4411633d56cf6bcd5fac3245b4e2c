@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0371116d_10d1d1c1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-12-30T02:56:59Z",
+      "side": 1,
+      "message": "Thanks ben,\nI means put \"uint64_t start, end, len\" out of the for loops.\nin for loops , we need to define these many times.",
+      "parentUuid": "1be24570_072ece53",
+      "revId": "95cfd28044e4411633d56cf6bcd5fac3245b4e2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2bf9a49a_bccaef22",
         "filename": "lib/vhost/rte_vhost_compat.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-12-30T02:20:26Z",
       "side": 1,
       "message": "Is is better to use struct rte_vhost_mem_region *region here directly?",
+      "revId": "95cfd28044e4411633d56cf6bcd5fac3245b4e2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b92bfaa_bb5de0e3",
+        "filename": "lib/vhost/rte_vhost_compat.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-12-30T02:56:59Z",
+      "side": 1,
+      "message": "Thanks changpeng,\nDo you mean instead of \"struct rte_vhost_memory *mem\"?\nif so, how to realize the iteration ?\nif other, please help to make it more clear?",
+      "parentUuid": "2bf9a49a_bccaef22",
       "revId": "95cfd28044e4411633d56cf6bcd5fac3245b4e2c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
