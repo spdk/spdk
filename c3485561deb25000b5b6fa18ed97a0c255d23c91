@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "028b58db_e891a414",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 17
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-30T10:07:40Z",
+      "side": 1,
+      "message": "Changes look good, but is the commit message still valid?\nLooking at the changes it looks to me that you already have run_test in place and just removing \"report_test_completion\" leftovers.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 47
+      },
+      "revId": "c3485561deb25000b5b6fa18ed97a0c255d23c91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
