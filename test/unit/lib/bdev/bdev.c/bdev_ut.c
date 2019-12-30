@@ -261,6 +261,7 @@ bdev_ut_get_io_channel(void *ctx)
 static bool g_io_types_supported[SPDK_BDEV_NUM_IO_TYPES] = {
 	[SPDK_BDEV_IO_TYPE_READ]		= true,
 	[SPDK_BDEV_IO_TYPE_WRITE]		= true,
+	[SPDK_BDEV_IO_TYPE_COMPARE]		= true,
 	[SPDK_BDEV_IO_TYPE_UNMAP]		= true,
 	[SPDK_BDEV_IO_TYPE_FLUSH]		= true,
 	[SPDK_BDEV_IO_TYPE_RESET]		= true,
@@ -2207,6 +2208,8 @@ bdev_compare_emulated(void)
 	memset(aa_buf, 0xaa, sizeof(aa_buf));
 	memset(bb_buf, 0xbb, sizeof(bb_buf));
 
+	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = false;
+
 	spdk_bdev_initialize(bdev_init_cb, NULL);
 	fn_table.submit_request = stub_submit_request_get_buf;
 	bdev = allocate_bdev("bdev");
@@ -2258,6 +2261,8 @@ bdev_compare_emulated(void)
 	spdk_bdev_finish(bdev_fini_cb, NULL);
 	poll_threads();
 
+	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = true;
+
 	g_compare_read_buf = NULL;
 }
 
@@ -2281,6 +2286,8 @@ bdev_compare_and_write(void)
 	memset(aa_buf, 0xaa, sizeof(aa_buf));
 	memset(bb_buf, 0xbb, sizeof(bb_buf));
 	memset(cc_buf, 0xcc, sizeof(cc_buf));
+
+	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = false;
 
 	spdk_bdev_initialize(bdev_init_cb, NULL);
 	fn_table.submit_request = stub_submit_request_get_buf;
@@ -2350,6 +2357,8 @@ bdev_compare_and_write(void)
 	fn_table.submit_request = stub_submit_request;
 	spdk_bdev_finish(bdev_fini_cb, NULL);
 	poll_threads();
+
+	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = true;
 
 	g_compare_read_buf = NULL;
 	g_compare_write_buf = NULL;
