@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "798a5564_c1269bd5",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1006,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-30T06:53:40Z",
+      "side": 1,
+      "message": "temp can be removed here.",
+      "revId": "acd0d60c3d2a6ac37219f930ffb8a745896d7745",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
