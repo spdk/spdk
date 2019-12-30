@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0dd895bb_2de270ab",
+        "filename": "autobuild.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-30T09:55:50Z",
+      "side": 1,
+      "message": "Shouldn\u0027t initial default value here be empty string like in the original file?\nThe way it is now enables scan-build compilation regardless of SPDK_RUN_SCANBUILD and \"hash scan-build\"",
+      "range": {
+        "startLine": 17,
+        "startChar": 10,
+        "endLine": 17,
+        "endChar": 59
+      },
+      "revId": "9b1944e1315cec278be3fff8d87b0b4b5d7f3501",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca008afa_7908ac20",
+        "filename": "autobuild.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-30T09:55:50Z",
+      "side": 1,
+      "message": "Should we actually exit the whole script here instead of just returning !\u003d0 from function?",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 7
+      },
+      "revId": "9b1944e1315cec278be3fff8d87b0b4b5d7f3501",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
