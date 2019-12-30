@@ -5,6 +5,10 @@ function xtrace_disable() {
 			XTRACE_DISABLED="yes"
 		fi
 		set +x
+        elif [ -z $XTRACE_NESTING_LEVEL ]; then
+                XTRACE_NESTING_LEVEL=1
+        else
+                XTRACE_NESTING_LEVEL=$((++XTRACE_NESTING_LEVEL))
 	fi
 }
 
@@ -23,7 +27,17 @@ function xtrace_enable() {
 # Keep it as alias to avoid xtrace_enable backtrace always pointing to xtrace_restore.
 # xtrace_enable will appear as called directly from the user script, from the same line
 # that "called" xtrace_restore.
-alias xtrace_restore='if [[ "$PREV_BASH_OPTS" == *"x"* ]]; then set -x; XTRACE_DISABLED="no"; PREV_BASH_OPTS=""; xtrace_enable; fi'
+alias xtrace_restore=\
+'if [ -z $XTRACE_NESTING_LEVEL ]; then
+        if [[ "$PREV_BASH_OPTS" == *"x"* ]]; then
+		XTRACE_DISABLED="no"; PREV_BASH_OPTS=""; set -x; xtrace_enable;
+	fi
+else
+	XTRACE_NESTING_LEVEL=$((--XTRACE_NESTING_LEVEL));
+	if [ $XTRACE_NESTING_LEVEL -eq "0" ]; then
+		unset XTRACE_NESTING_LEVEL
+	fi
+fi'
 
 : ${RUN_NIGHTLY:=0}
 export RUN_NIGHTLY
@@ -950,7 +964,9 @@ trap "trap - ERR; print_backtrace >&2" ERR
 
 PS4=' \t	\$ '
 if $SPDK_AUTOTEST_X; then
-	# explicitly enable xtraces
+	# explicitly enable xtraces, overriding any tracking information.
+	unset XTRACE_DISABLE
+	unset XTRACE_NESTING_LEVEL
 	set -x
 	xtrace_enable
 else
