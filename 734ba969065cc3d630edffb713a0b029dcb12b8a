@@ -16,6 +16,24 @@
       "revId": "734ba969065cc3d630edffb713a0b029dcb12b8a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e734d4b_26ba3cd9",
+        "filename": "app/vhost/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-30T02:41:32Z",
+      "side": 1,
+      "message": "Jim suggested this proposal, which I think it\u0027s OK for now, because vhost and muser target are both \"target\".  For long term, I think we need a library \"emulated_nvme\", we can build a \"muser target\" application which can support NVMe/Virtio-BLK/Virtio-SCSI PCI devices, and NVMf can also use this \"emulatd_nvme\" library.",
+      "parentUuid": "93245548_8144f329",
+      "revId": "734ba969065cc3d630edffb713a0b029dcb12b8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
