@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f4b724c_496b6ab5",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1674,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2019-12-30T11:43:50Z",
+      "side": 1,
+      "message": "It is somehow confusing transport type (enum) vs transport name (char*). Here it is trtype but actually it is name.\n\nAre few CUSTOM transport types possible or CUSTOM type is intentionally differentiable by name?",
+      "range": {
+        "startLine": 1674,
+        "startChar": 51,
+        "endLine": 1674,
+        "endChar": 65
+      },
+      "revId": "50c87188e1d034245701c024de3309e9913c0c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae12eda3_e4af4413",
+        "filename": "module/event/subsystems/nvmf/conf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 595,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2019-12-30T11:43:50Z",
+      "side": 1,
+      "message": "Shall be rather transport name?",
+      "range": {
+        "startLine": 595,
+        "startChar": 36,
+        "endLine": 595,
+        "endChar": 40
+      },
+      "revId": "50c87188e1d034245701c024de3309e9913c0c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
