@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "bffe12d1_f4beac3b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-12-30T10:46:25Z",
+      "side": 1,
+      "message": "Its fine right now, but please use GitHub keywords in the future to automatically close the issues when patches are merged.\nhttps://help.github.com/en/github/managing-your-work-on-github/closing-issues-using-keywords\n\nSo here \"Fixes #1126\" would be sufficient.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 40
+      },
+      "revId": "1aa1cde721dc2ec9d9460deaa7b01b465f222b54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8db913cb_dbad6f72",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
