@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fafefe93_70c7c03f",
+        "filename": "autorun_post.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-30T10:10:19Z",
+      "side": 1,
+      "message": "You already did line.strip() on line 104, .strip() can be removed here and later on.",
+      "range": {
+        "startLine": 106,
+        "startChar": 62,
+        "endLine": 106,
+        "endChar": 74
+      },
+      "revId": "20ce5959775ef95e4b25c9269dd09ef219e7f42a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
