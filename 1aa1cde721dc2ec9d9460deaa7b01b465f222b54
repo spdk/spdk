@@ -22,6 +22,30 @@
       "revId": "1aa1cde721dc2ec9d9460deaa7b01b465f222b54",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76bbc913_e115842f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-12-30T05:24:51Z",
+      "side": 1,
+      "message": "Thanks Ziye. Maybe not needed, as the failure to allocate related memory pool is error printed at the spdk_bdev_initialize() function.",
+      "parentUuid": "8db913cb_dbad6f72",
+      "range": {
+        "startLine": 1128,
+        "startChar": 1,
+        "endLine": 1128,
+        "endChar": 31
+      },
+      "revId": "1aa1cde721dc2ec9d9460deaa7b01b465f222b54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
