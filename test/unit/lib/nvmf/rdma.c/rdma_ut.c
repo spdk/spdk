@@ -535,14 +535,14 @@ free_req(struct spdk_nvmf_rdma_request *rdma_req)
 static void
 qpair_reset(struct spdk_nvmf_rdma_qpair *rqpair,
 	    struct spdk_nvmf_rdma_poller *poller,
-	    struct spdk_nvmf_rdma_port *port,
+	    struct spdk_nvmf_rdma_device *device,
 	    struct spdk_nvmf_rdma_resources *resources)
 {
 	memset(rqpair, 0, sizeof(*rqpair));
 	STAILQ_INIT(&rqpair->pending_rdma_write_queue);
 	STAILQ_INIT(&rqpair->pending_rdma_read_queue);
 	rqpair->poller = poller;
-	rqpair->port = port;
+	rqpair->device = device;
 	rqpair->resources = resources;
 	rqpair->qpair.qid = 1;
 	rqpair->ibv_state = IBV_QPS_RTS;
@@ -569,7 +569,6 @@ test_spdk_nvmf_rdma_request_process(void)
 	struct spdk_nvmf_rdma_transport rtransport = {};
 	struct spdk_nvmf_rdma_poll_group group = {};
 	struct spdk_nvmf_rdma_poller poller = {};
-	struct spdk_nvmf_rdma_port port = {};
 	struct spdk_nvmf_rdma_device device = {};
 	struct spdk_nvmf_rdma_resources resources = {};
 	struct spdk_nvmf_rdma_qpair rqpair = {};
@@ -581,9 +580,8 @@ test_spdk_nvmf_rdma_request_process(void)
 	STAILQ_INIT(&group.group.pending_buf_queue);
 	group.group.buf_cache_size = 0;
 	group.group.buf_cache_count = 0;
-	port.device = &device;
 	poller_reset(&poller, &group);
-	qpair_reset(&rqpair, &poller, &port, &resources);
+	qpair_reset(&rqpair, &poller, &device, &resources);
 
 	rtransport.transport.opts = g_rdma_ut_transport_opts;
 	rtransport.transport.data_buf_pool = spdk_mempool_create("test_data_pool", 16, 128, 0, 0);
@@ -624,7 +622,7 @@ test_spdk_nvmf_rdma_request_process(void)
 	free_recv(rdma_recv);
 	free_req(rdma_req);
 	poller_reset(&poller, &group);
-	qpair_reset(&rqpair, &poller, &port, &resources);
+	qpair_reset(&rqpair, &poller, &device, &resources);
 
 	/* Test 2: single SGL WRITE request */
 	rdma_recv = create_recv(&rqpair, SPDK_NVME_OPC_WRITE);
@@ -663,7 +661,7 @@ test_spdk_nvmf_rdma_request_process(void)
 	free_recv(rdma_recv);
 	free_req(rdma_req);
 	poller_reset(&poller, &group);
-	qpair_reset(&rqpair, &poller, &port, &resources);
+	qpair_reset(&rqpair, &poller, &device, &resources);
 
 	/* Test 3: WRITE+WRITE ibv_send batching */
 	{
@@ -736,7 +734,7 @@ test_spdk_nvmf_rdma_request_process(void)
 		free_recv(recv2);
 		free_req(req2);
 		poller_reset(&poller, &group);
-		qpair_reset(&rqpair, &poller, &port, &resources);
+		qpair_reset(&rqpair, &poller, &device, &resources);
 	}
 
 	spdk_mempool_free(rtransport.transport.data_buf_pool);
