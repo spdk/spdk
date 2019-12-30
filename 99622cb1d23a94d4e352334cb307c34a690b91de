@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7b853162_33860ac2",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-30T14:43:52Z",
+      "side": 1,
+      "message": "Hi shuhei. I think I get what you mean. I think for ben\u0027s design there is only one pg in each core so the poll group is not a necessary part of each target. And I don\u0027t find a RPC for setting the connection scheduler so I doubt it should be set for each target. Maybe I should set\nthem as global. I will think about this.",
+      "parentUuid": "e521114f_65315d33",
+      "range": {
+        "startLine": 56,
+        "startChar": 19,
+        "endLine": 56,
+        "endChar": 32
+      },
+      "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3bb98223_60a8178f",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 21
@@ -59,6 +83,24 @@
     },
     {
       "key": {
+        "uuid": "79d02ad4_ab117675",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-30T14:43:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ecc36334_31b6066b",
+      "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "105bb6f3_2afbef1e",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 21
@@ -73,6 +115,24 @@
       "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23582110_b3d51abd",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-30T14:43:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "105bb6f3_2afbef1e",
+      "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -93,6 +153,24 @@
     },
     {
       "key": {
+        "uuid": "cbe6d843_5585afaa",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-30T14:43:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5ded6d71_9aebe174",
+      "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "df59fe8e_d33d2fd3",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 21
@@ -110,6 +188,24 @@
     },
     {
       "key": {
+        "uuid": "39dcb9eb_394f7f44",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-30T14:43:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "df59fe8e_d33d2fd3",
+      "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19d2ca72_942cf8bc",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 21
@@ -124,6 +220,24 @@
       "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ec93f88_4249355b",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-30T14:43:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "19d2ca72_942cf8bc",
+      "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
