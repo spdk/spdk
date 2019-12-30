@@ -22,6 +22,30 @@
       "revId": "d8bce5a83da9aa763a4665f549bac4b76a71de58",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "713cd138_39c1ad61",
+        "filename": "test/make/check_so_deps.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-30T18:36:35Z",
+      "side": 1,
+      "message": "Yeah, this line is a little bit out of place, we always had to call make clean right before entering this script (see the old autobuild.sh line 138), so I just moved it into the script itself to:\n1. Make it more intuitive to run this script in isolation.\n2. make it so the top level test function was just calling a bunch of tests instead of a bunch of tests and make clean.\nI would have put it in a separate patch, but it would have been a one liner and there are a million changes in this series already.\n\nIf you still feel like it should be in a different patch, I can do that.",
+      "parentUuid": "06605a2d_f9ec81e3",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 22
+      },
+      "revId": "d8bce5a83da9aa763a4665f549bac4b76a71de58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
