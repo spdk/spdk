@@ -193,8 +193,8 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 }
 
 static void
-stub_submit_request_aligned_buffer_cb(struct spdk_io_channel *_ch,
-				      struct spdk_bdev_io *bdev_io, bool success)
+stub_submit_request_get_buf_cb(struct spdk_io_channel *_ch,
+			       struct spdk_bdev_io *bdev_io, bool success)
 {
 	CU_ASSERT(success == true);
 
@@ -202,9 +202,9 @@ stub_submit_request_aligned_buffer_cb(struct spdk_io_channel *_ch,
 }
 
 static void
-stub_submit_request_aligned_buffer(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
+stub_submit_request_get_buf(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
-	spdk_bdev_io_get_buf(bdev_io, stub_submit_request_aligned_buffer_cb,
+	spdk_bdev_io_get_buf(bdev_io, stub_submit_request_get_buf_cb,
 			     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 }
 
@@ -1725,7 +1725,7 @@ bdev_io_alignment(void)
 	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
 
-	fn_table.submit_request = stub_submit_request_aligned_buffer;
+	fn_table.submit_request = stub_submit_request_get_buf;
 	bdev = allocate_bdev("bdev0");
 
 	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
@@ -1943,7 +1943,7 @@ bdev_io_alignment_with_boundary(void)
 	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
 
-	fn_table.submit_request = stub_submit_request_aligned_buffer;
+	fn_table.submit_request = stub_submit_request_get_buf;
 	bdev = allocate_bdev("bdev0");
 
 	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
