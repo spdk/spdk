@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a8f6c0f0_059e7349",
+        "filename": "autorun_post.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-30T18:38:12Z",
+      "side": 1,
+      "message": "Thanks!",
+      "parentUuid": "9940a153_885682df",
+      "range": {
+        "startLine": 96,
+        "startChar": 4,
+        "endLine": 96,
+        "endChar": 67
+      },
+      "revId": "f0759708ae61db62a6bc7daaa44721d5b7105125",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef8f31fd_e974687f",
         "filename": "autorun_post.py",
         "patchSetId": 8
@@ -68,6 +92,54 @@
       "revId": "f0759708ae61db62a6bc7daaa44721d5b7105125",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a8c1a4d_895f4686",
+        "filename": "autorun_post.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-30T18:38:12Z",
+      "side": 1,
+      "message": "Not quite. The test list doesn\u0027t split out by agent, so there may already be an entry in there where we have (True, True, False) and asan_enabled is false. We don\u0027t want to override the true value from the previous tests. Hence the | operation.\nThe test_list feeds out to the list of tests that weren\u0027t executed with ASAN or UBSAN anywhere.",
+      "parentUuid": "19e6614f_7b4e01e9",
+      "range": {
+        "startLine": 105,
+        "startChar": 45,
+        "endLine": 105,
+        "endChar": 86
+      },
+      "revId": "f0759708ae61db62a6bc7daaa44721d5b7105125",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78caaa9e_70b811e8",
+        "filename": "autorun_post.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-30T18:38:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef8f31fd_e974687f",
+      "range": {
+        "startLine": 105,
+        "startChar": 22,
+        "endLine": 105,
+        "endChar": 34
+      },
+      "revId": "f0759708ae61db62a6bc7daaa44721d5b7105125",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
