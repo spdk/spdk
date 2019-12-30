@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "315ed315_5ff404b6",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-30T14:45:35Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c21e4fbc_728f1829",
+      "revId": "27a33cf2086543ef546cf25738884f80fcc16a0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "edb1650d_899f43e4",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 21
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "04cb1ea8_e08fb515",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-30T14:45:35Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "edb1650d_899f43e4",
+      "revId": "27a33cf2086543ef546cf25738884f80fcc16a0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a56f940f_039e64e6",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 21
@@ -50,6 +86,24 @@
       "revId": "27a33cf2086543ef546cf25738884f80fcc16a0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "abfe837b_7e3e902b",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-12-30T14:45:35Z",
+      "side": 1,
+      "message": "Ack. But I need this list in acceptor patch so I still keep it.",
+      "parentUuid": "a56f940f_039e64e6",
+      "revId": "27a33cf2086543ef546cf25738884f80fcc16a0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
