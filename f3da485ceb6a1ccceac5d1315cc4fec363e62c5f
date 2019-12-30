@@ -34,6 +34,24 @@
       "revId": "f3da485ceb6a1ccceac5d1315cc4fec363e62c5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e1a6802_e1de845e",
+        "filename": "autotest.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-30T18:18:16Z",
+      "side": 1,
+      "message": "Not if I want the simple grep based parser to pick it up properly. I thought about making the parser more complex to handle interpreting the shell variables, but we don\u0027t actually do this many places and it adds just a couple of lines.\nI feel like, at least for the time being, the few lines of code we save across all of the test scripts don\u0027t outweigh the effort of improving the test parser.",
+      "parentUuid": "06d19cc3_da74d86e",
+      "revId": "f3da485ceb6a1ccceac5d1315cc4fec363e62c5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
