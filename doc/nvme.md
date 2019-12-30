@@ -277,10 +277,11 @@ This feature is considered as experimental.
 For each controller as well as namespace, character devices are created in the
 locations:
 ~~~{.sh}
-    /dev/'dev_path'
-    /dev/'dev_path'nY
+    /dev/spdk/nvmeX
+    /dev/spdk/nvmeXnY
     ...
 ~~~
+Where X is unique SPDK NVMe controller index and Y is namespace id.
 
 Requests from CUSE are handled by pthreads when controller and namespaces are created.
 Those pass the I/O or admin commands via a ring to a thread that processes them using
