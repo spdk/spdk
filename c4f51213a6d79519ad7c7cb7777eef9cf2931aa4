@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "db40a802_acd6a9d2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 23
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-30T13:43:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5f9256f5_48dc554e",
+      "revId": "c4f51213a6d79519ad7c7cb7777eef9cf2931aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef2bafba_4de833ac",
         "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
         "patchSetId": 23
@@ -33,6 +51,24 @@
       "revId": "c4f51213a6d79519ad7c7cb7777eef9cf2931aa4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d9de7b2_3be9179b",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-12-30T13:43:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef2bafba_4de833ac",
+      "revId": "c4f51213a6d79519ad7c7cb7777eef9cf2931aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
