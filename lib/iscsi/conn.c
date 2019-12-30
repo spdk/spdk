@@ -150,7 +150,7 @@ int spdk_initialize_iscsi_conns(void)
 			     g_conns_array_fd, 0);
 
 	if (g_conns_array == MAP_FAILED) {
-		fprintf(stderr, "could not mmap cons array file %s (%d)\n", g_shm_name, errno);
+		SPDK_ERRLOG("could not mmap cons array file %s (%d)\n", g_shm_name, errno);
 		goto err;
 	}
 
