@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a465a425_602548db",
+        "filename": "autobuild.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-30T18:41:41Z",
+      "side": 1,
+      "message": "The variable is set unconditionally, but only for the sake of simplicity down below. If you look at lines 84 - 88 I only use the $scanbuild variable if SCANBUILD is enabled and we have scanbuild installed, so this patch doesn\u0027t change the behavior of the script.",
+      "parentUuid": "0dd895bb_2de270ab",
+      "range": {
+        "startLine": 17,
+        "startChar": 10,
+        "endLine": 17,
+        "endChar": 59
+      },
+      "revId": "9b1944e1315cec278be3fff8d87b0b4b5d7f3501",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ca008afa_7908ac20",
         "filename": "autobuild.sh",
         "patchSetId": 5
@@ -45,6 +69,30 @@
       "revId": "9b1944e1315cec278be3fff8d87b0b4b5d7f3501",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fed2981_80df4072",
+        "filename": "autobuild.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-12-30T18:41:41Z",
+      "side": 1,
+      "message": "You\u0027re probably right. That would make it a little more clear in the traceback I think. Thanks!",
+      "parentUuid": "ca008afa_7908ac20",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 7
+      },
+      "revId": "9b1944e1315cec278be3fff8d87b0b4b5d7f3501",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
