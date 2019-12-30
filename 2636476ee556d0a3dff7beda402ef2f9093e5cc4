@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d93da17_18368811",
+        "filename": "autobuild.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-30T09:57:52Z",
+      "side": 1,
+      "message": "Like in one of the previous patches - is it correct to actually exit the whole script instead of doing just \"false\" and triggering \"set -e\"?",
+      "range": {
+        "startLine": 77,
+        "startChar": 2,
+        "endLine": 77,
+        "endChar": 8
+      },
+      "revId": "2636476ee556d0a3dff7beda402ef2f9093e5cc4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
