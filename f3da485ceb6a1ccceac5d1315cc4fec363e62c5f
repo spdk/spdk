@@ -16,6 +16,24 @@
       "revId": "f3da485ceb6a1ccceac5d1315cc4fec363e62c5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90d7f569_2b08859c",
+        "filename": "autotest.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-12-30T09:33:35Z",
+      "side": 1,
+      "message": "I thought of this too when reviewing but in the end I didn\u0027t mind if/else blocks.\n\n\nCan probably be reduced to:\nif ! [[ \"$SPDK_TEST_NVMF_TRANSPORT\" \u003d~ (rmda|tcp|fc) ]]; then\n   echo \"unknown transport\"\n   exit 1\nelse \n   run_test blahlabh\nfi",
+      "parentUuid": "06d19cc3_da74d86e",
+      "revId": "f3da485ceb6a1ccceac5d1315cc4fec363e62c5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
