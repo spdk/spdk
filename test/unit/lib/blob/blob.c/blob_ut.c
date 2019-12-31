@@ -695,6 +695,7 @@ blob_snapshot(void)
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
+	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 2);
 
