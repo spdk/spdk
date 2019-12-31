@@ -209,6 +209,16 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 		CU_ASSERT(iov->iov_base == expected_iov->iov_base);
 	}
 
+	if (g_compare_read_buf && bdev_io->type == SPDK_BDEV_IO_TYPE_COMPARE) {
+		uint32_t len = bdev_io->u.bdev.iovs[0].iov_len;
+
+		CU_ASSERT(bdev_io->u.bdev.iovcnt == 1);
+		CU_ASSERT(g_compare_read_buf_len == len);
+		if (memcmp(bdev_io->u.bdev.iovs[0].iov_base, g_compare_read_buf, len)) {
+			g_io_exp_status = SPDK_BDEV_IO_STATUS_MISCOMPARE;
+		}
+	}
+
 	free(expected_io);
 }
 
@@ -2192,6 +2202,85 @@ bdev_histograms(void)
 }
 
 static void
+bdev_compare(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *ioch;
+	struct ut_expected_io *expected_io;
+	uint64_t offset, num_blocks;
+	uint32_t num_completed;
+	char aa_buf[512];
+	char bb_buf[512];
+	struct iovec compare_iov;
+	int rc;
+
+	memset(aa_buf, 0xaa, sizeof(aa_buf));
+	memset(bb_buf, 0xbb, sizeof(bb_buf));
+
+	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = true;
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	fn_table.submit_request = stub_submit_request_get_buf;
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	ioch = spdk_bdev_get_io_channel(desc);
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	fn_table.submit_request = stub_submit_request_get_buf;
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	offset = 50;
+	num_blocks = 1;
+	compare_iov.iov_base = aa_buf;
+	compare_iov.iov_len = sizeof(aa_buf);
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_COMPARE, offset, num_blocks, 1);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	expected_io->iov[0].iov_base = compare_iov.iov_base;
+	expected_io->iov[0].iov_len = compare_iov.iov_len;
+
+	g_io_done = false;
+	g_compare_read_buf = aa_buf;
+	g_compare_read_buf_len = sizeof(aa_buf);
+	rc = spdk_bdev_comparev_blocks(desc, ioch, &compare_iov, 1, offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_COMPARE, offset, num_blocks, 1);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	expected_io->iov[0].iov_base = compare_iov.iov_base;
+	expected_io->iov[0].iov_len = compare_iov.iov_len;
+
+	g_io_done = false;
+	g_compare_read_buf = bb_buf;
+	g_compare_read_buf_len = sizeof(bb_buf);
+	rc = spdk_bdev_comparev_blocks(desc, ioch, &compare_iov, 1, offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_MISCOMPARE);
+
+	spdk_put_io_channel(ioch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	fn_table.submit_request = stub_submit_request;
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+
+	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = true;
+
+	g_compare_read_buf = NULL;
+}
+
+static void
 bdev_compare_emulated(void)
 {
 	struct spdk_bdev *bdev;
@@ -2770,6 +2859,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_histograms", bdev_histograms) == NULL ||
 		CU_add_test(suite, "bdev_write_zeroes", bdev_write_zeroes) == NULL ||
 		CU_add_test(suite, "bdev_compare_and_write", bdev_compare_and_write) == NULL ||
+		CU_add_test(suite, "bdev_compare", bdev_compare) == NULL ||
 		CU_add_test(suite, "bdev_compare_emulated", bdev_compare_emulated) == NULL ||
 		CU_add_test(suite, "bdev_open_while_hotremove", bdev_open_while_hotremove) == NULL ||
 		CU_add_test(suite, "bdev_close_while_hotremove", bdev_close_while_hotremove) == NULL ||
