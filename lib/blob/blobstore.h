@@ -401,6 +401,13 @@ _spdk_bs_page_to_lba(struct spdk_blob_store *bs, uint64_t page)
 }
 
 static inline uint64_t
+_spdk_bs_md_page_to_lba(struct spdk_blob_store *bs, uint32_t page)
+{
+	assert(page < bs->md_len);
+	return _spdk_bs_page_to_lba(bs, page + bs->md_start);
+}
+
+static inline uint64_t
 _spdk_bs_dev_page_to_lba(struct spdk_bs_dev *bs_dev, uint64_t page)
 {
 	return page * SPDK_BS_PAGE_SIZE / bs_dev->blocklen;
