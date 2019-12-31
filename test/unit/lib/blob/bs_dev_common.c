@@ -331,6 +331,9 @@ dev_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	     g_power_failure_counters.general_counter < g_power_failure_thresholds.general_threshold)) {
 		offset = lba * dev->blocklen;
 		length = lba_count * dev->blocklen;
+		if (offset + length > DEV_BUFFER_SIZE) {
+			printf("blad\n");
+		}
 		SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
 		memset(&g_dev_buffer[offset], 0, length);
 	} else {
