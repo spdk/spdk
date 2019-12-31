@@ -979,12 +979,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	if (page->next != SPDK_INVALID_MD_PAGE) {
 		uint32_t next_page = page->next;
-		uint64_t next_lba = _spdk_bs_page_to_lba(blob->bs, blob->bs->md_start + next_page);
-		uint64_t max_md_lba = _spdk_bs_page_to_lba(blob->bs, blob->bs->md_start + blob->bs->md_len);
-
-		if (next_lba >= max_md_lba) {
-			assert(false);
-		}
+		uint64_t next_lba = _spdk_bs_md_page_to_lba(blob->bs, next_page);
 
 		/* Read the next page */
 		ctx->num_pages++;
@@ -1065,7 +1060,7 @@ _spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->seq = seq;
 
 	page_num = _spdk_bs_blobid_to_page(blob->id);
-	lba = _spdk_bs_page_to_lba(blob->bs, bs->md_start + page_num);
+	lba = _spdk_bs_md_page_to_lba(blob->bs, page_num);
 
 	blob->state = SPDK_BLOB_STATE_LOADING;
 
@@ -1260,7 +1255,7 @@ _spdk_blob_persist_zero_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	 * so any pages in the clean list must be zeroed.
 	 */
 	for (i = 1; i < blob->clean.num_pages; i++) {
-		lba = _spdk_bs_page_to_lba(bs, bs->md_start + blob->clean.pages[i]);
+		lba = _spdk_bs_md_page_to_lba(bs, blob->clean.pages[i]);
 
 		spdk_bs_batch_write_zeroes_dev(batch, lba, lba_count);
 	}
@@ -1271,7 +1266,7 @@ _spdk_blob_persist_zero_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 
 		/* The first page in the metadata goes where the blobid indicates */
 		page_num = _spdk_bs_blobid_to_page(blob->id);
-		lba = _spdk_bs_page_to_lba(bs, bs->md_start + page_num);
+		lba = _spdk_bs_md_page_to_lba(bs, page_num);
 
 		spdk_bs_batch_write_zeroes_dev(batch, lba, lba_count);
 	}
@@ -1299,7 +1294,7 @@ _spdk_blob_persist_write_page_root(spdk_bs_sequence_t *seq, void *cb_arg, int bs
 
 	page = &ctx->pages[0];
 	/* The first page in the metadata goes where the blobid indicates */
-	lba = _spdk_bs_page_to_lba(bs, bs->md_start + _spdk_bs_blobid_to_page(blob->id));
+	lba = _spdk_bs_md_page_to_lba(bs, _spdk_bs_blobid_to_page(blob->id));
 
 	spdk_bs_sequence_write_dev(seq, page, lba, lba_count,
 				   _spdk_blob_persist_zero_pages, ctx);
@@ -1332,7 +1327,7 @@ _spdk_blob_persist_write_page_chain(spdk_bs_sequence_t *seq, void *cb_arg, int b
 		page = &ctx->pages[i];
 		assert(page->sequence_num == i);
 
-		lba = _spdk_bs_page_to_lba(bs, bs->md_start + blob->active.pages[i]);
+		lba = _spdk_bs_md_page_to_lba(bs, blob->active.pages[i]);
 
 		spdk_bs_batch_write_dev(batch, page, lba, lba_count);
 	}
@@ -3184,7 +3179,7 @@ _spdk_bs_load_replay_cur_md_page(spdk_bs_sequence_t *seq, void *cb_arg)
 	uint64_t lba;
 
 	assert(ctx->cur_page < ctx->super->md_len);
-	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->md_start + ctx->cur_page);
+	lba = _spdk_bs_md_page_to_lba(ctx->bs, ctx->cur_page);
 	spdk_bs_sequence_read_dev(seq, ctx->page, lba,
 				  _spdk_bs_byte_to_lba(ctx->bs, SPDK_BS_PAGE_SIZE),
 				  _spdk_bs_load_replay_md_cpl, ctx);
