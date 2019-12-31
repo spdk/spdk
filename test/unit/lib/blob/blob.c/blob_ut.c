@@ -585,6 +585,8 @@ blob_snapshot(void)
 	const void *value;
 	size_t value_len;
 	int rc;
+	spdk_blob_id ids[2];
+	size_t count;
 
 	dev = init_dev();
 
@@ -683,6 +685,17 @@ blob_snapshot(void)
 	CU_ASSERT(value_len == strlen(g_xattr_values[2]));
 	CU_ASSERT_NSTRING_EQUAL((char *)value, g_xattr_values[2], value_len);
 
+	/* Confirm that blob is clone of snapshot2, and snapshot2 is clone of snapshot */
+	count = 2;
+	CU_ASSERT(spdk_blob_get_clones(bs, snapshotid2, ids, &count) == 0);
+	CU_ASSERT(count == 1);
+	CU_ASSERT(ids[0] == blobid);
+
+	count = 2;
+	CU_ASSERT(spdk_blob_get_clones(bs, snapshotid, ids, &count) == 0);
+	CU_ASSERT(count == 1);
+	CU_ASSERT(ids[0] == snapshotid2);
+
 	/* Try to create snapshot from snapshot */
 	spdk_bs_create_snapshot(bs, snapshotid, NULL, blob_op_with_id_complete, NULL);
 	poll_threads();
@@ -690,6 +703,7 @@ blob_snapshot(void)
 	CU_ASSERT(g_blobid == SPDK_BLOBID_INVALID);
 	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 2);
 
+	/* Delete blob and confirm that it is no longer on snapshot2 clone list */
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -697,8 +711,11 @@ blob_snapshot(void)
 	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
-	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 2);
+	count = 2;
+	CU_ASSERT(spdk_blob_get_clones(bs, snapshotid2, ids, &count) == 0);
+	CU_ASSERT(count == 0);
 
+	/* Delete snapshot2 and confirm that it is no longer on snapshot clone list */
 	spdk_blob_close(snapshot2, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -707,6 +724,9 @@ blob_snapshot(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 1);
+	count = 2;
+	CU_ASSERT(spdk_blob_get_clones(bs, snapshotid2, ids, &count) == 0);
+	CU_ASSERT(count == 0);
 
 	spdk_blob_close(snapshot, blob_op_complete, NULL);
 	poll_threads();
