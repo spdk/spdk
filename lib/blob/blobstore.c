@@ -41,6 +41,7 @@
 #include "spdk/bit_array.h"
 #include "spdk/likely.h"
 #include "spdk/util.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
@@ -4632,10 +4633,9 @@ _spdk_bs_snapshot_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bs
 	}
 
 	ctx->new.blob = newblob;
-
-	/* Zero out newblob cluster map */
-	memset(newblob->active.clusters, 0,
-	       newblob->active.num_clusters * sizeof(newblob->active.clusters));
+	assert(spdk_blob_is_thin_provisioned(newblob));
+	assert(spdk_mem_all_zero(newblob->active.clusters,
+				 newblob->active.num_clusters * sizeof(newblob->active.clusters)));
 
 	_spdk_blob_freeze_io(origblob, _spdk_bs_snapshot_freeze_cpl, ctx);
 }
