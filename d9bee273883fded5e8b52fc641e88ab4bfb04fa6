@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "17982481_bb0ac625",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-31T04:44:49Z",
+      "side": 1,
+      "message": "If I understand correctly, this section should be combined into the previous part, you can just assign req_idx to task-\u003elast_idx for the indirect descriptor case.",
+      "range": {
+        "startLine": 288,
+        "startChar": 0,
+        "endLine": 300,
+        "endChar": 2
+      },
+      "revId": "d9bee273883fded5e8b52fc641e88ab4bfb04fa6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
