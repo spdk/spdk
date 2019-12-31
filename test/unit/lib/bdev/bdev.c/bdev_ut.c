@@ -170,6 +170,16 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 		memcpy(g_compare_write_buf, bdev_io->u.bdev.iovs[0].iov_base, len);
 	}
 
+	if (g_compare_read_buf && bdev_io->type == SPDK_BDEV_IO_TYPE_COMPARE) {
+		uint32_t len = bdev_io->u.bdev.iovs[0].iov_len;
+
+		CU_ASSERT(bdev_io->u.bdev.iovcnt == 1);
+		CU_ASSERT(g_compare_read_buf_len == len);
+		if (memcmp(bdev_io->u.bdev.iovs[0].iov_base, g_compare_read_buf, len)) {
+			g_io_exp_status = SPDK_BDEV_IO_STATUS_MISCOMPARE;
+		}
+	}
+
 	TAILQ_INSERT_TAIL(&ch->outstanding_io, bdev_io, module_link);
 	ch->outstanding_io_count++;
 
@@ -2277,6 +2287,7 @@ static void
 bdev_compare(void)
 {
 	_bdev_compare(true);
+	_bdev_compare(false);
 }
 
 static void
