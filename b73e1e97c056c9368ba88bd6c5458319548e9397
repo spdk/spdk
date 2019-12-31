@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c337b65_ff19a58a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-31T02:54:55Z",
+      "side": 1,
+      "message": "You can use spdk_unlikely() macro in the data patch for the packed ring.",
+      "revId": "b73e1e97c056c9368ba88bd6c5458319548e9397",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "749dec1f_6dd6d593",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-31T02:54:55Z",
+      "side": 1,
+      "message": "Let\u0027s add a comment here:\n\nVRING_DESC_F_AVAIL and VRING_DESC_F_USED are equal for used descriptor.",
+      "revId": "b73e1e97c056c9368ba88bd6c5458319548e9397",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "902100ba_03cdd98e",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-12-31T02:54:55Z",
+      "side": 1,
+      "message": "This parameter can be removed by using vq-\u003eavail_wrap_counter",
+      "range": {
+        "startLine": 341,
+        "startChar": 12,
+        "endLine": 341,
+        "endChar": 30
+      },
+      "revId": "b73e1e97c056c9368ba88bd6c5458319548e9397",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
