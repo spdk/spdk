@@ -52,6 +52,11 @@ function nvmf_shutdown_tc1 {
 
 	# Connect with bdevperf and confirm it works
 	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 1
+
+	# We have seen the latent failure that the test 2 will see that the target is still finishing
+	# tearing down the qpair when connecting it.  As a workaround, leave a few seconds here to wait
+	# for the completion.
+	sleep 2
 }
 
 # Test 2: Kill initiator unexpectedly with I/O outstanding
