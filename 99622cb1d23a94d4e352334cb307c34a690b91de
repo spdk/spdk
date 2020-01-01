@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "1c63e862_8b5bea1e",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-01T21:49:28Z",
+      "side": 1,
+      "message": "Hi Jin,\n\nThe code to create/delete/use nvmf_tgt_poll_group is outside of lib/nvmf. So I think this sample application is free from the current module/event/subsystems/nvmf/nvmf_tgt, it may not be so valuable if multiple targets share nvmf_tgt_poll_group, and we can add RPC only for this sample. But following current nvmf_tgt will be practical. So what you are doing here is OK to me.\n\n-Shuhei",
+      "parentUuid": "7b853162_33860ac2",
+      "range": {
+        "startLine": 56,
+        "startChar": 19,
+        "endLine": 56,
+        "endChar": 32
+      },
+      "revId": "99622cb1d23a94d4e352334cb307c34a690b91de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3bb98223_60a8178f",
         "filename": "examples/nvmf/nvmf/nvmf.c",
         "patchSetId": 21
