@@ -22,6 +22,30 @@
       "revId": "c03fa0362444cd5f850439e7061475ca3cc5e6e1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac3c6d5e_9c812885",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1366,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-01T21:22:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d47eda6d_ddc1cbb2",
+      "range": {
+        "startLine": 1366,
+        "startChar": 10,
+        "endLine": 1366,
+        "endChar": 28
+      },
+      "revId": "c03fa0362444cd5f850439e7061475ca3cc5e6e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
