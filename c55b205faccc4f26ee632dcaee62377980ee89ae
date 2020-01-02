@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1971c1d2_91aeea74",
+        "filename": "lib/vhost/rte_vhost_compat.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:48:22Z",
+      "side": 1,
+      "message": "Overall this looks good - just a couple of minor nits.\n\nLet\u0027s say \"calc\" instead of \"cal\" to make the abbreviation a bit more clear.\n\nMore importantly, let\u0027s break up this line - I think it is only passing style check because it has rte_vhost_ prefix for the file name.  Put len and region on second line.",
+      "revId": "c55b205faccc4f26ee632dcaee62377980ee89ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
