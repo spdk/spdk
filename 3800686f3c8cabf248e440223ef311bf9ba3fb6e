@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "65d166f8_a3b2ba4e",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:45:32Z",
+      "side": 1,
+      "message": "I agree with Shuhei.  I hadn\u0027t considered performance impacts of making this an atomic.  When the system is busy, this function will not be called as often (since each call to this function executes all pollers) but I think it is still better to not make this atomic.",
+      "parentUuid": "81d2cc0d_eb689a5b",
+      "revId": "3800686f3c8cabf248e440223ef311bf9ba3fb6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c81cf019_84c78a5b",
         "filename": "lib/thread/thread.c",
         "patchSetId": 5
@@ -30,6 +48,30 @@
       "writtenOn": "2019-12-24T02:42:53Z",
       "side": 1,
       "message": "ditto.",
+      "range": {
+        "startLine": 655,
+        "startChar": 5,
+        "endLine": 655,
+        "endChar": 20
+      },
+      "revId": "3800686f3c8cabf248e440223ef311bf9ba3fb6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e15410b_1eb48c76",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:45:32Z",
+      "side": 1,
+      "message": "Same here.  Even if __atomic_load_n returns NULL, we could get a signal and set this critical_msg before the caller processes it - so the atomic does not guarantee anything.",
+      "parentUuid": "c81cf019_84c78a5b",
       "range": {
         "startLine": 655,
         "startChar": 5,
