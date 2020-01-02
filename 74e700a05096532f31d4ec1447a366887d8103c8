@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43a9ae5e_ad03f21d",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 2230,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T19:32:47Z",
+      "side": 1,
+      "message": "responding to version 17 (when comparev succeeds submission but writev fails)\n\nI don\u0027t think you can do option 2.  Once you return error to the bdev layer, it will free the bdev io.\n\nOption 1 doesn\u0027t really work either.  If writev returns error, then the compare may not even get submitted since it needs the fused commands to be submitted together.  (Even for fabrics case, the SPDK target wouldn\u0027t complete the compare operation in isolation.)\n\nI think we\u0027re going to need something more fancy in the nvme driver itself.  I\u0027m thinking of something like when FUSE_FIRST is set, don\u0027t call _nvme_qpair_submit_request immediately - instead save it in the nvme_qpair and submit it when the FUSE_SECOND is ready to be submitted.  Need to make sure this gets cleaned up though if the second command never gets submitted.  I think you could put most of this logic in nvme_qpair_submit_request.\n\nCould you think about this idea and if it makes sense create a separate patch to implement this logic?",
+      "revId": "74e700a05096532f31d4ec1447a366887d8103c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
