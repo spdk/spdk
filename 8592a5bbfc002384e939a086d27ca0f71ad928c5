@@ -16,6 +16,24 @@
       "revId": "8592a5bbfc002384e939a086d27ca0f71ad928c5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc0721a5_17e7f1e0",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 715,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-02T19:53:22Z",
+      "side": 1,
+      "message": "Thanks, sorry, I totally meant to fix that last time through.",
+      "parentUuid": "dc6524e1_be5aea05",
+      "revId": "8592a5bbfc002384e939a086d27ca0f71ad928c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
