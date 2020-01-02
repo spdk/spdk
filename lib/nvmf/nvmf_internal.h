@@ -431,6 +431,8 @@ int spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 				  struct spdk_nvmf_ctrlr *ctrlr);
 void spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 				      struct spdk_nvmf_ctrlr *ctrlr);
+void spdk_nvmf_subsystem_remove_all_listeners(struct spdk_nvmf_subsystem *subsystem,
+		bool stop);
 struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		uint16_t cntlid);
 int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);

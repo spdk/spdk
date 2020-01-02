@@ -52,6 +52,10 @@ Added `blobfs_set_cache_size` RPC method to set cache size for blobstore filesys
 Add SockPriority option in [Transport] section, this can be used for NVMe-oF target
 on TCP transport to set sock priority for the incomming TCP connections.
 
+Add `spdk_nvmf_tgt_stop_listen()` that can be used to stop listening for
+incoming connections for specified target and trid. Listener is not stopped
+implicitly upon destruction of a subsystem any more.
+
 ### util
 
 `spdk_pipe`, a new utility for buffering data from sockets or files for parsing
