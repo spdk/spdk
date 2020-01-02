@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b037cd7_0eeed8b5",
+        "filename": "test/lvol/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-02T09:51:47Z",
+      "side": 1,
+      "message": "Change not related to this patch.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 61
+      },
+      "revId": "5fb4cd469cd2c8f392c6f9c5ba5c5c2ba21fee20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80776b21_a3d3fcc6",
+        "filename": "test/lvol/resize.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-02T09:51:47Z",
+      "side": 1,
+      "message": "Use round_down function",
+      "range": {
+        "startLine": 95,
+        "startChar": 1,
+        "endLine": 95,
+        "endChar": 93
+      },
+      "revId": "5fb4cd469cd2c8f392c6f9c5ba5c5c2ba21fee20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
