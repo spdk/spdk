@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ea5a6c53_c47eab1e",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 1116,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-02T08:23:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2ba569d1_84dfb157",
+      "range": {
+        "startLine": 1116,
+        "startChar": 9,
+        "endLine": 1116,
+        "endChar": 21
+      },
+      "revId": "0bde7d784d99496133727ddc97492d3ec912e44c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1337454c_16d54122",
         "filename": "test/vhost/common.sh",
         "patchSetId": 9
@@ -45,6 +69,30 @@
       "revId": "0bde7d784d99496133727ddc97492d3ec912e44c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50258748_470b1c19",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 1134,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-02T08:23:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1337454c_16d54122",
+      "range": {
+        "startLine": 1134,
+        "startChar": 0,
+        "endLine": 1134,
+        "endChar": 22
+      },
+      "revId": "0bde7d784d99496133727ddc97492d3ec912e44c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
