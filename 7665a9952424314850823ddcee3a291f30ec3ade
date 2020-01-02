@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8d61968_a742613d",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T18:34:08Z",
+      "side": 1,
+      "message": "If this function is being driven by a call to spdk_thread_poll(), you don\u0027t need this.",
+      "revId": "7665a9952424314850823ddcee3a291f30ec3ade",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4d9ab72_bc6a5144",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T18:34:08Z",
+      "side": 1,
+      "message": "This doesn\u0027t make sense to me - why keep changing the current lightweight thread? Nothing in this loop cares what thread it\u0027s on.",
+      "revId": "7665a9952424314850823ddcee3a291f30ec3ade",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
