@@ -43,6 +43,8 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
+#include "nvmf_internal.h"
+
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
@@ -458,6 +460,7 @@ spdk_rpc_nvmf_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
 
+	spdk_nvmf_subsystem_remove_all_listeners(subsystem, true);
 	spdk_nvmf_subsystem_destroy(subsystem);
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -661,6 +664,7 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 							 "Invalid parameters");
 			ctx->response_sent = true;
 		}
+		spdk_nvmf_tgt_stop_listen(ctx->tgt, &ctx->trid);
 	} else {
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");

@@ -360,6 +360,19 @@ void spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 			  void *cb_arg);
 
 /**
+ * Stop accepting new connections at the provided address.
+ *
+ * This is a counterpart to spdk_nvmf_tgt_listen().
+ *
+ * \param tgt The target associated with the listen address.
+ * \param trid The address to stop listening at.
+ *
+ * \return int. 0 on success or a negated errno on failure.
+ */
+int spdk_nvmf_tgt_stop_listen(struct spdk_nvmf_tgt *tgt,
+			      struct spdk_nvme_transport_id *trid);
+
+/**
  * Poll the target for incoming connections.
  *
  * The new_qpair_fn cb_fn will be called for each newly discovered
@@ -687,6 +700,8 @@ const char *spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host);
 /**
  * Accept new connections on the address provided.
  *
+ * This does not start the listener. Use spdk_nvmf_tgt_listen() for that.
+ *
  * May only be performed on subsystems in the PAUSED or INACTIVE states.
  *
  * \param subsystem Subsystem to add listener to.
@@ -698,7 +713,11 @@ int spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 				     struct spdk_nvme_transport_id *trid);
 
 /**
- * Stop accepting new connections on the address provided
+ * Remove the listener from subsystem.
+ *
+ * New connections to the address won't be propagated to the subsystem.
+ * However to stop listening at target level one must use the
+ * spdk_nvmf_tgt_stop_listen().
  *
  * May only be performed on subsystems in the PAUSED or INACTIVE states.
  *

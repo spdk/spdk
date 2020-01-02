@@ -280,6 +280,7 @@ spdk_nvmf_tgt_destroy_cb(void *io_device)
 	if (tgt->subsystems) {
 		for (i = 0; i < tgt->max_subsystems; i++) {
 			if (tgt->subsystems[i]) {
+				spdk_nvmf_subsystem_remove_all_listeners(tgt->subsystems[i], true);
 				spdk_nvmf_subsystem_destroy(tgt->subsystems[i]);
 			}
 		}
@@ -569,6 +570,35 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 		cb_fn(cb_arg, rc);
 		return;
 	}
+}
+
+int
+spdk_nvmf_tgt_stop_listen(struct spdk_nvmf_tgt *tgt,
+			  struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_transport *transport;
+	const char *trtype;
+	int rc;
+
+	transport = spdk_nvmf_tgt_get_transport(tgt, trid->trstring);
+	if (!transport) {
+		trtype = spdk_nvme_transport_id_trtype_str(trid->trtype);
+		if (trtype != NULL) {
+			SPDK_ERRLOG("Unable to stop listen on transport %s. The transport must be created first.\n",
+				    trtype);
+		} else {
+			SPDK_ERRLOG("The specified trtype %d is unknown. Please make sure that it is properly registered.\n",
+				    trid->trtype);
+		}
+		return -EINVAL;
+	}
+
+	rc = spdk_nvmf_transport_stop_listen(transport, trid);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to stop listening on address '%s'\n", trid->traddr);
+		return rc;
+	}
+	return 0;
 }
 
 struct spdk_nvmf_tgt_add_transport_ctx {
