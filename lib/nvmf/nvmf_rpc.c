@@ -43,6 +43,8 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
+#include "nvmf_internal.h"
+
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
@@ -463,6 +465,7 @@ spdk_rpc_nvmf_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
 
+	spdk_nvmf_subsystem_remove_all_listeners(subsystem);
 	spdk_nvmf_subsystem_destroy(subsystem);
 
 	w = spdk_jsonrpc_begin_result(request);

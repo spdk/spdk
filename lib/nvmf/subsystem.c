@@ -330,7 +330,6 @@ _nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 void
 spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_listener	*listener, *listener_tmp;
 	struct spdk_nvmf_host		*host, *host_tmp;
 	struct spdk_nvmf_ctrlr		*ctrlr, *ctrlr_tmp;
 	struct spdk_nvmf_ns		*ns;
@@ -342,10 +341,6 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "subsystem is %p\n", subsystem);
-
-	TAILQ_FOREACH_SAFE(listener, &subsystem->listeners, link, listener_tmp) {
-		_nvmf_subsystem_remove_listener(subsystem, listener);
-	}
 
 	TAILQ_FOREACH_SAFE(host, &subsystem->hosts, link, host_tmp) {
 		_spdk_nvmf_subsystem_remove_host(subsystem, host);
@@ -802,6 +797,16 @@ spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	_nvmf_subsystem_remove_listener(subsystem, listener);
 
 	return 0;
+}
+
+void
+spdk_nvmf_subsystem_remove_all_listeners(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_listener       *listener, *listener_tmp;
+
+	TAILQ_FOREACH_SAFE(listener, &subsystem->listeners, link, listener_tmp) {
+		_nvmf_subsystem_remove_listener(subsystem, listener);
+	}
 }
 
 bool
