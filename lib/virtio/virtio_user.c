@@ -483,6 +483,8 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 		if (rc < 0) {
 			SPDK_ERRLOG("failed to send VHOST_USER_SET_VRING_ENABLE: %s\n",
 				    spdk_strerror(-rc));
+			close(kickfd);
+			close(callfd);
 			spdk_free(queue_mem);
 			return -rc;
 		}
