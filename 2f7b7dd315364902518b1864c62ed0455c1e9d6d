@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c3dbd00_7b7c1f4b",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 1157,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:18:41Z",
+      "side": 1,
+      "message": "let\u0027s use the word \"register\" instead of \"add\" in the function name",
+      "revId": "2f7b7dd315364902518b1864c62ed0455c1e9d6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26267784_780284f1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:18:41Z",
+      "side": 1,
+      "message": "I wasn\u0027t sure - is this needed?",
+      "revId": "2f7b7dd315364902518b1864c62ed0455c1e9d6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f9c3a964_f63177de",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:18:41Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "2f7b7dd315364902518b1864c62ed0455c1e9d6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
