@@ -18,6 +18,25 @@ parameter.
 
 `spdk_ftl_punit_range` and `ftl_module_init_opts` structures were removed.
 
+### nvmf
+
+Support for custom NVMe admin command handlers and admin command passthru
+in the NVMF subsystem.
+
+It is now possible to set a custom handler for a specific NVMe admin command.
+For example, vendor specific admin commands can now be intercepted by implementing
+a function handling the command.
+Further NVMe admin commands can be forwarded straight to an underlying NVMe bdev.
+
+The functions `spdk_nvmf_set_custom_admin_cmd_hdlr` and `spdk_nvmf_set_passthru_admin_cmd`
+in `spdk_internal/nvmf.h` expose this functionality. There is an example custom admin handler
+for the NVMe IDENTIFY CTRLR in `lib/nvmf/custom_cmd_hdlr.c`. This handler gets the SN, MN, FR, IEEE, FGUID
+attributes from the first NVMe drive in the NVMF subsystem and returns it to the NVMF initiator (sn and mn attributes
+specified during NVMF subsystem creation RPC will be overwritten).
+
+This handler is enabled by default and can be disabled by adding
+`spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_IDENTIFY, NULL);` to a target application.
+
 ### sock
 
 Added spdk_sock_writev_async for performing asynchronous writes to sockets. This call will

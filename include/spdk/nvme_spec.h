@@ -1221,6 +1221,8 @@ enum spdk_nvme_path_status_code {
 	SPDK_NVME_SC_ABORTED_BY_HOST			= 0x71,
 };
 
+#define SPDK_NVME_MAX_OPC 0xff
+
 /**
  * Admin opcodes
  */

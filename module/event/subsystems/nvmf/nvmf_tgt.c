@@ -40,6 +40,8 @@
 #include "spdk/nvme.h"
 #include "spdk/util.h"
 
+#include "spdk_internal/nvmf.h"
+
 enum nvmf_tgt_state {
 	NVMF_TGT_INIT_NONE = 0,
 	NVMF_TGT_INIT_PARSE_CONFIG,
@@ -436,6 +438,7 @@ nvmf_tgt_advance_state(void)
 
 		switch (g_tgt_state) {
 		case NVMF_TGT_INIT_NONE: {
+			spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_IDENTIFY, spdk_nvmf_custom_identify_hdlr);
 			g_tgt_state = NVMF_TGT_INIT_PARSE_CONFIG;
 			break;
 		}

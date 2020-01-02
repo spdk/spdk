@@ -1314,6 +1314,12 @@ spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->subtype;
 }
 
+uint32_t
+spdk_nvmf_subsystem_get_max_nsid(struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->max_nsid;
+}
+
 static uint16_t
 spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 {
