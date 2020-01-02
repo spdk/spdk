@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc6524e1_be5aea05",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 715,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T18:27:59Z",
+      "side": 1,
+      "message": "You don\u0027t want to do this strlen here - replace it with the strnlen. If src is not null terminated, this could for instance run off to a page that isn\u0027t paged in and fault, etc.",
+      "revId": "8592a5bbfc002384e939a086d27ca0f71ad928c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
