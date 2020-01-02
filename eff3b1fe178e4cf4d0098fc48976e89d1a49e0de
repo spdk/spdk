@@ -1,0 +1,310 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7808bb6d_76529777",
+        "filename": "app/nvmf_tgt/nvmf_main.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "I think this one we can install in spdk_nvmf_subsystem_init().  Passing through the native NVMe serial number, etc. is generally useful.",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25b713fb_6be796fa",
+        "filename": "app/nvmf_tgt/nvmf_main.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "This one is a bit trickier. I\u0027m rethinking how we\u0027d want this to work - for example, what happens if someone attaches a multi-namespace NVMe controller, and wants to present it over fabrics?  I think we should support that use case.  But in that case, we wouldn\u0027t want to specify a namespace ID - I think instead we\u0027d want to get the nsid from the command.\n\nWhat do you think?",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7158b87d_71775b63",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "is this required?",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d57271f2_c74b8878",
+        "filename": "include/spdk_internal/nvmf.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "let\u0027s add this file in a separate patch, including just the enums, declarations, etc. that already exist but are being exported here\n\nthen the patch that adds custom handler support can add the extra function declarations\n\n(it\u0027s all part of making this functionality easier to review)",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7f0320b_8503eedb",
+        "filename": "include/spdk_internal/nvmf.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "I appreciate that you added Doxygen comments here, but it\u0027s really not needed for spdk_internal header files.  We really should only document include/spdk files.",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76167746_8268983d",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1671,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "let\u0027s call this nvmf_ctrlr_populate_oacs()\n\n(note: this file completely violates a standard we try to keep in SPDK, where we only use the spdk_ prefix for functions in the public API - please don\u0027t worry about fixing all of the existing violations, but for this new function, let\u0027s leave off the spdk_ prefix)",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45081b6f_ee20fc2f",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2744,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "let\u0027s use SPDK_NVME_GLOBAL_NS_TAG instead of 0xffffffffu",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb80652d_f148da18",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "you can just reuse spdk_nvmf_ctrlr_process_io_cmd_resubmit for your use case rather than adding a separate function",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "692adf95_1aea13d3",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "let\u0027s name this spdk_nvmf_bdev_ctrlr_nvme_passthru_admin to make it more consistent with the passthru_io function just above here",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc44e039_2a0855ba",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "you should remove Intel/Mellanox copyrights and add one for your company instead",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9735ed97_0bd720ff",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "should we copy OACS directly?  I don\u0027t think that\u0027s valid, unless custom admin handlers have been installed for everything that the underlying controller supports",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09efda47_863e3797",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "I don\u0027t think we can do this either.",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de473caa_df94006f",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "I think we should really strip this down to a bare minimum.  I\u0027d like this handler to be something we can install by default, to show how this can be implemented.  Allowing for OACS, FW update parameters, format parameters (for NS below) infers that we have custom handlers installed for those too which we won\u0027t by default.\n\nSo I think probably just the SN, MN, FR, IEEE, and FGUID are enough.  Maybe VID and SSVID but I\u0027m not sure if we should be trying to populate those for fabrics controllers.",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67eb1986_fe917576",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "Let\u0027s have this only support IDENTIFY_CTRLR (see comments above).",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "513c6bfc_74fa2054",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "I think a simpler way to do this would be:\n\nif (!spdk_bdev_io_type_supported(SPDK_BDEV_IO_TYPE_NVME_ADMIN)) {\n    return -1;\n}\n\n\nThis basically checks if the bdev supports passthrough NVMe admin commands, which I think is a cleaner and simpler check than the product name string compare.",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea5c0506_0e360277",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "SPDK typically puts the variable declarations at the beginning of the code block - so in this case, at the start of the function.",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "096cd5e4_c76c4804",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1378,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "Ensure",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be8ca9d2_0f337cb5",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1379,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T18:58:31Z",
+      "side": 1,
+      "message": "just a nit - but normally the function that we are testing is not called within the CU_ASSERT itself - so we\u0027d normally do:\n\nrc \u003d spdk_nvmf_ctrlr_process_admin_cmd(\u0026req);\nCU_ASSERT(rc \u003d\u003d SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
