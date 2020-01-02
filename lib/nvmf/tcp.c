@@ -1253,10 +1253,7 @@ spdk_nvmf_tcp_send_c2h_term_req(struct spdk_nvmf_tcp_qpair *tqpair, struct nvme_
 		DSET32(&c2h_term_req->fei, error_offset);
 	}
 
-	copy_len = pdu->hdr->common.hlen;
-	if (copy_len > SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE) {
-		copy_len = SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE;
-	}
+	copy_len = spdk_min(pdu->hdr->common.hlen, SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE);
 
 	/* Copy the error info into the buffer */
 	memcpy((uint8_t *)rsp_pdu->hdr->raw + c2h_term_req_hdr_len, pdu->hdr->raw, copy_len);
