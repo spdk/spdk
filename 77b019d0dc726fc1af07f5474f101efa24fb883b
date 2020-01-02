@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95695c1f_3a2fb007",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:02:05Z",
+      "side": 1,
+      "message": "would adding something like spdk_nvme_transport_id_set_trtype() be better?\n\nit avoids the very long spdk_nvme_transport_id_parse_trstring line - you could also do a prep patch with this new function as a step, which first only sets the trid-\u003etrtype value",
+      "revId": "77b019d0dc726fc1af07f5474f101efa24fb883b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
