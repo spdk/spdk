@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d5959b2_30b349ca",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T20:41:43Z",
+      "side": 1,
+      "message": "Do you mean to exit if there are no subsystems? That isn\u0027t actually an error, since subsystems can be created at any time.",
+      "revId": "a1d82427b896f832704adaf4519576aa4d2cbce8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
