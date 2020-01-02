@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1cb28745_65639faa",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 2787,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:23:14Z",
+      "side": 1,
+      "message": "let\u0027s use \"register\" instead of \"add\" in the function name",
+      "revId": "3283dd597fd1290dcf420fad69a098c960020413",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5cc4b91_b4a0939e",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:23:14Z",
+      "side": 1,
+      "message": "I would put g_spdk_nvme_transport \u003d on this line, and put the TAILQ_HEAD_INITIALIZER on the second line indented.\n\nOtherwise it kind of looks like we\u0027re assigning g_spdk_nvme_transports outside of a function (it look me a second to realize this was a continuation of the previous line).",
+      "revId": "3283dd597fd1290dcf420fad69a098c960020413",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bcc25d94_523e17fe",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:23:14Z",
+      "side": 1,
+      "message": "void on its own line",
+      "revId": "3283dd597fd1290dcf420fad69a098c960020413",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
