@@ -975,6 +975,15 @@ const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
 enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
 
 /**
+ * Get maximum namespace id of the specified subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ *
+ * \return maximum namespace id
+ */
+uint32_t spdk_nvmf_subsystem_get_max_nsid(struct spdk_nvmf_subsystem *subsystem);
+
+/**
  * Initialize transport options
  *
  * \param transport_name The transport type to create
