@@ -16,6 +16,24 @@
       "revId": "462efb3e8c11f64b55e3a1498b832f5c0c8db8bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "247ecc33_5bce79dd",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1339,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-02T22:16:42Z",
+      "side": 1,
+      "message": "Ack. Thank you Jim.\nThis case is not possible and error case but we have no way to call spdk_app_stop(0) if I remove this.\nI will restore and keep this.",
+      "parentUuid": "8f7096ee_29f2fd19",
+      "revId": "462efb3e8c11f64b55e3a1498b832f5c0c8db8bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
