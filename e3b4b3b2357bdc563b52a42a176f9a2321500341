@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7e82d5f4_4df568c7",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-02T10:04:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d4083c1a_34d7d2a8",
+      "range": {
+        "startLine": 713,
+        "startChar": 9,
+        "endLine": 713,
+        "endChar": 23
+      },
+      "revId": "e3b4b3b2357bdc563b52a42a176f9a2321500341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0b43f307_b233be69",
         "filename": "test/nvmf/target/rpc.sh",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "e3b4b3b2357bdc563b52a42a176f9a2321500341",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ffa54d0a_2b56e3ab",
+        "filename": "test/nvmf/target/rpc.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-02T10:04:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0b43f307_b233be69",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 30
+      },
+      "revId": "e3b4b3b2357bdc563b52a42a176f9a2321500341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
