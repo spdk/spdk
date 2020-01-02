@@ -1343,6 +1343,7 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 	uint64_t	lfc; /* lowest free cluster */
 	uint64_t	num_clusters;
 	struct spdk_blob_store *bs;
+	int             rc __attribute__((unused));
 
 	bs = blob->bs;
 
@@ -1398,7 +1399,10 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 	if (spdk_blob_is_thin_provisioned(blob) == false) {
 		lfc = 0;
 		for (i = num_clusters; i < sz; i++) {
-			_spdk_bs_allocate_cluster(blob, i, &lfc, true);
+			/* This cannot ever return false, since we already verfified
+			 * there is enough clusters to claim. */
+			rc = _spdk_bs_allocate_cluster(blob, i, &lfc, true);
+			assert(rc == 0);
 			lfc++;
 		}
 	}
