@@ -921,7 +921,9 @@ _spdk_blob_load_final(void *cb_arg, int bserrno)
 	struct spdk_blob_load_ctx	*ctx = cb_arg;
 	struct spdk_blob		*blob = ctx->blob;
 
-	_spdk_blob_mark_clean(blob);
+	if (bserrno == 0) {
+		_spdk_blob_mark_clean(blob);
+	}
 
 	ctx->cb_fn(ctx->seq, ctx->cb_arg, bserrno);
 
@@ -970,9 +972,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	if (bserrno) {
 		SPDK_ERRLOG("Metadata page read failed: %d\n", bserrno);
-		ctx->cb_fn(seq, ctx->cb_arg, bserrno);
-		spdk_free(ctx->pages);
-		free(ctx);
+		_spdk_blob_load_final(ctx, bserrno);
 		return;
 	}
 
@@ -980,9 +980,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	crc = _spdk_blob_md_page_calc_crc(page);
 	if (crc != page->crc) {
 		SPDK_ERRLOG("Metadata page %d crc mismatch\n", ctx->num_pages);
-		ctx->cb_fn(seq, ctx->cb_arg, -EINVAL);
-		spdk_free(ctx->pages);
-		free(ctx);
+		_spdk_blob_load_final(ctx, -EINVAL);
 		return;
 	}
 
@@ -1000,9 +998,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		ctx->pages = spdk_realloc(ctx->pages, (sizeof(*page) * ctx->num_pages),
 					  sizeof(*page));
 		if (ctx->pages == NULL) {
-			ctx->cb_fn(seq, ctx->cb_arg, -ENOMEM);
-			spdk_free(ctx->pages);
-			free(ctx);
+			_spdk_blob_load_final(ctx, -ENOMEM);
 			return;
 		}
 
@@ -1016,9 +1012,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	/* Parse the pages */
 	rc = _spdk_blob_parse(ctx->pages, ctx->num_pages, blob);
 	if (rc) {
-		ctx->cb_fn(seq, ctx->cb_arg, rc);
-		spdk_free(ctx->pages);
-		free(ctx);
+		_spdk_blob_load_final(ctx, rc);
 		return;
 	}
 
@@ -1026,9 +1020,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		rc = _spdk_blob_get_xattr_value(blob, BLOB_SNAPSHOT, &value, &len, true);
 		if (rc == 0) {
 			if (len != sizeof(spdk_blob_id)) {
-				ctx->cb_fn(seq, ctx->cb_arg, -EINVAL);
-				spdk_free(ctx->pages);
-				free(ctx);
+				_spdk_blob_load_final(ctx, -EINVAL);
 				return;
 			}
 			/* open snapshot blob and continue in the callback function */
