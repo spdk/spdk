@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e22a609_6e35d767",
+        "filename": "test/lvol/hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-02T10:03:12Z",
+      "side": 1,
+      "message": "Use round_down function.",
+      "revId": "062422bd74c246cd99271e137a0b3588e23516fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
