@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "093470a4_b9f57426",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 12
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T21:55:42Z",
+      "side": 1,
+      "message": "We should print an error message and return immediately if the channel is put on a different thread than it was created.  The ref is not protected by a mutex.\n\nThis patch is correct and should be merged as-is.  spdk_put_io_channel can be fixed separately.",
+      "revId": "609834b0305e3020762d57d30d903fbb3967f5f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
