@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4083c1a_34d7d2a8",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-02T08:35:37Z",
+      "side": 1,
+      "message": "I think using lsblk is more universal and you can just extend previous version of waitforblk by adding \"SERIAL\" option like this:\n\nlsblk -l -o NAME,SERIAL\n\nI guess this also makes easier to understand what $1 is exactly. For \"sudo nvme list\" you have to refer to man/help if you don\u0027t remember the output, while lsblk -l -o NAME,SERIAL is pretty clear in terms of what will be displayed.",
+      "range": {
+        "startLine": 713,
+        "startChar": 9,
+        "endLine": 713,
+        "endChar": 23
+      },
+      "revId": "e3b4b3b2357bdc563b52a42a176f9a2321500341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b43f307_b233be69",
+        "filename": "test/nvmf/target/rpc.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-02T08:35:37Z",
+      "side": 1,
+      "message": "This comment is probably common for all the files you\u0027ve modified in the commit.\n\nMove nvme_serial to the same code block as MALLOC_BDEV_SIZE and MALLOC_BLOCK_SIZE. Also change the name to NVME_SERIAL - to be consistent with MALLOC_* variables and to show that it\u0027s a global var.\n\n\nBTW, it might be a good idea to try to move these 3 variables into test/nvmf/common.sh as part of some separate commit. They are repeated in multiple scripts and have the same values.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 30
+      },
+      "revId": "e3b4b3b2357bdc563b52a42a176f9a2321500341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
