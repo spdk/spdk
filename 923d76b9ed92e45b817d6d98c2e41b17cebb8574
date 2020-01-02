@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa85e548_15eed377",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T20:44:26Z",
+      "side": 1,
+      "message": "We don\u0027t need to make this full featured like the real target. Let\u0027s not have it be configurable, but rather always try to do the \"Transport\" version.",
+      "revId": "923d76b9ed92e45b817d6d98c2e41b17cebb8574",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fcc33e8b_ab56762c",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 639,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T20:44:26Z",
+      "side": 1,
+      "message": "Put \"nvmf_tgt\" in the name of this function",
+      "revId": "923d76b9ed92e45b817d6d98c2e41b17cebb8574",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
