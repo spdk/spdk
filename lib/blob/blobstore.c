@@ -952,8 +952,7 @@ _spdk_blob_load_snapshot_cpl(void *cb_arg, struct spdk_blob *snapshot, int bserr
 
 error:
 	SPDK_ERRLOG("Snapshot fail\n");
-	_spdk_blob_free(blob);
-	ctx->cb_fn(ctx->seq, NULL, bserrno);
+	ctx->cb_fn(ctx->seq, ctx->cb_arg, bserrno);
 	spdk_free(ctx->pages);
 	free(ctx);
 }
@@ -971,8 +970,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	if (bserrno) {
 		SPDK_ERRLOG("Metadata page read failed: %d\n", bserrno);
-		_spdk_blob_free(blob);
-		ctx->cb_fn(seq, NULL, bserrno);
+		ctx->cb_fn(seq, ctx->cb_arg, bserrno);
 		spdk_free(ctx->pages);
 		free(ctx);
 		return;
@@ -982,8 +980,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	crc = _spdk_blob_md_page_calc_crc(page);
 	if (crc != page->crc) {
 		SPDK_ERRLOG("Metadata page %d crc mismatch\n", ctx->num_pages);
-		_spdk_blob_free(blob);
-		ctx->cb_fn(seq, NULL, -EINVAL);
+		ctx->cb_fn(seq, ctx->cb_arg, -EINVAL);
 		spdk_free(ctx->pages);
 		free(ctx);
 		return;
@@ -1004,6 +1001,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 					  sizeof(*page));
 		if (ctx->pages == NULL) {
 			ctx->cb_fn(seq, ctx->cb_arg, -ENOMEM);
+			spdk_free(ctx->pages);
 			free(ctx);
 			return;
 		}
@@ -1018,8 +1016,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	/* Parse the pages */
 	rc = _spdk_blob_parse(ctx->pages, ctx->num_pages, blob);
 	if (rc) {
-		_spdk_blob_free(blob);
-		ctx->cb_fn(seq, NULL, rc);
+		ctx->cb_fn(seq, ctx->cb_arg, rc);
 		spdk_free(ctx->pages);
 		free(ctx);
 		return;
@@ -1029,8 +1026,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		rc = _spdk_blob_get_xattr_value(blob, BLOB_SNAPSHOT, &value, &len, true);
 		if (rc == 0) {
 			if (len != sizeof(spdk_blob_id)) {
-				_spdk_blob_free(blob);
-				ctx->cb_fn(seq, NULL, -EINVAL);
+				ctx->cb_fn(seq, ctx->cb_arg, -EINVAL);
 				spdk_free(ctx->pages);
 				free(ctx);
 				return;
@@ -5680,8 +5676,8 @@ _spdk_bs_open_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob *blob = cb_arg;
 
-	/* If the blob have crc error, we just return NULL. */
-	if (blob == NULL) {
+	if (bserrno != 0) {
+		_spdk_blob_free(blob);
 		seq->cpl.u.blob_handle.blob = NULL;
 		spdk_bs_sequence_finish(seq, bserrno);
 		return;
