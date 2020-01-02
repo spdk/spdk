@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f459a4fe_6a15a7fc",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T21:43:38Z",
+      "side": 1,
+      "message": "I think maybe g_groups would be better than keeping the g_head name.\n\nBut I\u0027m OK with this for now - maybe we can change that in another patch later in the series.  It would be good to get more of this merged rather than rebasing the whole series.",
+      "revId": "6fc7ba32d3b4771efd3d2aa1702701e186b0c571",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
