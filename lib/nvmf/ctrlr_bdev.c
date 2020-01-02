@@ -46,6 +46,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 
+#include "spdk_internal/nvmf.h"
 #include "spdk_internal/log.h"
 
 static bool
