@@ -938,25 +938,17 @@ _spdk_blob_load_snapshot_cpl(void *cb_arg, struct spdk_blob *snapshot, int bserr
 	struct spdk_blob_load_ctx	*ctx = cb_arg;
 	struct spdk_blob		*blob = ctx->blob;
 
-	if (bserrno != 0) {
-		goto error;
+	if (bserrno == 0) {
+		blob->back_bs_dev = spdk_bs_create_blob_bs_dev(snapshot);
+		if (blob->back_bs_dev == NULL) {
+			bserrno = -ENOMEM;
+		}
 	}
-
-	blob->back_bs_dev = spdk_bs_create_blob_bs_dev(snapshot);
-
-	if (blob->back_bs_dev == NULL) {
-		bserrno = -ENOMEM;
-		goto error;
+	if (bserrno != 0) {
+		SPDK_ERRLOG("Snapshot fail\n");
 	}
 
 	_spdk_blob_load_final(ctx, bserrno);
-	return;
-
-error:
-	SPDK_ERRLOG("Snapshot fail\n");
-	ctx->cb_fn(ctx->seq, ctx->cb_arg, bserrno);
-	spdk_free(ctx->pages);
-	free(ctx);
 }
 
 static void
