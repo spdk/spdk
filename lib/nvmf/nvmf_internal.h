@@ -45,6 +45,8 @@
 #include "spdk/util.h"
 #include "spdk/thread.h"
 
+#include "spdk_internal/nvmf.h"
+
 #define SPDK_NVMF_MAX_SGL_ENTRIES	16
 
 /* The maximum number of buffers per request */
@@ -221,6 +223,7 @@ struct spdk_nvmf_request {
 	bool				data_from_pool;
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 	struct spdk_nvmf_dif_info	dif;
+	spdk_nvmf_nvme_passthru_cmd_cb	cmd_cb_fn;
 
 	STAILQ_ENTRY(spdk_nvmf_request)	buf_link;
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
