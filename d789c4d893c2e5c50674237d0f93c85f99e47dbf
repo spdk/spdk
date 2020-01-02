@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a22fa18_af09beb0",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 911,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T19:44:14Z",
+      "side": 1,
+      "message": "Good point on the spec.  But since compare and write isn\u0027t widely supported, I think we\u0027d be better off setting this to 0 if the controller doesn\u0027t support compare-and-write.  It\u0027s possible controllers out there won\u0027t get this correct.",
+      "revId": "d789c4d893c2e5c50674237d0f93c85f99e47dbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
