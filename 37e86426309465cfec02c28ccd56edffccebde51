@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c100ae35_387ef7ed",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T20:39:50Z",
+      "side": 1,
+      "message": "/* spdk_for_each_channel is asynchronous but executes serially. That means only a single thread is executing this callback at a time, so we can safely touch the g_poll_groups list without a lock. */",
+      "revId": "37e86426309465cfec02c28ccd56edffccebde51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd097bff_8d615a83",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T20:39:50Z",
+      "side": 1,
+      "message": "Let\u0027s write this as:\n\n/* spdk_for_each_channel is asynchronous, but runs on each thread in serial. Since this is the only operation occurring on the g_poll_groups list, we don\u0027t need to take a lock. */",
+      "revId": "37e86426309465cfec02c28ccd56edffccebde51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62435b1f_4a0e3d92",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T20:39:50Z",
+      "side": 1,
+      "message": "Put this function by nvmf_tgt_destroy_poll_group and nvmf_tgt_destroy_poll_groups_done, so the create and destroy paths are grouped together.",
+      "revId": "37e86426309465cfec02c28ccd56edffccebde51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0c308d3_2ac4fc42",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T20:39:50Z",
+      "side": 1,
+      "message": "Let\u0027s expand this a bit:\n\n/* Poll groups are I/O channels associated with the spdk_nvmf_tgt object. To iterate all poll groups, we can use spdk_for_each_channel. */",
+      "revId": "37e86426309465cfec02c28ccd56edffccebde51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
