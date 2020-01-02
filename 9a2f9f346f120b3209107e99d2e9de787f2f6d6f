@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d87dbfb9_5bebc273",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 1132,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T19:12:35Z",
+      "side": 1,
+      "message": "before performing the read,",
+      "revId": "9a2f9f346f120b3209107e99d2e9de787f2f6d6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfa76b28_d0efb8dc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 3489,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T19:12:35Z",
+      "side": 1,
+      "message": "you can spdk_bdev_free_io(bdev_io) here (and then you don\u0027t have to do it in the !success case)",
+      "revId": "9a2f9f346f120b3209107e99d2e9de787f2f6d6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f6d2231_e6f23f73",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 3492,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T19:12:35Z",
+      "side": 1,
+      "message": "I think last parameter should be parent_io-\u003einternal.caller_ctx",
+      "revId": "9a2f9f346f120b3209107e99d2e9de787f2f6d6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
