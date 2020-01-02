@@ -61,6 +61,9 @@ modified to take a string.
 A function table, `spdk_nvmf_transport_ops`, and macro, `SPDK_NVMF_TRANSPORT_REGISTER`, have been added which
 enable registering out of tree transports.
 
+Add `spdk_nvmf_tgt_stop_listen()` that can be used to stop listening for
+incoming connections for specified target and trid. Listener is not stopped
+implicitly upon destruction of a subsystem any more.
 
 ### util
 
