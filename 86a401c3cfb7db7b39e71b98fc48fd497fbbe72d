@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa5aa514_a8d2cf5a",
+        "filename": "test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:25:33Z",
+      "side": 1,
+      "message": "could we create a common source file that can get included for the different transports unit tests?  similar to how we include common/lib/test_env.c\n\nIt would avoid some extra code duplication, and the need to add stuff in 3 separate files in the future if we add more stubs.",
+      "revId": "86a401c3cfb7db7b39e71b98fc48fd497fbbe72d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
