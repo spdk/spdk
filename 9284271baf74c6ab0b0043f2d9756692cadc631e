@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15174e0d_d7033fd3",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T15:51:18Z",
+      "side": 1,
+      "message": "is this whole memset required?  if so, I think we should do that in separate patch, since this didn\u0027t get zeroed in original code either\n\nit does look like you\u0027ve uncovered a bug here - and one that I\u0027m surprised we haven\u0027t had issues with until now?  we need to initialize status-\u003edone \u003d false\n\nbut we shouldn\u0027t have to memset status-\u003ecpl - the whole cpl structure gets copied over in nvme_completion_poll_cb\n\nso I\u0027d suggest we only set the done field to false, and in a separate patch",
+      "revId": "9284271baf74c6ab0b0043f2d9756692cadc631e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
