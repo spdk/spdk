@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6be42a62_b1512baf",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T21:02:37Z",
+      "side": 1,
+      "message": "Convert all of these values to integers?",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81568caa_70f795c4",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T21:02:37Z",
+      "side": 1,
+      "message": "return \u0027{:.0%}\u0027.format((int(n) - int(m)) / int(p))\n\nYou can eliminate these functions and just inline string format statements like that instead.\n\nNote that in Python3, dividing two integers can return a float, so you don\u0027t have to worry about that.",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e82ea40_1b4584fe",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T21:02:37Z",
+      "side": 1,
+      "message": "I think it makes more sense to convert to integers/floats right here, instead of leaving the data in strings. That will simplify some of the math you have to do later.",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3a39125_e4640770",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T21:02:37Z",
+      "side": 1,
+      "message": "Store integers/floats here. Convert them to strings only when you print them out.",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cce0c366_3a659f99",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T21:02:37Z",
+      "side": 1,
+      "message": "No need to check interval here - just time_in_second",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c5f7a1d_2598b8d4",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T21:02:37Z",
+      "side": 1,
+      "message": "This comment doesn\u0027t make sense",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "288adc32_0191531c",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T21:02:37Z",
+      "side": 1,
+      "message": "I think you want to add \"interval\" to cur here, and you want to do it after the sleep.",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
