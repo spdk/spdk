@@ -16,6 +16,24 @@
       "revId": "343a164a21f314f8a5ca8bcebf87b1749c1d2026",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf14ac4f_c261a454",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1004,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T17:44:26Z",
+      "side": 1,
+      "message": "OK - you\u0027re adding this here to make the code consistent when you change it to just call _spdk_blob_load_final().  I\u0027m fine with this.  Changing vote to +2.",
+      "parentUuid": "f50e2388_b836c8a7",
+      "revId": "343a164a21f314f8a5ca8bcebf87b1749c1d2026",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
