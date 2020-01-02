@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71c15105_af779fe4",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T20:34:04Z",
+      "side": 1,
+      "message": "You can do this:\n\nstatic struct nvmf_target g_nvmf_tgt \u003d {\n    .max_subsystems \u003d NVMF_DEFAULT_SUBSYSTEMS,\n};\n\nThen you don\u0027t need to set it to the default value below either.",
+      "revId": "18908fb24c95becccd94b477b80bca6c8a459d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47e8f094_66dc94a6",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T20:34:04Z",
+      "side": 1,
+      "message": "An NVMe-oF target is a collection of subsystems, namespaces, and poll groups, and defines the scope of the NVMe-oF discovery service.",
+      "revId": "18908fb24c95becccd94b477b80bca6c8a459d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "171cbc55_c96d178d",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T20:34:04Z",
+      "side": 1,
+      "message": "Make sure to use \"NVMe-oF\" in comments instead of nvmf and NVMF",
+      "revId": "18908fb24c95becccd94b477b80bca6c8a459d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e2278d1_83aa353a",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T20:34:04Z",
+      "side": 1,
+      "message": "Use periods after the numbers (\u0027.\u0027)",
+      "revId": "18908fb24c95becccd94b477b80bca6c8a459d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bac166b3_7c2f9dda",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T20:34:04Z",
+      "side": 1,
+      "message": "Allow any host to access the discovery subsystem",
+      "revId": "18908fb24c95becccd94b477b80bca6c8a459d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0afb4a38_af719bc9",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-02T20:34:04Z",
+      "side": 1,
+      "message": "blank line after return",
+      "revId": "18908fb24c95becccd94b477b80bca6c8a459d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
