@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f7096ee_29f2fd19",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1339,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T21:50:46Z",
+      "side": 1,
+      "message": "should we spdk_app_stop(0) if TAILQ_EMPTY(\u0026g_head)?\n\nit\u0027s not clear to me why that should be removed here - if it is no longer needed, let\u0027s remove it in a separate patch",
+      "revId": "462efb3e8c11f64b55e3a1498b832f5c0c8db8bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
