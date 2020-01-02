@@ -1024,8 +1024,6 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		free(ctx);
 		return;
 	}
-	ctx->seq = seq;
-
 
 	if (spdk_blob_is_thin_provisioned(blob)) {
 		rc = _spdk_blob_get_xattr_value(blob, BLOB_SNAPSHOT, &value, &len, true);
@@ -1083,6 +1081,7 @@ _spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->num_pages = 1;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
+	ctx->seq = seq;
 
 	page_num = _spdk_bs_blobid_to_page(blob->id);
 	lba = _spdk_bs_page_to_lba(blob->bs, bs->md_start + page_num);
