@@ -1627,6 +1627,8 @@ static void
 nvme_rdma_qpair_disconnect(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
+	struct nvme_rdma_ctrlr *rctrlr;
+	struct nvme_rdma_cm_event_entry *entry, *tmp;
 
 	nvme_qpair_set_state(qpair, NVME_QPAIR_DISABLED);
 	nvme_rdma_unregister_mem(rqpair);
@@ -1636,6 +1638,21 @@ nvme_rdma_qpair_disconnect(struct spdk_nvme_qpair *qpair)
 	if (rqpair->evt) {
 		rdma_ack_cm_event(rqpair->evt);
 		rqpair->evt = NULL;
+	}
+
+	/*
+	 * This works because we have the controller lock both in
+	 * this function and in the function where we add new events.
+	 */
+	if (qpair->ctrlr != NULL) {
+		rctrlr = nvme_rdma_ctrlr(qpair->ctrlr);
+		STAILQ_FOREACH_SAFE(entry, &rctrlr->pending_cm_events, link, tmp) {
+			if (nvme_rdma_qpair(entry->evt->id->context) == rqpair) {
+				STAILQ_REMOVE(&rctrlr->pending_cm_events, entry, nvme_rdma_cm_event_entry, link);
+				rdma_ack_cm_event(entry->evt);
+				STAILQ_INSERT_HEAD(&rctrlr->free_cm_events, entry, link);
+			}
+		}
 	}
 
 	if (rqpair->cm_id) {
