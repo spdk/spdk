@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29bd7f0a_5de6ab4f",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1697,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:12:35Z",
+      "side": 1,
+      "message": "how does this function work with custom transports?  (or maybe you address this in a later patch...)",
+      "revId": "63925e0f97be64a60fcab19a9a142977f9a99883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d86b76d_f15d5cde",
+        "filename": "test/unit/lib/nvmf/fc.c/fc_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:12:35Z",
+      "side": 1,
+      "message": "these changes don\u0027t look right",
+      "revId": "63925e0f97be64a60fcab19a9a142977f9a99883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
