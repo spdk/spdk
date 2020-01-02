@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c22ca50_f600cbba",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1038,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-02T20:05:29Z",
+      "side": 1,
+      "message": "shouldn\u0027t we just replace the trtype check with this trstring one?\n\nin the non-custom case, we\u0027re going to be comparing the trstrings anyways, so keeping the trtype check doesn\u0027t save any CPU cycles\n\nor maybe you only do this comparison if the trtype is CUSTOM - to make it clear that we\u0027re only checking it for that case",
+      "revId": "6c350a378fde1c15532b01b3ce9944e7f30ec7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
