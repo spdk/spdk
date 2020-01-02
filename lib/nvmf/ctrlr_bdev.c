@@ -105,6 +105,19 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 	spdk_bdev_free_io(bdev_io);
 }
 
+static void
+nvmf_bdev_ctrlr_complete_admin_cmd(struct spdk_bdev_io *bdev_io, bool success,
+				   void *cb_arg)
+{
+	struct spdk_nvmf_request *req = cb_arg;
+
+	if (req->cmd_cb_fn) {
+		req->cmd_cb_fn(req);
+	}
+
+	nvmf_bdev_ctrlr_complete_cmd(bdev_io, success, req);
+}
+
 void
 spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata,
 				 bool dif_insert_or_strip)
@@ -200,6 +213,14 @@ spdk_nvmf_ctrlr_process_io_cmd_resubmit(void *arg)
 	struct spdk_nvmf_request *req = arg;
 
 	spdk_nvmf_ctrlr_process_io_cmd(req);
+}
+
+static void
+spdk_nvmf_ctrlr_process_admin_cmd_resubmit(void *arg)
+{
+	struct spdk_nvmf_request *req = arg;
+
+	spdk_nvmf_ctrlr_process_admin_cmd(req);
 }
 
 static void
@@ -526,6 +547,30 @@ spdk_nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_d
 		}
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+}
+
+int
+spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
+		spdk_nvmf_nvme_passthru_cmd_cb cb_fn)
+{
+	int rc;
+
+	req->cmd_cb_fn = cb_fn;
+
+	rc = spdk_bdev_nvme_admin_passthru(desc, ch, &req->cmd->nvme_cmd, req->data, req->length,
+					   nvmf_bdev_ctrlr_complete_admin_cmd, req);
+	if (spdk_unlikely(rc)) {
+		if (rc == -ENOMEM) {
+			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_admin_cmd_resubmit, req);
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+		}
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 

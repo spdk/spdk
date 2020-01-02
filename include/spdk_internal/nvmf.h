@@ -31,11 +31,12 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_NVMF_INTERNAL_H_
-#define SPDK_NVMF_INTERNAL_H_
+#ifndef SPDK_INTERNAL_NVMF_H_
+#define SPDK_INTERNAL_NVMF_H_
 
 #include "spdk/stdinc.h"
 #include "spdk/nvmf.h"
+#include "spdk/bdev.h"
 
 typedef enum _spdk_nvmf_request_exec_status {
 	SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE,
@@ -50,4 +51,25 @@ int spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 				struct spdk_nvme_cpl *rsp,
 				struct spdk_nvme_ns_data *nsdata);
 
-#endif /* SPDK_NVMF_INTERNAL_H_ */
+typedef int (*spdk_nvmf_custom_cmd_hdlr)(struct spdk_nvmf_request *req);
+void spdk_nvmf_set_custom_admin_cmd_hdlr(uint8_t opc, spdk_nvmf_custom_cmd_hdlr hdlr);
+
+void spdk_nvmf_set_passthru_admin_cmd(uint8_t opc, uint32_t forward_nsid);
+
+typedef void (*spdk_nvmf_nvme_passthru_cmd_cb)(struct spdk_nvmf_request *req);
+int spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch, struct spdk_nvmf_request *req, spdk_nvmf_nvme_passthru_cmd_cb cb_fn);
+
+int spdk_nvmf_request_get_bdev(uint32_t nsid,
+			       struct spdk_nvmf_request *req,
+			       struct spdk_bdev **bdev,
+			       struct spdk_bdev_desc **desc,
+			       struct spdk_io_channel **ch);
+struct spdk_nvmf_ctrlr *spdk_nvmf_request_get_ctrlr(struct spdk_nvmf_request *req);
+struct spdk_nvmf_subsystem *spdk_nvmf_request_get_subsystem(struct spdk_nvmf_request *req);
+void spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length);
+struct spdk_nvme_cmd *spdk_nvmf_request_get_cmd(struct spdk_nvmf_request *req);
+struct spdk_nvme_cpl *spdk_nvmf_request_get_response(struct spdk_nvmf_request *req);
+int spdk_nvmf_custom_identify_hdlr(struct spdk_nvmf_request *req);
+
+#endif /* SPDK_INTERNAL_NVMF_H_ */
