@@ -70,6 +70,24 @@
       "revId": "f3da485ceb6a1ccceac5d1315cc4fec363e62c5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c91e6c03_6e6d7187",
+        "filename": "autotest.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T23:03:41Z",
+      "side": 1,
+      "message": "Seth clued me in offline.  I\u0027m fine with the keeping this as it is, but suggest adding a brief comment explaining why someone shouldn\u0027t later do this \"obvious\" simplification.\n\nYou may also want to update the create_test_list function to at least throw an error if someone tries to put a $ in a run_test name",
+      "parentUuid": "30f20de3_1c54b722",
+      "revId": "f3da485ceb6a1ccceac5d1315cc4fec363e62c5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
