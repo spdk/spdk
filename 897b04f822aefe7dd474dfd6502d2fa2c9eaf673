@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ddd1afb_3f78da2d",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T21:57:26Z",
+      "side": 1,
+      "message": "in at least one case, we lost a call to verify_bdev_present() (line 445 in old version)\n\nI like making the helper functions for this, but it would be better to do it as one or more separate patches, so that the refactoring doesn\u0027t get mixed in with the new functionality added in this patch.  Otherwise it\u0027s harder on the reviewer to try to keep track of what changes are part of refactoring and what changes are part of the new functionality.  I don\u0027t exactly see what was changed here except for the refactoring.\n\nThanks!",
+      "revId": "897b04f822aefe7dd474dfd6502d2fa2c9eaf673",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
