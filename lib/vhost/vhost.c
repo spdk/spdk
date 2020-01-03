@@ -1337,36 +1337,6 @@ spdk_vhost_unlock(void)
 	pthread_mutex_unlock(&g_vhost_mutex);
 }
 
-static void
-vhost_create_poll_group_done(void *ctx)
-{
-	spdk_vhost_init_cb init_cb = ctx;
-	int ret;
-
-	ret = vhost_scsi_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost controllers\n");
-		goto out;
-	}
-
-	ret = vhost_blk_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
-		goto out;
-	}
-
-#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
-	ret = vhost_nvme_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost NVMe controllers\n");
-		goto out;
-	}
-#endif
-
-out:
-	init_cb(ret);
-}
-
 void
 spdk_vhost_init(spdk_vhost_init_cb init_cb)
 {
@@ -1398,8 +1368,26 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 		goto err_out;
 	}
 
-	vhost_create_poll_group_done(init_cb);
-	return;
+	ret = vhost_scsi_controller_construct();
+	if (ret != 0) {
+		SPDK_ERRLOG("Cannot construct vhost controllers\n");
+		goto err_out;
+	}
+
+	ret = vhost_blk_controller_construct();
+	if (ret != 0) {
+		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
+		goto err_out;
+	}
+
+#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
+	ret = vhost_nvme_controller_construct();
+	if (ret != 0) {
+		SPDK_ERRLOG("Cannot construct vhost NVMe controllers\n");
+		goto err_out;
+	}
+#endif
+
 err_out:
 	init_cb(ret);
 }
