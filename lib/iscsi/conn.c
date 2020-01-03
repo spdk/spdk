@@ -1694,6 +1694,8 @@ _init_conn_thread(void *ctx)
 	struct spdk_iscsi_poll_group_ctx *pg_ctx = ctx;
 
 	ch = spdk_get_io_channel(&g_spdk_iscsi);
+	assert(ch != NULL);
+
 	pg = spdk_io_channel_get_ctx(ch);
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
@@ -1701,6 +1703,7 @@ _init_conn_thread(void *ctx)
 	pg_ctx->pg = pg;
 	TAILQ_FOREACH(sch_conn, &pg_ctx->initial_connections, tailq) {
 		sch_conn->conn->pg = pg;
+		sch_conn->conn->sess->target->pg = pg;
 		iscsi_conn_full_feature_migrate(sch_conn->conn);
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
@@ -1740,6 +1743,7 @@ _schedule_new(struct spdk_iscsi_conn *conn, int core_id)
 	if (pg_ctx) {
 		if (pg_ctx->pg) {
 			conn->pg = pg_ctx->pg;
+			conn->sess->target->pg = pg_ctx->pg;
 			spdk_thread_send_msg(pg_ctx->thread, iscsi_conn_full_feature_migrate, conn);
 			return 0;
 		} else {
@@ -1809,6 +1813,8 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 
 	pthread_mutex_unlock(&target->mutex);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
+	while (target->pg == NULL) {}
 }
 
 static int
