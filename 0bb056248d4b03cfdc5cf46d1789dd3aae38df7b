@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e1b50e6_81e59151",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1247,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T16:27:06Z",
+      "side": 1,
+      "message": "let\u0027s not change the cdata directly like this - this is what the controller returned and it we shouldn\u0027t modify it like this\n\nit really would be better to just have the bdev/nvme code set the bdev value to 0 if the controller doesn\u0027t support it",
+      "revId": "0bb056248d4b03cfdc5cf46d1789dd3aae38df7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5808a45_369fb7e3",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T16:27:06Z",
+      "side": 1,
+      "message": "same here\n\nlet\u0027s just abandon this patch",
+      "revId": "0bb056248d4b03cfdc5cf46d1789dd3aae38df7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
