@@ -16,6 +16,24 @@
       "revId": "77b019d0dc726fc1af07f5474f101efa24fb883b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3db28ddc_eea00ad0",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-03T17:21:47Z",
+      "side": 1,
+      "message": "I think I will still need this parse trstring function for handling user input such as in rpc.py, but I definitely see your point about the roundabout way of assigning the trstring here. Maybe the right thing to do here and in the other transports would be to do a direct copy into the trstring field since we know the value and possibly add the strings for each known transport as #defines.",
+      "parentUuid": "95695c1f_3a2fb007",
+      "revId": "77b019d0dc726fc1af07f5474f101efa24fb883b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
