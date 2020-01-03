@@ -480,6 +480,7 @@ _spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 		}
 		SPDK_ERRLOG("io_channel already allocated for lun %s\n",
 			    spdk_bdev_get_name(lun->bdev));
+		assert(false);
 		return -1;
 	}
 
