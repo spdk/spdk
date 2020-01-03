@@ -1694,6 +1694,8 @@ _init_conn_thread(void *ctx)
 	struct spdk_iscsi_poll_group_ctx *pg_ctx = ctx;
 
 	ch = spdk_get_io_channel(&g_spdk_iscsi);
+	assert(ch != NULL);
+
 	pg = spdk_io_channel_get_ctx(ch);
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
