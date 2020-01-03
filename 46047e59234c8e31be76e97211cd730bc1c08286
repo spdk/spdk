@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b36abbd9_a898e3ec",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1796,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T18:21:47Z",
+      "side": 1,
+      "message": "would __is_lba_aligned() be a better name?  this function may only be used in the write path, but it is not specific to write operations",
+      "revId": "46047e59234c8e31be76e97211cd730bc1c08286",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
