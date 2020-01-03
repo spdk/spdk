@@ -1241,6 +1241,11 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES,
 			     ctrlr->opts.admin_timeout_ms);
+
+	/* We can't assume that ctrl has set this value correctly when fused commands are not supported */
+	if (!ctrlr->cdata.fuses.compare_and_write) {
+		ctrlr->cdata.acwu = 0;
+	}
 }
 
 static int

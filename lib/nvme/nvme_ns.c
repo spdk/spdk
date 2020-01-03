@@ -108,6 +108,12 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 		ns->flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
 		ns->pi_type = nsdata->dps.pit;
 	}
+
+	/* We can't assume that ctrl has set these values correctly when fused commands are not supported */
+	if (!ns->ctrlr->cdata.fuses.compare_and_write) {
+		nsdata->nsfeat.ns_atomic_write_unit = 0;
+		nsdata->nacwu = 0;
+	}
 }
 
 static int
