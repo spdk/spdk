@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc9bc334_f55c20d5",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T22:28:01Z",
+      "side": 1,
+      "message": "if (success \u0026\u0026 orig_io-\u003etype \u003d\u003d SPDK_BDEV_IO_TYPE_ZONE_APPEND)",
+      "revId": "ea764525be3c6bb186dbf3d13db51e0779f1b84f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a2051ea_697b9163",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T22:28:01Z",
+      "side": 1,
+      "message": "I\u0027m just curious - why did you move the old case instead of just add a new case for ZONE_APPEND where it was?",
+      "revId": "ea764525be3c6bb186dbf3d13db51e0779f1b84f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
