@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31a84ae9_e5f9551f",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T17:07:23Z",
+      "side": 1,
+      "message": "Code looks good, but let\u0027s put it immediately after the code for IO_TYPE_READ and IO_TYPE_WRITE closer to the beginning of this function.",
+      "revId": "552e0e51160e8876827a8b2b5bbe5861b4bca18a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b5fd8de_c019534d",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2205,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T17:07:23Z",
+      "side": 1,
+      "message": "Isn\u0027t this pretty much an exact copy of bdev_compare_emulated?",
+      "revId": "552e0e51160e8876827a8b2b5bbe5861b4bca18a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
