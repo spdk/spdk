@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e47084c7_b40e2cd7",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T22:05:08Z",
+      "side": 1,
+      "message": "noticed this when reviewing the next patch\n\nyou should add the \"slba\" thing here, then you don\u0027t have to modify it immediately in the next patch",
+      "revId": "860844ac46f7ea9e41f1d91f16957367a473c4ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f049c61_198020aa",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T22:05:08Z",
+      "side": 1,
+      "message": "I think 208-211 are redundant.  If the first zone_id is invalid, the check inside the for loop will catch it.",
+      "revId": "860844ac46f7ea9e41f1d91f16957367a473c4ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
