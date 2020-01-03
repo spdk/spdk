@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60b280fa_33988519",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-03T14:25:01Z",
+      "side": 1,
+      "message": "Please expand the commit msg",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 48
+      },
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87fef835_4c619460",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-03T14:25:01Z",
+      "side": 1,
+      "message": "Whats the benefit of keeping set of files for each, instead of appending to two and then doing a diff between kernel and cuse ?",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 38
+      },
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a77b9db5_860f2e79",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-03T14:25:01Z",
+      "side": 1,
+      "message": "This should be separate patch.",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 2
+      },
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "593bd7b5_d91476f5",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-03T14:25:01Z",
+      "side": 1,
+      "message": "Whats the reason for modifying error exit within this script ?",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 6
+      },
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81c885ee_b900370b",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-03T14:25:01Z",
+      "side": 1,
+      "message": "I don\u0027t think bdf should be retrieved here, to assure same device is used - same bdf should be used.",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 45
+      },
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81df8bd6_d96ac2b4",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-03T14:25:01Z",
+      "side": 1,
+      "message": "return 1 too ?",
+      "range": {
+        "startLine": 69,
+        "startChar": 1,
+        "endLine": 69,
+        "endChar": 6
+      },
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8857837_3133700f",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-03T14:25:01Z",
+      "side": 1,
+      "message": "Shouldn\u0027t the output files be removed here ?",
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
