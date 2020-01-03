@@ -4517,6 +4517,7 @@ blob_insert_cluster_msg(void)
 	uint64_t free_clusters;
 	uint64_t new_cluster = 0;
 	uint32_t cluster_num = 3;
+	uint32_t extent = 0;
 
 	dev = init_dev();
 
@@ -4552,10 +4553,11 @@ blob_insert_cluster_msg(void)
 	/* Specify cluster_num to allocate and new_cluster will be returned to insert on md_thread.
 	 * This is to simulate behaviour when cluster is allocated after blob creation.
 	 * Such as _spdk_bs_allocate_and_copy_cluster(). */
-	_spdk_bs_allocate_cluster(blob, cluster_num, &new_cluster, false);
+	_spdk_bs_allocate_cluster(blob, cluster_num, &new_cluster, &extent, false);
 	CU_ASSERT(blob->active.clusters[cluster_num] == 0);
 
-	_spdk_blob_insert_cluster_on_md_thread(blob, cluster_num, new_cluster, blob_op_complete, NULL);
+	_spdk_blob_insert_cluster_on_md_thread(blob, cluster_num, new_cluster, extent, blob_op_complete,
+					       NULL);
 	poll_threads();
 
 	CU_ASSERT(blob->active.clusters[cluster_num] != 0);
