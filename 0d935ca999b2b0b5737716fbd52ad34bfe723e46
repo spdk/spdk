@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc0c77ca_0b6e6425",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1568,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T20:57:56Z",
+      "side": 1,
+      "message": "let\u0027s add this functionality in a separate patch, after this one (this patch is already big enough)",
+      "revId": "0d935ca999b2b0b5737716fbd52ad34bfe723e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f736f8f_22eccd6e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2062,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T20:57:56Z",
+      "side": 1,
+      "message": "I wonder if rc \u003e\u003d SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE would make this a bit more clear?",
+      "revId": "0d935ca999b2b0b5737716fbd52ad34bfe723e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5dd3ba78_5f0e62d7",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2737,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T20:57:56Z",
+      "side": 1,
+      "message": "I think this would be easier to read with a regular if statement rather than ternary operator (since the line is so long).",
+      "revId": "0d935ca999b2b0b5737716fbd52ad34bfe723e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6279852f_04f4f4c2",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T20:57:56Z",
+      "side": 1,
+      "message": "could you try just putting this cb_fn in spdk_nvmf_request directly?  spdk_nvmf_request is already about 800 bytes, so adding another function pointer won\u0027t affect it too much - I think it simplifies the code a bit because then you don\u0027t have to allocate a separate context structure",
+      "revId": "0d935ca999b2b0b5737716fbd52ad34bfe723e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c36868f_adccfd11",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T20:57:56Z",
+      "side": 1,
+      "message": "newline after last declaration",
+      "revId": "0d935ca999b2b0b5737716fbd52ad34bfe723e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c73bf295_a5cf7a5b",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T20:57:56Z",
+      "side": 1,
+      "message": "one too many new lines here",
+      "revId": "0d935ca999b2b0b5737716fbd52ad34bfe723e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad1027e5_1e91b964",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T20:57:56Z",
+      "side": 1,
+      "message": "remove this new line",
+      "revId": "0d935ca999b2b0b5737716fbd52ad34bfe723e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c81b9b42_ecd4c1fe",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T20:57:56Z",
+      "side": 1,
+      "message": "but add a new line here",
+      "revId": "0d935ca999b2b0b5737716fbd52ad34bfe723e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ff854fd_607c4879",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T20:57:56Z",
+      "side": 1,
+      "message": "do you want to put your copyright here instead?",
+      "revId": "0d935ca999b2b0b5737716fbd52ad34bfe723e46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
