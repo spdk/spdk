@@ -16,6 +16,24 @@
       "revId": "d789c4d893c2e5c50674237d0f93c85f99e47dbf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aca56db4_bb258100",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 911,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-03T12:49:12Z",
+      "side": 1,
+      "message": "I\u0027ve added new patch before this one. Let me know if this works.",
+      "parentUuid": "0a22fa18_af09beb0",
+      "revId": "d789c4d893c2e5c50674237d0f93c85f99e47dbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
