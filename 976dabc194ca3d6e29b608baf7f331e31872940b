@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28e1720c_b7d9ca3a",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T22:23:24Z",
+      "side": 1,
+      "message": "you could save some code here - put this function before zone_block_get_zone_by_slba(), then change zone_block_get_zone_by_slba to just do:\n\nstruct block_zone *zone \u003d zone_block_get_zone_containing_lba(bdev_node, lba);\n\nif (zone-\u003ezone_info.zone_id \u003d\u003d start_lba) {\n  return zone;\n} else {\n  return NULL;\n}",
+      "revId": "976dabc194ca3d6e29b608baf7f331e31872940b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7806782a_1f61a7e4",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T22:23:24Z",
+      "side": 1,
+      "message": "just return \u0026bdev_node-\u003ezones[index] here (and then you can also remove the zone variable)",
+      "revId": "976dabc194ca3d6e29b608baf7f331e31872940b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
