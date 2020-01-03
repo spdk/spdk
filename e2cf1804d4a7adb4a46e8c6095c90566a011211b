@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "f560bbd7_b50eed27",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-03T17:09:28Z",
+      "side": 1,
+      "message": "By \"differentiated service\" - do you mean different quality of service? Certainly I don\u0027t think anyone would do that by using a less efficient software interface. They\u0027d just do it through throttling. Is there any other use case you see for being able to use two different implementations at the same time?",
+      "parentUuid": "ad95c37d_95a5ecc1",
+      "revId": "e2cf1804d4a7adb4a46e8c6095c90566a011211b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "262fd300_cfd94c46",
         "filename": "/COMMIT_MSG",
         "patchSetId": 8
