@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "197cdec3_17497299",
+        "filename": "app/nvmf_tgt/nvmf_main.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7808bb6d_76529777",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "25b713fb_6be796fa",
         "filename": "app/nvmf_tgt/nvmf_main.c",
         "patchSetId": 4
@@ -33,6 +51,24 @@
       "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0d4494e_439d07ae",
+        "filename": "app/nvmf_tgt/nvmf_main.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "25b713fb_6be796fa",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -140,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "2ca668c7_910d5c02",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1671,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "76167746_8268983d",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "45081b6f_ee20fc2f",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 4
@@ -157,6 +211,24 @@
     },
     {
       "key": {
+        "uuid": "7d0e8980_1707aa0a",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2744,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "45081b6f_ee20fc2f",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb80652d_f148da18",
         "filename": "lib/nvmf/ctrlr_bdev.c",
         "patchSetId": 4
@@ -168,6 +240,24 @@
       "writtenOn": "2020-01-02T18:58:31Z",
       "side": 1,
       "message": "you can just reuse spdk_nvmf_ctrlr_process_io_cmd_resubmit for your use case rather than adding a separate function",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "acb965e2_8bf29bfd",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Don\u0027t think so... spdk_nvmf_ctrl_process_io_cmd is different from spdk_nvmf_ctrl_process_admin_cmd that is being called for the resubmit.",
+      "parentUuid": "bb80652d_f148da18",
       "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -191,6 +281,24 @@
     },
     {
       "key": {
+        "uuid": "019161ee_05eee20b",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "692adf95_1aea13d3",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc44e039_2a0855ba",
         "filename": "lib/nvmf/custom_cmd_hdlr.c",
         "patchSetId": 4
@@ -205,6 +313,24 @@
       "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f51580a5_73fe8231",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dc44e039_2a0855ba",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -225,6 +351,24 @@
     },
     {
       "key": {
+        "uuid": "c1101cca_035b3d84",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9735ed97_0bd720ff",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "09efda47_863e3797",
         "filename": "lib/nvmf/custom_cmd_hdlr.c",
         "patchSetId": 4
@@ -239,6 +383,24 @@
       "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b751d596_9babbea7",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "09efda47_863e3797",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -259,6 +421,24 @@
     },
     {
       "key": {
+        "uuid": "e41e0d63_90b732eb",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de473caa_df94006f",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67eb1986_fe917576",
         "filename": "lib/nvmf/custom_cmd_hdlr.c",
         "patchSetId": 4
@@ -273,6 +453,24 @@
       "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b90d4a8_483eb3ca",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "67eb1986_fe917576",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -293,6 +491,24 @@
     },
     {
       "key": {
+        "uuid": "6c1b1d81_eaee2ff7",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "513c6bfc_74fa2054",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ea5c0506_0e360277",
         "filename": "lib/nvmf/custom_cmd_hdlr.c",
         "patchSetId": 4
@@ -307,6 +523,24 @@
       "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79fb427a_fa9247a9",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ea5c0506_0e360277",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -327,6 +561,24 @@
     },
     {
       "key": {
+        "uuid": "3125df17_9ce7d4d3",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1378,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "096cd5e4_c76c4804",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be8ca9d2_0f337cb5",
         "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
         "patchSetId": 4
@@ -341,6 +593,24 @@
       "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "552996c2_5953125d",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1379,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-03T15:08:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be8ca9d2_0f337cb5",
+      "revId": "eff3b1fe178e4cf4d0098fc48976e89d1a49e0de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
