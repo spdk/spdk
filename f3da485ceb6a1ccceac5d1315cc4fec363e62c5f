@@ -52,6 +52,24 @@
       "revId": "f3da485ceb6a1ccceac5d1315cc4fec363e62c5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30f20de3_1c54b722",
+        "filename": "autotest.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T22:45:50Z",
+      "side": 1,
+      "message": "I\u0027m probably missing something obvious here.  But doesn\u0027t the parser operate on the output, not the shell script?  Meaning in the output, $SPDK_TEST_NVMF_TRANSPORT will get replaced with rdma/tcp/fc anyways.",
+      "parentUuid": "2e1a6802_e1de845e",
+      "revId": "f3da485ceb6a1ccceac5d1315cc4fec363e62c5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
