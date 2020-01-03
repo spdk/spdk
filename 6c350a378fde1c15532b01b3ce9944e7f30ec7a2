@@ -16,6 +16,24 @@
       "revId": "6c350a378fde1c15532b01b3ce9944e7f30ec7a2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd6a0ea4_58955f6b",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1038,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-03T17:28:33Z",
+      "side": 1,
+      "message": "Yeah, it\u0027s probably a good idea to only check one or the other. The canonical value for standard transports should be the trtype and the canonical value for custom transports should be the trstring. That way we can avoid coherency problems between trstring and trtype for a given trid.",
+      "parentUuid": "0c22ca50_f600cbba",
+      "revId": "6c350a378fde1c15532b01b3ce9944e7f30ec7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
