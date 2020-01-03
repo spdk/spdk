@@ -33,6 +33,23 @@
       "revId": "976dabc194ca3d6e29b608baf7f331e31872940b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49181206_f7bb4854",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T22:31:08Z",
+      "side": 1,
+      "message": "you should just remove this if (rc) completely - you can\u0027t goto write_fail here, otherwise you\u0027ll try to unlock the spin lock again\n\njust let this fall through and the rc will get returned on line 409",
+      "revId": "976dabc194ca3d6e29b608baf7f331e31872940b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
