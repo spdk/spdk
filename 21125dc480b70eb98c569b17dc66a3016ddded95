@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b3a2fb6_b1589577",
+        "filename": "autobuild.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T22:57:53Z",
+      "side": 1,
+      "message": "should we just move lines 60-63 here?  then we can avoid having to do an extra configure, and we wouldn\u0027t have to move the echo/uname/$MAKE code either",
+      "revId": "21125dc480b70eb98c569b17dc66a3016ddded95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f9c0c831_b48eb1d7",
+        "filename": "autobuild.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T22:57:53Z",
+      "side": 1,
+      "message": "do we need this configure?  we\u0027ve already configured at line 25, and if ocf_precompile gets called, then we will also configure at line 43",
+      "revId": "21125dc480b70eb98c569b17dc66a3016ddded95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
