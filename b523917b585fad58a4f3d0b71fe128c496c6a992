@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2cb7c09f_9e7b743e",
+        "filename": "autobuild.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T22:52:58Z",
+      "side": 0,
+      "message": "you didn\u0027t remove the matching timing_exit",
+      "revId": "b523917b585fad58a4f3d0b71fe128c496c6a992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
