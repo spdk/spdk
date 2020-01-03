@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2cc1ec0e_b93b612f",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T21:45:19Z",
+      "side": 1,
+      "message": "let\u0027s change these to HOST_ID_SIZE_8, etc.\n\nusing the capital letters makes it obviously when it\u0027s used that these are some kind of constant\n\nbut maybe this would just be easier to use uint32_t value directly and avoid the enumeration?  I think the enumeration just makes it more difficult to understand",
+      "revId": "8b3de65ed38e10f74976a1b48e26a3d5c8ed19dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58ff5055_58f4982e",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T21:45:19Z",
+      "side": 1,
+      "message": "I think you should also test an invalid host id size.  Have test_set_host_id_by_case return an int, and confirm that size 8 and size 16 both return 0, but a \u0027bad\u0027 size returns -EINVAL.",
+      "revId": "8b3de65ed38e10f74976a1b48e26a3d5c8ed19dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
