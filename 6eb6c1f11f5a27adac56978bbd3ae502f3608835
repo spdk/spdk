@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5ecbd873_34e10d23",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-03T07:37:39Z",
+      "side": 1,
+      "message": "yes , when json library convert json string to dictionary , json int will convert to python int , and json string will convert to python string . \nand also python3 int is 64bit , so it can store this number.",
+      "parentUuid": "6be42a62_b1512baf",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81568caa_70f795c4",
         "filename": "scripts/iostat.py",
         "patchSetId": 12
@@ -33,6 +51,24 @@
       "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74bc03eb_1e6aa792",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-03T07:37:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "81568caa_70f795c4",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "5956e790_66363007",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-03T07:37:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2e82ea40_1b4584fe",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b3a39125_e4640770",
         "filename": "scripts/iostat.py",
         "patchSetId": 12
@@ -67,6 +121,24 @@
       "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a10d9d75_6076fc93",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-03T07:37:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b3a39125_e4640770",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "d041e450_93f0670f",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-03T07:37:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cce0c366_3a659f99",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3c5f7a1d_2598b8d4",
         "filename": "scripts/iostat.py",
         "patchSetId": 12
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "f5c8c4ef_f6f44338",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-03T07:37:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3c5f7a1d_2598b8d4",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "288adc32_0191531c",
         "filename": "scripts/iostat.py",
         "patchSetId": 12
@@ -118,6 +226,24 @@
       "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98318a50_65afe57a",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-03T07:37:39Z",
+      "side": 1,
+      "message": "yes , but python don\u0027t have do....while . only have while.",
+      "parentUuid": "288adc32_0191531c",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
