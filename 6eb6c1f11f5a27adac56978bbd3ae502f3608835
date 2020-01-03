@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "e0ce6240_4f77e821",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-03T16:50:55Z",
+      "side": 1,
+      "message": "So then why do you need the int(value) on the cases above?",
+      "parentUuid": "5ecbd873_34e10d23",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81568caa_70f795c4",
         "filename": "scripts/iostat.py",
         "patchSetId": 12
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "Done",
       "parentUuid": "81568caa_70f795c4",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be65e09b_face2ad2",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-03T16:50:55Z",
+      "side": 1,
+      "message": "But now the body of these functions is the same number of characters as the function name. Just eliminate all of the functions.",
+      "parentUuid": "74bc03eb_1e6aa792",
       "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -241,6 +277,24 @@
       "side": 1,
       "message": "yes , but python don\u0027t have do....while . only have while.",
       "parentUuid": "288adc32_0191531c",
+      "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6a138be_2cf4cd34",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-03T16:50:55Z",
+      "side": 1,
+      "message": "I\u0027m saying this loop should look like this:\n\nwhile (True):\n    last_cpu_stat, bdev_stats \u003d io_stat_display(...)\n\n    if cur \u003e\u003d time_in_second:\n        break\n\n    time.sleep(interval)\n    cur +\u003d interval\n\n\nThe key differences being where cur is incremented, and incrementing cur by interval instead of by 1. When you write it this way, you can actually get rid of the if statement on line 313 too.",
+      "parentUuid": "98318a50_65afe57a",
       "revId": "6eb6c1f11f5a27adac56978bbd3ae502f3608835",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
