@@ -54,7 +54,7 @@ static int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
 static int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
 static void _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno);
 static void _spdk_blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
-		uint64_t cluster, spdk_blob_op_complete cb_fn, void *cb_arg);
+		uint64_t cluster, uint32_t extent, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 static int _spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
 				uint16_t value_len, bool internal);
@@ -114,7 +114,7 @@ _spdk_blob_insert_cluster(struct spdk_blob *blob, uint32_t cluster_num, uint64_t
 
 static int
 _spdk_bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
-			  uint64_t *lowest_free_cluster, bool update_map)
+			  uint64_t *lowest_free_cluster, uint32_t *lowest_free_md_page, bool update_map)
 {
 	pthread_mutex_lock(&blob->bs->used_clusters_mutex);
 	*lowest_free_cluster = spdk_bit_array_find_first_clear(blob->bs->used_clusters,
@@ -1555,6 +1555,7 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 	uint64_t	i;
 	uint64_t	*tmp;
 	uint64_t	lfc; /* lowest free cluster */
+	uint32_t	lfmd; /*  lowest free md page */
 	uint64_t	num_clusters;
 	struct spdk_blob_store *bs;
 
@@ -1614,9 +1615,11 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 
 	if (spdk_blob_is_thin_provisioned(blob) == false) {
 		lfc = 0;
+		lfmd = 0;
 		for (i = num_clusters; i < sz; i++) {
-			_spdk_bs_allocate_cluster(blob, i, &lfc, true);
+			_spdk_bs_allocate_cluster(blob, i, &lfc, &lfmd, true);
 			lfc++;
+			lfmd++;
 		}
 	}
 
@@ -1781,6 +1784,7 @@ struct spdk_blob_copy_cluster_ctx {
 	uint8_t *buf;
 	uint64_t page;
 	uint64_t new_cluster;
+	uint32_t new_extent_page;
 	spdk_bs_sequence_t *seq;
 };
 
@@ -1842,7 +1846,7 @@ _spdk_blob_write_copy_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	cluster_number = _spdk_bs_page_to_cluster(ctx->blob->bs, ctx->page);
 
 	_spdk_blob_insert_cluster_on_md_thread(ctx->blob, cluster_number, ctx->new_cluster,
-					       _spdk_blob_insert_cluster_cpl, ctx);
+					       ctx->new_extent_page, _spdk_blob_insert_cluster_cpl, ctx);
 }
 
 static void
@@ -1915,7 +1919,8 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 		}
 	}
 
-	rc = _spdk_bs_allocate_cluster(blob, cluster_number, &ctx->new_cluster, false);
+	rc = _spdk_bs_allocate_cluster(blob, cluster_number, &ctx->new_cluster, &ctx->new_extent_page,
+				       false);
 	if (rc != 0) {
 		spdk_free(ctx->buf);
 		free(ctx);
@@ -1947,7 +1952,7 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 					     _spdk_blob_write_copy, ctx);
 	} else {
 		_spdk_blob_insert_cluster_on_md_thread(ctx->blob, cluster_number, ctx->new_cluster,
-						       _spdk_blob_insert_cluster_cpl, ctx);
+						       ctx->new_extent_page, _spdk_blob_insert_cluster_cpl, ctx);
 	}
 }
 
@@ -6150,7 +6155,7 @@ _spdk_blob_insert_cluster_msg(void *arg)
 
 static void
 _spdk_blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
-				       uint64_t cluster, spdk_blob_op_complete cb_fn, void *cb_arg)
+				       uint64_t cluster, uint32_t extent_page, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_insert_cluster_ctx *ctx;
 
