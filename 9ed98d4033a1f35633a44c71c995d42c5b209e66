@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80952b3f_4a1733c7",
+        "filename": "autobuild.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-03T23:07:45Z",
+      "side": 1,
+      "message": "after seeing a few of these patches now, I\u0027m wondering if we should just put the new define the new function here and then put the call to it right after the definition\n\nI think that makes the test script easier to read - you don\u0027t have to scroll up and down between where the call is made and where the function is defined\n\nwhat do you think?",
+      "revId": "9ed98d4033a1f35633a44c71c995d42c5b209e66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
