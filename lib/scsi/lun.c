@@ -478,8 +478,10 @@ _spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 			lun->ref++;
 			return 0;
 		}
-		SPDK_ERRLOG("io_channel already allocated for lun %s\n",
-			    spdk_bdev_get_name(lun->bdev));
+		SPDK_ERRLOG("io_channel already allocated for lun %s , it is: %p with thread: %p\n",
+			    spdk_bdev_get_name(lun->bdev),
+			    lun->io_channel,
+			    spdk_io_channel_get_thread(lun->io_channel));
 		return -1;
 	}
 
