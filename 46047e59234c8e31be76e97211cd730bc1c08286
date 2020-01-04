@@ -16,6 +16,24 @@
       "revId": "46047e59234c8e31be76e97211cd730bc1c08286",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e922c0ee_51640ffe",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1796,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2020-01-04T03:07:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b36abbd9_a898e3ec",
+      "revId": "46047e59234c8e31be76e97211cd730bc1c08286",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
