@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "1e7fc8da_4ad5c423",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T22:04:13Z",
+      "side": 1,
+      "message": "Both of g_scsi_cmd_array and its size are for JSON config file. So can we remove these for now?",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "72bca1c2_fe79e69f",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -234,6 +251,52 @@
       "writtenOn": "2020-01-05T02:32:38Z",
       "side": 1,
       "message": "It will be OK to check only g_run in this function. We can remove max_io_to_complete and related code for now.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bdad2604_4924d2ca",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1078,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T22:04:13Z",
+      "side": 1,
+      "message": "Can we move this operation to the line 1038?",
+      "range": {
+        "startLine": 1071,
+        "startChar": 1,
+        "endLine": 1078,
+        "endChar": 0
+      },
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa56611e_1a496027",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T22:04:13Z",
+      "side": 1,
+      "message": "Can we set the timeout of this poller to g_runtime * spdk_get_ticks_hz()?\nThen this poller just sets g_run to false?",
+      "range": {
+        "startLine": 1096,
+        "startChar": 48,
+        "endLine": 1096,
+        "endChar": 68
+      },
       "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
