@@ -16,6 +16,24 @@
       "revId": "9ed98d4033a1f35633a44c71c995d42c5b209e66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c55f1d23_046cb024",
+        "filename": "autobuild.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-05T21:02:19Z",
+      "side": 1,
+      "message": "Personally I like it better like this - feels like more common practice to me but juste an opinion...",
+      "parentUuid": "80952b3f_4a1733c7",
+      "revId": "9ed98d4033a1f35633a44c71c995d42c5b209e66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
