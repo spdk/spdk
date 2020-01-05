@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fdd7eb8f_3163fdb6",
+        "filename": "autorun_post.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-05T21:49:50Z",
+      "side": 1,
+      "message": "So with this comment the print will live until the SPDK project ends :) Maybe something a bit more descriptive?",
+      "revId": "0142d00fadb63a4783854e1cb61a5b8e4fdfb9ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
