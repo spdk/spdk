@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49193015_3b6fd589",
+        "filename": "scripts/vagrant/autorun-spdk.conf",
+        "patchSetId": 9
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-05T21:08:09Z",
+      "side": 1,
+      "message": "I think a paragraph here explaining (summary) of your commit message and clearly indicating what\nSPDK_TEST_AUTOBUILD does when set or cleared would make this great change even greater :)",
+      "revId": "67b8a979cdb93e5cf164f9442101dd2402c3809b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
