@@ -1,0 +1,293 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eecb0c0c_8f425cbb",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "Please remove g_json_file for now.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72bca1c2_fe79e69f",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "This struct is not used anywhere.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cdd7f68b_f3a3f258",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "iov_ctx may be better as variable name.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ae3259a_28480191",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "timeout_tsc is only set and is not referenced anywhere. How do we use this variable?",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa653955_61764ecd",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "we can call free(g_scsi_cmd_array) without if check.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50229205_3579a61f",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "Is this necessary now? We can remove this for now until JSON config file is supported?",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36aac4ad_9ed18eec",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "Is this necessary now?",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e56c7f82_ff469bcb",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "We can\u0027t know the size of array here, and so this assert will not be meaningful.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5610ffdb_b9a231b4",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "I don\u0027t think we have to pass opcode here. We can set randomized value to 48 bytes PDU BHS regardless of opcode.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71151148_d8535cf7",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "sizeof(io_ctx-\u003ereq.nop_out_req) is not size of what the pointer points to.\nIt is the size of the pointer io_ctx-\u003ereq.nop_out_req, i.e., 8 bytes.\nPDU header size is 48 bytes and fixed regardless of opcode.\nI think we should use sizeof(struct iscsi_bhs) instead.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ee99fe3_00c6de86",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "We don\u0027t have to logout when we get reject response.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "089ef6ff_5db0dadc",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "Should we set 0 to hdigest_valid_bytes?",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e81732b8_4db96757",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 972,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "Will you remove this until JSON config file is supported?",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ac643f6_a9189ef1",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1024,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "It will be OK to check only g_run in this function. We can remove max_io_to_complete and related code for now.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ed0cfa7_d2a4fadc",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1124,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "Please remove -j option for now.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2d19fc5_3fda62f8",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1139,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "Please remove j option for now.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4bb8306a_3f828a5b",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1179,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-05T02:32:38Z",
+      "side": 1,
+      "message": "We can remove this if block until JSON config file is supported.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
