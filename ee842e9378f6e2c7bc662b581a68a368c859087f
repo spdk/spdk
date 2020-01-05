@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e00e0d6_dfb972d0",
+        "filename": "autotest.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-05T21:11:27Z",
+      "side": 1,
+      "message": "where did this come from?",
+      "revId": "ee842e9378f6e2c7bc662b581a68a368c859087f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
