@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "643c1d64_a6c4b6d8",
+        "filename": "autobuild.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-05T20:57:39Z",
+      "side": 1,
+      "message": "if we do, I think a comment here is still needed \"make sure to reconfigure after calling this func\".",
+      "parentUuid": "5b3a2fb6_b1589577",
+      "revId": "21125dc480b70eb98c569b17dc66a3016ddded95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f9c0c831_b48eb1d7",
         "filename": "autobuild.sh",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-03T22:57:53Z",
       "side": 1,
       "message": "do we need this configure?  we\u0027ve already configured at line 25, and if ocf_precompile gets called, then we will also configure at line 43",
+      "revId": "21125dc480b70eb98c569b17dc66a3016ddded95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a4e84962_08c15e2c",
+        "filename": "autobuild.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-05T20:57:39Z",
+      "side": 1,
+      "message": "the one in line 43 is conditional based on ocf precompile (its in a function)",
+      "parentUuid": "f9c0c831_b48eb1d7",
       "revId": "21125dc480b70eb98c569b17dc66a3016ddded95",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
