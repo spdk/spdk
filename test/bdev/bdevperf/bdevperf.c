@@ -1343,13 +1343,13 @@ spdk_bdevperf_shutdown_cb(void)
 
 	g_shutdown = true;
 
-	if (g_target_count == 0) {
-		bdevperf_fini(g_run_rc);
+	if (TAILQ_EMPTY(&g_head)) {
+		spdk_app_stop(0);
 		return;
 	}
 
-	if (TAILQ_EMPTY(&g_head)) {
-		spdk_app_stop(0);
+	if (g_target_count == 0) {
+		bdevperf_fini(g_run_rc);
 		return;
 	}
 
