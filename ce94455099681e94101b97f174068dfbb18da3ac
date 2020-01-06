@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cc35a80_975be170",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1327,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-06T20:16:12Z",
+      "side": 1,
+      "message": "so this new function does more than the one-liner it replaced - are you fixing an issue here in addition to factoring out the code into bdevperf_test_done()?",
+      "revId": "ce94455099681e94101b97f174068dfbb18da3ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
