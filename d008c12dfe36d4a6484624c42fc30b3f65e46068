@@ -2,6 +2,74 @@
   "comments": [
     {
       "key": {
+        "uuid": "fd3ce845_f23ff2b3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-06T18:57:23Z",
+      "side": 1,
+      "message": "A brief comment for io_locked would be good.",
+      "revId": "d008c12dfe36d4a6484624c42fc30b3f65e46068",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62972001_9167d97e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1951,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-06T18:57:23Z",
+      "side": 1,
+      "message": "This set of conditions I think is going to be hard for someone to understand in the future w/o going through lots of code. Can you add a brief comment explaining the conditions?",
+      "revId": "d008c12dfe36d4a6484624c42fc30b3f65e46068",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8286f81_cce0aceb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 5542,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-06T18:57:23Z",
+      "side": 1,
+      "message": "are you planning on another ret value? If just the one, why not make this void?",
+      "revId": "d008c12dfe36d4a6484624c42fc30b3f65e46068",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c4b9b70_8539c8dc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 5617,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-06T18:57:23Z",
+      "side": 1,
+      "message": "would an assert be better here? Seems like we\u0027re just trying to make sure new users of the API get it right - or is there a run-time reason why this might be NULL long after code is initially written?",
+      "revId": "d008c12dfe36d4a6484624c42fc30b3f65e46068",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f8cf8e75_58ccc041",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 8
