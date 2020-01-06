@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7cb2cc18_45b31994",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-06T09:31:05Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e478d346_c9261a38",
+      "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cbc4a3dc_073f9f66",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 11
@@ -33,6 +51,24 @@
       "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29e21514_ac5c468e",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-06T09:31:05Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "cbc4a3dc_073f9f66",
+      "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -59,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "f435e785_8d5be442",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-06T09:31:05Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5860f0ad_3f10ecfe",
+      "range": {
+        "startLine": 282,
+        "startChar": 2,
+        "endLine": 282,
+        "endChar": 10
+      },
+      "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ecc168b2_79eb6039",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 11
@@ -79,6 +139,30 @@
       "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85213a40_5c8e0909",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-06T09:31:05Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ecc168b2_79eb6039",
+      "range": {
+        "startLine": 563,
+        "startChar": 16,
+        "endLine": 563,
+        "endChar": 34
+      },
+      "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -105,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "db941399_2a9fbd6c",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 613,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-06T09:31:05Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "fc7405b5_72196034",
+      "range": {
+        "startLine": 613,
+        "startChar": 15,
+        "endLine": 613,
+        "endChar": 17
+      },
+      "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1793ef59_1e24130c",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 11
@@ -116,6 +224,24 @@
       "writtenOn": "2020-01-06T06:32:56Z",
       "side": 1,
       "message": "task is not used here, so you can make process_blk_task() as void function.",
+      "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5215a29f_ff4d67db",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-06T09:31:05Z",
+      "side": 1,
+      "message": "Use the task-\u003elast_idx to update the req_idx.",
+      "parentUuid": "1793ef59_1e24130c",
       "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
