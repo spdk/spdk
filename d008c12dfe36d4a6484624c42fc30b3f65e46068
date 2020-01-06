@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8cf8e75_58ccc041",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 5672,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-06T15:13:20Z",
+      "side": 1,
+      "message": "add a comment here explaining why we\u0027re doing this TAILQ_SWAP",
+      "revId": "d008c12dfe36d4a6484624c42fc30b3f65e46068",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
