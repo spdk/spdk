@@ -64,7 +64,11 @@ static inline size_t spdk_base64_get_encoded_strlen(size_t raw_len)
 /**
  * Calculate length of raw buffer based on strlen of encoded Base64.
  *
- * \param encoded_strlen Length of enocded Base64 string, excluding terminating null byte ('\0').
+ * This length will be the max possible decoded len. The exact decoded length could be
+ * shorter depending on if there was padding in the Base64 string.
+ *
+ * \param encoded_strlen Length of encoded Base64 string, excluding terminating null
+ * byte ('\0').
  * \return Length of raw buffer.
  */
 static inline size_t spdk_base64_get_decoded_len(size_t encoded_strlen)
@@ -106,13 +110,14 @@ int spdk_base64_urlsafe_encode(char *dst, const void *src, size_t src_len);
  *
  * \param dst Buffer address of decoded raw data. Its length should be enough
  * to contain decoded raw data, so it needs to be at least as long as
- * spdk_base64_get_decoded_len(encoded_strlen).
+ * spdk_base64_get_decoded_len(encoded_strlen). If NULL, only dst_len will be populated
+ * indicating the exact decoded length.
  * \param dst_len Output parameter for the length of actual decoded raw data.
  * If NULL, the actual decoded length won't be returned.
  * \param src Data buffer for base64 string to be decoded.
  *
  * \return 0 on success.
- * \return -EINVAL if dst or src is NULL, or content of src is illegal.
+ * \return -EINVAL if src is NULL, or content of src is illegal.
  */
 int spdk_base64_decode(void *dst, size_t *dst_len, const char *src);
 
@@ -121,13 +126,14 @@ int spdk_base64_decode(void *dst, size_t *dst_len, const char *src);
  *
  * \param dst Buffer address of decoded raw data. Its length should be enough
  * to contain decoded raw data, so it needs to be at least as long as
- * spdk_base64_get_decoded_len(encoded_strlen).
+ * spdk_base64_get_decoded_len(encoded_strlen). If NULL, only dst_len will be populated
+ * indicating the exact decoded length.
  * \param dst_len Output parameter for the length of actual decoded raw data.
  * If NULL, the actual decoded length won't be returned.
  * \param src Data buffer for base64 string to be decoded.
  *
  * \return 0 on success.
- * \return -EINVAL if dst or src is NULL, or content of src is illegal.
+ * \return -EINVAL if src is NULL, or content of src is illegal.
  */
 int spdk_base64_urlsafe_decode(void *dst, size_t *dst_len, const char *src);
 

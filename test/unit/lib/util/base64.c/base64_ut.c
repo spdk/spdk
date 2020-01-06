@@ -148,31 +148,67 @@ test_base64_decode(void)
 	size_t raw_len;
 	int ret;
 
+	/* len */
+	ret = spdk_base64_decode(NULL, &raw_len, text_A);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_A));
+
+	/* decode */
 	ret = spdk_base64_decode(raw, &raw_len, text_A);
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_A));
 	CU_ASSERT(memcmp(raw, raw_A, sizeof(raw_A)) == 0);
 
+	/* len */
+	ret = spdk_base64_decode(NULL, &raw_len, text_B);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_B));
+
+	/* decode */
 	ret = spdk_base64_decode(raw, &raw_len, text_B);
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_B));
 	CU_ASSERT(memcmp(raw, raw_B, sizeof(raw_B)) == 0);
 
+	/* len */
+	ret = spdk_base64_decode(NULL, &raw_len, text_C);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_C));
+
+	/* decode */
 	ret = spdk_base64_decode(raw, &raw_len, text_C);
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_C));
 	CU_ASSERT(memcmp(raw, raw_C, sizeof(raw_C)) == 0);
 
+	/* len */
+	ret = spdk_base64_decode(NULL, &raw_len, text_D);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_D));
+
+	/* decode */
 	ret = spdk_base64_decode(raw, &raw_len, text_D);
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_D));
 	CU_ASSERT(memcmp(raw, raw_D, sizeof(raw_D)) == 0);
 
+	/* len */
+	ret = spdk_base64_decode(NULL, &raw_len, text_I);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_I));
+
+	/* decode */
 	ret = spdk_base64_decode(raw, &raw_len, text_I);
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_I));
 	CU_ASSERT(memcmp(raw, raw_I, sizeof(raw_I)) == 0);
 
+	/* len */
+	ret = spdk_base64_decode(NULL, &raw_len, text_J);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_J));
+
+	/* decode */
 	ret = spdk_base64_decode(raw, &raw_len, text_J);
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_J));
@@ -185,8 +221,6 @@ test_base64_decode(void)
 	ret = spdk_base64_decode(raw, &raw_len, text_G);
 	CU_ASSERT_EQUAL(ret, -EINVAL);
 	ret = spdk_base64_decode(raw, &raw_len, text_H);
-	CU_ASSERT_EQUAL(ret, -EINVAL);
-	ret = spdk_base64_decode(NULL, &raw_len, text_H);
 	CU_ASSERT_EQUAL(ret, -EINVAL);
 	ret = spdk_base64_decode(raw, &raw_len, NULL);
 	CU_ASSERT_EQUAL(ret, -EINVAL);
@@ -240,31 +274,67 @@ test_base64_urlsafe_decode(void)
 	size_t raw_len = 0;
 	int ret;
 
+	/* len */
+	ret = spdk_base64_urlsafe_decode(NULL, &raw_len, text_A);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_A));
+
+	/* decode */
 	ret = spdk_base64_urlsafe_decode(raw, &raw_len, text_A);
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_A));
 	CU_ASSERT(memcmp(raw, raw_A, sizeof(raw_A)) == 0);
 
+	/* len */
+	ret = spdk_base64_urlsafe_decode(NULL, &raw_len, text_urlsafe_B);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_B));
+
+	/* decode */
 	ret = spdk_base64_urlsafe_decode(raw, &raw_len, text_urlsafe_B);
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_B));
 	CU_ASSERT(memcmp(raw, raw_B, sizeof(raw_B)) == 0);
 
+	/* len */
+	ret = spdk_base64_urlsafe_decode(NULL, &raw_len, text_urlsafe_C);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_C));
+
+	/* decode */
 	ret = spdk_base64_urlsafe_decode(raw, &raw_len, text_urlsafe_C);
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_C));
 	CU_ASSERT(memcmp(raw, raw_C, sizeof(raw_C)) == 0);
 
+	/* len */
+	ret = spdk_base64_urlsafe_decode(NULL, &raw_len, text_urlsafe_D);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_D));
+
+	/* decode */
 	ret = spdk_base64_urlsafe_decode(raw, &raw_len, text_urlsafe_D);
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_D));
 	CU_ASSERT(memcmp(raw, raw_D, sizeof(raw_D)) == 0);
 
+	/* len */
+	ret = spdk_base64_urlsafe_decode(NULL, &raw_len, text_urlsafe_I);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_I));
+
+	/* decode */
 	ret = spdk_base64_urlsafe_decode(raw, &raw_len, text_urlsafe_I);
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_I));
 	CU_ASSERT(memcmp(raw, raw_I, sizeof(raw_I)) == 0);
 
+	/* len */
+	ret = spdk_base64_urlsafe_decode(NULL, &raw_len, text_urlsafe_J);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_J));
+
+	/* decode */
 	ret = spdk_base64_urlsafe_decode(raw, &raw_len, text_urlsafe_J);
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_J));
@@ -277,8 +347,6 @@ test_base64_urlsafe_decode(void)
 	ret = spdk_base64_urlsafe_decode(raw, &raw_len, text_G);
 	CU_ASSERT_EQUAL(ret, -EINVAL);
 	ret = spdk_base64_urlsafe_decode(raw, &raw_len, text_H);
-	CU_ASSERT_EQUAL(ret, -EINVAL);
-	ret = spdk_base64_urlsafe_decode(NULL, &raw_len, text_H);
 	CU_ASSERT_EQUAL(ret, -EINVAL);
 	ret = spdk_base64_urlsafe_decode(raw, &raw_len, NULL);
 	CU_ASSERT_EQUAL(ret, -EINVAL);

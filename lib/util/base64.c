@@ -163,7 +163,7 @@ _spdk_base64_decode(void *dst, size_t *_dst_len, const uint8_t *dec_table, const
 	uint32_t tmp[4];
 	int i;
 
-	if (!dst || !src) {
+	if (!src) {
 		return -EINVAL;
 	}
 
@@ -190,6 +190,12 @@ _spdk_base64_decode(void *dst, size_t *_dst_len, const uint8_t *dec_table, const
 	if (_dst_len) {
 		*_dst_len = spdk_base64_get_decoded_len(src_strlen);
 	}
+
+	/* If dst is NULL, the client is only concerned w/ _dst_len, return */
+	if (!dst) {
+		return 0;
+	}
+
 	src_in = (const uint8_t *) src;
 
 #ifdef __aarch64__
