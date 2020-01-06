@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "596d7776_aabc9ec5",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-06T16:52:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "10dc2497_ee1d7fa1",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec26c759_71046f26",
         "filename": "include/spdk/nvme_spec.h",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "ea015494_da92ab54",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-06T16:52:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ec26c759_71046f26",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b618cb9b_bcef34f8",
         "filename": "include/spdk/nvme_spec.h",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2019-12-19T19:50:10Z",
       "side": 1,
       "message": "I would suggest moving this to muser.c.",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b17edf13_9c258765",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-06T16:52:55Z",
+      "side": 1,
+      "message": "It\u0027s needed by the static assert below.",
+      "parentUuid": "b618cb9b_bcef34f8",
       "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "ec1baefd_90d69bfd",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-06T16:52:55Z",
+      "side": 1,
+      "message": "Isn\u0027t it nice to have this check?",
+      "parentUuid": "dd73092f_5fab14a6",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e30ed903_075aa9b1",
         "filename": "include/spdk/nvme_spec.h",
         "patchSetId": 2
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "9d838880_509551bf",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-06T16:52:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e30ed903_075aa9b1",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f685c1d7_f9178582",
         "filename": "include/spdk/nvmf_spec.h",
         "patchSetId": 2
@@ -101,6 +191,24 @@
       "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7fdf6774_75c6e277",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-06T16:52:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f685c1d7_f9178582",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -144,6 +252,30 @@
     },
     {
       "key": {
+        "uuid": "efcb2b23_65d5a385",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-06T16:52:55Z",
+      "side": 1,
+      "message": "There\u0027s no nvme_muser.c to upstream, all the code is there. I\u0027m not sure how these defines work as Ben/Felipe wrote this, Ben could you comment?",
+      "parentUuid": "6f7db61c_9ad45afe",
+      "range": {
+        "startLine": 56,
+        "startChar": 54,
+        "endLine": 56,
+        "endChar": 79
+      },
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3980cb77_53f3c469",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 2
@@ -158,6 +290,24 @@
       "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "920491d5_4d96acfc",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-06T16:52:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3980cb77_53f3c469",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -184,6 +334,30 @@
     },
     {
       "key": {
+        "uuid": "0caa338b_82862f5b",
+        "filename": "lib/nvmf/muser.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-06T16:52:55Z",
+      "side": 1,
+      "message": "Good catch.",
+      "parentUuid": "1fb4f044_cedcbbaa",
+      "range": {
+        "startLine": 60,
+        "startChar": 15,
+        "endLine": 60,
+        "endChar": 17
+      },
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f2065603_1de20700",
         "filename": "lib/nvmf/muser.c",
         "patchSetId": 2
@@ -195,6 +369,24 @@
       "writtenOn": "2019-12-23T06:13:17Z",
       "side": 1,
       "message": "maybe better to define submission queue and completion queue separately.",
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afb14197_a7d09f39",
+        "filename": "lib/nvmf/muser.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-06T16:52:55Z",
+      "side": 1,
+      "message": "Not sure about this, as the comment already explains some code is simplified by using the same struct type.",
+      "parentUuid": "f2065603_1de20700",
       "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -221,6 +413,30 @@
       "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3f6a18c_7cab6f0c",
+        "filename": "lib/nvmf/muser.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 943,
+      "author": {
+        "id": 1017478
+      },
+      "writtenOn": "2020-01-06T16:52:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "58356497_d3804e5e",
+      "range": {
+        "startLine": 904,
+        "startChar": 0,
+        "endLine": 943,
+        "endChar": 82
+      },
+      "revId": "764761637cbe84a1fe5698a47f9e216dcbe23b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
