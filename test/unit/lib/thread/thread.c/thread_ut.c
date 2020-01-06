@@ -722,6 +722,126 @@ channel_destroy_races(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
 }
 
+static void
+channel_destroy_races_by_multiple_threads(void)
+{
+	uint64_t device;
+	struct spdk_io_channel *ch1, *ch2;
+
+	allocate_threads(2);
+	set_thread(0);
+
+	spdk_io_device_register(&device, create_cb, destroy_cb, sizeof(uint64_t), NULL);
+
+	ch1 = spdk_get_io_channel(&device);
+	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+	CU_ASSERT(ch1->ref == 1);
+
+	set_thread(1);
+
+	spdk_put_io_channel(ch1);
+	CU_ASSERT(ch1->ref == 0);
+	CU_ASSERT(ch1->destroy_ref == 1);
+
+	set_thread(0);
+
+	ch2 = spdk_get_io_channel(&device);
+	CU_ASSERT(ch2 == ch1);
+	CU_ASSERT(ch1->ref == 1);
+	CU_ASSERT(ch1->destroy_ref == 1);
+
+	poll_threads();
+	CU_ASSERT(ch1->ref == 1);
+	CU_ASSERT(ch1->destroy_ref == 0);
+
+	spdk_put_io_channel(ch1);
+	CU_ASSERT(ch1->ref == 0);
+	CU_ASSERT(ch1->destroy_ref == 1);
+
+	poll_threads();
+
+	spdk_io_device_unregister(&device, NULL);
+	poll_threads();
+
+	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
+	free_threads();
+	CU_ASSERT(TAILQ_EMPTY(&g_threads));
+}
+
+struct _sync_msg {
+	bool	done;
+	bool	wait;
+};
+
+static void
+_sync_msg_fn(struct spdk_sync_msg_ctx *ctx)
+{
+	struct _sync_msg *msg = spdk_sync_msg_ctx_get_ctx(ctx);
+
+	msg->done = true;
+
+	spdk_thread_cpl_sync_msg(ctx, 0);
+}
+
+static void
+_sync_msg_cpl(struct spdk_sync_msg_ctx *ctx, int status)
+{
+	struct _sync_msg *msg = spdk_sync_msg_ctx_get_ctx(ctx);
+
+	CU_ASSERT(msg->done);
+	msg->wait = false;
+}
+
+static void
+thread_send_sync_msg(void)
+{
+	struct spdk_thread *thread0;
+	struct _sync_msg *msg;
+
+	msg = calloc(1, sizeof(*msg));
+	SPDK_CU_ASSERT_FATAL(msg != NULL);
+
+	allocate_threads(2);
+	set_thread(0);
+	thread0 = spdk_get_thread();
+
+	msg->done = false;
+	msg->wait = true;
+
+	set_thread(1);
+	/* Simulate thread 1 sending a synchronous message to thread 0. */
+	spdk_thread_send_sync_msg(thread0, _sync_msg_fn, msg, _sync_msg_cpl);
+
+	CU_ASSERT(!msg->done);
+	CU_ASSERT(msg->wait);
+
+	/* Poll thread 1.  The synchronous message was sent to thread 0 but is
+	 *  not received yet.  So this should be a nop.
+	 */
+	poll_thread(1);
+	CU_ASSERT(!msg->done);
+	CU_ASSERT(msg->wait);
+
+	/* Poll thread 0.  This should execute the synchronous message and msg->done
+	 *  should be true.   However msg->wait still should be true because completion
+	 *  is not notified to thread 1 yet.
+	 */
+	poll_thread(0);
+	CU_ASSERT(msg->done);
+	CU_ASSERT(msg->wait);
+
+	/* Poll thread 0.  This should execute the completion callback to the synchronous
+	 *  message, and msg->wait should be false.
+	 */
+	poll_thread(1);
+	CU_ASSERT(msg->done);
+	CU_ASSERT(!msg->wait);
+
+	free(msg);
+
+	free_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -748,7 +868,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "for_each_channel_unreg", for_each_channel_unreg) == NULL ||
 		CU_add_test(suite, "thread_name", thread_name) == NULL ||
 		CU_add_test(suite, "channel", channel) == NULL ||
-		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL
+		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL ||
+		CU_add_test(suite, "thread_send_sync_msg", thread_send_sync_msg) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
