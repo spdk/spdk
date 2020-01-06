@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94443d51_8e3688a4",
+        "filename": "include/spdk_internal/nvmf.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-06T23:44:09Z",
+      "side": 1,
+      "message": "you could make this SPDK_INTERNAL_NVMF_H_ here, and then you wouldn\u0027t have to change it in the next patch",
+      "revId": "c8f74b6b46203828706f8b61eb925fceea025bcc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
