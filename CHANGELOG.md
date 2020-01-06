@@ -21,6 +21,9 @@ Enabled ISA-L on aarch64 by default in addition to x86.
 `spdk_thread_send_msg` now returns int indicating if the message was successfully
 sent.
 
+Mutex has been added to I/O channel to guard potential races when the I/O channel is
+freed from the different thread.
+
 ### blobfs
 
 Added boolean return value for function spdk_fs_set_cache_size to indicate its operation result.

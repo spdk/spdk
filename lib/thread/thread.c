@@ -1084,6 +1084,13 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	_spdk_io_device_free(dev);
 }
 
+static void
+_io_channel_free(struct spdk_io_channel *ch)
+{
+	pthread_mutex_destroy(&ch->mutex);
+	free(ch);
+}
+
 struct spdk_io_channel *
 spdk_get_io_channel(void *io_device)
 {
@@ -1139,6 +1146,7 @@ spdk_get_io_channel(void *io_device)
 	ch->thread = thread;
 	ch->ref = 1;
 	ch->destroy_ref = 0;
+	pthread_mutex_init(&ch->mutex, NULL);
 	TAILQ_INSERT_TAIL(&thread->io_channels, ch, tailq);
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Get io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
@@ -1153,7 +1161,7 @@ spdk_get_io_channel(void *io_device)
 		pthread_mutex_lock(&g_devlist_mutex);
 		TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
 		dev->refcnt--;
-		free(ch);
+		_io_channel_free(ch);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
@@ -1181,9 +1189,11 @@ _spdk_put_io_channel(void *arg)
 
 	assert(ch->thread == thread);
 
+	pthread_mutex_lock(&ch->mutex);
 	ch->destroy_ref--;
 
 	if (ch->ref > 0 || ch->destroy_ref > 0) {
+		pthread_mutex_unlock(&ch->mutex);
 		/*
 		 * Another reference to the associated io_device was requested
 		 *  after this message was sent but before it had a chance to
@@ -1191,6 +1201,7 @@ _spdk_put_io_channel(void *arg)
 		 */
 		return;
 	}
+	pthread_mutex_unlock(&ch->mutex);
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
@@ -1215,7 +1226,7 @@ _spdk_put_io_channel(void *arg)
 	if (do_remove_dev) {
 		_spdk_io_device_free(ch->dev);
 	}
-	free(ch);
+	_io_channel_free(ch);
 }
 
 void
@@ -1225,12 +1236,16 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 		      "Putting io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
 		      ch, ch->dev->name, ch->dev->io_device, ch->thread->name, ch->ref);
 
+	pthread_mutex_lock(&ch->mutex);
 	ch->ref--;
 
 	if (ch->ref == 0) {
 		ch->destroy_ref++;
+		pthread_mutex_unlock(&ch->mutex);
 		spdk_thread_send_msg(ch->thread, _spdk_put_io_channel, ch);
+		return;
 	}
+	pthread_mutex_unlock(&ch->mutex);
 }
 
 struct spdk_io_channel *
