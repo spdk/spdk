@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "189227de_59f601f4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2116,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-06T18:28:13Z",
+      "side": 1,
+      "message": "free range... heh. You should check in a comment on the same line that says // chicken",
+      "revId": "e12cd36a97c5a07a2349f52d0dfd6013dd2eb958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54dda5cb_b956e1d7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5496,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-06T18:28:13Z",
+      "side": 1,
+      "message": "So we\u0027re guaranteed that this is the owner range object thus ctx-\u003eowner_range can\u0027t be NULL?",
+      "revId": "e12cd36a97c5a07a2349f52d0dfd6013dd2eb958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2cb92de8_db1e0762",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
@@ -13,6 +47,41 @@
       "writtenOn": "2020-01-06T15:11:14Z",
       "side": 1,
       "message": "I cheated here when first developing this.  I still need to fix this to result in an error when calloc returns NULL.",
+      "revId": "e12cd36a97c5a07a2349f52d0dfd6013dd2eb958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb19fa80_c9b21906",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5510,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-06T18:28:13Z",
+      "side": 1,
+      "message": "pumpkin eater!",
+      "parentUuid": "2cb92de8_db1e0762",
+      "revId": "e12cd36a97c5a07a2349f52d0dfd6013dd2eb958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75e5041c_08f98127",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5589,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-06T18:28:13Z",
+      "side": 1,
+      "message": "What would be the implications if this did happen? Maybe a WARN message? Seems like this comment is more of a \"note to reviewers\" than something that should be checked in.",
       "revId": "e12cd36a97c5a07a2349f52d0dfd6013dd2eb958",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
