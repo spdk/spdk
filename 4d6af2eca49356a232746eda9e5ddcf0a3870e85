@@ -22,6 +22,30 @@
       "revId": "4d6af2eca49356a232746eda9e5ddcf0a3870e85",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9efd9973_11d5eb1c",
+        "filename": "test/unit/lib/nvme/nvme_uevent.c/nvme_uevent_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2020-01-06T03:29:19Z",
+      "side": 1,
+      "message": "sorry changpeng ,\n  these are following with \"\\0\". \nI read the topics about uevent from kernel ,and found similar behaviors :\nIt sends netlink message called uevent. uevent is just string of some special format that is sent via netlink socket. \nExamples:\n\"add@/class/input/input9/mouse2\\0    // message\nACTION\u003dadd\\0                         // action type\nDEVPATH\u003d/class/input/input9/mouse2\\0 // path in /sys\nSUBSYSTEM\u003dinput\\0                    // subsystem (class)\nSEQNUM\u003d1064\\0                        // sequence number\nPHYSDEVPATH\u003d/devices/pci0000:00/0000:00:1d.1/usb2/2­2/2­2:1.0\\0  // device path in /sys\nPHYSDEVBUS\u003dusb\\0       // bus\nPHYSDEVDRIVER\u003dusbhid\\0 // driver\nMAJOR\u003d13\\0             // major number\nMINOR\u003d34\\0\",           // minor number\nKernel function that actually sends uevent is kobject_uevent_env and it\u0027s wrapper kobject_uevent that is called in many places.\n\nThat \"\\0\" is the key factor of sending uevent commands.\nAnd I think \"\\n\" is not so important as you said, because we can\u0027t use some functions like \"strlen\" to get these commands\u0027 length.\n\nCan you also double confirm this with me?\nThank you very much!.",
+      "parentUuid": "d800711e_d9583a27",
+      "range": {
+        "startLine": 84,
+        "startChar": 3,
+        "endLine": 84,
+        "endChar": 119
+      },
+      "revId": "4d6af2eca49356a232746eda9e5ddcf0a3870e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
