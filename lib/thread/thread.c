@@ -45,6 +45,7 @@
 #define SPDK_MSG_BATCH_SIZE		8
 #define SPDK_MAX_DEVICE_NAME_LEN	256
 #define SPDK_MAX_THREAD_NAME_LEN	256
+#define SPDK_MAX_LCORE_COUNT		1024
 
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -148,6 +149,8 @@ struct spdk_thread {
 
 	SLIST_HEAD(, spdk_msg)		msg_cache;
 	size_t				msg_cache_count;
+
+	int				socket_id;
 
 	/* User context allocated at the end */
 	uint8_t				ctx[0];
@@ -268,6 +271,30 @@ _free_thread(struct spdk_thread *thread)
 	free(thread);
 }
 
+static void
+spdk_thread_set_socket_id(struct spdk_thread *thread)
+{
+	uint32_t core = 0;
+	int prev_socket_id = SPDK_ENV_SOCKET_ID_ANY;
+	int cur_socket_id = SPDK_ENV_SOCKET_ID_ANY;
+	struct spdk_cpuset *cpumask = spdk_thread_get_cpumask(thread);
+
+	for (core = 0; core < SPDK_MAX_LCORE_COUNT; core++) {
+		if (spdk_cpuset_get_cpu(cpumask, core)) {
+			cur_socket_id = spdk_env_get_socket_id(core);
+			if (prev_socket_id == SPDK_ENV_SOCKET_ID_ANY) {
+				prev_socket_id = cur_socket_id;
+			} else if (cur_socket_id != prev_socket_id) {
+				/* More than 1 socket used, set to any socket. */
+				thread->socket_id = SPDK_ENV_SOCKET_ID_ANY;
+				return;
+			}
+		}
+	}
+
+	thread->socket_id = cur_socket_id;
+}
+
 struct spdk_thread *
 spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 {
@@ -319,6 +346,8 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 	} else {
 		snprintf(thread->name, sizeof(thread->name), "%p", thread);
 	}
+
+	spdk_thread_set_socket_id(thread);
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Allocating new thread %s\n", thread->name);
 
@@ -382,6 +411,12 @@ struct spdk_cpuset *
 spdk_thread_get_cpumask(struct spdk_thread *thread)
 {
 	return &thread->cpumask;
+}
+
+int
+spdk_thread_get_socket_id(struct spdk_thread *thread)
+{
+	return thread->socket_id;
 }
 
 struct spdk_thread *
