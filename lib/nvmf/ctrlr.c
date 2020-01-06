@@ -1928,9 +1928,20 @@ spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 static int
 spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 {
-	uint8_t feature;
+	uint8_t feature, save;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	/*
+	 * Features are not saveable by the controller as indicated by
+	 * ONCS field of the Identify Controller data.
+	 * */
+	save = cmd->cdw10_bits.set_features.sv;
+	if (save) {
+		response->status.sc = SPDK_NVME_SC_FEATURE_ID_NOT_SAVEABLE;
+		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 
 	feature = cmd->cdw10_bits.set_features.fid;
 	switch (feature) {
