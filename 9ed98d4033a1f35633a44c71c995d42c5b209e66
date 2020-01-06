@@ -34,6 +34,24 @@
       "revId": "9ed98d4033a1f35633a44c71c995d42c5b209e66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27a50a4c_2e108495",
+        "filename": "autobuild.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-06T16:38:22Z",
+      "side": 1,
+      "message": "I think that having the definition right before the invocation makes it easier to read during review, but I think that during regular workflows, placing the run_test calls in sequence makes the script easier to read. My thinking behind this was that the calls to run_test act like a main funciton which is typically defined at the end of a file. They provide a high level picture of what is going on in the file. It also gives a clean one-look understanding of the ordering of the tests which wouldn\u0027t be the case (depending on the length of the test case) if the definition was inlined. It also allows us to keep the same organization of run_test calls whether a test case is a function invocation or a call to a separate script.",
+      "parentUuid": "c55f1d23_046cb024",
+      "revId": "9ed98d4033a1f35633a44c71c995d42c5b209e66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
