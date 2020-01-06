@@ -1564,6 +1564,28 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+static void
+nvmf_ctrlr_populate_oacs(struct spdk_nvmf_ctrlr *ctrlr,
+			 struct spdk_nvme_ctrlr_data *cdata)
+{
+	cdata->oacs.virtualization_management =
+		g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_VIRTUALIZATION_MANAGEMENT].hdlr != NULL;
+	cdata->oacs.nvme_mi = g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_NVME_MI_SEND].hdlr
+			      && g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_NVME_MI_RECEIVE].hdlr;
+	cdata->oacs.directives = g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_DIRECTIVE_SEND].hdlr
+				 && g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_DIRECTIVE_RECEIVE].hdlr;
+	cdata->oacs.device_self_test =
+		g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_DEVICE_SELF_TEST].hdlr != NULL;
+	cdata->oacs.ns_manage = g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_NS_MANAGEMENT].hdlr
+				&& g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_NS_ATTACHMENT].hdlr;
+	cdata->oacs.firmware = g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD].hdlr
+			       && g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_FIRMWARE_COMMIT].hdlr;
+	cdata->oacs.format =
+		g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_FORMAT_NVM].hdlr != NULL;
+	cdata->oacs.security = g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_SECURITY_SEND].hdlr
+			       &&  g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_SECURITY_RECEIVE].hdlr;
+}
+
 int
 spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_ctrlr_data *cdata)
 {
@@ -1637,6 +1659,8 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->oncs.dsm = spdk_nvmf_ctrlr_dsm_supported(ctrlr);
 		cdata->oncs.write_zeroes = spdk_nvmf_ctrlr_write_zeroes_supported(ctrlr);
 		cdata->oncs.reservations = 1;
+
+		nvmf_ctrlr_populate_oacs(ctrlr, cdata);
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ext ctrlr data: ioccsz 0x%x\n",
 			      cdata->nvmf_specific.ioccsz);
