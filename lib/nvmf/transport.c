@@ -50,6 +50,7 @@ static const struct spdk_nvmf_transport_ops *const g_transport_ops[] = {
 #ifdef SPDK_CONFIG_FC
 	&spdk_nvmf_transport_fc,
 #endif
+	&spdk_nvmf_transport_muser,
 };
 
 #define NUM_TRANSPORTS (SPDK_COUNTOF(g_transport_ops))

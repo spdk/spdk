@@ -53,6 +53,8 @@ nvme_transport_unknown(enum spdk_nvme_transport_type trtype)
 
 #define TRANSPORT_FABRICS_TCP(func_name, args)	case SPDK_NVME_TRANSPORT_TCP: return nvme_tcp_ ## func_name args;
 
+#define TRANSPORT_FABRICS_MUSER(func_name, args)	case SPDK_NVME_TRANSPORT_MUSER: SPDK_UNREACHABLE();
+
 #ifdef SPDK_CONFIG_RDMA
 #define TRANSPORT_FABRICS_RDMA(func_name, args)	case SPDK_NVME_TRANSPORT_RDMA: return nvme_rdma_ ## func_name args;
 #define TRANSPORT_RDMA_AVAILABLE		true
@@ -69,6 +71,7 @@ nvme_transport_unknown(enum spdk_nvme_transport_type trtype)
 		TRANSPORT_FABRICS_RDMA(func_name, args)		\
 		TRANSPORT_FABRICS_FC(func_name, args)		\
 		TRANSPORT_FABRICS_TCP(func_name, args)		\
+		TRANSPORT_FABRICS_MUSER(func_name, args)	\
 		TRANSPORT_DEFAULT(trtype)			\
 		}						\
 		SPDK_UNREACHABLE();				\
@@ -86,6 +89,7 @@ spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
 		return TRANSPORT_RDMA_AVAILABLE;
 
 	case SPDK_NVME_TRANSPORT_FC:
+	case SPDK_NVME_TRANSPORT_MUSER:
 		return false;
 	}
 

@@ -225,6 +225,7 @@ CXXFLAGS += $(COMMON_CFLAGS)
 
 SYS_LIBS += -lrt
 SYS_LIBS += -luuid
+SYS_LIBS += -lmuser
 SYS_LIBS += -lcrypto
 ifeq ($(CONFIG_LOG_BACKTRACE),y)
 SYS_LIBS += -lunwind

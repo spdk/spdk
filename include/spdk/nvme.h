@@ -279,6 +279,11 @@ enum spdk_nvme_transport_type {
 	 * TCP Transport
 	 */
 	SPDK_NVME_TRANSPORT_TCP = SPDK_NVMF_TRTYPE_TCP,
+
+	/**
+	 * Kernel mdev-based Transport
+	 */
+	SPDK_NVME_TRANSPORT_MUSER = SPDK_NVMF_TRTYPE_MUSER,
 };
 
 /* typedef added for coding style reasons */
@@ -2699,6 +2704,10 @@ int spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr);
  *
  */
 void spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
+
+int spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
+                   uint32_t len, size_t mps,
+                   void* (*gpa_to_vva)(void* prv, uint64_t addr, uint64_t len));
 
 #ifdef __cplusplus
 }

@@ -94,5 +94,6 @@ int spdk_nvmf_transport_qpair_set_sqsize(struct spdk_nvmf_qpair *qpair);
 extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
 extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_fc;
+extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_muser;
 
 #endif /* SPDK_NVMF_TRANSPORT_H */
