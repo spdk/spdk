@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9da3927_cdf6905f",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T06:17:22Z",
+      "side": 1,
+      "message": "just use virtqueue-\u003evring_idx here. vq_idx can be removed.",
+      "range": {
+        "startLine": 160,
+        "startChar": 41,
+        "endLine": 160,
+        "endChar": 47
+      },
+      "revId": "2d2f8328bef8750dd5bcabf9285f442a47d012be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b68f91c_8423a915",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T06:17:22Z",
+      "side": 1,
+      "message": "Let\u0027s still use \u0026 here, you can extend this flag in future without changing the code again.",
+      "range": {
+        "startLine": 363,
+        "startChar": 45,
+        "endLine": 363,
+        "endChar": 47
+      },
+      "revId": "2d2f8328bef8750dd5bcabf9285f442a47d012be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6320b4a4_00ede431",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T06:17:22Z",
+      "side": 1,
+      "message": "\u0026",
+      "range": {
+        "startLine": 387,
+        "startChar": 45,
+        "endLine": 387,
+        "endChar": 47
+      },
+      "revId": "2d2f8328bef8750dd5bcabf9285f442a47d012be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2342db2_757e2bca",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T06:17:22Z",
+      "side": 1,
+      "message": "typo.",
+      "range": {
+        "startLine": 566,
+        "startChar": 19,
+        "endLine": 566,
+        "endChar": 22
+      },
+      "revId": "2d2f8328bef8750dd5bcabf9285f442a47d012be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
