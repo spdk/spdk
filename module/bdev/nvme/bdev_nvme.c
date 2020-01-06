@@ -817,6 +817,7 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	const struct spdk_nvme_ctrlr_data *cdata;
 	const struct spdk_nvme_ns_data *nsdata;
 	int			rc;
+	struct spdk_pci_device *dev;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
@@ -881,6 +882,9 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 		nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, rc);
 		return;
 	}
+
+	dev = spdk_nvme_ctrlr_get_pci_device(ctrlr);
+	bdev->disk.socket_id = spdk_pci_device_get_socket_id(dev);
 
 	nvme_bdev_attach_bdev_to_ns(nvme_ns, bdev);
 	nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, 0);

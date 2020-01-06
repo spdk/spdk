@@ -282,6 +282,7 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 	null_disk->bdev.md_interleave = opts->md_interleave;
 	null_disk->bdev.dif_type = opts->dif_type;
 	null_disk->bdev.dif_is_head_of_md = opts->dif_is_head_of_md;
+	null_disk->bdev.socket_id = SPDK_ENV_SOCKET_ID_ANY;
 	/* Current block device layer API does not propagate
 	 * any DIF related information from user. So, we can
 	 * not generate or verify Application Tag.

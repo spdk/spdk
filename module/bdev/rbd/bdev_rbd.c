@@ -753,6 +753,7 @@ spdk_bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user
 	rbd->disk.ctxt = rbd;
 	rbd->disk.fn_table = &rbd_fn_table;
 	rbd->disk.module = &rbd_if;
+	rbd->disk.socket_id = SPDK_ENV_SOCKET_ID_ANY;
 
 	SPDK_NOTICELOG("Add %s rbd disk to lun\n", rbd->disk.name);
 

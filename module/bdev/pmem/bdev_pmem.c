@@ -39,6 +39,7 @@
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 #include "spdk/config.h"
+#include "spdk/env.h"
 
 #include "bdev_pmem.h"
 #include "libpmemblk.h"
@@ -370,6 +371,7 @@ spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev 
 	pdisk->disk.write_cache = 0;
 	pdisk->disk.blocklen = block_size;
 	pdisk->disk.blockcnt = num_blocks;
+	pdisk->disk.socket_id = SPDK_ENV_SOCKET_ID_ANY;
 
 	pdisk->disk.ctxt = pdisk;
 	pdisk->disk.fn_table = &pmem_fn_table;

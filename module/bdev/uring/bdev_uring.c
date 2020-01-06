@@ -476,6 +476,7 @@ create_uring_bdev(const char *name, const char *filename, uint32_t block_size)
 	uring->bdev.module = &uring_if;
 
 	uring->bdev.write_cache = 1;
+	uring->bdev.socket_id = SPDK_ENV_SOCKET_ID_ANY;
 
 	detected_block_size = spdk_fd_get_blocklen(uring->fd);
 	if (block_size == 0) {

@@ -1557,6 +1557,7 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 	comp_bdev->comp_bdev.ctxt = comp_bdev;
 	comp_bdev->comp_bdev.fn_table = &vbdev_compress_fn_table;
 	comp_bdev->comp_bdev.module = &compress_if;
+	comp_bdev->comp_bdev.socket_id = SPDK_ENV_SOCKET_ID_ANY;
 
 	pthread_mutex_init(&comp_bdev->reduce_lock, NULL);
 

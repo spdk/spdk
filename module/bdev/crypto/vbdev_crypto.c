@@ -1656,6 +1656,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		vbdev->crypto_bdev.split_on_optimal_io_boundary = true;
 		vbdev->crypto_bdev.blocklen = bdev->blocklen;
 		vbdev->crypto_bdev.blockcnt = bdev->blockcnt;
+		vbdev->crypto_bdev.socket_id = SPDK_ENV_SOCKET_ID_ANY;
 
 		/* This is the context that is passed to us when the bdev
 		 * layer calls in so we'll save our crypto_bdev node here.

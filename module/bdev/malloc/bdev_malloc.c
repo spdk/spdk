@@ -438,6 +438,7 @@ create_malloc_disk(struct spdk_bdev **bdev, const char *name, const struct spdk_
 	mdisk->disk.write_cache = 1;
 	mdisk->disk.blocklen = block_size;
 	mdisk->disk.blockcnt = num_blocks;
+	mdisk->disk.socket_id = SPDK_ENV_SOCKET_ID_ANY;
 	if (uuid) {
 		mdisk->disk.uuid = *uuid;
 	} else {

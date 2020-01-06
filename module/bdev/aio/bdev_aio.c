@@ -617,6 +617,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 	fdisk->disk.module = &aio_if;
 
 	fdisk->disk.write_cache = 1;
+	fdisk->disk.socket_id = SPDK_ENV_SOCKET_ID_ANY;
 
 	detected_block_size = spdk_fd_get_blocklen(fdisk->fd);
 	if (block_size == 0) {
