@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0c9ad5f0_82479a63",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eecb0c0c_8f425cbb",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1e7fc8da_4ad5c423",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -33,6 +51,24 @@
       "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5b98556_0a92bfbe",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "1e7fc8da_4ad5c423",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "b5b332f3_5fec47bb",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "72bca1c2_fe79e69f",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cdd7f68b_f3a3f258",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -67,6 +121,24 @@
       "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8380f607_dced0ae0",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cdd7f68b_f3a3f258",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "baa10245_3cf3f9fa",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "6ae3259a_28480191",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa653955_61764ecd",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -101,6 +191,24 @@
       "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6dd11a3c_cc28be76",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Thanks, I found \"g_scsi_cmd_array\" was not be used elsewhere, so I remove it.",
+      "parentUuid": "fa653955_61764ecd",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "a71af011_bff4ef41",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "I suggest we keep this, because we can see detailed bhs data in iscsi_autofuzz_logs.txt. We can temporarily not process the input JSON file, but the output is okay.",
+      "parentUuid": "50229205_3579a61f",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36aac4ad_9ed18eec",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -135,6 +261,24 @@
       "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b9fcf99_af45610e",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Ditto, thanks.",
+      "parentUuid": "36aac4ad_9ed18eec",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "31346f7b_2881350d",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "e56c7f82_ff469bcb",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5610ffdb_b9a231b4",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -166,6 +328,24 @@
       "writtenOn": "2020-01-05T02:32:38Z",
       "side": 1,
       "message": "I don\u0027t think we have to pass opcode here. We can set randomized value to 48 bytes PDU BHS regardless of opcode.",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "04602edb_f2248d4a",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "I suggest we keep this opcode parameter, because I tested before. For example, we set opcode \u003d 0x2 (not random value).\nIf we only set one random structure iscsi_bhs, we get only one kind of log:\niscsi.c:4667:iscsi_update_cmdsn: *ERROR*: CmdSN(3099910650) error ExpCmdSN\u003d0\niscsi.c:4945:iscsi_read_pdu: *ERROR*: Critical error is detected. Close the connection\nFuzz app quit before iscsi_pdu_hdr_op_task.\n\nBut if We generate different structures according to opcode parameter, we get log:\niscsi.c:3896:iscsi_pdu_hdr_op_task: *ERROR*: unsupported function 85\niscsi.c:3896:iscsi_pdu_hdr_op_task: *ERROR*: unsupported function 26\niscsi.c:3896:iscsi_pdu_hdr_op_task: *ERROR*: unsupported function 115\nLike this, fuzz app can get into deeper branches in iscsi.c as far as possible.\n\nThis is my understanding, I don\u0027t know if you agree.",
+      "parentUuid": "5610ffdb_b9a231b4",
       "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "cb973a60_859877dd",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "For the above reasons, I think (struct iscsi_bhs) can\u0027t completely fill such as (struct iscsi_bhs_login_req), (struct iscsi_bhs_nop_in), (struct iscsi_bhs_task_req)...",
+      "parentUuid": "71151148_d8535cf7",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8ee99fe3_00c6de86",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -203,6 +401,24 @@
       "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86ee8e03_f75ecd21",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "8ee99fe3_00c6de86",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -223,6 +439,24 @@
     },
     {
       "key": {
+        "uuid": "ae6ab4e1_b081f726",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Fixed.",
+      "parentUuid": "089ef6ff_5db0dadc",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e81732b8_4db96757",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -240,6 +474,24 @@
     },
     {
       "key": {
+        "uuid": "4ee9c0b4_5f886b88",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 972,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "e81732b8_4db96757",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6ac643f6_a9189ef1",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -254,6 +506,24 @@
       "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d152b262_497cfd8b",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1024,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6ac643f6_a9189ef1",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -280,6 +550,30 @@
     },
     {
       "key": {
+        "uuid": "49744b64_f0d2a67d",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1078,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bdad2604_4924d2ca",
+      "range": {
+        "startLine": 1071,
+        "startChar": 1,
+        "endLine": 1078,
+        "endChar": 0
+      },
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aa56611e_1a496027",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -303,6 +597,30 @@
     },
     {
       "key": {
+        "uuid": "ff4b576c_d5addb27",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "OK,done.",
+      "parentUuid": "aa56611e_1a496027",
+      "range": {
+        "startLine": 1096,
+        "startChar": 48,
+        "endLine": 1096,
+        "endChar": 68
+      },
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6ed0cfa7_d2a4fadc",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -317,6 +635,24 @@
       "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1e24201_e250c409",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1124,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6ed0cfa7_d2a4fadc",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -337,6 +673,24 @@
     },
     {
       "key": {
+        "uuid": "3c402b61_9160b1e8",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1139,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f2d19fc5_3fda62f8",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4bb8306a_3f828a5b",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -351,6 +705,24 @@
       "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab49e66b_f9f71731",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1179,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T07:56:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4bb8306a_3f828a5b",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
