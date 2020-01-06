@@ -250,17 +250,21 @@ bdevperf_free_target(struct io_target *target)
 }
 
 static void
-bdevperf_free_targets(void)
+_bdevperf_free_targets(struct spdk_io_channel_iter *i)
 {
-	struct io_target_group *group, *tmp_group;
-	struct io_target *target, *tmp_target;
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+	struct io_target *target, *tmp;
 
-	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
-		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
-			TAILQ_REMOVE(&group->targets, target, link);
-			bdevperf_free_target(target);
-		}
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp) {
+		TAILQ_REMOVE(&group->targets, target, link);
+		bdevperf_free_target(target);
 	}
+
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
@@ -453,15 +457,20 @@ bdevperf_fini(void)
 }
 
 static void
-bdevperf_test_done(void)
+_bdevperf_test_done(struct spdk_io_channel_iter *i, int status)
 {
-	bdevperf_free_targets();
-
 	if (g_request && !g_shutdown) {
 		rpc_perform_tests_cb();
 	} else {
 		bdevperf_fini();
 	}
+}
+
+static void
+bdevperf_test_done(void)
+{
+	spdk_for_each_channel(&g_bdevperf, _bdevperf_free_targets, NULL,
+			      _bdevperf_test_done);
 }
 
 static void
