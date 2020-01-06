@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "956b0a79_2e9d1ce7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 5751,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-06T19:17:31Z",
+      "side": 1,
+      "message": "This is a little confusing that we have to check for the same range on two lists. Maybe briefly explain here what we\u0027re checking \u0026 why? You could even change the \u0027range\u0027 var used in the first list check to ch_range or something and below compare range-\u003eoffset to ch_range_offset and range-\u003elength to ch_range-\u003elength which is obviously the same thing but maybe easier to see what\u0027s going on (if you think so too)",
+      "revId": "10e09269e4c30b9475fabeb47d5e6165c33eb04d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
