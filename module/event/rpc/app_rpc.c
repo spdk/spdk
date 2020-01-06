@@ -182,6 +182,7 @@ rpc_thread_get_stats(void *arg)
 		spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(thread));
 		spdk_json_write_named_string(ctx->w, "cpumask",
 					     spdk_cpuset_fmt(spdk_thread_get_cpumask(thread)));
+		spdk_json_write_named_int32(ctx->w, "socket_id", spdk_thread_get_socket_id(thread));
 		spdk_json_write_named_uint64(ctx->w, "busy", stats.busy_tsc);
 		spdk_json_write_named_uint64(ctx->w, "idle", stats.idle_tsc);
 		spdk_json_write_object_end(ctx->w);
@@ -253,6 +254,7 @@ rpc_framework_get_reactors(void *arg1, void *arg2)
 		spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(thread));
 		spdk_json_write_named_string(ctx->w, "cpumask",
 					     spdk_cpuset_fmt(spdk_thread_get_cpumask(thread)));
+		spdk_json_write_named_int32(ctx->w, "socket_id", spdk_thread_get_socket_id(thread));
 		spdk_json_write_object_end(ctx->w);
 	}
 	spdk_json_write_array_end(ctx->w);
