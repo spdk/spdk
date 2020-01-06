@@ -446,6 +446,16 @@ bdevperf_fini(int rc)
 }
 
 static void
+bdevperf_test_done(int rc)
+{
+	if (g_request && !g_shutdown) {
+		rpc_perform_tests_cb(rc);
+	} else {
+		bdevperf_fini(rc);
+	}
+}
+
+static void
 end_run(void *arg1, void *arg2)
 {
 	struct io_target *target = arg1;
@@ -469,11 +479,7 @@ end_run(void *arg1, void *arg2)
 			printf("Test time less than one microsecond, no performance data will be shown\n");
 		}
 
-		if (g_request && !g_shutdown) {
-			rpc_perform_tests_cb(g_run_rc);
-		} else {
-			bdevperf_fini(g_run_rc);
-		}
+		bdevperf_test_done(g_run_rc);
 	}
 }
 
@@ -1318,7 +1324,7 @@ bdevperf_run(void *arg1)
 
 	rc = bdevperf_test();
 	if (rc) {
-		bdevperf_fini(rc);
+		bdevperf_test_done(rc);
 		return;
 	}
 }
@@ -1349,7 +1355,7 @@ spdk_bdevperf_shutdown_cb(void)
 	}
 
 	if (g_target_count == 0) {
-		bdevperf_fini(g_run_rc);
+		bdevperf_test_done(g_run_rc);
 		return;
 	}
 
@@ -1460,7 +1466,7 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 
 	rc = bdevperf_test();
 	if (rc) {
-		rpc_perform_tests_cb(rc);
+		bdevperf_test_done(rc);
 	}
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
