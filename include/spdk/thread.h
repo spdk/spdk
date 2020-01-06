@@ -59,6 +59,8 @@ struct spdk_poller;
 
 struct spdk_io_channel_iter;
 
+struct spdk_sync_msg_ctx;
+
 /**
  * A function that is called each time a new thread is created.
  * The implementor of this function should frequently call
@@ -640,6 +642,56 @@ void *spdk_io_channel_iter_get_ctx(struct spdk_io_channel_iter *i);
  * \param status Status for the I/O channel iterator.
  */
 void spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status);
+
+/**
+ * A function that will be called on the thread which received the synchronous
+ *  message.
+ *
+ * \param ctx Synchronous message context.
+ */
+typedef void (*spdk_sync_msg_fn)(struct spdk_sync_msg_ctx *ctx);
+
+/**
+ * spdk_thread_send_sync_msg() callback.
+ *
+ * \param ctx Synchronous message context.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
+typedef void (*spdk_sync_msg_cpl)(struct spdk_sync_msg_ctx *ctx, int status);
+
+/**
+ * Get context from the synchronous message context.
+ *
+ * \param ctx Synchronous message context.
+ *
+ * \return a pointer to the context passed as arg to spdk_thread_send_sync_msg().
+ */
+void *spdk_sync_msg_ctx_get_ctx(struct spdk_sync_msg_ctx *ctx);
+
+/**
+ * Send a synchronous message to the given thread.
+ *
+ * The message will be sent asynchronously - i.e. spdk_thread_send_sync_msg will
+ *  always return prior to `fn` being called. After `fn` has been called, call
+ *  spdk_thread_cpl_sync_msg() to notify completion to the originating thread.
+ *
+ *
+ * \param thread The target thread.
+ * \param fn This function will be called on the given thread.
+ * \param ctx This context will be passed to `fn` when called.
+ * \param cpl This will be called on the originating thread after `fn` has been
+ *  called on the given thread.
+ */
+void spdk_thread_send_sync_msg(const struct spdk_thread *thread, spdk_sync_msg_fn fn,
+			       void *ctx, spdk_sync_msg_cpl cpl);
+
+/**
+ * Helper function to notify the completion for spdk_thread_send_sync_msg().
+ *
+ * \param ctx Synchronous message context.
+ * \param status Status for the synchronous message context.
+ */
+void spdk_thread_cpl_sync_msg(struct spdk_sync_msg_ctx *ctx, int status);
 
 #ifdef __cplusplus
 }
