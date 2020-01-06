@@ -352,6 +352,7 @@ zone_block_register(struct spdk_bdev *base_bdev)
 		bdev_node->bdev.ctxt = bdev_node;
 		bdev_node->bdev.fn_table = &zone_block_fn_table;
 		bdev_node->bdev.module = &bdev_zoned_if;
+		bdev_node->bdev.socket_id = SPDK_ENV_SOCKET_ID_ANY;
 
 		/* bdev specific info */
 		bdev_node->bdev.zone_size = spdk_align64pow2(name->zone_capacity);

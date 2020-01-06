@@ -634,6 +634,7 @@ vbdev_delay_register(struct spdk_bdev *bdev)
 		delay_node->delay_bdev.ctxt = delay_node;
 		delay_node->delay_bdev.fn_table = &vbdev_delay_fn_table;
 		delay_node->delay_bdev.module = &delay_if;
+		delay_node->delay_bdev.socket_id = SPDK_ENV_SOCKET_ID_ANY;
 
 		/* Store the number of ticks you need to add to get the I/O expiration time. */
 		delay_node->average_read_latency_ticks = ticks_mhz * assoc->avg_read_latency;

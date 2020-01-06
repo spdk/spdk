@@ -496,6 +496,7 @@ virtio_blk_dev_init(struct virtio_blk_dev *bvdev, uint16_t max_queues)
 	bdev->write_cache = 0;
 	bdev->blocklen = block_size;
 	bdev->blockcnt = num_blocks;
+	bdev->socket_id = SPDK_ENV_SOCKET_ID_ANY;
 
 	bdev->ctxt = bvdev;
 	bdev->fn_table = &virtio_fn_table;

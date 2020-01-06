@@ -615,6 +615,7 @@ create_iscsi_lun(struct iscsi_context *context, int lun_id, char *url, char *ini
 	lun->bdev.blockcnt = num_blocks;
 	lun->bdev.ctxt = lun;
 	lun->unmap_supported = unmap_supported;
+	lun->bdev.socket_id = SPDK_ENV_SOCKET_ID_ANY;
 
 	lun->bdev.fn_table = &iscsi_fn_table;
 

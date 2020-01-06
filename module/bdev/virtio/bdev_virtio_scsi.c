@@ -1357,6 +1357,7 @@ virtio_scsi_dev_add_tgt(struct virtio_scsi_dev *svdev, struct virtio_scsi_scan_i
 	bdev->write_cache = 0;
 	bdev->blocklen = disk->info.block_size;
 	bdev->blockcnt = disk->info.num_blocks;
+	bdev->socket_id = SPDK_ENV_SOCKET_ID_ANY;
 
 	bdev->ctxt = disk;
 	bdev->fn_table = &virtio_fn_table;

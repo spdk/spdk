@@ -1236,6 +1236,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 	raid_bdev_gen->fn_table = &g_raid_bdev_fn_table;
 	raid_bdev_gen->module = &g_raid_if;
 	raid_bdev_gen->write_cache = 0;
+	raid_bdev_gen->socket_id = SPDK_ENV_SOCKET_ID_ANY;
 
 	TAILQ_INSERT_TAIL(&g_raid_bdev_configuring_list, raid_bdev, state_link);
 	TAILQ_INSERT_TAIL(&g_raid_bdev_list, raid_bdev, global_link);
