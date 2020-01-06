@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "ca6856a4_cddc2101",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 4607,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-06T20:44:54Z",
+      "side": 1,
+      "message": "You are 100% correct.  I was blindly matching _spdk_blob_set_thin_provision() without paying close enough attention to exactly what was going on.  I\u0027ve walked through the snapshot path and believe these are the only things that were incorrect.  Thanks!",
+      "parentUuid": "915a577b_2936ea7b",
+      "revId": "a37da555121aec905a6f62ef6bac378e98e235bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f64b63a0_20985f14",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 8
