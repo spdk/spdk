@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69b14304_ad10d4d1",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1483,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-06T21:51:44Z",
+      "side": 1,
+      "message": "Maybe remove \"NVMe\" as this is all generic? (even though NVMe is the only one we have today that isn\u0027t SOCKET_ANY",
+      "revId": "1825f93e96ba445a1c0ccdf347228ca67016ec26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
