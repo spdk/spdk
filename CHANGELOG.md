@@ -24,6 +24,10 @@ sent.
 Mutex has been added to I/O channel to guard potential races when the I/O channel is
 freed from the different thread.
 
+`spdk_thread_send_sync_msg`, `spdk_thread_cpl_sync_msg`, and `spdk_sync_msg_ctx_get_ctx`
+has been added to notify the completion of the sent message to the sender thread like
+synchronous message passing.
+
 ### blobfs
 
 Added boolean return value for function spdk_fs_set_cache_size to indicate its operation result.
