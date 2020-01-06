@@ -111,7 +111,7 @@ cmb_copy(void)
 	/* Allocate QPs for the read and write controllers */
 	g_config.read.qpair = spdk_nvme_ctrlr_alloc_io_qpair(g_config.read.ctrlr, NULL, 0);
 	g_config.write.qpair = spdk_nvme_ctrlr_alloc_io_qpair(g_config.write.ctrlr, NULL, 0);
-	if (g_config.read.qpair == NULL || g_config.read.qpair == NULL) {
+	if (g_config.read.qpair == NULL || g_config.write.qpair == NULL) {
 		printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		return -ENOMEM;
 	}
