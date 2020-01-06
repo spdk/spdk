@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d2a793e_29e53e39",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-06T08:07:11Z",
+      "side": 1,
+      "message": "When I only quote one function instead of all of fuzz_common.h, the compiler will report errors: other functions such as ‘fuzz_parse_json_num’ defined but not used, so I can only copy one here, fuzz_get_value_base_64_buffer() is also.",
+      "range": {
+        "startLine": 129,
+        "startChar": 0,
+        "endLine": 129,
+        "endChar": 22
+      },
+      "revId": "67e7ab15f134eeeddf54627d3a4bf250db61a2b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
