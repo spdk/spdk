@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "67809b9c_4322dec8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5496,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-06T23:53:19Z",
+      "side": 1,
+      "message": "correct - we know that ctx-\u003eowner_range must have been set by one of the calls to bdev_lock_lba_range_get_channel - that function gets called for every channel, and the lock operation specified one of those channels",
+      "parentUuid": "54dda5cb_b956e1d7",
+      "revId": "e12cd36a97c5a07a2349f52d0dfd6013dd2eb958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2cb92de8_db1e0762",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
@@ -82,6 +100,24 @@
       "writtenOn": "2020-01-06T18:28:13Z",
       "side": 1,
       "message": "What would be the implications if this did happen? Maybe a WARN message? Seems like this comment is more of a \"note to reviewers\" than something that should be checked in.",
+      "revId": "e12cd36a97c5a07a2349f52d0dfd6013dd2eb958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ce89973_cc22a4f7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5589,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-06T23:53:19Z",
+      "side": 1,
+      "message": "I don\u0027t think we want a WARN here, since it\u0027s a perfectly valid (but very rare) case.  I foresaw someone commenting that we should assert that the range was found here and wanted to head that off.  I could just make it a comment in the review, but then it\u0027s not saved for posterity (or at least not without following GerritHub links).",
+      "parentUuid": "75e5041c_08f98127",
       "revId": "e12cd36a97c5a07a2349f52d0dfd6013dd2eb958",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
