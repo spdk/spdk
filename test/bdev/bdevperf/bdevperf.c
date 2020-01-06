@@ -231,32 +231,6 @@ verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len, int bloc
 	return true;
 }
 
-static int
-blockdev_heads_init(void)
-{
-	uint32_t i;
-	struct io_target_group *group, *tmp;
-
-	SPDK_ENV_FOREACH_CORE(i) {
-		group = calloc(1, sizeof(*group));
-		if (!group) {
-			fprintf(stderr, "Cannot allocate io_target_group\n");
-			goto error;
-		}
-		group->lcore = i;
-		TAILQ_INIT(&group->targets);
-		TAILQ_INSERT_TAIL(&g_bdevperf.groups, group, link);
-	}
-	return 0;
-
-error:
-	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp) {
-		TAILQ_REMOVE(&g_bdevperf.groups, group, link);
-		free(group);
-	}
-	return -1;
-}
-
 static void
 bdevperf_free_target(struct io_target *target)
 {
@@ -280,12 +254,10 @@ bdevperf_free_targets(void)
 	struct io_target *target, *tmp_target;
 
 	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
-		TAILQ_REMOVE(&g_bdevperf.groups, group, link);
 		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
 			TAILQ_REMOVE(&group->targets, target, link);
 			bdevperf_free_target(target);
 		}
-		free(group);
 	}
 }
 
@@ -446,9 +418,34 @@ bdevperf_construct_targets(void)
 }
 
 static void
+_bdevperf_fini_thread_done(struct spdk_io_channel_iter *i, int status)
+{
+	spdk_io_device_unregister(&g_bdevperf, NULL);
+
+	spdk_app_stop(g_run_rc);
+}
+
+static void
+_bdevperf_fini_thread(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	TAILQ_REMOVE(&g_bdevperf.groups, group, link);
+
+	spdk_put_io_channel(ch);
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
 bdevperf_fini(void)
 {
-	spdk_app_stop(g_run_rc);
+	spdk_for_each_channel(&g_bdevperf, _bdevperf_fini_thread, NULL,
+			      _bdevperf_fini_thread_done);
 }
 
 static void
@@ -1310,16 +1307,26 @@ bdevperf_test(void)
 	return 0;
 }
 
+static int
+io_target_group_create(void *io_device, void *ctx_buf)
+{
+	struct io_target_group *group = ctx_buf;
+
+	TAILQ_INIT(&group->targets);
+	group->lcore = spdk_env_get_current_core();
+
+	return 0;
+}
+
 static void
-bdevperf_run(void *arg1)
+io_target_group_destroy(void *io_device, void *ctx_buf)
+{
+}
+
+static void
+_bdevperf_init_thread_done(void *ctx)
 {
 	int rc;
-
-	rc = blockdev_heads_init();
-	if (rc) {
-		spdk_app_stop(rc);
-		return;
-	}
 
 	g_master_core = spdk_env_get_current_core();
 
@@ -1336,6 +1343,28 @@ bdevperf_run(void *arg1)
 		bdevperf_test_done();
 		return;
 	}
+}
+
+static void
+_bdevperf_init_thread(void *ctx)
+{
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+
+	ch = spdk_get_io_channel(&g_bdevperf);
+	group = spdk_io_channel_get_ctx(ch);
+
+	TAILQ_INSERT_TAIL(&g_bdevperf.groups, group, link);
+}
+
+static void
+bdevperf_run(void *arg1)
+{
+	spdk_io_device_register(&g_bdevperf, io_target_group_create, io_target_group_destroy,
+				sizeof(struct io_target_group), "bdevperf");
+
+	/* Send a message to each thread and create a target group */
+	spdk_for_each_thread(_bdevperf_init_thread, NULL, _bdevperf_init_thread_done);
 }
 
 static void
