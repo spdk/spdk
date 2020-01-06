@@ -46,6 +46,30 @@
       "revId": "4d6af2eca49356a232746eda9e5ddcf0a3870e85",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b6a2fa2_c912014b",
+        "filename": "test/unit/lib/nvme/nvme_uevent.c/nvme_uevent_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T03:55:50Z",
+      "side": 1,
+      "message": "that\u0027s fine. You can build the buf directly with the input string format and get_kernel_commands_length_with_nulls() is not required.",
+      "parentUuid": "9efd9973_11d5eb1c",
+      "range": {
+        "startLine": 84,
+        "startChar": 3,
+        "endLine": 84,
+        "endChar": 119
+      },
+      "revId": "4d6af2eca49356a232746eda9e5ddcf0a3870e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
