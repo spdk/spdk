@@ -520,7 +520,8 @@ Example response:
         "lw_threads": [
           {
             "name": "app_thread",
-            "cpumask": "1"
+            "cpumask": "1",
+            "socket_id": "0"
           }
         ]
       }
@@ -564,6 +565,7 @@ Example response:
       {
         "name": "app_thread",
 	"cpumask": "1",
+	"socket_id": "0",
         "busy": 139223208,
         "idle": 8641080608
       }
