@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a0534c2_4c1cb8f4",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1360,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-06T19:57:46Z",
+      "side": 1,
+      "message": "spdk_for_each_thread and spdk_for_each_channel execute on each thread in serial, so you don\u0027t actually need the lock here. But it\u0027s fine with me.",
+      "revId": "9360b774bce16dc3e9cf73008533bb7aa2f4465c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
