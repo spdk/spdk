@@ -722,6 +722,52 @@ channel_destroy_races(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
 }
 
+static void
+channel_destroy_races_by_multiple_threads(void)
+{
+	uint64_t device;
+	struct spdk_io_channel *ch1, *ch2;
+
+	allocate_threads(2);
+	set_thread(0);
+
+	spdk_io_device_register(&device, create_cb, destroy_cb, sizeof(uint64_t), NULL);
+
+	ch1 = spdk_get_io_channel(&device);
+	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+	CU_ASSERT(ch1->ref == 1);
+
+	set_thread(1);
+
+	spdk_put_io_channel(ch1);
+	CU_ASSERT(ch1->ref == 0);
+	CU_ASSERT(ch1->destroy_ref == 1);
+
+	set_thread(0);
+
+	ch2 = spdk_get_io_channel(&device);
+	CU_ASSERT(ch2 == ch1);
+	CU_ASSERT(ch1->ref == 1);
+	CU_ASSERT(ch1->destroy_ref == 1);
+
+	poll_threads();
+	CU_ASSERT(ch1->ref == 1);
+	CU_ASSERT(ch1->destroy_ref == 0);
+
+	spdk_put_io_channel(ch1);
+	CU_ASSERT(ch1->ref == 0);
+	CU_ASSERT(ch1->destroy_ref == 1);
+
+	poll_threads();
+
+	spdk_io_device_unregister(&device, NULL);
+	poll_threads();
+
+	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
+	free_threads();
+	CU_ASSERT(TAILQ_EMPTY(&g_threads));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -748,7 +794,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "for_each_channel_unreg", for_each_channel_unreg) == NULL ||
 		CU_add_test(suite, "thread_name", thread_name) == NULL ||
 		CU_add_test(suite, "channel", channel) == NULL ||
-		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL
+		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL ||
+		CU_add_test(suite, "channel_destroy_races_by_multiple_threads",
+			    channel_destroy_races_by_multiple_threads) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
