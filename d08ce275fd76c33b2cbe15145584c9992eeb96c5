@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4cd99ee_8f6427ef",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-06T19:44:55Z",
+      "side": 1,
+      "message": "You don\u0027t need this if statement. It will happen naturally in the while loop below.",
+      "revId": "d08ce275fd76c33b2cbe15145584c9992eeb96c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
