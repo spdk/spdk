@@ -261,6 +261,15 @@ void *spdk_thread_get_ctx(struct spdk_thread *thread);
 struct spdk_cpuset *spdk_thread_get_cpumask(struct spdk_thread *thread);
 
 /**
+ * Get the thread's socket id.
+ *
+ * \param thread The thread to get the socket id for.
+ *
+ * \return -1 if both sockets used. 0 if socket 0. 1 if socket 1.
+ */
+int spdk_thread_get_socket_id(struct spdk_thread *thread);
+
+/**
  * Return the thread object associated with the context handle previously
  * obtained by calling spdk_thread_get_ctx().
  *

@@ -45,6 +45,7 @@
 #define SPDK_MSG_BATCH_SIZE		8
 #define SPDK_MAX_DEVICE_NAME_LEN	256
 #define SPDK_MAX_THREAD_NAME_LEN	256
+#define SPDK_MAX_LCORE_COUNT		1024
 
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -382,6 +383,33 @@ struct spdk_cpuset *
 spdk_thread_get_cpumask(struct spdk_thread *thread)
 {
 	return &thread->cpumask;
+}
+
+int
+spdk_thread_get_socket_id(struct spdk_thread *thread)
+{
+	uint32_t core;
+	struct spdk_cpuset *cpumask;
+	bool first_socket_used = false;
+	int socket_id = 0, current_socket_id;
+
+	cpumask = spdk_thread_get_cpumask(thread);
+
+	for (core = 0; core < SPDK_MAX_LCORE_COUNT; core++) {
+		if (spdk_cpuset_get_cpu(cpumask, core)) {
+			current_socket_id = spdk_env_get_socket_id(core);
+			if (current_socket_id == 0) {
+				first_socket_used = true;
+			}
+			socket_id += current_socket_id;
+		}
+	}
+
+	if (socket_id > 0 && first_socket_used == true) {
+		return SPDK_ENV_SOCKET_ID_ANY;
+	}
+
+	return socket_id == 0 ? 0 : 1;
 }
 
 struct spdk_thread *
