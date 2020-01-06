@@ -441,13 +441,14 @@ bdevperf_construct_targets(void)
 static void
 bdevperf_fini(int rc)
 {
-	bdevperf_free_targets();
 	spdk_app_stop(rc);
 }
 
 static void
 bdevperf_test_done(int rc)
 {
+	bdevperf_free_targets();
+
 	if (g_request && !g_shutdown) {
 		rpc_perform_tests_cb(rc);
 	} else {
@@ -1440,8 +1441,6 @@ rpc_perform_tests_cb(int rc)
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "bdevperf failed with error %s", spdk_strerror(-rc));
 	}
-
-	bdevperf_free_targets();
 }
 
 static void
