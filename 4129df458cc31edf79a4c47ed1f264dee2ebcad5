@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6ccace4_39a5fad8",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-06T19:28:04Z",
+      "side": 1,
+      "message": "Needs to be in 20.01 section.",
+      "revId": "4129df458cc31edf79a4c47ed1f264dee2ebcad5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
