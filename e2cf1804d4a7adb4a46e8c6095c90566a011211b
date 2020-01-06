@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "8ae61d2c_005e1b30",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-06T01:44:47Z",
+      "side": 1,
+      "message": "Not related with QoS. The differentiated service means that if provided with service, different requirements can use different implementations of TCP/transports. This is valid in my mind. The provider will not need to always provide the fast solution to users if no additional cost is paid.",
+      "parentUuid": "f560bbd7_b50eed27",
+      "revId": "e2cf1804d4a7adb4a46e8c6095c90566a011211b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "262fd300_cfd94c46",
         "filename": "/COMMIT_MSG",
         "patchSetId": 8
