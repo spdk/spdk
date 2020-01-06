@@ -1479,6 +1479,16 @@ void spdk_bdev_histogram_get(struct spdk_bdev *bdev, struct spdk_histogram_data 
 size_t spdk_bdev_get_media_events(struct spdk_bdev_desc *bdev_desc,
 				  struct spdk_bdev_media_event *events, size_t max_events);
 
+/**
+ * Check whether NVMe bdev's socket and thread's socket is same.
+ *
+ * \param bdev Block device
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ *
+ * \return true if same (optimal)
+ */
+bool spdk_bdev_is_socket_optimal(struct spdk_bdev *bdev, struct spdk_io_channel *ch);
+
 #ifdef __cplusplus
 }
 #endif

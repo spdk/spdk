@@ -929,6 +929,8 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 
 			target = target->next;
 			continue;
+		} else {
+			spdk_bdev_is_socket_optimal(target->bdev, target->ch);
 		}
 
 		/* Start a timer to stop this I/O chain when the run is over */

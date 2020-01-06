@@ -5433,6 +5433,22 @@ spdk_bdev_notify_media_management(struct spdk_bdev *bdev)
 	pthread_mutex_unlock(&bdev->internal.mutex);
 }
 
+bool
+spdk_bdev_is_socket_optimal(struct spdk_bdev *bdev, struct spdk_io_channel *ch)
+{
+	int thread_socket_id = spdk_thread_get_socket_id(ch->thread);
+	int bdev_socket_id = bdev->socket_id;
+
+	if (bdev_socket_id == SPDK_ENV_SOCKET_ID_ANY || bdev_socket_id == thread_socket_id) {
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Bdev %s and IO thread on same socket\n", bdev->name);
+		return true;
+	} else {
+		SPDK_WARNLOG("Bdev %s and IO thread on different socket\n", bdev->name);
+		return false;
+	}
+}
+
+
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
 
 SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
