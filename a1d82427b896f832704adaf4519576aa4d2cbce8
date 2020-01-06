@@ -16,6 +16,24 @@
       "revId": "a1d82427b896f832704adaf4519576aa4d2cbce8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65a69dc4_7879c5c1",
+        "filename": "examples/nvmf/nvmf/nvmf.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-06T06:40:09Z",
+      "side": 1,
+      "message": "Yes.Because we have one discovery subsystem at least when we created the default nvmf target, isn\u0027t it?",
+      "parentUuid": "8d5959b2_30b349ca",
+      "revId": "a1d82427b896f832704adaf4519576aa4d2cbce8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
