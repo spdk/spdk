@@ -172,6 +172,7 @@ struct spdk_io_channel {
 	uint32_t			destroy_ref;
 	TAILQ_ENTRY(spdk_io_channel)	tailq;
 	spdk_io_channel_destroy_cb	destroy_cb;
+	pthread_mutex_t			mutex;
 
 	/*
 	 * Modules will allocate extra memory off the end of this structure
