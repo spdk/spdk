@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d1803e6_c42598a6",
+        "filename": "test/unit/lib/nvme/nvme_uevent.c/nvme_uevent_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T05:36:27Z",
+      "side": 1,
+      "message": "unnecessary comment here.",
+      "range": {
+        "startLine": 65,
+        "startChar": 1,
+        "endLine": 65,
+        "endChar": 40
+      },
+      "revId": "6aedc45498c258b260763381472dcadcb5280f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c39b468_1f5c57d1",
+        "filename": "test/unit/lib/nvme/nvme_uevent.c/nvme_uevent_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T05:36:27Z",
+      "side": 1,
+      "message": "You can set uevent.action \u003d 0 after line 77, same for line 133.",
+      "range": {
+        "startLine": 83,
+        "startChar": 11,
+        "endLine": 83,
+        "endChar": 48
+      },
+      "revId": "6aedc45498c258b260763381472dcadcb5280f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
