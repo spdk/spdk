@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60aa5b16_8a33d4ae",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 998,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-06T20:36:29Z",
+      "side": 1,
+      "message": "Can you cast from bool to int and guarantee you get 1? I\u0027m not sure that\u0027s defined behavior. Can you just make avail_wrap_counter a uint8_t maybe?",
+      "revId": "2eadcfc2f4ed98218cf3d0de2f2464334ba8c1c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91a56ec6_857ed9f2",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1067,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-06T20:36:29Z",
+      "side": 1,
+      "message": "It might be more intuitive to write this as\n\n(vsession-\u003enegotiated_features \u0026 (1ULL \u003c\u003c VIRTIO_F_RING_PACKED)) !\u003d 0;",
+      "revId": "2eadcfc2f4ed98218cf3d0de2f2464334ba8c1c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94961dfb_67eca8a3",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1097,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-06T20:36:29Z",
+      "side": 1,
+      "message": "q-\u003elast_avail_idx \u003e\u003e 15 instead?",
+      "revId": "2eadcfc2f4ed98218cf3d0de2f2464334ba8c1c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "650fdfbd_6eb2d352",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1098,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-06T20:36:29Z",
+      "side": 1,
+      "message": "capitalize the f",
+      "revId": "2eadcfc2f4ed98218cf3d0de2f2464334ba8c1c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ad3ad49_e4a038c4",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-06T20:36:29Z",
+      "side": 1,
+      "message": "Would a better name for these be \"phase\"?",
+      "revId": "2eadcfc2f4ed98218cf3d0de2f2464334ba8c1c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
