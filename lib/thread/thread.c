@@ -1546,5 +1546,72 @@ end:
 	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
 }
 
+struct spdk_sync_msg_ctx {
+	spdk_sync_msg_fn fn;
+	int status;
+	void *ctx;
+	struct spdk_thread *cur_thread;
+	struct spdk_thread *orig_thread;
+	spdk_sync_msg_cpl cpl;
+};
+
+void *
+spdk_sync_msg_ctx_get_ctx(struct spdk_sync_msg_ctx *ctx)
+{
+	return ctx->ctx;
+}
+
+static void
+_call_sync_msg(void *ctx)
+{
+	struct spdk_sync_msg_ctx *_ctx = ctx;
+
+	_ctx->cur_thread = _get_thread();
+
+	_ctx->fn(_ctx);
+}
+
+void
+spdk_thread_send_sync_msg(const struct spdk_thread *thread, spdk_sync_msg_fn fn,
+			  void *ctx, spdk_sync_msg_cpl cpl)
+{
+	struct spdk_sync_msg_ctx *_ctx;
+	int rc __attribute__((unused));
+
+	_ctx = calloc(1, sizeof(*_ctx));
+	if (!_ctx) {
+		SPDK_ERRLOG("Unable to allocate synchronous message context.\n");
+		return;
+	}
+
+	_ctx->fn = fn;
+	_ctx->ctx = ctx;
+	_ctx->cpl = cpl;
+	_ctx->orig_thread = _get_thread();
+
+	rc = spdk_thread_send_msg(thread, _call_sync_msg, _ctx);
+	assert(rc == 0);
+}
+
+static void
+_cpl_sync_msg(void *ctx)
+{
+	struct spdk_sync_msg_ctx *_ctx = ctx;
+
+	if (_ctx->cpl != NULL) {
+		_ctx->cpl(_ctx, _ctx->status);
+	}
+	free(_ctx);
+}
+
+void
+spdk_thread_cpl_sync_msg(struct spdk_sync_msg_ctx *ctx, int status)
+{
+	assert(ctx->cur_thread == _get_thread());
+
+	ctx->status = status;
+
+	spdk_thread_send_msg(ctx->orig_thread, _cpl_sync_msg, ctx);
+}
 
 SPDK_LOG_REGISTER_COMPONENT("thread", SPDK_LOG_THREAD)
