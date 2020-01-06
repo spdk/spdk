@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1dc5240b_6b2092bb",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T02:37:15Z",
+      "side": 1,
+      "message": "The 3 variables can be deleted, just use the magic number in test_set_host_id_cmds() is OK.",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 0
+      },
+      "revId": "8fa6229190f027e183f659d326f159a89d83a0a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
