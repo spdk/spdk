@@ -34,6 +34,24 @@
       "revId": "9360b774bce16dc3e9cf73008533bb7aa2f4465c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b49e3d76_05177f08",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1360,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-06T21:45:11Z",
+      "side": 1,
+      "message": "Thank you, carelessly I was trapped by the fact that spdk_for_each_channel() has its continue function but spdk_for_each_thread() doesn\u0027t have any. I updated the patch to remove mutex and clarify this in the commit message.",
+      "parentUuid": "887ecdec_18dacb03",
+      "revId": "9360b774bce16dc3e9cf73008533bb7aa2f4465c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
