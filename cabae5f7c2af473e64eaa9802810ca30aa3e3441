@@ -1,0 +1,124 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e478d346_c9261a38",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T06:32:56Z",
+      "side": 1,
+      "message": "let\u0027s use blk_iovs_split_queue_setup.",
+      "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbc4a3dc_073f9f66",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T06:32:56Z",
+      "side": 1,
+      "message": "blk_iovs_packed_queue_setup.",
+      "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5860f0ad_3f10ecfe",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T06:32:56Z",
+      "side": 1,
+      "message": "rc \u003d -EINVAL;",
+      "range": {
+        "startLine": 282,
+        "startChar": 2,
+        "endLine": 282,
+        "endChar": 10
+      },
+      "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecc168b2_79eb6039",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T06:32:56Z",
+      "side": 1,
+      "message": "ERRLOG",
+      "range": {
+        "startLine": 563,
+        "startChar": 16,
+        "endLine": 563,
+        "endChar": 34
+      },
+      "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc7405b5_72196034",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 613,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T06:32:56Z",
+      "side": 1,
+      "message": "You can define 32 as a macro in a separate commit in this file.",
+      "range": {
+        "startLine": 613,
+        "startChar": 15,
+        "endLine": 613,
+        "endChar": 17
+      },
+      "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1793ef59_1e24130c",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-06T06:32:56Z",
+      "side": 1,
+      "message": "task is not used here, so you can make process_blk_task() as void function.",
+      "revId": "cabae5f7c2af473e64eaa9802810ca30aa3e3441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
