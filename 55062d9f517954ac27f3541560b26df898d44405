@@ -34,6 +34,41 @@
       "revId": "55062d9f517954ac27f3541560b26df898d44405",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5412e25a_4710ee0a",
+        "filename": "autobuild.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-06T20:02:31Z",
+      "side": 1,
+      "message": "Point taken, I\u0027ll add an explanation in the commit message.",
+      "parentUuid": "394d6863_a90da630",
+      "revId": "55062d9f517954ac27f3541560b26df898d44405",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7239f8b4_d1eb968c",
+        "filename": "autobuild.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-06T20:02:31Z",
+      "side": 1,
+      "message": "It moved down a few lines.",
+      "revId": "55062d9f517954ac27f3541560b26df898d44405",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
