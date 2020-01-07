@@ -708,6 +708,7 @@ int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	int rc;
+	struct nvme_request *first_req = qpair->first_fused_request;
 
 	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->queued_req) && req->num_children == 0)) {
 		/*
@@ -720,14 +721,61 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		return 0;
 	}
 
+	if (req->cmd.fuse & SPDK_NVME_IO_FLAGS_FUSE_SECOND) {
+		if (first_req == NULL) {
+			SPDK_ERRLOG("Wrong sequence of fused operations\n");
+			return -EINVAL;
+		}
+
+		/* Submit first fused command first */
+		rc = _nvme_qpair_submit_request(qpair, first_req);
+		if (rc == -EAGAIN) {
+			STAILQ_INSERT_TAIL(&qpair->queued_req, first_req, stailq);
+			first_req->queued = true;
+			STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+			req->queued = true;
+
+			qpair->first_fused_request = NULL;
+
+			return 0;
+		} else if (rc != 0) {
+			/* Fail first and second fused commands */
+			goto fail_both_fused;
+		}
+	} else if (req->cmd.fuse & SPDK_NVME_IO_FLAGS_FUSE_FIRST) {
+		if (first_req != NULL) {
+			SPDK_ERRLOG("Wrong sequence of fused operations\n");
+			/* Fail first fused operation as well */
+			goto fail_both_fused;
+		}
+
+		/* Do not submit first of fused commands - wait until we get second one */
+		qpair->first_fused_request = req;
+		return 0;
+	}
+
 	rc = _nvme_qpair_submit_request(qpair, req);
 	if (rc == -EAGAIN) {
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
 		req->queued = true;
 		rc = 0;
+	} else if (rc != 0 && req->cmd.fuse & SPDK_NVME_IO_FLAGS_FUSE_SECOND) {
+		/* TODO: we should wait for first fused operation to complete before returning error here */
 	}
 
 	return rc;
+
+fail_both_fused:
+	/* Fail first fused command */
+	first_req->cpl.status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
+	first_req->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	nvme_complete_request(first_req->cb_fn, first_req->cb_arg, qpair, first_req, &first_req->cpl);
+	nvme_free_request(first_req);
+
+	qpair->first_fused_request = NULL;
+
+	/* Fail second fused command */
+	return -EINVAL;
 }
 
 static int
