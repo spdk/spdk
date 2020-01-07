@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa61ecd1_cad82824",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-07T20:51:09Z",
+      "side": 1,
+      "message": "just a thought to help break this patch up (which wouldn\u0027t break FTL in this one case I\u0027m describing)\n\nyou could start with just renaming ftl_num_band_lbks to ftl_num_blocks_in_band\n\nand then also ftl_dev_blks_in_zone to ftl_num_blocks_in_zone\n\nKeep the implementation of those two functions that same for now - but then at least you get this rote renaming out of the way.  Then in the later patch(es) you can change how those functions are actually implemented.",
+      "revId": "17f0ad1d0ba4a2f085c5e9dbfafc30a78d5ab7a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
