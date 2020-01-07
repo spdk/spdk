@@ -35,10 +35,10 @@
 
 #include "spdk_cunit.h"
 
-#include "common/lib/test_env.c"
 #include "common/lib/test_sock.c"
 
 #include "nvme/nvme_tcp.c"
+#include "common/lib/nvme/common_stubs.h"
 
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME);
 
