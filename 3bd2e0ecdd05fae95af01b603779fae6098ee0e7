@@ -16,6 +16,24 @@
       "revId": "3bd2e0ecdd05fae95af01b603779fae6098ee0e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb640d9a_1b3a8bd0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2743,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-07T22:19:31Z",
+      "side": 1,
+      "message": "true, move it under success label because in tcp there was debug log meaning almost the same as that notice\n\nis there any value to keep that debug log? if so i would move notice above success and restore debug log + do the same for rdma for consistency\n\nhowever I\u0027m also fine with your suggestion,\n\nBen - what you think?",
+      "parentUuid": "15c1f701_826aa9a5",
+      "revId": "3bd2e0ecdd05fae95af01b603779fae6098ee0e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
