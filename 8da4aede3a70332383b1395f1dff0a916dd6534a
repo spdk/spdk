@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "19d4301f_1c57ccf6",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2020-01-07T12:28:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "56628b38_49243834",
+      "revId": "8da4aede3a70332383b1395f1dff0a916dd6534a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4520380_8c71d7d5",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 31
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-03T22:16:14Z",
       "side": 1,
       "message": "I\u0027m curious what is supposed to happen (not just for this bdev, but a ZNS SSD in general) if you reset a zone and then try to open it while the reset is in progress.",
+      "revId": "8da4aede3a70332383b1395f1dff0a916dd6534a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "048ca28c_8e4bcf92",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2020-01-07T12:28:39Z",
+      "side": 1,
+      "message": "probably the same thing when trying to read from a sector before write completion, or writing to  a chunk before reset completion in an OCSSD device - undefined behavior?",
+      "parentUuid": "a4520380_8c71d7d5",
       "revId": "8da4aede3a70332383b1395f1dff0a916dd6534a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
