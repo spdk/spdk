@@ -69,6 +69,24 @@
       "revId": "552e0e51160e8876827a8b2b5bbe5861b4bca18a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d44c4431_478bf971",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2205,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-07T19:39:38Z",
+      "side": 1,
+      "message": "But most of the code is the exact same.  I would have liked to see something to reduce that duplication.  Something like:\n\nstatic void\n_bdev_compare(bool emulated)\n{\n  g_io_types_supported[COMPARE] \u003d !emulated;\n\n  if (emulated) {\n    expected_io \u003d ut_alloc_expected_io(IO_TYPE_READ);\n  } else {\n    expected_io \u003d ut_alloc_expected_io(IO_TYPE_COMPARE);\n  }\n}\n\nstatic void\nbdev_compare(void)\n{\n  _bdev_compare(true);\n  _bdev_compare(false);\n}\n\nThat\u0027s not exact but I think you get the idea.",
+      "parentUuid": "22bcfdda_f6eeb86e",
+      "revId": "552e0e51160e8876827a8b2b5bbe5861b4bca18a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
