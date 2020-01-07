@@ -34,6 +34,24 @@
       "revId": "74e700a05096532f31d4ec1447a366887d8103c8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e724cdb1_06032561",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 2230,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-07T13:32:36Z",
+      "side": 1,
+      "message": "I\u0027ve added patch delaying first fused command before this patch, but I think the problem still exists (see line 763 in new patch: https://review.gerrithub.io/c/spdk/spdk/+/479542/1/lib/nvme/nvme_qpair.c#763). I think we need to add some additional logic here to manage this case correctly.",
+      "parentUuid": "73f081e7_be2aad1b",
+      "revId": "74e700a05096532f31d4ec1447a366887d8103c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
