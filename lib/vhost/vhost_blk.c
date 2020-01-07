@@ -59,8 +59,12 @@
 		(1ULL << VIRTIO_BLK_F_BARRIER)  | (1ULL << VIRTIO_BLK_F_SCSI))
 
 /* Vhost-blk support protocol features */
+#ifndef SPDK_CONFIG_VHOST_INTERNAL_LIB
 #define SPDK_VHOST_BLK_PROTOCOL_FEATURES ((1ULL << VHOST_USER_PROTOCOL_F_CONFIG) | \
 		(1ULL << VHOST_USER_PROTOCOL_F_INFLIGHT_SHMFD))
+#else
+#define SPDK_VHOST_BLK_PROTOCOL_FEATURES (1ULL << VHOST_USER_PROTOCOL_F_CONFIG)
+#endif
 
 struct spdk_vhost_blk_task {
 	struct spdk_bdev_io *bdev_io;
