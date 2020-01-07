@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15c1f701_826aa9a5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2743,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-07T18:46:13Z",
+      "side": 1,
+      "message": "this is kind of a nit - but putting the NOTICELOG here changes behavior slightly - before, we would only print this when we listen on the port for the first time - any subsequent listens wouldn\u0027t get this NOTICELOG\n\nso I think you should just move this before the \"success\" label\n\nsame for TCP below\n\n(If there\u0027s a good reason to change it, I\u0027m fine with that, but it should be a separate patch.)",
+      "revId": "3bd2e0ecdd05fae95af01b603779fae6098ee0e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
