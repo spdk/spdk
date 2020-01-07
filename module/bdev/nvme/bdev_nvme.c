@@ -1351,7 +1351,9 @@ int
 spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 {
 	if (g_bdev_nvme_init_thread != NULL) {
-		return -EPERM;
+		if (!TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
+			return -EPERM;
+		}
 	}
 
 	g_opts = *opts;

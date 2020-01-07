@@ -115,7 +115,8 @@ spdk_rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 
 	return;
 }
-SPDK_RPC_REGISTER("bdev_nvme_set_options", spdk_rpc_bdev_nvme_set_options, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER("bdev_nvme_set_options", spdk_rpc_bdev_nvme_set_options,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_set_options, set_bdev_nvme_options)
 
 struct rpc_bdev_nvme_hotplug {

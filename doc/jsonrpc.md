@@ -1445,7 +1445,7 @@ Example response:
 
 ## bdev_nvme_set_options {#rpc_bdev_nvme_set_options}
 
-Set global parameters for all bdev NVMe. This RPC may only be called before SPDK subsystems have been initialized.
+Set global parameters for all bdev NVMe. This RPC may only be called before SPDK subsystems have been initialized or any bdev NVMe has been created.
 
 ### Parameters
 
