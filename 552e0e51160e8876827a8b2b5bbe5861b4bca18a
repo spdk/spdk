@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8b59e355_9b016787",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-07T10:36:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "31a84ae9_e5f9551f",
+      "revId": "552e0e51160e8876827a8b2b5bbe5861b4bca18a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9b5fd8de_c019534d",
         "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-03T17:07:23Z",
       "side": 1,
       "message": "Isn\u0027t this pretty much an exact copy of bdev_compare_emulated?",
+      "revId": "552e0e51160e8876827a8b2b5bbe5861b4bca18a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22bcfdda_f6eeb86e",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2205,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-07T10:36:23Z",
+      "side": 1,
+      "message": "It\u0027s very similar, but in emulated version we disable support for compare operation (g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] \u003d false) and we have different expected IO (expected_io \u003d ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_COMPARE... vs SPDK_BDEV_IO_TYPE_READ).",
+      "parentUuid": "9b5fd8de_c019534d",
       "revId": "552e0e51160e8876827a8b2b5bbe5861b4bca18a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
