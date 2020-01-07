@@ -130,7 +130,7 @@ struct spdk_nvmf_transport g_nvmf_transport = {
 };
 
 struct spdk_nvmf_transport *
-spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_type type)
+spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, const char *transport_name)
 {
 	return &g_nvmf_transport;
 }
