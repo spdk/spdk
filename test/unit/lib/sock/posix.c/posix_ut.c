@@ -40,7 +40,7 @@
 
 #include "sock/posix/posix.c"
 
-DEFINE_STUB_V(spdk_net_impl_register, (struct spdk_net_impl *impl));
+DEFINE_STUB_V(spdk_net_impl_register, (struct spdk_net_impl *impl, int priority));
 DEFINE_STUB(spdk_sock_close, int, (struct spdk_sock **s), 0);
 
 static void
