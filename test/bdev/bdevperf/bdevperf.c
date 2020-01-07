@@ -89,7 +89,6 @@ static bool g_every_core_for_each_bdev = false;
 static struct spdk_poller *g_perf_timer = NULL;
 
 static void bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task);
-static void performance_dump(uint64_t io_time_in_usec, uint64_t ema_period);
 static void rpc_perform_tests_cb(void);
 
 struct io_target {
@@ -458,6 +457,67 @@ bdevperf_test_done(void)
 	}
 }
 
+/*
+ * Cumulative Moving Average (CMA): average of all data up to current
+ * Exponential Moving Average (EMA): weighted mean of the previous n data and more weight is given to recent
+ * Simple Moving Average (SMA): unweighted mean of the previous n data
+ *
+ * Bdevperf supports CMA and EMA.
+ */
+static double
+get_cma_io_per_second(struct io_target *target, uint64_t io_time_in_usec)
+{
+	return (double)target->io_completed * 1000000 / io_time_in_usec;
+}
+
+static double
+get_ema_io_per_second(struct io_target *target, uint64_t ema_period)
+{
+	double io_completed, io_per_second;
+
+	io_completed = target->io_completed;
+	io_per_second = (double)(io_completed - target->prev_io_completed) * 1000000
+			/ g_show_performance_period_in_usec;
+	target->prev_io_completed = io_completed;
+
+	target->ema_io_per_second += (io_per_second - target->ema_io_per_second) * 2
+				     / (ema_period + 1);
+	return target->ema_io_per_second;
+}
+
+static void
+performance_dump(uint64_t io_time_in_usec)
+{
+	unsigned lcore_id;
+	double io_per_second, mb_per_second;
+	double total_io_per_second, total_mb_per_second;
+	struct io_target_group *group;
+	struct io_target *target;
+
+	total_io_per_second = 0;
+	total_mb_per_second = 0;
+	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
+		if (!TAILQ_EMPTY(&group->targets)) {
+			lcore_id = group->lcore;
+			printf("\r Logical core: %u\n", lcore_id);
+		}
+		TAILQ_FOREACH(target, &group->targets, link) {
+			io_per_second = get_cma_io_per_second(target, io_time_in_usec);
+			mb_per_second = io_per_second * g_io_size / (1024 * 1024);
+			printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
+			       target->name, io_per_second, mb_per_second);
+			total_io_per_second += io_per_second;
+			total_mb_per_second += mb_per_second;
+		}
+	}
+
+	printf("\r =====================================================\n");
+	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
+	       "Total", total_io_per_second, total_mb_per_second);
+	fflush(stdout);
+
+}
+
 static void
 end_run(void *ctx)
 {
@@ -476,7 +536,7 @@ end_run(void *ctx)
 
 		if (g_time_in_usec) {
 			if (!g_run_rc) {
-				performance_dump(g_time_in_usec, 0);
+				performance_dump(g_time_in_usec);
 			}
 		} else {
 			printf("Test time less than one microsecond, no performance data will be shown\n");
@@ -982,45 +1042,23 @@ bdevperf_usage(void)
 	printf(" -C                        enable every core to send I/Os to each bdev\n");
 }
 
-/*
- * Cumulative Moving Average (CMA): average of all data up to current
- * Exponential Moving Average (EMA): weighted mean of the previous n data and more weight is given to recent
- * Simple Moving Average (SMA): unweighted mean of the previous n data
- *
- * Bdevperf supports CMA and EMA.
- */
-static double
-get_cma_io_per_second(struct io_target *target, uint64_t io_time_in_usec)
-{
-	return (double)target->io_completed * 1000000 / io_time_in_usec;
-}
-
-static double
-get_ema_io_per_second(struct io_target *target, uint64_t ema_period)
-{
-	double io_completed, io_per_second;
-
-	io_completed = target->io_completed;
-	io_per_second = (double)(io_completed - target->prev_io_completed) * 1000000
-			/ g_show_performance_period_in_usec;
-	target->prev_io_completed = io_completed;
-
-	target->ema_io_per_second += (io_per_second - target->ema_io_per_second) * 2
-				     / (ema_period + 1);
-	return target->ema_io_per_second;
-}
-
-static void
-performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
+static int
+performance_statistics_thread(void *arg)
 {
 	unsigned lcore_id;
+	uint64_t io_time_in_usec, ema_period;
 	double io_per_second, mb_per_second;
 	double total_io_per_second, total_mb_per_second;
 	struct io_target_group *group;
 	struct io_target *target;
 
+	g_show_performance_period_num++;
+	io_time_in_usec = g_show_performance_period_num * g_show_performance_period_in_usec;
+	ema_period = g_show_performance_ema_period;
+
 	total_io_per_second = 0;
 	total_mb_per_second = 0;
+
 	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
 		if (!TAILQ_EMPTY(&group->targets)) {
 			lcore_id = group->lcore;
@@ -1045,14 +1083,6 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 	       "Total", total_io_per_second, total_mb_per_second);
 	fflush(stdout);
 
-}
-
-static int
-performance_statistics_thread(void *arg)
-{
-	g_show_performance_period_num++;
-	performance_dump(g_show_performance_period_num * g_show_performance_period_in_usec,
-			 g_show_performance_ema_period);
 	return -1;
 }
 
