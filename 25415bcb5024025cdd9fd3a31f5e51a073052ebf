@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8cae6f82_3d07994f",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-07T19:12:47Z",
+      "side": 1,
+      "message": "I think overall the code here looks good.  But I\u0027d prefer to put this fused-specific code in a separate function to reduce complexity for the normal path.  So something like this:\n\nif (req-\u003ecmd.fuse \u0026 SPDK_NVME_IO_FLAGS_FUSE_MASK) {\n  return nvme_qpair_submit_fused_request(qpair, req);\n}\n\nThere may be a small bit of duplicated code in this case, but I think that\u0027s OK.",
+      "revId": "25415bcb5024025cdd9fd3a31f5e51a073052ebf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
