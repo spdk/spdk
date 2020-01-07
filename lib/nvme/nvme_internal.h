@@ -380,6 +380,7 @@ struct spdk_nvme_qpair {
 
 	uint8_t				first_fused_submitted: 1;
 
+	struct nvme_request		*first_fused_request;
 	struct nvme_request		*second_fused_request;
 
 	enum spdk_nvme_transport_type	trtype;
