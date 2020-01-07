@@ -1128,7 +1128,7 @@ spdk_vhost_nvme_start(struct spdk_vhost_session *vsession)
 		return -1;
 	}
 
-	pg = vhost_get_poll_group(vsession->vdev->cpumask);
+	pg = vhost_get_poll_group(&vsession->vdev->cpumask);
 	return vhost_session_send_event(pg, vsession, spdk_vhost_nvme_start_cb,
 					3, "start session");
 }
@@ -1264,7 +1264,7 @@ spdk_vhost_nvme_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "ctrlr", nvme->vdev.name);
 	spdk_json_write_named_uint32(w, "io_queues", nvme->num_io_queues);
-	spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(nvme->vdev.cpumask));
+	spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(&nvme->vdev.cpumask));
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
