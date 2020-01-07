@@ -535,3 +535,31 @@ rte_vhost_vring_call(int vid, uint16_t vring_idx)
 
 	return -1;
 }
+
+int
+rte_vhost_set_last_inflight_io_split(int vid, uint16_t vring_idx,
+				     uint16_t idx)
+{
+	return 0;
+}
+
+int
+rte_vhost_clr_inflight_desc_split(int vid, uint16_t vring_idx,
+				  uint16_t last_used_idx, uint16_t idx)
+{
+	return 0;
+}
+
+int
+rte_vhost_set_inflight_desc_split(int vid, uint16_t vring_idx,
+				  uint16_t idx)
+{
+	return 0;
+}
+
+int
+rte_vhost_get_vhost_ring_inflight(int vid, uint16_t vring_idx,
+				  struct rte_vhost_ring_inflight *vring)
+{
+	return 0;
+}

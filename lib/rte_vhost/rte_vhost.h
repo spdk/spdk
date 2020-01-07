@@ -74,10 +74,50 @@ struct rte_vhost_memory {
 	struct rte_vhost_mem_region regions[0];
 };
 
+struct rte_vhost_inflight_desc_split {
+	uint8_t inflight;
+	uint8_t padding[5];
+	uint16_t next;
+	uint64_t counter;
+};
+
+struct rte_vhost_inflight_info_split {
+	uint64_t features;
+	uint16_t version;
+	uint16_t desc_num;
+	uint16_t last_inflight_io;
+	uint16_t used_idx;
+	struct rte_vhost_inflight_desc_split desc[0];
+};
+
+struct rte_vhost_resubmit_desc {
+	uint16_t index;
+	uint64_t counter;
+};
+
+struct rte_vhost_resubmit_info {
+	struct rte_vhost_resubmit_desc *resubmit_list;
+	uint16_t resubmit_num;
+};
+
+struct rte_vhost_ring_inflight {
+	struct rte_vhost_inflight_info_split *inflight_split;
+	struct rte_vhost_resubmit_info *resubmit_inflight;
+};
+
 struct rte_vhost_vring {
-	struct vring_desc	*desc;
-	struct vring_avail	*avail;
-	struct vring_used	*used;
+	union {
+		struct vring_desc *desc;
+		struct vring_packed_desc *desc_packed;
+	};
+	union {
+		struct vring_avail *avail;
+		struct vring_packed_desc_event *driver_event;
+	};
+	union {
+		struct vring_used *used;
+		struct vring_packed_desc_event *device_event;
+	};
 	uint64_t		log_guest_addr;
 
 	int			callfd;
@@ -484,4 +524,112 @@ int rte_vhost_get_vring_base(int vid, uint16_t queue_id,
  */
 int rte_vhost_vring_call(int vid, uint16_t vring_idx);
 
+/**
+ * Get guest inflight vring info, including inflight ring and resubmit list.
+ *
+ * @param vid
+ *  vhost device ID
+ * @param vring_idx
+ *  vring index
+ * @param vring
+ *  the structure to hold the requested inflight vring info
+ * @return
+ *  0 on success, -1 on failure
+ */
+__rte_experimental
+int
+rte_vhost_get_vhost_ring_inflight(int vid, uint16_t vring_idx,
+	struct rte_vhost_ring_inflight *vring);
+
+/**
+ * Set split inflight descriptor.
+ *
+ * This function save descriptors that has been comsumed in available
+ * ring
+ *
+ * @param vid
+ *  vhost device ID
+ * @param vring_idx
+ *  vring index
+ * @param idx
+ *  inflight entry index
+ * @return
+ *  0 on success, -1 on failure
+ */
+__rte_experimental
+int
+rte_vhost_set_inflight_desc_split(int vid, uint16_t vring_idx,
+	uint16_t idx);
+
+/**
+ * Save the head of list that the last batch of used descriptors.
+ *
+ * @param vid
+ *  vhost device ID
+ * @param vring_idx
+ *  vring index
+ * @param idx
+ *  descriptor entry index
+ * @return
+ *  0 on success, -1 on failure
+ */
+__rte_experimental
+int
+rte_vhost_set_last_inflight_io_split(int vid,
+	uint16_t vring_idx, uint16_t idx);
+
+/**
+ * Clear the split inflight status.
+ *
+ * @param vid
+ *  vhost device ID
+ * @param vring_idx
+ *  vring index
+ * @param last_used_idx
+ *  last used idx of used ring
+ * @param idx
+ *  inflight entry index
+ * @return
+ *  0 on success, -1 on failure
+ */
+__rte_experimental
+int
+rte_vhost_clr_inflight_desc_split(int vid, uint16_t vring_idx,
+	uint16_t last_used_idx, uint16_t idx);
+
+/**
+ * Save the head of list that the last batch of used descriptors.
+ *
+ * @param vid
+ *  vhost device ID
+ * @param vring_idx
+ *  vring index
+ * @param idx
+ *  descriptor entry index
+ * @return
+ *  0 on success, -1 on failure
+ */
+__rte_experimental
+int
+rte_vhost_set_last_inflight_io_split(int vid,
+	uint16_t vring_idx, uint16_t idx);
+
+/**
+ * Clear the split inflight status.
+ *
+ * @param vid
+ *  vhost device ID
+ * @param vring_idx
+ *  vring index
+ * @param last_used_idx
+ *  last used idx of used ring
+ * @param idx
+ *  inflight entry index
+ * @return
+ *  0 on success, -1 on failure
+ */
+__rte_experimental
+int
+rte_vhost_clr_inflight_desc_split(int vid, uint16_t vring_idx,
+	uint16_t last_used_idx, uint16_t idx);
 #endif /* _RTE_VHOST_H_ */
