@@ -45,6 +45,30 @@
       "revId": "c31d2122fac5cbfce8b5afeb2877abbcfccb8d8a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f85398d0_01168815",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 930,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-07T06:18:57Z",
+      "side": 1,
+      "message": "It looks that we have to know if sent PDUs are returned in iscsi_fuzz_handle_tgt_pdus() and return to free_io_ctx.\nI will consider how to do that.",
+      "parentUuid": "65c5ed86_aa4af647",
+      "range": {
+        "startLine": 928,
+        "startChar": 0,
+        "endLine": 930,
+        "endChar": 0
+      },
+      "revId": "c31d2122fac5cbfce8b5afeb2877abbcfccb8d8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
