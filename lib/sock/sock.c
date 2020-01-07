@@ -593,10 +593,21 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 }
 
 void
-spdk_net_impl_register(struct spdk_net_impl *impl)
+spdk_net_impl_register(struct spdk_net_impl *impl, int priority)
 {
-	if (!strcmp("posix", impl->name)) {
-		STAILQ_INSERT_TAIL(&g_net_impls, impl, link);
+	struct spdk_net_impl *cur, *prev;
+
+	impl->priority = priority;
+	prev = NULL;
+	STAILQ_FOREACH(cur, &g_net_impls, link) {
+		if (impl->priority > cur->priority) {
+			break;
+		}
+		prev = cur;
+	}
+
+	if (prev) {
+		STAILQ_INSERT_AFTER(&g_net_impls, prev, impl, link);
 	} else {
 		STAILQ_INSERT_HEAD(&g_net_impls, impl, link);
 	}
