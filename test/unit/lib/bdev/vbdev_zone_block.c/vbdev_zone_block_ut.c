@@ -362,7 +362,7 @@ verify_zone_config(struct rpc_construct_zone_block *r, bool presence)
 			}
 			CU_ASSERT(strcmp(r->base_bdev, cfg->bdev_name) == 0);
 			CU_ASSERT(r->zone_capacity == cfg->zone_capacity);
-			CU_ASSERT(r->optimal_open_zones == cfg->optimal_open_zones);
+			CU_ASSERT(spdk_max(r->optimal_open_zones, 1) == cfg->optimal_open_zones);
 			break;
 		}
 	}
@@ -377,9 +377,14 @@ verify_zone_config(struct rpc_construct_zone_block *r, bool presence)
 static void
 verify_zone_bdev(struct rpc_construct_zone_block *r, bool presence)
 {
+	struct block_zone *zone;
 	struct bdev_zone_block *bdev;
-	bool   bdev_found = false;
+	bool   bdev_found;
+	uint32_t i;
+	uint64_t expected_num_zones;
+	uint64_t expected_optimal_open_zones;
 
+	bdev_found = false;
 	TAILQ_FOREACH(bdev, &g_bdev_nodes, link) {
 		if (strcmp(bdev->bdev.name, r->name) == 0) {
 			bdev_found = true;
@@ -387,17 +392,27 @@ verify_zone_bdev(struct rpc_construct_zone_block *r, bool presence)
 				break;
 			}
 
+			expected_optimal_open_zones = spdk_max(r->optimal_open_zones, 1);
+			expected_num_zones = BLOCK_CNT / spdk_align64pow2(r->zone_capacity) / expected_optimal_open_zones;
+			expected_num_zones *= expected_optimal_open_zones;
+
+			CU_ASSERT(bdev->num_zones == expected_num_zones);
 			CU_ASSERT(bdev->bdev.zoned == true);
-			CU_ASSERT(bdev->bdev.blockcnt == BLOCK_CNT);
+			CU_ASSERT(bdev->bdev.blockcnt == expected_num_zones * spdk_align64pow2(r->zone_capacity));
 			CU_ASSERT(bdev->bdev.blocklen == BLOCK_SIZE);
 			CU_ASSERT(bdev->bdev.ctxt == bdev);
 			CU_ASSERT(bdev->bdev.fn_table == &zone_block_fn_table);
 			CU_ASSERT(bdev->bdev.module == &bdev_zoned_if);
 			CU_ASSERT(bdev->bdev.write_unit_size == 1);
 			CU_ASSERT(bdev->bdev.zone_size == spdk_align64pow2(r->zone_capacity));
-			CU_ASSERT(bdev->bdev.optimal_open_zones == r->optimal_open_zones);
+			CU_ASSERT(bdev->bdev.optimal_open_zones == expected_optimal_open_zones);
 			CU_ASSERT(bdev->bdev.max_open_zones == 0);
 
+			for (i = 0; i < bdev->num_zones; i++) {
+				zone = &bdev->zones[i];
+				CU_ASSERT(zone->zone_info.state == SPDK_BDEV_ZONE_STATE_FULL);
+				CU_ASSERT(zone->zone_info.capacity == r->zone_capacity);
+			}
 			break;
 		}
 	}
