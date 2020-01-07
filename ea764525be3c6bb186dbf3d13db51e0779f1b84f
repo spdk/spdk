@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1ed81969_a8b0a893",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2020-01-07T12:49:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fc9bc334_f55c20d5",
+      "revId": "ea764525be3c6bb186dbf3d13db51e0779f1b84f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0a2051ea_697b9163",
         "filename": "module/bdev/zone_block/vbdev_zone_block.c",
         "patchSetId": 32
@@ -33,6 +51,24 @@
       "revId": "ea764525be3c6bb186dbf3d13db51e0779f1b84f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c50c3977_d3830460",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2020-01-07T12:49:16Z",
+      "side": 1,
+      "message": "Done,\njust a leftover from many patches ago when there were two different calls and since then I\u0027ve merged them to the append case instead of the write one :)",
+      "parentUuid": "0a2051ea_697b9163",
+      "revId": "ea764525be3c6bb186dbf3d13db51e0779f1b84f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
