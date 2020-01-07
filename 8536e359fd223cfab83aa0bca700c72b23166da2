@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c11de013_0641399b",
+        "filename": "lib/virtio/virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-07T23:03:12Z",
+      "side": 0,
+      "message": "could you replace this with __builtin_prefetch?  we use this already in lib/nvme/nvme_pcie.c",
+      "revId": "8536e359fd223cfab83aa0bca700c72b23166da2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
