@@ -1335,7 +1335,12 @@ int
 spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 {
 	if (g_bdev_nvme_init_thread != NULL) {
-		return -EPERM;
+		pthread_mutex_lock(&g_bdev_nvme_mutex);
+		if (!TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
+			pthread_mutex_unlock(&g_bdev_nvme_mutex);
+			return -EPERM;
+		}
+		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	}
 
 	g_opts = *opts;
