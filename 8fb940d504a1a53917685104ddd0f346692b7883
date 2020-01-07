@@ -52,6 +52,24 @@
       "revId": "8fb940d504a1a53917685104ddd0f346692b7883",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c57152bd_257baf81",
+        "filename": "test/nvmf/target/shutdown.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-07T19:09:39Z",
+      "side": 1,
+      "message": "Thank you for your review Jim. Please take a look at https://github.com/spdk/spdk/issues/1096 especially Seth’s analysis",
+      "parentUuid": "2818e02b_41852480",
+      "revId": "8fb940d504a1a53917685104ddd0f346692b7883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
