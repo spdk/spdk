@@ -356,7 +356,7 @@ static struct spdk_net_impl g_ut_net_impl = {
 	.group_impl_close	= spdk_ut_sock_group_impl_close,
 };
 
-SPDK_NET_IMPL_REGISTER(ut, &g_ut_net_impl);
+SPDK_NET_IMPL_REGISTER(ut, &g_ut_net_impl, DEFAULT_SOCK_PRIORITY + 2);
 
 static void
 _sock(const char *ip, int port, char *impl_name)

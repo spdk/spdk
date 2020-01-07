@@ -1469,7 +1469,7 @@ static struct spdk_net_impl g_vpp_net_impl = {
 	.group_impl_close	= spdk_vpp_sock_group_impl_close,
 };
 
-SPDK_NET_IMPL_REGISTER(vpp, &g_vpp_net_impl);
+SPDK_NET_IMPL_REGISTER(vpp, &g_vpp_net_impl, DEFAULT_SOCK_PRIORITY + 1);
 
 static void
 spdk_vpp_net_framework_fini(void)
