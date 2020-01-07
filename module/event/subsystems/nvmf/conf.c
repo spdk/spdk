@@ -585,7 +585,7 @@ spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx)
 		return;
 	}
 
-	if (spdk_nvmf_tgt_get_transport(g_spdk_nvmf_tgt, trtype)) {
+	if (spdk_nvmf_tgt_get_transport(g_spdk_nvmf_tgt, type)) {
 		SPDK_ERRLOG("Duplicate transport type '%s'\n", type);
 		ctx->cb_fn(-1);
 		free(ctx);
