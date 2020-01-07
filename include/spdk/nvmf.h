@@ -1009,12 +1009,12 @@ int spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport);
  * Get an existing transport from the target
  *
  * \param tgt The NVMe-oF target
- * \param type The transport type to get
+ * \param transport_name The name of the transport type to get.
  *
  * \return the transport or NULL if not found
  */
 struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
-		enum spdk_nvme_transport_type type);
+		const char *transport_name);
 
 /**
  * Get the first transport registered with the given target
