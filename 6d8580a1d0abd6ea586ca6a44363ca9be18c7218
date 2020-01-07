@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6e28c55_588eec22",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-07T18:07:00Z",
+      "side": 1,
+      "message": "Added an `impl_name` parameter to both spdk_sock_listen() and spdk_sock_connect(). Users may now specify the sock layer implementation they\u0027d prefer to use. Valid implementations are currently \"vpp\" and \"posix\" and NULL, where NULL results in the previous behavior of the functions.",
+      "revId": "6d8580a1d0abd6ea586ca6a44363ca9be18c7218",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8db84095_6fcc9198",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-07T18:07:00Z",
+      "side": 1,
+      "message": "Create a socket using the specific sock implementation, connect the socket ...",
+      "revId": "6d8580a1d0abd6ea586ca6a44363ca9be18c7218",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f23a86f6_627c0167",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-07T18:07:00Z",
+      "side": 1,
+      "message": "\\param impl_name The socket implementation to use, such as \"posix\". If NULL, use the implementation that the system thinks is best.",
+      "revId": "6d8580a1d0abd6ea586ca6a44363ca9be18c7218",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce9633f7_d77c8eb0",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-07T18:07:00Z",
+      "side": 1,
+      "message": "Create a socket using the specified socket implementation, bind the socket...",
+      "revId": "6d8580a1d0abd6ea586ca6a44363ca9be18c7218",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85c1e866_d1e5233d",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-07T18:07:00Z",
+      "side": 1,
+      "message": "\\param impl_name The socket implementation to use, such as \"posix\". If NULL, use the implementation that the system thinks is best.",
+      "revId": "6d8580a1d0abd6ea586ca6a44363ca9be18c7218",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0c2deab_56cb0c48",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-07T18:07:00Z",
+      "side": 1,
+      "message": "Is impl_name guaranteed to be null terminated here? I\u0027m not sure it is. This should probably use a strncmp where the maximum length is strlen(impl-\u003ename) + 1 or something.",
+      "revId": "6d8580a1d0abd6ea586ca6a44363ca9be18c7218",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
