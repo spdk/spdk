@@ -36,45 +36,9 @@
 #include "spdk_cunit.h"
 
 #define UNIT_TEST_NO_VTOPHYS
-#include "common/lib/test_env.c"
 
 #include "nvme/nvme_pcie.c"
-
-const char *
-spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
-{
-	switch (trtype) {
-	case SPDK_NVME_TRANSPORT_PCIE:
-		return "PCIe";
-	case SPDK_NVME_TRANSPORT_RDMA:
-		return "RDMA";
-	case SPDK_NVME_TRANSPORT_FC:
-		return "FC";
-	default:
-		return NULL;
-	}
-}
-
-int
-spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid, const char *trstring)
-{
-	int len, i;
-
-	if (trstring == NULL) {
-		return -EINVAL;
-	}
-
-	len = strnlen(trstring, SPDK_NVMF_TRSTRING_MAX_LEN);
-	if (len == SPDK_NVMF_TRSTRING_MAX_LEN) {
-		return -EINVAL;
-	}
-
-	/* cast official trstring to uppercase version of input. */
-	for (i = 0; i < len; i++) {
-		trid->trstring[i] = toupper(trstring[i]);
-	}
-	return 0;
-}
+#include "common/lib/nvme/common_stubs.h"
 
 struct spdk_log_flag SPDK_LOG_NVME = {
 	.name = "nvme",
