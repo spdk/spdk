@@ -22,6 +22,23 @@
       "revId": "67e7ab15f134eeeddf54627d3a4bf250db61a2b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d694cc1_0e26d0d7",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 873,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-07T00:19:23Z",
+      "side": 1,
+      "message": "I think we should randomize logout PDU too.",
+      "revId": "67e7ab15f134eeeddf54627d3a4bf250db61a2b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }

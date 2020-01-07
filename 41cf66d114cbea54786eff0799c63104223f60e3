@@ -247,6 +247,24 @@
     },
     {
       "key": {
+        "uuid": "661a6691_c6423a5d",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-07T00:19:23Z",
+      "side": 1,
+      "message": "OK, that makes sense to me.",
+      "parentUuid": "a71af011_bff4ef41",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36aac4ad_9ed18eec",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -352,6 +370,24 @@
     },
     {
       "key": {
+        "uuid": "67fa0392_ac335150",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-07T00:19:23Z",
+      "side": 1,
+      "message": "Thank you, I shared the concern you have seen now, but I think it is not related with this function.\nI talked with Jim about this issue offline.\n\nHow about using randomized cmd_sn for 99% of time and corect cmd_sn for the remaining 1% of time?\n\nrandomize PDU contents;\nif (99% of time) {\n  keep current randomized pdu-\u003ecmd_sn;\n} else { /* Remaining 1% */\n  if (reqh-\u003eimmediate) {\n    pdu-\u003ecmd_sn \u003d dev_ctx-\u003ecurrent_cmd_sn;\n  } else {\n    pdu-\u003ecmd_sn \u003d dev_ctx-\u003ecurrent_cmd_sn++;\n  }\n}\n\ndata_segment_length may need similar consideration.",
+      "parentUuid": "04602edb_f2248d4a",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "71151148_d8535cf7",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -387,6 +423,24 @@
     },
     {
       "key": {
+        "uuid": "ea72394e_c596ff0d",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-07T00:19:23Z",
+      "side": 1,
+      "message": "I think you are misunderstanding my comment\nMy comment was about C language syntax (grammar), sizeof(io_ctx-\u003ereq.nop_out_req) is not 48 but 8.\nAnd struct iscsi_bhs_login_req and iscsi_bhs_nop_in are also 48 bytes.",
+      "parentUuid": "cb973a60_859877dd",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8ee99fe3_00c6de86",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 39
@@ -416,6 +470,24 @@
       "side": 1,
       "message": "Removed.",
       "parentUuid": "8ee99fe3_00c6de86",
+      "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1e18762_b4b4674c",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-07T00:19:23Z",
+      "side": 1,
+      "message": "Thanks for removing this but setting rc to -1 below had the same effect.\nPlease remove the line 430 together 😊",
+      "parentUuid": "86ee8e03_f75ecd21",
       "revId": "41cf66d114cbea54786eff0799c63104223f60e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
