@@ -380,6 +380,8 @@ struct spdk_nvme_qpair {
 
 	uint8_t				first_fused_submitted: 1;
 
+	struct nvme_request		*first_fused_request;
+
 	enum spdk_nvme_transport_type	trtype;
 
 	STAILQ_HEAD(, nvme_request)	free_req;
