@@ -51,9 +51,14 @@ enum spdk_nvmf_connect_sched {
 	CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP,
 };
 
+struct spdk_nvmf_admin_passthru_conf {
+	bool identify_ctrlr;
+};
+
 struct spdk_nvmf_tgt_conf {
 	uint32_t acceptor_poll_rate;
 	enum spdk_nvmf_connect_sched conn_sched;
+	struct spdk_nvmf_admin_passthru_conf admin_passthru;
 };
 
 extern struct spdk_nvmf_tgt_conf *g_spdk_nvmf_tgt_conf;
