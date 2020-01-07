@@ -16,6 +16,24 @@
       "revId": "128f239d58bb98b274973ed3d8189ab0167c3a12",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb3a8a0d_a4d9bac4",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-07T15:04:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "57beb770_a8f2cc64",
+      "revId": "128f239d58bb98b274973ed3d8189ab0167c3a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
