@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d37028fb_8661ce84",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T16:26:56Z",
+      "side": 1,
+      "message": "Internal space indentations such as these are on purpose, should not be changed because they align the text.\n\nThis should probably be even not detected by the regex because of the ^ anchor, so why is this change done?",
+      "range": {
+        "startLine": 24,
+        "startChar": 17,
+        "endLine": 24,
+        "endChar": 18
+      },
+      "revId": "278f8f883029fee19f520a06ed2b5bb7136c945f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2cfbe90_fc81870c",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T16:26:56Z",
+      "side": 1,
+      "message": "Internal space indentations such as these are on purpose, should not be changed because they align the text",
+      "range": {
+        "startLine": 36,
+        "startChar": 17,
+        "endLine": 36,
+        "endChar": 18
+      },
+      "revId": "278f8f883029fee19f520a06ed2b5bb7136c945f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
