@@ -951,7 +951,7 @@ nvmf_fc_ls_process_cass(uint32_t s_id,
 	uint8_t rc = FCNVME_RJT_RC_NONE;
 	uint8_t ec = FCNVME_RJT_EXP_NONE;
 	struct spdk_nvmf_transport *transport = spdk_nvmf_tgt_get_transport(ls_rqst->nvmf_tgt,
-						(enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC);
+						SPDK_NVME_TRANSPORT_NAME_FC);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_LS,
 		      "LS_CASS: ls_rqst_len=%d, desc_list_len=%d, cmd_len=%d, sq_size=%d, "
@@ -1086,7 +1086,7 @@ nvmf_fc_ls_process_cioc(struct spdk_nvmf_fc_nport *tgtport,
 	uint8_t rc = FCNVME_RJT_RC_NONE;
 	uint8_t ec = FCNVME_RJT_EXP_NONE;
 	struct spdk_nvmf_transport *transport = spdk_nvmf_tgt_get_transport(ls_rqst->nvmf_tgt,
-						(enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC);
+						SPDK_NVME_TRANSPORT_NAME_FC);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC_LS,
 		      "LS_CIOC: ls_rqst_len=%d, desc_list_len=%d, cmd_len=%d, "

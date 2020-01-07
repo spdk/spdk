@@ -1694,7 +1694,7 @@ spdk_rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_nvmf_tgt_get_transport(tgt, trtype)) {
+	if (spdk_nvmf_tgt_get_transport(tgt, ctx->trtype)) {
 		SPDK_ERRLOG("Transport type '%s' already exists\n", ctx->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Transport type '%s' already exists\n", ctx->trtype);
