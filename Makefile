@@ -103,11 +103,9 @@ mk/cc.mk:
 	false
 
 include/spdk/config.h: mk/config.mk scripts/genconfig.py
-	$(Q)PYCMD=$$(cat PYTHON_COMMAND 2>/dev/null) ; \
-	test -z "$$PYCMD" && PYCMD=python ; \
 	echo "#ifndef SPDK_CONFIG_H" > $@.tmp; \
 	echo "#define SPDK_CONFIG_H" >> $@.tmp; \
-	$$PYCMD scripts/genconfig.py $(MAKEFLAGS) >> $@.tmp; \
+	scripts/genconfig.py $(MAKEFLAGS) >> $@.tmp; \
 	echo "#endif /* SPDK_CONFIG_H */" >> $@.tmp; \
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
 	rm -f $@.tmp
