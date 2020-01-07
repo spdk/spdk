@@ -16,6 +16,24 @@
       "revId": "8fb940d504a1a53917685104ddd0f346692b7883",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "333baf3b_2ecadc6c",
+        "filename": "test/nvmf/target/shutdown.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-07T05:40:30Z",
+      "side": 1,
+      "message": "Thank you Changpeng.\nAs you say, insert sleep between nvmf_shutdown_tc1 call and nvmf_shutdown_tc2 call may be better.\nBut I want to wait for other comments before update.",
+      "parentUuid": "abccbf61_fdbee75f",
+      "revId": "8fb940d504a1a53917685104ddd0f346692b7883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
