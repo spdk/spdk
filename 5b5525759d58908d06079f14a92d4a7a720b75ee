@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7851b5af_0fe473f9",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-07T19:24:39Z",
+      "side": 1,
+      "message": "I\u0027d write this as (cur_desc-\u003eflags \u0026 VRING_DESC_F_INDIRECT) !\u003d 0;",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2521496d_c071e70a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-07T19:24:39Z",
+      "side": 1,
+      "message": "I\u0027m not sure exactly what this function is doing. This is the target side code, right? The target doesn\u0027t enqueue descriptors - it polls for and processes descriptors, and then it completes them. Is this the function that completes a descriptor? I\u0027m going to assume it is for the rest of my comments.\n\nIf I\u0027m right, name the function vhost_vq_packed_ring_complete",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38763294_f08b5908",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-07T19:24:39Z",
+      "side": 1,
+      "message": "Should you be calling vhost_vq_get_desc_packed to get the descriptor?",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94a563c1_f02f102c",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-07T19:24:39Z",
+      "side": 1,
+      "message": "So I read through the spec here: https://github.com/oasis-tcs/virtio-spec/blob/master/packed-ring.tex and the way it\u0027s written seems to be way more complex than necessary. Also the naming in the spec is terrible. It\u0027s actually a simple mechanism (although fundamentally worse than NVMe\u0027s design!) Here\u0027s how I think lines 524-541 should work:\n\nif ((*flags \u0026 VRING_DESC_F_AVAIL) !\u003d 0) {\n    *flags |\u003d VRING_DESC_F_USED;\n} else {\n    *flags \u0026\u003d ~VRING_DESC_F_USED;\n}\n\nYou can\u0027t actually use the value of \"used_wrap_counter\" here because I/O can complete out of order. If this happens at the end of the ring, for example, we may have an incompleted descriptor near the end but then complete the one at the actual end, triggering the phase bit to wrap around even though not all descriptors have been completed yet. The easiest solution is to just set the used flag to match the avail flag. Here\u0027s the actual wording from the spec:\n\n~~~\nThe counter maintained by the device is called the Device Ring Wrap\nCounter.  The device changes the value of this counter\neach time it uses the last descriptor in\nthe ring (after marking the last descriptor used).\n~~~\n\nBut as I outlined above, that\u0027s complete nonsense because they do allow for descriptors to complete out of order.\n\nIf the spec had used the word \"SUBMITTED\" instead of \"AVAIL\" and \"COMPLETED\" instead of \"USED\" and \"PHASE\" instead of \"WRAP COUNTER\" everything would be a whole lot clearer.",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "503357dd_9fab595e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-07T19:24:39Z",
+      "side": 1,
+      "message": "This assumes that the descriptors being completed here immediately follow the most recently completed descriptors. But that\u0027s not true in general - things can complete out of order. I actually believe this is the wrong place to update this last_used_index value. I think the value you need to maintain should be called \"virtqueue-\u003ehead\" and it\u0027s the index where the target is expecting the next AVAIL bit flip.",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fcfb772_26858a04",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-07T19:24:39Z",
+      "side": 1,
+      "message": "I know the specification says that the value of the USED bit should be set to the inverse, but that\u0027s only a sanity check that the ring is otherwise working correctly. This function can be as simple as this:\n\nreturn ((flags \u0026 VRING_DESC_F_AVAIL) \u003e\u003e VRING_PACKED_DESC_F_AVAIL) \u003d\u003d virtqueue-\u003eavail_wrap_counter;",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05f22ce9_bfbfee05",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-07T19:24:39Z",
+      "side": 1,
+      "message": "I don\u0027t think we should allow the user to pass in the index - the ring should know where the next descriptor should be. I think the API model needs to be something like:\n\nstruct vring_packed_desc *vhost_vq_packed_dequeue(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *virtqueue)\n\nIf there is a new descriptor available, it returns it. If there isn\u0027t, it returns NULL.",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
