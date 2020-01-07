@@ -1042,47 +1042,82 @@ bdevperf_usage(void)
 	printf(" -C                        enable every core to send I/Os to each bdev\n");
 }
 
-static int
-performance_statistics_thread(void *arg)
+struct perf_stats_ctx {
+	uint64_t	io_time_in_usec;
+	uint64_t	ema_period;
+	double		total_io_per_second;
+	double		total_mb_per_second;
+};
+
+static void
+_performance_stats_done(struct spdk_io_channel_iter *i, int status)
 {
-	unsigned lcore_id;
-	uint64_t io_time_in_usec, ema_period;
-	double io_per_second, mb_per_second;
-	double total_io_per_second, total_mb_per_second;
-	struct io_target_group *group;
-	struct io_target *target;
+	struct perf_stats_ctx *ctx;
 
-	g_show_performance_period_num++;
-	io_time_in_usec = g_show_performance_period_num * g_show_performance_period_in_usec;
-	ema_period = g_show_performance_ema_period;
-
-	total_io_per_second = 0;
-	total_mb_per_second = 0;
-
-	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
-		if (!TAILQ_EMPTY(&group->targets)) {
-			lcore_id = group->lcore;
-			printf("\r Logical core: %u\n", lcore_id);
-		}
-		TAILQ_FOREACH(target, &group->targets, link) {
-			if (ema_period == 0) {
-				io_per_second = get_cma_io_per_second(target, io_time_in_usec);
-			} else {
-				io_per_second = get_ema_io_per_second(target, ema_period);
-			}
-			mb_per_second = io_per_second * g_io_size / (1024 * 1024);
-			printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
-			       target->name, io_per_second, mb_per_second);
-			total_io_per_second += io_per_second;
-			total_mb_per_second += mb_per_second;
-		}
-	}
+	ctx = spdk_io_channel_iter_get_ctx(i);
 
 	printf("\r =====================================================\n");
 	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
-	       "Total", total_io_per_second, total_mb_per_second);
+	       "Total", ctx->total_io_per_second, ctx->total_mb_per_second);
 	fflush(stdout);
 
+	free(ctx);
+}
+
+static void
+_performance_stats(struct spdk_io_channel_iter *i)
+{
+	struct perf_stats_ctx *ctx;
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+	struct io_target *target;
+	double io_per_second, mb_per_second;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	if (TAILQ_EMPTY(&group->targets)) {
+		goto exit;
+	}
+
+	printf("\r Thread name: %s\n", spdk_thread_get_name(spdk_get_thread()));
+
+	TAILQ_FOREACH(target, &group->targets, link) {
+		if (ctx->ema_period == 0) {
+			io_per_second = get_cma_io_per_second(target, ctx->io_time_in_usec);
+		} else {
+			io_per_second = get_ema_io_per_second(target, ctx->ema_period);
+		}
+		mb_per_second = io_per_second * g_io_size / (1024 * 1024);
+		printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
+		       target->name, io_per_second, mb_per_second);
+		ctx->total_io_per_second += io_per_second;
+		ctx->total_mb_per_second += mb_per_second;
+	}
+
+	fflush(stdout);
+
+exit:
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static int
+performance_statistics_thread(void *arg)
+{
+	struct perf_stats_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return -1;
+	}
+
+	g_show_performance_period_num++;
+	ctx->io_time_in_usec = g_show_performance_period_num * g_show_performance_period_in_usec;
+	ctx->ema_period = g_show_performance_ema_period;
+
+	spdk_for_each_channel(&g_bdevperf, _performance_stats, ctx,
+			      _performance_stats_done);
 	return -1;
 }
 
