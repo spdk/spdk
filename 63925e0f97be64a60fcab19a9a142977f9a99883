@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cfeb4ea2_6ecb0bfd",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1697,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-07T18:04:56Z",
+      "side": 1,
+      "message": "Done, thanks. I missed this one on the first pass. I definitely need to figure out a way to validate this. Maybe I can do it locally with muser for now, but I will need to figure out a long term solution as well. I think this type of validation will be related to what we figure out for building external applications and bdev modules against SPDK shared libraries as they will both require us to maintain something outside of the SPDK repo for use in testing.",
+      "parentUuid": "29bd7f0a_5de6ab4f",
+      "revId": "63925e0f97be64a60fcab19a9a142977f9a99883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4d86b76d_f15d5cde",
         "filename": "test/unit/lib/nvmf/fc.c/fc_ut.c",
         "patchSetId": 15
@@ -33,6 +51,24 @@
       "revId": "63925e0f97be64a60fcab19a9a142977f9a99883",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65dc89c2_0f234d3f",
+        "filename": "test/unit/lib/nvmf/fc.c/fc_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-07T18:04:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4d86b76d_f15d5cde",
+      "revId": "63925e0f97be64a60fcab19a9a142977f9a99883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
