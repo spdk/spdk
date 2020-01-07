@@ -265,7 +265,7 @@ ftl_reloc_write_cb(struct ftl_io *io, void *arg, int status)
 	}
 
 	for (i = 0; i < move->lbk_cnt; ++i) {
-		ppa.lbk = move->ppa.lbk + i;
+		ppa.offset = move->ppa.offset + i;
 		size_t lbkoff = ftl_band_lbkoff_from_ppa(breloc->band, ppa);
 		ftl_reloc_clr_lbk(breloc, lbkoff);
 	}
@@ -446,7 +446,7 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move,
 	io->ppa = move->ppa;
 
 	if (flags & FTL_IO_VECTOR_LBA) {
-		for (i = 0; i < io->lbk_cnt; ++i, ++ppa.lbk) {
+		for (i = 0; i < io->lbk_cnt; ++i, ++ppa.offset) {
 			lbkoff = ftl_band_lbkoff_from_ppa(breloc->band, ppa);
 
 			if (!ftl_band_lbkoff_valid(breloc->band, lbkoff)) {

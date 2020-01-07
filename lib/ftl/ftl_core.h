@@ -303,11 +303,11 @@ int	ftl_nv_cache_scrub(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb
 struct spdk_io_channel *
 ftl_get_io_channel(const struct spdk_ftl_dev *dev);
 
-#define ftl_to_ppa(addr) \
-	(struct ftl_ppa) { .ppa = (uint64_t)(addr) }
+#define ftl_to_ppa(address) \
+	(struct ftl_ppa) { .addr = (uint64_t)(address) }
 
-#define ftl_to_ppa_packed(addr) \
-	(struct ftl_ppa) { .pack.ppa = (uint32_t)(addr) }
+#define ftl_to_ppa_packed(address) \
+	(struct ftl_ppa) { .pack.addr = (uint32_t)(address) }
 
 static inline struct spdk_thread *
 ftl_get_core_thread(const struct spdk_ftl_dev *dev)
@@ -342,7 +342,7 @@ ftl_ppa_packed(const struct spdk_ftl_dev *dev)
 static inline int
 ftl_ppa_invalid(struct ftl_ppa ppa)
 {
-	return ppa.ppa == ftl_to_ppa(FTL_PPA_INVALID).ppa;
+	return ppa.addr == ftl_to_ppa(FTL_PPA_INVALID).addr;
 }
 
 static inline int
@@ -356,8 +356,8 @@ ftl_ppa_addr_pack(const struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
 {
 	uint64_t lbk, chk, pu, grp;
 
-	lbk = ppa.lbk;
-	chk = ppa.chk;
+	lbk = ppa.offset;
+	chk = ppa.zone_id;
 	pu = ppa.pu / dev->geo.num_grp;
 	grp = ppa.pu % dev->geo.num_grp;
 
@@ -373,8 +373,8 @@ ftl_ppa_addr_unpack(const struct spdk_ftl_dev *dev, uint64_t ppa)
 	struct ftl_ppa res = {};
 	unsigned int pu, grp;
 
-	res.lbk = (ppa >> dev->ppaf.lbk_offset) & dev->ppaf.lbk_mask;
-	res.chk = (ppa >> dev->ppaf.chk_offset) & dev->ppaf.chk_mask;
+	res.offset = (ppa >> dev->ppaf.lbk_offset) & dev->ppaf.lbk_mask;
+	res.zone_id = (ppa >> dev->ppaf.chk_offset) & dev->ppaf.chk_mask;
 	pu  = (ppa >> dev->ppaf.pu_offset)  & dev->ppaf.pu_mask;
 	grp = (ppa >> dev->ppaf.grp_offset) & dev->ppaf.grp_mask;
 	res.pu = grp * dev->geo.num_pu + pu;
@@ -391,9 +391,9 @@ ftl_ppa_to_packed(const struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
 		p = ftl_to_ppa_packed(FTL_PPA_INVALID);
 	} else if (ftl_ppa_cached(ppa)) {
 		p.pack.cached = 1;
-		p.pack.offset = (uint32_t) ppa.offset;
+		p.pack.cache_offset = (uint32_t) ppa.cache_offset;
 	} else {
-		p.pack.ppa = (uint32_t) ftl_ppa_addr_pack(dev, ppa);
+		p.pack.addr = (uint32_t) ftl_ppa_addr_pack(dev, ppa);
 	}
 
 	return p;
@@ -404,13 +404,13 @@ ftl_ppa_from_packed(const struct spdk_ftl_dev *dev, struct ftl_ppa p)
 {
 	struct ftl_ppa ppa = {};
 
-	if (p.pack.ppa == (uint32_t)FTL_PPA_INVALID) {
+	if (p.pack.addr == (uint32_t)FTL_PPA_INVALID) {
 		ppa = ftl_to_ppa(FTL_PPA_INVALID);
 	} else if (p.pack.cached) {
 		ppa.cached = 1;
-		ppa.offset = p.pack.offset;
+		ppa.cache_offset = p.pack.cache_offset;
 	} else {
-		ppa = ftl_ppa_addr_unpack(dev, p.pack.ppa);
+		ppa = ftl_ppa_addr_unpack(dev, p.pack.addr);
 	}
 
 	return ppa;
@@ -451,7 +451,7 @@ ftl_ppa_in_range(const struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
 	_ftl_l2p_get(l2p, off, 64)
 
 #define ftl_ppa_cmp(p1, p2) \
-	((p1).ppa == (p2).ppa)
+	((p1).addr == (p2).addr)
 
 static inline void
 ftl_l2p_set(struct spdk_ftl_dev *dev, uint64_t lba, struct ftl_ppa ppa)
@@ -459,9 +459,9 @@ ftl_l2p_set(struct spdk_ftl_dev *dev, uint64_t lba, struct ftl_ppa ppa)
 	assert(dev->num_lbas > lba);
 
 	if (ftl_ppa_packed(dev)) {
-		_ftl_l2p_set32(dev->l2p, lba, ftl_ppa_to_packed(dev, ppa).ppa);
+		_ftl_l2p_set32(dev->l2p, lba, ftl_ppa_to_packed(dev, ppa).addr);
 	} else {
-		_ftl_l2p_set64(dev->l2p, lba, ppa.ppa);
+		_ftl_l2p_set64(dev->l2p, lba, ppa.addr);
 	}
 }
 

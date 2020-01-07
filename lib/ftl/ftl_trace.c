@@ -249,7 +249,7 @@ ftl_trace_rwb_pop(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry)
 		tpoint_id = FTL_TRACE_RWB_POP(FTL_TRACE_SOURCE_USER);
 	}
 
-	spdk_trace_record(tpoint_id, entry->trace, 0, entry->ppa.ppa, entry->lba);
+	spdk_trace_record(tpoint_id, entry->trace, 0, entry->ppa.addr, entry->lba);
 }
 
 void
@@ -337,7 +337,7 @@ ftl_trace_submission(struct spdk_ftl_dev *dev, const struct ftl_io *io, struct f
 		}
 	}
 
-	spdk_trace_record(tpoint_id, io->trace, ppa_cnt, 0, ppa.ppa);
+	spdk_trace_record(tpoint_id, io->trace, ppa_cnt, 0, ppa.addr);
 }
 
 void

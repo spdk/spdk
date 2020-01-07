@@ -404,8 +404,8 @@ ftl_band_tail_md_ppa(struct ftl_band *band)
 		zone = ftl_band_next_zone(band, zone);
 	}
 
-	ppa.lbk = (num_req / band->num_zones) * xfer_size;
-	ppa.chk = band->id;
+	ppa.offset = (num_req / band->num_zones) * xfer_size;
+	ppa.zone_id = band->id;
 	ppa.pu = zone->punit->start_ppa.pu;
 
 	return ppa;
@@ -421,7 +421,7 @@ ftl_band_head_md_ppa(struct ftl_band *band)
 	}
 
 	ppa = CIRCLEQ_FIRST(&band->zones)->punit->start_ppa;
-	ppa.chk = band->id;
+	ppa.zone_id = band->id;
 
 	return ppa;
 }
@@ -511,8 +511,8 @@ ftl_band_user_lbks(const struct ftl_band *band)
 struct ftl_band *
 ftl_band_from_ppa(struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
 {
-	assert(ppa.chk < ftl_dev_num_bands(dev));
-	return &dev->bands[ppa.chk];
+	assert(ppa.zone_id < ftl_dev_num_bands(dev));
+	return &dev->bands[ppa.zone_id];
 }
 
 struct ftl_zone *
@@ -534,9 +534,9 @@ ftl_band_lbkoff_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
 	unsigned int punit;
 
 	punit = ftl_ppa_flatten_punit(dev, ppa);
-	assert(ppa.chk == band->id);
+	assert(ppa.zone_id == band->id);
 
-	return punit * ftl_dev_lbks_in_zone(dev) + ppa.lbk;
+	return punit * ftl_dev_lbks_in_zone(dev) + ppa.offset;
 }
 
 struct ftl_ppa
@@ -547,13 +547,13 @@ ftl_band_next_xfer_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t num_lbk
 	unsigned int punit_num;
 	size_t num_xfers, num_stripes;
 
-	assert(ppa.chk == band->id);
+	assert(ppa.zone_id == band->id);
 
 	punit_num = ftl_ppa_flatten_punit(dev, ppa);
 	zone = &band->zone_buf[punit_num];
 
-	num_lbks += (ppa.lbk % dev->xfer_size);
-	ppa.lbk  -= (ppa.lbk % dev->xfer_size);
+	num_lbks += (ppa.offset % dev->xfer_size);
+	ppa.offset  -= (ppa.offset % dev->xfer_size);
 
 #if defined(DEBUG)
 	/* Check that the number of zones has not been changed */
@@ -568,10 +568,10 @@ ftl_band_next_xfer_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t num_lbk
 #endif
 	assert(band->num_zones != 0);
 	num_stripes = (num_lbks / dev->xfer_size) / band->num_zones;
-	ppa.lbk  += num_stripes * dev->xfer_size;
+	ppa.offset  += num_stripes * dev->xfer_size;
 	num_lbks -= num_stripes * dev->xfer_size * band->num_zones;
 
-	if (ppa.lbk > ftl_dev_lbks_in_zone(dev)) {
+	if (ppa.offset > ftl_dev_lbks_in_zone(dev)) {
 		return ftl_to_ppa(FTL_PPA_INVALID);
 	}
 
@@ -580,8 +580,8 @@ ftl_band_next_xfer_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t num_lbk
 		/* When the last zone is reached the lbk part of the address */
 		/* needs to be increased by xfer_size */
 		if (ftl_band_zone_is_last(band, zone)) {
-			ppa.lbk += dev->xfer_size;
-			if (ppa.lbk > ftl_dev_lbks_in_zone(dev)) {
+			ppa.offset += dev->xfer_size;
+			if (ppa.offset > ftl_dev_lbks_in_zone(dev)) {
 				return ftl_to_ppa(FTL_PPA_INVALID);
 			}
 		}
@@ -594,8 +594,8 @@ ftl_band_next_xfer_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t num_lbk
 	}
 
 	if (num_lbks) {
-		ppa.lbk += num_lbks;
-		if (ppa.lbk > ftl_dev_lbks_in_zone(dev)) {
+		ppa.offset += num_lbks;
+		if (ppa.offset > ftl_dev_lbks_in_zone(dev)) {
 			return ftl_to_ppa(FTL_PPA_INVALID);
 		}
 	}
@@ -610,10 +610,10 @@ ftl_xfer_offset_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
 	unsigned int punit_offset = 0;
 	size_t off, num_stripes, xfer_size = band->dev->xfer_size;
 
-	assert(ppa.chk == band->id);
+	assert(ppa.zone_id == band->id);
 
-	num_stripes = (ppa.lbk / xfer_size) * band->num_zones;
-	off = ppa.lbk % xfer_size;
+	num_stripes = (ppa.offset / xfer_size) * band->num_zones;
+	off = ppa.offset % xfer_size;
 
 	current_zone = ftl_band_zone_from_ppa(band, ppa);
 	CIRCLEQ_FOREACH(zone, &band->zones, circleq) {
@@ -629,14 +629,14 @@ ftl_xfer_offset_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
 struct ftl_ppa
 ftl_band_ppa_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 {
-	struct ftl_ppa ppa = { .ppa = 0 };
+	struct ftl_ppa ppa = { .addr = 0 };
 	struct spdk_ftl_dev *dev = band->dev;
 	uint64_t punit;
 
 	punit = lbkoff / ftl_dev_lbks_in_zone(dev) + dev->range.begin;
 
-	ppa.lbk = lbkoff % ftl_dev_lbks_in_zone(dev);
-	ppa.chk = band->id;
+	ppa.offset = lbkoff % ftl_dev_lbks_in_zone(dev);
+	ppa.zone_id = band->id;
 	ppa.pu = punit;
 
 	return ppa;

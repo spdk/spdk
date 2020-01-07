@@ -212,7 +212,7 @@ ftl_retrieve_chunk_info(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
 	unsigned int grp = ppa.pu % dev->geo.num_grp;
 	unsigned int punit = ppa.pu / dev->geo.num_grp;
 	uint64_t offset = (grp * dev->geo.num_pu + punit) *
-			  dev->geo.num_chk + ppa.chk;
+			  dev->geo.num_chk + ppa.zone_id;
 	int rc;
 
 	rc = spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_OCSSD_LOG_CHUNK_INFO, nsid,
@@ -246,7 +246,7 @@ ftl_retrieve_punit_chunk_info(struct spdk_ftl_dev *dev, const struct ftl_punit *
 	struct ftl_ppa chunk_ppa = punit->start_ppa;
 	char ppa_buf[128];
 
-	for (i = 0; i < dev->geo.num_chk; i += num_entries, chunk_ppa.chk += num_entries) {
+	for (i = 0; i < dev->geo.num_chk; i += num_entries, chunk_ppa.zone_id += num_entries) {
 		if (num_entries > dev->geo.num_chk - i) {
 			num_entries = dev->geo.num_chk - i;
 		}
@@ -377,7 +377,7 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 			zone->state = ftl_get_zone_state(&info[j]);
 			zone->punit = punit;
 			zone->start_ppa = punit->start_ppa;
-			zone->start_ppa.chk = band->id;
+			zone->start_ppa.zone_id = band->id;
 			zone->write_offset = ftl_dev_lbks_in_zone(dev);
 
 			if (zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE) {
@@ -412,7 +412,7 @@ ftl_dev_init_punits(struct spdk_ftl_dev *dev)
 		dev->punits[i].dev = dev;
 		punit = dev->range.begin + i;
 
-		dev->punits[i].start_ppa.ppa = 0;
+		dev->punits[i].start_ppa.addr = 0;
 		dev->punits[i].start_ppa.pu = punit;
 	}
 

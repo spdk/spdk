@@ -79,7 +79,7 @@ ftl_band_validate_md(struct ftl_band *band)
 			continue;
 		}
 
-		if (ppa_l2p.ppa != ppa_md.ppa) {
+		if (ppa_l2p.addr != ppa_md.addr) {
 			valid = false;
 			break;
 		}

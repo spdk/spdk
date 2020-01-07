@@ -118,33 +118,33 @@ test_ppa_pack32(void)
 	struct ftl_ppa orig = {}, ppa;
 
 	/* Check valid address transformation */
-	orig.lbk = 4;
-	orig.chk = 3;
+	orig.offset = 4;
+	orig.zone_id = 3;
 	orig.pu = 2;
 	ppa = ftl_ppa_to_packed(g_dev, orig);
-	CU_ASSERT_TRUE(ppa.ppa <= UINT32_MAX);
+	CU_ASSERT_TRUE(ppa.addr <= UINT32_MAX);
 	CU_ASSERT_FALSE(ppa.pack.cached);
 	ppa = ftl_ppa_from_packed(g_dev, ppa);
 	CU_ASSERT_FALSE(ftl_ppa_invalid(ppa));
-	CU_ASSERT_EQUAL(ppa.ppa, orig.ppa);
+	CU_ASSERT_EQUAL(ppa.addr, orig.addr);
 
 	/* Check invalid address transformation */
 	orig = ftl_to_ppa(FTL_PPA_INVALID);
 	ppa = ftl_ppa_to_packed(g_dev, orig);
-	CU_ASSERT_TRUE(ppa.ppa <= UINT32_MAX);
+	CU_ASSERT_TRUE(ppa.addr <= UINT32_MAX);
 	ppa = ftl_ppa_from_packed(g_dev, ppa);
 	CU_ASSERT_TRUE(ftl_ppa_invalid(ppa));
 
 	/* Check cached entry offset transformation */
 	orig.cached = 1;
-	orig.offset = 1024;
+	orig.cache_offset = 1024;
 	ppa = ftl_ppa_to_packed(g_dev, orig);
-	CU_ASSERT_TRUE(ppa.ppa <= UINT32_MAX);
+	CU_ASSERT_TRUE(ppa.addr <= UINT32_MAX);
 	CU_ASSERT_TRUE(ppa.pack.cached);
 	ppa = ftl_ppa_from_packed(g_dev, ppa);
 	CU_ASSERT_FALSE(ftl_ppa_invalid(ppa));
 	CU_ASSERT_TRUE(ftl_ppa_cached(ppa));
-	CU_ASSERT_EQUAL(ppa.ppa, orig.ppa);
+	CU_ASSERT_EQUAL(ppa.addr, orig.addr);
 	clean_l2p();
 }
 
@@ -153,34 +153,34 @@ test_ppa_pack64(void)
 {
 	struct ftl_ppa orig = {}, ppa;
 
-	orig.lbk = 4;
-	orig.chk = 3;
+	orig.offset = 4;
+	orig.zone_id = 3;
 	orig.pu = 2;
 
 	/* Check valid address transformation */
-	ppa.ppa = ftl_ppa_addr_pack(g_dev, orig);
-	ppa = ftl_ppa_addr_unpack(g_dev, ppa.ppa);
+	ppa.addr = ftl_ppa_addr_pack(g_dev, orig);
+	ppa = ftl_ppa_addr_unpack(g_dev, ppa.addr);
 	CU_ASSERT_FALSE(ftl_ppa_invalid(ppa));
-	CU_ASSERT_EQUAL(ppa.ppa, orig.ppa);
+	CU_ASSERT_EQUAL(ppa.addr, orig.addr);
 
-	orig.lbk = 0x7ea0be0f;
-	orig.chk = 0x6;
+	orig.offset = 0x7ea0be0f;
+	orig.zone_id = 0x6;
 	orig.pu = 0x4;
 
-	ppa.ppa = ftl_ppa_addr_pack(g_dev, orig);
-	ppa = ftl_ppa_addr_unpack(g_dev, ppa.ppa);
+	ppa.addr = ftl_ppa_addr_pack(g_dev, orig);
+	ppa = ftl_ppa_addr_unpack(g_dev, ppa.addr);
 	CU_ASSERT_FALSE(ftl_ppa_invalid(ppa));
-	CU_ASSERT_EQUAL(ppa.ppa, orig.ppa);
+	CU_ASSERT_EQUAL(ppa.addr, orig.addr);
 
 	/* Check maximum valid address for ppaf */
-	orig.lbk = 0x7fffffff;
-	orig.chk = 0xf;
+	orig.offset = 0x7fffffff;
+	orig.zone_id = 0xf;
 	orig.pu = 0x7;
 
-	ppa.ppa = ftl_ppa_addr_pack(g_dev, orig);
-	ppa = ftl_ppa_addr_unpack(g_dev, ppa.ppa);
+	ppa.addr = ftl_ppa_addr_pack(g_dev, orig);
+	ppa = ftl_ppa_addr_unpack(g_dev, ppa.addr);
 	CU_ASSERT_FALSE(ftl_ppa_invalid(ppa));
-	CU_ASSERT_EQUAL(ppa.ppa, orig.ppa);
+	CU_ASSERT_EQUAL(ppa.addr, orig.addr);
 	clean_l2p();
 }
 
@@ -191,18 +191,18 @@ test_ppa_trans(void)
 	size_t i;
 
 	for (i = 0; i < L2P_TABLE_SIZE; ++i) {
-		ppa.lbk = i % (g_dev->ppaf.lbk_mask + 1);
-		ppa.chk = i % (g_dev->ppaf.chk_mask + 1);
+		ppa.offset = i % (g_dev->ppaf.lbk_mask + 1);
+		ppa.zone_id = i % (g_dev->ppaf.chk_mask + 1);
 		ppa.pu = i % (g_dev->ppaf.pu_mask + 1);
 		ftl_l2p_set(g_dev, i, ppa);
 	}
 
 	for (i = 0; i < L2P_TABLE_SIZE; ++i) {
-		orig.lbk = i % (g_dev->ppaf.lbk_mask + 1);
-		orig.chk = i % (g_dev->ppaf.chk_mask + 1);
+		orig.offset = i % (g_dev->ppaf.lbk_mask + 1);
+		orig.zone_id = i % (g_dev->ppaf.chk_mask + 1);
 		orig.pu = i % (g_dev->ppaf.pu_mask + 1);
 		ppa = ftl_l2p_get(g_dev, i);
-		CU_ASSERT_EQUAL(ppa.ppa, orig.ppa);
+		CU_ASSERT_EQUAL(ppa.addr, orig.addr);
 	}
 	clean_l2p();
 }
@@ -240,7 +240,7 @@ test_ppa_cached(void)
 	/* Set every other LBA is cached */
 	for (i = 0; i < L2P_TABLE_SIZE; i += 2) {
 		ppa.cached = 1;
-		ppa.offset = i;
+		ppa.cache_offset = i;
 		ftl_l2p_set(g_dev, i, ppa);
 	}
 

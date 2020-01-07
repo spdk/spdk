@@ -172,7 +172,7 @@ ftl_anm_process_log(struct ftl_anm_poller *poller,
 		}
 
 		poller->fn(event);
-		ppa.chk++;
+		ppa.zone_id++;
 	}
 
 	return 0;
@@ -186,7 +186,7 @@ ftl_anm_in_poller_range(struct ftl_anm_poller *poller,
 	struct ftl_ppa ppa = ftl_ppa_addr_unpack(dev, log->lba);
 	char buf[128];
 
-	if (ppa.chk >= ftl_dev_num_bands(dev)) {
+	if (ppa.zone_id >= ftl_dev_num_bands(dev)) {
 		SPDK_ERRLOG("ANM log contains invalid @ppa: %s\n",
 			    ftl_ppa2str(ppa, buf, sizeof(buf)));
 		return false;

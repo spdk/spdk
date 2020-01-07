@@ -112,14 +112,14 @@ ftl_band_lbkoff_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
 struct ftl_ppa
 ftl_band_ppa_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 {
-	struct ftl_ppa ppa = { .ppa = 0 };
+	struct ftl_ppa ppa = { .addr = 0 };
 	struct spdk_ftl_dev *dev = band->dev;
 	uint64_t punit;
 
 	punit = lbkoff / ftl_dev_lbks_in_zone(dev) + dev->range.begin;
 
-	ppa.lbk = lbkoff % ftl_dev_lbks_in_zone(dev);
-	ppa.chk = band->id;
+	ppa.offset = lbkoff % ftl_dev_lbks_in_zone(dev);
+	ppa.zone_id = band->id;
 	ppa.pu = punit;
 
 	return ppa;
