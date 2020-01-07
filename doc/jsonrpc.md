@@ -4313,6 +4313,13 @@ have been initialized.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 acceptor_poll_rate      | Optional | number      | Polling interval of the acceptor for incoming connections (microseconds)
+admin_cmd_passthru      | Optional | object      | Admin command passthru configuration
+
+### admin_cmd_passthru {#spdk_nvmf_admin_passthru_conf}
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+identify_ctrlr          | Required | bool        | If true, enables custom identify handler that reports some identify attributes from the underlying NVMe drive
 
 ### Example
 
