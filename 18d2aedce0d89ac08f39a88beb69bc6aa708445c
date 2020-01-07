@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30e1da6d_df4baa10",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-07T13:18:08Z",
+      "side": 1,
+      "message": "Do we actually need this parameter (here and in all the other *_test_req functions)? It looks to me like we could use g_rpc_req instead.",
+      "range": {
+        "startLine": 322,
+        "startChar": 14,
+        "endLine": 322,
+        "endChar": 48
+      },
+      "revId": "18d2aedce0d89ac08f39a88beb69bc6aa708445c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3238752a_677e4d32",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-07T13:18:08Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you free the req.name before returning from this function?",
+      "revId": "18d2aedce0d89ac08f39a88beb69bc6aa708445c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d752de2_962d1e44",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-07T13:18:08Z",
+      "side": 1,
+      "message": "Is there a reason for changing this?",
+      "range": {
+        "startLine": 453,
+        "startChar": 20,
+        "endLine": 453,
+        "endChar": 22
+      },
+      "revId": "18d2aedce0d89ac08f39a88beb69bc6aa708445c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4931431_8c2886d1",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-07T13:18:08Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 487,
+        "startChar": 20,
+        "endLine": 487,
+        "endChar": 21
+      },
+      "revId": "18d2aedce0d89ac08f39a88beb69bc6aa708445c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76d1609c_06ce0894",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-07T13:18:08Z",
+      "side": 1,
+      "message": "Is there a reason for changing 2 -\u003e 1?",
+      "range": {
+        "startLine": 507,
+        "startChar": 28,
+        "endLine": 507,
+        "endChar": 29
+      },
+      "revId": "18d2aedce0d89ac08f39a88beb69bc6aa708445c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d3e2eec_edc61f80",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 510,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-07T13:18:08Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 510,
+        "startChar": 28,
+        "endLine": 510,
+        "endChar": 29
+      },
+      "revId": "18d2aedce0d89ac08f39a88beb69bc6aa708445c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
