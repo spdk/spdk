@@ -56,7 +56,7 @@ struct bdevperf_task {
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 };
 
-static const char *g_workload_type;
+static const char *g_workload_type = NULL;
 static int g_io_size = 0;
 static uint64_t g_buf_size = 0;
 /* initialize to invalid value so we can detect if user overrides it. */
@@ -68,7 +68,7 @@ static bool g_continue_on_failure = false;
 static bool g_unmap = false;
 static bool g_write_zeroes = false;
 static bool g_flush = false;
-static int g_queue_depth;
+static int g_queue_depth = 0;
 static uint64_t g_time_in_usec;
 static int g_show_performance_real_time = 0;
 static uint64_t g_show_performance_period_in_usec = 1000000;
@@ -79,8 +79,8 @@ static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
 static bool g_zcopy = true;
 static struct spdk_thread *g_master_thread;
-static int g_time_in_sec;
-static bool g_mix_specified;
+static int g_time_in_sec = 0;
+static bool g_mix_specified = false;
 static const char *g_target_bdev_name;
 static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
@@ -1556,13 +1556,6 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.reactor_mask = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
-
-	/* default value */
-	g_queue_depth = 0;
-	g_io_size = 0;
-	g_workload_type = NULL;
-	g_time_in_sec = 0;
-	g_mix_specified = false;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zfq:o:t:w:CM:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
