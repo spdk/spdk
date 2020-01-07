@@ -17,9 +17,8 @@ in `spdk_internal/nvmf.h` expose this functionality. There is an example custom 
 for the NVMe IDENTIFY CTRLR in `lib/nvmf/custom_cmd_hdlr.c`. This handler gets the SN, MN, FR, IEEE, FGUID
 attributes from the first NVMe drive in the NVMF subsystem and returns it to the NVMF initiator (sn and mn attributes
 specified during NVMF subsystem creation RPC will be overwritten).
-
-This handler is enabled by default and can be disabled by adding
-`spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_IDENTIFY, NULL);` to a target application.
+This handler can be enabled via the `nvmf_set_config` RPC.
+Note: In a future version of SPDK, this handler will be enabled by default.
 
 ### sock
 

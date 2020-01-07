@@ -92,9 +92,27 @@ static int decode_conn_sched(const struct spdk_json_val *val, void *out)
 	return 0;
 }
 
+static const struct spdk_json_object_decoder admin_passthru_decoder[] = {
+	{"identify_ctrlr", offsetof(struct spdk_nvmf_admin_passthru_conf, identify_ctrlr), spdk_json_decode_bool}
+};
+
+static int decode_admin_passthru(const struct spdk_json_val *val, void *out)
+{
+	struct spdk_nvmf_admin_passthru_conf *req = (struct spdk_nvmf_admin_passthru_conf *)out;
+	if (spdk_json_decode_object(val, admin_passthru_decoder,
+				    SPDK_COUNTOF(admin_passthru_decoder),
+				    req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		return -1;
+	}
+
+	return 0;
+}
+
 static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_conf_decoder[] = {
 	{"acceptor_poll_rate", offsetof(struct spdk_nvmf_tgt_conf, acceptor_poll_rate), spdk_json_decode_uint32, true},
 	{"conn_sched", offsetof(struct spdk_nvmf_tgt_conf, conn_sched), decode_conn_sched, true},
+	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), decode_admin_passthru, true}
 };
 
 static void
@@ -121,6 +139,7 @@ spdk_rpc_nvmf_set_config(struct spdk_jsonrpc_request *request,
 
 	conf->acceptor_poll_rate = ACCEPT_TIMEOUT_US;
 	conf->conn_sched = DEFAULT_CONN_SCHED;
+	conf->admin_passthru.identify_ctrlr = false;
 
 	if (params != NULL) {
 		if (spdk_json_decode_object(params, nvmf_rpc_subsystem_tgt_conf_decoder,
