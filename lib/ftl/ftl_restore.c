@@ -1164,12 +1164,12 @@ ftl_pad_zone_cb(struct ftl_io *io, void *arg, int status)
 		goto end;
 	}
 
-	if (io->ppa.lbk + io->lbk_cnt == band->dev->geo.clba) {
+	if (io->ppa.offset + io->lbk_cnt == band->dev->geo.clba) {
 		zone = ftl_band_zone_from_ppa(band, io->ppa);
 		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
 	} else {
 		struct ftl_ppa ppa = io->ppa;
-		ppa.lbk += io->lbk_cnt;
+		ppa.offset += io->lbk_cnt;
 		new_io = ftl_restore_init_pad_io(rband, io->iov[0].iov_base, ppa);
 		if (spdk_unlikely(!new_io)) {
 			restore->pad_status = -ENOMEM;
@@ -1224,7 +1224,7 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 			goto error;
 		}
 		ppa = band->zone_buf[i].start_ppa;
-		ppa.lbk = info.wp;
+		ppa.offset = info.wp;
 
 		buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * dev->xfer_size, 0, NULL);
 		if (spdk_unlikely(!buffer)) {

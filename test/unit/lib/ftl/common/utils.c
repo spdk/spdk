@@ -114,7 +114,7 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
 		zone->punit = &dev->punits[i];
 		zone->start_ppa = dev->punits[i].start_ppa;
-		zone->start_ppa.chk = band->id;
+		zone->start_ppa.zone_id = band->id;
 		CIRCLEQ_INSERT_TAIL(&band->zones, zone, circleq);
 		band->num_zones++;
 	}
@@ -154,7 +154,7 @@ test_offset_from_ppa(struct ftl_ppa ppa, struct ftl_band *band)
 
 	/* TODO: ftl_ppa_flatten_punit should return uint32_t */
 	punit = ftl_ppa_flatten_punit(dev, ppa);
-	CU_ASSERT_EQUAL(ppa.chk, band->id);
+	CU_ASSERT_EQUAL(ppa.zone_id, band->id);
 
-	return punit * ftl_dev_lbks_in_zone(dev) + ppa.lbk;
+	return punit * ftl_dev_lbks_in_zone(dev) + ppa.offset;
 }

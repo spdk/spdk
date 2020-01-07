@@ -54,7 +54,7 @@ static inline const char *
 ftl_ppa2str(struct ftl_ppa ppa, char *buf, size_t size)
 {
 	snprintf(buf, size, "(pu: %u, chk: %u, lbk: %u)",
-		 ppa.pu, ppa.chk, ppa.lbk);
+		 ppa.pu, ppa.zone_id, ppa.offset);
 	return buf;
 }
 

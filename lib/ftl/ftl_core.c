@@ -297,9 +297,9 @@ ftl_ppa_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa)
 	/* Metadata has to be read in the way it's written (jumping across */
 	/* the zones in xfer_size increments) */
 	if (io->flags & FTL_IO_MD) {
-		max_lbks = dev->xfer_size - (ppa->lbk % dev->xfer_size);
+		max_lbks = dev->xfer_size - (ppa->offset % dev->xfer_size);
 		lbk_cnt = spdk_min(ftl_io_iovec_len_left(io), max_lbks);
-		assert(ppa->lbk / dev->xfer_size == (ppa->lbk + lbk_cnt - 1) / dev->xfer_size);
+		assert(ppa->offset / dev->xfer_size == (ppa->offset + lbk_cnt - 1) / dev->xfer_size);
 	} else {
 		lbk_cnt = ftl_io_iovec_len_left(io);
 	}
@@ -351,7 +351,7 @@ ftl_submit_erase(struct ftl_io *io)
 			ppa = zone->start_ppa;
 		}
 
-		assert(ppa.lbk == 0);
+		assert(ppa.offset == 0);
 		ppa_packed = ftl_ppa_addr_pack(dev, ppa);
 
 		ftl_trace_submission(dev, io, ppa, 1);
@@ -586,7 +586,7 @@ ftl_wptr_advance(struct ftl_wptr *wptr, size_t xfer_size)
 	assert(!ftl_ppa_invalid(wptr->ppa));
 
 	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "wptr: pu:%d zone:%d, lbk:%u\n",
-		      wptr->ppa.pu, wptr->ppa.chk, wptr->ppa.lbk);
+		      wptr->ppa.pu, wptr->ppa.zone_id, wptr->ppa.offset);
 
 	if (wptr->offset >= next_thld && !dev->next_band) {
 		dev->next_band = ftl_next_write_band(dev);
@@ -689,7 +689,7 @@ ftl_cache_lba_valid(struct spdk_ftl_dev *dev, struct ftl_rwb_entry *entry)
 	}
 
 	ppa = ftl_l2p_get(dev, entry->lba);
-	if (!(ftl_ppa_cached(ppa) && ppa.offset == entry->pos)) {
+	if (!(ftl_ppa_cached(ppa) && ppa.cache_offset == entry->pos)) {
 		return false;
 	}
 
@@ -908,11 +908,11 @@ ftl_ppa_cache_read(struct ftl_io *io, uint64_t lba,
 	struct ftl_ppa nppa;
 	int rc = 0;
 
-	entry = ftl_rwb_entry_from_offset(rwb, ppa.offset);
+	entry = ftl_rwb_entry_from_offset(rwb, ppa.cache_offset);
 	pthread_spin_lock(&entry->lock);
 
 	nppa = ftl_l2p_get(io->dev, lba);
-	if (ppa.ppa != nppa.ppa) {
+	if (ppa.addr != nppa.addr) {
 		rc = -1;
 		goto out;
 	}
@@ -933,7 +933,7 @@ ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa)
 	*ppa = ftl_l2p_get(dev, ftl_io_current_lba(io));
 
 	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Read ppa:%lx, lba:%lu\n",
-		      ppa->ppa, ftl_io_current_lba(io));
+		      ppa->addr, ftl_io_current_lba(io));
 
 	/* If the PPA is invalid, skip it (the buffer should already be zero'ed) */
 	if (ftl_ppa_invalid(*ppa)) {
@@ -1148,7 +1148,7 @@ ftl_nv_cache_submit_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct ftl_nv_cache *nv_cache = &io->dev->nv_cache;
 
 	if (spdk_unlikely(!success)) {
-		SPDK_ERRLOG("Non-volatile cache write failed at %"PRIx64"\n", io->ppa.ppa);
+		SPDK_ERRLOG("Non-volatile cache write failed at %"PRIx64"\n", io->ppa.addr);
 		io->status = -EIO;
 	}
 
@@ -1175,14 +1175,14 @@ ftl_submit_nv_cache(void *ctx)
 	thread = spdk_io_channel_get_thread(io->ioch);
 
 	rc = spdk_bdev_write_blocks_with_md(nv_cache->bdev_desc, ioch->cache_ioch,
-					    ftl_io_iovec_addr(io), io->md, io->ppa.ppa,
+					    ftl_io_iovec_addr(io), io->md, io->ppa.addr,
 					    io->lbk_cnt, ftl_nv_cache_submit_cb, io);
 	if (rc == -ENOMEM) {
 		spdk_thread_send_msg(thread, ftl_submit_nv_cache, io);
 		return;
 	} else if (rc) {
 		SPDK_ERRLOG("Write to persistent cache failed: %s (%"PRIu64", %"PRIu64")\n",
-			    spdk_strerror(-rc), io->ppa.ppa, io->lbk_cnt);
+			    spdk_strerror(-rc), io->ppa.addr, io->lbk_cnt);
 		spdk_mempool_put(nv_cache->md_pool, io->md);
 		io->status = -EIO;
 		ftl_io_complete(io);
@@ -1238,8 +1238,8 @@ _ftl_write_nv_cache(void *ctx)
 		}
 
 		/* Reserve area on the write buffer cache */
-		child->ppa.ppa = ftl_reserve_nv_cache(&dev->nv_cache, &num_lbks, &phase);
-		if (child->ppa.ppa == FTL_LBA_INVALID) {
+		child->ppa.addr = ftl_reserve_nv_cache(&dev->nv_cache, &num_lbks, &phase);
+		if (child->ppa.addr == FTL_LBA_INVALID) {
 			spdk_mempool_put(dev->nv_cache.md_pool, child->md);
 			ftl_io_free(child);
 			spdk_thread_send_msg(thread, _ftl_write_nv_cache, io);
@@ -1362,7 +1362,7 @@ ftl_write_cb(struct ftl_io *io, void *arg, int status)
 		}
 
 		SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write ppa:%lu, lba:%lu\n",
-			      entry->ppa.ppa, entry->lba);
+			      entry->ppa.addr, entry->lba);
 	}
 
 	ftl_process_flush(dev, batch);
@@ -1401,7 +1401,7 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry,
 
 	if (ftl_ppa_cached(prev_ppa)) {
 		assert(!ftl_rwb_entry_weak(entry));
-		prev = ftl_rwb_entry_from_offset(dev->rwb, prev_ppa.offset);
+		prev = ftl_rwb_entry_from_offset(dev->rwb, prev_ppa.cache_offset);
 		pthread_spin_lock(&prev->lock);
 
 		/* Re-read the L2P under the lock to protect against updates */
@@ -1503,7 +1503,7 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 		ppa = wptr->ppa;
 	} else {
 		assert(io->flags & FTL_IO_DIRECT_ACCESS);
-		assert(io->ppa.chk == wptr->band->id);
+		assert(io->ppa.zone_id == wptr->band->id);
 		ppa = io->ppa;
 	}
 
@@ -1524,7 +1524,7 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 		ftl_io_fail(child, rc);
 		ftl_io_complete(child);
 		SPDK_ERRLOG("spdk_nvme_ns_cmd_write_with_md failed with status:%d, ppa:%lu\n",
-			    rc, ppa.ppa);
+			    rc, ppa.addr);
 		return -EIO;
 	}
 
@@ -1658,7 +1658,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 			prev_ppa = ftl_l2p_get(dev, entry->lba);
 
 			/* If the l2p was updated in the meantime, don't update band's metadata */
-			if (ftl_ppa_cached(prev_ppa) && prev_ppa.offset == entry->pos) {
+			if (ftl_ppa_cached(prev_ppa) && prev_ppa.cache_offset == entry->pos) {
 				/* Setting entry's cache bit needs to be done after metadata */
 				/* within the band is updated to make sure that writes */
 				/* invalidating the entry clear the metadata as well */
@@ -1674,7 +1674,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 		ppa = ftl_band_next_ppa(wptr->band, ppa, 1);
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write ppa:%lx, %lx\n", wptr->ppa.ppa,
+	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write ppa:%lx, %lx\n", wptr->ppa.addr,
 		      ftl_ppa_addr_pack(dev, wptr->ppa));
 
 	if (ftl_submit_write(wptr, io)) {
@@ -1756,7 +1756,7 @@ ftl_rwb_fill(struct ftl_io *io)
 
 		ftl_rwb_entry_fill(entry, io);
 
-		ppa.offset = entry->pos;
+		ppa.cache_offset = entry->pos;
 
 		ftl_trace_rwb_fill(dev, io);
 		ftl_update_l2p(dev, entry, ppa);
@@ -2151,7 +2151,7 @@ ftl_ppa_is_written(struct ftl_band *band, struct ftl_ppa ppa)
 {
 	struct ftl_zone *zone = ftl_band_zone_from_ppa(band, ppa);
 
-	return ppa.lbk < zone->write_offset;
+	return ppa.offset < zone->write_offset;
 }
 
 static void
