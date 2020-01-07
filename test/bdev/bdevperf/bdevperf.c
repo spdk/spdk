@@ -130,14 +130,6 @@ static struct spdk_bdevperf g_bdevperf = {
 struct io_target_group *g_next_tg;
 static uint32_t g_target_count = 0;
 
-/*
- * Used to determine how the I/O buffers should be aligned.
- *  This alignment will be bumped up for blockdevs that
- *  require alignment based on block length - for example,
- *  AIO blockdevs.
- */
-static size_t g_min_alignment = 8;
-
 static void
 generate_data(void *buf, int buf_len, int block_size, void *md_buf, int md_size,
 	      int num_blocks, int seed)
@@ -288,7 +280,6 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 {
 	struct io_target_group *group;
 	struct io_target *target;
-	size_t align;
 	int block_size, data_block_size;
 	int rc;
 
@@ -348,12 +339,6 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	}
 
 	target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
-	align = spdk_bdev_get_buf_align(bdev);
-	/*
-	 * TODO: This should actually use the LCM of align and g_min_alignment, but
-	 * it is fairly safe to assume all alignments are powers of two for now.
-	 */
-	g_min_alignment = spdk_max(g_min_alignment, align);
 
 	target->is_draining = false;
 	target->run_timer = NULL;
@@ -1066,8 +1051,8 @@ static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target 
 		return NULL;
 	}
 
-	task->buf = spdk_zmalloc(g_io_size, g_min_alignment, NULL, SPDK_ENV_LCORE_ID_ANY,
-				 SPDK_MALLOC_DMA);
+	task->buf = spdk_zmalloc(g_io_size, spdk_bdev_get_buf_align(target->bdev), NULL,
+				 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!task->buf) {
 		fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
 		free(task);
@@ -1099,11 +1084,6 @@ bdevperf_construct_targets_tasks(void)
 	struct bdevperf_task *task;
 	int i, task_num = g_queue_depth;
 
-	/*
-	 * Create the task pool after we have enumerated the targets, so that we know
-	 *  the min buffer alignment.  Some backends such as AIO have alignment restrictions
-	 *  that must be accounted for.
-	 */
 	if (g_reset) {
 		task_num += 1;
 	}
