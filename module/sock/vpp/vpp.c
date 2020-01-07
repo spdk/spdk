@@ -1487,7 +1487,7 @@ static struct spdk_net_framework g_vpp_net_framework = {
 	.fini	= spdk_vpp_net_framework_fini,
 };
 
-SPDK_NET_FRAMEWORK_REGISTER(vpp, &g_vpp_net_framework);
+SPDK_NET_FRAMEWORK_REGISTER(vpp, &g_vpp_net_framework, DEFAULT_SOCK_PRIORITY);
 
 SPDK_LOG_REGISTER_COMPONENT("sock_vpp", SPDK_SOCK_VPP)
 
