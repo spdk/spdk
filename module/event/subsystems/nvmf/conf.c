@@ -136,6 +136,9 @@ spdk_nvmf_read_config_file_tgt_conf(struct spdk_conf_section *sp,
 			       "we will use RoundRobin as the default scheduler\n");
 	}
 
+	conf->admin_passthru.identify_ctrlr = spdk_conf_section_get_boolval(sp,
+					      "AdminCmdPassthruIdentifyCtrlr", false);
+
 	return rc;
 }
 
@@ -168,6 +171,7 @@ spdk_nvmf_parse_tgt_conf(void)
 
 	conf->acceptor_poll_rate = ACCEPT_TIMEOUT_US;
 	conf->conn_sched = DEFAULT_CONN_SCHED;
+	conf->admin_passthru.identify_ctrlr = false;
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");
 	if (sp != NULL) {

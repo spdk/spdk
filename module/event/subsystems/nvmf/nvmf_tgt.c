@@ -435,10 +435,8 @@ nvmf_tgt_advance_state(void)
 
 	do {
 		prev_state = g_tgt_state;
-
 		switch (g_tgt_state) {
 		case NVMF_TGT_INIT_NONE: {
-			spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_IDENTIFY, spdk_nvmf_custom_identify_hdlr);
 			g_tgt_state = NVMF_TGT_INIT_PARSE_CONFIG;
 			break;
 		}
@@ -449,6 +447,11 @@ nvmf_tgt_advance_state(void)
 			spdk_thread_send_msg(spdk_get_thread(), nvmf_tgt_parse_conf_start, NULL);
 			break;
 		case NVMF_TGT_INIT_CREATE_POLL_GROUPS:
+			/* Config parsed */
+			if (g_spdk_nvmf_tgt_conf->admin_passthru.identify_ctrlr) {
+				SPDK_NOTICELOG("Custom identify ctrlr handler enabled\n");
+				spdk_nvmf_set_custom_admin_cmd_hdlr(SPDK_NVME_OPC_IDENTIFY, spdk_nvmf_custom_identify_hdlr);
+			}
 			/* Send a message to each thread and create a poll group */
 			spdk_for_each_thread(nvmf_tgt_create_poll_group,
 					     NULL,
