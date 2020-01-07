@@ -885,4 +885,4 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.group_impl_close	= spdk_posix_sock_group_impl_close,
 };
 
-SPDK_NET_IMPL_REGISTER(posix, &g_posix_net_impl);
+SPDK_NET_IMPL_REGISTER(posix, &g_posix_net_impl, DEFAULT_SOCK_PRIORITY);
