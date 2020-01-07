@@ -114,7 +114,6 @@ struct io_target {
 
 struct io_target_group {
 	TAILQ_HEAD(, io_target)		targets;
-	uint32_t			lcore;
 	TAILQ_ENTRY(io_target_group)	link;
 };
 
@@ -488,7 +487,7 @@ get_ema_io_per_second(struct io_target *target, uint64_t ema_period)
 static void
 performance_dump(uint64_t io_time_in_usec)
 {
-	unsigned lcore_id;
+	struct spdk_thread *thread;
 	double io_per_second, mb_per_second;
 	double total_io_per_second, total_mb_per_second;
 	struct io_target_group *group;
@@ -497,10 +496,13 @@ performance_dump(uint64_t io_time_in_usec)
 	total_io_per_second = 0;
 	total_mb_per_second = 0;
 	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
-		if (!TAILQ_EMPTY(&group->targets)) {
-			lcore_id = group->lcore;
-			printf("\r Logical core: %u\n", lcore_id);
+		if (TAILQ_EMPTY(&group->targets)) {
+			continue;
 		}
+
+		thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(group));
+		printf("\r Thread name: %s\n", spdk_thread_get_name(thread));
+
 		TAILQ_FOREACH(target, &group->targets, link) {
 			io_per_second = get_cma_io_per_second(target, io_time_in_usec);
 			mb_per_second = io_per_second * g_io_size / (1024 * 1024);
@@ -1373,8 +1375,6 @@ io_target_group_create(void *io_device, void *ctx_buf)
 	struct io_target_group *group = ctx_buf;
 
 	TAILQ_INIT(&group->targets);
-	group->lcore = spdk_env_get_current_core();
-
 	return 0;
 }
 
