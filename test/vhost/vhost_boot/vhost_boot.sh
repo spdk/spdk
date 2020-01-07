@@ -118,7 +118,8 @@ $rpc_py vhost_scsi_controller_remove_target naa.vhost_vm.$vm_no 0
 $rpc_py vhost_delete_controller naa.vhost_vm.$vm_no
 $rpc_py bdev_lvol_delete $lvb_u
 $rpc_py bdev_lvol_delete_lvstore -u $lvs_u
-vhost_kill 0
 timing_exit clean_vhost
+
+vhost_kill 0
 
 vhosttestfini
