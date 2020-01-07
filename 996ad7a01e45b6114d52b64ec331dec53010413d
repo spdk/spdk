@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "2569ab89_26fa51e0",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-07T14:11:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "04f3e80b_e76c7c36",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 2
+      },
+      "revId": "996ad7a01e45b6114d52b64ec331dec53010413d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "49ac3c24_63fdd296",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 24
@@ -164,6 +188,30 @@
       "revId": "996ad7a01e45b6114d52b64ec331dec53010413d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "390d31d2_9b5ad555",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-07T14:11:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef672df9_9fa4908e",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 91
+      },
+      "revId": "996ad7a01e45b6114d52b64ec331dec53010413d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

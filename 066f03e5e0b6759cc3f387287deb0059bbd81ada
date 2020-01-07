@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "af95decc_ad1a0f5b",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-07T14:11:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c8c9a2ed_cc9f526e",
+      "range": {
+        "startLine": 12,
+        "startChar": 1,
+        "endLine": 12,
+        "endChar": 114
+      },
+      "revId": "066f03e5e0b6759cc3f387287deb0059bbd81ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9d89d004_87e84ad7",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 26
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "c9334f04_03f5d8ef",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-07T14:11:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9d89d004_87e84ad7",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 32
+      },
+      "revId": "066f03e5e0b6759cc3f387287deb0059bbd81ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "69d90546_09f17903",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 26
@@ -68,6 +116,30 @@
       "revId": "066f03e5e0b6759cc3f387287deb0059bbd81ada",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b0517d3_ebbbd5ee",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-07T14:11:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "69d90546_09f17903",
+      "range": {
+        "startLine": 50,
+        "startChar": 40,
+        "endLine": 50,
+        "endChar": 50
+      },
+      "revId": "066f03e5e0b6759cc3f387287deb0059bbd81ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
