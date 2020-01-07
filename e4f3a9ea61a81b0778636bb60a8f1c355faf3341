@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa20847b_4b843a6d",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 35
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T09:55:13Z",
+      "side": 1,
+      "message": "Shouldnt this all be in a \"while\" loop? Otherwise break at line 29 affects \"for\" loop from line 22 instead of waiting for desired information.",
+      "range": {
+        "startLine": 28,
+        "startChar": 2,
+        "endLine": 28,
+        "endChar": 46
+      },
+      "revId": "e4f3a9ea61a81b0778636bb60a8f1c355faf3341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "800072e9_ce281085",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 35
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T09:55:13Z",
+      "side": 1,
+      "message": "Use double brackets if possible.",
+      "range": {
+        "startLine": 29,
+        "startChar": 3,
+        "endLine": 29,
+        "endChar": 17
+      },
+      "revId": "e4f3a9ea61a81b0778636bb60a8f1c355faf3341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8be9c73c_d1349888",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 35
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T09:55:13Z",
+      "side": 1,
+      "message": "This looks fine, but do we really need to check \u0026 wait for /dev/nvme* here?",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 6
+      },
+      "revId": "e4f3a9ea61a81b0778636bb60a8f1c355faf3341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9bb27605_d51670a9",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 35
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T09:55:13Z",
+      "side": 1,
+      "message": "And as for this place - I don\u0027t think we need to wait for /dev/nvme0n1 here.\nIt will already be ipresent after line 33. mkfs only creates a filesystem.",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 6
+      },
+      "revId": "e4f3a9ea61a81b0778636bb60a8f1c355faf3341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
