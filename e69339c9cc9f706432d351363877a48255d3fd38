@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "867aa6c2_09904d15",
+        "filename": "test/nvmf/target/connect_disconnect.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T13:41:56Z",
+      "side": 1,
+      "message": "This commit passed onyl because most probably connect_disconnect.sh is run as part of nightly tests.\n$nvme_serial !\u003d $NVME_SERIAL",
+      "range": {
+        "startLine": 38,
+        "startChar": 25,
+        "endLine": 38,
+        "endChar": 36
+      },
+      "revId": "e69339c9cc9f706432d351363877a48255d3fd38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84fd6620_62a7a384",
+        "filename": "test/nvmf/target/fio.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T13:41:56Z",
+      "side": 1,
+      "message": "head -1 is just for the first entry, while we\u0027re expecting 3 disks connected.",
+      "range": {
+        "startLine": 37,
+        "startChar": 60,
+        "endLine": 37,
+        "endChar": 67
+      },
+      "revId": "e69339c9cc9f706432d351363877a48255d3fd38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ef7a67c_fcd45d3d",
+        "filename": "test/nvmf/target/fio.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T13:41:56Z",
+      "side": 1,
+      "message": "No need to sudo. Whole autotest.sh has to be run with sudo, so doing it again is just repeating yourself.",
+      "range": {
+        "startLine": 37,
+        "startChar": 23,
+        "endLine": 37,
+        "endChar": 28
+      },
+      "revId": "e69339c9cc9f706432d351363877a48255d3fd38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07bc8c8c_c7ab6b74",
+        "filename": "test/nvmf/target/fio.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T13:41:56Z",
+      "side": 1,
+      "message": "Any chance we could reduce this pipe grep/head/awk combo? awk seems redundant in here.",
+      "range": {
+        "startLine": 37,
+        "startChar": 70,
+        "endLine": 37,
+        "endChar": 90
+      },
+      "revId": "e69339c9cc9f706432d351363877a48255d3fd38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c751ebc1_d5fcfd1e",
+        "filename": "test/nvmf/target/fio.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T13:41:56Z",
+      "side": 1,
+      "message": "Using \"nvme list\" relies on what is available under /sys/class/nvme path in the system, so the same as if you were using lsblk. This line might fail as block devices might not be ready yet - that\u0027s what waitforblk is for. It should come first in the script.",
+      "range": {
+        "startLine": 37,
+        "startChar": 28,
+        "endLine": 37,
+        "endChar": 37
+      },
+      "revId": "e69339c9cc9f706432d351363877a48255d3fd38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b142102d_b0437cbd",
+        "filename": "test/nvmf/target/nmic.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T13:41:56Z",
+      "side": 1,
+      "message": "You can eaisly make it the same value as in other scripts and then put it in nvmf/common.sh for other scripts to re-use.",
+      "range": {
+        "startLine": 8,
+        "startChar": 12,
+        "endLine": 8,
+        "endChar": 17
+      },
+      "revId": "e69339c9cc9f706432d351363877a48255d3fd38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf0173dd_9afbf226",
+        "filename": "test/nvmf/target/nvme_cli.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T13:41:56Z",
+      "side": 1,
+      "message": "Comments as in target/fio.sh",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 9
+      },
+      "revId": "e69339c9cc9f706432d351363877a48255d3fd38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
