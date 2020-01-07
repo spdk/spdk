@@ -22,6 +22,30 @@
       "revId": "762cc69770eac65e9d2ba8e65265a5ddfb500c45",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "302d6a58_bd502721",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-07T16:12:45Z",
+      "side": 1,
+      "message": "OK it looks like that all hacks involving !, [[ ]], [ ] and $() failed, so let\u0027s go with this approach.\nCan you just try if \u0026\u0026 false works properly instead of return 1?",
+      "parentUuid": "f319df04_f34a4682",
+      "range": {
+        "startLine": 29,
+        "startChar": 1,
+        "endLine": 29,
+        "endChar": 58
+      },
+      "revId": "762cc69770eac65e9d2ba8e65265a5ddfb500c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
