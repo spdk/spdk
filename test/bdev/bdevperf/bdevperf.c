@@ -280,13 +280,7 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 {
 	struct io_target_group *group;
 	struct io_target *target;
-	int block_size, data_block_size;
 	int rc;
-
-	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
-		return 0;
-	}
 
 	target = malloc(sizeof(struct io_target));
 	if (!target) {
@@ -316,19 +310,8 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	target->current_queue_depth = 0;
 	target->offset_in_ios = 0;
 
-	block_size = spdk_bdev_get_block_size(bdev);
-	data_block_size = spdk_bdev_get_data_block_size(bdev);
-	target->io_size_blocks = g_io_size / data_block_size;
-	if ((g_io_size % data_block_size) != 0) {
-		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
-			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
-		spdk_bdev_close(target->bdev_desc);
-		free(target->name);
-		free(target);
-		return 0;
-	}
-
-	target->buf_size = target->io_size_blocks * block_size;
+	target->io_size_blocks = g_io_size / spdk_bdev_get_data_block_size(bdev);
+	target->buf_size = target->io_size_blocks * spdk_bdev_get_block_size(bdev);
 
 	target->dif_check_flags = 0;
 	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
@@ -362,8 +345,21 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 static int
 _bdevperf_construct_targets(struct spdk_bdev *bdev)
 {
+	uint32_t data_block_size;
 	uint8_t core_idx, core_count_for_each_bdev;
 	int rc;
+
+	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
+		return 0;
+	}
+
+	data_block_size = spdk_bdev_get_data_block_size(bdev);
+	if ((g_io_size % data_block_size) != 0) {
+		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
+			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
+		return 0;
+	}
 
 	if (g_every_core_for_each_bdev == false) {
 		core_count_for_each_bdev = 1;
