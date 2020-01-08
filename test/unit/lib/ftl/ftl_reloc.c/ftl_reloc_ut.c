@@ -42,13 +42,11 @@
 #define MAX_ACTIVE_RELOCS 5
 #define MAX_RELOC_QDEPTH  31
 
-static struct spdk_ocssd_geometry_data g_geo = {
-	.num_grp	= 4,
-	.num_pu		= 3,
-	.num_chk	= 500,
-	.clba		= 100,
-	.ws_opt		= 16,
-	.ws_min		= 4,
+struct base_bdev_geometry g_geo = {
+	.write_unit_size    = 16,
+	.optimal_open_zones = 12,
+	.zone_size	    = 100,
+	.blockcnt	    = 1500 * 100 * 12,
 };
 
 DEFINE_STUB(ftl_dev_tail_md_disk_size, size_t, (const struct spdk_ftl_dev *dev), 1);
@@ -199,13 +197,14 @@ add_to_active_queue(struct ftl_reloc *reloc, struct ftl_band_reloc *breloc)
 
 static void
 setup_reloc(struct spdk_ftl_dev **_dev, struct ftl_reloc **_reloc,
-	    const struct spdk_ocssd_geometry_data *geo)
+	    const struct base_bdev_geometry *geo)
 {
 	size_t i;
 	struct spdk_ftl_dev *dev;
 	struct ftl_reloc *reloc;
 
 	dev = test_init_ftl_dev(geo);
+
 	dev->conf.max_active_relocs = MAX_ACTIVE_RELOCS;
 	dev->conf.max_reloc_qdepth = MAX_RELOC_QDEPTH;
 
@@ -266,7 +265,7 @@ test_reloc_iter_full(void)
 
 	setup_reloc(&dev, &reloc, &g_geo);
 
-	dev->geo.clba = 100;
+	g_geo.zone_size = 100;
 	breloc = &reloc->brelocs[0];
 	band = breloc->band;
 
