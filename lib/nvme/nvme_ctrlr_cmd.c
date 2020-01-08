@@ -486,9 +486,11 @@ nvme_ctrlr_cmd_set_host_id(struct spdk_nvme_ctrlr *ctrlr, void *host_id, uint32_
 }
 
 int
-spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
-				 uint32_t nsid, void *payload, uint32_t payload_size,
-				 uint64_t offset, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+spdk_nvme_ctrlr_cmd_get_log_page_ext(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
+				     uint32_t nsid, void *payload, uint32_t payload_size,
+				     uint64_t offset, uint32_t cdw10,
+				     uint32_t cdw11, uint32_t cdw14,
+				     spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
@@ -528,17 +530,29 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_GET_LOG_PAGE;
 	cmd->nsid = nsid;
+	cmd->cdw10 = cdw10;
 	cmd->cdw10_bits.get_log_page.numdl = numdl;
 	cmd->cdw10_bits.get_log_page.lid = log_page;
 
+	cmd->cdw11 = cdw11;
 	cmd->cdw11_bits.get_log_page.numdu = numdu;
 	cmd->cdw12 = lpol;
 	cmd->cdw13 = lpou;
+	cmd->cdw14 = cdw14;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return rc;
+}
+
+int
+spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
+				 uint32_t nsid, void *payload, uint32_t payload_size,
+				 uint64_t offset, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return spdk_nvme_ctrlr_cmd_get_log_page_ext(ctrlr, log_page, nsid, payload,
+			payload_size, offset, 0, 0, 0, cb_fn, cb_arg);
 }
 
 static void
