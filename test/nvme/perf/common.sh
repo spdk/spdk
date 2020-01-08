@@ -201,25 +201,28 @@ function create_fio_config(){
 	fi
 }
 
-function preconditioning(){
+function preconditioning() {
 	local dev_name=""
 	local filename=""
-	local i
-	sed -i -e "\$a[preconditioning]" $BASE_DIR/config.fio
+	local nvme_list
+
+	HUGEMEM=8192 $ROOT_DIR/scripts/setup.sh
+	cp $BASE_DIR/config.fio.tmp $BASE_DIR/config.fio
+	echo "[Preconditioning]" >> $BASE_DIR/config.fio
 
 	# Generate filename argument for FIO.
 	# We only want to target NVMes not bound to nvme driver.
 	# If they're still bound to nvme that means they were skipped by
 	# setup.sh on purpose.
-	local nvme_list
 	nvme_list=$(get_disks nvme)
 	for nvme in $nvme_list; do
 		dev_name='trtype=PCIe traddr='${nvme//:/.}' ns=1'
 		filename+=$(printf %s":" "$dev_name")
 	done
 	echo "** Preconditioning disks, this can take a while, depending on the size of disks."
-	run_spdk_nvme_fio "nvme" --filename="$filename" --size=100% --loops=2 --bs=1M\
-		--rw=write --iodepth=32
+	run_spdk_nvme_fio "nvme" --filename="$filename" --size=100% --loops=2 --bs=1M \
+		--rw=write --iodepth=32 --output-format=normal
+	rm -f $BASE_DIR/config.fio
 }
 
 function get_results(){
