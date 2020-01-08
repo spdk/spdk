@@ -47,53 +47,45 @@ if $PRECONDITIONING; then
 	preconditioning
 fi
 
-#Kernel Classic Polling ioengine parameters
-if [ $PLUGIN = "kernel-classic-polling" ]; then
+if [[ "$PLUGIN" =~ "kernel" ]]; then
 	$ROOT_DIR/scripts/setup.sh reset
-	fio_ioengine_opt="--ioengine=pvsync2 --hipri=100"
-	for disk in $DISK_NAMES; do
-		echo -1 > /sys/block/$disk/queue/io_poll_delay
-	done
-#Kernel Hybrid Polling ioengine parameter
-elif [ $PLUGIN = "kernel-hybrid-polling" ]; then
-	$ROOT_DIR/scripts/setup.sh reset
-	fio_ioengine_opt="--ioengine=pvsync2 --hipri=100"
-	for disk in $DISK_NAMES; do
-		echo 0 > /sys/block/$disk/queue/io_poll_delay
-	done
-elif [ $PLUGIN = "kernel-libaio" ]; then
-	$ROOT_DIR/scripts/setup.sh reset
-	fio_ioengine_opt="--ioengine=libaio"
-elif [ $PLUGIN = "kernel-io-uring" ]; then
-	$ROOT_DIR/scripts/setup.sh reset
-	fio_ioengine_opt="--ioengine=io_uring"
+	fio_ioengine_opt="${KERNEL_ENGINES[$PLUGIN]}"
 
-	modprobe -rv nvme
-	modprobe nvme poll_queues=8
-	wait_for_nvme_reload $DISK_NAMES
+	if [[ $PLUGIN = "kernel-classic-polling" ]]; then
+		for disk in $DISK_NAMES; do
+			echo -1 > /sys/block/$disk/queue/io_poll_delay
+		done
+	elif [[ $PLUGIN = "kernel-hybrid-polling" ]]; then
+		for disk in $DISK_NAMES; do
+			echo 0 > /sys/block/$disk/queue/io_poll_delay
+		done
+	elif [[ $PLUGIN = "kernel-io-uring" ]]; then
+		modprobe -rv nvme
+		modprobe nvme poll_queues=8
+		wait_for_nvme_reload $DISK_NAMES
 
-	backup_dir="/tmp/nvme_param_bak"
-	mkdir -p $backup_dir
+		backup_dir="/tmp/nvme_param_bak"
+		mkdir -p $backup_dir
 
-	for disk in $DISK_NAMES; do
-		echo "INFO: Backing up device parameters for $disk"
-		sysfs=/sys/block/$disk/queue
-		mkdir -p $backup_dir/$disk
-		cat $sysfs/iostats > $backup_dir/$disk/iostats
-		cat $sysfs/rq_affinity > $backup_dir/$disk/rq_affinity
-		cat $sysfs/nomerges > $backup_dir/$disk/nomerges
-		cat $sysfs/io_poll_delay > $backup_dir/$disk/io_poll_delay
-	done
+		for disk in $DISK_NAMES; do
+			echo "INFO: Backing up device parameters for $disk"
+			sysfs=/sys/block/$disk/queue
+			mkdir -p $backup_dir/$disk
+			cat $sysfs/iostats > $backup_dir/$disk/iostats
+			cat $sysfs/rq_affinity > $backup_dir/$disk/rq_affinity
+			cat $sysfs/nomerges > $backup_dir/$disk/nomerges
+			cat $sysfs/io_poll_delay > $backup_dir/$disk/io_poll_delay
+		done
 
-
-	for disk in $DISK_NAMES; do
-		echo "INFO: Setting device parameters for $disk"
-		sysfs=/sys/block/$disk/queue
-		echo 0 > $sysfs/iostats
-		echo 0 > $sysfs/rq_affinity
-		echo 2 > $sysfs/nomerges
-		echo 0 > $sysfs/io_poll_delay
-	done
+		for disk in $DISK_NAMES; do
+			echo "INFO: Setting device parameters for $disk"
+			sysfs=/sys/block/$disk/queue
+			echo 0 > $sysfs/iostats
+			echo 0 > $sysfs/rq_affinity
+			echo 2 > $sysfs/nomerges
+			echo 0 > $sysfs/io_poll_delay
+		done
+	fi
 fi
 
 result_dir=$BASE_DIR/results/perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}
