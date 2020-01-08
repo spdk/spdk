@@ -1167,7 +1167,7 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	int block_size, data_block_size;
 	int rc;
 
-	target = malloc(sizeof(struct io_target));
+	target = calloc(1, sizeof(struct io_target));
 	if (!target) {
 		fprintf(stderr, "Unable to allocate memory for new target.\n");
 		return -ENOMEM;
@@ -1189,9 +1189,6 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	}
 
 	target->bdev = bdev;
-	target->io_completed = 0;
-	target->current_queue_depth = 0;
-	target->offset_in_ios = 0;
 
 	block_size = spdk_bdev_get_block_size(bdev);
 	data_block_size = spdk_bdev_get_data_block_size(bdev);
@@ -1199,7 +1196,6 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 
 	target->buf_size = target->io_size_blocks * block_size;
 
-	target->dif_check_flags = 0;
 	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
 		target->dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
 	}
@@ -1209,9 +1205,6 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 
 	target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
 
-	target->is_draining = false;
-	target->run_timer = NULL;
-	target->reset_timer = NULL;
 	TAILQ_INIT(&target->task_list);
 
 	/* Mapping each created target to target group */
