@@ -46,6 +46,30 @@
       "revId": "73b9bd078fca6bb2864dc4dcbc0a197c0b5ef6f5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99406781_ccfafe7a",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 895,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-08T07:39:13Z",
+      "side": 1,
+      "message": "You\u0027re right. In that case wouldn\u0027t it make more sense to tie retry_queue to each IO channel and use one retry mechanism for all types of requests (internal and external)? I think it\u0027d simplify the code as well as increase the efficiency of retrying user read requests.",
+      "parentUuid": "902eb004_88585e11",
+      "range": {
+        "startLine": 895,
+        "startChar": 2,
+        "endLine": 895,
+        "endChar": 60
+      },
+      "revId": "73b9bd078fca6bb2864dc4dcbc0a197c0b5ef6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
