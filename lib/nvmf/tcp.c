@@ -328,7 +328,6 @@ spdk_nvmf_tcp_pdu_get(struct spdk_nvmf_tcp_qpair *tqpair)
 	TAILQ_REMOVE(&tqpair->free_queue, pdu, tailq);
 	memset(pdu, 0, sizeof(*pdu));
 	pdu->qpair = tqpair;
-	pdu->ref = 1;
 	pdu->hdr = &pdu->hdr_mem;
 
 	return pdu;
@@ -337,17 +336,8 @@ spdk_nvmf_tcp_pdu_get(struct spdk_nvmf_tcp_qpair *tqpair)
 static void
 spdk_nvmf_tcp_pdu_put(struct spdk_nvmf_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 {
-	if (!pdu) {
-		return;
-	}
-
-	assert(pdu->ref > 0);
-
-	pdu->ref--;
-	if (pdu->ref == 0) {
-		tqpair->free_pdu_num++;
-		TAILQ_INSERT_HEAD(&tqpair->free_queue, pdu, tailq);
-	}
+	tqpair->free_pdu_num++;
+	TAILQ_INSERT_HEAD(&tqpair->free_queue, pdu, tailq);
 }
 
 static struct spdk_nvmf_tcp_req *
