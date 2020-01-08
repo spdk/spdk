@@ -1243,12 +1243,11 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	return 0;
 }
 
-static void
-bdevperf_construct_targets(void)
+static int
+_bdevperf_construct_targets(struct spdk_bdev *bdev)
 {
-	struct spdk_bdev *bdev;
-	int rc;
 	uint8_t core_idx, core_count_for_each_bdev;
+	int rc;
 
 	if (g_every_core_for_each_bdev == false) {
 		core_count_for_each_bdev = 1;
@@ -1256,29 +1255,36 @@ bdevperf_construct_targets(void)
 		core_count_for_each_bdev = spdk_env_get_core_count();
 	}
 
+	for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
+		rc = bdevperf_construct_target(bdev);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
+static void
+bdevperf_construct_targets(void)
+{
+	struct spdk_bdev *bdev;
+	int rc;
+
 	if (g_target_bdev_name != NULL) {
 		bdev = spdk_bdev_get_by_name(g_target_bdev_name);
 		if (!bdev) {
 			fprintf(stderr, "Unable to find bdev '%s'\n", g_target_bdev_name);
 			goto end;
 		}
-
-		for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
-			rc = bdevperf_construct_target(bdev);
-			if (rc != 0) {
-				goto end;
-			}
-		}
+		_bdevperf_construct_targets(bdev);
 	} else {
 		bdev = spdk_bdev_first_leaf();
 		while (bdev != NULL) {
-			for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
-				rc = bdevperf_construct_target(bdev);
-				if (rc != 0) {
-					goto end;
-				}
+			rc = _bdevperf_construct_targets(bdev);
+			if (rc != 0) {
+				break;
 			}
-
 			bdev = spdk_bdev_next_leaf(bdev);
 		}
 	}
