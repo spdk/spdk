@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fcfab5e1_baba5eb9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 22
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2020-01-08T16:43:45Z",
+      "side": 1,
+      "message": "I see that you touched other areas..\n\n# git show | diffstat\n include/spdk/sock.h                 |    2 \n include/spdk_internal/sock.h        |    7 +\n lib/nvmf/tcp.c                      |    2 \n lib/sock/sock.c                     |    2 \n module/sock/posix/posix.c           |  168 +++++++++++++++++++++++++++++++++---\n test/bdev/bdevperf/bdevperf.c       |    3 \n test/nvmf/nvmf.sh                   |   44 ++++-----\n test/nvmf/target/bdev_io_wait.sh    |   19 +---\n test/nvmf/target/filesystem.sh      |   22 ++++\n test/unit/lib/sock/sock.c/sock_ut.c |    6 +\n 10 files changed, 226 insertions(+), 49 deletions(-)\n\nbut also the zcopy related code, it\u0027s hard to review the delta zcopy wise.. can you please put the changes not related to zcopy to another WIP patch (thanks)",
+      "revId": "056b198538fbf1281358abc25361cfae3d8422aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
