@@ -58,7 +58,6 @@ struct bdevperf_task {
 
 static const char *g_workload_type;
 static int g_io_size = 0;
-static uint64_t g_buf_size = 0;
 /* initialize to invalid value so we can detect if user overrides it. */
 static int g_rw_percentage = -1;
 static int g_is_random;
@@ -106,6 +105,7 @@ struct io_target {
 	uint64_t			size_in_ios;
 	uint64_t			offset_in_ios;
 	uint64_t			io_size_blocks;
+	uint64_t			buf_size;
 	uint32_t			dif_check_flags;
 	bool				is_draining;
 	struct spdk_poller		*run_timer;
@@ -328,7 +328,7 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 		return 0;
 	}
 
-	g_buf_size = spdk_max(g_buf_size, target->io_size_blocks * block_size);
+	target->buf_size = target->io_size_blocks * block_size;
 
 	target->dif_check_flags = 0;
 	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
@@ -505,7 +505,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
 		assert(iovcnt == 1);
 		assert(iovs != NULL);
-		if (!verify_data(task->buf, g_buf_size, iovs[0].iov_base, iovs[0].iov_len,
+		if (!verify_data(task->buf, target->buf_size, iovs[0].iov_base, iovs[0].iov_len,
 				 spdk_bdev_get_block_size(target->bdev),
 				 task->md_buf, spdk_bdev_io_get_md_buf(bdev_io),
 				 spdk_bdev_get_md_size(target->bdev),
@@ -747,7 +747,7 @@ bdevperf_zcopy_get_buf_complete(struct spdk_bdev_io *bdev_io, bool success, void
 		assert(iovcnt == 1);
 		assert(iovs != NULL);
 
-		copy_data(iovs[0].iov_base, iovs[0].iov_len, task->buf, g_buf_size,
+		copy_data(iovs[0].iov_base, iovs[0].iov_len, task->buf, target->buf_size,
 			  spdk_bdev_get_block_size(target->bdev),
 			  spdk_bdev_io_get_md_buf(bdev_io), task->md_buf,
 			  spdk_bdev_get_md_size(target->bdev), target->io_size_blocks);
@@ -808,7 +808,7 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 
 	task->offset_blocks = offset_in_ios * target->io_size_blocks;
 	if (g_verify || g_reset) {
-		generate_data(task->buf, g_buf_size,
+		generate_data(task->buf, target->buf_size,
 			      spdk_bdev_get_block_size(target->bdev),
 			      task->md_buf, spdk_bdev_get_md_size(target->bdev),
 			      target->io_size_blocks, rand_r(&seed) % 256);
@@ -817,7 +817,7 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 			return;
 		} else {
 			task->iov.iov_base = task->buf;
-			task->iov.iov_len = g_buf_size;
+			task->iov.iov_len = target->buf_size;
 			task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 		}
 	} else if (g_flush) {
@@ -835,7 +835,7 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 			return;
 		} else {
 			task->iov.iov_base = task->buf;
-			task->iov.iov_len = g_buf_size;
+			task->iov.iov_len = target->buf_size;
 			task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 		}
 	}
@@ -1051,7 +1051,7 @@ static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target 
 		return NULL;
 	}
 
-	task->buf = spdk_zmalloc(g_io_size, spdk_bdev_get_buf_align(target->bdev), NULL,
+	task->buf = spdk_zmalloc(target->buf_size, spdk_bdev_get_buf_align(target->bdev), NULL,
 				 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!task->buf) {
 		fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
