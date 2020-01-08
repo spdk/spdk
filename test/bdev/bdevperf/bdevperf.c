@@ -224,7 +224,8 @@ verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len, int bloc
 	return true;
 }
 
-static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target *target)
+static struct bdevperf_task
+*bdevperf_construct_task(struct io_target *target)
 {
 	struct bdevperf_task *task;
 
@@ -259,11 +260,10 @@ static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target 
 	return task;
 }
 
-static int
-bdevperf_construct_targets_tasks(void)
+/* Initialize task list for each target */
+static void
+bdevperf_construct_tasks(struct io_target *target)
 {
-	struct io_target_group *group;
-	struct io_target *target;
 	struct bdevperf_task *task;
 	int i, task_num = g_queue_depth;
 
@@ -271,25 +271,14 @@ bdevperf_construct_targets_tasks(void)
 		task_num += 1;
 	}
 
-	/* Initialize task list for each target */
-	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
-		TAILQ_FOREACH(target, &group->targets, link) {
-			for (i = 0; i < task_num; i++) {
-				task = bdevperf_construct_task_on_target(target);
-				if (task == NULL) {
-					goto ret;
-				}
-				TAILQ_INSERT_TAIL(&target->task_list, task, link);
-			}
+	for (i = 0; i < task_num; i++) {
+		task = bdevperf_construct_task(target);
+		if (task == NULL) {
+			fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
+			return;
 		}
+		TAILQ_INSERT_TAIL(&target->task_list, task, link);
 	}
-
-	return 0;
-
-ret:
-	fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
-	fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
-	return -1;
 }
 
 static void
@@ -368,6 +357,8 @@ _bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target_group *group
 
 	target->group = group;
 	TAILQ_INSERT_TAIL(&group->targets, target, link);
+
+	bdevperf_construct_tasks(target);
 
 	return 0;
 }
@@ -1352,16 +1343,9 @@ verify_test_params(struct spdk_app_opts *opts)
 static int
 bdevperf_test(void)
 {
-	int rc;
-
 	if (g_target_count == 0) {
 		fprintf(stderr, "No valid bdevs found.\n");
 		return -ENODEV;
-	}
-
-	rc = bdevperf_construct_targets_tasks();
-	if (rc) {
-		return rc;
 	}
 
 	printf("Running I/O for %" PRIu64 " seconds...\n", g_time_in_usec / 1000000);
