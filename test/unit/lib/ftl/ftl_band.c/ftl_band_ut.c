@@ -43,16 +43,14 @@
 #define TEST_BAND_IDX		68
 #define TEST_LBA		0x68676564
 
-static struct spdk_ocssd_geometry_data g_geo = {
-	.num_grp	= 3,
-	.num_pu		= 3,
-	.num_chk	= 1500,
-	.clba		= 100,
-	.ws_opt		= 16,
-	.ws_min		= 4,
+struct base_bdev_geometry g_geo = {
+	.write_unit_size    = 16,
+	.optimal_open_zones = 9,
+	.zone_size	    = 100,
+	.blockcnt	    = 1500 * 100 * 8,
 };
 
-static struct spdk_ftl_dev		*g_dev;
+static struct spdk_ftl_dev *g_dev;
 static struct ftl_band	*g_band;
 
 static void
@@ -108,7 +106,7 @@ test_band_lbkoff_from_addr_offset(void)
 
 	setup_band();
 	for (i = 0; i < ftl_get_num_punits(g_dev); ++i) {
-		for (j = 0; j < g_geo.clba; ++j) {
+		for (j = 0; j < g_geo.zone_size; ++j) {
 			addr = addr_from_punit(i);
 			addr.zone_id = TEST_BAND_IDX;
 			addr.offset = j;
@@ -130,7 +128,7 @@ test_band_addr_from_lbkoff(void)
 
 	setup_band();
 	for (i = 0; i < ftl_get_num_punits(g_dev); ++i) {
-		for (j = 0; j < g_geo.clba; ++j) {
+		for (j = 0; j < g_geo.zone_size; ++j) {
 			expect = addr_from_punit(i);
 			expect.zone_id = TEST_BAND_IDX;
 			expect.offset = j;
