@@ -11,6 +11,13 @@ NVMEPERF_DIR=$ROOT_DIR/examples/nvme/perf
 . $ROOT_DIR/test/common/autotest_common.sh
 NVME_FIO_RESULTS=$BASE_DIR/result.json
 
+declare -A KERNEL_ENGINES
+KERNEL_ENGINES=(
+				["kernel-libaio"]="--ioengine=libaio"
+				["kernel-classic-polling"]="--ioengine=pvsync2 --hipri=100"
+				["kernel-hybrid-polling"]="--ioengine=pvsync2 --hipri=100"
+				["kernel-io-uring"]="--ioengine=io_uring" )
+
 RW=randrw
 MIX=100
 IODEPTH=256
