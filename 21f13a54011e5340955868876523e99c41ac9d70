@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a70b7c71_84dd5ccf",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-08T08:08:48Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be changed too?",
+      "range": {
+        "startLine": 240,
+        "startChar": 27,
+        "endLine": 240,
+        "endChar": 30
+      },
+      "revId": "21f13a54011e5340955868876523e99c41ac9d70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
