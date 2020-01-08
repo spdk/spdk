@@ -1242,8 +1242,13 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	return 0;
 }
 
+struct bdevperf_construct_targets_ctx {
+	int	bdev_count;
+};
+
 static void
-_bdevperf_construct_targets(struct spdk_bdev *bdev)
+_bdevperf_construct_targets(struct spdk_bdev *bdev,
+			    struct bdevperf_construct_targets_ctx *ctx)
 {
 	uint8_t core_idx, core_count_for_each_bdev;
 	int rc;
@@ -1257,32 +1262,55 @@ _bdevperf_construct_targets(struct spdk_bdev *bdev)
 	for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
 		rc = bdevperf_construct_target(bdev);
 		if (rc != 0) {
-			return;
+			break;
 		}
+	}
+
+	if (--ctx->bdev_count == 0) {
+		free(ctx);
+		bdevperf_test();
 	}
 }
 
 static void
 bdevperf_construct_targets(void)
 {
+	struct bdevperf_construct_targets_ctx *ctx;
 	struct spdk_bdev *bdev;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		g_run_rc = -ENOMEM;
+		bdevperf_test_done();
+		return;
+	}
+
+	/* Increment initial bdev_count so that it will never reach 0 in the middle
+	 * of iteration.
+	 */
+	ctx->bdev_count++;
 
 	if (g_target_bdev_name != NULL) {
 		bdev = spdk_bdev_get_by_name(g_target_bdev_name);
 		if (bdev) {
-			_bdevperf_construct_targets(bdev);
+			ctx->bdev_count++;
+			_bdevperf_construct_targets(bdev, ctx);
 		} else {
 			fprintf(stderr, "Unable to find bdev '%s'\n", g_target_bdev_name);
 		}
 	} else {
 		bdev = spdk_bdev_first_leaf();
 		while (bdev != NULL) {
-			_bdevperf_construct_targets(bdev);
+			ctx->bdev_count++;
+			_bdevperf_construct_targets(bdev, ctx);
 			bdev = spdk_bdev_next_leaf(bdev);
 		}
 	}
 
-	bdevperf_test();
+	if (--ctx->bdev_count == 0) {
+		free(ctx);
+		bdevperf_test();
+	}
 }
 
 static int
