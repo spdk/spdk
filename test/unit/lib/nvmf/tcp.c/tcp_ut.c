@@ -480,101 +480,45 @@ test_nvmf_tcp_send_c2h_data(void)
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
 
+	tcp_req.pdu = &pdu;
+	tcp_req.req.length = 300;
+
 	tqpair.qpair.transport = &ttransport.transport;
-	TAILQ_INIT(&tqpair.free_queue);
 	TAILQ_INIT(&tqpair.send_queue);
-	STAILQ_INIT(&tqpair.queued_c2h_data_tcp_req);
 
 	/* Set qpair state to make unrelated operations NOP */
 	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_ERROR;
 
-	TAILQ_INSERT_TAIL(&tqpair.free_queue, &pdu, tailq);
-	tqpair.free_pdu_num++;
-
 	tcp_req.req.cmd = (union nvmf_h2c_msg *)&tcp_req.cmd;
 
 	tcp_req.req.iov[0].iov_base = (void *)0xDEADBEEF;
-	tcp_req.req.iov[0].iov_len = NVMF_TCP_PDU_MAX_C2H_DATA_SIZE;
+	tcp_req.req.iov[0].iov_len = 101;
 	tcp_req.req.iov[1].iov_base = (void *)0xFEEDBEEF;
-	tcp_req.req.iov[1].iov_len = NVMF_TCP_PDU_MAX_C2H_DATA_SIZE;
+	tcp_req.req.iov[1].iov_len = 100;
 	tcp_req.req.iov[2].iov_base = (void *)0xC0FFEE;
-	tcp_req.req.iov[2].iov_len = NVMF_TCP_PDU_MAX_C2H_DATA_SIZE;
+	tcp_req.req.iov[2].iov_len = 99;
 	tcp_req.req.iovcnt = 3;
-	tcp_req.req.length = NVMF_TCP_PDU_MAX_C2H_DATA_SIZE * 3;
+	tcp_req.req.length = 300;
 
-	CU_ASSERT(spdk_nvmf_tcp_calc_c2h_data_pdu_num(&tcp_req) == 3);
-
-	STAILQ_INSERT_TAIL(&tqpair.queued_c2h_data_tcp_req, &tcp_req, link);
-
-	tcp_req.c2h_data_offset = NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2;
-
-	/* 1st C2H */
 	spdk_nvmf_tcp_send_c2h_data(&tqpair, &tcp_req);
 
 	CU_ASSERT(TAILQ_FIRST(&tqpair.send_queue) == &pdu);
 	TAILQ_REMOVE(&tqpair.send_queue, &pdu, tailq);
-	TAILQ_INSERT_TAIL(&tqpair.free_queue, &pdu, tailq);
-	tqpair.free_pdu_num++;
 
 	c2h_data = &pdu.hdr->c2h_data;
-	CU_ASSERT(c2h_data->datao == NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
-	CU_ASSERT(c2h_data->datal = NVMF_TCP_PDU_MAX_C2H_DATA_SIZE);
-	CU_ASSERT(c2h_data->common.plen == sizeof(*c2h_data) + NVMF_TCP_PDU_MAX_C2H_DATA_SIZE);
-	CU_ASSERT(!(c2h_data->common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU));
-
-	CU_ASSERT(pdu.data_iovcnt == 2);
-	CU_ASSERT((uint64_t)pdu.data_iov[0].iov_base == 0xDEADBEEF + NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
-	CU_ASSERT(pdu.data_iov[0].iov_len == NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
-	CU_ASSERT((uint64_t)pdu.data_iov[1].iov_base == 0xFEEDBEEF);
-	CU_ASSERT(pdu.data_iov[1].iov_len == NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
-
-	CU_ASSERT(tcp_req.c2h_data_offset == (NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2) * 3);
-	CU_ASSERT(STAILQ_FIRST(&tqpair.queued_c2h_data_tcp_req) == &tcp_req);
-
-	/* 2nd C2H */
-	spdk_nvmf_tcp_send_c2h_data(&tqpair, &tcp_req);
-
-	CU_ASSERT(TAILQ_FIRST(&tqpair.send_queue) == &pdu);
-	TAILQ_REMOVE(&tqpair.send_queue, &pdu, tailq);
-	TAILQ_INSERT_TAIL(&tqpair.free_queue, &pdu, tailq);
-	tqpair.free_pdu_num++;
-
-	c2h_data = &pdu.hdr->c2h_data;
-	CU_ASSERT(c2h_data->datao == (NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2) * 3);
-	CU_ASSERT(c2h_data->datal = NVMF_TCP_PDU_MAX_C2H_DATA_SIZE);
-	CU_ASSERT(c2h_data->common.plen == sizeof(*c2h_data) + NVMF_TCP_PDU_MAX_C2H_DATA_SIZE);
-	CU_ASSERT(!(c2h_data->common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU));
-
-	CU_ASSERT(pdu.data_iovcnt == 2);
-	CU_ASSERT((uint64_t)pdu.data_iov[0].iov_base == 0xFEEDBEEF + NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
-	CU_ASSERT(pdu.data_iov[0].iov_len == NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
-	CU_ASSERT((uint64_t)pdu.data_iov[1].iov_base == 0xC0FFEE);
-	CU_ASSERT(pdu.data_iov[1].iov_len == NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
-
-	CU_ASSERT(tcp_req.c2h_data_offset == (NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2) * 5);
-	CU_ASSERT(STAILQ_FIRST(&tqpair.queued_c2h_data_tcp_req) == &tcp_req);
-
-	/* 3rd C2H */
-	spdk_nvmf_tcp_send_c2h_data(&tqpair, &tcp_req);
-
-	CU_ASSERT(TAILQ_FIRST(&tqpair.send_queue) == &pdu);
-	TAILQ_REMOVE(&tqpair.send_queue, &pdu, tailq);
-	CU_ASSERT(TAILQ_EMPTY(&tqpair.send_queue));
-
-	c2h_data = &pdu.hdr->c2h_data;
-	CU_ASSERT(c2h_data->datao == (NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2) * 5);
-	CU_ASSERT(c2h_data->datal = NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
-	CU_ASSERT(c2h_data->common.plen == sizeof(*c2h_data) + NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
+	CU_ASSERT(c2h_data->datao == 0);
+	CU_ASSERT(c2h_data->datal = 300);
+	CU_ASSERT(c2h_data->common.plen == sizeof(*c2h_data) + 300);
 	CU_ASSERT(c2h_data->common.flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU);
 
-	CU_ASSERT(pdu.data_iovcnt == 1);
-	CU_ASSERT((uint64_t)pdu.data_iov[0].iov_base == 0xC0FFEE + NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
-	CU_ASSERT(pdu.data_iov[0].iov_len == NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
-
-	CU_ASSERT(tcp_req.c2h_data_offset == NVMF_TCP_PDU_MAX_C2H_DATA_SIZE * 3);
-	CU_ASSERT(tqpair.c2h_data_pdu_cnt == 3);
-	CU_ASSERT(STAILQ_EMPTY(&tqpair.queued_c2h_data_tcp_req));
+	CU_ASSERT(pdu.data_iovcnt == 3);
+	CU_ASSERT((uint64_t)pdu.data_iov[0].iov_base == 0xDEADBEEF);
+	CU_ASSERT(pdu.data_iov[0].iov_len == 101);
+	CU_ASSERT((uint64_t)pdu.data_iov[1].iov_base == 0xFEEDBEEF);
+	CU_ASSERT(pdu.data_iov[1].iov_len == 100);
+	CU_ASSERT((uint64_t)pdu.data_iov[2].iov_base == 0xC0FFEE);
+	CU_ASSERT(pdu.data_iov[2].iov_len == 99);
 
 	spdk_thread_exit(thread);
 	spdk_thread_destroy(thread);
@@ -599,17 +543,15 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_ERROR;
 
 	tcp_req.req.iov[0].iov_base = (void *)0xDEADBEEF;
-	tcp_req.req.iov[0].iov_len = (NVMF_TCP_PDU_MAX_H2C_DATA_SIZE / 2) * 5;
+	tcp_req.req.iov[0].iov_len = 101;
 	tcp_req.req.iov[1].iov_base = (void *)0xFEEDBEEF;
-	tcp_req.req.iov[1].iov_len = NVMF_TCP_PDU_MAX_H2C_DATA_SIZE / 2;
+	tcp_req.req.iov[1].iov_len = 99;
 	tcp_req.req.iovcnt = 2;
-	tcp_req.req.length = NVMF_TCP_PDU_MAX_H2C_DATA_SIZE * 3;
+	tcp_req.req.length = 200;
 
 	tcp_req.req.cmd = (union nvmf_h2c_msg *)&tcp_req.cmd;
 	tcp_req.req.cmd->nvme_cmd.cid = 1;
-	tcp_req.req.length = NVMF_TCP_PDU_MAX_H2C_DATA_SIZE * 3;
 	tcp_req.ttag = 2;
-	tcp_req.next_expected_r2t_offset = NVMF_TCP_PDU_MAX_H2C_DATA_SIZE * 2;
 
 	TAILQ_INSERT_TAIL(&tqpair.state_queue[TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER],
 			  &tcp_req, state_link);
@@ -617,16 +559,16 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 	h2c_data = &pdu.hdr->h2c_data;
 	h2c_data->cccid = 1;
 	h2c_data->ttag = 2;
-	h2c_data->datao = NVMF_TCP_PDU_MAX_H2C_DATA_SIZE * 2;
-	h2c_data->datal = NVMF_TCP_PDU_MAX_H2C_DATA_SIZE;
+	h2c_data->datao = 0;
+	h2c_data->datal = 200;
 
 	spdk_nvmf_tcp_h2c_data_hdr_handle(&ttransport, &tqpair, &pdu);
 
 	CU_ASSERT(pdu.data_iovcnt == 2);
-	CU_ASSERT((uint64_t)pdu.data_iov[0].iov_base == 0xDEADBEEF + NVMF_TCP_PDU_MAX_H2C_DATA_SIZE * 2);
-	CU_ASSERT(pdu.data_iov[0].iov_len == NVMF_TCP_PDU_MAX_H2C_DATA_SIZE / 2);
+	CU_ASSERT((uint64_t)pdu.data_iov[0].iov_base == 0xDEADBEEF);
+	CU_ASSERT(pdu.data_iov[0].iov_len == 101);
 	CU_ASSERT((uint64_t)pdu.data_iov[1].iov_base == 0xFEEDBEEF);
-	CU_ASSERT(pdu.data_iov[1].iov_len == NVMF_TCP_PDU_MAX_H2C_DATA_SIZE / 2);
+	CU_ASSERT(pdu.data_iov[1].iov_len == 99);
 
 	CU_ASSERT(TAILQ_FIRST(&tqpair.state_queue[TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER]) ==
 		  &tcp_req);
@@ -673,9 +615,8 @@ test_nvmf_tcp_incapsule_data_handle(void)
 	for (i = TCP_REQUEST_STATE_FREE; i < TCP_REQUEST_NUM_STATES; i++) {
 		TAILQ_INIT(&tqpair.state_queue[i]);
 	}
-	TAILQ_INIT(&tqpair.free_queue);
+
 	TAILQ_INIT(&tqpair.send_queue);
-	STAILQ_INIT(&tqpair.queued_c2h_data_tcp_req);
 
 	TAILQ_INSERT_TAIL(&tqpair.state_queue[TCP_REQUEST_STATE_FREE], &tcp_req2, state_link);
 	tqpair.state_cntr[TCP_REQUEST_STATE_FREE]++;
