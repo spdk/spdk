@@ -43,6 +43,7 @@
 #include "spdk/string.h"
 #include "spdk/ftl.h"
 #include "spdk_internal/log.h"
+#include "spdk/nvme_ocssd.h"
 
 #include "bdev_ftl.h"
 #include "common.h"
@@ -763,8 +764,6 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct ftl_bdev_init_opts *
 	ftl_bdev->init_cb = cb;
 	ftl_bdev->init_arg = cb_arg;
 
-	opts.ctrlr = ctrlr;
-	opts.trid = bdev_opts->trid;
 	opts.mode = bdev_opts->mode;
 	opts.uuid = bdev_opts->uuid;
 	opts.name = ftl_bdev->bdev.name;
