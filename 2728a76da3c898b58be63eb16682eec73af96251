@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83fcf634_82905d19",
+        "filename": "autobuild.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-08T08:54:11Z",
+      "side": 1,
+      "message": "Similar to Jim\u0027s comment. Those depend heavily on what else was configured on a particular test system.\n\nThere could be cases where we want to run them on some systems while not on others (ex. jobs nvme_autotest and nvme_phy_autotest cover same configure flags). Yet I feel such decision should be done by each particular configuration for a job.\n\nI\u0027m fine if this patch would only consolidate the tests/flags that don\u0027t depend on configuration options. So the savings in test time you are describing would by having the consolidated tests ran just once on single job.\nMeanwhile configure dependent tests we would need to fine tune in job configs.\n\nOfftopic: @Seth would it be possible to generate output from scan-build which files were scanned, so that we could verify all files are (along with new ones) ?",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 59
+      },
+      "revId": "2728a76da3c898b58be63eb16682eec73af96251",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
