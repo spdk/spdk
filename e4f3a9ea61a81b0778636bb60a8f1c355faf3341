@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d864ebb6_2b8e2b1d",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 35
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-08T14:27:27Z",
+      "side": 1,
+      "message": "But how to change this condition to while loop ? \nFor example: while [ $parted_cmd print | grep -q gpt ]; do \nThis will fail on shellcheck",
+      "parentUuid": "fa20847b_4b843a6d",
+      "range": {
+        "startLine": 28,
+        "startChar": 2,
+        "endLine": 28,
+        "endChar": 46
+      },
+      "revId": "e4f3a9ea61a81b0778636bb60a8f1c355faf3341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "800072e9_ce281085",
         "filename": "test/vhost/integrity/integrity_vm.sh",
         "patchSetId": 35
@@ -45,6 +69,30 @@
       "revId": "e4f3a9ea61a81b0778636bb60a8f1c355faf3341",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87a816fc_f61c8ce6",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 35
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-08T14:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "800072e9_ce281085",
+      "range": {
+        "startLine": 29,
+        "startChar": 3,
+        "endLine": 29,
+        "endChar": 17
+      },
+      "revId": "e4f3a9ea61a81b0778636bb60a8f1c355faf3341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "b9390aee_4fa00953",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 35
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-08T14:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8be9c73c_d1349888",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 6
+      },
+      "revId": "e4f3a9ea61a81b0778636bb60a8f1c355faf3341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bb27605_d51670a9",
         "filename": "test/vhost/integrity/integrity_vm.sh",
         "patchSetId": 35
@@ -91,6 +163,30 @@
       "revId": "e4f3a9ea61a81b0778636bb60a8f1c355faf3341",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5547f2b6_eb547f87",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 35
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-08T14:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9bb27605_d51670a9",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 6
+      },
+      "revId": "e4f3a9ea61a81b0778636bb60a8f1c355faf3341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
