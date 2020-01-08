@@ -22,6 +22,30 @@
       "revId": "2728a76da3c898b58be63eb16682eec73af96251",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48a238ad_d7252b6a",
+        "filename": "autobuild.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-08T17:10:09Z",
+      "side": 1,
+      "message": "Thanks for the comment Tomek! I agree that we need to make sure that all compilation options are covered under scan-build (and the shared object build validation).\nIf I remember correctly, the goal of the unittest job was to move all of that into a single place to help weed out failing builds earlier in the build cycle. So my hope was to enable autobuild only on that machine. Currently that is the only job configured to run scan-build.\nJim\u0027s comment helped me to realize that we curently have at least one conflict that prevents us from doing that. That is between compressdev and RBD.\nI really like your idea about generating the output from scan-build about which files were touched. I will look into that. I think that is the only reliable way to enforce complete coverage for scan-build.",
+      "parentUuid": "83fcf634_82905d19",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 59
+      },
+      "revId": "2728a76da3c898b58be63eb16682eec73af96251",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
