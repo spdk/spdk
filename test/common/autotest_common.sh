@@ -207,11 +207,7 @@ if [ -f /usr/include/libpmem.h ] && [ $SPDK_TEST_REDUCE -eq 1 ]; then
 fi
 
 if [ -d /usr/include/rbd ] &&  [ -d /usr/include/rados ] && [ $SPDK_TEST_RBD -eq 1 ]; then
-	if [ $SPDK_TEST_ISAL -eq 0 ]; then
-		config_params+=' --with-rbd'
-	else
-		echo "rbd not enabled because isal is enabled."
-	fi
+	config_params+=' --with-rbd'
 fi
 
 if [ $SPDK_TEST_VPP -eq 1 ]; then
