@@ -54,7 +54,6 @@
 
 #define NVMF_TCP_PDU_MAX_H2C_DATA_SIZE	131072
 #define NVMF_TCP_PDU_MAX_C2H_DATA_SIZE	131072
-#define NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM  64  /* Maximal c2h_data pdu number for ecah tqpair */
 #define SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY 6
 #define SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR 4
 
@@ -216,8 +215,13 @@ struct spdk_nvmf_tcp_qpair {
 	TAILQ_HEAD(, nvme_tcp_pdu)		send_queue;
 	TAILQ_HEAD(, nvme_tcp_pdu)		free_queue;
 
-	struct nvme_tcp_pdu			*pdu;
-	struct nvme_tcp_pdu			*pdu_pool;
+	/* Arrays of in-capsule buffers, requests, and pdus.
+	 * Each array is 'resource_count' number of elements */
+	void					*bufs;
+	struct spdk_nvmf_tcp_req		*reqs;
+	struct nvme_tcp_pdu			*pdus;
+	uint32_t				resource_count;
+
 	uint16_t				free_pdu_num;
 
 	/* Queues to track the requests in all states */
@@ -229,21 +233,8 @@ struct spdk_nvmf_tcp_qpair {
 
 	uint8_t					cpda;
 
-	/* Array of size "max_queue_depth * InCapsuleDataSize" containing
-	 * buffers to be used for in capsule data.
-	 */
-	void					*buf;
-	void					*bufs;
-	struct spdk_nvmf_tcp_req		*req;
-	struct spdk_nvmf_tcp_req		*reqs;
-
 	bool					host_hdgst_enable;
 	bool					host_ddgst_enable;
-
-
-	/* The maximum number of I/O outstanding on this connection at one time */
-	uint16_t				max_queue_depth;
-
 
 	/** Specifies the maximum number of PDU-Data bytes per H2C Data Transfer PDU */
 	uint32_t				maxh2cdata;
@@ -449,17 +440,16 @@ spdk_nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
 	assert(err == 0);
 	spdk_nvmf_tcp_cleanup_all_states(tqpair);
 
-	if (tqpair->free_pdu_num != (tqpair->max_queue_depth + NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM)) {
+	if (tqpair->free_pdu_num != tqpair->resource_count) {
 		SPDK_ERRLOG("tqpair(%p) free pdu pool num is %u but should be %u\n", tqpair,
-			    tqpair->free_pdu_num,
-			    (tqpair->max_queue_depth + NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM));
+			    tqpair->free_pdu_num, tqpair->resource_count);
 		err++;
 	}
 
-	if (tqpair->state_cntr[TCP_REQUEST_STATE_FREE] != tqpair->max_queue_depth) {
+	if (tqpair->state_cntr[TCP_REQUEST_STATE_FREE] != tqpair->resource_count) {
 		SPDK_ERRLOG("tqpair(%p) free tcp request num is %u but should be %u\n", tqpair,
 			    tqpair->state_cntr[TCP_REQUEST_STATE_FREE],
-			    tqpair->max_queue_depth);
+			    tqpair->resource_count);
 		err++;
 	}
 
@@ -472,11 +462,9 @@ spdk_nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
 	if (err > 0) {
 		nvmf_tcp_dump_qpair_req_contents(tqpair);
 	}
-	spdk_dma_free(tqpair->pdu);
-	free(tqpair->pdu_pool);
-	free(tqpair->req);
+
+	spdk_dma_free(tqpair->pdus);
 	free(tqpair->reqs);
-	spdk_free(tqpair->buf);
 	spdk_free(tqpair->bufs);
 	free(tqpair->pdu_recv_buf.buf);
 	free(tqpair);
@@ -852,42 +840,46 @@ spdk_nvmf_tcp_qpair_write_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 }
 
 static int
-spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair, uint16_t size)
+spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair)
 {
-	int i;
-	struct spdk_nvmf_tcp_req *tcp_req;
-	struct spdk_nvmf_transport *transport = tqpair->qpair.transport;
+	uint32_t i;
+	struct spdk_nvmf_transport_opts *opts;
 	uint32_t in_capsule_data_size;
 
-	in_capsule_data_size = transport->opts.in_capsule_data_size;
-	if (transport->opts.dif_insert_or_strip) {
+	opts = &tqpair->qpair.transport->opts;
+
+	in_capsule_data_size = opts->in_capsule_data_size;
+	if (opts->dif_insert_or_strip) {
 		in_capsule_data_size = SPDK_BDEV_BUF_SIZE_WITH_MD(in_capsule_data_size);
 	}
 
-	if (!tqpair->qpair.sq_head_max) {
-		tqpair->req = calloc(1, sizeof(*tqpair->req));
-		if (!tqpair->req) {
-			SPDK_ERRLOG("Unable to allocate req on tqpair=%p.\n", tqpair);
+	tqpair->resource_count = opts->max_queue_depth;
+
+	tqpair->reqs = calloc(tqpair->resource_count, sizeof(*tqpair->reqs));
+	if (!tqpair->reqs) {
+		SPDK_ERRLOG("Unable to allocate reqs on tqpair=%p\n", tqpair);
+		return -1;
+	}
+
+	if (in_capsule_data_size) {
+		tqpair->bufs = spdk_zmalloc(tqpair->resource_count * in_capsule_data_size, 0x1000,
+					    NULL, SPDK_ENV_LCORE_ID_ANY,
+					    SPDK_MALLOC_DMA);
+		if (!tqpair->bufs) {
+			SPDK_ERRLOG("Unable to allocate bufs on tqpair=%p.\n", tqpair);
 			return -1;
 		}
+	}
 
-		if (in_capsule_data_size) {
-			tqpair->buf = spdk_zmalloc(in_capsule_data_size, 0x1000,
-						   NULL, SPDK_ENV_LCORE_ID_ANY,
-						   SPDK_MALLOC_DMA);
-			if (!tqpair->buf) {
-				SPDK_ERRLOG("Unable to allocate buf on tqpair=%p.\n", tqpair);
-				return -1;
-			}
-		}
+	for (i = 0; i < tqpair->resource_count; i++) {
+		struct spdk_nvmf_tcp_req *tcp_req = &tqpair->reqs[i];
 
-		tcp_req = tqpair->req;
-		tcp_req->ttag = 0;
+		tcp_req->ttag = i + 1;
 		tcp_req->req.qpair = &tqpair->qpair;
 
 		/* Set up memory to receive commands */
-		if (tqpair->buf) {
-			tcp_req->buf = tqpair->buf;
+		if (tqpair->bufs) {
+			tcp_req->buf = (void *)((uintptr_t)tqpair->bufs + (i * in_capsule_data_size));
 		}
 
 		/* Set the cmdn and rsp */
@@ -897,74 +889,29 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair, uint16
 		/* Initialize request state to FREE */
 		tcp_req->state = TCP_REQUEST_STATE_FREE;
 		TAILQ_INSERT_TAIL(&tqpair->state_queue[tcp_req->state], tcp_req, state_link);
-
-		tqpair->pdu = spdk_dma_malloc((NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM + 1) * sizeof(*tqpair->pdu), 0x1000,
-					      NULL);
-		if (!tqpair->pdu) {
-			SPDK_ERRLOG("Unable to allocate pdu on tqpair=%p.\n", tqpair);
-			return -1;
-		}
-
-		for (i = 0; i < 1 + NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM; i++) {
-			TAILQ_INSERT_TAIL(&tqpair->free_queue, &tqpair->pdu[i], tailq);
-		}
-
-		tqpair->pdu_recv_buf.size = (in_capsule_data_size + sizeof(struct spdk_nvme_tcp_cmd) + 2 *
-					     SPDK_NVME_TCP_DIGEST_LEN) * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
-		tqpair->pdu_recv_buf.buf = calloc(1, tqpair->pdu_recv_buf.size);
-		if (!tqpair->pdu_recv_buf.buf) {
-			SPDK_ERRLOG("Unable to allocate the pdu recv buf on tqpair=%p with size=%d\n", tqpair,
-				    tqpair->pdu_recv_buf.size);
-			return -1;
-		}
-		tqpair->pdu_in_progress.hdr = (union nvme_tcp_pdu_hdr *)tqpair->pdu_recv_buf.buf;
-	} else {
-		tqpair->reqs = calloc(size, sizeof(*tqpair->reqs));
-		if (!tqpair->reqs) {
-			SPDK_ERRLOG("Unable to allocate reqs on tqpair=%p\n", tqpair);
-			return -1;
-		}
-
-		if (in_capsule_data_size) {
-			tqpair->bufs = spdk_zmalloc(size * in_capsule_data_size, 0x1000,
-						    NULL, SPDK_ENV_LCORE_ID_ANY,
-						    SPDK_MALLOC_DMA);
-			if (!tqpair->bufs) {
-				SPDK_ERRLOG("Unable to allocate bufs on tqpair=%p.\n", tqpair);
-				return -1;
-			}
-		}
-
-		for (i = 0; i < size; i++) {
-			struct spdk_nvmf_tcp_req *tcp_req = &tqpair->reqs[i];
-
-			tcp_req->ttag = i + 1;
-			tcp_req->req.qpair = &tqpair->qpair;
-
-			/* Set up memory to receive commands */
-			if (tqpair->bufs) {
-				tcp_req->buf = (void *)((uintptr_t)tqpair->bufs + (i * in_capsule_data_size));
-			}
-
-			/* Set the cmdn and rsp */
-			tcp_req->req.rsp = (union nvmf_c2h_msg *)&tcp_req->rsp;
-			tcp_req->req.cmd = (union nvmf_h2c_msg *)&tcp_req->cmd;
-
-			/* Initialize request state to FREE */
-			tcp_req->state = TCP_REQUEST_STATE_FREE;
-			TAILQ_INSERT_TAIL(&tqpair->state_queue[tcp_req->state], tcp_req, state_link);
-		}
-
-		tqpair->pdu_pool = calloc(size, sizeof(*tqpair->pdu_pool));
-		if (!tqpair->pdu_pool) {
-			SPDK_ERRLOG("Unable to allocate pdu pool on tqpair =%p.\n", tqpair);
-			return -1;
-		}
-
-		for (i = 0; i < size; i++) {
-			TAILQ_INSERT_TAIL(&tqpair->free_queue, &tqpair->pdu_pool[i], tailq);
-		}
+		tqpair->state_cntr[TCP_REQUEST_STATE_FREE]++;
 	}
+
+	tqpair->pdus = spdk_dma_malloc(tqpair->resource_count * sizeof(*tqpair->pdus), 0x1000, NULL);
+	if (!tqpair->pdus) {
+		SPDK_ERRLOG("Unable to allocate pdu pool on tqpair =%p.\n", tqpair);
+		return -1;
+	}
+
+	for (i = 0; i < tqpair->resource_count; i++) {
+		TAILQ_INSERT_TAIL(&tqpair->free_queue, &tqpair->pdus[i], tailq);
+		tqpair->free_pdu_num++;
+	}
+
+	tqpair->pdu_recv_buf.size = (in_capsule_data_size + sizeof(struct spdk_nvme_tcp_cmd) + 2 *
+				     SPDK_NVME_TCP_DIGEST_LEN) * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
+	tqpair->pdu_recv_buf.buf = calloc(1, tqpair->pdu_recv_buf.size);
+	if (!tqpair->pdu_recv_buf.buf) {
+		SPDK_ERRLOG("Unable to allocate the pdu recv buf on tqpair=%p with size=%d\n", tqpair,
+			    tqpair->pdu_recv_buf.size);
+		return -1;
+	}
+	tqpair->pdu_in_progress.hdr = (union nvme_tcp_pdu_hdr *)tqpair->pdu_recv_buf.buf;
 
 	return 0;
 }
@@ -1037,9 +984,8 @@ _spdk_nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
 	}
 
 	tqpair->sock = sock;
-	tqpair->max_queue_depth = 1;
-	tqpair->free_pdu_num = tqpair->max_queue_depth + NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM;
-	tqpair->state_cntr[TCP_REQUEST_STATE_FREE] = tqpair->max_queue_depth;
+	tqpair->free_pdu_num = 0;
+	tqpair->state_cntr[TCP_REQUEST_STATE_FREE] = 0;
 	tqpair->port = port;
 	tqpair->qpair.transport = transport;
 
@@ -2244,8 +2190,7 @@ spdk_nvmf_tcp_handle_pending_c2h_data_queue(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	struct spdk_nvmf_tcp_req *tcp_req;
 
-	while (!STAILQ_EMPTY(&tqpair->queued_c2h_data_tcp_req) &&
-	       (tqpair->c2h_data_pdu_cnt < NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM)) {
+	while (!STAILQ_EMPTY(&tqpair->queued_c2h_data_tcp_req) && tqpair->free_pdu_num > 0) {
 		tcp_req = STAILQ_FIRST(&tqpair->queued_c2h_data_tcp_req);
 		spdk_nvmf_tcp_send_c2h_data(tqpair, tcp_req);
 	}
@@ -2256,8 +2201,6 @@ spdk_nvmf_tcp_queue_c2h_data(struct spdk_nvmf_tcp_req *tcp_req,
 			     struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	tcp_req->c2h_data_pdu_num = spdk_nvmf_tcp_calc_c2h_data_pdu_num(tcp_req);
-
-	assert(tcp_req->c2h_data_pdu_num < NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM);
 
 	STAILQ_INSERT_TAIL(&tqpair->queued_c2h_data_tcp_req, tcp_req, link);
 	spdk_nvmf_tcp_handle_pending_c2h_data_queue(tqpair);
@@ -2549,7 +2492,7 @@ spdk_nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		return -1;
 	}
 
-	rc = spdk_nvmf_tcp_qpair_init_mem_resource(tqpair, 1);
+	rc = spdk_nvmf_tcp_qpair_init_mem_resource(tqpair);
 	if (rc < 0) {
 		SPDK_ERRLOG("Cannot init memory resource info for tqpair=%p\n", tqpair);
 		return -1;
@@ -2695,26 +2638,6 @@ spdk_nvmf_tcp_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 	return spdk_nvmf_tcp_qpair_get_trid(qpair, trid, 0);
 }
 
-static int
-spdk_nvmf_tcp_qpair_set_sq_size(struct spdk_nvmf_qpair *qpair)
-{
-	struct spdk_nvmf_tcp_qpair     *tqpair;
-	int rc;
-	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
-
-	rc = spdk_nvmf_tcp_qpair_init_mem_resource(tqpair, tqpair->qpair.sq_head_max);
-	if (!rc) {
-		tqpair->max_queue_depth += tqpair->qpair.sq_head_max;
-		tqpair->free_pdu_num += tqpair->qpair.sq_head_max;
-		tqpair->state_cntr[TCP_REQUEST_STATE_FREE] += tqpair->qpair.sq_head_max;
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "The queue depth=%u for tqpair=%p\n",
-			      tqpair->max_queue_depth, tqpair);
-	}
-
-	return rc;
-
-}
-
 #define SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH 128
 #define SPDK_NVMF_TCP_DEFAULT_AQ_DEPTH 128
 #define SPDK_NVMF_TCP_DEFAULT_MAX_QPAIRS_PER_CTRLR 128
@@ -2770,7 +2693,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 	.qpair_get_local_trid = spdk_nvmf_tcp_qpair_get_local_trid,
 	.qpair_get_peer_trid = spdk_nvmf_tcp_qpair_get_peer_trid,
 	.qpair_get_listen_trid = spdk_nvmf_tcp_qpair_get_listen_trid,
-	.qpair_set_sqsize = spdk_nvmf_tcp_qpair_set_sq_size,
 };
 
 SPDK_NVMF_TRANSPORT_REGISTER(tcp, &spdk_nvmf_transport_tcp);
