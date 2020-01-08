@@ -366,9 +366,7 @@ nvmf_tcp_request_free(struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
 
-	if (!tcp_req) {
-		return;
-	}
+	assert(tcp_req != NULL);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tcp_req=%p will be freed\n", tcp_req);
 	ttransport = SPDK_CONTAINEROF(tcp_req->req.qpair->transport,
@@ -1446,6 +1444,12 @@ spdk_nvmf_tcp_pdu_c2h_data_complete(void *cb_arg)
 }
 
 static void
+spdk_nvmf_tcp_r2t_complete(void *cb_arg)
+{
+	/* Nothing to do. */
+}
+
+static void
 spdk_nvmf_tcp_send_r2t_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 			   struct spdk_nvmf_tcp_req *tcp_req)
 {
@@ -1473,7 +1477,7 @@ spdk_nvmf_tcp_send_r2t_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
 		      "tcp_req(%p) on tqpair(%p), r2t_info: cccid=%u, ttag=%u, r2to=%u, r2tl=%u\n",
 		      tcp_req, tqpair, r2t->cccid, r2t->ttag, r2t->r2to, r2t->r2tl);
-	spdk_nvmf_tcp_qpair_write_pdu(tqpair, rsp_pdu, spdk_nvmf_tcp_pdu_cmd_complete, NULL);
+	spdk_nvmf_tcp_qpair_write_pdu(tqpair, rsp_pdu, spdk_nvmf_tcp_r2t_complete, tcp_req);
 }
 
 static void
