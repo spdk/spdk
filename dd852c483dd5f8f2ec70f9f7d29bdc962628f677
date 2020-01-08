@@ -22,6 +22,30 @@
       "revId": "dd852c483dd5f8f2ec70f9f7d29bdc962628f677",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "357f4ea5_3068465b",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2020-01-08T09:56:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a0c8b39e_36883f6c",
+      "range": {
+        "startLine": 382,
+        "startChar": 5,
+        "endLine": 382,
+        "endChar": 8
+      },
+      "revId": "dd852c483dd5f8f2ec70f9f7d29bdc962628f677",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
