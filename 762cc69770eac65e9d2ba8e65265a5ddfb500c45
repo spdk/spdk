@@ -46,6 +46,30 @@
       "revId": "762cc69770eac65e9d2ba8e65265a5ddfb500c45",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11af713a_f5e3bc0c",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-08T10:52:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "302d6a58_bd502721",
+      "range": {
+        "startLine": 29,
+        "startChar": 1,
+        "endLine": 29,
+        "endChar": 58
+      },
+      "revId": "762cc69770eac65e9d2ba8e65265a5ddfb500c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
