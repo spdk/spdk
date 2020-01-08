@@ -1109,13 +1109,18 @@ _spdk_blob_load_snapshot_cpl(void *cb_arg, struct spdk_blob *snapshot, int bserr
 }
 
 static void
-_spdk_blob_load_backing_dev(void *cb_arg)
+_spdk_blob_load_backing_dev(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_load_ctx	*ctx = cb_arg;
 	struct spdk_blob		*blob = ctx->blob;
 	const void			*value;
 	size_t				len;
 	int				rc;
+
+	if (bserrno) {
+		_spdk_blob_load_final(ctx, bserrno);
+		return;
+	}
 
 	if (spdk_blob_is_thin_provisioned(blob)) {
 		rc = _spdk_blob_get_xattr_value(blob, BLOB_SNAPSHOT, &value, &len, true);
@@ -1190,7 +1195,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
-	_spdk_blob_load_backing_dev(ctx);
+	_spdk_blob_load_backing_dev(seq, ctx, 0);
 }
 
 /* Load a blob from disk given a blobid */
