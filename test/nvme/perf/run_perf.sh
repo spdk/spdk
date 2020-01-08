@@ -128,15 +128,27 @@ do
 			create_fio_config $k $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
 			desc="Running Test: Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH} io_plugin/driver=$PLUGIN"
 
+			cat <<- EOF >> $BASE_DIR/config.fio
+				rw=$RW
+				rwmixread=$MIX
+				iodepth=$qd
+				bs=$BLK_SIZE
+				runtime=$RUNTIME
+				ramp_time=$RAMP_TIME
+				numjobs=$NUMJOBS
+				time_based=1
+				description=$desc
+				log_avg_msec=250
+				EOF
+
+			echo "USING CONFIG:"
+			cat $BASE_DIR/config.fio
+
 			if [[ "$PLUGIN" =~ "spdk-plugin" ]]; then
-				run_spdk_nvme_fio $PLUGIN "--runtime=$RUNTIME" "--ramp_time=$RAMP_TIME" "--bs=$BLK_SIZE"\
-				"--rw=$RW" "--rwmixread=$MIX" "--iodepth=$qd" "--output=$NVME_FIO_RESULTS" "--time_based=1"\
-				"--numjobs=$NUMJOBS" "--description=$desc" "-log_avg_msec=250"\
+				run_spdk_nvme_fio $PLUGIN "--output=$NVME_FIO_RESULTS" \
 				"--write_lat_log=$BASE_DIR/results/$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
 			else
-				run_nvme_fio $fio_ioengine_opt "--runtime=$RUNTIME" "--ramp_time=$RAMP_TIME" "--bs=$BLK_SIZE"\
-				"--rw=$RW" "--rwmixread=$MIX" "--iodepth=$qd" "--output=$NVME_FIO_RESULTS" "--time_based=1"\
-				"--numjobs=$NUMJOBS" "--description=$desc" "-log_avg_msec=250"\
+				run_nvme_fio $fio_ioengine_opt "--output=$NVME_FIO_RESULTS" \
 				"--write_lat_log=$BASE_DIR/results/$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
 			fi
 
