@@ -1176,7 +1176,6 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	target = malloc(sizeof(struct io_target));
 	if (!target) {
 		fprintf(stderr, "Unable to allocate memory for new target.\n");
-		/* Return immediately because all mallocs will presumably fail after this */
 		return -ENOMEM;
 	}
 
@@ -1184,7 +1183,6 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	if (!target->name) {
 		fprintf(stderr, "Unable to allocate memory for target name.\n");
 		free(target);
-		/* Return immediately because all mallocs will presumably fail after this */
 		return -ENOMEM;
 	}
 
@@ -1245,11 +1243,10 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 }
 
 static void
-bdevperf_construct_targets(void)
+_bdevperf_construct_targets(struct spdk_bdev *bdev)
 {
-	struct spdk_bdev *bdev;
-	int rc;
 	uint8_t core_idx, core_count_for_each_bdev;
+	int rc;
 
 	if (g_every_core_for_each_bdev == false) {
 		core_count_for_each_bdev = 1;
@@ -1257,34 +1254,34 @@ bdevperf_construct_targets(void)
 		core_count_for_each_bdev = spdk_env_get_core_count();
 	}
 
+	for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
+		rc = bdevperf_construct_target(bdev);
+		if (rc != 0) {
+			return;
+		}
+	}
+}
+
+static void
+bdevperf_construct_targets(void)
+{
+	struct spdk_bdev *bdev;
+
 	if (g_target_bdev_name != NULL) {
 		bdev = spdk_bdev_get_by_name(g_target_bdev_name);
-		if (!bdev) {
+		if (bdev) {
+			_bdevperf_construct_targets(bdev);
+		} else {
 			fprintf(stderr, "Unable to find bdev '%s'\n", g_target_bdev_name);
-			goto end;
-		}
-
-		for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
-			rc = bdevperf_construct_target(bdev);
-			if (rc != 0) {
-				goto end;
-			}
 		}
 	} else {
 		bdev = spdk_bdev_first_leaf();
 		while (bdev != NULL) {
-			for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
-				rc = bdevperf_construct_target(bdev);
-				if (rc != 0) {
-					goto end;
-				}
-			}
-
+			_bdevperf_construct_targets(bdev);
 			bdev = spdk_bdev_next_leaf(bdev);
 		}
 	}
 
-end:
 	bdevperf_test();
 }
 
