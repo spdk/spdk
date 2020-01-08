@@ -34,11 +34,11 @@
 BASE_DIR=$(readlink -f $(dirname $0))
 . $BASE_DIR/common.sh
 
-disk_names=$(get_disks $PLUGIN)
-disks_numa=$(get_numa_node $PLUGIN "$disk_names")
-cores=$(get_cores "$CPUS_ALLOWED")
-no_cores_array=($cores)
-no_cores=${#no_cores_array[@]}
+DISK_NAMES=$(get_disks $PLUGIN)
+DISKS_NUMA=$(get_numa_node $PLUGIN "$DISK_NAMES")
+CORES=$(get_cores "$CPUS_ALLOWED")
+NO_CORES_ARRAY=($CORES)
+NO_CORES=${#NO_CORES_ARRAY[@]}
 
 if $PRECONDITIONING; then
 	HUGEMEM=8192 $ROOT_DIR/scripts/setup.sh
@@ -51,14 +51,14 @@ fi
 if [ $PLUGIN = "kernel-classic-polling" ]; then
 	$ROOT_DIR/scripts/setup.sh reset
 	fio_ioengine_opt="--ioengine=pvsync2 --hipri=100"
-	for disk in $disk_names; do
+	for disk in $DISK_NAMES; do
 		echo -1 > /sys/block/$disk/queue/io_poll_delay
 	done
 #Kernel Hybrid Polling ioengine parameter
 elif [ $PLUGIN = "kernel-hybrid-polling" ]; then
 	$ROOT_DIR/scripts/setup.sh reset
 	fio_ioengine_opt="--ioengine=pvsync2 --hipri=100"
-	for disk in $disk_names; do
+	for disk in $DISK_NAMES; do
 		echo 0 > /sys/block/$disk/queue/io_poll_delay
 	done
 elif [ $PLUGIN = "kernel-libaio" ]; then
@@ -70,12 +70,12 @@ elif [ $PLUGIN = "kernel-io-uring" ]; then
 
 	modprobe -rv nvme
 	modprobe nvme poll_queues=8
-	wait_for_nvme_reload $disk_names
+	wait_for_nvme_reload $DISK_NAMES
 
 	backup_dir="/tmp/nvme_param_bak"
 	mkdir -p $backup_dir
 
-	for disk in $disk_names; do
+	for disk in $DISK_NAMES; do
 		echo "INFO: Backing up device parameters for $disk"
 		sysfs=/sys/block/$disk/queue
 		mkdir -p $backup_dir/$disk
@@ -86,7 +86,7 @@ elif [ $PLUGIN = "kernel-io-uring" ]; then
 	done
 
 
-	for disk in $disk_names; do
+	for disk in $DISK_NAMES; do
 		echo "INFO: Setting device parameters for $disk"
 		sysfs=/sys/block/$disk/queue
 		echo 0 > $sysfs/iostats
@@ -101,7 +101,7 @@ mkdir -p $BASE_DIR/results/$result_dir
 result_file=$BASE_DIR/results/$result_dir/perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${date}.csv
 unset iops_disks bw mean_lat_disks_usec p99_lat_disks_usec p99_99_lat_disks_usec stdev_disks_usec
 echo "run-time,ramp-time,fio-plugin,QD,block-size,num-cpu-cores,workload,workload-mix" > $result_file
-printf "%s,%s,%s,%s,%s,%s,%s,%s\n" $RUNTIME $RAMP_TIME $PLUGIN $IODEPTH $BLK_SIZE $no_cores $RW $MIX >> $result_file
+printf "%s,%s,%s,%s,%s,%s,%s,%s\n" $RUNTIME $RAMP_TIME $PLUGIN $IODEPTH $BLK_SIZE $NO_CORES $RW $MIX >> $result_file
 echo "num_of_disks,iops,avg_lat[usec],p99[usec],p99.99[usec],stdev[usec],avg_slat[usec],avg_clat[usec],bw[Kib/s]" >> $result_file
 #Run each workolad $REPEAT_NO times
 for (( j=0; j < REPEAT_NO; j++ ))
@@ -123,9 +123,9 @@ do
 			run_bdevperf > $NVME_FIO_RESULTS
 			iops_disks[$k]=$((${iops_disks[$k]} + $(get_bdevperf_results iops)))
 			bw[$k]=$((${bw[$k]} + $(get_bdevperf_results bw_Kibs)))
-			cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${no_cores}cpus_${date}_${k}_disks_${j}.output
+			cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${date}_${k}_disks_${j}.output
 		else
-			create_fio_config $k $PLUGIN "$disk_names" "$disks_numa" "$cores"
+			create_fio_config $k $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
 			desc="Running Test: Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH} io_plugin/driver=$PLUGIN"
 
 			if [ $PLUGIN = "nvme" ] || [ $PLUGIN = "bdev" ]; then
@@ -150,8 +150,8 @@ do
 			mean_slat_disks_usec[$k]=$((${mean_slat_disks_usec[$k]} + $(get_results mean_slat_usec $MIX)))
 			mean_clat_disks_usec[$k]=$((${mean_clat_disks_usec[$k]} + $(get_results mean_clat_usec $MIX)))
 			bw[$k]=$((${bw[$k]} + $(get_results bw_Kibs $MIX)))
-			cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${no_cores}cpus_${date}_${k}_disks_${j}.json
-			cp $BASE_DIR/config.fio $BASE_DIR/results/$result_dir/config_${MIX}_${PLUGIN}_${no_cores}cpus_${date}_${k}_disks_${j}.fio
+			cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${date}_${k}_disks_${j}.json
+			cp $BASE_DIR/config.fio $BASE_DIR/results/$result_dir/config_${MIX}_${PLUGIN}_${NO_CORES}cpus_${date}_${k}_disks_${j}.fio
 			rm -f $BASE_DIR/config.fio
 		fi
 
@@ -197,9 +197,9 @@ if [ $PLUGIN = "kernel-io-uring" ]; then
 	# Reload the nvme driver so that other test runs are not affected
 	modprobe -rv nvme
 	modprobe nvme
-	wait_for_nvme_reload $disk_names
+	wait_for_nvme_reload $DISK_NAMES
 
-	for disk in $disk_names; do
+	for disk in $DISK_NAMES; do
 		echo "INFO: Restoring device parameters for $disk"
 		sysfs=/sys/block/$disk/queue
 		cat $backup_dir/$disk/iostats > $sysfs/iostats
