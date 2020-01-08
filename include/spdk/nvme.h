@@ -1401,6 +1401,48 @@ int spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr,
 				     spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
+ * Get a specific log page from the NVMe controller.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * This function allows specifying extra fields in cdw10 and cdw11 such as
+ * Retain Asynchronous Event and Log Specific Field.
+ *
+ * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
+ * commands submitted through this function.
+ *
+ * \sa spdk_nvme_ctrlr_is_log_page_supported()
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ * \param log_page The log page identifier.
+ * \param nsid Depending on the log page, this may be 0, a namespace identifier,
+ * or SPDK_NVME_GLOBAL_NS_TAG.
+ * \param payload The pointer to the payload buffer.
+ * \param payload_size The size of payload buffer.
+ * \param offset Offset in bytes within the log page to start retrieving log page
+ * data. May only be non-zero if the controller supports extended data for Get Log
+ * Page as reported in the controller data log page attributes.
+ * \param cdw10 Value to specify for cdw10.  Specify 0 for numdl - it will be
+ * set by this function based on the payload_size parameter.  Specify 0 for lid -
+ * it will be set by this function based on the log_page parameter.
+ * \param cdw11 Value to specify for cdw11.  Specify 0 for numdu - it will be
+ * set by this function based on the payload_size.
+ * \param cdw14 Value to specify for cdw14.
+ * \param cb_fn Callback function to invoke when the log page has been retrieved.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errno if resources could not be
+ * allocated for this request, -ENXIO if the admin qpair is failed at the transport layer.
+ */
+int spdk_nvme_ctrlr_cmd_get_log_page_ext(struct spdk_nvme_ctrlr *ctrlr,
+					 uint8_t log_page, uint32_t nsid,
+					 void *payload, uint32_t payload_size,
+					 uint64_t offset,
+					 uint32_t cdw10, uint32_t cdw11, uint32_t cdw14,
+					 spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
  * Abort a specific previously-submitted NVMe command.
  *
  * \sa spdk_nvme_ctrlr_register_timeout_callback()
