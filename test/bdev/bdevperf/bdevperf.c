@@ -224,6 +224,74 @@ verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len, int bloc
 	return true;
 }
 
+static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target *target)
+{
+	struct bdevperf_task *task;
+
+	task = calloc(1, sizeof(struct bdevperf_task));
+	if (!task) {
+		fprintf(stderr, "Failed to allocate task from memory\n");
+		return NULL;
+	}
+
+	task->buf = spdk_zmalloc(target->buf_size, spdk_bdev_get_buf_align(target->bdev), NULL,
+				 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	if (!task->buf) {
+		fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
+		free(task);
+		return NULL;
+	}
+
+	if (spdk_bdev_is_md_separate(target->bdev)) {
+		task->md_buf = spdk_zmalloc(target->io_size_blocks *
+					    spdk_bdev_get_md_size(target->bdev), 0, NULL,
+					    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		if (!task->md_buf) {
+			fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
+			free(task->buf);
+			free(task);
+			return NULL;
+		}
+	}
+
+	task->target = target;
+
+	return task;
+}
+
+static int
+bdevperf_construct_targets_tasks(void)
+{
+	struct io_target_group *group;
+	struct io_target *target;
+	struct bdevperf_task *task;
+	int i, task_num = g_queue_depth;
+
+	if (g_reset) {
+		task_num += 1;
+	}
+
+	/* Initialize task list for each target */
+	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
+		TAILQ_FOREACH(target, &group->targets, link) {
+			for (i = 0; i < task_num; i++) {
+				task = bdevperf_construct_task_on_target(target);
+				if (task == NULL) {
+					goto ret;
+				}
+				TAILQ_INSERT_TAIL(&target->task_list, task, link);
+			}
+		}
+	}
+
+	return 0;
+
+ret:
+	fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
+	fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
+	return -1;
+}
+
 static void
 bdevperf_free_target(struct io_target *target)
 {
@@ -1136,74 +1204,6 @@ performance_statistics_thread(void *arg)
 	g_show_performance_period_num++;
 	performance_dump(g_show_performance_period_num * g_show_performance_period_in_usec,
 			 g_show_performance_ema_period);
-	return -1;
-}
-
-static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target *target)
-{
-	struct bdevperf_task *task;
-
-	task = calloc(1, sizeof(struct bdevperf_task));
-	if (!task) {
-		fprintf(stderr, "Failed to allocate task from memory\n");
-		return NULL;
-	}
-
-	task->buf = spdk_zmalloc(target->buf_size, spdk_bdev_get_buf_align(target->bdev), NULL,
-				 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-	if (!task->buf) {
-		fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
-		free(task);
-		return NULL;
-	}
-
-	if (spdk_bdev_is_md_separate(target->bdev)) {
-		task->md_buf = spdk_zmalloc(target->io_size_blocks *
-					    spdk_bdev_get_md_size(target->bdev), 0, NULL,
-					    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-		if (!task->md_buf) {
-			fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
-			free(task->buf);
-			free(task);
-			return NULL;
-		}
-	}
-
-	task->target = target;
-
-	return task;
-}
-
-static int
-bdevperf_construct_targets_tasks(void)
-{
-	struct io_target_group *group;
-	struct io_target *target;
-	struct bdevperf_task *task;
-	int i, task_num = g_queue_depth;
-
-	if (g_reset) {
-		task_num += 1;
-	}
-
-	/* Initialize task list for each target */
-	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
-		TAILQ_FOREACH(target, &group->targets, link) {
-			for (i = 0; i < task_num; i++) {
-				task = bdevperf_construct_task_on_target(target);
-				if (task == NULL) {
-					goto ret;
-				}
-				TAILQ_INSERT_TAIL(&target->task_list, task, link);
-			}
-		}
-	}
-
-	return 0;
-
-ret:
-	fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
-	fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
 	return -1;
 }
 
