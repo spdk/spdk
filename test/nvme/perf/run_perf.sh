@@ -34,6 +34,9 @@
 BASE_DIR=$(readlink -f $(dirname $0))
 . $BASE_DIR/common.sh
 
+trap 'rm -f *.state $BASE_DIR/bdev.conf; print_backtrace' ERR SIGTERM SIGABRT
+verify_disk_number
+
 DISK_NAMES=$(get_disks $PLUGIN)
 DISKS_NUMA=$(get_numa_node $PLUGIN "$DISK_NAMES")
 CORES=$(get_cores "$CPUS_ALLOWED")
