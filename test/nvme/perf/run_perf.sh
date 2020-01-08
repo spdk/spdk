@@ -113,13 +113,13 @@ do
 		echo "" >> $BASE_DIR/config.fio
 		#The SPDK fio plugin supports submitting/completing I/Os to multiple SSDs from a single thread.
 		#Therefore, the per thread queue depth is set to the desired IODEPTH/device X the number of devices per thread.
-		if [ "$PLUGIN" = "nvme" ] || [ "$PLUGIN" = "bdev" ] && [ "$NOIOSCALING" = false ]; then
+		if [[ "$PLUGIN" =~ "spdk-plugin" ]] && [[ "$NOIOSCALING" = false ]]; then
 			qd=$(( IODEPTH * k ))
 		else
 			qd=$IODEPTH
 		fi
 
-		if [ $PLUGIN = "bdevperf" ]; then
+		if [ $PLUGIN = "spdk-perf-bdev" ]; then
 			run_bdevperf > $NVME_FIO_RESULTS
 			iops_disks[$k]=$((${iops_disks[$k]} + $(get_bdevperf_results iops)))
 			bw[$k]=$((${bw[$k]} + $(get_bdevperf_results bw_Kibs)))
@@ -128,7 +128,7 @@ do
 			create_fio_config $k $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
 			desc="Running Test: Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH} io_plugin/driver=$PLUGIN"
 
-			if [ $PLUGIN = "nvme" ] || [ $PLUGIN = "bdev" ]; then
+			if [[ "$PLUGIN" =~ "spdk-plugin" ]]; then
 				run_spdk_nvme_fio $PLUGIN "--runtime=$RUNTIME" "--ramp_time=$RAMP_TIME" "--bs=$BLK_SIZE"\
 				"--rw=$RW" "--rwmixread=$MIX" "--iodepth=$qd" "--output=$NVME_FIO_RESULTS" "--time_based=1"\
 				"--numjobs=$NUMJOBS" "--description=$desc" "-log_avg_msec=250"\
@@ -166,7 +166,7 @@ for (( k=DISKNO; k >= 1; k-=2 ))
 do
 	iops_disks[$k]=$((${iops_disks[$k]} / REPEAT_NO))
 
-	if [ $PLUGIN != "bdevperf" ]; then
+	if [[ $PLUGIN != "spdk-perf-bdev" ]]; then
 		mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} / REPEAT_NO))
 		p99_lat_disks_usec[$k]=$((${p99_lat_disks_usec[$k]} / REPEAT_NO))
 		p99_99_lat_disks_usec[$k]=$((${p99_99_lat_disks_usec[$k]} / REPEAT_NO))
