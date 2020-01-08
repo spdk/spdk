@@ -16,6 +16,24 @@
       "revId": "25415bcb5024025cdd9fd3a31f5e51a073052ebf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7bb959c_19fe1e69",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-08T12:32:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8cae6f82_3d07994f",
+      "revId": "25415bcb5024025cdd9fd3a31f5e51a073052ebf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
