@@ -328,6 +328,21 @@ function wait_for_nvme_reload() {
 	shopt -q extglob
 }
 
+function verify_disk_number() {
+	# Check if we have appropriate number of disks to carry out the test
+	if [[ $PLUGIN == "bdev" ]] || [[ $PLUGIN == "bdevperf" ]]; then
+		$ROOT_DIR/scripts/gen_nvme.sh >> $BASE_DIR/bdev.conf
+	fi
+
+	disks=($(get_disks $PLUGIN))
+	if [[ $DISKNO == "ALL" ]] || [[ $DISKNO == "all" ]]; then
+		DISKNO=${#disks[@]}
+	elif [[ $DISKNO -gt ${#disks[@]} ]] || [[ ! $DISKNO =~ ^[0-9]+$ ]]; then
+		echo "error: Required devices number ($DISKNO) is not a valid number or it's larger than the number of devices found (${#disks[@]})"
+		false
+	fi
+}
+
 function usage()
 {
 	set +x
@@ -397,17 +412,3 @@ while getopts 'h-:' optchar; do
 		*) usage $0 "Invalid argument '$optchar'"; exit 1 ;;
 	esac
 done
-
-trap 'rm -f *.state $BASE_DIR/bdev.conf; print_backtrace' ERR SIGTERM SIGABRT
-mkdir -p $BASE_DIR/results
-if [[ $PLUGIN == "bdev" ]] || [[ $PLUGIN == "bdevperf" ]]; then
-	$ROOT_DIR/scripts/gen_nvme.sh >> $BASE_DIR/bdev.conf
-fi
-
-disks=($(get_disks $PLUGIN))
-if [[ $DISKNO == "ALL" ]] || [[ $DISKNO == "all" ]]; then
-	DISKNO=${#disks[@]}
-elif [[ $DISKNO -gt ${#disks[@]} ]] || [[ ! $DISKNO =~ ^[0-9]+$ ]]; then
-	echo "error: Required devices number ($DISKNO) is not a valid number or it's larger than the number of devices found (${#disks[@]})"
-	exit 1
-fi
