@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4c53e95_31e3e5a7",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 2217,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-08T21:43:19Z",
+      "side": 1,
+      "message": "if we get -ENOMEM here, let\u0027s just return here - I know that this will end up working out OK as-is since the writev will also return -ENOMEM and that will get returned, but I think it\u0027s better to just return immediately to make it more clear",
+      "revId": "fe5c371d1880baab1f87db4083527ac57620b886",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
