@@ -574,19 +574,13 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 		exit 1
 	fi
 
-	if [[ "${CONFIG[RBD]}" = "y" ]]; then
-		echo "ISAL and RBD cannot co-exist currently so disabling ISAL and compression."
-		CONFIG[ISAL]=n
-		CONFIG[REDUCE]=n
-	else
-		cd $rootdir/isa-l
-		ISAL_LOG=$rootdir/isa-l/spdk-isal.log
-		echo -n "Configuring ISA-L (logfile: $ISAL_LOG)..."
-		./autogen.sh &> $ISAL_LOG
-		./configure CFLAGS="-fPIC -g -O2" --enable-shared=no >> $ISAL_LOG 2>&1
-		echo "done."
-		cd $rootdir
-	fi
+	cd $rootdir/isa-l
+	ISAL_LOG=$rootdir/isa-l/spdk-isal.log
+	echo -n "Configuring ISA-L (logfile: $ISAL_LOG)..."
+	./autogen.sh &> $ISAL_LOG
+	./configure CFLAGS="-fPIC -g -O2" --enable-shared=no >> $ISAL_LOG 2>&1
+	echo "done."
+	cd $rootdir
 fi
 
 if [[ "${CONFIG[PMDK]}" = "y" ]]; then
