@@ -38,7 +38,7 @@ C_SRCS = bdev_nvme.c bdev_nvme_rpc.c nvme_rpc.c common.c bdev_ocssd.c bdev_ocssd
 C_SRCS-$(CONFIG_NVME_CUSE) += bdev_nvme_cuse_rpc.c
 
 ifeq ($(OS),Linux)
-C_SRCS += bdev_ftl.c bdev_ftl_rpc.c vbdev_opal.c vbdev_opal_rpc.c
+C_SRCS += vbdev_opal.c vbdev_opal_rpc.c
 endif
 LIBNAME = bdev_nvme
 
