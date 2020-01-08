@@ -10,21 +10,21 @@ BDEVPERF_DIR=$ROOT_DIR/test/bdev/bdevperf
 . $ROOT_DIR/test/common/autotest_common.sh
 NVME_FIO_RESULTS=$BASE_DIR/result.json
 
-PRECONDITIONING=true
-FIO_BIN="/usr/src/fio/fio"
-RUNTIME=600
-PLUGIN="nvme"
-RAMP_TIME=30
-BLK_SIZE=4096
 RW=randrw
 MIX=100
 IODEPTH=256
-DISKNO=1
-ONEWORKLOAD=false
-CPUS_ALLOWED=1
+BLK_SIZE=4096
+RUNTIME=600
+RAMP_TIME=30
 NUMJOBS=1
 REPEAT_NO=3
+FIO_BIN="/usr/src/fio/fio"
+PLUGIN="nvme"
+DISKNO=1
+CPUS_ALLOWED=1
 NOIOSCALING=false
+PRECONDITIONING=true
+ONEWORKLOAD=false
 
 function is_bdf_not_mounted() {
 	local bdf=$1
@@ -331,21 +331,36 @@ function usage()
 	echo "Run NVMe PMD/BDEV performance test. Change options for easier debug and setup configuration"
 	echo "Usage: $(basename $1) [options]"
 	echo "-h, --help                Print help and exit"
-	echo "    --run-time=TIME[s]    Tell fio to run the workload for the specified period of time. [default=$RUNTIME]"
-	echo "    --ramp-time=TIME[s]   Fio will run the specified workload for this amount of time before logging any performance numbers. [default=$RAMP_TIME]"
-	echo "    --fio-bin=PATH        Path to fio binary. [default=$FIO_BIN]"
-	echo "    --driver=STR          Use 'bdev' or 'nvme' for spdk driver with fio_plugin,"
-	echo "                          'kernel-libaio', 'kernel-classic-polling', 'kernel-hybrid-polling' or"
-	echo "                          'kernel-io-uring' for kernel driver. [default=$PLUGIN]"
-	echo "    --max-disk=INT,ALL    Number of disks to test on, this will run multiple workloads with increasing number of disk each run, if =ALL then test on all found disk. [default=$DISKNO]"
-	echo "    --disk-no=INT,ALL     Number of disks to test on, this will run one workload on selected number od disks, it discards max-disk setting, if =ALL then test on all found disk"
+	echo
+	echo "Workload parameters:"
 	echo "    --rw=STR              Type of I/O pattern. Accepted values are randrw,rw. [default=$RW]"
 	echo "    --rwmixread=INT       Percentage of a mixed workload that should be reads. [default=$MIX]"
 	echo "    --iodepth=INT         Number of I/Os to keep in flight against the file. [default=$IODEPTH]"
-	echo "    --cpu-allowed=INT     Comma-separated list of CPU cores used to run the workload. [default=$CPUS_ALLOWED]"
-	echo "    --repeat-no=INT       How many times to repeat each workload. [default=$REPEAT_NO]"
 	echo "    --block-size=INT      The  block  size  in  bytes  used for I/O units. [default=$BLK_SIZE]"
+	echo "    --run-time=TIME[s]    Tell fio to run the workload for the specified period of time. [default=$RUNTIME]"
+	echo "    --ramp-time=TIME[s]   Fio will run the specified workload for this amount of time before"
+	echo "                          logging any performance numbers. [default=$RAMP_TIME]. Applicable only for fio-based tests."
 	echo "    --numjobs=INT         Create the specified number of clones of this job. [default=$NUMJOBS]"
+	echo "                          Applicable only for fio-based tests."
+	echo "    --repeat-no=INT       How many times to repeat workload test. [default=$REPEAT_NO]"
+	echo "                          Test result will be an average of repeated test runs."
+	echo "    --fio-bin=PATH        Path to fio binary. [default=$FIO_BIN]"
+	echo "                          Applicable only for fio-based tests."
+	echo
+	echo "Test setup parameters:"
+	echo "    --driver=STR          Selects tool used for testing. Choices available:"
+	echo "                             - nvme (SPDK nvme fio plugin)"
+	echo "                             - bdev (SPDK bdev fio plugin)"
+	echo "                             - bdevperf (SPDK bdevperf)"
+	echo "                             - kernel-classic-polling"
+	echo "                             - kernel-hybrid-polling"
+	echo "                             - kernel-libaio"
+	echo "                             - kernel-io-uring"
+	echo "    --disk-no=INT,ALL     Number of disks to test on, this will run one workload on selected number od disks,"
+	echo "                          it discards max-disk setting, if =ALL then test on all found disk. [default=$DISKNO]"
+	echo "    --max-disk=INT,ALL    Number of disks to test on, this will run multiple workloads with increasing number of disk each run."
+	echo "                          If =ALL then test on all found disk. [default=$DISKNO]"
+	echo "    --cpu-allowed=INT     Comma-separated list of CPU cores used to run the workload. [default=$CPUS_ALLOWED]"
 	echo "    --no-preconditioning  Skip preconditioning"
 	echo "    --no-io-scaling       Do not scale iodepth for each device in SPDK fio plugin. [default=$NOIOSCALING]"
 	set -x
@@ -356,21 +371,21 @@ while getopts 'h-:' optchar; do
 		-)
 		case "$OPTARG" in
 			help) usage $0; exit 0 ;;
-			run-time=*) RUNTIME="${OPTARG#*=}" ;;
-			ramp-time=*) RAMP_TIME="${OPTARG#*=}" ;;
-			fio-bin=*) FIO_BIN="${OPTARG#*=}" ;;
-			max-disk=*) DISKNO="${OPTARG#*=}" ;;
-			disk-no=*) DISKNO="${OPTARG#*=}"; ONEWORKLOAD=true ;;
-			driver=*) PLUGIN="${OPTARG#*=}" ;;
 			rw=*) RW="${OPTARG#*=}" ;;
 			rwmixread=*) MIX="${OPTARG#*=}" ;;
 			iodepth=*) IODEPTH="${OPTARG#*=}" ;;
 			block-size=*) BLK_SIZE="${OPTARG#*=}" ;;
-			no-preconditioning) PRECONDITIONING=false ;;
-			no-io-scaling) NOIOSCALING=true ;;
-			cpu-allowed=*) CPUS_ALLOWED="${OPTARG#*=}" ;;
+			run-time=*) RUNTIME="${OPTARG#*=}" ;;
+			ramp-time=*) RAMP_TIME="${OPTARG#*=}" ;;
 			numjobs=*) NUMJOBS="${OPTARG#*=}" ;;
 			repeat-no=*) REPEAT_NO="${OPTARG#*=}" ;;
+			fio-bin=*) FIO_BIN="${OPTARG#*=}" ;;
+			driver=*) PLUGIN="${OPTARG#*=}" ;;
+			disk-no=*) DISKNO="${OPTARG#*=}"; ONEWORKLOAD=true ;;
+			max-disk=*) DISKNO="${OPTARG#*=}" ;;
+			cpu-allowed=*) CPUS_ALLOWED="${OPTARG#*=}" ;;
+			no-preconditioning) PRECONDITIONING=false ;;
+			no-io-scaling) NOIOSCALING=true ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'"; exit 1 ;;
 		esac
 		;;
