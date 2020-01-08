@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "15ee0a16_4919e0b6",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-08T06:20:10Z",
+      "side": 1,
+      "message": "Hi Hailiang,\n\nI\u0027m reading iSCSI spec and work on using two queues correctly.\nHowever it\u0027s much harder than I expected and will not complete in this month.\n\nOn the other hand, it looks that only a single fuzz_iscsi_io_ctx is enough.\nCan we remove io_ctx_array, free_io_ctx, and outstanding_io_ctx from fuzz_iscsi_dev_ctx and an instance of fuzz_iscsi_io_ctx to fuzz_iscsi_dev_ctx instead?",
+      "range": {
+        "startLine": 108,
+        "startChar": 0,
+        "endLine": 110,
+        "endChar": 0
+      },
+      "revId": "c31d2122fac5cbfce8b5afeb2877abbcfccb8d8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3963fc60_e40d40d2",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 46
