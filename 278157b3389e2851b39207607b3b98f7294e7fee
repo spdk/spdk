@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ae6c63e_5d2c2145",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 669,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-08T16:39:29Z",
+      "side": 1,
+      "message": "Wow, somebody has been writing too much python and bash.",
+      "revId": "278157b3389e2851b39207607b3b98f7294e7fee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
