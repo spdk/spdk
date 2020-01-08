@@ -481,7 +481,7 @@ ftl_band_age(const struct ftl_band *band)
 size_t
 ftl_band_num_usable_lbks(const struct ftl_band *band)
 {
-	return band->num_zones * ftl_dev_lbks_in_zone(band->dev);
+	return band->num_zones * ftl_get_num_blocks_in_zone(band->dev);
 }
 
 size_t
@@ -527,7 +527,7 @@ ftl_band_lbkoff_from_addr(struct ftl_band *band, struct ftl_addr addr)
 {
 	assert(addr.zone_id == band->id);
 	assert(addr.pu < ftl_dev_num_punits(band->dev));
-	return addr.pu * ftl_dev_lbks_in_zone(band->dev) + addr.offset;
+	return addr.pu * ftl_get_num_blocks_in_zone(band->dev) + addr.offset;
 }
 
 struct ftl_addr
@@ -560,7 +560,7 @@ ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_
 	addr.offset  += num_stripes * dev->xfer_size;
 	num_lbks -= num_stripes * dev->xfer_size * band->num_zones;
 
-	if (addr.offset > ftl_dev_lbks_in_zone(dev)) {
+	if (addr.offset > ftl_get_num_blocks_in_zone(dev)) {
 		return ftl_to_addr(FTL_ADDR_INVALID);
 	}
 
@@ -570,7 +570,7 @@ ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_
 		/* needs to be increased by xfer_size */
 		if (ftl_band_zone_is_last(band, zone)) {
 			addr.offset += dev->xfer_size;
-			if (addr.offset > ftl_dev_lbks_in_zone(dev)) {
+			if (addr.offset > ftl_get_num_blocks_in_zone(dev)) {
 				return ftl_to_addr(FTL_ADDR_INVALID);
 			}
 		}
@@ -584,7 +584,7 @@ ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_
 
 	if (num_lbks) {
 		addr.offset += num_lbks;
-		if (addr.offset > ftl_dev_lbks_in_zone(dev)) {
+		if (addr.offset > ftl_get_num_blocks_in_zone(dev)) {
 			return ftl_to_addr(FTL_ADDR_INVALID);
 		}
 	}
@@ -622,9 +622,9 @@ ftl_band_addr_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 	struct spdk_ftl_dev *dev = band->dev;
 	uint64_t punit;
 
-	punit = lbkoff / ftl_dev_lbks_in_zone(dev);
+	punit = lbkoff / ftl_get_num_blocks_in_zone(dev);
 
-	addr.offset = lbkoff % ftl_dev_lbks_in_zone(dev);
+	addr.offset = lbkoff % ftl_get_num_blocks_in_zone(dev);
 	addr.zone_id = band->id;
 	addr.pu = punit;
 
