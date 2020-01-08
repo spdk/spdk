@@ -1866,7 +1866,7 @@ ftl_process_relocs(struct spdk_ftl_dev *dev)
 	if (ftl_dev_needs_defrag(dev)) {
 		band = ftl_select_defrag_band(dev);
 		if (band) {
-			ftl_reloc_add(dev->reloc, band, 0, ftl_num_band_lbks(dev), 0, true);
+			ftl_reloc_add(dev->reloc, band, 0, ftl_get_num_blocks_in_band(dev), 0, true);
 			ftl_trace_defrag_band(dev, band);
 		}
 	}

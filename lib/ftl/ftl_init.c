@@ -119,7 +119,7 @@ ftl_band_init_md(struct ftl_band *band)
 {
 	struct ftl_lba_map *lba_map = &band->lba_map;
 
-	lba_map->vld = spdk_bit_array_create(ftl_num_band_lbks(band->dev));
+	lba_map->vld = spdk_bit_array_create(ftl_get_num_blocks_in_band(band->dev));
 	if (!lba_map->vld) {
 		return -ENOMEM;
 	}
@@ -474,10 +474,10 @@ ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *bdev_desc
 	 * inside the cache can be overwritten, the band it's stored on has to be closed. Plus one
 	 * extra block is needed to store the header.
 	 */
-	if (spdk_bdev_get_num_blocks(bdev) < ftl_num_band_lbks(dev) * 2 + 1) {
+	if (spdk_bdev_get_num_blocks(bdev) < ftl_get_num_blocks_in_band(dev) * 2 + 1) {
 		SPDK_ERRLOG("Insufficient number of blocks for write buffer cache (available: %"
 			    PRIu64", required: %"PRIu64")\n", spdk_bdev_get_num_blocks(bdev),
-			    ftl_num_band_lbks(dev) * 2 + 1);
+			    ftl_get_num_blocks_in_band(dev) * 2 + 1);
 		return -1;
 	}
 
@@ -529,7 +529,7 @@ ftl_lba_map_request_ctor(struct spdk_mempool *mp, void *opaque, void *obj, unsig
 	struct spdk_ftl_dev *dev = opaque;
 
 	request->segments = spdk_bit_array_create(spdk_divide_round_up(
-				    ftl_num_band_lbks(dev), FTL_NUM_LBA_IN_BLOCK));
+				    ftl_get_num_blocks_in_band(dev), FTL_NUM_LBA_IN_BLOCK));
 }
 
 static int

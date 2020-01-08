@@ -469,7 +469,7 @@ ftl_dev_num_punits(const struct spdk_ftl_dev *dev)
 }
 
 static inline uint64_t
-ftl_num_band_lbks(const struct spdk_ftl_dev *dev)
+ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
 {
 	return ftl_dev_num_punits(dev) * ftl_dev_lbks_in_zone(dev);
 }
@@ -477,7 +477,7 @@ ftl_num_band_lbks(const struct spdk_ftl_dev *dev)
 static inline size_t
 ftl_vld_map_size(const struct spdk_ftl_dev *dev)
 {
-	return (size_t)spdk_divide_round_up(ftl_num_band_lbks(dev), CHAR_BIT);
+	return (size_t)spdk_divide_round_up(ftl_get_num_blocks_in_band(dev), CHAR_BIT);
 }
 
 static inline bool

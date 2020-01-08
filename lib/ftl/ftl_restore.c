@@ -387,7 +387,7 @@ ftl_restore_l2p(struct ftl_band *band)
 	uint64_t lba;
 	size_t i;
 
-	for (i = 0; i < ftl_num_band_lbks(band->dev); ++i) {
+	for (i = 0; i < ftl_get_num_blocks_in_band(band->dev); ++i) {
 		if (!spdk_bit_array_get(band->lba_map.vld, i)) {
 			continue;
 		}

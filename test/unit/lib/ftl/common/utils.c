@@ -86,7 +86,7 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 	LIST_INSERT_HEAD(&dev->shut_bands, band, list_entry);
 	CIRCLEQ_INIT(&band->zones);
 
-	band->lba_map.vld = spdk_bit_array_create(ftl_num_band_lbks(dev));
+	band->lba_map.vld = spdk_bit_array_create(ftl_get_num_blocks_in_band(dev));
 	SPDK_CU_ASSERT_FATAL(band->lba_map.vld != NULL);
 
 	band->zone_buf = calloc(ftl_dev_num_punits(dev), sizeof(*band->zone_buf));

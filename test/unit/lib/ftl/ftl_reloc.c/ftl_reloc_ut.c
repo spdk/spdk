@@ -87,7 +87,7 @@ ftl_band_acquire_lba_map(struct ftl_band *band)
 size_t
 ftl_lba_map_num_lbks(const struct spdk_ftl_dev *dev)
 {
-	return spdk_divide_round_up(ftl_num_band_lbks(dev) * sizeof(uint64_t), FTL_BLOCK_SIZE);
+	return spdk_divide_round_up(ftl_get_num_blocks_in_band(dev) * sizeof(uint64_t), FTL_BLOCK_SIZE);
 }
 
 int
@@ -270,11 +270,11 @@ test_reloc_iter_full(void)
 	breloc = &reloc->brelocs[0];
 	band = breloc->band;
 
-	set_band_valid_map(band, 0, ftl_num_band_lbks(dev));
+	set_band_valid_map(band, 0, ftl_get_num_blocks_in_band(dev));
 
-	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0, true);
+	ftl_reloc_add(reloc, band, 0, ftl_get_num_blocks_in_band(dev), 0, true);
 
-	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_num_band_lbks(dev));
+	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_get_num_blocks_in_band(dev));
 
 	num_iters = ftl_dev_num_punits(dev) *
 		    (ftl_dev_lbks_in_zone(dev) / reloc->xfer_size);
@@ -297,7 +297,7 @@ test_reloc_iter_full(void)
 	}
 
 	/* num_lbks should remain intact since all the blocks are valid */
-	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_num_band_lbks(dev));
+	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_get_num_blocks_in_band(dev));
 	breloc->state = FTL_BAND_RELOC_STATE_INACTIVE;
 
 	cleanup_reloc(dev, reloc);
@@ -316,7 +316,7 @@ test_reloc_empty_band(void)
 	breloc = &reloc->brelocs[0];
 	band = breloc->band;
 
-	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0, true);
+	ftl_reloc_add(reloc, band, 0, ftl_get_num_blocks_in_band(dev), 0, true);
 
 	CU_ASSERT_EQUAL(breloc->num_lbks, 0);
 
@@ -337,20 +337,20 @@ test_reloc_full_band(void)
 	breloc = &reloc->brelocs[0];
 	band = breloc->band;
 	num_moves = MAX_RELOC_QDEPTH * reloc->xfer_size;
-	num_iters = ftl_num_band_lbks(dev) / num_moves;
+	num_iters = ftl_get_num_blocks_in_band(dev) / num_moves;
 
-	set_band_valid_map(band, 0, ftl_num_band_lbks(dev));
+	set_band_valid_map(band, 0, ftl_get_num_blocks_in_band(dev));
 
-	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0, true);
+	ftl_reloc_add(reloc, band, 0, ftl_get_num_blocks_in_band(dev), 0, true);
 
-	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_num_band_lbks(dev));
+	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_get_num_blocks_in_band(dev));
 
 	ftl_reloc_prep(breloc);
 	add_to_active_queue(reloc, breloc);
 
 	for (i = 1; i <= num_iters; ++i) {
 		single_reloc_move(breloc);
-		num_lbk = ftl_num_band_lbks(dev) - (i * num_moves);
+		num_lbk = ftl_get_num_blocks_in_band(dev) - (i * num_moves);
 		CU_ASSERT_EQUAL(breloc->num_lbks, num_lbk);
 
 	}
@@ -380,19 +380,19 @@ test_reloc_scatter_band(void)
 
 	breloc = &reloc->brelocs[0];
 	band = breloc->band;
-	num_iters = spdk_divide_round_up(ftl_num_band_lbks(dev), MAX_RELOC_QDEPTH * 2);
+	num_iters = spdk_divide_round_up(ftl_get_num_blocks_in_band(dev), MAX_RELOC_QDEPTH * 2);
 
-	for (i = 0; i < ftl_num_band_lbks(dev); ++i) {
+	for (i = 0; i < ftl_get_num_blocks_in_band(dev); ++i) {
 		if (i % 2) {
 			set_band_valid_map(band, i, 1);
 		}
 	}
 
-	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0, true);
+	ftl_reloc_add(reloc, band, 0, ftl_get_num_blocks_in_band(dev), 0, true);
 	ftl_reloc_prep(breloc);
 	add_to_active_queue(reloc, breloc);
 
-	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_num_band_lbks(dev));
+	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_get_num_blocks_in_band(dev));
 
 	for (i = 0; i < num_iters ; ++i) {
 		single_reloc_move(breloc);
@@ -424,7 +424,7 @@ test_reloc_zone(void)
 	num_io = MAX_RELOC_QDEPTH * reloc->xfer_size;
 	num_iters = ftl_dev_lbks_in_zone(dev) / num_io;
 
-	set_band_valid_map(band, 0, ftl_num_band_lbks(dev));
+	set_band_valid_map(band, 0, ftl_get_num_blocks_in_band(dev));
 
 	ftl_reloc_add(reloc, band, ftl_dev_lbks_in_zone(dev) * 3,
 		      ftl_dev_lbks_in_zone(dev), 1, false);
