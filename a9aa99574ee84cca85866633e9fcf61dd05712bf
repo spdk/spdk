@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57761e99_e4b7343f",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-08T10:26:02Z",
+      "side": 1,
+      "message": "The cast here is unnecessary. Delete it from the functions below too.",
+      "range": {
+        "startLine": 311,
+        "startChar": 38,
+        "endLine": 311,
+        "endChar": 73
+      },
+      "revId": "a9aa99574ee84cca85866633e9fcf61dd05712bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7001f15c_47362963",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-08T10:26:02Z",
+      "side": 1,
+      "message": "Add a newline between the declaration and the rest of the function.",
+      "revId": "a9aa99574ee84cca85866633e9fcf61dd05712bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b898b454_737dc7a0",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-08T10:26:02Z",
+      "side": 1,
+      "message": "I think this parameter is no longer needed.",
+      "range": {
+        "startLine": 322,
+        "startChar": 1,
+        "endLine": 322,
+        "endChar": 15
+      },
+      "revId": "a9aa99574ee84cca85866633e9fcf61dd05712bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa29c7eb_170d7265",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-08T10:26:02Z",
+      "side": 1,
+      "message": "Missing newline.",
+      "revId": "a9aa99574ee84cca85866633e9fcf61dd05712bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eee45aca_e58dda47",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-08T10:26:02Z",
+      "side": 1,
+      "message": "Can we get rid of this? We could allocate the appropriate RPC request in the initialize_*_req function and then free it during free_*_req.",
+      "range": {
+        "startLine": 423,
+        "startChar": 0,
+        "endLine": 425,
+        "endChar": 18
+      },
+      "revId": "a9aa99574ee84cca85866633e9fcf61dd05712bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0224fdf8_214a0e87",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-08T10:26:02Z",
+      "side": 1,
+      "message": "I think we could also get use g_rpc_req inside these as well.",
+      "range": {
+        "startLine": 474,
+        "startChar": 20,
+        "endLine": 474,
+        "endChar": 25
+      },
+      "revId": "a9aa99574ee84cca85866633e9fcf61dd05712bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
