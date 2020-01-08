@@ -2106,12 +2106,14 @@ cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 	buf->buf_size = CACHE_BUFFER_SIZE;
 	buf->offset = offset;
 
-	pthread_spin_lock(&g_caches_lock);
-	if (file->tree->present_mask == 0) {
-		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
+	if (file->tree) {
+		pthread_spin_lock(&g_caches_lock);
+		if (file->tree->present_mask == 0) {
+			TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
+		}
+		file->tree = spdk_tree_insert_buffer(file->tree, buf);
+		pthread_spin_unlock(&g_caches_lock);
 	}
-	file->tree = spdk_tree_insert_buffer(file->tree, buf);
-	pthread_spin_unlock(&g_caches_lock);
 
 	return buf;
 }
@@ -2879,7 +2881,7 @@ cache_free_buffers(struct spdk_file *file)
 	BLOBFS_TRACE(file, "free=%s\n", file->name);
 	pthread_spin_lock(&file->lock);
 	pthread_spin_lock(&g_caches_lock);
-	if (file->tree->present_mask == 0) {
+	if (!file->tree || file->tree->present_mask == 0) {
 		pthread_spin_unlock(&g_caches_lock);
 		pthread_spin_unlock(&file->lock);
 		return;
@@ -2888,7 +2890,7 @@ cache_free_buffers(struct spdk_file *file)
 
 	TAILQ_REMOVE(&g_caches, file, cache_tailq);
 	/* If not freed, put it in the end of the queue */
-	if (file->tree->present_mask != 0) {
+	if (file->tree && file->tree->present_mask != 0) {
 		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
 	}
 	file->last = NULL;
