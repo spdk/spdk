@@ -2879,7 +2879,7 @@ cache_free_buffers(struct spdk_file *file)
 	BLOBFS_TRACE(file, "free=%s\n", file->name);
 	pthread_spin_lock(&file->lock);
 	pthread_spin_lock(&g_caches_lock);
-	if (file->tree->present_mask == 0) {
+	if (!file->tree || file->tree->present_mask == 0) {
 		pthread_spin_unlock(&g_caches_lock);
 		pthread_spin_unlock(&file->lock);
 		return;
@@ -2888,7 +2888,7 @@ cache_free_buffers(struct spdk_file *file)
 
 	TAILQ_REMOVE(&g_caches, file, cache_tailq);
 	/* If not freed, put it in the end of the queue */
-	if (file->tree->present_mask != 0) {
+	if (!file->tree && file->tree->present_mask != 0) {
 		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
 	}
 	file->last = NULL;
