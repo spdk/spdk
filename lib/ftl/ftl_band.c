@@ -101,7 +101,7 @@ ftl_vld_map_num_lbks(const struct spdk_ftl_dev *dev)
 size_t
 ftl_lba_map_num_lbks(const struct spdk_ftl_dev *dev)
 {
-	return spdk_divide_round_up(ftl_num_band_lbks(dev) * sizeof(uint64_t), FTL_BLOCK_SIZE);
+	return spdk_divide_round_up(ftl_get_num_blocks_in_band(dev) * sizeof(uint64_t), FTL_BLOCK_SIZE);
 }
 
 size_t
@@ -139,7 +139,7 @@ ftl_band_write_failed(struct ftl_band *band)
 
 	band->high_prio = 1;
 
-	ftl_reloc_add(dev->reloc, band, 0, ftl_num_band_lbks(dev), 1, true);
+	ftl_reloc_add(dev->reloc, band, 0, ftl_get_num_blocks_in_band(dev), 1, true);
 	ftl_band_set_state(band, FTL_BAND_STATE_CLOSED);
 }
 
@@ -288,7 +288,7 @@ ftl_pack_tail_md(struct ftl_band *band)
 
 	/* Clear out the buffer */
 	memset(tail, 0, ftl_tail_md_hdr_num_lbks() * FTL_BLOCK_SIZE);
-	tail->num_lbks = ftl_num_band_lbks(dev);
+	tail->num_lbks = ftl_get_num_blocks_in_band(dev);
 
 	pthread_spin_lock(&lba_map->lock);
 	spdk_bit_array_store_mask(lba_map->vld, vld_offset);
@@ -343,7 +343,7 @@ ftl_unpack_tail_md(struct ftl_band *band)
 		return FTL_MD_NO_MD;
 	}
 
-	if (tail->num_lbks != ftl_num_band_lbks(dev)) {
+	if (tail->num_lbks != ftl_get_num_blocks_in_band(dev)) {
 		return FTL_MD_INVALID_SIZE;
 	}
 
@@ -1147,7 +1147,7 @@ ftl_band_clear_lba_map(struct ftl_band *band)
 
 	/* For open band all lba map segments are already cached */
 	assert(band->state == FTL_BAND_STATE_PREP);
-	num_segments = spdk_divide_round_up(ftl_num_band_lbks(band->dev), FTL_NUM_LBA_IN_BLOCK);
+	num_segments = spdk_divide_round_up(ftl_get_num_blocks_in_band(band->dev), FTL_NUM_LBA_IN_BLOCK);
 	ftl_lba_map_set_segment_state(&band->lba_map, 0, num_segments, FTL_LBA_MAP_SEG_CACHED);
 
 	lba_map->num_vld = 0;
@@ -1158,5 +1158,5 @@ ftl_lba_map_pool_elem_size(struct spdk_ftl_dev *dev)
 {
 	/* Map pool element holds the whole tail md + segments map */
 	return ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE +
-	       spdk_divide_round_up(ftl_num_band_lbks(dev), FTL_NUM_LBA_IN_BLOCK);
+	       spdk_divide_round_up(ftl_get_num_blocks_in_band(dev), FTL_NUM_LBA_IN_BLOCK);
 }

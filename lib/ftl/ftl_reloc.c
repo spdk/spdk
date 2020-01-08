@@ -611,7 +611,7 @@ ftl_band_reloc_init(struct ftl_reloc *reloc, struct ftl_band_reloc *breloc,
 	breloc->band = band;
 	breloc->parent = reloc;
 
-	breloc->reloc_map = spdk_bit_array_create(ftl_num_band_lbks(reloc->dev));
+	breloc->reloc_map = spdk_bit_array_create(ftl_get_num_blocks_in_band(reloc->dev));
 	if (!breloc->reloc_map) {
 		SPDK_ERRLOG("Failed to initialize reloc map");
 		return -1;
@@ -822,7 +822,7 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 
 	/* If the band is coming from the defrag process, mark it appropriately */
 	if (is_defrag) {
-		assert(offset == 0 && num_lbks == ftl_num_band_lbks(band->dev));
+		assert(offset == 0 && num_lbks == ftl_get_num_blocks_in_band(band->dev));
 		reloc->num_defrag_bands++;
 		breloc->defrag = true;
 	}
