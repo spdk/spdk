@@ -107,7 +107,6 @@ struct nvme_tcp_pdu {
 	uint8_t						ch_valid_bytes;
 	uint8_t						psh_valid_bytes;
 	uint8_t						psh_len;
-	int						ref;
 
 	nvme_tcp_qpair_xfer_complete_cb			cb_fn;
 	void						*cb_arg;
