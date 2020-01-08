@@ -87,6 +87,8 @@ static bool g_every_core_for_each_bdev = false;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
+static int bdevperf_test(void);
+static void bdevperf_test_done(void);
 static void bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task);
 static void performance_dump(uint64_t io_time_in_usec, uint64_t ema_period);
 static void rpc_perform_tests_cb(void);
@@ -380,23 +382,30 @@ bdevperf_construct_targets(void)
 		bdev = spdk_bdev_get_by_name(g_target_bdev_name);
 		if (!bdev) {
 			fprintf(stderr, "Unable to find bdev '%s'\n", g_target_bdev_name);
-			return;
+			goto end;
 		}
 
 		rc = _bdevperf_construct_targets(bdev);
 		if (rc != 0) {
-			return;
+			goto end;
 		}
 	} else {
 		bdev = spdk_bdev_first_leaf();
 		while (bdev != NULL) {
 			rc = _bdevperf_construct_targets(bdev);
 			if (rc != 0) {
-				return;
+				goto end;
 			}
 
 			bdev = spdk_bdev_next_leaf(bdev);
 		}
+	}
+
+end:
+	rc = bdevperf_test();
+	if (rc) {
+		g_run_rc = rc;
+		bdevperf_test_done();
 	}
 }
 
@@ -1301,8 +1310,6 @@ io_target_group_destroy(void *io_device, void *ctx_buf)
 static void
 _bdevperf_init_thread_done(void *ctx)
 {
-	int rc;
-
 	g_master_thread = spdk_get_thread();
 
 	if (g_wait_for_tests) {
@@ -1311,13 +1318,6 @@ _bdevperf_init_thread_done(void *ctx)
 	}
 
 	bdevperf_construct_targets();
-
-	rc = bdevperf_test();
-	if (rc) {
-		g_run_rc = rc;
-		bdevperf_test_done();
-		return;
-	}
 }
 
 static void
@@ -1455,8 +1455,6 @@ rpc_perform_tests_cb(void)
 static void
 rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	int rc;
-
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "perform_tests method requires no parameters");
@@ -1471,12 +1469,6 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 	g_request = request;
 
 	bdevperf_construct_targets();
-
-	rc = bdevperf_test();
-	if (rc) {
-		g_run_rc = rc;
-		bdevperf_test_done();
-	}
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
 
