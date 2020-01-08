@@ -359,16 +359,6 @@ spdk_nvmf_transport_opts_init(const char *transport_name,
 }
 
 int
-spdk_nvmf_transport_qpair_set_sqsize(struct spdk_nvmf_qpair *qpair)
-{
-	if (qpair->transport->ops->qpair_set_sqsize) {
-		return qpair->transport->ops->qpair_set_sqsize(qpair);
-	}
-
-	return 0;
-}
-
-int
 spdk_nvmf_transport_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 					struct spdk_nvmf_transport *transport,
 					struct spdk_nvmf_transport_poll_group_stat **stat)

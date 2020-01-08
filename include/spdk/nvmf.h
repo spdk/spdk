@@ -251,11 +251,6 @@ struct spdk_nvmf_transport_ops {
 				     struct spdk_nvme_transport_id *trid);
 
 	/*
-	 * set the submission queue size of the queue pair
-	 */
-	int (*qpair_set_sqsize)(struct spdk_nvmf_qpair *qpair);
-
-	/*
 	 * Get transport poll group statistics
 	 */
 	int (*poll_group_get_stat)(struct spdk_nvmf_tgt *tgt,
