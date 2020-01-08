@@ -902,9 +902,7 @@ int	nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr,
 int	nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries);
 
 static inline struct nvme_request *
-nvme_allocate_request(struct spdk_nvme_qpair *qpair,
-		      const struct nvme_payload *payload, uint32_t payload_size,
-		      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+nvme_allocate_request(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_request *req;
 
@@ -915,6 +913,14 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 
 	STAILQ_REMOVE_HEAD(&qpair->free_req, stailq);
 
+	return req;
+}
+
+static inline void
+nvme_initialize_request(struct nvme_request *req,
+			const struct nvme_payload *payload, uint32_t payload_size,
+			spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
 	/*
 	 * Only memset/zero fields that need it.  All other fields
 	 *  will be initialized appropriately either later in this
@@ -934,8 +940,6 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 	req->payload_size = payload_size;
 	req->pid = g_spdk_nvme_pid;
 	req->submit_tick = 0;
-
-	return req;
 }
 
 static inline struct nvme_request *
@@ -944,10 +948,18 @@ nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair,
 			     spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_payload payload;
+	struct nvme_request *req;
 
 	payload = NVME_PAYLOAD_CONTIG(buffer, NULL);
 
-	return nvme_allocate_request(qpair, &payload, payload_size, cb_fn, cb_arg);
+	req = nvme_allocate_request(qpair);
+	if (req == NULL) {
+		return NULL;
+	}
+
+	nvme_initialize_request(req, &payload, payload_size, cb_fn, cb_arg);
+
+	return req;
 }
 
 static inline struct nvme_request *

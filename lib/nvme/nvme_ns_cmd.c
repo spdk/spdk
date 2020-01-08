@@ -402,10 +402,12 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		sector_size -= 8;
 	}
 
-	req = nvme_allocate_request(qpair, payload, lba_count * sector_size, cb_fn, cb_arg);
+	req = nvme_allocate_request(qpair);
 	if (req == NULL) {
 		return NULL;
 	}
+
+	nvme_initialize_request(req, payload, lba_count * sector_size, cb_fn, cb_arg);
 
 	req->payload_offset = payload_offset;
 	req->md_offset = md_offset;
