@@ -136,6 +136,7 @@ for i in "$@"; do
 			;;
 		--target-arch=*)
 			CONFIG[ARCH]="${i#*=}"
+			echo "Be sure to update your DPDK build environment, if applicable, to match."
 			;;
 		--cross-prefix=*)
 			CONFIG[CROSS_PREFIX]="${i#*=}"
