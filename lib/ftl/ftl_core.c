@@ -161,12 +161,12 @@ ftl_remove_wptr(struct ftl_wptr *wptr)
 }
 
 static void
-ftl_io_cmpl_cb(void *arg, const struct spdk_nvme_cpl *status)
+ftl_io_cmpl_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct ftl_io *io = arg;
+	struct ftl_io *io = cb_arg;
 
-	if (spdk_nvme_cpl_is_error(status)) {
-		ftl_io_process_error(io, status);
+	if (spdk_unlikely(!success)) {
+		io->status = -EIO;
 	}
 
 	ftl_trace_completion(io->dev, io, FTL_TRACE_COMPLETION_DISK);
@@ -175,6 +175,8 @@ ftl_io_cmpl_cb(void *arg, const struct spdk_nvme_cpl *status)
 	if (ftl_io_done(io)) {
 		ftl_io_complete(io);
 	}
+
+	spdk_bdev_free_io(bdev_io);
 }
 
 static void
@@ -340,10 +342,12 @@ ftl_submit_erase(struct ftl_io *io)
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_band *band = io->band;
 	struct ftl_addr addr = io->addr;
+	struct ftl_io_channel *ioch;
 	struct ftl_zone *zone;
-	uint64_t addr_packed;
 	int rc = 0;
 	size_t i;
+
+	ioch = spdk_io_channel_get_ctx(ftl_get_io_channel(dev));
 
 	for (i = 0; i < io->lbk_cnt; ++i) {
 		if (i != 0) {
@@ -353,11 +357,11 @@ ftl_submit_erase(struct ftl_io *io)
 		}
 
 		assert(addr.offset == 0);
-		addr_packed = ftl_addr_addr_pack(dev, addr);
 
 		ftl_trace_submission(dev, io, addr, 1);
-		rc = spdk_nvme_ocssd_ns_cmd_vector_reset(dev->ns, ftl_get_write_qpair(dev),
-				&addr_packed, 1, NULL, ftl_io_cmpl_cb, io);
+		rc = spdk_bdev_zone_management(dev->base_bdev_desc, ioch->base_ioch,
+					       ftl_block_offset_from_addr(dev, addr),
+					       SPDK_BDEV_ZONE_RESET, ftl_io_cmpl_cb, io);
 		if (spdk_unlikely(rc)) {
 			ftl_io_fail(io, rc);
 			SPDK_ERRLOG("Vector reset failed with status: %d\n", rc);
@@ -957,7 +961,8 @@ ftl_read_next_logical_addr(struct ftl_io *io, struct ftl_addr *addr)
 			break;
 		}
 
-		if (ftl_addr_addr_pack(dev, *addr) + i != ftl_addr_addr_pack(dev, next_addr)) {
+		if (ftl_block_offset_from_addr(dev, *addr) + i !=
+		    ftl_block_offset_from_addr(dev, next_addr)) {
 			break;
 		}
 	}
@@ -969,8 +974,11 @@ static int
 ftl_submit_read(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
+	struct ftl_io_channel *ioch;
 	struct ftl_addr addr;
 	int rc = 0, lbk_cnt;
+
+	ioch = spdk_io_channel_get_ctx(io->ioch);
 
 	assert(LIST_EMPTY(&io->children));
 
@@ -1000,10 +1008,10 @@ ftl_submit_read(struct ftl_io *io)
 		assert(lbk_cnt > 0);
 
 		ftl_trace_submission(dev, io, addr, lbk_cnt);
-		rc = spdk_nvme_ns_cmd_read(dev->ns, ftl_get_read_qpair(dev),
+		rc = spdk_bdev_read_blocks(dev->base_bdev_desc, ioch->base_ioch,
 					   ftl_io_iovec_addr(io),
-					   ftl_addr_addr_pack(io->dev, addr), lbk_cnt,
-					   ftl_io_cmpl_cb, io, 0);
+					   ftl_block_offset_from_addr(dev, addr),
+					   lbk_cnt, ftl_io_cmpl_cb, io);
 		if (spdk_unlikely(rc)) {
 			if (rc == -ENOMEM) {
 				ftl_add_to_retry_queue(io);
@@ -1496,9 +1504,12 @@ static int
 ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 {
 	struct spdk_ftl_dev	*dev = io->dev;
+	struct ftl_io_channel	*ioch;
 	struct ftl_io		*child;
-	int			rc;
 	struct ftl_addr		addr;
+	int			rc;
+
+	ioch = spdk_io_channel_get_ctx(io->ioch);
 
 	if (spdk_likely(!wptr->direct_mode)) {
 		addr = wptr->addr;
@@ -1516,15 +1527,16 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 	}
 
 	wptr->num_outstanding++;
-	rc = spdk_nvme_ns_cmd_write_with_md(dev->ns, ftl_get_write_qpair(dev),
-					    ftl_io_iovec_addr(child), child->md,
-					    ftl_addr_addr_pack(dev, addr),
-					    lbk_cnt, ftl_io_cmpl_cb, child, 0, 0, 0);
+
+	rc = spdk_bdev_write_blocks(dev->base_bdev_desc, ioch->base_ioch,
+				    ftl_io_iovec_addr(child),
+				    ftl_block_offset_from_addr(dev, addr),
+				    lbk_cnt, ftl_io_cmpl_cb, child);
 	if (rc) {
 		wptr->num_outstanding--;
 		ftl_io_fail(child, rc);
 		ftl_io_complete(child);
-		SPDK_ERRLOG("spdk_nvme_ns_cmd_write_with_md failed with status:%d, addr:%lu\n",
+		SPDK_ERRLOG("spdk_bdev_write_blocks_with_md failed with status:%d, addr:%lu\n",
 			    rc, addr.addr);
 		return -EIO;
 	}
@@ -1676,7 +1688,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write addr:%lx, %lx\n", wptr->addr.addr,
-		      ftl_addr_addr_pack(dev, wptr->addr));
+		      ftl_block_offset_from_addr(dev, wptr->addr));
 
 	if (ftl_submit_write(wptr, io)) {
 		/* TODO: we need some recovery here */
@@ -1887,8 +1899,8 @@ spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *at
 	attrs->lbk_cnt = dev->num_lbas;
 	attrs->lbk_size = FTL_BLOCK_SIZE;
 	attrs->cache_bdev_desc = dev->nv_cache.bdev_desc;
-	attrs->num_zones = dev->geo.num_chk;
-	attrs->zone_size = dev->geo.clba;
+	attrs->num_zones = ftl_get_num_zones(dev);
+	attrs->zone_size = ftl_get_num_blocks_in_zone(dev);
 	attrs->conf = dev->conf;
 }
 
@@ -2154,8 +2166,6 @@ ftl_task_read(void *ctx)
 {
 	struct ftl_thread *thread = ctx;
 	struct spdk_ftl_dev *dev = thread->dev;
-	struct spdk_nvme_qpair *qpair = ftl_get_read_qpair(dev);
-	size_t num_completed;
 
 	if (dev->halt) {
 		if (ftl_shutdown_complete(dev)) {
@@ -2164,13 +2174,12 @@ ftl_task_read(void *ctx)
 		}
 	}
 
-	num_completed = spdk_nvme_qpair_process_completions(qpair, 0);
-
-	if (num_completed && !TAILQ_EMPTY(&dev->retry_queue)) {
+	if (!TAILQ_EMPTY(&dev->retry_queue)) {
 		ftl_process_retry_queue(dev);
+		return 1;
 	}
 
-	return num_completed;
+	return 0;
 }
 
 int
@@ -2178,7 +2187,6 @@ ftl_task_core(void *ctx)
 {
 	struct ftl_thread *thread = ctx;
 	struct spdk_ftl_dev *dev = thread->dev;
-	struct spdk_nvme_qpair *qpair = ftl_get_write_qpair(dev);
 
 	if (dev->halt) {
 		if (ftl_shutdown_complete(dev)) {
@@ -2188,7 +2196,6 @@ ftl_task_core(void *ctx)
 	}
 
 	ftl_process_writes(dev);
-	spdk_nvme_qpair_process_completions(qpair, 0);
 	ftl_process_relocs(dev);
 
 	return 0;
