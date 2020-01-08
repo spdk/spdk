@@ -828,7 +828,7 @@ test_io_flags(void)
 	nvme_free_request(g_request);
 
 	rc = spdk_nvme_ns_cmd_write(&ns, &qpair, payload, lba, lba_count, NULL, NULL,
-				    SPDK_NVME_IO_FLAGS_VALID_MASK);
+				    SPDK_NVME_IO_FLAGS_VALID_MASK & ~SPDK_NVME_IO_FLAGS_FUSE_MASK);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	nvme_cmd_interpret_rw(&g_request->cmd, &cmd_lba, &cmd_lba_count);

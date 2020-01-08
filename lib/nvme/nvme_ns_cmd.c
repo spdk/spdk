@@ -402,9 +402,26 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		sector_size -= 8;
 	}
 
-	req = nvme_allocate_request(qpair);
-	if (req == NULL) {
-		return NULL;
+	if (io_flags & SPDK_NVME_IO_FLAGS_FUSE_SECOND) {
+		if (qpair->second_fused_request == NULL) {
+			return NULL;
+		}
+		req = qpair->second_fused_request;
+		qpair->second_fused_request = NULL;
+	} else {
+		req = nvme_allocate_request(qpair);
+		if (req == NULL) {
+			return NULL;
+		}
+	}
+
+	if (io_flags & SPDK_NVME_IO_FLAGS_FUSE_FIRST) {
+		/* Allocate also memory for second fused command */
+		qpair->second_fused_request = nvme_allocate_request(qpair);
+		if (qpair->second_fused_request == NULL) {
+			nvme_free_request(req);
+			return NULL;
+		}
 	}
 
 	nvme_initialize_request(req, payload, lba_count * sector_size, cb_fn, cb_arg);
