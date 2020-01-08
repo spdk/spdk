@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "893e250d_45cfe7b8",
+        "filename": "test/nvmf/target/fio.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-08T09:51:38Z",
+      "side": 1,
+      "message": "As in previous comments:\nYou still do lsblk BEFORE waitforblk. waitforblk is to make sure that block devices are connected and fully visible in the system. If you do lsblk here then chances are that it sill fail (or will fail to grep needed info) because remote disks are not available yet.",
+      "range": {
+        "startLine": 36,
+        "startChar": 1,
+        "endLine": 36,
+        "endChar": 33
+      },
+      "revId": "979c674cd4c40ab84ef4532f7ac331da0ded0f0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
