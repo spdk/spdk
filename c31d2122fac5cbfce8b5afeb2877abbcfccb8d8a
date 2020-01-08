@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "00410386_e73301fa",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-08T07:39:56Z",
+      "side": 1,
+      "message": "OK, I try to do it next step. I uploaded patch set 47. Only to fix PS39, Line 341 and PS39, Line 347 before. I am not sure if these current_cmd_sn and current_data_segment_len are correct, please review.",
+      "parentUuid": "15ee0a16_4919e0b6",
+      "range": {
+        "startLine": 108,
+        "startChar": 0,
+        "endLine": 110,
+        "endChar": 0
+      },
+      "revId": "c31d2122fac5cbfce8b5afeb2877abbcfccb8d8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3963fc60_e40d40d2",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 46
