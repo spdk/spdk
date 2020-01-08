@@ -53,7 +53,7 @@ function get_cores_numa_node(){
 function get_numa_node(){
 	local plugin=$1
 	local disks=$2
-	if [ "$plugin" = "nvme" ]; then
+	if [[ "$plugin" == "spdk-plugin-nvme" ]]; then
 		for bdf in $disks; do
 			local driver
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
@@ -62,7 +62,7 @@ function get_numa_node(){
 				cat /sys/bus/pci/devices/$bdf/numa_node
 			fi
 		done
-	elif [ "$plugin" = "bdev" ] || [ "$plugin" = "bdevperf" ]; then
+	elif [[ "$plugin" =~ "bdev" ]]; then
 		local bdevs
 		bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
 		for name in $disks; do
@@ -82,14 +82,14 @@ function get_numa_node(){
 
 function get_disks(){
 	local plugin=$1
-	if [ "$plugin" = "nvme" ]; then
+	if [[ "$plugin" == "spdk-plugin-nvme" ]]; then
 		for bdf in $(iter_pci_class_code 01 08 02); do
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 			if [ "$driver" = "vfio-pci" ] || [ "$driver" = "uio_pci_generic" ]; then
 				echo "$bdf"
 			fi
 		done
-	elif [ "$plugin" = "bdev" ] || [ "$plugin" = "bdevperf" ]; then
+	elif [[ "$plugin" =~ "bdev" ]]; then
 		local bdevs
 		bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
 		jq -r '.[].name' <<< $bdevs
@@ -137,7 +137,7 @@ function create_fio_config(){
 	local disks_per_core_mod=$((disk_no%no_cores))
 
 	# For kernel dirver, each disk will be alligned with all cpus on the same NUMA node
-	if [ "$plugin" != "nvme" ] && [ "$plugin" != "bdev" ]; then
+	if [[ "$plugin" =~ "kernel" ]]; then
 		for (( i=0; i<disk_no; i++ ))
 		do
 			sed -i -e "\$a[filename${i}]" $BASE_DIR/config.fio
@@ -176,9 +176,9 @@ function create_fio_config(){
 			while [ "$m" -lt  "$total_disks_per_core" ]; do
 				if [ ${disks_numa[$n]} = $core_numa ]; then
 					m=$((m+1))
-					if [ "$plugin" = "nvme" ]; then
+					if [[ "$plugin" = "spdk-plugin-nvme" ]]; then
 						filename='trtype=PCIe traddr='${disks[$n]//:/.}' ns=1'
-					elif [ "$plugin" = "bdev" ]; then
+					elif [[ "$plugin" = "spdk-plugin-bdev" ]]; then
 						filename=${disks[$n]}
 					fi
 					sed -i -e "\$afilename=$filename" $BASE_DIR/config.fio
@@ -220,7 +220,7 @@ function preconditioning() {
 		filename+=$(printf %s":" "$dev_name")
 	done
 	echo "** Preconditioning disks, this can take a while, depending on the size of disks."
-	run_spdk_nvme_fio "nvme" --filename="$filename" --size=100% --loops=2 --bs=1M \
+	run_spdk_nvme_fio "spdk-plugin-nvme" --filename="$filename" --size=100% --loops=2 --bs=1M \
 		--rw=write --iodepth=32 --output-format=normal
 	rm -f $BASE_DIR/config.fio
 }
@@ -291,10 +291,10 @@ function get_bdevperf_results(){
 function run_spdk_nvme_fio(){
 	local plugin=$1
 	echo "** Running fio test, this can take a while, depending on the run-time and ramp-time setting."
-	if [ "$plugin" = "nvme" ]; then
+	if [[ "$plugin" = "spdk-plugin-nvme" ]]; then
 		LD_PRELOAD=$PLUGIN_DIR_NVME/fio_plugin $FIO_BIN $BASE_DIR/config.fio --output-format=json\
 		 "${@:2}" --ioengine=spdk
-	elif [ "$plugin" = "bdev" ]; then
+	elif [[ "$plugin" = "spdk-plugin-bdev" ]]; then
 		LD_PRELOAD=$PLUGIN_DIR_BDEV/fio_plugin $FIO_BIN $BASE_DIR/config.fio --output-format=json\
 		 "${@:2}" --ioengine=spdk_bdev --spdk_conf=$BASE_DIR/bdev.conf --spdk_mem=4096
 	fi
@@ -330,7 +330,7 @@ function wait_for_nvme_reload() {
 
 function verify_disk_number() {
 	# Check if we have appropriate number of disks to carry out the test
-	if [[ $PLUGIN == "bdev" ]] || [[ $PLUGIN == "bdevperf" ]]; then
+	if [[ "$PLUGIN" =~ "bdev" ]]; then
 		$ROOT_DIR/scripts/gen_nvme.sh >> $BASE_DIR/bdev.conf
 	fi
 
@@ -368,9 +368,9 @@ function usage()
 	echo
 	echo "Test setup parameters:"
 	echo "    --driver=STR          Selects tool used for testing. Choices available:"
-	echo "                             - nvme (SPDK nvme fio plugin)"
-	echo "                             - bdev (SPDK bdev fio plugin)"
-	echo "                             - bdevperf (SPDK bdevperf)"
+	echo "                             - spdk-perf-bdev (SPDK bdev perf)"
+	echo "                             - spdk-plugin-nvme (SPDK nvme fio plugin)"
+	echo "                             - spdk-plugin-bdev (SPDK bdev fio plugin)"
 	echo "                             - kernel-classic-polling"
 	echo "                             - kernel-hybrid-polling"
 	echo "                             - kernel-libaio"
