@@ -94,7 +94,7 @@ test_band_lbkoff_from_addr_base(void)
 		addr.zone_id = TEST_BAND_IDX;
 
 		offset = ftl_band_lbkoff_from_addr(g_band, addr);
-		CU_ASSERT_EQUAL(offset, flat_lun * ftl_dev_lbks_in_zone(g_dev));
+		CU_ASSERT_EQUAL(offset, flat_lun * ftl_get_num_blocks_in_zone(g_dev));
 		flat_lun++;
 	}
 	cleanup_band();

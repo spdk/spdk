@@ -330,7 +330,7 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 			zone->state = ftl_get_zone_state(&info[j]);
 			zone->start_addr.pu = i;
 			zone->start_addr.zone_id = band->id;
-			zone->write_offset = ftl_dev_lbks_in_zone(dev);
+			zone->write_offset = ftl_get_num_blocks_in_zone(dev);
 
 			if (zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE) {
 				band->num_zones++;

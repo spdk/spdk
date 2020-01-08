@@ -156,7 +156,7 @@ test_wptr(void)
 		io.band = band;
 		io.dev = dev;
 
-		for (lbk = 0, offset = 0; lbk < ftl_dev_lbks_in_zone(dev) / xfer_size; ++lbk) {
+		for (lbk = 0, offset = 0; lbk < ftl_get_num_blocks_in_zone(dev) / xfer_size; ++lbk) {
 			for (zone = 0; zone < band->num_zones; ++zone) {
 				CU_ASSERT_EQUAL(wptr->addr.offset, (lbk * xfer_size));
 				CU_ASSERT_EQUAL(wptr->offset, offset);
@@ -166,7 +166,7 @@ test_wptr(void)
 		}
 
 		CU_ASSERT_EQUAL(band->state, FTL_BAND_STATE_FULL);
-		CU_ASSERT_EQUAL(wptr->addr.offset, ftl_dev_lbks_in_zone(dev));
+		CU_ASSERT_EQUAL(wptr->addr.offset, ftl_get_num_blocks_in_zone(dev));
 
 		ftl_band_set_state(band, FTL_BAND_STATE_CLOSING);
 

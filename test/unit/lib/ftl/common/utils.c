@@ -137,5 +137,5 @@ test_offset_from_addr(struct ftl_addr addr, struct ftl_band *band)
 
 	CU_ASSERT_EQUAL(addr.zone_id, band->id);
 
-	return addr.pu * ftl_dev_lbks_in_zone(dev) + addr.offset;
+	return addr.pu * ftl_get_num_blocks_in_zone(dev) + addr.offset;
 }
