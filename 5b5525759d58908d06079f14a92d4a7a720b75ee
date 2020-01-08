@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9eebd853_34d56192",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-08T08:00:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7851b5af_0fe473f9",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2521496d_c071e70a",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-07T19:24:39Z",
       "side": 1,
       "message": "I\u0027m not sure exactly what this function is doing. This is the target side code, right? The target doesn\u0027t enqueue descriptors - it polls for and processes descriptors, and then it completes them. Is this the function that completes a descriptor? I\u0027m going to assume it is for the rest of my comments.\n\nIf I\u0027m right, name the function vhost_vq_packed_ring_complete",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a582fae8_5625721f",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-08T08:00:39Z",
+      "side": 1,
+      "message": "It works like the split queue used ring when the device completed request it needs to enqueue info to notify the driver which request was completed. The difference is that split queue has three rings (descriptor ring, avail ring, used ring) but packed queue has one ring(descriptor ring). So in a packed queue, descriptor ring was used as to avail ring and used ring. Driver and device use the wrapping counters to pop and push descriptors. The driver and device maintain their wrap counters themself and wrap counters are initialized to 1 at first.\nThe workflow should be like this:\n1, driver push a request to the desc ring(request was split to descs with a request ID[in spec it\u0027s the buffer ID])\n2, device check the desc ring and find the avail desc then pop them and complete the request. After that, device push the used info to the desc ring(request ID[buffer ID]) so that driver knows which request was completed.\n\nThe driver needs to write all the descs of one request but device only needs to write one desc to notify the request was complete. \n\nAnother important thing is how the driver knows which desc is the used one(of course use the wrap counter but also need the right index).\nFor example driver push three requests, request 1 takes 1 descs, request 2 takes 2 descs and request 3 takes 3 descs.\ndesc0 avail ID1--desc1 avail--desc2 avail ID2--desc3 avail--desc4 avail--desc5 avail ID3\n\ndevice complete requesh and enqueue the used:\ndesc0 used ID2--desc1 avail--desc2 used ID1--desc3 used ID3--desc4 avail--desc5 avail ID3.\n\nFrom the buffer id driver knows this request takes how many desc then it can change the last_used_index.",
+      "parentUuid": "2521496d_c071e70a",
       "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "94b9e6dd_fbdcd64b",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-08T08:00:39Z",
+      "side": 1,
+      "message": "As you said this desc may has been set to used so we can\u0027t use the vhost_vq_get_desc_packed.",
+      "parentUuid": "38763294_f08b5908",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "94a563c1_f02f102c",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 10
@@ -64,6 +118,24 @@
       "writtenOn": "2020-01-07T19:24:39Z",
       "side": 1,
       "message": "So I read through the spec here: https://github.com/oasis-tcs/virtio-spec/blob/master/packed-ring.tex and the way it\u0027s written seems to be way more complex than necessary. Also the naming in the spec is terrible. It\u0027s actually a simple mechanism (although fundamentally worse than NVMe\u0027s design!) Here\u0027s how I think lines 524-541 should work:\n\nif ((*flags \u0026 VRING_DESC_F_AVAIL) !\u003d 0) {\n    *flags |\u003d VRING_DESC_F_USED;\n} else {\n    *flags \u0026\u003d ~VRING_DESC_F_USED;\n}\n\nYou can\u0027t actually use the value of \"used_wrap_counter\" here because I/O can complete out of order. If this happens at the end of the ring, for example, we may have an incompleted descriptor near the end but then complete the one at the actual end, triggering the phase bit to wrap around even though not all descriptors have been completed yet. The easiest solution is to just set the used flag to match the avail flag. Here\u0027s the actual wording from the spec:\n\n~~~\nThe counter maintained by the device is called the Device Ring Wrap\nCounter.  The device changes the value of this counter\neach time it uses the last descriptor in\nthe ring (after marking the last descriptor used).\n~~~\n\nBut as I outlined above, that\u0027s complete nonsense because they do allow for descriptors to complete out of order.\n\nIf the spec had used the word \"SUBMITTED\" instead of \"AVAIL\" and \"COMPLETED\" instead of \"USED\" and \"PHASE\" instead of \"WRAP COUNTER\" everything would be a whole lot clearer.",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa71490d_3deb2272",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-08T08:00:39Z",
+      "side": 1,
+      "message": "Yes， the spec is terrible. And it seems this function is not easy to understand. This func is used to push the used info include the flags and buffer_id into the ring. I want to clarify that the only shared memory is the vring between driver and device but wrap counters, avail index and used index are not shared. They are initialized to the same value at first, then the driver and device maintain them independently.\nWrap counters, avail index and used index are used in the same desc ring. Still I use an example.\nFor the device side:\navail_idx\nused_idx\n|\ndesc0 avail ID1--desc1 avail--desc2 avail ID2--desc3 avail--desc4 avail--desc5 avail ID3\n\ndevice process vq and complete two requests.\n                                               avail_idx\nused_idx                                       \n|                                                |\ndesc0 avail ID1--desc1 avail--desc2 avail ID2--desc3 avail--desc4 avail--desc5 avail ID3\n\nand we asume request2 was completed before request1. Then the desc ring would be like this:\n                                              avail_idx\nused_idx_time0               used_idx_time1   used_idx_now                        \n|                             |                  |\ndesc0 used ID2--desc1 avail--desc2 used ID1--desc3 avail--desc4 avail--desc5 avail ID3.\n\nFor the case you descripted, in phase1 request 2 was completed the flags should be set to\nphase1 and in phase2 request 1 was completed the flags should be set to phase2 so that driver can identify them correctly.",
+      "parentUuid": "94a563c1_f02f102c",
       "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "9f214e98_a16e8ad5",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-08T08:00:39Z",
+      "side": 1,
+      "message": "The same as above.",
+      "parentUuid": "503357dd_9fab595e",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2fcfb772_26858a04",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 10
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "6e22774f_4e201abe",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-08T08:00:39Z",
+      "side": 1,
+      "message": "I agree with you. But I think It\u0027s better to follow the spec and I also review the kernel code.\nIt also checked the two bits.\nstatic inline bool is_used_desc_packed(const struct vring_virtqueue *vq,\n                                        u16 idx, bool used_wrap_counter)\n{\n         bool avail, used;\n         u16 flags;\n\n         flags \u003d le16_to_cpu(vq-\u003epacked.vring.desc[idx].flags);\n         avail \u003d !!(flags \u0026 (1 \u003c\u003c VRING_PACKED_DESC_F_AVAIL));\n         used \u003d !!(flags \u0026 (1 \u003c\u003c VRING_PACKED_DESC_F_USED));\n\n         return avail \u003d\u003d used \u0026\u0026 used \u003d\u003d used_wrap_counter;\n}",
+      "parentUuid": "2fcfb772_26858a04",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "05f22ce9_bfbfee05",
         "filename": "lib/vhost/vhost_internal.h",
         "patchSetId": 10
@@ -115,6 +223,24 @@
       "writtenOn": "2020-01-07T19:24:39Z",
       "side": 1,
       "message": "I don\u0027t think we should allow the user to pass in the index - the ring should know where the next descriptor should be. I think the API model needs to be something like:\n\nstruct vring_packed_desc *vhost_vq_packed_dequeue(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *virtqueue)\n\nIf there is a new descriptor available, it returns it. If there isn\u0027t, it returns NULL.",
+      "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9675d71_a4c43fbd",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-08T08:00:39Z",
+      "side": 1,
+      "message": "The function name is aligned to split queue which uses the vhost_vq_get_desc. This function is used after the vhost_vq_packed_desc_is_avail() so I think pass in the index is reasonable. You \ncan review the next patch and if you still think I should revise this function then I will update it.",
+      "parentUuid": "05f22ce9_bfbfee05",
       "revId": "5b5525759d58908d06079f14a92d4a7a720b75ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
