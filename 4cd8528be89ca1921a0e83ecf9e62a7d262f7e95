@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06cb25b6_727fc1ba",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-08T21:35:56Z",
+      "side": 1,
+      "message": "let\u0027s put this at the end of the data structure - this field will be very infrequently accessed, so we don\u0027t want to put it near the \u0027hot\u0027 parts of this structure\n\nit\u0027s always a good idea to think of how the new member will affect the rest of the data structure - pahole is a great tool for this\n\nputting the pointer here actually creates 2 4-byte holes in the data structure - \u0027id\u0027 through \u0027first_fused_submitted\u0027 takes 4 bytes; since the pointer is 8 bytes and has to be aligned, a 4 byte hole will be created\n\nthen since trtype is an int (4 bytes), we\u0027ll have another 4 byte hole before free_req which is a struct of pointers",
+      "revId": "4cd8528be89ca1921a0e83ecf9e62a7d262f7e95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0d93066_18f47466",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-08T21:35:56Z",
+      "side": 1,
+      "message": "let\u0027s add an spdk_unlikely around this clause since this is the very hot nvme I/O path",
+      "revId": "4cd8528be89ca1921a0e83ecf9e62a7d262f7e95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d03916a_5dfd0903",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-08T21:35:56Z",
+      "side": 1,
+      "message": "spdk_unlikely",
+      "revId": "4cd8528be89ca1921a0e83ecf9e62a7d262f7e95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
