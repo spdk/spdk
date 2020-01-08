@@ -41,10 +41,7 @@ NO_CORES_ARRAY=($CORES)
 NO_CORES=${#NO_CORES_ARRAY[@]}
 
 if $PRECONDITIONING; then
-	HUGEMEM=8192 $ROOT_DIR/scripts/setup.sh
-	cp $BASE_DIR/config.fio.tmp $BASE_DIR/config.fio
 	preconditioning
-	rm -f $BASE_DIR/config.fio
 fi
 
 #Kernel Classic Polling ioengine parameters
