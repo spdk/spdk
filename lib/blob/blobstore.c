@@ -1419,25 +1419,15 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 }
 
 static void
-_spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
+_spdk_blob_persist_generate_new_metadata(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	spdk_bs_sequence_t *seq = ctx->seq;
+	struct spdk_blob_persist_ctx *ctx = cb_arg;
 	struct spdk_blob *blob = ctx->blob;
 	struct spdk_blob_store *bs = blob->bs;
 	uint64_t i;
 	uint32_t page_num;
 	void *tmp;
 	int rc;
-
-	if (blob->active.num_pages == 0) {
-		/* This is the signal that the blob should be deleted.
-		 * Immediately jump to the clean up routine. */
-		assert(blob->clean.num_pages > 0);
-		blob->state = SPDK_BLOB_STATE_CLEAN;
-		_spdk_blob_persist_zero_pages(seq, ctx, 0);
-		return;
-
-	}
 
 	/* Generate the new metadata */
 	rc = _spdk_blob_serialize(blob, &ctx->pages, &blob->active.num_pages);
@@ -1486,6 +1476,25 @@ _spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 	/* Start writing the metadata from last page to first */
 	blob->state = SPDK_BLOB_STATE_CLEAN;
 	_spdk_blob_persist_write_page_chain(seq, ctx, 0);
+}
+
+static void
+_spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
+{
+	spdk_bs_sequence_t *seq = ctx->seq;
+	struct spdk_blob *blob = ctx->blob;
+
+	if (blob->active.num_pages == 0) {
+		/* This is the signal that the blob should be deleted.
+		 * Immediately jump to the clean up routine. */
+		assert(blob->clean.num_pages > 0);
+		blob->state = SPDK_BLOB_STATE_CLEAN;
+		_spdk_blob_persist_zero_pages(seq, ctx, 0);
+		return;
+
+	}
+
+	_spdk_blob_persist_generate_new_metadata(seq, ctx, 0);
 }
 
 static void
