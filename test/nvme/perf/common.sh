@@ -25,6 +25,7 @@ CPUS_ALLOWED=1
 NOIOSCALING=false
 PRECONDITIONING=true
 ONEWORKLOAD=false
+DATE="$(date +'%m_%d_%Y_%H%M%S')"
 
 function is_bdf_not_mounted() {
 	local bdf=$1
@@ -396,7 +397,6 @@ done
 
 trap 'rm -f *.state $BASE_DIR/bdev.conf; print_backtrace' ERR SIGTERM SIGABRT
 mkdir -p $BASE_DIR/results
-date="$(date +'%m_%d_%Y_%H%M%S')"
 if [[ $PLUGIN == "bdev" ]] || [[ $PLUGIN == "bdevperf" ]]; then
 	$ROOT_DIR/scripts/gen_nvme.sh >> $BASE_DIR/bdev.conf
 fi
