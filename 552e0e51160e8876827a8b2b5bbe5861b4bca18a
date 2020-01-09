@@ -87,6 +87,24 @@
       "revId": "552e0e51160e8876827a8b2b5bbe5861b4bca18a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a37a4cee_72a263db",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2205,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-09T13:17:24Z",
+      "side": 1,
+      "message": "I\u0027ve created separate patch before that one that changes the logic to above.",
+      "parentUuid": "d44c4431_478bf971",
+      "revId": "552e0e51160e8876827a8b2b5bbe5861b4bca18a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
