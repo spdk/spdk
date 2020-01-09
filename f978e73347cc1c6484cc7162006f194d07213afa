@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a11e677a_1e8853d3",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-09T13:39:11Z",
+      "side": 1,
+      "message": "You use this path few times, maybe crate a variable for it and use that variable ?",
+      "range": {
+        "startLine": 140,
+        "startChar": 21,
+        "endLine": 140,
+        "endChar": 50
+      },
+      "revId": "f978e73347cc1c6484cc7162006f194d07213afa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
