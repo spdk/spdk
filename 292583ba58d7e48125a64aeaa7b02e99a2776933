@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bea16bf9_1a15b045",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-09T23:25:39Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nI checked the behavior, it is correct. The sock implementation with high priority (big number) will be put in the beginning of the list. Since STAILQ only has insert after but not insert before.",
+      "parentUuid": "18a303f1_f4562b14",
+      "revId": "292583ba58d7e48125a64aeaa7b02e99a2776933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9ccffbd2_39a5f844",
         "filename": "lib/sock/sock.c",
         "patchSetId": 5
