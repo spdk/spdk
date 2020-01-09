@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "0f5468df_f2a4b9c2",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2020-01-09T08:32:23Z",
+      "side": 1,
+      "message": "I am a bit unsure about this - wouldn\u0027t there be potential with some torn reads, even if the critical_msg is marked as volatile?\nI\u0027ve changed some of the logic, so that reads use a single element ring (similar to regular messages), but the writes are still protected by atomic sets (since they\u0027re not performance sensitive). Let me know if it is too convoluted and a regular check would do the job.",
+      "parentUuid": "65d166f8_a3b2ba4e",
+      "revId": "3800686f3c8cabf248e440223ef311bf9ba3fb6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c81cf019_84c78a5b",
         "filename": "lib/thread/thread.c",
         "patchSetId": 5
@@ -72,6 +90,30 @@
       "side": 1,
       "message": "Same here.  Even if __atomic_load_n returns NULL, we could get a signal and set this critical_msg before the caller processes it - so the atomic does not guarantee anything.",
       "parentUuid": "c81cf019_84c78a5b",
+      "range": {
+        "startLine": 655,
+        "startChar": 5,
+        "endLine": 655,
+        "endChar": 20
+      },
+      "revId": "3800686f3c8cabf248e440223ef311bf9ba3fb6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99337f8c_1f74b992",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2020-01-09T08:32:23Z",
+      "side": 1,
+      "message": "I don\u0027t think I understand the full problem here. Are you saying there\u0027s some way this function returns an incorrect state of the thread, or again - the atomic read has too large performance impact?",
+      "parentUuid": "1e15410b_1eb48c76",
       "range": {
         "startLine": 655,
         "startChar": 5,
