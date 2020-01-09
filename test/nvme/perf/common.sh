@@ -6,6 +6,7 @@ ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 PLUGIN_DIR_NVME=$ROOT_DIR/examples/nvme/fio_plugin
 PLUGIN_DIR_BDEV=$ROOT_DIR/examples/bdev/fio_plugin
 BDEVPERF_DIR=$ROOT_DIR/test/bdev/bdevperf
+NVMEPERF_DIR=$ROOT_DIR/examples/nvme/perf
 . $ROOT_DIR/scripts/common.sh || exit 1
 . $ROOT_DIR/test/common/autotest_common.sh
 NVME_FIO_RESULTS=$BASE_DIR/result.json
@@ -53,7 +54,7 @@ function get_cores_numa_node(){
 function get_numa_node(){
 	local plugin=$1
 	local disks=$2
-	if [[ "$plugin" == "spdk-plugin-nvme" ]]; then
+	if [[ "$plugin" =~ "nvme" ]]; then
 		for bdf in $disks; do
 			local driver
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
@@ -82,7 +83,7 @@ function get_numa_node(){
 
 function get_disks(){
 	local plugin=$1
-	if [[ "$plugin" == "spdk-plugin-nvme" ]]; then
+	if [[ "$plugin" =~ "nvme" ]]; then
 		for bdf in $(iter_pci_class_code 01 08 02); do
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 			if [ "$driver" = "vfio-pci" ] || [ "$driver" = "uio_pci_generic" ]; then
@@ -288,6 +289,26 @@ function get_bdevperf_results(){
 	esac
 }
 
+function get_nvmeperf_results() {
+	local iops
+	local bw_MBs
+	local mean_lat_usec
+	local max_lat_usec
+	local min_lat_usec
+
+	read -r iops bw_MBs mean_lat_usec min_lat_usec max_lat_usec<<< $(cat $NVME_FIO_RESULTS | tr -s " " | grep -oP "(?<=Total : )(.*+)")
+
+	# We need to get rid of the decimal spaces due
+	# to use of arithmetic expressions instead of "bc" for calculations
+	iops=${iops%.*}
+	bw_MBs=${bw_MBs%.*}
+	mean_lat_usec=${mean_lat_usec%.*}
+	min_lat_usec=${min_lat_usec%.*}
+	max_lat_usec=${max_lat_usec%.*}
+
+	echo "$iops $(bc <<< "$bw_MBs * 1024") $mean_lat_usec $min_lat_usec $max_lat_usec"
+}
+
 function run_spdk_nvme_fio(){
 	local plugin=$1
 	echo "** Running fio test, this can take a while, depending on the run-time and ramp-time setting."
@@ -311,6 +332,23 @@ function run_nvme_fio(){
 function run_bdevperf(){
 	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
 	$BDEVPERF_DIR/bdevperf -c $BASE_DIR/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]"
+	sleep 1
+}
+
+function run_nvmeperf() {
+	# Prepare -r argument string for nvme perf command
+	local r_opt
+	local disks
+
+	# Limit the number of disks to $1 if needed
+	disks=( $(get_disks nvme) )
+	disks=( "${disks[@]:0:$1}" )
+	r_opt=$(printf -- ' -r "trtype:PCIe traddr:%s"' "${disks[@]}")
+
+	echo "** Running nvme perf test, this can take a while, depending on the run-time setting."
+
+	# Run command in separate shell as this solves quoting issues related to r_opt var
+	$SHELL -c "$NVMEPERF_DIR/perf $r_opt -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -c [$CPUS_ALLOWED]"
 	sleep 1
 }
 
@@ -368,6 +406,7 @@ function usage()
 	echo
 	echo "Test setup parameters:"
 	echo "    --driver=STR          Selects tool used for testing. Choices available:"
+	echo "                             - spdk-perf-nvme (SPDK nvme perf)"
 	echo "                             - spdk-perf-bdev (SPDK bdev perf)"
 	echo "                             - spdk-plugin-nvme (SPDK nvme fio plugin)"
 	echo "                             - spdk-plugin-bdev (SPDK bdev fio plugin)"
