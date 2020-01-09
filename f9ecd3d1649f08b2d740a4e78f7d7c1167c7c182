@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "debacd96_0344d1bb",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-09T19:52:35Z",
+      "side": 1,
+      "message": "Can remove this line.",
+      "revId": "f9ecd3d1649f08b2d740a4e78f7d7c1167c7c182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5251406_55533c43",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-09T19:52:35Z",
+      "side": 1,
+      "message": "Instead of moving this here, I think you should put this call in spdk_nvmf_subsystem_destroy. You can call subsystem_destroy through other interfaces than the RPC and we want to avoid leaking them.",
+      "revId": "f9ecd3d1649f08b2d740a4e78f7d7c1167c7c182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd5b2470_892c3153",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-09T19:52:35Z",
+      "side": 1,
+      "message": "We should probably still call spdk_nvmf_subsystem_remove_all_listeners here.",
+      "revId": "f9ecd3d1649f08b2d740a4e78f7d7c1167c7c182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
