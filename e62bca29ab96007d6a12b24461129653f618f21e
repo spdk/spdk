@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec1cccdf_a371d61c",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T16:48:41Z",
+      "side": 1,
+      "message": "or intermediate compare-and-write status",
+      "revId": "e62bca29ab96007d6a12b24461129653f618f21e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "009beb3e_02210544",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 2006,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T16:48:41Z",
+      "side": 1,
+      "message": "where does bio-\u003ecpl get initialized?  I\u0027m concerned that this could have garbage in it that we interpret as an error when the compare operation completes\n\nmaybe we should keep another bool in the nvme_bdev_io for first_fused_completed?  then you can use that to know whether the bio-\u003ecpl is valid (i.e. if this gets called and first_fused_completed \u003d\u003d true, then you know this is the completion for the write)",
+      "revId": "e62bca29ab96007d6a12b24461129653f618f21e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b5cc6fe_c294fd7f",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 2219,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T16:48:41Z",
+      "side": 1,
+      "message": "oh - I led you wrong here - we can just do:\n\nif (!bio-\u003efirst_fused_submitted)\n\nbecause if num_retries \u003d\u003d 0, then we know that bio-\u003efirst_fused_submitted \u003d\u003d false",
+      "revId": "e62bca29ab96007d6a12b24461129653f618f21e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
