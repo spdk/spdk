@@ -1,0 +1,34 @@
+# Not configured to test vtune.
+lib/bdev/vtune
+
+# Not configured to test VPP
+module/sock/vpp/vpp
+
+# Not configured to test rocksdb env file
+lib/rocksdb/env_spdk.cc
+
+# Not configured to test FC
+lib/nvmf/fc
+lib/nvmf/fc_ls
+
+# Not configured for Neon testing
+lib/util/base64_neon
+
+# Files related to testing our internal vhost implementation.
+lib/rte_vhost/fd_man
+lib/rte_vhost/socket
+lib/rte_vhost/vhost
+lib/rte_vhost/vhost_user
+lib/vhost/vhost_nvme
+lib/virtio/virtio_user/vhost_user
+
+# Cuse related files, enable when ready.
+lib/nvme/nvme_cuse
+module/bdev/nvme/bdev_nvme_cuse_rpc
+
+# Currently we don't have this plumbed for testing, enable when ready.
+module/bdev/uring/bdev_uring
+module/bdev/uring/bdev_uring_rpc
+
+# Currently not testing blobfs_fuse, enable when ready.
+module/blobfs/bdev/blobfs_fuse
