@@ -54,6 +54,9 @@
 #define BLOBFS_DEFAULT_CACHE_SIZE (4ULL * 1024 * 1024 * 1024)
 #define SPDK_BLOBFS_DEFAULT_OPTS_CLUSTER_SZ (1024 * 1024)
 
+#define BLOBFS_WORTH_BUFFER_SIZE (16ULL * 1024 *1024)
+#define SPDK_BLOBFS_CACHE_RECLAIM_POLL_INTERVAL_IN_MSEC	1000
+
 #define SPDK_BLOBFS_SIGNATURE	"BLOBFS"
 
 static uint64_t g_fs_cache_size = BLOBFS_DEFAULT_CACHE_SIZE;
@@ -61,7 +64,6 @@ static struct spdk_mempool *g_cache_pool;
 static TAILQ_HEAD(, spdk_file) g_caches;
 static int g_fs_count = 0;
 static pthread_mutex_t g_cache_init_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_spinlock_t g_caches_lock;
 
 #define TRACE_GROUP_BLOBFS	0x7
 #define TRACE_BLOBFS_XATTR_START	SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x0)
@@ -134,6 +136,7 @@ struct spdk_file {
 	pthread_spinlock_t	lock;
 	struct cache_buffer	*last;
 	struct cache_tree	*tree;
+	struct spdk_poller	*cache_reclaim_poller;
 	TAILQ_HEAD(open_requests_head, spdk_fs_request) open_requests;
 	TAILQ_HEAD(sync_requests_head, spdk_fs_request) sync_requests;
 	TAILQ_ENTRY(spdk_file)	cache_tailq;
@@ -248,6 +251,8 @@ struct spdk_fs_cb_args {
 };
 
 static void cache_free_buffers(struct spdk_file *file);
+static int cache_reclaim_operation(void *arg);
+static void cache_memory_buffer_free(struct spdk_file *context);
 static void spdk_fs_io_device_unregister(struct spdk_filesystem *fs);
 static void spdk_fs_free_io_channels(struct spdk_filesystem *fs);
 
@@ -273,7 +278,6 @@ __initialize_cache(void)
 		assert(false);
 	}
 	TAILQ_INIT(&g_caches);
-	pthread_spin_init(&g_caches_lock, 0);
 }
 
 static void
@@ -617,6 +621,9 @@ file_alloc(struct spdk_filesystem *fs)
 		free(file);
 		return NULL;
 	}
+
+	file->cache_reclaim_poller = spdk_poller_register(cache_reclaim_operation, file,
+				     SPDK_BLOBFS_CACHE_RECLAIM_POLL_INTERVAL_IN_MSEC);
 
 	file->fs = fs;
 	TAILQ_INIT(&file->open_requests);
@@ -2012,18 +2019,35 @@ spdk_fs_get_cache_size(void)
 
 static void __file_flush(void *ctx);
 
-static void *
-alloc_cache_memory_buffer(struct spdk_file *context)
+static int
+cache_reclaim_operation(void *arg)
 {
-	struct spdk_file *file;
+	struct spdk_file *file = arg;
 	void *buf;
 
+	/* Try to free buffers if spdk_mempool_count() falls below
+	 * 16MB worth of buffers.
+	 * */
+
 	buf = spdk_mempool_get(g_cache_pool);
-	if (buf != NULL) {
-		return buf;
+	if (spdk_mempool_count(g_cache_pool) < BLOBFS_WORTH_BUFFER_SIZE) {
+		cache_memory_buffer_free(file);
+		return -1 ;
 	}
 
-	pthread_spin_lock(&g_caches_lock);
+	spdk_tree_remove_buffer(file->tree, buf);
+	if (file->tree->present_mask == 0) {
+		TAILQ_REMOVE(&g_caches, file, cache_tailq);
+	}
+
+	return -1;
+}
+
+static void
+cache_memory_buffer_free(struct spdk_file *context)
+{
+	struct spdk_file *file;
+
 	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
 		if (!file->open_for_writing &&
 		    file->priority == SPDK_FILE_PRIORITY_LOW &&
@@ -2031,53 +2055,33 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 			break;
 		}
 	}
-	pthread_spin_unlock(&g_caches_lock);
 	if (file != NULL) {
 		cache_free_buffers(file);
-		buf = spdk_mempool_get(g_cache_pool);
-		if (buf != NULL) {
-			return buf;
-		}
 	}
 
-	pthread_spin_lock(&g_caches_lock);
 	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
 		if (!file->open_for_writing && file != context) {
 			break;
 		}
 	}
-	pthread_spin_unlock(&g_caches_lock);
 	if (file != NULL) {
 		cache_free_buffers(file);
-		buf = spdk_mempool_get(g_cache_pool);
-		if (buf != NULL) {
-			return buf;
-		}
 	}
 
-	pthread_spin_lock(&g_caches_lock);
 	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
 		if (file != context) {
 			break;
 		}
 	}
-	pthread_spin_unlock(&g_caches_lock);
 	if (file != NULL) {
 		cache_free_buffers(file);
-		buf = spdk_mempool_get(g_cache_pool);
-		if (buf != NULL) {
-			return buf;
-		}
 	}
-
-	return NULL;
 }
 
 static struct cache_buffer *
 cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 {
 	struct cache_buffer *buf;
-	int count = 0;
 
 	buf = calloc(1, sizeof(*buf));
 	if (buf == NULL) {
@@ -2085,33 +2089,21 @@ cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 		return NULL;
 	}
 
-	buf->buf = alloc_cache_memory_buffer(file);
-	while (buf->buf == NULL) {
-		/*
-		 * TODO: alloc_cache_memory_buffer() should eventually free
-		 *  some buffers.  Need a more sophisticated check here, instead
-		 *  of just bailing if 100 tries does not result in getting a
-		 *  free buffer.  This will involve using the sync channel's
-		 *  semaphore to block until a buffer becomes available.
-		 */
-		if (count++ == 100) {
-			SPDK_ERRLOG("Could not allocate cache buffer for file=%p on offset=%jx\n",
-				    file, offset);
-			free(buf);
-			return NULL;
+	while (true) {
+		buf->buf = spdk_mempool_get(g_cache_pool);
+		if (buf->buf) {
+			break;
 		}
-		buf->buf = alloc_cache_memory_buffer(file);
+		usleep(SPDK_BLOBFS_CACHE_RECLAIM_POLL_INTERVAL_IN_MSEC);
 	}
 
 	buf->buf_size = CACHE_BUFFER_SIZE;
 	buf->offset = offset;
 
-	pthread_spin_lock(&g_caches_lock);
 	if (file->tree->present_mask == 0) {
 		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
 	}
 	file->tree = spdk_tree_insert_buffer(file->tree, buf);
-	pthread_spin_unlock(&g_caches_lock);
 
 	return buf;
 }
@@ -2590,12 +2582,10 @@ __file_read(struct spdk_file *file, void *payload, uint64_t offset, uint64_t len
 	BLOBFS_TRACE(file, "read %p offset=%ju length=%ju\n", payload, offset, length);
 	memcpy(payload, &buf->buf[offset - buf->offset], length);
 	if ((offset + length) % CACHE_BUFFER_SIZE == 0) {
-		pthread_spin_lock(&g_caches_lock);
 		spdk_tree_remove_buffer(file->tree, buf);
 		if (file->tree->present_mask == 0) {
 			TAILQ_REMOVE(&g_caches, file, cache_tailq);
 		}
-		pthread_spin_unlock(&g_caches_lock);
 	}
 
 	sem_post(&channel->sem);
@@ -2877,10 +2867,10 @@ static void
 cache_free_buffers(struct spdk_file *file)
 {
 	BLOBFS_TRACE(file, "free=%s\n", file->name);
+
+	spdk_poller_unregister(&file->cache_reclaim_poller);
 	pthread_spin_lock(&file->lock);
-	pthread_spin_lock(&g_caches_lock);
 	if (file->tree->present_mask == 0) {
-		pthread_spin_unlock(&g_caches_lock);
 		pthread_spin_unlock(&file->lock);
 		return;
 	}
@@ -2892,7 +2882,6 @@ cache_free_buffers(struct spdk_file *file)
 		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
 	}
 	file->last = NULL;
-	pthread_spin_unlock(&g_caches_lock);
 	pthread_spin_unlock(&file->lock);
 }
 
