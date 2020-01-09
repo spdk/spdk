@@ -518,7 +518,7 @@ ftl_band_from_addr(struct spdk_ftl_dev *dev, struct ftl_addr addr)
 struct ftl_zone *
 ftl_band_zone_from_addr(struct ftl_band *band, struct ftl_addr addr)
 {
-	assert(addr.pu < ftl_dev_num_punits(band->dev));
+	assert(addr.pu < ftl_get_num_punits(band->dev));
 	return &band->zone_buf[addr.pu];
 }
 
@@ -526,7 +526,7 @@ uint64_t
 ftl_band_lbkoff_from_addr(struct ftl_band *band, struct ftl_addr addr)
 {
 	assert(addr.zone_id == band->id);
-	assert(addr.pu < ftl_dev_num_punits(band->dev));
+	assert(addr.pu < ftl_get_num_punits(band->dev));
 	return addr.pu * ftl_get_num_blocks_in_zone(band->dev) + addr.offset;
 }
 

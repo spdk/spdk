@@ -276,7 +276,7 @@ test_reloc_iter_full(void)
 
 	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_get_num_blocks_in_band(dev));
 
-	num_iters = ftl_dev_num_punits(dev) *
+	num_iters = ftl_get_num_punits(dev) *
 		    (ftl_get_num_blocks_in_zone(dev) / reloc->xfer_size);
 
 	for (i = 0; i < num_iters; i++) {
@@ -284,7 +284,7 @@ test_reloc_iter_full(void)
 		CU_ASSERT_EQUAL(num_lbks, reloc->xfer_size);
 	}
 
-	num_iters = ftl_dev_num_punits(dev);
+	num_iters = ftl_get_num_punits(dev);
 
 	/* ftl_reloc_next_lbks is searching for maximum xfer_size */
 	/* contiguous valid logic blocks in zone, so we can end up */

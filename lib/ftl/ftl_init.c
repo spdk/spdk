@@ -298,7 +298,7 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 		pband = band;
 
 		CIRCLEQ_INIT(&band->zones);
-		band->zone_buf = calloc(ftl_dev_num_punits(dev), sizeof(*band->zone_buf));
+		band->zone_buf = calloc(ftl_get_num_punits(dev), sizeof(*band->zone_buf));
 		if (!band->zone_buf) {
 			SPDK_ERRLOG("Failed to allocate block state table for band: [%u]\n", i);
 			rc = -1;
@@ -318,7 +318,7 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 		}
 	}
 
-	for (i = 0; i < ftl_dev_num_punits(dev); ++i) {
+	for (i = 0; i < ftl_get_num_punits(dev); ++i) {
 		rc = ftl_retrieve_punit_chunk_info(dev, i, info);
 		if (rc) {
 			goto out;
@@ -1075,7 +1075,7 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		goto fail_sync;
 	}
 
-	dev->rwb = ftl_rwb_init(&dev->conf, dev->geo.ws_opt, dev->md_size, ftl_dev_num_punits(dev));
+	dev->rwb = ftl_rwb_init(&dev->conf, dev->geo.ws_opt, dev->md_size, ftl_get_num_punits(dev));
 	if (!dev->rwb) {
 		SPDK_ERRLOG("Unable to initialize rwb structures\n");
 		goto fail_sync;
