@@ -105,7 +105,7 @@ if [ $(uname) = Linux ]; then
 fi
 
 if [ $(uname) = Linux ]; then
-	start_stub "-s 4096 -i 0 -m 0xF"
+	start_stub "-s 4096 -i 0 -m 0xE"
 	trap "kill_stub -9; exit 1" SIGINT SIGTERM EXIT
 fi
 
