@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "866515ed_3d8ea40e",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T19:47:32Z",
+      "side": 1,
+      "message": "nit - ops and link aren\u0027t aligned",
+      "revId": "ed8a87d33cb00c33e4687679c4300dcc055ab491",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
