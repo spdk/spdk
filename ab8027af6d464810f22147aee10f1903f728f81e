@@ -16,6 +16,24 @@
       "revId": "ab8027af6d464810f22147aee10f1903f728f81e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1762b3f1_62d516c2",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-09T23:50:18Z",
+      "side": 1,
+      "message": "Yeah, no idea haha.",
+      "parentUuid": "d2d8bc8b_5578a3b7",
+      "revId": "ab8027af6d464810f22147aee10f1903f728f81e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
