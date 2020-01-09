@@ -46,6 +46,30 @@
       "revId": "2728a76da3c898b58be63eb16682eec73af96251",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27fbf7a9_469c9b03",
+        "filename": "autobuild.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-09T22:33:19Z",
+      "side": 1,
+      "message": "Thanks again for the suggestion Tomek. Please see here for the patch where I check scanbuild output vs. all of the files we build currently. https://review.gerrithub.io/c/spdk/spdk/+/479898\nIt\u0027s still kind of WIP because I need to do some work around ignoring a few WIP files.",
+      "parentUuid": "48a238ad_d7252b6a",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 59
+      },
+      "revId": "2728a76da3c898b58be63eb16682eec73af96251",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
