@@ -2049,6 +2049,7 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.orig_iovcnt = 0;
 	bdev_io->internal.orig_md_buf = NULL;
 	bdev_io->internal.error.nvme.cdw0 = 0;
+	bdev_io->num_retries = 0;
 }
 
 static bool
@@ -4304,6 +4305,7 @@ bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 		shared_resource->io_outstanding++;
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 		bdev_io->internal.error.nvme.cdw0 = 0;
+		bdev_io->num_retries++;
 		bdev->fn_table->submit_request(spdk_bdev_io_get_io_channel(bdev_io), bdev_io);
 		if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM) {
 			break;

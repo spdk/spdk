@@ -462,6 +462,9 @@ struct spdk_bdev_io {
 	/** Enumerated value representing the I/O type. */
 	uint8_t type;
 
+	/** Number of IO submission retries */
+	uint16_t num_retries;
+
 	/** A single iovec element for use by this bdev_io. */
 	struct iovec iov;
 
