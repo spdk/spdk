@@ -124,6 +124,17 @@ do
 			iops_disks[$k]=$((${iops_disks[$k]} + $(get_bdevperf_results iops)))
 			bw[$k]=$((${bw[$k]} + $(get_bdevperf_results bw_Kibs)))
 			cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
+		elif [ $PLUGIN = "spdk-perf-nvme" ]; then
+			run_nvmeperf $k > $NVME_FIO_RESULTS
+			read -r iops bandwidth mean_lat min_lat max_lat <<< $(get_nvmeperf_results)
+
+			iops_disks[$k]=$((${iops_disks[$k]} + iops))
+			bw[$k]=$((${bw[$k]} + bandwidth))
+			mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} + mean_lat))
+			min_lat_disks_usec[$k]=$((${min_lat_disks_usec[$k]} + min_lat))
+			max_lat_disks_usec[$k]=$((${max_lat_disks_usec[$k]} + max_lat))
+
+			cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
 		else
 			create_fio_config $k $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
 			desc="Running Test: Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH} io_plugin/driver=$PLUGIN"
@@ -178,15 +189,22 @@ for (( k=DISKNO; k >= 1; k-=2 ))
 do
 	iops_disks[$k]=$((${iops_disks[$k]} / REPEAT_NO))
 
-	if [[ $PLUGIN != "spdk-perf-bdev" ]]; then
+	if [[ "$PLUGIN" =~ "plugin" ]]; then
 		mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} / REPEAT_NO))
 		p99_lat_disks_usec[$k]=$((${p99_lat_disks_usec[$k]} / REPEAT_NO))
 		p99_99_lat_disks_usec[$k]=$((${p99_99_lat_disks_usec[$k]} / REPEAT_NO))
 		stdev_disks_usec[$k]=$((${stdev_disks_usec[$k]} / REPEAT_NO))
 		mean_slat_disks_usec[$k]=$((${mean_slat_disks_usec[$k]} / REPEAT_NO))
 		mean_clat_disks_usec[$k]=$((${mean_clat_disks_usec[$k]} / REPEAT_NO))
-	else
+	elif [[ "$PLUGIN" == "spdk-perf-bdev" ]]; then
 		mean_lat_disks_usec[$k]=0
+		p99_lat_disks_usec[$k]=0
+		p99_99_lat_disks_usec[$k]=0
+		stdev_disks_usec[$k]=0
+		mean_slat_disks_usec[$k]=0
+		mean_clat_disks_usec[$k]=0
+	elif [[ "$PLUGIN" == "spdk-perf-nvme" ]]; then
+		mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} / REPEAT_NO))
 		p99_lat_disks_usec[$k]=0
 		p99_99_lat_disks_usec[$k]=0
 		stdev_disks_usec[$k]=0
