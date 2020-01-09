@@ -51,6 +51,24 @@
       "revId": "c12f9149d4051df3d2fd911cbdf74453458ede3a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94a4f972_be6bdf0f",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T16:24:50Z",
+      "side": 1,
+      "message": "We technically will have two different functions for determine if a transport is available.  But the \"older\" existing function will only be kept for legacy purposes to not break the API.  Within SPDK, all of our applications would use the new function only.",
+      "parentUuid": "629467cd_748bd92f",
+      "revId": "c12f9149d4051df3d2fd911cbdf74453458ede3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
