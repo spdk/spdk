@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7cc2ba5b_2f8b8b9f",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T20:22:15Z",
+      "side": 1,
+      "message": "initiator\n\nBut I\u0027d split this into two different entries actually - one for nvmf, and one for nvme (the host driver)\n\nthe paragraph below seems too verbose for the CHANGELOG, but maybe it\u0027s fine",
+      "revId": "e199a3e970868ceb8549dee5a303d21b5f680040",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
