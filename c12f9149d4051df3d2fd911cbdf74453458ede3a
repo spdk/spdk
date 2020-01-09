@@ -33,6 +33,24 @@
       "revId": "c12f9149d4051df3d2fd911cbdf74453458ede3a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "629467cd_748bd92f",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-09T16:01:31Z",
+      "side": 1,
+      "message": "I\u0027m a little confused. This was the API we talked about in our 1:1 (or I thought it was). Last time through, I replaced the enum with a trid, but that was too broad. Then I asked you if we should have two different functions for determining if a transport is available, one for custom and one for traditional transports and you said no. So I just kept the single API, but changed it to use a  string instead of the enum so it could work for all transports. . .\nPlease let me know which way you would like me to handle this, and if I am mis-remembering our conversation, which API were we talking about then?",
+      "parentUuid": "8c42e003_b2e22697",
+      "revId": "c12f9149d4051df3d2fd911cbdf74453458ede3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
