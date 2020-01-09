@@ -115,7 +115,6 @@ struct io_target {
 
 struct io_target_group {
 	TAILQ_HEAD(, io_target)		targets;
-	uint32_t			lcore;
 	TAILQ_ENTRY(io_target_group)	link;
 };
 
@@ -1425,7 +1424,6 @@ io_target_group_create(void *io_device, void *ctx_buf)
 	struct io_target_group *group = ctx_buf;
 
 	TAILQ_INIT(&group->targets);
-	group->lcore = spdk_env_get_current_core();
 
 	return 0;
 }
