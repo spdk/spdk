@@ -6,6 +6,7 @@ ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 PLUGIN_DIR_NVME=$ROOT_DIR/examples/nvme/fio_plugin
 PLUGIN_DIR_BDEV=$ROOT_DIR/examples/bdev/fio_plugin
 BDEVPERF_DIR=$ROOT_DIR/test/bdev/bdevperf
+NVMEPERF_DIR=$ROOT_DIR/examples/nvme/perf
 . $ROOT_DIR/scripts/common.sh || exit 1
 . $ROOT_DIR/test/common/autotest_common.sh
 NVME_FIO_RESULTS=$BASE_DIR/result.json
@@ -59,7 +60,7 @@ function get_cores_numa_node(){
 function get_numa_node(){
 	local plugin=$1
 	local disks=$2
-	if [ "$plugin" = "spdk-plugin-nvme" ]; then
+	if [[ "$plugin" =~ "nvme" ]]; then
 		for bdf in $disks; do
 			local driver
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
@@ -88,7 +89,7 @@ function get_numa_node(){
 
 function get_disks(){
 	local plugin=$1
-	if [ "$plugin" = "spdk-plugin-nvme" ]; then
+	if [[ "$plugin" =~ "nvme" ]]; then
 		for bdf in $(iter_pci_class_code 01 08 02); do
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 			if [ "$driver" = "vfio-pci" ] || [ "$driver" = "uio_pci_generic" ]; then
@@ -317,6 +318,18 @@ function run_nvme_fio(){
 function run_bdevperf(){
 	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
 	$BDEVPERF_DIR/bdevperf -c $BASE_DIR/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]"
+	sleep 1
+}
+
+function run_nvmeperf() {
+	# Prepare -r argument string for nvme perf command
+	local r_opt
+	local disks
+	disks=( $(get_disks nvme) )
+	r_opt=$(printf -- "-r 'trtype:PCIe traddr:%s'" "${disks[@]}")
+
+	echo "** Running nvme perf test, this can take a while, depending on the run-time setting."
+	$NVMEPERF_DIR/perf "$r_opt" -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -c "[$CPUS_ALLOWED]"
 	sleep 1
 }
 

@@ -116,6 +116,8 @@ do
 			iops_disks[$k]=$((${iops_disks[$k]} + $(get_bdevperf_results iops)))
 			bw[$k]=$((${bw[$k]} + $(get_bdevperf_results bw_Kibs)))
 			cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
+		elif [ $PLUGIN = "spdk-perf-nvme" ]; then
+			run_nvmeperf
 		else
 			create_fio_config $k $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
 			desc="Running Test: Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH} io_plugin/driver=$PLUGIN"
