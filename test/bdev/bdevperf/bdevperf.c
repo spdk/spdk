@@ -1161,9 +1161,8 @@ bdevperf_target_gone(void *arg)
 }
 
 static int
-bdevperf_construct_target(struct spdk_bdev *bdev)
+bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target_group *group)
 {
-	struct io_target_group *group;
 	struct io_target *target;
 	int block_size, data_block_size;
 	int rc;
@@ -1208,13 +1207,6 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 
 	TAILQ_INIT(&target->task_list);
 
-	/* Mapping each created target to target group */
-	if (g_next_tg == NULL) {
-		g_next_tg = TAILQ_FIRST(&g_bdevperf.groups);
-		assert(g_next_tg != NULL);
-	}
-	group = g_next_tg;
-	g_next_tg = TAILQ_NEXT(g_next_tg, link);
 	target->group = group;
 	TAILQ_INSERT_TAIL(&group->targets, target, link);
 	g_target_count++;
@@ -1226,12 +1218,29 @@ struct bdevperf_construct_targets_ctx {
 	int	bdev_count;
 };
 
+static struct io_target_group *
+get_next_io_target_group(void)
+{
+	struct io_target_group *group;
+
+	if (g_next_tg == NULL) {
+		g_next_tg = TAILQ_FIRST(&g_bdevperf.groups);
+		assert(g_next_tg != NULL);
+	}
+
+	group = g_next_tg;
+	g_next_tg = TAILQ_NEXT(g_next_tg, link);
+
+	return group;
+}
+
 static void
 _bdevperf_construct_targets(struct spdk_bdev *bdev,
 			    struct bdevperf_construct_targets_ctx *ctx)
 {
 	uint32_t data_block_size;
 	uint8_t core_idx, core_count_for_each_bdev;
+	struct io_target_group *group;
 	int rc;
 
 	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
@@ -1253,7 +1262,8 @@ _bdevperf_construct_targets(struct spdk_bdev *bdev,
 	}
 
 	for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
-		rc = bdevperf_construct_target(bdev);
+		group = get_next_io_target_group();
+		rc = bdevperf_construct_target(bdev, group);
 		if (rc != 0) {
 			break;
 		}
