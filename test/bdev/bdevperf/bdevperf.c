@@ -223,36 +223,6 @@ verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len, int bloc
 }
 
 static void
-bdevperf_free_target(struct io_target *target)
-{
-	struct bdevperf_task *task, *tmp;
-
-	TAILQ_FOREACH_SAFE(task, &target->task_list, link, tmp) {
-		TAILQ_REMOVE(&target->task_list, task, link);
-		spdk_free(task->buf);
-		spdk_free(task->md_buf);
-		free(task);
-	}
-
-	free(target->name);
-	free(target);
-}
-
-static void
-bdevperf_free_targets(void)
-{
-	struct io_target_group *group, *tmp_group;
-	struct io_target *target, *tmp_target;
-
-	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
-		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
-			TAILQ_REMOVE(&group->targets, target, link);
-			bdevperf_free_target(target);
-		}
-	}
-}
-
-static void
 _bdevperf_fini_thread_done(struct spdk_io_channel_iter *i, int status)
 {
 	spdk_io_device_unregister(&g_bdevperf, NULL);
@@ -281,6 +251,36 @@ bdevperf_fini(void)
 {
 	spdk_for_each_channel(&g_bdevperf, _bdevperf_fini_thread, NULL,
 			      _bdevperf_fini_thread_done);
+}
+
+static void
+bdevperf_free_target(struct io_target *target)
+{
+	struct bdevperf_task *task, *tmp;
+
+	TAILQ_FOREACH_SAFE(task, &target->task_list, link, tmp) {
+		TAILQ_REMOVE(&target->task_list, task, link);
+		spdk_free(task->buf);
+		spdk_free(task->md_buf);
+		free(task);
+	}
+
+	free(target->name);
+	free(target);
+}
+
+static void
+bdevperf_free_targets(void)
+{
+	struct io_target_group *group, *tmp_group;
+	struct io_target *target, *tmp_target;
+
+	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
+		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
+			TAILQ_REMOVE(&group->targets, target, link);
+			bdevperf_free_target(target);
+		}
+	}
 }
 
 static void
