@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "786447a1_ea989765",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T11:04:16Z",
+      "side": 1,
+      "message": "These should probably also be renamed.",
+      "range": {
+        "startLine": 298,
+        "startChar": 0,
+        "endLine": 316,
+        "endChar": 0
+      },
+      "revId": "247efa03611d105274add45c155e98798fb51178",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f53d3503_acfbd22e",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 755,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T11:04:16Z",
+      "side": 1,
+      "message": "Unnecessary newline.",
+      "revId": "247efa03611d105274add45c155e98798fb51178",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc65f25e_f2b0a5f8",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 794,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T11:04:16Z",
+      "side": 1,
+      "message": "We could probably just store uuid and mode in local variables and free init_ctx at the beginning.",
+      "range": {
+        "startLine": 791,
+        "startChar": 0,
+        "endLine": 794,
+        "endChar": 33
+      },
+      "revId": "247efa03611d105274add45c155e98798fb51178",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a96ddb63_5315abe9",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T11:04:16Z",
+      "side": 1,
+      "message": "What is the purpose of assert(true)? Let\u0027s replace it with a debug/info log.",
+      "range": {
+        "startLine": 834,
+        "startChar": 3,
+        "endLine": 834,
+        "endChar": 16
+      },
+      "revId": "247efa03611d105274add45c155e98798fb51178",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9d398c4_79a9f6da",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 882,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T11:04:16Z",
+      "side": 1,
+      "message": "An error log here would be useful.",
+      "revId": "247efa03611d105274add45c155e98798fb51178",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8c46a9f_6225f76f",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 913,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T11:04:16Z",
+      "side": 1,
+      "message": "base bdev",
+      "range": {
+        "startLine": 913,
+        "startChar": 32,
+        "endLine": 913,
+        "endChar": 38
+      },
+      "revId": "247efa03611d105274add45c155e98798fb51178",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
