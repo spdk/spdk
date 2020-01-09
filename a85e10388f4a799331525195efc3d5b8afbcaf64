@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1b967bb_3d84518d",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T19:33:49Z",
+      "side": 1,
+      "message": "Will it be obvious to the reader what we mean by \"known transport\"?",
+      "revId": "a85e10388f4a799331525195efc3d5b8afbcaf64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef6be348_bee34655",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T19:33:49Z",
+      "side": 1,
+      "message": "you don\u0027t need to set trtype here - the function call will do it for you",
+      "revId": "a85e10388f4a799331525195efc3d5b8afbcaf64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ef1cc02_1c4fda05",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 851,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T19:33:49Z",
+      "side": 1,
+      "message": "you don\u0027t need to set -\u003etrtype - the function call will do it",
+      "revId": "a85e10388f4a799331525195efc3d5b8afbcaf64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
