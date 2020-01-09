@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18a303f1_f4562b14",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-09T05:48:12Z",
+      "side": 1,
+      "message": "The following should be\n\nprev \u003d NULL;\nSTAILQ_FOREACH(cur, \u0026g_net_impls, link) {\n  if (impl-\u003epriority \u003c cur-\u003epriority) {\n    break;\n  } else {\n    prev \u003d cur;\n  }\n}\n\nif (prev) {\n  STAILQ_INSERT_AFTER(\u0026g_net_impls, prev, impl, link);\n} else {\n  STAILQ_INSERT_HEAD(\u0026g_net_impls, impl, link);\n}\n\nOtherwise, if we insert 1, 2, and then 3, they will be ordered to 1, 3, 2.",
+      "revId": "292583ba58d7e48125a64aeaa7b02e99a2776933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ccffbd2_39a5f844",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-09T05:48:12Z",
+      "side": 1,
+      "message": "So the this condition should be reverse\n if (impl-\u003epriority \u003c cur-\u003epriority)",
+      "range": {
+        "startLine": 603,
+        "startChar": 2,
+        "endLine": 603,
+        "endChar": 39
+      },
+      "revId": "292583ba58d7e48125a64aeaa7b02e99a2776933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
