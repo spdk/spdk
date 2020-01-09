@@ -16,6 +16,24 @@
       "revId": "7fc2e03cf84cc8ebe453daf97b2727d468102963",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f351f673_4a642edf",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-09T09:36:50Z",
+      "side": 1,
+      "message": "In the spec they are named wrap_counter so I think we can follow the spec.",
+      "parentUuid": "cd2473fe_19f96677",
+      "revId": "7fc2e03cf84cc8ebe453daf97b2727d468102963",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
