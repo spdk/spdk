@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "285bddc8_ae572796",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T23:32:24Z",
+      "side": 0,
+      "message": "don\u0027t you need to still add --with-rbd?  maybe that\u0027s why the compilation worked 😊",
+      "revId": "70db9e5cb9d122b661c4cf71a832be081fb21cd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
