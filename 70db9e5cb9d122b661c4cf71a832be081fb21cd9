@@ -16,6 +16,24 @@
       "revId": "70db9e5cb9d122b661c4cf71a832be081fb21cd9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc96f7e3_32d422e4",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-09T23:34:33Z",
+      "side": 0,
+      "message": "Haha yep, my bad. But it also works for me locally outside of the context of this file. p.s. how do you do the faces?",
+      "parentUuid": "285bddc8_ae572796",
+      "revId": "70db9e5cb9d122b661c4cf71a832be081fb21cd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
