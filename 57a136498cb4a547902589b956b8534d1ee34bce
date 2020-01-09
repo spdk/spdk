@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7015a947_8def5979",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-09T11:21:15Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nSorry, I try to recover these old code, so we can see response opcode from Target. If you think it is unreasonable, we can remodify it again.\nRandom request bhs.opcode of Initiator is 0x2.\nDumping this request bhs contents now.\n\"bhs\": {\n  \"opcode\": 2,\n  \"immediate\": 1,\n  \"reserved\": 0,\n  \"total_ahs_len\": 0,\n  \"data_segment_len\": \"AAAA\",\n  \"itt\": 0,\n  \"exp_stat_sn\": 0\n}\nThe PDU transmission completed with an valid bhs opcode.\nReceived hdr_handle response opcode from Target is 0x22.\n\nPS: sizeof(io_ctx-\u003ereq.bhs) is also necessary to show response opcode. Your mentioned sizeof(struct iscsi_bhs) is more reasonable, but it can\u0027t show response opcode, I haven\u0027t studied it carefully.\n\nBest Regards\nWang Hailiang",
+      "range": {
+        "startLine": 333,
+        "startChar": 0,
+        "endLine": 369,
+        "endChar": 2
+      },
+      "revId": "57a136498cb4a547902589b956b8534d1ee34bce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5eb70ab_8f98baa6",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 885,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-09T11:21:15Z",
+      "side": 1,
+      "message": "Added this, ASAN issue was removed. Now there is another memory leak, I will solve it tomorrow.",
+      "range": {
+        "startLine": 884,
+        "startChar": 4,
+        "endLine": 885,
+        "endChar": 26
+      },
+      "revId": "57a136498cb4a547902589b956b8534d1ee34bce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
