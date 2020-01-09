@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a7ef0d0_000d8768",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T00:24:39Z",
+      "side": 1,
+      "message": "We would normally do these as SPDK_NVME_TRANSPORT_NAME_FC, SPDK_NVME_TRANSPORT_NAME_PCIE, etc.\n\nSimilar to SPDK_NVME_QPAIR_FAILURE_*, SPDK_NVME_TRANSPORT_*, SPDK_NVME_SGL_TYPE_*, and so on.",
+      "revId": "2ee6714713aa45a10add218f64bd49a7eac64209",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d7e84c4_e38b8a92",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T00:24:39Z",
+      "side": 1,
+      "message": "This still seems like a bit too much boilerplate code in a lot of places.\n\nHow about:\n\nstatic void\nnvme_trid_populate_known_transport(trid, trtype)\n{\n  const char *trstring;\n\n  trid-\u003etrtype \u003d trtype;\n  switch (trtype) {\n  case SPDK_NVME_TRANSPORT_PCIE:\n    trstring \u003d SPDK_NVME_TRANSPORT_NAME_PCIE;\n    break;\n  /* same for RDMA, TCP, FC */\n  case SPDK_NVME_TRANSPORT_CUSTOM:\n    SPDK_ERRLOG(\"don\u0027t use this for custom transports\\n\");\n    break;\n  }\n  snprintf(trid-\u003etrstring, SPDK_NVMF_TRSTRING_MAX_LEN, \"%s\", trstring);\n}\n\nIt may not end up being a net reduction in code, but it makes all of the calling site a lot simpler.",
+      "revId": "2ee6714713aa45a10add218f64bd49a7eac64209",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f578929_dbb92ef5",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T00:24:39Z",
+      "side": 1,
+      "message": "how about spdk_nvme_transport_id_populate_trstring(), and have it take the transport_id pointer as a parameter?\n\nI think that name more accurately describes what this function does, and passing the trid helps with the understanding too",
+      "revId": "2ee6714713aa45a10add218f64bd49a7eac64209",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
