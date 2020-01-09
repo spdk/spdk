@@ -698,6 +698,21 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint64_t value)
 		diff.bits.iocqes = 0;
 	}
 
+	if (diff.bits.ams) {
+		SPDK_ERRLOG("Arbitration Mechanism Selected (AMS) 0x%x not supported!\n", cc.bits.ams);
+		return false;
+	}
+
+	if (diff.bits.mps) {
+		SPDK_ERRLOG("Memory Page Size (MPS) %u KiB not supported!\n", (1 << (2 + cc.bits.mps)));
+		return false;
+	}
+
+	if (diff.bits.css) {
+		SPDK_ERRLOG("I/O Command Set Selected (CSS) 0x%x not supported!\n", cc.bits.css);
+		return false;
+	}
+
 	if (diff.raw != 0) {
 		SPDK_ERRLOG("Prop Set CC toggled reserved bits 0x%x!\n", diff.raw);
 		return false;
