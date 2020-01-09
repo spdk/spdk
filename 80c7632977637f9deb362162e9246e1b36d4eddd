@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e9c1e59_44328b96",
+        "filename": "autobuild.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T22:22:07Z",
+      "side": 1,
+      "message": "same here as below - we shouldn\u0027t use \u0026\u0026 here (although here it\u0027s not as big of a deal since the $MAKE part still is accounted for in the run_test timing)",
+      "revId": "80c7632977637f9deb362162e9246e1b36d4eddd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a85f74bf_16b32895",
+        "filename": "autobuild.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T22:22:07Z",
+      "side": 1,
+      "message": "I don\u0027t think you can do \u0026\u0026 here - the run_test will only apply to ./configure",
+      "revId": "80c7632977637f9deb362162e9246e1b36d4eddd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
