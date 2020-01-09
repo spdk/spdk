@@ -46,6 +46,30 @@
       "revId": "fec2b6638c950c8d7961afb8400fee5a26b7e4b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2eb64565_7ee7bdc4",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-09T15:18:21Z",
+      "side": 1,
+      "message": "Ok, I will copy those opts by hand and simplify this error path.",
+      "parentUuid": "099075e2_99088151",
+      "range": {
+        "startLine": 577,
+        "startChar": 0,
+        "endLine": 582,
+        "endChar": 12
+      },
+      "revId": "fec2b6638c950c8d7961afb8400fee5a26b7e4b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
