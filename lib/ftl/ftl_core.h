@@ -451,7 +451,7 @@ ftl_l2p_get(struct spdk_ftl_dev *dev, uint64_t lba)
 	}
 }
 static inline size_t
-ftl_dev_num_bands(const struct spdk_ftl_dev *dev)
+ftl_get_num_bands(const struct spdk_ftl_dev *dev)
 {
 	return dev->geo.num_chk;
 }

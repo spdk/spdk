@@ -209,9 +209,9 @@ setup_reloc(struct spdk_ftl_dev **_dev, struct ftl_reloc **_reloc,
 	dev->conf.max_active_relocs = MAX_ACTIVE_RELOCS;
 	dev->conf.max_reloc_qdepth = MAX_RELOC_QDEPTH;
 
-	SPDK_CU_ASSERT_FATAL(ftl_dev_num_bands(dev) > 0);
+	SPDK_CU_ASSERT_FATAL(ftl_get_num_bands(dev) > 0);
 
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		test_init_ftl_band(dev, i);
 	}
 
@@ -229,13 +229,13 @@ cleanup_reloc(struct spdk_ftl_dev *dev, struct ftl_reloc *reloc)
 {
 	size_t i;
 
-	for (i = 0; i < ftl_dev_num_bands(reloc->dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(reloc->dev); ++i) {
 		SPDK_CU_ASSERT_FATAL(reloc->brelocs[i].state == FTL_BAND_RELOC_STATE_INACTIVE);
 	}
 
 	ftl_reloc_free(reloc);
 
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		test_free_ftl_band(&dev->bands[i]);
 	}
 	test_free_ftl_dev(dev);

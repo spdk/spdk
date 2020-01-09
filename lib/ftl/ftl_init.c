@@ -273,8 +273,8 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 	LIST_INIT(&dev->shut_bands);
 
 	dev->num_free = 0;
-	dev->num_bands = ftl_dev_num_bands(dev);
-	dev->bands = calloc(ftl_dev_num_bands(dev), sizeof(*dev->bands));
+	dev->num_bands = ftl_get_num_bands(dev);
+	dev->bands = calloc(ftl_get_num_bands(dev), sizeof(*dev->bands));
 	if (!dev->bands) {
 		return -1;
 	}
@@ -284,7 +284,7 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 		return -1;
 	}
 
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		band = &dev->bands[i];
 		band->id = i;
 		band->dev = dev;
@@ -311,7 +311,7 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 			goto out;
 		}
 
-		band->reloc_bitmap = spdk_bit_array_create(ftl_dev_num_bands(dev));
+		band->reloc_bitmap = spdk_bit_array_create(ftl_get_num_bands(dev));
 		if (!band->reloc_bitmap) {
 			SPDK_ERRLOG("Failed to allocate band relocation bitmap\n");
 			goto out;
@@ -324,7 +324,7 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 			goto out;
 		}
 
-		for (j = 0; j < ftl_dev_num_bands(dev); ++j) {
+		for (j = 0; j < ftl_get_num_bands(dev); ++j) {
 			band = &dev->bands[j];
 			zone = &band->zone_buf[i];
 			zone->state = ftl_get_zone_state(&info[j]);
@@ -339,7 +339,7 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 		}
 	}
 
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		band = &dev->bands[i];
 		band->tail_md_addr = ftl_band_tail_md_addr(band);
 	}
@@ -861,7 +861,7 @@ ftl_setup_initial_state(struct spdk_ftl_dev *dev)
 	spdk_uuid_generate(&dev->uuid);
 
 	dev->num_lbas = 0;
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		dev->num_lbas += ftl_band_num_usable_lbks(&dev->bands[i]);
 	}
 
@@ -1168,7 +1168,7 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	}
 
 	if (dev->bands) {
-		for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+		for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 			free(dev->bands[i].zone_buf);
 			spdk_bit_array_free(&dev->bands[i].lba_map.vld);
 			spdk_bit_array_free(&dev->bands[i].reloc_bitmap);

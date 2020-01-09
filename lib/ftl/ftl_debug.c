@@ -101,7 +101,7 @@ ftl_dev_dump_bands(struct spdk_ftl_dev *dev)
 	}
 
 	ftl_debug("Bands validity:\n");
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		if (dev->bands[i].state == FTL_BAND_STATE_FREE &&
 		    dev->bands[i].wr_cnt == 0) {
 			continue;
@@ -146,7 +146,7 @@ ftl_dev_dump_stats(const struct spdk_ftl_dev *dev)
 	}
 
 	/* Count the number of valid LBAs */
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		total += dev->bands[i].lba_map.num_vld;
 	}
 

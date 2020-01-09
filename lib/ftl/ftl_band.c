@@ -511,7 +511,7 @@ ftl_band_user_lbks(const struct ftl_band *band)
 struct ftl_band *
 ftl_band_from_addr(struct spdk_ftl_dev *dev, struct ftl_addr addr)
 {
-	assert(addr.zone_id < ftl_dev_num_bands(dev));
+	assert(addr.zone_id < ftl_get_num_bands(dev));
 	return &dev->bands[addr.zone_id];
 }
 
