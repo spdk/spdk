@@ -1135,9 +1135,12 @@ bdevperf_test(void)
 }
 
 static void
-_target_gone(void *ctx)
+bdevperf_target_gone(void *arg)
 {
-	struct io_target *target = ctx;
+	struct io_target *target = arg;
+
+	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(target->group)) ==
+	       spdk_get_thread());
 
 	spdk_poller_unregister(&target->run_timer);
 	if (g_reset) {
@@ -1145,16 +1148,6 @@ _target_gone(void *ctx)
 	}
 
 	target->is_draining = true;
-}
-
-static void
-bdevperf_target_gone(void *arg)
-{
-	struct io_target *target = arg;
-	struct io_target_group *group = target->group;
-
-	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(group)),
-			     _target_gone, target);
 }
 
 static int
