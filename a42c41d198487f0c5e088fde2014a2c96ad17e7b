@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12f232e9_5b4c2ce4",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-09T11:24:05Z",
+      "side": 1,
+      "message": "You can set trap before you do vhost_run",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 87
+      },
+      "revId": "a42c41d198487f0c5e088fde2014a2c96ad17e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e2ba799_870ea384",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-09T11:24:05Z",
+      "side": 1,
+      "message": "We should probably move this chunk where we check if bdevperf is still alive AFTER checking perftest_pid return codes",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 2
+      },
+      "revId": "a42c41d198487f0c5e088fde2014a2c96ad17e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e377979a_608eaeb0",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-09T11:24:05Z",
+      "side": 1,
+      "message": "I\u0027m OK with leaving get_addr for now, but please consider removing it later from here and from hotplug/common.sh.\nIt\u0027s only used in vhost/hotplug tests and it\u0027s way over complicated to just extract a PCI address of a single disk.\n\nYou can use this instead and add this just after you run vhost on line 22.\nsudo scripts/rpc.py bdev_get_bdevs | jq -r \u0027.[].driver_specific.nvme.pci_address\u0027\n\nYou can add an index number \"0\" in [] if you just want the first entry.",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 18
+      },
+      "revId": "a42c41d198487f0c5e088fde2014a2c96ad17e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b6664de_79294a13",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-09T11:24:05Z",
+      "side": 1,
+      "message": "That doesn\u0027t seem needed.",
+      "range": {
+        "startLine": 62,
+        "startChar": 1,
+        "endLine": 62,
+        "endChar": 44
+      },
+      "revId": "a42c41d198487f0c5e088fde2014a2c96ad17e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c33170fb_8c12603f",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-09T11:24:05Z",
+      "side": 1,
+      "message": "Is there a need for this sleep?",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 7
+      },
+      "revId": "a42c41d198487f0c5e088fde2014a2c96ad17e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
