@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11e5f293_d0e3d333",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3126,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-09T08:52:42Z",
+      "side": 0,
+      "message": "Is it safe for multiple admin commands sent at the same time from the caller ?",
+      "revId": "70db9e5cb9d122b661c4cf71a832be081fb21cd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
