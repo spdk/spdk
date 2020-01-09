@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "635db0cb_0f5be32f",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T14:05:52Z",
+      "side": 1,
+      "message": "Since we already have ftl_addr_get_band and ftl_addr_get_pu, perhaps it\u0027d also make sense to have ftl_addr_get_offset?",
+      "range": {
+        "startLine": 537,
+        "startChar": 19,
+        "endLine": 537,
+        "endChar": 64
+      },
+      "revId": "4b0800f0b5eb86159dca462a7ce8af35273dd61a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3077f1f_e6e6c717",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T14:05:52Z",
+      "side": 1,
+      "message": "Double space.",
+      "range": {
+        "startLine": 544,
+        "startChar": 7,
+        "endLine": 544,
+        "endChar": 9
+      },
+      "revId": "4b0800f0b5eb86159dca462a7ce8af35273dd61a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b6a80bf_b6754cd0",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T14:05:52Z",
+      "side": 1,
+      "message": "Since there are two offsets now, either rename this one to xfer_offset or get rid of it (it\u0027s only used once in the return statement).",
+      "range": {
+        "startLine": 605,
+        "startChar": 1,
+        "endLine": 605,
+        "endChar": 5
+      },
+      "revId": "4b0800f0b5eb86159dca462a7ce8af35273dd61a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62d74988_275d78cf",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 37
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T14:05:52Z",
+      "side": 1,
+      "message": "Double space.",
+      "range": {
+        "startLine": 332,
+        "startChar": 21,
+        "endLine": 332,
+        "endChar": 22
+      },
+      "revId": "4b0800f0b5eb86159dca462a7ce8af35273dd61a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85a8fa23_e60353ab",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 37
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T14:05:52Z",
+      "side": 1,
+      "message": "Maybe ftl_addr_get_punit?",
+      "range": {
+        "startLine": 336,
+        "startChar": 0,
+        "endLine": 336,
+        "endChar": 15
+      },
+      "revId": "4b0800f0b5eb86159dca462a7ce8af35273dd61a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
