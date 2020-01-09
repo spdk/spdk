@@ -809,6 +809,7 @@ INPUT                  += \
                          changelog.md \
                          compression.md \
                          concurrency.md \
+                         containers.md \
                          event.md \
                          ftl.md \
                          gdb_macros.md \
