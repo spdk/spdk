@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "97491a4d_aa8808b1",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-09T14:44:42Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "786447a1_ea989765",
+      "range": {
+        "startLine": 298,
+        "startChar": 0,
+        "endLine": 316,
+        "endChar": 0
+      },
+      "revId": "247efa03611d105274add45c155e98798fb51178",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f53d3503_acfbd22e",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 2
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "8cfd7b9a_e6fea000",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 755,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-09T14:44:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f53d3503_acfbd22e",
+      "revId": "247efa03611d105274add45c155e98798fb51178",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc65f25e_f2b0a5f8",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 2
@@ -53,6 +95,30 @@
       "writtenOn": "2020-01-09T11:04:16Z",
       "side": 1,
       "message": "We could probably just store uuid and mode in local variables and free init_ctx at the beginning.",
+      "range": {
+        "startLine": 791,
+        "startChar": 0,
+        "endLine": 794,
+        "endChar": 33
+      },
+      "revId": "247efa03611d105274add45c155e98798fb51178",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fdc6e05_e569d748",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 794,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-09T14:44:42Z",
+      "side": 1,
+      "message": "Yes we can do that but it require to add three locals and copy parameters (and we need to add another one each time if we need to extend this function with new param). I prefer to keep it in this way - we have here one error path with proper handling.",
+      "parentUuid": "dc65f25e_f2b0a5f8",
       "range": {
         "startLine": 791,
         "startChar": 0,
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "8bc085b6_2db06e3f",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-09T14:44:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a96ddb63_5315abe9",
+      "range": {
+        "startLine": 834,
+        "startChar": 3,
+        "endLine": 834,
+        "endChar": 16
+      },
+      "revId": "247efa03611d105274add45c155e98798fb51178",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e9d398c4_79a9f6da",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 2
@@ -102,6 +192,24 @@
       "revId": "247efa03611d105274add45c155e98798fb51178",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "368c6b62_7916263d",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 882,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-09T14:44:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e9d398c4_79a9f6da",
+      "revId": "247efa03611d105274add45c155e98798fb51178",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -125,6 +233,30 @@
       "revId": "247efa03611d105274add45c155e98798fb51178",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7bd7b1f6_630f967d",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 913,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-09T14:44:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c8c46a9f_6225f76f",
+      "range": {
+        "startLine": 913,
+        "startChar": 32,
+        "endLine": 913,
+        "endChar": 38
+      },
+      "revId": "247efa03611d105274add45c155e98798fb51178",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
