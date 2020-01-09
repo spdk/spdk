@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df1cf067_973994f5",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T14:54:01Z",
+      "side": 1,
+      "message": "You could probably incorporate that condition inside bdev_ftl_close.",
+      "range": {
+        "startLine": 622,
+        "startChar": 0,
+        "endLine": 624,
+        "endChar": 2
+      },
+      "revId": "94e5761a4408defe4f9800f4fc7dc7615a1e117b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
