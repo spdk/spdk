@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4358ed4a_0cd8d816",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T13:34:25Z",
+      "side": 1,
+      "message": "You could merge these together under one label and just call bdev_ftl_defer_free(init).",
+      "range": {
+        "startLine": 577,
+        "startChar": 0,
+        "endLine": 582,
+        "endChar": 12
+      },
+      "revId": "fec2b6638c950c8d7961afb8400fee5a26b7e4b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
