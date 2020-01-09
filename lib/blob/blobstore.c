@@ -1936,6 +1936,17 @@ _spdk_blob_persist_write_extent_pages(spdk_bs_sequence_t *seq, void *cb_arg, int
 					/* TODO: Extent page is already on disk. */
 				}
 			}
+		} else if (i + 1  == blob->active.et_array_size) {
+			/* No extent_page is allocated for the cluster */
+			extent_page_id = spdk_bit_array_find_first_clear(blob->bs->used_md_pages, 0);
+			if (extent_page_id == UINT32_MAX) {
+				assert(false);
+				return;
+			}
+			_spdk_bs_claim_extent(blob->bs, extent_page_id);
+			assert(blob->active.extent_table[i] == 0);
+			blob->active.extent_table[i] = extent_page_id;
+			goto write_out;
 		} else {
 			assert(spdk_blob_is_thin_provisioned(blob));
 		}
@@ -5192,8 +5203,6 @@ _spdk_bs_snapshot_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bs
 	assert(spdk_blob_is_thin_provisioned(newblob));
 	assert(spdk_mem_all_zero(newblob->active.clusters,
 				 newblob->active.num_clusters * sizeof(newblob->active.clusters)));
-	assert(spdk_mem_all_zero(newblob->active.extent_table,
-				 newblob->active.num_extent_pages * sizeof(newblob->active.extent_table)));
 
 	_spdk_blob_freeze_io(origblob, _spdk_bs_snapshot_freeze_cpl, ctx);
 }
