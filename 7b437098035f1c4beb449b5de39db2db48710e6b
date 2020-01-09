@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38477b78_fdd6eeb2",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 2137,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T20:15:58Z",
+      "side": 1,
+      "message": "let\u0027s keep the old function names (still get rid of the wrapper, but change the name of the existing function that we\u0027re keeping)\n\nthat way the function names stay consistent with the fn_table names - rather than using destroy here for the name of the delete_io_qpair implementation",
+      "revId": "7b437098035f1c4beb449b5de39db2db48710e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
