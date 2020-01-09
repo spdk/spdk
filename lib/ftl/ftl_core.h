@@ -463,7 +463,7 @@ ftl_get_num_blocks_in_zone(const struct spdk_ftl_dev *dev)
 }
 
 static inline size_t
-ftl_dev_num_punits(const struct spdk_ftl_dev *dev)
+ftl_get_num_punits(const struct spdk_ftl_dev *dev)
 {
 	return dev->geo.num_pu * dev->geo.num_grp;
 }
@@ -471,7 +471,7 @@ ftl_dev_num_punits(const struct spdk_ftl_dev *dev)
 static inline uint64_t
 ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
 {
-	return ftl_dev_num_punits(dev) * ftl_get_num_blocks_in_zone(dev);
+	return ftl_get_num_punits(dev) * ftl_get_num_blocks_in_zone(dev);
 }
 
 static inline size_t

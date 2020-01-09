@@ -89,13 +89,13 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 	band->lba_map.vld = spdk_bit_array_create(ftl_get_num_blocks_in_band(dev));
 	SPDK_CU_ASSERT_FATAL(band->lba_map.vld != NULL);
 
-	band->zone_buf = calloc(ftl_dev_num_punits(dev), sizeof(*band->zone_buf));
+	band->zone_buf = calloc(ftl_get_num_punits(dev), sizeof(*band->zone_buf));
 	SPDK_CU_ASSERT_FATAL(band->zone_buf != NULL);
 
 	band->reloc_bitmap = spdk_bit_array_create(ftl_dev_num_bands(dev));
 	SPDK_CU_ASSERT_FATAL(band->reloc_bitmap != NULL);
 
-	for (size_t i = 0; i < ftl_dev_num_punits(dev); ++i) {
+	for (size_t i = 0; i < ftl_get_num_punits(dev); ++i) {
 		zone = &band->zone_buf[i];
 		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
 		zone->start_addr.pu = i;

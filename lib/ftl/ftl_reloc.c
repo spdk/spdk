@@ -298,7 +298,7 @@ ftl_reloc_read_cb(struct ftl_io *io, void *arg, int status)
 static void
 ftl_reloc_iter_reset(struct ftl_band_reloc *breloc)
 {
-	memset(breloc->iter.zone_offset, 0, ftl_dev_num_punits(breloc->band->dev) *
+	memset(breloc->iter.zone_offset, 0, ftl_get_num_punits(breloc->band->dev) *
 	       sizeof(*breloc->iter.zone_offset));
 	breloc->iter.zone_current = 0;
 }
@@ -314,7 +314,7 @@ ftl_reloc_iter_lbkoff(struct ftl_band_reloc *breloc)
 static void
 ftl_reloc_iter_next_zone(struct ftl_band_reloc *breloc)
 {
-	size_t num_zones = ftl_dev_num_punits(breloc->band->dev);
+	size_t num_zones = ftl_get_num_punits(breloc->band->dev);
 
 	breloc->iter.zone_current = (breloc->iter.zone_current + 1) % num_zones;
 }
@@ -368,7 +368,7 @@ static int
 ftl_reloc_iter_done(struct ftl_band_reloc *breloc)
 {
 	size_t i;
-	size_t num_zones = ftl_dev_num_punits(breloc->band->dev);
+	size_t num_zones = ftl_get_num_punits(breloc->band->dev);
 	size_t num_lbks = ftl_get_num_blocks_in_zone(breloc->parent->dev);
 
 	for (i = 0; i < num_zones; ++i) {
@@ -407,7 +407,7 @@ ftl_reloc_next_lbks(struct ftl_band_reloc *breloc, struct ftl_addr *addr)
 	size_t i, lbk_cnt = 0;
 	struct spdk_ftl_dev *dev = breloc->parent->dev;
 
-	for (i = 0; i < ftl_dev_num_punits(dev); ++i) {
+	for (i = 0; i < ftl_get_num_punits(dev); ++i) {
 		lbk_cnt = ftl_reloc_find_valid_lbks(breloc, breloc->parent->xfer_size, addr);
 		ftl_reloc_iter_next_zone(breloc);
 
@@ -617,7 +617,7 @@ ftl_band_reloc_init(struct ftl_reloc *reloc, struct ftl_band_reloc *breloc,
 		return -1;
 	}
 
-	breloc->iter.zone_offset = calloc(ftl_dev_num_punits(band->dev),
+	breloc->iter.zone_offset = calloc(ftl_get_num_punits(band->dev),
 					  sizeof(*breloc->iter.zone_offset));
 	if (!breloc->iter.zone_offset) {
 		SPDK_ERRLOG("Failed to initialize reloc iterator");
