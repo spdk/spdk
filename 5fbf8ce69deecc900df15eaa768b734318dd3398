@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "087624f2_fdb60b01",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-09T10:53:12Z",
+      "side": 1,
+      "message": "Save question as in https://review.gerrithub.io/c/spdk/spdk/+/459677/15/test/lvol/basic.sh",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 67
+      },
+      "revId": "5fbf8ce69deecc900df15eaa768b734318dd3398",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
