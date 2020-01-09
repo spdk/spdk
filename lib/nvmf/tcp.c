@@ -69,6 +69,11 @@ enum spdk_nvmf_tcp_req_state {
 	/* The request is currently transferring data from the host to the controller. */
 	TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
 
+	/* An R2T requires two acknowledgments - an incoming H2C request and the send
+	 * completion from the socket layer. This state means the request has received
+	 * one of those, but not the other. */
+	TCP_REQUEST_STATE_AWAITING_R2T_ACK,
+
 	/* The request is ready to execute at the block device */
 	TCP_REQUEST_STATE_READY_TO_EXECUTE,
 
@@ -284,6 +289,10 @@ spdk_nvmf_tcp_req_set_state(struct spdk_nvmf_tcp_req *tcp_req,
 	qpair = tcp_req->req.qpair;
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
 
+	if (tcp_req->state == TCP_REQUEST_STATE_AWAITING_R2T_ACK) {
+		assert(state != TCP_REQUEST_STATE_COMPLETED);
+	}
+
 	TAILQ_REMOVE(&tqpair->state_queue[tcp_req->state], tcp_req, state_link);
 	tqpair->state_cntr[tcp_req->state]--;
 	assert(tqpair->state_cntr[tcp_req->state] >= 0);
@@ -390,6 +399,7 @@ spdk_nvmf_tcp_cleanup_all_states(struct spdk_nvmf_tcp_qpair *tqpair)
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEED_BUFFER);
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_EXECUTING);
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_AWAITING_R2T_ACK);
 }
 
 static void
@@ -749,6 +759,8 @@ spdk_nvmf_tcp_qpair_write_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 	uint32_t crc32c;
 	uint32_t mapped_length = 0;
 	ssize_t rc;
+
+	assert(&tqpair->pdu_in_progress != pdu);
 
 	hlen = pdu->hdr->common.hlen;
 	enable_digest = 1;
@@ -1237,7 +1249,7 @@ spdk_nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 		      tqpair, h2c_data->datao, h2c_data->datal, h2c_data->cccid, h2c_data->ttag);
 
 	/* According to the information in the pdu to find the req */
-	TAILQ_FOREACH(tcp_req, &tqpair->state_queue[TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER],
+	TAILQ_FOREACH(tcp_req, &tqpair->state_queue[TCP_REQUEST_STATE_AWAITING_R2T_ACK],
 		      state_link) {
 		if ((tcp_req->req.cmd->nvme_cmd.cid == h2c_data->cccid) && (tcp_req->ttag == h2c_data->ttag)) {
 			break;
@@ -1245,6 +1257,19 @@ spdk_nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 
 		if (!ttag_offset_error && (tcp_req->req.cmd->nvme_cmd.cid == h2c_data->cccid)) {
 			ttag_offset_error = true;
+		}
+	}
+
+	if (!tcp_req) {
+		TAILQ_FOREACH(tcp_req, &tqpair->state_queue[TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER],
+			      state_link) {
+			if ((tcp_req->req.cmd->nvme_cmd.cid == h2c_data->cccid) && (tcp_req->ttag == h2c_data->ttag)) {
+				break;
+			}
+
+			if (!ttag_offset_error && (tcp_req->req.cmd->nvme_cmd.cid == h2c_data->cccid)) {
+				ttag_offset_error = true;
+			}
 		}
 	}
 
@@ -1341,8 +1366,20 @@ static void
 spdk_nvmf_tcp_r2t_complete(void *cb_arg)
 {
 	struct spdk_nvmf_tcp_req *tcp_req = cb_arg;
+	struct spdk_nvmf_tcp_transport *ttransport;
 
 	spdk_nvmf_tcp_req_pdu_release(tcp_req);
+
+	ttransport = SPDK_CONTAINEROF(tcp_req->req.qpair->transport,
+				      struct spdk_nvmf_tcp_transport, transport);
+
+	if (tcp_req->state == TCP_REQUEST_STATE_AWAITING_R2T_ACK) {
+		spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
+		spdk_nvmf_tcp_req_process(ttransport, tcp_req);
+	} else {
+		assert(tcp_req->state == TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+		spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_AWAITING_R2T_ACK);
+	}
 }
 
 static void
@@ -1395,8 +1432,13 @@ spdk_nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport
 
 	spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 
-	spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
-	spdk_nvmf_tcp_req_process(ttransport, tcp_req);
+	if (tcp_req->state == TCP_REQUEST_STATE_AWAITING_R2T_ACK) {
+		spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
+		spdk_nvmf_tcp_req_process(ttransport, tcp_req);
+	} else {
+		spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_AWAITING_R2T_ACK);
+	}
+
 }
 
 static void
