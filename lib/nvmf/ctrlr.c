@@ -661,7 +661,7 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint64_t value)
 			ctrlr->vcprop.csts.bits.rdy = 1;
 		} else {
 			SPDK_ERRLOG("CC.EN transition from 1 to 0 (reset) not implemented!\n");
-
+			return false;
 		}
 		diff.bits.en = 0;
 	}
