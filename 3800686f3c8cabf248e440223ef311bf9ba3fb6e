@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "e4aa0fa9_486a9a01",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T21:59:43Z",
+      "side": 1,
+      "message": "We can\u0027t have torn reads on a function pointer.",
+      "parentUuid": "0f5468df_f2a4b9c2",
+      "revId": "3800686f3c8cabf248e440223ef311bf9ba3fb6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c81cf019_84c78a5b",
         "filename": "lib/thread/thread.c",
         "patchSetId": 5
@@ -114,6 +132,30 @@
       "side": 1,
       "message": "I don\u0027t think I understand the full problem here. Are you saying there\u0027s some way this function returns an incorrect state of the thread, or again - the atomic read has too large performance impact?",
       "parentUuid": "1e15410b_1eb48c76",
+      "range": {
+        "startLine": 655,
+        "startChar": 5,
+        "endLine": 655,
+        "endChar": 20
+      },
+      "revId": "3800686f3c8cabf248e440223ef311bf9ba3fb6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d35a36b_26a7c483",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T21:59:43Z",
+      "side": 1,
+      "message": "This function can\u0027t return an incorrect state, it\u0027s just not necessary.  critical_msg is a function pointer which is always written and read atomically (meaning it can\u0027t be torn).\n\nThis function also does not need to be precise - it is just a guide.  thread-\u003ecritical_msg could get set (or messages could be appended to thread-\u003emessages ring) after it is checked but before the function returns.",
+      "parentUuid": "99337f8c_1f74b992",
       "range": {
         "startLine": 655,
         "startChar": 5,
