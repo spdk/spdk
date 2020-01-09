@@ -16,6 +16,23 @@
       "revId": "ed8a87d33cb00c33e4687679c4300dcc055ab491",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b947df7c_356717a0",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 1121,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T20:10:46Z",
+      "side": 1,
+      "message": "we should also try to get rid of this - that can come later though\n\nit would allow us to make all of the transport functions static to their file",
+      "revId": "ed8a87d33cb00c33e4687679c4300dcc055ab491",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
