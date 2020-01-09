@@ -692,12 +692,12 @@ ftl_reloc_init(struct spdk_ftl_dev *dev)
 		goto error;
 	}
 
-	reloc->brelocs = calloc(ftl_dev_num_bands(dev), sizeof(*reloc->brelocs));
+	reloc->brelocs = calloc(ftl_get_num_bands(dev), sizeof(*reloc->brelocs));
 	if (!reloc->brelocs) {
 		goto error;
 	}
 
-	for (i = 0; i < ftl_dev_num_bands(reloc->dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(reloc->dev); ++i) {
 		if (ftl_band_reloc_init(reloc, &reloc->brelocs[i], &dev->bands[i])) {
 			goto error;
 		}
@@ -722,7 +722,7 @@ ftl_reloc_free(struct ftl_reloc *reloc)
 		return;
 	}
 
-	for (i = 0; i < ftl_dev_num_bands(reloc->dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(reloc->dev); ++i) {
 		ftl_band_reloc_free(&reloc->brelocs[i]);
 	}
 

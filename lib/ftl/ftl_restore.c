@@ -175,14 +175,14 @@ ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
 	restore->cb = cb;
 	restore->final_phase = false;
 
-	restore->bands = calloc(ftl_dev_num_bands(dev), sizeof(*restore->bands));
+	restore->bands = calloc(ftl_get_num_bands(dev), sizeof(*restore->bands));
 	if (!restore->bands) {
 		goto error;
 	}
 
 	STAILQ_INIT(&restore->pad_bands);
 
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		rband = &restore->bands[i];
 		rband->band = &dev->bands[i];
 		rband->parent = restore;
@@ -190,7 +190,7 @@ ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
 	}
 
 	/* Allocate buffer capable of holding head mds of all bands */
-	restore->md_buf = spdk_dma_zmalloc(ftl_dev_num_bands(dev) * ftl_head_md_num_lbks(dev) *
+	restore->md_buf = spdk_dma_zmalloc(ftl_get_num_bands(dev) * ftl_head_md_num_lbks(dev) *
 					   FTL_BLOCK_SIZE, 0, NULL);
 	if (!restore->md_buf) {
 		goto error;
@@ -235,7 +235,7 @@ ftl_restore_check_seq(const struct ftl_restore *restore)
 	const struct ftl_band *next_band;
 	size_t i;
 
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		rband = &restore->bands[i];
 		if (rband->md_status != FTL_MD_SUCCESS) {
 			continue;
@@ -256,7 +256,7 @@ ftl_restore_head_valid(struct spdk_ftl_dev *dev, struct ftl_restore *restore, si
 	struct ftl_restore_band *rband;
 	size_t i;
 
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		rband = &restore->bands[i];
 
 		if (rband->md_status != FTL_MD_SUCCESS &&
@@ -292,7 +292,7 @@ ftl_restore_head_complete(struct ftl_restore *restore)
 	}
 
 	/* Sort bands in sequence number ascending order */
-	qsort(restore->bands, ftl_dev_num_bands(dev), sizeof(struct ftl_restore_band),
+	qsort(restore->bands, ftl_get_num_bands(dev), sizeof(struct ftl_restore_band),
 	      ftl_band_cmp);
 
 	if (ftl_restore_check_seq(restore)) {
@@ -332,9 +332,9 @@ ftl_restore_head_md(void *ctx)
 	unsigned int num_failed = 0, num_ios;
 	size_t i;
 
-	restore->num_ios = ftl_dev_num_bands(dev);
+	restore->num_ios = ftl_get_num_bands(dev);
 
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		rband = &restore->bands[i];
 		lba_map = &rband->band->lba_map;
 
@@ -416,7 +416,7 @@ ftl_restore_next_band(struct ftl_restore *restore)
 {
 	struct ftl_restore_band *rband;
 
-	for (; restore->current < ftl_dev_num_bands(restore->dev); ++restore->current) {
+	for (; restore->current < ftl_get_num_bands(restore->dev); ++restore->current) {
 		rband = &restore->bands[restore->current];
 
 		if (spdk_likely(rband->band->num_zones) &&

@@ -111,7 +111,7 @@ setup_wptr_test(struct spdk_ftl_dev **dev, const struct spdk_ocssd_geometry_data
 
 	t_dev = test_init_ftl_dev(geo);
 
-	for (i = 0; i < ftl_dev_num_bands(t_dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(t_dev); ++i) {
 		test_init_ftl_band(t_dev, i);
 		t_dev->bands[i].state = FTL_BAND_STATE_CLOSED;
 		ftl_band_set_state(&t_dev->bands[i], FTL_BAND_STATE_FREE);
@@ -125,7 +125,7 @@ cleanup_wptr_test(struct spdk_ftl_dev *dev)
 {
 	size_t i;
 
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		dev->bands[i].lba_map.segments = NULL;
 		test_free_ftl_band(&dev->bands[i]);
 	}
@@ -148,7 +148,7 @@ test_wptr(void)
 
 	xfer_size = dev->xfer_size;
 	ftl_add_wptr(dev);
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
 		wptr = LIST_FIRST(&dev->wptr_list);
 		band = wptr->band;
 		ftl_band_set_state(band, FTL_BAND_STATE_OPENING);
@@ -180,7 +180,7 @@ test_wptr(void)
 
 		/* There are no free bands during the last iteration, so */
 		/* there'll be no new wptr allocation */
-		if (i == (ftl_dev_num_bands(dev) - 1)) {
+		if (i == (ftl_get_num_bands(dev) - 1)) {
 			CU_ASSERT_EQUAL(rc, -1);
 		} else {
 			CU_ASSERT_EQUAL(rc, 0);

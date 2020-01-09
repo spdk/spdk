@@ -264,7 +264,7 @@ ftl_md_write_cb(struct ftl_io *io, void *arg, int status)
 		 * onto current band and update their counters to allow them to be used for writing
 		 * (once they're closed and empty).
 		 */
-		for (id = 0; id < ftl_dev_num_bands(dev); ++id) {
+		for (id = 0; id < ftl_get_num_bands(dev); ++id) {
 			if (spdk_bit_array_get(band->reloc_bitmap, id)) {
 				assert(dev->bands[id].num_reloc_bands > 0);
 				dev->bands[id].num_reloc_bands--;
