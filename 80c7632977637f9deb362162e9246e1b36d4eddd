@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "557a35b7_ad0eb005",
+        "filename": "autobuild.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-09T22:36:12Z",
+      "side": 1,
+      "message": "If it\u0027s OK, I\u0027ll leave this one as is for the time being. I am going to wrap it all in a function here: https://review.gerrithub.io/c/spdk/spdk/+/479898",
+      "parentUuid": "0e9c1e59_44328b96",
+      "revId": "80c7632977637f9deb362162e9246e1b36d4eddd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a85f74bf_16b32895",
         "filename": "autobuild.sh",
         "patchSetId": 11
@@ -33,6 +51,24 @@
       "revId": "80c7632977637f9deb362162e9246e1b36d4eddd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf17bc86_ac49b62c",
+        "filename": "autobuild.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-09T22:36:12Z",
+      "side": 1,
+      "message": "I can just drop the configure actually since we do it at the top of the file.",
+      "parentUuid": "a85f74bf_16b32895",
+      "revId": "80c7632977637f9deb362162e9246e1b36d4eddd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
