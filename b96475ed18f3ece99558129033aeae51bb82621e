@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec58ff92_9e14efa1",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1794,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T20:14:43Z",
+      "side": 1,
+      "message": "I like getting rid of the wrappers, but I\u0027d suggest we keep the old name for the \u0027new\u0027 function\n\nthat way these keep function names that match the entry in the function table, rather than the fn_table using delete_io_qpair and the actual function being called destroy\n\nsimilar for other functions here",
+      "revId": "b96475ed18f3ece99558129033aeae51bb82621e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
