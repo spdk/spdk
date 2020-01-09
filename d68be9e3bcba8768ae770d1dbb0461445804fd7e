@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04b9c146_4820ebef",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-09T10:56:01Z",
+      "side": 1,
+      "message": "As noted in https://review.gerrithub.io/c/spdk/spdk/+/459677/15/test/lvol/basic.sh\nthis is an inconsistent change.\nYou add a negative test case in new function, but in previous commits you added negative steps to test_construct_lvs which is meant (I think) to be a positive test.",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 46
+      },
+      "revId": "d68be9e3bcba8768ae770d1dbb0461445804fd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a51b72a3_24892d0e",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-09T10:56:01Z",
+      "side": 1,
+      "message": "Rephrase to smth like \"Create first bdev and lvs\"",
+      "range": {
+        "startLine": 43,
+        "startChar": 3,
+        "endLine": 43,
+        "endChar": 23
+      },
+      "revId": "d68be9e3bcba8768ae770d1dbb0461445804fd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "371d05ce_1d483115",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-09T10:56:01Z",
+      "side": 1,
+      "message": "Rephrase to smth like \"Create second bdev and lvs\"",
+      "range": {
+        "startLine": 47,
+        "startChar": 1,
+        "endLine": 47,
+        "endChar": 13
+      },
+      "revId": "d68be9e3bcba8768ae770d1dbb0461445804fd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
