@@ -1078,9 +1078,8 @@ static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target 
 }
 
 static int
-bdevperf_construct_targets_tasks(void)
+bdevperf_construct_tasks_on_group(struct io_target_group *group)
 {
-	struct io_target_group *group;
 	struct io_target *target;
 	struct bdevperf_task *task;
 	int i, task_num = g_queue_depth;
@@ -1089,16 +1088,30 @@ bdevperf_construct_targets_tasks(void)
 		task_num += 1;
 	}
 
+	TAILQ_FOREACH(target, &group->targets, link) {
+		for (i = 0; i < task_num; i++) {
+			task = bdevperf_construct_task_on_target(target);
+			if (task == NULL) {
+				return -1;
+			}
+			TAILQ_INSERT_TAIL(&target->task_list, task, link);
+		}
+	}
+
+	return 0;
+}
+
+static int
+bdevperf_construct_targets_tasks(void)
+{
+	struct io_target_group *group;
+	int rc;
+
 	/* Initialize task list for each target */
 	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
-		TAILQ_FOREACH(target, &group->targets, link) {
-			for (i = 0; i < task_num; i++) {
-				task = bdevperf_construct_task_on_target(target);
-				if (task == NULL) {
-					goto ret;
-				}
-				TAILQ_INSERT_TAIL(&target->task_list, task, link);
-			}
+		rc = bdevperf_construct_tasks_on_group(group);
+		if (rc != 0) {
+			goto ret;
 		}
 	}
 
