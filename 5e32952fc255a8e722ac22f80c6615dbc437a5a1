@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "65de0138_b3b14dd7",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-09T10:52:08Z",
+      "side": 1,
+      "message": "Should these changes be placed inside this function? It\u0027s rather inconsistent with how we approach lvol_bdev tests which have a positive test (test_construct_lvol) and a couple of negative ones (like test_construct_lvols_conflict_alias for example).\n\nShouldn\u0027t we create a new test function for a negative test case, like \"test_construct_lvs_inexistent_bdev\"?",
+      "range": {
+        "startLine": 9,
+        "startChar": 8,
+        "endLine": 9,
+        "endChar": 29
+      },
+      "revId": "5e32952fc255a8e722ac22f80c6615dbc437a5a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "42ebc161_c2f93ad6",
         "filename": "test/lvol/basic.sh",
         "patchSetId": 15
