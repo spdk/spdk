@@ -893,6 +893,7 @@ _spdk_blob_serialize_extent_table(const struct spdk_blob *blob,
 	return 0;
 }
 
+#if 0
 static void
 _spdk_blob_serialize_extent_rle(const struct spdk_blob *blob,
 				uint64_t start_cluster, uint64_t *next_cluster,
@@ -987,6 +988,7 @@ _spdk_blob_serialize_extents_rle(const struct spdk_blob *blob,
 
 	return 0;
 }
+#endif
 
 static void
 _spdk_blob_serialize_extent(const struct spdk_blob *blob,
@@ -1144,9 +1146,10 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 	if (rc < 0) {
 		return rc;
 	}
-
+#if 0
 	/* Serialize extents */
 	rc = _spdk_blob_serialize_extents_rle(blob, pages, cur_page, page_count, &buf, &remaining_sz);
+#endif
 
 	return rc;
 }
