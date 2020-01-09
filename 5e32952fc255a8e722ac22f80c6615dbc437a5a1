@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42ebc161_c2f93ad6",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T00:00:50Z",
+      "side": 1,
+      "message": "I still don\u0027t understand this comment.  We aren\u0027t creating a dummy bdev on line 11.  We are creating a real bdev that is going to be used later on (line 16).\n\nI think you can just put your new lines 12 and 13 at the beginning of the test_construct_lvs().  The rest of the function should stay the same.",
+      "revId": "5e32952fc255a8e722ac22f80c6615dbc437a5a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
