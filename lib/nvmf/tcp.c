@@ -764,10 +764,12 @@ spdk_nvmf_tcp_qpair_disconnect(struct spdk_nvmf_tcp_qpair *tqpair)
 }
 
 static void
-_pdu_write_done(void *cb_arg, int err)
+_pdu_write_done(void *_pdu, int err)
 {
-	struct nvme_tcp_pdu *pdu = cb_arg;
-	struct spdk_nvmf_tcp_qpair *tqpair = pdu->qpair;
+	struct nvme_tcp_pdu			*pdu = _pdu;
+	struct spdk_nvmf_tcp_qpair		*tqpair = pdu->qpair;
+	nvme_tcp_qpair_xfer_complete_cb		cb_fn;
+	void					*cb_arg;
 
 	TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
 
@@ -783,9 +785,15 @@ _pdu_write_done(void *cb_arg, int err)
 	}
 
 	assert(pdu->cb_fn != NULL);
-	pdu->cb_fn(pdu->cb_arg);
+
+	/* Capture the callback and argument so we can free the PDU
+	 * prior to calling the callback. */
+	cb_fn = pdu->cb_fn;
+	cb_arg = pdu->cb_arg;
 
 	spdk_nvmf_tcp_pdu_put(tqpair, pdu);
+
+	cb_fn(cb_arg);
 }
 
 static void
