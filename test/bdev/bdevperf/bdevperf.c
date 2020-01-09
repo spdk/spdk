@@ -115,7 +115,6 @@ struct io_target {
 
 struct io_target_group {
 	TAILQ_HEAD(, io_target)		targets;
-	uint32_t			lcore;
 	TAILQ_ENTRY(io_target_group)	link;
 };
 
@@ -862,42 +861,83 @@ get_ema_io_per_second(struct io_target *target, uint64_t ema_period)
 	return target->ema_io_per_second;
 }
 
-static void
-performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
-{
-	unsigned lcore_id;
-	double io_per_second, mb_per_second;
-	double total_io_per_second, total_mb_per_second;
-	struct io_target_group *group;
-	struct io_target *target;
+struct perf_dump_ctx {
+	uint64_t	io_time_in_usec;
+	uint64_t	ema_period;
+	double		total_io_per_second;
+	double		total_mb_per_second;
+};
 
-	total_io_per_second = 0;
-	total_mb_per_second = 0;
-	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
-		if (!TAILQ_EMPTY(&group->targets)) {
-			lcore_id = group->lcore;
-			printf("\r Logical core: %u\n", lcore_id);
-		}
-		TAILQ_FOREACH(target, &group->targets, link) {
-			if (ema_period == 0) {
-				io_per_second = get_cma_io_per_second(target, io_time_in_usec);
-			} else {
-				io_per_second = get_ema_io_per_second(target, ema_period);
-			}
-			mb_per_second = io_per_second * g_io_size / (1024 * 1024);
-			printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
-			       target->name, io_per_second, mb_per_second);
-			total_io_per_second += io_per_second;
-			total_mb_per_second += mb_per_second;
-		}
-	}
+static void
+_performance_dump_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct perf_dump_ctx *ctx;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
 
 	printf("\r =====================================================\n");
 	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
-	       "Total", total_io_per_second, total_mb_per_second);
+	       "Total", ctx->total_io_per_second, ctx->total_mb_per_second);
 	fflush(stdout);
 
+	free(ctx);
 }
+
+static void
+_performance_dump(struct spdk_io_channel_iter *i)
+{
+	struct perf_dump_ctx *ctx;
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
+	struct io_target *target;
+	double io_per_second, mb_per_second;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	if (TAILQ_EMPTY(&group->targets)) {
+		goto exit;
+	}
+
+	printf("\r Thread name: %s\n", spdk_thread_get_name(spdk_get_thread()));
+
+	TAILQ_FOREACH(target, &group->targets, link) {
+		if (ctx->ema_period == 0) {
+			io_per_second = get_cma_io_per_second(target, ctx->io_time_in_usec);
+		} else {
+			io_per_second = get_ema_io_per_second(target, ctx->ema_period);
+		}
+		mb_per_second = io_per_second * g_io_size / (1024 * 1024);
+		printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
+		       target->name, io_per_second, mb_per_second);
+		ctx->total_io_per_second += io_per_second;
+		ctx->total_mb_per_second += mb_per_second;
+	}
+
+	fflush(stdout);
+
+exit:
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
+{
+	struct perf_dump_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return;
+	}
+
+	ctx->io_time_in_usec = io_time_in_usec;
+	ctx->ema_period = ema_period;
+
+	spdk_for_each_channel(&g_bdevperf, _performance_dump, ctx,
+			      _performance_dump_done);
+}
+
 
 static int
 performance_statistics_thread(void *arg)
@@ -1387,7 +1427,6 @@ io_target_group_create(void *io_device, void *ctx_buf)
 	struct io_target_group *group = ctx_buf;
 
 	TAILQ_INIT(&group->targets);
-	group->lcore = spdk_env_get_current_core();
 
 	return 0;
 }
