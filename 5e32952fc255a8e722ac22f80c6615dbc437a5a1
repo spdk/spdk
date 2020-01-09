@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "712012c8_eccc1641",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-09T13:18:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65de0138_b3b14dd7",
+      "range": {
+        "startLine": 9,
+        "startChar": 8,
+        "endLine": 9,
+        "endChar": 29
+      },
+      "revId": "5e32952fc255a8e722ac22f80c6615dbc437a5a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "42ebc161_c2f93ad6",
         "filename": "test/lvol/basic.sh",
         "patchSetId": 15
@@ -39,6 +63,24 @@
       "revId": "5e32952fc255a8e722ac22f80c6615dbc437a5a1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fde7175c_28777fd8",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-09T13:18:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "42ebc161_c2f93ad6",
+      "revId": "5e32952fc255a8e722ac22f80c6615dbc437a5a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
