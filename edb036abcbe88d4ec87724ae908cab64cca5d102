@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32e5475d_56dc775c",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T19:53:22Z",
+      "side": 1,
+      "message": "is inline needed here?  this would only affect calls within this source file",
+      "revId": "edb036abcbe88d4ec87724ae908cab64cca5d102",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1bb2499d_72c8d0ca",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-09T19:53:22Z",
+      "side": 1,
+      "message": "let\u0027s add a newline here (I know the old function also didn\u0027t have a newline, but since you\u0027ve changed that function and adding a new one let\u0027s fix that here)",
+      "revId": "edb036abcbe88d4ec87724ae908cab64cca5d102",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
