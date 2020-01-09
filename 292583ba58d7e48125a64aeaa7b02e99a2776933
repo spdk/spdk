@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "b722f030_7623d61d",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-09T23:55:00Z",
+      "side": 1,
+      "message": "Hi Ziye,\n\nOops, I thought increasing order, smaller number has higher priority by mistake.\nSo, this patch is fine. Thanks for correcting me.\n\nBy the way, do we already have consensus about larger number has higher priority?\n\nThanks,\nShuhei",
+      "parentUuid": "bea16bf9_1a15b045",
+      "revId": "292583ba58d7e48125a64aeaa7b02e99a2776933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9ccffbd2_39a5f844",
         "filename": "lib/sock/sock.c",
         "patchSetId": 5
