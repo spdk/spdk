@@ -22,6 +22,30 @@
       "revId": "fec2b6638c950c8d7961afb8400fee5a26b7e4b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "099075e2_99088151",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-09T14:38:03Z",
+      "side": 1,
+      "message": "I\u0027m copying init-\u003eopts \u003d *opts so I can\u0027t do this. Of course I can copy necessary opts by hand but it will be less extendable.",
+      "parentUuid": "4358ed4a_0cd8d816",
+      "range": {
+        "startLine": 577,
+        "startChar": 0,
+        "endLine": 582,
+        "endChar": 12
+      },
+      "revId": "fec2b6638c950c8d7961afb8400fee5a26b7e4b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
