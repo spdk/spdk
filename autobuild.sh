@@ -54,6 +54,27 @@ function make_fail_cleanup {
 	false
 }
 
+function scanbuild_make {
+	pass=true
+	$scanbuild $MAKE $MAKEFLAGS > $out/build_output.txt && rm -rf $out/scan-build-tmp || make_fail_cleanup
+	for ent in $(find app examples lib module -type f | grep -vF ".h"); do
+		if file -bi $ent | grep -q 'text/x-c'; then
+			echo $ent | sed 's/\.cp\{0,2\}$//g' >> $out/all_c_files.txt
+		fi
+	done
+
+	sed -n '/Leaving directory /,$p' $out/build_output.txt | grep -E "CC|CXX" | sed 's/\s\s\(CC\|CXX\)\s//g' | sed 's/\.o//g' > $out/built_c_files.txt
+	paste -d '\n' $out/all_c_files.txt $out/built_c_files.txt $rootdir/test/common/skipped_build_files.txt | grep -vE "^test|lib/env_ocf|#" | sort | uniq -u > $out/unbuilt_c_files.txt
+
+	if [ $(cat $out/unbuilt_c_files.txt | wc -l) -ge 1 ]; then
+		echo "missing files"
+		cat $out/unbuilt_c_files.txt
+		pass=false
+	fi
+
+	$pass
+}
+
 function porcelain_check {
 	if [ $(git status --porcelain --ignore-submodules | wc -l) -ne 0 ]; then
 		echo "Generated files missing from .gitignore:"
@@ -117,7 +138,7 @@ function build_doc {
 function autobuild_test_suite {
 	run_test "autobuild_check_format" ./scripts/check_format.sh
 	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh
-	run_test "scanbuild_make" $scanbuild $MAKE $MAKEFLAGS && rm -rf $out/scan-build-tmp || make_fail_cleanup
+	run_test "scanbuild_make" scanbuild_make
 	run_test "autobuild_generated_files_check" porcelain_check
 	run_test "autobuild_header_dependency_check" header_dependency_check
 	run_test "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk prefix=/usr
