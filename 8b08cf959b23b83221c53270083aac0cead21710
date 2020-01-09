@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b99d05b_780dd62c",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2020-01-09T06:59:00Z",
+      "side": 1,
+      "message": "We can warn if rc \u003c 0 but errno is not one of these two values, but why did you while-true-d this out? what goes wrong or less successful if we use the no-while-true version?",
+      "range": {
+        "startLine": 476,
+        "startChar": 1,
+        "endLine": 482,
+        "endChar": 4
+      },
+      "revId": "8b08cf959b23b83221c53270083aac0cead21710",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
