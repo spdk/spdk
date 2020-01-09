@@ -16,6 +16,24 @@
       "revId": "9284271baf74c6ab0b0043f2d9756692cadc631e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73686401_dd21237a",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-09T05:08:20Z",
+      "side": 1,
+      "message": "spdk_nvme_wait_for_completion_robust_lock() and spdk_nvme_wait_for_completion_timeout() are also need to update if we already set the status-\u003ecpl and status-\u003edone to zero.",
+      "parentUuid": "15174e0d_d7033fd3",
+      "revId": "9284271baf74c6ab0b0043f2d9756692cadc631e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
