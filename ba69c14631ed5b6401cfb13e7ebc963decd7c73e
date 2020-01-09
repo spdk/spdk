@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe5a2682_b3c41854",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T12:51:17Z",
+      "side": 1,
+      "message": "It\u0027d probably be worth it to have one function for closing a bdev.",
+      "range": {
+        "startLine": 617,
+        "startChar": 0,
+        "endLine": 624,
+        "endChar": 2
+      },
+      "revId": "ba69c14631ed5b6401cfb13e7ebc963decd7c73e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d30bc317_9cab0ea5",
+        "filename": "module/bdev/ftl/bdev_ftl.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-09T12:51:17Z",
+      "side": 1,
+      "message": "Let\u0027s call it bdev_ftl_create_bdev to be consistent with delete.",
+      "range": {
+        "startLine": 66,
+        "startChar": 4,
+        "endLine": 66,
+        "endChar": 19
+      },
+      "revId": "ba69c14631ed5b6401cfb13e7ebc963decd7c73e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
