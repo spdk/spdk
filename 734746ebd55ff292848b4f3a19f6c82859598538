@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d388111_de54f077",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2020-01-10T15:01:43Z",
+      "side": 1,
+      "message": "what is R2T ack? I assume you don\u0027t refer to the ack in the TCP level..",
+      "range": {
+        "startLine": 9,
+        "startChar": 51,
+        "endLine": 10,
+        "endChar": 21
+      },
+      "revId": "734746ebd55ff292848b4f3a19f6c82859598538",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
