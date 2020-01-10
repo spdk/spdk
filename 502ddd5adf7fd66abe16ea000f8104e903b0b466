@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45ab14e4_d15bc8f8",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-10T06:07:24Z",
+      "side": 1,
+      "message": "Where this io_output is verified or used?\nI can not find any place which uses or references g_io_output[].",
+      "range": {
+        "startLine": 304,
+        "startChar": 0,
+        "endLine": 304,
+        "endChar": 13
+      },
+      "revId": "502ddd5adf7fd66abe16ea000f8104e903b0b466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
