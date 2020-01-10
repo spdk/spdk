@@ -716,7 +716,7 @@ nvmf_target_advance_state(void)
 		case NVMF_INIT_SUBSYSTEM:
 			/* initlize the bdev layer */
 			spdk_subsystem_init(nvmf_subsystem_init_done, NULL);
-			break;
+			return;
 		case NVMF_INIT_TARGET:
 			nvmf_create_nvmf_tgt();
 			break;
