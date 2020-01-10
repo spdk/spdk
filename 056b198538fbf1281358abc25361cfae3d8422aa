@@ -16,6 +16,24 @@
       "revId": "056b198538fbf1281358abc25361cfae3d8422aa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "157ef45a_ab90113f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 22
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-10T22:48:39Z",
+      "side": 1,
+      "message": "I\u0027m trying to hunt down a bug that I can\u0027t reproduce at my desk. I marked the patch work in progress to make it clear that this isn\u0027t ready for review at the moment.",
+      "parentUuid": "fcfab5e1_baba5eb9",
+      "revId": "056b198538fbf1281358abc25361cfae3d8422aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
