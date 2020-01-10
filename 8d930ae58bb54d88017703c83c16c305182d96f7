@@ -22,6 +22,30 @@
       "revId": "8d930ae58bb54d88017703c83c16c305182d96f7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d3423bd_c35d7d6c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-10T16:47:04Z",
+      "side": 1,
+      "message": "With something like iSCSI, which has a very similar R2T/PDU design, but lacks a pre-negotiated maximum data transfer size (MDTS), using multiple R2Ts per incoming command is critically important. The user could send a 1MB write, for instance, and the target needs the ability to flow control when that data is actually sent.\n\nHowever, with NVMe-oF, the target can simply report an MDTS value that caps the maximum size of a single command. The initiator side will then split the command up as necessary. This isn\u0027t strictly equivalent to using multiple R2Ts per command because these extra commands take up queue slots, but it\u0027s close enough for our purposes. I\u0027d also posit that any special flow control that was being done via R2T could just as easily be done by processing the incoming commands themselves out of order. Either way, the SPDK target processes everything exactly in order anyway, which is what I meant by \" with our target design, there\u0027s no advantage to sending multiple R2T PDUs\".\n\nIn practice, the target was always setting the max R2T size equal to MDTS already, and that\u0027s all the automated tests were ever actually verifying. So while the code technically did support having different values for those two, it was never verified that it actually works. I think it makes the transport much, much simpler to just remove it.\n\nBut I\u0027ll let Ziye weigh in before we move forward with this. He may have some insight into why this is necessary that I\u0027m missing.",
+      "parentUuid": "5065994e_821c0be3",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 35
+      },
+      "revId": "8d930ae58bb54d88017703c83c16c305182d96f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
