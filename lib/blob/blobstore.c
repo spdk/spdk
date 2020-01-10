@@ -361,7 +361,7 @@ _spdk_blob_mark_clean(struct spdk_blob *blob)
 			free(clusters);
 			return -ENOMEM;
 		}
-		memcpy(pages, blob->active.pages, blob->active.num_pages * sizeof(*pages));
+		memcpy(pages, blob->active.pages, blob->active.num_pages * sizeof(*blob->active.pages));
 	}
 
 	free(blob->clean.clusters);
