@@ -70,6 +70,30 @@
       "revId": "979c674cd4c40ab84ef4532f7ac331da0ded0f0d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f380cc7c_6592e723",
+        "filename": "test/nvmf/target/fio.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-10T12:53:43Z",
+      "side": 1,
+      "message": "Can\u0027t you use:\n i\u003d0\n until lsblk -o NAME,SERIAL | grep -q $NVME_SERIAL; do\n \t[[ $i -lt 100 ]] || break\n \ti\u003d$((i+1))\n \techo \"Waiting for devices\"\n \tsleep 0.1\n done\nlike in other scripts?",
+      "parentUuid": "0501f49a_5dcf81c5",
+      "range": {
+        "startLine": 36,
+        "startChar": 1,
+        "endLine": 36,
+        "endChar": 33
+      },
+      "revId": "979c674cd4c40ab84ef4532f7ac331da0ded0f0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
