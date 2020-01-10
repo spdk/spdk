@@ -13,6 +13,7 @@ trap "exit 1" SIGINT SIGTERM EXIT
 
 TEST_ARGS=( "$@" )
 
+
 run_test "nvmf_example" test/nvmf/target/nvmf_example.sh "${TEST_ARGS[@]}"
 run_test "nvmf_filesystem" test/nvmf/target/filesystem.sh "${TEST_ARGS[@]}"
 run_test "nvmf_discovery" test/nvmf/target/discovery.sh "${TEST_ARGS[@]}"
