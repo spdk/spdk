@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7bc0be9e_4e2aee87",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-10T22:54:54Z",
+      "side": 1,
+      "message": "I only commented one of these -e checks in the last revision, but the question applied to all of them - the one here and others below.  If they aren\u0027t needed, we should remove all of them.",
+      "revId": "3ab5eeabeb04e6ee874269fecb7e79fb77a7cd15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79efc49b_65ce01e0",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 1126,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-10T22:54:54Z",
+      "side": 1,
+      "message": "missed this previously - should this be $TARGET_DIR/*\n\notherwise it seems like this changes functionality compared to the old code",
+      "revId": "3ab5eeabeb04e6ee874269fecb7e79fb77a7cd15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
