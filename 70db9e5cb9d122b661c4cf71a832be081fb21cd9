@@ -34,6 +34,24 @@
       "revId": "70db9e5cb9d122b661c4cf71a832be081fb21cd9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23e24a07_1412732f",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3126,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-10T08:05:54Z",
+      "side": 0,
+      "message": "It looks like we need to allocate a pool of such structures and track free/queued ones like it is done for requests in qpair. I\u0027ll do it in a separate patch",
+      "parentUuid": "2164c373_0140a804",
+      "revId": "70db9e5cb9d122b661c4cf71a832be081fb21cd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
