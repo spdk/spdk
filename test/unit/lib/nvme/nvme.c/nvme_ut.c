@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1210,14 +1210,16 @@ test_nvme_request_check_timeout(void)
 
 struct nvme_completion_poll_status g_status;
 uint64_t completion_delay, timeout_in_secs;
+int g_process_comp_result;
+
 int
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	spdk_delay_us(completion_delay * spdk_get_ticks_hz());
 
-	g_status.done = completion_delay < timeout_in_secs ? true : false;
+	g_status.done = completion_delay < timeout_in_secs && g_process_comp_result == 0 ? true : false;
 
-	return 0;
+	return g_process_comp_result;
 }
 
 static void
@@ -1235,7 +1237,19 @@ test_nvme_wait_for_completion(void)
 	g_status.done = true;
 	rc = spdk_nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
 	CU_ASSERT(g_status.done == false);
-	CU_ASSERT(rc == -EIO);
+	CU_ASSERT(rc == -ECANCELED);
+
+	/* spdk_nvme_qpair_process_completions returns error */
+	g_process_comp_result = -1;
+	completion_delay = 1;
+	timeout_in_secs = 2;
+	rc = spdk_nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
+	CU_ASSERT(rc == -ECANCELED);
+	CU_ASSERT(g_status.done == false);
+	CU_ASSERT(g_status.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(g_status.cpl.status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION);
+
+	g_process_comp_result = 0;
 
 	/* complete in time */
 	completion_delay = 1;

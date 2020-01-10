@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -143,12 +143,27 @@ spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
 	return spdk_nvme_wait_for_completion_robust_lock(qpair, status, NULL);
 }
 
+/**
+ * Poll qpair for completions until a command completes.
+ *
+ * \param qpair queue to poll
+ * \param status completion status
+ * \param timeout_in_secs optional timeout
+ *
+ * \return 0 if command completed without error,
+ * -EIO if command completed with error,
+ * -ECANCELED if command is not completed due to transport/device error or time expired
+ *
+ * The command to wait upon must be submitted with nvme_completion_poll_cb as the callback
+ * and status as the callback argument.
+ */
 int
 spdk_nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
 				      struct nvme_completion_poll_status *status,
 				      uint64_t timeout_in_secs)
 {
 	uint64_t timeout_tsc = 0;
+	int rc = 0;
 
 	memset(&status->cpl, 0, sizeof(status->cpl));
 	status->done = false;
@@ -157,14 +172,20 @@ spdk_nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
 	}
 
 	while (status->done == false) {
-		spdk_nvme_qpair_process_completions(qpair, 0);
+		rc = spdk_nvme_qpair_process_completions(qpair, 0);
+
+		if (rc < 0) {
+			status->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			status->cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+			break;
+		}
 		if (timeout_tsc && spdk_get_ticks() > timeout_tsc) {
 			break;
 		}
 	}
 
-	if (status->done == false) {
-		return -EIO;
+	if (status->done == false || rc < 0) {
+		return -ECANCELED;
 	}
 
 	return spdk_nvme_cpl_is_error(&status->cpl) ? -EIO : 0;
