@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "83a4b311_420967be",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-10T01:21:55Z",
+      "side": 1,
+      "message": "if (task-\u003elast_idx + 1 \u003d\u003d vq-\u003evring.size) {\n    vq-\u003eavail_wrap_counter \u003d !vq-\u003eavail_wrap_counter;\n}\n\nI think some of the code here you can optimize a little bit.",
+      "revId": "1d2ee3a4c51e8f5694c005c75633ee3ffb37cc91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3c44eb32_b111a5e8",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 14
