@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "1bd78de7_0ddee7d6",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2020-01-10T12:51:38Z",
+      "side": 1,
+      "message": "We have one output per nvme-cli command. If we use one file per all commands it can be difficult to know which command failed from diff.",
+      "parentUuid": "87fef835_4c619460",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 38
+      },
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a77b9db5_860f2e79",
         "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
         "patchSetId": 7
@@ -94,6 +118,30 @@
     },
     {
       "key": {
+        "uuid": "597b5e73_ff642f1f",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2020-01-10T12:51:38Z",
+      "side": 1,
+      "message": "nvme-cli command may fail if e.g. some command is not supported by controller.It shouldn\u0027t stop tests.",
+      "parentUuid": "593bd7b5_d91476f5",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 6
+      },
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "81c885ee_b900370b",
         "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
         "patchSetId": 7
@@ -114,6 +162,54 @@
       "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4996c0c_0ee209ff",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2020-01-10T12:51:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "81c885ee_b900370b",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 45
+      },
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb72cacc_7613c4ba",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2020-01-10T12:51:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "81c885ee_b900370b",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 45
+      },
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -140,6 +236,54 @@
     },
     {
       "key": {
+        "uuid": "b2649f60_dfea56c1",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2020-01-10T12:51:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "81df8bd6_d96ac2b4",
+      "range": {
+        "startLine": 69,
+        "startChar": 1,
+        "endLine": 69,
+        "endChar": 6
+      },
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c31c98b4_6eea20bb",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2020-01-10T12:51:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "81df8bd6_d96ac2b4",
+      "range": {
+        "startLine": 69,
+        "startChar": 1,
+        "endLine": 69,
+        "endChar": 6
+      },
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d8857837_3133700f",
         "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
         "patchSetId": 7
@@ -154,6 +298,24 @@
       "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6915bdc0_8f67a028",
+        "filename": "test/nvme/spdk_nvme_cli_cuse.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2020-01-10T12:51:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d8857837_3133700f",
+      "revId": "9f92a4d94055a178b8bfd4f75c3b456cc6bc18ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
