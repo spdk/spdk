@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c140e4e_8c00b90f",
+        "filename": "test/lvol/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-10T12:12:26Z",
+      "side": 1,
+      "message": "We don\u0027t need if statement here. You can just assign $6.",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 21
+      },
+      "revId": "ba812f5d4842db7e09a049f25e1662ffaa9140dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "323fcaa2_eda1ae3c",
+        "filename": "test/lvol/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-10T12:12:26Z",
+      "side": 1,
+      "message": "Should be \u0027if [ ! $pattern ]; then\u0027 (no !). Also please use double brackets.",
+      "range": {
+        "startLine": 43,
+        "startChar": 1,
+        "endLine": 43,
+        "endChar": 24
+      },
+      "revId": "ba812f5d4842db7e09a049f25e1662ffaa9140dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5740c118_4f665b6b",
+        "filename": "test/lvol/snapshot_clone.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-10T12:12:26Z",
+      "side": 1,
+      "message": "We have only one lvol, so we don\u0027t need \u00271\u0027 in its name. Do we need that line at all? You don\u0027t use lvol1 anywhere.",
+      "range": {
+        "startLine": 92,
+        "startChar": 1,
+        "endLine": 92,
+        "endChar": 6
+      },
+      "revId": "ba812f5d4842db7e09a049f25e1662ffaa9140dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6167eec9_136d218f",
+        "filename": "test/lvol/snapshot_clone.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-10T12:12:26Z",
+      "side": 1,
+      "message": "Can we double this value? I have doubts that snapshot will be created before this ends.",
+      "range": {
+        "startLine": 96,
+        "startChar": 75,
+        "endLine": 96,
+        "endChar": 76
+      },
+      "revId": "ba812f5d4842db7e09a049f25e1662ffaa9140dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68afcd86_31a8740e",
+        "filename": "test/lvol/snapshot_clone.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-10T12:12:26Z",
+      "side": 1,
+      "message": "snapshot",
+      "range": {
+        "startLine": 99,
+        "startChar": 10,
+        "endLine": 99,
+        "endChar": 20
+      },
+      "revId": "ba812f5d4842db7e09a049f25e1662ffaa9140dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
