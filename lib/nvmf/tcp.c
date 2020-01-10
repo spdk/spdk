@@ -340,18 +340,27 @@ spdk_nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 	return tcp_req;
 }
 
+static int spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair);
+
 static void
 nvmf_tcp_request_free(struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
+	struct spdk_nvmf_tcp_qpair *tqpair;
 
 	assert(tcp_req != NULL);
-
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tcp_req=%p will be freed\n", tcp_req);
+
 	ttransport = SPDK_CONTAINEROF(tcp_req->req.qpair->transport,
 				      struct spdk_nvmf_tcp_transport, transport);
+	tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct spdk_nvmf_tcp_qpair, qpair);
+
 	spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_COMPLETED);
 	spdk_nvmf_tcp_req_process(ttransport, tcp_req);
+
+	if (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_REQ) {
+		spdk_nvmf_tcp_sock_process(tqpair);
+	}
 }
 
 static int
