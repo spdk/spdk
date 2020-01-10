@@ -22,6 +22,30 @@
       "revId": "734746ebd55ff292848b4f3a19f6c82859598538",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6c3ffc9_31984339",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-10T16:49:38Z",
+      "side": 1,
+      "message": "It\u0027s the completion callback from spdk_sock_writev_async. When zero copy is enabled, it\u0027s the zero copy completion arriving in the MSG_ERRQUEUE on the sock, meaning the data was actually sent (but not the TCP ack).",
+      "parentUuid": "2d388111_de54f077",
+      "range": {
+        "startLine": 9,
+        "startChar": 51,
+        "endLine": 10,
+        "endChar": 21
+      },
+      "revId": "734746ebd55ff292848b4f3a19f6c82859598538",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
