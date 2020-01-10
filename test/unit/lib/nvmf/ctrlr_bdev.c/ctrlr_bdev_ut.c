@@ -48,6 +48,7 @@ DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "t
 
 struct spdk_bdev {
 	uint32_t blocklen;
+	uint64_t num_blocks;
 	uint32_t md_len;
 };
 
@@ -60,8 +61,7 @@ spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
 uint64_t
 spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 {
-	abort();
-	return 0;
+	return bdev->num_blocks;
 }
 
 uint32_t
@@ -76,6 +76,19 @@ spdk_bdev_get_md_size(const struct spdk_bdev *bdev)
 {
 	return bdev->md_len;
 }
+
+DEFINE_STUB(spdk_bdev_comparev_and_writev_blocks, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct iovec *compare_iov, int compare_iovcnt,
+	     struct iovec *write_iov, int write_iovcnt,
+	     uint64_t offset_blocks, uint64_t num_blocks,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
+
+DEFINE_STUB(spdk_nvmf_ctrlr_process_io_cmd, int, (struct spdk_nvmf_request *req), 0);
+
+DEFINE_STUB_V(spdk_bdev_io_get_nvme_fused_status, (const struct spdk_bdev_io *bdev_io,
+		uint32_t *cdw0, int *cmp_sct, int *cmp_sc, int *wr_sct, int *wr_sc));
 
 DEFINE_STUB(spdk_bdev_is_md_interleaved, bool, (const struct spdk_bdev *bdev), false);
 
@@ -248,6 +261,136 @@ test_get_dif_ctx(void)
 	CU_ASSERT(dif_ctx.init_ref_tag == 0x90ABCDEF);
 }
 
+static void
+test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(void)
+{
+	int rc;
+	struct spdk_bdev bdev = {};
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel ch = {};
+
+	struct spdk_nvmf_request cmp_req;
+	union nvmf_c2h_msg cmp_rsp;
+
+	struct spdk_nvmf_request write_req;
+	union nvmf_c2h_msg write_rsp;
+
+	struct spdk_nvmf_qpair qpair;
+
+	struct spdk_nvme_cmd cmp_cmd;
+	struct spdk_nvme_cmd write_cmd;
+
+	struct spdk_nvmf_ctrlr ctrlr;
+	struct spdk_nvmf_subsystem subsystem;
+	struct spdk_nvmf_ns ns;
+	struct spdk_nvmf_ns *subsys_ns[1];
+
+	struct spdk_nvmf_poll_group group;
+	struct spdk_nvmf_subsystem_poll_group sgroups;
+	struct spdk_nvmf_subsystem_pg_ns_info ns_info;
+
+	bdev.blocklen = 512;
+	bdev.num_blocks = 10;
+	ns.bdev = &bdev;
+
+	subsystem.id = 0;
+	subsystem.max_nsid = 1;
+	subsys_ns[0] = &ns;
+	subsystem.ns = (struct spdk_nvmf_ns **)&subsys_ns;
+
+	/* Enable controller */
+	ctrlr.vcprop.cc.bits.en = 1;
+	ctrlr.subsys = &subsystem;
+
+	group.num_sgroups = 1;
+	sgroups.num_ns = 1;
+	sgroups.ns_info = &ns_info;
+	group.sgroups = &sgroups;
+
+	qpair.ctrlr = &ctrlr;
+	qpair.group = &group;
+
+	cmp_req.qpair = &qpair;
+	cmp_req.cmd = (union nvmf_h2c_msg *)&cmp_cmd;
+	cmp_req.rsp = &cmp_rsp;
+
+	cmp_cmd.nsid = 1;
+	cmp_cmd.fuse = SPDK_NVME_CMD_FUSE_FIRST;
+	cmp_cmd.opc = SPDK_NVME_OPC_COMPARE;
+
+	write_req.qpair = &qpair;
+	write_req.cmd = (union nvmf_h2c_msg *)&write_cmd;
+	write_req.rsp = &write_rsp;
+
+	write_cmd.nsid = 1;
+	write_cmd.fuse = SPDK_NVME_CMD_FUSE_SECOND;
+	write_cmd.opc = SPDK_NVME_OPC_WRITE;
+
+	/* 1. SUCCESS */
+	cmp_cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
+	cmp_cmd.cdw12 = 1;	/* NLB: CDW12 bits 15:00, 0's based */
+
+	write_cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
+	write_cmd.cdw12 = 1;	/* NLB: CDW12 bits 15:00, 0's based */
+	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen;
+
+	rc = spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(&bdev, desc, &ch, &cmp_req, &write_req);
+
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	CU_ASSERT(cmp_rsp.nvme_cpl.status.sct == 0);
+	CU_ASSERT(cmp_rsp.nvme_cpl.status.sc == 0);
+	CU_ASSERT(write_rsp.nvme_cpl.status.sct == 0);
+	CU_ASSERT(write_rsp.nvme_cpl.status.sc == 0);
+
+	/* 2. Fused command start lba / num blocks mismatch */
+	cmp_cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
+	cmp_cmd.cdw12 = 2;	/* NLB: CDW12 bits 15:00, 0's based */
+
+	write_cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
+	write_cmd.cdw12 = 1;	/* NLB: CDW12 bits 15:00, 0's based */
+	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen;
+
+	rc = spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(&bdev, desc, &ch, &cmp_req, &write_req);
+
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(cmp_rsp.nvme_cpl.status.sct == 0);
+	CU_ASSERT(cmp_rsp.nvme_cpl.status.sc == 0);
+	CU_ASSERT(write_rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(write_rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* 3. SPDK_NVME_SC_LBA_OUT_OF_RANGE */
+	cmp_cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
+	cmp_cmd.cdw12 = 100;	/* NLB: CDW12 bits 15:00, 0's based */
+
+	write_cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
+	write_cmd.cdw12 = 100;	/* NLB: CDW12 bits 15:00, 0's based */
+	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen;
+
+	rc = spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(&bdev, desc, &ch, &cmp_req, &write_req);
+
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(cmp_rsp.nvme_cpl.status.sct == 0);
+	CU_ASSERT(cmp_rsp.nvme_cpl.status.sc == 0);
+	CU_ASSERT(write_rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(write_rsp.nvme_cpl.status.sc == SPDK_NVME_SC_LBA_OUT_OF_RANGE);
+
+	/* 4. SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID */
+	cmp_cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
+	cmp_cmd.cdw12 = 1;	/* NLB: CDW12 bits 15:00, 0's based */
+
+	write_cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
+	write_cmd.cdw12 = 1;	/* NLB: CDW12 bits 15:00, 0's based */
+	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen - 1;
+
+	rc = spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(&bdev, desc, &ch, &cmp_req, &write_req);
+
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(cmp_rsp.nvme_cpl.status.sct == 0);
+	CU_ASSERT(cmp_rsp.nvme_cpl.status.sc == 0);
+	CU_ASSERT(write_rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(write_rsp.nvme_cpl.status.sc == SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -266,7 +409,10 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "get_rw_params", test_get_rw_params) == NULL ||
 		CU_add_test(suite, "lba_in_range", test_lba_in_range) == NULL ||
-		CU_add_test(suite, "get_dif_ctx", test_get_dif_ctx) == NULL
+		CU_add_test(suite, "get_dif_ctx", test_get_dif_ctx) == NULL ||
+
+		CU_add_test(suite, "spdk_nvmf_bdev_ctrlr_compare_and_write_cmd",
+			    test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
