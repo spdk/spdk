@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41b195c2_4dfe632c",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-10T09:18:48Z",
+      "side": 1,
+      "message": "Why [DELETE]?",
+      "range": {
+        "startLine": 363,
+        "startChar": 7,
+        "endLine": 363,
+        "endChar": 15
+      },
+      "revId": "319075c7bb62e4d04dbf6a1e8d5d2d3f5ee9a4af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
