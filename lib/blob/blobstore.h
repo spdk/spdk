@@ -518,6 +518,24 @@ _spdk_bs_back_dev_lba_to_io_unit(struct spdk_blob *blob, uint64_t lba)
 	return lba * (blob->back_bs_dev->blocklen / blob->bs->io_unit_size);
 }
 
+static inline uint64_t
+_spdk_bs_cluster_to_extent_table_id(uint64_t cluster_num)
+{
+	return cluster_num / SPDK_EXTENTS_PER_EP;
+}
+
+static inline uint32_t *
+_spdk_bs_cluster_to_extent_page(struct spdk_blob *blob, uint64_t cluster_num)
+{
+	uint64_t extent_table_id = _spdk_bs_cluster_to_extent_table_id(cluster_num);
+
+	if (extent_table_id >= blob->active.extent_pages_array_size) {
+		return NULL;
+	}
+
+	return &blob->active.extent_pages[extent_table_id];
+}
+
 /* End basic conversions */
 
 static inline uint64_t
