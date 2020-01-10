@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "ab758556_62c76040",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-10T07:16:00Z",
+      "side": 1,
+      "message": "Hi Hailiang,\n\nWhat I wanted to let you know was this was 8 byte.\nSo fuzz_fill_random_bytes() only sets the first 8 bytes for all opcodes including unknown opcodes.\n\nDoes this match your expectation?\n\nThanks,\nShuhei",
+      "range": {
+        "startLine": 335,
+        "startChar": 0,
+        "endLine": 335,
+        "endChar": 68
+      },
+      "revId": "57a136498cb4a547902589b956b8534d1ee34bce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7015a947_8def5979",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 49
