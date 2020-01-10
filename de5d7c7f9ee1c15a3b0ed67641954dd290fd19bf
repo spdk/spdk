@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7a6af4d8_c964db2d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 5671,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-10T21:41:52Z",
+      "side": 1,
+      "message": "Used in next patch. I\u0027d rather see it added there, but this is fine with me.",
+      "parentUuid": "ca493177_dcb20f30",
+      "revId": "de5d7c7f9ee1c15a3b0ed67641954dd290fd19bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "989285a7_035f068e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-10T20:49:30Z",
       "side": 1,
       "message": "Can just embed this one line function below.",
+      "revId": "de5d7c7f9ee1c15a3b0ed67641954dd290fd19bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25e19049_7b1d45a5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 5744,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-10T21:41:52Z",
+      "side": 1,
+      "message": "Later on you do some locking around this call, but I\u0027m still not sure it\u0027s strictly necessary.",
+      "parentUuid": "989285a7_035f068e",
       "revId": "de5d7c7f9ee1c15a3b0ed67641954dd290fd19bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
