@@ -22,6 +22,30 @@
       "revId": "e649a2149d4cef87cbc6f6623f0a8e0055507123",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73158e34_b5269da7",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-10T16:41:43Z",
+      "side": 1,
+      "message": "Sadly I can\u0027t. I really, really tried everything I could to avoid doing this, but there is one inescapable problem.\nFor PCIe, we have multiprocess support enabled. This means that the ctrlr struct and the admin qpair are allocated out of shared memory and can be accessed from multiple processes. If I store the transport struct in the controller, the function pointers will be invalid for all of the secondary processes.\nLuckily, the I/O qpairs are not shared between processes so we can store a transport struct in those. I have the check on lines 295-297 to avoid the call to nvme_get_transport in the I/O path.",
+      "parentUuid": "afe4a9b5_a9f82cee",
+      "range": {
+        "startLine": 299,
+        "startChar": 13,
+        "endLine": 299,
+        "endChar": 61
+      },
+      "revId": "e649a2149d4cef87cbc6f6623f0a8e0055507123",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
