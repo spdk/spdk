@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2938456e_0192c879",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 684,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-10T08:03:09Z",
+      "side": 1,
+      "message": "this is common for if and else, and can we move this to the line 673?\nIf true, we may be able to unify the line 674 to 690 with above _bdev_io_put_buf().",
+      "range": {
+        "startLine": 684,
+        "startChar": 2,
+        "endLine": 684,
+        "endChar": 41
+      },
+      "revId": "d5840ac8a792537bd6b314346c85bb78794b353e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f480f7a_07bcb9e0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-10T08:03:09Z",
+      "side": 1,
+      "message": "unnecessary space",
+      "range": {
+        "startLine": 748,
+        "startChar": 16,
+        "endLine": 748,
+        "endChar": 17
+      },
+      "revId": "d5840ac8a792537bd6b314346c85bb78794b353e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
