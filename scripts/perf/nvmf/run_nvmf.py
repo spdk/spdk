@@ -35,13 +35,19 @@ class Server:
 
 class Target(Server):
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
-                 use_null_block=False, sar_settings=None):
+                 use_null_block=False, sar_settings=None, pcm_settings=None):
 
         super(Target, self).__init__(name, username, password, mode, nic_ips, transport)
         self.null_block = bool(use_null_block)
         self.enable_sar = False
+        self.enable_pcm_memory = False
+        self.enable_pcm = False
+
         if sar_settings:
             self.enable_sar, self.sar_delay, self.sar_interval, self.sar_count = sar_settings
+
+        if pcm_settings:
+            self.pcm_dir, self.enable_pcm, self.enable_pcm_memory, self.pcm_delay, self.pcm_interval, self.pcm_count = pcm_settings
 
         self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
@@ -175,6 +181,16 @@ class Target(Server):
                 if "Average" in line and "all" in line:
                     self.log_print(line)
             fh.write(out)
+
+    def measure_pcm_memory(self, pcm_file_name):
+        time.sleep(self.pcm_delay)
+        subprocess.run("%s/pcm-memory.x %s -i=%s -csv=%s" % (self.pcm_dir, self.pcm_interval, self.pcm_count,
+                       self.pcm_file_name), shell=True, check=True)
+
+    def measure_pcm(self, pcm_file_name):
+        time.sleep(self.pcm_delay)
+        subprocess.run("%s/pcm.x %s -i=%s -csv=%s" % (self.pcm_dir, self.pcm_interval, self.pcm_count,
+                       self.pcm_file_name), shell=True, check=True)
 
 
 class Initiator(Server):
@@ -327,11 +343,11 @@ runtime={run_time}
 
 class KernelTarget(Target):
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
-                 use_null_block=False, sar_settings=None,
+                 use_null_block=False, sar_settings=None, pcm_settings=None,
                  nvmet_bin="nvmetcli", **kwargs):
 
         super(KernelTarget, self).__init__(name, username, password, mode, nic_ips, transport,
-                                           use_null_block, sar_settings)
+                                           use_null_block, sar_settings, pcm_settings)
         self.nvmet_bin = nvmet_bin
 
     def __del__(self):
@@ -455,11 +471,11 @@ class KernelTarget(Target):
 class SPDKTarget(Target):
 
     def __init__(self, name, username, password, mode, nic_ips, transport="rdma",
-                 use_null_block=False, sar_settings=None,
+                 use_null_block=False, sar_settings=None, pcm_settings=None,
                  num_shared_buffers=4096, num_cores=1, **kwargs):
 
         super(SPDKTarget, self).__init__(name, username, password, mode, nic_ips, transport,
-                                         use_null_block, sar_settings)
+                                         use_null_block, sar_settings, pcm_settings)
         self.num_cores = num_cores
         self.num_shared_buffers = num_shared_buffers
 
@@ -741,6 +757,18 @@ if __name__ == "__main__":
             sar_file_name = "_".join([str(block_size), str(rw), str(io_depth), "sar"])
             sar_file_name = ".".join([sar_file_name, "txt"])
             t = threading.Thread(target=target_obj.measure_sar, args=(target_results_dir, sar_file_name))
+            threads.append(t)
+
+        if target_obj.enable_pcm:
+            pcm_file_name = "_".join("pcm_cpu", [str(block_size), str(rw), str(io_depth)])
+            pcm_file_name = ".".join([pcm_file_name, "csv"])
+            t = threading.Thread(target=target_obj.measure_pcm, args=(target_results_dir, pcm_file_name))
+            threads.append(t)
+
+        if target_obj.enable_pcm_memory:
+            pcm_file_name = "_".join("pcm_memory", [str(block_size), str(rw), str(io_depth)])
+            pcm_file_name = ".".join([pcm_file_name, "csv"])
+            t = threading.Thread(target=target_obj.measure_pcm_memory, args=(target_results_dir, pcm_file_name))
             threads.append(t)
 
         for t in threads:
