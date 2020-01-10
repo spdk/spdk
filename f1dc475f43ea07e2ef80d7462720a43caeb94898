@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abf58391_97e14cb6",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-10T11:35:44Z",
+      "side": 1,
+      "message": "Is kernel-libaio missing",
+      "revId": "f1dc475f43ea07e2ef80d7462720a43caeb94898",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
