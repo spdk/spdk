@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f7eb2ce_179aa0b6",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T13:24:26Z",
+      "side": 1,
+      "message": "I think you could just do ftl_to_addr(CIRCLEQ_FIRST(\u0026band-\u003ezones)-\u003einfo.zone_id).",
+      "range": {
+        "startLine": 421,
+        "startChar": 0,
+        "endLine": 424,
+        "endChar": 13
+      },
+      "revId": "a92c1e392f591d1bbcafa23f1695e85f1ae45177",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
