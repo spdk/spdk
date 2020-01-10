@@ -67,6 +67,9 @@ struct spdk_blob_mut_data {
 	/* Number of data clusters in the blob */
 	uint64_t	num_clusters;
 
+	/* Number of data clusters in the blob */
+	uint64_t	total_num_clusters;
+
 	/* Array LBAs that are the beginning of a cluster, in
 	 * the order they appear in the blob.
 	 */
@@ -76,6 +79,18 @@ struct spdk_blob_mut_data {
 	 * equal to 'num_clusters'.
 	 */
 	size_t		cluster_array_size;
+
+	/* Number of extent pages */
+	uint64_t	num_extent_pages;
+
+	/* Array of page offsets into the metadata region,
+	 * containing extents. Can contain entries for not yet
+	 * allocated pages. */
+	uint32_t	*extent_pages;
+
+	/* The size of the extent page array. This is greater than or
+	 * equal to 'num_extent_pages'. */
+	size_t		extent_pages_array_size;
 
 	/* Number of metadata pages */
 	uint32_t	num_pages;
@@ -247,6 +262,7 @@ struct spdk_bs_md_mask {
 #define SPDK_MD_DESCRIPTOR_TYPE_XATTR 2
 #define SPDK_MD_DESCRIPTOR_TYPE_FLAGS 3
 #define SPDK_MD_DESCRIPTOR_TYPE_XATTR_INTERNAL 4
+#define SPDK_MD_DESCRIPTOR_TYPE_EXTENT_TABLE 5
 
 struct spdk_blob_md_descriptor_xattr {
 	uint8_t		type;
@@ -267,6 +283,19 @@ struct spdk_blob_md_descriptor_extent_rle {
 		uint32_t        cluster_idx;
 		uint32_t        length; /* In units of clusters */
 	} extents[0];
+};
+
+struct spdk_blob_md_descriptor_extent_table {
+	uint8_t		type;
+	uint32_t	length;
+
+	/* Number of data clusters in the blob */
+	uint64_t	num_clusters;
+
+	struct {
+		uint32_t	extent_idx;
+		uint32_t	num_pages; /* In units of pages */
+	} extent_page[0];
 };
 
 #define SPDK_BLOB_THIN_PROV (1ULL << 0)
