@@ -351,7 +351,7 @@ _spdk_blob_mark_clean(struct spdk_blob *blob)
 		if (!clusters) {
 			return -ENOMEM;
 		}
-		memcpy(clusters, blob->active.clusters, blob->active.num_clusters * sizeof(*clusters));
+		memcpy(clusters, blob->active.clusters, blob->active.num_clusters * sizeof(*blob->active.clusters));
 	}
 
 	if (blob->active.num_pages) {
@@ -502,7 +502,7 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			if (cluster_count == 0) {
 				return -EINVAL;
 			}
-			tmp = realloc(blob->active.clusters, cluster_count * sizeof(uint64_t));
+			tmp = realloc(blob->active.clusters, cluster_count * sizeof(*blob->active.clusters));
 			if (tmp == NULL) {
 				return -ENOMEM;
 			}
@@ -1144,7 +1144,7 @@ _spdk_blob_persist_clear_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 		void *tmp;
 
 		/* scan-build really can't figure reallocs, workaround it */
-		tmp = realloc(blob->active.clusters, sizeof(uint64_t) * blob->active.num_clusters);
+		tmp = realloc(blob->active.clusters, sizeof(*blob->active.clusters) * blob->active.num_clusters);
 		assert(tmp != NULL);
 		blob->active.clusters = tmp;
 #endif
@@ -1383,12 +1383,12 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 		/* Expand the cluster array if necessary.
 		 * We only shrink the array when persisting.
 		 */
-		tmp = realloc(blob->active.clusters, sizeof(uint64_t) * sz);
+		tmp = realloc(blob->active.clusters, sizeof(*blob->active.clusters) * sz);
 		if (sz > 0 && tmp == NULL) {
 			return -ENOMEM;
 		}
 		memset(tmp + blob->active.cluster_array_size, 0,
-		       sizeof(uint64_t) * (sz - blob->active.cluster_array_size));
+		       sizeof(*blob->active.clusters) * (sz - blob->active.cluster_array_size));
 		blob->active.clusters = tmp;
 		blob->active.cluster_array_size = sz;
 	}
@@ -4630,7 +4630,7 @@ _spdk_bs_snapshot_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bs
 	ctx->new.blob = newblob;
 	assert(spdk_blob_is_thin_provisioned(newblob));
 	assert(spdk_mem_all_zero(newblob->active.clusters,
-				 newblob->active.num_clusters * sizeof(newblob->active.clusters)));
+				 newblob->active.num_clusters * sizeof(*newblob->active.clusters)));
 
 	_spdk_blob_freeze_io(origblob, _spdk_bs_snapshot_freeze_cpl, ctx);
 }
