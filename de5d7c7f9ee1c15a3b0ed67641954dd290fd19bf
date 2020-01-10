@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca493177_dcb20f30",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 5671,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-10T20:49:30Z",
+      "side": 1,
+      "message": "poller unused",
+      "revId": "de5d7c7f9ee1c15a3b0ed67641954dd290fd19bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "989285a7_035f068e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 5744,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-10T20:49:30Z",
+      "side": 1,
+      "message": "Can just embed this one line function below.",
+      "revId": "de5d7c7f9ee1c15a3b0ed67641954dd290fd19bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83e282f1_9260f332",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 5752,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-10T20:49:30Z",
+      "side": 1,
+      "message": "Forward declaration unnecessary",
+      "revId": "de5d7c7f9ee1c15a3b0ed67641954dd290fd19bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d661dc6_a8b387ac",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 5820,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-10T20:49:30Z",
+      "side": 1,
+      "message": "Not needed",
+      "revId": "de5d7c7f9ee1c15a3b0ed67641954dd290fd19bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
