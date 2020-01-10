@@ -54,9 +54,12 @@ if [ -s /etc/redhat-release ]; then
 		fi
 	fi
 
+	#minimal install
 	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-		git astyle python-pycodestyle lcov python libuuid-devel \
-		sg3_utils libiscsi-devel pciutils ShellCheck
+		libuuid-devel libiscsi-devel
+	#dependencies for developers
+	yum install -y git astyle python-pycodestyle lcov python \
+		sg3_utils pciutils ShellCheck
 	# Additional (optional) dependencies for showing backtrace in logs
 	yum install -y libunwind-devel || true
 	# Additional dependencies for NVMe over Fabrics
@@ -77,9 +80,11 @@ if [ -s /etc/redhat-release ]; then
 	yum install -y fuse3-devel
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
+	#minimal install
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
-		git astyle pep8 lcov clang uuid-dev sg3-utils libiscsi-dev pciutils \
-		shellcheck
+		uuid-dev libiscsi-dev
+	#dependencies for developers
+	apt-get install -yg it astyle pep8 lcov clang sg3-utils pciutils shellcheck
 	# Additional python style checker not available on ubuntu 16.04 or earlier.
 	apt-get install -y pycodestyle || true
 	# Additional (optional) dependencies for showing backtrace in logs
@@ -100,9 +105,12 @@ elif [ -f /etc/debian_version ]; then
 	# Additional dependecies for nvmf performance test script
 	apt-get install -y python3-paramiko
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
+	#minimal install
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
-		git-core lcov python-base python-pycodestyle libuuid-devel sg3_utils pciutils \
-		ShellCheck
+		libuuid-devel
+	#dependencies for developers
+	zypper install -y git-core lcov python-base python-pycodestyle sg3_utils \
+		pciutils ShellCheck
 	# Additional (optional) dependencies for showing backtrace in logs
 	zypper install libunwind-devel || true
 	# Additional dependencies for NVMe over Fabrics
@@ -118,8 +126,11 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	# Additional dependencies for FUSE and CUSE
 	zypper install -y fuse3-devel
 elif [ $(uname -s) = "FreeBSD" ] ; then
-	pkg install -y gmake cunit openssl git devel/astyle bash py27-pycodestyle \
-		python misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
+	#minimal install
+	pkg install -y gmake cunit openssl git bash misc/e2fsprogs-libuuid
+	#dependencies for developers
+	pkg install -y devel/astyle bash py27-pycodestyle python \
+		misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
 	# Additional dependencies for building docs
 	pkg install -y doxygen mscgen graphviz
 	# Additional dependencies for ISA-L used in compression
@@ -127,8 +138,10 @@ elif [ $(uname -s) = "FreeBSD" ] ; then
 elif [ -f /etc/arch-release ]; then
 	# Install main dependencies
 	pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
-		git astyle autopep8 python clang libutil-linux sg3_utils \
-		libiscsi pciutils shellcheck
+		libutil-linux libiscsi
+	#dependencies for developers
+	pacman -Sy --needed --noconfirm git astyle autopep8 python \
+		clang sg3_utils pciutils shellcheck
 
 	# Additional (optional) dependencies for showing backtrace in logs
 	pacman -Sy --needed --noconfirm libunwind
