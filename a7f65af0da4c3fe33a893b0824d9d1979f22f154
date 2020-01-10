@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4243d01c_59b7d49e",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1354,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T12:00:27Z",
+      "side": 1,
+      "message": "What\u0027s the reason behind moving this?",
+      "range": {
+        "startLine": 1348,
+        "startChar": 0,
+        "endLine": 1354,
+        "endChar": 1
+      },
+      "revId": "a7f65af0da4c3fe33a893b0824d9d1979f22f154",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "397aaef5_22c9311c",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1401,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T12:00:27Z",
+      "side": 1,
+      "message": "I don\u0027t think this is the correct place for this trace.",
+      "range": {
+        "startLine": 1401,
+        "startChar": 2,
+        "endLine": 1401,
+        "endChar": 32
+      },
+      "revId": "a7f65af0da4c3fe33a893b0824d9d1979f22f154",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f497a477_3f6c0b62",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1582,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T12:00:27Z",
+      "side": 1,
+      "message": "We\u0027ll be changing the write buffering pretty soon in a way that it\u0027ll no longer be true. Could you explain why is this necessary to check this now?",
+      "range": {
+        "startLine": 1581,
+        "startChar": 0,
+        "endLine": 1582,
+        "endChar": 53
+      },
+      "revId": "a7f65af0da4c3fe33a893b0824d9d1979f22f154",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
