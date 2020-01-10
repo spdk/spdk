@@ -103,7 +103,9 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
  * \param status completion status
  * \param robust_mutex optional robust mutex to lock while polling qpair
  *
- * \return 0 if command completed without error, negative errno on failure
+ * \return 0 if command completed without error,
+ * -EIO if command completed with error,
+ * -ECANCELED if command is not completed due to transport/device error
  *
  * The command to wait upon must be submitted with nvme_completion_poll_cb as the callback
  * and status as the callback argument.
@@ -116,20 +118,23 @@ spdk_nvme_wait_for_completion_robust_lock(
 {
 	memset(&status->cpl, 0, sizeof(status->cpl));
 	status->done = false;
+	int rc;
 
 	while (status->done == false) {
 		if (robust_mutex) {
 			nvme_robust_mutex_lock(robust_mutex);
 		}
 
-		if (spdk_nvme_qpair_process_completions(qpair, 0) < 0) {
-			status->done = true;
-			status->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-			status->cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
-		}
+		rc = spdk_nvme_qpair_process_completions(qpair, 0);
 
 		if (robust_mutex) {
 			nvme_robust_mutex_unlock(robust_mutex);
+		}
+
+		if (rc < 0) {
+			status->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			status->cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+			return -ECANCELED;
 		}
 	}
 
