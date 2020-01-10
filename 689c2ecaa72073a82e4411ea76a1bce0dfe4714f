@@ -57,6 +57,30 @@
       "revId": "689c2ecaa72073a82e4411ea76a1bce0dfe4714f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c3d35f9_70fa40f4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 6012,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-10T01:13:58Z",
+      "side": 1,
+      "message": "I was wrong. range is a member of struct locked_lba_range_ctx",
+      "parentUuid": "bfe8b376_6407e62b",
+      "range": {
+        "startLine": 6012,
+        "startChar": 45,
+        "endLine": 6012,
+        "endChar": 50
+      },
+      "revId": "689c2ecaa72073a82e4411ea76a1bce0dfe4714f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
