@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
+pcm_interval=1
+
 source $rootdir/test/common/autotest_common.sh
 
 if [ ! $(uname -s) = Linux ]; then
@@ -12,6 +14,13 @@ source $rootdir/test/nvmf/common.sh
 trap "exit 1" SIGINT SIGTERM EXIT
 
 TEST_ARGS=( "$@" )
+
+if [ -f $HOME/pcm/pcm-memory.x ]; then
+	$HOME/pcm/pcm-memory.x $pcm_interval -csv=pcm-memory.csv
+	pcm_memory_pid=$!
+	$HOME/pcm/pcm.x $pcm_interval -csv=pcm-cpu.csv
+	pcm_cpu_pid=$!
+fi
 
 run_test "nvmf_example" test/nvmf/target/nvmf_example.sh "${TEST_ARGS[@]}"
 run_test "nvmf_filesystem" test/nvmf/target/filesystem.sh "${TEST_ARGS[@]}"
@@ -53,6 +62,11 @@ run_test "nvmf_fio" test/nvmf/host/fio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_target_disconnect" test/nvmf/host/target_disconnect.sh "${TEST_ARGS[@]}"
 
 timing_exit host
+
+if [ -v pcm_memory_pid ]; then
+	kill $pcm_memory_pid
+	kill $pcm_cpu_pid
+fi
 
 trap - SIGINT SIGTERM EXIT
 revert_soft_roce
