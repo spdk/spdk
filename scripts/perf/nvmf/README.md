@@ -85,3 +85,16 @@ as a runtime environment parameter.
 # Test Results
 When the test completes, you will find a csv file (nvmf_results.csv) containing the results in the target node
 directory /tmp/results.
+
+#Processor Counter Monitor (PCM)
+PCM Tools provides a number of command-line utilities for real-time monitoring.
+Before using PCM Tools in nvmf perf scripts first need to be installed by Your self on Target machine.
+PCM source and instructions are available on https://github.com/opcm/pcm.
+To enable PCM in perf test You need to add Target setting in config.json file:
+```
+"pcm_settings": ["pcdm_directory", "measure_cpu", "measure_memory", delay_time, measure_interval, sample_count]
+```
+example:
+```
+"pcm_settings": ["/home/sys_sgci/pcm", "TRUE", "TRUE", 5, 1, 1]
+```
