@@ -1504,6 +1504,8 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 	uint64_t	*tmp;
 	uint64_t	lfc; /* lowest free cluster */
 	uint64_t	num_clusters;
+	uint32_t	*et_tmp;
+	uint64_t	et_sz, num_extent_pages;
 	struct spdk_blob_store *bs;
 
 	bs = blob->bs;
@@ -1524,6 +1526,11 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 	} else {
 		num_clusters = blob->active.num_clusters;
 	}
+
+	/* Round up since every cluster beyond current Extent Table size,
+	 * requires new extent page. */
+	et_sz = spdk_divide_round_up(sz, SPDK_EXTENTS_PER_EP);
+	num_extent_pages = spdk_divide_round_up(num_clusters, SPDK_EXTENTS_PER_EP);
 
 	/* Do two passes - one to verify that we can obtain enough clusters
 	 * and md pages, another to actually claim them.
@@ -1555,7 +1562,17 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 		blob->active.clusters = tmp;
 		blob->active.cluster_array_size = sz;
 
-		/* TODO: Expand the extents table, only if enough clusters were added */
+		/* Expand the extents table, only if enough clusters were added */
+		if (et_sz > num_extent_pages) {
+			et_tmp = realloc(blob->active.extent_pages, sizeof(uint32_t) * et_sz);
+			if (et_sz > 0 && et_tmp == NULL) {
+				return -ENOMEM;
+			}
+			memset(et_tmp + blob->active.et_array_size, 0,
+			       sizeof(uint32_t) * (et_sz - blob->active.et_array_size));
+			blob->active.extent_pages = et_tmp;
+			blob->active.et_array_size = et_sz;
+		}
 	}
 
 	blob->state = SPDK_BLOB_STATE_DIRTY;
@@ -1569,6 +1586,7 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 	}
 
 	blob->active.num_clusters = sz;
+	blob->active.num_extent_pages = et_sz;
 
 	return 0;
 }
