@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "815c76ed_d346fc07",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-10T02:34:55Z",
+      "side": 1,
+      "message": "g_io_output_index is started to use in the next patch, but adding in this patch is OK to me.",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 27
+      },
+      "revId": "f1811d068f0623dd95cef692164170fcd1e798ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ca148c0_23b26823",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-10T02:34:55Z",
+      "side": 1,
+      "message": "Changing the type to bool may be kind for reader.",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 9
+      },
+      "revId": "f1811d068f0623dd95cef692164170fcd1e798ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a75cfa59_a4ddcffc",
+        "filename": "test/unit/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 702,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-10T02:34:55Z",
+      "side": 1,
+      "message": "This is used as bool. So CU_ASSERT(g_io_comp_status \u003d\u003d true) may be kind for reader.",
+      "range": {
+        "startLine": 702,
+        "startChar": 11,
+        "endLine": 702,
+        "endChar": 27
+      },
+      "revId": "f1811d068f0623dd95cef692164170fcd1e798ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
