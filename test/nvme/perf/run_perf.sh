@@ -96,9 +96,9 @@ elif [ $PLUGIN = "kernel-io-uring" ]; then
 	done
 fi
 
-result_dir=perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}
-mkdir -p $BASE_DIR/results/$result_dir
-result_file=$BASE_DIR/results/$result_dir/perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}.csv
+result_dir=$BASE_DIR/results/perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}
+result_file=$result_dir/perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}.csv
+mkdir -p $result_dir
 unset iops_disks bw mean_lat_disks_usec p99_lat_disks_usec p99_99_lat_disks_usec stdev_disks_usec
 echo "run-time,ramp-time,fio-plugin,QD,block-size,num-cpu-cores,workload,workload-mix" > $result_file
 printf "%s,%s,%s,%s,%s,%s,%s,%s\n" $RUNTIME $RAMP_TIME $PLUGIN $IODEPTH $BLK_SIZE $NO_CORES $RW $MIX >> $result_file
@@ -123,7 +123,7 @@ do
 			run_bdevperf > $NVME_FIO_RESULTS
 			iops_disks[$k]=$((${iops_disks[$k]} + $(get_bdevperf_results iops)))
 			bw[$k]=$((${bw[$k]} + $(get_bdevperf_results bw_Kibs)))
-			cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
+			cp $NVME_FIO_RESULTS $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
 		elif [ $PLUGIN = "spdk-perf-nvme" ]; then
 			run_nvmeperf $k > $NVME_FIO_RESULTS
 			read -r iops bandwidth mean_lat min_lat max_lat <<< $(get_nvmeperf_results)
@@ -134,7 +134,7 @@ do
 			min_lat_disks_usec[$k]=$((${min_lat_disks_usec[$k]} + min_lat))
 			max_lat_disks_usec[$k]=$((${max_lat_disks_usec[$k]} + max_lat))
 
-			cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
+			cp $NVME_FIO_RESULTS $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
 		else
 			create_fio_config $k $PLUGIN "$DISK_NAMES" "$DISKS_NUMA" "$CORES"
 			desc="Running Test: Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH} io_plugin/driver=$PLUGIN"
@@ -157,10 +157,10 @@ do
 
 			if [[ "$PLUGIN" =~ "spdk-plugin" ]]; then
 				run_spdk_nvme_fio $PLUGIN "--output=$NVME_FIO_RESULTS" \
-				"--write_lat_log=$BASE_DIR/results/$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
+				"--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
 			else
 				run_nvme_fio $fio_ioengine_opt "--output=$NVME_FIO_RESULTS" \
-				"--write_lat_log=$BASE_DIR/results/$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
+				"--write_lat_log=$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${DATE}_${k}disks_${j}"
 			fi
 
 			#Store values for every number of used disks
@@ -173,8 +173,8 @@ do
 			mean_slat_disks_usec[$k]=$((${mean_slat_disks_usec[$k]} + $(get_results mean_slat_usec $MIX)))
 			mean_clat_disks_usec[$k]=$((${mean_clat_disks_usec[$k]} + $(get_results mean_clat_usec $MIX)))
 			bw[$k]=$((${bw[$k]} + $(get_results bw_Kibs $MIX)))
-			cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.json
-			cp $BASE_DIR/config.fio $BASE_DIR/results/$result_dir/config_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.fio
+			cp $NVME_FIO_RESULTS $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.json
+			cp $BASE_DIR/config.fio $result_dir/config_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.fio
 			rm -f $BASE_DIR/config.fio
 		fi
 
