@@ -1257,6 +1257,22 @@ test_nvme_wait_for_completion(void)
 	rc = spdk_nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
 	CU_ASSERT(g_status.done == true);
 	CU_ASSERT(rc == 0);
+
+	/* spdk_nvme_wait_for_completion */
+	/* spdk_nvme_qpair_process_completions returns error */
+	g_process_comp_result = -1;
+	rc = spdk_nvme_wait_for_completion(&qpair, &g_status);
+	CU_ASSERT(rc == -ECANCELED);
+	CU_ASSERT(g_status.done == false);
+	CU_ASSERT(g_status.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(g_status.cpl.status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION);
+
+	g_process_comp_result = 0;
+
+	/* successful completion */
+	rc = spdk_nvme_wait_for_completion(&qpair, &g_status);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_status.done == true);
 }
 
 static void
