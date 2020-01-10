@@ -3724,6 +3724,8 @@ blob_dirty_shutdown(void)
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
 
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(g_bs));
+
 	/* Dirty shutdown */
 	_spdk_bs_free(g_bs);
 
@@ -3734,11 +3736,15 @@ blob_dirty_shutdown(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(g_bs));
+
 	/* Get the super blob */
 	spdk_bs_get_super(g_bs, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(blobid1 == g_blobid);
+
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(g_bs));
 
 	spdk_bs_open_blob(g_bs, blobid1, blob_op_with_handle_complete, NULL);
 	poll_threads();
@@ -4693,9 +4699,9 @@ blob_thin_prov_rw(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(free_clusters - 1 == spdk_bs_free_cluster_count(bs));
-	/* For thin-provisioned blob we need to write 20 pages plus one page metadata and
-	 * read 0 bytes */
-	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 21);
+	/* For thin-provisioned blob we need to write 20 pages plus one page metadata plus one extent page
+	 * and read 0 bytes */
+	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 22);
 	CU_ASSERT(g_dev_read_bytes - read_bytes == 0);
 
 	spdk_blob_io_read(blob, channel, payload_read, 4, 10, blob_op_complete, NULL);
@@ -4792,9 +4798,9 @@ blob_thin_prov_rle(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(free_clusters - 1 == spdk_bs_free_cluster_count(bs));
-	/* For thin-provisioned blob we need to write 10 pages plus one page metadata and
-	 * read 0 bytes */
-	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 11);
+	/* For thin-provisioned blob we need to write 10 pages plus one page metadata plus one extent page
+	 * and read 0 bytes */
+	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 12);
 	CU_ASSERT(g_dev_read_bytes - read_bytes == 0);
 
 	spdk_blob_io_read(blob, channel, payload_read, io_unit, 10, blob_op_complete, NULL);
@@ -5166,9 +5172,9 @@ blob_snapshot_rw(void)
 	CU_ASSERT(free_clusters != spdk_bs_free_cluster_count(bs));
 
 	/* For a clone we need to allocate and copy one cluster, update one page of metadata
-	 * and then write 10 pages of payload.
+	 * plus extent page and then write 10 pages of payload.
 	 */
-	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 11 + cluster_size);
+	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 12 + cluster_size);
 	CU_ASSERT(g_dev_read_bytes - read_bytes == cluster_size);
 
 	spdk_blob_io_read(blob, channel, payload_read, 4, 10, blob_op_complete, NULL);
