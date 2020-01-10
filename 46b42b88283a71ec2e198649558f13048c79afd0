@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18eec373_2efd8a39",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-10T07:44:45Z",
+      "side": 1,
+      "message": "I thought that max index is 3 * 16 * 2, and so uint8_t is enough.",
+      "range": {
+        "startLine": 463,
+        "startChar": 1,
+        "endLine": 463,
+        "endChar": 2
+      },
+      "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29b8e149_46ff8205",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1062,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-10T07:44:45Z",
+      "side": 1,
+      "message": "Oh, very complex but well designed.\nI get that index is 0 to 95, and 0 -\u003e 32 -\u003e 64 -\u003e 1 -\u003e 33 ...",
+      "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
