@@ -22,6 +22,30 @@
       "revId": "8cb4f106342a217b27eb93f7f73ef8674a98223a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8396f4f1_c1fa2e84",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-10T16:31:44Z",
+      "side": 0,
+      "message": "This is the line of code that previously made this call do nothing, accidentally. The only scenario where this tcp_req was previously NULL was the mistaken case where the r2t PDU was using the wrong callback function (which this patch fixes). I suspect during initial debug that the author crashed with a NULL pointer and \"fixed\" it with this check, without understanding the real root cause.",
+      "parentUuid": "e08a89c4_86db81f8",
+      "range": {
+        "startLine": 367,
+        "startChar": 2,
+        "endLine": 367,
+        "endChar": 14
+      },
+      "revId": "8cb4f106342a217b27eb93f7f73ef8674a98223a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
