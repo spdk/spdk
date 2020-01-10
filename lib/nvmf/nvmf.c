@@ -672,6 +672,12 @@ spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 		return NULL;
 	}
 
+	/* Ensure that subnqn is null terminated */
+	if (!memchr(subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1)) {
+		SPDK_ERRLOG("Connect SUBNQN is not null terminated\n");
+		return NULL;
+	}
+
 	for (sid = 0; sid < tgt->max_subsystems; sid++) {
 		subsystem = tgt->subsystems[sid];
 		if (subsystem == NULL) {
