@@ -1460,6 +1460,9 @@ rpc_perform_tests_cb(void)
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "bdevperf failed with error %s", spdk_strerror(-g_run_rc));
 	}
+
+	/* Reset g_run_rc to 0 for the next test run. */
+	g_run_rc = 0;
 }
 
 static void
