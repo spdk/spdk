@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "afe4a9b5_a9f82cee",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-10T08:13:17Z",
+      "side": 1,
+      "message": "This call is used in IO path and the current implementation of nvme_get_transport() which iterates the list of transports and compares strings will most likely reduce performance. Probably we can store a pointer to transport inside of controller? I believe that this pointer won\u0027t be changed during life time of the controller",
+      "range": {
+        "startLine": 299,
+        "startChar": 13,
+        "endLine": 299,
+        "endChar": 61
+      },
+      "revId": "e649a2149d4cef87cbc6f6623f0a8e0055507123",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
