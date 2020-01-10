@@ -491,6 +491,21 @@ end_run(void *arg1, void *arg2)
 	}
 }
 
+static int
+end_target(void *arg)
+{
+	struct io_target *target = arg;
+
+	spdk_poller_unregister(&target->run_timer);
+	if (g_reset) {
+		spdk_poller_unregister(&target->reset_timer);
+	}
+
+	target->is_draining = true;
+
+	return -1;
+}
+
 static void
 bdevperf_queue_io_wait_with_cb(struct bdevperf_task *task, spdk_bdev_io_wait_cb cb_fn)
 {
@@ -874,21 +889,6 @@ bdevperf_submit_io(struct io_target *target, int queue_depth)
 		task = bdevperf_target_get_task(target);
 		bdevperf_submit_single(target, task);
 	}
-}
-
-static int
-end_target(void *arg)
-{
-	struct io_target *target = arg;
-
-	spdk_poller_unregister(&target->run_timer);
-	if (g_reset) {
-		spdk_poller_unregister(&target->reset_timer);
-	}
-
-	target->is_draining = true;
-
-	return -1;
 }
 
 static int reset_target(void *arg);
