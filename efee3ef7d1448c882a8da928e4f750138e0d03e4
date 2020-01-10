@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34a7246e_1817b371",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T13:08:53Z",
+      "side": 1,
+      "message": "Why not just check the underlying bdev for append support and use it if it does support it?",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 33
+      },
+      "revId": "efee3ef7d1448c882a8da928e4f750138e0d03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61cafc38_de82f361",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T13:08:53Z",
+      "side": 1,
+      "message": "We only need this to know if we can use the appends for writing. Let\u0027s just use a boolean use_append for this.",
+      "range": {
+        "startLine": 141,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 22
+      },
+      "revId": "efee3ef7d1448c882a8da928e4f750138e0d03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fb1a42b_6dd0ceee",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T13:08:53Z",
+      "side": 1,
+      "message": "Let\u0027s rename this to ftl_addr_get_zone_slba.",
+      "range": {
+        "startLine": 332,
+        "startChar": 0,
+        "endLine": 332,
+        "endChar": 16
+      },
+      "revId": "efee3ef7d1448c882a8da928e4f750138e0d03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ddfb076_55a638bc",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T13:08:53Z",
+      "side": 1,
+      "message": "Why do we need an additional IO type? If we\u0027re using append, we\u0027re using it for all writes, so we could just check spdk_ftl_dev for append support. It\u0027ll significantly reduce the required number of changes.",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 15
+      },
+      "revId": "efee3ef7d1448c882a8da928e4f750138e0d03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
