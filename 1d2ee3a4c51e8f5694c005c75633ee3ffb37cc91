@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "574848aa_cd189384",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-10T09:09:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5ac1e838_1efd4507",
+      "revId": "1d2ee3a4c51e8f5694c005c75633ee3ffb37cc91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83a4b311_420967be",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 14
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-10T01:21:55Z",
       "side": 1,
       "message": "if (task-\u003elast_idx + 1 \u003d\u003d vq-\u003evring.size) {\n    vq-\u003eavail_wrap_counter \u003d !vq-\u003eavail_wrap_counter;\n}\n\nI think some of the code here you can optimize a little bit.",
+      "revId": "1d2ee3a4c51e8f5694c005c75633ee3ffb37cc91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2545174_8d06e46d",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-10T09:09:18Z",
+      "side": 1,
+      "message": "Hi Changpeng. I think it\u0027s not right as the task-\u003elast_idx may be a value less then task-\u003ereq_idx. For example the desc chain may be 126, 127, 0(assume the vring size is 128) so here the last_idx is 0 we still need to reverse the warp counter.",
+      "parentUuid": "83a4b311_420967be",
       "revId": "1d2ee3a4c51e8f5694c005c75633ee3ffb37cc91",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -50,6 +86,24 @@
       "revId": "1d2ee3a4c51e8f5694c005c75633ee3ffb37cc91",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "745d4caf_04878dbf",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-10T09:09:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3c44eb32_b111a5e8",
+      "revId": "1d2ee3a4c51e8f5694c005c75633ee3ffb37cc91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
