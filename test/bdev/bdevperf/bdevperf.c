@@ -258,6 +258,17 @@ error:
 }
 
 static void
+blockdev_heads_destroy(void)
+{
+	struct io_target_group *group, *tmp;
+
+	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp) {
+		TAILQ_REMOVE(&g_bdevperf.groups, group, link);
+		free(group);
+	}
+}
+
+static void
 bdevperf_free_target(struct io_target *target)
 {
 	struct bdevperf_task *task, *tmp;
@@ -280,12 +291,10 @@ bdevperf_free_targets(void)
 	struct io_target *target, *tmp_target;
 
 	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
-		TAILQ_REMOVE(&g_bdevperf.groups, group, link);
 		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
 			TAILQ_REMOVE(&group->targets, target, link);
 			bdevperf_free_target(target);
 		}
-		free(group);
 	}
 }
 
@@ -454,6 +463,7 @@ bdevperf_construct_targets(void)
 static void
 bdevperf_fini(void)
 {
+	blockdev_heads_destroy();
 	spdk_app_stop(g_run_rc);
 }
 
