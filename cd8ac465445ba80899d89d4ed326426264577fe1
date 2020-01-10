@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09a2c992_5088350a",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T13:27:48Z",
+      "side": 1,
+      "message": "Now that there\u0027s only one thread, we should merge these.",
+      "range": {
+        "startLine": 445,
+        "startChar": 0,
+        "endLine": 471,
+        "endChar": 1
+      },
+      "revId": "cd8ac465445ba80899d89d4ed326426264577fe1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
