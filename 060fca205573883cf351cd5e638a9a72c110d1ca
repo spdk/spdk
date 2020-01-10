@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5961c895_252dd717",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-10T18:53:32Z",
+      "side": 1,
+      "message": "offset is fine, but maybe \"address\" (because it\u0027s a \"logical block address range\")",
+      "revId": "060fca205573883cf351cd5e638a9a72c110d1ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8aaa1b9d_a3f8e723",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1902,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-10T18:53:32Z",
+      "side": 1,
+      "message": "Forward declare unnecessary",
+      "revId": "060fca205573883cf351cd5e638a9a72c110d1ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
