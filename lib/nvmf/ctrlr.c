@@ -464,6 +464,32 @@ _spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
 	spdk_thread_send_msg(admin_qpair->group->thread, spdk_nvmf_ctrlr_add_io_qpair, req);
 }
 
+static bool
+spdk_nvmf_qpair_access_allowed(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_subsystem *subsystem,
+			       const char *hostnqn)
+{
+	struct spdk_nvme_transport_id listen_trid = {};
+
+	if (!spdk_nvmf_subsystem_host_allowed(subsystem, hostnqn)) {
+		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s'\n", subsystem->subnqn, hostnqn);
+		return false;
+	}
+
+	if (spdk_nvmf_qpair_get_listen_trid(qpair, &listen_trid)) {
+		SPDK_ERRLOG("Subsystem '%s' is unable to enforce access control due to an internal error.\n",
+			    subsystem->subnqn);
+		return false;
+	}
+
+	if (!spdk_nvmf_subsystem_listener_allowed(subsystem, &listen_trid)) {
+		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s' to connect at this address.\n",
+			    subsystem->subnqn, hostnqn);
+		return false;
+	}
+
+	return true;
+}
+
 static int
 spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
@@ -472,12 +498,8 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_transport *transport = qpair->transport;
-	struct spdk_nvmf_tgt *tgt = transport->tgt;
 	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_subsystem *subsystem;
-	const char *subnqn, *hostnqn;
-	struct spdk_nvme_transport_id listen_trid = {};
-	void *end;
 
 	if (req->length < sizeof(struct spdk_nvmf_fabric_connect_data)) {
 		SPDK_ERRLOG("Connect command data length 0x%x too small\n", req->length);
@@ -506,19 +528,8 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	/* Ensure that subnqn is null terminated */
-	end = memchr(data->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1);
-	if (!end) {
-		SPDK_ERRLOG("Connect SUBNQN is not null terminated\n");
-		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-	subnqn = data->subnqn;
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "  subnqn: \"%s\"\n", subnqn);
-
-	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, subnqn);
-	if (subsystem == NULL) {
-		SPDK_ERRLOG("Could not find subsystem '%s'\n", subnqn);
+	subsystem = spdk_nvmf_tgt_find_subsystem(transport->tgt, data->subnqn);
+	if (!subsystem) {
 		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -527,40 +538,22 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	    (subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSING) ||
 	    (subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED) ||
 	    (subsystem->state == SPDK_NVMF_SUBSYSTEM_DEACTIVATING)) {
-		SPDK_ERRLOG("Subsystem '%s' is not ready\n", subnqn);
+		SPDK_ERRLOG("Subsystem '%s' is not ready\n", subsystem->subnqn);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	/* Ensure that hostnqn is null terminated */
-	end = memchr(data->hostnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1);
-	if (!end) {
+	if (!memchr(data->hostnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1)) {
 		SPDK_ERRLOG("Connect HOSTNQN is not null terminated\n");
 		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, hostnqn);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
-	hostnqn = data->hostnqn;
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "  hostnqn: \"%s\"\n", hostnqn);
 
-	if (!spdk_nvmf_subsystem_host_allowed(subsystem, hostnqn)) {
-		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s'\n", subnqn, hostnqn);
-		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "  hostnqn: \"%s\"\n", data->hostnqn);
 
-	if (spdk_nvmf_qpair_get_listen_trid(qpair, &listen_trid)) {
-		SPDK_ERRLOG("Subsystem '%s' is unable to enforce access control due to an internal error.\n",
-			    subnqn);
-		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	if (!spdk_nvmf_subsystem_listener_allowed(subsystem, &listen_trid)) {
-		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s' to connect at this address.\n", subnqn,
-			    hostnqn);
+	if (!spdk_nvmf_qpair_access_allowed(req->qpair, subsystem, data->hostnqn)) {
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;

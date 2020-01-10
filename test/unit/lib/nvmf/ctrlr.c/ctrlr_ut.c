@@ -436,20 +436,6 @@ test_connect(void)
 	CU_ASSERT(qpair.ctrlr == NULL);
 	cmd.connect_cmd.recfmt = 0;
 
-	/* Unterminated subnqn */
-	memset(&rsp, 0, sizeof(rsp));
-	memset(connect_data.subnqn, 'a', sizeof(connect_data.subnqn));
-	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
-	rc = spdk_nvmf_ctrlr_connect(&req);
-	poll_threads();
-	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
-	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
-	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVMF_FABRIC_SC_INVALID_PARAM);
-	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.iattr == 1);
-	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.ipo == 256);
-	CU_ASSERT(qpair.ctrlr == NULL);
-	snprintf(connect_data.subnqn, sizeof(connect_data.subnqn), "%s", subnqn);
-
 	/* Subsystem not found */
 	memset(&rsp, 0, sizeof(rsp));
 	MOCK_SET(spdk_nvmf_tgt_find_subsystem, NULL);
