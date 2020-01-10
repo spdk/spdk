@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7ec885c_8cc46c7c",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T14:07:06Z",
+      "side": 1,
+      "message": "If we\u0027re already changing this, I think that num_blocks would fit better here.",
+      "range": {
+        "startLine": 134,
+        "startChar": 13,
+        "endLine": 134,
+        "endChar": 22
+      },
+      "revId": "ff8b9a615c1d6171cba4071868067e08034c01cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23d34293_857db05e",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T14:07:06Z",
+      "side": 1,
+      "message": "Rename to num_blocks.",
+      "range": {
+        "startLine": 134,
+        "startChar": 8,
+        "endLine": 134,
+        "endChar": 14
+      },
+      "revId": "ff8b9a615c1d6171cba4071868067e08034c01cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f9d597b_74d8fdee",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T14:07:06Z",
+      "side": 1,
+      "message": "Let\u0027s rename this to num_blocks too.",
+      "range": {
+        "startLine": 112,
+        "startChar": 41,
+        "endLine": 112,
+        "endChar": 50
+      },
+      "revId": "ff8b9a615c1d6171cba4071868067e08034c01cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a8ed7de6_0f6e9454",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T14:07:06Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 163,
+        "startChar": 12,
+        "endLine": 163,
+        "endChar": 21
+      },
+      "revId": "ff8b9a615c1d6171cba4071868067e08034c01cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4d2ded7_13ef7c25",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T14:07:06Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 71,
+        "startChar": 12,
+        "endLine": 71,
+        "endChar": 21
+      },
+      "revId": "ff8b9a615c1d6171cba4071868067e08034c01cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47f0539d_ed71bad5",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T14:07:06Z",
+      "side": 1,
+      "message": "num_blocks",
+      "range": {
+        "startLine": 385,
+        "startChar": 14,
+        "endLine": 385,
+        "endChar": 23
+      },
+      "revId": "ff8b9a615c1d6171cba4071868067e08034c01cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9dd71f3e_57ec8085",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-10T14:07:06Z",
+      "side": 1,
+      "message": "Let\u0027s make it consistent with block_cnt and call it block_off.",
+      "range": {
+        "startLine": 387,
+        "startChar": 8,
+        "endLine": 387,
+        "endChar": 16
+      },
+      "revId": "ff8b9a615c1d6171cba4071868067e08034c01cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
