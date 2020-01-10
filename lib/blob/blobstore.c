@@ -3434,6 +3434,7 @@ _spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct 
 			uint32_t				cluster_idx;
 
 			desc_extent = (struct spdk_blob_md_descriptor_extent *)desc;
+			break;
 
 			for (i = 0; i < desc_extent->length / sizeof(desc_extent->cluster_idx[0]); i++) {
 				cluster_idx = desc_extent->cluster_idx[i];
