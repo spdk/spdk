@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ac1e838_1efd4507",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-10T01:15:22Z",
+      "side": 1,
+      "message": "this line is not required any more.",
+      "revId": "1d2ee3a4c51e8f5694c005c75633ee3ffb37cc91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c44eb32_b111a5e8",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-10T01:15:22Z",
+      "side": 1,
+      "message": "use the macro defined in vhost_internal.h here too.",
+      "revId": "1d2ee3a4c51e8f5694c005c75633ee3ffb37cc91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72478848_f7ddfab3",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-10T01:15:22Z",
+      "side": 1,
+      "message": "Is it better to use SPDK_VHOST_VQ_MAX_SUBMISSIONS ?, at least we should have a SPDK_VHOST prefix.",
+      "revId": "1d2ee3a4c51e8f5694c005c75633ee3ffb37cc91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
