@@ -79,7 +79,9 @@ spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
-			   const struct spdk_nvme_transport_id *trid)
+			   const struct spdk_nvme_transport_id *trid,
+			   spdk_nvmf_tgt_listen_done_fn cb_fn,
+			   void *cb_arg)
 {
 	return 0;
 }
@@ -223,13 +225,13 @@ test_discovery_log(void)
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
 	spdk_nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0,
 					 sizeof(disc_log->genctr));
-	CU_ASSERT(disc_log->genctr == 1); /* one added subsystem */
+	CU_ASSERT(disc_log->genctr == 2); /* one added subsystem and listener */
 
 	/* Get only the header, no entries */
 	memset(buffer, 0xCC, sizeof(buffer));
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
 	spdk_nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0, sizeof(*disc_log));
-	CU_ASSERT(disc_log->genctr == 1);
+	CU_ASSERT(disc_log->genctr == 2);
 	CU_ASSERT(disc_log->numrec == 1);
 
 	/* Offset 0, exact size match */
