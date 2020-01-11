@@ -175,9 +175,11 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport)
 
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
-			   const struct spdk_nvme_transport_id *trid)
+			   const struct spdk_nvme_transport_id *trid,
+			   spdk_nvmf_tgt_listen_done_fn cb_fn,
+			   void *cb_arg)
 {
-	return transport->ops->listen(transport, trid);
+	return transport->ops->listen(transport, trid, cb_fn, cb_arg);
 }
 
 int

@@ -563,16 +563,12 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 		return;
 	}
 
-	rc = spdk_nvmf_transport_listen(transport, trid);
+	rc = spdk_nvmf_transport_listen(transport, trid, cb_fn, cb_arg);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to listen on address '%s'\n", trid->traddr);
 		cb_fn(cb_arg, rc);
 		return;
 	}
-
-	tgt->discovery_genctr++;
-
-	cb_fn(cb_arg, 0);
 }
 
 struct spdk_nvmf_tgt_add_transport_ctx {
