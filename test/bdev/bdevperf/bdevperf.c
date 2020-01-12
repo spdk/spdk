@@ -290,16 +290,22 @@ bdevperf_free_targets(void)
 }
 
 static void
-_target_gone(void *arg1, void *arg2)
+_end_target(struct io_target *target)
 {
-	struct io_target *target = arg1;
-
 	spdk_poller_unregister(&target->run_timer);
 	if (g_reset) {
 		spdk_poller_unregister(&target->reset_timer);
 	}
 
 	target->is_draining = true;
+}
+
+static void
+_target_gone(void *arg1, void *arg2)
+{
+	struct io_target *target = arg1;
+
+	_end_target(target);
 }
 
 static void
@@ -881,12 +887,7 @@ end_target(void *arg)
 {
 	struct io_target *target = arg;
 
-	spdk_poller_unregister(&target->run_timer);
-	if (g_reset) {
-		spdk_poller_unregister(&target->reset_timer);
-	}
-
-	target->is_draining = true;
+	_end_target(target);
 
 	return -1;
 }
