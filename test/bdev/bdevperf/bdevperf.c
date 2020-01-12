@@ -258,6 +258,17 @@ error:
 }
 
 static void
+blockdev_heads_destroy(void)
+{
+	struct io_target_group *group, *tmp;
+
+	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp) {
+		TAILQ_REMOVE(&g_bdevperf.groups, group, link);
+		free(group);
+	}
+}
+
+static void
 bdevperf_free_target(struct io_target *target)
 {
 	struct bdevperf_task *task, *tmp;
@@ -280,12 +291,10 @@ bdevperf_free_targets(void)
 	struct io_target *target, *tmp_target;
 
 	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
-		TAILQ_REMOVE(&g_bdevperf.groups, group, link);
 		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
 			TAILQ_REMOVE(&group->targets, target, link);
 			bdevperf_free_target(target);
 		}
-		free(group);
 	}
 }
 
@@ -448,6 +457,7 @@ bdevperf_construct_targets(void)
 static void
 bdevperf_fini(void)
 {
+	blockdev_heads_destroy();
 	spdk_app_stop(g_run_rc);
 }
 
@@ -500,6 +510,21 @@ bdevperf_queue_io_wait_with_cb(struct bdevperf_task *task, spdk_bdev_io_wait_cb 
 	task->bdev_io_wait.cb_fn = cb_fn;
 	task->bdev_io_wait.cb_arg = task;
 	spdk_bdev_queue_io_wait(target->bdev, target->ch, &task->bdev_io_wait);
+}
+
+static int
+end_target(void *arg)
+{
+	struct io_target *target = arg;
+
+	spdk_poller_unregister(&target->run_timer);
+	if (g_reset) {
+		spdk_poller_unregister(&target->reset_timer);
+	}
+
+	target->is_draining = true;
+
+	return -1;
 }
 
 static void
@@ -556,6 +581,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	} else {
 		TAILQ_INSERT_TAIL(&target->task_list, task, link);
 		if (target->current_queue_depth == 0) {
+			end_target(target);
 			spdk_put_io_channel(target->ch);
 			complete = spdk_event_allocate(g_master_core, end_run, target, NULL);
 			spdk_event_call(complete);
@@ -874,21 +900,6 @@ bdevperf_submit_io(struct io_target *target, int queue_depth)
 		task = bdevperf_target_get_task(target);
 		bdevperf_submit_single(target, task);
 	}
-}
-
-static int
-end_target(void *arg)
-{
-	struct io_target *target = arg;
-
-	spdk_poller_unregister(&target->run_timer);
-	if (g_reset) {
-		spdk_poller_unregister(&target->reset_timer);
-	}
-
-	target->is_draining = true;
-
-	return -1;
 }
 
 static int reset_target(void *arg);
@@ -1449,6 +1460,9 @@ rpc_perform_tests_cb(void)
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "bdevperf failed with error %s", spdk_strerror(-g_run_rc));
 	}
+
+	/* Reset g_run_rc to 0 for the next test run. */
+	g_run_rc = 0;
 }
 
 static void
