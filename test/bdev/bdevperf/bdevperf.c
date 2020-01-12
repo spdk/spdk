@@ -1161,19 +1161,13 @@ bdevperf_target_gone(void *arg)
 }
 
 static int
-bdevperf_construct_target(struct spdk_bdev *bdev)
+bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target_group *group)
 {
-	struct io_target_group *group;
 	struct io_target *target;
 	int block_size, data_block_size;
 	int rc;
 
-	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
-		return 0;
-	}
-
-	target = malloc(sizeof(struct io_target));
+	target = calloc(1, sizeof(struct io_target));
 	if (!target) {
 		fprintf(stderr, "Unable to allocate memory for new target.\n");
 		return -ENOMEM;
@@ -1195,25 +1189,13 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	}
 
 	target->bdev = bdev;
-	target->io_completed = 0;
-	target->current_queue_depth = 0;
-	target->offset_in_ios = 0;
 
 	block_size = spdk_bdev_get_block_size(bdev);
 	data_block_size = spdk_bdev_get_data_block_size(bdev);
 	target->io_size_blocks = g_io_size / data_block_size;
-	if ((g_io_size % data_block_size) != 0) {
-		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
-			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
-		spdk_bdev_close(target->bdev_desc);
-		free(target->name);
-		free(target);
-		return 0;
-	}
 
 	target->buf_size = target->io_size_blocks * block_size;
 
-	target->dif_check_flags = 0;
 	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
 		target->dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
 	}
@@ -1223,18 +1205,8 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 
 	target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
 
-	target->is_draining = false;
-	target->run_timer = NULL;
-	target->reset_timer = NULL;
 	TAILQ_INIT(&target->task_list);
 
-	/* Mapping each created target to target group */
-	if (g_next_tg == NULL) {
-		g_next_tg = TAILQ_FIRST(&g_bdevperf.groups);
-		assert(g_next_tg != NULL);
-	}
-	group = g_next_tg;
-	g_next_tg = TAILQ_NEXT(g_next_tg, link);
 	target->group = group;
 	TAILQ_INSERT_TAIL(&group->targets, target, link);
 	g_target_count++;
@@ -1246,12 +1218,42 @@ struct bdevperf_construct_targets_ctx {
 	int	bdev_count;
 };
 
+static struct io_target_group *
+get_next_io_target_group(void)
+{
+	struct io_target_group *group;
+
+	if (g_next_tg == NULL) {
+		g_next_tg = TAILQ_FIRST(&g_bdevperf.groups);
+		assert(g_next_tg != NULL);
+	}
+
+	group = g_next_tg;
+	g_next_tg = TAILQ_NEXT(g_next_tg, link);
+
+	return group;
+}
+
 static void
 _bdevperf_construct_targets(struct spdk_bdev *bdev,
 			    struct bdevperf_construct_targets_ctx *ctx)
 {
+	uint32_t data_block_size;
 	uint8_t core_idx, core_count_for_each_bdev;
+	struct io_target_group *group;
 	int rc;
+
+	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
+		goto end;
+	}
+
+	data_block_size = spdk_bdev_get_data_block_size(bdev);
+	if ((g_io_size % data_block_size) != 0) {
+		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
+			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
+		goto end;
+	}
 
 	if (g_every_core_for_each_bdev == false) {
 		core_count_for_each_bdev = 1;
@@ -1260,12 +1262,14 @@ _bdevperf_construct_targets(struct spdk_bdev *bdev,
 	}
 
 	for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
-		rc = bdevperf_construct_target(bdev);
+		group = get_next_io_target_group();
+		rc = bdevperf_construct_target(bdev, group);
 		if (rc != 0) {
 			break;
 		}
 	}
 
+end:
 	if (--ctx->bdev_count == 0) {
 		free(ctx);
 		bdevperf_test();
