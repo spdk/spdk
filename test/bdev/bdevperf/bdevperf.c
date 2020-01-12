@@ -1261,13 +1261,13 @@ bdevperf_construct_targets(void)
 		bdev = spdk_bdev_get_by_name(g_target_bdev_name);
 		if (!bdev) {
 			fprintf(stderr, "Unable to find bdev '%s'\n", g_target_bdev_name);
-			return;
+			goto end;
 		}
 
 		for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
 			rc = bdevperf_construct_target(bdev);
 			if (rc != 0) {
-				return;
+				goto end;
 			}
 		}
 	} else {
@@ -1276,13 +1276,16 @@ bdevperf_construct_targets(void)
 			for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
 				rc = bdevperf_construct_target(bdev);
 				if (rc != 0) {
-					return;
+					goto end;
 				}
 			}
 
 			bdev = spdk_bdev_next_leaf(bdev);
 		}
 	}
+
+end:
+	bdevperf_test();
 }
 
 static int
@@ -1312,8 +1315,6 @@ _bdevperf_init_thread_done(void *ctx)
 	}
 
 	bdevperf_construct_targets();
-
-	bdevperf_test();
 }
 
 static void
@@ -1468,8 +1469,6 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 	g_request = request;
 
 	bdevperf_construct_targets();
-
-	bdevperf_test();
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
 
