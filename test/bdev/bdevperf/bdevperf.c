@@ -523,7 +523,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	if (!success) {
 		if (!g_reset && !g_continue_on_failure) {
-			target->is_draining = true;
+			_end_target(target);
 			g_run_rc = -1;
 			printf("task offset: %lu on target bdev=%s fails\n",
 			       task->offset_blocks, target->name);
@@ -538,7 +538,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 				 spdk_bdev_get_md_size(target->bdev),
 				 target->io_size_blocks, md_check)) {
 			printf("Buffer mismatch! Disk Offset: %lu\n", task->offset_blocks);
-			target->is_draining = true;
+			_end_target(target);
 			g_run_rc = -1;
 		}
 	}
@@ -593,7 +593,7 @@ bdevperf_verify_submit_read(void *cb_arg)
 		bdevperf_queue_io_wait_with_cb(task, bdevperf_verify_submit_read);
 	} else if (rc != 0) {
 		printf("Failed to submit read: %d\n", rc);
-		target->is_draining = true;
+		_end_target(target);
 		g_run_rc = rc;
 	}
 }
@@ -739,7 +739,7 @@ bdevperf_submit_task(void *arg)
 		return;
 	} else if (rc != 0) {
 		printf("Failed to submit bdev_io: %d\n", rc);
-		target->is_draining = true;
+		_end_target(target);
 		g_run_rc = rc;
 		return;
 	}
@@ -756,7 +756,7 @@ bdevperf_zcopy_get_buf_complete(struct spdk_bdev_io *bdev_io, bool success, void
 	int			iovcnt;
 
 	if (!success) {
-		target->is_draining = true;
+		_end_target(target);
 		g_run_rc = -1;
 		return;
 	}
@@ -902,7 +902,7 @@ reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	if (!success) {
 		printf("Reset blockdev=%s failed\n", spdk_bdev_get_name(target->bdev));
-		target->is_draining = true;
+		_end_target(target);
 		g_run_rc = -1;
 	}
 
@@ -928,7 +928,7 @@ reset_target(void *arg)
 			     reset_cb, task);
 	if (rc) {
 		printf("Reset failed: %d\n", rc);
-		target->is_draining = true;
+		_end_target(target);
 		g_run_rc = -1;
 	}
 
