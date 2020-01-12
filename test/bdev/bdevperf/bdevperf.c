@@ -223,190 +223,6 @@ verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len, int bloc
 }
 
 static void
-bdevperf_free_target(struct io_target *target)
-{
-	struct bdevperf_task *task, *tmp;
-
-	TAILQ_FOREACH_SAFE(task, &target->task_list, link, tmp) {
-		TAILQ_REMOVE(&target->task_list, task, link);
-		spdk_free(task->buf);
-		spdk_free(task->md_buf);
-		free(task);
-	}
-
-	free(target->name);
-	free(target);
-}
-
-static void
-bdevperf_free_targets(void)
-{
-	struct io_target_group *group, *tmp_group;
-	struct io_target *target, *tmp_target;
-
-	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
-		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
-			TAILQ_REMOVE(&group->targets, target, link);
-			bdevperf_free_target(target);
-		}
-	}
-}
-
-static void
-_end_target(struct io_target *target)
-{
-	spdk_poller_unregister(&target->run_timer);
-	if (g_reset) {
-		spdk_poller_unregister(&target->reset_timer);
-	}
-
-	target->is_draining = true;
-}
-
-static void
-_target_gone(void *ctx)
-{
-	struct io_target *target = ctx;
-
-	_end_target(target);
-}
-
-static void
-bdevperf_target_gone(void *arg)
-{
-	struct io_target *target = arg;
-	struct io_target_group *group = target->group;
-
-	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(group)),
-			     _target_gone, target);
-}
-
-static int
-bdevperf_construct_target(struct spdk_bdev *bdev)
-{
-	struct io_target_group *group;
-	struct io_target *target;
-	int block_size, data_block_size;
-	int rc;
-
-	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
-		return 0;
-	}
-
-	target = malloc(sizeof(struct io_target));
-	if (!target) {
-		fprintf(stderr, "Unable to allocate memory for new target.\n");
-		/* Return immediately because all mallocs will presumably fail after this */
-		return -ENOMEM;
-	}
-
-	target->name = strdup(spdk_bdev_get_name(bdev));
-	if (!target->name) {
-		fprintf(stderr, "Unable to allocate memory for target name.\n");
-		free(target);
-		/* Return immediately because all mallocs will presumably fail after this */
-		return -ENOMEM;
-	}
-
-	rc = spdk_bdev_open(bdev, true, bdevperf_target_gone, target, &target->bdev_desc);
-	if (rc != 0) {
-		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
-		free(target->name);
-		free(target);
-		return 0;
-	}
-
-	target->bdev = bdev;
-	target->io_completed = 0;
-	target->current_queue_depth = 0;
-	target->offset_in_ios = 0;
-
-	block_size = spdk_bdev_get_block_size(bdev);
-	data_block_size = spdk_bdev_get_data_block_size(bdev);
-	target->io_size_blocks = g_io_size / data_block_size;
-	if ((g_io_size % data_block_size) != 0) {
-		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
-			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
-		spdk_bdev_close(target->bdev_desc);
-		free(target->name);
-		free(target);
-		return 0;
-	}
-
-	target->buf_size = target->io_size_blocks * block_size;
-
-	target->dif_check_flags = 0;
-	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
-		target->dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
-	}
-	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_GUARD)) {
-		target->dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
-	}
-
-	target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
-
-	target->is_draining = false;
-	target->run_timer = NULL;
-	target->reset_timer = NULL;
-	TAILQ_INIT(&target->task_list);
-
-	/* Mapping each created target to target group */
-	if (g_next_tg == NULL) {
-		g_next_tg = TAILQ_FIRST(&g_bdevperf.groups);
-		assert(g_next_tg != NULL);
-	}
-	group = g_next_tg;
-	g_next_tg = TAILQ_NEXT(g_next_tg, link);
-	target->group = group;
-	TAILQ_INSERT_TAIL(&group->targets, target, link);
-	g_target_count++;
-
-	return 0;
-}
-
-static void
-bdevperf_construct_targets(void)
-{
-	struct spdk_bdev *bdev;
-	int rc;
-	uint8_t core_idx, core_count_for_each_bdev;
-
-	if (g_every_core_for_each_bdev == false) {
-		core_count_for_each_bdev = 1;
-	} else {
-		core_count_for_each_bdev = spdk_env_get_core_count();
-	}
-
-	if (g_target_bdev_name != NULL) {
-		bdev = spdk_bdev_get_by_name(g_target_bdev_name);
-		if (!bdev) {
-			fprintf(stderr, "Unable to find bdev '%s'\n", g_target_bdev_name);
-			return;
-		}
-
-		for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
-			rc = bdevperf_construct_target(bdev);
-			if (rc != 0) {
-				return;
-			}
-		}
-	} else {
-		bdev = spdk_bdev_first_leaf();
-		while (bdev != NULL) {
-			for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
-				rc = bdevperf_construct_target(bdev);
-				if (rc != 0) {
-					return;
-				}
-			}
-
-			bdev = spdk_bdev_next_leaf(bdev);
-		}
-	}
-}
-
-static void
 _bdevperf_fini_thread_done(struct spdk_io_channel_iter *i, int status)
 {
 	spdk_io_device_unregister(&g_bdevperf, NULL);
@@ -435,6 +251,36 @@ bdevperf_fini(void)
 {
 	spdk_for_each_channel(&g_bdevperf, _bdevperf_fini_thread, NULL,
 			      _bdevperf_fini_thread_done);
+}
+
+static void
+bdevperf_free_target(struct io_target *target)
+{
+	struct bdevperf_task *task, *tmp;
+
+	TAILQ_FOREACH_SAFE(task, &target->task_list, link, tmp) {
+		TAILQ_REMOVE(&target->task_list, task, link);
+		spdk_free(task->buf);
+		spdk_free(task->md_buf);
+		free(task);
+	}
+
+	free(target->name);
+	free(target);
+}
+
+static void
+bdevperf_free_targets(void)
+{
+	struct io_target_group *group, *tmp_group;
+	struct io_target *target, *tmp_target;
+
+	TAILQ_FOREACH_SAFE(group, &g_bdevperf.groups, link, tmp_group) {
+		TAILQ_FOREACH_SAFE(target, &group->targets, link, tmp_target) {
+			TAILQ_REMOVE(&group->targets, target, link);
+			bdevperf_free_target(target);
+		}
+	}
 }
 
 static void
@@ -486,6 +332,17 @@ bdevperf_queue_io_wait_with_cb(struct bdevperf_task *task, spdk_bdev_io_wait_cb 
 	task->bdev_io_wait.cb_fn = cb_fn;
 	task->bdev_io_wait.cb_arg = task;
 	spdk_bdev_queue_io_wait(target->bdev, target->ch, &task->bdev_io_wait);
+}
+
+static void
+_end_target(struct io_target *target)
+{
+	spdk_poller_unregister(&target->run_timer);
+	if (g_reset) {
+		spdk_poller_unregister(&target->reset_timer);
+	}
+
+	target->is_draining = true;
 }
 
 static void
@@ -1042,74 +899,6 @@ performance_statistics_thread(void *arg)
 	return -1;
 }
 
-static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target *target)
-{
-	struct bdevperf_task *task;
-
-	task = calloc(1, sizeof(struct bdevperf_task));
-	if (!task) {
-		fprintf(stderr, "Failed to allocate task from memory\n");
-		return NULL;
-	}
-
-	task->buf = spdk_zmalloc(target->buf_size, spdk_bdev_get_buf_align(target->bdev), NULL,
-				 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-	if (!task->buf) {
-		fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
-		free(task);
-		return NULL;
-	}
-
-	if (spdk_bdev_is_md_separate(target->bdev)) {
-		task->md_buf = spdk_zmalloc(target->io_size_blocks *
-					    spdk_bdev_get_md_size(target->bdev), 0, NULL,
-					    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-		if (!task->md_buf) {
-			fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
-			free(task->buf);
-			free(task);
-			return NULL;
-		}
-	}
-
-	task->target = target;
-
-	return task;
-}
-
-static int
-bdevperf_construct_targets_tasks(void)
-{
-	struct io_target_group *group;
-	struct io_target *target;
-	struct bdevperf_task *task;
-	int i, task_num = g_queue_depth;
-
-	if (g_reset) {
-		task_num += 1;
-	}
-
-	/* Initialize task list for each target */
-	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
-		TAILQ_FOREACH(target, &group->targets, link) {
-			for (i = 0; i < task_num; i++) {
-				task = bdevperf_construct_task_on_target(target);
-				if (task == NULL) {
-					goto ret;
-				}
-				TAILQ_INSERT_TAIL(&target->task_list, task, link);
-			}
-		}
-	}
-
-	return 0;
-
-ret:
-	fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
-	fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
-	return -1;
-}
-
 static int
 verify_test_params(struct spdk_app_opts *opts)
 {
@@ -1252,6 +1041,74 @@ verify_test_params(struct spdk_app_opts *opts)
 	return 0;
 }
 
+static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target *target)
+{
+	struct bdevperf_task *task;
+
+	task = calloc(1, sizeof(struct bdevperf_task));
+	if (!task) {
+		fprintf(stderr, "Failed to allocate task from memory\n");
+		return NULL;
+	}
+
+	task->buf = spdk_zmalloc(target->buf_size, spdk_bdev_get_buf_align(target->bdev), NULL,
+				 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	if (!task->buf) {
+		fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
+		free(task);
+		return NULL;
+	}
+
+	if (spdk_bdev_is_md_separate(target->bdev)) {
+		task->md_buf = spdk_zmalloc(target->io_size_blocks *
+					    spdk_bdev_get_md_size(target->bdev), 0, NULL,
+					    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		if (!task->md_buf) {
+			fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
+			free(task->buf);
+			free(task);
+			return NULL;
+		}
+	}
+
+	task->target = target;
+
+	return task;
+}
+
+static int
+bdevperf_construct_targets_tasks(void)
+{
+	struct io_target_group *group;
+	struct io_target *target;
+	struct bdevperf_task *task;
+	int i, task_num = g_queue_depth;
+
+	if (g_reset) {
+		task_num += 1;
+	}
+
+	/* Initialize task list for each target */
+	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
+		TAILQ_FOREACH(target, &group->targets, link) {
+			for (i = 0; i < task_num; i++) {
+				task = bdevperf_construct_task_on_target(target);
+				if (task == NULL) {
+					goto ret;
+				}
+				TAILQ_INSERT_TAIL(&target->task_list, task, link);
+			}
+		}
+	}
+
+	return 0;
+
+ret:
+	fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
+	fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
+	return -1;
+}
+
 static int
 bdevperf_test(void)
 {
@@ -1281,6 +1138,149 @@ bdevperf_test(void)
 	spdk_for_each_channel(&g_bdevperf, bdevperf_submit_on_group, NULL, NULL);
 
 	return 0;
+}
+
+static void
+_target_gone(void *ctx)
+{
+	struct io_target *target = ctx;
+
+	_end_target(target);
+}
+
+static void
+bdevperf_target_gone(void *arg)
+{
+	struct io_target *target = arg;
+	struct io_target_group *group = target->group;
+
+	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(group)),
+			     _target_gone, target);
+}
+
+static int
+bdevperf_construct_target(struct spdk_bdev *bdev)
+{
+	struct io_target_group *group;
+	struct io_target *target;
+	int block_size, data_block_size;
+	int rc;
+
+	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
+		return 0;
+	}
+
+	target = malloc(sizeof(struct io_target));
+	if (!target) {
+		fprintf(stderr, "Unable to allocate memory for new target.\n");
+		/* Return immediately because all mallocs will presumably fail after this */
+		return -ENOMEM;
+	}
+
+	target->name = strdup(spdk_bdev_get_name(bdev));
+	if (!target->name) {
+		fprintf(stderr, "Unable to allocate memory for target name.\n");
+		free(target);
+		/* Return immediately because all mallocs will presumably fail after this */
+		return -ENOMEM;
+	}
+
+	rc = spdk_bdev_open(bdev, true, bdevperf_target_gone, target, &target->bdev_desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
+		free(target->name);
+		free(target);
+		return 0;
+	}
+
+	target->bdev = bdev;
+	target->io_completed = 0;
+	target->current_queue_depth = 0;
+	target->offset_in_ios = 0;
+
+	block_size = spdk_bdev_get_block_size(bdev);
+	data_block_size = spdk_bdev_get_data_block_size(bdev);
+	target->io_size_blocks = g_io_size / data_block_size;
+	if ((g_io_size % data_block_size) != 0) {
+		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
+			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
+		spdk_bdev_close(target->bdev_desc);
+		free(target->name);
+		free(target);
+		return 0;
+	}
+
+	target->buf_size = target->io_size_blocks * block_size;
+
+	target->dif_check_flags = 0;
+	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
+		target->dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
+	}
+	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_GUARD)) {
+		target->dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
+	}
+
+	target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
+
+	target->is_draining = false;
+	target->run_timer = NULL;
+	target->reset_timer = NULL;
+	TAILQ_INIT(&target->task_list);
+
+	/* Mapping each created target to target group */
+	if (g_next_tg == NULL) {
+		g_next_tg = TAILQ_FIRST(&g_bdevperf.groups);
+		assert(g_next_tg != NULL);
+	}
+	group = g_next_tg;
+	g_next_tg = TAILQ_NEXT(g_next_tg, link);
+	target->group = group;
+	TAILQ_INSERT_TAIL(&group->targets, target, link);
+	g_target_count++;
+
+	return 0;
+}
+
+static void
+bdevperf_construct_targets(void)
+{
+	struct spdk_bdev *bdev;
+	int rc;
+	uint8_t core_idx, core_count_for_each_bdev;
+
+	if (g_every_core_for_each_bdev == false) {
+		core_count_for_each_bdev = 1;
+	} else {
+		core_count_for_each_bdev = spdk_env_get_core_count();
+	}
+
+	if (g_target_bdev_name != NULL) {
+		bdev = spdk_bdev_get_by_name(g_target_bdev_name);
+		if (!bdev) {
+			fprintf(stderr, "Unable to find bdev '%s'\n", g_target_bdev_name);
+			return;
+		}
+
+		for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
+			rc = bdevperf_construct_target(bdev);
+			if (rc != 0) {
+				return;
+			}
+		}
+	} else {
+		bdev = spdk_bdev_first_leaf();
+		while (bdev != NULL) {
+			for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
+				rc = bdevperf_construct_target(bdev);
+				if (rc != 0) {
+					return;
+				}
+			}
+
+			bdev = spdk_bdev_next_leaf(bdev);
+		}
+	}
 }
 
 static int
