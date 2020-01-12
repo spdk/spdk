@@ -78,7 +78,7 @@ static int g_run_rc = 0;
 static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
 static bool g_zcopy = true;
-static unsigned g_master_core;
+static struct spdk_thread *g_master_thread;
 static int g_time_in_sec;
 static bool g_mix_specified;
 static const char *g_target_bdev_name;
@@ -99,7 +99,6 @@ struct io_target {
 	struct spdk_io_channel		*ch;
 	TAILQ_ENTRY(io_target)		link;
 	struct io_target_group		*group;
-	unsigned			lcore;
 	uint64_t			io_completed;
 	uint64_t			prev_io_completed;
 	double				ema_io_per_second;
@@ -273,9 +272,9 @@ _end_target(struct io_target *target)
 }
 
 static void
-_target_gone(void *arg1, void *arg2)
+_target_gone(void *ctx)
 {
-	struct io_target *target = arg1;
+	struct io_target *target = ctx;
 
 	_end_target(target);
 }
@@ -284,10 +283,10 @@ static void
 bdevperf_target_gone(void *arg)
 {
 	struct io_target *target = arg;
-	struct spdk_event *event;
+	struct io_target_group *group = target->group;
 
-	event = spdk_event_allocate(target->lcore, _target_gone, target, NULL);
-	spdk_event_call(event);
+	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(group)),
+			     _target_gone, target);
 }
 
 static int
@@ -374,7 +373,6 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	}
 	group = g_next_tg;
 	g_next_tg = TAILQ_NEXT(g_next_tg, link);
-	target->lcore = group->lcore;
 	target->group = group;
 	TAILQ_INSERT_TAIL(&group->targets, target, link);
 	g_target_count++;
@@ -467,9 +465,9 @@ bdevperf_test_done(void)
 }
 
 static void
-end_run(void *arg1, void *arg2)
+end_run(void *ctx)
 {
-	struct io_target *target = arg1;
+	struct io_target *target = ctx;
 
 	spdk_bdev_close(target->bdev_desc);
 	if (--g_target_count == 0) {
@@ -510,7 +508,6 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct io_target	*target;
 	struct bdevperf_task	*task = cb_arg;
-	struct spdk_event	*complete;
 	struct iovec		*iovs;
 	int			iovcnt;
 	bool			md_check;
@@ -560,8 +557,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		TAILQ_INSERT_TAIL(&target->task_list, task, link);
 		if (target->current_queue_depth == 0) {
 			spdk_put_io_channel(target->ch);
-			complete = spdk_event_allocate(g_master_core, end_run, target, NULL);
-			spdk_event_call(complete);
+			spdk_thread_send_msg(g_master_thread, end_run, target);
 		}
 	}
 }
@@ -1328,7 +1324,7 @@ _bdevperf_init_thread_done(void *ctx)
 {
 	int rc;
 
-	g_master_core = spdk_env_get_current_core();
+	g_master_thread = spdk_get_thread();
 
 	if (g_wait_for_tests) {
 		/* Do not perform any tests until RPC is received */
