@@ -22,6 +22,30 @@
       "revId": "080c5b4473372f796d08038497c5936157ed4366",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b3acf97_f4b31518",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2976,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-13T16:42:10Z",
+      "side": 1,
+      "message": "Yes, you can\u0027t destroy a CM_ID until all of the CM events associated with it have been acked, and we end up destroying this CM_ID in spdk_nvmf_rdma_stop_listen which is called farther down in this function.",
+      "parentUuid": "51640fa5_3bd541ed",
+      "range": {
+        "startLine": 2976,
+        "startChar": 3,
+        "endLine": 2976,
+        "endChar": 28
+      },
+      "revId": "080c5b4473372f796d08038497c5936157ed4366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
