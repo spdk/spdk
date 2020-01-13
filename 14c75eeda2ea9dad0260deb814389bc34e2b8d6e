@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31858030_a88614cc",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1382,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-13T02:23:20Z",
+      "side": 1,
+      "message": "Code from 1376-1382 is same to  1435-1440. can we use a separate static function, then we can aovid the duplicated code.",
+      "range": {
+        "startLine": 1376,
+        "startChar": 1,
+        "endLine": 1382,
+        "endChar": 2
+      },
+      "revId": "14c75eeda2ea9dad0260deb814389bc34e2b8d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3697510d_c21113a5",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2305,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-13T02:23:20Z",
+      "side": 1,
+      "message": "We can still keep the old function, and put line 2293 into original function (spdk_nvmf_tcp_pdu_set_buf_from_req). This will reduce this patch\u0027s change. If you want to remove spdk_nvmf_tcp_pdu_set_buf_from_req, may be a seperate patch.",
+      "range": {
+        "startLine": 2291,
+        "startChar": 0,
+        "endLine": 2305,
+        "endChar": 5
+      },
+      "revId": "14c75eeda2ea9dad0260deb814389bc34e2b8d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
