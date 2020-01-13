@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30710c1a_49e887b4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 6253,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T22:31:18Z",
+      "side": 1,
+      "message": "I assume this is coming in the series? (you didn\u0027t put TODO so I figured I\u0027d ask)",
+      "revId": "db801adb797cbb882788de9965fc2a4609ddd224",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
