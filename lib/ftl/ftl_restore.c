@@ -706,7 +706,13 @@ ftl_nv_cache_alloc_io(struct ftl_nv_cache_block *block, uint64_t lba)
 		.num_blocks	= 1,
 		.cb_fn		= ftl_nv_cache_write_cb,
 		.cb_ctx		= block,
-		.data		= block->buf,
+		.iovs		= {
+			{
+				.iov_base = block->buf,
+				.iov_len = FTL_BLOCK_SIZE,
+			}
+		},
+		.iovcnt		= 1,
 	};
 	struct ftl_io *io;
 
@@ -1136,7 +1142,13 @@ ftl_restore_init_pad_io(struct ftl_restore_band *rband, void *buffer,
 		.num_blocks	= dev->xfer_size,
 		.cb_fn		= ftl_pad_zone_cb,
 		.cb_ctx		= rband,
-		.data		= buffer,
+		.iovs		= {
+			{
+				.iov_base = buffer,
+				.iov_len = dev->xfer_size * FTL_BLOCK_SIZE,
+			}
+		},
+		.iovcnt		= 1,
 		.parent		= NULL,
 	};
 	struct ftl_io *io;

@@ -705,7 +705,13 @@ ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_addr addr,
 		.type		= FTL_IO_READ,
 		.num_blocks	= num_blocks,
 		.cb_fn		= fn,
-		.data		= buf,
+		.iovs		= {
+			{
+				.iov_base = buf,
+				.iov_len = num_blocks * FTL_BLOCK_SIZE,
+			}
+		},
+		.iovcnt		= 1,
 	};
 
 	io = (struct ftl_md_io *)ftl_io_init_internal(&opts);
@@ -735,7 +741,13 @@ ftl_io_init_md_write(struct spdk_ftl_dev *dev, struct ftl_band *band,
 		.type		= FTL_IO_WRITE,
 		.num_blocks	= num_blocks,
 		.cb_fn		= cb,
-		.data		= data,
+		.iovs		= {
+			{
+				.iov_base = data,
+				.iov_len = num_blocks * FTL_BLOCK_SIZE,
+			}
+		},
+		.iovcnt		= 1,
 		.md		= NULL,
 	};
 

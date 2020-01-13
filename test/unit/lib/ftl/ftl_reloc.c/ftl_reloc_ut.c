@@ -143,7 +143,8 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	io->cb_fn = opts->cb_fn;
 	io->cb_ctx = io;
 	io->num_blocks = opts->num_blocks;
-	io->iov[0].iov_base = opts->data;
+	memcpy(&io->iov, &opts->iovs, sizeof(io->iov));
+	io->iov_cnt = opts->iovcnt;
 
 	if (opts->flags & FTL_IO_VECTOR_LBA) {
 		io->lba.vector = calloc(io->num_blocks, sizeof(uint64_t));

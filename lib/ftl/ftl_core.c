@@ -1183,7 +1183,13 @@ ftl_alloc_io_nv_cache(struct ftl_io *parent, size_t num_blocks)
 	struct ftl_io_init_opts opts = {
 		.dev		= parent->dev,
 		.parent		= parent,
-		.data		= ftl_io_iovec_addr(parent),
+		.iovs		= {
+			{
+				.iov_base = ftl_io_iovec_addr(parent),
+				.iov_len = num_blocks * FTL_BLOCK_SIZE,
+			}
+		},
+		.iovcnt		= 1,
 		.num_blocks	= num_blocks,
 		.flags		= parent->flags | FTL_IO_CACHE,
 	};
@@ -1530,7 +1536,13 @@ ftl_io_init_child_write(struct ftl_io *parent, struct ftl_addr addr,
 		.type		= parent->type,
 		.num_blocks	= dev->xfer_size,
 		.cb_fn		= cb,
-		.data		= data,
+		.iovs		= {
+			{
+				.iov_base = data,
+				.iov_len = dev->xfer_size * FTL_BLOCK_SIZE,
+			}
+		},
+		.iovcnt		= 1,
 		.md		= md,
 	};
 
