@@ -59,10 +59,23 @@ function fio_test_suite() {
 	done
 
 	local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
+	local fio_params_json="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_json_conf=./test/bdev/bdev.conf.json"
 	local fio_ext_params="--ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
 
+	$rootdir/app/spdk_tgt/spdk_tgt -c ./test/bdev/bdev.conf &
+	spdk_tgt=$!
+	waitforlisten $spdk_tgt
+	# For some reason QoS hangs fio at the end of run, if it was enabled by json_rpc
+	# Disable it for now and will try to create minimal repro steps
+	$rpc_py bdev_set_qos_limit --rw_ios_per_sec 0 Malloc0
+	$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec 0 Malloc3
+	$rpc_py save_subsystem_config -n bdev | jq -r '{subsystems: [.] }' > ./test/bdev/bdev.conf.json
+	sleep 3
+	killprocess $spdk_tgt
+	sleep 3
+
 	if [ $RUN_NIGHTLY -eq 0 ]; then
-		run_test "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM \
+		run_test "bdev_fio_rw_verify" fio_bdev $fio_params_json --spdk_mem=$PRE_RESERVED_MEM \
 		--output=$output_dir/blockdev_fio_verify.txt
 	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
 		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
@@ -72,6 +85,7 @@ function fio_test_suite() {
 	fi
 	rm -f ./*.state
 	rm -f $testdir/bdev.fio
+	rm -f ./test/bdev/bdev.conf.json
 
 	# Generate the fio config file given the list of all unclaimed bdevs that support unmap
 	fio_config_gen $testdir/bdev.fio trim
