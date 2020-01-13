@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e52d93df_cbbd57ee",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-13T10:36:35Z",
+      "side": 1,
+      "message": "I added two previous negative tests to separate functions.\nThis function corresponds to test_construct_lvols_conflict_alias.",
+      "parentUuid": "04b9c146_4820ebef",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 46
+      },
+      "revId": "d68be9e3bcba8768ae770d1dbb0461445804fd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a51b72a3_24892d0e",
         "filename": "test/lvol/basic.sh",
         "patchSetId": 9
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "dcc705c5_390be55b",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-13T10:36:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a51b72a3_24892d0e",
+      "range": {
+        "startLine": 43,
+        "startChar": 3,
+        "endLine": 43,
+        "endChar": 23
+      },
+      "revId": "d68be9e3bcba8768ae770d1dbb0461445804fd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "371d05ce_1d483115",
         "filename": "test/lvol/basic.sh",
         "patchSetId": 9
@@ -68,6 +116,30 @@
       "revId": "d68be9e3bcba8768ae770d1dbb0461445804fd7e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4cc722d3_9615d87a",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-13T10:36:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "371d05ce_1d483115",
+      "range": {
+        "startLine": 47,
+        "startChar": 1,
+        "endLine": 47,
+        "endChar": 13
+      },
+      "revId": "d68be9e3bcba8768ae770d1dbb0461445804fd7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
