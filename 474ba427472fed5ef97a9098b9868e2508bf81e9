@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "a3652748_52c3ab2a",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-13T20:21:10Z",
+      "side": 1,
+      "message": "This is not exactly accurate.  If impl_name is specified, it will *only* try to listen on that impl.  If it is NULL, it will try both posix and vpp for example.\n\nSame for connect above.",
+      "revId": "474ba427472fed5ef97a9098b9868e2508bf81e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f83c51ed_68c4d4a2",
         "filename": "lib/sock/sock.c",
         "patchSetId": 13
@@ -13,6 +30,30 @@
       "writtenOn": "2020-01-13T04:30:59Z",
       "side": 1,
       "message": "Do we need accurate impl name here? maybe strcmp is better here.",
+      "range": {
+        "startLine": 201,
+        "startChar": 19,
+        "endLine": 201,
+        "endChar": 26
+      },
+      "revId": "474ba427472fed5ef97a9098b9868e2508bf81e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a3b4640_1f6ad5fb",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-13T20:21:10Z",
+      "side": 1,
+      "message": "I think strncmp gives an accurate comparison.  It only differs from strcmp in that it ensures it handles case where there is no null termination.",
+      "parentUuid": "f83c51ed_68c4d4a2",
       "range": {
         "startLine": 201,
         "startChar": 19,
