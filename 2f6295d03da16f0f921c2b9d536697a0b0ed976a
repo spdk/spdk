@@ -188,6 +188,30 @@
       "revId": "2f6295d03da16f0f921c2b9d536697a0b0ed976a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f33cf7f3_37073953",
+        "filename": "test/nvmf/target/fio.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-13T17:56:09Z",
+      "side": 1,
+      "message": "I\u0027m with Karol here. We need this to be deterministic. We wouldn\u0027t want to break at some point in the future when timing changes.",
+      "parentUuid": "1c345cef_0cdec376",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 46,
+        "endChar": 4
+      },
+      "revId": "2f6295d03da16f0f921c2b9d536697a0b0ed976a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
