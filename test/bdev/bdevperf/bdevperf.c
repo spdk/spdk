@@ -1102,13 +1102,35 @@ static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target 
 	return task;
 }
 
+static int
+bdevperf_construct_tasks_on_group(struct io_target_group *group)
+{
+	struct io_target *target;
+	struct bdevperf_task *task;
+	int i, task_num = g_queue_depth;
+
+	if (g_reset) {
+		task_num += 1;
+	}
+
+	TAILQ_FOREACH(target, &group->targets, link) {
+		for (i = 0; i < task_num; i++) {
+			task = bdevperf_construct_task_on_target(target);
+			if (task == NULL) {
+				return -1;
+			}
+			TAILQ_INSERT_TAIL(&target->task_list, task, link);
+		}
+	}
+
+	return 0;
+}
+
 static void
 bdevperf_construct_targets_tasks(void)
 {
 	struct io_target_group *group;
-	struct io_target *target;
-	struct bdevperf_task *task;
-	int i, task_num = g_queue_depth;
+	int rc;
 
 	if (g_target_count == 0) {
 		fprintf(stderr, "No valid bdevs found.\n");
@@ -1117,24 +1139,15 @@ bdevperf_construct_targets_tasks(void)
 		return;
 	}
 
-	if (g_reset) {
-		task_num += 1;
-	}
-
 	/* Initialize task list for each target */
 	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
-		TAILQ_FOREACH(target, &group->targets, link) {
-			for (i = 0; i < task_num; i++) {
-				task = bdevperf_construct_task_on_target(target);
-				if (task == NULL) {
-					fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
-					fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
-					g_run_rc = -1;
-					bdevperf_test_done();
-					return;
-				}
-				TAILQ_INSERT_TAIL(&target->task_list, task, link);
-			}
+		rc = bdevperf_construct_tasks_on_group(group);
+		if (rc != 0) {
+			fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
+			fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
+			g_run_rc = rc;
+			bdevperf_test_done();
+			return;
 		}
 	}
 
