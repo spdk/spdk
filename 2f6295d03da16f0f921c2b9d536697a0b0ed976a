@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1145076c_64f40f2e",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-13T12:49:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "101606bf_5830187d",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 30
+      },
+      "revId": "2f6295d03da16f0f921c2b9d536697a0b0ed976a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0abf8c74_0e6a0839",
         "filename": "test/nvmf/target/filesystem.sh",
         "patchSetId": 12
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "7afebd5c_ebaaeb96",
+        "filename": "test/nvmf/target/filesystem.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-13T12:49:42Z",
+      "side": 1,
+      "message": "Yes, You right, this is fixed here.",
+      "parentUuid": "0abf8c74_0e6a0839",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 77
+      },
+      "revId": "2f6295d03da16f0f921c2b9d536697a0b0ed976a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7fa0547_4ce0b775",
         "filename": "test/nvmf/target/fio.sh",
         "patchSetId": 12
@@ -68,6 +116,30 @@
       "revId": "2f6295d03da16f0f921c2b9d536697a0b0ed976a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed328628_44930960",
+        "filename": "test/nvmf/target/fio.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-13T12:49:42Z",
+      "side": 1,
+      "message": "I don\u0027t agree with you.\na) when we waitforblk to it\u0027 original form, then we need back to use nvme0n1 in scripts, but we don\u0027t wan\u0027t this.\nb) I don\u0027t think that we need counter because this case concerns on waiting for device but namespaces are created really fast.",
+      "parentUuid": "c7fa0547_4ce0b775",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 46,
+        "endChar": 4
+      },
+      "revId": "2f6295d03da16f0f921c2b9d536697a0b0ed976a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
