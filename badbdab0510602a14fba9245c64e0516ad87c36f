@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be14be31_eec32224",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-13T20:28:46Z",
+      "side": 1,
+      "message": "you can break here instead of goto",
+      "revId": "badbdab0510602a14fba9245c64e0516ad87c36f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43c77683_d6bcc95d",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-13T20:28:46Z",
+      "side": 1,
+      "message": "remove this (since you can remove the goto above)",
+      "revId": "badbdab0510602a14fba9245c64e0516ad87c36f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
