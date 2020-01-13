@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "25c39370_3b079340",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1319,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-13T17:50:44Z",
+      "side": 0,
+      "message": "MaxH2CData is a value picked by the target and sent to the host in the connection response. In this patch, I\u0027m picking the value to be equal to MDTS. That gets enforced when the command arrives, so here we only need to check that the h2c isn\u0027t larger than the original request.",
+      "parentUuid": "92d83287_fe5865cd",
+      "range": {
+        "startLine": 1319,
+        "startChar": 31,
+        "endLine": 1319,
+        "endChar": 41
+      },
+      "revId": "c212478517cae75996e0f6544bc90501e94cd18a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5c4397c7_1b85f5eb",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2020-01-13T02:48:03Z",
       "side": 0,
       "message": "And for C2Hdata, from the spec. The target can also send multiple C2hdata,it is defined in the spec. So I think that we should not remove this related code.",
+      "range": {
+        "startLine": 1388,
+        "startChar": 1,
+        "endLine": 1389,
+        "endChar": 34
+      },
+      "revId": "c212478517cae75996e0f6544bc90501e94cd18a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "618a2ae4_ff0992ff",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1389,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-13T17:50:44Z",
+      "side": 0,
+      "message": "A target can, but this patch makes our target choose to only use 1 per request. That\u0027s the point of this change. So the number here is always 1.",
+      "parentUuid": "5c4397c7_1b85f5eb",
       "range": {
         "startLine": 1388,
         "startChar": 1,

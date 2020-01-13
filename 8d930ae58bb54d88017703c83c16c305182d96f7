@@ -93,6 +93,30 @@
       "revId": "8d930ae58bb54d88017703c83c16c305182d96f7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f37071c_5dc3701f",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1395,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-13T17:50:44Z",
+      "side": 1,
+      "message": "You\u0027re right - the host is allowed to respond to an R2T with multiple H2Cs. I need to make a change to allow for that. We can still have a 1:1 ratio of request to R2T in the target even when I adjust for this.",
+      "parentUuid": "4982c2d5_e1cb33a4",
+      "range": {
+        "startLine": 1390,
+        "startChar": 1,
+        "endLine": 1395,
+        "endChar": 0
+      },
+      "revId": "8d930ae58bb54d88017703c83c16c305182d96f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
