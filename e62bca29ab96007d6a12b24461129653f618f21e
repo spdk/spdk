@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "69b33bd9_61f0ece7",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-13T08:42:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ec1cccdf_a371d61c",
+      "revId": "e62bca29ab96007d6a12b24461129653f618f21e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "009beb3e_02210544",
         "filename": "module/bdev/nvme/bdev_nvme.c",
         "patchSetId": 28
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "ad5a4df5_ae7132d9",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 2006,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-13T08:42:25Z",
+      "side": 1,
+      "message": "Quick idea before I make change here - maybe we could just memset it in line 2221 (before compare call). Will it make a much difference in performance?",
+      "parentUuid": "009beb3e_02210544",
+      "revId": "e62bca29ab96007d6a12b24461129653f618f21e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3b5cc6fe_c294fd7f",
         "filename": "module/bdev/nvme/bdev_nvme.c",
         "patchSetId": 28
@@ -47,6 +83,24 @@
       "writtenOn": "2020-01-09T16:48:41Z",
       "side": 1,
       "message": "oh - I led you wrong here - we can just do:\n\nif (!bio-\u003efirst_fused_submitted)\n\nbecause if num_retries \u003d\u003d 0, then we know that bio-\u003efirst_fused_submitted \u003d\u003d false",
+      "revId": "e62bca29ab96007d6a12b24461129653f618f21e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "478ee293_748180ce",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 2219,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-13T08:42:25Z",
+      "side": 1,
+      "message": "Actually we can drop first_fused_submitted flag and relay only on num_retries as they are directly correlated (please correct me if I\u0027m wrong).",
+      "parentUuid": "3b5cc6fe_c294fd7f",
       "revId": "e62bca29ab96007d6a12b24461129653f618f21e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
