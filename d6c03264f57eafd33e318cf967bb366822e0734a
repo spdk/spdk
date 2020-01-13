@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2eb2f28b_3fde4ff6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1589,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T21:02:59Z",
+      "side": 1,
+      "message": "I\u0027ve lost track of the difference between these 3 so am unsure about line 1589, can you shed some light real quick?\nblob-\u003eactive.extent_pages\nblob-\u003eactive.et_array_size\nblob-\u003eactive.num_extent_pages",
+      "revId": "d6c03264f57eafd33e318cf967bb366822e0734a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
