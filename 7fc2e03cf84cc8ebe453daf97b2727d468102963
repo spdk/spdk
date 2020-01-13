@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "5a5c40f1_a823ba58",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 997,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-13T19:12:11Z",
+      "side": 1,
+      "message": "This doesn\u0027t make sense. Why put the phase bit at the top of the index?\nThese indices basically mean the next spot where commands should arrive for polling purposes. Also, for packed rings, tracking the used idx isn\u0027t necessary.",
+      "revId": "7fc2e03cf84cc8ebe453daf97b2727d468102963",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d2b2e7a_b95159c3",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1099,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-13T19:12:11Z",
+      "side": 1,
+      "message": "Tracking the used phase isn\u0027t important. We just make the used phase equal to the avail phase when it completes.\n\nAlso, tracking the used idx isn\u0027t going to be necessary either because the location to update on completion is based on where the incoming descriptor was in the ring, as opposed to a separate ring like in a split queue.",
+      "revId": "7fc2e03cf84cc8ebe453daf97b2727d468102963",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cd2473fe_19f96677",
         "filename": "lib/vhost/vhost_internal.h",
         "patchSetId": 7
@@ -31,6 +65,24 @@
       "side": 1,
       "message": "In the spec they are named wrap_counter so I think we can follow the spec.",
       "parentUuid": "cd2473fe_19f96677",
+      "revId": "7fc2e03cf84cc8ebe453daf97b2727d468102963",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c143cdb_4b666408",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-13T19:12:11Z",
+      "side": 1,
+      "message": "No. Name it phase. After a thorough reading, the spec is awful and I believe also broken.\n\nYou only need one integer here named phase. You could even do a single bit for phase and another bit to indicate it\u0027s packed to save space.",
+      "parentUuid": "f351f673_4a642edf",
       "revId": "7fc2e03cf84cc8ebe453daf97b2727d468102963",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
