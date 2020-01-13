@@ -53,10 +53,6 @@ struct ftl_bdev {
 
 	struct spdk_ftl_dev		*dev;
 
-	struct spdk_bdev_desc		*base_bdev_desc;
-
-	struct spdk_bdev_desc		*cache_bdev_desc;
-
 	ftl_bdev_init_fn		init_cb;
 
 	void				*init_arg;
@@ -113,23 +109,11 @@ static struct spdk_bdev_module g_ftl_if = {
 SPDK_BDEV_MODULE_REGISTER(ftl, &g_ftl_if)
 
 static void
-bdev_ftl_close(struct spdk_bdev_desc *bdev_desc)
-{
-	spdk_bdev_module_release_bdev(spdk_bdev_desc_get_bdev(bdev_desc));
-	spdk_bdev_close(bdev_desc);
-}
-
-static void
 bdev_ftl_free_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 {
 	struct ftl_bdev *ftl_bdev = ctx;
 
 	spdk_io_device_unregister(ftl_bdev, NULL);
-	bdev_ftl_close(ftl_bdev->base_bdev_desc);
-
-	if (ftl_bdev->cache_bdev_desc) {
-		bdev_ftl_close(ftl_bdev->cache_bdev_desc);
-	}
 
 	spdk_bdev_destruct_done(&ftl_bdev->bdev, status);
 	free(ftl_bdev->bdev.name);
@@ -332,17 +316,14 @@ bdev_ftl_get_io_channel(void *ctx)
 static void
 _bdev_ftl_write_config_info(struct ftl_bdev *ftl_bdev, struct spdk_json_write_ctx *w)
 {
-	struct spdk_ftl_attrs attrs;
-	const char *cache_bdev, *base_bdev;
+	struct spdk_ftl_attrs attrs = {};
 
 	spdk_ftl_dev_get_attrs(ftl_bdev->dev, &attrs);
 
-	base_bdev = spdk_bdev_get_name(spdk_bdev_desc_get_bdev(ftl_bdev->base_bdev_desc));
-	spdk_json_write_named_string(w, "base_bdev", base_bdev);
+	spdk_json_write_named_string(w, "base_bdev", attrs.base_bdev);
 
-	if (ftl_bdev->cache_bdev_desc) {
-		cache_bdev = spdk_bdev_get_name(spdk_bdev_desc_get_bdev(ftl_bdev->cache_bdev_desc));
-		spdk_json_write_named_string(w, "cache", cache_bdev);
+	if (attrs.cache_bdev) {
+		spdk_json_write_named_string(w, "cache", attrs.cache_bdev);
 	}
 }
 
@@ -463,12 +444,6 @@ bdev_ftl_io_channel_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 static void
-bdev_ftl_bdev_removed_cb(void *ctx)
-{
-	assert(0 && "Removed dependent bdev\n");
-}
-
-static void
 bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 {
 	struct ftl_bdev		*ftl_bdev = ctx;
@@ -519,12 +494,6 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 error_unregister:
 	spdk_io_device_unregister(ftl_bdev, NULL);
 error_dev:
-	bdev_ftl_close(ftl_bdev->base_bdev_desc);
-
-	if (ftl_bdev->cache_bdev_desc) {
-		bdev_ftl_close(ftl_bdev->cache_bdev_desc);
-	}
-
 	free(ftl_bdev->bdev.name);
 	free(ftl_bdev);
 
@@ -583,33 +552,6 @@ error:
 	return -ENOMEM;
 }
 
-static int
-bdev_ftl_init_dependent_bdev(struct ftl_bdev *ftl_bdev, const char *bdev_name,
-			     struct spdk_bdev_desc **bdev_desc)
-{
-	struct spdk_bdev *bdev = NULL;
-
-	bdev = spdk_bdev_get_by_name(bdev_name);
-	if (!bdev) {
-		SPDK_ERRLOG("Unable to find bdev: %s\n", bdev_name);
-		return -ENODEV;
-	}
-
-	if (spdk_bdev_open(bdev, true, bdev_ftl_bdev_removed_cb,
-			   ftl_bdev, bdev_desc)) {
-		SPDK_ERRLOG("Unable to open bdev: %s\n", bdev_name);
-		return -EPERM;
-	}
-
-	if (spdk_bdev_module_claim_bdev(bdev, *bdev_desc, &g_ftl_if)) {
-		SPDK_ERRLOG("Unable to claim bdev %s\n", bdev_name);
-		spdk_bdev_close(*bdev_desc);
-		return -EPERM;
-	}
-
-	return 0;
-}
-
 int
 bdev_ftl_create_bdev(const struct ftl_bdev_init_opts *bdev_opts,
 		     ftl_bdev_init_fn cb, void *cb_arg)
@@ -639,34 +581,14 @@ bdev_ftl_create_bdev(const struct ftl_bdev_init_opts *bdev_opts,
 		goto error_name;
 	}
 
-	rc = bdev_ftl_init_dependent_bdev(ftl_bdev, bdev_opts->base_bdev,
-					  &ftl_bdev->base_bdev_desc);
-	if (rc) {
-		goto error_name;
-	}
-
-	if (!spdk_bdev_is_zoned(spdk_bdev_desc_get_bdev(ftl_bdev->base_bdev_desc))) {
-		SPDK_ERRLOG("Bdev dosen't support zone capabilities: %s\n", bdev_opts->base_bdev);
-		rc = -EINVAL;
-		goto error_cache;
-	}
-
-	if (bdev_opts->cache_bdev) {
-		rc = bdev_ftl_init_dependent_bdev(ftl_bdev, bdev_opts->cache_bdev,
-						  &ftl_bdev->cache_bdev_desc);
-		if (rc) {
-			goto error_cache;
-		}
-	}
-
 	ftl_bdev->init_cb = cb;
 	ftl_bdev->init_arg = cb_arg;
 
 	opts.mode = bdev_opts->mode;
 	opts.uuid = bdev_opts->uuid;
 	opts.name = ftl_bdev->bdev.name;
-	opts.base_bdev_desc = ftl_bdev->base_bdev_desc;
-	opts.cache_bdev_desc = ftl_bdev->cache_bdev_desc;
+	opts.base_bdev = bdev_opts->base_bdev;
+	opts.cache_bdev = bdev_opts->cache_bdev;
 	opts.conf = &bdev_opts->ftl_conf;
 
 	/* TODO: set threads based on config */
@@ -675,18 +597,11 @@ bdev_ftl_create_bdev(const struct ftl_bdev_init_opts *bdev_opts,
 	rc = spdk_ftl_dev_init(&opts, bdev_ftl_create_cb, ftl_bdev);
 	if (rc) {
 		SPDK_ERRLOG("Could not create FTL device\n");
-		goto error_cache;
+		goto error_name;
 	}
 
 	return 0;
 
-error_cache:
-	if (ftl_bdev->cache_bdev_desc) {
-		bdev_ftl_close(ftl_bdev->cache_bdev_desc);
-	}
-	if (ftl_bdev->base_bdev_desc) {
-		bdev_ftl_close(ftl_bdev->base_bdev_desc);
-	}
 error_name:
 	free(ftl_bdev->bdev.name);
 error_bdev:

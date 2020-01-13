@@ -41,6 +41,7 @@
 #include "spdk/likely.h"
 #include "spdk/string.h"
 #include "spdk/bdev_zone.h"
+#include "spdk/bdev_module.h"
 
 #include "ftl_core.h"
 #include "ftl_io.h"
@@ -53,6 +54,11 @@
 #define FTL_INIT_TIMEOUT	30
 #define FTL_NSID		1
 #define FTL_ZONE_INFO_COUNT	64
+
+/* Dummy bdev module used to to claim bdevs. */
+static struct spdk_bdev_module g_ftl_bdev_module = {
+	.name	= "ftl_lib",
+};
 
 struct ftl_dev_init_ctx {
 	struct spdk_ftl_dev		*dev;
@@ -207,8 +213,20 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 	return rc;
 }
 
+static void
+ftl_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		assert(0);
+		break;
+	default:
+		break;
+	}
+}
+
 static int
-ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *bdev_desc)
+ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, const char *bdev_name)
 {
 	struct spdk_bdev *bdev;
 	struct spdk_ftl_conf *conf = &dev->conf;
@@ -216,11 +234,29 @@ ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *bdev_desc
 	char pool_name[128];
 	int rc;
 
-	if (!bdev_desc) {
+	if (!bdev_name) {
 		return 0;
 	}
 
-	bdev = spdk_bdev_desc_get_bdev(bdev_desc);
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	if (!bdev) {
+		SPDK_ERRLOG("Unable to find bdev: %s\n", bdev_name);
+		return -1;
+	}
+
+	if (spdk_bdev_open_ext(bdev_name, true, ftl_bdev_event_cb,
+			       dev, &nv_cache->bdev_desc)) {
+		SPDK_ERRLOG("Unable to open bdev: %s\n", bdev_name);
+		return -1;
+	}
+
+	if (spdk_bdev_module_claim_bdev(bdev, nv_cache->bdev_desc, &g_ftl_bdev_module)) {
+		spdk_bdev_close(nv_cache->bdev_desc);
+		nv_cache->bdev_desc = NULL;
+		SPDK_ERRLOG("Unable to claim bdev %s\n", bdev_name);
+		return -1;
+	}
+
 	SPDK_INFOLOG(SPDK_LOG_FTL_INIT, "Using %s as write buffer cache\n",
 		     spdk_bdev_get_name(bdev));
 
@@ -285,7 +321,6 @@ ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *bdev_desc
 		return -1;
 	}
 
-	nv_cache->bdev_desc = bdev_desc;
 	nv_cache->current_addr = FTL_NV_CACHE_DATA_OFFSET;
 	nv_cache->num_data_blocks = spdk_bdev_get_num_blocks(bdev) - 1;
 	nv_cache->num_available = nv_cache->num_data_blocks;
@@ -951,15 +986,34 @@ ftl_dev_init_io_channel(struct spdk_ftl_dev *dev)
 }
 
 static int
-ftl_dev_init_base_bdev(struct spdk_ftl_dev *dev)
+ftl_dev_init_base_bdev(struct spdk_ftl_dev *dev, const char *bdev_name)
 {
 	uint32_t block_size;
 	uint64_t num_blocks;
-	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(dev->base_bdev_desc);
+	struct spdk_bdev *bdev;
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	if (!bdev) {
+		SPDK_ERRLOG("Unable to find bdev: %s\n", bdev_name);
+		return -1;
+	}
 
 	if (!spdk_bdev_is_zoned(bdev)) {
 		SPDK_ERRLOG("Bdev dosen't support zone capabilities: %s\n",
 			    spdk_bdev_get_name(bdev));
+		return -1;
+	}
+
+	if (spdk_bdev_open_ext(bdev_name, true, ftl_bdev_event_cb,
+			       dev, &dev->base_bdev_desc)) {
+		SPDK_ERRLOG("Unable to open bdev: %s\n", bdev_name);
+		return -1;
+	}
+
+	if (spdk_bdev_module_claim_bdev(bdev, dev->base_bdev_desc, &g_ftl_bdev_module)) {
+		spdk_bdev_close(dev->base_bdev_desc);
+		dev->base_bdev_desc = NULL;
+		SPDK_ERRLOG("Unable to claim bdev %s\n", bdev_name);
 		return -1;
 	}
 
@@ -998,6 +1052,17 @@ ftl_lba_map_request_dtor(struct spdk_mempool *mp, void *opaque, void *obj, unsig
 	struct ftl_lba_map_request *request = obj;
 
 	spdk_bit_array_free(&request->segments);
+}
+
+static void
+ftl_release_bdev(struct spdk_bdev_desc *bdev_desc)
+{
+	if (!bdev_desc) {
+		return;
+	}
+
+	spdk_bdev_module_release_bdev(spdk_bdev_desc_get_bdev(bdev_desc));
+	spdk_bdev_close(bdev_desc);
 }
 
 static void
@@ -1055,6 +1120,9 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	ftl_rwb_free(dev->rwb);
 	ftl_reloc_free(dev->reloc);
 
+	ftl_release_bdev(dev->nv_cache.bdev_desc);
+	ftl_release_bdev(dev->base_bdev_desc);
+
 	free(dev->name);
 	free(dev->bands);
 	free(dev->l2p);
@@ -1086,7 +1154,7 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		opts.conf = &g_default_conf;
 	}
 
-	if (!opts.base_bdev_desc) {
+	if (!opts.base_bdev) {
 		SPDK_ERRLOG("Lack of underlying device in configuration\n");
 		rc = -EINVAL;
 		goto fail_sync;
@@ -1097,7 +1165,6 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 	dev->init_ctx.cb_fn = cb_fn;
 	dev->init_ctx.cb_arg = cb_arg;
 	dev->init_ctx.thread = spdk_get_thread();
-	dev->base_bdev_desc = opts.base_bdev_desc;
 	dev->limit = SPDK_FTL_LIMIT_MAX;
 
 	dev->name = strdup(opts.name);
@@ -1106,7 +1173,7 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		goto fail_sync;
 	}
 
-	if (ftl_dev_init_base_bdev(dev)) {
+	if (ftl_dev_init_base_bdev(dev, opts.base_bdev)) {
 		SPDK_ERRLOG("Unsupported underlying device\n");
 		goto fail_sync;
 	}
@@ -1130,7 +1197,7 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		goto fail_sync;
 	}
 
-	if (ftl_dev_init_nv_cache(dev, opts.cache_bdev_desc)) {
+	if (ftl_dev_init_nv_cache(dev, opts.cache_bdev)) {
 		SPDK_ERRLOG("Unable to initialize persistent cache\n");
 		goto fail_sync;
 	}
