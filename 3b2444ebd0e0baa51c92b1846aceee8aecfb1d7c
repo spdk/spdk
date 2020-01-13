@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9bcd78e_069e2c2e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-13T19:31:09Z",
+      "side": 1,
+      "message": "To handle out of order completions across ring wrap boundaries, this needs to set the used flag equal to the avail flag.",
+      "revId": "3b2444ebd0e0baa51c92b1846aceee8aecfb1d7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d257b2d_f299ec8e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-13T19:31:09Z",
+      "side": 1,
+      "message": "Tracking last_used_idx and used_wrap_counter isn\u0027t useful. You don\u0027t need those values anywhere.",
+      "revId": "3b2444ebd0e0baa51c92b1846aceee8aecfb1d7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c8cdb32_909b33c6",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-13T19:31:09Z",
+      "side": 1,
+      "message": "This only should look at the avail bit. I know the kernel checks both, and that\u0027s a fine sanity check. But it shouldn\u0027t be mandatory. In fact, if we detect a phase bit flip here, we should probably assert that the used bit matches.\n\nThe only scenario I see where this may be necessary is if the spec allows out of order submissions on top of completions. But if that\u0027s allowed it\u0027s going to make polling the queue for incoming commands unreliable because we don\u0027t know which descriptor index to poll next. I hope that\u0027s not the case. If this is true, we can\u0027t implement this feature.",
+      "revId": "3b2444ebd0e0baa51c92b1846aceee8aecfb1d7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "999ae049_ca4db19d",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-13T19:31:09Z",
+      "side": 1,
+      "message": "Call this complete instead of enqueue. For a split ring you enqueue a new descriptor on a separate ring. For packed rings, you just update an existing descriptor in place.",
+      "revId": "3b2444ebd0e0baa51c92b1846aceee8aecfb1d7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
