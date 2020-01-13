@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -282,8 +282,8 @@ spdk_nvme_wait_for_completion_robust_lock(
 	struct nvme_completion_poll_status *status,
 	pthread_mutex_t *robust_mutex)
 {
+	memset(status, 0, sizeof(*status));
 	status->done = true;
-	memset(&status->cpl, 0, sizeof(status->cpl));
 	status->cpl.status.sc = 0;
 	if (set_status_cpl == 1) {
 		status->cpl.status.sc = 1;

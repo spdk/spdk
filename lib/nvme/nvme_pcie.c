@@ -3,7 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2017, IBM Corporation. All rights reserved.
- *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2019, 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1560,32 +1560,60 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 {
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(ctrlr);
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
-	struct nvme_completion_poll_status	status;
+	struct nvme_completion_poll_status	*status;
 	int					rc;
 
-	rc = nvme_pcie_ctrlr_cmd_create_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
+	status = malloc(sizeof(*status));
+	if (!status) {
+		SPDK_ERRLOG("Failed to allocate status tracker\n");
+		return -ENOMEM;
+	}
+
+	rc = nvme_pcie_ctrlr_cmd_create_io_cq(ctrlr, qpair, nvme_completion_poll_cb, status);
 	if (rc != 0) {
+		free(status);
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
 		SPDK_ERRLOG("nvme_create_io_cq failed!\n");
+		if (!status->timed_out) {
+			free(status);
+		}
 		return -1;
 	}
 
-	rc = nvme_pcie_ctrlr_cmd_create_io_sq(qpair->ctrlr, qpair, nvme_completion_poll_cb, &status);
+	rc = nvme_pcie_ctrlr_cmd_create_io_sq(qpair->ctrlr, qpair, nvme_completion_poll_cb, status);
 	if (rc != 0) {
+		free(status);
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
 		SPDK_ERRLOG("nvme_create_io_sq failed!\n");
+		if (status->timed_out) {
+			/* Request is still queued, the memory will be freed in a completion callback.
+			   allocate a new request */
+			status = malloc(sizeof(*status));
+			if (!status) {
+				SPDK_ERRLOG("Failed to allocate status tracker\n");
+				return -ENOMEM;
+			}
+		}
+
 		/* Attempt to delete the completion queue */
-		rc = nvme_pcie_ctrlr_cmd_delete_io_cq(qpair->ctrlr, qpair, nvme_completion_poll_cb, &status);
+		rc = nvme_pcie_ctrlr_cmd_delete_io_cq(qpair->ctrlr, qpair, nvme_completion_poll_cb, status);
 		if (rc != 0) {
+			/* The originall or newly allocated status structure can be freed since
+			 * the corresponding request has been completed of failed to submit */
+			free(status);
 			return -1;
 		}
-		spdk_nvme_wait_for_completion(ctrlr->adminq, &status);
+		spdk_nvme_wait_for_completion(ctrlr->adminq, status);
+		if (!status->timed_out) {
+			/* status can be freed regardless of spdk_nvme_wait_for_completion return value */
+			free(status);
+		}
 		return -1;
 	}
 
@@ -1603,6 +1631,7 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 		pqpair->flags.has_shadow_doorbell = 0;
 	}
 	nvme_pcie_qpair_reset(qpair);
+	free(status);
 
 	return 0;
 }
@@ -1670,7 +1699,7 @@ nvme_pcie_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 int
 nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_completion_poll_status status;
+	struct nvme_completion_poll_status *status;
 	int rc;
 
 	assert(ctrlr != NULL);
@@ -1679,25 +1708,40 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		goto free;
 	}
 
+	status = malloc(sizeof(*status));
+	if (!status) {
+		SPDK_ERRLOG("Failed to allocate status tracker\n");
+		return -ENOMEM;
+	}
+
 	/* Delete the I/O submission queue */
-	rc = nvme_pcie_ctrlr_cmd_delete_io_sq(ctrlr, qpair, nvme_completion_poll_cb, &status);
+	rc = nvme_pcie_ctrlr_cmd_delete_io_sq(ctrlr, qpair, nvme_completion_poll_cb, status);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to send request to delete_io_sq with rc=%d\n", rc);
+		free(status);
 		return rc;
 	}
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
+		if (!status->timed_out) {
+			free(status);
+		}
 		return -1;
 	}
 
 	/* Delete the completion queue */
-	rc = nvme_pcie_ctrlr_cmd_delete_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
+	rc = nvme_pcie_ctrlr_cmd_delete_io_cq(ctrlr, qpair, nvme_completion_poll_cb, status);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to send request to delete_io_cq with rc=%d\n", rc);
+		free(status);
 		return rc;
 	}
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
+		if (!status->timed_out) {
+			free(status);
+		}
 		return -1;
 	}
+	free(status);
 
 free:
 	if (qpair->no_deletion_notification_needed == 0) {

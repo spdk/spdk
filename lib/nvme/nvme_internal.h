@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -339,6 +339,9 @@ struct nvme_request {
 struct nvme_completion_poll_status {
 	struct spdk_nvme_cpl	cpl;
 	bool			done;
+	/* This flag indicates that the request has been timed out and the memory
+	   must be freed in a completion callback */
+	bool			timed_out;
 };
 
 struct nvme_async_event_request {

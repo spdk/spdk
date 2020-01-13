@@ -87,6 +87,12 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_completion_poll_status	*status = arg;
 
+	if (status->timed_out) {
+		/* There is no routine waiting for the completion of this request, free allocated memory */
+		free(status);
+		return;
+	}
+
 	/*
 	 * Copy status into the argument passed by the caller, so that
 	 *  the caller can check the status to determine if the
@@ -116,8 +122,7 @@ spdk_nvme_wait_for_completion_robust_lock(
 	struct nvme_completion_poll_status *status,
 	pthread_mutex_t *robust_mutex)
 {
-	memset(&status->cpl, 0, sizeof(status->cpl));
-	status->done = false;
+	memset(status, 0, sizeof(*status));
 	int rc;
 
 	while (status->done == false) {
@@ -134,6 +139,9 @@ spdk_nvme_wait_for_completion_robust_lock(
 		if (rc < 0) {
 			status->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			status->cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+			if (status->done == false) {
+				status->timed_out = true;
+			}
 			return -ECANCELED;
 		}
 	}
@@ -170,8 +178,7 @@ spdk_nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
 	uint64_t timeout_tsc = 0;
 	int rc = 0;
 
-	memset(&status->cpl, 0, sizeof(status->cpl));
-	status->done = false;
+	memset(status, 0, sizeof(*status));
 	if (timeout_in_secs) {
 		timeout_tsc = spdk_get_ticks() + timeout_in_secs * spdk_get_ticks_hz();
 	}
@@ -190,6 +197,9 @@ spdk_nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
 	}
 
 	if (status->done == false || rc < 0) {
+		if (status->done == false) {
+			status->timed_out = true;
+		}
 		return -ECANCELED;
 	}
 

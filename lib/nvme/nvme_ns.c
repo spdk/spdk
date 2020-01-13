@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -113,25 +113,36 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 static int
 nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 {
-	struct nvme_completion_poll_status	status;
+	struct nvme_completion_poll_status	*status;
 	struct spdk_nvme_ns_data		*nsdata;
 	int					rc;
+
+	status = malloc(sizeof(*status));
+	if (!status) {
+		SPDK_ERRLOG("Failed to allocate status tracker\n");
+		return -ENOMEM;
+	}
 
 	nsdata = _nvme_ns_get_data(ns);
 	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id,
 				     nsdata, sizeof(*nsdata),
-				     nvme_completion_poll_cb, &status);
+				     nvme_completion_poll_cb, status);
 	if (rc != 0) {
+		free(status);
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, &status,
+	if (spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, status,
 			&ns->ctrlr->ctrlr_lock)) {
+		if (!status->timed_out) {
+			free(status);
+		}
 		/* This can occur if the namespace is not active. Simply zero the
 		 * namespace data and continue. */
 		nvme_ns_destruct(ns);
 		return 0;
 	}
+	free(status);
 
 	nvme_ns_set_identify_data(ns);
 
@@ -141,7 +152,7 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 static int
 nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 {
-	struct nvme_completion_poll_status      status;
+	struct nvme_completion_poll_status      *status;
 	int                                     rc;
 
 	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
@@ -152,18 +163,29 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 		return 0;
 	}
 
+	status = malloc(sizeof(*status));
+	if (!status) {
+		SPDK_ERRLOG("Failed to allocate status tracker\n");
+		return -ENOMEM;
+	}
+
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Attempting to retrieve NS ID Descriptor List\n");
 	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST, 0, ns->id,
 				     ns->id_desc_list, sizeof(ns->id_desc_list),
-				     nvme_completion_poll_cb, &status);
+				     nvme_completion_poll_cb, status);
 	if (rc < 0) {
+		free(status);
 		return rc;
 	}
 
-	rc = spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, &status, &ns->ctrlr->ctrlr_lock);
+	rc = spdk_nvme_wait_for_completion_robust_lock(ns->ctrlr->adminq, status, &ns->ctrlr->ctrlr_lock);
 	if (rc != 0) {
 		SPDK_WARNLOG("Failed to retrieve NS ID Descriptor List\n");
 		memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
+	}
+
+	if (!status->timed_out) {
+		free(status);
 	}
 
 	return rc;
