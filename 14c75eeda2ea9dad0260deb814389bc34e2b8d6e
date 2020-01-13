@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "f27dfdd9_fd65d024",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1431,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-13T07:15:22Z",
+      "side": 1,
+      "message": "This is introduced in the previous patch, As I stated, the initiator can send multiple h2c pdus to respond one R2T. For example, if the R2T requires to transfer 64KB, the initiator can sends 16KB, 16KB, 32 KB. This behaviour is permitted in the spec. And our SPDK NVMe-oF target cannot suppose that the initiator sends all the data which wants.",
+      "range": {
+        "startLine": 1426,
+        "startChar": 0,
+        "endLine": 1431,
+        "endChar": 2
+      },
+      "revId": "14c75eeda2ea9dad0260deb814389bc34e2b8d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3697510d_c21113a5",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 4
