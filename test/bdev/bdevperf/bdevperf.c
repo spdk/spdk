@@ -1109,19 +1109,23 @@ ret:
 	return -1;
 }
 
-static int
+static void
 bdevperf_test(void)
 {
 	int rc;
 
 	if (g_target_count == 0) {
 		fprintf(stderr, "No valid bdevs found.\n");
-		return -ENODEV;
+		g_run_rc = -ENODEV;
+		bdevperf_test_done();
+		return;
 	}
 
 	rc = bdevperf_construct_targets_tasks();
 	if (rc) {
-		return rc;
+		g_run_rc = rc;
+		bdevperf_test_done();
+		return;
 	}
 
 	printf("Running I/O for %" PRIu64 " seconds...\n", g_time_in_usec / 1000000);
@@ -1136,8 +1140,6 @@ bdevperf_test(void)
 
 	/* Iterate target groups to start all I/O */
 	spdk_for_each_channel(&g_bdevperf, bdevperf_submit_on_group, NULL, NULL);
-
-	return 0;
 }
 
 static void
@@ -1302,8 +1304,6 @@ io_target_group_destroy(void *io_device, void *ctx_buf)
 static void
 _bdevperf_init_thread_done(void *ctx)
 {
-	int rc;
-
 	g_master_thread = spdk_get_thread();
 
 	if (g_wait_for_tests) {
@@ -1313,12 +1313,7 @@ _bdevperf_init_thread_done(void *ctx)
 
 	bdevperf_construct_targets();
 
-	rc = bdevperf_test();
-	if (rc) {
-		g_run_rc = rc;
-		bdevperf_test_done();
-		return;
-	}
+	bdevperf_test();
 }
 
 static void
@@ -1459,8 +1454,6 @@ rpc_perform_tests_cb(void)
 static void
 rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	int rc;
-
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "perform_tests method requires no parameters");
@@ -1476,11 +1469,7 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 
 	bdevperf_construct_targets();
 
-	rc = bdevperf_test();
-	if (rc) {
-		g_run_rc = rc;
-		bdevperf_test_done();
-	}
+	bdevperf_test();
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
 
