@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51640fa5_3bd541ed",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2976,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-13T15:04:16Z",
+      "side": 1,
+      "message": "is there any reason to ack event here and not after this function is executed?",
+      "range": {
+        "startLine": 2976,
+        "startChar": 3,
+        "endLine": 2976,
+        "endChar": 28
+      },
+      "revId": "080c5b4473372f796d08038497c5936157ed4366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
