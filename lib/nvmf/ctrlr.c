@@ -490,8 +490,6 @@ spdk_nvmf_subsystem_get(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 		return NULL;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "  subnqn: \"%s\"\n", subnqn);
-
 	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, subnqn);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Could not find subsystem '%s'\n", subnqn);
@@ -501,7 +499,7 @@ spdk_nvmf_subsystem_get(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 }
 
 static int
-spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
+spdk_nvmf_ctrlr_connect_unsafe(struct spdk_nvmf_request *req, struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_fabric_connect_data *data = req->data;
 	struct spdk_nvmf_fabric_connect_cmd *cmd = &req->cmd->connect_cmd;
@@ -509,13 +507,6 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_transport *transport = qpair->transport;
 	struct spdk_nvmf_ctrlr *ctrlr;
-	struct spdk_nvmf_subsystem *subsystem;
-
-	if (req->length < sizeof(struct spdk_nvmf_fabric_connect_data)) {
-		SPDK_ERRLOG("Connect command data length 0x%x too small\n", req->length);
-		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "recfmt 0x%x qid %u sqsize %u\n",
 		      cmd->recfmt, cmd->qid, cmd->sqsize);
@@ -530,42 +521,13 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		      data->hostid[9],
 		      ntohs(*(uint16_t *)&data->hostid[10]),
 		      ntohl(*(uint32_t *)&data->hostid[12]));
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "  subnqn: \"%s\"\n", data->subnqn);
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "  hostnqn: \"%s\"\n", data->hostnqn);
 
 	if (cmd->recfmt != 0) {
 		SPDK_ERRLOG("Connect command unsupported RECFMT %u\n", cmd->recfmt);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INCOMPATIBLE_FORMAT;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	subsystem = spdk_nvmf_subsystem_get(transport->tgt, data->subnqn);
-	if (!subsystem) {
-		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	if ((subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE) ||
-	    (subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSING) ||
-	    (subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED) ||
-	    (subsystem->state == SPDK_NVMF_SUBSYSTEM_DEACTIVATING)) {
-		SPDK_ERRLOG("Subsystem '%s' is not ready\n", subsystem->subnqn);
-		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	/* Ensure that hostnqn is null terminated */
-	if (!memchr(data->hostnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1)) {
-		SPDK_ERRLOG("Connect HOSTNQN is not null terminated\n");
-		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, hostnqn);
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "  hostnqn: \"%s\"\n", data->hostnqn);
-
-	if (spdk_nvmf_validate_host(req->qpair, subsystem, data->hostnqn)) {
-		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
@@ -631,6 +593,69 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		spdk_thread_send_msg(subsystem->thread, _spdk_nvmf_ctrlr_add_io_qpair, req);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	}
+}
+
+static int
+spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_fabric_connect_data *data = req->data;
+	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
+	struct spdk_nvmf_subsystem *subsystem;
+
+	if (req->length < sizeof(struct spdk_nvmf_fabric_connect_data)) {
+		SPDK_ERRLOG("Connect command data length 0x%x too small\n", req->length);
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	subsystem = spdk_nvmf_subsystem_get(req->qpair->transport->tgt, data->subnqn);
+	if (!subsystem) {
+		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if ((subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE) ||
+	    (subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSING) ||
+	    (subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED) ||
+	    (subsystem->state == SPDK_NVMF_SUBSYSTEM_DEACTIVATING)) {
+		SPDK_ERRLOG("Subsystem '%s' is not ready\n", subsystem->subnqn);
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	/* Ensure that hostnqn is null terminated */
+	if (!memchr(data->hostnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1)) {
+		SPDK_ERRLOG("Connect HOSTNQN is not null terminated\n");
+		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, hostnqn);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (spdk_nvmf_validate_host(req->qpair, subsystem, data->hostnqn)) {
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	return spdk_nvmf_ctrlr_connect_unsafe(req, subsystem);
+}
+
+int
+spdk_nvmf_ctrlr_connect_backdoor(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_fabric_connect_data *data = req->data;
+	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
+	struct spdk_nvmf_subsystem *subsystem;
+
+	TAILQ_INSERT_TAIL(&req->qpair->outstanding, req, link);
+
+	subsystem = spdk_nvmf_subsystem_get(req->qpair->transport->tgt, data->subnqn);
+	if (!subsystem) {
+		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	return spdk_nvmf_ctrlr_connect_unsafe(req, subsystem);
 }
 
 static uint64_t
