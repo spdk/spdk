@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9679e590_4f43e8de",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1808,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T22:35:47Z",
+      "side": 1,
+      "message": "just a nit but \"written down\" sounds funny, how about \"written out\"?",
+      "revId": "8df13d2fb1651393c3c9ab953c0991d2ab4359f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee9d1561_a8cfccbf",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1815,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T22:35:47Z",
+      "side": 1,
+      "message": "oh man, can you make a write_out() function or handle this some other way than a goto? I think we try to reserve use of goto\u0027s to where nothing else really works well (error case cleanup)",
+      "revId": "8df13d2fb1651393c3c9ab953c0991d2ab4359f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
