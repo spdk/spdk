@@ -104,6 +104,24 @@
       "revId": "e62bca29ab96007d6a12b24461129653f618f21e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66854d6a_f5f778a4",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 2219,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-13T19:29:11Z",
+      "side": 1,
+      "message": "They are not directly correlated.  If the comparev fails with -ENOMEM, the bdev_io would get retried but then would only submit the writev, not the comparev.",
+      "parentUuid": "478ee293_748180ce",
+      "revId": "e62bca29ab96007d6a12b24461129653f618f21e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
