@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c97e46e2_ddc37994",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T18:13:23Z",
+      "side": 1,
+      "message": "just a suggestion, this if else is getting really big and hard to follow. IMHO a switch is easier to follow",
+      "revId": "570db28be2f8327326a894d34b78290db3031b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b120e877_8b9ca1d4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T18:13:23Z",
+      "side": 1,
+      "message": "you could also move this line to the top of the function and shorten this and the pervious condition",
+      "revId": "570db28be2f8327326a894d34b78290db3031b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d84e860e_41f2c278",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T18:13:23Z",
+      "side": 1,
+      "message": "Don\u0027t think you need a CR here",
+      "revId": "570db28be2f8327326a894d34b78290db3031b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b94cb53e_4056e323",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T18:13:23Z",
+      "side": 1,
+      "message": "how about extent_page_array_size? I don\u0027t think its too ugly big but et doesn\u0027t explain much",
+      "revId": "570db28be2f8327326a894d34b78290db3031b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f2631b2_68216675",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T18:13:23Z",
+      "side": 1,
+      "message": "maybe name it num_pages so it\u0027s clear in the code without going to the struct defn?",
+      "revId": "570db28be2f8327326a894d34b78290db3031b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
