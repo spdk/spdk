@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5b2f5f9_df390412",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-13T10:48:20Z",
+      "side": 1,
+      "message": "Instead using a per file basis poller, we should use a global cache poller.",
+      "revId": "455f90c912956d305063b518bc385a69ffc2880a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
