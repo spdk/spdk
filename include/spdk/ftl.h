@@ -111,9 +111,9 @@ enum spdk_ftl_mode {
 
 struct spdk_ftl_dev_init_opts {
 	/* Underlying device */
-	struct spdk_bdev_desc			*base_bdev_desc;
+	const char				*base_bdev;
 	/* Write buffer cache */
-	struct spdk_bdev_desc			*cache_bdev_desc;
+	const char				*cache_bdev;
 
 	/* Thread responsible for core tasks execution */
 	struct spdk_thread			*core_thread;
@@ -137,8 +137,10 @@ struct spdk_ftl_attrs {
 	uint64_t				num_blocks;
 	/* Logical block size */
 	size_t					block_size;
+	/* Underlying device */
+	const char				*base_bdev;
 	/* Write buffer cache */
-	struct spdk_bdev_desc			*cache_bdev_desc;
+	const char				*cache_bdev;
 	/* Number of zones per parallel unit in the underlying device (including any offline ones) */
 	size_t					num_zones;
 	/* Number of logical blocks per zone */
