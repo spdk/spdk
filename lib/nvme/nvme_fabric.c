@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -45,10 +45,16 @@ nvme_fabric_prop_set_cmd(struct spdk_nvme_ctrlr *ctrlr,
 			 uint32_t offset, uint8_t size, uint64_t value)
 {
 	struct spdk_nvmf_fabric_prop_set_cmd cmd = {};
-	struct nvme_completion_poll_status status;
+	struct nvme_completion_poll_status *status;
 	int rc;
 
 	assert(size == SPDK_NVMF_PROP_SIZE_4 || size == SPDK_NVMF_PROP_SIZE_8);
+
+	status = malloc(sizeof(*status));
+	if (!status) {
+		SPDK_ERRLOG("Failed to allocate status tracker\n");
+		return -ENOMEM;
+	}
 
 	cmd.opcode = SPDK_NVME_OPC_FABRIC;
 	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET;
@@ -58,15 +64,20 @@ nvme_fabric_prop_set_cmd(struct spdk_nvme_ctrlr *ctrlr,
 
 	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, (struct spdk_nvme_cmd *)&cmd,
 					   NULL, 0,
-					   nvme_completion_poll_cb, &status);
+					   nvme_completion_poll_cb, status);
 	if (rc < 0) {
+		free(status);
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
+		if (!status->timed_out) {
+			free(status);
+		}
 		SPDK_ERRLOG("Property Set failed\n");
 		return -1;
 	}
+	free(status);
 
 	return 0;
 }
@@ -76,11 +87,17 @@ nvme_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr,
 			 uint32_t offset, uint8_t size, uint64_t *value)
 {
 	struct spdk_nvmf_fabric_prop_set_cmd cmd = {};
-	struct nvme_completion_poll_status status;
+	struct nvme_completion_poll_status *status;
 	struct spdk_nvmf_fabric_prop_get_rsp *response;
 	int rc;
 
 	assert(size == SPDK_NVMF_PROP_SIZE_4 || size == SPDK_NVMF_PROP_SIZE_8);
+
+	status = malloc(sizeof(*status));
+	if (!status) {
+		SPDK_ERRLOG("Failed to allocate status tracker\n");
+		return -ENOMEM;
+	}
 
 	cmd.opcode = SPDK_NVME_OPC_FABRIC;
 	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
@@ -89,23 +106,29 @@ nvme_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr,
 
 	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, (struct spdk_nvme_cmd *)&cmd,
 					   NULL, 0, nvme_completion_poll_cb,
-					   &status);
+					   status);
 	if (rc < 0) {
+		free(status);
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
+		if (!status->timed_out) {
+			free(status);
+		}
 		SPDK_ERRLOG("Property Get failed\n");
 		return -1;
 	}
 
-	response = (struct spdk_nvmf_fabric_prop_get_rsp *)&status.cpl;
+	response = (struct spdk_nvmf_fabric_prop_get_rsp *)&status->cpl;
 
 	if (size == SPDK_NVMF_PROP_SIZE_4) {
 		*value = response->value.u32.low;
 	} else {
 		*value = response->value.u64;
 	}
+
+	free(status);
 
 	return 0;
 }
@@ -205,18 +228,29 @@ static int
 nvme_fabric_get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr,
 				   void *log_page, uint32_t size, uint64_t offset)
 {
-	struct nvme_completion_poll_status status;
+	struct nvme_completion_poll_status *status;
 	int rc;
 
+	status = malloc(sizeof(*status));
+	if (!status) {
+		SPDK_ERRLOG("Failed to allocate status tracker\n");
+		return -ENOMEM;
+	}
+
 	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_DISCOVERY, 0, log_page, size, offset,
-					      nvme_completion_poll_cb, &status);
+					      nvme_completion_poll_cb, status);
 	if (rc < 0) {
+		free(status);
 		return -1;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, status)) {
+		if (!status->timed_out) {
+			free(status);
+		}
 		return -1;
 	}
+	free(status);
 
 	return 0;
 }
@@ -229,7 +263,7 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 	struct spdk_nvme_ctrlr *discovery_ctrlr;
 	union spdk_nvme_cc_register cc;
 	int rc;
-	struct nvme_completion_poll_status status;
+	struct nvme_completion_poll_status *status;
 
 	if (strcmp(probe_ctx->trid.subnqn, SPDK_NVMF_DISCOVERY_NQN) != 0) {
 		/* It is not a discovery_ctrlr info and try to directly connect it */
@@ -260,19 +294,31 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		return -1;
 	}
 
+	status = malloc(sizeof(*status));
+	if (!status) {
+		SPDK_ERRLOG("Failed to allocate status tracker\n");
+		return -ENOMEM;
+	}
+
 	/* get the cdata info */
 	rc = nvme_ctrlr_cmd_identify(discovery_ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
 				     &discovery_ctrlr->cdata, sizeof(discovery_ctrlr->cdata),
-				     nvme_completion_poll_cb, &status);
+				     nvme_completion_poll_cb, status);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to identify cdata\n");
+		free(status);
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(discovery_ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion(discovery_ctrlr->adminq, status)) {
 		SPDK_ERRLOG("nvme_identify_controller failed!\n");
+		if (!status->timed_out) {
+			free(status);
+		}
 		return -ENXIO;
 	}
+
+	free(status);
 
 	/* Direct attach through spdk_nvme_connect() API */
 	if (direct_connect == true) {
@@ -341,7 +387,7 @@ nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr,
 int
 nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 {
-	struct nvme_completion_poll_status status;
+	struct nvme_completion_poll_status *status;
 	struct spdk_nvmf_fabric_connect_rsp *rsp;
 	struct spdk_nvmf_fabric_connect_cmd cmd;
 	struct spdk_nvmf_fabric_connect_data *nvmf_data;
@@ -361,6 +407,12 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 				 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!nvmf_data) {
 		SPDK_ERRLOG("nvmf_data allocation error\n");
+		return -ENOMEM;
+	}
+
+	status = malloc(sizeof(*status));
+	if (!status) {
+		SPDK_ERRLOG("Failed to allocate status tracker\n");
 		return -ENOMEM;
 	}
 
@@ -386,25 +438,30 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 	rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, qpair,
 					(struct spdk_nvme_cmd *)&cmd,
 					nvmf_data, sizeof(*nvmf_data),
-					nvme_completion_poll_cb, &status);
+					nvme_completion_poll_cb, status);
 	if (rc < 0) {
 		SPDK_ERRLOG("Connect command failed\n");
 		spdk_free(nvmf_data);
+		free(status);
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(qpair, &status)) {
+	if (spdk_nvme_wait_for_completion(qpair, status)) {
 		SPDK_ERRLOG("Connect command failed\n");
 		spdk_free(nvmf_data);
+		if (!status->timed_out) {
+			free(status);
+		}
 		return -EIO;
 	}
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
-		rsp = (struct spdk_nvmf_fabric_connect_rsp *)&status.cpl;
+		rsp = (struct spdk_nvmf_fabric_connect_rsp *)&status->cpl;
 		ctrlr->cntlid = rsp->status_code_specific.success.cntlid;
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "CNTLID 0x%04" PRIx16 "\n", ctrlr->cntlid);
 	}
 
 	spdk_free(nvmf_data);
+	free(status);
 	return 0;
 }
