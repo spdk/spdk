@@ -1,0 +1,487 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eadf3246_52e2b65d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 15
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "nitpick: \"is like\" ?",
+      "range": {
+        "startLine": 9,
+        "startChar": 10,
+        "endLine": 9,
+        "endChar": 16
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9bcf257_c06022a9",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "Unused import",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 11
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99de6154_b368b3bc",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "Unused import",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 9
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71d63634_817c6b33",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "sys already imported on line 4",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 10
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59069358_c4f878db",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "Unused imports",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 63
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ef11397_64cd2d4d",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "Also one other thing. Does this really need to be a class?\nFrom what I see I understand that bdev_stat is only used to hold some data. Wouldn\u0027t a dictionary be enough?",
+      "range": {
+        "startLine": 27,
+        "startChar": 6,
+        "endLine": 27,
+        "endChar": 16
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f5a0a5b_30d80bdb",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "Class definition as in Python 2.*.\nFile shebang points to Py3, so please consider changing this to Py3 style",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 16
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d12b0e1a_e7b0294b",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "\"format\" is a built-in keyword, consider using different name for the variable",
+      "range": {
+        "startLine": 104,
+        "startChar": 4,
+        "endLine": 104,
+        "endChar": 10
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b047d12_ae8aae52",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "inconsistent with line 172.\nThis line returns nothing wile line 172 returns cpi_dump_info iterable (list?).",
+      "range": {
+        "startLine": 156,
+        "startChar": 8,
+        "endLine": 156,
+        "endChar": 14
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dca35bad_33cded91",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "External parentheses not necessary",
+      "range": {
+        "startLine": 163,
+        "startChar": 13,
+        "endLine": 163,
+        "endChar": 33
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f696f7a1_623f4328",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "No need to do len().\n\n\"if cpu_dump info:\" is sufficient to check if iterable is empty.\n\nhttps://www.python.org/dev/peps/pep-0008/\n\"For sequences, (strings, lists, tuples), use the fact that empty sequences are false.\"",
+      "range": {
+        "startLine": 165,
+        "startChar": 15,
+        "endLine": 165,
+        "endChar": 33
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3477be2_1f880672",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "Unused arguments. args.* variables are used instead in function body",
+      "range": {
+        "startLine": 261,
+        "startChar": 18,
+        "endLine": 261,
+        "endChar": 30
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2eebb00_cb71251c",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this line use \"client\" and \"name\" from function args?",
+      "range": {
+        "startLine": 262,
+        "startChar": 36,
+        "endLine": 262,
+        "endChar": 63
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d72faea_b9a0e980",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "External parentheses not needed",
+      "range": {
+        "startLine": 295,
+        "startChar": 10,
+        "endLine": 295,
+        "endChar": 16
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9363e57_609b9b80",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "Long line. Not really a hard reason for -1, but consider breaking the help string.",
+      "range": {
+        "startLine": 326,
+        "startChar": 24,
+        "endLine": 326,
+        "endChar": 140
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63e9e231_627303ca",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 330,
+        "startChar": 24,
+        "endLine": 330,
+        "endChar": 135
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9e70325_b360f232",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 334,
+        "startChar": 24,
+        "endLine": 334,
+        "endChar": 136
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b938e75b_b6d1f89f",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 348,
+        "startChar": 24,
+        "endLine": 348,
+        "endChar": 123
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0f2aa8e_4868a778",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "If we\u0027re using local variables then iostat_result should be probably declared as well",
+      "range": {
+        "startLine": 60,
+        "startChar": 1,
+        "endLine": 60,
+        "endChar": 17
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "120bae2a_0b319ccd",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "iostat_result\u003d$(cat bdevperf_out | grep $1 | tail -1) can be moved to line 61 to avoid repetition and in if/else block you can just do:\niostat_result\u003d$(awk \u0027{print $2}\u0027 \u003c\u003c\u003c $iostat_result)",
+      "range": {
+        "startLine": 63,
+        "startChar": 2,
+        "endLine": 63,
+        "endChar": 115
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f6c56db_8ea985bf",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:28:03Z",
+      "side": 1,
+      "message": "I\u0027d suggest using elif [[ \"$limit_type\" \u003d \"BANDWIDTH\" ]] explicitly instead of \"else\" ,because 6th column value returned by AWK is just bandwidth.",
+      "range": {
+        "startLine": 64,
+        "startChar": 1,
+        "endLine": 64,
+        "endChar": 5
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
