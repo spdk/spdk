@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "101606bf_5830187d",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T12:19:44Z",
+      "side": 1,
+      "message": "Sorr, I missed this previously.\nShouldn\u0027t this be NVMF_SERIAL?",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 30
+      },
+      "revId": "2f6295d03da16f0f921c2b9d536697a0b0ed976a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0abf8c74_0e6a0839",
+        "filename": "test/nvmf/target/filesystem.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T12:19:44Z",
+      "side": 1,
+      "message": "Actually... isn\u0027t this #TODO solved here?\nThis can be probably removed now or in a separate patch.",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 77
+      },
+      "revId": "2f6295d03da16f0f921c2b9d536697a0b0ed976a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7fa0547_4ce0b775",
+        "filename": "test/nvmf/target/fio.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T12:19:44Z",
+      "side": 1,
+      "message": "Since this is used more than once - can we move this into a new function?\nThat way we could:\na) revert waitforblk to it\u0027 original form (just use dev name)\nb) create a new function ...waitforserial? Or something like that.\n   It would take 2 arguments: SERIAL and COUNT (COUNT being optional and defaulting to 1).\n   Count is needed because here you do \"grep\" which will succeed if there\u0027s any single blk dev with this serial, but we\u0027re waiting for 3.",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 46,
+        "endChar": 4
+      },
+      "revId": "2f6295d03da16f0f921c2b9d536697a0b0ed976a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
