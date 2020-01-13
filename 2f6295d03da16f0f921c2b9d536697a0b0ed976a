@@ -140,6 +140,30 @@
       "revId": "2f6295d03da16f0f921c2b9d536697a0b0ed976a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5917afa7_93dc1a42",
+        "filename": "test/nvmf/target/fio.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T14:26:04Z",
+      "side": 1,
+      "message": "a) Once you have a new option then you can use waitforserial instead of waitforblk where needed.\nb) You can\u0027t be 100% sure of that. Just because lsblk contains an entry with $NVMF_SERIAL does not mean that all of 3 expected block devices are already available.",
+      "parentUuid": "ed328628_44930960",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 46,
+        "endChar": 4
+      },
+      "revId": "2f6295d03da16f0f921c2b9d536697a0b0ed976a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
