@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "6733e475_8171459a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-13T20:10:35Z",
+      "side": 1,
+      "message": "I just re-read the spec and it definitely says that submissions must remain in order. So that means we can poll it and only the avail bit needs to be checked here against the current phase.",
+      "parentUuid": "1c8cdb32_909b33c6",
+      "revId": "3b2444ebd0e0baa51c92b1846aceee8aecfb1d7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "999ae049_ca4db19d",
         "filename": "lib/vhost/vhost_internal.h",
         "patchSetId": 13
