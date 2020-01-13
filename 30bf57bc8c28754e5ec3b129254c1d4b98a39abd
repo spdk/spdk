@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d148d64_c741d9ed",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-13T20:04:01Z",
+      "side": 1,
+      "message": "It is not really clear how adding this line performs what is described in the commit message.  We take this code path for non-error cases - so having this call here seems confusing.\n\nNote that end_target does three things:\n\n1) unregister run_timer\n2) unregister reset_timer\n3) set is_draining flag\n\nIt ends up working OK to call end_target multiple times (since spdk_poller_unregister() will set the poller pointer to NULL), but I think it\u0027s confusing to call it like this here.  The normal path is that the run_timer expires, which sets is_draining \u003d true, and then we eventually get to this point.  Calling end_target() again doesn\u0027t make sense in that case.",
+      "revId": "30bf57bc8c28754e5ec3b129254c1d4b98a39abd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
