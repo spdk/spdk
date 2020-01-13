@@ -22,6 +22,30 @@
       "revId": "14b90a8bba4f7c0a63b1fa67e151a3778979e24a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09b2210b_7a162b13",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-13T17:58:33Z",
+      "side": 0,
+      "message": "A target may, but at least in the default configuration for the tcp transport, our target does not. And because this is hard coded to 64 instead of calculated from the io_unit_size and the max_io_size, choosing values for those that may require the target to send multiple c2h pdus is broken. I\u0027m simplifying it to assume they\u0027re equal here, which is no more broken than before. In the next patch I then guarantee they\u0027re equal.",
+      "parentUuid": "953cebac_7c649a3e",
+      "range": {
+        "startLine": 57,
+        "startChar": 1,
+        "endLine": 57,
+        "endChar": 93
+      },
+      "revId": "14b90a8bba4f7c0a63b1fa67e151a3778979e24a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
