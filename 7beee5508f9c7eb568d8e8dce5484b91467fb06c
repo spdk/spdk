@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8bb5f809_15a70a29",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1112,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T21:23:45Z",
+      "side": 1,
+      "message": "is the seq that you\u0027re passing in not the same sequence available in `struct spdk_blob_load_ctx` once cast below?",
+      "revId": "7beee5508f9c7eb568d8e8dce5484b91467fb06c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
