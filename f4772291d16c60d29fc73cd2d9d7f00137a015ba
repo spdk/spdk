@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e2cd46c_d9ecb71a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1610,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T21:49:53Z",
+      "side": 1,
+      "message": "same question as before, do we need to add seq as an arg or can we just have ctx in the parm list and get seq from it?",
+      "revId": "f4772291d16c60d29fc73cd2d9d7f00137a015ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
