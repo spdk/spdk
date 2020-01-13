@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "34a90fcd_8221355c",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-13T14:42:22Z",
+      "side": 1,
+      "message": "Thanks for noticing it.\nAdditional condition in check_format.sh doesn\u0027t fix the code. Only displays false indentations.\nI changed this code unintentionally.",
+      "parentUuid": "ae693c10_e6e0165d",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 35
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b9d4fb65_59d3c621",
         "filename": "test/fuzz/autofuzz_vhost.sh",
         "patchSetId": 7
@@ -45,6 +69,30 @@
       "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b87b1f98_cb29687f",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-13T14:42:22Z",
+      "side": 1,
+      "message": "Thanks.",
+      "parentUuid": "b9d4fb65_59d3c621",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 81
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "808edeff_39a042aa",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-13T14:42:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3aa730a8_e2e17c4c",
+      "range": {
+        "startLine": 14,
+        "startChar": 7,
+        "endLine": 14,
+        "endChar": 9
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a7bd0fd0_b46d582a",
         "filename": "test/json_config/json_config.sh",
         "patchSetId": 7
@@ -91,6 +163,30 @@
       "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd9ae245_2f3e91d8",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-13T14:42:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a7bd0fd0_b46d582a",
+      "range": {
+        "startLine": 205,
+        "startChar": 25,
+        "endLine": 205,
+        "endChar": 26
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "b7857063_ecf1acaf",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-13T14:42:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2e7f6806_cadb25f3",
+      "range": {
+        "startLine": 291,
+        "startChar": 39,
+        "endLine": 291,
+        "endChar": 40
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e0632a0_e0030639",
         "filename": "test/lvol/lvol.sh",
         "patchSetId": 7
@@ -137,6 +257,30 @@
       "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c28affc_21b0443a",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-13T14:42:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0e0632a0_e0030639",
+      "range": {
+        "startLine": 19,
+        "startChar": 19,
+        "endLine": 19,
+        "endChar": 20
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "f707539f_d44e26cc",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-13T14:42:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "30d5744d_28a9bb82",
+      "range": {
+        "startLine": 5,
+        "startChar": 1,
+        "endLine": 5,
+        "endChar": 2
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "911b9fea_af0a1b02",
         "filename": "test/vhost/hotplug/blk_hotremove.sh",
         "patchSetId": 7
@@ -183,6 +351,30 @@
       "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ad5f46b_0419e80a",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-13T14:42:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "911b9fea_af0a1b02",
+      "range": {
+        "startLine": 10,
+        "startChar": 1,
+        "endLine": 10,
+        "endChar": 2
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "0ed8eab9_45e300c8",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-13T14:42:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fc6ca0d8_f8f5ab06",
+      "range": {
+        "startLine": 28,
+        "startChar": 9,
+        "endLine": 28,
+        "endChar": 10
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d4d2ddb7_621b90ce",
         "filename": "test/vhost/hotplug/scsi_hotremove.sh",
         "patchSetId": 7
@@ -229,6 +445,30 @@
       "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9dc3d32a_c40141dc",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-13T14:42:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d4d2ddb7_621b90ce",
+      "range": {
+        "startLine": 13,
+        "startChar": 1,
+        "endLine": 13,
+        "endChar": 2
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
