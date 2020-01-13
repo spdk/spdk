@@ -1102,36 +1102,55 @@ static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target 
 	return task;
 }
 
-static int
-bdevperf_construct_tasks_on_group(struct io_target_group *group)
+static void
+bdevperf_construct_targets_tasks_done(struct spdk_io_channel_iter *i, int status)
 {
+	if (status != 0) {
+		fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
+		fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
+		g_run_rc = status;
+		bdevperf_test_done();
+		return;
+	}
+
+	bdevperf_test();
+}
+
+static void
+bdevperf_construct_tasks_on_group(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch;
+	struct io_target_group *group;
 	struct io_target *target;
 	struct bdevperf_task *task;
-	int i, task_num = g_queue_depth;
+	int n, task_num = g_queue_depth;
+	int rc = 0;
+
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
 
 	if (g_reset) {
 		task_num += 1;
 	}
 
 	TAILQ_FOREACH(target, &group->targets, link) {
-		for (i = 0; i < task_num; i++) {
+		for (n = 0; n < task_num; n++) {
 			task = bdevperf_construct_task_on_target(target);
 			if (task == NULL) {
-				return -1;
+				rc = -1;
+				goto end;
 			}
 			TAILQ_INSERT_TAIL(&target->task_list, task, link);
 		}
 	}
 
-	return 0;
+end:
+	spdk_for_each_channel_continue(i, rc);
 }
 
 static void
 bdevperf_construct_targets_tasks(void)
 {
-	struct io_target_group *group;
-	int rc;
-
 	if (g_target_count == 0) {
 		fprintf(stderr, "No valid bdevs found.\n");
 		g_run_rc = -ENODEV;
@@ -1140,18 +1159,8 @@ bdevperf_construct_targets_tasks(void)
 	}
 
 	/* Initialize task list for each target */
-	TAILQ_FOREACH(group, &g_bdevperf.groups, link) {
-		rc = bdevperf_construct_tasks_on_group(group);
-		if (rc != 0) {
-			fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
-			fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
-			g_run_rc = rc;
-			bdevperf_test_done();
-			return;
-		}
-	}
-
-	bdevperf_test();
+	spdk_for_each_channel(&g_bdevperf, bdevperf_construct_tasks_on_group, NULL,
+			      bdevperf_construct_targets_tasks_done);
 }
 
 static void
