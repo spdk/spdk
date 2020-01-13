@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51c836ca_b2d04885",
+        "filename": "test/nvme/hw_hotplug.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-13T12:24:04Z",
+      "side": 0,
+      "message": "Change is ok, but lets do that in separate patches as usual.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 23
+      },
+      "revId": "c85b38d916168ebafd7d9b1381416c6194fd06f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da5470f3_37a868e4",
+        "filename": "test/nvme/spdk_smartctl_cuse.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-13T12:24:04Z",
+      "side": 0,
+      "message": "Change is ok, but lets do that in separate patches as usual.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 31
+      },
+      "revId": "c85b38d916168ebafd7d9b1381416c6194fd06f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
