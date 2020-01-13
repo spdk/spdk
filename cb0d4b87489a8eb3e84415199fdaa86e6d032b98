@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e85df3d_728aa049",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 989,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T22:25:13Z",
+      "side": 1,
+      "message": "I think it\u0027d be better to add this func when you need it 2 patches up the chain as opposed to now with the unused attr",
+      "revId": "cb0d4b87489a8eb3e84415199fdaa86e6d032b98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cac810bf_b69cec49",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T22:25:13Z",
+      "side": 1,
+      "message": "I think with the three desc types that all have the word EXTENT in them it would be good to put a few sentences here in a comment describing what they are",
+      "revId": "cb0d4b87489a8eb3e84415199fdaa86e6d032b98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
