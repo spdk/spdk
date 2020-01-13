@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae693c10_e6e0165d",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:45:22Z",
+      "side": 1,
+      "message": "These lines should not be detected by \" ^\\t* {4,} \" because the first line char is \"#\".\n\nPlease reset your local changes for this commit, run updated check_format.sh and then re-commit.",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 35
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9d4fb65_59d3c621",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:45:22Z",
+      "side": 1,
+      "message": "This looks very wrong :)",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 81
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3aa730a8_e2e17c4c",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:45:22Z",
+      "side": 1,
+      "message": "As per comment in previous patch set:\nSpace indentations which are NOT at line start should not be included in check_format.sh rule.\n\nDo not fix this line manually. Please reset your changes locally, apply valid check_format.sh rule and then commit a new patchset with changes that are generated automatically.",
+      "range": {
+        "startLine": 14,
+        "startChar": 7,
+        "endLine": 14,
+        "endChar": 9
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7bd0fd0_b46d582a",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:45:22Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 205,
+        "startChar": 25,
+        "endLine": 205,
+        "endChar": 26
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e7f6806_cadb25f3",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:45:22Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 291,
+        "startChar": 39,
+        "endLine": 291,
+        "endChar": 40
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e0632a0_e0030639",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:45:22Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 19,
+        "startChar": 19,
+        "endLine": 19,
+        "endChar": 20
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30d5744d_28a9bb82",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:45:22Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 5,
+        "startChar": 1,
+        "endLine": 5,
+        "endChar": 2
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "911b9fea_af0a1b02",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:45:22Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 10,
+        "startChar": 1,
+        "endLine": 10,
+        "endChar": 2
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc6ca0d8_f8f5ab06",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:45:22Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 28,
+        "startChar": 9,
+        "endLine": 28,
+        "endChar": 10
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4d2ddb7_621b90ce",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-13T11:45:22Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 13,
+        "startChar": 1,
+        "endLine": 13,
+        "endChar": 2
+      },
+      "revId": "45311cb81de2579440e5a2af2e99efb7618f0542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
