@@ -2748,14 +2748,55 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, bool is_admin_queue)
 	}
 }
 
+static void
+_nvmf_request_exec(struct spdk_nvmf_request *req,
+		   struct spdk_nvmf_subsystem_poll_group *sgroup)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	spdk_nvmf_request_exec_status status;
+
+	nvmf_trace_command(req->cmd, spdk_nvmf_qpair_is_admin_queue(qpair));
+
+	if (sgroup) {
+		sgroup->io_outstanding++;
+	}
+
+	/* Place the request on the outstanding list so we can keep track of it */
+	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+
+	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
+		status = spdk_nvmf_ctrlr_process_fabrics_cmd(req);
+	} else if (spdk_unlikely(spdk_nvmf_qpair_is_admin_queue(qpair))) {
+		status = spdk_nvmf_ctrlr_process_admin_cmd(req);
+	} else {
+		status = spdk_nvmf_ctrlr_process_io_cmd(req);
+	}
+
+	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		spdk_nvmf_request_complete(req);
+	}
+}
+
+void
+spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
+
+	assert(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC);
+
+	if (qpair->ctrlr) {
+		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+	}
+
+	_nvmf_request_exec(req, sgroup);
+}
+
 void
 spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
-	spdk_nvmf_request_exec_status status;
 	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
-
-	nvmf_trace_command(req->cmd, spdk_nvmf_qpair_is_admin_queue(qpair));
 
 	if (qpair->ctrlr) {
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
@@ -2781,24 +2822,9 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
 			return;
 		}
-
-		sgroup->io_outstanding++;
 	}
 
-	/* Place the request on the outstanding list so we can keep track of it */
-	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
-
-	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
-		status = spdk_nvmf_ctrlr_process_fabrics_cmd(req);
-	} else if (spdk_unlikely(spdk_nvmf_qpair_is_admin_queue(qpair))) {
-		status = spdk_nvmf_ctrlr_process_admin_cmd(req);
-	} else {
-		status = spdk_nvmf_ctrlr_process_io_cmd(req);
-	}
-
-	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
-		spdk_nvmf_request_complete(req);
-	}
+	_nvmf_request_exec(req, sgroup);
 }
 
 static bool
