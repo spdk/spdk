@@ -30,12 +30,18 @@ set +e
 ctrlr="/dev/${nvme_name}"
 ns="/dev/${nvme_name}n1"
 
+oacs=$( ${NVME_CMD} id-ctrl $ctrlr | grep oacs | cut -d: -f2 )
+oacs_firmware=$(( oacs & 0x4 ))
+
 ${NVME_CMD} get-ns-id $ns > ${KERNEL_OUT}.1
 ${NVME_CMD} id-ns $ns > ${KERNEL_OUT}.2
 ${NVME_CMD} list-ns $ns > ${KERNEL_OUT}.3
 
 ${NVME_CMD} id-ctrl $ctrlr > ${KERNEL_OUT}.4
 ${NVME_CMD} list-ctrl $ctrlr > ${KERNEL_OUT}.5
+if [ "$oacs_firmware" -ne "0" ]; then
+	${NVME_CMD} fw-log $ctrlr > ${KERNEL_OUT}.6
+fi
 ${NVME_CMD} smart-log $ctrlr
 ${NVME_CMD} error-log $ctrlr > ${KERNEL_OUT}.7
 ${NVME_CMD} get-feature $ctrlr -f 1 -s 1 -l 100 > ${KERNEL_OUT}.8
@@ -74,6 +80,9 @@ ${NVME_CMD} list-ns $ns > ${CUSE_OUT}.3
 ctrlr="/dev/spdk/nvme0"
 ${NVME_CMD} id-ctrl $ctrlr > ${CUSE_OUT}.4
 ${NVME_CMD} list-ctrl $ctrlr > ${CUSE_OUT}.5
+if [ "$oacs_firmware" -ne "0" ]; then
+	${NVME_CMD} fw-log $ctrlr > ${CUSE_OUT}.6
+fi
 ${NVME_CMD} smart-log $ctrlr
 ${NVME_CMD} error-log $ctrlr > ${CUSE_OUT}.7
 ${NVME_CMD} get-feature $ctrlr -f 1 -s 1 -l 100 > ${CUSE_OUT}.8
