@@ -70,6 +70,29 @@
       "revId": "8d930ae58bb54d88017703c83c16c305182d96f7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4982c2d5_e1cb33a4",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1395,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-13T02:48:03Z",
+      "side": 1,
+      "message": "Hi Ben, \nAccording to the Spec, \n\n\"The H2CData PDU length does not exceed the maximum length\ncommunicated by the controller during the connection establishment (MAXH2CDATA)\"\nIn page 18. So I think that your change here is not correct. You can not suggest that \none R2T can be respond with one H2Cdata, actually the initiator can send maxh2cdata size. \nSo your code change here is wrong.",
+      "range": {
+        "startLine": 1390,
+        "startChar": 1,
+        "endLine": 1395,
+        "endChar": 0
+      },
+      "revId": "8d930ae58bb54d88017703c83c16c305182d96f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
