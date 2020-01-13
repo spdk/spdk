@@ -1050,6 +1050,23 @@ verify_test_params(struct spdk_app_opts *opts)
 	return 0;
 }
 
+static void
+bdevperf_test(void)
+{
+	printf("Running I/O for %" PRIu64 " seconds...\n", g_time_in_usec / 1000000);
+	fflush(stdout);
+
+	/* Start a timer to dump performance numbers */
+	g_shutdown_tsc = spdk_get_ticks();
+	if (g_show_performance_real_time) {
+		g_perf_timer = spdk_poller_register(performance_statistics_thread, NULL,
+						    g_show_performance_period_in_usec);
+	}
+
+	/* Iterate target groups to start all I/O */
+	spdk_for_each_channel(&g_bdevperf, bdevperf_submit_on_group, NULL, NULL);
+}
+
 static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target *target)
 {
 	struct bdevperf_task *task;
@@ -1085,13 +1102,20 @@ static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target 
 	return task;
 }
 
-static int
+static void
 bdevperf_construct_targets_tasks(void)
 {
 	struct io_target_group *group;
 	struct io_target *target;
 	struct bdevperf_task *task;
 	int i, task_num = g_queue_depth;
+
+	if (g_target_count == 0) {
+		fprintf(stderr, "No valid bdevs found.\n");
+		g_run_rc = -ENODEV;
+		bdevperf_test_done();
+		return;
+	}
 
 	if (g_reset) {
 		task_num += 1;
@@ -1103,52 +1127,18 @@ bdevperf_construct_targets_tasks(void)
 			for (i = 0; i < task_num; i++) {
 				task = bdevperf_construct_task_on_target(target);
 				if (task == NULL) {
-					goto ret;
+					fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
+					fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
+					g_run_rc = -1;
+					bdevperf_test_done();
+					return;
 				}
 				TAILQ_INSERT_TAIL(&target->task_list, task, link);
 			}
 		}
 	}
 
-	return 0;
-
-ret:
-	fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
-	fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
-	return -1;
-}
-
-static void
-bdevperf_test(void)
-{
-	int rc;
-
-	if (g_target_count == 0) {
-		fprintf(stderr, "No valid bdevs found.\n");
-		g_run_rc = -ENODEV;
-		bdevperf_test_done();
-		return;
-	}
-
-	rc = bdevperf_construct_targets_tasks();
-	if (rc) {
-		g_run_rc = rc;
-		bdevperf_test_done();
-		return;
-	}
-
-	printf("Running I/O for %" PRIu64 " seconds...\n", g_time_in_usec / 1000000);
-	fflush(stdout);
-
-	/* Start a timer to dump performance numbers */
-	g_shutdown_tsc = spdk_get_ticks();
-	if (g_show_performance_real_time) {
-		g_perf_timer = spdk_poller_register(performance_statistics_thread, NULL,
-						    g_show_performance_period_in_usec);
-	}
-
-	/* Iterate target groups to start all I/O */
-	spdk_for_each_channel(&g_bdevperf, bdevperf_submit_on_group, NULL, NULL);
+	bdevperf_test();
 }
 
 static void
@@ -1240,7 +1230,7 @@ _bdevperf_construct_targets_done(struct spdk_io_channel_iter *i, int status)
 	_ctx = ctx->ctx;
 	if (--_ctx->bdev_count == 0) {
 		free(_ctx);
-		bdevperf_test();
+		bdevperf_construct_targets_tasks();
 	}
 	free(ctx);
 }
@@ -1324,7 +1314,7 @@ _bdevperf_construct_targets(struct spdk_bdev *bdev,
 end:
 	if (--_ctx->bdev_count == 0) {
 		free(_ctx);
-		bdevperf_test();
+		bdevperf_construct_targets_tasks();
 	}
 }
 
@@ -1365,7 +1355,7 @@ bdevperf_construct_targets(void)
 
 	if (--ctx->bdev_count == 0) {
 		free(ctx);
-		bdevperf_test();
+		bdevperf_construct_targets_tasks();
 	}
 }
 
