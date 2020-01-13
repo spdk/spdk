@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e5ba8ba_7c99593f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1716,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-13T22:17:25Z",
+      "side": 1,
+      "message": "probably put this declaration up with rest and the comment above the code block",
+      "revId": "db086474048006c8ed0da25aef4e146b5410c96c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
