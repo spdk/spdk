@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa6b6826_ed006fa4",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-13T08:25:25Z",
+      "side": 1,
+      "message": "sizeof (struct vring_packed_desc) is better.",
+      "range": {
+        "startLine": 266,
+        "startChar": 36,
+        "endLine": 266,
+        "endChar": 51
+      },
+      "revId": "92eb3afed585d35f431967332cae7c7ffa15b5e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
