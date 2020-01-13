@@ -3045,6 +3045,10 @@ struct spdk_bs_load_ctx {
 	uint32_t			cur_page;
 	struct spdk_blob_md_page	*page;
 
+	uint64_t			num_extent_pages;
+	uint32_t			*extent_pages;
+	uint64_t			extent_pages_size;
+
 	spdk_bs_sequence_t			*seq;
 	spdk_blob_op_with_handle_complete	iter_cb_fn;
 	void					*iter_cb_arg;
@@ -3508,8 +3512,10 @@ _spdk_bs_load_read_used_pages(spdk_bs_sequence_t *seq, void *cb_arg)
 }
 
 static int
-_spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob_store *bs)
+_spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page,
+				   struct spdk_bs_load_ctx *ctx)
 {
+	struct spdk_blob_store *bs = ctx->bs;
 	struct spdk_blob_md_descriptor *desc;
 	size_t	cur_desc = 0;
 
@@ -3557,8 +3563,51 @@ _spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct 
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_FLAGS) {
 			/* Skip this item */
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT_TABLE) {
-			/* TODO: Read the extent pages when replaying the md,
-			 * only after particular blob md chain was read */
+			struct spdk_blob_md_descriptor_extent_table *desc_extent_table;
+			unsigned int num_extent_pages = ctx->extent_pages_size;
+			unsigned int i;
+			void *tmp;
+
+			desc_extent_table = (struct spdk_blob_md_descriptor_extent_table *)desc;
+
+			if (desc_extent_table->length == 0 ||
+			    ((desc_extent_table->length - sizeof(desc_extent_table->num_clusters)) % sizeof(
+				     desc_extent_table->extent_page[0]) != 0)) {
+				return -EINVAL;
+			}
+
+			if (desc_extent_table->num_clusters == 0) {
+				return -EINVAL;
+			}
+
+			for (i = 0;
+			     i < (desc_extent_table->length - sizeof(desc_extent_table->num_clusters)) / sizeof(
+				     desc_extent_table->extent_page[0]); i++) {
+				if (desc_extent_table->extent_page[i].extent_idx != 0) {
+					assert(desc_extent_table->extent_page[i].num_pages == 1);
+					num_extent_pages += desc_extent_table->extent_page[i].num_pages;
+				}
+			}
+
+			tmp = realloc(ctx->extent_pages, num_extent_pages * sizeof(uint32_t));
+			if (tmp == NULL) {
+				return -ENOMEM;
+			}
+			ctx->extent_pages = tmp;
+			ctx->extent_pages_size = num_extent_pages;
+
+			/* Extent table entries contain md page numbers for extents.
+			 * Zeroes represent unallocated extents, those are run-length-encoded.
+			 */
+			for (i = 0;
+			     i < (desc_extent_table->length - sizeof(desc_extent_table->num_clusters)) / sizeof(
+				     desc_extent_table->extent_page[0]); i++) {
+				if (desc_extent_table->extent_page[i].extent_idx != 0) {
+					assert(desc_extent_table->extent_page[i].num_pages == 1);
+					ctx->extent_pages[ctx->num_extent_pages++] =
+						desc_extent_table->extent_page[i].extent_idx;
+				}
+			}
 		} else {
 			/* Error */
 			return -EINVAL;
@@ -3576,25 +3625,22 @@ _spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct 
 static bool _spdk_bs_load_cur_md_page_valid(struct spdk_bs_load_ctx *ctx)
 {
 	uint32_t crc;
-	struct spdk_blob_md_descriptor *desc = (struct spdk_blob_md_descriptor *)ctx->page->descriptors;
 
 	crc = _spdk_blob_md_page_calc_crc(ctx->page);
 	if (crc != ctx->page->crc) {
 		return false;
 	}
 
-	/* First page of a sequence should match the blobid.
-	 * With exception of EXTENT pages, which runs are of lenth 1. */
+	/* First page of a sequence should match the blobid. */
 	if (ctx->page->sequence_num == 0 &&
-	    _spdk_bs_page_to_blobid(ctx->cur_page) != ctx->page->id &&
-	    desc->type != SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
+	    _spdk_bs_page_to_blobid(ctx->cur_page) != ctx->page->id) {
 		return false;
 	}
 	return true;
 }
 
 static void
-_spdk_bs_load_replay_cur_md_page(spdk_bs_sequence_t *seq, void *cb_arg);
+_spdk_bs_load_replay_cur_md_page(spdk_bs_sequence_t *seq, uint32_t page, void *cb_arg);
 
 static void
 _spdk_bs_load_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
@@ -3645,29 +3691,33 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
-	page_num = ctx->cur_page;
 	if (_spdk_bs_load_cur_md_page_valid(ctx) == true) {
 		if (ctx->page->sequence_num == 0 || ctx->in_page_chain == true) {
+			page_num = ctx->cur_page;
 			spdk_bit_array_set(ctx->bs->used_md_pages, page_num);
 			if (ctx->page->sequence_num == 0) {
-				/* Should used_blobids be set for extent descriptors too ?
-				 * They should have valid blobids in them. */
-				struct spdk_blob_md_descriptor *desc = (struct spdk_blob_md_descriptor *)ctx->page->descriptors;
-				if (desc->type != SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
-					spdk_bit_array_set(ctx->bs->used_blobids, page_num);
-				}
+				spdk_bit_array_set(ctx->bs->used_blobids, page_num);
 			}
-			if (_spdk_bs_load_replay_md_parse_page(ctx->page, ctx->bs)) {
+			if (_spdk_bs_load_replay_md_parse_page(ctx->page, ctx)) {
 				_spdk_bs_load_ctx_fail(seq, ctx, -EILSEQ);
 				return;
 			}
 			if (ctx->page->next != SPDK_INVALID_MD_PAGE) {
 				ctx->in_page_chain = true;
 				ctx->cur_page = ctx->page->next;
-				_spdk_bs_load_replay_cur_md_page(seq, cb_arg);
+				_spdk_bs_load_replay_cur_md_page(seq, ctx->cur_page, ctx);
 				return;
 			}
 		}
+	}
+	if (_spdk_bs_load_extent_page_valid(ctx) == true) {
+		ctx->in_page_chain = true;
+		/* Load extent pages from valid pages */
+		if (ctx->num_extent_pages != 0) {
+			ctx->cur_page = ctx->page->next;
+			_spdk_bs_load_replay_cur_md_page(seq, ctx->cur_page, ctx);
+		}
+
 	}
 
 	ctx->in_page_chain = false;
@@ -3678,7 +3728,7 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	if (ctx->page_index < ctx->super->md_len) {
 		ctx->cur_page = ctx->page_index;
-		_spdk_bs_load_replay_cur_md_page(seq, cb_arg);
+		_spdk_bs_load_replay_cur_md_page(seq, ctx->cur_page, cb_arg);
 	} else {
 		/* Claim all of the clusters used by the metadata */
 		num_md_clusters = spdk_divide_round_up(ctx->super->md_len, ctx->bs->pages_per_cluster);
@@ -3691,13 +3741,13 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static void
-_spdk_bs_load_replay_cur_md_page(spdk_bs_sequence_t *seq, void *cb_arg)
+_spdk_bs_load_replay_cur_md_page(spdk_bs_sequence_t *seq, uint32_t page, void *cb_arg)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint64_t lba;
 
-	assert(ctx->cur_page < ctx->super->md_len);
-	lba = _spdk_bs_md_page_to_lba(ctx->bs, ctx->cur_page);
+	assert(page < ctx->super->md_len);
+	lba = _spdk_bs_md_page_to_lba(ctx->bs, page);
 	spdk_bs_sequence_read_dev(seq, ctx->page, lba,
 				  _spdk_bs_byte_to_lba(ctx->bs, SPDK_BS_PAGE_SIZE),
 				  _spdk_bs_load_replay_md_cpl, ctx);
@@ -3716,7 +3766,7 @@ _spdk_bs_load_replay_md(spdk_bs_sequence_t *seq, void *cb_arg)
 		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
 		return;
 	}
-	_spdk_bs_load_replay_cur_md_page(seq, cb_arg);
+	_spdk_bs_load_replay_cur_md_page(seq, ctx->cur_page, cb_arg);
 }
 
 static void
