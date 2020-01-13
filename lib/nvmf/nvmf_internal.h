@@ -387,6 +387,7 @@ void spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 void spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_subsystem *subsystem, spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg);
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
+void spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 
