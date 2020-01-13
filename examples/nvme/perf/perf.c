@@ -1716,18 +1716,22 @@ parse_args(int argc, char **argv)
 	}
 
 	if (!g_queue_depth) {
+		fprintf(stderr, "missing -q (queue size) operand\n");
 		usage(argv[0]);
 		return 1;
 	}
 	if (!g_io_size_bytes) {
+		fprintf(stderr, "missing -o (block size) operand\n");
 		usage(argv[0]);
 		return 1;
 	}
 	if (!workload_type) {
+		fprintf(stderr, "missing -w (io pattern type) operand\n");
 		usage(argv[0]);
 		return 1;
 	}
 	if (!g_time_in_sec) {
+		fprintf(stderr, "missing -t (test time in seconds) operand\n");
 		usage(argv[0]);
 		return 1;
 	}
