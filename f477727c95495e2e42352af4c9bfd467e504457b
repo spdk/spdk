@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4325709a_6ba03063",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T14:08:27Z",
+      "side": 1,
+      "message": "This comment isn\u0027t really accurate.  I\u0027ve talked with Maciej offline - he\u0027s going to fix this in a separate patch at the end of this series.",
+      "revId": "f477727c95495e2e42352af4c9bfd467e504457b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
