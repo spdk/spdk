@@ -113,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "3ee2a08e_e7e62424",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T05:05:50Z",
+      "side": 1,
+      "message": "You are differentiating return status code. So locating check here will be OK.",
+      "parentUuid": "ca4d1f3b_d19f358c",
+      "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b771a6eb_2816f5a1",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 3
@@ -124,6 +142,30 @@
       "writtenOn": "2020-01-14T04:57:57Z",
       "side": 1,
       "message": "This should be changed?",
+      "range": {
+        "startLine": 559,
+        "startChar": 38,
+        "endLine": 559,
+        "endChar": 45
+      },
+      "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "724b348e_1a38f09a",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T05:05:50Z",
+      "side": 1,
+      "message": "This was also my mistake. Sorry. Please ignore this.",
+      "parentUuid": "b771a6eb_2816f5a1",
       "range": {
         "startLine": 559,
         "startChar": 38,
