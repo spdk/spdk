@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e3d1f77_337258a0",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T22:14:08Z",
+      "side": 1,
+      "message": "string",
+      "revId": "79f21ca8069c4520aeb2b1a68710182e6d310477",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8d5994b_a72eb1f2",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T22:14:08Z",
+      "side": 1,
+      "message": "I think you can make this a bit less wordy by just saying:\n\nspdk_nvmf_transport_opts_init, spdk_nvmf_transport_opts_init, and spdk_nvmf_transport_create now take a string parameter to specify the transport name.\n\nThe CHANGELOG really doesn\u0027t need to be so specific.  It\u0027s mainly to bring attention that some API has been added or changed, which gives the developer a hint to go look at the header files for more detail.",
+      "revId": "79f21ca8069c4520aeb2b1a68710182e6d310477",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
