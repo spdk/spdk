@@ -87,6 +87,11 @@ elif [ -f /etc/debian_version ]; then
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
 		uuid-dev libiscsi-dev
 	# Additional dependencies for DPDK
+	if [[ $(lsb_release -si) == "Ubuntu" ]] && [[ $(lsb_release -sr) =~ 18 ]]; then
+		# Adding repository with NASM version 2.13.03 for Ubuntu 18
+		add-apt-repository ppa:bkryza/onedata-1909-bionic
+		apt-get update
+	fi
 	apt-get install -y libnuma-dev nasm
 	# Additional dependencies for ISA-L used in compression
 	apt-get install -y autoconf automake libtool help2man
