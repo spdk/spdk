@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e2c52f43_da890fda",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-14T01:50:22Z",
+      "side": 1,
+      "message": "Let me revise it.",
+      "parentUuid": "a3652748_52c3ab2a",
+      "revId": "474ba427472fed5ef97a9098b9868e2508bf81e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f83c51ed_68c4d4a2",
         "filename": "lib/sock/sock.c",
         "patchSetId": 13
@@ -54,6 +72,30 @@
       "side": 1,
       "message": "I think strncmp gives an accurate comparison.  It only differs from strcmp in that it ensures it handles case where there is no null termination.",
       "parentUuid": "f83c51ed_68c4d4a2",
+      "range": {
+        "startLine": 201,
+        "startChar": 19,
+        "endLine": 201,
+        "endChar": 26
+      },
+      "revId": "474ba427472fed5ef97a9098b9868e2508bf81e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "661d5ab8_8c71313e",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-14T01:50:22Z",
+      "side": 1,
+      "message": "I used strcmp, which is suggested by Ben to use strncmp.",
+      "parentUuid": "9a3b4640_1f6ad5fb",
       "range": {
         "startLine": 201,
         "startChar": 19,
