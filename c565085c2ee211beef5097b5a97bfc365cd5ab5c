@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c11ff629_79bce57d",
+        "filename": "test/unit/lib/thread/thread.c/thread_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T22:43:20Z",
+      "side": 1,
+      "message": "I don\u0027t think we ever intended to allow spdk_put_io_channel() to be called from a different thread than spdk_get_io_channel().  We only added the spdk_thread_send_msg, to ensure that any channel cleanup routines would execute after the current context unwound.  This fixed some issues where something like bdevperf would delete the channel when the last I/O was completed, and when bdevperf callback returned back up the stack to the NVMe poller, the qpair had already been deleted and we would crash.\n\nI think we should assert() that spdk_get_thread() \u003d\u003d ch-\u003ethread.  Let\u0027s see if there are any cases today where we don\u0027t follow that assumption.  Then I think we should fix them, rather than allowing this misuse of the API (in my opinion).",
+      "revId": "c565085c2ee211beef5097b5a97bfc365cd5ab5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
