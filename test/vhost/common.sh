@@ -990,7 +990,7 @@ function vm_start_fio_server()
 	for vm_num in "$@"; do
 		notice "Starting fio server on VM$vm_num"
 		if [[ $fio_bin != "" ]]; then
-			cat $fio_bin | vm_exec $vm_num 'cat > /root/fio; chmod +x /root/fio'
+			vm_exec $vm_num 'cat > /root/fio; chmod +x /root/fio' < $fio_bin
 			vm_exec $vm_num /root/fio $readonly --eta=never --server --daemonize=/root/fio.pid
 		else
 			vm_exec $vm_num fio $readonly --eta=never --server --daemonize=/root/fio.pid
@@ -1092,7 +1092,7 @@ function run_fio()
 		vm_exec $vm_num cat /root/$job_fname
 		if ! $run_server_mode; then
 			if [[ -n "$fio_bin" ]]; then
-				cat $fio_bin | vm_exec $vm_num 'cat > /root/fio; chmod +x /root/fio'
+				vm_exec $vm_num 'cat > /root/fio; chmod +x /root/fio' < $fio_bin
 			fi
 
 			notice "Running local fio on VM $vm_num"
