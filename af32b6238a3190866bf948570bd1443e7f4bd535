@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31586ccc_471fe03d",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:53:14Z",
+      "side": 1,
+      "message": "data-\u003esubnqn may be easier to follow.",
+      "range": {
+        "startLine": 550,
+        "startChar": 47,
+        "endLine": 550,
+        "endChar": 56
+      },
+      "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca4d1f3b_d19f358c",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:53:14Z",
+      "side": 1,
+      "message": "How about moving this check into spdk_nvmf_validate_host()?",
+      "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd92f4da_33cb58e7",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:53:14Z",
+      "side": 1,
+      "message": "How about moving this DEBUGLOG into spd_nvmf_validate_host() too?",
+      "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
