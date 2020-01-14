@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7277a54f_28d82bba",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2709,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-14T16:48:42Z",
+      "side": 1,
+      "message": "This check isn\u0027t really needed. I took it out.",
+      "parentUuid": "1dd0f7ab_10fcf54f",
+      "revId": "772c4df4d5329ac2cf67d1987399f10d8f42ec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "25a3b50c_d09726cc",
         "filename": "lib/nvmf/ctrlr_bdev.c",
         "patchSetId": 2
@@ -39,6 +57,30 @@
       "revId": "772c4df4d5329ac2cf67d1987399f10d8f42ec3e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f12fdedb_5ba99ef5",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-14T16:48:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "25a3b50c_d09726cc",
+      "range": {
+        "startLine": 573,
+        "startChar": 33,
+        "endLine": 573,
+        "endChar": 60
+      },
+      "revId": "772c4df4d5329ac2cf67d1987399f10d8f42ec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "6ad44eb9_cd2b8a80",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-14T16:48:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7875fc44_f10d2fdd",
+      "range": {
+        "startLine": 89,
+        "startChar": 1,
+        "endLine": 89,
+        "endChar": 8
+      },
+      "revId": "772c4df4d5329ac2cf67d1987399f10d8f42ec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c30b9b28_e69cd9be",
         "filename": "lib/nvmf/custom_cmd_hdlr.c",
         "patchSetId": 2
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "cd677ce1_4a369cd1",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-14T16:48:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c30b9b28_e69cd9be",
+      "range": {
+        "startLine": 95,
+        "startChar": 1,
+        "endLine": 95,
+        "endChar": 5
+      },
+      "revId": "772c4df4d5329ac2cf67d1987399f10d8f42ec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b2b183a1_b3bdddae",
         "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
         "patchSetId": 2
@@ -108,6 +198,30 @@
       "revId": "772c4df4d5329ac2cf67d1987399f10d8f42ec3e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f533b80_c8b6cf5f",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1352,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-14T16:48:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b2b183a1_b3bdddae",
+      "range": {
+        "startLine": 1352,
+        "startChar": 32,
+        "endLine": 1352,
+        "endChar": 59
+      },
+      "revId": "772c4df4d5329ac2cf67d1987399f10d8f42ec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
