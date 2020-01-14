@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd42e98b_8c352303",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T12:05:25Z",
+      "side": 1,
+      "message": "This should go under developer deps too",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 3
+      },
+      "revId": "7ecd83f6a303ee396f5959d026ece2f816a58fb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0cf99be7_8294950b",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T12:05:25Z",
+      "side": 1,
+      "message": "As per discussion on community meeting https://trello.com/c/1DpW22HC/266-scripts-pkgdepsh-improvements\nMy takeaway was to have:\n1) no arguments given, enough deps to ./configure \u0026\u0026 make\n2) dev deps argument given, enough deps to help satisfy what is required of SPDK developer before submitting a patch. (check format, asan/ubsan, etc)\n3) arguments mirroring ./configure options (ex. --with-rdma) and their relevant deps\n\nHaving 2) and 3) bunched together would make it harder for some one to do 1) and 3) with particular optional feature they are interested in.",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 49
+      },
+      "revId": "7ecd83f6a303ee396f5959d026ece2f816a58fb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
