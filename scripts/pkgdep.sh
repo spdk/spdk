@@ -88,6 +88,12 @@ elif [ -f /etc/debian_version ]; then
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
 		uuid-dev libiscsi-dev python
 	# Additional dependencies for DPDK
+	if [[ $(lsb_release -si) == "Ubuntu" ]] && [[ $(lsb_release -sr) =~ 18 ]]; then
+		# Adding repository with NASM version 2.13.03 for Ubuntu 18
+		echo "This repository contains NASM version 2.13.03 for Ubuntu 18 needed for DPDK"
+		add-apt-repository ppa:sergey-dryabzhinsky/ffmpeg
+		apt-get update
+	fi
 	apt-get install -y libnuma-dev nasm
 	# Additional dependencies for ISA-L used in compression
 	apt-get install -y autoconf automake libtool help2man
