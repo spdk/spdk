@@ -1184,6 +1184,7 @@ struct spdk_blob_load_ctx {
 
 	struct spdk_blob_md_page	*pages;
 	uint32_t			num_pages;
+	uint32_t			extent_table_id;
 	spdk_bs_sequence_t	        *seq;
 
 	spdk_bs_sequence_cpl		cb_fn;
@@ -1272,6 +1273,97 @@ _spdk_blob_load_backing_dev(void *cb_arg)
 }
 
 static void
+_spdk_blob_load_cpl_extents_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob_load_ctx	*ctx = cb_arg;
+	struct spdk_blob		*blob = ctx->blob;
+	struct spdk_blob_md_page	*page;
+	uint64_t			i;
+	uint32_t			crc;
+	uint64_t			lba;
+	void *tmp;
+
+	if (bserrno) {
+		SPDK_ERRLOG("Extent page read failed: %d\n", bserrno);
+		goto out;
+	}
+	if (ctx->pages == NULL) {
+		ctx->pages = spdk_realloc(ctx->pages, SPDK_BS_PAGE_SIZE, SPDK_BS_PAGE_SIZE);
+		if (!ctx->pages) {
+			_spdk_blob_load_final(ctx, -ENOMEM);
+			return;
+		}
+		ctx->num_pages = 1;
+		ctx->extent_table_id = 0;
+	} else {
+
+		page = &ctx->pages[0];
+		crc = _spdk_blob_md_page_calc_crc(page);
+		if (crc != page->crc) {
+			bserrno = -EINVAL;
+			goto out;
+		}
+
+		if (page->next != SPDK_INVALID_MD_PAGE) {
+			bserrno = -EINVAL;
+			goto out;
+		}
+
+		bserrno = _spdk_blob_parse(page, 1, blob);
+		if (bserrno) {
+			goto out;
+		}
+
+		ctx->extent_table_id++;
+	}
+
+	for (i = ctx->extent_table_id; i < blob->active.num_extent_pages; i++) {
+		if (blob->active.extent_pages[i] != 0) {
+			lba = _spdk_bs_md_page_to_lba(blob->bs, blob->active.extent_pages[i]);
+			ctx->extent_table_id = i;
+
+			spdk_bs_sequence_read_dev(seq, &ctx->pages[0], lba,
+						  _spdk_bs_byte_to_lba(blob->bs, SPDK_BS_PAGE_SIZE),
+						  _spdk_blob_load_cpl_extents_cpl, ctx);
+			return;
+		} else if (spdk_blob_is_thin_provisioned(blob)) {
+			/* Extent table entry can point to unallocated page
+			 * when blob is thin provisioned.
+			 * In this case blob size should be increased. */
+			uint64_t sz;
+			if (blob->active.total_num_clusters >= SPDK_EXTENTS_PER_EP) {
+				sz = SPDK_EXTENTS_PER_EP;
+				blob->active.num_clusters += SPDK_EXTENTS_PER_EP;
+				blob->active.total_num_clusters -= SPDK_EXTENTS_PER_EP;
+			} else {
+				sz = blob->active.total_num_clusters;
+				blob->active.num_clusters += blob->active.total_num_clusters;
+				blob->active.total_num_clusters = 0;
+			}
+			/* TEMP */
+			tmp = realloc(blob->active.clusters, blob->active.num_clusters * sizeof(*blob->active.clusters));
+			if (tmp == NULL) {
+				bserrno = -ENOMEM;
+				goto out;
+			}
+			memset(tmp + blob->active.cluster_array_size, 0,
+			       sizeof(*blob->active.clusters) * (sz - blob->active.cluster_array_size));
+			blob->active.clusters = tmp;
+			blob->active.cluster_array_size = blob->active.num_clusters;
+		} else if (!spdk_blob_is_thin_provisioned(blob)) {
+			/* Extent table entry should never point to unallocated page
+			 * when blob is thick provisioned. */
+			assert(false);
+		}
+	}
+
+	_spdk_blob_load_backing_dev(ctx);
+	return;
+out:
+	_spdk_blob_load_final(ctx, bserrno);
+}
+
+static void
 _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_load_ctx	*ctx = cb_arg;
@@ -1320,8 +1412,12 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		_spdk_blob_load_final(ctx, rc);
 		return;
 	}
+	spdk_free(ctx->pages);
+	ctx->pages = NULL;
 
-	_spdk_blob_load_backing_dev(ctx);
+	/* Extent Table descriptors are present in a blob,
+	 * load the corresponding Extent Pages. */
+	_spdk_blob_load_cpl_extents_cpl(seq, ctx, 0);
 }
 
 /* Load a blob from disk given a blobid */
@@ -1841,6 +1937,8 @@ _spdk_blob_persist_write_extent_pages(spdk_bs_sequence_t *seq, void *cb_arg, int
 					/* TODO: Extent page is already on disk. */
 				}
 			}
+		} else {
+			assert(spdk_blob_is_thin_provisioned(blob));
 		}
 	}
 
