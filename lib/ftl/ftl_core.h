@@ -167,6 +167,9 @@ struct spdk_ftl_dev {
 	/* LBA map requests pool */
 	struct spdk_mempool			*lba_request_pool;
 
+	/* Media management events pool */
+	struct spdk_mempool			*media_events_pool;
+
 	/* Statistics */
 	struct ftl_stats			stats;
 
@@ -247,6 +250,13 @@ struct ftl_nv_cache_header {
 	uint32_t				checksum;
 } __attribute__((packed));
 
+struct ftl_media_event {
+	/* Owner */
+	struct spdk_ftl_dev			*dev;
+	/* Media event */
+	struct spdk_bdev_media_event		event;
+};
+
 typedef void (*ftl_restore_fn)(struct spdk_ftl_dev *, struct ftl_restore *, int);
 
 void	ftl_apply_limits(struct spdk_ftl_dev *dev);
@@ -274,6 +284,7 @@ int	ftl_nv_cache_write_header(struct ftl_nv_cache *nv_cache, bool shutdown,
 				  spdk_bdev_io_completion_cb cb_fn, void *cb_arg);
 int	ftl_nv_cache_scrub(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb cb_fn,
 			   void *cb_arg);
+void	ftl_get_media_events(struct spdk_ftl_dev *dev);
 
 struct spdk_io_channel *
 ftl_get_io_channel(const struct spdk_ftl_dev *dev);
