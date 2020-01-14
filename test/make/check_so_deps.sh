@@ -27,7 +27,7 @@ function replace_defined_variables() {
 		fi
 	done
 	for dep in "${bad_values[@]}"; do
-		dep_def_arr=($(cat $libdeps_file | grep -v "#" | grep "${dep}" | cut -d "=" -f 2 | xargs))
+		dep_def_arr=($(grep -v "#" $libdeps_file | grep "${dep}" | cut -d "=" -f 2 | xargs))
 		new_values=($(replace_defined_variables "${dep_def_arr[@]}"))
 		good_values=( "${good_values[@]}" "${new_values[@]}" )
 	done
@@ -42,7 +42,7 @@ function confirm_deps() {
 
 	#keep the space here to differentiate bdev and bdev_*
 	lib_shortname=$(basename $lib | sed 's,libspdk_,,g' | sed 's,\.so, ,g')
-	lib_make_deps=($(cat $libdeps_file | grep "DEPDIRS-${lib_shortname}" | cut -d "=" -f 2 | xargs))
+	lib_make_deps=($(grep "DEPDIRS-${lib_shortname}" $libdeps_file | cut -d "=" -f 2 | xargs))
 	lib_make_deps=($(replace_defined_variables "${lib_make_deps[@]}"))
 
 	for ign_dep in "${IGNORED_LIBS[@]}"; do
