@@ -2157,6 +2157,69 @@ ftl_addr_is_written(struct ftl_band *band, struct ftl_addr addr)
 	return addr.offset < zone->info.write_pointer;
 }
 
+static void ftl_process_media_event(struct spdk_ftl_dev *dev, struct spdk_bdev_media_event event);
+
+static void
+_ftl_process_media_event(void *ctx)
+{
+	struct ftl_media_event *event = ctx;
+	struct spdk_ftl_dev *dev = event->dev;
+
+	ftl_process_media_event(dev, event->event);
+	spdk_mempool_put(dev->media_events_pool, event);
+}
+
+static void
+ftl_process_media_event(struct spdk_ftl_dev *dev, struct spdk_bdev_media_event event)
+{
+	struct ftl_band *band;
+	struct ftl_addr addr = { .offset = event.offset };
+	size_t block_off;
+
+	if (!ftl_check_core_thread(dev)) {
+		struct ftl_media_event *media_event;
+
+		media_event = spdk_mempool_get(dev->media_events_pool);
+		if (!media_event) {
+			SPDK_ERRLOG("Media event lost due to lack of memory");
+			return;
+		}
+
+		media_event->dev = dev;
+		media_event->event = event;
+		spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_process_media_event,
+				     media_event);
+		return;
+	}
+
+	band = ftl_band_from_addr(dev, addr);
+	block_off = ftl_band_block_offset_from_addr(band, addr);
+
+	ftl_reloc_add(dev->reloc, band, block_off, event.num_blocks, 0, false);
+}
+
+void
+ftl_get_media_events(struct spdk_ftl_dev *dev)
+{
+#define FTL_MAX_MEDIA_EVENTS 128
+	struct spdk_bdev_media_event events[FTL_MAX_MEDIA_EVENTS];
+	size_t num_events, i;
+
+	if (!dev->initialized) {
+		return;
+	}
+
+	do {
+		num_events = spdk_bdev_get_media_events(dev->base_bdev_desc,
+							events, FTL_MAX_MEDIA_EVENTS);
+
+		for (i = 0; i < num_events; ++i) {
+			ftl_process_media_event(dev, events[i]);
+		}
+
+	} while (num_events);
+}
+
 static void
 ftl_process_retry_queue(struct spdk_ftl_dev *dev)
 {
