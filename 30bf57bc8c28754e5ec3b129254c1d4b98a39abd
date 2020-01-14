@@ -16,6 +16,24 @@
       "revId": "30bf57bc8c28754e5ec3b129254c1d4b98a39abd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ca188d8_9777d140",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T01:38:20Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nThanks for your review. My patch was not enough. What we should do is to unregister pollers for all places that sets target-\u003eis_draining to true. So I inserted a patch and updated this patch. Please take a look at this patch again.\n\nBesides, I undershot the target but I reduced the number of patches from 33 to 21. I hope if this reduction will reduce the burden of reviewers. This may be the best I can do now.\n\nThanks,\nShuhei",
+      "parentUuid": "9d148d64_c741d9ed",
+      "revId": "30bf57bc8c28754e5ec3b129254c1d4b98a39abd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
