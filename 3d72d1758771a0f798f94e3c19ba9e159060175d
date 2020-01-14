@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be1a2a9e_07ffa5eb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 39
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T08:26:55Z",
+      "side": 1,
+      "message": "Please in the future refer to the issue in commit msg and possibly use https://help.github.com/en/github/managing-your-work-on-github/closing-issues-using-keywords",
+      "revId": "3d72d1758771a0f798f94e3c19ba9e159060175d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7e83c8b_ec90caaa",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 39
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T08:26:55Z",
+      "side": 1,
+      "message": "As we start to add similar \u0027wait\u0027 type functionalities (repeated commands until success), it might be worth considering doing those as functions in autotest_common.sh. I\u0027m fine with this right now, but please consider that as more similar intermittent failures are being fixed.",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 6
+      },
+      "revId": "3d72d1758771a0f798f94e3c19ba9e159060175d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
