@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ccdc0dbc_8b4d3ce1",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 997,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-14T05:56:35Z",
+      "side": 1,
+      "message": "The queue size is 2 ^ 15 so we can use the bit16 to put phase_flag.\nThere is only one queue in the packed ring. The completion desc isn\u0027t the incoming desc so we need avail_idx and used_idx to track desc.",
+      "parentUuid": "5a5c40f1_a823ba58",
+      "revId": "7fc2e03cf84cc8ebe453daf97b2727d468102963",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2d2b2e7a_b95159c3",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-13T19:12:11Z",
       "side": 1,
       "message": "Tracking the used phase isn\u0027t important. We just make the used phase equal to the avail phase when it completes.\n\nAlso, tracking the used idx isn\u0027t going to be necessary either because the location to update on completion is based on where the incoming descriptor was in the ring, as opposed to a separate ring like in a split queue.",
+      "revId": "7fc2e03cf84cc8ebe453daf97b2727d468102963",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4f2c4eb_983393e2",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1099,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-14T05:56:35Z",
+      "side": 1,
+      "message": "Hi Ben. I think you\u0027re wrong. Tracking the used idx is necessary otherwise we don\u0027t know where to enqueue the used info and the enqueued index is\u0027t where the incoming descriptor was in the ring as the descs are completed out of order.\nFor example, the available ring can be:\ndesc0 avail ID1--desc1 avail ID2--desc2 avail ID3.\nBut after completion the used ring can be:\ndesc0 used ID3--desc1 used ID2--desc2 used ID1.\n\nIf the completion is based on where the incoming desc was in the ring then it means if desc0 wasn\u0027t completed although desc1 ~ desc2 were completed, driver still can\u0027t push a new request into desc0? I don\u0027t think this is the spec design.\n\nCould you review this workflow and give some feedbacks? \nI think this is the spec design of how to work:\nThe flow should be like this:\ndriver pushes three requests（we assume each request occupy 1 desc） into ring:\ndesc0 avail ID1--desc1 avail ID2--desc2 avail ID3\ndevice completes request 3 and 2:\ndesc0 used ID3--desc1 used ID2--desc2 avail ID3\nTwo available descs are left so driver still can push request 4 and 5:\n\n                              avail_idx \u0026 avail_phase_1\n                                        |                          \ndesc0 avail ID4--desc1 avail ID5--desc2 avail ID3\n                                        |\n                                used_idx \u0026 used_phase_0\ndevice completes request 4 and 5 but request 1 isn\u0027t completed.\n\n                              avail_idx \u0026 avail_phase_1\n                                        |                          \ndesc0 used ID5--desc1 avail ID5--desc2 used ID4\n                      |\n            used_idx \u0026 used_phase_1      \n\nAt last complete request 1:\n                              avail_idx \u0026 avail_phase_1\n                                        |                          \ndesc0 used ID5--desc1 used ID1--desc2 used ID4\n                                        |\n                               used_idx \u0026 used_phase_1",
+      "parentUuid": "2d2b2e7a_b95159c3",
       "revId": "7fc2e03cf84cc8ebe453daf97b2727d468102963",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -83,6 +119,24 @@
       "side": 1,
       "message": "No. Name it phase. After a thorough reading, the spec is awful and I believe also broken.\n\nYou only need one integer here named phase. You could even do a single bit for phase and another bit to indicate it\u0027s packed to save space.",
       "parentUuid": "f351f673_4a642edf",
+      "revId": "7fc2e03cf84cc8ebe453daf97b2727d468102963",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f22546e6_bbb50871",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-14T05:56:35Z",
+      "side": 1,
+      "message": "OK，I will update this. Thanks.",
+      "parentUuid": "1c143cdb_4b666408",
       "revId": "7fc2e03cf84cc8ebe453daf97b2727d468102963",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
