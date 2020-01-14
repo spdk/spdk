@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3840a7cf_3994fa23",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T20:20:27Z",
+      "side": 1,
+      "message": "I think this comment needs to be fixed/removed.",
+      "revId": "1ea5addf1ff6eafcc921ba54f43e5b32c5691737",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d22d951_750ac508",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T20:20:27Z",
+      "side": 1,
+      "message": "This seems to drastically change what this test script does.  Previously, these bdevperf runs were only trying to run against the gpt partitions.  But now it runs against $conf_file which includes a lot more.\n\nI\u0027m not saying that\u0027s wrong - but we should make the commit message reflect this fact.",
+      "revId": "1ea5addf1ff6eafcc921ba54f43e5b32c5691737",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
