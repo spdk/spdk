@@ -10,11 +10,20 @@ git submodule update --init
 
 # Installing Prerequisites {#getting_started_prerequisites}
 
-The `scripts/pkgdep.sh` script will automatically install the full set of
-dependencies required to build and develop SPDK.
+The `scripts/pkgdep.sh` script call with no arguments will automatically
+install bare minimum dependencies required to build SPDK.
+Call pkgdep.sh with any argument will install bare minimum dependencies too.
+Optional dependencies have additional switches, for more information
+use `--help` option.
 
 ~~~{.sh}
 sudo scripts/pkgdep.sh
+~~~
+
+Using option --developer-tools will automatically install tools for developers.
+
+~~~{.sh}
+sudo scripts/pkgdep.sh --developer-tools
 ~~~
 
 # Building {#getting_started_building}
