@@ -16,6 +16,24 @@
       "revId": "7beee5508f9c7eb568d8e8dce5484b91467fb06c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf65fc42_97b9e3d3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1112,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T17:20:16Z",
+      "side": 1,
+      "message": "It is, originally I thought this would end up as a callback passed to a read operation (thus required signature). In the end it turns out it is not needed. I\u0027ll abandon this one.",
+      "parentUuid": "8bb5f809_15a70a29",
+      "revId": "7beee5508f9c7eb568d8e8dce5484b91467fb06c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
