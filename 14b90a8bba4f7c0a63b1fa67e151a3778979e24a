@@ -46,6 +46,30 @@
       "revId": "14b90a8bba4f7c0a63b1fa67e151a3778979e24a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e400150b_55d83547",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-14T02:01:20Z",
+      "side": 0,
+      "message": "Hi Ben, \n\nFor C2H pdu 64, we can use a configurable variable. The C2h pdu is used to restrict the C2h PDU usage, if there are multiple C2h pdus. And additionally, we guarantee that the all the pdus can be allocated. Otherwise, we will face the issue that the the pdu cannot allocated. So this is why in the design and implementation, we set the number of PDUs in the beginning.\n\nYes, multiple C2H pdu support is also a feature described in the spec. I think that we should keep it.",
+      "parentUuid": "09b2210b_7a162b13",
+      "range": {
+        "startLine": 57,
+        "startChar": 1,
+        "endLine": 57,
+        "endChar": 93
+      },
+      "revId": "14b90a8bba4f7c0a63b1fa67e151a3778979e24a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
