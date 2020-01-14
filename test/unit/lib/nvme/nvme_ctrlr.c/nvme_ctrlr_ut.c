@@ -255,10 +255,12 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	return 0;
 }
 
+static int32_t g_wait_for_completion_return_val;
+
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
-	return 0;
+	return g_wait_for_completion_return_val;
 }
 
 void
@@ -276,6 +278,8 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	status->done = true;
 }
 
+static struct nvme_completion_poll_status *g_failed_status;
+
 int
 spdk_nvme_wait_for_completion_robust_lock(
 	struct spdk_nvme_qpair *qpair,
@@ -283,8 +287,13 @@ spdk_nvme_wait_for_completion_robust_lock(
 	pthread_mutex_t *robust_mutex)
 {
 	memset(status, 0, sizeof(*status));
+	if (spdk_nvme_qpair_process_completions(qpair, 0) < 0) {
+		g_failed_status = status;
+		status->timed_out = true;
+		return -1;
+	}
+
 	status->done = true;
-	status->cpl.status.sc = 0;
 	if (set_status_cpl == 1) {
 		status->cpl.status.sc = 1;
 	}
@@ -1739,6 +1748,20 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &status);
 	CU_ASSERT(ret == 0);
 
+	/* spdk_nvme_wait_for_completion returns an error */
+	g_wait_for_completion_return_val = -1;
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &status);
+	CU_ASSERT(ret == -ENXIO);
+	CU_ASSERT(g_failed_status != NULL);
+	CU_ASSERT(g_failed_status->timed_out == true);
+	/* status should be freed by callback, which is not triggered in test env.
+	   Store status to global variable and free it manually.
+	   If spdk_nvme_ctrlr_update_firmware changes its behaviour and frees the status
+	   itself, we'll get a double free here.. */
+	free(g_failed_status);
+	g_failed_status = NULL;
+	g_wait_for_completion_return_val = 0;
+
 	set_status_cpl = 0;
 }
 
@@ -1825,6 +1848,39 @@ test_nvme_ctrlr_test_active_ns(void)
 
 		nvme_ctrlr_destruct(&ctrlr);
 	}
+}
+
+static void
+test_nvme_ctrlr_test_active_ns_error_case(void)
+{
+	int rc;
+	struct spdk_nvme_ctrlr	ctrlr = {};
+
+	ctrlr.page_size = 0x1000;
+	ctrlr.vs.bits.mjr = 1;
+	ctrlr.vs.bits.mnr = 2;
+	ctrlr.vs.bits.ter = 0;
+	ctrlr.num_ns = 2;
+
+	/* completion with error, status is freed by nvme_ctrlr_identify_active_ns */
+	set_status_cpl = 1;
+	rc = nvme_ctrlr_identify_active_ns(&ctrlr);
+	CU_ASSERT(rc == -ENXIO);
+	set_status_cpl = 0;
+
+	/* spdk_nvme_qpair_process_completions returns an error, status is not freed */
+	g_wait_for_completion_return_val = -1;
+	rc = nvme_ctrlr_identify_active_ns(&ctrlr);
+	CU_ASSERT(rc == -ENXIO);
+	CU_ASSERT(g_failed_status != NULL);
+	CU_ASSERT(g_failed_status->timed_out == true);
+	/* status should be freed by callback, which is not triggered in test env.
+	   Store status to global variable and free it manually.
+	   If nvme_ctrlr_identify_active_ns changes its behaviour and frees the status
+	   itself, we'll get a double free here.. */
+	free(g_failed_status);
+	g_failed_status = NULL;
+	g_wait_for_completion_return_val = 0;
 }
 
 static void
@@ -1974,6 +2030,8 @@ int main(int argc, char **argv)
 #endif
 		|| CU_add_test(suite, "test nvme ctrlr function test_nvme_ctrlr_test_active_ns",
 			       test_nvme_ctrlr_test_active_ns) == NULL
+		|| CU_add_test(suite, "test nvme ctrlr function test_nvme_ctrlr_test_active_ns_error_case",
+			       test_nvme_ctrlr_test_active_ns_error_case) == NULL
 		|| CU_add_test(suite, "test_spdk_nvme_ctrlr_reconnect_io_qpair",
 			       test_spdk_nvme_ctrlr_reconnect_io_qpair) == NULL
 		|| CU_add_test(suite, "test_spdk_nvme_ctrlr_set_trid", test_spdk_nvme_ctrlr_set_trid) == NULL
