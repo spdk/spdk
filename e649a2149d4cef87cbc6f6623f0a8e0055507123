@@ -46,6 +46,30 @@
       "revId": "e649a2149d4cef87cbc6f6623f0a8e0055507123",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6832cb76_9b5eb91f",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T22:20:08Z",
+      "side": 1,
+      "message": "Yeah - I brought up this same concern with Seth offline.  It really is unavoidable.  Note that we only call nvme_get_transport() here for admin queue, so it doesn\u0027t really run in the I/O path.\n\nA possible optimization I thought of would be to store the transport in the controller, which is the ops structure for the *primary* process.  Then we only use the ctrlr-\u003etransport object if spdk_process_is_primary() \u003d\u003d true.  spdk_process_is_primary() resolves to a DPDK function that just returns a valid from a global structure (much cheaper than the string compares).",
+      "parentUuid": "73158e34_b5269da7",
+      "range": {
+        "startLine": 299,
+        "startChar": 13,
+        "endLine": 299,
+        "endChar": 61
+      },
+      "revId": "e649a2149d4cef87cbc6f6623f0a8e0055507123",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
