@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7c66fee5_04b0fd1b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T16:34:07Z",
+      "side": 1,
+      "message": "Agreed, the serialize/parse/replay functions for the descriptors are getting unwieldy. I can look into that after this series, since it adds two new descriptors - it would make more obvious how to better to structure everything. If you are okay with this approach.",
+      "parentUuid": "c97e46e2_ddc37994",
+      "revId": "570db28be2f8327326a894d34b78290db3031b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b120e877_8b9ca1d4",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 24
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-13T18:13:23Z",
       "side": 1,
       "message": "you could also move this line to the top of the function and shorten this and the pervious condition",
+      "revId": "570db28be2f8327326a894d34b78290db3031b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a199dfa_e588332d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T16:34:07Z",
+      "side": 1,
+      "message": "See above comment.",
+      "parentUuid": "b120e877_8b9ca1d4",
       "revId": "570db28be2f8327326a894d34b78290db3031b86",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "1535bfba_63d4e6f4",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T16:34:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d84e860e_41f2c278",
+      "revId": "570db28be2f8327326a894d34b78290db3031b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b94cb53e_4056e323",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 24
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "56f7e9a9_1d1bb1c0",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T16:34:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b94cb53e_4056e323",
+      "revId": "570db28be2f8327326a894d34b78290db3031b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f2631b2_68216675",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 24
@@ -84,6 +156,24 @@
       "revId": "570db28be2f8327326a894d34b78290db3031b86",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8629c65a_9fda6980",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T16:34:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0f2631b2_68216675",
+      "revId": "570db28be2f8327326a894d34b78290db3031b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
