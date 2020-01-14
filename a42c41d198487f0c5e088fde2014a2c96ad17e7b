@@ -282,6 +282,30 @@
       "revId": "a42c41d198487f0c5e088fde2014a2c96ad17e7b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "542ddb96_938bee33",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-14T08:08:03Z",
+      "side": 1,
+      "message": "1 sec is not that critical. OK.",
+      "parentUuid": "711e208c_377f5e42",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 7
+      },
+      "revId": "a42c41d198487f0c5e088fde2014a2c96ad17e7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
