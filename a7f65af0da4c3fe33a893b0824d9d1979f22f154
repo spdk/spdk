@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "26a3add7_74ee065e",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1354,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-14T14:03:11Z",
+      "side": 1,
+      "message": "But I don\u0027t think there\u0027s any reason for moving the call to this function too. Let\u0027s revert this change.",
+      "parentUuid": "f7d8c90a_cef570d2",
+      "range": {
+        "startLine": 1348,
+        "startChar": 0,
+        "endLine": 1354,
+        "endChar": 1
+      },
+      "revId": "a7f65af0da4c3fe33a893b0824d9d1979f22f154",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "397aaef5_22c9311c",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 24
