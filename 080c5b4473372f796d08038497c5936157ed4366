@@ -70,6 +70,69 @@
       "revId": "080c5b4473372f796d08038497c5936157ed4366",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75a2f07a_1a378b3d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2980,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T06:39:41Z",
+      "side": 1,
+      "message": "Caching to temporary variables is necessary? Just using port-\u003etrid and port-\u003eref below is enough?",
+      "range": {
+        "startLine": 2978,
+        "startChar": 0,
+        "endLine": 2980,
+        "endChar": 0
+      },
+      "revId": "080c5b4473372f796d08038497c5936157ed4366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a092a354_32d3e851",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2983,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T06:39:41Z",
+      "side": 1,
+      "message": "This is fine but if (!event_acked) { return false; } will reduce nest level by 1 and will be a little simpler.",
+      "range": {
+        "startLine": 2983,
+        "startChar": 1,
+        "endLine": 2983,
+        "endChar": 19
+      },
+      "revId": "080c5b4473372f796d08038497c5936157ed4366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44d07e1b_530ec26f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2997,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T06:39:41Z",
+      "side": 1,
+      "message": "for (i \u003d 0; i \u003c ref; i++) may be a little simpler.",
+      "revId": "080c5b4473372f796d08038497c5936157ed4366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
