@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "880a8a18_7889b805",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1570,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:31:34Z",
+      "side": 1,
+      "message": "Some fields are checked by hdlr !\u003d NULL, and other fields are just hdlr.\nWill you decide which one to use?",
+      "revId": "75d868aeb708469eb22cf14b88f07da48914f888",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29d26f12_6591181f",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1586,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:31:34Z",
+      "side": 1,
+      "message": "Unnecessary space here.",
+      "range": {
+        "startLine": 1586,
+        "startChar": 13,
+        "endLine": 1586,
+        "endChar": 14
+      },
+      "revId": "75d868aeb708469eb22cf14b88f07da48914f888",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
