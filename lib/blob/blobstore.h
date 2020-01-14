@@ -372,6 +372,10 @@ SPDK_STATIC_ASSERT(SPDK_BS_PAGE_SIZE == sizeof(struct spdk_blob_md_page), "Inval
 
 #define SPDK_BS_MAX_DESC_SIZE sizeof(((struct spdk_blob_md_page*)0)->descriptors)
 
+/* TODO: Set to low amount for purpose of testing */
+/* Maximum number of LBA's a single Extent Page can fit */
+#define SPDK_EXTENTS_PER_EP 100
+
 #define SPDK_BS_SUPER_BLOCK_SIG "SPDKBLOB"
 
 struct spdk_bs_super_block {
