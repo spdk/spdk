@@ -2,6 +2,18 @@
 
 ## v20.01: (Upcoming Release)
 
+### ftl
+
+All NVMe dependencies were removed from ftl library.
+From now ftl library is using bdev_zone API.
+bdev_ftl becomes virtual bdev.
+
+'ctrlr' and 'trid' fields in `spdk_ftl_dev_init_opts` structure  were replaced by
+'base_bdev_desc'.
+
+`bdev_ftl_create` RPC method 'trtype' and 'traddr' parameters were replaced by 'base_bdev'
+parameter.
+
 ### sock
 
 Added spdk_sock_writev_async for performing asynchronous writes to sockets. This call will
