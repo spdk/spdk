@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44e98386_7d7a7a64",
+        "filename": "autorun_post.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T07:39:34Z",
+      "side": 1,
+      "message": "Looking at output https://dqtibwqq6s6ux.cloudfront.net/results/autotest-per-patch/builds/56327/archive/post_process/script.log\nSeems that you\u0027ve kept the old string just to keep current Jenkins configuration happy. Instead, one of two could be done:\n1) Easy one - the strings differ by just the last additional \"-\" so keep 6 of them in new strings too.\n2) Better one - move part that generates script.log from Jenkins to autorun_post.py (@Karol thx for suggestion)",
+      "range": {
+        "startLine": 153,
+        "startChar": 0,
+        "endLine": 154,
+        "endChar": 51
+      },
+      "revId": "bf781d2c0dd7ff81d60edc99bf718a0b55166ea2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
