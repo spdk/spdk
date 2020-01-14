@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "04502903_7a9f381d",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-14T15:03:49Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ad928044_5b14cf45",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 33
+      },
+      "revId": "efee3ef7d1448c882a8da928e4f750138e0d03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b4cc5a8_3fdd0c5f",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 27
@@ -84,6 +108,30 @@
       "writtenOn": "2020-01-14T13:31:59Z",
       "side": 1,
       "message": "I don\u0027t think this is the correct place for this... ftl_io_cmpl_cb is called for all IO types (so reads and erases too). I think it\u0027d make more sense to put it only in the write path.",
+      "range": {
+        "startLine": 173,
+        "startChar": 0,
+        "endLine": 178,
+        "endChar": 0
+      },
+      "revId": "efee3ef7d1448c882a8da928e4f750138e0d03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c81b129_64dca295",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-14T15:03:49Z",
+      "side": 1,
+      "message": "We need to have access to bdev_io to retrieve spdk_bdev_io_get_append_location.",
+      "parentUuid": "5b4cc5a8_3fdd0c5f",
       "range": {
         "startLine": 173,
         "startChar": 0,
