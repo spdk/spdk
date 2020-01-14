@@ -16,6 +16,24 @@
       "revId": "d6c03264f57eafd33e318cf967bb366822e0734a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92ea4877_2a1d34cf",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1589,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T17:49:53Z",
+      "side": 1,
+      "message": "Yea I get you. So it very closely mimics how clusters are kept: \nblob-\u003eactive.extent_pages (array of page numbers) \u003d\u003d blob-\u003eactive.clusters (array of LBAs)\nblob-\u003eactive.et_array_size (size of the array) \u003d\u003d blob-\u003eactive.cluster_array_size (size of the array)\nblob-\u003eactive.num_extent_pages (number of pages) \u003d\u003d blob-\u003eactive.num_clusters (number of clusters)\n\nThe reason why size of array is not equal to number of pages/clusters, is that arrays only shrink when persisting (comment on 1553). Meanwhile numbers of pages/clusters change dynamically even without persisting. This is because shrinking either of those requires actual removal of them from md. While increasing the size reserves them, but they are unavailable until persist.",
+      "parentUuid": "2eb2f28b_3fde4ff6",
+      "revId": "d6c03264f57eafd33e318cf967bb366822e0734a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
