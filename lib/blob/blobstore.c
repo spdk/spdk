@@ -166,6 +166,7 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 	opts->num_clusters = 0;
 	opts->thin_provision = false;
 	_spdk_blob_xattrs_init(&opts->xattrs);
+	opts->disable_extent_pages = true;
 }
 
 void
@@ -190,6 +191,7 @@ _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 	blob->parent_id = SPDK_BLOBID_INVALID;
 
 	blob->state = SPDK_BLOB_STATE_DIRTY;
+	blob->disable_extent_pages = true;
 	blob->active.num_pages = 1;
 	blob->active.pages = calloc(1, sizeof(*blob->active.pages));
 	if (!blob->active.pages) {
@@ -479,6 +481,12 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			struct spdk_blob_md_descriptor_extent_rle	*desc_extent_rle;
 			unsigned int				i, j;
 			unsigned int				cluster_count = blob->active.num_clusters;
+
+			if (blob->disable_extent_pages == false) {
+				/* This means that Extent Table is present in MD,
+				 * both should never be at the same time. */
+				return -EINVAL;
+			}
 
 			desc_extent_rle = (struct spdk_blob_md_descriptor_extent_rle *)desc;
 
@@ -886,8 +894,14 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 		return rc;
 	}
 
-	/* Serialize extents */
-	rc = _spdk_blob_serialize_extents_rle(blob, pages, cur_page, page_count, &buf, &remaining_sz);
+	if (blob->disable_extent_pages) {
+		/* Serialize extents */
+		rc = _spdk_blob_serialize_extents_rle(blob, pages, cur_page, page_count, &buf, &remaining_sz);
+	} else {
+		/* Serialization as extent pages is not yet implemented */
+		assert(false);
+		rc = ENOSYS;
+	}
 
 	return rc;
 }
@@ -4335,6 +4349,9 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 		spdk_blob_opts_init(&opts_default);
 		opts = &opts_default;
 	}
+
+	blob->disable_extent_pages = opts->disable_extent_pages;
+
 	if (!internal_xattrs) {
 		_spdk_blob_xattrs_init(&internal_xattrs_default);
 		internal_xattrs = &internal_xattrs_default;
@@ -4726,6 +4743,7 @@ _spdk_bs_snapshot_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int b
 	 * but do not allocate clusters */
 	opts.thin_provision = true;
 	opts.num_clusters = spdk_blob_get_num_clusters(_blob);
+	opts.disable_extent_pages = _blob->disable_extent_pages;
 
 	/* If there are any xattrs specified for snapshot, set them now */
 	if (ctx->xattrs) {
@@ -4834,6 +4852,7 @@ _spdk_bs_clone_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bser
 
 	opts.thin_provision = true;
 	opts.num_clusters = spdk_blob_get_num_clusters(_blob);
+	opts.disable_extent_pages = _blob->disable_extent_pages;
 	if (ctx->xattrs) {
 		memcpy(&opts.xattrs, ctx->xattrs, sizeof(*ctx->xattrs));
 	}
