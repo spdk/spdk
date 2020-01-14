@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7f8e620_e479b3a6",
+        "filename": "autorun_post.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T20:33:07Z",
+      "side": 1,
+      "message": "should we remove this \"nightly\" check?  I think we should only check the skiplist",
+      "revId": "c6b0926d8b0ef58d1cd90a95c7ace4e1a490c837",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
