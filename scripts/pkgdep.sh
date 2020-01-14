@@ -102,7 +102,13 @@ elif [ -f /etc/debian_version ]; then
 		"Note: Some SPDK CLI dependencies could not be installed."
 
 	# Additional dependencies for DPDK
-	apt-get install -y libnuma-dev nasm
+	if [[ $NAME == "Ubuntu" ]] && [[ $VERSION_ID_NUM -lt 1900 ]]; then
+		echo "Ubuntu $VERSION_ID needs NASM version 2.13.03 for DPDK but is not in the mainline repository."
+		echo "You can install it manually"
+	else
+		apt-get install -y nasm
+	fi
+	apt-get install -y libnuma-dev
 	# Additional dependencies for ISA-L used in compression
 	apt-get install -y autoconf automake libtool help2man
 	if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
