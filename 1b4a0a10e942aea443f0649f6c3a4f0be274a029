@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "ee0be173_4a85946b",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b9bcf257_c06022a9",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 11
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "99de6154_b368b3bc",
         "filename": "scripts/iostat.py",
         "patchSetId": 15
@@ -68,6 +92,30 @@
       "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7ff0202_c957b32d",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "99de6154_b368b3bc",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 9
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -94,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "a2a189a4_7fd10874",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "71d63634_817c6b33",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 10
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "59069358_c4f878db",
         "filename": "scripts/iostat.py",
         "patchSetId": 15
@@ -114,6 +186,30 @@
       "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff075d3f_a73d2feb",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "59069358_c4f878db",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 63
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -163,6 +259,54 @@
     },
     {
       "key": {
+        "uuid": "7d4e292d_37641220",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "The point is that the iostat variable name returned by rpc is different from the sysstat variable name.\nso if i just use dictionary to store iostat info returned by rpc . it is hard to understand.\nalso you can understand this obj as a model obj.",
+      "parentUuid": "8ef11397_64cd2d4d",
+      "range": {
+        "startLine": 27,
+        "startChar": 6,
+        "endLine": 27,
+        "endChar": 16
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7120ee2_08826b8e",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f5a0a5b_30d80bdb",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 16
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d12b0e1a_e7b0294b",
         "filename": "scripts/iostat.py",
         "patchSetId": 15
@@ -183,6 +327,30 @@
       "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ef46f36_43efa250",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d12b0e1a_e7b0294b",
+      "range": {
+        "startLine": 104,
+        "startChar": 4,
+        "endLine": 104,
+        "endChar": 10
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -209,6 +377,30 @@
     },
     {
       "key": {
+        "uuid": "f63359d9_25c14d4a",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "change it to with open() as xx:",
+      "parentUuid": "5b047d12_ae8aae52",
+      "range": {
+        "startLine": 156,
+        "startChar": 8,
+        "endLine": 156,
+        "endChar": 14
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dca35bad_33cded91",
         "filename": "scripts/iostat.py",
         "patchSetId": 15
@@ -229,6 +421,30 @@
       "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c37a4912_44cd15d8",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "removed, \nwhy I added this part logic is that it may be used in the future.",
+      "parentUuid": "dca35bad_33cded91",
+      "range": {
+        "startLine": 163,
+        "startChar": 13,
+        "endLine": 163,
+        "endChar": 33
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -255,6 +471,30 @@
     },
     {
       "key": {
+        "uuid": "31aadc40_057b6998",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "removed",
+      "parentUuid": "f696f7a1_623f4328",
+      "range": {
+        "startLine": 165,
+        "startChar": 15,
+        "endLine": 165,
+        "endChar": 33
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3477be2_1f880672",
         "filename": "scripts/iostat.py",
         "patchSetId": 15
@@ -275,6 +515,30 @@
       "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1947e83b_9f46d025",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a3477be2_1f880672",
+      "range": {
+        "startLine": 261,
+        "startChar": 18,
+        "endLine": 261,
+        "endChar": 30
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -301,6 +565,30 @@
     },
     {
       "key": {
+        "uuid": "a416d648_5e3ec329",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e2eebb00_cb71251c",
+      "range": {
+        "startLine": 262,
+        "startChar": 36,
+        "endLine": 262,
+        "endChar": 63
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7d72faea_b9a0e980",
         "filename": "scripts/iostat.py",
         "patchSetId": 15
@@ -321,6 +609,30 @@
       "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c517fbfc_7f53ed53",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7d72faea_b9a0e980",
+      "range": {
+        "startLine": 295,
+        "startChar": 10,
+        "endLine": 295,
+        "endChar": 16
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -347,6 +659,30 @@
     },
     {
       "key": {
+        "uuid": "a801a371_832fe392",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b9363e57_609b9b80",
+      "range": {
+        "startLine": 326,
+        "startChar": 24,
+        "endLine": 326,
+        "endChar": 140
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "63e9e231_627303ca",
         "filename": "scripts/iostat.py",
         "patchSetId": 15
@@ -367,6 +703,30 @@
       "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ec36171_2b02848f",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "63e9e231_627303ca",
+      "range": {
+        "startLine": 330,
+        "startChar": 24,
+        "endLine": 330,
+        "endChar": 135
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -393,6 +753,30 @@
     },
     {
       "key": {
+        "uuid": "c0e4031b_dd2e1567",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a9e70325_b360f232",
+      "range": {
+        "startLine": 334,
+        "startChar": 24,
+        "endLine": 334,
+        "endChar": 136
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b938e75b_b6d1f89f",
         "filename": "scripts/iostat.py",
         "patchSetId": 15
@@ -413,6 +797,30 @@
       "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "892e266a_9d7863eb",
+        "filename": "scripts/iostat.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b938e75b_b6d1f89f",
+      "range": {
+        "startLine": 348,
+        "startChar": 24,
+        "endLine": 348,
+        "endChar": 123
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -439,6 +847,30 @@
     },
     {
       "key": {
+        "uuid": "de005c51_b79942c4",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0f2aa8e_4868a778",
+      "range": {
+        "startLine": 60,
+        "startChar": 1,
+        "endLine": 60,
+        "endChar": 17
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "120bae2a_0b319ccd",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 15
@@ -462,6 +894,30 @@
     },
     {
       "key": {
+        "uuid": "831205ce_4ea2626f",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "120bae2a_0b319ccd",
+      "range": {
+        "startLine": 63,
+        "startChar": 2,
+        "endLine": 63,
+        "endChar": 115
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6f6c56db_8ea985bf",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 15
@@ -482,6 +938,30 @@
       "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14592567_08d3aa78",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2020-01-14T05:00:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6f6c56db_8ea985bf",
+      "range": {
+        "startLine": 64,
+        "startChar": 1,
+        "endLine": 64,
+        "endChar": 5
+      },
+      "revId": "1b4a0a10e942aea443f0649f6c3a4f0be274a029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
