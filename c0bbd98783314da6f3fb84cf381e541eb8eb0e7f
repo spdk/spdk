@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "829ea87e_0113678f",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T20:28:21Z",
+      "side": 1,
+      "message": "let\u0027s indent all of this\n\nyou can use \u003c\u003c-EOF (see the - added before EOF) to enable indentation of the heredoc stuff",
+      "revId": "c0bbd98783314da6f3fb84cf381e541eb8eb0e7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
