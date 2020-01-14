@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f51ad6b_4639770e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T11:55:10Z",
+      "side": 1,
+      "message": "required",
+      "range": {
+        "startLine": 7,
+        "startChar": 36,
+        "endLine": 7,
+        "endChar": 47
+      },
+      "revId": "b92101a73318d868620fecb297609e301592cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f853f40e_85e693f8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T11:55:10Z",
+      "side": 1,
+      "message": "Please expand the commit msg so it easier to understand why those changes are done.",
+      "revId": "b92101a73318d868620fecb297609e301592cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87b59aa8_b00d28fd",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T11:55:10Z",
+      "side": 1,
+      "message": "SPDK/DPDK compiles fine without those ?",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 34
+      },
+      "revId": "b92101a73318d868620fecb297609e301592cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b738cb4_c53e00e6",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T11:55:10Z",
+      "side": 1,
+      "message": "Since by default ISA-L compile is enabled, does SPDK compile (along with ISA-L) fine without those dependencies ?",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 50
+      },
+      "revId": "b92101a73318d868620fecb297609e301592cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8067e28b_66fa7d93",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-14T11:55:10Z",
+      "side": 1,
+      "message": "typo, should be git.",
+      "range": {
+        "startLine": 87,
+        "startChar": 19,
+        "endLine": 87,
+        "endChar": 23
+      },
+      "revId": "b92101a73318d868620fecb297609e301592cc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
