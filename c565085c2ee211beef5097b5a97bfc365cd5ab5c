@@ -16,6 +16,24 @@
       "revId": "c565085c2ee211beef5097b5a97bfc365cd5ab5c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6cf2e29b_7b9061dd",
+        "filename": "test/unit/lib/thread/thread.c/thread_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T22:54:12Z",
+      "side": 1,
+      "message": "Hi Jim, make sense to me. I had known you already suggested adding assert, but I was confused by the comment in the header file, \"Actual release will happen on the same thread that called spdk_get_io_channel()\" I will update these two patches to add assert and update the comment in the header file today.",
+      "parentUuid": "c11ff629_79bce57d",
+      "revId": "c565085c2ee211beef5097b5a97bfc365cd5ab5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
