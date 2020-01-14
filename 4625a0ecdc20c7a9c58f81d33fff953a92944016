@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5810c563_5513971b",
+        "filename": "test/config_converter/test_converter.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T20:58:54Z",
+      "side": 1,
+      "message": "I think the following is more clear (not exact but you get the idea):\n\npython3 $SPDK/config_converter.py \u003c config.ini \u003e config_converter.json",
+      "revId": "4625a0ecdc20c7a9c58f81d33fff953a92944016",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ec56de2_c6f77b9a",
+        "filename": "test/json_config/json_diff.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T20:58:54Z",
+      "side": 1,
+      "message": "same as above (use foo \u003c input \u003e output)",
+      "revId": "4625a0ecdc20c7a9c58f81d33fff953a92944016",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
