@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "4f16fccf_37d7c0ee",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2980,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-14T10:20:39Z",
+      "side": 1,
+      "message": "Copy is needed because port will be freed on stop_listen.\nHowever, I\u0027m wondering what kind of migration is it if we stop trid and listen with the same trid again?",
+      "parentUuid": "75a2f07a_1a378b3d",
+      "range": {
+        "startLine": 2978,
+        "startChar": 0,
+        "endLine": 2980,
+        "endChar": 0
+      },
+      "revId": "080c5b4473372f796d08038497c5936157ed4366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a092a354_32d3e851",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 8
