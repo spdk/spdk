@@ -216,10 +216,15 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 static void
 ftl_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
 {
+	struct spdk_ftl_dev *dev = event_ctx;
+
 	switch (type) {
 	case SPDK_BDEV_EVENT_REMOVE:
 		assert(0);
 		break;
+	case SPDK_BDEV_EVENT_MEDIA_MANAGEMENT:
+		assert(bdev == spdk_bdev_desc_get_bdev(dev->base_bdev_desc));
+		ftl_get_media_events(dev);
 	default:
 		break;
 	}
@@ -343,6 +348,30 @@ ftl_lba_map_request_ctor(struct spdk_mempool *mp, void *opaque, void *obj, unsig
 
 	request->segments = spdk_bit_array_create(spdk_divide_round_up(
 				    ftl_get_num_blocks_in_band(dev), FTL_NUM_LBA_IN_BLOCK));
+}
+
+static int
+ftl_init_media_events_pool(struct spdk_ftl_dev *dev)
+{
+	char pool_name[128];
+	int rc;
+
+	rc = snprintf(pool_name, sizeof(pool_name), "ftl-media-%p", dev);
+	if (rc < 0 || rc >= (int)sizeof(pool_name)) {
+		SPDK_ERRLOG("Failed to create media pool name\n");
+		return -1;
+	}
+
+	dev->media_events_pool = spdk_mempool_create(pool_name, 1024,
+				 sizeof(struct ftl_media_event),
+				 SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+				 SPDK_ENV_SOCKET_ID_ANY);
+	if (!dev->media_events_pool) {
+		SPDK_ERRLOG("Failed to create media events pool\n");
+		return -1;
+	}
+
+	return 0;
 }
 
 static int
@@ -1112,6 +1141,7 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 
 	spdk_mempool_free(dev->lba_pool);
 	spdk_mempool_free(dev->nv_cache.md_pool);
+	spdk_mempool_free(dev->media_events_pool);
 	if (dev->lba_request_pool) {
 		spdk_mempool_obj_iter(dev->lba_request_pool, ftl_lba_map_request_dtor, NULL);
 	}
@@ -1187,6 +1217,11 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 
 	if (ftl_init_lba_map_pools(dev)) {
 		SPDK_ERRLOG("Unable to init LBA map pools\n");
+		goto fail_sync;
+	}
+
+	if (ftl_init_media_events_pool(dev)) {
+		SPDK_ERRLOG("Unable to init media events pools\n");
 		goto fail_sync;
 	}
 
