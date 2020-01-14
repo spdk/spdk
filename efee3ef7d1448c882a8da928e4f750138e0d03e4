@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "ad928044_5b14cf45",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-14T14:07:15Z",
+      "side": 1,
+      "message": "Makes sense, but I think it\u0027d make more sense for this to be a boolean variable in spdk_ftl_conf.",
+      "parentUuid": "6e9a5316_d6b3445e",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 33
+      },
+      "revId": "efee3ef7d1448c882a8da928e4f750138e0d03e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5b4cc5a8_3fdd0c5f",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 27
