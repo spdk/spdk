@@ -677,9 +677,6 @@ spdk_get_thread(void)
 	struct spdk_thread *thread;
 
 	thread = _get_thread();
-	if (!thread) {
-		SPDK_ERRLOG("No thread allocated\n");
-	}
 
 	return thread;
 }
