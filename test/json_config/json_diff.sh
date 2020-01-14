@@ -25,8 +25,8 @@ tmp_file_1=$(mktemp /tmp/$(basename ${1}).XXX)
 tmp_file_2=$(mktemp /tmp/$(basename ${2}).XXX)
 ret=0
 
-cat $1 | $python_cmd $rootdir/test/json_config/config_filter.py -method "sort" > $tmp_file_1
-cat $2 | $python_cmd $rootdir/test/json_config/config_filter.py -method "sort" > $tmp_file_2
+< $1 $python_cmd $rootdir/test/json_config/config_filter.py -method "sort" > $tmp_file_1
+< $2 $python_cmd $rootdir/test/json_config/config_filter.py -method "sort" > $tmp_file_2
 
 if ! diff -u $tmp_file_1 $tmp_file_2; then
 	ret=1

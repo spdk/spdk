@@ -105,7 +105,7 @@ do
 	$rpc_py iscsi_create_target_node Target${i} Target${i}_alias "${bdevs[i]}:0" "$PORTAL_TAG:$INITIATOR_TAG" 64 -d
 done
 
-cat $testdir/perf.job | ssh_initiator "cat > perf.job"
+ssh_initiator "cat > perf.job" < $testdir/perf.job
 rm -f $testdir/perf.job
 timing_exit iscsi_config
 
