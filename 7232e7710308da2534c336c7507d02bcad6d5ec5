@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7463bd4_e0dcacda",
+        "filename": "module/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T23:39:49Z",
+      "side": 1,
+      "message": "How about doing this in nvmf_tgt_parse_conf_done()?",
+      "revId": "7232e7710308da2534c336c7507d02bcad6d5ec5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
