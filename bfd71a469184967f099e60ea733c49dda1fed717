@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c245169_d78e692c",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-14T14:12:13Z",
+      "side": 1,
+      "message": "Maybe we should expand off -\u003e offset too?",
+      "range": {
+        "startLine": 185,
+        "startChar": 18,
+        "endLine": 185,
+        "endChar": 27
+      },
+      "revId": "bfd71a469184967f099e60ea733c49dda1fed717",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
