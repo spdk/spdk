@@ -411,6 +411,9 @@ struct spdk_blob_opts {
 	uint64_t  num_clusters;
 	bool	thin_provision;
 	struct spdk_blob_xattr_opts xattrs;
+
+	/** Disable separate extent pages in metadata */
+	bool disable_extent_pages;
 };
 
 /**

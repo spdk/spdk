@@ -150,6 +150,7 @@ struct spdk_blob {
 	uint32_t frozen_refcnt;
 	bool locked_operation_in_progress;
 	enum blob_clear_method clear_method;
+	bool disable_extent_pages;
 };
 
 struct spdk_blob_store {
