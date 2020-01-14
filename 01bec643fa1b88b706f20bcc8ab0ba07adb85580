@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b40c05b_7f7523be",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T22:31:48Z",
+      "side": 1,
+      "message": "This",
+      "range": {
+        "startLine": 46,
+        "startChar": 72,
+        "endLine": 46,
+        "endChar": 77
+      },
+      "revId": "01bec643fa1b88b706f20bcc8ab0ba07adb85580",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2b9a102_7d4fdd71",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T22:31:48Z",
+      "side": 1,
+      "message": "know",
+      "range": {
+        "startLine": 48,
+        "startChar": 15,
+        "endLine": 48,
+        "endChar": 19
+      },
+      "revId": "01bec643fa1b88b706f20bcc8ab0ba07adb85580",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df845301_b22cd5f4",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T22:31:48Z",
+      "side": 1,
+      "message": "It looks that only this function uses if - else. Following three functions are different.",
+      "revId": "01bec643fa1b88b706f20bcc8ab0ba07adb85580",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
