@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "273ff484_74d2279e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:57:57Z",
+      "side": 1,
+      "message": "This should be changed.",
+      "range": {
+        "startLine": 542,
+        "startChar": 38,
+        "endLine": 542,
+        "endChar": 44
+      },
+      "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "31586ccc_471fe03d",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 3
@@ -36,6 +59,29 @@
       "writtenOn": "2020-01-14T04:53:14Z",
       "side": 1,
       "message": "How about moving this check into spdk_nvmf_validate_host()?",
+      "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b771a6eb_2816f5a1",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:57:57Z",
+      "side": 1,
+      "message": "This should be changed?",
+      "range": {
+        "startLine": 559,
+        "startChar": 38,
+        "endLine": 559,
+        "endChar": 45
+      },
       "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
