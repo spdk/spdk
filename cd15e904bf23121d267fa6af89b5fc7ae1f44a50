@@ -16,6 +16,24 @@
       "revId": "cd15e904bf23121d267fa6af89b5fc7ae1f44a50",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83ac9c3a_843e6f3d",
+        "filename": "module/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-14T11:33:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ee328c13_84515b81",
+      "revId": "cd15e904bf23121d267fa6af89b5fc7ae1f44a50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
