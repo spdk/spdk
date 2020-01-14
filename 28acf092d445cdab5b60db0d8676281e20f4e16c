@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2f3a142_e72341e3",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 4278,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:40:05Z",
+      "side": 1,
+      "message": "Is this really optional?",
+      "range": {
+        "startLine": 4278,
+        "startChar": 26,
+        "endLine": 4278,
+        "endChar": 35
+      },
+      "revId": "28acf092d445cdab5b60db0d8676281e20f4e16c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a1dc8aa_ea089341",
+        "filename": "module/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:40:05Z",
+      "side": 1,
+      "message": "Please insert an empty line after definition of req.",
+      "revId": "28acf092d445cdab5b60db0d8676281e20f4e16c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70692d3f_673c2188",
+        "filename": "module/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:40:05Z",
+      "side": 1,
+      "message": "The following delete of a line looks unintentional.",
+      "revId": "28acf092d445cdab5b60db0d8676281e20f4e16c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
