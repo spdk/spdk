@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "503d92d3_3b8cb584",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 39
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-14T09:11:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be1a2a9e_07ffa5eb",
+      "revId": "3d72d1758771a0f798f94e3c19ba9e159060175d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f7e83c8b_ec90caaa",
         "filename": "test/vhost/integrity/integrity_vm.sh",
         "patchSetId": 39
