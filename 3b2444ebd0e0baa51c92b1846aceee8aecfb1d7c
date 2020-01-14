@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "79e4d9e5_498882ed",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-14T08:45:30Z",
+      "side": 1,
+      "message": "This code is setting the used flag equals to the avail flag. and we only need to set the first desc.\n#define VRING_DESC_F_AVAIL_USED\t(VRING_DESC_F_AVAIL | VRING_DESC_F_USED)\nHere we can\u0027t directly use the vq-\u003eavail_phase. is it? We can get the avail_phase from the *flags or use the used_phase.\nOk, I have removed the used_phase.",
+      "parentUuid": "c9bcd78e_069e2c2e",
+      "revId": "3b2444ebd0e0baa51c92b1846aceee8aecfb1d7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7d257b2d_f299ec8e",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 13
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-13T19:31:09Z",
       "side": 1,
       "message": "Tracking last_used_idx and used_wrap_counter isn\u0027t useful. You don\u0027t need those values anywhere.",
+      "revId": "3b2444ebd0e0baa51c92b1846aceee8aecfb1d7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb72b488_4de2403b",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-14T08:45:30Z",
+      "side": 1,
+      "message": "last_used_idx !\u003d req_idx so we must need the last_used_idx. Used_wrap_counter may be optional.\nRemoved the used_wrap_counter.",
+      "parentUuid": "7d257b2d_f299ec8e",
       "revId": "3b2444ebd0e0baa51c92b1846aceee8aecfb1d7c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -68,6 +104,24 @@
       "revId": "3b2444ebd0e0baa51c92b1846aceee8aecfb1d7c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0c31b3fb_854884cc",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2020-01-14T08:45:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6733e475_8171459a",
+      "revId": "3b2444ebd0e0baa51c92b1846aceee8aecfb1d7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
