@@ -83,6 +83,8 @@ if [ -s /etc/redhat-release ]; then
 	# Additional dependencies for FUSE and CUSE
 	yum install -y fuse3-devel
 elif [ -f /etc/debian_version ]; then
+	. /etc/os-release
+	VERSION_ID=$(echo $VERSION_ID | sed 's/\.//g')
 	# Includes Ubuntu, Debian
 	# Minimal install
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
@@ -101,6 +103,14 @@ elif [ -f /etc/debian_version ]; then
 		# Additional dependencies for SPDK CLI - not available on older Ubuntus
 		apt-get install -y python3-configshell-fb python3-pexpect || echo \
 			"Note: Some SPDK CLI dependencies could not be installed."
+		# Additional dependencies for FUSE and CUSE
+		if [[ $NAME == "Ubuntu" ]] && [[ $VERSION_ID -gt 1400 ]] && [[ $VERSION_ID -lt 1900 ]]; then
+			# Adding repository with libfuse3-dev for Ubuntu 14, 16 and 18
+			echo "This repository contains libfuse3-dev for Ubuntu $VERSION needed for FUSE and CUSE"
+			add-apt-repository ppa:bkryza/fuse3
+			apt-get update
+		fi
+		apt-get install -y libfuse3-dev
 		# Additional dependecies for nvmf performance test script
 		apt-get install -y python3-paramiko
 	fi
