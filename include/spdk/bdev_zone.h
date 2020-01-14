@@ -166,6 +166,32 @@ int spdk_bdev_zone_append(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 			  spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
+ * Submit a zone_append request to the bdev. This differs from
+ * spdk_bdev_zone_append by allowing the data buffer to be described in a scatter
+ * gather list.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param iov A scatter gather list of buffers to be written from.
+ * \param iovcnt The number of elements in iov.
+ * \param zone_id First logical block of a zone.
+ * \param num_blocks The number of blocks to write. buf must be greater than or equal to this size.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed).
+ * Appended logical block address can be obtained with spdk_bdev_io_get_append_location().
+ * Return negated errno on failure, in which case the callback will not be called.
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ */
+int spdk_bdev_zone_appendv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			   struct iovec *iov, int iovcnt, uint64_t zone_id, uint64_t num_blocks,
+			   spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
  * Submit a zone_append request with metadata to the bdev.
  *
  * This function uses separate buffer for metadata transfer (valid only if bdev supports this
@@ -191,6 +217,37 @@ int spdk_bdev_zone_append(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 int spdk_bdev_zone_append_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				  void *buf, void *md, uint64_t zone_id, uint64_t num_blocks,
 				  spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a zone_append request with metadata to the bdev. This differs from
+ * spdk_bdev_zone_append by allowing the data buffer to be described in a scatter
+ * gather list.
+ *
+ * This function uses separate buffer for metadata transfer (valid only if bdev supports this
+ * mode).
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param iov A scatter gather list of buffers to be written from.
+ * \param iovcnt The number of elements in iov.
+ * \param md Metadata buffer.
+ * \param zone_id First logical block of a zone.
+ * \param num_blocks The number of blocks to write. buf must be greater than or equal to this size.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed).
+ * Appended logical block address can be obtained with spdk_bdev_io_get_append_location().
+ * Return negated errno on failure, in which case the callback will not be called.
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ */
+int spdk_bdev_zone_appendv_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				   struct iovec *iov, int iovcnt, void *md, uint64_t zone_id,
+				   uint64_t num_blocks, spdk_bdev_io_completion_cb cb,
+				   void *cb_arg);
 
 /**
  * Get append location (offset in blocks of the bdev) for this I/O.

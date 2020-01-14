@@ -156,6 +156,44 @@ spdk_bdev_zone_append_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 					 cb, cb_arg);
 }
 
+int
+spdk_bdev_zone_appendv_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			       struct iovec *iov, int iovcnt, void *md_buf, uint64_t zone_id,
+			       uint64_t num_blocks, spdk_bdev_io_completion_cb cb,
+			       void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	bdev_io = bdev_channel_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_ZONE_APPEND;
+	bdev_io->u.bdev.iovs = iov;
+	bdev_io->u.bdev.iovcnt = iovcnt;
+	bdev_io->u.bdev.md_buf = md_buf;
+	bdev_io->u.bdev.num_blocks = num_blocks;
+	bdev_io->u.bdev.offset_blocks = zone_id;
+	bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	bdev_io_submit(bdev_io);
+	return 0;
+}
+
+int
+spdk_bdev_zone_appendv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		       struct iovec *iovs, int iovcnt, uint64_t zone_id, uint64_t num_blocks,
+		       spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return spdk_bdev_zone_appendv_with_md(desc, ch, iovs, iovcnt, NULL, zone_id, num_blocks,
+					      cb, cb_arg);
+}
+
 uint64_t
 spdk_bdev_io_get_append_location(struct spdk_bdev_io *bdev_io)
 {
