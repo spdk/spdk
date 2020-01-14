@@ -51,6 +51,9 @@ git submodule update --init
 ## Prerequisites
 
 The dependencies can be installed automatically by `scripts/pkgdep.sh`.
+The `scripts/pkgdep.sh` script will automatically install the bare minimum
+dependencies required to build SPDK.
+Use `--help` to see information on installing dependencies for optional components
 
 ~~~{.sh}
 ./scripts/pkgdep.sh
