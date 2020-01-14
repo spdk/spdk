@@ -107,6 +107,11 @@ elif [ -f /etc/debian_version ]; then
 		# Additional dependencies for ISA-L used in compression
 		apt-get install -y autoconf automake libtool help2man
 		# Additional dependencies for FUSE and CUSE
+                if [[ $(lsb_release -si) == "Ubuntu" ]] && [[ $(lsb_release -sr) =~ 18 ]]; then
+			# Adding repository with libfuse3-dev for Ubuntu 18
+			add-apt-repository ppa:bkryza/onedata-1909-bionic
+			apt-get update
+		fi
 		apt-get install -y libfuse3-dev
 		# Additional dependecies for nvmf performance test script
 		apt-get install -y python3-paramiko
