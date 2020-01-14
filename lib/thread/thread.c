@@ -674,14 +674,7 @@ spdk_thread_get_count(void)
 struct spdk_thread *
 spdk_get_thread(void)
 {
-	struct spdk_thread *thread;
-
-	thread = _get_thread();
-	if (!thread) {
-		SPDK_ERRLOG("No thread allocated\n");
-	}
-
-	return thread;
+	return _get_thread();
 }
 
 const char *
