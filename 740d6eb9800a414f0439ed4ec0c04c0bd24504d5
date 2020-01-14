@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7fdbbb5_718a39c2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 3116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T22:05:16Z",
+      "side": 1,
+      "message": "So I think this works, only because the lvol_delete_lvstore RPC indirectly deletes all of the lvols before destroying the lvstore.\n\nBut I still think it is a more straightforward test to only delete the lvol.\n\nThis is a valid test, but I think it\u0027s secondary to a test that only deletes the lvol.",
+      "revId": "740d6eb9800a414f0439ed4ec0c04c0bd24504d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
