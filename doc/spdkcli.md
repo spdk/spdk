@@ -9,8 +9,8 @@ for the next SPDK release.
 
 ### Install needed dependencies
 
-All dependencies should be handled by scripts/pkgdep.sh script.
-Package dependencies at the moment include:
+Bare minimum dependencies should be handled by scripts/pkgdep.sh script.
+Minimal dependencies at the moment include:
  - configshell
 
 ### Run SPDK application instance
