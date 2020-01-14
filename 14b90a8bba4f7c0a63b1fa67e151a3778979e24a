@@ -22,6 +22,30 @@
       "revId": "14b90a8bba4f7c0a63b1fa67e151a3778979e24a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ade22065_6992bd62",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2020-01-14T07:37:29Z",
+      "side": 1,
+      "message": "-1-ing this just to draw your attention for the comment.",
+      "parentUuid": "38918704_6699e5b5",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 61
+      },
+      "revId": "14b90a8bba4f7c0a63b1fa67e151a3778979e24a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
