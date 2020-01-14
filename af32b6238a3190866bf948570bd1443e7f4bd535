@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "41a50d0e_4d93c974",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-14T09:37:14Z",
+      "side": 1,
+      "message": "Previously subnqn was cached, data-\u003esubnqn is used to get subsystem which stores subnqn - seems valid to use subsystem-\u003esubnqn here.",
+      "parentUuid": "d0422ba9_6e64d6e3",
+      "range": {
+        "startLine": 550,
+        "startChar": 47,
+        "endLine": 550,
+        "endChar": 56
+      },
+      "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca4d1f3b_d19f358c",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 3
@@ -128,6 +152,24 @@
       "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c59ab13c_fb6e546c",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-14T09:37:14Z",
+      "side": 1,
+      "message": "Yes, exactly. \nif there is an issue with data there is \u0027invalid connect data\u0027\nif validate host return error there is \u0027invalid host\u0027.",
+      "parentUuid": "3ee2a08e_e7e62424",
+      "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -189,6 +231,24 @@
       "writtenOn": "2020-01-14T04:53:14Z",
       "side": 1,
       "message": "How about moving this DEBUGLOG into spd_nvmf_validate_host() too?",
+      "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64aa2e90_1f4cd513",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-14T09:37:14Z",
+      "side": 1,
+      "message": "I didn\u0027t want to change behavior here as with next patch I move debug log with hostnqn/subnqn anyway. I can fix if there is sth else to be done on that patch (so no need for rebase in sequence patches), is that OK for you?",
+      "parentUuid": "dd92f4da_33cb58e7",
       "revId": "af32b6238a3190866bf948570bd1443e7f4bd535",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
