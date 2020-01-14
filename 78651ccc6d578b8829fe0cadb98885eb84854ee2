@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c9073cb_7bab2055",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 2465,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T14:42:33Z",
+      "side": 1,
+      "message": "I would suggest moving the cmd-\u003efuse checking here - before the opc switch.\n\nSomething like:\n\nif (spdk_unlikely(cmd-\u003efuse \u0026 SPDK_NVME_CMD_FUSE_FLAG_MASK)) {\n  return spdk_nvmf_ctrlr_process_io_fused_cmd(...);\n}\n\nspdk_nvmf_ctrlr_process_io_fused_cmd(...)\n{\n  if (cmd-\u003efuse \u003d\u003d FUSE_FIRST) {\n    return STATUS_ASYNCHRONOUS;\n  }\n\n  if (cmd-\u003efuse \u003d\u003d FUSE_SECOND) {\n    /* check opc of both commands - i.e. if compare and write then call the bdev compare-and-write function */\n  }\n}\n\nThis has two points:\n1) we move the fused command handling separately from the primary I/O path\n2) it fixes the case where someone does fused commands, but the first command isn\u0027t a compare (the check on line 2470 doesn\u0027t account for that)",
+      "revId": "78651ccc6d578b8829fe0cadb98885eb84854ee2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
