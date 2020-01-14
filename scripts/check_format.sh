@@ -233,24 +233,22 @@ if hash shellcheck 2>/dev/null; then
 
 	shellcheck_v=$(shellcheck --version | grep -P "version: [0-9\.]+" | cut -d " " -f2)
 
-	# Exclude list currently holds all of reported errors. Errors will be fixed and list
-	# reduced over time. If you find any new error which is not on the list and you think
-	# that it should be excluded - please create a GitHub issue.
-	# For more information about the topic and a list of human-friendly error descripions
-	# go to: https://trello.com/c/29Z90j1W
+	# SHCK_EXCLUDE contains a list of all of the spellcheck errors found in SPDK scripts
+	# currently. New errors should only be added to this list if the cost of fixing them
+	# is deemed too high. For more information about the errors, go to:
+	# https://github.com/koalaman/shellcheck/wiki/Checks
 	# Error descriptions can also be found at: https://github.com/koalaman/shellcheck/wiki
-	# This SHCK_EXCLUDE list is out "to do" and we work to fix all of this errors.
-	SHCK_EXCLUDE="SC2010"
 	# SPDK fails some error checks which have been deprecated in later versions of shellcheck.
 	# We will not try to fix these error checks, but instead just leave the error types here
 	# so that we can still run with older versions of shellcheck.
-	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1117"
+	SHCK_EXCLUDE="SC1117"
 	# SPDK has decided to not fix violations of these errors.
 	# We are aware about below exclude list and we want this errors to be excluded.
 	# SC1083: This {/} is literal. Check expression (missing ;/\n?) or quote it.
 	# SC1090: Can't follow non-constant source. Use a directive to specify location.
 	# SC1091: Not following: (error message here)
 	# SC2001: See if you can use ${variable//search/replace} instead.
+	# SC2010: Don't use ls | grep. Use a glob or a for loop with a condition to allow non-alphanumeric filenames.
 	# SC2015: Note that A && B || C is not if-then-else. C may run when A is true.
 	# SC2016: Expressions don't expand in single quotes, use double quotes for that.
 	# SC2034: foo appears unused. Verify it or export it.
@@ -267,7 +265,7 @@ if hash shellcheck 2>/dev/null; then
 	#         or split robustly with mapfile or read -a.
 	# SC2207: Prefer mapfile or read -a to split command output (or quote to avoid splitting).
 	# SC2223: This default assignment may cause DoS due to globbing. Quote it.
-	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1083,SC1090,SC1091,SC2015,SC2016,SC2034,SC2046,SC2086,\
+	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1083,SC1090,SC1091,SC2010,SC2015,SC2016,SC2034,SC2046,SC2086,\
 SC2119,SC2120,SC2148,SC2153,SC2154,SC2164,SC2174,SC2001,SC2206,SC2207,SC2223"
 
 	SHCK_FORMAT="diff"
