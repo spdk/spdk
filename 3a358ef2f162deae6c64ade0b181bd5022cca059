@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f250c7b4_298a50fc",
+        "filename": "doc/nvme.md",
+        "patchSetId": 26
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-14T14:53:13Z",
+      "side": 1,
+      "message": "Let\u0027s reword this so that the reader understands how they should use it with the SPDK nvme API.  For example:\n\n1) What does \"executed\" mean in this context?\n2) \"No other operations\" - does that mean on the whole controller, or just one qpair?\n3) How does the user make sure that commands are inserted next to each other on the same submission queue?\n\nI\u0027m not really asking you to answer these questions here - I\u0027m more trying to show that a new user who wants to issue a compare-and-write fused operation may not get clarity by reading this text.\n\nYou may also want to say something like:\n\nThe NVMe specification currently defines compare-and-write as a fused operation.  Support for compare-and-write is reported by the controller flag SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED.",
+      "revId": "3a358ef2f162deae6c64ade0b181bd5022cca059",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
