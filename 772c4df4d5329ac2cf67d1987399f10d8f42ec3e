@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1dd0f7ab_10fcf54f",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2709,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:27:46Z",
+      "side": 1,
+      "message": "g_nvmf_custom_admin_cmd_hdlrs[cmd-\u003eopc].hdlr !\u003d nvmf_passthru_admin_cmd is more accurate?",
+      "revId": "772c4df4d5329ac2cf67d1987399f10d8f42ec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25a3b50c_d09726cc",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:27:46Z",
+      "side": 1,
+      "message": "spdk_bdev_nvme_admin_passthru may return -EBADF or -ENOMEM. Hence SPDK_NVME_SC_INTERNAL_DEVICE_ERROR may be better. I think you just followed spdk_nvmf_bdev_ctrlr_nvme_passthru_io though.",
+      "range": {
+        "startLine": 573,
+        "startChar": 33,
+        "endLine": 573,
+        "endChar": 60
+      },
+      "revId": "772c4df4d5329ac2cf67d1987399f10d8f42ec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7875fc44_f10d2fdd",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:27:46Z",
+      "side": 1,
+      "message": "Defining variables at the head of function may be usual in SPDK.",
+      "range": {
+        "startLine": 89,
+        "startChar": 1,
+        "endLine": 89,
+        "endChar": 8
+      },
+      "revId": "772c4df4d5329ac2cf67d1987399f10d8f42ec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c30b9b28_e69cd9be",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:27:46Z",
+      "side": 1,
+      "message": "Ditto",
+      "range": {
+        "startLine": 95,
+        "startChar": 1,
+        "endLine": 95,
+        "endChar": 5
+      },
+      "revId": "772c4df4d5329ac2cf67d1987399f10d8f42ec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2b183a1_b3bdddae",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1352,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-14T04:27:46Z",
+      "side": 1,
+      "message": "Other status code may be better because we will get this code even when no custom handler is registered to 0xc1.",
+      "range": {
+        "startLine": 1352,
+        "startChar": 32,
+        "endLine": 1352,
+        "endChar": 59
+      },
+      "revId": "772c4df4d5329ac2cf67d1987399f10d8f42ec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
