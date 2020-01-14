@@ -91,6 +91,8 @@ if [ -s /etc/redhat-release ]; then
 	# Additional dependencies for FUSE and CUSE
 	yum install -y fuse3-devel
 elif [ -f /etc/debian_version ]; then
+	. /etc/os-release
+	VERSION_ID_NUM=$(sed 's/\.//g' <<< $VERSION_ID)
 	# Includes Ubuntu, Debian
 	# Minimal install
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
@@ -118,7 +120,12 @@ elif [ -f /etc/debian_version ]; then
 	# Additional dependencies for building docs
 	apt-get install -y doxygen mscgen graphviz
 	# Additional dependencies for FUSE and CUSE
-	apt-get install -y libfuse3-dev
+	if [[ $NAME == "Ubuntu" ]] && (( VERSION_ID_NUM > 1400 && VERSION_ID_NUM < 1900 )); then
+		echo "Ubuntu $VERSION_ID does not have libfuse3-dev in mainline repository."
+		echo "You can install it manually"
+	else
+		apt-get install -y libfuse3-dev
+	fi
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	# Minimal install
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
