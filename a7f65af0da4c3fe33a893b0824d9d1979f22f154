@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f7d8c90a_cef570d2",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1354,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-14T13:39:47Z",
+      "side": 1,
+      "message": "It is called from ftl_write_cb now.",
+      "parentUuid": "4243d01c_59b7d49e",
+      "range": {
+        "startLine": 1348,
+        "startChar": 0,
+        "endLine": 1354,
+        "endChar": 1
+      },
+      "revId": "a7f65af0da4c3fe33a893b0824d9d1979f22f154",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "397aaef5_22c9311c",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 24
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "e850f06f_d16c220a",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1401,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-14T13:39:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "397aaef5_22c9311c",
+      "range": {
+        "startLine": 1401,
+        "startChar": 2,
+        "endLine": 1401,
+        "endChar": 32
+      },
+      "revId": "a7f65af0da4c3fe33a893b0824d9d1979f22f154",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f497a477_3f6c0b62",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 24
@@ -59,6 +107,30 @@
       "writtenOn": "2020-01-10T12:00:27Z",
       "side": 1,
       "message": "We\u0027ll be changing the write buffering pretty soon in a way that it\u0027ll no longer be true. Could you explain why is this necessary to check this now?",
+      "range": {
+        "startLine": 1581,
+        "startChar": 0,
+        "endLine": 1582,
+        "endChar": 53
+      },
+      "revId": "a7f65af0da4c3fe33a893b0824d9d1979f22f154",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "53feaf85_b989836a",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1582,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-14T13:39:47Z",
+      "side": 1,
+      "message": "We had loop below \"while (io-\u003eiov_pos \u003c io-\u003eiov_cnt)\" and in case user writes io-\u003eiov_cnt must be equal to one. In ftl_write_cb we are assuming that we had only one batch associated with IO so we should at least check if we don\u0027t try to sent bigger user writes.",
+      "parentUuid": "f497a477_3f6c0b62",
       "range": {
         "startLine": 1581,
         "startChar": 0,
