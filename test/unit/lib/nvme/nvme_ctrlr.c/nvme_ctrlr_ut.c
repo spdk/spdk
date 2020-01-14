@@ -1799,9 +1799,9 @@ test_nvme_ctrlr_test_active_ns(void)
 	ctrlr.page_size = 0x1000;
 
 	for (minor = 0; minor <= 2; minor++) {
-		ctrlr.cdata.ver.bits.mjr = 1;
-		ctrlr.cdata.ver.bits.mnr = minor;
-		ctrlr.cdata.ver.bits.ter = 0;
+		ctrlr.vs.bits.mjr = 1;
+		ctrlr.vs.bits.mnr = minor;
+		ctrlr.vs.bits.ter = 0;
 		ctrlr.num_ns = 1531;
 		nvme_ctrlr_identify_active_ns(&ctrlr);
 
