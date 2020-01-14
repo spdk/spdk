@@ -94,6 +94,12 @@ elif [ -f /etc/debian_version ]; then
 		"Note: Some SPDK CLI dependencies could not be installed."
 
 	# Additional dependencies for DPDK
+	if [[ $NAME == "Ubuntu" ]] && [[ $VERSION_ID -lt 1900 ]]; then
+		# Adding repository with NASM version 2.13.03 for Ubuntu 18
+		echo "This repository contains NASM version 2.13.03 for Ubuntu 18 needed for DPDK"
+		add-apt-repository ppa:sergey-dryabzhinsky/ffmpeg
+		apt-get update
+	fi
 	apt-get install -y libnuma-dev nasm
 	# Additional dependencies for ISA-L used in compression
 	apt-get install -y autoconf automake libtool help2man
