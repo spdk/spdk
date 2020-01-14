@@ -210,6 +210,8 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test "rocksdb" ./test/blobfs/rocksdb/rocksdb.sh
 		run_test "blobstore" ./test/blobstore/blobstore.sh
 		run_test "blobfs" ./test/blobfs/blobfs.sh
+		run_test "hello_blob" ./examples/blob/hello_world/hello_blob \
+			examples/blob/hello_world/hello_blob.conf
 	fi
 
 	if [ $SPDK_TEST_NVMF -eq 1 ]; then

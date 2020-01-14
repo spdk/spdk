@@ -459,7 +459,7 @@ main(int argc, char **argv)
 	 * specify a name for the app.
 	 */
 	opts.name = "hello_blob";
-	opts.config_file = "hello_blob.conf";
+	opts.config_file = argv[1];
 
 
 	/*
