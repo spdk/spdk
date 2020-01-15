@@ -193,8 +193,6 @@ iscsi_poll_group_remove_conn(struct spdk_iscsi_poll_group *pg, struct spdk_iscsi
 		SPDK_ERRLOG("Failed to remove sock=%p of conn=%p\n", conn->sock, conn);
 	}
 
-	spdk_poller_unregister(&conn->flush_poller);
-
 	conn->is_stopped = true;
 	STAILQ_REMOVE(&pg->connections, conn, spdk_iscsi_conn, link);
 }
@@ -1380,36 +1378,6 @@ spdk_iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
 	return SPDK_ISCSI_CONNECTION_FATAL;
 }
 
-static int
-iscsi_get_pdu_length(struct spdk_iscsi_pdu *pdu, int header_digest,
-		     int data_digest)
-{
-	int data_len, enable_digest, total;
-
-	enable_digest = 1;
-	if (pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) {
-		enable_digest = 0;
-	}
-
-	total = ISCSI_BHS_LEN;
-
-	total += (4 * pdu->bhs.total_ahs_len);
-
-	if (enable_digest && header_digest) {
-		total += ISCSI_DIGEST_LEN;
-	}
-
-	data_len = DGET24(pdu->bhs.data_segment_len);
-	if (data_len > 0) {
-		total += ISCSI_ALIGN(data_len);
-		if (enable_digest && data_digest) {
-			total += ISCSI_DIGEST_LEN;
-		}
-	}
-
-	return total;
-}
-
 static bool
 iscsi_is_free_pdu_deferred(struct spdk_iscsi_pdu *pdu)
 {
@@ -1423,154 +1391,6 @@ iscsi_is_free_pdu_deferred(struct spdk_iscsi_pdu *pdu)
 	}
 
 	return false;
-}
-
-/**
- * \brief Makes one attempt to flush response PDUs back to the initiator.
- *
- * Builds a list of iovecs for response PDUs that must be sent back to the
- * initiator and passes it to writev().
- *
- * Since the socket is non-blocking, writev() may not be able to flush all
- * of the iovecs, and may even partially flush one of the iovecs.  In this
- * case, the partially flushed PDU will remain on the write_pdu_list with
- * an offset pointing to the next byte to be flushed.
- *
- * Returns 0 if all PDUs were flushed.
- *
- * Returns 1 if some PDUs could not be flushed due to lack of send buffer
- * space.
- *
- * Returns -1 if an exception error occurred indicating the TCP connection
- * should be closed.
- */
-static int
-iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
-{
-	const int num_iovs = 32;
-	struct iovec iovs[num_iovs];
-	struct iovec *iov = iovs;
-	int iovcnt = 0;
-	int bytes = 0;
-	uint32_t total_length = 0;
-	uint32_t mapped_length = 0;
-	struct spdk_iscsi_pdu *pdu;
-	int pdu_length;
-	TAILQ_HEAD(, spdk_iscsi_pdu) completed_pdus_list;
-
-	pdu = TAILQ_FIRST(&conn->write_pdu_list);
-
-	if (pdu == NULL) {
-		return 0;
-	}
-
-	/*
-	 * Build up a list of iovecs for the first few PDUs in the
-	 *  connection's write_pdu_list. For the first PDU, check if it was
-	 *  partially written out the last time this function was called, and
-	 *  if so adjust the iovec array accordingly. This check is done in
-	 *  spdk_iscsi_build_iovs() and so applied to remaining PDUs too.
-	 *  But extra overhead is negligible.
-	 */
-	while (pdu != NULL && ((num_iovs - iovcnt) > 0)) {
-		iovcnt += spdk_iscsi_build_iovs(conn, &iovs[iovcnt], num_iovs - iovcnt,
-						pdu, &mapped_length);
-		total_length += mapped_length;
-		pdu = TAILQ_NEXT(pdu, tailq);
-	}
-
-	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, total_length, 0, iovcnt);
-
-	bytes = spdk_sock_writev(conn->sock, iov, iovcnt);
-	if (bytes == -1) {
-		if (errno == EWOULDBLOCK || errno == EAGAIN) {
-			return 1;
-		} else {
-			SPDK_ERRLOG("spdk_sock_writev() failed, errno %d: %s\n",
-				    errno, spdk_strerror(errno));
-			return -1;
-		}
-	}
-
-	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_DONE, conn->id, bytes, 0, 0);
-
-	pdu = TAILQ_FIRST(&conn->write_pdu_list);
-
-	/*
-	 * Free any PDUs that were fully written.  If a PDU was only
-	 *  partially written, update its writev_offset so that next
-	 *  time only the unwritten portion will be sent to writev().
-	 */
-	TAILQ_INIT(&completed_pdus_list);
-	while (bytes > 0) {
-		pdu_length = iscsi_get_pdu_length(pdu, conn->header_digest,
-						  conn->data_digest);
-		pdu_length -= pdu->writev_offset;
-
-		if (bytes >= pdu_length) {
-			bytes -= pdu_length;
-			TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
-			TAILQ_INSERT_TAIL(&completed_pdus_list, pdu, tailq);
-			pdu = TAILQ_FIRST(&conn->write_pdu_list);
-		} else {
-			pdu->writev_offset += bytes;
-			bytes = 0;
-		}
-	}
-
-	while (!TAILQ_EMPTY(&completed_pdus_list)) {
-		pdu = TAILQ_FIRST(&completed_pdus_list);
-		TAILQ_REMOVE(&completed_pdus_list, pdu, tailq);
-		if ((conn->full_feature) &&
-		    (conn->sess->ErrorRecoveryLevel >= 1) &&
-		    iscsi_is_free_pdu_deferred(pdu)) {
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "stat_sn=%d\n",
-				      from_be32(&pdu->bhs.stat_sn));
-			TAILQ_INSERT_TAIL(&conn->snack_pdu_list, pdu,
-					  tailq);
-		} else {
-			spdk_iscsi_conn_free_pdu(conn, pdu);
-		}
-	}
-
-	return TAILQ_EMPTY(&conn->write_pdu_list) ? 0 : 1;
-}
-
-/**
- * \brief Flushes response PDUs back to the initiator.
- *
- * This function may return without all PDUs having flushed to the
- * underlying TCP socket buffer - for example, in the case where the
- * socket buffer is already full.
- *
- * If not all PDUs are flushed, then subsequent calls to this routine
- * will eventually flush remaining PDUs.
- *
- * PDUs are flushed only during normal RUNNING connection state.
- */
-static int
-iscsi_conn_flush_pdus(void *_conn)
-{
-	struct spdk_iscsi_conn *conn = _conn;
-	int rc;
-
-	if (spdk_unlikely(conn->state > ISCSI_CONN_STATE_RUNNING)) {
-		return 1;
-	}
-
-	rc = iscsi_conn_flush_pdus_internal(conn);
-	if (rc == 0 && conn->flush_poller != NULL) {
-		spdk_poller_unregister(&conn->flush_poller);
-	} else if (rc == 1 && conn->flush_poller == NULL) {
-		conn->flush_poller = spdk_poller_register(iscsi_conn_flush_pdus,
-				     conn, 50);
-	}
-
-	if (rc < 0) {
-		conn->state = ISCSI_CONN_STATE_EXITING;
-	}
-
-	return 1;
 }
 
 static int
@@ -1594,11 +1414,45 @@ iscsi_dif_verify(struct spdk_iscsi_pdu *pdu, struct spdk_dif_ctx *dif_ctx)
 	return rc;
 }
 
+static void
+_iscsi_conn_pdu_write_done(void *cb_arg, int err)
+{
+	struct spdk_iscsi_pdu *pdu = cb_arg;
+	struct spdk_iscsi_conn *conn = pdu->conn;
+
+	assert(conn != NULL);
+
+	if (spdk_unlikely(conn->state >= ISCSI_CONN_STATE_EXITING)) {
+		/* The other policy will recycle the resource */
+		return;
+	}
+
+	TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
+
+	if (err != 0) {
+		conn->state = ISCSI_CONN_STATE_EXITING;
+	} else {
+		spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_DONE, conn->id, pdu->mapped_length, (uintptr_t)pdu, 0);
+	}
+
+	if ((conn->full_feature) &&
+	    (conn->sess->ErrorRecoveryLevel >= 1) &&
+	    iscsi_is_free_pdu_deferred(pdu)) {
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "stat_sn=%d\n",
+			      from_be32(&pdu->bhs.stat_sn));
+		TAILQ_INSERT_TAIL(&conn->snack_pdu_list, pdu,
+				  tailq);
+	} else {
+		spdk_iscsi_conn_free_pdu(conn, pdu);
+	}
+}
+
 void
 spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	uint32_t crc32c;
-	int rc;
+	ssize_t rc;
+	bool use_sync_writev = false;
 
 	if (spdk_unlikely(pdu->dif_insert_or_strip)) {
 		rc = iscsi_dif_verify(pdu, &pdu->dif_ctx);
@@ -1624,7 +1478,30 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	}
 
 	TAILQ_INSERT_TAIL(&conn->write_pdu_list, pdu, tailq);
-	iscsi_conn_flush_pdus(conn);
+
+	if (spdk_unlikely(conn->state > ISCSI_CONN_STATE_RUNNING)) {
+		use_sync_writev = true;
+	}
+	pdu->sock_req.iovcnt = spdk_iscsi_build_iovs(conn, pdu->iov, SPDK_COUNTOF(pdu->iov), pdu,
+			       &pdu->mapped_length);
+	pdu->sock_req.cb_fn = _iscsi_conn_pdu_write_done;
+	pdu->sock_req.cb_arg = pdu;
+
+	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, pdu->mapped_length, (uintptr_t)pdu,
+			  pdu->sock_req.iovcnt);
+	if (spdk_unlikely(use_sync_writev ||
+			  (pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) ||
+			  (pdu->bhs.opcode == ISCSI_OP_LOGOUT_RSP))) {
+		rc = spdk_sock_writev(conn->sock, pdu->iov, pdu->sock_req.iovcnt);
+		if (rc == pdu->mapped_length) {
+			_iscsi_conn_pdu_write_done(pdu, 0);
+		} else {
+			SPDK_ERRLOG("Login RSP or Logout RSP could not write to socket.\n");
+			_iscsi_conn_pdu_write_done(pdu, -1);
+		}
+	} else {
+		spdk_sock_writev_async(conn->sock, &pdu->sock_req);
+	}
 }
 
 static void
