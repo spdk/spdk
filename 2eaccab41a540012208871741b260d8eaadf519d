@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "dd572369_9c19fb73",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4585,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T19:54:14Z",
+      "side": 1,
+      "message": "(general comment) - I think we have a bug in the bdev/nvme compare-and-write code now that I review this patch.  If the compare fails, we still need to wait for the write completion, but we should complete the bdev_io with the status of the compare failure *not* the write failure.",
+      "revId": "2eaccab41a540012208871741b260d8eaadf519d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e4d684a8_e535e865",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
