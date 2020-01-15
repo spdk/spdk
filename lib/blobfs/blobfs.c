@@ -2126,6 +2126,26 @@ spdk_fs_get_cache_size(void)
 
 static void __file_flush(void *ctx);
 
+static void
+_file_cache_insert_buffer(void *ctx)
+{
+	struct spdk_file *iter, *file = ctx;
+	bool exist = false;
+
+	pthread_spin_lock(&g_caches_lock);
+	TAILQ_FOREACH(iter, &g_caches, cache_tailq) {
+		if (iter == file) {
+			exist = true;
+			break;
+		}
+	}
+
+	if (!exist) {
+		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
+	}
+	pthread_spin_unlock(&g_caches_lock);
+}
+
 static struct cache_buffer *
 cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 {
@@ -2156,13 +2176,10 @@ cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 
 	buf->buf_size = CACHE_BUFFER_SIZE;
 	buf->offset = offset;
-
-	pthread_spin_lock(&g_caches_lock);
-	if (file->tree->present_mask == 0) {
-		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
-	}
 	file->tree = spdk_tree_insert_buffer(file->tree, buf);
-	pthread_spin_unlock(&g_caches_lock);
+
+	assert(g_cache_pool_thread != NULL);
+	spdk_thread_send_msg(g_cache_pool_thread, _file_cache_insert_buffer, file);
 
 	return buf;
 }
