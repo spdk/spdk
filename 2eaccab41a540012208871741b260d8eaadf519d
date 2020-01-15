@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ac628cf_badc2d8b",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1563,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T19:50:47Z",
+      "side": 1,
+      "message": "Let\u0027s not make this compare-and-write specific.  We can say that it is used to get status codes for fused operations such as compare-and-write.\n\nThis also means that the parameters shouldn\u0027t be \"cmp\" and \"wr\" but rather \"first\" and \"second\".\n\nIt is possible we could have other fused operations in the future, so don\u0027t want to bake compare-and-write too much into this interface.\n\nWe should also add a note to spdk_bdev_comparev_and_writev_blocks(), that this function should be called to get NVMe status for the individual operations.",
+      "revId": "2eaccab41a540012208871741b260d8eaadf519d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4d684a8_e535e865",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4594,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T19:50:47Z",
+      "side": 1,
+      "message": "I think you need an if statement inside of NVME_ERROR.  If status \u003d\u003d NVME_ERROR and sct \u003d\u003d MEDIA_ERROR and sc \u003d\u003d COMPARE_FAILURE, then we want to copy sct/sc to the first sct/sc, and the second sct/sc should be GENERIC/ABORTED_FAILED_FUSED (just like the IO_STATUS_MISCOMPARE below).",
+      "revId": "2eaccab41a540012208871741b260d8eaadf519d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d71a3e4_5963af48",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4610,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T19:50:47Z",
+      "side": 1,
+      "message": "This should be SPDK_NVME_SCT_MEDIA_ERROR.",
+      "revId": "2eaccab41a540012208871741b260d8eaadf519d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
