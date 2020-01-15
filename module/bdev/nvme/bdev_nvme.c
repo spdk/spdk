@@ -69,13 +69,13 @@ struct nvme_bdev_io {
 	/** Offset in current iovec. */
 	uint32_t iov_offset;
 
-	/** Saved status for admin passthru completion event or PI error verification. */
+	/** Saved status for admin passthru completion event, PI error verification, or intermediate compare-and-write status */
 	struct spdk_nvme_cpl cpl;
 
 	/** Originating thread */
 	struct spdk_thread *orig_thread;
 
-	/** Intermediate compare-and-write status */
+	/** Keeps track if first of fused commands was submitted */
 	bool first_fused_submitted;
 };
 
