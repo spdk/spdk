@@ -279,7 +279,18 @@ blobfs_cache_pool_need_reclaim(void)
 static int
 blobfs_cache_pool_mgmt(void *arg)
 {
-	struct spdk_file *file = NULL;
+	struct spdk_file *file, *tmp;
+
+	/* remove the files which don't have cache buffers */
+	pthread_spin_lock(&g_caches_lock);
+	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
+		pthread_spin_lock(&file->lock);
+		if (file->tree && file->tree->present_mask == 0) {
+			TAILQ_REMOVE(&g_caches, file, cache_tailq);
+		}
+		pthread_spin_unlock(&file->lock);
+	}
+	pthread_spin_unlock(&g_caches_lock);
 
 	if (!blobfs_cache_pool_need_reclaim()) {
 		return -1;
@@ -2658,12 +2669,11 @@ __file_read(struct spdk_file *file, void *payload, uint64_t offset, uint64_t len
 	BLOBFS_TRACE(file, "read %p offset=%ju length=%ju\n", payload, offset, length);
 	memcpy(payload, &buf->buf[offset - buf->offset], length);
 	if ((offset + length) % CACHE_BUFFER_SIZE == 0) {
-		pthread_spin_lock(&g_caches_lock);
+		/* remove the cache buffer while hold the file lock, the
+		 *  cache pool thread will help to remove file from g_caches
+		 *  list if no cache buffers with it.
+		 */
 		spdk_tree_remove_buffer(file->tree, buf);
-		if (file->tree->present_mask == 0) {
-			TAILQ_REMOVE(&g_caches, file, cache_tailq);
-		}
-		pthread_spin_unlock(&g_caches_lock);
 	}
 
 	sem_post(&channel->sem);
@@ -2946,21 +2956,12 @@ cache_free_buffers(struct spdk_file *file)
 {
 	BLOBFS_TRACE(file, "free=%s\n", file->name);
 	pthread_spin_lock(&file->lock);
-	pthread_spin_lock(&g_caches_lock);
 	if (file->tree->present_mask == 0) {
-		pthread_spin_unlock(&g_caches_lock);
 		pthread_spin_unlock(&file->lock);
 		return;
 	}
 	spdk_tree_free_buffers(file->tree);
-
-	TAILQ_REMOVE(&g_caches, file, cache_tailq);
-	/* If not freed, put it in the end of the queue */
-	if (file->tree->present_mask != 0) {
-		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
-	}
 	file->last = NULL;
-	pthread_spin_unlock(&g_caches_lock);
 	pthread_spin_unlock(&file->lock);
 }
 
