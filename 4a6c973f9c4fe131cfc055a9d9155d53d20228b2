@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e778a4c7_32a28b46",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 26
+      },
+      "lineNbr": 3102,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T23:47:27Z",
+      "side": 1,
+      "message": "Let\u0027s say something like:\n\n# Delete lvol store.  We need to do this so that we can attach the underlying malloc\n# bdev to nbd to examine its contents.",
+      "revId": "4a6c973f9c4fe131cfc055a9d9155d53d20228b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
