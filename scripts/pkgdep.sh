@@ -98,6 +98,9 @@ elif [ -f /etc/debian_version ]; then
 	apt-get install -y libnuma-dev nasm
 	# Additional dependencies for ISA-L used in compression
 	apt-get install -y autoconf automake libtool help2man
+	if [[ $NAME == "Ubuntu" ]] && [[ $VERSION -gt 1800 ]]; then
+		apt-get install -y libpmem-dev
+	fi
 	if [[ $INSTALL_DEV_DEPENDENCIES == "true" ]]; then
 		# Dependencies for developers
 		apt-get install -y git astyle pep8 lcov clang sg3-utils pciutils shellcheck
