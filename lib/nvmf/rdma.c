@@ -67,6 +67,8 @@ struct spdk_nvme_rdma_hooks g_nvmf_hooks = {};
 /* Timeout for destroying defunct rqpairs */
 #define NVMF_RDMA_QPAIR_DESTROY_TIMEOUT_US	4000000
 
+#define MAX_MEMPOOL_NAME_LENGTH 32
+
 static int g_spdk_nvmf_ibv_query_mask =
 	IBV_QP_STATE |
 	IBV_QP_PKEY_INDEX |
@@ -2332,6 +2334,8 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	uint32_t			min_shared_buffers;
 	int				max_device_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
 	pthread_mutexattr_t		attr;
+	char				data_wr_pool_name[MAX_MEMPOOL_NAME_LENGTH];
+	int				chars_written;
 
 	rtransport = calloc(1, sizeof(*rtransport));
 	if (!rtransport) {
@@ -2426,7 +2430,15 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	rtransport->data_wr_pool = spdk_mempool_create("spdk_nvmf_rdma_wr_data",
+	chars_written = snprintf(data_wr_pool_name, MAX_MEMPOOL_NAME_LENGTH, "%s_%d",
+				 "spdk_nvmf_rdmawr", getpid());
+	if (chars_written < 0) {
+		SPDK_ERRLOG("Unable to generate work request pool name.\n");
+		spdk_nvmf_rdma_destroy(&rtransport->transport);
+		return NULL;
+	}
+
+	rtransport->data_wr_pool = spdk_mempool_create(data_wr_pool_name,
 				   opts->max_queue_depth * SPDK_NVMF_MAX_SGL_ENTRIES,
 				   sizeof(struct spdk_nvmf_rdma_request_data),
 				   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,

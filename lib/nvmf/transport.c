@@ -53,7 +53,7 @@ static const struct spdk_nvmf_transport_ops *const g_transport_ops[] = {
 };
 
 #define NUM_TRANSPORTS (SPDK_COUNTOF(g_transport_ops))
-#define MAX_MEMPOOL_NAME_LENGTH 40
+#define MAX_MEMPOOL_NAME_LENGTH 32
 
 static inline const struct spdk_nvmf_transport_ops *
 spdk_nvmf_get_transport_ops(enum spdk_nvme_transport_type type)
@@ -104,8 +104,8 @@ spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 
 	transport->ops = ops;
 	transport->opts = *opts;
-	chars_written = snprintf(spdk_mempool_name, MAX_MEMPOOL_NAME_LENGTH, "%s_%s_%s", "spdk_nvmf",
-				 spdk_nvme_transport_id_trtype_str(type), "data");
+	chars_written = snprintf(spdk_mempool_name, MAX_MEMPOOL_NAME_LENGTH, "%s_%s_%s_%d", "spdk_nvmf",
+				 spdk_nvme_transport_id_trtype_str(type), "data", getpid());
 	if (chars_written < 0) {
 		SPDK_ERRLOG("Unable to generate transport data buffer pool name.\n");
 		ops->destroy(transport);
