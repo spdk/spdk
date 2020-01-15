@@ -4714,7 +4714,9 @@ blob_thin_prov_rw(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 
+	set_thread(1);
 	spdk_bs_free_io_channel(channel_thread1);
+	set_thread(0);
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
 
