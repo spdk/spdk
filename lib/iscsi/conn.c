@@ -778,7 +778,7 @@ iscsi_send_logout_request(struct spdk_iscsi_conn *conn)
 	struct spdk_iscsi_pdu *rsp_pdu;
 	struct iscsi_bhs_async *rsph;
 
-	rsp_pdu = spdk_get_pdu();
+	rsp_pdu = spdk_get_pdu(conn);
 	assert(rsp_pdu != NULL);
 
 	rsph = (struct iscsi_bhs_async *)&rsp_pdu->bhs;
@@ -1238,7 +1238,7 @@ iscsi_conn_send_nopin(struct spdk_iscsi_conn *conn)
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
 		      conn->StatSN, conn->sess->ExpCmdSN,
 		      conn->sess->MaxCmdSN);
-	rsp_pdu = spdk_get_pdu();
+	rsp_pdu = spdk_get_pdu(conn);
 	rsp = (struct iscsi_bhs_nop_in *) &rsp_pdu->bhs;
 	rsp_pdu->data = NULL;
 	/*
