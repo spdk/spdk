@@ -183,6 +183,7 @@ struct spdk_iscsi_pdu {
 	uint32_t data_buf_len;
 	bool dif_insert_or_strip;
 	struct spdk_dif_ctx dif_ctx;
+	struct spdk_iscsi_conn *conn;
 	TAILQ_ENTRY(spdk_iscsi_pdu)	tailq;
 
 
@@ -432,7 +433,7 @@ uint32_t spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu);
 
 /* Memory management */
 void spdk_put_pdu(struct spdk_iscsi_pdu *pdu);
-struct spdk_iscsi_pdu *spdk_get_pdu(void);
+struct spdk_iscsi_pdu *spdk_get_pdu(struct spdk_iscsi_conn *conn);
 int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_op_abort_task_set(struct spdk_iscsi_task *task,
 				  uint8_t function);
