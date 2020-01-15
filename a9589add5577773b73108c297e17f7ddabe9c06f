@@ -22,6 +22,30 @@
       "revId": "a9589add5577773b73108c297e17f7ddabe9c06f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76de3a7a_740c6edb",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-15T07:08:57Z",
+      "side": 1,
+      "message": "I modified spdk_nvme_wait_for_completion_timeout so that it updates status-\u003efailed and returns -ECANCELED if request timed out",
+      "parentUuid": "f0e206cc_b23adf0f",
+      "range": {
+        "startLine": 342,
+        "startChar": 1,
+        "endLine": 344,
+        "endChar": 15
+      },
+      "revId": "a9589add5577773b73108c297e17f7ddabe9c06f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
