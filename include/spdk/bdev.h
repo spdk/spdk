@@ -1139,6 +1139,9 @@ int spdk_bdev_comparev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_i
  * data and may not be able to directly transfer out of the buffers provided. In
  * this case, the request may fail.
  *
+ * spdk_bdev_io_get_nvme_fused_status() function should be called in callback function
+ * to get status for the individual operation.
+ *
  * \ingroup bdev_io_submit_functions
  *
  * \param desc Block device descriptor.
@@ -1558,6 +1561,20 @@ void spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat 
  */
 void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0, int *sct,
 				  int *sc);
+
+/**
+ * Get the status of bdev_io as an NVMe status codes and command specific
+ * completion queue value for fused operations such as compare-and-write.
+ *
+ * \param bdev_io I/O to get the status from.
+ * \param cdw0 Command specific completion queue value
+ * \param first_sct Status Code Type return value for the first operation, as defined by the NVMe specification.
+ * \param first_sc Status Code return value for the first operation, as defined by the NVMe specification.
+ * \param second_sct Status Code Type return value for the second operation, as defined by the NVMe specification.
+ * \param second_sc Status Code return value for the second operation, as defined by the NVMe specification.
+ */
+void spdk_bdev_io_get_nvme_fused_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0,
+					int *first_sct, int *first_sc, int *second_sct, int *second_sc);
 
 /**
  * Get the status of bdev_io as a SCSI status code.
