@@ -16,6 +16,24 @@
       "revId": "78651ccc6d578b8829fe0cadb98885eb84854ee2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e86a9281_f993ffbf",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 2465,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-15T09:51:59Z",
+      "side": 1,
+      "message": "Done. I\u0027ve also moved code related to fused commands from beginning of this function to the new function - this way it looks clearer.",
+      "parentUuid": "1c9073cb_7bab2055",
+      "revId": "78651ccc6d578b8829fe0cadb98885eb84854ee2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
