@@ -130,6 +130,11 @@ The functions `spdk_reactor_enable_framework_monitor_context_switch()` and
 `spdk_framework_enable_context_switch_monitor()` and
 `spdk_framework_context_switch_monitor_enabled()`, respectively.
 
+### bdev
+
+Added spdk_bdev_io_get_nvme_fused_status function for translating bdev_io status to NVMe status
+code for fused compare-and-write operation.
+
 ## v19.10:
 
 ### rpc
