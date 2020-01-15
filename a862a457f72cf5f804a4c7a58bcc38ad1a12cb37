@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1b9800d_69386810",
+        "filename": "test/ftl/common.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-15T10:17:39Z",
+      "side": 1,
+      "message": "You probably could have used the RPC \"bdev_nvme_set_options -p 100\" instead, if this options is required for functional tests.",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 1
+      },
+      "revId": "a862a457f72cf5f804a4c7a58bcc38ad1a12cb37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
