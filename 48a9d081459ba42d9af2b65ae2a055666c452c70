@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4747a43_4705207b",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-15T10:36:48Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be \"[[ \"$plugin\" \u003d \"spdk-plugin-nvme\" ]]\" ?",
+      "range": {
+        "startLine": 56,
+        "startChar": 1,
+        "endLine": 56,
+        "endChar": 35
+      },
+      "revId": "48a9d081459ba42d9af2b65ae2a055666c452c70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "effbada4_801ddf58",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-15T10:36:48Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be \"[[ \"$plugin\" \u003d \"spdk-plugin-nvme\" ]]\" ?",
+      "range": {
+        "startLine": 85,
+        "startChar": 4,
+        "endLine": 85,
+        "endChar": 29
+      },
+      "revId": "48a9d081459ba42d9af2b65ae2a055666c452c70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "424f37b4_13fd1eb6",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-15T10:36:48Z",
+      "side": 1,
+      "message": "Why not \"[[ \"$plugin\" \u003d~ \"kernel\" ]]\"  instead to be more explicit ?",
+      "range": {
+        "startLine": 140,
+        "startChar": 4,
+        "endLine": 140,
+        "endChar": 38
+      },
+      "revId": "48a9d081459ba42d9af2b65ae2a055666c452c70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
