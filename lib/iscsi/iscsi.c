@@ -260,7 +260,7 @@ iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 		data_len += ISCSI_DIGEST_LEN;
 	}
 
-	rsp_pdu = spdk_get_pdu();
+	rsp_pdu = spdk_get_pdu(conn);
 	if (rsp_pdu == NULL) {
 		free(data);
 		return -ENOMEM;
@@ -2148,7 +2148,7 @@ iscsi_pdu_hdr_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 	}
 
-	rsp_pdu = spdk_get_pdu();
+	rsp_pdu = spdk_get_pdu(conn);
 	if (rsp_pdu == NULL) {
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
@@ -2371,7 +2371,7 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "Negotiated Params", data, data_len);
 
 	/* response PDU */
-	rsp_pdu = spdk_get_pdu();
+	rsp_pdu = spdk_get_pdu(conn);
 	if (rsp_pdu == NULL) {
 		spdk_iscsi_param_free(params);
 		free(data);
@@ -2491,7 +2491,7 @@ iscsi_pdu_hdr_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu
 	}
 
 	/* response PDU */
-	rsp_pdu = spdk_get_pdu();
+	rsp_pdu = spdk_get_pdu(conn);
 	if (rsp_pdu == NULL) {
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
@@ -2573,7 +2573,7 @@ iscsi_send_r2t(struct spdk_iscsi_conn *conn,
 	uint64_t fmt_lun;
 
 	/* R2T PDU */
-	rsp_pdu = spdk_get_pdu();
+	rsp_pdu = spdk_get_pdu(conn);
 	if (rsp_pdu == NULL) {
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
@@ -2892,7 +2892,7 @@ iscsi_send_datain(struct spdk_iscsi_conn *conn,
 	primary = spdk_iscsi_task_get_primary(task);
 
 	/* DATA PDU */
-	rsp_pdu = spdk_get_pdu();
+	rsp_pdu = spdk_get_pdu(conn);
 	rsph = (struct iscsi_bhs_data_in *)&rsp_pdu->bhs;
 	rsp_pdu->data = task->scsi.iovs[0].iov_base + offset;
 	rsp_pdu->data_buf_len = task->scsi.iovs[0].iov_len - offset;
@@ -3127,7 +3127,7 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 	}
 
 	/* response PDU */
-	rsp_pdu = spdk_get_pdu();
+	rsp_pdu = spdk_get_pdu(conn);
 	assert(rsp_pdu != NULL);
 	rsph = (struct iscsi_bhs_scsi_resp *)&rsp_pdu->bhs;
 	assert(task->scsi.sense_data_len <= sizeof(rsp_pdu->sense.data));
@@ -3471,7 +3471,7 @@ spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 
 	reqh = (struct iscsi_bhs_task_req *)&task->pdu->bhs;
 	/* response PDU */
-	rsp_pdu = spdk_get_pdu();
+	rsp_pdu = spdk_get_pdu(conn);
 	rsph = (struct iscsi_bhs_task_resp *)&rsp_pdu->bhs;
 	rsph->opcode = ISCSI_OP_TASK_RSP;
 	rsph->flags |= 0x80; /* bit 0 default to 1 */
@@ -3802,7 +3802,7 @@ iscsi_pdu_payload_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu 
 	}
 
 	/* response PDU */
-	rsp_pdu = spdk_get_pdu();
+	rsp_pdu = spdk_get_pdu(conn);
 	if (rsp_pdu == NULL) {
 		free(data);
 		return SPDK_ISCSI_CONNECTION_FATAL;
@@ -4470,7 +4470,7 @@ iscsi_pdu_hdr_handle(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	 * return response code 0x020b to initiator.
 	 * */
 	if (!conn->full_feature && conn->state == ISCSI_CONN_STATE_RUNNING) {
-		rsp_pdu = spdk_get_pdu();
+		rsp_pdu = spdk_get_pdu(conn);
 		if (rsp_pdu == NULL) {
 			return SPDK_ISCSI_CONNECTION_FATAL;
 		}
@@ -4598,7 +4598,7 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 		case ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY:
 			assert(conn->pdu_in_progress == NULL);
 
-			conn->pdu_in_progress = spdk_get_pdu();
+			conn->pdu_in_progress = spdk_get_pdu(conn);
 			if (conn->pdu_in_progress == NULL) {
 				return SPDK_ISCSI_CONNECTION_FATAL;
 			}
