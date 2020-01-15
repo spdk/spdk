@@ -286,6 +286,37 @@ vhost_vq_get_desc_packed(struct spdk_vhost_session *vsession,
 }
 
 int
+vhost_vq_get_inflight_desc(struct spdk_vhost_session *vsession,
+			   spdk_vhost_inflight_desc *desc_array,
+			   uint16_t req_idx, spdk_vhost_inflight_desc **desc,
+			   struct vring_packed_desc  **desc_table, uint32_t *desc_table_size)
+{
+	*desc = &desc_array[req_idx];
+
+	if (((*desc)->flags & VRING_DESC_F_INDIRECT) != 0) {
+		*desc_table_size = (*desc)->len / sizeof(**desc_table);
+		*desc_table = vhost_gpa_to_vva(vsession, (*desc)->addr,
+					       (*desc)->len);
+		if (*desc_table == NULL) {
+			return -1;
+		}
+
+		/* This desc is the inflight desc not the packed desc.
+		 * When set the F_INDIRECT the table entry should be the packed desc
+		 * so set the inflight desc NULL.
+		 */
+		*desc = NULL;
+		return 0;
+	}
+
+	/* When not set the F_INDIRECT means there is no packed desc table */
+	*desc_table = NULL;
+	*desc_table_size = 0;
+
+	return 0;
+}
+
+int
 vhost_vq_used_signal(struct spdk_vhost_session *vsession,
 		     struct spdk_vhost_virtqueue *virtqueue)
 {
@@ -572,6 +603,12 @@ vhost_vring_packed_desc_is_wr(struct vring_packed_desc *cur_desc)
 	return (cur_desc->flags & VRING_DESC_F_WRITE) != 0;
 }
 
+bool
+vhost_vring_inflight_desc_is_wr(spdk_vhost_inflight_desc *cur_desc)
+{
+	return (cur_desc->flags & VRING_DESC_F_WRITE) != 0;
+}
+
 int
 vhost_vring_packed_desc_get_next(struct vring_packed_desc **desc, uint16_t *req_idx,
 				 struct spdk_vhost_virtqueue *vq,
@@ -638,6 +675,14 @@ vhost_vring_desc_payload_to_iov(struct spdk_vhost_session *vsession, struct iove
 int
 vhost_vring_packed_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
 			       uint16_t *iov_index, const struct vring_packed_desc *desc)
+{
+	return vhost_vring_desc_payload_to_iov(vsession, iov, iov_index,
+					       desc->addr, desc->len);
+}
+
+int
+vhost_vring_inflight_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
+				 uint16_t *iov_index, const spdk_vhost_inflight_desc *desc)
 {
 	return vhost_vring_desc_payload_to_iov(vsession, iov, iov_index,
 					       desc->addr, desc->len);
@@ -1310,6 +1355,21 @@ vhost_start_device_cb(int vid)
 		}
 
 		if (packed_ring) {
+			/* Use the inflight mem to save the last_avail_idx and last_used_idx.
+			 * In Qemu when the vring format is packed, the last_avail_idx
+			 * and last_used_idx are not passed by the Guest, it's different with split.
+			 * Then when we reconnect to Qemu, it will send the initlization value(default:0).
+			 * Adding the receive_inflight flag because start_device and destroy
+			 * device may be called multi-times and during that interval last_avail_idx
+			 * may be updated but not completed which means inflight index does not update
+			 * aligning to last_avail_idx. So we only receive inflight index once.
+			 */
+			if (!vsession->receive_inflight) {
+				rte_vhost_get_vring_base_from_inflight(vsession->vid, i,
+								       &q->last_avail_idx,
+								       &q->last_used_idx);
+				vsession->receive_inflight = true;
+			}
 			/* Packed virtqueues support up to 2^15 entries each
 			 * so left one bit can be used as wrap counter
 			 * We don't use the use_wrap_counter as it can be replaced
@@ -1508,6 +1568,7 @@ vhost_new_connection_cb(int vid, const char *ifname)
 	vsession->poll_group = NULL;
 	vsession->started = false;
 	vsession->initialized = false;
+	vsession->receive_inflight = false;
 	vsession->next_stats_check_time = 0;
 	vsession->stats_check_interval = SPDK_VHOST_STATS_CHECK_INTERVAL_MS *
 					 spdk_get_ticks_hz() / 1000UL;

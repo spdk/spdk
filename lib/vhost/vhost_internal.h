@@ -91,8 +91,10 @@ struct vhost_poll_group {
 	TAILQ_ENTRY(vhost_poll_group) tailq;
 };
 
-typedef struct rte_vhost_resubmit_desc spdk_vhost_resubmit_desc;
-typedef struct rte_vhost_resubmit_info spdk_vhost_resubmit_info;
+typedef struct rte_vhost_resubmit_desc		spdk_vhost_resubmit_desc;
+typedef struct rte_vhost_resubmit_info		spdk_vhost_resubmit_info;
+typedef struct rte_vhost_inflight_desc_packed	spdk_vhost_inflight_desc;
+
 
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
@@ -148,6 +150,7 @@ struct spdk_vhost_session {
 	bool started;
 	bool needs_restart;
 	bool forced_polling;
+	bool receive_inflight;
 
 	struct rte_vhost_memory *mem;
 
@@ -291,6 +294,12 @@ int vhost_vq_get_desc_packed(struct spdk_vhost_session *vsession,
 			     uint16_t req_idx, struct vring_packed_desc **desc,
 			     struct vring_packed_desc **desc_table, uint32_t *desc_table_size);
 
+
+int vhost_vq_get_inflight_desc(struct spdk_vhost_session *vsession,
+			       spdk_vhost_inflight_desc *desc_array,
+			       uint16_t req_idx, spdk_vhost_inflight_desc **desc,
+			       struct vring_packed_desc  **desc_table, uint32_t *desc_table_size);
+
 /**
  * Send IRQ/call client (if pending) for \c vq.
  * \param vsession vhost session
@@ -367,8 +376,13 @@ int vhost_vring_packed_desc_get_next(struct vring_packed_desc **desc, uint16_t *
 
 bool vhost_vring_packed_desc_is_wr(struct vring_packed_desc *cur_desc);
 
+bool vhost_vring_inflight_desc_is_wr(spdk_vhost_inflight_desc *cur_desc);
+
 int vhost_vring_packed_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
 				   uint16_t *iov_index, const struct vring_packed_desc *desc);
+
+int vhost_vring_inflight_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
+				     uint16_t *iov_index, const spdk_vhost_inflight_desc *desc);
 
 uint16_t vhost_vring_packed_desc_get_buffer_id(struct spdk_vhost_virtqueue *vq, uint16_t req_idx,
 		uint16_t *last_idx);
