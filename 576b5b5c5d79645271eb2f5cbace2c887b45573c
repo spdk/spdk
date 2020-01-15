@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e391b07_d35e971c",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 43
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T20:30:16Z",
+      "side": 1,
+      "message": "oh - this is a bug we should fix - this should be SPDK_NVME (not SPDK_NVMF)",
+      "revId": "576b5b5c5d79645271eb2f5cbace2c887b45573c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c19712f_44974f01",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 43
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T20:30:16Z",
+      "side": 1,
+      "message": "let\u0027s just put this in the spdk_nvme_cmd_fuse enum, and name it SPDK_NVME_CMD_FUSE_MASK (remove the FLAG)",
+      "revId": "576b5b5c5d79645271eb2f5cbace2c887b45573c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e56dbeb_d99cdde7",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 43
+      },
+      "lineNbr": 2839,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T20:30:16Z",
+      "side": 1,
+      "message": "we should probably be using the spdk_nvme_cmd_fuse enum values here (you could do that in this patch or a separate patch) - if you do it in this patch, just add a note in the commit message why you did it",
+      "revId": "576b5b5c5d79645271eb2f5cbace2c887b45573c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59c9eaa7_5bfaeef7",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 2393,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T20:30:16Z",
+      "side": 1,
+      "message": "response \u003d\u003e rsp (matches the req-\u003ersp name)",
+      "revId": "576b5b5c5d79645271eb2f5cbace2c887b45573c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed1d507b_a1e3f661",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 2395,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T20:30:16Z",
+      "side": 1,
+      "message": "add:\n\nstruct spdk_nvmf_request *first_fused_req \u003d req-\u003eqpair-\u003efirst_fused_req;\n\nThen you can use this variable a few places later in this function.",
+      "revId": "576b5b5c5d79645271eb2f5cbace2c887b45573c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
