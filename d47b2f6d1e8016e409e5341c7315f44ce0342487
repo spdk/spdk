@@ -307,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "042df312_1a55956e",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T14:13:48Z",
+      "side": 1,
+      "message": "Let\u0027s make it a part of spdk_ftl_attr then.",
+      "parentUuid": "f619e98e_c8f8a1d0",
+      "range": {
+        "startLine": 615,
+        "startChar": 2,
+        "endLine": 615,
+        "endChar": 55
+      },
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "80ead2a8_b1e54a79",
         "filename": "module/bdev/ftl/bdev_ftl.c",
         "patchSetId": 2
