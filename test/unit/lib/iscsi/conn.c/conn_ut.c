@@ -510,51 +510,6 @@ process_non_read_task_completion_test(void)
 	CU_ASSERT(primary.scsi.ref == 0);
 }
 
-static void
-recursive_flush_pdus_calls(void)
-{
-	struct spdk_iscsi_pdu pdu1 = {}, pdu2 = {}, pdu3 = {};
-	struct spdk_iscsi_task task1 = {}, task2 = {}, task3 = {};
-	struct spdk_iscsi_conn conn = {};
-	int rc;
-
-	TAILQ_INIT(&conn.write_pdu_list);
-	conn.data_in_cnt = 3;
-
-	task1.scsi.ref = 1;
-	task2.scsi.ref = 1;
-	task3.scsi.ref = 1;
-
-	task1.scsi.offset = 512;
-	task2.scsi.offset = 512 * 2;
-	task3.scsi.offset = 512 * 3;
-
-	pdu1.task = &task1;
-	pdu2.task = &task2;
-	pdu3.task = &task3;
-
-	pdu1.bhs.opcode = ISCSI_OP_SCSI_DATAIN;
-	pdu2.bhs.opcode = ISCSI_OP_SCSI_DATAIN;
-	pdu3.bhs.opcode = ISCSI_OP_SCSI_DATAIN;
-
-	DSET24(&pdu1.bhs.data_segment_len, 512);
-	DSET24(&pdu2.bhs.data_segment_len, 512);
-	DSET24(&pdu3.bhs.data_segment_len, 512);
-
-	TAILQ_INSERT_TAIL(&conn.write_pdu_list, &pdu1, tailq);
-	TAILQ_INSERT_TAIL(&conn.write_pdu_list, &pdu2, tailq);
-	TAILQ_INSERT_TAIL(&conn.write_pdu_list, &pdu3, tailq);
-
-	g_sock_writev_bytes = (512 + ISCSI_BHS_LEN) * 3;
-
-	rc = iscsi_conn_flush_pdus_internal(&conn);
-	CU_ASSERT(rc == 0);
-
-	CU_ASSERT(task1.scsi.ref == 0);
-	CU_ASSERT(task2.scsi.ref == 0);
-	CU_ASSERT(task3.scsi.ref == 0);
-}
-
 static bool
 dequeue_pdu(void *_head, struct spdk_iscsi_pdu *pdu)
 {
@@ -935,7 +890,6 @@ main(int argc, char **argv)
 			    propagate_scsi_error_status_for_split_read_tasks) == NULL ||
 		CU_add_test(suite, "process_non_read_task_completion_test",
 			    process_non_read_task_completion_test) == NULL ||
-		CU_add_test(suite, "recursive_flush_pdus_calls", recursive_flush_pdus_calls) == NULL ||
 		CU_add_test(suite, "free_tasks_on_connection", free_tasks_on_connection) == NULL ||
 		CU_add_test(suite, "free_tasks_with_queued_datain", free_tasks_with_queued_datain) == NULL ||
 		CU_add_test(suite, "abort_queued_datain_task_test", abort_queued_datain_task_test) == NULL ||
