@@ -69,7 +69,7 @@ DEPDIRS-notify := log util $(JSON_LIBS)
 DEPDIRS-trace := log util $(JSON_LIBS)
 
 DEPDIRS-bdev := log util conf thread $(JSON_LIBS) notify trace
-DEPDIRS-blobfs := log conf thread blob trace
+DEPDIRS-blobfs := log conf thread blob trace util
 DEPDIRS-event := log util conf thread $(JSON_LIBS) trace
 
 DEPDIRS-ftl := log util thread trace bdev
