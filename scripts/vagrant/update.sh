@@ -33,7 +33,7 @@ SYSTEM=$(uname -s)
 if [ "$SYSTEM" = "FreeBSD" ]; then
 	# Do initial setup for the system
 	pkg upgrade -f
-	${SPDK_DIR}/scripts/pkgdep.sh --developer-tools
+	${SPDK_DIR}/scripts/pkgdep.sh --developer-tools --pmem
 	if [ -d /usr/src/.git ]; then
 		echo
 		echo "/usr/src/ is a git repository"
@@ -79,12 +79,12 @@ else
 		# Standard update + upgrade dance
 		apt-get update --assume-yes --no-install-suggests --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 		apt-get upgrade --assume-yes --no-install-suggests --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-		${SPDK_DIR}/scripts/pkgdep.sh --developer-tools
+		${SPDK_DIR}/scripts/pkgdep.sh --developer-tools --pmem
 	elif [ "$DISTRIB_ID" == "CentOS" ]; then
 		# Standard update + upgrade dance
 		yum check-update
 		yum update -y
-		${SPDK_DIR}/scripts/pkgdep.sh --developer-tools
+		${SPDK_DIR}/scripts/pkgdep.sh --developer-tools --pmem
 	elif [ "$DISTRIB_ID" == "Fedora" ]; then
 		if [ "$DISTRIB_RELEASE" = "26" ]; then
 			echo
@@ -93,7 +93,7 @@ else
 		else
 			yum check-update
 			yum update -y
-			${SPDK_DIR}/scripts/pkgdep.sh --developer-tools
+			${SPDK_DIR}/scripts/pkgdep.sh --developer-tools --pmem
 		fi
 	fi
 fi
