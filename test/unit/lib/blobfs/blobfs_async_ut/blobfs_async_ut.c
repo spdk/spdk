@@ -668,6 +668,7 @@ int main(int argc, char **argv)
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		return CU_get_error();
 	}
+	allocate_cores(2);
 
 	suite = CU_add_suite("blobfs_async_ut", NULL, NULL);
 	if (suite == NULL) {
@@ -702,6 +703,7 @@ int main(int argc, char **argv)
 	free(g_dev_buffer);
 
 	free_threads();
+	free_cores();
 
 	return num_failures;
 }
