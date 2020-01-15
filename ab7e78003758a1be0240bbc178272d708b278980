@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10a2abb6_07744a53",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T20:07:05Z",
+      "side": 1,
+      "message": "let\u0027s name these first_sc and first_sct.\n\nUsing \"fused\" here is a bit confusing - it could mean the first fused or the second fused.  And also the NVMe spec uses the ABORTED_FAILED_FUSED status code on the second command, not the first.",
+      "revId": "ab7e78003758a1be0240bbc178272d708b278980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbdb4d00_504081d8",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T20:07:05Z",
+      "side": 1,
+      "message": "first_req instead of fused_req",
+      "revId": "ab7e78003758a1be0240bbc178272d708b278980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
