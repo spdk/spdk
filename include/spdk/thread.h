@@ -506,7 +506,7 @@ struct spdk_io_channel *spdk_get_io_channel(void *io_device);
 /**
  * Release a reference to an I/O channel. This happens asynchronously.
  *
- * Actual release will happen on the same thread that called spdk_get_io_channel()
+ * This must be called on the same thread that called spdk_get_io_channel()
  * for the specified I/O channel. If this releases the last reference to the
  * I/O channel, The destroy_cb function specified in spdk_io_device_register()
  * will be invoked to release any associated resources.
