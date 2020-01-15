@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -371,4 +371,9 @@ void nvme_ns_destruct(struct spdk_nvme_ns *ns)
 	ns->sectors_per_max_io = 0;
 	ns->sectors_per_stripe = 0;
 	ns->flags = 0;
+}
+
+int nvme_ns_update(struct spdk_nvme_ns *ns)
+{
+	return nvme_ctrlr_identify_ns(ns);
 }

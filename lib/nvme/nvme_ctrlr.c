@@ -1756,20 +1756,29 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t i, nn = ctrlr->cdata.nn;
 	struct spdk_nvme_ns_data *nsdata;
+	bool   ns_is_active;
 
 	for (i = 0; i < nn; i++) {
 		struct spdk_nvme_ns	*ns = &ctrlr->ns[i];
 		uint32_t		nsid = i + 1;
 
 		nsdata = &ctrlr->nsdata[nsid - 1];
+		ns_is_active = spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid);
 
-		if ((nsdata->ncap == 0) && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+		if (nsdata->ncap && ns_is_active) {
+			if (0 != nvme_ns_update(ns)) {
+				SPDK_ERRLOG("Failed to update active NS %u\n", nsid);
+				continue;
+			}
+		}
+
+		if ((nsdata->ncap == 0) && ns_is_active) {
 			if (nvme_ns_construct(ns, nsid, ctrlr) != 0) {
 				continue;
 			}
 		}
 
-		if (nsdata->ncap && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+		if (nsdata->ncap && !ns_is_active) {
 			nvme_ns_destruct(ns);
 		}
 	}

@@ -1074,7 +1074,12 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_bdev_ctrlr->ctrlr;
 	struct nvme_bdev_ns	*ns;
+	struct spdk_nvme_ns	*nvme_ns;
+	struct nvme_bdev	*bdev, *tmp;
 	uint32_t		i;
+	int			rc;
+	uint64_t		num_sectors;
+	bool			ns_is_active;
 
 	if (ctx) {
 		/* Initialize this count to 1 to handle the populate functions
@@ -1087,7 +1092,29 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 		uint32_t	nsid = i + 1;
 
 		ns = nvme_bdev_ctrlr->namespaces[i];
-		if (!ns->populated && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+		ns_is_active = spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid);
+
+		if (ns->populated && ns_is_active) {
+			/* NS is still there but attributes may have changed */
+			nvme_ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+			num_sectors = spdk_nvme_ns_get_num_sectors(nvme_ns);
+			TAILQ_FOREACH_SAFE(bdev, &ns->bdevs, tailq, tmp) {
+				if (bdev->disk.blockcnt != num_sectors) {
+					SPDK_NOTICELOG("NSID %u is resized: bdev name %s, old size %lu, new size %lu\n",
+						       nsid,
+						       bdev->disk.name,
+						       bdev->disk.blockcnt,
+						       num_sectors);
+					rc = spdk_bdev_notify_blockcnt_change(&bdev->disk, num_sectors);
+					if (rc != 0) {
+						SPDK_ERRLOG("Could not change num blocks for nvme bdev: name %s, errno: %d.\n",
+							    bdev->disk.name, rc);
+					}
+				}
+			}
+		}
+
+		if (!ns->populated && ns_is_active) {
 			ns->id = nsid;
 			ns->ctrlr = nvme_bdev_ctrlr;
 			if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
@@ -1104,7 +1131,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			nvme_ctrlr_populate_namespace(nvme_bdev_ctrlr, ns, ctx);
 		}
 
-		if (ns->populated && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+		if (ns->populated && !ns_is_active) {
 			nvme_ctrlr_depopulate_namespace(nvme_bdev_ctrlr, ns);
 		}
 	}
