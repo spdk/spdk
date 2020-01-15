@@ -195,7 +195,7 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 	opts->num_clusters = 0;
 	opts->thin_provision = false;
 	_spdk_blob_xattrs_init(&opts->xattrs);
-	opts->disable_extent_pages = true;
+	opts->disable_extent_pages = false;
 }
 
 void
