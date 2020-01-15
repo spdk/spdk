@@ -630,6 +630,8 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
+	allocate_cores(2);
+
 	suite = CU_add_suite("blobfs_sync_ut", NULL, NULL);
 	if (suite == NULL) {
 		CU_cleanup_registry();
@@ -683,6 +685,8 @@ int main(int argc, char **argv)
 	spdk_thread_destroy(g_dispatch_thread);
 
 	spdk_thread_lib_fini();
+
+	free_cores();
 
 	return num_failures;
 }
