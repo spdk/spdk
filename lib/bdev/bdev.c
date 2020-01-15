@@ -359,6 +359,16 @@ bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 			   uint64_t offset_blocks, uint64_t num_blocks,
 			   spdk_bdev_io_completion_cb cb, void *cb_arg);
 
+int
+bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
+		    uint64_t offset, uint64_t length,
+		    lock_range_cb cb_fn, void *cb_arg);
+
+int
+bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
+		      uint64_t offset, uint64_t length,
+		      lock_range_cb cb_fn, void *cb_arg);
+
 void
 spdk_bdev_get_opts(struct spdk_bdev_opts *opts)
 {
@@ -3572,6 +3582,42 @@ spdk_bdev_compare_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_cha
 					   cb, cb_arg);
 }
 
+struct bdev_compare_and_write_ctx {
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_io_channel *ch;
+	spdk_bdev_io_completion_cb cb;
+	void *cb_arg;
+};
+
+static void
+bdev_comparev_and_writev_blocks_unlocked(void *ctx, int unlock_status)
+{
+	struct bdev_compare_and_write_ctx *fused_ctx = ctx;
+	struct spdk_bdev_io *bdev_io = fused_ctx->bdev_io;
+
+	if (unlock_status) {
+		SPDK_ERRLOG("LBA range unlock failed\n");
+	}
+
+	fused_ctx->cb(bdev_io, bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS ? true : false,
+		      fused_ctx->cb_arg);
+
+	free(fused_ctx);
+}
+
+static void
+bdev_compare_and_write_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct bdev_compare_and_write_ctx *fused_ctx = cb_arg;
+
+	if (!success) {
+		SPDK_ERRLOG("Compare and write operation failed\n");
+	}
+
+	bdev_unlock_lba_range(bdev_io->internal.desc, fused_ctx->ch, bdev_io->u.bdev.offset_blocks,
+			      bdev_io->u.bdev.num_blocks, bdev_comparev_and_writev_blocks_unlocked, fused_ctx);
+}
+
 static void
 bdev_compare_and_write_do_write_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
@@ -3579,13 +3625,8 @@ bdev_compare_and_write_do_write_done(struct spdk_bdev_io *bdev_io, bool success,
 
 	spdk_bdev_free_io(bdev_io);
 
-	if (success) {
-		parent_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	} else {
-		parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-	}
-
-	parent_io->internal.cb(parent_io, false, parent_io->internal.caller_ctx);
+	parent_io->internal.status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	parent_io->internal.cb(parent_io, success, parent_io->internal.caller_ctx);
 }
 
 static void
@@ -3644,6 +3685,26 @@ bdev_compare_and_write_do_compare(void *_bdev_io)
 	}
 }
 
+static void
+bdev_comparev_and_writev_blocks_locked(void *ctx, int status)
+{
+	struct bdev_compare_and_write_ctx *fused_ctx = ctx;
+	struct spdk_bdev_io *bdev_io = fused_ctx->bdev_io;
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(bdev_io->internal.desc);
+
+	if (status) {
+		fused_ctx->cb(bdev_io, SPDK_BDEV_IO_STATUS_FIRST_FUSED_FAILED, fused_ctx);
+		free(fused_ctx);
+	}
+
+	if (bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE)) {
+		bdev_io_submit(bdev_io);
+		return;
+	}
+
+	bdev_compare_and_write_do_compare(bdev_io);
+}
+
 int
 spdk_bdev_comparev_and_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				     struct iovec *compare_iov, int compare_iovcnt,
@@ -3654,6 +3715,7 @@ spdk_bdev_comparev_and_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct bdev_compare_and_write_ctx *fused_ctx;
 
 	if (!desc->write) {
 		return -EBADF;
@@ -3672,6 +3734,16 @@ spdk_bdev_comparev_and_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io
 		return -ENOMEM;
 	}
 
+	fused_ctx = calloc(1, sizeof(struct bdev_compare_and_write_ctx));
+	if (fused_ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	fused_ctx->bdev_io = bdev_io;
+	fused_ctx->ch = ch;
+	fused_ctx->cb = cb;
+	fused_ctx->cb_arg = cb_arg;
+
 	bdev_io->internal.ch = channel;
 	bdev_io->internal.desc = desc;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE;
@@ -3682,15 +3754,10 @@ spdk_bdev_comparev_and_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io
 	bdev_io->u.bdev.md_buf = NULL;
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
-	bdev_io_init(bdev_io, bdev, cb_arg, cb);
+	bdev_io_init(bdev_io, bdev, fused_ctx, bdev_compare_and_write_done);
 
-	if (bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE)) {
-		bdev_io_submit(bdev_io);
-		return 0;
-	}
-
-	bdev_compare_and_write_do_compare(bdev_io);
-	return 0;
+	return bdev_lock_lba_range(desc, ch, offset_blocks, num_blocks,
+				   bdev_comparev_and_writev_blocks_locked, fused_ctx);
 }
 
 static void
@@ -6068,11 +6135,6 @@ bdev_lba_range_overlaps_tailq(struct lba_range *range, lba_range_tailq_t *tailq)
 int
 bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 		    uint64_t offset, uint64_t length,
-		    lock_range_cb cb_fn, void *cb_arg);
-
-int
-bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
-		    uint64_t offset, uint64_t length,
 		    lock_range_cb cb_fn, void *cb_arg)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
@@ -6185,11 +6247,6 @@ bdev_unlock_lba_range_get_channel(struct spdk_io_channel_iter *i)
 
 	spdk_for_each_channel_continue(i, 0);
 }
-
-int
-bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
-		      uint64_t offset, uint64_t length,
-		      lock_range_cb cb_fn, void *cb_arg);
 
 int
 bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,

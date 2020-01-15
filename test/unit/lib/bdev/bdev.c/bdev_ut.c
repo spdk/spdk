@@ -2346,6 +2346,7 @@ bdev_compare_and_write(void)
 	g_compare_write_buf_len = sizeof(write_buf);
 	rc = spdk_bdev_comparev_and_writev_blocks(desc, ioch, &compare_iov, 1, &write_iov, 1,
 			offset, num_blocks, io_done, NULL);
+	poll_threads();
 	CU_ASSERT_EQUAL(rc, 0);
 	num_completed = stub_complete_io(1);
 	CU_ASSERT_EQUAL(num_completed, 1);
@@ -2367,6 +2368,7 @@ bdev_compare_and_write(void)
 	g_compare_write_buf_len = sizeof(write_buf);
 	rc = spdk_bdev_comparev_and_writev_blocks(desc, ioch, &compare_iov, 1, &write_iov, 1,
 			offset, num_blocks, io_done, NULL);
+	poll_threads();
 	CU_ASSERT_EQUAL(rc, 0);
 	num_completed = stub_complete_io(1);
 	CU_ASSERT_EQUAL(num_completed, 1);
