@@ -22,6 +22,30 @@
       "revId": "c0e7cee9b9e0f26b08993fc3e7d9d7aca1ef3cbd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c8eb327_9debb86d",
+        "filename": "test/ftl/fio.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-15T08:40:57Z",
+      "side": 1,
+      "message": "report_test_completion was moved into run_test, but signal handling should stay.",
+      "parentUuid": "3695937c_3b5da7a7",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 8
+      },
+      "revId": "c0e7cee9b9e0f26b08993fc3e7d9d7aca1ef3cbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
