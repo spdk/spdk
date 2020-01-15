@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f95a125a_355eaa42",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2174,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T14:21:09Z",
+      "side": 1,
+      "message": "Let\u0027s keep structure declarations together.",
+      "range": {
+        "startLine": 2174,
+        "startChar": 1,
+        "endLine": 2174,
+        "endChar": 17
+      },
+      "revId": "d8c06e166c0d21c1df5ffb99cada3d9a818b1fe1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f27760ec_2589bfcc",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2184,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T14:21:09Z",
+      "side": 1,
+      "message": "Let\u0027s avoid allocating these events during runtime by having a pre-allocated pool.",
+      "range": {
+        "startLine": 2179,
+        "startChar": 0,
+        "endLine": 2184,
+        "endChar": 3
+      },
+      "revId": "d8c06e166c0d21c1df5ffb99cada3d9a818b1fe1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6bf6e25b_a43e365e",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2199,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T14:21:09Z",
+      "side": 1,
+      "message": "Let\u0027s rename this to ftl_process_media_events.",
+      "range": {
+        "startLine": 2199,
+        "startChar": 0,
+        "endLine": 2199,
+        "endChar": 19
+      },
+      "revId": "d8c06e166c0d21c1df5ffb99cada3d9a818b1fe1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ebb04381_b39b1555",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T14:21:09Z",
+      "side": 1,
+      "message": "Unnecessary newline.",
+      "revId": "d8c06e166c0d21c1df5ffb99cada3d9a818b1fe1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
