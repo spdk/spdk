@@ -2346,11 +2346,15 @@ bdev_compare_and_write(void)
 	g_compare_write_buf_len = sizeof(write_buf);
 	rc = spdk_bdev_comparev_and_writev_blocks(desc, ioch, &compare_iov, 1, &write_iov, 1,
 			offset, num_blocks, io_done, NULL);
+	/* Trigger range locking */
+	poll_threads();
 	CU_ASSERT_EQUAL(rc, 0);
 	num_completed = stub_complete_io(1);
 	CU_ASSERT_EQUAL(num_completed, 1);
 	CU_ASSERT(g_io_done == false);
 	num_completed = stub_complete_io(1);
+	/* Trigger range unlocking */
+	poll_threads();
 	CU_ASSERT_EQUAL(num_completed, 1);
 	CU_ASSERT(g_io_done == true);
 	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
@@ -2367,8 +2371,12 @@ bdev_compare_and_write(void)
 	g_compare_write_buf_len = sizeof(write_buf);
 	rc = spdk_bdev_comparev_and_writev_blocks(desc, ioch, &compare_iov, 1, &write_iov, 1,
 			offset, num_blocks, io_done, NULL);
+	/* Trigger range locking */
+	poll_threads();
 	CU_ASSERT_EQUAL(rc, 0);
 	num_completed = stub_complete_io(1);
+	/* Trigger range unlocking earlier because we expect error here */
+	poll_threads();
 	CU_ASSERT_EQUAL(num_completed, 1);
 	CU_ASSERT(g_io_done == true);
 	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_MISCOMPARE);
