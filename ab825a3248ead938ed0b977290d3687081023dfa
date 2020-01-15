@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "cf160c10_6235c4e5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-15T11:57:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6aee4211_ea1884b6",
+      "range": {
+        "startLine": 7,
+        "startChar": 45,
+        "endLine": 7,
+        "endChar": 48
+      },
+      "revId": "ab825a3248ead938ed0b977290d3687081023dfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bd5ec1df_10aea504",
         "filename": "test/nvme/perf/run_perf.sh",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2020-01-15T10:52:53Z",
       "side": 1,
       "message": "All of the io engines iterate over the DISK_NAMES, why not move it one level up ?",
+      "range": {
+        "startLine": 55,
+        "startChar": 2,
+        "endLine": 55,
+        "endChar": 29
+      },
+      "revId": "ab825a3248ead938ed0b977290d3687081023dfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba2676be_35b814ab",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-15T11:57:21Z",
+      "side": 1,
+      "message": "On the other hand inside the \"for\" loop if statement would execute x\u003dlen(DISK_NAMES) number of times:P\nI\u0027ll leave it as-is for now, but I\u0027ll move this commit to end of the series just in case I decide I want to change it.",
+      "parentUuid": "bd5ec1df_10aea504",
       "range": {
         "startLine": 55,
         "startChar": 2,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "4cc6290d_1cea0896",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-15T11:57:21Z",
+      "side": 1,
+      "message": "ditto",
+      "parentUuid": "ea27982c_5129aee5",
+      "range": {
+        "startLine": 71,
+        "startChar": 3,
+        "endLine": 71,
+        "endChar": 54
+      },
+      "revId": "ab825a3248ead938ed0b977290d3687081023dfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "594e9bb8_fd654961",
         "filename": "test/nvme/perf/run_perf.sh",
         "patchSetId": 5
@@ -82,6 +154,30 @@
       "writtenOn": "2020-01-15T10:52:53Z",
       "side": 1,
       "message": "This setting is common for \u0027io_uring\u0027 and \u0027hybrid-polling\u0027. Have you explored which of other options could/should be modified for other engines ?",
+      "range": {
+        "startLine": 86,
+        "startChar": 3,
+        "endLine": 86,
+        "endChar": 32
+      },
+      "revId": "ab825a3248ead938ed0b977290d3687081023dfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7c54002_34f135a6",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-15T11:57:21Z",
+      "side": 1,
+      "message": "Besides what\u0027s already in the script - no.",
+      "parentUuid": "594e9bb8_fd654961",
       "range": {
         "startLine": 86,
         "startChar": 3,
