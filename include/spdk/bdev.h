@@ -1560,6 +1560,20 @@ void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *
 				  int *sc);
 
 /**
+ * Get the status of bdev_io as an NVMe status codes and command specific
+ * completion queue value for compare-and-write operation.
+ *
+ * \param bdev_io I/O to get the status from.
+ * \param cdw0 Command specific completion queue value
+ * \param cmp_sct Status Code Type return value for compare operation, as defined by the NVMe specification.
+ * \param cmp_sc Status Code return value for compare operation, as defined by the NVMe specification.
+ * \param wr_sct Status Code Type return value for write operation, as defined by the NVMe specification.
+ * \param wr_sc Status Code return value for write operation, as defined by the NVMe specification.
+ */
+void spdk_bdev_io_get_nvme_fused_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0,
+					int *cmp_sct, int *cmp_sc, int *wr_sct, int *wr_sc);
+
+/**
  * Get the status of bdev_io as a SCSI status code.
  *
  * \param bdev_io I/O to get the status from.

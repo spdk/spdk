@@ -3633,7 +3633,7 @@ bdev_compare_and_write_do_compare(void *_bdev_io)
 	if (rc == -ENOMEM) {
 		bdev_queue_io_wait_with_cb(bdev_io, bdev_compare_and_write_do_compare);
 	} else if (rc != 0) {
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FIRST_FUSED_FAILED;
 		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 	}
 }
@@ -4576,6 +4576,46 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0,
 	} else {
 		*sct = SPDK_NVME_SCT_GENERIC;
 		*sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+	}
+
+	*cdw0 = bdev_io->internal.error.nvme.cdw0;
+}
+
+void
+spdk_bdev_io_get_nvme_fused_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0, int *cmp_sct,
+				   int *cmp_sc, int *wr_sct, int *wr_sc)
+{
+	assert(cmp_sct != NULL);
+	assert(cmp_sc != NULL);
+	assert(wr_sct != NULL);
+	assert(wr_sc != NULL);
+	assert(cdw0 != NULL);
+
+	if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR) {
+		*cmp_sct = SPDK_NVME_SCT_GENERIC;
+		*cmp_sc = SPDK_NVME_SC_SUCCESS;
+		*wr_sct = bdev_io->internal.error.nvme.sct;
+		*wr_sc = bdev_io->internal.error.nvme.sc;
+	} else if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+		*cmp_sct = SPDK_NVME_SCT_GENERIC;
+		*cmp_sc = SPDK_NVME_SC_SUCCESS;
+		*wr_sct = SPDK_NVME_SCT_GENERIC;
+		*wr_sc = SPDK_NVME_SC_SUCCESS;
+	} else if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FIRST_FUSED_FAILED) {
+		*cmp_sct = SPDK_NVME_SCT_GENERIC;
+		*cmp_sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		*wr_sct = SPDK_NVME_SCT_GENERIC;
+		*wr_sc = SPDK_NVME_SC_ABORTED_FAILED_FUSED;
+	} else if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_MISCOMPARE) {
+		*cmp_sct = SPDK_NVME_SCT_GENERIC;
+		*cmp_sc = SPDK_NVME_SC_COMPARE_FAILURE;
+		*wr_sct = SPDK_NVME_SCT_GENERIC;
+		*wr_sc = SPDK_NVME_SC_ABORTED_FAILED_FUSED;
+	} else {
+		*cmp_sct = SPDK_NVME_SCT_GENERIC;
+		*cmp_sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		*wr_sct = SPDK_NVME_SCT_GENERIC;
+		*wr_sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 	}
 
 	*cdw0 = bdev_io->internal.error.nvme.cdw0;
