@@ -52,6 +52,8 @@ if [ -s /etc/redhat-release ]; then
 	fi
 	# Additional dependencies for ISA-L used in compression
 	yum install -y autoconf automake libtool help2man
+	# Additional dependencies for building pmem based backends
+	yum install -y libpmemblk-devel || true
 	# Additional dependencies for DPDK
 	yum install -y numactl-devel nasm
 	if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
@@ -77,8 +79,6 @@ if [ -s /etc/redhat-release ]; then
 		yum install -y libibverbs-devel librdmacm-devel
 		# Additional dependencies for building docs
 		yum install -y doxygen mscgen graphviz
-		# Additional dependencies for building pmem based backends
-		yum install -y libpmemblk-devel || true
 		# Additional dependencies for FUSE and CUSE
 		yum install -y fuse3-devel
 	fi
@@ -99,6 +99,9 @@ elif [ -f /etc/debian_version ]; then
 	apt-get install -y libnuma-dev nasm
 	# Additional dependencies for ISA-L used in compression
 	apt-get install -y autoconf automake libtool help2man
+	if [[ $NAME == "Ubuntu" ]] && [[ $VERSION -gt 1800 ]]; then
+		apt-get install -y libpmem-dev
+	fi
 	if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 		# Dependencies for developers
 		apt-get install -y git astyle pep8 lcov clang sg3-utils pciutils shellcheck
@@ -132,6 +135,8 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	zypper install -y libnuma-devel nasm
 	# Additional dependencies for ISA-L used in compression
 	zypper install -y autoconf automake libtool help2man
+	# Additional dependencies for building pmem based backends
+	zypper install -y libpmemblk-devel
 	if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 		# Dependencies for developers
 		zypper install -y git-core lcov python-pycodestyle sg3_utils \
@@ -140,8 +145,6 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 		zypper install libunwind-devel || true
 		# Additional dependencies for NVMe over Fabrics
 		zypper install -y rdma-core-devel
-		# Additional dependencies for building pmem based backends
-		zypper install -y libpmemblk-devel
 		# Additional dependencies for building docs
 		zypper install -y doxygen mscgen graphviz
 		# Additional dependencies for FUSE and CUSE
@@ -167,6 +170,14 @@ elif [ -f /etc/arch-release ]; then
 	pacman -Sy --needed --noconfirm numactl nasm
 	# Additional dependencies for ISA-L used in compression
 	pacman -Sy --needed --noconfirm autoconf automake libtool help2man
+	# Additional dependencies for building pmem based backends
+	pacman -Sy --needed --noconfirm ndctl
+	git clone https://github.com/pmem/pmdk.git /tmp/pmdk -b 1.6.1
+	make -C /tmp/pmdk -j$(nproc)
+	make install -C /tmp/pmdk
+	echo "/usr/local/lib" > /etc/ld.so.conf.d/pmdk.conf
+	ldconfig
+	rm -rf /tmp/pmdk
 	if [[ $INSTALL_DEV_TOOLS ]]; then
 		# Dependencies for developers
 		pacman -Sy --needed --noconfirm git astyle autopep8 \
@@ -217,14 +228,6 @@ elif [ -f /etc/arch-release ]; then
 			makepkg -si --needed --noconfirm;
 			cd .. && rm -rf rdma-core;
 			popd"
-		# Additional dependencies for building pmem based backends
-		pacman -Sy --needed --noconfirm ndctl
-		git clone https://github.com/pmem/pmdk.git /tmp/pmdk -b 1.6.1
-		make -C /tmp/pmdk -j$(nproc)
-		make install -C /tmp/pmdk
-		echo "/usr/local/lib" > /etc/ld.so.conf.d/pmdk.conf
-		ldconfig
-		rm -rf /tmp/pmdk
 	fi
 else
 	echo "pkgdep: unknown system type."
