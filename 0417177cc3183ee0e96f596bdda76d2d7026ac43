@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8dd428c7_2743176c",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-15T12:01:12Z",
+      "side": 1,
+      "message": "Leftover ?",
+      "range": {
+        "startLine": 315,
+        "startChar": 1,
+        "endLine": 315,
+        "endChar": 66
+      },
+      "revId": "0417177cc3183ee0e96f596bdda76d2d7026ac43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09ca910e_070415f2",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-15T12:01:12Z",
+      "side": 1,
+      "message": "why not $1 directly ? as disks_limit is not used anywhere else here.",
+      "range": {
+        "startLine": 352,
+        "startChar": 23,
+        "endLine": 352,
+        "endChar": 35
+      },
+      "revId": "0417177cc3183ee0e96f596bdda76d2d7026ac43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
