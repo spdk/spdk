@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6868eeac_a24f4ed6",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-15T01:40:52Z",
+      "side": 1,
+      "message": "I think the original code is right, this isn\u0027t correct. spdk_nvme_qpair_process_completions() will return the submitted requests correctly.",
+      "range": {
+        "startLine": 177,
+        "startChar": 2,
+        "endLine": 181,
+        "endChar": 3
+      },
+      "revId": "d10265444bc738711e5c7b42d94512929b0ecfb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
