@@ -13,6 +13,7 @@ function usage()
 	echo "  -h --help"
 	echo "  -a --all"
 	echo "  -d --developer-tools        Install tools for developers (code styling, code coverage, etc.)"
+	echo "  -p --pmem                   Additional dependencies for reduce and pmdk"
 	echo ""
 	exit 0
 }
@@ -20,18 +21,21 @@ function usage()
 function install_all_dependencies ()
 {
 	INSTALL_DEV_TOOLS=true
+	INSTALL_PMEM=true
 }
 
 INSTALL_CRYPTO=false
 INSTALL_DEV_TOOLS=false
+INSTALL_PMEM=false
 
-while getopts 'adhi-:' optchar; do
+while getopts 'adhip-:' optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
 			help) usage;;
 			all) install_all_dependencies;;
 			developer-tools) INSTALL_DEV_TOOLS=true;;
+			pmem) INSTALL_PMEM=true;;
 			*) echo "Invalid argument '$OPTARG'"
 			usage;;
 		esac
@@ -39,6 +43,7 @@ while getopts 'adhi-:' optchar; do
 	h) usage;;
 	a) install_all_dependencies;;
 	d) INSTALL_DEV_TOOLS=true;;
+	p) INSTALL_PMEM=true;;
 	*) echo "Invalid argument '$OPTARG'"
 	usage;;
 	esac
@@ -82,12 +87,14 @@ if [ -s /etc/redhat-release ]; then
 		# Additional (optional) dependencies for showing backtrace in logs
 		yum install -y libunwind-devel || true
 	fi
+	if [[ $INSTALL_PMEM == "true" ]]; then
+		# Additional dependencies for building pmem based backends
+		yum install -y libpmemblk-devel || true
+	fi
 	# Additional dependencies for NVMe over Fabrics
 	yum install -y libibverbs-devel librdmacm-devel
 	# Additional dependencies for building docs
 	yum install -y doxygen mscgen graphviz
-	# Additional dependencies for building pmem based backends
-	yum install -y libpmemblk-devel || true
 	# Additional dependencies for FUSE and CUSE
 	yum install -y fuse3-devel
 elif [ -f /etc/debian_version ]; then
@@ -121,6 +128,12 @@ elif [ -f /etc/debian_version ]; then
 		# Additional dependecies for nvmf performance test script
 		apt-get install -y python3-paramiko
 	fi
+	if [[ $INSTALL_PMEM == "true" ]]; then
+		# Additional dependencies for building pmem based backends
+		if [[ $NAME == "Ubuntu" ]] && [[ $VERSION_ID_NUM -gt 1800 ]]; then
+			apt-get install -y libpmem-dev
+		fi
+	fi
 	# Additional dependencies for NVMe over Fabrics
 	apt-get install -y libibverbs-dev librdmacm-dev
 	# Additional dependencies for building docs
@@ -147,10 +160,12 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 		# Additional (optional) dependencies for showing backtrace in logs
 		zypper install libunwind-devel || true
 	fi
+	if [[ $INSTALL_PMEM == "true" ]]; then
+		# Additional dependencies for building pmem based backends
+		zypper install -y libpmemblk-devel
+	fi
 	# Additional dependencies for NVMe over Fabrics
 	zypper install -y rdma-core-devel
-	# Additional dependencies for building pmem based backends
-	zypper install -y libpmemblk-devel
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz
 	# Additional dependencies for FUSE and CUSE
@@ -203,6 +218,16 @@ elif [ -f /etc/arch-release ]; then
 			cd .. && rm -rf lcov-git;
 			popd"
 	fi
+	if [[ $INSTALL_PMEM == "true" ]]; then
+		# Additional dependencies for building pmem based backends
+		pacman -Sy --needed --noconfirm ndctl
+		git clone https://github.com/pmem/pmdk.git /tmp/pmdk -b 1.6.1
+		make -C /tmp/pmdk -j$(nproc)
+		make install -C /tmp/pmdk
+		echo "/usr/local/lib" > /etc/ld.so.conf.d/pmdk.conf
+		ldconfig
+		rm -rf /tmp/pmdk
+	fi
 	# Additional dependencies for building docs
 	pacman -Sy --needed --noconfirm doxygen graphviz
 	# Additional dependencies for FUSE and CUSE
@@ -226,14 +251,6 @@ elif [ -f /etc/arch-release ]; then
 		makepkg -si --needed --noconfirm;
 		cd .. && rm -rf rdma-core;
 		popd"
-	# Additional dependencies for building pmem based backends
-	pacman -Sy --needed --noconfirm ndctl
-	git clone https://github.com/pmem/pmdk.git /tmp/pmdk -b 1.6.1
-	make -C /tmp/pmdk -j$(nproc)
-	make install -C /tmp/pmdk
-	echo "/usr/local/lib" > /etc/ld.so.conf.d/pmdk.conf
-	ldconfig
-	rm -rf /tmp/pmdk
 else
 	echo "pkgdep: unknown system type."
 	exit 1
