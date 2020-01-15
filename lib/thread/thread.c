@@ -111,6 +111,7 @@ struct spdk_poller {
 	uint64_t			next_run_tick;
 	spdk_poller_fn			fn;
 	void				*arg;
+	struct spdk_thread		*thread;
 };
 
 struct spdk_thread {
@@ -789,6 +790,7 @@ spdk_poller_register(spdk_poller_fn fn,
 	poller->state = SPDK_POLLER_STATE_WAITING;
 	poller->fn = fn;
 	poller->arg = arg;
+	poller->thread = thread;
 
 	if (period_microseconds) {
 		quotient = period_microseconds / SPDK_SEC_TO_USEC;
@@ -823,6 +825,8 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 		assert(false);
 		return;
 	}
+
+	assert(poller->thread == thread);
 
 	/* If the poller was paused, put it on the active_pollers list so that
 	 * its unregistration can be processed by spdk_thread_poll().
