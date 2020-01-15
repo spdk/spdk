@@ -1,0 +1,193 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b0cb5ce_b51efd6c",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T13:23:49Z",
+      "side": 1,
+      "message": "An error log here would be helpful.",
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e067f4dc_ad6494d0",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 996,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T13:23:49Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aae7f1ac_4ca8494f",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1056,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T13:23:49Z",
+      "side": 1,
+      "message": "Let\u0027s call this ftl_release_bdev.",
+      "range": {
+        "startLine": 1056,
+        "startChar": 0,
+        "endLine": 1056,
+        "endChar": 14
+      },
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bbc7fe29_534ca652",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1117,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T13:23:49Z",
+      "side": 1,
+      "message": "Let\u0027s incorporate this condition inside ftl_bdev_close.",
+      "range": {
+        "startLine": 1117,
+        "startChar": 1,
+        "endLine": 1117,
+        "endChar": 31
+      },
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2fe3fb0_7a9dd14c",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T13:23:49Z",
+      "side": 1,
+      "message": "This is unnecessary.",
+      "range": {
+        "startLine": 124,
+        "startChar": 1,
+        "endLine": 124,
+        "endChar": 28
+      },
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f7777f5_0c5ea5e4",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T13:23:49Z",
+      "side": 1,
+      "message": "This function is no longer needed.",
+      "range": {
+        "startLine": 562,
+        "startChar": 0,
+        "endLine": 574,
+        "endChar": 1
+      },
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16733e93_44102602",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T13:23:49Z",
+      "side": 1,
+      "message": "The result of strdup is not checked for NULL. Also, what is the point of actually copying this string? It\u0027s not used for anything, we should remove cache_bdev/base_bdev from ftl_bdev.",
+      "range": {
+        "startLine": 615,
+        "startChar": 2,
+        "endLine": 615,
+        "endChar": 55
+      },
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80ead2a8_b1e54a79",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T13:23:49Z",
+      "side": 1,
+      "message": "Same here, strdup\u0027s result is not checked.",
+      "range": {
+        "startLine": 621,
+        "startChar": 1,
+        "endLine": 621,
+        "endChar": 52
+      },
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de6b754f_99f90ea2",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-15T13:23:49Z",
+      "side": 1,
+      "message": "ftl_bdev-\u003ebase_bdev/ftl_bdev-\u003ecache_bdev should be freed here.",
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
