@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0e206cc_b23adf0f",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-15T02:30:34Z",
+      "side": 1,
+      "message": "spdk_nvme_wait_for_completion_robust_lock() and spdk_nvme_wait_for_completion() can always return a value to the caller, while spdk_nvme_wait_for_completion_timeout() can return to caller prior the real completion, this function may need another return value other than -EIO.",
+      "range": {
+        "startLine": 342,
+        "startChar": 1,
+        "endLine": 344,
+        "endChar": 15
+      },
+      "revId": "a9589add5577773b73108c297e17f7ddabe9c06f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
