@@ -22,6 +22,30 @@
       "revId": "154a52f3c39f4824268fc3a83213237ba1f9551a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf3ae9a1_ce357dfa",
+        "filename": "autorun_post.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-15T01:30:50Z",
+      "side": 1,
+      "message": "I added line breaks between conditionals. I don\u0027t think I can use filter() since I rely on a secondary source (whitelist) and I don\u0027t really want to make that variable global.",
+      "parentUuid": "9b3debb0_846d661b",
+      "range": {
+        "startLine": 140,
+        "startChar": 20,
+        "endLine": 140,
+        "endChar": 124
+      },
+      "revId": "154a52f3c39f4824268fc3a83213237ba1f9551a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
