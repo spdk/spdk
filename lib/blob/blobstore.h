@@ -243,10 +243,17 @@ struct spdk_bs_md_mask {
 };
 
 #define SPDK_MD_DESCRIPTOR_TYPE_PADDING 0
-#define SPDK_MD_DESCRIPTOR_TYPE_EXTENT_RLE 1
 #define SPDK_MD_DESCRIPTOR_TYPE_XATTR 2
 #define SPDK_MD_DESCRIPTOR_TYPE_FLAGS 3
 #define SPDK_MD_DESCRIPTOR_TYPE_XATTR_INTERNAL 4
+
+/* Following descriptors define cluster layout in a blob. */
+
+/* EXTENT_RLE descriptor holds array of LBA that point to
+ * begining of allocated clusters. The array is run-lenght encoded,
+ * with 0's being unallocated clusters. It is part of serialized
+ * metadata chain for a blob. */
+#define SPDK_MD_DESCRIPTOR_TYPE_EXTENT_RLE 1
 
 struct spdk_blob_md_descriptor_xattr {
 	uint8_t		type;
