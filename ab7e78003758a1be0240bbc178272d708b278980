@@ -33,6 +33,23 @@
       "revId": "ab7e78003758a1be0240bbc178272d708b278980",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f2481db_b7fdeb46",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T20:33:10Z",
+      "side": 1,
+      "message": "let\u0027s call this first_fused_req\n\nthe name is a bit shorter, and typically we abbreviate variables of this type as \"req\" in other places in the code",
+      "revId": "ab7e78003758a1be0240bbc178272d708b278980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
