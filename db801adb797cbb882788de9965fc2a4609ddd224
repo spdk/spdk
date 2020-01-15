@@ -16,6 +16,24 @@
       "revId": "db801adb797cbb882788de9965fc2a4609ddd224",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9a87ef4_0e5b8c72",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 6253,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-15T15:27:32Z",
+      "side": 1,
+      "message": "Now that you mention it, it wasn\u0027t because I\u0027ve missed putting the TODO !\n\nLet me get that fixed in next patch set, since code here got a lot more manageable compared to when this was to be implemented.",
+      "parentUuid": "30710c1a_49e887b4",
+      "revId": "db801adb797cbb882788de9965fc2a4609ddd224",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
