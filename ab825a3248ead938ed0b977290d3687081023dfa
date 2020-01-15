@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6aee4211_ea1884b6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-15T10:52:53Z",
+      "side": 1,
+      "message": "one or single",
+      "range": {
+        "startLine": 7,
+        "startChar": 45,
+        "endLine": 7,
+        "endChar": 48
+      },
+      "revId": "ab825a3248ead938ed0b977290d3687081023dfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd5ec1df_10aea504",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-15T10:52:53Z",
+      "side": 1,
+      "message": "All of the io engines iterate over the DISK_NAMES, why not move it one level up ?",
+      "range": {
+        "startLine": 55,
+        "startChar": 2,
+        "endLine": 55,
+        "endChar": 29
+      },
+      "revId": "ab825a3248ead938ed0b977290d3687081023dfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea27982c_5129aee5",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-15T10:52:53Z",
+      "side": 1,
+      "message": "If we are going route of backing those up, why not back up for all types of engines ? (again moving it one level up)",
+      "range": {
+        "startLine": 71,
+        "startChar": 3,
+        "endLine": 71,
+        "endChar": 54
+      },
+      "revId": "ab825a3248ead938ed0b977290d3687081023dfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "594e9bb8_fd654961",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-15T10:52:53Z",
+      "side": 1,
+      "message": "This setting is common for \u0027io_uring\u0027 and \u0027hybrid-polling\u0027. Have you explored which of other options could/should be modified for other engines ?",
+      "range": {
+        "startLine": 86,
+        "startChar": 3,
+        "endLine": 86,
+        "endChar": 32
+      },
+      "revId": "ab825a3248ead938ed0b977290d3687081023dfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
