@@ -277,7 +277,16 @@ blobfs_cache_pool_need_reclaim(void)
 static int
 blobfs_cache_pool_mgmt(void *arg)
 {
-	struct spdk_file *file = NULL;
+	struct spdk_file *file, *tmp;
+
+	/* remove the files which don't have valid cache buffer */
+	pthread_spin_lock(&g_caches_lock);
+	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
+		if (file->tree && file->tree->present_mask == 0) {
+			TAILQ_REMOVE(&g_caches, file, cache_tailq);
+		}
+	}
+	pthread_spin_unlock(&g_caches_lock);
 
 	if (!blobfs_cache_pool_need_reclaim()) {
 		return -1;
@@ -2600,12 +2609,7 @@ __file_read(struct spdk_file *file, void *payload, uint64_t offset, uint64_t len
 	BLOBFS_TRACE(file, "read %p offset=%ju length=%ju\n", payload, offset, length);
 	memcpy(payload, &buf->buf[offset - buf->offset], length);
 	if ((offset + length) % CACHE_BUFFER_SIZE == 0) {
-		pthread_spin_lock(&g_caches_lock);
 		spdk_tree_remove_buffer(file->tree, buf);
-		if (file->tree->present_mask == 0) {
-			TAILQ_REMOVE(&g_caches, file, cache_tailq);
-		}
-		pthread_spin_unlock(&g_caches_lock);
 	}
 
 	sem_post(&channel->sem);
