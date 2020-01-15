@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48d1aab8_568178c7",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T22:51:53Z",
+      "side": 1,
+      "message": "Now that the !thread check is removed, you can just simplify this whole function to:\n\n{\n  return _get_thread();\n}\n\nCould you also add a note in your commit message, saying something about use cases that don\u0027t want this ERRLOG?\n\nThanks,\n\n-Jim",
+      "revId": "d5f0db13cb544107488471c5ffd5eadd2e185c2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
