@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "580a8ab6_9e4d19f2",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-15T01:42:02Z",
+      "side": 0,
+      "message": "Actually I think we should not check the return value of spdk_nvme_qpair_process_completions().",
+      "range": {
+        "startLine": 125,
+        "startChar": 2,
+        "endLine": 129,
+        "endChar": 3
+      },
+      "revId": "d10265444bc738711e5c7b42d94512929b0ecfb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
