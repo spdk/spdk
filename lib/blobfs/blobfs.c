@@ -59,6 +59,7 @@
 static uint64_t g_fs_cache_size = BLOBFS_DEFAULT_CACHE_SIZE;
 static struct spdk_mempool *g_cache_pool;
 static struct spdk_poller *g_cache_pool_mgmt_poller;
+static struct spdk_thread *g_cache_pool_thread;
 #define BLOBFS_CACHE_POOL_POLL_PERIOD_IN_US 1000ULL
 #define BLOBFS_CACHE_POOL_LOW_THRESHOLD (16ULL * 1024 * 1024)
 static TAILQ_HEAD(, spdk_file) g_caches;
@@ -349,6 +350,7 @@ __initialize_cache(void)
 			    "increase the memory and try again\n");
 		assert(false);
 	}
+	g_cache_pool_thread = spdk_get_thread();
 	g_cache_pool_mgmt_poller = spdk_poller_register(blobfs_cache_pool_mgmt, NULL,
 							BLOBFS_CACHE_POOL_POLL_PERIOD_IN_US);
 	TAILQ_INIT(&g_caches);
@@ -2094,6 +2096,18 @@ spdk_fs_get_cache_size(void)
 
 static void __file_flush(void *ctx);
 
+static void
+_file_cache_insert_buffer(void *ctx)
+{
+	struct spdk_file *file = ctx;
+
+	pthread_spin_lock(&g_caches_lock);
+	if (file->tree->present_mask == 0) {
+		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
+	}
+	pthread_spin_unlock(&g_caches_lock);
+}
+
 static struct cache_buffer *
 cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 {
@@ -2124,13 +2138,10 @@ cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 
 	buf->buf_size = CACHE_BUFFER_SIZE;
 	buf->offset = offset;
-
-	pthread_spin_lock(&g_caches_lock);
-	if (file->tree->present_mask == 0) {
-		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
-	}
 	file->tree = spdk_tree_insert_buffer(file->tree, buf);
-	pthread_spin_unlock(&g_caches_lock);
+
+	assert(g_cache_pool_thread != NULL);
+	spdk_thread_send_msg(g_cache_pool_thread, _file_cache_insert_buffer, file);
 
 	return buf;
 }
