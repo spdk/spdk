@@ -206,7 +206,7 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 	opts->thin_provision = false;
 	opts->clear_method = BLOB_CLEAR_WITH_DEFAULT;
 	_spdk_blob_xattrs_init(&opts->xattrs);
-	opts->enable_extent_pages = false;
+	opts->enable_extent_pages = true;
 }
 
 void
