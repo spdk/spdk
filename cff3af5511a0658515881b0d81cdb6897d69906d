@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cde5ca08_11f82980",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3678,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T14:59:54Z",
+      "side": 1,
+      "message": "you can get the fused_ctx from the bdev_io (bdev_io-\u003einternal.caller_ctx) - pass that as the callback parameter instead of bdev_io\n\nthen in bdev_compare_and_write_do_compare_done(), you can get the parent_io from the fused_ctx",
+      "revId": "cff3af5511a0658515881b0d81cdb6897d69906d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38feb9f4_0247d452",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3759,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T14:59:54Z",
+      "side": 1,
+      "message": "you should only lock the range if the bdev doesn\u0027t support COMPARE_AND_WRITE - if the bdev supports COMPARE_AND_WRITE, it is responsible for the locking (for example, you do not need to lock the range on the initiator side - the target side will do it)",
+      "revId": "cff3af5511a0658515881b0d81cdb6897d69906d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
