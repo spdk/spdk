@@ -84,6 +84,40 @@
       "revId": "576b5b5c5d79645271eb2f5cbace2c887b45573c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b1ac257_161da2eb",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 2413,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T20:31:44Z",
+      "side": 1,
+      "message": "I think we should just return ASYNCHRONOUS here (and remove the opc \u003d\u003d COMPARE check below)",
+      "revId": "576b5b5c5d79645271eb2f5cbace2c887b45573c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b515e56b_8c2b4232",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 2446,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T20:31:44Z",
+      "side": 1,
+      "message": "shouldn\u0027t this be compare_and_write_cmd???",
+      "revId": "576b5b5c5d79645271eb2f5cbace2c887b45573c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
