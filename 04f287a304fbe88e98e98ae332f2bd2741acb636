@@ -1,0 +1,199 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bed3ded9_1bf38e50",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-15T06:07:19Z",
+      "side": 1,
+      "message": "How about adding a comment like \"TBD: Discovery login to get target information. We use fixed IQN for target for now.\"",
+      "range": {
+        "startLine": 78,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 51
+      },
+      "revId": "04f287a304fbe88e98e98ae332f2bd2741acb636",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3de34e0a_1d7a6f2c",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-15T06:07:19Z",
+      "side": 1,
+      "message": "Please add instance of spdk_iscsi_sess and spdk_iscsi_conn as sess and conn here respectively.",
+      "revId": "04f287a304fbe88e98e98ae332f2bd2741acb636",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a9344ea_a18a83a2",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-15T06:07:19Z",
+      "side": 1,
+      "message": "get_thread() just gets a pointer. So -EINVAL?",
+      "range": {
+        "startLine": 313,
+        "startChar": 8,
+        "endLine": 313,
+        "endChar": 14
+      },
+      "revId": "04f287a304fbe88e98e98ae332f2bd2741acb636",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f10641f5_d7f2465a",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 784,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-15T06:07:19Z",
+      "side": 1,
+      "message": "Please move these to start_io() before starting dev_ctx-\u003epoller, around the line 990.\nPlease use dev_ctx-\u003esess and dev_ctx-\u003econn;",
+      "range": {
+        "startLine": 766,
+        "startChar": 0,
+        "endLine": 784,
+        "endChar": 0
+      },
+      "revId": "04f287a304fbe88e98e98ae332f2bd2741acb636",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a30bd71b_52be075e",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-15T06:07:19Z",
+      "side": 1,
+      "message": "Please remove this while loop.",
+      "range": {
+        "startLine": 785,
+        "startChar": 1,
+        "endLine": 785,
+        "endChar": 12
+      },
+      "revId": "04f287a304fbe88e98e98ae332f2bd2741acb636",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63c2cc1a_56d77532",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-15T06:07:19Z",
+      "side": 1,
+      "message": "Please change this to return.",
+      "range": {
+        "startLine": 809,
+        "startChar": 4,
+        "endLine": 809,
+        "endChar": 12
+      },
+      "revId": "04f287a304fbe88e98e98ae332f2bd2741acb636",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc63aff6_d468205e",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 932,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-15T06:07:19Z",
+      "side": 1,
+      "message": "Please remove these.",
+      "range": {
+        "startLine": 927,
+        "startChar": 0,
+        "endLine": 932,
+        "endChar": 0
+      },
+      "revId": "04f287a304fbe88e98e98ae332f2bd2741acb636",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76e9a01c_3ef182e2",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 936,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-15T06:07:19Z",
+      "side": 1,
+      "message": "Please remove these.",
+      "range": {
+        "startLine": 934,
+        "startChar": 0,
+        "endLine": 936,
+        "endChar": 0
+      },
+      "revId": "04f287a304fbe88e98e98ae332f2bd2741acb636",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d92b539d_e2570da8",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 969,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-15T06:07:19Z",
+      "side": 1,
+      "message": "Please insert spdk_sock_close(\u0026dev_ctx-\u003econn.sock) here.",
+      "revId": "04f287a304fbe88e98e98ae332f2bd2741acb636",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
