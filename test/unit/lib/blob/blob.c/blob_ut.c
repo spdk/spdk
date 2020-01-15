@@ -7665,6 +7665,9 @@ int main(int argc, char **argv)
 	g_enable_extent_pages = false;
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
+	g_enable_extent_pages = true;
+	CU_basic_run_tests();
+	num_failures += CU_get_number_of_failures();
 	CU_cleanup_registry();
 
 	free(g_dev_buffer);
