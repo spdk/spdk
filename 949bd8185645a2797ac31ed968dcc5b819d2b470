@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94cfa977_f301141a",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 3189,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T23:50:21Z",
+      "side": 1,
+      "message": "Just to make it clear to readers:\n\n# Check if data on first lvol bdev was zeroed.  Malloc bdev should zero any\n# data that is unmapped.",
+      "revId": "949bd8185645a2797ac31ed968dcc5b819d2b470",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
