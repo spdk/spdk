@@ -16,6 +16,24 @@
       "revId": "25d4602cabbb65cc10af59f813312c1f094eb4c1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8968160b_67ec55dd",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-15T03:01:20Z",
+      "side": 0,
+      "message": "Commit message updated.",
+      "parentUuid": "15a6cced_800c4104",
+      "revId": "25d4602cabbb65cc10af59f813312c1f094eb4c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
