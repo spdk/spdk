@@ -310,10 +310,11 @@ void spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 	}
 }
 
-struct spdk_iscsi_pdu *spdk_get_pdu(void)
+struct spdk_iscsi_pdu *spdk_get_pdu(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_pdu *pdu;
 
+	assert(conn != NULL);
 	pdu = spdk_mempool_get(g_spdk_iscsi.pdu_pool);
 	if (!pdu) {
 		SPDK_ERRLOG("Unable to get PDU\n");
@@ -323,6 +324,7 @@ struct spdk_iscsi_pdu *spdk_get_pdu(void)
 	/* we do not want to zero out the last part of the structure reserved for AHS and sense data */
 	memset(pdu, 0, offsetof(struct spdk_iscsi_pdu, ahs));
 	pdu->ref = 1;
+	pdu->conn = conn;
 
 	return pdu;
 }
