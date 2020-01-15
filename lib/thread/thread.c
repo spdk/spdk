@@ -1200,8 +1200,8 @@ _spdk_put_io_channel(void *arg)
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD,
-		      "Releasing io_channel %p for io_device %s (%p). Channel thread %p. Current thread %s\n",
-		      ch, ch->dev->name, ch->dev->io_device, ch->thread, thread->name);
+		      "Releasing io_channel %p for io_device %s (%p) on thread %s\n",
+		      ch, ch->dev->name, ch->dev->io_device, thread->name);
 
 	assert(ch->thread == thread);
 
@@ -1245,15 +1245,30 @@ _spdk_put_io_channel(void *arg)
 void
 spdk_put_io_channel(struct spdk_io_channel *ch)
 {
+	struct spdk_thread *thread;
+
+	thread = spdk_get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("called from non-SPDK thread\n");
+		assert(false);
+		return;
+	}
+
+	if (ch->thread != thread) {
+		SPDK_ERRLOG("different from the thread that called get_io_channel()\n");
+		assert(false);
+		return;
+	}
+
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD,
 		      "Putting io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
-		      ch, ch->dev->name, ch->dev->io_device, ch->thread->name, ch->ref);
+		      ch, ch->dev->name, ch->dev->io_device, thread->name, ch->ref);
 
 	ch->ref--;
 
 	if (ch->ref == 0) {
 		ch->destroy_ref++;
-		spdk_thread_send_msg(ch->thread, _spdk_put_io_channel, ch);
+		spdk_thread_send_msg(thread, _spdk_put_io_channel, ch);
 	}
 }
 
