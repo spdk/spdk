@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca4259f2_8f0c8537",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1759,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T23:13:49Z",
+      "side": 1,
+      "message": "small nit - just use a single space after \u0027bool\u0027",
+      "revId": "297f569388aa2db03abdd7a9a5e0635f82e72a7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60de6da3_c0273e38",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1769,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T23:13:49Z",
+      "side": 1,
+      "message": "just call nvme_ctrlr_identify_ns(ns) here, instead of adding the new function - that avoids having to modify two files (including the copyright updates)\n\nlet\u0027s also use (x !\u003d 0) - that\u0027s the style that\u0027s used throughput SPDK, including the nsdata-\u003ecap \u003d\u003d 0 later in this function",
+      "revId": "297f569388aa2db03abdd7a9a5e0635f82e72a7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1d0971f_717c32ab",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1097,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-15T23:13:49Z",
+      "side": 1,
+      "message": "Open Channel SSD (OCSSD) support has a feature where a namespace can be split into multiple bdevs - but capacity changes aren\u0027t going to happen on OCSSDs, and even if they did, it would be handled differently than the code you have here\n\nso let\u0027s just add a \u0026\u0026 ns-\u003etype \u003d\u003d NVME_BDEV_NS_STANDARD, which will ensure this code only gets executed for \u0027standard\u0027 controllers\n\nthen also remove the TAILQ_FOREACH_SAFE - in the standard case, there is only ever one bdev per ns, so you can just do TAILQ_FIRST() instead - I think that makes the code more clear",
+      "revId": "297f569388aa2db03abdd7a9a5e0635f82e72a7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
