@@ -111,6 +111,7 @@ struct spdk_poller {
 	uint64_t			next_run_tick;
 	spdk_poller_fn			fn;
 	void				*arg;
+	struct spdk_thread		*thread;
 };
 
 struct spdk_thread {
@@ -789,6 +790,7 @@ spdk_poller_register(spdk_poller_fn fn,
 	poller->state = SPDK_POLLER_STATE_WAITING;
 	poller->fn = fn;
 	poller->arg = arg;
+	poller->thread = thread;
 
 	if (period_microseconds) {
 		quotient = period_microseconds / SPDK_SEC_TO_USEC;
@@ -820,6 +822,12 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 
 	thread = spdk_get_thread();
 	if (!thread) {
+		assert(false);
+		return;
+	}
+
+	if (poller->thread != thread) {
+		SPDK_ERRLOG("different from the thread that called spdk_poller_register()\n");
 		assert(false);
 		return;
 	}
