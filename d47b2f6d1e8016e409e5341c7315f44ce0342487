@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "673399a9_cb5150f5",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-15T14:10:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6b0cb5ce_b51efd6c",
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e067f4dc_ad6494d0",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 2
@@ -33,6 +51,24 @@
       "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3cd222d6_d6122236",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 996,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-15T14:10:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e067f4dc_ad6494d0",
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -59,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "3e57d8d0_57207424",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1056,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-15T14:10:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aae7f1ac_4ca8494f",
+      "range": {
+        "startLine": 1056,
+        "startChar": 0,
+        "endLine": 1056,
+        "endChar": 14
+      },
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bbc7fe29_534ca652",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 2
@@ -79,6 +139,30 @@
       "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b55fe79f_19574e4d",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1117,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-15T14:10:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bbc7fe29_534ca652",
+      "range": {
+        "startLine": 1117,
+        "startChar": 1,
+        "endLine": 1117,
+        "endChar": 31
+      },
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -105,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "468c5f4a_29eca5b2",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-15T14:10:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b2fe3fb0_7a9dd14c",
+      "range": {
+        "startLine": 124,
+        "startChar": 1,
+        "endLine": 124,
+        "endChar": 28
+      },
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f7777f5_0c5ea5e4",
         "filename": "module/bdev/ftl/bdev_ftl.c",
         "patchSetId": 2
@@ -128,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "89d5907d_43365120",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-15T14:10:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7f7777f5_0c5ea5e4",
+      "range": {
+        "startLine": 562,
+        "startChar": 0,
+        "endLine": 574,
+        "endChar": 1
+      },
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "16733e93_44102602",
         "filename": "module/bdev/ftl/bdev_ftl.c",
         "patchSetId": 2
@@ -139,6 +271,30 @@
       "writtenOn": "2020-01-15T13:23:49Z",
       "side": 1,
       "message": "The result of strdup is not checked for NULL. Also, what is the point of actually copying this string? It\u0027s not used for anything, we should remove cache_bdev/base_bdev from ftl_bdev.",
+      "range": {
+        "startLine": 615,
+        "startChar": 2,
+        "endLine": 615,
+        "endChar": 55
+      },
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f619e98e_c8f8a1d0",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-15T14:10:34Z",
+      "side": 1,
+      "message": "It is used in _bdev_ftl_write_config_info",
+      "parentUuid": "16733e93_44102602",
       "range": {
         "startLine": 615,
         "startChar": 2,
@@ -174,6 +330,30 @@
     },
     {
       "key": {
+        "uuid": "96cf9e3a_9e5a83a9",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-15T14:10:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "80ead2a8_b1e54a79",
+      "range": {
+        "startLine": 621,
+        "startChar": 1,
+        "endLine": 621,
+        "endChar": 52
+      },
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "de6b754f_99f90ea2",
         "filename": "module/bdev/ftl/bdev_ftl.c",
         "patchSetId": 2
@@ -188,6 +368,24 @@
       "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ec7808b_5c7b9056",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-15T14:10:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de6b754f_99f90ea2",
+      "revId": "d47b2f6d1e8016e409e5341c7315f44ce0342487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
