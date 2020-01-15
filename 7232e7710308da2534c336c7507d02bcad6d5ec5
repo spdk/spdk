@@ -16,6 +16,24 @@
       "revId": "7232e7710308da2534c336c7507d02bcad6d5ec5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27d2a29a_54872715",
+        "filename": "module/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-15T00:00:03Z",
+      "side": 1,
+      "message": "I have no real opinion. The comment above says that we\u0027ve parsed the config. So it seemed to me there\u0027s a distinction between parsing and applying. The g_spdk_nvmf_tgt_conf variable referenced all over the place.",
+      "parentUuid": "f7463bd4_e0dcacda",
+      "revId": "7232e7710308da2534c336c7507d02bcad6d5ec5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
