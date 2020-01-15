@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "997cb3a0_744b3718",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1849,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-15T15:34:16Z",
+      "side": 1,
+      "message": "I\u0027ll get this consolidated with _spdk_blob_insert_extent().",
+      "range": {
+        "startLine": 1849,
+        "startChar": 0,
+        "endLine": 1849,
+        "endChar": 10
+      },
+      "revId": "6aba260da463f01ba9675fe43122b90a0cf7979d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
