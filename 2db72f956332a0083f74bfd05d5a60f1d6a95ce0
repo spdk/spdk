@@ -16,6 +16,24 @@
       "revId": "2db72f956332a0083f74bfd05d5a60f1d6a95ce0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50ce2189_5822f803",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 4576,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-15T09:50:51Z",
+      "side": 1,
+      "message": "Agree. I\u0027ve added separate patch with this new function before this patch.",
+      "parentUuid": "e2221531_0bc5ff30",
+      "revId": "2db72f956332a0083f74bfd05d5a60f1d6a95ce0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
