@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1870143_0d92c23a",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 46
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T17:38:59Z",
+      "side": 1,
+      "message": "let\u0027s remove this 0x4 reserved line\n\nfuse is only 2 bits, so 0x4 isn\u0027t even possible - technically, 0x3 is still \"reserved\" but I don\u0027t think we need to document that here",
+      "revId": "937abe0582fe1ee7ebbf74c2c67c87b031994a26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2585389c_890e3455",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 46
+      },
+      "lineNbr": 2834,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T17:38:59Z",
+      "side": 1,
+      "message": "sorry - I should have been more clear on this comment\n\nSPDK_NVME_IO_FLAGS_XXX is the set of flags we pass for each I/O.  It just happens that the flags for FUSE match exactly the values that are set in the fuse field in the nvme commands themselves.  These IO_FLAGS #defines are actually part of the public API, so we need to keep them.\n\nso I think we should change this to:\n\n#define SPDK_NVME_IO_FLAGS_FUSE_FIRST  (SPDK_NVME_CMD_FUSE_FIRST \u003c\u003c 0)\n#define SPDK_NVME_IO_FLAGS_FUSE_SECOND (SPDK_NVME_CMD_FUSE_SECOND \u003c\u003c 0)\n#define SPDK_NVME_IO_FLAGS_FUSE_MASK.  (SPDK_NVME_CMD_FUSE_MASK \u003c\u003c 0)",
+      "revId": "937abe0582fe1ee7ebbf74c2c67c87b031994a26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "597744ca_82931a8e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 2389,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T17:38:59Z",
+      "side": 1,
+      "message": "let\u0027s add this function is the earlier patch\n\notherwise here you end up both moving the function *and* modifying it",
+      "revId": "937abe0582fe1ee7ebbf74c2c67c87b031994a26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
