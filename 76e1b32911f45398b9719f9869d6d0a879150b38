@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "de0e330d_6e53f4c5",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1664,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T19:36:22Z",
+      "side": 1,
+      "message": "How about we rename this to --passthru-identify-ctrlr?  Then help can read:\n\nPassthrough fields like serial number and model number when the controller has a single namespace that is an NVMe bdev.",
+      "revId": "76e1b32911f45398b9719f9869d6d0a879150b38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
