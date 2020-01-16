@@ -16,6 +16,24 @@
       "revId": "edb9d6260085fb7ad4c1c77d6f54c355dd852dcc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db8e9a60_f3767b7a",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:00:35Z",
+      "side": 1,
+      "message": "Done.\nNow they should be aligned regardless of \"tabstop\" set in the editor.",
+      "parentUuid": "8d3e19a8_47febf8c",
+      "revId": "edb9d6260085fb7ad4c1c77d6f54c355dd852dcc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
