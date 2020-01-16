@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3eb32420_de62e018",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1479,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T02:59:54Z",
+      "side": 1,
+      "message": "use_sync_writev?",
+      "range": {
+        "startLine": 1479,
+        "startChar": 2,
+        "endLine": 1479,
+        "endChar": 19
+      },
+      "revId": "e2c6ca7873e92df639553dd400ed00efefaca115",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6265a698_4f77c398",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1490,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T02:59:54Z",
+      "side": 1,
+      "message": "I think we should send Reject, Async Message (Logout request), Text Response, SCSI TMF Response, and NOP-In immediately too.",
+      "revId": "e2c6ca7873e92df639553dd400ed00efefaca115",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
