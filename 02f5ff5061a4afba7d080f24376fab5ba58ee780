@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "8760a30a_480cc834",
+        "filename": "test/nvmf/host/identify_passthru.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T22:51:41Z",
+      "side": 1,
+      "message": "I think if bdf is empty here, we should fail.  It means there\u0027s no NVMe SSD.\n\nI guess technically it will fail when you run the identify app, but a check here with an explicit error message will make it more clear.",
+      "revId": "02f5ff5061a4afba7d080f24376fab5ba58ee780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "da8e5cbb_cb2a1259",
         "filename": "test/nvmf/host/identify_passthru.sh",
         "patchSetId": 1
