@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e45995de_95458c03",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T20:57:36Z",
+      "side": 1,
+      "message": "was the /** intentional for this comment?",
+      "revId": "0b2e75144e2c8cca2a8617b2c7146356fd8fd206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0d625e0_c904357d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 903,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T20:57:36Z",
+      "side": 1,
+      "message": "-ENOSYS?",
+      "revId": "0b2e75144e2c8cca2a8617b2c7146356fd8fd206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
