@@ -62,18 +62,6 @@ function fio_test_suite() {
 	local fio_params_json="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_json_conf=./test/bdev/bdev.conf.json"
 	local fio_ext_params="--ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
 
-	$rootdir/app/spdk_tgt/spdk_tgt -c ./test/bdev/bdev.conf &
-	spdk_tgt=$!
-	waitforlisten $spdk_tgt
-	# For some reason QoS hangs fio at the end of run, if it was enabled by json_rpc
-	# Disable it for now and will try to create minimal repro steps
-	$rpc_py bdev_set_qos_limit --rw_ios_per_sec 0 Malloc0
-	$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec 0 Malloc3
-	$rpc_py save_subsystem_config -n bdev | jq -r '{subsystems: [.] }' > ./test/bdev/bdev.conf.json
-	sleep 3
-	killprocess $spdk_tgt
-	sleep 3
-
 	if [ $RUN_NIGHTLY -eq 0 ]; then
 		run_test "bdev_fio_rw_verify" fio_bdev $fio_params_json --spdk_mem=$PRE_RESERVED_MEM \
 		--output=$output_dir/blockdev_fio_verify.txt
@@ -85,7 +73,6 @@ function fio_test_suite() {
 	fi
 	rm -f ./*.state
 	rm -f $testdir/bdev.fio
-	rm -f ./test/bdev/bdev.conf.json
 
 	# Generate the fio config file given the list of all unclaimed bdevs that support unmap
 	fio_config_gen $testdir/bdev.fio trim
@@ -278,6 +265,22 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 run_test "bdev_hello_world" $rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Malloc0
 run_test "bdev_bounds" bdev_bounds
 run_test "bdev_nbd" nbd_function_test $testdir/bdev.conf "$bdevs_name"
+
+# Prepare json config that is common for fio and bdevperf
+$rootdir/app/spdk_tgt/spdk_tgt -c ./test/bdev/bdev.conf &
+spdk_tgt=$!
+waitforlisten $spdk_tgt
+$rpc_py save_subsystem_config -n bdev | jq -r '{subsystems: [.] }' > ./test/bdev/bdev.conf.json
+sleep 3
+killprocess $spdk_tgt
+sleep 3
+
+cat ./test/bdev/bdev.conf.json
+
+# run bdevperf without gpt (just to show the issue - used common config)
+run_test "bdev_gpt_verify" $testdir/bdevperf/bdevperf --json ./test/bdev/bdev.conf.json -q 128 -o 4096 -w verify -t 5
+run_test "bdev_gpt_write_zeroes" $testdir/bdevperf/bdevperf --json ./test/bdev/bdev.conf.json -q 128 -o 4096 -w write_zeroes -t 1
+
 if [ -d /usr/src/fio ]; then
 	run_test "bdev_fio" fio_test_suite
 else
@@ -285,9 +288,8 @@ else
 	exit 1
 fi
 
-# Run bdevperf with gpt
-run_test "bdev_gpt_verify" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
-run_test "bdev_gpt_write_zeroes" $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
+rm -f ./test/bdev/bdev.conf.json
+
 run_test "bdev_qos" qos_test_suite
 
 # Temporarily disabled - infinite loop
