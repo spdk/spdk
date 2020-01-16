@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70f049fd_dc445a0a",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T15:30:19Z",
+      "side": 0,
+      "message": "Let\u0027s leave this in, perhaps rephrasing it a little:\n\nIn order to use the FTL module, a device capable of zoned interface is required. Currently, there are two ways of obtaining one: either using the `zone_block` bdev on top of regular block device, or using the OCSSD bdev. The latter option requires Open Channel SSD, which can be emulated using QEMU.",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 141,
+        "endChar": 22
+      },
+      "revId": "60c456778920373f0634ce86996b7282a717a23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52d4a3f8_ea90022d",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T15:30:19Z",
+      "side": 0,
+      "message": "Let\u0027s keep this explanation (updating it appropriately).",
+      "range": {
+        "startLine": 243,
+        "startChar": 0,
+        "endLine": 246,
+        "endChar": 0
+      },
+      "revId": "60c456778920373f0634ce86996b7282a717a23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98b59061_f56190e9",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T15:30:19Z",
+      "side": 0,
+      "message": "It\u0027d be nice to keep the output of the commands too, it makes it much easier to understand what is going on.",
+      "range": {
+        "startLine": 252,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 1
+      },
+      "revId": "60c456778920373f0634ce86996b7282a717a23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

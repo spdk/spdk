@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5e36de4_4cc6edcc",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T15:30:19Z",
+      "side": 1,
+      "message": "devices",
+      "range": {
+        "startLine": 3,
+        "startChar": 75,
+        "endLine": 3,
+        "endChar": 81
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5c200b8_96a08036",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T15:30:19Z",
+      "side": 1,
+      "message": "a",
+      "range": {
+        "startLine": 127,
+        "startChar": 3,
+        "endLine": 127,
+        "endChar": 5
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c658b120_c2df58ee",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T15:30:19Z",
+      "side": 1,
+      "message": "Let\u0027s capitalize this.",
+      "range": {
+        "startLine": 226,
+        "startChar": 71,
+        "endLine": 226,
+        "endChar": 76
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7bdb106_2b9b0090",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T15:30:19Z",
+      "side": 1,
+      "message": "Let\u0027s rephrase this to: \"supporting zoned namespace semantics\".",
+      "range": {
+        "startLine": 230,
+        "startChar": 19,
+        "endLine": 230,
+        "endChar": 60
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d62a084_ce7485ad",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T15:30:19Z",
+      "side": 1,
+      "message": "bdev\u0027s",
+      "range": {
+        "startLine": 230,
+        "startChar": 8,
+        "endLine": 230,
+        "endChar": 12
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f32df45_7b56c2cd",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T15:30:19Z",
+      "side": 1,
+      "message": "OCSSD, but I\u0027d use NVMe here.",
+      "range": {
+        "startLine": 234,
+        "startChar": 10,
+        "endLine": 234,
+        "endChar": 17
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dfd32098_7a871cdc",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T15:30:19Z",
+      "side": 1,
+      "message": "Let\u0027s add a little more information here: \"Create OCSSD bdev on the controller attached in 1)\".",
+      "range": {
+        "startLine": 235,
+        "startChar": 3,
+        "endLine": 235,
+        "endChar": 20
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a03bc32f_91d7e225",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T15:30:19Z",
+      "side": 1,
+      "message": "Same, here: \"Create FTL bdev on top of bdev created in 2)\".",
+      "range": {
+        "startLine": 236,
+        "startChar": 3,
+        "endLine": 236,
+        "endChar": 18
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
