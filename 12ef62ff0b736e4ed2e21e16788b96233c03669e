@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04c43111_039c8ea7",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T08:23:41Z",
+      "side": 1,
+      "message": "Rephrase.\nOriginal comments from py scripts were OK, you can use them and modify them a little.\n\n\"Call bdev_lvol_create_lvstore with cluster size is equal malloc bdev size + 1B.\"\n\"Call bdev_lvol_create_lvstore with cluster size smaller than minimal value of 8192.\"",
+      "range": {
+        "startLine": 78,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 45
+      },
+      "revId": "12ef62ff0b736e4ed2e21e16788b96233c03669e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "547a4a2d_861b5ab3",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T08:23:41Z",
+      "side": 1,
+      "message": "Why do we test this twice? Isn\u0027t the test with 8191 enough?",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 101,
+        "endChar": 76
+      },
+      "revId": "12ef62ff0b736e4ed2e21e16788b96233c03669e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65f446f0_e50aef0b",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T08:23:41Z",
+      "side": 1,
+      "message": "That\u0027s a lot of additional test steps not really related to testing lvs cluster size.\n\nWe could:\n ---- move \"-c 8192\" from line 108 to line 84\n ---- just leave the \"cleanup\" with delete lvs / get_lvs for just lvs1_uuid",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 45
+      },
+      "revId": "12ef62ff0b736e4ed2e21e16788b96233c03669e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
