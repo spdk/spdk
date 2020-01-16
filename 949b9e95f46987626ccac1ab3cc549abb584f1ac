@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8093df77_a71e555b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T22:16:37Z",
+      "side": 1,
+      "message": "If you did the following you could remove lines 1038 \u0026 1039. Seems simpler if I did that right, maybe not though 😊\n\tfor (i \u003d start_cluster + 1; i \u003c end_cluster + 1; i++) {\n\t\tdesc_extent-\u003ecluster_idx[extent_idx] \u003d lba / lba_per_cluster;\n\t\textent_idx++;\n                if (i \u003c end_cluster) {\n\t\t        lba \u003d blob-\u003eactive.clusters[i];\n                }\n\t}",
+      "revId": "949b9e95f46987626ccac1ab3cc549abb584f1ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
