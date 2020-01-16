@@ -925,6 +925,17 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	spdk_bs_load(dev, &bs_opts, load_cb, req);
 }
 
+static void _fs_delete_cache_and_file(void *ctx)
+{
+	struct spdk_file *file = ctx;
+
+	cache_free_buffers(file);
+
+	free(file->name);
+	free(file->tree);
+	free(file);
+}
+
 static void
 unload_cb(void *ctx, int bserrno)
 {
@@ -1569,16 +1580,10 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 	}
 
 	TAILQ_REMOVE(&fs->files, f, tailq);
-
-	cache_free_buffers(f);
-
 	blobid = f->blobid;
-
-	free(f->name);
-	free(f->tree);
-	free(f);
-
 	spdk_bs_delete_blob(fs->bs, blobid, blob_delete_cb, req);
+
+	spdk_thread_send_msg(g_cache_pool_thread, _fs_delete_cache_and_file, f);
 }
 
 static uint64_t
