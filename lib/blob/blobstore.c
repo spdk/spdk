@@ -1371,6 +1371,8 @@ struct spdk_blob_persist_ctx {
 	struct spdk_bs_super_block	*super;
 
 	struct spdk_blob_md_page	*pages;
+	uint32_t			last_extent;
+	struct spdk_blob_md_page	*extent_page;
 
 	spdk_bs_sequence_t		*seq;
 	spdk_bs_sequence_cpl		cb_fn;
@@ -1803,6 +1805,76 @@ _spdk_blob_persist_generate_new_metadata(struct spdk_blob_persist_ctx *ctx)
 	_spdk_blob_persist_write_page_chain(seq, ctx, 0);
 }
 
+static void _spdk_blob_persist_write_extent_pages(spdk_bs_sequence_t *seq, void *cb_arg,
+		int bserrno);
+
+static void
+_spdk_blob_persist_write_single_extent_page(uint32_t extent, uint64_t cluster_num,
+		struct spdk_blob_persist_ctx *ctx)
+{
+	spdk_bs_sequence_t		*seq = ctx->seq;
+	uint32_t                        page_count = 0;
+	struct spdk_blob		*blob = ctx->blob;
+	int rc;
+
+	rc = _spdk_blob_serialize_add_page(blob, &ctx->extent_page, &page_count, &ctx->extent_page);
+	if (rc < 0) {
+		assert(false);
+		return;
+	}
+
+	_spdk_blob_serialize_extent(blob, cluster_num, ctx->extent_page);
+
+	ctx->extent_page->crc = _spdk_blob_md_page_calc_crc(ctx->extent_page);
+
+	spdk_bs_sequence_write_dev(seq, ctx->extent_page, _spdk_bs_md_page_to_lba(blob->bs, extent),
+				   _spdk_bs_byte_to_lba(blob->bs, SPDK_BS_PAGE_SIZE),
+				   _spdk_blob_persist_write_extent_pages, ctx);
+}
+
+static void
+_spdk_blob_persist_write_extent_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob_persist_ctx	*ctx = cb_arg;
+	struct spdk_blob		*blob = ctx->blob;
+	struct spdk_blob_store		*bs = blob->bs;
+	size_t				i;
+	uint32_t extent_page_id;
+
+	if (ctx->extent_page != NULL) {
+		spdk_free(ctx->extent_page);
+		ctx->extent_page = NULL;
+	}
+
+	/* Write out extent pages only for extents that were changed */
+	for (i = ctx->last_extent; i < blob->active.extent_pages_array_size; i++) {
+		extent_page_id = blob->active.extent_pages[i];
+		if (extent_page_id != 0) {
+			if (i > blob->clean.extent_pages_array_size || blob->clean.extent_pages_array_size == 0) {
+				assert(spdk_bit_array_get(bs->used_md_pages, extent_page_id));
+				SPDK_ERRLOG("Writing out extent page %d, clean was not written out\n", (int)extent_page_id);
+				_spdk_blob_persist_write_single_extent_page(extent_page_id, i * SPDK_EXTENTS_PER_EP, ctx);
+				ctx->last_extent = ++i;
+				return;
+			} else if (blob->clean.extent_pages_array_size > 0) {
+				if (extent_page_id != blob->clean.extent_pages[i]) {
+					assert(spdk_bit_array_get(bs->used_md_pages, extent_page_id));
+					assert(blob->clean.extent_pages[i] == 0);
+					/* Write out extent page, it was writen out to disk before as 0. */
+					_spdk_blob_persist_write_single_extent_page(extent_page_id, i * SPDK_EXTENTS_PER_EP, ctx);
+					ctx->last_extent = ++i;
+					return;
+				} else {
+					/* TODO: Extent page is already on disk. */
+				}
+			}
+		}
+	}
+
+	_spdk_blob_persist_generate_new_metadata(ctx);
+	return;
+}
+
 static void
 _spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 {
@@ -1819,7 +1891,7 @@ _spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 
 	}
 
-	_spdk_blob_persist_generate_new_metadata(ctx);
+	_spdk_blob_persist_write_extent_pages(seq, ctx, 0);
 }
 
 static void
@@ -1876,6 +1948,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->seq = seq;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
+	ctx->last_extent = 0;
 
 	if (blob->bs->clean) {
 		ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL,
