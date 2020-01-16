@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c68b4295_9617ea6d",
+        "filename": "autorun_post.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-16T10:19:15Z",
+      "side": 1,
+      "message": "Won\u0027t this fail when running jobs that are not part of per-patch ? Even nightly where a test is chosen between nightly or per-patch version ?",
+      "range": {
+        "startLine": 138,
+        "startChar": 4,
+        "endLine": 138,
+        "endChar": 24
+      },
+      "revId": "edf7c28814fa41353b698bf5169ce356f174dbb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
