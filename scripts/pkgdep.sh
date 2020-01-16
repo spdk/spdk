@@ -12,25 +12,30 @@ function usage()
 	echo "$0"
 	echo "  -h --help"
 	echo "  -d --developer-tools        Install tools for developers (code styling, code coverage, etc.)"
+	echo "  -f --fuse                   Additional dependencies for FUSE and CUSE"
+	echo "                              For Ubuntu distribution we used external package sources."
 	echo ""
 	exit 0
 }
 
 INSTALL_CRYPTO=false
 INSTALL_DEV_TOOLS=false
+INSTALL_FUSE=false
 
-while getopts 'dhi-:' optchar; do
+while getopts 'dhfi-:' optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
 			help) usage;;
 			developer-tools) INSTALL_DEV_TOOLS=true;;
+			fuse) INSTALL_FUSE=true;;
 			*) echo "Invalid argument '$OPTARG'"
 			usage;;
 		esac
 		;;
 	h) usage;;
 	d) INSTALL_DEV_TOOLS=true;;
+	f) INSTALL_FUSE=true;;
 	*) echo "Invalid argument '$OPTARG'"
 	usage;;
 	esac
@@ -76,12 +81,14 @@ if [ -s /etc/redhat-release ]; then
 		# Additional (optional) dependencies for showing backtrace in logs
 		yum install -y libunwind-devel || true
 	fi
+	if [[ $INSTALL_FUSE == "true" ]]; then
+		# Additional dependencies for FUSE and CUSE
+		yum install -y fuse3-devel
+	fi
 	# Additional dependencies for NVMe over Fabrics
 	yum install -y libibverbs-devel librdmacm-devel
 	# Additional dependencies for building docs
 	yum install -y doxygen mscgen graphviz
-	# Additional dependencies for FUSE and CUSE
-	yum install -y fuse3-devel
 elif [ -f /etc/debian_version ]; then
 	. /etc/os-release
 	VERSION_ID=$(sed 's/\.//g' <<< $VERSION_ID)
@@ -116,18 +123,20 @@ elif [ -f /etc/debian_version ]; then
 		# Additional dependecies for nvmf performance test script
 		apt-get install -y python3-paramiko
 	fi
+	if [[ $INSTALL_FUSE == "true" ]]; then
+		# Additional dependencies for FUSE and CUSE
+		if [[ $NAME == "Ubuntu" ]] && [[ $VERSION_ID -gt 1400 ]] && [[ $VERSION_ID -lt 1900 ]]; then
+			# Adding repository with libfuse3-dev for Ubuntu 14, 16 and 18
+			echo "This repository contains libfuse3-dev for Ubuntu $VERSION needed for FUSE and CUSE"
+			add-apt-repository ppa:bkryza/fuse3
+			apt-get update
+		fi
+		apt-get install -y libfuse3-dev
+	fi
 	# Additional dependencies for NVMe over Fabrics
 	apt-get install -y libibverbs-dev librdmacm-dev
 	# Additional dependencies for building docs
 	apt-get install -y doxygen mscgen graphviz
-	# Additional dependencies for FUSE and CUSE
-	if [[ $NAME == "Ubuntu" ]] && (( VERSION_ID > 1400 && VERSION_ID < 1900 )); then
-		# Adding repository with libfuse3-dev for Ubuntu 14, 16 and 18
-		echo "This repository contains libfuse3-dev for Ubuntu $VERSION needed for FUSE and CUSE"
-		add-apt-repository ppa:bkryza/fuse3
-		apt-get update
-	fi
-	apt-get install -y libfuse3-dev
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	# Minimal install
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
@@ -145,12 +154,14 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 		# Additional (optional) dependencies for showing backtrace in logs
 		zypper install libunwind-devel || true
 	fi
+	if [[ $INSTALL_FUSE == "true" ]]; then
+		# Additional dependencies for FUSE and CUSE
+		zypper install -y fuse3-devel
+	fi
 	# Additional dependencies for NVMe over Fabrics
 	zypper install -y rdma-core-devel
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz
-	# Additional dependencies for FUSE and CUSE
-	zypper install -y fuse3-devel
 elif [ $(uname -s) = "FreeBSD" ] ; then
 	# Minimal install
 	pkg install -y gmake cunit openssl git bash misc/e2fsprogs-libuuid python
@@ -209,8 +220,6 @@ elif [ -f /etc/arch-release ]; then
 	fi
 	# Additional dependencies for building docs
 	pacman -Sy --needed --noconfirm doxygen graphviz
-	# Additional dependencies for FUSE and CUSE
-	pacman -Sy --needed --noconfirm fuse3
 	# Additional dependency for building docs
 	pacman -S --noconfirm --needed gd ttf-font
 	su - $SUDO_USER -c "pushd /tmp;
@@ -229,6 +238,10 @@ elif [ -f /etc/arch-release ]; then
 		makepkg -si --needed --noconfirm;
 		cd .. && rm -rf rdma-core;
 		popd"
+	if [[ $INSTALL_FUSE == "true" ]]; then
+		# Additional dependencies for FUSE and CUSE
+		pacman -Sy --needed --noconfirm fuse3
+	fi
 else
 	echo "pkgdep: unknown system type."
 	exit 1
