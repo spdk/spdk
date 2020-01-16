@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5520081_4f91b27a",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T02:15:09Z",
+      "side": 1,
+      "message": "Just a comment. We can keep this here but it may be diffcult to use this because it is difficult to match request PDU with response PDU at the initiator.",
+      "range": {
+        "startLine": 111,
+        "startChar": 1,
+        "endLine": 111,
+        "endChar": 20
+      },
+      "revId": "8bb4eb60401607f6433e94b1191ddd9b206da8ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c45bebc0_d183dd38",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T02:15:09Z",
+      "side": 1,
+      "message": "Same as below",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 25
+      },
+      "revId": "8bb4eb60401607f6433e94b1191ddd9b206da8ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "564faf20_2f3538f0",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T02:15:09Z",
+      "side": 1,
+      "message": "Same as below.",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 29
+      },
+      "revId": "8bb4eb60401607f6433e94b1191ddd9b206da8ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3cc81ad2_59bd4a42",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T02:15:09Z",
+      "side": 1,
+      "message": "Can we remove this declaration by moving check_successful_op() above dev_submit_requests()?",
+      "range": {
+        "startLine": 123,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 19
+      },
+      "revId": "8bb4eb60401607f6433e94b1191ddd9b206da8ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7686b5ba_f9208a3d",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 901,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T02:15:09Z",
+      "side": 1,
+      "message": "We have not got any completion here.\nNumber of PDUs used in iscsi_fuzz_read_pdu() counts roughly I/O completion.",
+      "range": {
+        "startLine": 901,
+        "startChar": 11,
+        "endLine": 901,
+        "endChar": 23
+      },
+      "revId": "8bb4eb60401607f6433e94b1191ddd9b206da8ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
