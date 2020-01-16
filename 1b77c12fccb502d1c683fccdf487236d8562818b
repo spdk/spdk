@@ -16,6 +16,23 @@
       "revId": "1b77c12fccb502d1c683fccdf487236d8562818b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aab67ff1_db27c84f",
+        "filename": "lib/nvmf/custom_cmd_hdlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T19:39:49Z",
+      "side": 1,
+      "message": "Should we be worried about the case where someone creates a subsystem with two namespaces, and those two namespaces point to two different NVMe controllers?\n\nI\u0027m thinking you can use subsystem-\u003emax_nsid to check for this case.  Only run the custom handler when max_nsid \u003d\u003d 1.  You may need to add a helper function to get that value.",
+      "revId": "1b77c12fccb502d1c683fccdf487236d8562818b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
