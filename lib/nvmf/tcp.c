@@ -187,9 +187,9 @@ struct spdk_nvmf_tcp_req  {
 	enum spdk_nvmf_tcp_req_state		state;
 
 	/*
-	 * next_expected_r2t_offset is used when we receive the h2c_data PDU.
+	 * h2c_offset is used when we receive the h2c_data PDU.
 	 */
-	uint32_t				next_expected_r2t_offset;
+	uint32_t				h2c_offset;
 
 	STAILQ_ENTRY(spdk_nvmf_tcp_req)		link;
 	TAILQ_ENTRY(spdk_nvmf_tcp_req)		state_link;
@@ -330,7 +330,7 @@ spdk_nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 	}
 
 	memset(&tcp_req->rsp, 0, sizeof(tcp_req->rsp));
-	tcp_req->next_expected_r2t_offset = 0;
+	tcp_req->h2c_offset = 0;
 	tcp_req->has_incapsule_data = false;
 	tcp_req->req.dif.dif_insert_or_strip = false;
 
@@ -1259,10 +1259,10 @@ spdk_nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 		goto err;
 	}
 
-	if (tcp_req->next_expected_r2t_offset != h2c_data->datao) {
+	if (tcp_req->h2c_offset != h2c_data->datao) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
 			      "tcp_req(%p), tqpair=%p, expected data offset %u, but data offset is %u\n",
-			      tcp_req, tqpair, tcp_req->next_expected_r2t_offset, h2c_data->datao);
+			      tcp_req, tqpair, tcp_req->h2c_offset, h2c_data->datao);
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_OUT_OF_RANGE;
 		goto err;
 	}
@@ -1366,7 +1366,7 @@ spdk_nvmf_tcp_send_r2t_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 
 	r2t->cccid = tcp_req->req.cmd->nvme_cmd.cid;
 	r2t->ttag = tcp_req->ttag;
-	r2t->r2to = tcp_req->next_expected_r2t_offset;
+	r2t->r2to = tcp_req->h2c_offset;
 	r2t->r2tl = tcp_req->req.length;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
@@ -1387,11 +1387,11 @@ spdk_nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
 
-	tcp_req->next_expected_r2t_offset += pdu->data_len;
+	tcp_req->h2c_offset += pdu->data_len;
 
 	spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 
-	if (tcp_req->next_expected_r2t_offset == tcp_req->req.length) {
+	if (tcp_req->h2c_offset == tcp_req->req.length) {
 		spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
 		spdk_nvmf_tcp_req_process(ttransport, tcp_req);
 	}
@@ -2142,7 +2142,7 @@ spdk_nvmf_tcp_pdu_set_buf_from_req(struct spdk_nvmf_tcp_qpair *tqpair,
 
 	if (tcp_req->req.data_from_pool) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Will send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req, tqpair);
-		tcp_req->next_expected_r2t_offset = 0;
+		tcp_req->h2c_offset = 0;
 		spdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);
 	} else {
 		pdu = &tqpair->pdu_in_progress;
