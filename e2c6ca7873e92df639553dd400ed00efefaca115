@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5655fc2b_e519bba1",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1479,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T06:33:23Z",
+      "side": 1,
+      "message": "I\u0027m still wondering this. what means use_async_writev \u003d\u003d false. I don\u0027t think use_async_writev \u003d\u003d false is synchronous.",
+      "parentUuid": "3eb32420_de62e018",
+      "range": {
+        "startLine": 1479,
+        "startChar": 2,
+        "endLine": 1479,
+        "endChar": 19
+      },
+      "revId": "e2c6ca7873e92df639553dd400ed00efefaca115",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6265a698_4f77c398",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 5
@@ -36,6 +60,24 @@
       "writtenOn": "2020-01-16T02:59:54Z",
       "side": 1,
       "message": "I think we should send Reject, Async Message (Logout request), Text Response, SCSI TMF Response, and NOP-In immediately too.",
+      "revId": "e2c6ca7873e92df639553dd400ed00efefaca115",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14afb579_9b668745",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1490,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T06:33:23Z",
+      "side": 1,
+      "message": "I read your patch again and I get the reason why sending now only for login and logout response is that iSCSI initiator don\u0027t send any I/O until login completion and don\u0027t any I/O after requesting logout. Hence this is OK to me.",
+      "parentUuid": "6265a698_4f77c398",
       "revId": "e2c6ca7873e92df639553dd400ed00efefaca115",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
