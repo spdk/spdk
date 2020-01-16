@@ -12,12 +12,14 @@ function usage()
 	echo "$0"
 	echo "  -h --help"
 	echo "  -d --developer-tools        build with developer dependencies"
+	echo "  --fuse                      additional dependencies for FUSE and CUSE"
 	echo ""
 	exit 0
 }
 
 INSTALL_CRYPTO=false
 INSTALL_DEV_TOOLS=false
+INSTALL_FUSE=false
 
 while getopts 'dhi-:' optchar; do
 	case "$optchar" in
@@ -79,6 +81,8 @@ if [ -s /etc/redhat-release ]; then
 		yum install -y doxygen mscgen graphviz
 		# Additional dependencies for building pmem based backends
 		yum install -y libpmemblk-devel || true
+	fi
+	if [[ $INSTALL_FUSE == "true" ]]; then
 		# Additional dependencies for FUSE and CUSE
 		yum install -y fuse3-devel
 	fi
@@ -116,6 +120,10 @@ elif [ -f /etc/debian_version ]; then
 		# Additional dependencies for SPDK CLI - not available on older Ubuntus
 		apt-get install -y python3-configshell-fb python3-pexpect || echo \
 			"Note: Some SPDK CLI dependencies could not be installed."
+		# Additional dependecies for nvmf performance test script
+		apt-get install -y python3-paramiko
+	fi
+	if [[ $INSTALL_FUSE == "true" ]]; then
 		# Additional dependencies for FUSE and CUSE
 		if [[ $NAME == "Ubuntu" ]] && [[ $VERSION -gt 1400 ]] && [[ $VERSION -lt 1900 ]]; then
 			# Adding repository with libfuse3-dev for Ubuntu 14, 16 and 18
@@ -124,8 +132,6 @@ elif [ -f /etc/debian_version ]; then
 			apt-get update
 		fi
 		apt-get install -y libfuse3-dev
-		# Additional dependecies for nvmf performance test script
-		apt-get install -y python3-paramiko
 	fi
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	# Minimal install
@@ -147,6 +153,8 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 		zypper install -y libpmemblk-devel
 		# Additional dependencies for building docs
 		zypper install -y doxygen mscgen graphviz
+	fi
+	if [[ $INSTALL_FUSE == "true" ]]; then
 		# Additional dependencies for FUSE and CUSE
 		zypper install -y fuse3-devel
 	fi
@@ -228,6 +236,10 @@ elif [ -f /etc/arch-release ]; then
 		echo "/usr/local/lib" > /etc/ld.so.conf.d/pmdk.conf
 		ldconfig
 		rm -rf /tmp/pmdk
+	fi
+	if [[ $INSTALL_FUSE == "true" ]]; then
+		# Additional dependencies for FUSE and CUSE
+		pacman -Sy --needed --noconfirm fuse3
 	fi
 else
 	echo "pkgdep: unknown system type."
