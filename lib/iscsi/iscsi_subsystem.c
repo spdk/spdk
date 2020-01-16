@@ -1207,8 +1207,11 @@ iscsi_poll_group_destroy(void *io_device, void *ctx_buf)
 	spdk_poller_unregister(&pg->nop_poller);
 }
 
+int g_init_counter = 0;
+struct spdk_thread *g_init_thread = NULL;
+
 static void
-_iscsi_init_thread(void *ctx)
+_iscsi_init_thread(void *cpl)
 {
 	struct spdk_io_channel *ch;
 	struct spdk_iscsi_poll_group *pg;
@@ -1218,6 +1221,12 @@ _iscsi_init_thread(void *ctx)
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_INSERT_TAIL(&g_spdk_iscsi.poll_group_head, pg, link);
+
+	g_init_counter--;
+	if (g_init_counter == 0) {
+		spdk_thread_send_msg(g_init_thread, cpl, NULL);
+	}
+
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }
 
@@ -1227,8 +1236,17 @@ initialize_iscsi_poll_group(spdk_msg_fn cpl)
 	spdk_io_device_register(&g_spdk_iscsi, iscsi_poll_group_create, iscsi_poll_group_destroy,
 				sizeof(struct spdk_iscsi_poll_group), "iscsi_tgt");
 
-	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(_iscsi_init_thread, NULL, cpl);
+	char thread_name[32];
+	g_init_thread = spdk_get_thread();
+
+	struct spdk_cpuset *mask = spdk_app_get_core_mask();
+	const int core_count = spdk_cpuset_count(mask);
+	g_init_counter = core_count;
+	for (int i = 0; i < core_count; i++) {
+		snprintf(thread_name, sizeof(thread_name), "iscsi_conn_%u", i);
+		struct spdk_thread *thread = spdk_thread_create(thread_name, mask);
+		spdk_thread_send_msg(thread, _iscsi_init_thread, cpl);
+	}
 }
 
 static void
