@@ -47,7 +47,6 @@
 #define PORTNUMLEN 32
 #define SO_RCVBUF_SIZE (2 * 1024 * 1024)
 #define SO_SNDBUF_SIZE (2 * 1024 * 1024)
-#define IOV_BATCH_SIZE 64
 
 struct spdk_posix_sock {
 	struct spdk_sock	base;
@@ -442,49 +441,14 @@ _sock_flush(struct spdk_sock *sock)
 	int flags;
 	struct iovec iovs[IOV_BATCH_SIZE];
 	int iovcnt;
-	int retval;
-	struct spdk_sock_request *req;
-	int i;
 	ssize_t rc;
-	unsigned int offset;
-	size_t len;
 
 	/* Can't flush from within a callback or we end up with recursive calls */
 	if (sock->cb_cnt > 0) {
 		return 0;
 	}
 
-	/* Gather an iov */
-	iovcnt = 0;
-	req = TAILQ_FIRST(&sock->queued_reqs);
-	while (req) {
-		offset = req->internal.offset;
-
-		for (i = 0; i < req->iovcnt; i++) {
-			/* Consume any offset first */
-			if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
-				offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
-				continue;
-			}
-
-			iovs[iovcnt].iov_base = SPDK_SOCK_REQUEST_IOV(req, i)->iov_base + offset;
-			iovs[iovcnt].iov_len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
-			iovcnt++;
-
-			offset = 0;
-
-			if (iovcnt >= IOV_BATCH_SIZE) {
-				break;
-			}
-		}
-
-		if (iovcnt >= IOV_BATCH_SIZE) {
-			break;
-		}
-
-		req = TAILQ_NEXT(req, internal.link);
-	}
-
+	iovcnt = spdk_sock_prep_reqs(sock, iovs, IOV_BATCH_SIZE);
 	if (iovcnt == 0) {
 		return 0;
 	}
@@ -501,46 +465,7 @@ _sock_flush(struct spdk_sock *sock)
 		return rc;
 	}
 
-	/* Consume the requests that were actually written */
-	req = TAILQ_FIRST(&sock->queued_reqs);
-	while (req) {
-		offset = req->internal.offset;
-
-		for (i = 0; i < req->iovcnt; i++) {
-			/* Advance by the offset first */
-			if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
-				offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
-				continue;
-			}
-
-			/* Calculate the remaining length of this element */
-			len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
-
-			if (len > (size_t)rc) {
-				/* This element was partially sent. */
-				req->internal.offset += rc;
-				return 0;
-			}
-
-			offset = 0;
-			req->internal.offset += len;
-			rc -= len;
-		}
-
-		/* Handled a full request. */
-		req->internal.offset = 0;
-		spdk_sock_request_pend(sock, req);
-
-		/* The sendmsg syscall above isn't currently asynchronous,
-		 * so it's already done. */
-		retval = spdk_sock_request_put(sock, req, 0);
-
-		if (rc == 0 || retval) {
-			break;
-		}
-
-		req = TAILQ_FIRST(&sock->queued_reqs);
-	}
+	spdk_sock_complete_reqs(sock, rc);
 
 	return 0;
 }
