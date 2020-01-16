@@ -24,6 +24,13 @@ Using option --developer-tools will automatically install tools for developers.
 sudo scripts/pkgdep.sh --developer-tools
 ~~~
 
+Using option --fuse will automatically install dependencies for FUSE and CUSE.
+For Ubuntu distribution we used external package sources.
+
+~~~{.sh}
+sudo scripts/pkgdep.sh --fuse
+~~~
+
 # Building {#getting_started_building}
 
 Linux:
