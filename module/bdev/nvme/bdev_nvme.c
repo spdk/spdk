@@ -56,6 +56,14 @@
 static void bdev_nvme_get_spdk_running_config(FILE *fp);
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
+struct nvme_bdev_fused_io {
+	struct nvme_bdev *nbdev;
+	struct spdk_io_channel *channel;
+	void *md;
+	uint64_t lba_count;
+	uint64_t lba;
+};
+
 struct nvme_bdev_io {
 	/** array of iovecs to transfer. */
 	struct iovec *iovs;
@@ -81,11 +89,14 @@ struct nvme_bdev_io {
 	/** Offset in current iovec. */
 	uint32_t fused_iov_offset;
 
-	/** Saved status for admin passthru completion event or PI error verification or intermediate compare-and-write status */
+	/** Saved status for admin passthru completion event or PI error verification */
 	struct spdk_nvme_cpl cpl;
 
 	/** Originating thread */
 	struct spdk_thread *orig_thread;
+
+	/** Data required for executing fused command */
+	struct nvme_bdev_fused_io *fused_io_data;
 
 	/** Keeps track if first of fused commands was submitted */
 	bool first_fused_submitted;
@@ -2019,27 +2030,6 @@ bdev_nvme_comparev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
-bdev_nvme_comparev_and_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
-{
-	struct nvme_bdev_io *bio = ref;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
-
-	/* We need to check if compare operation failed to make sure that in such case
-	 * write operation failed as well. We don't need to know if we are in compare
-	 * or write callback because for compare callback below check will always result
-	 * as false. */
-	if (spdk_nvme_cpl_is_error(&bio->cpl)) {
-		assert(spdk_nvme_cpl_is_error(cpl));
-	}
-
-	/* Save compare result for write callback. In case this is write callback this
-	 * line does not matter */
-	bio->cpl = *cpl;
-
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
-}
-
-static void
 bdev_nvme_queued_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
@@ -2264,6 +2254,65 @@ bdev_nvme_comparev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 	return rc;
 }
 
+static void
+bdev_nvme_comparev_and_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_bdev_io *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+
+	/* We need to check if compare operation failed to make sure that in such case
+	 * write operation failed as well. We don't need to know if we are in compare
+	 * or write callback because for compare callback below check will always result
+	 * as false. */
+	if (spdk_nvme_cpl_is_error(&bio->cpl)) {
+		SPDK_ERRLOG("fused writev completed with PI error (sct=%d, sc=%d)\n",
+			    cpl->status.sct, cpl->status.sc);
+		/* Run PI verification for compare data buffer if PI error is detected. */
+		bdev_nvme_verify_pi_error(bdev_io);
+	}
+
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+}
+
+static void
+bdev_nvme_comparev_and_writev_do_write(struct nvme_bdev_io *bio)
+{
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(bio->fused_io_data->channel);
+	uint32_t flags = bio->fused_io_data->nbdev->disk.dif_check_flags;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	int rc;
+
+	flags |= SPDK_NVME_CMD_FUSE_SECOND;
+
+	rc = spdk_nvme_ns_cmd_writev_with_md(bio->fused_io_data->nbdev->nvme_ns->ns, nvme_ch->qpair,
+					     bio->fused_io_data->lba, bio->fused_io_data->lba_count, bdev_nvme_comparev_and_writev_done, bio,
+					     flags, bdev_nvme_queued_reset_fused_sgl, bdev_nvme_queued_next_fused_sge, bio->fused_io_data->md, 0,
+					     0);
+	if (rc != 0 && rc != -ENOMEM) {
+		SPDK_ERRLOG("write failed: rc = %d\n", rc);
+		spdk_bdev_io_complete_nvme_status(bdev_io, 0, SPDK_NVME_SCT_GENERIC,
+						  SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+	}
+}
+
+static void
+bdev_nvme_comparev_and_writev_compare_done(void *ref, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_bdev_io *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+
+	if (spdk_nvme_cpl_is_error(&bio->cpl)) {
+		SPDK_ERRLOG("fused comparev completed with PI error (sct=%d, sc=%d)\n",
+			    cpl->status.sct, cpl->status.sc);
+		/* Run PI verification for compare data buffer if PI error is detected. */
+		bdev_nvme_verify_pi_error(bdev_io);
+		spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+		return;
+	}
+
+	bdev_nvme_comparev_and_writev_do_write(bio);
+}
+
 static int
 bdev_nvme_comparev_and_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 			      struct nvme_bdev_io *bio, struct iovec *cmp_iov, int cmp_iovcnt, struct iovec *write_iov,
@@ -2285,6 +2334,11 @@ bdev_nvme_comparev_and_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *c
 	bio->fused_iovcnt = write_iovcnt;
 	bio->fused_iovpos = 0;
 	bio->fused_iov_offset = 0;
+	bio->fused_io_data->nbdev = nbdev;
+	bio->fused_io_data->channel = ch;
+	bio->fused_io_data->md = md;
+	bio->fused_io_data->lba_count = lba_count;
+	bio->fused_io_data->lba = lba;
 
 	if (bdev_io->num_retries == 0) {
 		bio->first_fused_submitted = false;
@@ -2295,30 +2349,21 @@ bdev_nvme_comparev_and_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *c
 		memset(&bio->cpl, 0, sizeof(bio->cpl));
 
 		rc = spdk_nvme_ns_cmd_comparev_with_md(nbdev->nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
-						       bdev_nvme_comparev_and_writev_done, bio, flags,
+						       bdev_nvme_comparev_and_writev_compare_done, bio, flags,
 						       bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge, md, 0, 0);
 		if (rc == 0) {
 			bio->first_fused_submitted = true;
-			flags &= ~SPDK_NVME_CMD_FUSE_FIRST;
 		} else {
 			if (rc != -ENOMEM) {
 				SPDK_ERRLOG("compare failed: rc = %d\n", rc);
 			}
 			return rc;
 		}
+	} else {
+		bdev_nvme_comparev_and_writev_do_write(bio);
 	}
 
-	flags |= SPDK_NVME_CMD_FUSE_SECOND;
-
-	rc = spdk_nvme_ns_cmd_writev_with_md(nbdev->nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
-					     bdev_nvme_comparev_and_writev_done, bio, flags,
-					     bdev_nvme_queued_reset_fused_sgl, bdev_nvme_queued_next_fused_sge, md, 0, 0);
-	if (rc != 0 && rc != -ENOMEM) {
-		SPDK_ERRLOG("write failed: rc = %d\n", rc);
-		rc = 0;
-	}
-
-	return rc;
+	return 0;
 }
 
 static int
