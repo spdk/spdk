@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0fa33bd_376e67a1",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T20:19:24Z",
+      "side": 1,
+      "message": "g_next_qat_index\n\n(you acked this comment on previous revision but I think forgot to apply it)",
+      "revId": "fd6d4e00e6003a929c87c79db93001c0eeb0e20d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
