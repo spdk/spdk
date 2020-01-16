@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30704717_baf79712",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1435,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T08:07:52Z",
+      "side": 1,
+      "message": "Adding pdu pointer may be meaningful because we cannot track this completion for what PDU write.\nI may not understand how to use spdk_trace_record yet though.",
+      "range": {
+        "startLine": 1435,
+        "startChar": 83,
+        "endLine": 1435,
+        "endChar": 84
+      },
+      "revId": "ee83854bc67b08ef23e6d53c5345e2ec9dd27253",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf30aa24_db59c073",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1490,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T08:07:52Z",
+      "side": 1,
+      "message": "Ditto. Can we add pdu pointer here to bind this with completion?\nMy understanding for spdk_trace_record may be wrong too.",
+      "range": {
+        "startLine": 1490,
+        "startChar": 83,
+        "endLine": 1490,
+        "endChar": 84
+      },
+      "revId": "ee83854bc67b08ef23e6d53c5345e2ec9dd27253",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
