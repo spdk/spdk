@@ -69,6 +69,18 @@ struct nvme_bdev_io {
 	/** Offset in current iovec. */
 	uint32_t iov_offset;
 
+	/** array of iovecs to transfer. */
+	struct iovec *fused_iovs;
+
+	/** Number of iovecs in iovs array. */
+	int fused_iovcnt;
+
+	/** Current iovec position. */
+	int fused_iovpos;
+
+	/** Offset in current iovec. */
+	uint32_t fused_iov_offset;
+
 	/** Saved status for admin passthru completion event, PI error verification, or intermediate compare-and-write status */
 	struct spdk_nvme_cpl cpl;
 
@@ -139,8 +151,8 @@ static int bdev_nvme_comparev(struct nvme_bdev *nbdev, struct spdk_io_channel *c
 			      struct nvme_bdev_io *bio,
 			      struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba);
 static int bdev_nvme_comparev_and_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
-		struct nvme_bdev_io *bio,
-		struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba);
+		struct nvme_bdev_io *bio, struct iovec *cmp_iov, int cmp_iovcnt, struct iovec *write_iov,
+		int write_iovcnt, void *md, uint64_t lba_count, uint64_t lba);
 static int bdev_nvme_admin_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
@@ -518,6 +530,8 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 						     nbdev_io,
 						     bdev_io->u.bdev.iovs,
 						     bdev_io->u.bdev.iovcnt,
+						     bdev_io->u.bdev.fused_iovs,
+						     bdev_io->u.bdev.fused_iovcnt,
 						     bdev_io->u.bdev.md_buf,
 						     bdev_io->u.bdev.num_blocks,
 						     bdev_io->u.bdev.offset_blocks);
@@ -2102,6 +2116,51 @@ bdev_nvme_queued_next_sge(void *ref, void **address, uint32_t *length)
 	return 0;
 }
 
+static void
+bdev_nvme_queued_reset_fused_sgl(void *ref, uint32_t sgl_offset)
+{
+	struct nvme_bdev_io *bio = ref;
+	struct iovec *iov;
+
+	bio->fused_iov_offset = sgl_offset;
+	for (bio->fused_iovpos = 0; bio->fused_iovpos < bio->fused_iovcnt; bio->fused_iovpos++) {
+		iov = &bio->fused_iovs[bio->fused_iovpos];
+		if (bio->fused_iov_offset < iov->iov_len) {
+			break;
+		}
+
+		bio->fused_iov_offset -= iov->iov_len;
+	}
+}
+
+static int
+bdev_nvme_queued_next_fused_sge(void *ref, void **address, uint32_t *length)
+{
+	struct nvme_bdev_io *bio = ref;
+	struct iovec *iov;
+
+	assert(bio->fused_iovpos < bio->fused_iovcnt);
+
+	iov = &bio->fused_iovs[bio->fused_iovpos];
+
+	*address = iov->iov_base;
+	*length = iov->iov_len;
+
+	if (bio->fused_iov_offset) {
+		assert(bio->fused_iov_offset <= iov->iov_len);
+		*address += bio->fused_iov_offset;
+		*length -= bio->fused_iov_offset;
+	}
+
+	bio->fused_iov_offset += *length;
+	if (bio->fused_iov_offset == iov->iov_len) {
+		bio->fused_iovpos++;
+		bio->fused_iov_offset = 0;
+	}
+
+	return 0;
+}
+
 static int
 bdev_nvme_no_pi_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 		      struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
@@ -2212,8 +2271,8 @@ bdev_nvme_comparev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 
 static int
 bdev_nvme_comparev_and_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
-			      struct nvme_bdev_io *bio,
-			      struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba)
+			      struct nvme_bdev_io *bio, struct iovec *cmp_iov, int cmp_iovcnt, struct iovec *write_iov,
+			      int write_iovcnt, void *md, uint64_t lba_count, uint64_t lba)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
@@ -2223,10 +2282,14 @@ bdev_nvme_comparev_and_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *c
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "compare and write %lu blocks with offset %#lx\n",
 		      lba_count, lba);
 
-	bio->iovs = iov;
-	bio->iovcnt = iovcnt;
+	bio->iovs = cmp_iov;
+	bio->iovcnt = cmp_iovcnt;
 	bio->iovpos = 0;
 	bio->iov_offset = 0;
+	bio->fused_iovs = write_iov;
+	bio->fused_iovcnt = write_iovcnt;
+	bio->fused_iovpos = 0;
+	bio->fused_iov_offset = 0;
 
 	if (bdev_io->num_retries == 0) {
 		bio->first_fused_submitted = false;
@@ -2254,7 +2317,7 @@ bdev_nvme_comparev_and_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *c
 
 	rc = spdk_nvme_ns_cmd_writev_with_md(nbdev->nvme_ns->ns, nvme_ch->qpair, lba, lba_count,
 					     bdev_nvme_comparev_and_writev_done, bio, flags,
-					     bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge, md, 0, 0);
+					     bdev_nvme_queued_reset_fused_sgl, bdev_nvme_queued_next_fused_sge, md, 0, 0);
 	if (rc != 0 && rc != -ENOMEM) {
 		SPDK_ERRLOG("write failed: rc = %d\n", rc);
 		rc = 0;
