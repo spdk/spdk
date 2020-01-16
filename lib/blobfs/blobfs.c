@@ -66,7 +66,6 @@ static struct spdk_thread *g_cache_pool_thread;
 static TAILQ_HEAD(, spdk_file) g_caches;
 static int g_fs_count = 0;
 static pthread_mutex_t g_cache_init_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_spinlock_t g_caches_lock;
 
 #define TRACE_GROUP_BLOBFS	0x7
 #define TRACE_BLOBFS_XATTR_START	SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x0)
@@ -282,7 +281,6 @@ blobfs_cache_pool_mgmt(void *arg)
 	struct spdk_file *file, *tmp;
 
 	/* remove the files which don't have cache buffers */
-	pthread_spin_lock(&g_caches_lock);
 	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
 		pthread_spin_lock(&file->lock);
 		if (file->tree && file->tree->present_mask == 0) {
@@ -290,21 +288,18 @@ blobfs_cache_pool_mgmt(void *arg)
 		}
 		pthread_spin_unlock(&file->lock);
 	}
-	pthread_spin_unlock(&g_caches_lock);
 
 	if (!blobfs_cache_pool_need_reclaim()) {
 		return -1;
 	}
 
 	/* reclaim cache buffer */
-	pthread_spin_lock(&g_caches_lock);
 	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
 		if (!file->open_for_writing &&
 		    file->priority == SPDK_FILE_PRIORITY_LOW) {
 			break;
 		}
 	}
-	pthread_spin_unlock(&g_caches_lock);
 	if (file != NULL) {
 		cache_free_buffers(file);
 		if (!blobfs_cache_pool_need_reclaim()) {
@@ -312,13 +307,11 @@ blobfs_cache_pool_mgmt(void *arg)
 		}
 	}
 
-	pthread_spin_lock(&g_caches_lock);
 	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
 		if (!file->open_for_writing) {
 			break;
 		}
 	}
-	pthread_spin_unlock(&g_caches_lock);
 	if (file != NULL) {
 		cache_free_buffers(file);
 		if (!blobfs_cache_pool_need_reclaim()) {
@@ -326,13 +319,10 @@ blobfs_cache_pool_mgmt(void *arg)
 		}
 	}
 
-	pthread_spin_lock(&g_caches_lock);
 	if (TAILQ_EMPTY(&g_caches)) {
-		pthread_spin_unlock(&g_caches_lock);
 		return -1;
 	}
 	file = TAILQ_FIRST(&g_caches);
-	pthread_spin_unlock(&g_caches_lock);
 	cache_free_buffers(file);
 
 	return -1;
@@ -363,7 +353,6 @@ __initialize_cache(void)
 		assert(false);
 	}
 	TAILQ_INIT(&g_caches);
-	pthread_spin_init(&g_caches_lock, 0);
 
 	lcore = spdk_env_get_current_core();
 	next_lcore = spdk_env_get_next_core(lcore);
@@ -955,14 +944,12 @@ static void _fs_free_file_from_cache(void *ctx)
 {
 	struct spdk_file *iter, *tmp, *file = ctx;
 
-	pthread_spin_lock(&g_caches_lock);
 	TAILQ_FOREACH_SAFE(iter, &g_caches, cache_tailq, tmp) {
 		if (iter == file) {
 			TAILQ_REMOVE(&g_caches, file, cache_tailq);
 			break;
 		}
 	}
-	pthread_spin_unlock(&g_caches_lock);
 
 	free(file->name);
 	free(file->tree);
@@ -2143,7 +2130,6 @@ _file_cache_insert_buffer(void *ctx)
 	struct spdk_file *iter, *file = ctx;
 	bool exist = false;
 
-	pthread_spin_lock(&g_caches_lock);
 	TAILQ_FOREACH(iter, &g_caches, cache_tailq) {
 		if (iter == file) {
 			exist = true;
@@ -2154,7 +2140,6 @@ _file_cache_insert_buffer(void *ctx)
 	if (!exist) {
 		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
 	}
-	pthread_spin_unlock(&g_caches_lock);
 }
 
 static struct cache_buffer *
