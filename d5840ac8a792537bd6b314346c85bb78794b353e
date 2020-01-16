@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d60fba76_1d1557d7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 684,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T18:38:14Z",
+      "side": 1,
+      "message": "yes, it is common - good catch!",
+      "parentUuid": "2938456e_0192c879",
+      "range": {
+        "startLine": 684,
+        "startChar": 2,
+        "endLine": 684,
+        "endChar": 41
+      },
+      "revId": "d5840ac8a792537bd6b314346c85bb78794b353e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2f480f7a_07bcb9e0",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 10
@@ -45,6 +69,30 @@
       "revId": "d5840ac8a792537bd6b314346c85bb78794b353e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07417a28_1682b09f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T18:38:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2f480f7a_07bcb9e0",
+      "range": {
+        "startLine": 748,
+        "startChar": 16,
+        "endLine": 748,
+        "endChar": 17
+      },
+      "revId": "d5840ac8a792537bd6b314346c85bb78794b353e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
