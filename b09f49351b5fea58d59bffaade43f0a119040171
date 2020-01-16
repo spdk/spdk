@@ -140,6 +140,30 @@
       "revId": "b09f49351b5fea58d59bffaade43f0a119040171",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99b13a48_34e3cd99",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-16T07:03:06Z",
+      "side": 1,
+      "message": "My mistake,with this ppa will not work but i the last patch I change ppa and it work",
+      "parentUuid": "ce03e324_c80afa34",
+      "range": {
+        "startLine": 109,
+        "startChar": 3,
+        "endLine": 109,
+        "endChar": 54
+      },
+      "revId": "b09f49351b5fea58d59bffaade43f0a119040171",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
