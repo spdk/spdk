@@ -143,6 +143,29 @@
     },
     {
       "key": {
+        "uuid": "19856ae7_1f14b3e5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2995,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-16T13:32:40Z",
+      "side": 1,
+      "message": "I checked how kernel target handles this event, they handle it in the same way as RDMA_CM_EVENT_DISCONNECTED - just disconnects the associated qpair. Can you please explain why you decided to restart listeners? I don\u0027t mean that this is wrong way, I just want to understand the reason",
+      "range": {
+        "startLine": 2995,
+        "startChar": 3,
+        "endLine": 2995,
+        "endChar": 48
+      },
+      "revId": "080c5b4473372f796d08038497c5936157ed4366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "44d07e1b_530ec26f",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 8
