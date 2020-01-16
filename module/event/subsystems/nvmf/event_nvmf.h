@@ -43,7 +43,7 @@
 #include "spdk_internal/log.h"
 
 #define ACCEPT_TIMEOUT_US	10000 /* 10ms */
-#define DEFAULT_CONN_SCHED CONNECT_SCHED_ROUND_ROBIN
+#define DEFAULT_CONN_SCHED CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP
 
 enum spdk_nvmf_connect_sched {
 	CONNECT_SCHED_ROUND_ROBIN = 0,
