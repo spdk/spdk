@@ -49,11 +49,9 @@ DIRS-$(CONFIG_ISAL) += isalbuild
 	uninstall
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
-ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
 ifneq ($(SKIP_DPDK_BUILD),1)
 DPDKBUILD = dpdkbuild
 DIRS-y += dpdkbuild
-endif
 endif
 endif
 
@@ -62,6 +60,8 @@ LIB = shared_lib
 else
 LIB = module
 endif
+
+DPDK_DEPS = mk/cc.mk include/spdk/config.h
 
 ifeq ($(CONFIG_IPSEC_MB),y)
 LIB += ipsecbuild

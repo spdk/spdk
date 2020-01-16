@@ -210,7 +210,6 @@ for i in "$@"; do
 			CONFIG[WERROR]=n
 			;;
 		--with-dpdk=*)
-			check_dir "$i"
 			CONFIG[DPDK_DIR]=$(readlink -f ${i#*=})
 			;;
 		--without-dpdk)
@@ -437,16 +436,21 @@ if [ -z "${CONFIG[ENV]}" ]; then
 		fi
 	else
 		if [[ "${CONFIG[VHOST]}" = "y" ]] && [[ "${CONFIG[VHOST_INTERNAL_LIB]}" = "n" ]]; then
-			# DPDK must be already built, so we can simply try to use the new rte_vhost.
-			# It has a number of internal dependencies though, so don't try to link the
-			# program, just compile it
-			if ! echo -e '#include <rte_vhost.h>\n' \
-				'int main(void) { return rte_vhost_extern_callback_register(0, NULL, NULL); }\n' \
-				| ${BUILD_CMD[@]} -c -Wno-deprecated-declarations -Werror \
-				-I"${CONFIG[DPDK_DIR]}/include" - &>/dev/null; then
-				echo "Notice: DPDK's rte_vhost not found or version < 19.05, using internal," \
-				     "legacy rte_vhost library."
-				CONFIG[VHOST_INTERNAL_LIB]=y
+			if [ -d "${CONFIG[DPDK_DIR]}" ]; then
+				# DPDK must be already built, so we can simply try to use the new rte_vhost.
+				# It has a number of internal dependencies though, so don't try to link the
+				# program, just compile it
+				if ! echo -e '#include <rte_vhost.h>\n' \
+					'int main(void) { return rte_vhost_extern_callback_register(0, NULL, NULL); }\n' \
+					| ${BUILD_CMD[@]} -c -Wno-deprecated-declarations -Werror \
+					-I"${CONFIG[DPDK_DIR]}/include" - &>/dev/null; then
+					echo "Notice: DPDK's rte_vhost not found or version < 19.05, using internal," \
+					     "legacy rte_vhost library."
+					CONFIG[VHOST_INTERNAL_LIB]=y
+				fi
+			else
+				echo "Please make sure that rte_vhost is at least version 19.05"
+				echo "Otherwise --with-internal-vhost-lib should be used"
 			fi
 		fi
 	fi
