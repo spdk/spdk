@@ -663,6 +663,13 @@ static void
 spdk_rocksdb_run(__attribute__((unused)) void *arg1)
 {
 	struct spdk_bdev *bdev;
+	uint32_t count;
+
+	count = spdk_env_get_core_count();
+	if (count < 2) {
+		SPDK_ERRLOG("At least two cores are required\n");
+		exit(1);
+	}
 
 	bdev = spdk_bdev_get_by_name(g_bdev_name.c_str());
 
@@ -731,6 +738,7 @@ SpdkEnv::SpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
 	spdk_app_opts_init(opts);
 	opts->name = "rocksdb";
 	opts->config_file = mConfig.c_str();
+	opts->reactor_mask = "0x3";
 	opts->shutdown_cb = spdk_rocksdb_shutdown;
 
 	spdk_fs_set_cache_size(cache_size_in_mb);
