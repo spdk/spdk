@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b9952c7_a70cdd66",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1292,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T23:09:40Z",
+      "side": 1,
+      "message": "you should either goto out here or in all cases where you currently goto out just call _spdk_blob_load_final(ctx, bserrno).  The latter might be cleaner since your cleanup is just a one-liner anyway",
+      "revId": "529c0e23570e9aa986f4003fbfb5b2cfc83474ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0cbcab6_14fef7bd",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1342,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T23:09:40Z",
+      "side": 1,
+      "message": "what\u0027s the comment?",
+      "revId": "529c0e23570e9aa986f4003fbfb5b2cfc83474ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec5fd6b1_be70a51a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1355,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T23:09:40Z",
+      "side": 1,
+      "message": "is there a todo here? having an else with just an assert doesn\u0027t make a whole lot of sense.  Is this common enough to put and SPDK_ERRLOG here or ??",
+      "revId": "529c0e23570e9aa986f4003fbfb5b2cfc83474ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
