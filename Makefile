@@ -66,6 +66,8 @@ else
 LIB = module
 endif
 
+DPDK_DEPS = mk/cc.mk include/spdk/config.h
+
 ifeq ($(CONFIG_IPSEC_MB),y)
 LIB += ipsecbuild
 DPDK_DEPS += ipsecbuild
