@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a16968d_5b3e78bd",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 727,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:36:57Z",
+      "side": 1,
+      "message": "can do:\nlocal counter\u003d1\nif [[ -n \"$2\" ]]; then\n   counter\u003d$2\nfi\n\nAlso - consider renaming \"counter\" to some other name so that it\u0027s clear what are we counting here.",
+      "range": {
+        "startLine": 723,
+        "startChar": 0,
+        "endLine": 727,
+        "endChar": 3
+      },
+      "revId": "0c03bddc7e62ee4b88915a354c915d842f37e3ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6cbc3fe0_cf47bb02",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:36:57Z",
+      "side": 1,
+      "message": "use -l option",
+      "range": {
+        "startLine": 729,
+        "startChar": 12,
+        "endLine": 729,
+        "endChar": 19
+      },
+      "revId": "0c03bddc7e62ee4b88915a354c915d842f37e3ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49ca1c92_580313c4",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 730,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:36:57Z",
+      "side": 1,
+      "message": "That\u0027s too much, reduce to 15",
+      "range": {
+        "startLine": 730,
+        "startChar": 11,
+        "endLine": 730,
+        "endChar": 15
+      },
+      "revId": "0c03bddc7e62ee4b88915a354c915d842f37e3ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab70b28c_0226308a",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:36:57Z",
+      "side": 1,
+      "message": "Not really sure if we need this loop.\nWe already discovered X number of devices which have a desired SERIAL in the previous loop, so I think there\u0027s no real benefit in having another loop and waiting based on blockdev names.",
+      "range": {
+        "startLine": 735,
+        "startChar": 0,
+        "endLine": 738,
+        "endChar": 5
+      },
+      "revId": "0c03bddc7e62ee4b88915a354c915d842f37e3ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7930fe98_b501d4fd",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:36:57Z",
+      "side": 1,
+      "message": "this function lacks fail condition if desired devices did not show up until timeout (like in disconnect function)",
+      "range": {
+        "startLine": 739,
+        "startChar": 0,
+        "endLine": 739,
+        "endChar": 1
+      },
+      "revId": "0c03bddc7e62ee4b88915a354c915d842f37e3ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "375f3a38_91eb3552",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 743,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:36:57Z",
+      "side": 1,
+      "message": "use tab indentations",
+      "range": {
+        "startLine": 743,
+        "startChar": 0,
+        "endLine": 743,
+        "endChar": 8
+      },
+      "revId": "0c03bddc7e62ee4b88915a354c915d842f37e3ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d1966bc_3b8b9e06",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 745,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:36:57Z",
+      "side": 1,
+      "message": "That\u0027s too much, reduce to 15",
+      "range": {
+        "startLine": 745,
+        "startChar": 25,
+        "endLine": 745,
+        "endChar": 29
+      },
+      "revId": "0c03bddc7e62ee4b88915a354c915d842f37e3ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "778db60d_d6e515fd",
+        "filename": "test/nvmf/target/filesystem.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:36:57Z",
+      "side": 1,
+      "message": "I\u0027ll be honest here - I really dislike using AWK for sole purpose of piping into it just to get a single value/column.\nThat\u0027s quite a powerful tool and a separate \u0027language\u0027 than bash, and this looks like an overkill.\n\nInstead of piping twice and using 2 separate tools (grep/awk) you could just stick to 1:\n\na) grep with matching groups and positive lookahead: lsblk -l -o NAME,SERIAL | grep -oP \"([\\w]*)(?\u003d\\s+${NVMF_SERIAL})\nIf you\u0027d like a complete breakdown on what this regex does visit https://regex101.com/ and try for yourself\n\nb) stick with awk but use it\u0027s possibilities and use its conditionals: lsblk -l -o NAME,SERIAL | awk {\u0027if ($2\u003d\u003d\"${NVMF_SERIAL}\") print $1\u0027}",
+      "range": {
+        "startLine": 49,
+        "startChar": 36,
+        "endLine": 49,
+        "endChar": 74
+      },
+      "revId": "0c03bddc7e62ee4b88915a354c915d842f37e3ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d007e8b0_ea395032",
+        "filename": "test/nvmf/target/filesystem.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:36:57Z",
+      "side": 1,
+      "message": "use -l option as well",
+      "range": {
+        "startLine": 49,
+        "startChar": 19,
+        "endLine": 49,
+        "endChar": 21
+      },
+      "revId": "0c03bddc7e62ee4b88915a354c915d842f37e3ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
