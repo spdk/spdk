@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99ebce97_ff7f8755",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T05:01:56Z",
+      "side": 1,
+      "message": "Lines 12-13 should be indented too.  But let\u0027s not rebase the whole series just for that.  Can you clean this up at the end of the series?",
+      "revId": "0de1a48d53648d3cdb6a9c63f04c40dcdd7ad58a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
