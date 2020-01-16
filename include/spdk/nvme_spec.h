@@ -468,7 +468,7 @@ enum spdk_nvme_cc_ams {
  * Fused Operation
  */
 enum spdk_nvme_cmd_fuse {
-	SPDK_NVMF_CMD_FUSE_NONE		= 0x0,	/**< normal operation */
+	SPDK_NVME_CMD_FUSE_NONE		= 0x0,	/**< normal operation */
 	SPDK_NVME_CMD_FUSE_FIRST	= 0x1,	/**< fused operation, first command */
 	SPDK_NVME_CMD_FUSE_SECOND	= 0x2,	/**< fused operation, second command */
 	/* 0x3 - reserved */
