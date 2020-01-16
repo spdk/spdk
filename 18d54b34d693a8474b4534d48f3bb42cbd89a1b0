@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f35c063d_b7c03496",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T10:50:21Z",
+      "side": 1,
+      "message": "I think we can just call this ftl_media_event.",
+      "range": {
+        "startLine": 253,
+        "startChar": 7,
+        "endLine": 253,
+        "endChar": 26
+      },
+      "revId": "18d54b34d693a8474b4534d48f3bb42cbd89a1b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e84345e8_9342cdea",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T10:50:21Z",
+      "side": 1,
+      "message": "I don\u0027t think this is necessary, it\u0027s only used in the spdk_mempool_create call.",
+      "range": {
+        "startLine": 356,
+        "startChar": 0,
+        "endLine": 356,
+        "endChar": 33
+      },
+      "revId": "18d54b34d693a8474b4534d48f3bb42cbd89a1b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71161080_6e05f222",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T10:50:21Z",
+      "side": 1,
+      "message": "Let\u0027s use sizeof(pool_name) instead.",
+      "range": {
+        "startLine": 361,
+        "startChar": 21,
+        "endLine": 361,
+        "endChar": 24
+      },
+      "revId": "18d54b34d693a8474b4534d48f3bb42cbd89a1b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a37d6f7_bc68bc90",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T10:50:21Z",
+      "side": 1,
+      "message": "An error log here would be helpful.",
+      "revId": "18d54b34d693a8474b4534d48f3bb42cbd89a1b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7854be50_a13e1c8e",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T10:50:21Z",
+      "side": 1,
+      "message": "Either return -errno or -1 to indicate an error. I think most of the ftl_init_* functions return -1, so let\u0027s stick with that.",
+      "range": {
+        "startLine": 370,
+        "startChar": 9,
+        "endLine": 370,
+        "endChar": 16
+      },
+      "revId": "18d54b34d693a8474b4534d48f3bb42cbd89a1b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20b24b2a_0e045ea7",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T10:50:21Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "18d54b34d693a8474b4534d48f3bb42cbd89a1b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
