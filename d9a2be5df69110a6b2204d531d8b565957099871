@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3615597_435d0155",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T23:58:21Z",
+      "side": 1,
+      "message": "Is there a better name than et_sz?\n\nIf I\u0027m reading this correctly, et_sz represents the size required for the extent table, based on the new size.  While num_extent_pages represents the current size of the extent table?\n\nI know this function already uses \"sz\" and \"num_clusters\" which is just as confusing.  :)  But I\u0027d say in this case let\u0027s pick names that are a bit more descriptive to make this easier to review.  Maybe new_et_sz and current_et_sz?",
+      "revId": "d9a2be5df69110a6b2204d531d8b565957099871",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41b2c219_09792352",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1609,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T23:58:21Z",
+      "side": 1,
+      "message": "just curious - you used \"extent_pages_array_size\" in the mut_data structure, but here you\u0027re using et_sz which I think means extent_table_size.  Should we make those names consistent?  That could just mean calling this variable epa_sz instead of et_sz.",
+      "revId": "d9a2be5df69110a6b2204d531d8b565957099871",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
