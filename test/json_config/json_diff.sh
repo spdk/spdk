@@ -8,12 +8,6 @@ if [ $# -ne 2 ]; then
 fi
 
 rootdir=$(readlink -f $(dirname $0)/../..)
-# FIXME: Remove this when python3 will be on FeeBSD machines
-if [ $(uname -s) = "FreeBSD" ]; then
-	python_cmd=python
-else
-	python_cmd=""
-fi
 
 # Compare two JSON files.
 #
@@ -25,8 +19,8 @@ tmp_file_1=$(mktemp /tmp/$(basename ${1}).XXX)
 tmp_file_2=$(mktemp /tmp/$(basename ${2}).XXX)
 ret=0
 
-$python_cmd $rootdir/test/json_config/config_filter.py -method "sort" < $1 > $tmp_file_1
-$python_cmd $rootdir/test/json_config/config_filter.py -method "sort" < $2 > $tmp_file_2
+$rootdir/test/json_config/config_filter.py -method "sort" < $1 > $tmp_file_1
+$rootdir/test/json_config/config_filter.py -method "sort" < $2 > $tmp_file_2
 
 if ! diff -u $tmp_file_1 $tmp_file_2; then
 	ret=1
