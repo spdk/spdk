@@ -381,7 +381,7 @@ ftl_init_lba_map_pools(struct spdk_ftl_dev *dev)
 	char pool_name[POOL_NAME_LEN];
 	int rc;
 
-	rc = snprintf(pool_name, sizeof(pool_name), "%s-%s", dev->name, "ocssd-lba-pool");
+	rc = snprintf(pool_name, sizeof(pool_name), "%s-%s", dev->name, "ftl-lba-pool");
 	if (rc < 0 || rc >= POOL_NAME_LEN) {
 		return -ENAMETOOLONG;
 	}
@@ -399,7 +399,7 @@ ftl_init_lba_map_pools(struct spdk_ftl_dev *dev)
 		return -ENOMEM;
 	}
 
-	rc = snprintf(pool_name, sizeof(pool_name), "%s-%s", dev->name, "ocssd-lbareq-pool");
+	rc = snprintf(pool_name, sizeof(pool_name), "%s-%s", dev->name, "ftl-lbareq-pool");
 	if (rc < 0 || rc >= POOL_NAME_LEN) {
 		return -ENAMETOOLONG;
 	}
