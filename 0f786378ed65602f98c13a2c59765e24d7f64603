@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8716c6c5_9560b5c3",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 829,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T17:03:11Z",
+      "side": 1,
+      "message": "similar to previous patch, let\u0027s do:\n\nif (poller-\u003ethread !\u003d thread) {\n  SPDK_ERRLOG(\"xxx\\n\");\n  assert(false);\n  return;\n}",
+      "revId": "0f786378ed65602f98c13a2c59765e24d7f64603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
