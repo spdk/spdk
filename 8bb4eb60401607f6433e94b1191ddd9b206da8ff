@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9dde8c6e_9b308972",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-16T03:36:41Z",
+      "side": 1,
+      "message": "Either I delete it first.",
+      "parentUuid": "d5520081_4f91b27a",
+      "range": {
+        "startLine": 111,
+        "startChar": 1,
+        "endLine": 111,
+        "endChar": 20
+      },
+      "revId": "8bb4eb60401607f6433e94b1191ddd9b206da8ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c45bebc0_d183dd38",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 51
@@ -45,6 +69,30 @@
       "revId": "8bb4eb60401607f6433e94b1191ddd9b206da8ff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb1605cd_1efef9be",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-16T03:36:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c45bebc0_d183dd38",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 25
+      },
+      "revId": "8bb4eb60401607f6433e94b1191ddd9b206da8ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d72e16c3_abc73887",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-16T03:36:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "564faf20_2f3538f0",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 29
+      },
+      "revId": "8bb4eb60401607f6433e94b1191ddd9b206da8ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3cc81ad2_59bd4a42",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 51
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "761d7f81_66c9cc84",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-16T03:36:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3cc81ad2_59bd4a42",
+      "range": {
+        "startLine": 123,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 19
+      },
+      "revId": "8bb4eb60401607f6433e94b1191ddd9b206da8ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7686b5ba_f9208a3d",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 51
@@ -114,6 +210,30 @@
       "revId": "8bb4eb60401607f6433e94b1191ddd9b206da8ff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "644f1131_53dfd810",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 901,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-16T03:36:41Z",
+      "side": 1,
+      "message": "Thanks, let me explain here. This \"dev_ctx-\u003ecompleted_io\" just mean roandom PDUs I sent.\nI try to print rough I/O used in iscsi_fuzz_read_pdu():13263011, this doesn\u0027t make sense to me.\ndevice 0x611000009c80 stats: Completed I/O: 13263011, Successful I/O: 19\nTo resolve this confusion, I modify it to \"dev_ctx-\u003ecompleted_random_pdus\", and print:\ndevice 0x611000009a00 stats: Completed random PDUs: 182, Successful random PDUs: 18",
+      "parentUuid": "7686b5ba_f9208a3d",
+      "range": {
+        "startLine": 901,
+        "startChar": 11,
+        "endLine": 901,
+        "endChar": 23
+      },
+      "revId": "8bb4eb60401607f6433e94b1191ddd9b206da8ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
