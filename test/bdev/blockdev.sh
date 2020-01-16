@@ -65,10 +65,6 @@ function fio_test_suite() {
 	$rootdir/app/spdk_tgt/spdk_tgt -c ./test/bdev/bdev.conf &
 	spdk_tgt=$!
 	waitforlisten $spdk_tgt
-	# For some reason QoS hangs fio at the end of run, if it was enabled by json_rpc
-	# Disable it for now and will try to create minimal repro steps
-	$rpc_py bdev_set_qos_limit --rw_ios_per_sec 0 Malloc0
-	$rpc_py bdev_set_qos_limit --rw_mbytes_per_sec 0 Malloc3
 	$rpc_py save_subsystem_config -n bdev | jq -r '{subsystems: [.] }' > ./test/bdev/bdev.conf.json
 	sleep 3
 	killprocess $spdk_tgt
