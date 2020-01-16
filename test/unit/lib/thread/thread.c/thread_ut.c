@@ -746,6 +746,80 @@ channel_destroy_races(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
 }
 
+static void
+thread_for_each_on_group(void)
+{
+	int count = 0;
+	struct spdk_thread *thread;
+	uint64_t group1, group2;
+
+	allocate_threads(5);
+
+	/* Set thread 1, 3, and 4 to the 1st group, and set thread 0 and 2 to the 2nd group. */
+	set_thread(1);
+	thread = spdk_get_thread();
+	group1 = spdk_thread_get_group_id(thread);
+
+	set_thread(3);
+	thread = spdk_get_thread();
+	spdk_thread_set_group_id(thread, group1);
+
+	set_thread(4);
+	thread = spdk_get_thread();
+	spdk_thread_set_group_id(thread, group1);
+
+	set_thread(0);
+	thread = spdk_get_thread();
+	group2 = spdk_thread_get_group_id(thread);
+
+	set_thread(2);
+	thread = spdk_get_thread();
+	spdk_thread_set_group_id(thread, group2);
+
+	set_thread(0);
+
+	spdk_for_each_thread_on_group(for_each_cb, &count, for_each_cb, group1);
+
+	/* We have not polled any thread yet, so count should be 0. */
+	CU_ASSERT(count == 0);
+
+	/* Poll each thread to verify the message is passed only to group1 threads. */
+	poll_thread(0);
+	CU_ASSERT(count == 0);
+	poll_thread(1);
+	CU_ASSERT(count == 1);
+	poll_thread(2);
+	CU_ASSERT(count == 1);
+	poll_thread(3);
+	CU_ASSERT(count == 2);
+	poll_thread(4);
+	CU_ASSERT(count == 3);
+
+	/* After each thread is called, the completion calls it one or more time. */
+	poll_thread(0);
+	CU_ASSERT(count == 4);
+
+	spdk_for_each_thread_on_group(for_each_cb, &count, for_each_cb, group2);
+
+	/* Poll each thread to verify the message is passed only to group2 threads. */
+	poll_thread(0);
+	CU_ASSERT(count == 5);
+	poll_thread(1);
+	CU_ASSERT(count == 5);
+	poll_thread(2);
+	CU_ASSERT(count == 6);
+	poll_thread(3);
+	CU_ASSERT(count == 6);
+	poll_thread(4);
+	CU_ASSERT(count == 6);
+
+	/* After each thread is called, the completion calls it one or more time. */
+	poll_thread(0);
+	CU_ASSERT(count == 7);
+
+	free_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -772,7 +846,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "for_each_channel_unreg", for_each_channel_unreg) == NULL ||
 		CU_add_test(suite, "thread_name", thread_name) == NULL ||
 		CU_add_test(suite, "channel", channel) == NULL ||
-		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL
+		CU_add_test(suite, "channel_destroy_races", channel_destroy_races) == NULL ||
+		CU_add_test(suite, "thread_for_each_on_group", thread_for_each_on_group) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

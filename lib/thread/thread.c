@@ -1079,6 +1079,90 @@ spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 	spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ct);
 }
 
+struct call_thread_on_group {
+	uint64_t group_id;
+	struct spdk_thread *cur_thread;
+	spdk_msg_fn fn;
+	void *ctx;
+
+	struct spdk_thread *orig_thread;
+	spdk_msg_fn cpl;
+};
+
+static void
+spdk_on_thread_on_group(void *ctx)
+{
+	struct call_thread_on_group *ct = ctx;
+
+	ct->fn(ct->ctx);
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	do {
+		ct->cur_thread = TAILQ_NEXT(ct->cur_thread, tailq);
+	} while (ct->cur_thread != NULL && ct->cur_thread->group_id != ct->group_id);
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	if (!ct->cur_thread) {
+		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Completed thread iteration on group %" PRIu64 "\n",
+			      ct->group_id);
+		spdk_thread_send_msg(ct->orig_thread, ct->cpl, ct->ctx);
+		free(ctx);
+	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Continuing thread iteration to %s on group %" PRIu64 "\n",
+			      ct->cur_thread->name, ct->group_id);
+		spdk_thread_send_msg(ct->cur_thread, spdk_on_thread_on_group, ctx);
+	}
+}
+
+void
+spdk_for_each_thread_on_group(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl,
+			      uint64_t group_id)
+{
+	struct call_thread_on_group *ct;
+	struct spdk_thread *thread;
+
+	ct = calloc(1, sizeof(*ct));
+	if (!ct) {
+		SPDK_ERRLOG("Unable to perform thread iteration\n");
+		cpl(ctx);
+		return;
+	}
+
+	ct->group_id = group_id;
+	ct->fn = fn;
+	ct->ctx = ctx;
+	ct->cpl = cpl;
+
+	thread = _get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("No thread allocated\n");
+		free(ct);
+		cpl(ctx);
+		return;
+	}
+	ct->orig_thread = thread;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	TAILQ_FOREACH(ct->cur_thread, &g_threads, tailq) {
+		if (ct->cur_thread->group_id == ct->group_id) {
+			break;
+		}
+	}
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	if (!ct->cur_thread) {
+		SPDK_ERRLOG("No thread in group %" PRIu64 "\n", ct->group_id);
+		free(ct);
+		cpl(ctx);
+		return;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Starting thread iteration from %s on group %" PRIu64 "\n",
+		      ct->orig_thread->name, ct->group_id);
+
+	spdk_thread_send_msg(ct->cur_thread, spdk_on_thread_on_group, ct);
+}
+
 void
 spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 			spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size,
