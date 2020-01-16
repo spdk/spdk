@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "973484e9_f124aae2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T23:11:05Z",
+      "side": 1,
+      "message": "Let\u0027s make these static now, since now this patch actually calls them.\n\nI didn\u0027t make them static before, since there was no code here that called them, and we\u0027d get static-not-used errors.",
+      "revId": "1bcd1d685b0ee43cfe0b9bb27a2f2630920f1f19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "962e323b_c6d3458b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3617,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T23:11:05Z",
+      "side": 1,
+      "message": "this callback is used for the native compare-and-write patch (where we send it directly to the underlying bdev) - in that case, we don\u0027t want to unlock\n\nI think you should have a completely different callback for the native done path",
+      "revId": "1bcd1d685b0ee43cfe0b9bb27a2f2630920f1f19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e973b6f_0ac0e3a3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3734,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T23:11:05Z",
+      "side": 1,
+      "message": "hmmm - we can\u0027t return -ENOMEM here, that is reserved for when we run out of bdev_io structures\n\nI\u0027m still not sure why you need fused_ctx at all.  You certainly don\u0027t need it when bdev_io_type_supported(COMPARE_AND_WRITE) \u003d\u003d true.  And even in the emulated case, you should be able to just use this bdev_io as your context.",
+      "revId": "1bcd1d685b0ee43cfe0b9bb27a2f2630920f1f19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "acd218c0_149d20f1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 6137,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T23:11:05Z",
+      "side": 1,
+      "message": "static",
+      "revId": "1bcd1d685b0ee43cfe0b9bb27a2f2630920f1f19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0520849_ceb4461d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 6253,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T23:11:05Z",
+      "side": 1,
+      "message": "static",
+      "revId": "1bcd1d685b0ee43cfe0b9bb27a2f2630920f1f19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
