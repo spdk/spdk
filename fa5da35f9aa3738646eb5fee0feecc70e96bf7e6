@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0741c31_66ba3a19",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 728,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-16T18:12:09Z",
+      "side": 1,
+      "message": "I\u0027m a little confused here. shouldn\u0027t you be using -lt here? if you are waiting for one device and you grep and find one here then the condition is met and the test should be allowed to continue. I think that\u0027s why this is failing on the test pool.",
+      "revId": "fa5da35f9aa3738646eb5fee0feecc70e96bf7e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f89fae10_fdf5b45f",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-16T18:12:09Z",
+      "side": 1,
+      "message": "Also use -lt here.",
+      "revId": "fa5da35f9aa3738646eb5fee0feecc70e96bf7e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87f1cf93_d20adff6",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 742,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-16T18:12:09Z",
+      "side": 1,
+      "message": "This is just a suggestion, I don\u0027t think it\u0027s a feature we really need, but want your opinion. Do we want to allow ourselves to specify a number of  remaining devices here? I think that for right now we don\u0027t have any examples where we might want to only disconnect some of the devices, but it might be a useful option to have.",
+      "revId": "fa5da35f9aa3738646eb5fee0feecc70e96bf7e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
