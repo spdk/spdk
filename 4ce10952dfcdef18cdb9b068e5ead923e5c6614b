@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b7217646_7981ee29",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T23:29:33Z",
+      "side": 1,
+      "message": "That would break things because it\u0027s used (the boolean) in bdev_io_put_buf() to know whether to put the aux buffer or not. So I only set it to false after its been put, not when its been set",
+      "parentUuid": "b27f8b64_9fd5c8e5",
+      "revId": "4ce10952dfcdef18cdb9b068e5ead923e5c6614b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1456803e_5f5f3a6e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 13
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "2118fb74_567fc7c6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T23:29:33Z",
+      "side": 1,
+      "message": "We can\u0027t use the union here:\n\nbuf \u003d bdev_io-\u003eu.bdev.aux_buf;\n\nbecause this function is called by callers who may not be using that union.  What is your goal with this proposed block of code? Do you see it as simpler?",
+      "parentUuid": "1456803e_5f5f3a6e",
+      "range": {
+        "startLine": 637,
+        "startChar": 0,
+        "endLine": 637,
+        "endChar": 16
+      },
+      "revId": "4ce10952dfcdef18cdb9b068e5ead923e5c6614b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "08a1b141_fba65b08",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 13
@@ -53,6 +95,30 @@
       "writtenOn": "2020-01-16T22:41:15Z",
       "side": 1,
       "message": "Is this wrong?\n\nWe should use bdev_io-\u003eu.bdev.num_blocks * bdev_io-\u003ebdev-\u003eblocklen instead?\nPlease see the line 765.",
+      "range": {
+        "startLine": 685,
+        "startChar": 11,
+        "endLine": 685,
+        "endChar": 37
+      },
+      "revId": "4ce10952dfcdef18cdb9b068e5ead923e5c6614b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f89c8e46_ad681896",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T23:29:33Z",
+      "side": 1,
+      "message": "they are one and the same.  By design the aux buf len is the same as the internal buf len which is the same as line 765 so I could do the math here as well but I wanted to make it clear that its always the same as the internal buf wrt length",
+      "parentUuid": "08a1b141_fba65b08",
       "range": {
         "startLine": 685,
         "startChar": 11,
@@ -99,6 +165,30 @@
       "writtenOn": "2020-01-16T22:41:15Z",
       "side": 1,
       "message": "I think checking only bdev_io-\u003eu.bdev.aux_buf is enough.",
+      "range": {
+        "startLine": 717,
+        "startChar": 5,
+        "endLine": 717,
+        "endChar": 70
+      },
+      "revId": "4ce10952dfcdef18cdb9b068e5ead923e5c6614b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba19f092_2e19ece7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T23:29:33Z",
+      "side": 1,
+      "message": "should be, I was just just being safe :) I can change it but I\u0027ll wait for your feedback on other comments and possibly for Jim\u0027s review also.",
+      "parentUuid": "59ae79e7_e7083471",
       "range": {
         "startLine": 717,
         "startChar": 5,
