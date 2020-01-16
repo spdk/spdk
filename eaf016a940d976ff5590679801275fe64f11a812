@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c306a230_35bec398",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T22:05:36Z",
+      "side": 1,
+      "message": "Might be nice to add a comment here from your commit message since the math here isn\u0027t super easy to do in one\u0027s head 😊\n\"For an SPDK_BS_PAGE_SIZE of 4K SPDK_EXTENTS_PER_ET would be 512.\"",
+      "revId": "eaf016a940d976ff5590679801275fe64f11a812",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
