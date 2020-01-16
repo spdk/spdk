@@ -49,11 +49,9 @@ DIRS-$(CONFIG_ISAL) += isalbuild
 	uninstall
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
-ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
 ifneq ($(SKIP_DPDK_BUILD),1)
 DPDKBUILD = dpdkbuild
 DIRS-y += dpdkbuild
-endif
 endif
 endif
 
@@ -62,6 +60,8 @@ LIB = shared_lib
 else
 LIB = module
 endif
+
+DPDK_DEPS = $(SPDK_ROOT_DIR)/mk/cc.mk $(SPDK_ROOT_DIR)/include/spdk/config.h
 
 ifeq ($(CONFIG_IPSEC_MB),y)
 LIB += ipsecbuild
@@ -102,7 +102,7 @@ mk/cc.mk:
 	$(Q)echo "Please run configure prior to make"
 	false
 
-include/spdk/config.h: mk/config.mk scripts/genconfig.py
+$(SPDK_ROOT_DIR)/include/spdk/config.h: mk/config.mk scripts/genconfig.py
 	$(Q)PYCMD=$$(cat PYTHON_COMMAND 2>/dev/null) ; \
 	test -z "$$PYCMD" && PYCMD=python ; \
 	echo "#ifndef SPDK_CONFIG_H" > $@.tmp; \
