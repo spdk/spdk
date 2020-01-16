@@ -3175,11 +3175,35 @@ _spdk_bs_load_write_used_md(struct spdk_bs_load_ctx *ctx)
 }
 
 static void
+_spdk_bs_load_replay_md_chain_cpl(struct spdk_bs_load_ctx *ctx)
+{
+	uint64_t num_md_clusters;
+	uint64_t i;
+
+	ctx->in_page_chain = false;
+
+	do {
+		ctx->page_index++;
+	} while (spdk_bit_array_get(ctx->bs->used_md_pages, ctx->page_index) == true);
+
+	if (ctx->page_index < ctx->super->md_len) {
+		ctx->cur_page = ctx->page_index;
+		_spdk_bs_load_replay_cur_md_page(ctx);
+	} else {
+		/* Claim all of the clusters used by the metadata */
+		num_md_clusters = spdk_divide_round_up(ctx->super->md_len, ctx->bs->pages_per_cluster);
+		for (i = 0; i < num_md_clusters; i++) {
+			_spdk_bs_claim_cluster(ctx->bs, i);
+		}
+		spdk_free(ctx->page);
+		_spdk_bs_load_write_used_md(ctx);
+	}
+}
+
+static void
 _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
-	uint64_t num_md_clusters;
-	uint64_t i;
 	uint32_t page_num;
 
 	if (bserrno != 0) {
@@ -3206,25 +3230,7 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 			}
 		}
 	}
-
-	ctx->in_page_chain = false;
-
-	do {
-		ctx->page_index++;
-	} while (spdk_bit_array_get(ctx->bs->used_md_pages, ctx->page_index) == true);
-
-	if (ctx->page_index < ctx->super->md_len) {
-		ctx->cur_page = ctx->page_index;
-		_spdk_bs_load_replay_cur_md_page(ctx);
-	} else {
-		/* Claim all of the clusters used by the metadata */
-		num_md_clusters = spdk_divide_round_up(ctx->super->md_len, ctx->bs->pages_per_cluster);
-		for (i = 0; i < num_md_clusters; i++) {
-			_spdk_bs_claim_cluster(ctx->bs, i);
-		}
-		spdk_free(ctx->page);
-		_spdk_bs_load_write_used_md(ctx);
-	}
+	_spdk_bs_load_replay_md_chain_cpl(ctx);
 }
 
 static void
