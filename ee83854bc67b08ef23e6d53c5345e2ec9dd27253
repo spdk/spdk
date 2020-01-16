@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "ccd96dee_44f45cb2",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1435,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-16T10:32:43Z",
+      "side": 1,
+      "message": "It seems that 0 is the object_id, but we can convert pdu to (uintptr_t) type.",
+      "parentUuid": "1b5b0e10_3ef52cec",
+      "range": {
+        "startLine": 1435,
+        "startChar": 83,
+        "endLine": 1435,
+        "endChar": 84
+      },
+      "revId": "ee83854bc67b08ef23e6d53c5345e2ec9dd27253",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cf30aa24_db59c073",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 8
