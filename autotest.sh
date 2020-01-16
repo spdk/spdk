@@ -186,6 +186,8 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		if [ $SPDK_RUN_ASAN -eq 0 ]; then
 			run_test "nvme_hotplug" test/nvme/hotplug.sh intel
 		fi
+
+		run_test "nvmf_identify_passthru" test/nvmf/target/identify_passthru.sh --transport=tcp
 	fi
 
 	if [ $SPDK_TEST_IOAT -eq 1 ]; then
