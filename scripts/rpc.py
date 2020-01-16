@@ -1545,6 +1545,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                             cache=args.cache,
                                             allow_open_bands=args.allow_open_bands,
                                             overprovisioning=args.overprovisioning,
+                                            use_append=args.use_append,
                                             **arg_limits))
 
     p = subparsers.add_parser('bdev_ftl_create', aliases=['construct_ftl_bdev'], help='Add FTL bdev')
@@ -1558,6 +1559,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    ' result in partial data recovery, instead of error', action='store_true')
     p.add_argument('--overprovisioning', help='Percentage of device used for relocation, not exposed'
                    ' to user (optional)', type=int)
+    p.add_argument('--use_append', help='Use appends instead of writes', action='store_true')
 
     limits = p.add_argument_group('Defrag limits', 'Configures defrag limits and thresholds for'
                                   ' levels ' + str(ftl_valid_limits)[1:-1])

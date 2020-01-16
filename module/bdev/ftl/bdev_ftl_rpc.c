@@ -70,6 +70,10 @@ static const struct spdk_json_object_decoder rpc_bdev_ftl_create_decoders[] = {
 		offsetof(struct spdk_ftl_conf, lba_rsvd), spdk_json_decode_uint64, true
 	},
 	{
+		"use_append", offsetof(struct rpc_bdev_ftl_create, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, use_append), spdk_json_decode_bool, true
+	},
+	{
 		"limit_crit", offsetof(struct rpc_bdev_ftl_create, ftl_conf) +
 		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_CRIT]) +
 		offsetof(struct spdk_ftl_limit, limit),

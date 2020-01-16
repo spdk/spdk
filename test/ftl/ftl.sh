@@ -46,6 +46,7 @@ if [ -z "$nv_cache" ]; then
 fi
 
 run_test "ftl_bdevperf" $testdir/bdevperf.sh $device
+run_test "ftl_bdevperf_append" $testdir/bdevperf.sh $device --use_append
 
 run_test "ftl_restore" $testdir/restore.sh $device
 if [ -n "$nv_cache" ]; then
