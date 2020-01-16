@@ -47,6 +47,7 @@ extern "C" {
 #endif
 
 #define MAX_EVENTS_PER_POLL 32
+#define IOV_BATCH_SIZE 64
 
 struct spdk_sock {
 	struct spdk_net_impl		*net_impl;
