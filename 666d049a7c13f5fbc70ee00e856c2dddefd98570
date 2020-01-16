@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5828ffed_ce7421b9",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-16T05:54:05Z",
+      "side": 1,
+      "message": "Just a question - should not we use \"SPDK_NVMF_TRSVCID_MAX_LEN +1\" to check validness of the string length? \nString of length SPDK_NVMF_TRSTRING_MAX_LEN should be a valid string and in that case null terminator is at position SPDK_NVMF_TRSTRING_MAX_LEN+1, but strnlen is only checking first N bytes and it won\u0027t find null terminator in that case.",
+      "range": {
+        "startLine": 740,
+        "startChar": 25,
+        "endLine": 740,
+        "endChar": 51
+      },
+      "revId": "666d049a7c13f5fbc70ee00e856c2dddefd98570",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
