@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7b39911_596a622e",
+        "filename": "test/nvmf/host/identify_passthru.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T22:50:32Z",
+      "side": 1,
+      "message": "you can remove these MALLOC variables",
+      "revId": "02f5ff5061a4afba7d080f24376fab5ba58ee780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da8e5cbb_cb2a1259",
+        "filename": "test/nvmf/host/identify_passthru.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T22:50:32Z",
+      "side": 1,
+      "message": "I don\u0027t think this sync is needed.",
+      "revId": "02f5ff5061a4afba7d080f24376fab5ba58ee780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
