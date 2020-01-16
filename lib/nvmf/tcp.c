@@ -2135,27 +2135,6 @@ request_transfer_out(struct spdk_nvmf_request *req)
 }
 
 static void
-spdk_nvmf_tcp_pdu_set_buf_from_req(struct spdk_nvmf_tcp_qpair *tqpair,
-				   struct spdk_nvmf_tcp_req *tcp_req)
-{
-	struct nvme_tcp_pdu *pdu;
-
-	if (tcp_req->req.data_from_pool) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Will send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req, tqpair);
-		tcp_req->h2c_offset = 0;
-		spdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);
-	} else {
-		pdu = &tqpair->pdu_in_progress;
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Not need to send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req,
-			      tqpair);
-		/* No need to send r2t, contained in the capsuled data */
-		nvme_tcp_pdu_set_data_buf(pdu, tcp_req->req.iov, tcp_req->req.iovcnt,
-					  0, tcp_req->req.length);
-		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
-	}
-}
-
-static void
 spdk_nvmf_tcp_set_incapsule_data(struct spdk_nvmf_tcp_qpair *tqpair,
 				 struct spdk_nvmf_tcp_req *tcp_req)
 {
@@ -2267,7 +2246,21 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			/* If data is transferring from host to controller, we need to do a transfer from the host. */
 			if (tcp_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 				spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
-				spdk_nvmf_tcp_pdu_set_buf_from_req(tqpair, tcp_req);
+				if (tcp_req->req.data_from_pool) {
+					SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Will send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req, tqpair);
+					tcp_req->h2c_offset = 0;
+					spdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);
+				} else {
+					struct nvme_tcp_pdu *pdu;
+
+					pdu = &tqpair->pdu_in_progress;
+					SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Not need to send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req,
+						      tqpair);
+					/* No need to send r2t, contained in the capsuled data */
+					nvme_tcp_pdu_set_data_buf(pdu, tcp_req->req.iov, tcp_req->req.iovcnt,
+								  0, tcp_req->req.length);
+					spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
+				}
 				break;
 			}
 
