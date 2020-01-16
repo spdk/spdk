@@ -130,6 +130,30 @@
     },
     {
       "key": {
+        "uuid": "2ed71bba_00d880c2",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T18:20:25Z",
+      "side": 1,
+      "message": "it actually may get bigger with future devices so I\u0027ll make it an int to avoid what could up being a hard to track down bug in the future",
+      "parentUuid": "18eec373_2efd8a39",
+      "range": {
+        "startLine": 463,
+        "startChar": 1,
+        "endLine": 463,
+        "endChar": 2
+      },
+      "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d2af419d_a71a09b1",
         "filename": "module/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 20
