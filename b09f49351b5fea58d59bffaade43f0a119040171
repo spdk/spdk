@@ -164,6 +164,30 @@
       "revId": "b09f49351b5fea58d59bffaade43f0a119040171",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "929feea3_75759a85",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-16T07:17:09Z",
+      "side": 1,
+      "message": "PPA work, but on fresh system when I try to build spdk:\nIn file included from vhost.c:42:0:\nvhost_internal.h:93:33: error: field ‘vring_inflight’ has incomplete type\n  struct rte_vhost_ring_inflight vring_inflight;\n                                 ^\nvhost.c: In function ‘vhost_vq_used_ring_enqueue’:\nvhost.c:432:2: error: implicit declaration of function ‘rte_vhost_set_last_inflight_io_split’ [-Werror\u003dimplicit-function-declaration]\n  rte_vhost_set_last_inflight_io_split(vsession-\u003evid, vq_idx, id);\n  ^\nvhost.c:438:2: error: implicit declaration of function ‘rte_vhost_clr_inflight_desc_split’ [-Werror\u003dimplicit-function-declaration]\n  rte_vhost_clr_inflight_desc_split(vsession-\u003evid, vq_idx, virtqueue-\u003elast_used_idx, id);\n  ^\nvhost.c: In function ‘vhost_start_device_cb’:\nvhost.c:1060:3: error: implicit declaration of function ‘rte_vhost_get_vhost_ring_inflight’ [-Werror\u003dimplicit-function-declaration]\n   rte_vhost_get_vhost_ring_inflight(vid, i, \u0026q-\u003evring_inflight);\n   ^\ncc1: all warnings being treated as errors\n/home/vagrant/spdk_repo/spdk/mk/spdk.common.mk:374: recipe for target \u0027vhost.o\u0027 failed\nmake[2]: *** [vhost.o] Error 1\n/home/vagrant/spdk_repo/spdk/mk/spdk.subdirs.mk:44: recipe for target \u0027vhost\u0027 failed\nmake[1]: *** [vhost] Error 2\n/home/vagrant/spdk_repo/spdk/mk/spdk.subdirs.mk:44: recipe for target \u0027lib\u0027 failed\nmake: *** [lib] Error 2\n\nAny ideas ?",
+      "parentUuid": "99b13a48_34e3cd99",
+      "range": {
+        "startLine": 109,
+        "startChar": 3,
+        "endLine": 109,
+        "endChar": 54
+      },
+      "revId": "b09f49351b5fea58d59bffaade43f0a119040171",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
