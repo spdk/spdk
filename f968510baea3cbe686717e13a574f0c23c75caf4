@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfb5f4d9_6eaaaa5f",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 708,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-16T08:52:23Z",
+      "side": 1,
+      "message": "Can we initialize this value with NULL or pointing to some string like \"INVALID\"? If the user calls this function for custom transport, we will log an error on line 726 and write some garbage to trid-\u003etrstring. As an alternative we can add return instead of break on line 727.\nThat is not critical, you can ignore it or correct in a separate patch.",
+      "range": {
+        "startLine": 708,
+        "startChar": 12,
+        "endLine": 708,
+        "endChar": 22
+      },
+      "revId": "f968510baea3cbe686717e13a574f0c23c75caf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df75ef02_6edaf4aa",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-16T08:52:23Z",
+      "side": 1,
+      "message": "It is assumed that the user should use spdk_nvme_transport_available_by_name() to check availability of custom transport?",
+      "range": {
+        "startLine": 91,
+        "startChar": 9,
+        "endLine": 91,
+        "endChar": 15
+      },
+      "revId": "f968510baea3cbe686717e13a574f0c23c75caf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
