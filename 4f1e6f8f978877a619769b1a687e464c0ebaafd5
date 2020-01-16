@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75a63986_2154de06",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T15:23:19Z",
+      "side": 1,
+      "message": "Wow!  You\u0027ve officially resolved the full list of checks.  I think we should now update this comment on lines 236-241.  Something like:\n\n# SHCK_EXCLUDE contains a list of all of the spellcheck errors found in SPDK scripts\n# currently.  New errors should only be added to this list if the cost of fixing them\n# is deemed too high.  For more information about the errors, go to:\n# https://github.com/koalaman/shellcheck/wiki/Checks",
+      "revId": "4f1e6f8f978877a619769b1a687e464c0ebaafd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
