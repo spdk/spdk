@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "716a3f3b_c0ddb493",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2258,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T17:58:28Z",
+      "side": 1,
+      "message": "do we need to move this function?\n\nplease try to avoid moving *and* modifying a function in the same patch - it makes reviews a lot more difficult",
+      "revId": "0c11f21711a2d0e90a21d9d0f6a171cb8f248c3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8780e177_56827c01",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2337,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T17:58:28Z",
+      "side": 1,
+      "message": "I\u0027m not really following why we need to do this.  I really think the previous code is the better approach.  I\u0027m not even sure how this approach would work, since the compare operation can\u0027t actually start on the device (or remote target) until the write is submitted.\n\nI was trying to say that after both the compare and write have completed, we need to decide which nvme status to use for completing the I/O to the bdev layer.  If the compare failed (and the write was aborted), we should use the compare nvme status.  Otherwise we should use the status from the write.",
+      "revId": "0c11f21711a2d0e90a21d9d0f6a171cb8f248c3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
