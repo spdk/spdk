@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "62ba8da9_79abc4dd",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-16T22:19:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f0c083ce_f00048db",
+      "range": {
+        "startLine": 204,
+        "startChar": 3,
+        "endLine": 204,
+        "endChar": 4
+      },
+      "revId": "ca2e57647baa6697091ba2e9665bdb5b43f7f659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c25a64d7_18d70250",
         "filename": "test/vhost/hotplug/scsi_hotremove.sh",
         "patchSetId": 9
@@ -39,6 +63,24 @@
       "revId": "ca2e57647baa6697091ba2e9665bdb5b43f7f659",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61d973d1_485ab6c1",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-16T22:19:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c25a64d7_18d70250",
+      "revId": "ca2e57647baa6697091ba2e9665bdb5b43f7f659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
