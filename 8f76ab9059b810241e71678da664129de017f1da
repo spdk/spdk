@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dba550cf_5eb3ab06",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 44
+      },
+      "lineNbr": 2413,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T17:24:40Z",
+      "side": 1,
+      "message": "Why spdk_nvmf_transport_req_complete()?  The req was added to qpair-\u003eoutstanding already, and won\u0027t get removed if we call spdk_nvmf_transport_req_complete() instead of spdk_nvmf_request_complete().\n\nI\u0027m just curious why you changed this in this version of the patch?  I\u0027m guessing you ran into some kind of problem.",
+      "revId": "8f76ab9059b810241e71678da664129de017f1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
