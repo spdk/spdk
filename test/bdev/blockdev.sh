@@ -58,18 +58,16 @@ function fio_test_suite() {
 		fio_config_add_job $testdir/bdev.fio $b
 	done
 
-	local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
-	local fio_ext_params="--ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
-
 	if [ $RUN_NIGHTLY -eq 0 ]; then
-		run_test "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM \
-		--output=$output_dir/blockdev_fio_verify.txt
-	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
+		local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
+	else
 		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
 		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
-		run_test "bdev_fio_rw_verify_ext" fio_bdev $fio_ext_params --spdk_mem=$PRE_RESERVED_MEM \
-		--output=$output_dir/blockdev_fio_verify.txt
+		local fio_params="--ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio --spdk_conf=./test/bdev/bdev.conf"
 	fi
+
+	run_test "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM \
+	--output=$output_dir/blockdev_fio_verify.txt
 	rm -f ./*.state
 	rm -f $testdir/bdev.fio
 
@@ -79,12 +77,7 @@ function fio_test_suite() {
 		fio_config_add_job $testdir/bdev.fio $b
 	done
 
-	if [ $RUN_NIGHTLY -eq 0 ]; then
-		run_test "bdev_fio_trim" fio_bdev $fio_params --output=$output_dir/blockdev_trim.txt
-	elif [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
-		run_test "bdev_fio_trim_ext" fio_bdev $fio_ext_params --output=$output_dir/blockdev_trim.txt
-	fi
-
+	run_test "bdev_fio_trim" fio_bdev $fio_params --output=$output_dir/blockdev_trim.txt
 	rm -f ./*.state
 	rm -f $testdir/bdev.fio
 }
