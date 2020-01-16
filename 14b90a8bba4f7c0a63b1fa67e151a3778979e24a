@@ -70,6 +70,30 @@
       "revId": "14b90a8bba4f7c0a63b1fa67e151a3778979e24a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95cb6c2b_8e4ec9bd",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-16T18:14:44Z",
+      "side": 0,
+      "message": "Making the C2H PDU count configurable doesn\u0027t help. It needs to be calculated. But in the commit message here I\u0027ve outlined why I don\u0027t think our target needs to support any ratio of request to C2H other than 1:1.",
+      "parentUuid": "e400150b_55d83547",
+      "range": {
+        "startLine": 57,
+        "startChar": 1,
+        "endLine": 57,
+        "endChar": 93
+      },
+      "revId": "14b90a8bba4f7c0a63b1fa67e151a3778979e24a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
