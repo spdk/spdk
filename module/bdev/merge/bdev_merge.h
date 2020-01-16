@@ -37,6 +37,8 @@
 #include "spdk/bdev_module.h"
 
 
+#define SPDK_CONFIG_BDEV_SPLIT " "
+
 struct taus258_state {
 	uint64_t s1, s2, s3, s4, s5;
 };
@@ -91,6 +93,9 @@ enum merge_bdev_state {
 
 
 enum merge_bdev_type {
+	/* none merge bdev , not config yet */
+	MERGE_BDEV_TYPE_NONE,
+
 	/* master merge bdev , all of small io request will be store in master */
 	MERGE_BDEV_TYPE_MASTER,
 
@@ -113,6 +118,8 @@ struct merge_bdev {
 
 	enum merge_bdev_state		state;
 
+	struct merge_base_bdev_config *base_config;
+	/* todo remove */
 	struct merge_config *config;
 
 	/* Set to true if destruct is called for this merge bdev */
@@ -147,7 +154,7 @@ struct merge_base_bdev_config {
 	/* strip size */
 	uint32_t			strip_size;
 
-	/* Points to already created raid bdev  */
+	/* Points to already created merge bdev  */
 	struct merge_bdev *merge_bdev;
 
 	TAILQ_ENTRY(merge_base_bdev_config) link;
@@ -165,8 +172,16 @@ struct merge_config {
 
 	TAILQ_HEAD(, merge_base_bdev_config) merge_base_bdev_config_head;
 
-	/* total merge bdev  from config file */
-	uint8_t total_merge_slave_bdev;
+	/* total base bdev nums */
+	uint8_t total_bdev_nums;
+
+	/* total merge master bdev from config file */
+	uint8_t total_master_bdev_nums;
+
+	/* total merge slave bdev from config file */
+	uint8_t total_slave_bdev_nums;
+
+	TAILQ_ENTRY(merge_config) link;
 };
 
 
