@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "f2044737_1cc41a23",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 20
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T00:20:50Z",
+      "side": 1,
+      "message": "who is this \"ned\" guy?  :-)\n\nI normally wouldn\u0027t comment on a commit message typo, but in this case I think your commit message is super informative so don\u0027t want any information to get lost.",
+      "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a21a7484_7fbe726d",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T00:20:50Z",
+      "side": 1,
+      "message": "small nit - g_next_qat_index might be better",
+      "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "745c3ea9_be178830",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T00:20:50Z",
+      "side": 1,
+      "message": "pairs",
+      "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "18eec373_2efd8a39",
         "filename": "module/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 20
@@ -19,6 +70,40 @@
         "endLine": 463,
         "endChar": 2
       },
+      "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2af419d_a71a09b1",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1271,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T00:20:50Z",
+      "side": 1,
+      "message": "overall this looks great and not asking you to make this change, but ideally as channels come and go, things could get unbalanced between the CPMs - ideally we\u0027d keep track of how many QPs we\u0027re using per CPM, and a separate g_device_qp_qat TAILQ per CPM - then we look which CPM has the fewest QPs currently being used, and pull a qp from that list\n\nit would also be a lot cheaper to find a qp to use - currently we will have to iterate through 32 (at least) QPs on average to find the next one with matching g_next_index\n\nI know that\u0027s more complicated, but would be good to further refine this for 20.04 release.",
+      "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf28191b_2b9c2e00",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1275,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T00:20:50Z",
+      "side": 1,
+      "message": "I think you can simplify this a bit by doing:\n\nTAILQ_FOREACH() {\n  if (device_qp-\u003eindex !\u003d g_next_index) {\n    continue;\n  }\n  if (device_qp-\u003ein_use \u003d\u003d false) {\n    /* assign it */\n    break;\n  } else {\n    g_next_index \u003d (g_next_index + 1) % g_qat_total_qp;\n  }\n}",
       "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
