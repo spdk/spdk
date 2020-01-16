@@ -36,6 +36,40 @@
     },
     {
       "key": {
+        "uuid": "fe175705_0b625b57",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T23:19:21Z",
+      "side": 1,
+      "message": "add newline (consistent with other fields in this structure)",
+      "revId": "c76d70837323bd70436012697892744aa7ced2aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0026449_491ee2a9",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T23:19:21Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "c76d70837323bd70436012697892744aa7ced2aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4d903fc4_c24f0e6b",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 27
@@ -47,6 +81,23 @@
       "writtenOn": "2020-01-16T21:07:26Z",
       "side": 1,
       "message": "What is \"EXTENT_TABE+EXTENT\"?",
+      "revId": "c76d70837323bd70436012697892744aa7ced2aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85e5f8bb_addaf6ca",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T23:19:21Z",
+      "side": 1,
+      "message": "length",
       "revId": "c76d70837323bd70436012697892744aa7ced2aa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
