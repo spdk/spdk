@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "304fae3d_ed1c5184",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T20:47:58Z",
+      "side": 1,
+      "message": "I don\u0027t understand what you\u0027re trying to say in the last sentence of the commit message, can you reword or expand?  Thanks!",
+      "revId": "a40083ce9f958669e1891585b8b75afe8e64dbdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
