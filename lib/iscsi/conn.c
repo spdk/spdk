@@ -1452,7 +1452,6 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 {
 	uint32_t crc32c;
 	ssize_t rc;
-	bool use_sync_writev = false;
 
 	if (spdk_unlikely(pdu->dif_insert_or_strip)) {
 		rc = iscsi_dif_verify(pdu, &pdu->dif_ctx);
@@ -1480,7 +1479,7 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	TAILQ_INSERT_TAIL(&conn->write_pdu_list, pdu, tailq);
 
 	if (spdk_unlikely(conn->state > ISCSI_CONN_STATE_RUNNING)) {
-		use_sync_writev = true;
+		return;
 	}
 	pdu->sock_req.iovcnt = spdk_iscsi_build_iovs(conn, pdu->iov, SPDK_COUNTOF(pdu->iov), pdu,
 			       &pdu->mapped_length);
@@ -1489,8 +1488,7 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 
 	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, pdu->mapped_length, (uintptr_t)pdu,
 			  pdu->sock_req.iovcnt);
-	if (spdk_unlikely(use_sync_writev ||
-			  (pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) ||
+	if (spdk_unlikely((pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) ||
 			  (pdu->bhs.opcode == ISCSI_OP_LOGOUT_RSP))) {
 		rc = spdk_sock_writev(conn->sock, pdu->iov, pdu->sock_req.iovcnt);
 		if (rc == pdu->mapped_length) {
