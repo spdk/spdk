@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "97b88600_c5927088",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T03:48:15Z",
+      "side": 1,
+      "message": "Maybe \"Sent %lu valid opcode PDUs, %lu invalid opcode PDUs\" may be simpler",
+      "range": {
+        "startLine": 243,
+        "startChar": 27,
+        "endLine": 243,
+        "endChar": 84
+      },
+      "revId": "e69d89b90816009d50520264b0b70bae5dcdeca3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00f4a030_0999ec14",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 745,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T03:48:15Z",
+      "side": 1,
+      "message": "How about \"send valid opcode PDU\"?",
+      "range": {
+        "startLine": 745,
+        "startChar": 19,
+        "endLine": 745,
+        "endChar": 75
+      },
+      "revId": "e69d89b90816009d50520264b0b70bae5dcdeca3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9045a95e_a109a2be",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 746,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T03:48:15Z",
+      "side": 1,
+      "message": "Just num_valid_opcode_pdus or num_valid_pdus may be straight-forward.",
+      "range": {
+        "startLine": 746,
+        "startChar": 11,
+        "endLine": 746,
+        "endChar": 33
+      },
+      "revId": "e69d89b90816009d50520264b0b70bae5dcdeca3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84848cc9_4f17c29f",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T03:48:15Z",
+      "side": 1,
+      "message": "I think this doesn\u0027t mean \"failed to send PDU.\"\n\nHow about \"send invalid opcode PDU\"?",
+      "range": {
+        "startLine": 748,
+        "startChar": 19,
+        "endLine": 748,
+        "endChar": 59
+      },
+      "revId": "e69d89b90816009d50520264b0b70bae5dcdeca3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac6eebfe_7d495555",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 904,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T03:48:15Z",
+      "side": 1,
+      "message": "just num_sent_pdus may be straight-forward.",
+      "range": {
+        "startLine": 904,
+        "startChar": 11,
+        "endLine": 904,
+        "endChar": 32
+      },
+      "revId": "e69d89b90816009d50520264b0b70bae5dcdeca3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
