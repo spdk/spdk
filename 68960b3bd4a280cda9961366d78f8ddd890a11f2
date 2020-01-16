@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1f68531_7a6a1d8f",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T11:00:58Z",
+      "side": 1,
+      "message": "After reconsidering - this should probably also be considered as a \"minimum\" dependency. Why?\nWe have python on line 58 for rpc.py management. spdkcli is too a mgmt tool for spdk, so I think it should be treated the same.",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 3
+      },
+      "revId": "68960b3bd4a280cda9961366d78f8ddd890a11f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
