@@ -16,6 +16,24 @@
       "revId": "4f1e6f8f978877a619769b1a687e464c0ebaafd5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c2477f5_717fcdd3",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-16T16:25:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "75a63986_2154de06",
+      "revId": "4f1e6f8f978877a619769b1a687e464c0ebaafd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
