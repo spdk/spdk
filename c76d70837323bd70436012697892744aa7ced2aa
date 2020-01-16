@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "307d082e_594a5b9a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T21:07:26Z",
+      "side": 1,
+      "message": "maybe it was a different patch where I commented on the goto, I think it\u0027d be much better if you slightly reworked this to not use goto. You could break and then put a condition on 804-808 for example. Just to avoid goto in cases that aren\u0027t related to error cleanup",
+      "revId": "c76d70837323bd70436012697892744aa7ced2aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "904a3584_3a9d8db7",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T21:07:26Z",
+      "side": 1,
+      "message": "this comment is the same as line 67, what is the difference?",
+      "revId": "c76d70837323bd70436012697892744aa7ced2aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d903fc4_c24f0e6b",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T21:07:26Z",
+      "side": 1,
+      "message": "What is \"EXTENT_TABE+EXTENT\"?",
+      "revId": "c76d70837323bd70436012697892744aa7ced2aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
