@@ -47,7 +47,6 @@
 #define PORTNUMLEN 32
 #define SO_RCVBUF_SIZE (2 * 1024 * 1024)
 #define SO_SNDBUF_SIZE (2 * 1024 * 1024)
-#define IOV_BATCH_SIZE 64
 
 struct spdk_posix_sock {
 	struct spdk_sock	base;
