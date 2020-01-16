@@ -51,9 +51,13 @@ popd
 timing_exit db_bench_build
 
 $rootdir/scripts/gen_nvme.sh > $ROCKSDB_CONF
-# 0x80 is the bit mask for BlobFS tracepoints
-echo "[Global]" >> $ROCKSDB_CONF
-echo "TpointGroupMask 0x80" >> $ROCKSDB_CONF
+{
+	echo "[Global]"
+	# 0x80 is the bit mask for BlobFS tracepoints
+	echo "TpointGroupMask 0x80"
+	# Use 2 cores, one core is used for cache pool management
+	echo "ReactorMask 0x3"
+} >> $ROCKSDB_CONF
 
 trap 'run_bsdump; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 
