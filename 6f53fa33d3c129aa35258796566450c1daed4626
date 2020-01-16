@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d4257ee9_e669d6b7",
+        "filename": "lib/ftl/ftl_addr.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-16T08:43:36Z",
+      "side": 1,
+      "message": "Yes, this should be updated.",
+      "parentUuid": "67582a07_5023fdc7",
+      "range": {
+        "startLine": 48,
+        "startChar": 1,
+        "endLine": 48,
+        "endChar": 46
+      },
+      "revId": "6f53fa33d3c129aa35258796566450c1daed4626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d5e5a839_9c34ffe3",
         "filename": "lib/ftl/ftl_addr.h",
         "patchSetId": 48
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "8bf068eb_552b7a2e",
+        "filename": "lib/ftl/ftl_addr.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-16T08:43:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d5e5a839_9c34ffe3",
+      "range": {
+        "startLine": 51,
+        "startChar": 16,
+        "endLine": 51,
+        "endChar": 24
+      },
+      "revId": "6f53fa33d3c129aa35258796566450c1daed4626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1dc87ed0_192d65a9",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 48
@@ -59,6 +107,30 @@
       "writtenOn": "2020-01-16T07:46:33Z",
       "side": 1,
       "message": "Maybe ftl_to_offset?",
+      "range": {
+        "startLine": 281,
+        "startChar": 8,
+        "endLine": 281,
+        "endChar": 19
+      },
+      "revId": "6f53fa33d3c129aa35258796566450c1daed4626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e6ece13_00873121",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-16T08:43:36Z",
+      "side": 1,
+      "message": "I think that ftl_to addr is more suitable here. We are returning ftl_addr structure here and offset is just one of possible representation of address.",
+      "parentUuid": "1dc87ed0_192d65a9",
       "range": {
         "startLine": 281,
         "startChar": 8,
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "e77d45b6_7a28b619",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-16T08:43:36Z",
+      "side": 1,
+      "message": "Same here.",
+      "parentUuid": "a12d7b7d_45cb3eb8",
+      "range": {
+        "startLine": 284,
+        "startChar": 8,
+        "endLine": 284,
+        "endChar": 26
+      },
+      "revId": "6f53fa33d3c129aa35258796566450c1daed4626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a413a342_a063e58a",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 48
@@ -114,6 +210,30 @@
       "revId": "6f53fa33d3c129aa35258796566450c1daed4626",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a688654_afa806b2",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-16T08:43:36Z",
+      "side": 1,
+      "message": "Same here.",
+      "parentUuid": "a413a342_a063e58a",
+      "range": {
+        "startLine": 423,
+        "startChar": 8,
+        "endLine": 423,
+        "endChar": 20
+      },
+      "revId": "6f53fa33d3c129aa35258796566450c1daed4626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
