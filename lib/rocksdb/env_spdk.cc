@@ -663,6 +663,13 @@ static void
 spdk_rocksdb_run(__attribute__((unused)) void *arg1)
 {
 	struct spdk_bdev *bdev;
+	uint32_t count;
+
+	count = spdk_env_get_core_count();
+	if (count < 2) {
+		SPDK_ERRLOG("At least two cores are required\n");
+		exit(1);
+	}
 
 	bdev = spdk_bdev_get_by_name(g_bdev_name.c_str());
 
