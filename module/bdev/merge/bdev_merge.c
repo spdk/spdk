@@ -49,10 +49,8 @@
 #endif
 
 
-int merge_bdev_config_add_master_bdev(struct merge_base_bdev_config *merge_cfg,
-				      const char *master_bdev_name);
-int merge_bdev_config_add_slave_bdev(struct merge_base_bdev_config *merge_cfg,
-				     const char *slave_bdev_name);
+int merge_bdev_config_add_bdev(struct merge_config *merge_cfg,
+			       const char *bdev_name, enum merge_bdev_type type);
 int merge_bdev_create(struct merge_config *merge_config);
 int merge_bdev_add_base_devices(struct merge_config *merge_config);
 
@@ -94,8 +92,7 @@ static const struct spdk_bdev_fn_table g_merge_bdev_fn_table = {
 };
 
 
-
-struct merge_config *g_merge_config;
+TAILQ_HEAD(, merge_config) g_merge_configs;
 
 char *g_trace_file_path = NULL;
 /* g_io_count will accumulate the completed I/Os */
@@ -204,32 +201,7 @@ merge_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 static void
 merge_bdev_get_running_config(FILE *fp)
 {
-	struct spdk_bdev *base;
-	struct merge_base_bdev_config *base_bdev_p;
 
-	if (g_merge_config != NULL) {
-		fprintf(fp, \
-			"\n" \
-			"[MERGE%d]\n" \
-			"  Name	%s\n" \
-			"  MasterStripSize %" PRIu32 "\n" \
-			"  SlaveStripSize %" PRIu32 "\n" \
-			"  NumDevices %u\n", \
-			0, g_merge_config->merge_bdev->bdev.name, g_merge_config->master_strip_size, \
-			g_merge_config->slave_strip_size, g_merge_config->total_merge_slave_bdev + 1);
-		fprintf(fp,
-			"	Devices ");
-		TAILQ_FOREACH(base_bdev_p, &g_merge_config->merge_base_bdev_config_head, link) {
-			base = base_bdev_p->base_bdev_info.bdev;
-			if (base) {
-				fprintf(fp, \
-					"%s ", \
-					base->name);
-			}
-		}
-		fprintf(fp, \
-			"\n");
-	}
 }
 
 static struct spdk_io_channel *
@@ -369,10 +341,12 @@ merge_bdev_slave_io_completion(struct spdk_bdev_io *bdev_io, bool success, void 
 		check_io_flow(bdev_io);
 	}
 #endif
-	spdk_bdev_free_io(bdev_io);
+	if (bdev_io->u.merge_io.current_bdev_idx == bdev_io->u.merge_io.slave_bdev_nums) {
+		spdk_bdev_free_io(bdev_io);
 
-	spdk_bdev_io_complete(parent_io,
-			      success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
+		spdk_bdev_io_complete(parent_io,
+				      success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
+	}
 }
 
 
@@ -386,10 +360,11 @@ merge_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 	struct merge_bdev		*merge_bdev;
 	struct merge_config		*merge_config;
 	struct merge_base_bdev_config *merge_cfg, *master_bdev_config = NULL, *slave_bdev_config = NULL;
-	int i = 2, ret = 0;
+	int ret = 0;
 	int number_block = 0;
 	uint64_t offset;
 	bool merge = false;
+	int slave_bdev_index;
 
 	merge_bdev = (struct merge_bdev *)bdev_io->bdev->ctxt;
 	merge_io = (struct merge_bdev_io *)bdev_io->driver_ctx;
@@ -397,7 +372,6 @@ merge_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 	merge_ch =  spdk_io_channel_get_ctx(merge_io->ch);
 
 	TAILQ_FOREACH(merge_cfg, &merge_bdev->config->merge_base_bdev_config_head, link) {
-		i--;
 		if (merge_cfg->type == MERGE_BDEV_TYPE_MASTER) {
 			master_bdev_config = merge_cfg;
 		} else if (merge_cfg->type == MERGE_BDEV_TYPE_SLAVE) {
@@ -405,7 +379,7 @@ merge_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 		}
 	}
 
-	if (i != 0 || master_bdev_config == NULL || slave_bdev_config == NULL) {
+	if (master_bdev_config == NULL || slave_bdev_config == NULL) {
 		SPDK_ERRLOG("Base bdev error\n");
 		return ;
 	}
@@ -464,16 +438,26 @@ merge_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 			if (merge_bdev->slave_offset + number_block > merge_bdev->max_blockcnt) {
 				merge_bdev->slave_offset = (merge_bdev->slave_offset + number_block) % merge_bdev->max_blockcnt;
 			}
-			ret = spdk_bdev_writev_blocks(slave_bdev_config->base_bdev_info.desc,
-						      merge_ch->slave_channel[0],
-						      &merge_bdev->big_buff_iov, 1,
-						      merge_bdev->slave_offset % merge_bdev->max_blockcnt, number_block, merge_bdev_slave_io_completion,
-						      bdev_io);
+			slave_bdev_index = merge_ch->num_slave_channels - 1;
+			bdev_io->u.merge_io.slave_bdev_nums = merge_ch->num_slave_channels;
+			TAILQ_FOREACH(merge_cfg, &merge_bdev->config->merge_base_bdev_config_head, link) {
+				if (merge_cfg->type == MERGE_BDEV_TYPE_SLAVE) {
+					/* todo bind iochannel with base bdev */
+					bdev_io->u.merge_io.current_bdev_idx++;
+					ret = spdk_bdev_writev_blocks(slave_bdev_config->base_bdev_info.desc,
+								      merge_ch->slave_channel[slave_bdev_index--],
+								      &merge_bdev->big_buff_iov, 1,
+								      merge_bdev->slave_offset % merge_bdev->max_blockcnt, number_block, merge_bdev_slave_io_completion,
+								      bdev_io);
 
-			if (ret != 0) {
-				SPDK_ERRLOG("Bad IO write request submit to slave bdev. error code : %d\n", ret);
-				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+					if (ret != 0) {
+						SPDK_ERRLOG("Bad IO write request submit to slave bdev. error code : %d\n", ret);
+						spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+					}
+				}
 			}
+
+			slave_bdev_index = 0;
 			merge_bdev->slave_offset += merge_bdev->big_buff_size / spdk_bdev_get_block_size(&merge_bdev->bdev);
 			merge_bdev->big_buff_size = 0;
 		}
@@ -603,8 +587,24 @@ merge_bdev_create_io_channel(void *io_device, void *ctx_buf)
 	struct merge_base_bdev_config *merge_cfg;
 	int i = 0, j = 0, k = 0;
 
-	merge_ch->num_master_channels = 1; /* fix for test */
-	merge_ch->num_slave_channels = 1;
+	TAILQ_FOREACH(merge_cfg, &merge_bdev->config->merge_base_bdev_config_head, link) {
+		if (merge_cfg->type == MERGE_BDEV_TYPE_NONE) {
+			SPDK_ERRLOG("Bdev status must not be MERGE_BDEV_TYPE_NONE\n");
+			goto error;
+		}
+
+		if (merge_cfg->type == MERGE_BDEV_TYPE_MASTER) {
+			merge_ch->num_master_channels += 1;
+		} else {
+			merge_ch->num_slave_channels += 1;
+		}
+	}
+
+	if (merge_ch->num_master_channels != 1) {
+		SPDK_ERRLOG("Merge bdev master number must be 1\n");
+		goto error;
+	}
+
 	merge_ch->master_channel = calloc(merge_ch->num_master_channels, sizeof(struct spdk_io_channel *));
 	merge_ch->slave_channel = calloc(merge_ch->num_slave_channels, sizeof(struct spdk_io_channel *));
 	if (!merge_ch->master_channel || !merge_ch->slave_channel) {
@@ -688,12 +688,22 @@ merge_bdev_config_cleanup(struct merge_config *merge_cfg)
 static void
 merge_bdev_free(void)
 {
+	struct merge_config *merge_config;
+
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_MERGE, "merge_bdev_free\n");
-	if (g_merge_config == NULL) {
+	if (TAILQ_EMPTY(&g_merge_configs)) {
 		return ;
 	}
 	/* free config of base bdevs and then free config of merge_bdev */
-	merge_bdev_config_cleanup(g_merge_config);
+
+	while (!TAILQ_EMPTY(&g_merge_configs)) {
+		merge_config = TAILQ_FIRST(&g_merge_configs);
+		if (merge_config != NULL) {
+			TAILQ_REMOVE(&g_merge_configs, merge_config, link);
+			merge_bdev_config_cleanup(merge_config);
+		}
+	}
+
 }
 
 /* brief: */
@@ -729,22 +739,25 @@ merge_bdev_find_by_base_bdev(struct spdk_bdev *base_bdev, struct merge_bdev **_m
 			     struct merge_base_bdev_config **_base_bdev_p)
 {
 	struct merge_base_bdev_config *base_bdev_p = NULL;
+	struct merge_config *merge_config;
 
 	/* there is only one merge bdev for now, so only need to
 	 * so only need to check the pointer for non-NULL.
 	 */
-	assert(g_merge_config != NULL);
-	if (g_merge_config == NULL) {
+	if (TAILQ_EMPTY(&g_merge_configs)) {
 		SPDK_ERRLOG("find base bdev failed, there is no merge bdev.\n");
 		return false;
 	}
-	TAILQ_FOREACH(base_bdev_p, &g_merge_config->merge_base_bdev_config_head, link) {
-		if (base_bdev_p->base_bdev_info.bdev == base_bdev) {
-			*_merge_bdev = base_bdev_p->merge_bdev;
-			*_base_bdev_p = base_bdev_p;
-			return true;
+	TAILQ_FOREACH(merge_config, &g_merge_configs, link) {
+		TAILQ_FOREACH(base_bdev_p, &merge_config->merge_base_bdev_config_head, link) {
+			if (base_bdev_p->base_bdev_info.bdev == base_bdev) {
+				*_merge_bdev = base_bdev_p->merge_bdev;
+				*_base_bdev_p = base_bdev_p;
+				return true;
+			}
 		}
 	}
+
 
 	return false;
 }
@@ -836,46 +849,35 @@ merge_bdev_get_ctx_size(void)
 
 
 int
-merge_bdev_config_add_master_bdev(struct merge_base_bdev_config *merge_cfg,
-				  const char *master_bdev_name)
+merge_bdev_config_add_bdev(struct merge_config *merge_cfg,
+			   const char *bdev_name, enum merge_bdev_type type)
 {
-	struct merge_base_bdev_config *tmp;
-
-	/* for rpc method , to check master node exist */
-	TAILQ_FOREACH(tmp, &g_merge_config->merge_base_bdev_config_head, link) {
-		if (tmp->type == MERGE_BDEV_TYPE_MASTER && tmp->merge_bdev != NULL) {
-			SPDK_ERRLOG("Already contain master node : %s\n", tmp->name);
+	struct merge_base_bdev_config *merge_base_cfg;
+	assert(type != MERGE_BDEV_TYPE_NONE);
+	/* make sure we only have one master now. */
+	TAILQ_FOREACH(merge_base_cfg, &merge_cfg->merge_base_bdev_config_head, link) {
+		if (type == MERGE_BDEV_TYPE_MASTER && merge_base_cfg->type == MERGE_BDEV_TYPE_MASTER) {
+			SPDK_ERRLOG("Already contain master node : %s\n", merge_base_cfg->name);
 			return -EEXIST;
 		}
 	}
+	merge_base_cfg = calloc(1, sizeof(*merge_base_cfg));
+	merge_base_cfg->merge_bdev = NULL;
+	merge_base_cfg->name = strdup(bdev_name);
+	merge_base_cfg->type = type;
+	merge_base_cfg->strip_size = (type == MERGE_BDEV_TYPE_MASTER) ? merge_cfg->master_strip_size :
+				     (type == MERGE_BDEV_TYPE_SLAVE) ? merge_cfg->slave_strip_size : 0;
+	TAILQ_INSERT_TAIL(&merge_cfg->merge_base_bdev_config_head, merge_base_cfg, link);
 
-	merge_cfg->merge_bdev = NULL;
-	merge_cfg->type = MERGE_BDEV_TYPE_MASTER;
-	merge_cfg->name = strdup(master_bdev_name);
-	if (merge_cfg->name == NULL) {
-		SPDK_ERRLOG("Unable to allocate memory\n");
-		return -ENOMEM;
+	if (type == MERGE_BDEV_TYPE_MASTER) {
+		merge_cfg->total_master_bdev_nums += 1;
+	} else if (type == MERGE_BDEV_TYPE_SLAVE) {
+		merge_cfg->total_slave_bdev_nums += 1;
 	}
 
+	merge_cfg->total_bdev_nums += 1;
 	return 0;
 }
-
-
-int
-merge_bdev_config_add_slave_bdev(struct merge_base_bdev_config *merge_cfg,
-				 const char *slave_bdev_name)
-{
-	/* todo check slave number , now we only need one slave */
-	merge_cfg->name = strdup(slave_bdev_name);
-	merge_cfg->type = MERGE_BDEV_TYPE_SLAVE;
-	if (merge_cfg->name == NULL) {
-		SPDK_ERRLOG("Unable to allocate memory\n");
-		return -ENOMEM;
-	}
-
-	return 0;
-}
-
 
 static int
 merge_bdev_destruct(void *ctxt)
@@ -1073,19 +1075,20 @@ merge_bdev_add_base_devices(struct merge_config *merge_config)
  * merge_bdev_parse_config is used to parse the merge bdev from config file based on
  * pre-defined merge bdev format in config file.
  * Format of config file:
- *   [Merge1]
- *   Name merge1
- *   MasterStripSize 4
- *   SlaveStripSize 1096
- *   Master Nvme1n1
- *   Slave Nvme2n1
  *
- *   [Merge2]
- *   Name merge2
- *   MasterStripSize 4
- *   SlaveStripSize 1096
- *   Master Nvme3n1
- *   Slave Nvme4n1
+ * [Merge1]
+ * Name merge1
+ * MasterStripSize 4096
+ * SlaveStripSize 1024000
+ * Master Malloc0
+ * Slave Malloc1 Malloc2
+ *
+ * [Merge2]
+ * Name merge2
+ * MasterStripSize 4096
+ * SlaveStripSize 1024000
+ * Master Malloc3
+ * Slave Malloc4 Malloc5
  *
  * params:
  * conf_section - pointer to config section
@@ -1098,8 +1101,8 @@ merge_bdev_parse_config(struct spdk_conf_section *conf_section)
 {
 	const char *merge_name;
 	const char *master_name, *slave_name;
-	struct merge_base_bdev_config *merge_cfg;
-	int rc, val;
+	int rc, val, i;
+	struct merge_config *merge_config;
 
 	merge_name = spdk_conf_section_get_val(conf_section, "Name");
 	if (merge_name == NULL) {
@@ -1107,12 +1110,9 @@ merge_bdev_parse_config(struct spdk_conf_section *conf_section)
 		return -EINVAL;
 	}
 
-	g_merge_config = calloc(1, sizeof(*g_merge_config));
-	g_merge_config->name =  strdup(merge_name);
-	TAILQ_INIT(&g_merge_config->merge_base_bdev_config_head);
-
-	/* now , ali only need one slave , and i think most of situation is one */
-	g_merge_config->total_merge_slave_bdev = 1;
+	merge_config = calloc(1, sizeof(*merge_config));
+	merge_config->name =  strdup(merge_name);
+	TAILQ_INIT(&merge_config->merge_base_bdev_config_head);
 
 	/* parse the strip size */
 	val = spdk_conf_section_get_intval(conf_section, "MasterStripSize");
@@ -1120,21 +1120,21 @@ merge_bdev_parse_config(struct spdk_conf_section *conf_section)
 		SPDK_ERRLOG("MasterStripSize must bigger than 0\n");
 		return -EINVAL;
 	}
-	g_merge_config->master_strip_size = val;
+	merge_config->master_strip_size = val;
 
 	val = spdk_conf_section_get_intval(conf_section, "SlaveStripSize");
 	if (val < 0) {
 		SPDK_ERRLOG("SlaveStripSize must bigger than 0\n");
 		return -EINVAL;
 	}
-	g_merge_config->slave_strip_size = val;
+	merge_config->slave_strip_size = val;
 
-	if (g_merge_config->slave_strip_size <= g_merge_config->master_strip_size) {
+	if (merge_config->slave_strip_size <= merge_config->master_strip_size) {
 		SPDK_ERRLOG("SlaveStripSize must bigger than MasterStripSize\n");
 		return -EINVAL;
 	}
 
-	if (g_merge_config->slave_strip_size % g_merge_config->master_strip_size != 0) {
+	if (merge_config->slave_strip_size % merge_config->master_strip_size != 0) {
 		SPDK_ERRLOG("SlaveStripSize must be a multiple of MasterStripSize\n");
 		return -EINVAL;
 	}
@@ -1187,49 +1187,45 @@ merge_bdev_parse_config(struct spdk_conf_section *conf_section)
 		return -EINVAL;
 	}
 
-	merge_cfg = calloc(1, sizeof(*merge_cfg));
-	merge_cfg->strip_size = g_merge_config->master_strip_size;
-	rc = merge_bdev_config_add_master_bdev(merge_cfg, master_name);
+	rc = merge_bdev_config_add_bdev(merge_config, master_name, MERGE_BDEV_TYPE_MASTER);
 	if (rc != 0) {
-		/* Free the config */
-		free(merge_cfg);
 		SPDK_ERRLOG("Failed to add base bdev to merge bdev config\n");
 		return rc;
 	}
-	TAILQ_INSERT_TAIL(&g_merge_config->merge_base_bdev_config_head, merge_cfg, link);
 
 	/* parse the slave bdev */
-	slave_name = spdk_conf_section_get_val(conf_section, "Slave");
-	if (slave_name == NULL) {
-		SPDK_ERRLOG("Slave name is null\n");
-		return -EINVAL;
-	}
+	for (i = 0 ; i < SPDK_CONFIG_SLAVE_NUM_LIMIT ; i++) {
+		slave_name = spdk_conf_section_get_nmval(conf_section, "Slave", 0, i);
+		if (slave_name == NULL && i == 0) {
+			SPDK_ERRLOG("Slave name is null\n");
+			return -EINVAL;
+		} else if (slave_name == NULL) {
+			break;
+		}
 
-	merge_cfg = calloc(1, sizeof(*merge_cfg));
-	merge_cfg->strip_size = g_merge_config->slave_strip_size;
-	merge_bdev_config_add_slave_bdev(merge_cfg, slave_name);
-	if (rc != 0) {
-		/* Free the config  */
-		free(merge_cfg);
-		SPDK_ERRLOG("Failed to add base bdev to merge bdev config\n");
-		return rc;
+		rc = merge_bdev_config_add_bdev(merge_config, slave_name, MERGE_BDEV_TYPE_SLAVE);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to add base bdev to merge bdev config\n");
+			return rc;
+		}
 	}
-	TAILQ_INSERT_TAIL(&g_merge_config->merge_base_bdev_config_head, merge_cfg, link);
 
 	/* create bdevs */
-	rc = merge_bdev_create(g_merge_config);
+	rc = merge_bdev_create(merge_config);
 	if (rc != 0) {
-		merge_bdev_config_cleanup(g_merge_config);
+		merge_bdev_config_cleanup(merge_config);
 		SPDK_ERRLOG("Failed to create merge bdev\n");
 		return rc;
 	}
 
-	rc = merge_bdev_add_base_devices(g_merge_config);
+	rc = merge_bdev_add_base_devices(merge_config);
 	if (rc != 0) {
 		/* Pending: do we really need to clean up config */
-		merge_bdev_config_cleanup(g_merge_config);
+		merge_bdev_config_cleanup(merge_config);
 		SPDK_ERRLOG("Failed to add any base bdev to merge bdev\n");
 	}
+
+	TAILQ_INSERT_TAIL(&g_merge_configs, merge_config, link);
 
 	return 0;
 }
@@ -1241,7 +1237,9 @@ merge_bdev_parse_config_root(void)
 {
 	int ret;
 	struct spdk_conf_section *conf_section;
-	/* multi [Merge]
+
+	TAILQ_INIT(&g_merge_configs);
+
 	conf_section = spdk_conf_first_section(NULL);
 	while (conf_section != NULL) {
 		if (spdk_conf_section_match_prefix(conf_section, "Merge")) {
@@ -1252,16 +1250,8 @@ merge_bdev_parse_config_root(void)
 			}
 		}
 		conf_section = spdk_conf_next_section(conf_section);
-	} */
-
-	conf_section = spdk_conf_find_section(NULL, "Merge");
-	if (conf_section != NULL) {
-		ret = merge_bdev_parse_config(conf_section);
-		if (ret < 0) {
-			SPDK_ERRLOG("Unable to parse merge bdev section\n");
-			return ret;
-		}
 	}
+
 	return 0;
 }
 
