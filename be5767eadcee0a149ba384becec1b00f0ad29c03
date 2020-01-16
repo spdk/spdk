@@ -33,6 +33,24 @@
       "revId": "be5767eadcee0a149ba384becec1b00f0ad29c03",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "296f6a9d_90079228",
+        "filename": "test/json_config/json_diff.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-16T16:19:25Z",
+      "side": 1,
+      "message": "It looks like freebsd has python3. I will change it in another patch.",
+      "parentUuid": "e13e76f7_23548fbf",
+      "revId": "be5767eadcee0a149ba384becec1b00f0ad29c03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
