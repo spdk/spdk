@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67582a07_5023fdc7",
+        "filename": "lib/ftl/ftl_addr.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T07:46:33Z",
+      "side": 1,
+      "message": "offset describing the raw offset?",
+      "range": {
+        "startLine": 48,
+        "startChar": 1,
+        "endLine": 48,
+        "endChar": 46
+      },
+      "revId": "6f53fa33d3c129aa35258796566450c1daed4626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5e5a839_9c34ffe3",
+        "filename": "lib/ftl/ftl_addr.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T07:46:33Z",
+      "side": 1,
+      "message": "offset?",
+      "range": {
+        "startLine": 51,
+        "startChar": 16,
+        "endLine": 51,
+        "endChar": 24
+      },
+      "revId": "6f53fa33d3c129aa35258796566450c1daed4626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1dc87ed0_192d65a9",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T07:46:33Z",
+      "side": 1,
+      "message": "Maybe ftl_to_offset?",
+      "range": {
+        "startLine": 281,
+        "startChar": 8,
+        "endLine": 281,
+        "endChar": 19
+      },
+      "revId": "6f53fa33d3c129aa35258796566450c1daed4626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a12d7b7d_45cb3eb8",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T07:46:33Z",
+      "side": 1,
+      "message": "maybe ftl_to_offset_packed?",
+      "range": {
+        "startLine": 284,
+        "startChar": 8,
+        "endLine": 284,
+        "endChar": 26
+      },
+      "revId": "6f53fa33d3c129aa35258796566450c1daed4626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a413a342_a063e58a",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-16T07:46:33Z",
+      "side": 1,
+      "message": "Maybe ftl_offset_cmp?",
+      "range": {
+        "startLine": 423,
+        "startChar": 8,
+        "endLine": 423,
+        "endChar": 20
+      },
+      "revId": "6f53fa33d3c129aa35258796566450c1daed4626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
