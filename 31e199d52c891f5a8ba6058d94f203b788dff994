@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a2d2f22_e4d25c18",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1422,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T21:27:38Z",
+      "side": 1,
+      "message": "just a nit - but I\u0027d just use \"md\" instead of \"metadata\" here - it\u0027s also a bit more consistent with the rest of the code - I don\u0027t think we actually spell out \"metadata\" anywhere except for comments",
+      "revId": "31e199d52c891f5a8ba6058d94f203b788dff994",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
