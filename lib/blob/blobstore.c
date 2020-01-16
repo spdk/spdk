@@ -2891,7 +2891,6 @@ _spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 static void
 _spdk_bs_load_complete(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx, int bserrno)
 {
-	ctx->seq = seq;
 	spdk_bs_iter_first(ctx->bs, _spdk_bs_load_iter, ctx);
 }
 
@@ -3332,7 +3331,6 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 {
 	struct spdk_blob_store	*bs;
 	struct spdk_bs_cpl	cpl;
-	spdk_bs_sequence_t	*seq;
 	struct spdk_bs_load_ctx *ctx;
 	struct spdk_bs_opts	opts = {};
 	int err;
@@ -3391,8 +3389,8 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	cpl.u.bs_handle.cb_arg = cb_arg;
 	cpl.u.bs_handle.bs = bs;
 
-	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
-	if (!seq) {
+	ctx->seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
+	if (!ctx->seq) {
 		spdk_free(ctx->super);
 		free(ctx);
 		_spdk_bs_free(bs);
@@ -3401,7 +3399,7 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	}
 
 	/* Read the super block */
-	spdk_bs_sequence_read_dev(seq, ctx->super, _spdk_bs_page_to_lba(bs, 0),
+	spdk_bs_sequence_read_dev(ctx->seq, ctx->super, _spdk_bs_page_to_lba(bs, 0),
 				  _spdk_bs_byte_to_lba(bs, sizeof(*ctx->super)),
 				  _spdk_bs_load_super_cpl, ctx);
 }
