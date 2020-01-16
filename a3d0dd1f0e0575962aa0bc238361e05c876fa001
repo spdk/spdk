@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3163b3b_77a9e48f",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:59:30Z",
+      "side": 1,
+      "message": "developer",
+      "range": {
+        "startLine": 14,
+        "startChar": 25,
+        "endLine": 14,
+        "endChar": 34
+      },
+      "revId": "a3d0dd1f0e0575962aa0bc238361e05c876fa001",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dfc2c675_2a75003c",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:59:30Z",
+      "side": 1,
+      "message": "I think we should also add long names for these options. -d is just not clear enough.\n\n-d ---\u003e Developer Tools?",
+      "range": {
+        "startLine": 14,
+        "startChar": 9,
+        "endLine": 14,
+        "endChar": 11
+      },
+      "revId": "a3d0dd1f0e0575962aa0bc238361e05c876fa001",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b27d0c8c_f44f1daa",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:59:30Z",
+      "side": 1,
+      "message": "I think it\u0027d be more accurate to call it dev tools",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 24
+      },
+      "revId": "a3d0dd1f0e0575962aa0bc238361e05c876fa001",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34ee92c2_335d5745",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T10:59:30Z",
+      "side": 1,
+      "message": "So right now this option would install everything which is not a bare minimum, not only developer tools.\n\nI think that for this particular commit it should work like this:\na) if pkgdep.sh is called with no arguments: install ALL other packages (bare minumum from the lines above and additional stuff like rdma, pmem, cuse packages) but NOT developer packages\nb) if called with \"-d\" - install all from point a) AND developer tools.\n\nIMO \"-d\" option should contain:\ngit astyle python-pycodestyle lcov sg3_utils pciutils ShellCheck libunwind-devel \n\nAnd additionally could contain all documentation related stuff, but thats debatable, as documentation could have it\u0027s own option.",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 51
+      },
+      "revId": "a3d0dd1f0e0575962aa0bc238361e05c876fa001",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
