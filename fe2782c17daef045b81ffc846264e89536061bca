@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "115c6dce_a672158e",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T09:12:35Z",
+      "side": 1,
+      "message": "Now that the library is the one responsible for opening the bdevs, I don\u0027t think there\u0027s any point in returning spdk_bdev_desc here. Let\u0027s declare these either as spdk_bdev or just a const char *.",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 143,
+        "endChar": 42
+      },
+      "revId": "fe2782c17daef045b81ffc846264e89536061bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92f72e82_9a9b994a",
+        "filename": "module/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-16T09:12:35Z",
+      "side": 1,
+      "message": "This isn\u0027t used, remove it.",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 21
+      },
+      "revId": "fe2782c17daef045b81ffc846264e89536061bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
