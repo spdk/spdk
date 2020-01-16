@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "976265e2_1b373ce7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 20
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T00:27:06Z",
+      "side": 1,
+      "message": "LOL, no idea how those 3 letters ended up there :)",
+      "parentUuid": "f2044737_1cc41a23",
+      "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a21a7484_7fbe726d",
         "filename": "module/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 20
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "1729c69e_93e4f50e",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T00:27:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a21a7484_7fbe726d",
+      "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "745c3ea9_be178830",
         "filename": "module/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 20
@@ -50,6 +86,24 @@
       "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ea46912_0a90d661",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T00:27:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "745c3ea9_be178830",
+      "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -93,6 +147,24 @@
     },
     {
       "key": {
+        "uuid": "518d71ee_effc1166",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1271,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T00:27:06Z",
+      "side": 1,
+      "message": "OK, we can think about it it for next release.  One thing though, we have no way to know for sure where the CPMs are.  On earlier silicon, for example, this load balancing doesn\u0027t do anything. In the future I\u0027ve already asked for an API to give us more insight into the layout of the device that we\u0027re talking to so we can be confident about how effective our placement is.",
+      "parentUuid": "d2af419d_a71a09b1",
+      "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cf28191b_2b9c2e00",
         "filename": "module/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 20
@@ -107,6 +179,24 @@
       "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3824ae4_0ed80f3d",
+        "filename": "module/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1275,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-16T00:27:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "cf28191b_2b9c2e00",
+      "revId": "46b42b88283a71ec2e198649558f13048c79afd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
