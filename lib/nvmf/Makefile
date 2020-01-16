@@ -35,11 +35,12 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 C_SRCS = ctrlr.c ctrlr_discovery.c ctrlr_bdev.c \
-	 subsystem.c nvmf.c nvmf_rpc.c transport.c tcp.c
+	 subsystem.c nvmf.c nvmf_rpc.c transport.c tcp.c \
+	 muser.c
 
 C_SRCS-$(CONFIG_RDMA) += rdma.c
 LIBNAME = nvmf
-LOCAL_SYS_LIBS = -luuid
+LOCAL_SYS_LIBS = -luuid -lmuser
 ifeq ($(CONFIG_RDMA),y)
 LOCAL_SYS_LIBS += -libverbs -lrdmacm
 #Attach only if FreeBSD and RDMA is specified with configure
