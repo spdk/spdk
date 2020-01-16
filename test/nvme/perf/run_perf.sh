@@ -112,7 +112,7 @@ do
 		fi
 
 		if [ $PLUGIN = "spdk-perf-bdev" ]; then
-			run_bdevperf > $NVME_FIO_RESULTS
+			run_bdevperf $k > $NVME_FIO_RESULTS
 			iops_disks[$k]=$((${iops_disks[$k]} + $(get_bdevperf_results iops)))
 			bw[$k]=$((${bw[$k]} + $(get_bdevperf_results bw_Kibs)))
 			cp $NVME_FIO_RESULTS $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
