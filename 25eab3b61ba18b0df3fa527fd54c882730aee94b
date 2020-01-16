@@ -22,6 +22,30 @@
       "revId": "25eab3b61ba18b0df3fa527fd54c882730aee94b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "611e24ee_521ade92",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-16T15:53:00Z",
+      "side": 1,
+      "message": "Best solution would be to straight up remove test case from this patch and do one in https://review.gerrithub.io/c/spdk/spdk/+/467967 as bash test.\n\nAlthough both of them have been in the review process long enough, when this series ends no python tests for lvol should remain. I\u0027d prefer to not hold up of either the series for too long. Lets get both merged first, then as this series gets smaller we will eventually get to the other test case - porting to bash and potentially removing this one.",
+      "parentUuid": "9e7f4230_7eaf44e2",
+      "range": {
+        "startLine": 133,
+        "startChar": 0,
+        "endLine": 133,
+        "endChar": 67
+      },
+      "revId": "25eab3b61ba18b0df3fa527fd54c882730aee94b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
