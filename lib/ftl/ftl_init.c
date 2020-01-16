@@ -955,8 +955,14 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 	struct spdk_ftl_dev *dev = io_device;
 	struct ftl_io_channel *ioch = ctx;
 	char mempool_name[32];
+	int rc;
 
-	snprintf(mempool_name, sizeof(mempool_name), "ftl_io_%p", ioch);
+	rc = snprintf(mempool_name, sizeof(mempool_name), "ftl_io_%p", ioch);
+	if (rc < 0 || rc >= (int)sizeof(mempool_name)) {
+		SPDK_ERRLOG("Failed to create IO channel pool name\n");
+		return -1;
+	}
+
 	ioch->cache_ioch = NULL;
 	ioch->dev = dev;
 	ioch->elem_size = sizeof(struct ftl_md_io);
