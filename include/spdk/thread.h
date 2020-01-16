@@ -468,11 +468,26 @@ int spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn);
  * prior to `fn` being called on each thread.
  *
  * \param fn This is the function that will be called on each thread.
- * \param ctx This context will be passed to fn when called.
+ * \param ctx This context will be passed to `fn` when called.
  * \param cpl This will be called on the originating thread after `fn` has been
  * called on each thread.
  */
 void spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl);
+
+/**
+ * Send a message to each thread on the specific thread group, serially.
+ *
+ * The message is sent asynchronously - i.e. spdk_for_each_thread_on_group will
+ * return prior to `fn` being called on each thread.
+ *
+ * \param fn This is the function that will be called on each thread.
+ * \param ctx This is context will be passed to `fn` when called.
+ * \param cpl This will be called on the originating thread after `fn` has been
+ * called on each thread.
+ * \param group_id `fn` is called only on the threads whose group ID matches.
+ */
+void spdk_for_each_thread_on_group(spdk_msg_fn fn, void *ctx,
+				   spdk_msg_fn cpl, uint64_t group_id);
 
 /**
  * Register a poller on the current thread.
