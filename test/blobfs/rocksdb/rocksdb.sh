@@ -54,6 +54,8 @@ $rootdir/scripts/gen_nvme.sh > $ROCKSDB_CONF
 # 0x80 is the bit mask for BlobFS tracepoints
 echo "[Global]" >> $ROCKSDB_CONF
 echo "TpointGroupMask 0x80" >> $ROCKSDB_CONF
+# At least two cores are required, one for the cache pool mangement.
+echo "ReactorMask 0x3" >>  $ROCKSDB_CONF
 
 trap 'run_bsdump; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 

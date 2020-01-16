@@ -663,6 +663,20 @@ static void
 spdk_rocksdb_run(__attribute__((unused)) void *arg1)
 {
 	struct spdk_bdev *bdev;
+	uint32_t count;
+
+	count = spdk_env_get_core_count();
+	if (count < 2) {
+		SPDK_ERRLOG("At least two lcores are required\n");
+		exit(1);
+	}
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (i != spdk_env_get_current_core()) {
+			g_lcore = i;
+			break;
+		}
+	}
 
 	bdev = spdk_bdev_get_by_name(g_bdev_name.c_str());
 
@@ -670,8 +684,6 @@ spdk_rocksdb_run(__attribute__((unused)) void *arg1)
 		SPDK_ERRLOG("bdev %s not found\n", g_bdev_name.c_str());
 		exit(1);
 	}
-
-	g_lcore = spdk_env_get_first_core();
 
 	g_bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
 	printf("using bdev %s\n", g_bdev_name.c_str());
