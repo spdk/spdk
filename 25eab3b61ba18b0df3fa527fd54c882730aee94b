@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e7f4230_7eaf44e2",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-16T08:30:33Z",
+      "side": 1,
+      "message": "This actually just tests the possibility of calling bdev_lvol_create_lvstore RPC with different clear methods and checking whether or not it will fail.\nThere\u0027s no functional test in here that\u0027d confirm if given clear method works as expected and the actual test should probably look more like the one you have here: https://review.gerrithub.io/c/spdk/spdk/+/471255\n\nI\u0027m fine with merging the \"basic\" version of the test first, but I\u0027d really like to see it expanded.\n\n-1 for comment visibility",
+      "range": {
+        "startLine": 133,
+        "startChar": 0,
+        "endLine": 133,
+        "endChar": 67
+      },
+      "revId": "25eab3b61ba18b0df3fa527fd54c882730aee94b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
