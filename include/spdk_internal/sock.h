@@ -115,6 +115,9 @@ struct spdk_net_impl {
 };
 
 void spdk_net_impl_register(struct spdk_net_impl *impl);
+/* return the iov number constructed */
+int spdk_sock_prep_reqs(struct spdk_sock *sock, struct iovec *iovs, int max_batch_size);
+void spdk_sock_complete_reqs(struct spdk_sock *sock, ssize_t completed_size);
 
 #define SPDK_NET_IMPL_REGISTER(name, impl) \
 static void __attribute__((constructor)) net_impl_register_##name(void) \

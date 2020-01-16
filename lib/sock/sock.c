@@ -584,6 +584,97 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 	return 0;
 }
 
+int
+spdk_sock_prep_reqs(struct spdk_sock *sock, struct iovec *iovs, int max_batch_size)
+{
+	int iovcnt, i;
+	struct spdk_sock_request *req;
+	unsigned int offset;
+
+	/* Gather an iov */
+	iovcnt = 0;
+	req = TAILQ_FIRST(&sock->queued_reqs);
+	while (req) {
+		offset = req->internal.offset;
+
+		for (i = 0; i < req->iovcnt; i++) {
+			/* Consume any offset first */
+			if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
+				offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
+				continue;
+			}
+
+			iovs[iovcnt].iov_base = SPDK_SOCK_REQUEST_IOV(req, i)->iov_base + offset;
+			iovs[iovcnt].iov_len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
+			iovcnt++;
+
+			offset = 0;
+
+			if (iovcnt >= max_batch_size) {
+				break;
+			}
+		}
+		if (iovcnt >= max_batch_size) {
+			break;
+		}
+
+		req = TAILQ_NEXT(req, internal.link);
+	}
+
+	return iovcnt;
+}
+
+void
+spdk_sock_complete_reqs(struct spdk_sock *sock, ssize_t completed_size)
+{
+	struct spdk_sock_request *req;
+	int i, retval;
+	ssize_t rc = completed_size;
+	unsigned int offset;
+	size_t len;
+
+
+	/* Consume the requests that were actually written */
+	req = TAILQ_FIRST(&sock->queued_reqs);
+	while (req) {
+		offset = req->internal.offset;
+
+		for (i = 0; i < req->iovcnt; i++) {
+			/* Advance by the offset first */
+			if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
+				offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
+				continue;
+			}
+
+			/* Calculate the remaining length of this element */
+			len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
+
+			if (len > (size_t)rc) {
+				/* This element was partially sent. */
+				req->internal.offset += rc;
+				return;
+			}
+
+			offset = 0;
+			req->internal.offset += len;
+			rc -= len;
+		}
+
+		/* Handled a full request. */
+		req->internal.offset = 0;
+		spdk_sock_request_pend(sock, req);
+
+		/* The sendmsg syscall above isn't currently asynchronous,
+		 * so it's already done. */
+		retval = spdk_sock_request_put(sock, req, 0);
+		if (rc == 0 || retval) {
+			break;
+		}
+
+		req = TAILQ_FIRST(&sock->queued_reqs);
+	}
+}
+
 void
 spdk_net_impl_register(struct spdk_net_impl *impl)
 {
