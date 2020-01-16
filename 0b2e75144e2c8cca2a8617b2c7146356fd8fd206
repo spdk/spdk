@@ -19,6 +19,41 @@
     },
     {
       "key": {
+        "uuid": "d311ac0c_7fab2d84",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T21:42:45Z",
+      "side": 1,
+      "message": "/** designates Doxygen comments.",
+      "parentUuid": "e45995de_95458c03",
+      "revId": "0b2e75144e2c8cca2a8617b2c7146356fd8fd206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1371bafd_8c0f3fc7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T21:42:45Z",
+      "side": 1,
+      "message": "I feel like this is out of place here.  This doesn\u0027t get set to false anywhere (yet).  I think it will make more sense what this code does in the later patches when you are parsing EXTENT_TABLE descriptors.  Then readers will see that if we got an EXTENT_TABLE descriptor, it would set disable_extent_pages \u003d false, and then this false check will make more sense.\n\nI\u0027m still trying to understand how this will work though, even in the later patches.  For example, blob-\u003edisable_extent_pages will be initialized to some value when you call _spdk_blob_alloc().  Let\u0027s say it is initialized to false.  When you get here, and see that value is false, you don\u0027t know if it is because you already saw an EXTENT_TABLE descriptor, or just because it\u0027s the initialized value.\n\nSo I feel like even later, this will need to be implemented to catch this case where both types of descriptors are found.  So even more reason to wait to add this until later.",
+      "revId": "0b2e75144e2c8cca2a8617b2c7146356fd8fd206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a0d625e0_c904357d",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 7
