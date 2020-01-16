@@ -3170,3 +3170,85 @@ spdk_nvme_ctrlr_get_transport_id(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return &ctrlr->trid;
 }
+
+/* FIXME need to specify max number of iovs */
+int
+spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
+                   uint32_t len, size_t mps,
+                   void* (*gpa_to_vva)(void* prv, uint64_t addr, uint64_t len))
+{
+	uint64_t prp1, prp2;
+	void *vva;
+	uint32_t i;
+	uint32_t residue_len, nents;
+	uint64_t *prp_list;
+	int iovcnt;
+
+	prp1 = cmd->dptr.prp.prp1;
+	prp2 = cmd->dptr.prp.prp2;
+
+	/* PRP1 may started with unaligned page address */
+	residue_len = mps - (prp1 % mps);
+	residue_len = spdk_min(len, residue_len);
+
+	vva = gpa_to_vva(prv, prp1, residue_len);
+	if (spdk_unlikely(vva == NULL)) {
+		SPDK_ERRLOG("GPA to VVA failed\n");
+		return -1;
+	}
+	iovs[0].iov_base = vva;
+	iovs[0].iov_len = residue_len;
+	len -= residue_len;
+
+	if (len) {
+		if (spdk_unlikely(prp2 == 0)) {
+			SPDK_ERRLOG("no PRP2, %d remaining\n", len);
+			return -1;
+		}
+
+		if (len <= mps) {
+			/* 2 PRP used */
+			iovcnt = 2;
+			vva = gpa_to_vva(prv, prp2, len);
+			if (spdk_unlikely(vva == NULL)) {
+				SPDK_ERRLOG("no VVA for %#lx, len%#x\n",
+					prp2, len);
+				return -1;
+			}
+			iovs[1].iov_base = vva;
+			iovs[1].iov_len = len;
+		} else {
+			/* PRP list used */
+			nents = (len + mps - 1) / mps;
+			vva = gpa_to_vva(prv, prp2, nents * sizeof(*prp_list));
+			if (spdk_unlikely(vva == NULL)) {
+				SPDK_ERRLOG("no VVA for %#lx, nents=%#x\n",
+					prp2, nents);
+				return -1;
+			}
+			prp_list = vva;
+			i = 0;
+			while (len != 0) {
+				residue_len = spdk_min(len, mps);
+				vva = gpa_to_vva(prv, prp_list[i], residue_len);
+				if (spdk_unlikely(vva == NULL)) {
+					SPDK_ERRLOG("no VVA for %#lx, residue_len=%#x\n",
+						prp_list[i], residue_len);
+					return -1;
+				}
+				iovs[i + 1].iov_base = vva;
+				iovs[i + 1].iov_len = residue_len;
+				len -= residue_len;
+				i++;
+			}
+			iovcnt = i + 1;
+		}
+	} else {
+		/* 1 PRP used */
+		iovcnt = 1;
+	}
+
+	return iovcnt;
+}
+
+

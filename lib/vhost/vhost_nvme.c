@@ -248,74 +248,17 @@ spdk_vhost_nvme_get_queue_head(struct spdk_vhost_nvme_dev *nvme, uint32_t offset
 }
 
 static int
-spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
+spdk_vhost_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 		   struct spdk_vhost_nvme_task *task, uint32_t len)
 {
-	struct spdk_vhost_session *vsession = nvme->vsession;
-	uint64_t prp1, prp2;
-	void *vva;
-	uint32_t i;
-	uint32_t residue_len, nents, mps = 4096;
-	uint64_t *prp_list;
+	int err;
 
-	prp1 = cmd->dptr.prp.prp1;
-	prp2 = cmd->dptr.prp.prp2;
-
-	/* PRP1 may started with unaligned page address */
-	residue_len = mps - (prp1 % mps);
-	residue_len = spdk_min(len, residue_len);
-
-	vva = vhost_gpa_to_vva(vsession, prp1, residue_len);
-	if (spdk_unlikely(vva == NULL)) {
-		SPDK_ERRLOG("GPA to VVA failed\n");
-		return -1;
+	err = spdk_nvme_map_prps(nvme->session, cmd, task->iovs, len, 4096,
+	                         vhost_gpa_to_vva);
+	if (spedk_unlikely(err < 0)) {
+		return err;
 	}
-	task->iovs[0].iov_base = vva;
-	task->iovs[0].iov_len = residue_len;
-	len -= residue_len;
-
-	if (len) {
-		if (spdk_unlikely(prp2 == 0)) {
-			SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "Invalid PRP2=0 in command\n");
-			return -1;
-		}
-
-		if (len <= mps) {
-			/* 2 PRP used */
-			task->iovcnt = 2;
-			vva = vhost_gpa_to_vva(vsession, prp2, len);
-			if (spdk_unlikely(vva == NULL)) {
-				return -1;
-			}
-			task->iovs[1].iov_base = vva;
-			task->iovs[1].iov_len = len;
-		} else {
-			/* PRP list used */
-			nents = (len + mps - 1) / mps;
-			vva = vhost_gpa_to_vva(vsession, prp2, nents * sizeof(*prp_list));
-			if (spdk_unlikely(vva == NULL)) {
-				return -1;
-			}
-			prp_list = vva;
-			i = 0;
-			while (len != 0) {
-				residue_len = spdk_min(len, mps);
-				vva = vhost_gpa_to_vva(vsession, prp_list[i], residue_len);
-				if (spdk_unlikely(vva == NULL)) {
-					return -1;
-				}
-				task->iovs[i + 1].iov_base = vva;
-				task->iovs[i + 1].iov_len = residue_len;
-				len -= residue_len;
-				i++;
-			}
-			task->iovcnt = i + 1;
-		}
-	} else {
-		/* 1 PRP used */
-		task->iovcnt = 1;
-	}
-
+	task->iovcnt = err;
 	return 0;
 }
 
@@ -547,7 +490,7 @@ spdk_nvme_process_sq(struct spdk_vhost_nvme_dev *nvme, struct spdk_vhost_nvme_sq
 			len = nlba * block_size;
 		}
 
-		ret = spdk_nvme_map_prps(nvme, cmd, task, len);
+		ret = spdk_vhost_nvme_map_prps(nvme, cmd, task, len);
 		if (spdk_unlikely(ret != 0)) {
 			SPDK_ERRLOG("nvme command map prps failed\n");
 			task->dnr = 1;
