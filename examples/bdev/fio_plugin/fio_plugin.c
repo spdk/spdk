@@ -236,6 +236,11 @@ spdk_init_thread_poll(void *arg)
 	struct timespec			ts;
 	struct thread_data		td = {};
 
+	rc = spdk_log_set_flag("all");
+	if (rc) {
+		goto err_exit;
+	}
+
 	/* Create a dummy thread data for use on the initialization thread. */
 	td.o.iodepth = 32;
 	td.eo = eo;
