@@ -946,10 +946,7 @@ unload_cb(void *ctx, int bserrno)
 
 	TAILQ_FOREACH_SAFE(file, &fs->files, tailq, tmp) {
 		TAILQ_REMOVE(&fs->files, file, tailq);
-		cache_free_buffers(file);
-		free(file->name);
-		free(file->tree);
-		free(file);
+		spdk_thread_send_msg(g_cache_pool_thread, _fs_delete_cache_and_file, file);
 	}
 
 	pthread_mutex_lock(&g_cache_init_lock);
