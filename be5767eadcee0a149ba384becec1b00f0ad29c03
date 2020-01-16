@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d328d7f9_3ccf29c8",
+        "filename": "test/config_converter/test_converter.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-16T16:20:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eb1fb2d0_2d4147cb",
+      "revId": "be5767eadcee0a149ba384becec1b00f0ad29c03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e13e76f7_23548fbf",
         "filename": "test/json_config/json_diff.sh",
         "patchSetId": 3
