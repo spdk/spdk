@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b08fd47a_7b90282a",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T05:11:49Z",
+      "side": 1,
+      "message": "is this due to the multi-ns corruption issue you were seeing with QEMU?\n\nI\u0027m trying to follow why you add this here at this point in the series.  Wouldn\u0027t we run fio_test_suite against nvme and gpt before this patch?",
+      "revId": "6205c8db79ae15b748c52ba744ed0ca12de805a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
