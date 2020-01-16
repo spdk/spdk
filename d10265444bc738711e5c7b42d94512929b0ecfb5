@@ -70,6 +70,30 @@
       "revId": "d10265444bc738711e5c7b42d94512929b0ecfb5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b1071db_14683ec6",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-16T14:08:40Z",
+      "side": 1,
+      "message": "I think that we need. At least RDMA/TCP qpair will be disconnected and this status reflects this behaviour",
+      "parentUuid": "8f30cccd_a291589d",
+      "range": {
+        "startLine": 177,
+        "startChar": 2,
+        "endLine": 181,
+        "endChar": 3
+      },
+      "revId": "d10265444bc738711e5c7b42d94512929b0ecfb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
