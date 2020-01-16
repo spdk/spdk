@@ -24,6 +24,12 @@ dependencies required to build and develop SPDK.
 sudo scripts/pkgdep.sh --developer-tools
 ~~~
 
+Using option --fuse will automatically install dependencies for FUSE and CUSE.
+
+~~~{.sh}
+sudo scripts/pkgdep.sh --fuse
+~~~
+
 # Building {#getting_started_building}
 
 Linux:
