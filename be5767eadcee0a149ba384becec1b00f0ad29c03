@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb1fb2d0_2d4147cb",
+        "filename": "test/config_converter/test_converter.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T15:28:53Z",
+      "side": 1,
+      "message": "I know you didn\u0027t add this, but while you\u0027re changing these lines, I have a suggestion:\n\nconfig_converter.py is an executable, so we shouldn\u0027t need to invoke it using python3 - we can just execute it directly.  Same on next line.",
+      "revId": "be5767eadcee0a149ba384becec1b00f0ad29c03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e13e76f7_23548fbf",
+        "filename": "test/json_config/json_diff.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-16T15:28:53Z",
+      "side": 1,
+      "message": "It seems this one is different - I guess we don\u0027t have python3 on FreeBSD systems yet.  So I\u0027m OK keeping this one as-is.  (Maybe you can check with Karol and Seth if this has changed?)",
+      "revId": "be5767eadcee0a149ba384becec1b00f0ad29c03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
