@@ -337,6 +337,14 @@ function run_nvme_fio(){
 }
 
 function run_bdevperf(){
+	local disks
+	local disks_limit
+	disks_limit=$1
+
+	# "+1" because of [Nvme] section in the config file
+	disks=$(head -n $((disks_limit+1)) <<< cat $BASE_DIR/bdev.conf)
+	echo "$disks" > $BASE_DIR/bdev.conf
+
 	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
 	$BDEVPERF_DIR/bdevperf -c $BASE_DIR/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]"
 	sleep 1
