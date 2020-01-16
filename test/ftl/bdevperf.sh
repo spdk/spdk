@@ -21,7 +21,13 @@ for (( i=0; i<${#tests[@]}; i++ )) do
 	waitforlisten $bdevperf_pid
 	$rpc_py bdev_nvme_attach_controller -b nvme0 -a $device -t pcie
 	$rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1
-	$rpc_py bdev_ftl_create -b ftl0 -d nvme0n1
+	# Test append and write alternately
+	if [ $((i % 2)) -eq 0 ]; then
+		$rpc_py bdev_ftl_create -b ftl0 -d nvme0n1
+	else
+		$rpc_py bdev_ftl_create -b ftl0 -d nvme0n1 --use_write
+	fi
+
 	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
 	$rpc_py delete_ftl_bdev -b ftl0
 	$rpc_py bdev_ocssd_delete nvme0n1
