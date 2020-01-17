@@ -108,8 +108,10 @@ def getCompletions(completionFile, test_list, test_completion_table):
             try:
                 test_completion_table.remove(["None", "None", test_name, False, False])
             except ValueError:
+                print("ValueError")
                 continue
         except KeyError:
+            print("KeyError")
             continue
 
 
@@ -167,6 +169,7 @@ def aggregateCompletedTests(output_dir, repo_dir):
             test_completion_table.append(["None", "None", test_name, False, False])
 
     for completionFile in completionFiles:
+        print(completionFile)
         getCompletions(completionFile, test_list, test_completion_table)
 
     printListInformation("Tests", test_list)
