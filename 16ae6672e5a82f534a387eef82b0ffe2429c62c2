@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "642dba1b_571dbecb",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1583,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-17T13:12:16Z",
+      "side": 1,
+      "message": "seems like oacs.doorbell_buffer_config / SPDK_NVME_OPC_DOORBELL_BUFFER_CONFIG is missing\n\nnot sure what about Get LBA Status capability (from 1.4 spec)",
+      "range": {
+        "startLine": 1583,
+        "startChar": 0,
+        "endLine": 1583,
+        "endChar": 24
+      },
+      "revId": "16ae6672e5a82f534a387eef82b0ffe2429c62c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
