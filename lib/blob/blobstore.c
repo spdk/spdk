@@ -728,25 +728,24 @@ _spdk_blob_serialize_extent_rle(const struct spdk_blob *blob,
 		if (*buf_sz < cur_sz) {
 			/* If we ran out of buffer space, return */
 			*next_cluster = i;
-			goto finish;
+			break;
 		}
 
 		lba = blob->active.clusters[i];
 		lba_count = lba_per_cluster;
 	}
 
-	desc_extent_rle->extents[extent_idx].cluster_idx = lba / lba_per_cluster;
-	desc_extent_rle->extents[extent_idx].length = lba_count / lba_per_cluster;
-	extent_idx++;
+	if (*buf_sz >= cur_sz) {
+		desc_extent_rle->extents[extent_idx].cluster_idx = lba / lba_per_cluster;
+		desc_extent_rle->extents[extent_idx].length = lba_count / lba_per_cluster;
+		extent_idx++;
 
-	*next_cluster = blob->active.num_clusters;
+		*next_cluster = blob->active.num_clusters;
+	}
 
-finish:
 	desc_extent_rle->length = sizeof(desc_extent_rle->extents[0]) * extent_idx;
 	*buf_sz -= sizeof(struct spdk_blob_md_descriptor) + desc_extent_rle->length;
 	*buf += sizeof(struct spdk_blob_md_descriptor) + desc_extent_rle->length;
-
-	return;
 }
 
 static int
