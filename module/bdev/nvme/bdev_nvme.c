@@ -2029,19 +2029,26 @@ bdev_nvme_comparev_and_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	struct nvme_bdev_io *bio = ref;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
-	/* We need to check if compare operation failed to make sure that in such case
-	 * write operation failed as well. We don't need to know if we are in compare
-	 * or write callback because for compare callback below check will always result
-	 * as false. */
-	if (spdk_nvme_cpl_is_error(&bio->cpl)) {
-		assert(spdk_nvme_cpl_is_error(cpl));
+	/* Compare operation completion */
+	if ((cpl->cdw0 & 0xFF) == SPDK_NVME_OPC_COMPARE) {
+		/* Save compare result for write callback */
+		bio->cpl = *cpl;
+		return;
 	}
 
-	/* Save compare result for write callback. In case this is write callback this
-	 * line does not matter */
-	bio->cpl = *cpl;
+	/* Write operation completion */
+	if (spdk_nvme_cpl_is_error(&bio->cpl)) {
+		/* If bio->cpl is already an error, it means the compare operation failed.  In that case,
+		 * complete the IO with the compare operation's status.
+		 */
+		if (!spdk_nvme_cpl_is_error(cpl)) {
+			SPDK_ERRLOG("Unexpected write success after compare failure.\n");
+		}
 
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+		spdk_bdev_io_complete_nvme_status(bdev_io, bio->cpl.cdw0, bio->cpl.status.sct, bio->cpl.status.sc);
+	} else {
+		spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+	}
 }
 
 static void
