@@ -1529,7 +1529,8 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 		 * targets use icdoff = 0.  For targets with non-zero icdoff, we
 		 * will currently just not use inline data for now.
 		 */
-		if (req->cmd.opc == SPDK_NVME_OPC_WRITE &&
+		if (spdk_nvme_opc_get_data_transfer(req->cmd.opc) ==
+		    SPDK_NVME_DATA_HOST_TO_CONTROLLER &&
 		    req->payload_size <= nvme_rdma_icdsz_bytes(ctrlr) &&
 		    (ctrlr->cdata.nvmf_specific.icdoff == 0)) {
 			rc = nvme_rdma_build_contig_inline_request(rqpair, rdma_req);
@@ -1537,7 +1538,8 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 			rc = nvme_rdma_build_contig_request(rqpair, rdma_req);
 		}
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL) {
-		if (req->cmd.opc == SPDK_NVME_OPC_WRITE &&
+		if (spdk_nvme_opc_get_data_transfer(req->cmd.opc) ==
+		    SPDK_NVME_DATA_HOST_TO_CONTROLLER &&
 		    req->payload_size <= nvme_rdma_icdsz_bytes(ctrlr) &&
 		    ctrlr->cdata.nvmf_specific.icdoff == 0) {
 			rc = nvme_rdma_build_sgl_inline_request(rqpair, rdma_req);
