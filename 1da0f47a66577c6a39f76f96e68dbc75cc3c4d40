@@ -16,6 +16,57 @@
       "revId": "1da0f47a66577c6a39f76f96e68dbc75cc3c4d40",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fce3715f_e2c7436b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1061,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T20:32:49Z",
+      "side": 1,
+      "message": "return not needed",
+      "revId": "1da0f47a66577c6a39f76f96e68dbc75cc3c4d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fed50769_e87c3702",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 6309,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T20:32:49Z",
+      "side": 1,
+      "message": "serialize_extent_page",
+      "revId": "1da0f47a66577c6a39f76f96e68dbc75cc3c4d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe2c245a_b2eb1788",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 6317,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T20:32:49Z",
+      "side": 1,
+      "message": "_spdk_blob_persist_extent_page_cpl?",
+      "revId": "1da0f47a66577c6a39f76f96e68dbc75cc3c4d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
