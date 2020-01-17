@@ -160,6 +160,7 @@ struct spdk_iscsi_conn {
 	int full_feature;
 
 	struct iscsi_param *params;
+	struct iscsi_param *params_tmp;
 	bool sess_param_state_negotiated[MAX_SESSION_PARAMS];
 	bool conn_param_state_negotiated[MAX_CONNECTION_PARAMS];
 	struct iscsi_chap_auth auth;
