@@ -1503,8 +1503,7 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, pdu->mapped_length, (uintptr_t)pdu,
 			  pdu->sock_req.iovcnt);
 	if (spdk_unlikely((pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) ||
-			  (pdu->bhs.opcode == ISCSI_OP_LOGOUT_RSP) ||
-			  (pdu->bhs.opcode == ISCSI_OP_TEXT_RSP))) {
+			  (pdu->bhs.opcode == ISCSI_OP_LOGOUT_RSP))) {
 		rc = spdk_sock_writev(conn->sock, pdu->iov, pdu->sock_req.iovcnt);
 		if (rc == pdu->mapped_length) {
 			_iscsi_conn_pdu_write_done(pdu, 0);
