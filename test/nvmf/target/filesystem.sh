@@ -29,7 +29,21 @@ function nvmf_filesystem_create {
 	sync
 	rm /mnt/device/aaa
 	sync
-	umount /mnt/device
+
+	while ! umount /mnt/device; do
+		[ $i -lt 15 ] || break
+		i=$((i+1))
+		sleep 1
+	done
+
+	# Make sure the target did not crash
+	kill -0 $nvmfpid
+
+	# Make sure the device is still present
+	lsblk -l -o NAME | grep -q -w "${nvme_name}"
+
+	# Make sure the partition is still present
+	lsblk -l -o NAME | grep -q -w "${nvme_name}p1"
 }
 
 function nvmf_filesystem_part {
