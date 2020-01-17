@@ -34,6 +34,24 @@
       "revId": "96df4eb3e69c47582530e8b391876f96a8efa203",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fbad9e88_8b535a72",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1481,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-17T05:00:45Z",
+      "side": 1,
+      "message": "Oops, I forgot to insert spdk_iscsi_conn_free_pdu(). but your idea looks good to me. Let\u0027s keep this patch and get review. Looks nice to me.",
+      "parentUuid": "7d626d58_15a5b58c",
+      "revId": "96df4eb3e69c47582530e8b391876f96a8efa203",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
