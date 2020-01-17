@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "77e5afe8_e6247318",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-17T15:27:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "771f28f8_f6221763",
+      "range": {
+        "startLine": 71,
+        "startChar": 71,
+        "endLine": 71,
+        "endChar": 74
+      },
+      "revId": "22f3368edb748c53ca4b33e94118f0b9616ec5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "82e2e440_125432d8",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 5
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "e77767b7_737e08cf",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2063,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-17T15:27:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "82e2e440_125432d8",
+      "range": {
+        "startLine": 2063,
+        "startChar": 2,
+        "endLine": 2063,
+        "endChar": 8
+      },
+      "revId": "22f3368edb748c53ca4b33e94118f0b9616ec5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f44b36c9_67677ff5",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 5
@@ -68,6 +116,30 @@
       "revId": "22f3368edb748c53ca4b33e94118f0b9616ec5b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e78f458a_c8369946",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2067,
+      "author": {
+        "id": 1016048
+      },
+      "writtenOn": "2020-01-17T15:27:45Z",
+      "side": 1,
+      "message": "Yes. We give the callback a chance to handle the command and if it can\u0027t we fall back to the normal flow.\nThis way the callback can pick and chose what to handle.",
+      "parentUuid": "f44b36c9_67677ff5",
+      "range": {
+        "startLine": 2064,
+        "startChar": 0,
+        "endLine": 2067,
+        "endChar": 3
+      },
+      "revId": "22f3368edb748c53ca4b33e94118f0b9616ec5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
