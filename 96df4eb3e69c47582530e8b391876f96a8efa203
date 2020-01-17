@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55bd7565_4a9eb668",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1481,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-17T04:48:41Z",
+      "side": 1,
+      "message": "Should we move this check and return to the top of this function, before the line 1456?",
+      "revId": "96df4eb3e69c47582530e8b391876f96a8efa203",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
