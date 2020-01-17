@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66324990_b3bbe108",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T21:43:43Z",
+      "side": 1,
+      "message": "I think I\u0027d prefer we add this GET_LBA_STATUS stuff in a separate patch.  It\u0027s not a lot, but the commit message doesn\u0027t mention anything about it, so we should either update the commit message, or add a separate patch (likely just before this one).  Normally we would want to separate out the nvme_spec.h Get LBA Status changes from the NVMf code changes, so I\u0027d vote for the former (separate patch).\n\nGood catch though Jacek - I hadn\u0027t even looked at the new OACS values in 1.4 to see this new one.",
+      "revId": "6942c1f52f863effa63f7cedb37e186454d7f9ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
