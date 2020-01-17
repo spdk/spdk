@@ -2666,11 +2666,6 @@ _spdk_bs_write_used_md(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence_cpl 
 	struct spdk_bs_load_ctx	*ctx = arg;
 	uint64_t	mask_size, lba, lba_count;
 
-	if (seq->bserrno) {
-		_spdk_bs_load_ctx_fail(ctx, seq->bserrno);
-		return;
-	}
-
 	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
 	ctx->mask = spdk_zmalloc(mask_size, 0x1000, NULL,
 				 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
@@ -4006,9 +4001,9 @@ spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn,
 /* START spdk_bs_unload */
 
 static void
-_spdk_bs_unload_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+_spdk_bs_unload_finish(struct spdk_bs_load_ctx *ctx, int bserrno)
 {
-	struct spdk_bs_load_ctx	*ctx = cb_arg;
+	spdk_bs_sequence_t *seq = ctx->seq;
 
 	spdk_free(ctx->super);
 
@@ -4027,11 +4022,25 @@ _spdk_bs_unload_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 }
 
 static void
+_spdk_bs_unload_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx	*ctx = cb_arg;
+
+	_spdk_bs_unload_finish(ctx, bserrno);
+}
+
+static void
 _spdk_bs_unload_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx	*ctx = cb_arg;
 
 	spdk_free(ctx->mask);
+
+	if (bserrno != 0) {
+		_spdk_bs_unload_finish(ctx, bserrno);
+		return;
+	}
+
 	ctx->super->clean = 1;
 
 	_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_unload_write_super_cpl, ctx);
@@ -4045,6 +4054,11 @@ _spdk_bs_unload_write_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, in
 	spdk_free(ctx->mask);
 	ctx->mask = NULL;
 
+	if (bserrno != 0) {
+		_spdk_bs_unload_finish(ctx, bserrno);
+		return;
+	}
+
 	_spdk_bs_write_used_clusters(seq, ctx, _spdk_bs_unload_write_used_clusters_cpl);
 }
 
@@ -4056,12 +4070,24 @@ _spdk_bs_unload_write_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int 
 	spdk_free(ctx->mask);
 	ctx->mask = NULL;
 
+	if (bserrno != 0) {
+		_spdk_bs_unload_finish(ctx, bserrno);
+		return;
+	}
+
 	_spdk_bs_write_used_blobids(seq, ctx, _spdk_bs_unload_write_used_blobids_cpl);
 }
 
 static void
 _spdk_bs_unload_read_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
+	struct spdk_bs_load_ctx	*ctx = cb_arg;
+
+	if (bserrno != 0) {
+		_spdk_bs_unload_finish(ctx, bserrno);
+		return;
+	}
+
 	_spdk_bs_write_used_md(seq, cb_arg, _spdk_bs_unload_write_used_pages_cpl);
 }
 
