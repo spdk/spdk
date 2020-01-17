@@ -1123,15 +1123,39 @@ iscsi_conn_params_update(struct spdk_iscsi_conn *conn)
 	return rc;
 }
 
+static void
+iscsi_conn_login_pdu_err_complete(void *arg)
+{
+	struct spdk_iscsi_conn *conn = arg;
+
+	if (conn->full_feature) {
+		iscsi_conn_params_update(conn);
+	}
+}
+
+static void
+iscsi_conn_login_pdu_success_complete(void *arg)
+{
+	struct spdk_iscsi_conn *conn = arg;
+
+	if (conn->full_feature) {
+		if (iscsi_conn_params_update(conn) != 0) {
+			return;
+		}
+	}
+	conn->state = ISCSI_CONN_STATE_RUNNING;
+	if (conn->full_feature != 0) {
+		spdk_iscsi_conn_schedule(conn);
+	}
+}
+
 /*
  * The response function of spdk_iscsi_op_login
- * return:
- * 0:success;
- * -1:error;
  */
-static int
+static void
 iscsi_op_login_response(struct spdk_iscsi_conn *conn,
-			struct spdk_iscsi_pdu *rsp_pdu, struct iscsi_param *params)
+			struct spdk_iscsi_pdu *rsp_pdu, struct iscsi_param *params,
+			iscsi_conn_xfer_complete_cb cb_fn)
 {
 	struct iscsi_bhs_login_rsp *rsph;
 
@@ -1160,16 +1184,8 @@ iscsi_op_login_response(struct spdk_iscsi_conn *conn,
 		rsph->flags &= ~ISCSI_LOGIN_CURRENT_STAGE_MASK;
 		rsph->flags &= ~ISCSI_LOGIN_NEXT_STAGE_MASK;
 	}
-
 	spdk_iscsi_param_free(params);
-	spdk_iscsi_conn_write_pdu(conn, rsp_pdu, spdk_iscsi_conn_pdu_generic_complete, NULL);
-
-	/* after send PDU digest on/off */
-	if (conn->full_feature) {
-		return iscsi_conn_params_update(conn);
-	}
-
-	return 0;
+	spdk_iscsi_conn_write_pdu(conn, rsp_pdu, cb_fn, conn);
 }
 
 /*
@@ -2173,8 +2189,8 @@ iscsi_pdu_hdr_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 	rc = iscsi_op_login_rsp_init(conn, pdu, rsp_pdu);
 	if (rc < 0) {
-		iscsi_op_login_response(conn, rsp_pdu, NULL);
-		return rc;
+		iscsi_op_login_response(conn, rsp_pdu, NULL, iscsi_conn_login_pdu_err_complete);
+		return 0;
 	}
 
 	conn->login_rsp_pdu = rsp_pdu;
@@ -2201,35 +2217,26 @@ iscsi_pdu_payload_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *
 
 	rc = iscsi_op_login_store_incoming_params(conn, pdu, rsp_pdu, &params);
 	if (rc < 0) {
-		iscsi_op_login_response(conn, rsp_pdu, NULL);
-		return rc;
+		iscsi_op_login_response(conn, rsp_pdu, NULL, iscsi_conn_login_pdu_err_complete);
+		return 0;
 	}
 
 	if (conn->state == ISCSI_CONN_STATE_INVALID) {
 		rc = iscsi_op_login_phase_none(conn, rsp_pdu, params, cid);
 		if (rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE || rc == SPDK_ISCSI_LOGIN_ERROR_PARAMETER) {
-			iscsi_op_login_response(conn, rsp_pdu, params);
-			return rc;
+			iscsi_op_login_response(conn, rsp_pdu, params, iscsi_conn_login_pdu_err_complete);
+			return 0;
 		}
 	}
 
 	rc = iscsi_op_login_rsp_handle(conn, rsp_pdu, &params);
 	if (rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE) {
-		iscsi_op_login_response(conn, rsp_pdu, params);
-		return rc;
+		iscsi_op_login_response(conn, rsp_pdu, params, iscsi_conn_login_pdu_err_complete);
+		return 0;
 	}
 
-	rc = iscsi_op_login_response(conn, rsp_pdu, params);
-	if (rc == 0) {
-		conn->state = ISCSI_CONN_STATE_RUNNING;
-		if (conn->full_feature != 0) {
-			spdk_iscsi_conn_schedule(conn);
-		}
-	} else {
-		SPDK_ERRLOG("login error - connection will be destroyed\n");
-	}
-
-	return rc;
+	iscsi_op_login_response(conn, rsp_pdu, params, iscsi_conn_login_pdu_success_complete);
+	return 0;
 }
 
 static int

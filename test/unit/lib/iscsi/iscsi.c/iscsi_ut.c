@@ -1350,7 +1350,7 @@ pdu_hdr_op_login_test(void)
 	login_reqh->flags |= ISCSI_LOGIN_CONTINUE;
 
 	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
-	CU_ASSERT(rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE);
+	CU_ASSERT(rc == 0);
 	check_login_response(ISCSI_CLASS_INITIATOR_ERROR, ISCSI_LOGIN_INITIATOR_ERROR);
 
 	/* Case 5 - Both version-min and version-max must be set to 0x00. */
@@ -1358,7 +1358,7 @@ pdu_hdr_op_login_test(void)
 	login_reqh->version_min = ISCSI_VERSION + 1;
 
 	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
-	CU_ASSERT(rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE);
+	CU_ASSERT(rc == 0);
 	check_login_response(ISCSI_CLASS_INITIATOR_ERROR, ISCSI_LOGIN_UNSUPPORTED_VERSION);
 
 	/* Case 6 - T bit is set to 1 correctly but invalid stage code is set to NSG. */
@@ -1367,7 +1367,7 @@ pdu_hdr_op_login_test(void)
 	login_reqh->flags |= ISCSI_NSG_RESERVED_CODE;
 
 	rc = iscsi_pdu_hdr_op_login(&conn, &pdu);
-	CU_ASSERT(rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE);
+	CU_ASSERT(rc == 0);
 	check_login_response(ISCSI_CLASS_INITIATOR_ERROR, ISCSI_LOGIN_INITIATOR_ERROR);
 
 	/* Case 7 - Login request is correct.  Login response is initialized and set to
