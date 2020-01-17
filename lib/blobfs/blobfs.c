@@ -282,11 +282,9 @@ blobfs_cache_pool_mgmt(void *arg)
 
 	/* remove the files which don't have cache buffers */
 	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
-		pthread_spin_lock(&file->lock);
 		if (file->tree && file->tree->present_mask == 0) {
 			TAILQ_REMOVE(&g_caches, file, cache_tailq);
 		}
-		pthread_spin_unlock(&file->lock);
 	}
 
 	if (!blobfs_cache_pool_need_reclaim()) {
