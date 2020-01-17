@@ -221,8 +221,6 @@ struct spdk_ftl_dev {
 
 	/* Inflight IO operations */
 	uint32_t				num_inflight;
-	/* Queue of IO awaiting retry */
-	TAILQ_HEAD(, ftl_io)			retry_queue;
 
 	/* Manages data relocation */
 	struct ftl_reloc			*reloc;
