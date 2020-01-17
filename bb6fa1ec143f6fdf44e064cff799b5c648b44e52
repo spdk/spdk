@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2916a4dc_ad9b7693",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2035,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T14:15:31Z",
+      "side": 1,
+      "message": "let\u0027s add a comment here:\n\n/* If bio-\u003ecpl is already an error, it means the compare operation failed.  In that case,\n * complete the IO with the compare operation\u0027s status.\n */",
+      "revId": "bb6fa1ec143f6fdf44e064cff799b5c648b44e52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
