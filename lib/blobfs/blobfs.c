@@ -940,6 +940,24 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	spdk_bs_load(dev, &bs_opts, load_cb, req);
 }
 
+static void _fs_free_file_from_cache(void *ctx)
+{
+	struct spdk_file *iter, *tmp, *file = ctx;
+
+	pthread_spin_lock(&g_caches_lock);
+	TAILQ_FOREACH_SAFE(iter, &g_caches, cache_tailq, tmp) {
+		if (iter == file) {
+			TAILQ_REMOVE(&g_caches, file, cache_tailq);
+			break;
+		}
+	}
+	pthread_spin_unlock(&g_caches_lock);
+
+	free(file->name);
+	free(file->tree);
+	free(file);
+}
+
 static void
 unload_cb(void *ctx, int bserrno)
 {
@@ -951,9 +969,7 @@ unload_cb(void *ctx, int bserrno)
 	TAILQ_FOREACH_SAFE(file, &fs->files, tailq, tmp) {
 		TAILQ_REMOVE(&fs->files, file, tailq);
 		cache_free_buffers(file);
-		free(file->name);
-		free(file->tree);
-		free(file);
+		spdk_thread_send_msg(g_cache_pool_thread, _fs_free_file_from_cache, file);
 	}
 
 	pthread_mutex_lock(&g_cache_init_lock);
@@ -1588,12 +1604,9 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 	cache_free_buffers(f);
 
 	blobid = f->blobid;
-
-	free(f->name);
-	free(f->tree);
-	free(f);
-
 	spdk_bs_delete_blob(fs->bs, blobid, blob_delete_cb, req);
+
+	spdk_thread_send_msg(g_cache_pool_thread, _fs_free_file_from_cache, f);
 }
 
 static uint64_t
