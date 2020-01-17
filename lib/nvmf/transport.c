@@ -99,6 +99,12 @@ spdk_nvmf_get_transport_type(struct spdk_nvmf_transport *transport)
 	return transport->ops->type;
 }
 
+const char *
+spdk_nvmf_get_transport_name(struct spdk_nvmf_transport *transport)
+{
+	return transport->ops->name;
+}
+
 struct spdk_nvmf_transport *
 spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transport_opts *opts)
 {
