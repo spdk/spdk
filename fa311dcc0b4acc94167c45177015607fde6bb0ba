@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1453d6c0_10ea92d4",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:28:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e5e36de4_4cc6edcc",
+      "range": {
+        "startLine": 3,
+        "startChar": 75,
+        "endLine": 3,
+        "endChar": 81
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5c200b8_96a08036",
         "filename": "doc/ftl.md",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "68990c58_f4029805",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:28:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f5c200b8_96a08036",
+      "range": {
+        "startLine": 127,
+        "startChar": 3,
+        "endLine": 127,
+        "endChar": 5
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c658b120_c2df58ee",
         "filename": "doc/ftl.md",
         "patchSetId": 3
@@ -68,6 +116,30 @@
       "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fcd1babe_e3557407",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:28:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c658b120_c2df58ee",
+      "range": {
+        "startLine": 226,
+        "startChar": 71,
+        "endLine": 226,
+        "endChar": 76
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +189,54 @@
     },
     {
       "key": {
+        "uuid": "0676e1bb_2fc90d1a",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:28:20Z",
+      "side": 1,
+      "message": "I will rather avoid to use \"namespace\" in context of bdev_zone interface",
+      "parentUuid": "f7bdb106_2b9b0090",
+      "range": {
+        "startLine": 230,
+        "startChar": 19,
+        "endLine": 230,
+        "endChar": 60
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73f380d9_e77d6399",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:28:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7d62a084_ce7485ad",
+      "range": {
+        "startLine": 230,
+        "startChar": 8,
+        "endLine": 230,
+        "endChar": 12
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f32df45_7b56c2cd",
         "filename": "doc/ftl.md",
         "patchSetId": 3
@@ -128,6 +248,30 @@
       "writtenOn": "2020-01-16T15:30:19Z",
       "side": 1,
       "message": "OCSSD, but I\u0027d use NVMe here.",
+      "range": {
+        "startLine": 234,
+        "startChar": 10,
+        "endLine": 234,
+        "endChar": 17
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7ff5f8f_c5ffaaba",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:28:20Z",
+      "side": 1,
+      "message": "I will change it to OC SSD",
+      "parentUuid": "3f32df45_7b56c2cd",
       "range": {
         "startLine": 234,
         "startChar": 10,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "3f97c4f3_f85db114",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:28:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dfd32098_7a871cdc",
+      "range": {
+        "startLine": 235,
+        "startChar": 3,
+        "endLine": 235,
+        "endChar": 20
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a03bc32f_91d7e225",
         "filename": "doc/ftl.md",
         "patchSetId": 3
@@ -183,6 +351,30 @@
       "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b14d1018_f815d201",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:28:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a03bc32f_91d7e225",
+      "range": {
+        "startLine": 236,
+        "startChar": 3,
+        "endLine": 236,
+        "endChar": 18
+      },
+      "revId": "fa311dcc0b4acc94167c45177015607fde6bb0ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "aafd4c59_9c48b103",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:28:20Z",
+      "side": 0,
+      "message": "Ok, but I don\u0027t think that we should say that there are only two options for crating FTL - we need to remember to update this each time when new bdev_zone appears.",
+      "parentUuid": "70f049fd_dc445a0a",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 141,
+        "endChar": 22
+      },
+      "revId": "60c456778920373f0634ce86996b7282a717a23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52d4a3f8_ea90022d",
         "filename": "doc/ftl.md",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2020-01-16T15:30:19Z",
       "side": 0,
       "message": "Let\u0027s keep this explanation (updating it appropriately).",
+      "range": {
+        "startLine": 243,
+        "startChar": 0,
+        "endLine": 246,
+        "endChar": 0
+      },
+      "revId": "60c456778920373f0634ce86996b7282a717a23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "04bbfb96_c2802e3c",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:28:20Z",
+      "side": 0,
+      "message": "I do not want to put JSON config example to this doc (it could be outdated very soon)",
+      "parentUuid": "52d4a3f8_ea90022d",
       "range": {
         "startLine": 243,
         "startChar": 0,
@@ -68,6 +116,30 @@
       "revId": "60c456778920373f0634ce86996b7282a717a23d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eabfb38f_b266e75a",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:28:20Z",
+      "side": 0,
+      "message": "Done",
+      "parentUuid": "98b59061_f56190e9",
+      "range": {
+        "startLine": 252,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 1
+      },
+      "revId": "60c456778920373f0634ce86996b7282a717a23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
