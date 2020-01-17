@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b72b1e18_d4ec3441",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1198,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T21:30:31Z",
+      "side": 1,
+      "message": "extent_page_id?",
+      "revId": "efb7dca926c1584f6cda58064ca1c3c8333b58a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3fd8a57d_8455d68a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1302,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T21:30:31Z",
+      "side": 1,
+      "message": "zmalloc instead of realloc?  ctx-\u003epages is NULL here, so realloc() doesn\u0027t really make sense",
+      "revId": "efb7dca926c1584f6cda58064ca1c3c8333b58a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8dd0d40_e3e8d5c2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1314,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T21:30:31Z",
+      "side": 1,
+      "message": "I think some crossing comments + patches here.  Paul had a good comment on this - we should just call _spdk_blob_load_final() inline and avoid the goto, especially since that\u0027s done above on line 1304.",
+      "revId": "efb7dca926c1584f6cda58064ca1c3c8333b58a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fdca512e_3d3a8673",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1354,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T21:30:31Z",
+      "side": 1,
+      "message": "Comment here?  (Paul commented on this on previous revision)",
+      "revId": "efb7dca926c1584f6cda58064ca1c3c8333b58a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c23376a2_e7369fb1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1364,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T21:30:31Z",
+      "side": 1,
+      "message": "I don\u0027t think this is needed.  You already know this cannot be thin provisioned from the check at line 1340.",
+      "revId": "efb7dca926c1584f6cda58064ca1c3c8333b58a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
