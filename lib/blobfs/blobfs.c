@@ -279,7 +279,18 @@ blobfs_cache_pool_need_reclaim(void)
 static int
 blobfs_cache_pool_mgmt(void *arg)
 {
-	struct spdk_file *file = NULL;
+	struct spdk_file *file, *tmp;
+
+	/* remove the files which don't have cache buffers */
+	pthread_spin_lock(&g_caches_lock);
+	TAILQ_FOREACH_SAFE(file, &g_caches, cache_tailq, tmp) {
+		pthread_spin_lock(&file->lock);
+		if (file->tree && file->tree->present_mask == 0) {
+			TAILQ_REMOVE(&g_caches, file, cache_tailq);
+		}
+		pthread_spin_unlock(&file->lock);
+	}
+	pthread_spin_unlock(&g_caches_lock);
 
 	if (!blobfs_cache_pool_need_reclaim()) {
 		return -1;
@@ -940,6 +951,24 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	spdk_bs_load(dev, &bs_opts, load_cb, req);
 }
 
+static void _fs_free_file_from_cache(void *ctx)
+{
+	struct spdk_file *iter, *tmp, *file = ctx;
+
+	pthread_spin_lock(&g_caches_lock);
+	TAILQ_FOREACH_SAFE(iter, &g_caches, cache_tailq, tmp) {
+		if (iter == file) {
+			TAILQ_REMOVE(&g_caches, file, cache_tailq);
+			break;
+		}
+	}
+	pthread_spin_unlock(&g_caches_lock);
+
+	free(file->name);
+	free(file->tree);
+	free(file);
+}
+
 static void
 unload_cb(void *ctx, int bserrno)
 {
@@ -951,9 +980,7 @@ unload_cb(void *ctx, int bserrno)
 	TAILQ_FOREACH_SAFE(file, &fs->files, tailq, tmp) {
 		TAILQ_REMOVE(&fs->files, file, tailq);
 		cache_free_buffers(file);
-		free(file->name);
-		free(file->tree);
-		free(file);
+		spdk_thread_send_msg(g_cache_pool_thread, _fs_free_file_from_cache, file);
 	}
 
 	pthread_mutex_lock(&g_cache_init_lock);
@@ -1588,12 +1615,9 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 	cache_free_buffers(f);
 
 	blobid = f->blobid;
-
-	free(f->name);
-	free(f->tree);
-	free(f);
-
 	spdk_bs_delete_blob(fs->bs, blobid, blob_delete_cb, req);
+
+	spdk_thread_send_msg(g_cache_pool_thread, _fs_free_file_from_cache, f);
 }
 
 static uint64_t
@@ -2113,6 +2137,26 @@ spdk_fs_get_cache_size(void)
 
 static void __file_flush(void *ctx);
 
+static void
+_file_cache_insert_buffer(void *ctx)
+{
+	struct spdk_file *iter, *file = ctx;
+	bool exist = false;
+
+	pthread_spin_lock(&g_caches_lock);
+	TAILQ_FOREACH(iter, &g_caches, cache_tailq) {
+		if (iter == file) {
+			exist = true;
+			break;
+		}
+	}
+
+	if (!exist) {
+		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
+	}
+	pthread_spin_unlock(&g_caches_lock);
+}
+
 static struct cache_buffer *
 cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 {
@@ -2143,13 +2187,10 @@ cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 
 	buf->buf_size = CACHE_BUFFER_SIZE;
 	buf->offset = offset;
-
-	pthread_spin_lock(&g_caches_lock);
-	if (file->tree->present_mask == 0) {
-		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
-	}
 	file->tree = spdk_tree_insert_buffer(file->tree, buf);
-	pthread_spin_unlock(&g_caches_lock);
+
+	assert(g_cache_pool_thread != NULL);
+	spdk_thread_send_msg(g_cache_pool_thread, _file_cache_insert_buffer, file);
 
 	return buf;
 }
@@ -2628,12 +2669,11 @@ __file_read(struct spdk_file *file, void *payload, uint64_t offset, uint64_t len
 	BLOBFS_TRACE(file, "read %p offset=%ju length=%ju\n", payload, offset, length);
 	memcpy(payload, &buf->buf[offset - buf->offset], length);
 	if ((offset + length) % CACHE_BUFFER_SIZE == 0) {
-		pthread_spin_lock(&g_caches_lock);
+		/* remove the cache buffer while hold the file lock, the
+		 *  cache pool thread will help to remove file from g_caches
+		 *  list if no cache buffers with it.
+		 */
 		spdk_tree_remove_buffer(file->tree, buf);
-		if (file->tree->present_mask == 0) {
-			TAILQ_REMOVE(&g_caches, file, cache_tailq);
-		}
-		pthread_spin_unlock(&g_caches_lock);
 	}
 
 	sem_post(&channel->sem);
@@ -2916,21 +2956,12 @@ cache_free_buffers(struct spdk_file *file)
 {
 	BLOBFS_TRACE(file, "free=%s\n", file->name);
 	pthread_spin_lock(&file->lock);
-	pthread_spin_lock(&g_caches_lock);
 	if (file->tree->present_mask == 0) {
-		pthread_spin_unlock(&g_caches_lock);
 		pthread_spin_unlock(&file->lock);
 		return;
 	}
 	spdk_tree_free_buffers(file->tree);
-
-	TAILQ_REMOVE(&g_caches, file, cache_tailq);
-	/* If not freed, put it in the end of the queue */
-	if (file->tree->present_mask != 0) {
-		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
-	}
 	file->last = NULL;
-	pthread_spin_unlock(&g_caches_lock);
 	pthread_spin_unlock(&file->lock);
 }
 
