@@ -66,15 +66,13 @@ enum ftl_io_flags {
 	FTL_IO_PHYSICAL_MODE	= (1 << 5),
 	/* Indicates that IO contains noncontiguous LBAs */
 	FTL_IO_VECTOR_LBA	= (1 << 6),
-	/* Indicates that IO is being retried */
-	FTL_IO_RETRY		= (1 << 7),
 	/* The IO is directed to non-volatile cache */
-	FTL_IO_CACHE		= (1 << 8),
+	FTL_IO_CACHE		= (1 << 7),
 	/* Indicates that physical address should be taken from IO struct, */
 	/* not assigned by wptr, only works if wptr is also in direct mode */
-	FTL_IO_DIRECT_ACCESS	= (1 << 9),
+	FTL_IO_DIRECT_ACCESS	= (1 << 8),
 	/* Bypass the non-volatile cache */
-	FTL_IO_BYPASS_CACHE	= (1 << 10),
+	FTL_IO_BYPASS_CACHE	= (1 << 9),
 };
 
 enum ftl_io_type {
@@ -138,6 +136,7 @@ struct ftl_io_channel {
 	struct spdk_poller			*poller;
 	/* Completion queue */
 	TAILQ_HEAD(, ftl_io)			completion_queue;
+	TAILQ_HEAD(, ftl_io)			retry_queue;
 };
 
 /* General IO descriptor */
@@ -257,9 +256,7 @@ ftl_io_mode_logical(const struct ftl_io *io)
 static inline bool
 ftl_io_done(const struct ftl_io *io)
 {
-	return io->req_cnt == 0 &&
-	       io->pos == io->num_blocks &&
-	       !(io->flags & FTL_IO_RETRY);
+	return io->req_cnt == 0 && io->pos == io->num_blocks;
 }
 
 struct ftl_io *ftl_io_alloc(struct spdk_io_channel *ch);
