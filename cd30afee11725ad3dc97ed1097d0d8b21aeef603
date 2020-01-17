@@ -68,6 +68,29 @@
       "revId": "cd30afee11725ad3dc97ed1097d0d8b21aeef603",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4b89b434_f75f1830",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 53
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2020-01-17T05:13:30Z",
+      "side": 1,
+      "message": "It is better to run this tool nightly or separate Jenkins job.",
+      "range": {
+        "startLine": 27,
+        "startChar": 11,
+        "endLine": 27,
+        "endChar": 25
+      },
+      "revId": "cd30afee11725ad3dc97ed1097d0d8b21aeef603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
