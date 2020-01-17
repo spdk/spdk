@@ -21,14 +21,33 @@ function nvmf_filesystem_create {
 		force=-f
 	fi
 
-	mkfs.${fstype} $force /dev/nvme0n1p1
+	local i=0
+	while ! mkfs.${fstype} $force /dev/nvme0n1p1; do
+		[ $i -lt 15 ] || break
+		i=$((i+1))
+		sleep 1
+	done
 
 	mount /dev/nvme0n1p1 /mnt/device
 	touch /mnt/device/aaa
 	sync
 	rm /mnt/device/aaa
 	sync
-	umount /mnt/device
+
+	while ! umount /mnt/device; do
+		[ $i -lt 15 ] || break
+		i=$((i+1))
+		sleep 1
+	done
+
+	# Make sure the target did not crash
+	kill -0 $nvmfpid
+
+	# Make sure the device is still present
+	lsblk -l -o NAME | grep -q -w "nvme0n1"
+
+	# Make sure the partition is still present
+	lsblk -l -o NAME | grep -q -w "nvme0n1p1"
 }
 
 function nvmf_filesystem_part {
