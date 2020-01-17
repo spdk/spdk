@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84a519de_e9f333a7",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1482,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-17T01:08:15Z",
+      "side": 1,
+      "message": "I think this is reasonable but just call spdk_iscsi_conn_free_pdu(conn, pdu) and return is better.\nAdditionally can we move this to the top of spdk_iscsi_conn_write_pdu()?\n\nThen can we merge this patch into the last one?",
+      "revId": "5196c0ca58a953804565837681492b1493871b17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
