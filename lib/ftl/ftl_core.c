@@ -858,8 +858,10 @@ ftl_wptr_process_shutdown(struct ftl_wptr *wptr)
 static int
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 {
+	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(dev->core_thread.ioch);
+
 	return !__atomic_load_n(&dev->num_inflight, __ATOMIC_SEQ_CST) &&
-	       LIST_EMPTY(&dev->wptr_list) && TAILQ_EMPTY(&dev->retry_queue);
+	       LIST_EMPTY(&dev->wptr_list) && TAILQ_EMPTY(&ioch->retry_queue);
 }
 
 void
@@ -941,15 +943,6 @@ static int
 ftl_read_canceled(int rc)
 {
 	return rc == -EFAULT || rc == 0;
-}
-
-static void
-ftl_add_to_retry_queue(struct ftl_io *io)
-{
-	if (!(io->flags & FTL_IO_RETRY)) {
-		io->flags |= FTL_IO_RETRY;
-		TAILQ_INSERT_TAIL(&io->dev->retry_queue, io, tailq_entry);
-	}
 }
 
 static int
@@ -1061,7 +1054,8 @@ ftl_submit_read(struct ftl_io *io)
 					   num_blocks, ftl_io_cmpl_cb, io);
 		if (spdk_unlikely(rc)) {
 			if (rc == -ENOMEM) {
-				ftl_add_to_retry_queue(io);
+				TAILQ_INSERT_TAIL(&ioch->retry_queue, io, ioch_entry);
+				rc = 0;
 			} else {
 				ftl_io_fail(io, rc);
 			}
@@ -1641,7 +1635,7 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 		/* There are no guarantees of the order of completion of NVMe IO submission queue */
 		/* so wait until zone is not busy before submitting another write */
 		if (!ftl_is_append_supported(dev) && wptr->zone->busy) {
-			TAILQ_INSERT_TAIL(&wptr->pending_queue, io, tailq_entry);
+			TAILQ_INSERT_TAIL(&wptr->pending_queue, io, ioch_entry);
 			rc = -EAGAIN;
 			break;
 		}
@@ -1649,7 +1643,7 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 		rc = ftl_submit_child_write(wptr, io, dev->xfer_size);
 		if (spdk_unlikely(rc)) {
 			if (rc == -EAGAIN) {
-				TAILQ_INSERT_TAIL(&wptr->pending_queue, io, tailq_entry);
+				TAILQ_INSERT_TAIL(&wptr->pending_queue, io, ioch_entry);
 			} else {
 				ftl_io_fail(io, rc);
 			}
@@ -1700,7 +1694,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 
 	if (spdk_unlikely(!TAILQ_EMPTY(&wptr->pending_queue))) {
 		io = TAILQ_FIRST(&wptr->pending_queue);
-		TAILQ_REMOVE(&wptr->pending_queue, io, tailq_entry);
+		TAILQ_REMOVE(&wptr->pending_queue, io, ioch_entry);
 
 		if (ftl_submit_write(wptr, io) == -EAGAIN) {
 			return 0;
@@ -1818,6 +1812,8 @@ ftl_rwb_fill(struct ftl_io *io)
 	struct ftl_addr addr = { .cached = 1 };
 	int flags = ftl_rwb_flags_from_io(io);
 
+	ioch = spdk_io_channel_get_ctx(io->ioch);
+
 	while (io->pos < io->num_blocks) {
 		if (ftl_io_current_lba(io) == FTL_LBA_INVALID) {
 			ftl_io_advance(io, 1);
@@ -1826,7 +1822,8 @@ ftl_rwb_fill(struct ftl_io *io)
 
 		entry = ftl_acquire_entry(dev, flags);
 		if (!entry) {
-			return -EAGAIN;
+			TAILQ_INSERT_TAIL(&ioch->retry_queue, io, ioch_entry);
+			return 0;
 		}
 
 		ftl_rwb_entry_fill(entry, io);
@@ -1847,8 +1844,7 @@ ftl_rwb_fill(struct ftl_io *io)
 		if (ftl_dev_has_nv_cache(dev) && !(io->flags & FTL_IO_BYPASS_CACHE)) {
 			ftl_write_nv_cache(io);
 		} else {
-			ioch = spdk_io_channel_get_ctx(io->ioch);
-			TAILQ_INSERT_TAIL(&ioch->write_cmpl_queue, io, tailq_entry);
+			TAILQ_INSERT_TAIL(&ioch->write_cmpl_queue, io, ioch_entry);
 		}
 	}
 
@@ -1980,21 +1976,6 @@ _ftl_io_write(void *ctx)
 }
 
 static int
-ftl_rwb_fill_leaf(struct ftl_io *io)
-{
-	int rc;
-
-	rc = ftl_rwb_fill(io);
-	if (rc == -EAGAIN) {
-		spdk_thread_send_msg(spdk_io_channel_get_thread(io->ioch),
-				     _ftl_io_write, io);
-		return 0;
-	}
-
-	return rc;
-}
-
-static int
 ftl_submit_write_leaf(struct ftl_io *io)
 {
 	int rc;
@@ -2015,7 +1996,7 @@ ftl_io_write(struct ftl_io *io)
 
 	/* For normal IOs we just need to copy the data onto the rwb */
 	if (!(io->flags & FTL_IO_MD)) {
-		ftl_io_call_foreach_child(io, ftl_rwb_fill_leaf);
+		ftl_io_call_foreach_child(io, ftl_rwb_fill);
 	} else {
 		/* Metadata has its own buffer, so it doesn't have to be copied, so just */
 		/* send it the the core thread and schedule the write immediately */
@@ -2059,20 +2040,6 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 	return 0;
 }
 
-static int
-ftl_io_read_leaf(struct ftl_io *io)
-{
-	int rc;
-
-	rc = ftl_submit_read(io);
-	if (rc == -ENOMEM) {
-		/* ENOMEM means that the request was put on a pending queue */
-		return 0;
-	}
-
-	return rc;
-}
-
 static void
 _ftl_io_read(void *arg)
 {
@@ -2085,7 +2052,7 @@ ftl_io_read(struct ftl_io *io)
 	struct spdk_ftl_dev *dev = io->dev;
 
 	if (ftl_check_core_thread(dev)) {
-		ftl_io_call_foreach_child(io, ftl_io_read_leaf);
+		ftl_io_call_foreach_child(io, ftl_submit_read);
 	} else {
 		spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_read, io);
 	}
@@ -2267,46 +2234,38 @@ ftl_get_media_events(struct spdk_ftl_dev *dev)
 	} while (num_events);
 }
 
-static void
-ftl_process_retry_queue(struct spdk_ftl_dev *dev)
-{
-	struct ftl_io *io;
-	int rc;
-
-	while (!TAILQ_EMPTY(&dev->retry_queue)) {
-		io = TAILQ_FIRST(&dev->retry_queue);
-
-		/* Retry only if IO is still healthy */
-		if (spdk_likely(io->status == 0)) {
-			rc = ftl_submit_read(io);
-			if (rc == -ENOMEM) {
-				break;
-			}
-		}
-
-		io->flags &= ~FTL_IO_RETRY;
-		TAILQ_REMOVE(&dev->retry_queue, io, tailq_entry);
-
-		if (ftl_io_done(io)) {
-			ftl_io_complete(io);
-		}
-	}
-}
-
 int
 ftl_io_channel_poll(void *arg)
 {
 	struct ftl_io_channel *ch = arg;
 	struct ftl_io *io;
+	TAILQ_HEAD(, ftl_io) retry_queue;
 
-	if (TAILQ_EMPTY(&ch->write_cmpl_queue)) {
+	if (TAILQ_EMPTY(&ch->write_cmpl_queue) && TAILQ_EMPTY(&ch->retry_queue)) {
 		return 0;
 	}
 
 	while (!TAILQ_EMPTY(&ch->write_cmpl_queue)) {
 		io = TAILQ_FIRST(&ch->write_cmpl_queue);
-		TAILQ_REMOVE(&ch->write_cmpl_queue, io, tailq_entry);
+		TAILQ_REMOVE(&ch->write_cmpl_queue, io, ioch_entry);
 		ftl_io_complete(io);
+	}
+
+	/*
+	 * Create local copy of the retry queue to prevent from infinite retrying if IO will be
+	 * inserted to the retry queue again
+	 */
+	TAILQ_INIT(&retry_queue);
+	TAILQ_SWAP(&ch->retry_queue, &retry_queue, ftl_io, ioch_entry);
+
+	while (!TAILQ_EMPTY(&retry_queue)) {
+		io = TAILQ_FIRST(&retry_queue);
+		TAILQ_REMOVE(&retry_queue, io, ioch_entry);
+		if (io->type == FTL_IO_WRITE) {
+			ftl_io_write(io);
+		} else {
+			ftl_io_read(io);
+		}
 	}
 
 	return 1;
@@ -2327,11 +2286,6 @@ ftl_task_core(void *ctx)
 
 	ftl_process_writes(dev);
 	ftl_process_relocs(dev);
-
-	if (!TAILQ_EMPTY(&dev->retry_queue)) {
-		ftl_process_retry_queue(dev);
-		return 1;
-	}
 
 	return 0;
 }
