@@ -16,6 +16,24 @@
       "revId": "6205c8db79ae15b748c52ba744ed0ca12de805a2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20f8b48b_7d1c6601",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-17T00:55:53Z",
+      "side": 1,
+      "message": "It is. Previous to this build, these tests only ran on physical machines which don\u0027t have multi-ns drives (we currently only test against the qemu ones which are buggy). In the autotest.sh file on this patch, I parse out the per-patch testing and move it to each of the different jobs (NVMe, crypto, etc). Which causes it to run on the nvme_autotest job triggering the failure.",
+      "parentUuid": "b08fd47a_7b90282a",
+      "revId": "6205c8db79ae15b748c52ba744ed0ca12de805a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
