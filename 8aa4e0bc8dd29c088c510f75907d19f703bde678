@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "224e3f84_1570938d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T18:10:51Z",
+      "side": 1,
+      "message": "you could remove this return while you\u0027re here",
+      "revId": "8aa4e0bc8dd29c088c510f75907d19f703bde678",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
