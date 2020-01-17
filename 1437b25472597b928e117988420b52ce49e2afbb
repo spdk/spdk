@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3afaf5ef_45bfa2c5",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-17T14:32:28Z",
+      "side": 0,
+      "message": "This change is not related to the commit, could you move it to the next patch where you add usage of writev_async?",
+      "range": {
+        "startLine": 593,
+        "startChar": 0,
+        "endLine": 596,
+        "endChar": 2
+      },
+      "revId": "1437b25472597b928e117988420b52ce49e2afbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
