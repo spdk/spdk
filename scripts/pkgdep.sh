@@ -15,6 +15,7 @@ function usage()
 	echo "  -d --developer-tools        Install tools for developers (code styling, code coverage, etc.)"
 	echo "  -p --pmem                   Additional dependencies for reduce and pmdk"
 	echo "  -f --fuse                   Additional dependencies for FUSE and NVMe-CUSE"
+	echo "  -r --rdma                   Additional dependencies for RDMA transport in NVMe over Fabrics"
 	echo ""
 	exit 0
 }
@@ -24,14 +25,16 @@ function install_all_dependencies ()
 	INSTALL_DEV_TOOLS=true
 	INSTALL_PMEM=true
 	INSTALL_FUSE=true
+	INSTALL_RDMA=true
 }
 
 INSTALL_CRYPTO=false
 INSTALL_DEV_TOOLS=false
 INSTALL_PMEM=false
 INSTALL_FUSE=false
+INSTALL_RDMA=false
 
-while getopts 'adfhip-:' optchar; do
+while getopts 'adfhipr-:' optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
@@ -40,6 +43,7 @@ while getopts 'adfhip-:' optchar; do
 			developer-tools) INSTALL_DEV_TOOLS=true;;
 			pmem) INSTALL_PMEM=true;;
 			fuse) INSTALL_FUSE=true;;
+			rdma) INSTALL_RDMA=true;;
 			*) echo "Invalid argument '$OPTARG'"
 			usage;;
 		esac
@@ -49,6 +53,7 @@ while getopts 'adfhip-:' optchar; do
 	d) INSTALL_DEV_TOOLS=true;;
 	p) INSTALL_PMEM=true;;
 	f) INSTALL_FUSE=true;;
+	r) INSTALL_RDMA=true;;
 	*) echo "Invalid argument '$OPTARG'"
 	usage;;
 	esac
@@ -100,10 +105,12 @@ if [ -s /etc/redhat-release ]; then
 		# Additional dependencies for FUSE and NVMe-CUSE
 		yum install -y fuse3-devel
 	fi
-	# Additional dependencies for NVMe over Fabrics
-	yum install -y libibverbs-devel librdmacm-devel
 	# Additional dependencies for building docs
 	yum install -y doxygen mscgen graphviz
+	if [[ $INSTALL_RDMA == "true" ]]; then
+		# Additional dependencies for RDMA transport in NVMe over Fabrics
+		yum install -y libibverbs-devel librdmacm-devel
+	fi
 elif [ -f /etc/debian_version ]; then
 	. /etc/os-release
 	VERSION_ID_NUM=$(sed 's/\.//g' <<< $VERSION_ID)
@@ -150,10 +157,12 @@ elif [ -f /etc/debian_version ]; then
 			apt-get install -y libfuse3-dev
 		fi
 	fi
-	# Additional dependencies for NVMe over Fabrics
-	apt-get install -y libibverbs-dev librdmacm-dev
 	# Additional dependencies for building docs
 	apt-get install -y doxygen mscgen graphviz
+	if [[ $INSTALL_RDMA == "true" ]]; then
+		# Additional dependencies for RDMA transport in NVMe over Fabrics
+		apt-get install -y libibverbs-dev librdmacm-dev
+	fi
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	# Minimal install
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
@@ -177,10 +186,12 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 		# Additional dependencies for FUSE and NVMe-CUSE
 		zypper install -y fuse3-devel
 	fi
-	# Additional dependencies for NVMe over Fabrics
-	zypper install -y rdma-core-devel
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz
+	if [[ $INSTALL_RDMA == "true" ]]; then
+		# Additional dependencies for RDMA transport in NVMe over Fabrics
+		zypper install -y rdma-core-devel
+	fi
 elif [ $(uname -s) = "FreeBSD" ] ; then
 	# Minimal install
 	pkg install -y gmake cunit openssl git bash misc/e2fsprogs-libuuid python
@@ -249,20 +260,22 @@ elif [ -f /etc/arch-release ]; then
 		makepkg -si --needed --noconfirm;
 		cd .. && rm -rf mscgen;
 		popd"
-	# Additional dependencies for NVMe over Fabrics
-	if [[ -n "$http_proxy" ]]; then
-		gpg_options=" --keyserver hkp://keyserver.ubuntu.com:80 --keyserver-options \"http-proxy=$http_proxy\""
-	fi
-	su - $SUDO_USER -c "gpg $gpg_options --recv-keys 29F0D86B9C1019B1"
-	su - $SUDO_USER -c "pushd /tmp;
-		git clone https://aur.archlinux.org/rdma-core.git;
-		cd rdma-core;
-		makepkg -si --needed --noconfirm;
-		cd .. && rm -rf rdma-core;
-		popd"
 	if [[ $INSTALL_FUSE == "true" ]]; then
 		# Additional dependencies for FUSE and NVMe-CUSE
 		pacman -Sy --needed --noconfirm fuse3
+	fi
+	if [[ $INSTALL_RDMA == "true" ]]; then
+		# Additional dependencies for RDMA transport in NVMe over Fabrics
+		if [[ -n "$http_proxy" ]]; then
+			gpg_options=" --keyserver hkp://keyserver.ubuntu.com:80 --keyserver-options \"http-proxy=$http_proxy\""
+		fi
+		su - $SUDO_USER -c "gpg $gpg_options --recv-keys 29F0D86B9C1019B1"
+		su - $SUDO_USER -c "pushd /tmp;
+			git clone https://aur.archlinux.org/rdma-core.git;
+			cd rdma-core;
+			makepkg -si --needed --noconfirm;
+			cd .. && rm -rf rdma-core;
+			popd"
 	fi
 else
 	echo "pkgdep: unknown system type."

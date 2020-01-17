@@ -29,16 +29,11 @@ available [here](https://downloads.openfabrics.org/OFED/).
 
 ### Prerequisites {#nvmf_prereqs}
 
-To build nvmf_tgt with the RDMA transport, there are some additional dependencies.
+To build nvmf_tgt with the RDMA transport, there are some additional dependencies,
+which can be install using pkgdep.sh script.
 
-Fedora:
 ~~~{.sh}
-dnf install libibverbs-devel librdmacm-devel
-~~~
-
-Ubuntu:
-~~~{.sh}
-apt-get install libibverbs-dev librdmacm-dev
+sudo scripts/pkgdep.sh --rdma
 ~~~
 
 Then build SPDK with RDMA enabled:
