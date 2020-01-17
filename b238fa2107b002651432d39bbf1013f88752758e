@@ -22,6 +22,30 @@
       "revId": "b238fa2107b002651432d39bbf1013f88752758e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "133a99fa_1bbe82d5",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-17T10:29:56Z",
+      "side": 1,
+      "message": "My mistake, in line 87 I use VERSION_ID and here is typo",
+      "parentUuid": "e19449b5_1376dcab",
+      "range": {
+        "startLine": 111,
+        "startChar": 36,
+        "endLine": 111,
+        "endChar": 44
+      },
+      "revId": "b238fa2107b002651432d39bbf1013f88752758e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
