@@ -47,7 +47,5 @@ $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
-killprocess $nvmfpid
-
 nvmftestfini
 timing_exit nvmf_fuzz_test
