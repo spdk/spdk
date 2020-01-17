@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "46ff8993_cd470753",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 18
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-17T17:40:58Z",
+      "side": 1,
+      "message": "With the current structure layout the values work out to SPDK_EXTENTS_PER_EP_MAX\u003d\u003d1016 and thus pow2 SPDK_EXTENTS_PER_EP\u003d\u003d512.\n\nI don\u0027t think we ever do this calculation in I/O path, except when allocating new extent page on new cluster allocation due to write to it.\n\nIf preferred could use SPDK_EXTENTS_PER_EP_MAX.",
+      "parentUuid": "4ca41687_37bfdafb",
+      "revId": "eaf016a940d976ff5590679801275fe64f11a812",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c306a230_35bec398",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 18
@@ -33,6 +51,24 @@
       "revId": "eaf016a940d976ff5590679801275fe64f11a812",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05a984d1_27be9494",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-17T17:40:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c306a230_35bec398",
+      "revId": "eaf016a940d976ff5590679801275fe64f11a812",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
