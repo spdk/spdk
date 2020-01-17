@@ -595,6 +595,13 @@ _bdev_io_set_bounce_md_buf(struct spdk_bdev_io *bdev_io, void *md_buf, size_t le
 }
 
 static void
+bdev_io_get_buf_complete(struct spdk_bdev_io *bdev_io, bool status)
+{
+	bdev_io->internal.get_buf_cb(spdk_bdev_io_get_io_channel(bdev_io), bdev_io, status);
+	bdev_io->internal.get_buf_cb = NULL;
+}
+
+static void
 _bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t len)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
@@ -626,7 +633,7 @@ _bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t len)
 	}
 
 	bdev_io->internal.buf = buf;
-	bdev_io->internal.get_buf_cb(spdk_bdev_io_get_io_channel(bdev_io), bdev_io, true);
+	bdev_io_get_buf_complete(bdev_io, true);
 }
 
 static void
@@ -720,6 +727,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	void *buf;
 
 	assert(cb != NULL);
+	bdev_io->internal.get_buf_cb = cb;
 
 	alignment = spdk_bdev_get_buf_align(bdev);
 	md_len = spdk_bdev_is_md_separate(bdev) ? bdev_io->u.bdev.num_blocks * bdev->md_len : 0;
@@ -727,7 +735,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	if (_is_buf_allocated(bdev_io->u.bdev.iovs) &&
 	    _are_iovs_aligned(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, alignment)) {
 		/* Buffer already present and aligned */
-		cb(spdk_bdev_io_get_io_channel(bdev_io), bdev_io, true);
+		bdev_io_get_buf_complete(bdev_io, true);
 		return;
 	}
 
@@ -735,14 +743,13 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	    SPDK_BDEV_POOL_ALIGNMENT) {
 		SPDK_ERRLOG("Length + alignment %" PRIu64 " is larger than allowed\n",
 			    len + alignment);
-		cb(spdk_bdev_io_get_io_channel(bdev_io), bdev_io, false);
+		bdev_io_get_buf_complete(bdev_io, false);
 		return;
 	}
 
 	mgmt_ch = bdev_io->internal.ch->shared_resource->mgmt_ch;
 
 	bdev_io->internal.buf_len = len;
-	bdev_io->internal.get_buf_cb = cb;
 
 	if (len + alignment + md_len <= SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) +
 	    SPDK_BDEV_POOL_ALIGNMENT) {
