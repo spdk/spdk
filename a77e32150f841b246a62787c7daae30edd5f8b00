@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d979de7a_b4eee053",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-17T11:24:10Z",
+      "side": 1,
+      "message": "Please update this comment since this function doesn\u0027t stop listener anymore",
+      "range": {
+        "startLine": 714,
+        "startChar": 3,
+        "endLine": 714,
+        "endChar": 57
+      },
+      "revId": "a77e32150f841b246a62787c7daae30edd5f8b00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e4ea776_dfbefa6f",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-17T11:24:10Z",
+      "side": 1,
+      "message": "It looks like we can remove this option and always stop listeners. At least in the current implementation spdk_nvmf_subsystem_remove_all_listeners and spdk_nvmf_subsystem_destroy are always called together. The first call to spdk_nvmf_subsystem_remove_all_listeners will remove listeners from the list and the next call from spdk_nvmf_subsystem_remove_all_listeners will do nothing since the list will be empty.\nAs for me, I would only keep spdk_nvmf_subsystem_remove_all_listeners call inside spdk_nvmf_subsystem_destroy - the final effect will be the same but we\u0027ll have less code changes and more clear behaviour from my point of view. But it is up to you)",
+      "range": {
+        "startLine": 810,
+        "startChar": 2,
+        "endLine": 810,
+        "endChar": 11
+      },
+      "revId": "a77e32150f841b246a62787c7daae30edd5f8b00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
