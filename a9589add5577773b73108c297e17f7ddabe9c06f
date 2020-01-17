@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "55d53efb_5d3b6acd",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-17T05:40:22Z",
+      "side": 1,
+      "message": "I have a preliminary question.\n\nIs it possible that nvme_completion_poll_cb() frees status by stauts-\u003efailed \u003d 1 in spdk_nvme_wait_for_completion_timeout()?\n\nIf so, the line 560 is to access status-\u003efailed after status is freed?",
+      "revId": "a9589add5577773b73108c297e17f7ddabe9c06f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f0e206cc_b23adf0f",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 4
