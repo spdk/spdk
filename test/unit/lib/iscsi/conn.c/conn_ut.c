@@ -540,6 +540,10 @@ dequeue_task(void *_head, struct spdk_iscsi_task *task)
 	return false;
 }
 
+static void iscsi_conn_pdu_dummy_complete(void *arg)
+{
+}
+
 static void
 free_tasks_on_connection(void)
 {
@@ -556,6 +560,11 @@ free_tasks_on_connection(void)
 	pdu1.task = &task1;
 	pdu2.task = &task2;
 	pdu3.task = &task3;
+
+	pdu1.cb_fn = iscsi_conn_pdu_dummy_complete;
+	pdu2.cb_fn = iscsi_conn_pdu_dummy_complete;
+	pdu3.cb_fn = iscsi_conn_pdu_dummy_complete;
+	pdu4.cb_fn = iscsi_conn_pdu_dummy_complete;
 
 	task1.scsi.lun = &lun1;
 	task2.scsi.lun = &lun2;
@@ -587,6 +596,9 @@ free_tasks_on_connection(void)
 	task1.scsi.ref = 1;
 	task2.scsi.ref = 1;
 	task3.scsi.ref = 1;
+	pdu1.cb_fn = iscsi_conn_pdu_dummy_complete;
+	pdu2.cb_fn = iscsi_conn_pdu_dummy_complete;
+	pdu3.cb_fn = iscsi_conn_pdu_dummy_complete;
 	TAILQ_INSERT_TAIL(&conn.snack_pdu_list, &pdu1, tailq);
 	TAILQ_INSERT_TAIL(&conn.snack_pdu_list, &pdu2, tailq);
 	TAILQ_INSERT_TAIL(&conn.snack_pdu_list, &pdu3, tailq);
@@ -635,6 +647,9 @@ free_tasks_with_queued_datain(void)
 	pdu1.task = &task1;
 	pdu2.task = &task2;
 	pdu3.task = &task3;
+	pdu1.cb_fn = iscsi_conn_pdu_dummy_complete;
+	pdu2.cb_fn = iscsi_conn_pdu_dummy_complete;
+	pdu3.cb_fn = iscsi_conn_pdu_dummy_complete;
 
 	task1.scsi.ref = 1;
 	task2.scsi.ref = 1;
@@ -655,6 +670,9 @@ free_tasks_with_queued_datain(void)
 	task4.pdu = &pdu4;
 	task5.pdu = &pdu5;
 	task6.pdu = &pdu6;
+	pdu4.cb_fn = iscsi_conn_pdu_dummy_complete;
+	pdu5.cb_fn = iscsi_conn_pdu_dummy_complete;
+	pdu6.cb_fn = iscsi_conn_pdu_dummy_complete;
 
 	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, &task4, link);
 	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, &task5, link);
