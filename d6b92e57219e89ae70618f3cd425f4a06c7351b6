@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46648e01_cac98b97",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1386,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T21:05:01Z",
+      "side": 1,
+      "message": "last_extent_page?",
+      "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2816cae6_9cfbe5cb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1824,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T21:05:01Z",
+      "side": 1,
+      "message": "I think you can drop \"single\" from the name here.  At least for me, the \"pages\" v. \"page\" distinction is enough.",
+      "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65f795a8_fde37e71",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1861,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T21:05:01Z",
+      "side": 1,
+      "message": "only for extent pages that were changed?\n\nOr more concisely:\n\nOnly write out changed extent pages",
+      "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21481a78_cec40cc1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1865,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T21:05:01Z",
+      "side": 1,
+      "message": "Shouldn\u0027t the \u003e be \u003e\u003d here?  I feel like the \u003d\u003d 0 case may have been added because in the most common case (when we create a new blob), the clean_size \u003d\u003d 0, and when i \u003d\u003d 0, we wouldn\u0027t fall into this code block since it was using \u003e instead of \u003e\u003d.\n\nAnd then in that case, you could remove the \u003d\u003d 0 check.\n\nBut please don\u0027t take my word for this.  I\u0027m still fully working through it in my head.",
+      "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56f9bfbb_e71e7dbc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1869,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T21:05:01Z",
+      "side": 1,
+      "message": "I said we should change last_extent to last_extent_page above, but really I think next_extent_page would be more clear.  last_extent_page seems to me to mean the last one that we processed, but really you\u0027re using this to track the next one to be processed.\n\nI also think \"i + 1\" is better than \"++i\" here.  There\u0027s no need to modify \"I\" since you\u0027re returning immediately afterwards.  Additional case of this below.",
+      "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a8c67c81_a2c1257d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1872,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T21:05:01Z",
+      "side": 1,
+      "message": "We know that extent_page_id !\u003d 0 here.  So what is the case where these two could be unequal?  Is it where we shrink the blob and then immediately grow it?  If so, please add a comment here to explain that further.\n\nWait - no, that can\u0027t be it.  You\u0027re asserting just below that clean.extent_pages[i] \u003d\u003d 0.\n\nShould this be:\n\nif (blob-\u003eclean.extent_pages[i] \u003d\u003d 0) {\n\ninstead?  I think that\u0027s more clear.  You could also consider combining this if with the if on the previous line, to remove one level of indenting.",
+      "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
