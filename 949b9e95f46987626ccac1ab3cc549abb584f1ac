@@ -16,6 +16,24 @@
       "revId": "949b9e95f46987626ccac1ab3cc549abb584f1ac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "364ad7ec_7dc77240",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T14:32:32Z",
+      "side": 1,
+      "message": "or:\n\nextent_idx \u003d 0;\nfor (i \u003d start_cluster; i \u003c end_cluster; i++) {\n  lba \u003d blob-\u003eactive.clusters[i];\n  desc_extent-\u003ecluster_idx[extent_idx++] \u003d lba / lba_per_cluster;\n}\n\nThis should be able to replace lines 1034-1045.  But please double-check my work!",
+      "parentUuid": "8093df77_a71e555b",
+      "revId": "949b9e95f46987626ccac1ab3cc549abb584f1ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
