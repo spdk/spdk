@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a90a4d7e_d1f5368d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 19
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T20:26:18Z",
+      "side": 1,
+      "message": "PER_EP",
+      "revId": "87a056809008aa88bfc103272f1e400052be284e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1dcc0848_42311116",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 19
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T20:26:18Z",
+      "side": 1,
+      "message": "fit into Extent Page?",
+      "revId": "87a056809008aa88bfc103272f1e400052be284e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9719d500_018784dd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 19
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T20:26:18Z",
+      "side": 1,
+      "message": "PER_EP",
+      "revId": "87a056809008aa88bfc103272f1e400052be284e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f11931bd_7ce5c8e6",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T20:26:18Z",
+      "side": 1,
+      "message": "Maximum number of extents (or clusters)\n\nWe don\u0027t store LBA indices in these pages - we store cluster indices.",
+      "revId": "87a056809008aa88bfc103272f1e400052be284e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "025661ac_f92e03df",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T20:26:18Z",
+      "side": 1,
+      "message": "PER_EP",
+      "revId": "87a056809008aa88bfc103272f1e400052be284e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
