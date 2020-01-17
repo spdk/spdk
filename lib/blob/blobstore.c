@@ -85,6 +85,24 @@ _spdk_bs_get_snapshot_entry(struct spdk_blob_store *bs, spdk_blob_id blobid)
 }
 
 static void
+_spdk_bs_claim_md_page(struct spdk_blob_store *bs, uint32_t page)
+{
+	assert(page < spdk_bit_array_capacity(bs->used_md_pages));
+	assert(spdk_bit_array_get(bs->used_md_pages, page) == false);
+
+	spdk_bit_array_set(bs->used_md_pages, page);
+}
+
+static void
+_spdk_bs_release_md_page(struct spdk_blob_store *bs, uint32_t page)
+{
+	assert(page < spdk_bit_array_capacity(bs->used_md_pages));
+	assert(spdk_bit_array_get(bs->used_md_pages, page) == true);
+
+	spdk_bit_array_clear(bs->used_md_pages, page);
+}
+
+static void
 _spdk_bs_claim_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 {
 	assert(cluster_num < spdk_bit_array_capacity(bs->used_clusters));
@@ -1435,14 +1453,14 @@ _spdk_blob_persist_zero_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 	 * so any pages in the clean list must be zeroed.
 	 */
 	for (i = 1; i < blob->clean.num_pages; i++) {
-		spdk_bit_array_clear(bs->used_md_pages, blob->clean.pages[i]);
+		_spdk_bs_release_md_page(bs, blob->clean.pages[i]);
 	}
 
 	if (blob->active.num_pages == 0) {
 		uint32_t page_num;
 
 		page_num = _spdk_bs_blobid_to_page(blob->id);
-		spdk_bit_array_clear(bs->used_md_pages, page_num);
+		_spdk_bs_release_md_page(bs, page_num);
 	}
 
 	/* Move on to clearing clusters */
@@ -1698,7 +1716,7 @@ _spdk_blob_persist_generate_new_md(struct spdk_blob_persist_ctx *ctx)
 		/* Now that previous metadata page is complete, calculate the crc for it. */
 		ctx->pages[i - 1].crc = _spdk_blob_md_page_calc_crc(&ctx->pages[i - 1]);
 		blob->active.pages[i] = page_num;
-		spdk_bit_array_set(bs->used_md_pages, page_num);
+		_spdk_bs_claim_md_page(bs, page_num);
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming page %u for blob %lu\n", page_num, blob->id);
 		page_num++;
 	}
@@ -3440,7 +3458,7 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	page_num = ctx->cur_page;
 	if (_spdk_bs_load_cur_md_page_valid(ctx) == true) {
 		if (ctx->page->sequence_num == 0 || ctx->in_page_chain == true) {
-			spdk_bit_array_set(ctx->bs->used_md_pages, page_num);
+			_spdk_bs_claim_md_page(ctx->bs, page_num);
 			if (ctx->page->sequence_num == 0) {
 				spdk_bit_array_set(ctx->bs->used_blobids, page_num);
 			}
@@ -4608,7 +4626,7 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 		return;
 	}
 	spdk_bit_array_set(bs->used_blobids, page_idx);
-	spdk_bit_array_set(bs->used_md_pages, page_idx);
+	_spdk_bs_claim_md_page(bs, page_idx);
 
 	id = _spdk_bs_page_to_blobid(page_idx);
 
