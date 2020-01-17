@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d16fa94_4d09b700",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1729,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-17T12:25:39Z",
+      "side": 1,
+      "message": "imo that one should be removed but i\u0027m not sure if that change would not break anything",
+      "range": {
+        "startLine": 1729,
+        "startChar": 1,
+        "endLine": 1729,
+        "endChar": 84
+      },
+      "revId": "2905258d77e20a478fa79fdce43b425e0b1775d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
