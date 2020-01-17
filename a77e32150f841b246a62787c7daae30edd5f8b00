@@ -93,6 +93,30 @@
       "revId": "a77e32150f841b246a62787c7daae30edd5f8b00",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d976e5f4_1d113b07",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-17T15:17:12Z",
+      "side": 1,
+      "message": "Thanks for the explanation!",
+      "parentUuid": "811638ae_6d0a1045",
+      "range": {
+        "startLine": 810,
+        "startChar": 2,
+        "endLine": 810,
+        "endChar": 11
+      },
+      "revId": "a77e32150f841b246a62787c7daae30edd5f8b00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
