@@ -2279,6 +2279,32 @@ iscsi_pdu_hdr_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	return 0;
 }
 
+static void
+spdk_iscsi_conn_text_pdu_complete(void *arg)
+{
+	struct spdk_iscsi_conn *conn = arg;
+	int rc;
+
+	/* update internal variables */
+	rc = spdk_iscsi_copy_param2var(conn);
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_copy_param2var() failed\n");
+		if (conn->state < ISCSI_CONN_STATE_EXITING) {
+			conn->state = ISCSI_CONN_STATE_EXITING;
+		}
+		return;
+	}
+
+	/* check value */
+	rc = iscsi_check_values(conn);
+	if (rc < 0) {
+		SPDK_ERRLOG("iscsi_check_values() failed\n");
+		if (conn->state < ISCSI_CONN_STATE_EXITING) {
+			conn->state = ISCSI_CONN_STATE_EXITING;
+		}
+	}
+}
+
 static int
 iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
@@ -2415,22 +2441,7 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
 	to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
 
-	spdk_iscsi_conn_write_pdu(conn, rsp_pdu, spdk_iscsi_conn_pdu_generic_complete, NULL);
-
-	/* update internal variables */
-	rc = spdk_iscsi_copy_param2var(conn);
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_copy_param2var() failed\n");
-		return -1;
-	}
-
-	/* check value */
-	rc = iscsi_check_values(conn);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_check_values() failed\n");
-		return -1;
-	}
-
+	spdk_iscsi_conn_write_pdu(conn, rsp_pdu, spdk_iscsi_conn_text_pdu_complete, conn);
 	return 0;
 }
 
