@@ -820,7 +820,8 @@ vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
 		 */
 		goto out_insert;
 	}
-
+	DEBUG_PRINT("Setting up mapping for %llu iova at %llu virtual address.\n", dma_map->map.iova,
+		    dma_map->map.vaddr);
 	ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
 	if (ret) {
 		DEBUG_PRINT("Cannot set up DMA mapping, error %d\n", errno);

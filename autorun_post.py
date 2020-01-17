@@ -103,13 +103,16 @@ def getCompletions(completionFile, test_list, test_completion_table):
     for line in completions.splitlines():
         try:
             domain, test_name = line.strip().split()
+            print(test_name)
             test_list[test_name] = (True, asan_enabled | test_list[test_name][1], ubsan_enabled | test_list[test_name][2])
             test_completion_table.append([agent_name, domain, test_name, asan_enabled, ubsan_enabled])
             try:
                 test_completion_table.remove(["None", "None", test_name, False, False])
             except ValueError:
+                print("ValueError")
                 continue
         except KeyError:
+            print("KeyError")
             continue
 
 
@@ -165,8 +168,9 @@ def aggregateCompletedTests(output_dir, repo_dir):
 
             test_list[test_name] = (False, False, False)
             test_completion_table.append(["None", "None", test_name, False, False])
-
+    print("looking at completion files.")
     for completionFile in completionFiles:
+        print(completionFile)
         getCompletions(completionFile, test_list, test_completion_table)
 
     printListInformation("Tests", test_list)
