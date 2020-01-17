@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b52c4d06_7e3764ea",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T00:32:21Z",
+      "side": 1,
+      "message": "I think either _spdk_bs_claim_extent_page, or _spdk_bs_claim_md_page, would be a better name here (I\u0027d lean towards the latter - in which case you should also change the extent_page parameter name)",
+      "revId": "5eb9b271b2ea3116c74010c501d2cd442aefff33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c9bbd9b_04e8b343",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T00:32:21Z",
+      "side": 1,
+      "message": "you need to free the cluster in this case\n\nbut I\u0027m really wondering if you should first make sure you can get a free md_page (when you need it) before you even try to call _spdk_bs_claim_cluster()",
+      "revId": "5eb9b271b2ea3116c74010c501d2cd442aefff33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd03b43e_b4d0da98",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 6121,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T00:32:21Z",
+      "side": 1,
+      "message": "we can hit a case where two different threads try to allocate a cluster (i.e. writes to the same  unallocated cluster)\n\nso each thread first sends a message to the md thread to allocate a cluster (and maybe an extent page!), after it gets the cluster, it reads the backing data, merges the write data, and writes it to the cluster - then finally it sends a message to the md thread to insert the cluster\n\nbut one thread will win and one will lose - the one that loses gets ctx-\u003erc \u003d\u003d -EEXIST here - in that case, the losing thread throws away the cluster (see _spdk_blob_insert_cluster_cpl)\n\nso I think you have to account for this case with the allocate extent_page - if one was allocated - probably adding to the code in _spdk_blob_insert_cluster_cpl",
+      "revId": "5eb9b271b2ea3116c74010c501d2cd442aefff33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
