@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d058c456_73965822",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T17:32:22Z",
+      "side": 1,
+      "message": "Patch looks good - but could you expand on this a bit - especially how we found it?",
+      "revId": "dd91c9bf0cd21bb046e23377cb4715931cd45c73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
