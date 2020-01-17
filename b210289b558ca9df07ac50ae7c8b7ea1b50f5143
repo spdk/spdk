@@ -16,6 +16,57 @@
       "revId": "b210289b558ca9df07ac50ae7c8b7ea1b50f5143",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3acdf146_9d21d756",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1842,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T14:43:15Z",
+      "side": 1,
+      "message": "extent_page_id not aligned with rest of variables",
+      "revId": "b210289b558ca9df07ac50ae7c8b7ea1b50f5143",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "800effec_ef173cc6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1852,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T14:43:15Z",
+      "side": 1,
+      "message": "In cases like this, I usually prefer:\n\nif (extent_page_id \u003d\u003d 0) {\n  continue;\n}\n\nThen you avoid the extra level of indentation.",
+      "revId": "b210289b558ca9df07ac50ae7c8b7ea1b50f5143",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1b42f62_677efdb9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1875,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T14:43:15Z",
+      "side": 1,
+      "message": "return not needed at end of void function",
+      "revId": "b210289b558ca9df07ac50ae7c8b7ea1b50f5143",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
