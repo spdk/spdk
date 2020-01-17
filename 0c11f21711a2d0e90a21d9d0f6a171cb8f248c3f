@@ -33,6 +33,24 @@
       "revId": "0c11f21711a2d0e90a21d9d0f6a171cb8f248c3f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b86abef_c08fe047",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2337,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-17T13:37:05Z",
+      "side": 1,
+      "message": "I misunderstood your comment about returning completion from bdev_nvme_comparev_and_writev function earlier. I that case we don\u0027t need this patch. I\u0027ve created new one with fix for completion: https://review.gerrithub.io/c/spdk/spdk/+/481976",
+      "parentUuid": "8780e177_56827c01",
+      "revId": "0c11f21711a2d0e90a21d9d0f6a171cb8f248c3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
