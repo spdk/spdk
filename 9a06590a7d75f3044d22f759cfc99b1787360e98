@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27763b2d_a18d7eb9",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T13:45:33Z",
+      "side": 1,
+      "message": "personal preference comment: could you please try to split and group lines in some way?\nIt\u0027s hard to read now, at least for me.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 7
+      },
+      "revId": "9a06590a7d75f3044d22f759cfc99b1787360e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27f8f6e1_3bedc4c4",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T13:45:33Z",
+      "side": 1,
+      "message": "wrong indentation",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 8
+      },
+      "revId": "9a06590a7d75f3044d22f759cfc99b1787360e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6fa1fe1_0d5edf48",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T13:45:33Z",
+      "side": 1,
+      "message": "wrong indentation",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 8
+      },
+      "revId": "9a06590a7d75f3044d22f759cfc99b1787360e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73613372_2b580a89",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T13:45:33Z",
+      "side": 1,
+      "message": "wrong indentation",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 8
+      },
+      "revId": "9a06590a7d75f3044d22f759cfc99b1787360e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84a14498_6930036b",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T13:45:33Z",
+      "side": 1,
+      "message": "wrong indentation",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 8
+      },
+      "revId": "9a06590a7d75f3044d22f759cfc99b1787360e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
