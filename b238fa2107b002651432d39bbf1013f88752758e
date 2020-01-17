@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e19449b5_1376dcab",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T09:52:44Z",
+      "side": 1,
+      "message": "There\u0027s no variable $VERSION declared by you, and if youre using VERSION from /etc/os-release here then I have doubts about this \"-gt\" operation. $VERSION from /etc/os-release contains a human-friendly representation of the distro, smth like VERSION\u003d\"18.04.2 LTS (Bionic Beaver)\".\nComparing this string with 1400 or 1900 may not work as you\u0027d expect it to.",
+      "range": {
+        "startLine": 111,
+        "startChar": 36,
+        "endLine": 111,
+        "endChar": 44
+      },
+      "revId": "b238fa2107b002651432d39bbf1013f88752758e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
