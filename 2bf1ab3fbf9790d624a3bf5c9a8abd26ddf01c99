@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1dcadd58_095a0145",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1769,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T18:33:18Z",
+      "side": 1,
+      "message": "I think this should be new_extent_page.",
+      "revId": "2bf1ab3fbf9790d624a3bf5c9a8abd26ddf01c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c677340e_b4a097b1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 6125,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T18:33:18Z",
+      "side": 1,
+      "message": "I think this should be extent_page.",
+      "revId": "2bf1ab3fbf9790d624a3bf5c9a8abd26ddf01c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7eff377d_fe7c9ad2",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 4520,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T18:33:18Z",
+      "side": 1,
+      "message": "extent_page",
+      "revId": "2bf1ab3fbf9790d624a3bf5c9a8abd26ddf01c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
