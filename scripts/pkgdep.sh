@@ -13,6 +13,7 @@ function usage()
 	echo "  -h --help"
 	echo "  -d --developer-tools        build with developer dependencies"
 	echo "  --fuse                      additional dependencies for FUSE and CUSE"
+	echo "  --nvmeof                    additional dependencies for NVMe over Fabrics"
 	echo ""
 	exit 0
 }
@@ -20,6 +21,7 @@ function usage()
 INSTALL_CRYPTO=false
 INSTALL_DEV_TOOLS=false
 INSTALL_FUSE=false
+INSTALL_NVMEOF=false
 
 while getopts 'dhi-:' optchar; do
 	case "$optchar" in
@@ -28,6 +30,7 @@ while getopts 'dhi-:' optchar; do
 			help) usage;;
 			developer-tools) INSTALL_DEV_TOOLS=true;;
 			fuse) INSTALL_FUSE=true;;
+			nvmeof) INSTALL_NVMEOF=true;;
 			*) echo "Invalid argument '$OPTARG'"
 			usage;;
 		esac
@@ -78,14 +81,16 @@ if [ -s /etc/redhat-release ]; then
 			sg3_utils pciutils ShellCheck
 		# Additional (optional) dependencies for showing backtrace in logs
 		yum install -y libunwind-devel || true
-		# Additional dependencies for NVMe over Fabrics
-		yum install -y libibverbs-devel librdmacm-devel
 		# Additional dependencies for building docs
 		yum install -y doxygen mscgen graphviz
 	fi
 	if [[ $INSTALL_FUSE == "true" ]]; then
 		# Additional dependencies for FUSE and CUSE
 		yum install -y fuse3-devel
+	fi
+	if [[ $INSTALL_NVMEOF == "true" ]]; then
+		# Additional dependencies for NVMe over Fabrics
+		yum install -y libibverbs-devel librdmacm-devel
 	fi
 elif [ -f /etc/debian_version ]; then
 	. /etc/os-release
@@ -114,8 +119,6 @@ elif [ -f /etc/debian_version ]; then
 		apt-get install -y pycodestyle || true
 		# Additional (optional) dependencies for showing backtrace in logs
 		apt-get install -y libunwind-dev || true
-		# Additional dependencies for NVMe over Fabrics
-		apt-get install -y libibverbs-dev librdmacm-dev
 		# Additional dependencies for building docs
 		apt-get install -y doxygen mscgen graphviz
 		# Additional dependencies for SPDK CLI - not available on older Ubuntus
@@ -134,6 +137,10 @@ elif [ -f /etc/debian_version ]; then
 		fi
 		apt-get install -y libfuse3-dev
 	fi
+	if [[ $INSTALL_NVMEOF == "true" ]]; then
+		# Additional dependencies for NVMe over Fabrics
+		apt-get install -y libibverbs-dev librdmacm-dev
+	fi
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	# Minimal install
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
@@ -150,14 +157,16 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 			pciutils ShellCheck
 		# Additional (optional) dependencies for showing backtrace in logs
 		zypper install libunwind-devel || true
-		# Additional dependencies for NVMe over Fabrics
-		zypper install -y rdma-core-devel
 		# Additional dependencies for building docs
 		zypper install -y doxygen mscgen graphviz
 	fi
 	if [[ $INSTALL_FUSE == "true" ]]; then
 		# Additional dependencies for FUSE and CUSE
 		zypper install -y fuse3-devel
+	fi
+	if [[ $INSTALL_NVMEOF == "true" ]]; then
+		# Additional dependencies for NVMe over Fabrics
+		zypper install -y rdma-core-devel
 	fi
 elif [ $(uname -s) = "FreeBSD" ] ; then
 	# Minimal install
@@ -224,6 +233,12 @@ elif [ -f /etc/arch-release ]; then
 			makepkg -si --needed --noconfirm;
 			cd .. && rm -rf mscgen;
 			popd"
+	fi
+	if [[ $INSTALL_FUSE == "true" ]]; then
+		# Additional dependencies for FUSE and CUSE
+		pacman -Sy --needed --noconfirm fuse3
+	fi
+	if [[ $INSTALL_NVMEOF == "true" ]]; then
 		# Additional dependencies for NVMe over Fabrics
 		if [[ -n "$http_proxy" ]]; then
 			gpg_options=" --keyserver hkp://keyserver.ubuntu.com:80 --keyserver-options \"http-proxy=$http_proxy\""
@@ -235,10 +250,6 @@ elif [ -f /etc/arch-release ]; then
 			makepkg -si --needed --noconfirm;
 			cd .. && rm -rf rdma-core;
 			popd"
-	fi
-	if [[ $INSTALL_FUSE == "true" ]]; then
-		# Additional dependencies for FUSE and CUSE
-		pacman -Sy --needed --noconfirm fuse3
 	fi
 else
 	echo "pkgdep: unknown system type."
