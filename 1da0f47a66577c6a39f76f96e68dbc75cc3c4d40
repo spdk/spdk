@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c317f238_82a87858",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1049,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T20:27:59Z",
+      "side": 1,
+      "message": "Copying comment from previous revision (I think my comment crossed paths with your series update).\n\nextent_idx \u003d 0;\nfor (i \u003d start_cluster; i \u003c end_cluster; i++) {\n  lba \u003d blob-\u003eactive.clusters[i];\n  desc_extent-\u003ecluster_idx[extent_idx++] \u003d lba / lba_per_cluster;\n}\nThis should be able to replace lines 1046-1057.  But please double-check my work!",
+      "revId": "1da0f47a66577c6a39f76f96e68dbc75cc3c4d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
