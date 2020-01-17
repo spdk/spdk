@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a661ba14_442cd310",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1011829
+      },
+      "writtenOn": "2020-01-17T14:36:17Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d979de7a_b4eee053",
+      "range": {
+        "startLine": 714,
+        "startChar": 3,
+        "endLine": 714,
+        "endChar": 57
+      },
+      "revId": "a77e32150f841b246a62787c7daae30edd5f8b00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e4ea776_dfbefa6f",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 3
@@ -45,6 +69,30 @@
       "revId": "a77e32150f841b246a62787c7daae30edd5f8b00",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "811638ae_6d0a1045",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1011829
+      },
+      "writtenOn": "2020-01-17T14:36:17Z",
+      "side": 1,
+      "message": "You are right that in the current spdk code, a listener is always stopped when destroying a subsystem. So why should we bother to pass any kind of stop argument? And the answer is: 3rd party code that uses spdk\u0027s API (and not RPC). In my application stopping listeners when destroying a subsystem is wrong. It\u0027s not wrong for spdk itself, but that\u0027s only because the RPC is done in way it is done. Creating a subsystem always implies starting a listener. And destroying a subsystem always means stopping the listener. However that\u0027s not true at the API level. And that is the inconsistency I\u0027m trying to solve here. One day when spdk provides more fine-grained RPC that is capable of explicitly starting/stopping the listeners instead of doing that implicitly upon subsystem create/destroy, then spdk will need this fix too. Just now it\u0027s useful only for apps using the API. And of course it\u0027s always good if the API makes sense and is consistent, which is not the case currently. There is a good background info in the ticket with a concrete use case when this becomes a problem (part of discussion with Ben). I hope I understood your question. Please let me know if I misunderstood your comment. Thanks!",
+      "parentUuid": "8e4ea776_dfbefa6f",
+      "range": {
+        "startLine": 810,
+        "startChar": 2,
+        "endLine": 810,
+        "endChar": 11
+      },
+      "revId": "a77e32150f841b246a62787c7daae30edd5f8b00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
