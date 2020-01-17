@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "6bc73acd_980c9549",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-17T00:46:00Z",
+      "side": 1,
+      "message": "Thanks again. I got that this macro is to initialize the whole struct ftl_addr.",
+      "parentUuid": "6a282538_43691769",
+      "range": {
+        "startLine": 281,
+        "startChar": 8,
+        "endLine": 281,
+        "endChar": 19
+      },
+      "revId": "6f53fa33d3c129aa35258796566450c1daed4626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a12d7b7d_45cb3eb8",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 48
@@ -202,6 +226,30 @@
       "side": 1,
       "message": "Same here.",
       "parentUuid": "a12d7b7d_45cb3eb8",
+      "range": {
+        "startLine": 284,
+        "startChar": 8,
+        "endLine": 284,
+        "endChar": 26
+      },
+      "revId": "6f53fa33d3c129aa35258796566450c1daed4626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9a01036_8e5f39ad",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-17T00:46:00Z",
+      "side": 1,
+      "message": "Same here.",
+      "parentUuid": "e77d45b6_7a28b619",
       "range": {
         "startLine": 284,
         "startChar": 8,
