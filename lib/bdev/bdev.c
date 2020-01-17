@@ -1408,6 +1408,12 @@ bdev_qos_io_to_limit(struct spdk_bdev_io *bdev_io)
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		return true;
+	case SPDK_BDEV_IO_TYPE_ZCOPY:
+		if (bdev_io->u.bdev.zcopy.start) {
+			return true;
+		} else {
+			return false;
+		}
 	default:
 		return false;
 	}
