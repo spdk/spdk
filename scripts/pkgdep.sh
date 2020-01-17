@@ -58,8 +58,19 @@ rootdir=$(readlink -f $scriptsdir/..)
 if [ -s /etc/redhat-release ]; then
 	. /etc/os-release
 	# Minimal install
+	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
+		# Add PowerTools needed for install CUnit-devel in Centos8
+		yum config-manager --set-enabled PowerTools
+	fi
 	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-		libuuid-devel libiscsi-devel python
+		libuuid-devel libiscsi-devel
+	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
+		yum install -y python36
+		#Create hard link to use in SPKD as python
+		ln /etc/alternatives/python3 /usr/bin/python
+	else
+		yum install -y python
+	fi
 	# Additional dependencies for SPDK CLI - not available in rhel and centos
 	if ! echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7'; then
 		yum install -y python3-configshell python3-pexpect
@@ -72,7 +83,7 @@ if [ -s /etc/redhat-release ]; then
 		# Tools for developers
 		# Includes Fedora, CentOS 7, RHEL 7
 		# Add EPEL repository for CUnit-devel and libunwind-devel
-		if echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7'; then
+		if echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7|centos 8'; then
 			if ! rpm --quiet -q epel-release; then
 				yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 			fi
@@ -83,8 +94,13 @@ if [ -s /etc/redhat-release ]; then
 				yum --enablerepo=extras install -y epel-release
 			fi
 		fi
-		yum install -y git astyle python-pycodestyle lcov \
-			sg3_utils pciutils ShellCheck
+		if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
+			yum install -y python3-pycodestyle
+			echo "Centos 8 do not have lcov and ShellCheck dependencies"
+		else
+			yum install -y python-pycodestyle lcov ShellCheck
+		fi
+		yum install -y git astyle sg3_utils pciutils
 		# Additional (optional) dependencies for showing backtrace in logs
 		yum install -y libunwind-devel || true
 	fi
@@ -102,7 +118,12 @@ if [ -s /etc/redhat-release ]; then
 	fi
 	if [[ $INSTALL_DOCS == "true" ]]; then
 		# Additional dependencies for building docs
-		yum install -y doxygen mscgen graphviz
+		if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
+			echo "Centos 8 do not have mscgen dependencies"
+		else
+			yum install -y mscgen
+		fi
+		yum install -y doxygen graphviz
 	fi
 elif [ -f /etc/debian_version ]; then
 	. /etc/os-release
