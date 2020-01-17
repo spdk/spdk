@@ -597,7 +597,9 @@ _bdev_io_set_bounce_md_buf(struct spdk_bdev_io *bdev_io, void *md_buf, size_t le
 static void
 bdev_io_get_buf_complete(struct spdk_bdev_io *bdev_io, bool status)
 {
-	bdev_io->internal.get_buf_cb(spdk_bdev_io_get_io_channel(bdev_io), bdev_io, status);
+	struct spdk_io_channel *ch = spdk_bdev_io_get_io_channel(bdev_io);
+
+	bdev_io->internal.get_buf_cb(ch, bdev_io, status);
 	bdev_io->internal.get_buf_cb = NULL;
 }
 
@@ -713,8 +715,8 @@ _bdev_io_unset_bounce_buf(struct spdk_bdev_io *bdev_io)
 	bdev_io_put_buf(bdev_io);
 }
 
-void
-spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
+static void
+bdev_io_get_buf(struct spdk_bdev_io *bdev_io, uint64_t len)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_mempool *pool;
@@ -723,18 +725,8 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	uint64_t alignment, md_len;
 	void *buf;
 
-	assert(cb != NULL);
-	bdev_io->internal.get_buf_cb = cb;
-
 	alignment = spdk_bdev_get_buf_align(bdev);
 	md_len = spdk_bdev_is_md_separate(bdev) ? bdev_io->u.bdev.num_blocks * bdev->md_len : 0;
-
-	if (_is_buf_allocated(bdev_io->u.bdev.iovs) &&
-	    _are_iovs_aligned(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, alignment)) {
-		/* Buffer already present and aligned */
-		bdev_io_get_buf_complete(bdev_io, true);
-		return;
-	}
 
 	if (len + alignment + md_len > SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE) +
 	    SPDK_BDEV_POOL_ALIGNMENT) {
@@ -763,6 +755,27 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	} else {
 		_bdev_io_set_buf(bdev_io, buf, len);
 	}
+}
+
+void
+spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
+{
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	uint64_t alignment;
+
+	assert(cb != NULL);
+	bdev_io->internal.get_buf_cb = cb;
+
+	alignment = spdk_bdev_get_buf_align(bdev);
+
+	if (_is_buf_allocated(bdev_io->u.bdev.iovs) &&
+	    _are_iovs_aligned(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, alignment)) {
+		/* Buffer already present and aligned */
+		cb(spdk_bdev_io_get_io_channel(bdev_io), bdev_io, true);
+		return;
+	}
+
+	bdev_io_get_buf(bdev_io, len);
 }
 
 static int
