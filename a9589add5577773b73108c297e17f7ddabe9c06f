@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "dd0b0c43_1223f2e1",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-17T07:20:04Z",
+      "side": 1,
+      "message": "Thank you Alexey! I could see the code flow very clearly according to your comment.",
+      "parentUuid": "9ebe8d9c_bf40feb6",
+      "revId": "a9589add5577773b73108c297e17f7ddabe9c06f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f0e206cc_b23adf0f",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 4
