@@ -2446,23 +2446,12 @@ exit:
 	return 0;
 }
 
-int
-spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
+static int
+spdk_nvmf_ctrlr_process_io_fused_cmd(struct spdk_nvmf_request *req, struct spdk_bdev *bdev,
+				     struct spdk_bdev_desc *desc, struct spdk_io_channel *ch)
 {
-	uint32_t nsid;
-	struct spdk_nvmf_ns *ns;
-	struct spdk_bdev *bdev;
-	struct spdk_bdev_desc *desc;
-	struct spdk_io_channel *ch;
-	struct spdk_nvmf_poll_group *group = req->qpair->group;
-	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
-	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
-
-	/* pre-set response details for this command */
-	response->status.sc = SPDK_NVME_SC_SUCCESS;
-	nsid = cmd->nsid;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
 	if (cmd->fuse == SPDK_NVME_CMD_FUSE_FIRST) {
 		/* first fused operation (should be compare) */
@@ -2481,8 +2470,8 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		/* second fused operation */
 		if (req->qpair->first_fused_req == NULL) {
 			SPDK_ERRLOG("Wrong sequence of fused operations\n");
-			response->status.sct = SPDK_NVME_SCT_GENERIC;
-			response->status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
+			rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+			rsp->status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
@@ -2490,6 +2479,27 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		req->first_fused_req = req->qpair->first_fused_req;
 		req->qpair->first_fused_req = NULL;
 	}
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
+{
+	uint32_t nsid;
+	struct spdk_nvmf_ns *ns;
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_poll_group *group = req->qpair->group;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
+
+	/* pre-set response details for this command */
+	response->status.sc = SPDK_NVME_SC_SUCCESS;
+	nsid = cmd->nsid;
 
 	if (spdk_unlikely(ctrlr == NULL)) {
 		SPDK_ERRLOG("I/O command sent before CONNECT\n");
@@ -2525,6 +2535,11 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	bdev = ns->bdev;
 	desc = ns->desc;
 	ch = ns_info->channel;
+
+	if (spdk_unlikely(cmd->fuse & SPDK_NVME_CMD_FUSE_MASK)) {
+		return spdk_nvmf_ctrlr_process_io_fused_cmd(req, bdev, desc, ch);
+	}
+
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
 		return spdk_nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
