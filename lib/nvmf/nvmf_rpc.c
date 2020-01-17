@@ -1727,6 +1727,7 @@ dump_nvmf_transport(struct spdk_json_write_ctx *w, struct spdk_nvmf_transport *t
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_named_string(w, "trtype", spdk_nvme_transport_id_trtype_str(type));
+	spdk_json_write_named_string(w, "name", spdk_nvmf_get_transport_name(transport));
 	spdk_json_write_named_uint32(w, "max_queue_depth", opts->max_queue_depth);
 	spdk_json_write_named_uint32(w, "max_qpairs_per_ctrlr", opts->max_qpairs_per_ctrlr);
 	spdk_json_write_named_uint32(w, "in_capsule_data_size", opts->in_capsule_data_size);
