@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e871b412_e5c8c8fb",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1563,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-17T13:49:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0ac628cf_badc2d8b",
+      "revId": "2eaccab41a540012208871741b260d8eaadf519d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd572369_9c19fb73",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-15T19:54:14Z",
       "side": 1,
       "message": "(general comment) - I think we have a bug in the bdev/nvme compare-and-write code now that I review this patch.  If the compare fails, we still need to wait for the write completion, but we should complete the bdev_io with the status of the compare failure *not* the write failure.",
+      "revId": "2eaccab41a540012208871741b260d8eaadf519d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "634556a5_5c03cc26",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4585,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-17T13:49:49Z",
+      "side": 1,
+      "message": "Agree. Should we move write op to callback? I\u0027ll prepare separate patch for that and let me know what do you think about it. Only one small concern: what will controller do when it won\u0027t get second of fused commands?",
+      "parentUuid": "dd572369_9c19fb73",
       "revId": "2eaccab41a540012208871741b260d8eaadf519d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "2cd6033d_abb9771d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4594,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-17T13:49:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4d684a8_e535e865",
+      "revId": "2eaccab41a540012208871741b260d8eaadf519d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d71a3e4_5963af48",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -67,6 +121,24 @@
       "revId": "2eaccab41a540012208871741b260d8eaadf519d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2afd3080_393c5fc9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4610,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-17T13:49:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1d71a3e4_5963af48",
+      "revId": "2eaccab41a540012208871741b260d8eaadf519d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
