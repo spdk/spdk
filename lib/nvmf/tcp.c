@@ -267,6 +267,7 @@ struct spdk_nvmf_tcp_poll_group {
 	struct spdk_sock_group			*sock_group;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	qpairs;
+	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	await_req;
 };
 
 struct spdk_nvmf_tcp_port {
@@ -1025,6 +1026,7 @@ spdk_nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 	}
 
 	TAILQ_INIT(&tgroup->qpairs);
+	TAILQ_INIT(&tgroup->await_req);
 
 	return &tgroup->group;
 
@@ -1094,14 +1096,23 @@ spdk_nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
 		return;
 	}
 
+	if (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_REQ) {
+		/* When leaving the await req state, move the qpair to the main list */
+		TAILQ_REMOVE(&tqpair->group->await_req, tqpair, link);
+		TAILQ_INSERT_TAIL(&tqpair->group->qpairs, tqpair, link);
+	}
+
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tqpair(%p) recv state=%d\n", tqpair, state);
 	tqpair->recv_state = state;
 
 	switch (state) {
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
-	case NVME_TCP_PDU_RECV_STATE_AWAIT_REQ:
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
+		break;
+	case NVME_TCP_PDU_RECV_STATE_AWAIT_REQ:
+		TAILQ_REMOVE(&tqpair->group->qpairs, tqpair, link);
+		TAILQ_INSERT_TAIL(&tqpair->group->await_req, tqpair, link);
 		break;
 	case NVME_TCP_PDU_RECV_STATE_ERROR:
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
@@ -2462,7 +2473,12 @@ spdk_nvmf_tcp_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 	assert(tqpair->group == tgroup);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "remove tqpair=%p from the tgroup=%p\n", tqpair, tgroup);
-	TAILQ_REMOVE(&tgroup->qpairs, tqpair, link);
+	if (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_REQ) {
+		TAILQ_REMOVE(&tgroup->await_req, tqpair, link);
+	} else {
+		TAILQ_REMOVE(&tgroup->qpairs, tqpair, link);
+	}
+
 	rc = spdk_sock_group_remove_sock(tgroup->sock_group, tqpair->sock);
 	if (rc != 0) {
 		SPDK_ERRLOG("Could not remove sock from sock_group: %s (%d)\n",
@@ -2506,12 +2522,13 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	int rc;
 	struct spdk_nvmf_request *req, *req_tmp;
 	struct spdk_nvmf_tcp_req *tcp_req;
+	struct spdk_nvmf_tcp_qpair *tqpair, *tqpair_tmp;
 	struct spdk_nvmf_tcp_transport *ttransport = SPDK_CONTAINEROF(group->transport,
 			struct spdk_nvmf_tcp_transport, transport);
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 
-	if (spdk_unlikely(TAILQ_EMPTY(&tgroup->qpairs))) {
+	if (spdk_unlikely(TAILQ_EMPTY(&tgroup->qpairs) && TAILQ_EMPTY(&tgroup->await_req))) {
 		return 0;
 	}
 
@@ -2525,6 +2542,10 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	rc = spdk_sock_group_poll(tgroup->sock_group);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to poll sock_group=%p\n", tgroup->sock_group);
+	}
+
+	TAILQ_FOREACH_SAFE(tqpair, &tgroup->await_req, link, tqpair_tmp) {
+		spdk_nvmf_tcp_sock_process(tqpair);
 	}
 
 	return rc;
