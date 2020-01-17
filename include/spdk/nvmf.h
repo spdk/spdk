@@ -1056,6 +1056,15 @@ const struct spdk_nvmf_transport_opts *spdk_nvmf_get_transport_opts(struct spdk_
 spdk_nvme_transport_type_t spdk_nvmf_get_transport_type(struct spdk_nvmf_transport *transport);
 
 /**
+ * Get the transport name for a given transport.
+ *
+ * \param transport The transport to query
+ *
+ * \return the transport name for the given transport
+ */
+const char *spdk_nvmf_get_transport_name(struct spdk_nvmf_transport *transport);
+
+/**
  * Function to be called once transport add is complete
  *
  * \param cb_arg Callback argument passed to this function.
