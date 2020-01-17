@@ -14,6 +14,7 @@ function usage()
 	echo "  -d --developer-tools        Install tools for developers (code styling, code coverage, etc.)"
 	echo "  --fuse                      additional dependencies for FUSE and CUSE"
 	echo "  --nvmeof                    additional dependencies for NVMe over Fabrics"
+	echo "  --docs                      additional dependencies for building docs"
 	echo ""
 	exit 0
 }
@@ -22,6 +23,7 @@ INSTALL_CRYPTO=false
 INSTALL_DEV_TOOLS=false
 INSTALL_FUSE=false
 INSTALL_NVMEOF=false
+INSTALL_DOCS=false
 
 while getopts 'dhi-:' optchar; do
 	case "$optchar" in
@@ -31,6 +33,7 @@ while getopts 'dhi-:' optchar; do
 			developer-tools) INSTALL_DEV_TOOLS=true;;
 			fuse) INSTALL_FUSE=true;;
 			nvmeof) INSTALL_NVMEOF=true;;
+			docs) INSTALL_DOCS=true;;
 			*) echo "Invalid argument '$OPTARG'"
 			usage;;
 		esac
@@ -92,6 +95,10 @@ if [ -s /etc/redhat-release ]; then
 		# Additional dependencies for NVMe over Fabrics
 		yum install -y libibverbs-devel librdmacm-devel
 	fi
+	if [[ $INSTALL_DOCS == "true" ]]; then
+		# Additional dependencies for building docs
+		yum install -y doxygen mscgen graphviz
+	fi
 elif [ -f /etc/debian_version ]; then
 	. /etc/os-release
 	VERSION_ID=$(echo $VERSION_ID | sed 's/\.//g')
@@ -141,6 +148,10 @@ elif [ -f /etc/debian_version ]; then
 		# Additional dependencies for NVMe over Fabrics
 		apt-get install -y libibverbs-dev librdmacm-dev
 	fi
+	if [[ $INSTALL_DOCS == "true" ]]; then
+		# Additional dependencies for building docs
+		apt-get install -y doxygen mscgen graphviz
+	fi
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	# Minimal install
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
@@ -168,6 +179,10 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 		# Additional dependencies for NVMe over Fabrics
 		zypper install -y rdma-core-devel
 	fi
+	if [[ $INSTALL_DOCS == "true" ]]; then
+		# Additional dependencies for building docs
+		zypper install -y doxygen mscgen graphviz
+	fi
 elif [ $(uname -s) = "FreeBSD" ] ; then
 	# Minimal install
 	pkg install -y gmake cunit openssl git bash misc/e2fsprogs-libuuid python
@@ -178,8 +193,10 @@ elif [ $(uname -s) = "FreeBSD" ] ; then
 		pkg install -y devel/astyle bash py27-pycodestyle \
 			misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
 	fi
-	# Additional dependencies for building docs
-	pkg install -y doxygen mscgen graphviz
+	if [[ $INSTALL_DOCS == "true" ]]; then
+		# Additional dependencies for building docs
+		pkg install -y doxygen mscgen graphviz
+	fi
 elif [ -f /etc/arch-release ]; then
 	# Install main dependencies
 	pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
@@ -259,6 +276,16 @@ elif [ -f /etc/arch-release ]; then
 			cd rdma-core;
 			makepkg -si --needed --noconfirm;
 			cd .. && rm -rf rdma-core;
+			popd"
+	fi
+	if [[ $INSTALL_DOCS == "true" ]]; then
+		# Additional dependency for building docs
+		pacman -S --noconfirm --needed gd ttf-font
+		su - $SUDO_USER -c "pushd /tmp;
+			git clone https://aur.archlinux.org/mscgen.git;
+			cd mscgen;
+			makepkg -si --needed --noconfirm;
+			cd .. && rm -rf mscgen;
 			popd"
 	fi
 else

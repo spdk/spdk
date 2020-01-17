@@ -36,6 +36,12 @@ Using option --nvmeof will automatically install dependencies for NVMe over Fabr
 sudo scripts/pkgdep.sh --nvmeof
 ~~~
 
+Using option --docs will automatically install dependencies for building docs.
+
+~~~{.sh}
+sudo scripts/pkgdep.sh --docs
+~~~
+
 # Building {#getting_started_building}
 
 Linux:
