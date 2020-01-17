@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "83283025_473a2d11",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 728,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-17T06:53:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a0741c31_66ba3a19",
+      "revId": "fa5da35f9aa3738646eb5fee0feecc70e96bf7e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f89fae10_fdf5b45f",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 18
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "3397a60f_75e68587",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-17T06:53:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f89fae10_fdf5b45f",
+      "revId": "fa5da35f9aa3738646eb5fee0feecc70e96bf7e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "87f1cf93_d20adff6",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 18
@@ -47,6 +83,24 @@
       "writtenOn": "2020-01-16T18:12:09Z",
       "side": 1,
       "message": "This is just a suggestion, I don\u0027t think it\u0027s a feature we really need, but want your opinion. Do we want to allow ourselves to specify a number of  remaining devices here? I think that for right now we don\u0027t have any examples where we might want to only disconnect some of the devices, but it might be a useful option to have.",
+      "revId": "fa5da35f9aa3738646eb5fee0feecc70e96bf7e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67a9b832_56f550d6",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 742,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-17T06:53:57Z",
+      "side": 1,
+      "message": "Right now I don\u0027t have any idea how should it work.\nUsing device serial, here we disconnect all devices with that serial i.e: \nnvme1n1\nnvme1n2\nnvme1n3\net cetera,\nand You want to disconnect only one, or two of them ? \nFor disconnecting one of them we can use old function waitforblk_disconnect.",
+      "parentUuid": "87f1cf93_d20adff6",
       "revId": "fa5da35f9aa3738646eb5fee0feecc70e96bf7e6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
