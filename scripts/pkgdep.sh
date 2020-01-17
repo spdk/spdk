@@ -53,8 +53,19 @@ rootdir=$(readlink -f $scriptsdir/..)
 if [ -s /etc/redhat-release ]; then
 	. /etc/os-release
 	# Minimal install
+	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
+		# Add PowerTools needed for install CUnit-devel in Centos8
+		yum config-manager --set-enabled PowerTools
+	fi
 	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-		libuuid-devel libiscsi-devel python
+		libuuid-devel libiscsi-devel
+	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
+		yum install -y python36
+		#Create hard link to use in SPKD as python
+		ln /etc/alternatives/python3 /usr/bin/python
+	else
+		yum install -y python
+	fi
 	# Additional dependencies for SPDK CLI - not available in rhel and centos
 	if ! echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7'; then
 		yum install -y python3-configshell python3-pexpect
