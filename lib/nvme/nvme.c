@@ -814,6 +814,8 @@ spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
 		return "FC";
 	case SPDK_NVME_TRANSPORT_TCP:
 		return "TCP";
+	case SPDK_NVME_TRANSPORT_CUSTOM:
+		return "CUSTOM";
 	default:
 		return NULL;
 	}
