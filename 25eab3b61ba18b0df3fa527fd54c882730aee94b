@@ -46,6 +46,30 @@
       "revId": "25eab3b61ba18b0df3fa527fd54c882730aee94b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e7d1f95_3b6c397d",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-17T12:18:43Z",
+      "side": 1,
+      "message": "If patches https://review.gerrithub.io/c/spdk/spdk/+/471255 and https://review.gerrithub.io/c/spdk/spdk/+/467967 are merged we will start testing different clear_method options more precisely. Moving these two patches to bash could be another step.\nI think we can have this bash test as basic test for now.",
+      "parentUuid": "611e24ee_521ade92",
+      "range": {
+        "startLine": 133,
+        "startChar": 0,
+        "endLine": 133,
+        "endChar": 67
+      },
+      "revId": "25eab3b61ba18b0df3fa527fd54c882730aee94b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
