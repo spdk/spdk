@@ -16,6 +16,92 @@
       "revId": "2410667a82df62e432866d630c15899c422c9d44",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b56870d_9b3a8f6d",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T00:41:45Z",
+      "side": 1,
+      "message": "and also \"beginning\"",
+      "parentUuid": "5a7a3da4_fb7e6c15",
+      "revId": "2410667a82df62e432866d630c15899c422c9d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0772138_8cfa9642",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T00:41:45Z",
+      "side": 1,
+      "message": "length",
+      "revId": "2410667a82df62e432866d630c15899c422c9d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a41f7a6_9c9de66a",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T00:41:45Z",
+      "side": 1,
+      "message": "should we use EXTENT_PAGE here instead?  I feel like that\u0027s more descriptive than just \"EXTENT\"",
+      "revId": "2410667a82df62e432866d630c15899c422c9d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54026cdd_63355f90",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T00:41:45Z",
+      "side": 1,
+      "message": "extent_page?  (similar to above)",
+      "revId": "2410667a82df62e432866d630c15899c422c9d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "416d6963_8fc0145d",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T00:41:45Z",
+      "side": 1,
+      "message": "I don\u0027t see any indication in here on which range of clusters this extent page specifies, so I\u0027m guessing you\u0027re going to process the extent pages in order?\n\nWe may want to rethink that eventually.  For example, if an extent table points to 300 extent pages, it would be great to be able to read those 300 metadata pages in parallel, instead of one at a time.\n\nWe don\u0027t need to actually implement that parallel logic now, but if we want to add it in the future, this extent page needs some kind of index variable indicating the range of clusters for this extent page.  We\u0027ll also need to fill out that index now.  Because we can\u0027t change the metadata format/contents later.",
+      "revId": "2410667a82df62e432866d630c15899c422c9d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
