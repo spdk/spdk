@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fdee2ed_4d1a39dc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T00:05:32Z",
+      "side": 1,
+      "message": "see below - let\u0027s name this lowest_free_md_page",
+      "revId": "134280e12d159ed3913fa004382dc0ace465a143",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6ba5a17_09e6821c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1538,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T00:05:32Z",
+      "side": 1,
+      "message": "for clusters, the blob has clusters, and then we have the free cluster bit array\n\nbut for extents, the blob has extents but we have the free md page bit array\n\nso I think here it should be something like lfmd for lowest free md page",
+      "revId": "134280e12d159ed3913fa004382dc0ace465a143",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
