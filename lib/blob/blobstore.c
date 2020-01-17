@@ -134,6 +134,8 @@ static int
 _spdk_bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 			  uint64_t *lowest_free_cluster, uint32_t *lowest_free_md_page, bool update_map)
 {
+	uint32_t *extent_page = _spdk_bs_cluster_to_extent_page(blob, cluster_num);
+
 	pthread_mutex_lock(&blob->bs->used_clusters_mutex);
 	*lowest_free_cluster = spdk_bit_array_find_first_clear(blob->bs->used_clusters,
 			       *lowest_free_cluster);
@@ -143,13 +145,28 @@ _spdk_bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 		return -ENOSPC;
 	}
 
+	if (extent_page != NULL && *extent_page == 0) {
+		/* No extent_page is allocated for the cluster */
+		*lowest_free_md_page = spdk_bit_array_find_first_clear(blob->bs->used_md_pages,
+				       *lowest_free_md_page);
+		if (*lowest_free_md_page == UINT32_MAX) {
+			/* No more free md pages. Cannot satisfy the request */
+			pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
+			return -ENOSPC;
+		}
+		_spdk_bs_claim_md_page(blob->bs, *lowest_free_md_page);
+	}
+
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %lu for blob %lu\n", *lowest_free_cluster, blob->id);
 	_spdk_bs_claim_cluster(blob->bs, *lowest_free_cluster);
+
 	pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
 
 	if (update_map) {
 		_spdk_blob_insert_cluster(blob, cluster_num, *lowest_free_cluster);
-		/* TODO: Claim used_md_pages for extent pages */
+		if (extent_page != NULL && *extent_page == 0) {
+			*extent_page = *lowest_free_md_page;
+		}
 	}
 
 	return 0;
@@ -1619,7 +1636,14 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 			}
 			lfc++;
 		}
-		/* TODO: Check if enough used_md_pages are available. */
+		lfmd = 0;
+		for (i = current_num_ep; i < new_num_ep ; i++) {
+			lfmd = spdk_bit_array_find_first_clear(blob->bs->used_md_pages, lfmd);
+			if (lfmd == UINT32_MAX) {
+				/* No more free md pages. Cannot satisfy the request */
+				return -ENOSPC;
+			}
+		}
 	}
 
 	if (sz > num_clusters) {
@@ -1864,6 +1888,9 @@ _spdk_blob_insert_cluster_cpl(void *cb_arg, int bserrno)
 			bserrno = 0;
 		}
 		_spdk_bs_release_cluster(ctx->blob->bs, ctx->new_cluster);
+		if (ctx->new_extent_page != 0) {
+			_spdk_bs_release_md_page(ctx->blob->bs, ctx->new_extent_page);
+		}
 	}
 
 	spdk_bs_sequence_finish(ctx->seq, bserrno);
@@ -6153,6 +6180,7 @@ struct spdk_blob_insert_cluster_ctx {
 	struct spdk_blob	*blob;
 	uint32_t		cluster_num;	/* cluster index in blob */
 	uint32_t		cluster;	/* cluster on disk */
+	uint32_t		extent_page;	/* extent page on disk */
 	int			rc;
 	spdk_blob_op_complete	cb_fn;
 	void			*cb_arg;
@@ -6180,6 +6208,7 @@ static void
 _spdk_blob_insert_cluster_msg(void *arg)
 {
 	struct spdk_blob_insert_cluster_ctx *ctx = arg;
+	uint32_t *extent_page = _spdk_bs_cluster_to_extent_page(ctx->blob, ctx->cluster_num);
 
 	ctx->rc = _spdk_blob_insert_cluster(ctx->blob, ctx->cluster_num, ctx->cluster);
 	if (ctx->rc != 0) {
@@ -6187,6 +6216,20 @@ _spdk_blob_insert_cluster_msg(void *arg)
 		return;
 	}
 
+	if (extent_page == NULL) {
+		/* Extent page are not used, proceed with sync of md that will contain Extents RLE */
+	} else if (*extent_page == 0) {
+		/* Extent page needs allocation, it was claimed in the map already and placed in ctx */
+		assert(ctx->extent_page != 0);
+		assert(spdk_bit_array_get(ctx->blob->bs->used_md_pages, ctx->extent_page) == true);
+		/* TODO for further patches, here actual extent page will be writen out to disk.
+		 * It will be followed by sync of all md, to update the extent table. */
+		*extent_page = ctx->extent_page;
+	} else {
+		assert(ctx->extent_page == 0);
+		/* TODO for further patches, here actual extent page will be writen out to disk.
+		 * Instead of doing full out sync of all md. */
+	}
 	ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
 	_spdk_blob_sync_md(ctx->blob, _spdk_blob_insert_cluster_msg_cb, ctx);
 }
@@ -6207,6 +6250,7 @@ _spdk_blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_
 	ctx->blob = blob;
 	ctx->cluster_num = cluster_num;
 	ctx->cluster = cluster;
+	ctx->extent_page = extent_page;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
