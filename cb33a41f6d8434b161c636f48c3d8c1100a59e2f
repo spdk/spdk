@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc5173d4_e8ca1658",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T22:48:48Z",
+      "side": 1,
+      "message": "Always use sendmsg, eliminate #define.",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85ae71c4_ddd71bcf",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T22:48:48Z",
+      "side": 1,
+      "message": "Let\u0027s only worry about writes for now. Reads need very different semantics. Eliminate this enum entirely and just assume write.",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd144cab_68d02f21",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T22:48:48Z",
+      "side": 1,
+      "message": "I think you don\u0027t need this enum. You can instead check if there are any requests queued, pending, etc. to determine these states.",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71ecdad1_2c577f25",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T22:48:48Z",
+      "side": 1,
+      "message": "Take this struct and just embed the fields directly into spdk_uring_sock for now.",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c71072c8_60fb1f7e",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T22:48:48Z",
+      "side": 1,
+      "message": "In the first patch, let\u0027s drop all libaio support. We can add that later. The complexity is making it difficult to review.",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3efc9fdc_a7006da5",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T22:48:48Z",
+      "side": 1,
+      "message": "This can become a list of sockets that have operations to be done. Or when polling you can loop over all sockets. Looping over all sockets isn\u0027t as good, but in benchmarking it doesn\u0027t seem to make a huge difference. It simplifies the code and we can always go in and add it back later.",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a9ef3a8_5e17f41f",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T22:48:48Z",
+      "side": 1,
+      "message": "With io_uring, is there ever a case where the write finishes with a partial send?",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6b67f76_903f4fd4",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 705,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T22:48:48Z",
+      "side": 1,
+      "message": "The user data can just point at the sock",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eea24c04_a75d3c10",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T22:48:48Z",
+      "side": 1,
+      "message": "This should be a list of socks that have pending write I/O to send.",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "724fe5b0_18894021",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 727,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T22:48:48Z",
+      "side": 1,
+      "message": "Name spdk_uring_init_iov to _sock_flush, to match the posix.c implementation.",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
