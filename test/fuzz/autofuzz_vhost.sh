@@ -70,9 +70,5 @@ $fuzz_generic_rpc_py framework_start_init
 wait $fuzzpid
 
 trap - SIGINT SIGTERM exit
-set +e
 killprocess $vhostpid
-echo $?
-set -e
-killprocess $fuzzpid
 timing_exit vhost_fuzz_test
