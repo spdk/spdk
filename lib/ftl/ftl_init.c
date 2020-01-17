@@ -979,6 +979,7 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 	}
 
 	TAILQ_INIT(&ioch->completion_queue);
+	TAILQ_INIT(&ioch->retry_queue);
 	ioch->poller = spdk_poller_register(ftl_io_channel_poll, ioch, 0);
 	if (!ioch->poller) {
 		SPDK_ERRLOG("Failed to register IO channel poller\n");
@@ -1187,7 +1188,6 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		goto fail_sync;
 	}
 
-	TAILQ_INIT(&dev->retry_queue);
 	dev->conf = *opts.conf;
 	dev->init_ctx.cb_fn = cb_fn;
 	dev->init_ctx.cb_arg = cb_arg;

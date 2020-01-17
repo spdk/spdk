@@ -807,8 +807,10 @@ ftl_wptr_process_shutdown(struct ftl_wptr *wptr)
 static int
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 {
+	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(dev->core_thread.ioch);
+
 	return !__atomic_load_n(&dev->num_inflight, __ATOMIC_SEQ_CST) &&
-	       LIST_EMPTY(&dev->wptr_list) && TAILQ_EMPTY(&dev->retry_queue);
+	       LIST_EMPTY(&dev->wptr_list) && TAILQ_EMPTY(&ioch->retry_queue);
 }
 
 void
@@ -895,10 +897,9 @@ ftl_read_canceled(int rc)
 static void
 ftl_add_to_retry_queue(struct ftl_io *io)
 {
-	if (!(io->flags & FTL_IO_RETRY)) {
-		io->flags |= FTL_IO_RETRY;
-		TAILQ_INSERT_TAIL(&io->dev->retry_queue, io, retry_entry);
-	}
+	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(io->ioch);
+
+	TAILQ_INSERT_TAIL(&ioch->retry_queue, io, ioch_entry);
 }
 
 static int
@@ -1009,9 +1010,7 @@ ftl_submit_read(struct ftl_io *io)
 					   addr.offset,
 					   num_blocks, ftl_io_cmpl_cb, io);
 		if (spdk_unlikely(rc)) {
-			if (rc == -ENOMEM) {
-				ftl_add_to_retry_queue(io);
-			} else {
+			if (rc != -ENOMEM) {
 				ftl_io_fail(io, rc);
 			}
 			break;
@@ -1930,8 +1929,7 @@ ftl_rwb_fill_leaf(struct ftl_io *io)
 
 	rc = ftl_rwb_fill(io);
 	if (rc == -EAGAIN) {
-		spdk_thread_send_msg(spdk_io_channel_get_thread(io->ioch),
-				     _ftl_io_write, io);
+		ftl_add_to_retry_queue(io);
 		return 0;
 	}
 
@@ -2010,7 +2008,7 @@ ftl_io_read_leaf(struct ftl_io *io)
 
 	rc = ftl_submit_read(io);
 	if (rc == -ENOMEM) {
-		/* ENOMEM means that the request was put on a pending queue */
+		ftl_add_to_retry_queue(io);
 		return 0;
 	}
 
@@ -2211,43 +2209,19 @@ ftl_get_media_events(struct spdk_ftl_dev *dev)
 	} while (num_events);
 }
 
-static void
-ftl_process_retry_queue(struct spdk_ftl_dev *dev)
-{
-	struct ftl_io *io;
-	int rc;
-
-	while (!TAILQ_EMPTY(&dev->retry_queue)) {
-		io = TAILQ_FIRST(&dev->retry_queue);
-
-		/* Retry only if IO is still healthy */
-		if (spdk_likely(io->status == 0)) {
-			rc = ftl_submit_read(io);
-			if (rc == -ENOMEM) {
-				break;
-			}
-		}
-
-		io->flags &= ~FTL_IO_RETRY;
-		TAILQ_REMOVE(&dev->retry_queue, io, retry_entry);
-
-		if (ftl_io_done(io)) {
-			ftl_io_complete(io);
-		}
-	}
-}
-
 int
 ftl_io_channel_poll(void *arg)
 {
 	struct ftl_io_channel *ch = arg;
 	struct ftl_io *io;
 	TAILQ_HEAD(, ftl_io) io_queue;
+	TAILQ_HEAD(, ftl_io) retry_queue;
+	int rc;
 
 	TAILQ_INIT(&io_queue);
 	TAILQ_SWAP(&ch->completion_queue, &io_queue, ftl_io, ioch_entry);
 
-	if (TAILQ_EMPTY(&io_queue)) {
+	if (TAILQ_EMPTY(&io_queue) && TAILQ_EMPTY(&ch->retry_queue)) {
 		return 0;
 	}
 
@@ -2255,6 +2229,25 @@ ftl_io_channel_poll(void *arg)
 		io = TAILQ_FIRST(&io_queue);
 		TAILQ_REMOVE(&io_queue, io, ioch_entry);
 		ftl_io_complete(io);
+	}
+
+	TAILQ_INIT(&retry_queue);
+	TAILQ_SWAP(&ch->retry_queue, &retry_queue, ftl_io, ioch_entry);
+
+	while (!TAILQ_EMPTY(&retry_queue)) {
+		io = TAILQ_FIRST(&retry_queue);
+		TAILQ_REMOVE(&retry_queue, io, ioch_entry);
+		if (io->type == FTL_IO_WRITE) {
+			rc = ftl_rwb_fill(io);
+		} else {
+			rc = ftl_submit_read(io);
+		}
+
+		if (rc == -EAGAIN) {
+			TAILQ_INSERT_HEAD(&retry_queue, io, ioch_entry);
+			TAILQ_SWAP(&ch->retry_queue, &retry_queue, ftl_io, ioch_entry);
+			break;
+		}
 	}
 
 	return 1;
@@ -2275,11 +2268,6 @@ ftl_task_core(void *ctx)
 
 	ftl_process_writes(dev);
 	ftl_process_relocs(dev);
-
-	if (!TAILQ_EMPTY(&dev->retry_queue)) {
-		ftl_process_retry_queue(dev);
-		return 1;
-	}
 
 	return 0;
 }
