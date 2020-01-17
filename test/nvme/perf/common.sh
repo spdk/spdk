@@ -303,7 +303,7 @@ function get_nvmeperf_results() {
 	local max_lat_usec
 	local min_lat_usec
 
-	read -r iops bw_MBs mean_lat_usec min_lat_usec max_lat_usec<<< $(cat $NVME_FIO_RESULTS | tr -s " " | grep -oP "(?<=Total : )(.*+)")
+	read -r iops bw_MBs mean_lat_usec min_lat_usec max_lat_usec<<< $(tr -s " " < $NVME_FIO_RESULTS | grep -oP "(?<=Total : )(.*+)")
 
 	# We need to get rid of the decimal spaces due
 	# to use of arithmetic expressions instead of "bc" for calculations
