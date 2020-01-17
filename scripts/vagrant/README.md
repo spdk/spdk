@@ -223,7 +223,7 @@ The following steps are done by the `update.sh` script. It is recommended that y
 
 ```
    $ sudo pkg upgrade -f
-   $ sudo spdk_repo/spdk/scripts/pkgdep.sh --developer-tools --pmem --fuse --rdma
+   $ sudo spdk_repo/spdk/scripts/pkgdep.sh --developer-tools --pmem --fuse --rdma --docs
    $ sudo git clone --depth 10 -b releases/11.1.0 https://github.com/freebsd/freebsd.git /usr/src
 ```
 
