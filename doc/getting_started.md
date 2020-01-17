@@ -30,6 +30,12 @@ Using option --fuse will automatically install dependencies for FUSE and CUSE.
 sudo scripts/pkgdep.sh --fuse
 ~~~
 
+Using option --nvmeof will automatically install dependencies for NVMe over Fabrics.
+
+~~~{.sh}
+sudo scripts/pkgdep.sh --nvmeof
+~~~
+
 # Building {#getting_started_building}
 
 Linux:

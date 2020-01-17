@@ -13,6 +13,7 @@ function usage()
 	echo "  -h --help"
 	echo "  -d --developer-tools        Install tools for developers (code styling, code coverage, etc.)"
 	echo "  --fuse                      additional dependencies for FUSE and CUSE"
+	echo "  --nvmeof                    additional dependencies for NVMe over Fabrics"
 	echo ""
 	exit 0
 }
@@ -20,6 +21,7 @@ function usage()
 INSTALL_CRYPTO=false
 INSTALL_DEV_TOOLS=false
 INSTALL_FUSE=false
+INSTALL_NVMEOF=false
 
 while getopts 'dhi-:' optchar; do
 	case "$optchar" in
@@ -28,6 +30,7 @@ while getopts 'dhi-:' optchar; do
 			help) usage;;
 			developer-tools) INSTALL_DEV_TOOLS=true;;
 			fuse) INSTALL_FUSE=true;;
+			nvmeof) INSTALL_NVMEOF=true;;
 			*) echo "Invalid argument '$OPTARG'"
 			usage;;
 		esac
@@ -83,10 +86,12 @@ if [ -s /etc/redhat-release ]; then
 		# Additional dependencies for FUSE and CUSE
 		yum install -y fuse3-devel
 	fi
-	# Additional dependencies for NVMe over Fabrics
-	yum install -y libibverbs-devel librdmacm-devel
 	# Additional dependencies for building docs
 	yum install -y doxygen mscgen graphviz
+	if [[ $INSTALL_NVMEOF == "true" ]]; then
+		# Additional dependencies for NVMe over Fabrics
+		yum install -y libibverbs-devel librdmacm-devel
+	fi
 elif [ -f /etc/debian_version ]; then
 	. /etc/os-release
 	VERSION_ID=$(echo $VERSION_ID | sed 's/\.//g')
@@ -130,10 +135,12 @@ elif [ -f /etc/debian_version ]; then
 		fi
 		apt-get install -y libfuse3-dev
 	fi
-	# Additional dependencies for NVMe over Fabrics
-	apt-get install -y libibverbs-dev librdmacm-dev
 	# Additional dependencies for building docs
 	apt-get install -y doxygen mscgen graphviz
+	if [[ $INSTALL_NVMEOF == "true" ]]; then
+		# Additional dependencies for NVMe over Fabrics
+		apt-get install -y libibverbs-dev librdmacm-dev
+	fi
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	# Minimal install
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
@@ -155,10 +162,12 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 		# Additional dependencies for FUSE and CUSE
 		zypper install -y fuse3-devel
 	fi
-	# Additional dependencies for NVMe over Fabrics
-	zypper install -y rdma-core-devel
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz
+	if [[ $INSTALL_NVMEOF == "true" ]]; then
+		# Additional dependencies for NVMe over Fabrics
+		zypper install -y rdma-core-devel
+	fi
 elif [ $(uname -s) = "FreeBSD" ] ; then
 	# Minimal install
 	pkg install -y gmake cunit openssl git bash misc/e2fsprogs-libuuid python
@@ -238,6 +247,19 @@ elif [ -f /etc/arch-release ]; then
 	if [[ $INSTALL_FUSE == "true" ]]; then
 		# Additional dependencies for FUSE and CUSE
 		pacman -Sy --needed --noconfirm fuse3
+	fi
+	if [[ $INSTALL_NVMEOF == "true" ]]; then
+		# Additional dependencies for NVMe over Fabrics
+		if [[ -n "$http_proxy" ]]; then
+			gpg_options=" --keyserver hkp://keyserver.ubuntu.com:80 --keyserver-options \"http-proxy=$http_proxy\""
+		fi
+		su - $SUDO_USER -c "gpg $gpg_options --recv-keys 29F0D86B9C1019B1"
+		su - $SUDO_USER -c "pushd /tmp;
+			git clone https://aur.archlinux.org/rdma-core.git;
+			cd rdma-core;
+			makepkg -si --needed --noconfirm;
+			cd .. && rm -rf rdma-core;
+			popd"
 	fi
 else
 	echo "pkgdep: unknown system type."
