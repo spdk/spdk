@@ -108,8 +108,10 @@ def getCompletions(completionFile, test_list, test_completion_table):
             try:
                 test_completion_table.remove(["None", "None", test_name, False, False])
             except ValueError:
+                print("ValueError")
                 continue
         except KeyError:
+            print("KeyError")
             continue
 
 
@@ -151,7 +153,7 @@ def aggregateCompletedTests(output_dir, repo_dir):
     testFiles = glob.glob(os.path.join(output_dir, '**', 'all_tests.txt'), recursive=True)
     completionFiles = glob.glob(os.path.join(output_dir, '**', 'test_completions.txt'), recursive=True)
 
-    if len(testFiles) == 0:
+    if len(testFiles) == 0 or len(completionFiles) == 0:
         print("Unable to perform test completion aggregator. No input files.")
         return 0
 
@@ -167,6 +169,7 @@ def aggregateCompletedTests(output_dir, repo_dir):
             test_completion_table.append(["None", "None", test_name, False, False])
 
     for completionFile in completionFiles:
+        print(completionFile)
         getCompletions(completionFile, test_list, test_completion_table)
 
     printListInformation("Tests", test_list)
