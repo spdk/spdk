@@ -2907,7 +2907,7 @@ _spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 }
 
 static void
-_spdk_bs_load_complete(struct spdk_bs_load_ctx *ctx, int bserrno)
+_spdk_bs_load_complete(struct spdk_bs_load_ctx *ctx)
 {
 	spdk_bs_iter_first(ctx->bs, _spdk_bs_load_iter, ctx);
 }
@@ -2936,7 +2936,7 @@ _spdk_bs_load_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 		return;
 	}
 
-	_spdk_bs_load_complete(ctx, bserrno);
+	_spdk_bs_load_complete(ctx);
 }
 
 static void
@@ -2945,6 +2945,11 @@ _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint64_t		lba, lba_count, mask_size;
 	int			rc;
+
+	if (bserrno != 0) {
+		_spdk_bs_load_ctx_fail(ctx, bserrno);
+		return;
+	}
 
 	/* The type must be correct */
 	assert(ctx->mask->type == SPDK_MD_MASK_TYPE_USED_CLUSTERS);
@@ -2986,6 +2991,11 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint64_t		lba, lba_count, mask_size;
 	int			rc;
+
+	if (bserrno != 0) {
+		_spdk_bs_load_ctx_fail(ctx, bserrno);
+		return;
+	}
 
 	/* The type must be correct */
 	assert(ctx->mask->type == SPDK_MD_MASK_TYPE_USED_PAGES);
@@ -3123,7 +3133,12 @@ _spdk_bs_load_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 {
 	struct spdk_bs_load_ctx	*ctx = cb_arg;
 
-	_spdk_bs_load_complete(ctx, bserrno);
+	if (bserrno != 0) {
+		_spdk_bs_load_ctx_fail(ctx, bserrno);
+		return;
+	}
+
+	_spdk_bs_load_complete(ctx);
 }
 
 static void
@@ -3133,6 +3148,11 @@ _spdk_bs_load_write_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int 
 
 	spdk_free(ctx->mask);
 	ctx->mask = NULL;
+
+	if (bserrno != 0) {
+		_spdk_bs_load_ctx_fail(ctx, bserrno);
+		return;
+	}
 
 	_spdk_bs_write_used_clusters(seq, ctx, _spdk_bs_load_write_used_clusters_cpl);
 }
@@ -3145,11 +3165,16 @@ _spdk_bs_load_write_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bs
 	spdk_free(ctx->mask);
 	ctx->mask = NULL;
 
+	if (bserrno != 0) {
+		_spdk_bs_load_ctx_fail(ctx, bserrno);
+		return;
+	}
+
 	_spdk_bs_write_used_blobids(seq, ctx, _spdk_bs_load_write_used_blobids_cpl);
 }
 
 static void
-_spdk_bs_load_write_used_md(struct spdk_bs_load_ctx *ctx, int bserrno)
+_spdk_bs_load_write_used_md(struct spdk_bs_load_ctx *ctx)
 {
 	_spdk_bs_write_used_md(ctx->seq, ctx, _spdk_bs_load_write_used_pages_cpl);
 }
@@ -3203,7 +3228,7 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 			_spdk_bs_claim_cluster(ctx->bs, i);
 		}
 		spdk_free(ctx->page);
-		_spdk_bs_load_write_used_md(ctx, bserrno);
+		_spdk_bs_load_write_used_md(ctx);
 	}
 }
 
