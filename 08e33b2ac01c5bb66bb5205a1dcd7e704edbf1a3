@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3dc9ef7_fa81a032",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1481,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-17T14:43:31Z",
+      "side": 0,
+      "message": "Please revert these lines, we still need to check the result",
+      "range": {
+        "startLine": 1479,
+        "startChar": 0,
+        "endLine": 1481,
+        "endChar": 2
+      },
+      "revId": "08e33b2ac01c5bb66bb5205a1dcd7e704edbf1a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
