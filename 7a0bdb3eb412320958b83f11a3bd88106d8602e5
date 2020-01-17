@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd599bfc_35a71557",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T09:46:07Z",
+      "side": 1,
+      "message": "Maybe smth like \"Install tools for developers (code styling, code coverage, etc.)\"? \nComment in () optional.",
+      "range": {
+        "startLine": 14,
+        "startChar": 37,
+        "endLine": 14,
+        "endChar": 70
+      },
+      "revId": "7a0bdb3eb412320958b83f11a3bd88106d8602e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56da5c04_102eb9c7",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T09:46:07Z",
+      "side": 1,
+      "message": "Tools",
+      "range": {
+        "startLine": 58,
+        "startChar": 4,
+        "endLine": 58,
+        "endChar": 17
+      },
+      "revId": "7a0bdb3eb412320958b83f11a3bd88106d8602e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c2eeccb_eb444daf",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T09:46:07Z",
+      "side": 1,
+      "message": "Use double brackets now that we\u0027re editing these lines",
+      "range": {
+        "startLine": 66,
+        "startChar": 6,
+        "endLine": 66,
+        "endChar": 21
+      },
+      "revId": "7a0bdb3eb412320958b83f11a3bd88106d8602e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07c2c011_889d40c1",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T09:46:07Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 68,
+        "startChar": 8,
+        "endLine": 68,
+        "endChar": 26
+      },
+      "revId": "7a0bdb3eb412320958b83f11a3bd88106d8602e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0de77569_2df18462",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T09:46:07Z",
+      "side": 1,
+      "message": "These are not developer tools but rather build dependencies for additional module (RDMA in this specific case).\nThis should be outside of this \"if\" block until we add a separate flag for RDMA deps.",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 49
+      },
+      "revId": "7a0bdb3eb412320958b83f11a3bd88106d8602e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c638e58d_4c070dfd",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T09:46:07Z",
+      "side": 1,
+      "message": "ditto, but for docs flag",
+      "range": {
+        "startLine": 79,
+        "startChar": 2,
+        "endLine": 79,
+        "endChar": 40
+      },
+      "revId": "7a0bdb3eb412320958b83f11a3bd88106d8602e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a4e51b02_51b9a005",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T09:46:07Z",
+      "side": 1,
+      "message": "ditto, but for pmdk flag",
+      "range": {
+        "startLine": 81,
+        "startChar": 2,
+        "endLine": 81,
+        "endChar": 41
+      },
+      "revId": "7a0bdb3eb412320958b83f11a3bd88106d8602e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "264287fd_5b297253",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-17T09:46:07Z",
+      "side": 1,
+      "message": "ditto, but for cuse flag",
+      "range": {
+        "startLine": 83,
+        "startChar": 2,
+        "endLine": 83,
+        "endChar": 28
+      },
+      "revId": "7a0bdb3eb412320958b83f11a3bd88106d8602e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
