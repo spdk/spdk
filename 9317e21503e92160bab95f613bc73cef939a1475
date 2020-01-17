@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8629dcbc_2aaf670d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1543,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T18:24:40Z",
+      "side": 1,
+      "message": "I know this is going to seem pedantic, but I think I\u0027d prefer new_num_ep and current_num_ep.\n\nep_sz to me says \"size of the ep\".  et_sz would make sense (which I originally suggested), since \"size of the et\" naturally is related to the number of eps.  But I\u0027m thinking that \"num_ep\" is actually better, since you could have so many eps that you need more than one et, and \"size_of_all_et_put_together\" is really a bad name.  :-)",
+      "revId": "9317e21503e92160bab95f613bc73cef939a1475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
