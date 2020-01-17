@@ -22,6 +22,30 @@
       "revId": "2905258d77e20a478fa79fdce43b425e0b1775d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35d9e46f_f886ec1d",
+        "filename": "lib/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1729,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-17T15:23:02Z",
+      "side": 1,
+      "message": "Actually, I think you should just replace the spdk_nvme_transport_id_trtype_str with a call to spdk_nvmf_get_transport_name on line 1729. The trtype dumped out on line 1729 is already the string representation of the transport.",
+      "parentUuid": "7d16fa94_4d09b700",
+      "range": {
+        "startLine": 1729,
+        "startChar": 1,
+        "endLine": 1729,
+        "endChar": 84
+      },
+      "revId": "2905258d77e20a478fa79fdce43b425e0b1775d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
