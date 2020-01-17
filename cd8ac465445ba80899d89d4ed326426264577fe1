@@ -22,6 +22,30 @@
       "revId": "cd8ac465445ba80899d89d4ed326426264577fe1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2fa1015_0731496e",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:56:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "09a2c992_5088350a",
+      "range": {
+        "startLine": 445,
+        "startChar": 0,
+        "endLine": 471,
+        "endChar": 1
+      },
+      "revId": "cd8ac465445ba80899d89d4ed326426264577fe1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
