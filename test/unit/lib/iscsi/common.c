@@ -190,7 +190,8 @@ DEFINE_STUB(spdk_iscsi_conn_readv_data, int,
 	    (struct spdk_iscsi_conn *conn, struct iovec *iov, int iovcnt), 0);
 
 void
-spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
+			  iscsi_conn_xfer_complete_cb cb_fn, void *cb_arg)
 {
 	TAILQ_INSERT_TAIL(&g_write_pdu_list, pdu, tailq);
 }
