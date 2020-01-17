@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7068b08a_b0786676",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T18:18:31Z",
+      "side": 1,
+      "message": "The name \"total_num_clusters\" doesn\u0027t really convey any information on why it\u0027s different than num_clusters.  Maybe num_clusters_in_et?",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ba22ab4_47377155",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T18:18:31Z",
+      "side": 1,
+      "message": "EXTENT_TABLE",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f62d147_195a02cc",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T18:18:31Z",
+      "side": 1,
+      "message": "Should this only count the number of clusters represented by this extent table?\n\nI\u0027m thinking of the case where we need more than one extent table.  Let\u0027s say we have three extent tables, we do a resize, and the third extent table needs to be extended.  Do we want to have to change num_clusters in the first and second extent table descriptor?",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
