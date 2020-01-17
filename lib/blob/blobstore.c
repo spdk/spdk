@@ -2577,12 +2577,12 @@ struct spdk_bs_load_ctx {
 };
 
 static void
-_spdk_bs_load_ctx_fail(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx, int bserrno)
+_spdk_bs_load_ctx_fail(struct spdk_bs_load_ctx *ctx, int bserrno)
 {
 	assert(bserrno != 0);
 
 	spdk_free(ctx->super);
-	spdk_bs_sequence_finish(seq, bserrno);
+	spdk_bs_sequence_finish(ctx->seq, bserrno);
 	_spdk_bs_free(ctx->bs);
 	free(ctx);
 }
@@ -2646,7 +2646,7 @@ _spdk_bs_write_used_clusters(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequenc
 	ctx->mask = spdk_zmalloc(mask_size, 0x1000, NULL,
 				 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ctx->mask) {
-		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
 
@@ -2667,7 +2667,7 @@ _spdk_bs_write_used_md(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence_cpl 
 	uint64_t	mask_size, lba, lba_count;
 
 	if (seq->bserrno) {
-		_spdk_bs_load_ctx_fail(seq, ctx, seq->bserrno);
+		_spdk_bs_load_ctx_fail(ctx, seq->bserrno);
 		return;
 	}
 
@@ -2675,7 +2675,7 @@ _spdk_bs_write_used_md(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence_cpl 
 	ctx->mask = spdk_zmalloc(mask_size, 0x1000, NULL,
 				 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ctx->mask) {
-		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
 
@@ -2708,7 +2708,7 @@ _spdk_bs_write_used_blobids(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence
 	ctx->mask = spdk_zmalloc(mask_size, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
 				 SPDK_MALLOC_DMA);
 	if (!ctx->mask) {
-		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
 
@@ -2932,7 +2932,7 @@ _spdk_bs_load_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 	rc = _spdk_bs_load_mask(&ctx->bs->used_blobids, ctx->mask);
 	if (rc < 0) {
 		spdk_free(ctx->mask);
-		_spdk_bs_load_ctx_fail(seq, ctx, rc);
+		_spdk_bs_load_ctx_fail(ctx, rc);
 		return;
 	}
 
@@ -2957,7 +2957,7 @@ _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 	rc = _spdk_bs_load_mask(&ctx->bs->used_clusters, ctx->mask);
 	if (rc < 0) {
 		spdk_free(ctx->mask);
-		_spdk_bs_load_ctx_fail(seq, ctx, rc);
+		_spdk_bs_load_ctx_fail(ctx, rc);
 		return;
 	}
 
@@ -2971,7 +2971,7 @@ _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 	ctx->mask = spdk_zmalloc(mask_size, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
 				 SPDK_MALLOC_DMA);
 	if (!ctx->mask) {
-		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
 	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_blobid_mask_start);
@@ -2998,7 +2998,7 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	rc = _spdk_bs_load_mask(&ctx->bs->used_md_pages, ctx->mask);
 	if (rc < 0) {
 		spdk_free(ctx->mask);
-		_spdk_bs_load_ctx_fail(seq, ctx, rc);
+		_spdk_bs_load_ctx_fail(ctx, rc);
 		return;
 	}
 
@@ -3009,7 +3009,7 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	ctx->mask = spdk_zmalloc(mask_size, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
 				 SPDK_MALLOC_DMA);
 	if (!ctx->mask) {
-		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
 	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_cluster_mask_start);
@@ -3028,7 +3028,7 @@ _spdk_bs_load_read_used_pages(struct spdk_bs_load_ctx *ctx)
 	ctx->mask = spdk_zmalloc(mask_size, 0x1000, NULL,
 				 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ctx->mask) {
-		_spdk_bs_load_ctx_fail(ctx->seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
 
@@ -3163,7 +3163,7 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	uint32_t page_num;
 
 	if (bserrno != 0) {
-		_spdk_bs_load_ctx_fail(seq, ctx, bserrno);
+		_spdk_bs_load_ctx_fail(ctx, bserrno);
 		return;
 	}
 
@@ -3175,7 +3175,7 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 				spdk_bit_array_set(ctx->bs->used_blobids, page_num);
 			}
 			if (_spdk_bs_load_replay_md_parse_page(ctx->page, ctx->bs)) {
-				_spdk_bs_load_ctx_fail(seq, ctx, -EILSEQ);
+				_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
 				return;
 			}
 			if (ctx->page->next != SPDK_INVALID_MD_PAGE) {
@@ -3227,7 +3227,7 @@ _spdk_bs_load_replay_md(struct spdk_bs_load_ctx *ctx)
 	ctx->page = spdk_zmalloc(SPDK_BS_PAGE_SIZE, SPDK_BS_PAGE_SIZE,
 				 NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ctx->page) {
-		_spdk_bs_load_ctx_fail(ctx->seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
 	_spdk_bs_load_replay_cur_md_page(ctx);
@@ -3240,19 +3240,19 @@ _spdk_bs_recover(struct spdk_bs_load_ctx *ctx)
 
 	rc = spdk_bit_array_resize(&ctx->bs->used_md_pages, ctx->super->md_len);
 	if (rc < 0) {
-		_spdk_bs_load_ctx_fail(ctx->seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
 
 	rc = spdk_bit_array_resize(&ctx->bs->used_blobids, ctx->super->md_len);
 	if (rc < 0) {
-		_spdk_bs_load_ctx_fail(ctx->seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
 
 	rc = spdk_bit_array_resize(&ctx->bs->used_clusters, ctx->bs->total_clusters);
 	if (rc < 0) {
-		_spdk_bs_load_ctx_fail(ctx->seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
 
@@ -3270,19 +3270,19 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	if (ctx->super->version > SPDK_BS_VERSION ||
 	    ctx->super->version < SPDK_BS_INITIAL_VERSION) {
-		_spdk_bs_load_ctx_fail(seq, ctx, -EILSEQ);
+		_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
 		return;
 	}
 
 	if (memcmp(ctx->super->signature, SPDK_BS_SUPER_BLOCK_SIG,
 		   sizeof(ctx->super->signature)) != 0) {
-		_spdk_bs_load_ctx_fail(seq, ctx, -EILSEQ);
+		_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
 		return;
 	}
 
 	crc = _spdk_blob_md_page_calc_crc(ctx->super);
 	if (crc != ctx->super->crc) {
-		_spdk_bs_load_ctx_fail(seq, ctx, -EILSEQ);
+		_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
 		return;
 	}
 
@@ -3294,14 +3294,14 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Unexpected bstype\n");
 		SPDK_LOGDUMP(SPDK_LOG_BLOB, "Expected:", ctx->bs->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
 		SPDK_LOGDUMP(SPDK_LOG_BLOB, "Found:", ctx->super->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
-		_spdk_bs_load_ctx_fail(seq, ctx, -ENXIO);
+		_spdk_bs_load_ctx_fail(ctx, -ENXIO);
 		return;
 	}
 
 	if (ctx->super->size > ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen) {
 		SPDK_NOTICELOG("Size mismatch, dev size: %lu, blobstore size: %lu\n",
 			       ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen, ctx->super->size);
-		_spdk_bs_load_ctx_fail(seq, ctx, -EILSEQ);
+		_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
 		return;
 	}
 
@@ -3321,7 +3321,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	ctx->bs->io_unit_size = ctx->super->io_unit_size;
 	rc = spdk_bit_array_resize(&ctx->bs->used_clusters, ctx->bs->total_clusters);
 	if (rc < 0) {
-		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		_spdk_bs_load_ctx_fail(ctx, -ENOMEM);
 		return;
 	}
 	ctx->bs->md_start = ctx->super->md_start;
