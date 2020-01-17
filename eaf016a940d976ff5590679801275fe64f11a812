@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "d0d9648d_21f196ed",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 18
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T20:23:35Z",
+      "side": 1,
+      "message": "Never mind again.  cluster indices are 32-bit too.  It\u0027s definitely Friday afternoon.",
+      "parentUuid": "9d83d4ab_9d30b663",
+      "revId": "eaf016a940d976ff5590679801275fe64f11a812",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c306a230_35bec398",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 18
