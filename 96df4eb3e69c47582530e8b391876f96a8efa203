@@ -16,6 +16,24 @@
       "revId": "96df4eb3e69c47582530e8b391876f96a8efa203",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d626d58_15a5b58c",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1481,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-17T04:53:40Z",
+      "side": 1,
+      "message": "We cannot do that, because we want to track the pdu usage, the pdu is ready allocated. Better to add it into the list and let the other policy to handle. Otherwise, you may also need to call spdk_iscsi_conn_free_pdu.",
+      "parentUuid": "55bd7565_4a9eb668",
+      "revId": "96df4eb3e69c47582530e8b391876f96a8efa203",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
