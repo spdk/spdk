@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0e726ba9_3a127f78",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-17T16:26:14Z",
+      "side": 1,
+      "message": "After looking at those things for too long, the most obvious solutions escape me :)\nYou are right that those names describe it better.",
+      "parentUuid": "b3615597_435d0155",
+      "revId": "d9a2be5df69110a6b2204d531d8b565957099871",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "41b2c219_09792352",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 6
@@ -33,6 +51,24 @@
       "revId": "d9a2be5df69110a6b2204d531d8b565957099871",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b24382a2_5760c2e6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1609,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-17T16:26:14Z",
+      "side": 1,
+      "message": "Yea I think I\u0027ve went the wrong way when naming variables here.\nEXTENT_TABLE descriptor contains extent pages.\nMutable structure thus holds array of all extent pages.\nNo need to keep \"table\" naming in this function.",
+      "parentUuid": "41b2c219_09792352",
+      "revId": "d9a2be5df69110a6b2204d531d8b565957099871",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
