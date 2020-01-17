@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "fce8dbb3_623188f4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T20:23:47Z",
+      "side": 1,
+      "message": "page numbers for extent pages.\n\nunallocated extent pages.",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f735b2b5_057e16e5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T20:23:47Z",
+      "side": 1,
+      "message": "extent page",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7068b08a_b0786676",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 28
@@ -36,6 +70,23 @@
     },
     {
       "key": {
+        "uuid": "02b8d40f_98fab0f5",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T20:23:47Z",
+      "side": 1,
+      "message": "EXTENT_PAGE descriptor?",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0f62d147_195a02cc",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 28
@@ -47,6 +98,23 @@
       "writtenOn": "2020-01-17T18:18:31Z",
       "side": 1,
       "message": "Should this only count the number of clusters represented by this extent table?\n\nI\u0027m thinking of the case where we need more than one extent table.  Let\u0027s say we have three extent tables, we do a resize, and the third extent table needs to be extended.  Do we want to have to change num_clusters in the first and second extent table descriptor?",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40f31b15_9287c67b",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-17T20:23:47Z",
+      "side": 1,
+      "message": "Maybe extent_idx can be page_idx? Or just idx? I\u0027m concerned the word \"extent\" here isn\u0027t quite right.",
       "revId": "d9df3946596419899d1951929307caba0f014c9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
