@@ -16,6 +16,7 @@ function usage()
 	echo "  -p --pmem                   Additional dependencies for reduce and pmdk"
 	echo "  -f --fuse                   Additional dependencies for FUSE and NVMe-CUSE"
 	echo "  -r --rdma                   Additional dependencies for RDMA transport in NVMe over Fabrics"
+	echo "  -b --docs                   Additional dependencies for building docs"
 	echo ""
 	exit 0
 }
@@ -26,6 +27,7 @@ function install_all_dependencies ()
 	INSTALL_PMEM=true
 	INSTALL_FUSE=true
 	INSTALL_RDMA=true
+	INSTALL_DOCS=true
 }
 
 INSTALL_CRYPTO=false
@@ -33,8 +35,9 @@ INSTALL_DEV_TOOLS=false
 INSTALL_PMEM=false
 INSTALL_FUSE=false
 INSTALL_RDMA=false
+INSTALL_DOCS=false
 
-while getopts 'adfhipr-:' optchar; do
+while getopts 'abdfhipr-:' optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
@@ -44,6 +47,7 @@ while getopts 'adfhipr-:' optchar; do
 			pmem) INSTALL_PMEM=true;;
 			fuse) INSTALL_FUSE=true;;
 			rdma) INSTALL_RDMA=true;;
+			docs) INSTALL_DOCS=true;;
 			*) echo "Invalid argument '$OPTARG'"
 			usage;;
 		esac
@@ -54,6 +58,7 @@ while getopts 'adfhipr-:' optchar; do
 	p) INSTALL_PMEM=true;;
 	f) INSTALL_FUSE=true;;
 	r) INSTALL_RDMA=true;;
+	b) INSTALL_DOCS=true;;
 	*) echo "Invalid argument '$OPTARG'"
 	usage;;
 	esac
@@ -105,11 +110,13 @@ if [ -s /etc/redhat-release ]; then
 		# Additional dependencies for FUSE and NVMe-CUSE
 		yum install -y fuse3-devel
 	fi
-	# Additional dependencies for building docs
-	yum install -y doxygen mscgen graphviz
 	if [[ $INSTALL_RDMA == "true" ]]; then
 		# Additional dependencies for RDMA transport in NVMe over Fabrics
 		yum install -y libibverbs-devel librdmacm-devel
+	fi
+	if [[ $INSTALL_DOCS == "true" ]]; then
+		# Additional dependencies for building docs
+		yum install -y doxygen mscgen graphviz
 	fi
 elif [ -f /etc/debian_version ]; then
 	. /etc/os-release
@@ -157,11 +164,13 @@ elif [ -f /etc/debian_version ]; then
 			apt-get install -y libfuse3-dev
 		fi
 	fi
-	# Additional dependencies for building docs
-	apt-get install -y doxygen mscgen graphviz
 	if [[ $INSTALL_RDMA == "true" ]]; then
 		# Additional dependencies for RDMA transport in NVMe over Fabrics
 		apt-get install -y libibverbs-dev librdmacm-dev
+	fi
+	if [[ $INSTALL_DOCS == "true" ]]; then
+		# Additional dependencies for building docs
+		apt-get install -y doxygen mscgen graphviz
 	fi
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	# Minimal install
@@ -186,11 +195,13 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 		# Additional dependencies for FUSE and NVMe-CUSE
 		zypper install -y fuse3-devel
 	fi
-	# Additional dependencies for building docs
-	zypper install -y doxygen mscgen graphviz
 	if [[ $INSTALL_RDMA == "true" ]]; then
 		# Additional dependencies for RDMA transport in NVMe over Fabrics
 		zypper install -y rdma-core-devel
+	fi
+	if [[ $INSTALL_DOCS == "true" ]]; then
+		# Additional dependencies for building docs
+		zypper install -y doxygen mscgen graphviz
 	fi
 elif [ $(uname -s) = "FreeBSD" ] ; then
 	# Minimal install
@@ -202,8 +213,10 @@ elif [ $(uname -s) = "FreeBSD" ] ; then
 		pkg install -y devel/astyle bash py27-pycodestyle \
 			misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
 	fi
-	# Additional dependencies for building docs
-	pkg install -y doxygen mscgen graphviz
+	if [[ $INSTALL_DOCS == "true" ]]; then
+		# Additional dependencies for building docs
+		pkg install -y doxygen mscgen graphviz
+	fi
 elif [ -f /etc/arch-release ]; then
 	# Install main dependencies
 	pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
@@ -250,16 +263,6 @@ elif [ -f /etc/arch-release ]; then
 		ldconfig
 		rm -rf /tmp/pmdk
 	fi
-	# Additional dependencies for building docs
-	pacman -Sy --needed --noconfirm doxygen graphviz
-	# Additional dependency for building docs
-	pacman -S --noconfirm --needed gd ttf-font
-	su - $SUDO_USER -c "pushd /tmp;
-		git clone https://aur.archlinux.org/mscgen.git;
-		cd mscgen;
-		makepkg -si --needed --noconfirm;
-		cd .. && rm -rf mscgen;
-		popd"
 	if [[ $INSTALL_FUSE == "true" ]]; then
 		# Additional dependencies for FUSE and NVMe-CUSE
 		pacman -Sy --needed --noconfirm fuse3
@@ -275,6 +278,17 @@ elif [ -f /etc/arch-release ]; then
 			cd rdma-core;
 			makepkg -si --needed --noconfirm;
 			cd .. && rm -rf rdma-core;
+			popd"
+	fi
+	if [[ $INSTALL_DOCS == "true" ]]; then
+		# Additional dependencies for building docs
+		pacman -Sy --needed --noconfirm doxygen graphviz
+		pacman -S --noconfirm --needed gd ttf-font
+		su - $SUDO_USER -c "pushd /tmp;
+			git clone https://aur.archlinux.org/mscgen.git;
+			cd mscgen;
+			makepkg -si --needed --noconfirm;
+			cd .. && rm -rf mscgen;
 			popd"
 	fi
 else
