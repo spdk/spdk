@@ -168,6 +168,8 @@ struct spdk_mobj {
  */
 #define SPDK_ISCSI_MAX_SGL_DESCRIPTORS	(5)
 
+typedef void (*iscsi_conn_xfer_complete_cb)(void *cb_arg);
+
 struct spdk_iscsi_pdu {
 	struct iscsi_bhs bhs;
 	struct spdk_mobj *mobj;
@@ -191,6 +193,9 @@ struct spdk_iscsi_pdu {
 	bool dif_insert_or_strip;
 	struct spdk_dif_ctx dif_ctx;
 	struct spdk_iscsi_conn *conn;
+
+	iscsi_conn_xfer_complete_cb		cb_fn;
+	void					*cb_arg;
 
 	/* The sock request ends with a 0 length iovec. Place the actual iovec immediately
 	 * after it. There is a static assert below to check if the compiler inserted

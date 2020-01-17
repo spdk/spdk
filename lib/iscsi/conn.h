@@ -225,9 +225,12 @@ int spdk_iscsi_conn_abort_queued_datain_tasks(struct spdk_iscsi_conn *conn,
 int spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int len, void *buf);
 int spdk_iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
 			       struct iovec *iov, int iovcnt);
-void spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
+void spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
+			       iscsi_conn_xfer_complete_cb cb_fn,
+			       void *cb_arg);
 
 void spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
 
 void spdk_iscsi_conn_info_json(struct spdk_json_write_ctx *w, struct spdk_iscsi_conn *conn);
+void spdk_iscsi_conn_pdu_generic_complete(void *cb_arg);
 #endif /* SPDK_ISCSI_CONN_H */
