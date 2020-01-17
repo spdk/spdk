@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "771f28f8_f6221763",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-17T12:46:15Z",
+      "side": 1,
+      "message": "define max opc in nvme_spec and use here? nn for comment \u0027The array index corresponds to the OPC\u0027 then",
+      "range": {
+        "startLine": 71,
+        "startChar": 71,
+        "endLine": 71,
+        "endChar": 74
+      },
+      "revId": "22f3368edb748c53ca4b33e94118f0b9616ec5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82e2e440_125432d8",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2063,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-17T12:46:15Z",
+      "side": 1,
+      "message": "isn\u0027t it against spdk code?",
+      "range": {
+        "startLine": 2063,
+        "startChar": 2,
+        "endLine": 2063,
+        "endChar": 8
+      },
+      "revId": "22f3368edb748c53ca4b33e94118f0b9616ec5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f44b36c9_67677ff5",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2067,
+      "author": {
+        "id": 1016781
+      },
+      "writtenOn": "2020-01-17T12:46:15Z",
+      "side": 1,
+      "message": "is it intentionally done that if callback return negative value the flow continues?",
+      "range": {
+        "startLine": 2064,
+        "startChar": 0,
+        "endLine": 2067,
+        "endChar": 3
+      },
+      "revId": "22f3368edb748c53ca4b33e94118f0b9616ec5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
