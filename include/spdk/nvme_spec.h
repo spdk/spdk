@@ -1263,6 +1263,8 @@ enum spdk_nvme_admin_opcode {
 	SPDK_NVME_OPC_SECURITY_RECEIVE			= 0x82,
 
 	SPDK_NVME_OPC_SANITIZE				= 0x84,
+
+	SPDK_NVME_OPC_GET_LBA_STATUS			= 0x86,
 };
 
 /**
@@ -1588,7 +1590,10 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 		/** Supports SPDK_NVME_OPC_DOORBELL_BUFFER_CONFIG */
 		uint16_t	doorbell_buffer_config : 1;
 
-		uint16_t	oacs_rsvd : 7;
+		/** Supports SPDK_NVME_OPC_GET_LBA_STATUS */
+		uint16_t	get_lba_status : 1;
+
+		uint16_t	oacs_rsvd : 6;
 	} oacs;
 
 	/** abort command limit */
