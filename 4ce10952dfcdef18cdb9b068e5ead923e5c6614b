@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "b63c6425_b9499e5f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-17T00:10:01Z",
+      "side": 1,
+      "message": "I just thought that we could use the combination of aux_buf and need_aux_buf as state transition.\n\nassert(bdev_io-\u003eu.bdev.aux_buf \u003d\u003d NULL);\nbdev_io-\u003eu.bdev.aux_buf \u003d aligned_buf;\n\nWe can skip using need_aux_buf in bdev_io_put_buf() as you replied.",
+      "parentUuid": "b7217646_7981ee29",
+      "revId": "4ce10952dfcdef18cdb9b068e5ead923e5c6614b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1456803e_5f5f3a6e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 13
@@ -84,6 +102,30 @@
     },
     {
       "key": {
+        "uuid": "beadefa7_e74a120d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-17T00:10:01Z",
+      "side": 1,
+      "message": "This may be personal preference but I saw the code simpler by factor out. According to your comment, we may be able to reuse buf_len by adding md_len as follows.\n\n\nbuf \u003d bdev_io-\u003einternal.buf;\nbuf_len \u003d bdev_io-\u003eu.bdev.aux_buf;\nif (buf !\u003d NULL) {\n  md_len \u003d ...;\n  ...\n  _bdev_io_put_buf(bdev_io, buf, buf_len + md_len);\n}\nbuf \u003d bdev_io-\u003einternal.aux_buf;\nif (buf !\u003d NULL) {\n  ...\n  _bdev_io_put_buf(bdev_io, buf, buf_len);\n}",
+      "parentUuid": "2118fb74_567fc7c6",
+      "range": {
+        "startLine": 637,
+        "startChar": 0,
+        "endLine": 637,
+        "endChar": 16
+      },
+      "revId": "4ce10952dfcdef18cdb9b068e5ead923e5c6614b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "08a1b141_fba65b08",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 13
@@ -119,6 +161,30 @@
       "side": 1,
       "message": "they are one and the same.  By design the aux buf len is the same as the internal buf len which is the same as line 765 so I could do the math here as well but I wanted to make it clear that its always the same as the internal buf wrt length",
       "parentUuid": "08a1b141_fba65b08",
+      "range": {
+        "startLine": 685,
+        "startChar": 11,
+        "endLine": 685,
+        "endChar": 37
+      },
+      "revId": "4ce10952dfcdef18cdb9b068e5ead923e5c6614b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ee3ed14_ee55ea62",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-17T00:10:01Z",
+      "side": 1,
+      "message": "You already described that very clearly in header file. I\u0027m sorry I overlooked that and I had been confused by overwriting bdev_io-\u003einternal.buf_len.\n\nThen how about using bdev_io-\u003einternal.buf_len in spdk_bdev_io_get_aux_buf() or checking if bdev_io-\u003einternal.buf_len \u003d\u003d bdev_io-\u003eu.bdev.num_blocks * bdev_io-\u003ebdev-\u003eblocklen?",
+      "parentUuid": "f89c8e46_ad681896",
       "range": {
         "startLine": 685,
         "startChar": 11,
