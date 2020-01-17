@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e5b1e310_74e9bdff",
+        "filename": "module/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:28:11Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "421e3a82_f6833888",
+      "range": {
+        "startLine": 73,
+        "startChar": 3,
+        "endLine": 73,
+        "endChar": 12
+      },
+      "revId": "61a756c8aae6ff2efa88007913d51697c85346a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fec35c4a_db7aa01d",
         "filename": "test/ftl/bdevperf.sh",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2020-01-17T08:23:34Z",
       "side": 1,
       "message": "I think we should run the first test one extra time with the use_write flag instead. It\u0027d probably also make sense to run all the tests twice during nightly tests.",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 0
+      },
+      "revId": "61a756c8aae6ff2efa88007913d51697c85346a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "faf88be6_ca1d6e96",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2020-01-17T10:28:11Z",
+      "side": 1,
+      "message": "I was thinking that we don\u0027t have a lot of space in the time window, but we could try to do this.",
+      "parentUuid": "fec35c4a_db7aa01d",
       "range": {
         "startLine": 24,
         "startChar": 0,
