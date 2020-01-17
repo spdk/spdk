@@ -302,11 +302,22 @@ error_return:
 void
 spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
+	iscsi_conn_xfer_complete_cb cb_fn;
+	void *cb_arg;
+
+	cb_fn = pdu->cb_fn;
+	cb_arg = pdu->cb_arg;
+
+	assert(cb_fn != NULL);
+	pdu->cb_fn = NULL;
+
 	if (pdu->task) {
 		spdk_iscsi_task_put(pdu->task);
 		spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 	}
 	spdk_put_pdu(pdu);
+
+	cb_fn(cb_arg);
 }
 
 static int
@@ -791,7 +802,7 @@ iscsi_send_logout_request(struct spdk_iscsi_conn *conn)
 	to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
 	to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
 
-	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
+	spdk_iscsi_conn_write_pdu(conn, rsp_pdu, spdk_iscsi_conn_pdu_complete_dummy, NULL);
 }
 
 static int
@@ -1254,7 +1265,7 @@ iscsi_conn_send_nopin(struct spdk_iscsi_conn *conn)
 	to_be32(&rsp->stat_sn, conn->StatSN);
 	to_be32(&rsp->exp_cmd_sn, conn->sess->ExpCmdSN);
 	to_be32(&rsp->max_cmd_sn, conn->sess->MaxCmdSN);
-	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
+	spdk_iscsi_conn_write_pdu(conn, rsp_pdu, spdk_iscsi_conn_pdu_complete_dummy, NULL);
 	conn->last_nopin = spdk_get_ticks();
 	conn->nop_outstanding = true;
 }
@@ -1448,7 +1459,9 @@ _iscsi_conn_pdu_write_done(void *cb_arg, int err)
 }
 
 void
-spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
+			  iscsi_conn_xfer_complete_cb cb_fn,
+			  void *cb_arg)
 {
 	uint32_t crc32c;
 	ssize_t rc;
@@ -1476,6 +1489,8 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 		}
 	}
 
+	pdu->cb_fn = cb_fn;
+	pdu->cb_arg = cb_arg;
 	TAILQ_INSERT_TAIL(&conn->write_pdu_list, pdu, tailq);
 
 	if (spdk_unlikely(conn->state > ISCSI_CONN_STATE_RUNNING)) {
