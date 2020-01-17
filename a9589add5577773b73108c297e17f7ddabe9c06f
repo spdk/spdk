@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9ebe8d9c_bf40feb6",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-17T06:57:48Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nspdk_nvme_wait_for_completion_timeout sets status-\u003efailed\u003dtrue only if status-\u003edone\u003d\u003dfalse and that means that the callback was not called yet. Also this callback can only be triggered within spdk_nvme_qpair_process_completions() and we set status-\u003efailed\u003dtrue after call of this function. In other words, if we set status-\u003efailed\u003dtrue that means that the request is still queued (thereby callback is not triggered yet) and we can safely use status until the next call to spdk_nvme_qpair_process_completions() (which will happen with the next call of admin function)",
+      "parentUuid": "55d53efb_5d3b6acd",
+      "revId": "a9589add5577773b73108c297e17f7ddabe9c06f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f0e206cc_b23adf0f",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 4
