@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3765dd7c_eee563d6",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2020-01-17T07:59:12Z",
+      "side": 1,
+      "message": "I don\u0027t think this is a good idea. We\u0027re defaulting to a mode that can fail, if the bdev below doesn\u0027t support appends. The default config should be foolproof and work out of the box.",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 20
+      },
+      "revId": "39a2b56b1c1153b9ad224ad0a481646729c9ff9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
