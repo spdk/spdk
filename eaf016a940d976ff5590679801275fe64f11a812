@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "4ca41687_37bfdafb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 18
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-17T00:45:34Z",
+      "side": 1,
+      "message": "but we have to account for the md_descriptor header - so it won\u0027t be a full 4096 bytes for extent entries\n\nI\u0027d call that out here in the commit message.  I know we already talked about this limitation (it means we\u0027d waste almost have of the md page) but our calculations indicated that it won\u0027t really matter\n\nbut I guess the other question is how often are we doing extent page calculations?  do we ever have to do it in the main I/O path?  I think it\u0027s only needed when we are allocating clusters - so maybe a non-power-of-2 is OK\n\nAt some point I was concerned about the power-of-2 stuff here, but now I\u0027m wondering if it\u0027s not really an issue at all.",
+      "revId": "eaf016a940d976ff5590679801275fe64f11a812",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c306a230_35bec398",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 18
