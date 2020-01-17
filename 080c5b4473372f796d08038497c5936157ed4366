@@ -166,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "b06be830_d6c568c6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2995,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2020-01-17T17:57:55Z",
+      "side": 1,
+      "message": "My understanding is that in the case of active-active bonding failover, when we are listening on a specific port and that port goes down, then we need to start listening on the new port or we get failures when trying to reconnect from the initiator until we destroy the listener and start listening on the new port. I don\u0027t personally have a setup with active-active bonding enabled, but I was working with a user who did and that was the behavior they reported.",
+      "parentUuid": "19856ae7_1f14b3e5",
+      "range": {
+        "startLine": 2995,
+        "startChar": 3,
+        "endLine": 2995,
+        "endChar": 48
+      },
+      "revId": "080c5b4473372f796d08038497c5936157ed4366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "44d07e1b_530ec26f",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 8
