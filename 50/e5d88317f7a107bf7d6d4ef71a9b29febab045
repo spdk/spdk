@@ -1,0 +1,9 @@
+Code-Review+2: Tomasz Zawadzki <tomasz.zawadzki@intel.com>
+Code-Review+2: Jim Harris <james.r.harris@intel.com>
+Verified+1: SPDK CI Jenkins <sys_sgci@intel.com>
+Community-CI+1: SPDK CI Jenkins <sys_sgci@intel.com>
+Submitted-by: Tomasz Zawadzki <tomasz.zawadzki@intel.com>
+Submitted-at: Fri, 17 Jan 2020 14:07:39 +0000
+Reviewed-on: https://review.gerrithub.io/c/spdk/spdk/+/481602
+Project: spdk/spdk
+Branch: refs/heads/master
