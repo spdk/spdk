@@ -66,6 +66,13 @@ function waitfortcp() {
 # $2 = test type posix or vpp. defaults to posix.
 iscsitestinit $1 $2
 
+if [ "$1" == "posix" ] || [ "$1" == "vpp" ]; then
+        TEST_TYPE=$1
+else
+        echo "No sock implmentation pecified"
+        exit 1
+fi
+
 HELLO_SOCK_APP="$TARGET_NS_CMD $rootdir/examples/sock/hello_world/hello_sock"
 if [ $SPDK_TEST_VPP -eq 1 ]; then
 	HELLO_SOCK_APP+=" -L sock_vpp"
@@ -86,7 +93,7 @@ waitfortcp $server_pid $INITIATOR_IP:$ISCSI_PORT
 
 # send message using hello_sock client
 message="**MESSAGE:This is a test message from the client**"
-response=$( echo $message | $HELLO_SOCK_APP -H $INITIATOR_IP -P $ISCSI_PORT )
+response=$( echo $message | $HELLO_SOCK_APP -H $INITIATOR_IP -P $ISCSI_PORT -N $TEST_TYPE)
 
 if ! echo "$response" | grep -q "$message"; then
 	exit 1
@@ -105,7 +112,7 @@ timing_exit sock_client
 timing_enter sock_server
 
 # start echo server using hello_sock echo server
-$HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S & server_pid=$!
+$HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S -N $TEST_TYPE & server_pid=$!
 trap 'killprocess $server_pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $server_pid
 
