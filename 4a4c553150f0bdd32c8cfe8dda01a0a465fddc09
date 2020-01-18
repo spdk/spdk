@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60552ec2_8bc85d7e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-18T08:17:57Z",
+      "side": 1,
+      "message": "If we can require aux buffer have to be freed before primary buffer, we can refer bdev_io-\u003einternal.buf_len here.\nbuf_len is not cleared though.",
+      "revId": "4a4c553150f0bdd32c8cfe8dda01a0a465fddc09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "662f1ef0_1f9ad817",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 806,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-18T08:17:57Z",
+      "side": 1,
+      "message": "This overwrites bdev_io.internal.buf_len without any vefification.\nI want to suggest referring bdev_io.internal.buf_len here after checking if primary buffer is not null.",
+      "revId": "4a4c553150f0bdd32c8cfe8dda01a0a465fddc09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
