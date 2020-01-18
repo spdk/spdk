@@ -2462,6 +2462,46 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	return 0;
 }
 
+static void iscsi_conn_logout_pdu_complete(void *arg)
+{
+	struct spdk_iscsi_conn *conn = arg;
+
+	if (conn->sess == NULL) {
+		/*
+		 * login failed but initiator still sent a logout rather than
+		 *  just closing the TCP connection.
+		 */
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Logout(login failed) from %s (%s) on"
+			      " (%s:%s,%d)\n",
+			      conn->initiator_name, conn->initiator_addr,
+			      conn->portal_host, conn->portal_port, conn->pg_tag);
+	} else if (spdk_iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Logout from %s (%s) on %s tgt_node%d"
+			      " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
+			      " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
+			      conn->initiator_name, conn->initiator_addr,
+			      conn->target->name, conn->target->num,
+			      conn->portal_host, conn->portal_port, conn->pg_tag,
+			      conn->sess->isid, conn->sess->tsih, conn->cid,
+			      (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
+			       ? "on" : "off"),
+			      (spdk_iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
+			       ? "on" : "off"));
+	} else {
+		/* discovery session */
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Logout(discovery) from %s (%s) on"
+			      " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
+			      " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
+			      conn->initiator_name, conn->initiator_addr,
+			      conn->portal_host, conn->portal_port, conn->pg_tag,
+			      conn->sess->isid, conn->sess->tsih, conn->cid,
+			      (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
+			       ? "on" : "off"),
+			      (spdk_iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
+			       ? "on" : "off"));
+	}
+}
+
 static int
 iscsi_pdu_hdr_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
@@ -2552,42 +2592,7 @@ iscsi_pdu_hdr_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu
 	rsph->time_2_wait = 0;
 	rsph->time_2_retain = 0;
 
-	spdk_iscsi_conn_write_pdu(conn, rsp_pdu, spdk_iscsi_conn_pdu_generic_complete, NULL);
-
-	if (conn->sess == NULL) {
-		/*
-		 * login failed but initiator still sent a logout rather than
-		 *  just closing the TCP connection.
-		 */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Logout(login failed) from %s (%s) on"
-			      " (%s:%s,%d)\n",
-			      conn->initiator_name, conn->initiator_addr,
-			      conn->portal_host, conn->portal_port, conn->pg_tag);
-	} else if (spdk_iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Logout from %s (%s) on %s tgt_node%d"
-			      " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
-			      " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
-			      conn->initiator_name, conn->initiator_addr,
-			      conn->target->name, conn->target->num,
-			      conn->portal_host, conn->portal_port, conn->pg_tag,
-			      conn->sess->isid, conn->sess->tsih, conn->cid,
-			      (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
-			       ? "on" : "off"),
-			      (spdk_iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
-			       ? "on" : "off"));
-	} else {
-		/* discovery session */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Logout(discovery) from %s (%s) on"
-			      " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
-			      " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
-			      conn->initiator_name, conn->initiator_addr,
-			      conn->portal_host, conn->portal_port, conn->pg_tag,
-			      conn->sess->isid, conn->sess->tsih, conn->cid,
-			      (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
-			       ? "on" : "off"),
-			      (spdk_iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
-			       ? "on" : "off"));
-	}
+	spdk_iscsi_conn_write_pdu(conn, rsp_pdu, iscsi_conn_logout_pdu_complete, conn);
 
 	return 0;
 }
