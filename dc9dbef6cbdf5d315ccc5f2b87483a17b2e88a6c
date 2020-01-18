@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9ae08f2_5f8bd54c",
+        "filename": "lib/iscsi/conn.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-18T05:15:53Z",
+      "side": 1,
+      "message": "We don\u0027t need this variable.",
+      "revId": "dc9dbef6cbdf5d315ccc5f2b87483a17b2e88a6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b1870e9_a3bbd0e2",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2405,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-18T05:15:53Z",
+      "side": 1,
+      "message": "Can we free params here?",
+      "revId": "dc9dbef6cbdf5d315ccc5f2b87483a17b2e88a6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4da74855_f9ac7fd3",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2449,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-18T05:15:53Z",
+      "side": 1,
+      "message": "We don\u0027t need to pass params here?",
+      "revId": "dc9dbef6cbdf5d315ccc5f2b87483a17b2e88a6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
