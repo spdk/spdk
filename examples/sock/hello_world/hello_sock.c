@@ -49,6 +49,7 @@
 static bool g_is_running;
 
 static char *g_host;
+static char *g_sock_impl_name;
 static int g_port;
 static bool g_is_server;
 static bool g_verbose;
@@ -60,6 +61,7 @@ static bool g_verbose;
 struct hello_context_t {
 	bool is_server;
 	char *host;
+	char *sock_impl_name;
 	int port;
 
 	bool verbose;
@@ -84,6 +86,7 @@ hello_sock_usage(void)
 {
 	printf(" -H host_addr  host address\n");
 	printf(" -P port       port number\n");
+	printf(" -N sock_impl  socket implementation, e.g., -N posix or -N vpp\n");
 	printf(" -S            start in server mode\n");
 	printf(" -V            print out additional informations");
 }
@@ -96,6 +99,9 @@ static int hello_sock_parse_arg(int ch, char *arg)
 	switch (ch) {
 	case 'H':
 		g_host = arg;
+		break;
+	case 'N':
+		g_sock_impl_name = arg;
 		break;
 	case 'P':
 		g_port = spdk_strtol(arg, 10);
@@ -211,9 +217,10 @@ hello_sock_connect(struct hello_context_t *ctx)
 	char saddr[ADDR_STR_LEN], caddr[ADDR_STR_LEN];
 	uint16_t cport, sport;
 
-	SPDK_NOTICELOG("Connecting to the server on %s:%d\n", ctx->host, ctx->port);
+	SPDK_NOTICELOG("Connecting to the server on %s:%d with sock_impl(%s)\n", ctx->host, ctx->port,
+		       ctx->sock_impl_name);
 
-	ctx->sock = spdk_sock_connect(ctx->host, ctx->port, NULL);
+	ctx->sock = spdk_sock_connect(ctx->host, ctx->port, ctx->sock_impl_name);
 	if (ctx->sock == NULL) {
 		SPDK_ERRLOG("connect error(%d): %s\n", errno, spdk_strerror(errno));
 		return -1;
@@ -340,13 +347,14 @@ hello_sock_group_poll(void *arg)
 static int
 hello_sock_listen(struct hello_context_t *ctx)
 {
-	ctx->sock = spdk_sock_listen(ctx->host, ctx->port, NULL);
+	ctx->sock = spdk_sock_listen(ctx->host, ctx->port, ctx->sock_impl_name);
 	if (ctx->sock == NULL) {
 		SPDK_ERRLOG("Cannot create server socket\n");
 		return -1;
 	}
 
-	SPDK_NOTICELOG("Listening connection on %s:%d\n", ctx->host, ctx->port);
+	SPDK_NOTICELOG("Listening connection on %s:%d with sock_impl(%s)\n", ctx->host, ctx->port,
+		       ctx->sock_impl_name);
 
 	/*
 	 * Create sock group for server socket
@@ -406,12 +414,13 @@ main(int argc, char **argv)
 	opts.name = "hello_sock";
 	opts.shutdown_cb = hello_sock_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "H:P:SV", NULL, hello_sock_parse_arg,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "H:N:P:SV", NULL, hello_sock_parse_arg,
 				      hello_sock_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
 	hello_context.is_server = g_is_server;
 	hello_context.host = g_host;
+	hello_context.sock_impl_name = g_sock_impl_name;
 	hello_context.port = g_port;
 	hello_context.verbose = g_verbose;
 
