@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "292e08f7_ae6c1602",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-18T02:02:42Z",
+      "side": 1,
+      "message": "Ack, will always use sendmsg for uring",
+      "parentUuid": "fc5173d4_e8ca1658",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "85ae71c4_ddd71bcf",
         "filename": "module/sock/uring/uring.c",
         "patchSetId": 21
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "de0f9256_341f4fee",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-18T02:02:42Z",
+      "side": 1,
+      "message": "Will Remove the read",
+      "parentUuid": "85ae71c4_ddd71bcf",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dd144cab_68d02f21",
         "filename": "module/sock/uring/uring.c",
         "patchSetId": 21
@@ -47,6 +83,24 @@
       "writtenOn": "2020-01-17T22:48:48Z",
       "side": 1,
       "message": "I think you don\u0027t need this enum. You can instead check if there are any requests queued, pending, etc. to determine these states.",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7031c93f_54d1bdcd",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-18T02:02:42Z",
+      "side": 1,
+      "message": "Hi Ben, we need these states, which will make the code efficient since in my code, we have a active task list in the group, which will make the code efficient.",
+      "parentUuid": "dd144cab_68d02f21",
       "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -122,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "5df6ab06_93def070",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-18T02:02:42Z",
+      "side": 1,
+      "message": "I would like to maintain these usage. Since in our test, we have low number of the connections, and I would keep it.",
+      "parentUuid": "3efc9fdc_a7006da5",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2a9ef3a8_5e17f41f",
         "filename": "module/sock/uring/uring.c",
         "patchSetId": 21
@@ -174,6 +246,24 @@
     },
     {
       "key": {
+        "uuid": "e68d4668_8086ae35",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 705,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-18T02:02:42Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b6b67f76_903f4fd4",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eea24c04_a75d3c10",
         "filename": "module/sock/uring/uring.c",
         "patchSetId": 21
@@ -185,6 +275,24 @@
       "writtenOn": "2020-01-17T22:48:48Z",
       "side": 1,
       "message": "This should be a list of socks that have pending write I/O to send.",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7a24b39_5fee52e3",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-18T02:02:42Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nActually, the write task contains active I/Os in each sock, and the list you see contains the sock with active write I/Os.\n\nPS: For the write task in each sock is reused. We still merge iovs from user and use on write task (contains the iovs from the user) for one sock. And if the I/O completed, we will continue adding more pending I/Os.",
+      "parentUuid": "eea24c04_a75d3c10",
       "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -205,6 +313,24 @@
       "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0b3f15f_6c073a70",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 727,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-18T02:02:42Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "724fe5b0_18894021",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
