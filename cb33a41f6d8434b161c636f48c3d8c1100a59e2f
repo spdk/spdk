@@ -87,6 +87,24 @@
     },
     {
       "key": {
+        "uuid": "0b64ee2f_f1a83df0",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-18T00:26:52Z",
+      "side": 1,
+      "message": "Hi Ben, if we do this to remove libaio, we cannot pass the CI test. Actually, the logic is only related with some operations on libaio with submission and complete, so it is not complicated.",
+      "parentUuid": "c71072c8_60fb1f7e",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3efc9fdc_a7006da5",
         "filename": "module/sock/uring/uring.c",
         "patchSetId": 21
