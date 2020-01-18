@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8124eb21_58c8c92b",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-18T04:55:14Z",
+      "side": 1,
+      "message": "I think accepting null for cb_fn is better.",
+      "revId": "4deb4bb398fec57a28335f3ed2ba48aa3c5608ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bbd5a2eb_d29633b9",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-18T04:55:14Z",
+      "side": 1,
+      "message": "Can we call cb_fn only if it is not null?",
+      "revId": "4deb4bb398fec57a28335f3ed2ba48aa3c5608ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc0e2fed_e1758813",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-18T04:55:14Z",
+      "side": 1,
+      "message": "Can we remove this?",
+      "revId": "4deb4bb398fec57a28335f3ed2ba48aa3c5608ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
