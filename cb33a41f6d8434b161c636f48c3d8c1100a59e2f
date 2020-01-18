@@ -124,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "4daf5435_a6d908b6",
+        "filename": "module/sock/uring/uring.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-18T02:07:44Z",
+      "side": 1,
+      "message": "Best to keep this, which will make the further optimization easy, if we want to support async read later.",
+      "parentUuid": "71ecdad1_2c577f25",
+      "revId": "cb33a41f6d8434b161c636f48c3d8c1100a59e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c71072c8_60fb1f7e",
         "filename": "module/sock/uring/uring.c",
         "patchSetId": 21
