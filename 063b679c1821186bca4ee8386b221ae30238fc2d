@@ -16,6 +16,24 @@
       "revId": "063b679c1821186bca4ee8386b221ae30238fc2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41e1330a_8c0a598b",
+        "filename": "configure",
+        "patchSetId": 6
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-18T00:30:56Z",
+      "side": 1,
+      "message": "In the previous patch, we can support both aio and uring. If configured only with uring, the CI will not test the previous patch.\n\nAnd using existing uring flag, libaio will not be tested. So better to use another flag to identify async posix socket usage.",
+      "parentUuid": "03e7b4b9_ad2a365e",
+      "revId": "063b679c1821186bca4ee8386b221ae30238fc2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
