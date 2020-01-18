@@ -16,6 +16,24 @@
       "revId": "cf9ec74d3ba32cdfe23dd974512cb8e259ccebbd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cdce49bd_2348d07f",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-18T16:18:00Z",
+      "side": 1,
+      "message": "We don\u0027t want to get swapped out.  Making this a spinlock ensures it doesn\u0027t get swapped out, if the lock is already held by another thread.\n\nIn practice, even with the mutex, a thread that is blocked won\u0027t sleep if it sees that the thread holding the lock is currently running, since it\u0027s likely the mutex will be released soon.\n\nSo I think using a spinlock here is the right thing to do.  I know we use mutexes elsewhere in SPDK but those should probably be switched to spinlocks.  That\u0027s what DPDK primarily uses.",
+      "parentUuid": "ec0a348b_2dcd831d",
+      "revId": "cf9ec74d3ba32cdfe23dd974512cb8e259ccebbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
