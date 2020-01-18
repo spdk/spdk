@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "026408e0_c11f06a7",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-18T16:57:15Z",
+      "side": 1,
+      "message": "maybe init/fini instead of acquire/release?  I feel like acquire/release isn\u0027t semantically correct - especially if long term you remove the DEBUG code\n\nwhich does lead me to my next question - are you planning to keep this DEBUG code in long-term?  I\u0027m open to that if we think we need it, but it\u0027s a bit non-standard so might be good to mention that in the commit message - I\u0027m even wondering if it even needs to be under a DEBUG flag - do you think it\u0027s that much of a pessimization in release builds?",
+      "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
