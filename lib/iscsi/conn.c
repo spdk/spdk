@@ -1503,17 +1503,7 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 
 	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, pdu->mapped_length, (uintptr_t)pdu,
 			  pdu->sock_req.iovcnt);
-	if (spdk_unlikely(pdu->bhs.opcode == ISCSI_OP_LOGOUT_RSP)) {
-		rc = spdk_sock_writev(conn->sock, pdu->iov, pdu->sock_req.iovcnt);
-		if (rc == pdu->mapped_length) {
-			_iscsi_conn_pdu_write_done(pdu, 0);
-		} else {
-			SPDK_ERRLOG("Login RSP or Logout RSP could not write to socket.\n");
-			_iscsi_conn_pdu_write_done(pdu, -1);
-		}
-	} else {
-		spdk_sock_writev_async(conn->sock, &pdu->sock_req);
-	}
+	spdk_sock_writev_async(conn->sock, &pdu->sock_req);
 }
 
 static void
