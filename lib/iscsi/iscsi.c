@@ -2904,6 +2904,14 @@ get_transfer_task(struct spdk_iscsi_conn *conn, uint32_t transfer_tag)
 	return NULL;
 }
 
+static void
+spdk_iscsi_conn_datain_pdu_complete(void *arg)
+{
+	struct spdk_iscsi_conn *conn = arg;
+
+	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
+}
+
 static int
 iscsi_send_datain(struct spdk_iscsi_conn *conn,
 		  struct spdk_iscsi_task *task, int datain_flag,
@@ -3006,7 +3014,7 @@ iscsi_send_datain(struct spdk_iscsi_conn *conn,
 		}
 	}
 
-	spdk_iscsi_conn_write_pdu(conn, rsp_pdu, spdk_iscsi_conn_pdu_complete_dummy, NULL);
+	spdk_iscsi_conn_write_pdu(conn, rsp_pdu, spdk_iscsi_conn_datain_pdu_complete, conn);
 
 	return DataSN;
 }
