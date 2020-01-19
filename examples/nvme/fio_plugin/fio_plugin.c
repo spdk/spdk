@@ -111,12 +111,12 @@ struct spdk_fio_qpair {
 	struct spdk_nvme_qpair	*qpair;
 	struct spdk_nvme_ns	*ns;
 	uint32_t		io_flags;
-	bool			do_nvme_pi;
-	/* True for DIF and false for DIX, and this is valid only if do_nvme_pi is true. */
+	bool			nvme_pi_enabled;
+	/* True for DIF and false for DIX, and this is valid only if nvme_pi_enabled is true. */
 	bool			extended_lba;
 	/* True for protection info transferred at start of metadata,
 	 * false for protection info transferred at end of metadata, and
-	 * this is valid only if do_nvme_pi is true.
+	 * this is valid only if nvme_pi_enabled is true.
 	 */
 	bool			md_start;
 	struct spdk_fio_qpair	*next;
@@ -214,30 +214,6 @@ get_fio_ctrlr(const struct spdk_nvme_transport_id *trid)
 	return NULL;
 }
 
-static bool
-fio_do_nvme_pi_check(struct spdk_fio_qpair *fio_qpair)
-{
-	struct spdk_nvme_ns	*ns = NULL;
-	const struct spdk_nvme_ns_data *nsdata;
-
-	ns = fio_qpair->ns;
-	nsdata = spdk_nvme_ns_get_data(ns);
-
-	if (spdk_nvme_ns_get_pi_type(ns) ==
-	    SPDK_NVME_FMT_NVM_PROTECTION_DISABLE) {
-		return false;
-	}
-
-	fio_qpair->md_start = nsdata->dps.md_start;
-
-	/* Controller performs PI setup and check */
-	if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRACT) {
-		return false;
-	}
-
-	return true;
-}
-
 static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
@@ -331,12 +307,11 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	if (spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
 		fio_qpair->io_flags = g_spdk_pract_flag | g_spdk_prchk_flags;
-		fio_qpair->do_nvme_pi = fio_do_nvme_pi_check(fio_qpair);
-		if (fio_qpair->do_nvme_pi) {
-			fio_qpair->extended_lba = spdk_nvme_ns_supports_extended_lba(ns);
-			fprintf(stdout, "PI type%u enabled with %s\n", spdk_nvme_ns_get_pi_type(ns),
-				fio_qpair->extended_lba ? "extended lba" : "separate metadata");
-		}
+		fio_qpair->nvme_pi_enabled = true;
+		fio_qpair->extended_lba = spdk_nvme_ns_supports_extended_lba(ns);
+		assert(spdk_nvme_ns_get_pi_type(ns) != SPDK_NVME_FMT_NVM_PROTECTION_DISABLE);
+		fprintf(stdout, "PI type%u enabled with %s\n", spdk_nvme_ns_get_pi_type(ns),
+			fio_qpair->extended_lba ? "extended lba" : "separate metadata");
 	}
 
 	f->real_file_size = spdk_nvme_ns_get_size(fio_qpair->ns);
@@ -581,6 +556,13 @@ fio_extended_lba_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	struct iovec iov;
 	int rc;
 
+	/* Set appmask and apptag when PRACT is enabled */
+	if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRACT) {
+		fio_req->dif_ctx.appmask = g_spdk_apptag_mask;
+		fio_req->dif_ctx.tag = g_spdk_apptag;
+		return 0;
+	}
+
 	extended_lba_size = spdk_nvme_ns_get_extended_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
 	lba = io_u->offset / extended_lba_size;
@@ -618,6 +600,13 @@ fio_separate_md_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	uint64_t lba;
 	struct iovec iov, md_iov;
 	int rc;
+
+	/* Set appmask and apptag when PRACT is enabled */
+	if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRACT) {
+		fio_req->dif_ctx.appmask = g_spdk_apptag_mask;
+		fio_req->dif_ctx.tag = g_spdk_apptag;
+		return 0;
+	}
 
 	block_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
@@ -659,6 +648,11 @@ fio_extended_lba_verify_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	struct spdk_dif_error err_blk = {};
 	int rc;
 
+	/* Do nothing when PRACT is enabled */
+	if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRACT) {
+		return 0;
+	}
+
 	iov.iov_base = io_u->buf;
 	iov.iov_len = io_u->xfer_buflen;
 	lba_count = io_u->xfer_buflen / spdk_nvme_ns_get_extended_sector_size(ns);
@@ -681,6 +675,11 @@ fio_separate_md_verify_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	struct iovec iov, md_iov;
 	struct spdk_dif_error err_blk = {};
 	int rc;
+
+	/* Do nothing when PRACT is enabled */
+	if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRACT) {
+		return 0;
+	}
 
 	iov.iov_base = io_u->buf;
 	iov.iov_len = io_u->xfer_buflen;
@@ -705,7 +704,7 @@ static void spdk_fio_completion_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct spdk_fio_qpair		*fio_qpair = fio_req->fio_qpair;
 	int				rc;
 
-	if (fio_qpair->do_nvme_pi && fio_req->io->ddir == DDIR_READ) {
+	if (fio_qpair->nvme_pi_enabled && fio_req->io->ddir == DDIR_READ) {
 		if (fio_qpair->extended_lba) {
 			rc = fio_extended_lba_verify_pi(fio_qpair, fio_req->io);
 		} else {
@@ -784,7 +783,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	if (fio_qpair == NULL || ns == NULL) {
 		return -ENXIO;
 	}
-	if (fio_qpair->do_nvme_pi && !fio_qpair->extended_lba) {
+	if (fio_qpair->nvme_pi_enabled && !fio_qpair->extended_lba) {
 		md_buf = fio_req->md_buf;
 	}
 	fio_req->fio_qpair = fio_qpair;
@@ -803,7 +802,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	lba_count = io_u->xfer_buflen / block_size;
 
 	/* TODO: considering situations that fio will randomize and verify io_u */
-	if (fio_qpair->do_nvme_pi) {
+	if (fio_qpair->nvme_pi_enabled) {
 		if (fio_qpair->extended_lba) {
 			rc = fio_extended_lba_setup_pi(fio_qpair, io_u);
 		} else {
