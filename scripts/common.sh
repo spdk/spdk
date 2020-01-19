@@ -99,3 +99,34 @@ function iter_pci_class_code() {
 		fi
 	done
 }
+
+get_mount () {
+	local get=$1 mounts
+
+	[[ -e /proc/mounts ]] || return 1
+
+	local dev mpoint pfs
+	# Match on device or a filesystem
+	while read -r dev mpoint pfs _; do
+		if [[ $pfs == "$get" ]] \
+		|| [[ $dev == "$get" ]]; then
+			mounts+=("$mpoint")
+		fi
+	done </proc/mounts
+
+	(( ${#mounts[@]} )) || return 1
+	printf '%s\n' "${mounts[@]}"
+}
+
+# FIXME: This doesn't really feel as "common", maybe put this somewhere else?
+is_apparmor () {
+	local mode=${1:-enforce} sec_fs
+
+	sec_fs=$(get_mount securityfs) || return 1
+
+	local app_p=/sys/module/apparmor/parameters
+	local app_e=$app_p/enabled
+	local app_m=$app_p/mode
+
+	[[ -d $sec_fs/apparmor && $(<"$app_e") == "Y" && $(<"$app_m") == "$mode" ]]
+}
