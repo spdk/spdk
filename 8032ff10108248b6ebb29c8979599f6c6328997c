@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78c8abc2_d69e1d20",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1492,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-19T22:11:37Z",
+      "side": 1,
+      "message": "Please add ISCSI_OP_TEXT_RSP here and remove it later in this series.\nWe are not certain if we can merge these patches simultaneously.",
+      "revId": "8032ff10108248b6ebb29c8979599f6c6328997c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
