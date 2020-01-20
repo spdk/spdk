@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30caee2e_94fffe27",
+        "filename": "doc/getting_started.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-20T11:21:27Z",
+      "side": 1,
+      "message": "I think it would be good to add another paragraph with a list of dependencies installed, describe that these are enough to build SPDK with empty ./configure option and maybe try to describe which SPDK \"modules\" are build as a result.\n\nI think it\u0027s also good to mention that these bare minimum packages will be installed regardless of which additional flags are used.",
+      "range": {
+        "startLine": 14,
+        "startChar": 8,
+        "endLine": 14,
+        "endChar": 57
+      },
+      "revId": "8d44339d54f6eebfeb891641f0d664faf48e126d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd47e19e_7d252515",
+        "filename": "doc/getting_started.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-20T11:21:27Z",
+      "side": 1,
+      "message": "This description doesn\u0027t match the actual effect of --developer-tools flag.",
+      "range": {
+        "startLine": 20,
+        "startChar": 50,
+        "endLine": 21,
+        "endChar": 48
+      },
+      "revId": "8d44339d54f6eebfeb891641f0d664faf48e126d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c36120e_2e37678f",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-20T11:21:27Z",
+      "side": 1,
+      "message": "Nitpick:\nSometimes you use [[ $INSTALL_DEV_TOOLS \u003d\u003d \"true\" ]] sometimes just [[ $INSTALL_DEV_TOOLS ]].\nCan we please stick to one for consistency?",
+      "range": {
+        "startLine": 57,
+        "startChar": 4,
+        "endLine": 57,
+        "endChar": 38
+      },
+      "revId": "8d44339d54f6eebfeb891641f0d664faf48e126d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
