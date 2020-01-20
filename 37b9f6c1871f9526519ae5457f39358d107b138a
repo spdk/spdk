@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "936a4bf9_4d036d92",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 568,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-20T08:38:36Z",
+      "side": 1,
+      "message": "Then do this here.",
+      "range": {
+        "startLine": 563,
+        "startChar": 0,
+        "endLine": 568,
+        "endChar": 0
+      },
+      "revId": "37b9f6c1871f9526519ae5457f39358d107b138a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd642a20_94a2fb0b",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-20T08:38:36Z",
+      "side": 1,
+      "message": "\u0026\u0026 !(fio_qpair-\u003eio_flags \u0026 SPDK_NVME_IO_FLAGS_PRACT) ?",
+      "range": {
+        "startLine": 710,
+        "startChar": 31,
+        "endLine": 710,
+        "endChar": 34
+      },
+      "revId": "37b9f6c1871f9526519ae5457f39358d107b138a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
