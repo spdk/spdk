@@ -54,6 +54,7 @@ int g_done;
 char *g_xattr_names[] = {"first", "second", "third"};
 char *g_xattr_values[] = {"one", "two", "three"};
 uint64_t g_ctx = 1729;
+bool g_enable_extent_pages = false;
 
 struct spdk_bs_super_block_ver1 {
 	uint8_t		signature[8];
@@ -121,6 +122,14 @@ _get_snapshots_count(struct spdk_blob_store *bs)
 
 	return count;
 }
+
+static void
+ut_spdk_blob_opts_init(struct spdk_blob_opts *opts)
+{
+	spdk_blob_opts_init(opts);
+	opts->enable_extent_pages = g_enable_extent_pages;
+}
+#define spdk_blob_opts_init ut_spdk_blob_opts_init
 
 static void
 bs_op_complete(void *cb_arg, int bserrno)
@@ -7653,6 +7662,7 @@ int main(int argc, char **argv)
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
+	g_enable_extent_pages = false;
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
