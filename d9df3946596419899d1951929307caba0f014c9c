@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7b2e8184_d1399092",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-20T15:45:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fce8dbb3_623188f4",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f735b2b5_057e16e5",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 28
@@ -33,6 +51,24 @@
       "revId": "d9df3946596419899d1951929307caba0f014c9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cfbe9587_3a092c2b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-20T15:45:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f735b2b5_057e16e5",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "2104c393_f3de0369",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-20T15:45:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7068b08a_b0786676",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7ba22ab4_47377155",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 28
@@ -67,6 +121,24 @@
       "revId": "d9df3946596419899d1951929307caba0f014c9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7cda4a29_623d8d24",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-20T15:45:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7ba22ab4_47377155",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "fc3b4bd0_3f15574d",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-20T15:45:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "02b8d40f_98fab0f5",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f62d147_195a02cc",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 28
@@ -98,6 +188,24 @@
       "writtenOn": "2020-01-17T18:18:31Z",
       "side": 1,
       "message": "Should this only count the number of clusters represented by this extent table?\n\nI\u0027m thinking of the case where we need more than one extent table.  Let\u0027s say we have three extent tables, we do a resize, and the third extent table needs to be extended.  Do we want to have to change num_clusters in the first and second extent table descriptor?",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f836180f_cbc53b14",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-20T15:45:54Z",
+      "side": 1,
+      "message": "Here my thinking was that it serves following purpose - keep total number of clusters (allocated or not) in blob, as EXTENT_PAGE is not reliable for that. Last EXTENT_PAGE might not be allocated, so the remainder of that count would be lost.\nSince EXTENT_TABLE always is required to be in md (and is serialized as part of in-chain md for blob) it could have the number of clusters written down.\n\nThen thinking of the same case as you\u0027ve mentioned, what if EXTENT_TABLE runs over a single md page in size (due to its own size or other md). In such case there would be multiples of that value. Yet all of the EXTENT_TABLE descriptors get serialized at the same time and are in the same md chain (by _spdk_blob_serialize_extent_table().\n\nThus concluded that there is no difference if this value is repeated in multiple descriptors, and should never get out of sync between each other.\nDo you think it is still worth changing the values assigned here ?",
+      "parentUuid": "0f62d147_195a02cc",
       "revId": "d9df3946596419899d1951929307caba0f014c9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -118,6 +226,24 @@
       "revId": "d9df3946596419899d1951929307caba0f014c9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21de94bf_e7164ab5",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-20T15:45:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "40f31b15_9287c67b",
+      "revId": "d9df3946596419899d1951929307caba0f014c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
