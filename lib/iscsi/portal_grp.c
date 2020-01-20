@@ -215,8 +215,7 @@ iscsi_portal_close(struct spdk_iscsi_portal *p)
 }
 
 static int
-iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip,
-		   int dry_run)
+iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip)
 {
 	char *host = NULL, *port = NULL;
 	int len, rc = -1;
@@ -244,46 +243,38 @@ iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip,
 		}
 	}
 
-	if (!dry_run) {
-		len = p - portalstring;
-		host = malloc(len + 1);
-		if (host == NULL) {
-			SPDK_ERRLOG("malloc() failed for host\n");
-			goto error_out;
-		}
-		memcpy(host, portalstring, len);
-		host[len] = '\0';
+	len = p - portalstring;
+	host = malloc(len + 1);
+	if (host == NULL) {
+		SPDK_ERRLOG("malloc() failed for host\n");
+		goto error_out;
 	}
+	memcpy(host, portalstring, len);
+	host[len] = '\0';
 
 	/* Port number (IPv4 and IPv6 are the same) */
 	if (p[0] == '\0') {
-		if (!dry_run) {
-			port = malloc(PORTNUMSTRLEN);
-			if (!port) {
-				SPDK_ERRLOG("malloc() failed for port\n");
-				goto error_out;
-			}
-			snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
-		}
-	} else {
-		if (!dry_run) {
-			p++;
-			len = strlen(p);
-			port = malloc(len + 1);
-			if (port == NULL) {
-				SPDK_ERRLOG("malloc() failed for port\n");
-				goto error_out;
-			}
-			memcpy(port, p, len);
-			port[len] = '\0';
-		}
-	}
-
-	if (!dry_run) {
-		*ip = spdk_iscsi_portal_create(host, port);
-		if (!*ip) {
+		port = malloc(PORTNUMSTRLEN);
+		if (!port) {
+			SPDK_ERRLOG("malloc() failed for port\n");
 			goto error_out;
 		}
+		snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
+	} else {
+		p++;
+		len = strlen(p);
+		port = malloc(len + 1);
+		if (port == NULL) {
+			SPDK_ERRLOG("malloc() failed for port\n");
+			goto error_out;
+		}
+		memcpy(port, p, len);
+		port[len] = '\0';
+	}
+
+	*ip = spdk_iscsi_portal_create(host, port);
+	if (!*ip) {
+		goto error_out;
 	}
 
 	rc = 0;
@@ -389,7 +380,7 @@ iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 	struct spdk_iscsi_portal *p;
 	const char *val;
 	char *label, *portal;
-	int portals = 0, i = 0, rc = 0;
+	int i = 0, rc = 0;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add portal group (from config file) %d\n",
 		      spdk_conf_section_get_num(sp));
@@ -399,38 +390,13 @@ iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Comment %s\n", val);
 	}
 
-	/* counts number of definitions */
-	for (i = 0; ; i++) {
-		/*
-		 * label is no longer used, but we keep it in the config
-		 *  file definition so that we do not break existing config
-		 *  files.
-		 */
-		label = spdk_conf_section_get_nmval(sp, "Portal", i, 0);
-		portal = spdk_conf_section_get_nmval(sp, "Portal", i, 1);
-		if (label == NULL || portal == NULL) {
-			break;
-		}
-		rc = iscsi_parse_portal(portal, &p, 1);
-		if (rc < 0) {
-			SPDK_ERRLOG("parse portal error (%s)\n", portal);
-			return -1;
-		}
-	}
-
-	portals = i;
-	if (portals > MAX_PORTAL) {
-		SPDK_ERRLOG("%d > MAX_PORTAL\n", portals);
-		return -1;
-	}
-
 	pg = spdk_iscsi_portal_grp_create(spdk_conf_section_get_num(sp));
 	if (!pg) {
 		SPDK_ERRLOG("portal group malloc error (%s)\n", spdk_conf_section_get_name(sp));
 		return -1;
 	}
 
-	for (i = 0; i < portals; i++) {
+	for (i = 0; ; i++) {
 		label = spdk_conf_section_get_nmval(sp, "Portal", i, 0);
 		portal = spdk_conf_section_get_nmval(sp, "Portal", i, 1);
 		if (label == NULL || portal == NULL) {
@@ -438,7 +404,7 @@ iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 			goto error;
 		}
 
-		rc = iscsi_parse_portal(portal, &p, 0);
+		rc = iscsi_parse_portal(portal, &p);
 		if (rc < 0) {
 			SPDK_ERRLOG("parse portal error (%s)\n", portal);
 			goto error;
