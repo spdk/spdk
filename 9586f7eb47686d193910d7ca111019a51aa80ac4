@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6908ec6b_50d4486b",
+        "filename": "module/sock/vpp/vpp.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1057,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-20T10:35:53Z",
+      "side": 1,
+      "message": "You meant \"_vpp_sock_writev\" ?",
+      "range": {
+        "startLine": 1057,
+        "startChar": 9,
+        "endLine": 1057,
+        "endChar": 24
+      },
+      "revId": "9586f7eb47686d193910d7ca111019a51aa80ac4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
