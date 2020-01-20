@@ -215,8 +215,7 @@ iscsi_portal_close(struct spdk_iscsi_portal *p)
 }
 
 static int
-iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip,
-		   int dry_run)
+iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip)
 {
 	char *host = NULL, *port = NULL;
 	int len, rc = -1;
@@ -244,46 +243,38 @@ iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip,
 		}
 	}
 
-	if (!dry_run) {
-		len = p - portalstring;
-		host = malloc(len + 1);
-		if (host == NULL) {
-			SPDK_ERRLOG("malloc() failed for host\n");
-			goto error_out;
-		}
-		memcpy(host, portalstring, len);
-		host[len] = '\0';
+	len = p - portalstring;
+	host = malloc(len + 1);
+	if (host == NULL) {
+		SPDK_ERRLOG("malloc() failed for host\n");
+		goto error_out;
 	}
+	memcpy(host, portalstring, len);
+	host[len] = '\0';
 
 	/* Port number (IPv4 and IPv6 are the same) */
 	if (p[0] == '\0') {
-		if (!dry_run) {
-			port = malloc(PORTNUMSTRLEN);
-			if (!port) {
-				SPDK_ERRLOG("malloc() failed for port\n");
-				goto error_out;
-			}
-			snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
-		}
-	} else {
-		if (!dry_run) {
-			p++;
-			len = strlen(p);
-			port = malloc(len + 1);
-			if (port == NULL) {
-				SPDK_ERRLOG("malloc() failed for port\n");
-				goto error_out;
-			}
-			memcpy(port, p, len);
-			port[len] = '\0';
-		}
-	}
-
-	if (!dry_run) {
-		*ip = spdk_iscsi_portal_create(host, port);
-		if (!*ip) {
+		port = malloc(PORTNUMSTRLEN);
+		if (!port) {
+			SPDK_ERRLOG("malloc() failed for port\n");
 			goto error_out;
 		}
+		snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
+	} else {
+		p++;
+		len = strlen(p);
+		port = malloc(len + 1);
+		if (port == NULL) {
+			SPDK_ERRLOG("malloc() failed for port\n");
+			goto error_out;
+		}
+		memcpy(port, p, len);
+		port[len] = '\0';
+	}
+
+	*ip = spdk_iscsi_portal_create(host, port);
+	if (!*ip) {
+		goto error_out;
 	}
 
 	rc = 0;
@@ -411,11 +402,6 @@ iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 		if (label == NULL || portal == NULL) {
 			break;
 		}
-		rc = iscsi_parse_portal(portal, &p, 1);
-		if (rc < 0) {
-			SPDK_ERRLOG("parse portal error (%s)\n", portal);
-			return -1;
-		}
 	}
 
 	portals = i;
@@ -438,7 +424,7 @@ iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 			goto error;
 		}
 
-		rc = iscsi_parse_portal(portal, &p, 0);
+		rc = iscsi_parse_portal(portal, &p);
 		if (rc < 0) {
 			SPDK_ERRLOG("parse portal error (%s)\n", portal);
 			goto error;
