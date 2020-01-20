@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "17be010b_6ba8fd15",
+        "filename": "doc/getting_started.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-20T12:09:19Z",
+      "side": 1,
+      "message": "Need to add note about using external package sources for some of the systems",
+      "range": {
+        "startLine": 27,
+        "startChar": 77,
+        "endLine": 27,
+        "endChar": 78
+      },
+      "revId": "4833e9cbbf348056e1ff31befe7dab41875a24fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f7975fb_12cbfe13",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-20T12:09:19Z",
+      "side": 1,
+      "message": "Need to add note about using external package sources for some of the systems",
+      "range": {
+        "startLine": 15,
+        "startChar": 78,
+        "endLine": 15,
+        "endChar": 79
+      },
+      "revId": "4833e9cbbf348056e1ff31befe7dab41875a24fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10e2731f_7d1f02b8",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-20T12:09:19Z",
+      "side": 1,
+      "message": "Short version -f?",
+      "range": {
+        "startLine": 15,
+        "startChar": 9,
+        "endLine": 15,
+        "endChar": 15
+      },
+      "revId": "4833e9cbbf348056e1ff31befe7dab41875a24fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "035ffe28_a3b35df2",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-20T12:09:19Z",
+      "side": 1,
+      "message": "Does this command stop script execution and you have to response with \"yes/no\"?\nIf not then we\u0027d probably want to add some read/if here to confirm if the used is really OK with installing external package source.",
+      "range": {
+        "startLine": 128,
+        "startChar": 3,
+        "endLine": 128,
+        "endChar": 38
+      },
+      "revId": "4833e9cbbf348056e1ff31befe7dab41875a24fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
