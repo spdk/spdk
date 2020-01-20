@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "600ad484_d66265de",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-20T07:04:53Z",
+      "side": 1,
+      "message": "Removed \"SCSI_IO_NAME\", direct to use \"bhs\".",
+      "parentUuid": "3647c892_06f6a976",
+      "range": {
+        "startLine": 52,
+        "startChar": 7,
+        "endLine": 52,
+        "endChar": 20
+      },
+      "revId": "cd30afee11725ad3dc97ed1097d0d8b21aeef603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "96be284b_42248ad5",
         "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
         "patchSetId": 53
@@ -45,6 +69,30 @@
       "revId": "cd30afee11725ad3dc97ed1097d0d8b21aeef603",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4bf26e82_682580d1",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-20T07:04:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "96be284b_42248ad5",
+      "range": {
+        "startLine": 54,
+        "startChar": 23,
+        "endLine": 54,
+        "endChar": 24
+      },
+      "revId": "cd30afee11725ad3dc97ed1097d0d8b21aeef603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "a09247de_773025b9",
+        "filename": "test/app/fuzz/iscsi_fuzz/iscsi_fuzz.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-20T07:04:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a09c1416_78edbf5f",
+      "range": {
+        "startLine": 55,
+        "startChar": 21,
+        "endLine": 55,
+        "endChar": 22
+      },
+      "revId": "cd30afee11725ad3dc97ed1097d0d8b21aeef603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b89b434_f75f1830",
         "filename": "test/iscsi_tgt/iscsi_tgt.sh",
         "patchSetId": 53
@@ -91,6 +163,30 @@
       "revId": "cd30afee11725ad3dc97ed1097d0d8b21aeef603",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43669f5d_5999a5c7",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 53
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2020-01-20T07:04:53Z",
+      "side": 1,
+      "message": "Moved to nightly.",
+      "parentUuid": "4b89b434_f75f1830",
+      "range": {
+        "startLine": 27,
+        "startChar": 11,
+        "endLine": 27,
+        "endChar": 25
+      },
+      "revId": "cd30afee11725ad3dc97ed1097d0d8b21aeef603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
