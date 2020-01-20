@@ -70,6 +70,31 @@ _spdk_blob_verify_md_op(struct spdk_blob *blob)
 	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 }
 
+static void
+_spdk_blob_set_extent_pages_support(struct spdk_blob *blob, bool enable)
+{
+	assert(blob != NULL);
+	assert(spdk_get_thread() == blob->bs->md_thread);
+
+	if (enable) {
+		blob->extent_pages_support = BLOB_EXTENT_PAGES_SUPPORT_ENABLED;
+	} else {
+		blob->extent_pages_support = BLOB_EXTENT_PAGES_SUPPORT_DISABLED;
+	}
+}
+
+static bool
+_spdk_blob_are_extent_pages_enabled(const struct spdk_blob *blob)
+{
+	if (blob->extent_pages_support == BLOB_EXTENT_PAGES_SUPPORT_ENABLED) {
+		return true;
+	}
+
+	/* BLOB_EXTENT_PAGES_SUPPORT_DISABLED/UNSET */
+	return false;
+}
+
+
 static struct spdk_blob_list *
 _spdk_bs_get_snapshot_entry(struct spdk_blob_store *bs, spdk_blob_id blobid)
 {
@@ -167,6 +192,7 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 	opts->thin_provision = false;
 	opts->clear_method = BLOB_CLEAR_WITH_DEFAULT;
 	_spdk_blob_xattrs_init(&opts->xattrs);
+	opts->enable_extent_pages = false;
 }
 
 void
@@ -191,6 +217,7 @@ _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 	blob->parent_id = SPDK_BLOBID_INVALID;
 
 	blob->state = SPDK_BLOB_STATE_DIRTY;
+	blob->extent_pages_support = BLOB_EXTENT_PAGES_SUPPORT_UNSET;
 	blob->active.num_pages = 1;
 	blob->active.pages = calloc(1, sizeof(*blob->active.pages));
 	if (!blob->active.pages) {
@@ -480,6 +507,13 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			struct spdk_blob_md_descriptor_extent_rle	*desc_extent_rle;
 			unsigned int				i, j;
 			unsigned int				cluster_count = blob->active.num_clusters;
+
+			if (_spdk_blob_are_extent_pages_enabled(blob)) {
+				/* Extent Table already present in the md,
+				 * both descriptors should never be at the same time. */
+				return -EINVAL;
+			}
+			_spdk_blob_set_extent_pages_support(blob, false);
 
 			desc_extent_rle = (struct spdk_blob_md_descriptor_extent_rle *)desc;
 
@@ -887,8 +921,14 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 		return rc;
 	}
 
-	/* Serialize extents */
-	rc = _spdk_blob_serialize_extents_rle(blob, pages, cur_page, page_count, &buf, &remaining_sz);
+	if (_spdk_blob_are_extent_pages_enabled(blob)) {
+		/* Serialization as extent pages is not yet implemented */
+		assert(false);
+		rc = -ENOSYS;
+	} else {
+		/* Serialize extents */
+		rc = _spdk_blob_serialize_extents_rle(blob, pages, cur_page, page_count, &buf, &remaining_sz);
+	}
 
 	return rc;
 }
@@ -963,6 +1003,9 @@ _spdk_blob_load_backing_dev(void *cb_arg)
 	const void			*value;
 	size_t				len;
 	int				rc;
+
+	/* Metadata is now parsed, set detected Extent Pages support */
+	_spdk_blob_set_extent_pages_support(blob, _spdk_blob_are_extent_pages_enabled(blob));
 
 	if (spdk_blob_is_thin_provisioned(blob)) {
 		rc = _spdk_blob_get_xattr_value(blob, BLOB_SNAPSHOT, &value, &len, true);
@@ -4398,6 +4441,9 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 		spdk_blob_opts_init(&opts_default);
 		opts = &opts_default;
 	}
+
+	_spdk_blob_set_extent_pages_support(blob, opts->enable_extent_pages);
+
 	if (!internal_xattrs) {
 		_spdk_blob_xattrs_init(&internal_xattrs_default);
 		internal_xattrs = &internal_xattrs_default;
@@ -4794,6 +4840,7 @@ _spdk_bs_snapshot_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int b
 	 * but do not allocate clusters */
 	opts.thin_provision = true;
 	opts.num_clusters = spdk_blob_get_num_clusters(_blob);
+	opts.enable_extent_pages = _spdk_blob_are_extent_pages_enabled(_blob);
 
 	/* If there are any xattrs specified for snapshot, set them now */
 	if (ctx->xattrs) {
@@ -4902,6 +4949,7 @@ _spdk_bs_clone_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bser
 
 	opts.thin_provision = true;
 	opts.num_clusters = spdk_blob_get_num_clusters(_blob);
+	opts.enable_extent_pages = _spdk_blob_are_extent_pages_enabled(_blob);
 	if (ctx->xattrs) {
 		memcpy(&opts.xattrs, ctx->xattrs, sizeof(*ctx->xattrs));
 	}

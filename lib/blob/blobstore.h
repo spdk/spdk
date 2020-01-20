@@ -102,6 +102,20 @@ enum spdk_blob_state {
 	SPDK_BLOB_STATE_LOADING,
 };
 
+enum extent_pages_support {
+	/* Beginning state when loading a blob.
+	 * When unchanged after finishing blob load,
+	 * shall mean that support for Extent Pages is disabled. */
+	BLOB_EXTENT_PAGES_SUPPORT_UNSET,
+
+	/* EXTENT_RLE descriptors shall be used to persist extents. */
+	BLOB_EXTENT_PAGES_SUPPORT_DISABLED,
+
+	/* EXTENT_TABLE and EXTENT_PAGES descriptors shall be
+	 * used to persist extents. */
+	BLOB_EXTENT_PAGES_SUPPORT_ENABLED,
+};
+
 TAILQ_HEAD(spdk_xattr_tailq, spdk_xattr);
 
 struct spdk_blob_list {
@@ -150,6 +164,7 @@ struct spdk_blob {
 	uint32_t frozen_refcnt;
 	bool locked_operation_in_progress;
 	enum blob_clear_method clear_method;
+	enum extent_pages_support extent_pages_support;
 };
 
 struct spdk_blob_store {
