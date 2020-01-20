@@ -22,6 +22,30 @@
       "revId": "09a51da47567df116d440fe0eb5b58d63150f35e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62c3db1c_25b76ea5",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-20T17:09:28Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5d80109f_1ad97224",
+      "range": {
+        "startLine": 245,
+        "startChar": 0,
+        "endLine": 252,
+        "endChar": 6
+      },
+      "revId": "09a51da47567df116d440fe0eb5b58d63150f35e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
