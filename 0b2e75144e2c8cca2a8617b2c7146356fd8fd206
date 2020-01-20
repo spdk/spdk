@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "c1e383b4_1f56b22e",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-20T15:20:10Z",
+      "side": 1,
+      "message": "I\u0027ve left it as it was.",
+      "parentUuid": "fd2d302b_d21f13a2",
+      "revId": "0b2e75144e2c8cca2a8617b2c7146356fd8fd206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1371bafd_8c0f3fc7",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 7
@@ -90,6 +108,24 @@
     },
     {
       "key": {
+        "uuid": "60ab703e_4479cd33",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-20T15:20:10Z",
+      "side": 1,
+      "message": "Please see updated version of the patch set.\nI\u0027ve updated the commit description to hopefully make the intention clear. The code here is left as is, so that EXTENT_RLE path would not need further changes in the patches. Hopefully the commit message explains that.",
+      "parentUuid": "ee72b104_f2785293",
+      "revId": "0b2e75144e2c8cca2a8617b2c7146356fd8fd206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a0d625e0_c904357d",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 7
@@ -104,6 +140,24 @@
       "revId": "0b2e75144e2c8cca2a8617b2c7146356fd8fd206",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a7f6a74_1bcd1d03",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 903,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-20T15:20:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a0d625e0_c904357d",
+      "revId": "0b2e75144e2c8cca2a8617b2c7146356fd8fd206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
