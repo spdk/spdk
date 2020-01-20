@@ -54,6 +54,7 @@ int g_done;
 char *g_xattr_names[] = {"first", "second", "third"};
 char *g_xattr_values[] = {"one", "two", "three"};
 uint64_t g_ctx = 1729;
+bool g_use_extent_table = false;
 
 struct spdk_bs_super_block_ver1 {
 	uint8_t		signature[8];
@@ -120,6 +121,13 @@ _get_snapshots_count(struct spdk_blob_store *bs)
 	}
 
 	return count;
+}
+
+static void
+ut_spdk_blob_opts_init(struct spdk_blob_opts *opts)
+{
+	spdk_blob_opts_init(opts);
+	opts->use_extent_table = g_use_extent_table;
 }
 
 static void
@@ -204,7 +212,7 @@ blob_super(void)
 	CU_ASSERT(g_blobid == SPDK_BLOBID_INVALID);
 
 	/* Create a blob */
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -245,7 +253,7 @@ blob_open(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -319,7 +327,7 @@ blob_create(void)
 
 	/* Create blob with 10 clusters */
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -341,7 +349,7 @@ blob_create(void)
 
 	/* Create blob with 0 clusters */
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = 0;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -382,7 +390,7 @@ blob_create(void)
 
 	/* Try to create blob with size larger than blobstore */
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = bs->total_clusters + 1;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -419,7 +427,7 @@ blob_create_internal(void)
 
 	/* Create blob with custom xattrs */
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	_spdk_blob_xattrs_init(&internal_xattrs);
 	internal_xattrs.count = 3;
 	internal_xattrs.names = g_xattr_names;
@@ -520,7 +528,7 @@ blob_thin_provision(void)
 
 	/* Create blob with thin provisioning enabled */
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = true;
 	opts.num_clusters = 10;
 
@@ -601,7 +609,7 @@ blob_snapshot(void)
 	bs = g_bs;
 
 	/* Create blob with 10 clusters */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -782,7 +790,7 @@ blob_snapshot_freeze_io(void)
 	bs_channel = spdk_io_channel_get_ctx(channel);
 
 	/* Create blob with 10 clusters */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
 	opts.thin_provision = false;
 
@@ -875,7 +883,7 @@ blob_clone(void)
 
 	/* Create blob with 10 clusters */
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -1022,7 +1030,7 @@ _blob_inflate(bool decouple_parent)
 
 	/* Create blob with 10 clusters */
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
 	opts.thin_provision = true;
 
@@ -1141,7 +1149,7 @@ blob_delete(void)
 	bs = g_bs;
 
 	/* Create a blob and then delete it. */
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -1182,7 +1190,7 @@ blob_resize(void)
 	bs = g_bs;
 	free_clusters = spdk_bs_free_cluster_count(bs);
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -1270,7 +1278,7 @@ blob_read_only(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -1401,7 +1409,7 @@ blob_write(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -1486,7 +1494,7 @@ blob_read(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -1569,7 +1577,7 @@ blob_rw_verify(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -1637,7 +1645,7 @@ blob_rw_verify_iov(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -1749,7 +1757,7 @@ blob_rw_verify_iov_nomem(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -1823,7 +1831,7 @@ blob_rw_iov_read_only(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -1971,7 +1979,7 @@ blob_operation_split_rw(void)
 	SPDK_CU_ASSERT_FATAL(channel != NULL);
 
 	/* Create blob */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = false;
 	opts.num_clusters = 5;
 
@@ -2147,7 +2155,7 @@ blob_operation_split_rw_iov(void)
 	SPDK_CU_ASSERT_FATAL(channel != NULL);
 
 	/* Create blob */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = false;
 	opts.num_clusters = 5;
 
@@ -2296,7 +2304,7 @@ blob_unmap(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -2404,7 +2412,7 @@ blob_iter(void)
 	CU_ASSERT(g_blob == NULL);
 	CU_ASSERT(g_bserrno == -ENOENT);
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -2452,7 +2460,7 @@ blob_xattr(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -2614,7 +2622,7 @@ bs_load(void)
 	CU_ASSERT(g_blob == NULL);
 
 	/* Create a blob */
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(g_bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -2811,7 +2819,7 @@ bs_load_pending_removal(void)
 	bs = g_bs;
 
 	/* Create blob */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -3148,7 +3156,7 @@ bs_unload(void)
 
 	/* Create a blob and open it. */
 	g_bserrno = -1;
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -3307,7 +3315,7 @@ bs_usable_clusters(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
 	CU_ASSERT(spdk_bs_total_data_cluster_count(g_bs) == clusters);
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 
 	/* Create and resize blobs to make sure that useable cluster count won't change */
 	for (i = 0; i < 4; i++) {
@@ -3389,7 +3397,7 @@ bs_resize_md(void)
 
 	CU_ASSERT(spdk_bs_get_cluster_size(g_bs) == cluster_sz);
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 
 	for (i = 0; i < NUM_BLOBS; i++) {
 		g_bserrno = -1;
@@ -3493,7 +3501,7 @@ blob_serialize(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 
 	/* Create and open two blobs */
 	for (i = 0; i < 2; i++) {
@@ -3603,7 +3611,7 @@ blob_crc(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -3712,7 +3720,7 @@ blob_dirty_shutdown(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
 	/* Create first blob */
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(g_bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -4056,7 +4064,7 @@ blob_flags(void)
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 
 	/* Initialize a new blob store */
 	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
@@ -4270,7 +4278,7 @@ bs_version(void)
 	 *  results in writing the super block (since metadata pages
 	 *  were allocated.
 	 */
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 	spdk_bs_create_blob_ext(g_bs, &blob_opts, blob_op_with_id_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
@@ -4334,7 +4342,7 @@ blob_set_xattrs(void)
 	bs = g_bs;
 
 	/* Create blob with extra attributes */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 
 	opts.xattrs.names = g_xattr_names;
 	opts.xattrs.get_value = _get_xattr_value;
@@ -4396,7 +4404,7 @@ blob_set_xattrs(void)
 	g_blobid = SPDK_BLOBID_INVALID;
 
 	/* NULL callback */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.xattrs.names = g_xattr_names;
 	opts.xattrs.get_value = NULL;
 	opts.xattrs.count = 1;
@@ -4408,7 +4416,7 @@ blob_set_xattrs(void)
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 
 	/* NULL values */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.xattrs.names = g_xattr_names;
 	opts.xattrs.get_value = _get_xattr_value_null;
 	opts.xattrs.count = 1;
@@ -4445,7 +4453,7 @@ blob_thin_prov_alloc(void)
 	free_clusters = spdk_bs_free_cluster_count(bs);
 
 	/* Set blob as thin provisioned */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = true;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -4576,7 +4584,7 @@ blob_insert_cluster_msg(void)
 	free_clusters = spdk_bs_free_cluster_count(bs);
 
 	/* Set blob as thin provisioned */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = true;
 	opts.num_clusters = 4;
 
@@ -4682,7 +4690,7 @@ blob_thin_prov_rw(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = true;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -4800,7 +4808,7 @@ blob_thin_prov_rle(void)
 	free_clusters = spdk_bs_free_cluster_count(bs);
 	page_size = spdk_bs_get_page_size(bs);
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = true;
 	opts.num_clusters = 5;
 
@@ -4933,7 +4941,7 @@ blob_thin_prov_rw_iov(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = true;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -5054,7 +5062,7 @@ bs_load_iter(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
-	spdk_blob_opts_init(&blob_opts);
+	ut_spdk_blob_opts_init(&blob_opts);
 
 	for (i = 0; i < 4; i++) {
 		g_bserrno = -1;
@@ -5158,7 +5166,7 @@ blob_snapshot_rw(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = true;
 	opts.num_clusters = 5;
 
@@ -5289,7 +5297,7 @@ blob_snapshot_rw_iov(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = true;
 	opts.num_clusters = 5;
 
@@ -5467,7 +5475,7 @@ _blob_inflate_rw(bool decouple_parent)
 	SPDK_CU_ASSERT_FATAL(channel != NULL);
 
 	/* Create blob */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = true;
 	opts.num_clusters = 5;
 
@@ -5761,7 +5769,7 @@ blob_relations(void)
 
 	/* 1. Create blob with 10 clusters */
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -6110,7 +6118,7 @@ blob_relations2(void)
 
 	/* 1. Create blob with 10 clusters */
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -6508,7 +6516,7 @@ blob_delete_snapshot_power_failure(void)
 	bs = g_bs;
 
 	/* Create blob */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -6632,7 +6640,7 @@ blob_create_snapshot_power_failure(void)
 	bs = g_bs;
 
 	/* Create blob */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -7322,7 +7330,7 @@ blob_io_unit(void)
 	channel = spdk_bs_alloc_io_channel(g_bs);
 
 	/* Create thick provisioned blob */
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = false;
 	opts.num_clusters = 32;
 
@@ -7356,7 +7364,7 @@ blob_io_unit(void)
 
 	/* Create thin provisioned blob */
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.thin_provision = true;
 	opts.num_clusters = 32;
 
@@ -7527,7 +7535,7 @@ blob_simultaneous_operations(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	SPDK_CU_ASSERT_FATAL(channel != NULL);
 
-	spdk_blob_opts_init(&opts);
+	ut_spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
@@ -7717,6 +7725,7 @@ int main(int argc, char **argv)
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
+	g_use_extent_table = false;
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
