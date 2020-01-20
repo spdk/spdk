@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1a5fb60e_ff7c0fab",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-20T01:42:15Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "13be747a_2a1e1205",
+      "range": {
+        "startLine": 7,
+        "startChar": 10,
+        "endLine": 7,
+        "endChar": 42
+      },
+      "revId": "ed09c348ad6d2b7f14ec23a6b32c09530ab9db3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "325998fa_52da9665",
         "filename": "lib/iscsi/iscsi.c",
         "patchSetId": 6
@@ -45,6 +69,30 @@
       "revId": "ed09c348ad6d2b7f14ec23a6b32c09530ab9db3b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ce9c059_c5579655",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2445,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-20T01:42:15Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "325998fa_52da9665",
+      "range": {
+        "startLine": 2445,
+        "startChar": 1,
+        "endLine": 2445,
+        "endChar": 31
+      },
+      "revId": "ed09c348ad6d2b7f14ec23a6b32c09530ab9db3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
