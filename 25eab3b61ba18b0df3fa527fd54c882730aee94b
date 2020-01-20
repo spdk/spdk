@@ -70,6 +70,30 @@
       "revId": "25eab3b61ba18b0df3fa527fd54c882730aee94b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1aa6ab8d_a03b8e85",
+        "filename": "test/lvol/basic.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2020-01-20T12:22:47Z",
+      "side": 1,
+      "message": "I agree with Tomek.\nThese patches which introduced the test in Python are already merged. You can rebase to latest master now and use use the scenario from https://review.gerrithub.io/c/spdk/spdk/+/467967 to implement in bash version.\n\nFeel free to cherry-pick this patch and move it further in the series if you don\u0027t want to block other commits.",
+      "parentUuid": "8e7d1f95_3b6c397d",
+      "range": {
+        "startLine": 133,
+        "startChar": 0,
+        "endLine": 133,
+        "endChar": 67
+      },
+      "revId": "25eab3b61ba18b0df3fa527fd54c882730aee94b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
