@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5111d861_c8b0d318",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-20T18:21:22Z",
+      "side": 1,
+      "message": "there\u0027s a few \"\\c\" occurrences in these comments, I don\u0027t think I uploaded them. Were they accidental or is there some new thing I\u0027m not hip to? 😊",
+      "revId": "4b9d1debc661ce16cf2e447dbbe1b52e404b6d3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
