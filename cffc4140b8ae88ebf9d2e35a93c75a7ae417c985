@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab7b1635_fc5f70cc",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1017532
+      },
+      "writtenOn": "2020-01-20T15:07:39Z",
+      "side": 1,
+      "message": "This craves for some common function to be used, like: https://86318d20a20456d9.paste.se/ or similar. :)",
+      "revId": "cffc4140b8ae88ebf9d2e35a93c75a7ae417c985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c19b8610_fae2cb8a",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1017532
+      },
+      "writtenOn": "2020-01-20T15:07:39Z",
+      "side": 1,
+      "message": "This is just a food for thought, but using proper evaluation constracts for arithmetic checks, e.g. `(( VERSION_ID \u003e foo ))`, etc. would be of more benefit I think (not in this particular case maybe but in more general scope of things).  Also, combining this into single expression, like `(( VERSION_ID \u003e 1400 \u0026\u0026 VERSION_ID \u003c 1900 ))` would be a bit clearer imho too. :)",
+      "revId": "cffc4140b8ae88ebf9d2e35a93c75a7ae417c985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
