@@ -1208,31 +1208,54 @@ iscsi_poll_group_destroy(void *io_device, void *ctx_buf)
 }
 
 static void
-_iscsi_init_thread(void *ctx)
+_iscsi_init_thread(struct spdk_thread *thread)
 {
+	struct spdk_thread *orig_thread;
 	struct spdk_io_channel *ch;
 	struct spdk_iscsi_poll_group *pg;
+
+	orig_thread = spdk_get_thread();
+	spdk_set_thread(thread);
 
 	ch = spdk_get_io_channel(&g_spdk_iscsi);
 	pg = spdk_io_channel_get_ctx(ch);
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_INSERT_TAIL(&g_spdk_iscsi.poll_group_head, pg, link);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
+	spdk_set_thread(orig_thread);
 }
 
 static void
-initialize_iscsi_poll_group(spdk_msg_fn cpl)
+iscsi_parse_configuration(void);
+
+static void
+initialize_iscsi_poll_group(void)
 {
+	struct spdk_cpuset *app_cpumask;
+	uint32_t i;
+	char thread_name[32];
+	struct spdk_thread *thread;
+
 	spdk_io_device_register(&g_spdk_iscsi, iscsi_poll_group_create, iscsi_poll_group_destroy,
 				sizeof(struct spdk_iscsi_poll_group), "iscsi_tgt");
 
-	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(_iscsi_init_thread, NULL, cpl);
+	app_cpumask = spdk_app_get_core_mask();
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (!spdk_cpuset_get_cpu(app_cpumask, i)) {
+			continue;
+		}
+		snprintf(thread_name, sizeof(thread_name), "iscsi_poll_group_%u", i);
+
+		thread = spdk_thread_create(thread_name, app_cpumask);
+		_iscsi_init_thread(thread);
+	}
+
+	iscsi_parse_configuration();
 }
 
 static void
-iscsi_parse_configuration(void *ctx)
+iscsi_parse_configuration(void)
 {
 	int rc;
 
@@ -1310,7 +1333,7 @@ iscsi_parse_globals(void)
 		return rc;
 	}
 
-	initialize_iscsi_poll_group(iscsi_parse_configuration);
+	initialize_iscsi_poll_group();
 	return 0;
 }
 
@@ -1330,7 +1353,7 @@ spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 	}
 
 	/*
-	 * spdk_iscsi_parse_configuration() will be called as the callback to
+	 * spdk_iscsi_parse_configuration() will be called in the end of
 	 * spdk_initialize_iscsi_poll_group() and will complete iSCSI
 	 * subsystem initialization.
 	 */
@@ -1358,7 +1381,7 @@ iscsi_fini_done(void *io_device)
 }
 
 static void
-_iscsi_fini_dev_unreg(struct spdk_io_channel_iter *i, int status)
+_iscsi_fini_dev_unreg(void)
 {
 	iscsi_check_pools();
 	iscsi_free_pools();
@@ -1374,27 +1397,38 @@ _iscsi_fini_dev_unreg(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-_iscsi_fini_thread(struct spdk_io_channel_iter *i)
+_iscsi_fini_thread(struct spdk_iscsi_poll_group *pg)
 {
 	struct spdk_io_channel *ch;
-	struct spdk_iscsi_poll_group *pg;
+	struct spdk_thread *orig_thread, *thread;
 
-	ch = spdk_io_channel_iter_get_channel(i);
-	pg = spdk_io_channel_get_ctx(ch);
+	orig_thread = spdk_get_thread();
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	ch = spdk_io_channel_from_ctx(pg);
+	thread = spdk_io_channel_get_thread(ch);
+
+	spdk_set_thread(thread);
+
 	TAILQ_REMOVE(&g_spdk_iscsi.poll_group_head, pg, link);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-
 	spdk_put_io_channel(ch);
 
-	spdk_for_each_channel_continue(i, 0);
+	spdk_set_thread(orig_thread);
+
+	/* TBD: delete SPDK thread dynamically. We still rely on SPDK application shutdown
+	 *  processing for deleting SPDK threads.
+	 */
 }
 
 void
 spdk_shutdown_iscsi_conns_done(void)
 {
-	spdk_for_each_channel(&g_spdk_iscsi, _iscsi_fini_thread, NULL, _iscsi_fini_dev_unreg);
+	struct spdk_iscsi_poll_group *pg, *tmp;
+
+	TAILQ_FOREACH_SAFE(pg, &g_spdk_iscsi.poll_group_head, link, tmp) {
+		_iscsi_fini_thread(pg);
+	}
+
+	_iscsi_fini_dev_unreg();
 }
 
 void
