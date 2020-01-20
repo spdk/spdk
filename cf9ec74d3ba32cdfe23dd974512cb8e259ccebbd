@@ -34,6 +34,24 @@
       "revId": "cf9ec74d3ba32cdfe23dd974512cb8e259ccebbd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f52a4d8_9f47a0d6",
+        "filename": "module/bdev/zone_block/vbdev_zone_block.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-20T14:30:47Z",
+      "side": 1,
+      "message": "Given our threading model and the fact that we spin all the time anyway, I think you\u0027re probably right. I\u0027ve changed my vote.",
+      "parentUuid": "cdce49bd_2348d07f",
+      "revId": "cf9ec74d3ba32cdfe23dd974512cb8e259ccebbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
