@@ -1191,6 +1191,9 @@ spdk_nvme_probe_async(const struct spdk_nvme_transport_id *trid,
 	spdk_nvme_probe_ctx_init(probe_ctx, trid, cb_ctx, probe_cb, attach_cb, remove_cb);
 	rc = spdk_nvme_probe_internal(probe_ctx, false);
 	if (rc != 0) {
+		if (cb_ctx) {
+			free(cb_ctx);
+		}
 		free(probe_ctx);
 		return NULL;
 	}
