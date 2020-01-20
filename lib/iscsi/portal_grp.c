@@ -83,8 +83,9 @@ iscsi_portal_accept(void *arg)
 }
 
 static void
-iscsi_acceptor_start(struct spdk_iscsi_portal *p)
+_iscsi_acceptor_start(void *ctx)
 {
+	struct spdk_iscsi_portal *p = ctx;
 	struct spdk_io_channel *ch;
 
 	p->acceptor_poller = spdk_poller_register(iscsi_portal_accept, p, ACCEPT_TIMEOUT_US);
@@ -95,8 +96,9 @@ iscsi_acceptor_start(struct spdk_iscsi_portal *p)
 }
 
 static void
-iscsi_acceptor_stop(struct spdk_iscsi_portal *p)
+_iscsi_acceptor_stop(void *ctx)
 {
+	struct spdk_iscsi_portal *p = ctx;
 	struct spdk_io_channel *ch;
 
 	spdk_poller_unregister(&p->acceptor_poller);
@@ -104,6 +106,25 @@ iscsi_acceptor_stop(struct spdk_iscsi_portal *p)
 	assert(p->acceptor_pg != NULL);
 	ch = spdk_io_channel_from_ctx(p->acceptor_pg);
 	spdk_put_io_channel(ch);
+}
+
+static void
+call_iscsi_acceptor(struct spdk_iscsi_portal *p, spdk_msg_fn msg_fn)
+{
+	struct spdk_iscsi_poll_group *pg;
+	struct spdk_thread *thread;
+
+	pg = TAILQ_FIRST(&g_spdk_iscsi.poll_group_head);
+	if (pg == NULL) {
+		SPDK_ERRLOG("There is no poll group.\n");
+		assert(false);
+		return;
+	}
+
+	thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(pg));
+	assert(thread == spdk_get_thread());
+
+	spdk_thread_send_msg(thread, msg_fn, p);
 }
 
 static struct spdk_iscsi_portal *
@@ -222,7 +243,7 @@ iscsi_portal_open(struct spdk_iscsi_portal *p)
 	 * the requests will be queued by the nonzero backlog of the socket
 	 * or resend by TCP.
 	 */
-	iscsi_acceptor_start(p);
+	call_iscsi_acceptor(p, _iscsi_acceptor_start);
 
 	return 0;
 }
@@ -233,7 +254,7 @@ iscsi_portal_close(struct spdk_iscsi_portal *p)
 	if (p->sock) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "close portal (%s, %s)\n",
 			      p->host, p->port);
-		iscsi_acceptor_stop(p);
+		call_iscsi_acceptor(p, _iscsi_acceptor_stop);
 		spdk_sock_close(&p->sock);
 	}
 }
