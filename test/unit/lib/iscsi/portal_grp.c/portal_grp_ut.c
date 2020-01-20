@@ -54,6 +54,7 @@ struct spdk_iscsi_globals g_spdk_iscsi;
 static int
 test_setup(void)
 {
+	TAILQ_INIT(&g_spdk_iscsi.poll_group_head);
 	TAILQ_INIT(&g_spdk_iscsi.portal_head);
 	TAILQ_INIT(&g_spdk_iscsi.pg_head);
 	pthread_mutex_init(&g_spdk_iscsi.mutex, NULL);
@@ -294,6 +295,8 @@ ut_poll_group_destroy(void *io_device, void *ctx_buf)
 static void
 portal_grp_add_delete_case(void)
 {
+	struct spdk_io_channel *ch;
+	struct spdk_iscsi_poll_group *poll_group;
 	struct spdk_sock sock = {};
 	struct spdk_iscsi_portal_grp *pg1, *pg2;
 	struct spdk_iscsi_portal *p;
@@ -307,6 +310,10 @@ portal_grp_add_delete_case(void)
 
 	spdk_io_device_register(&g_spdk_iscsi, ut_poll_group_create, ut_poll_group_destroy,
 				sizeof(struct spdk_iscsi_poll_group), "ut_portal_grp");
+
+	ch = spdk_get_io_channel(&g_spdk_iscsi);
+	poll_group = spdk_io_channel_get_ctx(ch);
+	TAILQ_INSERT_TAIL(&g_spdk_iscsi.poll_group_head, poll_group, link);
 
 	/* internal of iscsi_create_portal_group */
 	pg1 = spdk_iscsi_portal_grp_create(1);
@@ -337,6 +344,11 @@ portal_grp_add_delete_case(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
 
+	TAILQ_REMOVE(&g_spdk_iscsi.poll_group_head, poll_group, link);
+	spdk_put_io_channel(ch);
+
+	poll_thread(0);
+
 	spdk_io_device_unregister(&g_spdk_iscsi, NULL);
 
 	free_threads();
@@ -345,6 +357,8 @@ portal_grp_add_delete_case(void)
 static void
 portal_grp_add_delete_twice_case(void)
 {
+	struct spdk_io_channel *ch;
+	struct spdk_iscsi_poll_group *poll_group;
 	struct spdk_sock sock = {};
 	struct spdk_iscsi_portal_grp *pg1, *pg2;
 	struct spdk_iscsi_portal *p;
@@ -358,6 +372,10 @@ portal_grp_add_delete_twice_case(void)
 
 	spdk_io_device_register(&g_spdk_iscsi, ut_poll_group_create, ut_poll_group_destroy,
 				sizeof(struct spdk_iscsi_poll_group), "ut_portal_grp");
+
+	ch = spdk_get_io_channel(&g_spdk_iscsi);
+	poll_group = spdk_io_channel_get_ctx(ch);
+	TAILQ_INSERT_TAIL(&g_spdk_iscsi.poll_group_head, poll_group, link);
 
 	/* internal of iscsi_create_portal_group related */
 	pg1 = spdk_iscsi_portal_grp_create(1);
@@ -402,6 +420,11 @@ portal_grp_add_delete_twice_case(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
 
 	MOCK_CLEAR_P(spdk_sock_listen);
+
+	TAILQ_REMOVE(&g_spdk_iscsi.poll_group_head, poll_group, link);
+	spdk_put_io_channel(ch);
+
+	poll_thread(0);
 
 	spdk_io_device_unregister(&g_spdk_iscsi, NULL);
 
