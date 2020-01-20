@@ -147,7 +147,7 @@ parse_portal_ipv4_normal_case(void)
 	struct spdk_iscsi_portal *p = NULL;
 	int rc;
 
-	rc = iscsi_parse_portal(string, &p, 0);
+	rc = iscsi_parse_portal(string, &p);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
@@ -167,7 +167,7 @@ parse_portal_ipv6_normal_case(void)
 	struct spdk_iscsi_portal *p = NULL;
 	int rc;
 
-	rc = iscsi_parse_portal(string, &p, 0);
+	rc = iscsi_parse_portal(string, &p);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
@@ -186,7 +186,7 @@ parse_portal_ipv4_skip_port_case(void)
 	struct spdk_iscsi_portal *p = NULL;
 	int rc;
 
-	rc = iscsi_parse_portal(string, &p, 0);
+	rc = iscsi_parse_portal(string, &p);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
@@ -205,7 +205,7 @@ parse_portal_ipv6_skip_port_case(void)
 	struct spdk_iscsi_portal *p = NULL;
 	int rc;
 
-	rc = iscsi_parse_portal(string, &p, 0);
+	rc = iscsi_parse_portal(string, &p);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
