@@ -144,6 +144,7 @@ function autobuild_test_suite {
 	run_test "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk prefix=/usr
 	run_test "autobuild_make_uninstall" test_make_uninstall
 	run_test "autobuild_build_doc" build_doc
+	run_test "autobuild_external_code" $rootdir/test/external_code/test_make.sh $rootdir
 }
 
 if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
