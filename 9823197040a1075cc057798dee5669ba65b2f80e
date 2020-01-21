@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "a4f77ce8_37d5a88a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T18:20:34Z",
+      "side": 1,
+      "message": "should we check to make sure that -\u003enum_clusters matches?  for example:\n\nif (blob-\u003eextent_table_found \u0026\u0026 desc_extent_table-\u003enum_clusters !\u003d blob-\u003eactive.num_clusters_in_et) {\n  return -EINVAL;\n}\n\nof course you\u0027d need to do this before you set extent_table_found \u003d true for this descriptor",
+      "revId": "9823197040a1075cc057798dee5669ba65b2f80e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae7389a4_078cf46a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 698,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T18:20:34Z",
+      "side": 1,
+      "message": "Once all extent pages have been read, num_clusters_in_et \u003d\u003d 0?  That doesn\u0027t seem right to me.  It means if someone looks at this field after the blob has been loaded, it will say there are 0 clusters in the extent table.\n\nShould we have a separate field in spdk_blob (not part of mut_data structure) that tracks number of remaining clusters to be read from extent pages?  At least to me, the mut_data structure represents the data that is going to be persistent to metadata at some point - it\u0027s not used to track information needed while we are loading the blob.",
+      "revId": "9823197040a1075cc057798dee5669ba65b2f80e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8e33dd01_4a7beea2",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 18
