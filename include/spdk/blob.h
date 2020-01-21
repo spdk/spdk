@@ -412,6 +412,9 @@ struct spdk_blob_opts {
 	bool	thin_provision;
 	enum blob_clear_method clear_method;
 	struct spdk_blob_xattr_opts xattrs;
+
+	/** Enable separate extent pages in metadata */
+	bool use_extent_table;
 };
 
 /**

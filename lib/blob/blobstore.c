@@ -167,6 +167,7 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 	opts->thin_provision = false;
 	opts->clear_method = BLOB_CLEAR_WITH_DEFAULT;
 	_spdk_blob_xattrs_init(&opts->xattrs);
+	opts->use_extent_table = false;
 }
 
 void
@@ -191,6 +192,8 @@ _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 	blob->parent_id = SPDK_BLOBID_INVALID;
 
 	blob->state = SPDK_BLOB_STATE_DIRTY;
+	blob->extent_rle_found = false;
+	blob->extent_table_found = false;
 	blob->active.num_pages = 1;
 	blob->active.pages = calloc(1, sizeof(*blob->active.pages));
 	if (!blob->active.pages) {
@@ -480,6 +483,13 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			struct spdk_blob_md_descriptor_extent_rle	*desc_extent_rle;
 			unsigned int				i, j;
 			unsigned int				cluster_count = blob->active.num_clusters;
+
+			if (blob->extent_table_found) {
+				/* Extent Table already present in the md,
+				 * both descriptors should never be at the same time. */
+				return -EINVAL;
+			}
+			blob->extent_rle_found = true;
 
 			desc_extent_rle = (struct spdk_blob_md_descriptor_extent_rle *)desc;
 
@@ -887,8 +897,14 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 		return rc;
 	}
 
-	/* Serialize extents */
-	rc = _spdk_blob_serialize_extents_rle(blob, pages, cur_page, page_count, &buf, &remaining_sz);
+	if (blob->use_extent_table) {
+		/* Serialization as extent pages is not yet implemented */
+		assert(false);
+		rc = -ENOSYS;
+	} else {
+		/* Serialize extents */
+		rc = _spdk_blob_serialize_extents_rle(blob, pages, cur_page, page_count, &buf, &remaining_sz);
+	}
 
 	return rc;
 }
@@ -1036,6 +1052,19 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		_spdk_blob_load_final(ctx, rc);
 		return;
 	}
+
+	if (blob->extent_table_found == true) {
+		/* If EXTENT_TABLE was found, that means support for it should be enabled. */
+		assert(blob->extent_rle_found == false);
+		blob->use_extent_table = true;
+	} else {
+		/* If EXTENT_RLE or no extent_* descriptor was found disable support
+		 * for extent table. No extent_* descriptors means that blob has length of 0
+		 * and no extent_rle descriptors were persisted for it.
+		 * EXTENT_TABLE if used, is always present in metadata regardless of length. */
+		blob->use_extent_table = false;
+	}
+
 	ctx->seq = seq;
 
 	/* Check the clear_method stored in metadata vs what may have been passed
@@ -4398,6 +4427,9 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 		spdk_blob_opts_init(&opts_default);
 		opts = &opts_default;
 	}
+
+	blob->use_extent_table = opts->use_extent_table;
+
 	if (!internal_xattrs) {
 		_spdk_blob_xattrs_init(&internal_xattrs_default);
 		internal_xattrs = &internal_xattrs_default;
@@ -4794,6 +4826,7 @@ _spdk_bs_snapshot_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int b
 	 * but do not allocate clusters */
 	opts.thin_provision = true;
 	opts.num_clusters = spdk_blob_get_num_clusters(_blob);
+	opts.use_extent_table = _blob->use_extent_table;
 
 	/* If there are any xattrs specified for snapshot, set them now */
 	if (ctx->xattrs) {
@@ -4902,6 +4935,7 @@ _spdk_bs_clone_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bser
 
 	opts.thin_provision = true;
 	opts.num_clusters = spdk_blob_get_num_clusters(_blob);
+	opts.use_extent_table = _blob->use_extent_table;
 	if (ctx->xattrs) {
 		memcpy(&opts.xattrs, ctx->xattrs, sizeof(*ctx->xattrs));
 	}
