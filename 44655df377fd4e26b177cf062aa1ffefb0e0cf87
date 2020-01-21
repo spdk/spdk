@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24692e3d_d0e5863e",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 2016,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T17:32:42Z",
+      "side": 0,
+      "message": "let\u0027s first have a patch that just moves this function (with no changes)\n\nthen this patch can just make necessary modifications to this function\n\nit makes the code a lot easier to review, since I don\u0027t have to scroll up and down to check what may have changed in the function while it was moved",
+      "revId": "44655df377fd4e26b177cf062aa1ffefb0e0cf87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
