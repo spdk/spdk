@@ -29,6 +29,7 @@ REPEAT_NO=3
 FIO_BIN="/usr/src/fio/fio"
 PLUGIN="nvme"
 DISKNO=1
+DISKCFG=""
 CPUS_ALLOWED=1
 NOIOSCALING=false
 PRECONDITIONING=true
@@ -90,26 +91,28 @@ function get_numa_node(){
 
 function get_disks(){
 	local plugin=$1
+	local bdfs
+	local bdevs
+	local blknames
+
 	if [[ "$plugin" =~ "nvme" ]]; then
-		for bdf in $(iter_pci_class_code 01 08 02); do
-			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
-			if [ "$driver" = "vfio-pci" ] || [ "$driver" = "uio_pci_generic" ]; then
-				echo "$bdf"
-			fi
-		done
+		# spdk-perf-nvme and spdk-plugin-nvme rely on PCI BDF addresses like
+		# 0000:1a:00.0 extract them from disk config file
+		bdfs=$(grep -oP "(?<=traddr:)([\w\:\.])+" <<< cat $BASE_DIR/bdev.conf)
+		echo "$bdfs"
 	elif [[ "$plugin" =~ "bdev" ]]; then
-		local bdevs
-		bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
-		jq -r '.[].name' <<< $bdevs
+		# spdk-perf-bdev and spdk-plugin-bdev rely on SPDK bdev names from
+		# provided config file, extract them
+		bdevs=( $(grep -oP "Nvme\d+" <<< cat $BASE_DIR/bdev.conf) )
+		printf -- '%sn1 ' "${bdevs[@]}"
 	else
-		# Only target not mounted NVMes
-		for bdf in $(iter_pci_class_code 01 08 02); do
-			if is_bdf_not_mounted $bdf; then
-				local blkname
-				blkname=$(ls -l /sys/block/ | grep $bdf | awk '{print $9}')
-				echo $blkname
-			fi
+		# kernel-* modes rely on kernel /dev/nvme* names. Extract PCI BDF addresses
+		# from config file and match them to proper nvme devices.
+		bdfs=$(grep -oP "(?<=traddr:)([\w\:\.])+" <<< cat $BASE_DIR/bdev.conf)
+		for bdf in $bdfs; do
+			blknames+="$(ls -l /sys/block/ | grep $bdf | awk '{print $9}') "
 		done
+		echo "$blknames"
 	fi
 }
 
@@ -356,7 +359,7 @@ function run_nvmeperf() {
 	local disks
 
 	# Limit the number of disks to $1 if needed
-	disks=( $(get_disks nvme) )
+	disks=( $(get_disks spdk-perf-nvme) )
 	disks=( "${disks[@]:0:$1}" )
 	r_opt=$(printf -- ' -r "trtype:PCIe traddr:%s"' "${disks[@]}")
 
@@ -382,10 +385,13 @@ function wait_for_nvme_reload() {
 }
 
 function verify_disk_number() {
-	# Check if we have appropriate number of disks to carry out the test
-	if [[ "$PLUGIN" =~ "bdev" ]]; then
-		$ROOT_DIR/scripts/gen_nvme.sh >> $BASE_DIR/bdev.conf
+	# Copy the file to our local dir so that we do not overwrite the original config in any way
+	if [[ -z "$DISKCFG" ]]; then
+		echo "Error: Disk configuration file is empty!"
+		false
 	fi
+
+	cp $DISKCFG $BASE_DIR/bdev.conf
 
 	disks=($(get_disks $PLUGIN))
 	if [[ $DISKNO == "ALL" ]] || [[ $DISKNO == "all" ]]; then
@@ -429,6 +435,9 @@ function usage()
 	echo "                             - kernel-hybrid-polling"
 	echo "                             - kernel-libaio"
 	echo "                             - kernel-io-uring"
+	echo "    --disk-config         Configuration file containing disk names and PCI BDF addresses."
+	echo "                          Template can be acquired using scripts/gen_nvme.sh script and then manually edited"
+	echo "                          if needed. Used by all --driver testing tools."
 	echo "    --disk-no=INT,ALL     Number of disks to test on, this will run one workload on selected number od disks,"
 	echo "                          it discards max-disk setting, if =ALL then test on all found disk. [default=$DISKNO]"
 	echo "    --max-disk=INT,ALL    Number of disks to test on, this will run multiple workloads with increasing number of disk each run."
@@ -454,6 +463,7 @@ while getopts 'h-:' optchar; do
 			repeat-no=*) REPEAT_NO="${OPTARG#*=}" ;;
 			fio-bin=*) FIO_BIN="${OPTARG#*=}" ;;
 			driver=*) PLUGIN="${OPTARG#*=}" ;;
+			disk-config=*) DISKCFG="${OPTARG#*=}" ;;
 			disk-no=*) DISKNO="${OPTARG#*=}"; ONEWORKLOAD=true ;;
 			max-disk=*) DISKNO="${OPTARG#*=}" ;;
 			cpu-allowed=*) CPUS_ALLOWED="${OPTARG#*=}" ;;
