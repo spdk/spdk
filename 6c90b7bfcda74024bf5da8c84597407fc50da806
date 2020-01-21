@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c63f9448_df25e48e",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-21T18:14:50Z",
+      "side": 1,
+      "message": "Do you mean like run-length encoding? We can\u0027t do that with this scheme because we use the fact that every EP contains the same number of clusters to quickly jump to the right EP.",
+      "revId": "6c90b7bfcda74024bf5da8c84597407fc50da806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
