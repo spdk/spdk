@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e33dd01_4a7beea2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1317,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T18:06:01Z",
+      "side": 1,
+      "message": "-EINVAL?  I don\u0027t think -ENOMEM is best here (and you had -EINVAL in earlier revision)",
+      "revId": "9823197040a1075cc057798dee5669ba65b2f80e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
