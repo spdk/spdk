@@ -22,6 +22,30 @@
       "revId": "5a04e473b22e6f6b65433d07c5a1668a0a404fa2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "919d0131_bbfa1615",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-21T02:29:28Z",
+      "side": 0,
+      "message": "I checked the NVMe driver, if SPDK_NVME_NS_DPS_PI_SUPPORTED was set, then the PI type must not be SPDK_NVME_FMT_NVM_PROTECTION_DISABLE, so the whole function is removed.",
+      "parentUuid": "3848590c_c6ee6c79",
+      "range": {
+        "startLine": 233,
+        "startChar": 0,
+        "endLine": 237,
+        "endChar": 0
+      },
+      "revId": "5a04e473b22e6f6b65433d07c5a1668a0a404fa2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
