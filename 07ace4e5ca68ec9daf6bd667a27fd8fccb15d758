@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c74abea_7ae55a19",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T17:46:01Z",
+      "side": 1,
+      "message": "I\u0027m thinking we should just name this \"use_extent_table\" to match the spdk_blob field.  Avoids having to understand differences between \"use\" and \"enable\", and \"extent_pages\" and \"extent_table\".",
+      "revId": "07ace4e5ca68ec9daf6bd667a27fd8fccb15d758",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
