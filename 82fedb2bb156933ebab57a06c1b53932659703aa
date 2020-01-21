@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f26224a_dd793bcf",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 2578,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T16:28:05Z",
+      "side": 1,
+      "message": "spdk_unlikely() here would be better",
+      "revId": "82fedb2bb156933ebab57a06c1b53932659703aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
