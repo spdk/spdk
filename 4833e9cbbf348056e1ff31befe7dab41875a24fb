@@ -71,6 +71,54 @@
     },
     {
       "key": {
+        "uuid": "596c9bdf_62aaffcc",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-21T07:39:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8f7975fb_12cbfe13",
+      "range": {
+        "startLine": 15,
+        "startChar": 78,
+        "endLine": 15,
+        "endChar": 79
+      },
+      "revId": "4833e9cbbf348056e1ff31befe7dab41875a24fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a11779b1_74219feb",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-21T07:39:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "10e2731f_7d1f02b8",
+      "range": {
+        "startLine": 15,
+        "startChar": 9,
+        "endLine": 15,
+        "endChar": 15
+      },
+      "revId": "4833e9cbbf348056e1ff31befe7dab41875a24fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "035ffe28_a3b35df2",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 8
@@ -91,6 +139,30 @@
       "revId": "4833e9cbbf348056e1ff31befe7dab41875a24fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8f30c11_6c26df67",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2020-01-21T07:39:56Z",
+      "side": 1,
+      "message": "Yes, this command will stop script and wait for confirmation from user",
+      "parentUuid": "035ffe28_a3b35df2",
+      "range": {
+        "startLine": 128,
+        "startChar": 3,
+        "endLine": 128,
+        "endChar": 38
+      },
+      "revId": "4833e9cbbf348056e1ff31befe7dab41875a24fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
