@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "1a6a1d2e_6b8a727a",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1481,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T20:54:56Z",
+      "side": 1,
+      "message": "let\u0027s use \u003e\u003d ISCSI_CONN_STATE_EXITING\n\nthat is consistent with the similar check in the new _iscsi_conn_pdu_write_done() function above",
+      "revId": "01a98e8b2f796960c23c446aae0007cba18e1ec8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5e1a2de_7746aec1",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1493,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T20:54:56Z",
+      "side": 1,
+      "message": "why can we not use writev_async for LOGIN/LOGOUT/TEXT?\n\nIt would be good to briefly explain that here.  I am concerned that we could be using async and sync interfaces in parallel when logging out.",
+      "revId": "01a98e8b2f796960c23c446aae0007cba18e1ec8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "40c39ba6_689464dc",
         "filename": "lib/iscsi/iscsi.h",
         "patchSetId": 14
