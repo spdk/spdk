@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "394a34f9_884b690c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1386,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-21T12:44:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "46648e01_cac98b97",
+      "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2816cae6_9cfbe5cb",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 7
@@ -33,6 +51,24 @@
       "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ec7860c_6ad5d660",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1824,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-21T12:44:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2816cae6_9cfbe5cb",
+      "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "0ab0f0a9_f67326f9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1861,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-21T12:44:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65f795a8_fde37e71",
+      "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21481a78_cec40cc1",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 7
@@ -67,6 +121,24 @@
       "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "476231bf_9bf466d6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1865,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-21T12:44:31Z",
+      "side": 1,
+      "message": "Yup, that is the right way.",
+      "parentUuid": "21481a78_cec40cc1",
+      "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "72da5963_92011a0e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1869,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-21T12:44:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "56f9bfbb_e71e7dbc",
+      "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a8c67c81_a2c1257d",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 7
@@ -101,6 +191,24 @@
       "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e06f5374_418ac19b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1872,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-21T12:44:31Z",
+      "side": 1,
+      "message": "This whole block can be thrown out.\n\nThere logic here should be to iterate over active extent pages array. If they are allocated (!\u003d0) write down any that aren\u0027t yet on disk. It is assumed that all of the ones in clean extent pages array already are on disk. Two cases here:\n- active is larger than clean, so all allocated extent pages should be written out\n- clean and active is smaller or equal, then write out only when clean.extent_pages[i] \u003d\u003d 0 and extent_page_id !\u003d 0\n\nSecond case can be true for thin provisioned blobs, this function is called as part of persist when extent table needs to be updated too (new extent page).\n\nAs for changing of sizes multiple times before syncing - extent_pages_array will only grow when doing resizes without sync. Now that I think about it, it might be possible that we write out extent pages here and then have to remove them at the end of persist. Should still end up with the right amount at the end. If blob started with 0, then was resized to large cluster size and shrunk down to 0 - additional writes would be done to persist all extent pages and then to remove them. Expectation here probably is to not write out any extent pages in such case.\nI\u0027ve this loop to iterate over num_extent_pages rather than extent_pages_array_size.",
+      "parentUuid": "a8c67c81_a2c1257d",
+      "revId": "d6b92e57219e89ae70618f3cd425f4a06c7351b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
