@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c50eb34_8db827de",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T20:15:56Z",
+      "side": 1,
+      "message": "nit - comment formatting is off here (lines after first one need to be indented one space)",
+      "revId": "62dfc4b096e345e201aca3022a47787e33339d2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "984736f9_04bd7a58",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 610,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T20:15:56Z",
+      "side": 1,
+      "message": "how about a local variable sendmsg_offset; set that above (line 596) to psock-\u003esendmsg_idx and then increment sendmsg_idx there too?  then you can avoid incrementing here and subtracting one below\n\nwhat\u0027s here is totally fine - I was just trying to work out in my head whether there was anything tricky related to this sendmsg_idx that I was missing (there wasn\u0027t)",
+      "revId": "62dfc4b096e345e201aca3022a47787e33339d2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6dce237_a7fab621",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T20:15:56Z",
+      "side": 1,
+      "message": "maybe move this into an else for the zcopy if statement just afterwards?  just makes it a bit more clear since using sendmsg_idx only makes sense in the zcopy case",
+      "revId": "62dfc4b096e345e201aca3022a47787e33339d2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
