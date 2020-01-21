@@ -119,6 +119,8 @@ struct spdk_thread {
 	TAILQ_ENTRY(spdk_thread)	tailq;
 	char				name[SPDK_MAX_THREAD_NAME_LEN + 1];
 	uint64_t			thread_id;
+	/* group_id is set to thread_id as default. */
+	uint64_t			group_id;
 
 	bool				exit;
 
@@ -292,7 +294,7 @@ _free_thread(struct spdk_thread *thread)
 struct spdk_thread *
 spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 {
-	struct spdk_thread *thread;
+	struct spdk_thread *thread, *parent;
 	struct spdk_msg *msgs[SPDK_MSG_MEMPOOL_CACHE_SIZE];
 	int rc, i;
 
@@ -345,6 +347,12 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	thread->thread_id = g_thread_id++;
+	parent = _get_thread();
+	if (parent) {
+		thread->group_id = parent->group_id;
+	} else {
+		thread->group_id = thread->thread_id;
+	}
 	TAILQ_INSERT_TAIL(&g_threads, thread, tailq);
 	g_thread_count++;
 	pthread_mutex_unlock(&g_devlist_mutex);
@@ -756,6 +764,18 @@ uint64_t
 spdk_thread_get_thread_id(const struct spdk_thread *thread)
 {
 	return thread->thread_id;
+}
+
+uint64_t
+spdk_thread_get_group_id(const struct spdk_thread *thread)
+{
+	return thread->group_id;
+}
+
+void
+spdk_thread_set_group_id(struct spdk_thread *thread, uint64_t group_id)
+{
+	thread->group_id = group_id;
 }
 
 int

@@ -182,6 +182,8 @@ rpc_thread_get_stats(void *arg)
 		spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(thread));
 		spdk_json_write_named_uint64(ctx->w, "thread_id",
 					     spdk_thread_get_thread_id(thread));
+		spdk_json_write_named_uint64(ctx->w, "group_id",
+					     spdk_thread_get_group_id(thread));
 		spdk_json_write_named_string(ctx->w, "cpumask",
 					     spdk_cpuset_fmt(spdk_thread_get_cpumask(thread)));
 		spdk_json_write_named_uint64(ctx->w, "busy", stats.busy_tsc);
