@@ -116,6 +116,15 @@ blk_task_finish(struct spdk_vhost_blk_task *task)
 }
 
 static void
+blk_task_init(struct spdk_vhost_blk_task *task)
+{
+	task->used = true;
+	task->iovcnt = SPDK_COUNTOF(task->iovs);
+	task->status = NULL;
+	task->used_len = 0;
+}
+
+static void
 invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
 {
 	if (task->status) {
@@ -232,6 +241,8 @@ blk_request_resubmit(void *arg)
 {
 	struct spdk_vhost_blk_task *task = (struct spdk_vhost_blk_task *)arg;
 	int rc = 0;
+
+	blk_task_init(task);
 
 	rc = process_blk_request(task, task->bvsession, task->vq);
 	if (rc == 0) {
@@ -472,10 +483,7 @@ submit_inflight_desc(struct spdk_vhost_blk_session *bvsession,
 
 		vsession->task_cnt++;
 
-		task->used = true;
-		task->iovcnt = SPDK_COUNTOF(task->iovs);
-		task->status = NULL;
-		task->used_len = 0;
+		blk_task_init(task);
 
 		rc = process_blk_request(task, bvsession, vq);
 		if (rc == 0) {
@@ -530,10 +538,7 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 
 		vsession->task_cnt++;
 
-		task->used = true;
-		task->iovcnt = SPDK_COUNTOF(task->iovs);
-		task->status = NULL;
-		task->used_len = 0;
+		blk_task_init(task);
 
 		rc = process_blk_request(task, bvsession, vq);
 		if (rc == 0) {
