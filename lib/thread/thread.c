@@ -432,10 +432,6 @@ _spdk_msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 		assert(msg != NULL);
 		msg->fn(msg->arg);
 
-		if (thread->exit) {
-			break;
-		}
-
 		if (thread->msg_cache_count < SPDK_MSG_MEMPOOL_CACHE_SIZE) {
 			/* Insert the messages at the head. We want to re-use the hot
 			 * ones. */
@@ -443,6 +439,10 @@ _spdk_msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 			thread->msg_cache_count++;
 		} else {
 			spdk_mempool_put(g_spdk_msg_mempool, msg);
+		}
+
+		if (thread->exit) {
+			break;
 		}
 	}
 
