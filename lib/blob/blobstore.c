@@ -62,6 +62,9 @@ static int _spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 				      const void **value, size_t *value_len, bool internal);
 static int _spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name, bool internal);
 
+static void _spdk_blob_insert_extent(struct spdk_blob *blob, uint32_t extent, uint64_t cluster_num,
+				     spdk_blob_op_complete cb_fn, void *cb_arg);
+
 static void
 _spdk_blob_verify_md_op(struct spdk_blob *blob)
 {
@@ -1020,6 +1023,30 @@ _spdk_blob_serialize_extents_rle(const struct spdk_blob *blob,
 	}
 
 	return 0;
+}
+
+static void
+_spdk_blob_serialize_extent_page(const struct spdk_blob *blob,
+				 uint64_t cluster, struct spdk_blob_md_page *page)
+{
+	struct spdk_blob_md_descriptor_extent_page *desc_extent;
+	uint64_t i, extent_idx;
+	uint64_t lba, lba_per_cluster;
+	uint64_t start_cluster = (cluster / SPDK_EXTENTS_PER_EP) * SPDK_EXTENTS_PER_EP;
+	uint64_t end_cluster = spdk_min(start_cluster + SPDK_EXTENTS_PER_EP, blob->active.num_clusters);
+
+	desc_extent = (struct spdk_blob_md_descriptor_extent_page *) page->descriptors;
+	desc_extent->type = SPDK_MD_DESCRIPTOR_TYPE_EXTENT_PAGE;
+
+	lba_per_cluster = _spdk_bs_cluster_to_lba(blob->bs, 1);
+
+	extent_idx = 0;
+	for (i = start_cluster; i < end_cluster; i++) {
+		lba = blob->active.clusters[i];
+		desc_extent->cluster_idx[extent_idx++] = lba / lba_per_cluster;
+	}
+
+	desc_extent->length = sizeof(desc_extent->cluster_idx[0]) * extent_idx;
 }
 
 static void
@@ -6270,6 +6297,51 @@ _spdk_blob_insert_cluster_msg_cb(void *arg, int bserrno)
 }
 
 static void
+_spdk_blob_persist_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob_md_page        *page = cb_arg;
+
+	spdk_bs_sequence_finish(seq, bserrno);
+	spdk_free(page);
+}
+
+static void
+_spdk_blob_insert_extent(struct spdk_blob *blob, uint32_t extent, uint64_t cluster_num,
+			 spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	spdk_bs_sequence_t		*seq;
+	struct spdk_bs_cpl		cpl;
+	struct spdk_blob_md_page	*page = NULL;
+	uint32_t			page_count = 0;
+	int				rc;
+
+	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	cpl.u.blob_basic.cb_fn = cb_fn;
+	cpl.u.blob_basic.cb_arg = cb_arg;
+
+	seq = spdk_bs_sequence_start(blob->bs->md_channel, &cpl);
+	if (!seq) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+	rc = _spdk_blob_serialize_add_page(blob, &page, &page_count, &page);
+	if (rc < 0) {
+		spdk_bs_sequence_finish(seq, rc);
+		return;
+	}
+
+	_spdk_blob_serialize_extent_page(blob, cluster_num, page);
+
+	page->crc = _spdk_blob_md_page_calc_crc(page);
+
+	assert(spdk_bit_array_get(blob->bs->used_md_pages, extent) == true);
+
+	spdk_bs_sequence_write_dev(seq, page, _spdk_bs_md_page_to_lba(blob->bs, extent),
+				   _spdk_bs_byte_to_lba(blob->bs, SPDK_BS_PAGE_SIZE),
+				   _spdk_blob_persist_extent_page_cpl, page);
+}
+
+static void
 _spdk_blob_insert_cluster_msg(void *arg)
 {
 	struct spdk_blob_insert_cluster_ctx *ctx = arg;
@@ -6283,20 +6355,24 @@ _spdk_blob_insert_cluster_msg(void *arg)
 
 	if (extent_page == NULL) {
 		/* Extent page are not used, proceed with sync of md that will contain Extents RLE */
+		ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
+		_spdk_blob_sync_md(ctx->blob, _spdk_blob_insert_cluster_msg_cb, ctx);
 	} else if (*extent_page == 0) {
-		/* Extent page needs allocation, it was claimed in the map already and placed in ctx */
+		/* Extent page requires allocation.
+		 * It was already claimed in the used_md_pages map and placed in ctx.
+		 * Blob persist will take care of writing out new extent page on disk. */
 		assert(ctx->extent_page != 0);
 		assert(spdk_bit_array_get(ctx->blob->bs->used_md_pages, ctx->extent_page) == true);
-		/* TODO for further patches, here actual extent page will be writen out to disk.
-		 * It will be followed by sync of all md, to update the extent table. */
 		*extent_page = ctx->extent_page;
+		ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
+		_spdk_blob_sync_md(ctx->blob, _spdk_blob_insert_cluster_msg_cb, ctx);
 	} else {
 		assert(ctx->extent_page == 0);
-		/* TODO for further patches, here actual extent page will be writen out to disk.
-		 * Instead of doing full out sync of all md. */
+		/* Extent page already allocated.
+		 * Every cluster allocation, requires just an update of single extent page. */
+		_spdk_blob_insert_extent(ctx->blob, ctx->extent_page, ctx->cluster_num,
+					 _spdk_blob_insert_cluster_msg_cb, ctx);
 	}
-	ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
-	_spdk_blob_sync_md(ctx->blob, _spdk_blob_insert_cluster_msg_cb, ctx);
 }
 
 static void
