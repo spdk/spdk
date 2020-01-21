@@ -223,7 +223,7 @@ struct spdk_nvmf_tcp_qpair {
 	/* Queues to track the requests in all states */
 	TAILQ_HEAD(, spdk_nvmf_tcp_req)		state_queue[TCP_REQUEST_NUM_STATES];
 	/* Number of requests in each state */
-	int32_t					state_cntr[TCP_REQUEST_NUM_STATES];
+	uint32_t				state_cntr[TCP_REQUEST_NUM_STATES];
 
 	STAILQ_HEAD(, spdk_nvmf_tcp_req)	queued_c2h_data_tcp_req;
 
@@ -303,8 +303,8 @@ spdk_nvmf_tcp_req_set_state(struct spdk_nvmf_tcp_req *tcp_req,
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
 
 	TAILQ_REMOVE(&tqpair->state_queue[tcp_req->state], tcp_req, state_link);
+	assert(tqpair->state_cntr[tcp_req->state] > 0);
 	tqpair->state_cntr[tcp_req->state]--;
-	assert(tqpair->state_cntr[tcp_req->state] >= 0);
 
 	TAILQ_INSERT_TAIL(&tqpair->state_queue[state], tcp_req, state_link);
 	tqpair->state_cntr[state]++;
@@ -430,7 +430,7 @@ nvmf_tcp_dump_qpair_req_contents(struct spdk_nvmf_tcp_qpair *tqpair)
 
 	SPDK_ERRLOG("Dumping contents of queue pair (QID %d)\n", tqpair->qpair.qid);
 	for (i = 1; i < TCP_REQUEST_NUM_STATES; i++) {
-		SPDK_ERRLOG("\tNum of requests in state[%d] = %d\n", i, tqpair->state_cntr[i]);
+		SPDK_ERRLOG("\tNum of requests in state[%d] = %u\n", i, tqpair->state_cntr[i]);
 		TAILQ_FOREACH(tcp_req, &tqpair->state_queue[i], state_link) {
 			SPDK_ERRLOG("\t\tRequest Data From Pool: %d\n", tcp_req->req.data_from_pool);
 			SPDK_ERRLOG("\t\tRequest opcode: %d\n", tcp_req->req.cmd->nvmf_cmd.opcode);
