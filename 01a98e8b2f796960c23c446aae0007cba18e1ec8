@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40c39ba6_689464dc",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T20:43:50Z",
+      "side": 1,
+      "message": "Why 64?  I would think 5 should be sufficient.  Each PDU should only have maximum of 5 iovs - BHS, AHS, data, header digest, data digest.\n\nUsing 64 here will just allocate extra memory that is not needed.",
+      "revId": "01a98e8b2f796960c23c446aae0007cba18e1ec8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
