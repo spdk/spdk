@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73edf04b_defa5a1f",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-21T01:52:07Z",
+      "side": 1,
+      "message": "This can combine into one line.",
+      "range": {
+        "startLine": 335,
+        "startChar": 1,
+        "endLine": 336,
+        "endChar": 15
+      },
+      "revId": "1e83fd25770218cf1f3d3d6a20b510b25086e6ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
