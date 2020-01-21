@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6bd31eb_65360ca4",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2039,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T16:31:20Z",
+      "side": 1,
+      "message": "So I know that cpl *should* be an error, if bio-\u003ecpl is an error.  But I don\u0027t think we need to assert that - it doesn\u0027t indicate a bug in this driver as much as it does in the device (including the target).  Better would be:\n\nif (spdk_nvme_cpl_is_error(cpl)) {\n  SPDK_ERRLOG(\"Unexpected write success after compare failure.\\n\");\n}",
+      "revId": "034e1d538e57378681609bb9d1d39251e7add236",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
