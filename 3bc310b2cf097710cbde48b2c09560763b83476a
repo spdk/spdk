@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ccd4c01_fd24b778",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1308,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-21T22:19:55Z",
+      "side": 1,
+      "message": "We can fix this not in the next patch but in this patch, but that\u0027s OK to me.",
+      "range": {
+        "startLine": 1308,
+        "startChar": 34,
+        "endLine": 1308,
+        "endChar": 47
+      },
+      "revId": "3bc310b2cf097710cbde48b2c09560763b83476a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
