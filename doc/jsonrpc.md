@@ -565,7 +565,10 @@ Example response:
         "name": "app_thread",
 	"cpumask": "1",
         "busy": 139223208,
-        "idle": 8641080608
+        "idle": 8641080608,
+        "active_poller_count": 2,
+        "timer_poller_count": 3,
+        "paused_poller_count": 0
       }
     ]
   }
