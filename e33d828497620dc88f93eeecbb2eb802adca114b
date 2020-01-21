@@ -16,6 +16,24 @@
       "revId": "e33d828497620dc88f93eeecbb2eb802adca114b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7cb09759_8b129427",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-21T17:29:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e8bde082_c17aedab",
+      "revId": "e33d828497620dc88f93eeecbb2eb802adca114b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
