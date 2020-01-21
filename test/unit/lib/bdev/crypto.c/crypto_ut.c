@@ -150,12 +150,13 @@ DEFINE_STUB(spdk_conf_section_get_nmval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx1, int idx2), NULL);
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *g_bdev_io));
+DEFINE_STUB_V(spdk_bdev_io_put_aux_buf, (struct spdk_bdev_io *bdev_io, void *aux_buf));
 DEFINE_STUB(spdk_bdev_io_type_supported, bool, (struct spdk_bdev *bdev,
 		enum spdk_bdev_io_type io_type), 0);
 DEFINE_STUB_V(spdk_bdev_module_release_bdev, (struct spdk_bdev *bdev));
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), 0);
-DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 64);
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc), 0);
 DEFINE_STUB_V(spdk_bdev_unregister, (struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
 				     void *cb_arg));
@@ -233,6 +234,12 @@ unsigned int
 rte_cryptodev_sym_get_private_session_size(uint8_t dev_id)
 {
 	return (unsigned int)dev_id;
+}
+
+void
+spdk_bdev_io_get_aux_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_aux_buf_cb cb)
+{
+	cb(g_io_ch, g_bdev_io, (void *)0xDEADBEEF);
 }
 
 void
@@ -434,10 +441,10 @@ test_simple_write(void)
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_io_ctx->cryop_cnt_remaining == 1);
-	CU_ASSERT(g_io_ctx->cry_iov.iov_len == 512);
-	CU_ASSERT(g_io_ctx->cry_iov.iov_base != NULL);
-	CU_ASSERT(g_io_ctx->cry_offset_blocks == 0);
-	CU_ASSERT(g_io_ctx->cry_num_blocks == 1);
+	CU_ASSERT(g_io_ctx->aux_buf_iov.iov_len == 512);
+	CU_ASSERT(g_io_ctx->aux_buf_iov.iov_base != NULL);
+	CU_ASSERT(g_io_ctx->aux_offset_blocks == 0);
+	CU_ASSERT(g_io_ctx->aux_num_blocks == 1);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->buf_addr == &test_simple_write);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->data_len == 512);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->next == NULL);
@@ -447,7 +454,6 @@ test_simple_write(void)
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst->buf_addr != NULL);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst->data_len == 512);
 
-	spdk_free(g_io_ctx->cry_iov.iov_base);
 	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_src);
 	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_dst);
 }
@@ -533,16 +539,15 @@ test_large_rw(void)
 		CU_ASSERT(g_test_crypto_ops[i]->sym->cipher.data.length == block_len);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->cipher.data.offset == 0);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src->userdata == g_bdev_io);
-		CU_ASSERT(g_io_ctx->cry_iov.iov_len == io_len);
-		CU_ASSERT(g_io_ctx->cry_iov.iov_base != NULL);
-		CU_ASSERT(g_io_ctx->cry_offset_blocks == 0);
-		CU_ASSERT(g_io_ctx->cry_num_blocks == num_blocks);
+		CU_ASSERT(g_io_ctx->aux_buf_iov.iov_len == io_len);
+		CU_ASSERT(g_io_ctx->aux_buf_iov.iov_base != NULL);
+		CU_ASSERT(g_io_ctx->aux_offset_blocks == 0);
+		CU_ASSERT(g_io_ctx->aux_num_blocks == num_blocks);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_dst->buf_addr != NULL);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_dst->data_len == block_len);
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_dst);
 	}
-	spdk_free(g_io_ctx->cry_iov.iov_base);
 }
 
 static void
@@ -678,7 +683,6 @@ test_crazy_rw(void)
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_dst);
 	}
-	spdk_free(g_io_ctx->cry_iov.iov_base);
 }
 
 static void
@@ -857,10 +861,6 @@ test_initdrivers(void)
 static void
 test_crypto_op_complete(void)
 {
-	/* Need to prove to scan-build that we are setting iov_bases properly. */
-	void *old_iov_base;
-	struct crypto_bdev_io *orig_ctx;
-
 	/* Make sure completion code respects failure. */
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 	g_completion_called = false;
@@ -881,11 +881,6 @@ test_crypto_op_complete(void)
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	g_completion_called = false;
 	MOCK_SET(spdk_bdev_writev_blocks, 0);
-	/* Code under test will free this, if not ASAN will complain. */
-	g_io_ctx->cry_iov.iov_base = spdk_malloc(16, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
-				     SPDK_MALLOC_DMA);
-	orig_ctx = (struct crypto_bdev_io *)g_bdev_io->driver_ctx;
-	old_iov_base = orig_ctx->cry_iov.iov_base;
 	_crypto_operation_complete(g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_completion_called == true);
@@ -895,13 +890,6 @@ test_crypto_op_complete(void)
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	g_completion_called = false;
 	MOCK_SET(spdk_bdev_writev_blocks, -1);
-	/* Code under test will free this, if not ASAN will complain. */
-	g_io_ctx->cry_iov.iov_base = spdk_malloc(16, 0x40, NULL, SPDK_ENV_LCORE_ID_ANY,
-				     SPDK_MALLOC_DMA);
-	/* To Do: remove this garbage assert as soon as scan-build stops throwing a
-	 * heap use after free error.
-	 */
-	SPDK_CU_ASSERT_FATAL(old_iov_base != orig_ctx->cry_iov.iov_base);
 	_crypto_operation_complete(g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
 	CU_ASSERT(g_completion_called == true);
