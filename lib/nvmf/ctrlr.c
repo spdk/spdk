@@ -2452,35 +2452,73 @@ spdk_nvmf_ctrlr_process_io_fused_cmd(struct spdk_nvmf_request *req, struct spdk_
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_request *first_fused_req = req->qpair->first_fused_req;
+	int rc;
 
 	if (cmd->fuse == SPDK_NVME_CMD_FUSE_FIRST) {
 		/* first fused operation (should be compare) */
-		if (req->qpair->first_fused_req != NULL) {
-			struct spdk_nvme_cpl *fused_response = &req->qpair->first_fused_req->rsp->nvme_cpl;
+		if (first_fused_req != NULL) {
+			struct spdk_nvme_cpl *fused_response = &first_fused_req->rsp->nvme_cpl;
 
 			SPDK_ERRLOG("Wrong sequence of fused operations\n");
+
 			/* abort req->qpair->first_fused_request and continue with new fused command */
 			fused_response->status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
 			fused_response->status.sct = SPDK_NVME_SCT_GENERIC;
-			spdk_nvmf_request_complete(req->qpair->first_fused_req);
+			spdk_nvmf_request_complete(first_fused_req);
+		} else if (cmd->opc != SPDK_NVME_OPC_COMPARE) {
+			SPDK_ERRLOG("Wrong op code of fused operations\n");
+			rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+			rsp->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
 		req->qpair->first_fused_req = req;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	} else if (cmd->fuse == SPDK_NVME_CMD_FUSE_SECOND) {
-		/* second fused operation */
-		if (req->qpair->first_fused_req == NULL) {
+		/* second fused operation (should be write) */
+		if (first_fused_req == NULL) {
 			SPDK_ERRLOG("Wrong sequence of fused operations\n");
 			rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 			rsp->status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		} else if (cmd->opc != SPDK_NVME_OPC_WRITE) {
+			struct spdk_nvme_cpl *fused_response = &first_fused_req->rsp->nvme_cpl;
+
+			SPDK_ERRLOG("Wrong op code of fused operations\n");
+
+			/* abort req->qpair->first_fused_request and fail current command */
+			fused_response->status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
+			fused_response->status.sct = SPDK_NVME_SCT_GENERIC;
+			spdk_nvmf_request_complete(first_fused_req);
+
+			rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+			rsp->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+			req->qpair->first_fused_req = NULL;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
 		/* save request of first command to generate response later */
-		req->first_fused_req = req->qpair->first_fused_req;
+		req->first_fused_req = first_fused_req;
 		req->qpair->first_fused_req = NULL;
 	}
 
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	rc = spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(bdev, desc, ch, req->first_fused_req, req);
+
+	if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		if (spdk_nvme_cpl_is_error(rsp)) {
+			struct spdk_nvme_cpl *fused_response = &first_fused_req->rsp->nvme_cpl;
+
+			fused_response->status = rsp->status;
+			rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+			rsp->status.sc = SPDK_NVME_SC_ABORTED_FAILED_FUSED;
+			/* Complete first of fused commands. Second will be completed by upper layer */
+			spdk_nvmf_request_complete(first_fused_req);
+			req->first_fused_req = NULL;
+		}
+	}
+
+	return rc;
 }
 
 int
@@ -2538,6 +2576,16 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 
 	if (spdk_unlikely(cmd->fuse & SPDK_NVME_CMD_FUSE_MASK)) {
 		return spdk_nvmf_ctrlr_process_io_fused_cmd(req, bdev, desc, ch);
+	} else if (spdk_unlikely(req->qpair->first_fused_req != NULL)) {
+		struct spdk_nvme_cpl *fused_response = &req->qpair->first_fused_req->rsp->nvme_cpl;
+
+		SPDK_ERRLOG("Expected second of fused commands - failing first of fused commands\n");
+
+		/* abort req->qpair->first_fused_request and continue with new command */
+		fused_response->status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
+		fused_response->status.sct = SPDK_NVME_SCT_GENERIC;
+		spdk_nvmf_request_complete(req->qpair->first_fused_req);
+		req->qpair->first_fused_req = NULL;
 	}
 
 	switch (cmd->opc) {
