@@ -33,6 +33,29 @@
       "revId": "80c63127a8b63a592e53925d5625b337cff3d859",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00fbb8c4_48078ffd",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1195,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-21T22:05:10Z",
+      "side": 1,
+      "message": "Please move this in a separate patch as Jim suggested.",
+      "range": {
+        "startLine": 1192,
+        "startChar": 0,
+        "endLine": 1195,
+        "endChar": 0
+      },
+      "revId": "80c63127a8b63a592e53925d5625b337cff3d859",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
