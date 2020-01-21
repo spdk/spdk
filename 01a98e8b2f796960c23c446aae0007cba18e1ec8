@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "08ac2a27_5f57f574",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1493,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T21:01:39Z",
+      "side": 1,
+      "message": "I\u0027m wondering if this is basically copied from how we use the sync interface for IC_RESP and C2H_TERM_REQ in nvme/tcp?",
+      "parentUuid": "f5e1a2de_7746aec1",
+      "revId": "01a98e8b2f796960c23c446aae0007cba18e1ec8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "40c39ba6_689464dc",
         "filename": "lib/iscsi/iscsi.h",
         "patchSetId": 14
