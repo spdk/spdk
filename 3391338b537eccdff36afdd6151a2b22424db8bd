@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8745ebea_e44e5d46",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T03:20:23Z",
+      "side": 1,
+      "message": "I feel like this might be easier to understand if we just add two bools to struct spdk_blob named \"extent_rle_found\" and \"extent_table_found\".  These are both initialized to false, and set to true if/when a corresponding metadata descriptor is found.\n\nI think it allows you to then do all of the coding inline, without needing any helper functions.  It also avoids adding this enum.\n\nWhat do you think?",
+      "revId": "3391338b537eccdff36afdd6151a2b22424db8bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
