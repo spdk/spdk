@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a47f93b0_227f1bbc",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1262,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T19:51:55Z",
+      "side": 1,
+      "message": "I couple of things here:\n\n1) since we\u0027re duplicating this TAILQ_FOREACH, should we put this into a helper function?  it should get inlined (and if not, this is for large I/O so extra CPU cycles probably don\u0027t matter)\n\n2) I think this might be simpler to understand:\n\nTAILQ_FOREACH() {\n  if (tcp_req-\u003ereq.cmd-\u003envme_cmd.cid !\u003d h2c_data-\u003ecccid) {\n    continue;\n  }\n  if (tcp_req-\u003ettag \u003d\u003d h2c_data-\u003ettag) {\n    break;\n  } else {\n    ttag_offset_error \u003d true;\n  }\n}",
+      "revId": "005f5b3bd8c72ee2ec7aeac5ba9e3ad9e78e53de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28db7379_b7b3c8fa",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1268,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T19:51:55Z",
+      "side": 1,
+      "message": "this ttag_offset_error processing seems off to me, but that\u0027s not related to your patch (you\u0027re just copying the code from above)\n\nI guess I don\u0027t understand what\u0027s supposed to happen if we find a ttag_offset_error, but then we later find a tcp_req in the state_queue that has the correct ttag?  that would seem to be a bug in our target and something we should assert on",
+      "revId": "005f5b3bd8c72ee2ec7aeac5ba9e3ad9e78e53de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a165911d_5b8687e2",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1288,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T19:51:55Z",
+      "side": 1,
+      "message": "You need this a few patches sooner.  :-)",
+      "revId": "005f5b3bd8c72ee2ec7aeac5ba9e3ad9e78e53de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "04bf409b_ab7b2efa",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1431,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T19:51:55Z",
+      "side": 1,
+      "message": "I think this -\u003estate check was added to cover case where we receive the H2C data before we got an ack for the R2T?  if so, a short comment here would probably be good - or a different comment if my analysis was wrong :)",
+      "revId": "005f5b3bd8c72ee2ec7aeac5ba9e3ad9e78e53de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
