@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50c4ceb3_55bec7c9",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-21T01:38:21Z",
+      "side": 1,
+      "message": "If we allow only a single R2T for a single NVMe command, R2T offset is always zero? So this variable itself is not needed?",
+      "range": {
+        "startLine": 193,
+        "startChar": 13,
+        "endLine": 193,
+        "endChar": 23
+      },
+      "revId": "a49c057df21021584c7e8c227ef8b29af87d2e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "359314a0_0a069763",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1269,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-21T01:38:21Z",
+      "side": 1,
+      "message": "If we keep h2c_offset, I think we can\u0027t use this fixed comment.",
+      "range": {
+        "startLine": 1269,
+        "startChar": 35,
+        "endLine": 1269,
+        "endChar": 48
+      },
+      "revId": "a49c057df21021584c7e8c227ef8b29af87d2e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
