@@ -22,6 +22,30 @@
       "revId": "a006c568ae5a96b59f320ea645710c89559cf1de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "489a61a8_1c9d2f19",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1597,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2020-01-21T07:00:24Z",
+      "side": 1,
+      "message": "It will make code less readable since we\u0027ll have to check result of 2 status trackers. I would keep the existing behaviour if you don\u0027t mind",
+      "parentUuid": "f0f8096b_8930c323",
+      "range": {
+        "startLine": 1597,
+        "startChar": 3,
+        "endLine": 1597,
+        "endChar": 9
+      },
+      "revId": "a006c568ae5a96b59f320ea645710c89559cf1de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
