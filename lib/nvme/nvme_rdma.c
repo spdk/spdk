@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2019, 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -78,6 +78,11 @@
  */
 #define NVME_RDMA_STALE_CONN_RETRY_MAX		5
 #define NVME_RDMA_STALE_CONN_RETRY_DELAY_US	10000
+
+/*
+ * Maximum value of transport_retry_count used by RDMA controller
+ */
+#define NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT	7
 
 struct spdk_nvmf_cmd {
 	struct spdk_nvme_cmd cmd;
@@ -901,7 +906,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 
 	param.private_data = &request_data;
 	param.private_data_len = sizeof(request_data);
-	param.retry_count = 7;
+	param.retry_count = ctrlr->opts.transport_retry_count;
 	param.rnr_retry_count = 7;
 
 	ret = rdma_connect(rqpair->cm_id, &param);
@@ -1725,8 +1730,13 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 	}
 
 	spdk_nvme_trid_populate_transport(&rctrlr->ctrlr.trid, SPDK_NVME_TRANSPORT_RDMA);
-	rctrlr->ctrlr.opts = *opts;
 	memcpy(&rctrlr->ctrlr.trid, trid, sizeof(rctrlr->ctrlr.trid));
+	rctrlr->ctrlr.opts = *opts;
+	if (rctrlr->ctrlr.opts.transport_retry_count > NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT) {
+		SPDK_NOTICELOG("transport_retry_count exceeds max value %d, use max value\n",
+			       NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT);
+		rctrlr->ctrlr.opts.transport_retry_count = NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT;
+	}
 
 	contexts = rdma_get_devices(NULL);
 	if (contexts == NULL) {
