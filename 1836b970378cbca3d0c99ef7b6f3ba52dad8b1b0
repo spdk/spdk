@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e64d23f_b775ad98",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-21T18:11:21Z",
+      "side": 1,
+      "message": "Returning a pointer to the array entry and then setting it is a bit tricky here. It might be simpler to just update the map more directly. But what you have is fine.",
+      "revId": "1836b970378cbca3d0c99ef7b6f3ba52dad8b1b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
