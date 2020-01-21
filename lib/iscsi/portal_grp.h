@@ -47,7 +47,6 @@ struct spdk_iscsi_portal {
 	char				port[MAX_PORTAL_PORT + 1];
 	struct spdk_sock		*sock;
 	struct spdk_poller		*acceptor_poller;
-	struct spdk_iscsi_poll_group	*acceptor_pg;
 	TAILQ_ENTRY(spdk_iscsi_portal)	per_pg_tailq;
 	TAILQ_ENTRY(spdk_iscsi_portal)	g_tailq;
 };
