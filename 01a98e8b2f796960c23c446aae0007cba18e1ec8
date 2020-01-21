@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "f039e18d_1a97c6e2",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1493,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-21T21:16:32Z",
+      "side": 1,
+      "message": "Hi Jim, Ziye is already adding patches for login, logout, and text.\nI reviewed but the patch for login is not ready to merge yet and I suggested we could hold the patch off from 20.01.\nWe may need further cleanup  for login.\nLogout is the pair with login and so we can leave it together.\nThe patch for text response is fine to me.",
+      "parentUuid": "08ac2a27_5f57f574",
+      "revId": "01a98e8b2f796960c23c446aae0007cba18e1ec8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "40c39ba6_689464dc",
         "filename": "lib/iscsi/iscsi.h",
         "patchSetId": 14
