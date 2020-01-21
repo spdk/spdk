@@ -48,3 +48,8 @@ test/unit/lib/ftl/common/utils
 test/unit/lib/iscsi/common
 test/unit/lib/json_mock
 test/unit/lib/sock/uring.c/uring_ut
+
+# These files are in the external_code directory which doesn't get compiled with SPDK.
+test/external_code/hello_world/hello_bdev
+test/external_code/passthru/vbdev_passthru
+test/external_code/passthru/vbdev_passthru_rpc
