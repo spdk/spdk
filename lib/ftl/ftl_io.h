@@ -167,7 +167,11 @@ struct ftl_io {
 	/* Number of blocks */
 	size_t					num_blocks;
 
-	struct iovec				iov[FTL_IO_MAX_IOVEC];
+	/* IO vector pointer */
+	struct iovec				*iov;
+
+	/* IO vector buffer for internal requests */
+	struct iovec				iov_buf[FTL_IO_MAX_IOVEC];
 
 	/* Metadata */
 	void					*md;

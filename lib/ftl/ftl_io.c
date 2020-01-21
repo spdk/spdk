@@ -294,6 +294,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	io->rwb_batch = opts->rwb_batch;
 	io->band = opts->band;
 	io->md = opts->md;
+	io->iov = &io->iov_buf[0];
 
 	if (parent) {
 		if (parent->flags & FTL_IO_VECTOR_LBA) {
@@ -406,11 +407,9 @@ ftl_io_user_init(struct spdk_io_channel *_ioch, uint64_t lba, size_t num_blocks,
 	ftl_io_init(io, dev, _ftl_user_cb, cb_ctx, 0, type);
 	io->lba.single = lba;
 	io->user_fn = cb_fn;
-
-	if (ftl_io_init_iovec(io, iov, iov_cnt, num_blocks)) {
-		ftl_io_free(io);
-		return NULL;
-	}
+	io->iov = iov;
+	io->iov_cnt = iov_cnt;
+	io->num_blocks = num_blocks;
 
 	ftl_trace_lba_io_init(io->dev, io);
 	return io;
