@@ -977,6 +977,7 @@ _stop_session(struct spdk_vhost_session *vsession)
 	int rc;
 	uint16_t i;
 
+	SPDK_NOTICELOG("in _stop_session.\n");
 	rc = vdev->backend->stop_session(vsession);
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vsession->vid);
@@ -1004,6 +1005,7 @@ vhost_stop_device_cb(int vid)
 	struct spdk_vhost_session *vsession;
 	int rc;
 
+	SPDK_NOTICELOG("In stop device cb for vid %d.\n", vid);
 	pthread_mutex_lock(&g_vhost_mutex);
 	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
@@ -1034,6 +1036,7 @@ vhost_start_device_cb(int vid)
 
 	pthread_mutex_lock(&g_vhost_mutex);
 
+	SPDK_NOTICELOG("in vhost_start_device_cb for vid: %d.\n", vid);
 	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
 		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
@@ -1268,6 +1271,7 @@ vhost_destroy_connection_cb(int vid)
 	struct spdk_vhost_session *vsession;
 	int rc = 0;
 
+	SPDK_NOTICELOG("In destroy connection cb for vid: %d.\n", vid);
 	pthread_mutex_lock(&g_vhost_mutex);
 	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
