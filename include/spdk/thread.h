@@ -326,6 +326,34 @@ bool spdk_thread_has_pollers(struct spdk_thread *thread);
 bool spdk_thread_is_idle(struct spdk_thread *thread);
 
 /**
+ * Returns number of active pollers (pollers for which period_microseconds
+ * equals to 0) registered to be run on the thread.
+ *
+ * \param thread The thread to check.
+ *
+ * \return Number of active pollers on the thread.
+ */
+uint32_t spdk_thread_get_active_poller_count(struct spdk_thread *thread);
+
+/**
+ * Returns number of timed pollers registered to be run on the thread.
+ *
+ * \param thread The thread to check.
+ *
+ * \return Number of timed pollers on the thread.
+ */
+uint32_t spdk_thread_get_timed_poller_count(struct spdk_thread *thread);
+
+/**
+ * Returns number of paused pollers on the thread.
+ *
+ * \param thread The thread to check.
+ *
+ * \return Number of paused pollers on the thread.
+ */
+uint32_t spdk_thread_get_paused_poller_count(struct spdk_thread *thread);
+
+/**
  * Get count of allocated threads.
  */
 uint32_t spdk_thread_get_count(void);
