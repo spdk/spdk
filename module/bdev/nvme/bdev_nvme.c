@@ -1522,8 +1522,13 @@ static int
 bdev_nvme_async_poll(void *arg)
 {
 	struct nvme_async_probe_ctx	*ctx = arg;
+	int				rc;
 
-	spdk_nvme_probe_poll_async(ctx->probe_ctx);
+	rc = spdk_nvme_probe_poll_async(ctx->probe_ctx);
+	if (spdk_unlikely(rc != -EAGAIN && rc != 0)) {
+		spdk_poller_unregister(&ctx->poller);
+		free(ctx);
+	}
 
 	return 1;
 }
