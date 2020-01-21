@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "8440e902_d3ffa6c0",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1157,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-21T22:02:57Z",
+      "side": 1,
+      "message": "Please do not forget moving this to the head of this function together. We can call spdk_iscsi_param_free() even before iscsi_op_login_response() but it looks clean to call it here.",
+      "range": {
+        "startLine": 1157,
+        "startChar": 1,
+        "endLine": 1157,
+        "endChar": 22
+      },
+      "revId": "0cd0e5c15c60237a4ca5c4c0cd60661da2504743",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "96913fa7_ad29e801",
         "filename": "lib/iscsi/iscsi.c",
         "patchSetId": 8
@@ -31,6 +54,24 @@
       "side": 1,
       "message": "Sounds reasonable.",
       "parentUuid": "96913fa7_ad29e801",
+      "revId": "0cd0e5c15c60237a4ca5c4c0cd60661da2504743",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0776cd74_9566aea4",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2360,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-21T22:02:57Z",
+      "side": 1,
+      "message": "Please do not forget moving param_free() for login response together in the patch you will create.",
+      "parentUuid": "f51793d8_c9a6e65a",
       "revId": "0cd0e5c15c60237a4ca5c4c0cd60661da2504743",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
