@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28d07f3d_c4dbda23",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 863,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T16:50:06Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to rename extent_idx to page_idx for this RLE function.  I\u0027m guessing you accidentally searched and replaced these.",
+      "revId": "db4463a6268c52b204e8a9c26bc9c3d8470a942f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44eec6b5_2751ff93",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T16:50:06Z",
+      "side": 1,
+      "message": "Following up on comments from previous review.\n\nJust keeping num_clusters here is probably OK.  I guess the question is whether we ever think we may want the additional info (number of clusters represented by *this* extent table).  If we know for sure we\u0027ll never want it, then we can leave it out.\n\nBut thinking about it more, it should be fairly easy to know how many clusters are represented by this extent_table - it\u0027s just the number of extent pages times the number of extents per page.",
+      "revId": "db4463a6268c52b204e8a9c26bc9c3d8470a942f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
