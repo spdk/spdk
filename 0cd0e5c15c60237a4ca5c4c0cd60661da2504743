@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96913fa7_ad29e801",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2360,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T21:33:16Z",
+      "side": 1,
+      "message": "I think you should do a separate patch, that calls spdk_iscsi_param_free(params) immediately after this call to spdk_iscsi_param_get_val().  This is the last time params is used in this function.\n\nThen you can avoid having to add the comment in this patch, which will require the reader to understand *why* we can free the params before sending the PDU.",
+      "revId": "0cd0e5c15c60237a4ca5c4c0cd60661da2504743",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
