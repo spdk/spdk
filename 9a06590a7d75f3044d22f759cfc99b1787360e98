@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5e282e2f_ea95f57a",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-21T09:02:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "27763b2d_a18d7eb9",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 7
+      },
+      "revId": "9a06590a7d75f3044d22f759cfc99b1787360e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "27f8f6e1_3bedc4c4",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 40
@@ -45,6 +69,30 @@
       "revId": "9a06590a7d75f3044d22f759cfc99b1787360e98",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c1e7fb6_bdbf7218",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-21T09:02:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "27f8f6e1_3bedc4c4",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 8
+      },
+      "revId": "9a06590a7d75f3044d22f759cfc99b1787360e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "bd3e1852_3f5189ab",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-21T09:02:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e6fa1fe1_0d5edf48",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 8
+      },
+      "revId": "9a06590a7d75f3044d22f759cfc99b1787360e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "73613372_2b580a89",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 40
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "4485eefa_7b1f0812",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-21T09:02:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "73613372_2b580a89",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 8
+      },
+      "revId": "9a06590a7d75f3044d22f759cfc99b1787360e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "84a14498_6930036b",
         "filename": "test/vhost/hotplug/virtio_hotremove.sh",
         "patchSetId": 40
@@ -114,6 +210,30 @@
       "revId": "9a06590a7d75f3044d22f759cfc99b1787360e98",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7f8f7b1_f7aafbfb",
+        "filename": "test/vhost/hotplug/virtio_hotremove.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2020-01-21T09:02:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "84a14498_6930036b",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 8
+      },
+      "revId": "9a06590a7d75f3044d22f759cfc99b1787360e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
