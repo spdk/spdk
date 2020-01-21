@@ -184,6 +184,12 @@ rpc_thread_get_stats(void *arg)
 					     spdk_cpuset_fmt(spdk_thread_get_cpumask(thread)));
 		spdk_json_write_named_uint64(ctx->w, "busy", stats.busy_tsc);
 		spdk_json_write_named_uint64(ctx->w, "idle", stats.idle_tsc);
+		spdk_json_write_named_uint32(ctx->w, "active_poller_count",
+					     spdk_thread_get_active_poller_count(thread));
+		spdk_json_write_named_uint32(ctx->w, "timer_poller_count",
+					     spdk_thread_get_timer_poller_count(thread));
+		spdk_json_write_named_uint32(ctx->w, "paused_poller_count",
+					     spdk_thread_get_paused_poller_count(thread));
 		spdk_json_write_object_end(ctx->w);
 	}
 }
