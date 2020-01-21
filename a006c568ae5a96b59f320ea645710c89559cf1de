@@ -46,6 +46,30 @@
       "revId": "a006c568ae5a96b59f320ea645710c89559cf1de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44f440c5_e0a76b08",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1597,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-21T07:06:49Z",
+      "side": 1,
+      "message": "Maybe we can just skip this deletion, as if we hit this error the controller is already in the error status, the SPDK driver already checked the qid is valid or not before calling this function.  May get other reviewer\u0027s comment too.",
+      "parentUuid": "489a61a8_1c9d2f19",
+      "range": {
+        "startLine": 1597,
+        "startChar": 3,
+        "endLine": 1597,
+        "endChar": 9
+      },
+      "revId": "a006c568ae5a96b59f320ea645710c89559cf1de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
