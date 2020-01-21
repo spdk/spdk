@@ -1579,7 +1579,7 @@ ftl_io_child_write_cb(struct ftl_io *io, void *ctx, int status)
 }
 
 static int
-ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int num_blocks)
+ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io)
 {
 	struct spdk_ftl_dev	*dev = io->dev;
 	struct ftl_io_channel	*ioch;
@@ -1610,12 +1610,12 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int num_blocks)
 		rc = spdk_bdev_zone_append(dev->base_bdev_desc, ioch->base_ioch,
 					   ftl_io_iovec_addr(child),
 					   ftl_addr_get_zone_slba(dev, addr),
-					   num_blocks, ftl_io_cmpl_cb, child);
+					   dev->xfer_size, ftl_io_cmpl_cb, child);
 	} else {
 		rc = spdk_bdev_write_blocks(dev->base_bdev_desc, ioch->base_ioch,
 					    ftl_io_iovec_addr(child),
 					    addr.offset,
-					    num_blocks, ftl_io_cmpl_cb, child);
+					    dev->xfer_size, ftl_io_cmpl_cb, child);
 	}
 
 	if (rc) {
@@ -1628,7 +1628,7 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int num_blocks)
 	}
 
 	ftl_io_inc_req(child);
-	ftl_io_advance(child, num_blocks);
+	ftl_io_advance(child, dev->xfer_size);
 
 	return 0;
 }
@@ -1652,7 +1652,7 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 			break;
 		}
 
-		rc = ftl_submit_child_write(wptr, io, dev->xfer_size);
+		rc = ftl_submit_child_write(wptr, io);
 		if (spdk_unlikely(rc)) {
 			if (rc == -EAGAIN) {
 				TAILQ_INSERT_TAIL(&wptr->pending_queue, io, ioch_entry);
