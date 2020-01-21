@@ -52,7 +52,6 @@
 
 #define NVMF_TCP_MAX_ACCEPT_SOCK_ONE_TIME 16
 
-#define NVMF_TCP_PDU_MAX_H2C_DATA_SIZE	131072
 #define NVMF_TCP_PDU_MAX_C2H_DATA_SIZE	131072
 #define SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY 6
 #define SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR 4
@@ -235,9 +234,6 @@ struct spdk_nvmf_tcp_qpair {
 
 	bool					host_hdgst_enable;
 	bool					host_ddgst_enable;
-
-	/** Specifies the maximum number of PDU-Data bytes per H2C Data Transfer PDU */
-	uint32_t				maxh2cdata;
 
 	uint32_t				c2h_data_pdu_cnt;
 
@@ -1309,15 +1305,8 @@ spdk_nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 
 	if (tcp_req->next_expected_r2t_offset != h2c_data->datao) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
-			      "tcp_req(%p), tqpair=%p,  expected_r2t_offset=%u, but data offset =%u\n",
-			      tcp_req, tqpair, tcp_req->next_expected_r2t_offset, h2c_data->datao);
-		fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_OUT_OF_RANGE;
-		goto err;
-	}
-
-	if (h2c_data->datal > tqpair->maxh2cdata) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tcp_req(%p), tqpair=%p,  datao=%u execeeds maxh2cdata size=%u\n",
-			      tcp_req, tqpair, h2c_data->datao, tqpair->maxh2cdata);
+			      "tcp_req(%p), tqpair=%p, data offset 0, but data offset =%u\n",
+			      tcp_req, tqpair, h2c_data->datao);
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_OUT_OF_RANGE;
 		goto err;
 	}
@@ -1326,7 +1315,7 @@ spdk_nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
 			      "tcp_req(%p), tqpair=%p,  (datao=%u + datal=%u) execeeds requested length=%u\n",
 			      tcp_req, tqpair, h2c_data->datao, h2c_data->datal, tcp_req->req.length);
-		fes = SPDK_NVME_TCP_TERM_REQ_FES_R2T_LIMIT_EXCEEDED;
+		fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_OUT_OF_RANGE;
 		goto err;
 	}
 
@@ -1425,7 +1414,7 @@ spdk_nvmf_tcp_send_r2t_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 	r2t->cccid = tcp_req->req.cmd->nvme_cmd.cid;
 	r2t->ttag = tcp_req->ttag;
 	r2t->r2to = tcp_req->next_expected_r2t_offset;
-	r2t->r2tl = spdk_min(tcp_req->req.length - tcp_req->next_expected_r2t_offset, tqpair->maxh2cdata);
+	r2t->r2tl = tcp_req->req.length;
 	tcp_req->r2tl_remain = r2t->r2tl;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
@@ -1603,9 +1592,7 @@ spdk_nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	ic_resp->common.hlen = ic_resp->common.plen =  sizeof(*ic_resp);
 	ic_resp->pfv = 0;
 	ic_resp->cpda = tqpair->cpda;
-	tqpair->maxh2cdata = spdk_min(NVMF_TCP_PDU_MAX_H2C_DATA_SIZE,
-				      ttransport->transport.opts.io_unit_size);
-	ic_resp->maxh2cdata = tqpair->maxh2cdata;
+	ic_resp->maxh2cdata = ttransport->transport.opts.max_io_size;
 	ic_resp->dgst.bits.hdgst_enable = tqpair->host_hdgst_enable ? 1 : 0;
 	ic_resp->dgst.bits.ddgst_enable = tqpair->host_ddgst_enable ? 1 : 0;
 

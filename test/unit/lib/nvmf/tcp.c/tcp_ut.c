@@ -580,6 +580,8 @@ test_nvmf_tcp_send_c2h_data(void)
 	spdk_thread_destroy(thread);
 }
 
+#define NVMF_TCP_PDU_MAX_H2C_DATA_SIZE (128 * 1024)
+
 static void
 test_nvmf_tcp_h2c_data_hdr_handle(void)
 {
@@ -591,7 +593,6 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 
 	pdu.hdr = &pdu.hdr_mem;
 	TAILQ_INIT(&tqpair.state_queue[TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER]);
-	tqpair.maxh2cdata = NVMF_TCP_PDU_MAX_H2C_DATA_SIZE;
 
 	/* Set qpair state to make unrelated operations NOP */
 	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
