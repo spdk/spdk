@@ -51,7 +51,7 @@ _thread_schedule(struct spdk_thread *thread)
 static void
 thread_alloc(void)
 {
-	struct spdk_thread *thread;
+	struct spdk_thread *thread, *parent;
 
 	/* No schedule callback */
 	spdk_thread_lib_init(NULL, 0);
@@ -77,6 +77,30 @@ thread_alloc(void)
 	g_sched_rc = -1;
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread == NULL);
+
+	spdk_thread_lib_fini();
+
+	/* Test group ID */
+	spdk_thread_lib_init(NULL, 0);
+	parent = spdk_thread_create(NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(parent != NULL);
+	CU_ASSERT(spdk_thread_get_thread_id(parent) == spdk_thread_get_group_id(parent));
+
+	spdk_set_thread(parent);
+	thread = spdk_thread_create(NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	CU_ASSERT(spdk_thread_get_thread_id(thread) != spdk_thread_get_group_id(thread));
+	CU_ASSERT(spdk_thread_get_group_id(thread) == spdk_thread_get_group_id(parent));
+
+	spdk_thread_set_group_id(thread, spdk_thread_get_thread_id(thread));
+	CU_ASSERT(spdk_thread_get_thread_id(thread) == spdk_thread_get_group_id(thread));
+
+	spdk_set_thread(thread);
+	spdk_thread_exit(thread);
+	spdk_thread_destroy(thread);
+	spdk_set_thread(parent);
+	spdk_thread_exit(parent);
+	spdk_thread_destroy(parent);
 
 	spdk_thread_lib_fini();
 }

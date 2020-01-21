@@ -397,6 +397,24 @@ const char *spdk_thread_get_name(const struct spdk_thread *thread);
  */
 uint64_t spdk_thread_get_thread_id(const struct spdk_thread *thread);
 
+/**
+ * Get a thread's group ID. Child inherits parent's group ID if parent
+ * exists, or its thread ID otherwise.
+ *
+ * \param thread Thread to query.
+ *
+ * \return the group ID of the thread.
+ */
+uint64_t spdk_thread_get_group_id(const struct spdk_thread *thread);
+
+/**
+ * Set the thread's group ID.
+ *
+ * \param thread Thread to update the group ID.
+ * \param group_id Set the thread's group ID to group_id.
+ */
+void spdk_thread_set_group_id(struct spdk_thread *thread, uint64_t group_id);
+
 struct spdk_thread_stats {
 	uint64_t busy_tsc;
 	uint64_t idle_tsc;
