@@ -150,6 +150,7 @@ DEFINE_STUB(spdk_conf_section_get_nmval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx1, int idx2), NULL);
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *g_bdev_io));
+DEFINE_STUB_V(spdk_bdev_io_put_aux_buf, (struct spdk_bdev_io *bdev_io, void *aux_buf));
 DEFINE_STUB(spdk_bdev_io_type_supported, bool, (struct spdk_bdev *bdev,
 		enum spdk_bdev_io_type io_type), 0);
 DEFINE_STUB_V(spdk_bdev_module_release_bdev, (struct spdk_bdev *bdev));
@@ -233,6 +234,12 @@ unsigned int
 rte_cryptodev_sym_get_private_session_size(uint8_t dev_id)
 {
 	return (unsigned int)dev_id;
+}
+
+void
+spdk_bdev_io_get_aux_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_aux_buf_cb cb)
+{
+	cb(g_io_ch, g_bdev_io, (void *)0xDEADBEEF);
 }
 
 void
@@ -447,7 +454,6 @@ test_simple_write(void)
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst->buf_addr != NULL);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst->data_len == 512);
 
-	spdk_free(g_io_ctx->cry_iov.iov_base);
 	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_src);
 	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_dst);
 }
@@ -542,7 +548,6 @@ test_large_rw(void)
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_dst);
 	}
-	spdk_free(g_io_ctx->cry_iov.iov_base);
 }
 
 static void
@@ -678,7 +683,6 @@ test_crazy_rw(void)
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_dst);
 	}
-	spdk_free(g_io_ctx->cry_iov.iov_base);
 }
 
 static void
