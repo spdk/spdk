@@ -93,6 +93,7 @@ CONFIG_FIO_SOURCE_DIR=/usr/src/fio
 # Requires ibverbs development libraries.
 CONFIG_RDMA=n
 CONFIG_RDMA_SEND_WITH_INVAL=n
+CONFIG_RDMA_SET_ACK_TIMEOUT=n
 
 # Enable NVMe Character Devices.
 CONFIG_NVME_CUSE=n

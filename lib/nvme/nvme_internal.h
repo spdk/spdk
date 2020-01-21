@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -158,6 +158,9 @@ extern pid_t g_spdk_nvme_pid;
 #define DEFAULT_IO_QUEUE_REQUESTS	(512)
 
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)
+
+#define SPDK_NVME_TRANSPORT_ACK_TIMEOUT_DISABLED	(0)
+#define SPDK_NVME_DEFAULT_TRANSPORT_ACK_TIMEOUT	SPDK_NVME_TRANSPORT_ACK_TIMEOUT_DISABLED
 
 #define MIN_KEEP_ALIVE_TIMEOUT_IN_MS	(10000)
 
