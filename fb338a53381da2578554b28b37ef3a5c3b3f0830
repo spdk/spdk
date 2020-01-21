@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b30bb36_ed8a90b6",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-21T19:59:52Z",
+      "side": 1,
+      "message": "I found the specific bug here. When the user calls this function, they meant to be completing the descriptor at \"req_idx\", but this line is grabbing the flags for the descriptor at \"last_used_idx\". For out of order completions, those are not the same descriptor. Right now, this will mark the next descriptor as complete, regardless of whether the caller of this function actually said to do that.\n\nNote that due to this bug, the initiator won\u0027t entirely hang like I was describing. Instead, it will believe a descriptor is complete prior to it actually being complete and possibly use corrupt data.",
+      "revId": "fb338a53381da2578554b28b37ef3a5c3b3f0830",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
