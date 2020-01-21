@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "c9bb6e8c_30807fe3",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-21T01:35:42Z",
+      "side": 1,
+      "message": "I think we can remove next_expected_r2t_offset too.",
+      "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "026408e0_c11f06a7",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 3
@@ -13,6 +30,115 @@
       "writtenOn": "2020-01-18T16:57:15Z",
       "side": 1,
       "message": "maybe init/fini instead of acquire/release?  I feel like acquire/release isn\u0027t semantically correct - especially if long term you remove the DEBUG code\n\nwhich does lead me to my next question - are you planning to keep this DEBUG code in long-term?  I\u0027m open to that if we think we need it, but it\u0027s a bit non-standard so might be good to mention that in the commit message - I\u0027m even wondering if it even needs to be under a DEBUG flag - do you think it\u0027s that much of a pessimization in release builds?",
+      "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b94bd3ab_182dc398",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-21T01:35:42Z",
+      "side": 1,
+      "message": "This check should be change to h2c_data-\u003edatao \u003d\u003d 0 ? I think we can remove tcp_req-\u003enext_expected_r2t_offset as said above.",
+      "range": {
+        "startLine": 1267,
+        "startChar": 5,
+        "endLine": 1267,
+        "endChar": 57
+      },
+      "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8cb91e30_44f07190",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1269,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-21T01:35:42Z",
+      "side": 1,
+      "message": "This comment doesn\u0027t match the above change.",
+      "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6bd7b3d9_6f035a67",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1275,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-21T01:35:42Z",
+      "side": 1,
+      "message": "Then we can simplify this to h2c_data-\u003edatal \u003e tcp_req-\u003ereq.length",
+      "range": {
+        "startLine": 1275,
+        "startChar": 6,
+        "endLine": 1275,
+        "endChar": 62
+      },
+      "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57aceeb2_26fe8f8a",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1278,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-21T01:35:42Z",
+      "side": 1,
+      "message": "We don\u0027t have to output this.",
+      "range": {
+        "startLine": 1278,
+        "startChar": 26,
+        "endLine": 1278,
+        "endChar": 41
+      },
+      "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a4f0674_ee121b08",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-21T01:35:42Z",
+      "side": 1,
+      "message": "This should be fixed by zero?",
+      "range": {
+        "startLine": 1374,
+        "startChar": 14,
+        "endLine": 1374,
+        "endChar": 46
+      },
       "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
