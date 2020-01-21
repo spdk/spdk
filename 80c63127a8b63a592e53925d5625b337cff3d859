@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f8fd392_f06f200f",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1100,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T21:48:21Z",
+      "side": 1,
+      "message": "Please create this function as part of a separate patch.  Then this patch can add more calls to this function.\n\nIt is almost always better to move a function (from one file to another, or within the same file) in a separate patch.  It makes it easier to review.",
+      "revId": "80c63127a8b63a592e53925d5625b337cff3d859",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31c17767_797f5673",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1143,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T21:48:21Z",
+      "side": 1,
+      "message": "if (iscsi_conn_params_update(conn) !\u003d 0) {\n  return;\n}\n\nThen you can avoid adding the rc variable.  It should also reduce the function by 4 lines.",
+      "revId": "80c63127a8b63a592e53925d5625b337cff3d859",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
