@@ -146,6 +146,10 @@ struct spdk_thread {
 	 */
 	TAILQ_HEAD(paused_pollers_head, spdk_poller)	paused_pollers;
 
+	uint32_t			active_poller_count;
+	uint32_t			timer_poller_count;
+	uint32_t			paused_poller_count;
+
 	struct spdk_ring		*messages;
 
 	SLIST_HEAD(, spdk_msg)		msg_cache;
@@ -227,27 +231,34 @@ _free_thread(struct spdk_thread *thread)
 			SPDK_WARNLOG("poller %p still registered at thread exit\n",
 				     poller);
 		}
-
+		assert(thread->active_poller_count > 0);
+		thread->active_poller_count--;
 		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 		free(poller);
 	}
-
 
 	TAILQ_FOREACH_SAFE(poller, &thread->timer_pollers, tailq, ptmp) {
 		if (poller->state != SPDK_POLLER_STATE_UNREGISTERED) {
 			SPDK_WARNLOG("poller %p still registered at thread exit\n",
 				     poller);
 		}
-
+		assert(thread->timer_poller_count > 0);
+		thread->timer_poller_count--;
 		TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
 		free(poller);
 	}
 
 	TAILQ_FOREACH_SAFE(poller, &thread->paused_pollers, tailq, ptmp) {
 		SPDK_WARNLOG("poller %p still registered at thread exit\n", poller);
+		assert(thread->paused_poller_count > 0);
+		thread->paused_poller_count--;
 		TAILQ_REMOVE(&thread->paused_pollers, poller, tailq);
 		free(poller);
 	}
+
+	assert(thread->active_poller_count == 0);
+	assert(thread->timer_poller_count == 0);
+	assert(thread->paused_poller_count == 0);
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	assert(g_thread_count > 0);
@@ -477,8 +488,10 @@ _spdk_thread_insert_poller(struct spdk_thread *thread, struct spdk_poller *polle
 {
 	if (poller->period_ticks) {
 		_spdk_poller_insert_timer(thread, poller, spdk_get_ticks());
+		thread->timer_poller_count++;
 	} else {
 		TAILQ_INSERT_TAIL(&thread->active_pollers, poller, tailq);
+		thread->active_poller_count++;
 	}
 }
 
@@ -518,12 +531,17 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		}
 
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+			assert(thread->active_poller_count > 0);
+			thread->active_poller_count--;
 			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 			free(poller);
 			continue;
 		} else if (poller->state == SPDK_POLLER_STATE_PAUSING) {
+			assert(thread->active_poller_count > 0);
+			thread->active_poller_count--;
 			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 			TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
+			thread->paused_poller_count++;
 			poller->state = SPDK_POLLER_STATE_PAUSED;
 			continue;
 		}
@@ -538,6 +556,8 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 #endif
 
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+			assert(thread->active_poller_count > 0);
+			thread->active_poller_count--;
 			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 			free(poller);
 		} else if (poller->state != SPDK_POLLER_STATE_PAUSED) {
@@ -557,12 +577,17 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		}
 
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+			assert(thread->timer_poller_count > 0);
+			thread->timer_poller_count--;
 			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
 			free(poller);
 			continue;
 		} else if (poller->state == SPDK_POLLER_STATE_PAUSING) {
+			assert(thread->timer_poller_count > 0);
+			thread->timer_poller_count--;
 			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
 			TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
+			thread->paused_poller_count++;
 			poller->state = SPDK_POLLER_STATE_PAUSED;
 			continue;
 		}
@@ -581,12 +606,17 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 #endif
 
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+			assert(thread->timer_poller_count > 0);
+			thread->timer_poller_count--;
 			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
 			free(poller);
 		} else if (poller->state != SPDK_POLLER_STATE_PAUSED) {
 			poller->state = SPDK_POLLER_STATE_WAITING;
+			assert(thread->timer_poller_count > 0);
+			thread->timer_poller_count--;
 			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
 			_spdk_poller_insert_timer(thread, poller, now);
+			thread->timer_poller_count++;
 		}
 
 		if (timer_rc > rc) {
@@ -659,6 +689,24 @@ spdk_thread_is_idle(struct spdk_thread *thread)
 	}
 
 	return true;
+}
+
+uint32_t
+spdk_thread_get_active_poller_count(struct spdk_thread *thread)
+{
+	return thread->active_poller_count;
+}
+
+uint32_t
+spdk_thread_get_timer_poller_count(struct spdk_thread *thread)
+{
+	return thread->timer_poller_count;
+}
+
+uint32_t
+spdk_thread_get_paused_poller_count(struct spdk_thread *thread)
+{
+	return thread->paused_poller_count;
 }
 
 uint32_t
@@ -836,8 +884,11 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 	 * its unregistration can be processed by spdk_thread_poll().
 	 */
 	if (poller->state == SPDK_POLLER_STATE_PAUSED) {
+		assert(thread->paused_poller_count > 0);
+		thread->paused_poller_count--;
 		TAILQ_REMOVE(&thread->paused_pollers, poller, tailq);
 		TAILQ_INSERT_TAIL(&thread->active_pollers, poller, tailq);
+		thread->active_poller_count++;
 		poller->period_ticks = 0;
 	}
 
@@ -873,12 +924,17 @@ spdk_poller_pause(struct spdk_poller *poller)
 		poller->state = SPDK_POLLER_STATE_PAUSING;
 	} else {
 		if (poller->period_ticks > 0) {
+			assert(thread->timer_poller_count > 0);
+			thread->timer_poller_count--;
 			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
 		} else {
+			assert(thread->active_poller_count > 0);
+			thread->active_poller_count--;
 			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 		}
 
 		TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
+		thread->paused_poller_count++;
 		poller->state = SPDK_POLLER_STATE_PAUSED;
 	}
 }
@@ -906,6 +962,8 @@ spdk_poller_resume(struct spdk_poller *poller)
 	 * the appropriate list.
 	 */
 	if (poller->state == SPDK_POLLER_STATE_PAUSED) {
+		assert(thread->paused_poller_count > 0);
+		thread->paused_poller_count--;
 		TAILQ_REMOVE(&thread->paused_pollers, poller, tailq);
 		_spdk_thread_insert_poller(thread, poller);
 	}
