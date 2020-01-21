@@ -54,6 +54,8 @@ DEFINE_STUB(vhost_driver_unregister, int, (const char *path), 0);
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(rte_vhost_vring_call, int, (int vid, uint16_t vring_idx), 0);
+DEFINE_STUB_V(rte_vhost_log_used_vring, (int vid, uint16_t vring_idx,
+		uint64_t offset, uint64_t len));
 
 static struct spdk_cpuset *g_app_core_mask;
 struct spdk_cpuset *spdk_app_get_core_mask(void)
@@ -402,6 +404,77 @@ vq_avail_ring_get_test(void)
 	}
 }
 
+static void
+vq_packed(void)
+{
+	struct spdk_vhost_session vs = {};
+	struct spdk_vhost_virtqueue vq = {};
+	struct vring_packed_desc descs[4];
+	int i;
+	uint16_t next_idx, last_idx;
+
+	memset(descs, 0, sizeof(descs));
+	for (i = 0; i < 4; i++) {
+		descs[i].id = i;
+	}
+
+	vq.packed.packed_ring = true;
+	vq.packed.avail_phase = 1;
+	vq.packed.used_phase = 1;
+	vq.vring.desc_packed = descs;
+	vq.vring.size = 4;
+
+	/* Descriptor is not ready yet */
+	CU_ASSERT(vhost_vq_packed_ring_is_avail(&vq) == false);
+
+	/* Submit 3 descriptors */
+	for (i = 0; i < 3; i++) {
+		/* This is the initiator side "submitting" the descriptor */
+		descs[i].flags |= VRING_DESC_F_AVAIL;
+
+		/* This is the target side polling and finding the descriptor */
+		CU_ASSERT(vhost_vq_packed_ring_is_avail(&vq));
+		next_idx = vhost_vring_packed_desc_get_buffer_id(&vq, i, &last_idx);
+		CU_ASSERT(next_idx == i);
+		CU_ASSERT(last_idx == i);
+	}
+
+	/* Complete the 3 submitted descriptors */
+	for (i = 0; i < 3; i++) {
+		vhost_vq_packed_ring_complete(&vs, &vq, i, i, i);
+		CU_ASSERT((descs[i].flags & VRING_DESC_F_USED) == VRING_DESC_F_USED);
+	}
+
+	/* Submit the final descriptor in the ring */
+	descs[3].flags |= VRING_DESC_F_AVAIL;
+	CU_ASSERT(vhost_vq_packed_ring_is_avail(&vq));
+	next_idx = vhost_vring_packed_desc_get_buffer_id(&vq, 3, &last_idx);
+	CU_ASSERT(next_idx == 3);
+	CU_ASSERT(last_idx == 3);
+
+	/* Submit another descriptor to the first slot again */
+	descs[0].flags &= ~VRING_DESC_F_AVAIL;
+	CU_ASSERT(vhost_vq_packed_ring_is_avail(&vq));
+	next_idx = vhost_vring_packed_desc_get_buffer_id(&vq, 0, &last_idx);
+	CU_ASSERT(next_idx == 0);
+	CU_ASSERT(last_idx == 0);
+
+	/* Complete the two requests out of order. */
+	vhost_vq_packed_ring_complete(&vs, &vq, 0, 0, 0);
+
+	/* Verify the last descriptor was not completed */
+	CU_ASSERT((descs[3].flags & VRING_DESC_F_USED) == 0);
+
+	vhost_vq_packed_ring_complete(&vs, &vq, 3, 3, 3);
+
+	/* Act like the initiator searching for completions. The last descriptor
+	 * in the ring should search for the used bit flipping to 1. */
+	CU_ASSERT((descs[3].flags & VRING_DESC_F_USED) == VRING_DESC_F_USED);
+
+	/* The first slot should be flipped back to 0, to match the avail bit. */
+	CU_ASSERT((descs[0].flags & VRING_DESC_F_USED) == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -423,7 +496,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "create_controller", create_controller_test) == NULL ||
 		CU_add_test(suite, "session_find_by_vid", session_find_by_vid_test) == NULL ||
 		CU_add_test(suite, "remove_controller", remove_controller_test) == NULL ||
-		CU_add_test(suite, "vq_avail_ring_get", vq_avail_ring_get_test) == NULL
+		CU_add_test(suite, "vq_avail_ring_get", vq_avail_ring_get_test) == NULL ||
+		CU_add_test(suite, "vq_packed", vq_packed) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
