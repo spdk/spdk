@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcd0d2a6_b7b54124",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 24
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T17:58:35Z",
+      "side": 1,
+      "message": "I would word this as:\n\nwrite out the EXTENT_PAGE and sync_md to update EXTENT_TABLE\n\nsince that is the order in which we need to do them (we can\u0027t update the EXTENT_TABLE until we\u0027ve written out the EXTENT_PAGE)",
+      "revId": "ed02fea456c0a8676c6e2a1f6f305e927ea055a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7c01015_4004ad55",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 6348,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T17:58:35Z",
+      "side": 1,
+      "message": "I suggested removing \"single\" from the completion function name.  I\u0027m not sure we need that here.  For example, we don\u0027t use \"single\" in _spdk_blob_serialize_extent_page().",
+      "revId": "ed02fea456c0a8676c6e2a1f6f305e927ea055a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
