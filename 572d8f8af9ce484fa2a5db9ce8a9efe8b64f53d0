@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd19ea18_320b47ad",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1622,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T16:59:03Z",
+      "side": 1,
+      "message": "So this works in the RLE case, only because new_num_ep and current_num_ep will both be zero.  But I\u0027m wondering if we should still check the blob extent_table flag here, just to make it extra clear that we won\u0027t go down this realloc() path unless we\u0027re actually using extent tables.",
+      "revId": "572d8f8af9ce484fa2a5db9ce8a9efe8b64f53d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
