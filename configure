@@ -539,6 +539,16 @@ of libibverbs, so Linux kernel NVMe-oF initiators based on kernels greater
 than or equal to 4.14 will see significantly reduced performance.
 *******************************************************************************"
 	fi
+
+	if echo -e '#include <rdma/rdma_cma.h>\n' \
+		'int main(void) { return !!RDMA_OPTION_ID_ACK_TIMEOUT; }\n' \
+		| ${BUILD_CMD[@]} -c - 2>/dev/null; then
+		CONFIG[RDMA_SET_ACK_TIMEOUT]="y"
+	else
+	  CONFIG[RDMA_SET_ACK_TIMEOUT]="n"
+	  echo "RDMA_OPTION_ID_ACK_TIMEOUT is not supported"
+	fi
+
 fi
 
 if [[ "${CONFIG[FC]}" = "y" ]]; then

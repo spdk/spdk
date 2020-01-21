@@ -118,6 +118,9 @@ the target expects the initiator to send both the compare command and write comm
 SPDK initiator currently respects this requirement, but this note is included as a flag for other initiators attempting
 compatibility with this version of SPDK.
 
+The `spdk_nvme_ctrlr_opts` struct has been extended with new field `transport_ack_timeout` which allows
+to configure transport ACK timeout. Applicable for RDMA transport only.
+
 ### rpc
 
 A new RPC, `bdev_zone_block_create`, enables creating an emulated zoned bdev on top of a standard block device.
