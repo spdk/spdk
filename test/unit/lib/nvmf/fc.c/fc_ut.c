@@ -45,6 +45,7 @@
 
 #include "transport.h"
 #include "nvmf_internal.h"
+
 #include "nvmf_fc.h"
 
 #include "json/json_util.c"
@@ -123,6 +124,8 @@ DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 
 DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 1024);
 
 DEFINE_STUB(spdk_nvmf_ctrlr_async_event_ns_notice, int, (struct spdk_nvmf_ctrlr *ctrlr), 0);
+DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id *trid,
+		enum spdk_nvme_transport_type trtype));
 
 const char *
 spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
@@ -276,7 +279,7 @@ create_transport_test(void)
 	g_nvmf_tgt = spdk_nvmf_tgt_create(&tgt_opts);
 	SPDK_CU_ASSERT_FATAL(g_nvmf_tgt != NULL);
 
-	ops = spdk_nvmf_get_transport_ops((enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC);
+	ops = spdk_nvmf_get_transport_ops(SPDK_NVME_TRANSPORT_NAME_FC);
 	SPDK_CU_ASSERT_FATAL(ops != NULL);
 
 	ops->opts_init(&opts);
