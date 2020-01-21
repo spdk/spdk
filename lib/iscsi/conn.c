@@ -197,6 +197,14 @@ iscsi_poll_group_remove_conn(struct spdk_iscsi_poll_group *pg, struct spdk_iscsi
 	STAILQ_REMOVE(&pg->connections, conn, spdk_iscsi_conn, link);
 }
 
+static void
+iscsi_conn_start(void *ctx)
+{
+	struct spdk_iscsi_conn *conn = ctx;
+
+	iscsi_poll_group_add_conn(conn->pg, conn);
+}
+
 int
 spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 			  struct spdk_sock *sock)
@@ -284,13 +292,17 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Launching connection on acceptor thread\n");
 	conn->pending_task_cnt = 0;
 
-	/* Get the acceptor poll group */
-	pg = portal->acceptor_pg;
-
-	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(pg)) == spdk_get_thread());
+	/* Get the first poll group. */
+	pg = TAILQ_FIRST(&g_spdk_iscsi.poll_group_head);
+	if (pg == NULL) {
+		SPDK_ERRLOG("There is no poll group.\n");
+		assert(false);
+		goto error_return;
+	}
 
 	conn->pg = pg;
-	iscsi_poll_group_add_conn(pg, conn);
+	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(pg)),
+			     iscsi_conn_start, conn);
 	return 0;
 
 error_return:
