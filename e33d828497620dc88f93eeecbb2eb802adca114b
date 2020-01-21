@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8bde082_c17aedab",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T16:41:14Z",
+      "side": 1,
+      "message": "I\u0027m thinking about how to relate this to the extent_*_found flags in spdk_blob...\n\nI think it\u0027s more clear to have a third flag in spdk_blob called \"use_extent_table\" (rather than overloading one of the \"found\" flags).  That way when you\u0027re deciding whether to persist RLEs or tables, you just look at a flag that says \"use_extent_table\" which to me seems more clear than looking at \"extent_table_found\".  I also think that\u0027s more natural than setting one of the \"found\" flags to true even when they were both false.\n\nSo if we go that route, than I think the flag here should match the one in spdk_blob.  So \"use_extent_table\" would be the better name here.",
+      "revId": "e33d828497620dc88f93eeecbb2eb802adca114b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
