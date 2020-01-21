@@ -60,6 +60,8 @@ void spdk_set_thread(struct spdk_thread *thread);
 DEFINE_STUB(spdk_nvmf_request_complete, int, (struct spdk_nvmf_request *req), -ENOSPC);
 DEFINE_STUB(spdk_nvmf_subsystem_host_allowed, bool,
 	    (struct spdk_nvmf_subsystem *subsystem, const char *hostnqn), true);
+DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id *trid,
+		enum spdk_nvme_transport_type trtype));
 
 static const char *fc_ut_subsystem_nqn =
 	"nqn.2017-11.io.spdk:sn.390c0dc7c87011e786b300a0989adc53:subsystem.good";
