@@ -51,6 +51,7 @@
 #include "spdk/string.h"
 #include "spdk/endian.h"
 #include "spdk/likely.h"
+#include "spdk/config.h"
 
 #include "nvme_internal.h"
 
@@ -83,6 +84,11 @@
  * Maximum value of transport_retry_count used by RDMA controller
  */
 #define NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT	7
+
+/*
+ * Maximum value of transport_ack_timeout used by RDMA controller
+ */
+#define NVME_RDMA_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT	31
 
 struct spdk_nvmf_cmd {
 	struct spdk_nvme_cmd cmd;
@@ -858,6 +864,21 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 		SPDK_ERRLOG("RDMA address resolution error\n");
 		return -1;
 	}
+
+	if (rqpair->qpair.ctrlr->opts.transport_ack_timeout != SPDK_NVME_TRANSPORT_ACK_TIMEOUT_DISABLED) {
+#ifdef SPDK_CONFIG_RDMA_SET_ACK_TIMEOUT
+		uint8_t timeout = rqpair->qpair.ctrlr->opts.transport_ack_timeout;
+		ret = rdma_set_option(rqpair->cm_id, RDMA_OPTION_ID,
+				      RDMA_OPTION_ID_ACK_TIMEOUT,
+				      &timeout, sizeof(timeout));
+		if (ret) {
+			SPDK_NOTICELOG("Can't apply RDMA_OPTION_ID_ACK_TIMEOUT %d, ret %d\n", timeout, ret);
+		}
+#else
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "transport_ack_timeout is not supported\n");
+#endif
+	}
+
 
 	ret = rdma_resolve_route(rqpair->cm_id, NVME_RDMA_TIME_OUT_IN_MS);
 	if (ret) {
@@ -1736,6 +1757,11 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 		SPDK_NOTICELOG("transport_retry_count exceeds max value %d, use max value\n",
 			       NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT);
 		rctrlr->ctrlr.opts.transport_retry_count = NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT;
+	}
+	if (rctrlr->ctrlr.opts.transport_ack_timeout > NVME_RDMA_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT) {
+		SPDK_NOTICELOG("transport_ack_timeout exceeds max value %d, use max value\n",
+			       NVME_RDMA_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT);
+		rctrlr->ctrlr.opts.transport_ack_timeout = NVME_RDMA_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT;
 	}
 
 	contexts = rdma_get_devices(NULL);

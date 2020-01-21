@@ -113,6 +113,9 @@ A new function, `spdk_nvme_transport_available_by_name`, has been added.
 A function table, `spdk_nvme_transport_ops`, and macro, `SPDK_NVME_TRANSPORT_REGISTER`, have been added which
 enable registering out of tree transports.
 
+The `spdk_nvme_ctrlr_opts` struct has been extended with new field `transport_ack_timeout` which allows
+to configure transport ACK timeout. Applicable for RDMA transport only.
+
 ### rpc
 
 Added optional 'delay_cmd_submit' parameter to 'bdev_nvme_set_options' RPC method.

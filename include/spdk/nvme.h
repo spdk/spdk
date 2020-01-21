@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2019, 2020 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -220,6 +220,15 @@ struct spdk_nvme_ctrlr_opts {
 	 * Defaults to 'false' (errors are logged).
 	 */
 	bool disable_error_logging;
+
+	/**
+	 * It is used for RDMA transport
+	 * Specify the transport ACK timeout. The value should be in range 0-31 where 0 means
+	 * use driver-specific default value.
+	 * The value of ACK timeout calculated according to the formula
+	 * 4.096 * 2^(transport_ack_timeout) usec.
+	 */
+	uint8_t transport_ack_timeout;
 };
 
 /**
