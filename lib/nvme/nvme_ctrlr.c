@@ -180,6 +180,10 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	if (FIELD_OK(disable_error_logging)) {
 		opts->disable_error_logging = false;
 	}
+
+	if (FIELD_OK(transport_ack_timeout)) {
+		opts->transport_ack_timeout = SPDK_NVME_DEFAULT_TRANSPORT_ACK_TIMEOUT;
+	}
 #undef FIELD_OK
 }
 
