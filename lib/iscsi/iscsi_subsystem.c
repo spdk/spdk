@@ -1178,6 +1178,44 @@ iscsi_poll_group_handle_nop(void *ctx)
 	return -1;
 }
 
+static void
+iscsi_parse_configuration(void)
+{
+	int rc;
+
+	rc = spdk_iscsi_parse_portal_grps();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_parse_portal_grps() failed\n");
+		goto end;
+	}
+
+	rc = spdk_iscsi_parse_init_grps();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_parse_init_grps() failed\n");
+		goto end;
+	}
+
+	rc = spdk_iscsi_parse_tgt_nodes();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_parse_tgt_nodes() failed\n");
+	}
+
+	if (g_spdk_iscsi.authfile != NULL) {
+		if (access(g_spdk_iscsi.authfile, R_OK) == 0) {
+			rc = iscsi_parse_auth_info();
+			if (rc < 0) {
+				SPDK_ERRLOG("spdk_iscsi_parse_auth_info() failed\n");
+			}
+		} else {
+			SPDK_INFOLOG(SPDK_LOG_ISCSI, "CHAP secret file is not found in the path %s\n",
+				     g_spdk_iscsi.authfile);
+		}
+	}
+
+end:
+	iscsi_init_complete(rc);
+}
+
 static int
 iscsi_poll_group_create(void *io_device, void *ctx_buf)
 {
@@ -1226,9 +1264,6 @@ _iscsi_init_thread(struct spdk_thread *thread)
 }
 
 static void
-iscsi_parse_configuration(void);
-
-static void
 initialize_iscsi_poll_group(void)
 {
 	struct spdk_cpuset *app_cpumask;
@@ -1252,44 +1287,6 @@ initialize_iscsi_poll_group(void)
 	}
 
 	iscsi_parse_configuration();
-}
-
-static void
-iscsi_parse_configuration(void)
-{
-	int rc;
-
-	rc = spdk_iscsi_parse_portal_grps();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_parse_portal_grps() failed\n");
-		goto end;
-	}
-
-	rc = spdk_iscsi_parse_init_grps();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_parse_init_grps() failed\n");
-		goto end;
-	}
-
-	rc = spdk_iscsi_parse_tgt_nodes();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_parse_tgt_nodes() failed\n");
-	}
-
-	if (g_spdk_iscsi.authfile != NULL) {
-		if (access(g_spdk_iscsi.authfile, R_OK) == 0) {
-			rc = iscsi_parse_auth_info();
-			if (rc < 0) {
-				SPDK_ERRLOG("spdk_iscsi_parse_auth_info() failed\n");
-			}
-		} else {
-			SPDK_INFOLOG(SPDK_LOG_ISCSI, "CHAP secret file is not found in the path %s\n",
-				     g_spdk_iscsi.authfile);
-		}
-	}
-
-end:
-	iscsi_init_complete(rc);
 }
 
 static int
