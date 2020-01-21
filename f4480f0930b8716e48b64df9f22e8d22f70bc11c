@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1eb11b7_f20228cc",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T20:00:37Z",
+      "side": 1,
+      "message": "nit - unrelated whitespace changes in this function",
+      "revId": "f4480f0930b8716e48b64df9f22e8d22f70bc11c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e17d25c_14404217",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2537,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-21T20:00:37Z",
+      "side": 1,
+      "message": "should this loop have a check somewhere for tqpair-\u003estate_queue[TCP_REQUEST_STATE_FREE]?  I\u0027m just thinking that if we have a lot qpairs in await_req state, that we don\u0027t want to keep calling spdk_nvmf_tcp_sock_process if we know there aren\u0027t any reqs available",
+      "revId": "f4480f0930b8716e48b64df9f22e8d22f70bc11c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
