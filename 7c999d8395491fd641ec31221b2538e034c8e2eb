@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ee1d1b6e_97e99d98",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-21T17:23:48Z",
+      "side": 1,
+      "message": "This variable isn\u0027t clearly named. It\u0027s the offset at which the next H2C PDU is expected to arrive. In the next patch in this series, I rename it. It\u0027s still necessary.",
+      "parentUuid": "c9bb6e8c_30807fe3",
+      "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "026408e0_c11f06a7",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2020-01-18T16:57:15Z",
       "side": 1,
       "message": "maybe init/fini instead of acquire/release?  I feel like acquire/release isn\u0027t semantically correct - especially if long term you remove the DEBUG code\n\nwhich does lead me to my next question - are you planning to keep this DEBUG code in long-term?  I\u0027m open to that if we think we need it, but it\u0027s a bit non-standard so might be good to mention that in the commit message - I\u0027m even wondering if it even needs to be under a DEBUG flag - do you think it\u0027s that much of a pessimization in release builds?",
+      "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce8588f0_b1e13e1c",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-21T17:23:48Z",
+      "side": 1,
+      "message": "I\u0027ll go ahead and leave it in for all builds. The main downside is it messes with the cache line packing of the structure, but these data structures have not been intentionally packed yet anyway.",
+      "parentUuid": "026408e0_c11f06a7",
       "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -59,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "934b6dc5_3abf979d",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-21T17:23:48Z",
+      "side": 1,
+      "message": "The initiator can still elect to send multiple H2C\u0027s in response to a single R2T from the target. Beyond the confusing naming of \"next_expected_r2t_offset\" which I fix in the next patch, this check is correct and necessary.",
+      "parentUuid": "b94bd3ab_182dc398",
+      "range": {
+        "startLine": 1267,
+        "startChar": 5,
+        "endLine": 1267,
+        "endChar": 57
+      },
+      "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8cb91e30_44f07190",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 3
@@ -76,6 +136,24 @@
     },
     {
       "key": {
+        "uuid": "aa956355_b96b7f7b",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1269,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-21T17:23:48Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8cb91e30_44f07190",
+      "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6bd7b3d9_6f035a67",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 3
@@ -87,6 +165,30 @@
       "writtenOn": "2020-01-21T01:35:42Z",
       "side": 1,
       "message": "Then we can simplify this to h2c_data-\u003edatal \u003e tcp_req-\u003ereq.length",
+      "range": {
+        "startLine": 1275,
+        "startChar": 6,
+        "endLine": 1275,
+        "endChar": 62
+      },
+      "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc29ca52_c1f88240",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1275,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-21T17:23:48Z",
+      "side": 1,
+      "message": "The initiator is still allowed to respond with multiple H2Cs if it chooses.",
+      "parentUuid": "6bd7b3d9_6f035a67",
       "range": {
         "startLine": 1275,
         "startChar": 6,
@@ -133,6 +235,30 @@
       "writtenOn": "2020-01-21T01:35:42Z",
       "side": 1,
       "message": "This should be fixed by zero?",
+      "range": {
+        "startLine": 1374,
+        "startChar": 14,
+        "endLine": 1374,
+        "endChar": 46
+      },
+      "revId": "7c999d8395491fd641ec31221b2538e034c8e2eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15825f61_65ceb5dc",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-21T17:23:48Z",
+      "side": 1,
+      "message": "Yes - this value is always 0. I debated whether it would be clearer to hardcode 0 or to put in this offset here (the offset is cleared to 0 when the PDU is first acquired). I decided leaving the offset would be best.",
+      "parentUuid": "7a4f0674_ee121b08",
       "range": {
         "startLine": 1374,
         "startChar": 14,
