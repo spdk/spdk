@@ -29,3 +29,5 @@ mk/cc.mk
 mk/config.mk
 mk/cc.flags.mk
 PYTHON_COMMAND
+test_completions.txt
+timing.txt
