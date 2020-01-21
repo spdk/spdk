@@ -280,17 +280,6 @@ portal_grp_register_twice_case(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
 }
 
-static int
-ut_poll_group_create(void *io_device, void *ctx_buf)
-{
-	return 0;
-}
-
-static void
-ut_poll_group_destroy(void *io_device, void *ctx_buf)
-{
-}
-
 static void
 portal_grp_add_delete_case(void)
 {
@@ -304,9 +293,6 @@ portal_grp_add_delete_case(void)
 
 	allocate_threads(1);
 	set_thread(0);
-
-	spdk_io_device_register(&g_spdk_iscsi, ut_poll_group_create, ut_poll_group_destroy,
-				sizeof(struct spdk_iscsi_poll_group), "ut_portal_grp");
 
 	/* internal of iscsi_create_portal_group */
 	pg1 = spdk_iscsi_portal_grp_create(1);
@@ -337,8 +323,6 @@ portal_grp_add_delete_case(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
 
-	spdk_io_device_unregister(&g_spdk_iscsi, NULL);
-
 	free_threads();
 }
 
@@ -355,9 +339,6 @@ portal_grp_add_delete_twice_case(void)
 
 	allocate_threads(1);
 	set_thread(0);
-
-	spdk_io_device_register(&g_spdk_iscsi, ut_poll_group_create, ut_poll_group_destroy,
-				sizeof(struct spdk_iscsi_poll_group), "ut_portal_grp");
 
 	/* internal of iscsi_create_portal_group related */
 	pg1 = spdk_iscsi_portal_grp_create(1);
@@ -402,8 +383,6 @@ portal_grp_add_delete_twice_case(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
 
 	MOCK_CLEAR_P(spdk_sock_listen);
-
-	spdk_io_device_unregister(&g_spdk_iscsi, NULL);
 
 	free_threads();
 }
