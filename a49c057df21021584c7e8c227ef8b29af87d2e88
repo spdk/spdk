@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7cd56d19_ffa29dff",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2020-01-21T17:24:56Z",
+      "side": 1,
+      "message": "Our target only sends a single R2T saying we\u0027re ready to receive the entire data for a given command. The initiator can then elect to send multiple H2Cs containing that data, in order. We have to track the offset to know where to place the data for each incoming H2C.",
+      "parentUuid": "50c4ceb3_55bec7c9",
+      "range": {
+        "startLine": 193,
+        "startChar": 13,
+        "endLine": 193,
+        "endChar": 23
+      },
+      "revId": "a49c057df21021584c7e8c227ef8b29af87d2e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "359314a0_0a069763",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 2
