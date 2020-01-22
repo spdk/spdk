@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f743be1_b9420c50",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T00:29:05Z",
+      "side": 1,
+      "message": "tricky 😊\n\nWe don\u0027t really do this anywhere else in our unit tests though (at least to my knowledge).  And I think it might make the tests themselves a bit trickier to understand - if they missed this #define here, they won\u0027t know that calling spdk_blob_opts_init() isn\u0027t calling the *real* spdk_blob_opts_init().\n\nSo I think instead you just change the existing calls to spdk_blob_opts_init() to call ut_spdk_blob_opts_init() directly, and avoid the #define.  Then the reader will automatically know exactly what\u0027s happening when ut_spdk_blob_opts_init() is called.",
+      "revId": "52519a5305eda324a5882539355b91feffd24674",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
