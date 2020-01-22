@@ -22,6 +22,30 @@
       "revId": "d27b2500cf76530f621ef0d817a536b1dcb20471",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86c45c7a_8bade00b",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 2140,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2020-01-22T07:53:47Z",
+      "side": 1,
+      "message": "The dead lock is not here, there will be an error message for this case, I find there are blobs not closed when unload the blobstore, so it\u0027s related with file lock.",
+      "parentUuid": "016a0453_e7369f9c",
+      "range": {
+        "startLine": 2127,
+        "startChar": 2,
+        "endLine": 2140,
+        "endChar": 44
+      },
+      "revId": "d27b2500cf76530f621ef0d817a536b1dcb20471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
