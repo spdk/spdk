@@ -16,6 +16,24 @@
       "revId": "36b34ea6c9d339e6dd5203dbc09f3274115b5af3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38bb6cbe_84547c4d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3616,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2020-01-22T08:27:32Z",
+      "side": 1,
+      "message": "The IO operation succeeded so we should return success status. I\u0027ve added the above errlog to make possible issue investigation easier.",
+      "parentUuid": "e5df91c6_05f6f878",
+      "revId": "36b34ea6c9d339e6dd5203dbc09f3274115b5af3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
