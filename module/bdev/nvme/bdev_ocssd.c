@@ -918,7 +918,8 @@ bdev_ocssd_handle_chunk_notification(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	uint32_t nsid;
 
 	for (nsid = 0; nsid < nvme_bdev_ctrlr->num_ns; ++nsid) {
-		if (nvme_bdev_ctrlr->namespaces[nsid] == NULL) {
+		if (nvme_bdev_ctrlr->namespaces[nsid] == NULL ||
+		    !nvme_bdev_ctrlr->namespaces[nsid]->populated) {
 			continue;
 		}
 
