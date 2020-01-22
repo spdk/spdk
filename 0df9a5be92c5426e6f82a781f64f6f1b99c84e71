@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70024357_e202cfe4",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1126,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-22T10:42:16Z",
+      "side": 1,
+      "message": "Could we reset the in_use state  of tqpair-\u003emgmt_pdu:\nassert(tqpair-\u003emgmt_pdu._in_use \u003d\u003d true)\ntqpair-\u003emgmt_pdu.in_use \u003d false;",
+      "revId": "0df9a5be92c5426e6f82a781f64f6f1b99c84e71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01586f74_be01de64",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1142,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-22T10:42:16Z",
+      "side": 1,
+      "message": "could we add an assert:\nassert(rsp_pdu-\u003epdu_in_use \u003d\u003d false)\nrsp_pdu-\u003epdu_in_use \u003d true;",
+      "range": {
+        "startLine": 1142,
+        "startChar": 1,
+        "endLine": 1142,
+        "endChar": 29
+      },
+      "revId": "0df9a5be92c5426e6f82a781f64f6f1b99c84e71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
