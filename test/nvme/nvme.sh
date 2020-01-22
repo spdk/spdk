@@ -102,8 +102,8 @@ if [ $(uname) = Linux ]; then
 fi
 
 if [ $(uname) = Linux ]; then
-	start_stub "-s 4096 -i 0 -m 0xE"
 	trap "kill_stub -9; exit 1" SIGINT SIGTERM EXIT
+	start_stub "-s 4096 -i 0 -m 0xE"
 fi
 
 run_test "nvme_reset" $testdir/reset/reset -q 64 -w write -s 4096 -t 5
