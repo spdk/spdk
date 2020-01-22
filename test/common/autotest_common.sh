@@ -575,7 +575,7 @@ function rbd_cleanup() {
 	fi
 }
 
-function start_stub() {
+function _start_stub() {
 	# Disable ASLR for multi-process testing.  SPDK does support using DPDK multi-process,
 	# but ASLR can still be unreliable in some cases.
 	# We will reenable it again after multi-process testing is complete in kill_stub().
@@ -586,14 +586,25 @@ function start_stub() {
 	stubpid=$!
 	echo Waiting for stub to ready for secondary processes...
 	while ! [ -e /var/run/spdk_stub0 ]; do
+		# If stub dies while we wait, bail
+		[[ -e /proc/$stubpid ]] || return 1
 		sleep 1s
 	done
 	echo done.
 }
 
+function start_stub() {
+	if ! _start_stub "$@"; then
+		echo "stub failed" >&2
+		return 1
+	fi
+}
+
 function kill_stub() {
-	kill $1 $stubpid
-	wait $stubpid
+	if [[ -e /proc/$stubpid ]]; then
+		kill $1 $stubpid
+		wait $stubpid
+	fi 2>/dev/null || :
 	rm -f /var/run/spdk_stub0
 	# Re-enable ASLR now that we are done with multi-process testing
 	# Note: "1" enables ASLR w/o randomizing data segments, "2" adds data segment

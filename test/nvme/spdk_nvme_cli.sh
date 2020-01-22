@@ -18,8 +18,8 @@ if [ ! -d $spdk_nvme_cli ]; then
 fi
 
 if [ $(uname) = Linux ]; then
-	start_stub "-s 2048 -i 0 -m 0xF"
 	trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
+	start_stub "-s 2048 -i 0 -m 0xF"
 fi
 
 # Build against the version of SPDK under test
