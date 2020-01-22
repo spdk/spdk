@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "33acb738_44278d2e",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1481,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-22T01:45:29Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1a6a1d2e_6b8a727a",
+      "revId": "01a98e8b2f796960c23c446aae0007cba18e1ec8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5e1a2de_7746aec1",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 14
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "Hi Jim, Ziye is already adding patches for login, logout, and text.\nI reviewed but the patch for login is not ready to merge yet and I suggested we could hold the patch off from 20.01.\nWe may need further cleanup  for login.\nLogout is the pair with login and so we can leave it together.\nThe patch for text response is fine to me.",
       "parentUuid": "08ac2a27_5f57f574",
+      "revId": "01a98e8b2f796960c23c446aae0007cba18e1ec8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fca34eed_449c5c84",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1493,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-22T01:45:29Z",
+      "side": 1,
+      "message": "Hi Jim, \n\nThe following patches for handling LOGIN/LOGOUT/TEXT is provided with other patches. The reason that I did not make it in the single patch, since there are lots of changes.\n\n\"I\u0027m wondering if this is basically copied from how we use the sync interface for IC_RESP and C2H_TERM_REQ in nvme/tcp?\"\n\nThe answer is not since we have additional code which needs to be handled.",
+      "parentUuid": "f039e18d_1a97c6e2",
       "revId": "01a98e8b2f796960c23c446aae0007cba18e1ec8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
