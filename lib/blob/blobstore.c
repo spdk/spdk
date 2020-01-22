@@ -554,10 +554,12 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT_TABLE) {
 			struct spdk_blob_md_descriptor_extent_table *desc_extent_table;
-			unsigned int num_extent_pages = blob->active.num_extent_pages;
-			unsigned int i, j;
+			uint32_t num_extent_pages = blob->active.num_extent_pages;
+			uint32_t i, j;
+			size_t extent_pages_length;
 
 			desc_extent_table = (struct spdk_blob_md_descriptor_extent_table *)desc;
+			extent_pages_length = desc_extent_table->length - sizeof(desc_extent_table->num_clusters);
 
 			if (blob->extent_rle_found) {
 				/* This means that Extent RLE is present in MD,
@@ -567,18 +569,11 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			blob->extent_table_found = true;
 
 			if (desc_extent_table->length == 0 ||
-			    ((desc_extent_table->length - sizeof(desc_extent_table->num_clusters)) % sizeof(
-				     desc_extent_table->extent_page[0]) != 0)) {
+			    (extent_pages_length % sizeof(desc_extent_table->extent_page[0]) != 0)) {
 				return -EINVAL;
 			}
 
-			if (desc_extent_table->num_clusters == 0) {
-				return -EINVAL;
-			}
-
-			for (i = 0;
-			     i < (desc_extent_table->length - sizeof(desc_extent_table->num_clusters)) / sizeof(
-				     desc_extent_table->extent_page[0]); i++) {
+			for (i = 0; i < extent_pages_length / sizeof(desc_extent_table->extent_page[0]); i++) {
 				num_extent_pages += desc_extent_table->extent_page[i].num_pages;
 			}
 
@@ -594,9 +589,7 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			/* Extent table entries contain md page numbers for extent pages.
 			 * Zeroes represent unallocated extent pages, those are run-length-encoded.
 			 */
-			for (i = 0;
-			     i < (desc_extent_table->length - sizeof(desc_extent_table->num_clusters)) / sizeof(
-				     desc_extent_table->extent_page[0]); i++) {
+			for (i = 0; i < extent_pages_length / sizeof(desc_extent_table->extent_page[0]); i++) {
 				if (desc_extent_table->extent_page[i].page_idx != 0) {
 					assert(desc_extent_table->extent_page[i].num_pages == 1);
 					blob->active.extent_pages[blob->active.num_extent_pages++] =
