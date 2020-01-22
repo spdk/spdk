@@ -2,6 +2,22 @@
 
 ## v20.01: (Upcoming Release)
 
+### bdev
+
+A new function, `spdk_bdev_set_timeout`, has been added to set per descriptor I/O timeouts.
+
+A new class of functions `spdk_bdev_compare*`, have been added to allow native bdev support
+of block comparisons and compare-and-write.
+
+A new class of bdev events, `SPDK_BDEV_EVENT_MEDIA_MANAGEMENT`, has been added to allow bdevs
+which expose raw media to alert all I/O channels of pending media management events.
+
+A new API was added `spdk_bdev_io_get_aux_buf` allowing the caller to request
+an auxiliary buffer for its own private use. The API is used in the same manner that
+`spdk_bdev_io_get_buf` is used and the length of the buffer is always the same as the
+bdev_io primary buffer. 'spdk_bdev_io_put_aux_buf' frees the allocated auxiliary
+buffer.
+
 ### ftl
 
 All NVMe dependencies were removed from ftl library.
@@ -18,31 +34,9 @@ parameter.
 
 `spdk_ftl_punit_range` and `ftl_module_init_opts` structures were removed.
 
-### nvmf
+### scsi
 
-Support for custom NVMe admin command handlers and admin command passthru
-in the NVMF subsystem.
-
-It is now possible to set a custom handler for a specific NVMe admin command.
-For example, vendor specific admin commands can now be intercepted by implementing
-a function handling the command.
-Further NVMe admin commands can be forwarded straight to an underlying NVMe bdev.
-
-The functions `spdk_nvmf_set_custom_admin_cmd_hdlr` and `spdk_nvmf_set_passthru_admin_cmd`
-in `spdk_internal/nvmf.h` expose this functionality. There is an example custom admin handler
-for the NVMe IDENTIFY CTRLR in `lib/nvmf/custom_cmd_hdlr.c`. This handler gets the SN, MN, FR, IEEE, FGUID
-attributes from the first NVMe drive in the NVMF subsystem and returns it to the NVMF initiator (sn and mn attributes
-specified during NVMF subsystem creation RPC will be overwritten).
-This handler can be enabled via the `nvmf_set_config` RPC.
-Note: In a future version of SPDK, this handler will be enabled by default.
-
-### bdev
-
-A new API was added `spdk_bdev_io_get_aux_buf` allowing the caller to request
-an auxiliary buffer for its own private use. The API is used in the same manner that
-`spdk_bdev_io_get_buf` is used and the length of the buffer is always the same as the
-bdev_io primary buffer. 'spdk_bdev_io_put_aux_buf' frees the allocated auxiliary
-buffer.
+`spdk_scsi_lun_get_dif_ctx` now takes an additional argument of type `spdk_scsi_task`.
 
 ### sock
 
@@ -66,6 +60,12 @@ Enabled ISA-L on aarch64 by default in addition to x86.
 
 `spdk_thread_send_msg` now returns int indicating if the message was successfully
 sent.
+
+A new function `spdk_thread_send_critical_msg`, has been added to support sending a single message that
+might interrupt execution of the application, e.g. signal handlers.
+
+Two new functions, `spdk_poller_pause`, and `spdk_poller_resume`, have been added to give greater control
+of pollers to the application owner.
 
 ### blobfs
 
@@ -91,6 +91,16 @@ Add `spdk_nvmf_tgt_stop_listen()` that can be used to stop listening for
 incoming connections for specified target and trid. Listener is not stopped
 implicitly upon destruction of a subsystem any more.
 
+A custom NVMe admin command handler has been added which allows the user to use the real drive
+attributes from one of the target NVMe drives when reporting drive attributes to the initiator.
+This handler can be enabled via the `nvmf_set_config` RPC.
+Note: In a future version of SPDK, this handler will be enabled by default.
+
+The SPDK target and initiator both now include compare-and-write functionality with one caveat. If using the RDMA transport,
+the target expects the initiator to send both the compare command and write command either with, or without inline data. The
+SPDK initiator currently respects this requirement, but this note is included as a flag for other initiators attempting
+compatibility with this version of SPDK.
+
 ### util
 
 `spdk_pipe`, a new utility for buffering data from sockets or files for parsing
@@ -113,15 +123,48 @@ A new function, `spdk_nvme_transport_available_by_name`, has been added.
 A function table, `spdk_nvme_transport_ops`, and macro, `SPDK_NVME_TRANSPORT_REGISTER`, have been added which
 enable registering out of tree transports.
 
+A new function, `spdk_nvme_ns_supports_compare`, allows a user to check whether a given namespace supports the compare
+operation.
+
+A new family of functions, `spdk_nvmf_ns_compare*`, give the user access to submitting compare commands to NVMe namespaces.
+
+A new function, `spdk_nvme_ctrlr_cmd_get_log_page_ext`, gives users more granular control over the command dwords sent in
+log page requests.
+
 ### rpc
 
-Added optional 'delay_cmd_submit' parameter to 'bdev_nvme_set_options' RPC method.
+A new RPC, `bdev_zone_block_create`, enables creating zone bdevs on a block device.
 
-An new RPC `framework_get_reactors` has been added to retrieve list of all reactors.
+A new RPC, `bdev_ocssd_create`, enables creating zone bdevs on an Open Channel SSD.
+
+A new RPC, `blobfs_set_cache_size`, enables managing blobfs cache size.
+
+A new RPC, `env_dpdk_get_mem_stats`, has been added to facilitate reading DPDK related memory
+consumprion stats. Please see the env_dpdk section above for more details.
+
+A new RPC, `framework_get_reactors`, has been added to retrieve list of all reactors.
+
+`bdev_ftl_create` now takes a `base_bdev` argument in lieu of `trtype`, `traddr`, and `punits`.
+
+`bdev_nvme_set_options` now allows users to disable I/O submission batching with the `-d` flag
+
+`bdev_nvme_cuse_register` now accepts a `name` parameter.
+
+`bdev_uring_create` now takes arguments for `bdev_name` and `block_size`
+
+`nvmf_set_config` now takes an argument to enable passthru of identify commands to base NVMe devices.
+Please see the nvmf section above for more details.
 
 ### dpdk
 
 Updated DPDK submodule to DPDK 19.11.
+
+### env_dpdk
+
+`spdk_env_dpdk_post_init` now takes a boolean, `legacy_mem`, as an argument.
+
+A new function, `spdk_env_dpdk_dump_mem_stats`, prints information about the memory consumed by DPDK to a file specified by
+the user. A new utility, `scripts/dpdk_mem_info.py`, wraps this function and prints the output in an easy to read way.
 
 ### event
 
