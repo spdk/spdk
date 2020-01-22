@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16bd5ea9_78b9f20c",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T07:19:51Z",
+      "side": 1,
+      "message": "A nit. Use spaces instead of tabs here?",
+      "range": {
+        "startLine": 70,
+        "startChar": 21,
+        "endLine": 70,
+        "endChar": 26
+      },
+      "revId": "fb1e984edf3ec4671397636cb3069b9fb148bb61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d93f29be_e983a1ff",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T07:19:51Z",
+      "side": 1,
+      "message": "PCI BDF may be kind.",
+      "range": {
+        "startLine": 73,
+        "startChar": 40,
+        "endLine": 73,
+        "endChar": 43
+      },
+      "revId": "fb1e984edf3ec4671397636cb3069b9fb148bb61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fa99b16_595711af",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T07:19:51Z",
+      "side": 1,
+      "message": "Adding an actual sample data may be helpful.\n0000:89:00.0,Nvme3,4,4 5 6 7\n\nSome comment such that \"VM list is VM numbers separated by a space\" may be helpful?",
+      "range": {
+        "startLine": 75,
+        "startChar": 35,
+        "endLine": 75,
+        "endChar": 78
+      },
+      "revId": "fb1e984edf3ec4671397636cb3069b9fb148bb61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
