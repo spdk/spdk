@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3afc05d_acc698ff",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:48:07Z",
+      "side": 1,
+      "message": "This is specifically RDMA transport, NVMe-oF compiles by default and does not require additional dependencies.",
+      "range": {
+        "startLine": 7,
+        "startChar": 32,
+        "endLine": 7,
+        "endChar": 49
+      },
+      "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0ae6358_5d1923b3",
+        "filename": "doc/getting_started.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:48:07Z",
+      "side": 1,
+      "message": "Please remove, as in previous patch.",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 0
+      },
+      "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c615118_3f5da288",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:48:07Z",
+      "side": 1,
+      "message": "rmda",
+      "range": {
+        "startLine": 17,
+        "startChar": 11,
+        "endLine": 17,
+        "endChar": 37
+      },
+      "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a684d81f_3b5aa7c6",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:48:07Z",
+      "side": 1,
+      "message": "Change the original description to:\n\"Additional dependencies for RDMA transport in NVMe over Fabrics\"",
+      "range": {
+        "startLine": 94,
+        "startChar": 32,
+        "endLine": 94,
+        "endChar": 49
+      },
+      "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1dc1702_3681d199",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:48:07Z",
+      "side": 1,
+      "message": "same",
+      "range": {
+        "startLine": 143,
+        "startChar": 31,
+        "endLine": 143,
+        "endChar": 49
+      },
+      "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eecad638_cff9d219",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:48:07Z",
+      "side": 1,
+      "message": "same",
+      "range": {
+        "startLine": 170,
+        "startChar": 26,
+        "endLine": 170,
+        "endChar": 49
+      },
+      "revId": "8e19b83f8a23aabf70f1c09bf5c329a096018156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
