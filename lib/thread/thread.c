@@ -146,6 +146,7 @@ struct spdk_thread {
 	 */
 	TAILQ_HEAD(paused_pollers_head, spdk_poller)	paused_pollers;
 
+	uint32_t			io_channel_count;
 	uint32_t			active_poller_count;
 	uint32_t			timed_poller_count;
 	uint32_t			paused_poller_count;
@@ -710,6 +711,12 @@ spdk_thread_get_paused_poller_count(struct spdk_thread *thread)
 }
 
 uint32_t
+spdk_thread_get_io_channel_count(struct spdk_thread *thread)
+{
+	return thread->io_channel_count;
+}
+
+uint32_t
 spdk_thread_get_count(void)
 {
 	/*
@@ -1230,6 +1237,7 @@ spdk_get_io_channel(void *io_device)
 	ch->ref = 1;
 	ch->destroy_ref = 0;
 	TAILQ_INSERT_TAIL(&thread->io_channels, ch, tailq);
+	thread->io_channel_count++;
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Get io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
 		      ch, dev->name, dev->io_device, thread->name, ch->ref);
@@ -1241,6 +1249,8 @@ spdk_get_io_channel(void *io_device)
 	rc = dev->create_cb(io_device, (uint8_t *)ch + sizeof(*ch));
 	if (rc != 0) {
 		pthread_mutex_lock(&g_devlist_mutex);
+		assert(ch->thread->io_channel_count > 0);
+		ch->thread->io_channel_count--;
 		TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
 		dev->refcnt--;
 		free(ch);
@@ -1283,6 +1293,8 @@ _spdk_put_io_channel(void *arg)
 	}
 
 	pthread_mutex_lock(&g_devlist_mutex);
+	assert(ch->thread->io_channel_count > 0);
+	ch->thread->io_channel_count--;
 	TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
 	pthread_mutex_unlock(&g_devlist_mutex);
 
