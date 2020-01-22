@@ -33,6 +33,24 @@
       "revId": "f4480f0930b8716e48b64df9f22e8d22f70bc11c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1ea0d18_dd0400b3",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2537,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T22:43:27Z",
+      "side": 1,
+      "message": "never mind - the reqs are per-qpair - I think this is fine, we can always optimize this later (a straight if statement would be a bit more efficient)",
+      "parentUuid": "5e17d25c_14404217",
+      "revId": "f4480f0930b8716e48b64df9f22e8d22f70bc11c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
