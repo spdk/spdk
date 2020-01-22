@@ -3093,6 +3093,9 @@ struct spdk_bs_load_ctx {
 	uint32_t			cur_page;
 	struct spdk_blob_md_page	*page;
 
+	uint64_t			num_extent_pages;
+	uint32_t			*extent_pages;
+
 	spdk_bs_sequence_t			*seq;
 	spdk_blob_op_with_handle_complete	iter_cb_fn;
 	void					*iter_cb_arg;
@@ -3308,12 +3311,15 @@ _spdk_bs_delete_corrupted_blob(void *cb_arg, int bserrno)
 		return;
 	}
 
-	/* Snapshot and clone have the same copy of cluster map at this point.
-	 * Let's clear cluster map for snpashot now so that it won't be cleared
-	 * for clone later when we remove snapshot. Also set thin provision to
-	 * pass data corruption check */
+	/* Snapshot and clone have the same copy of cluster map and extent pages
+	 * at this point. Let's clear both for snpashot now,
+	 * so that it won't be cleared for clone later when we remove snapshot.
+	 * Also set thin provision to pass data corruption check */
 	for (i = 0; i < ctx->blob->active.num_clusters; i++) {
 		ctx->blob->active.clusters[i] = 0;
+	}
+	for (i = 0; i < ctx->blob->active.num_extent_pages; i++) {
+		ctx->blob->active.extent_pages[i] = 0;
 	}
 
 	ctx->blob->md_ro = false;
@@ -3611,7 +3617,37 @@ _spdk_bs_load_replay_md_parse_page(struct spdk_bs_load_ctx *ctx)
 				return -EINVAL;
 			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT_PAGE) {
-			/* Skip this item */
+			struct spdk_blob_md_descriptor_extent_page	*desc_extent;
+			uint32_t					i;
+			uint32_t					cluster_count = 0;
+			uint32_t					cluster_idx;
+
+			desc_extent = (struct spdk_blob_md_descriptor_extent_page *)desc;
+
+			if (desc_extent->length == 0 ||
+			    (desc_extent->length % sizeof(desc_extent->cluster_idx[0]) != 0)) {
+				return -EINVAL;
+			}
+
+			for (i = 0; i < desc_extent->length / sizeof(desc_extent->cluster_idx[0]); i++) {
+				cluster_idx = desc_extent->cluster_idx[i];
+				/*
+				 * cluster_idx = 0 means an unallocated cluster - don't mark that
+				 * in the used cluster map.
+				 */
+				if (cluster_idx != 0) {
+					spdk_bit_array_set(bs->used_clusters, cluster_idx);
+					if (bs->num_free_clusters == 0) {
+						return -ENOSPC;
+					}
+					bs->num_free_clusters--;
+				}
+				cluster_count++;
+			}
+
+			if (cluster_count == 0) {
+				return -EINVAL;
+			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {
 			/* Skip this item */
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR_INTERNAL) {
@@ -3619,8 +3655,46 @@ _spdk_bs_load_replay_md_parse_page(struct spdk_bs_load_ctx *ctx)
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_FLAGS) {
 			/* Skip this item */
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT_TABLE) {
-			/* TODO: Read the extent pages when replaying the md,
-			 * only after particular blob md chain was read */
+			struct spdk_blob_md_descriptor_extent_table *desc_extent_table;
+			uint32_t num_extent_pages = ctx->num_extent_pages;
+			uint32_t i;
+			size_t extent_pages_length;
+			void *tmp;
+
+			desc_extent_table = (struct spdk_blob_md_descriptor_extent_table *)desc;
+			extent_pages_length = desc_extent_table->length - sizeof(desc_extent_table->num_clusters);
+
+			if (desc_extent_table->length == 0 ||
+			    (extent_pages_length % sizeof(desc_extent_table->extent_page[0]) != 0)) {
+				return -EINVAL;
+			}
+
+			for (i = 0; i < extent_pages_length / sizeof(desc_extent_table->extent_page[0]); i++) {
+				if (desc_extent_table->extent_page[i].page_idx != 0) {
+					if (desc_extent_table->extent_page[i].num_pages != 1) {
+						return -EINVAL;
+					}
+					num_extent_pages += 1;
+				}
+			}
+
+			if (num_extent_pages > 0) {
+				tmp = realloc(ctx->extent_pages, num_extent_pages * sizeof(uint32_t));
+				if (tmp == NULL) {
+					return -ENOMEM;
+				}
+				ctx->extent_pages = tmp;
+
+				/* Extent table entries contain md page numbers for extent pages.
+				 * Zeroes represent unallocated extent pages, those are run-length-encoded.
+				 */
+				for (i = 0; i < extent_pages_length / sizeof(desc_extent_table->extent_page[0]); i++) {
+					if (desc_extent_table->extent_page[i].page_idx != 0) {
+						ctx->extent_pages[ctx->num_extent_pages] = desc_extent_table->extent_page[i].page_idx;
+						ctx->num_extent_pages += 1;
+					}
+				}
+			}
 		} else {
 			/* Error */
 			return -EINVAL;
@@ -3770,6 +3844,58 @@ _spdk_bs_load_replay_md_chain_cpl(struct spdk_bs_load_ctx *ctx)
 	}
 }
 
+static void _spdk_bs_load_replay_extent_page(spdk_bs_sequence_t *seq, uint32_t page, void *cb_arg);
+
+static void
+_spdk_bs_load_replay_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	uint32_t page_num;
+
+	if (bserrno != 0) {
+		_spdk_bs_load_ctx_fail(ctx, bserrno);
+		return;
+	}
+
+	/* Extent pages are only read when present within in chain md.
+	 * Integrity of md is not right if that page was not a valid extent page. */
+	if (_spdk_bs_load_cur_extent_page_valid(ctx->page) != true) {
+		_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
+		return;
+	}
+
+	page_num = ctx->extent_pages[ctx->num_extent_pages - 1];
+	spdk_bit_array_set(ctx->bs->used_md_pages, page_num);
+	if (_spdk_bs_load_replay_md_parse_page(ctx)) {
+		_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
+		return;
+	}
+
+	ctx->num_extent_pages--;
+	if (ctx->num_extent_pages > 0) {
+		_spdk_bs_load_replay_extent_page(seq, ctx->extent_pages[ctx->num_extent_pages - 1], ctx);
+		return;
+	}
+
+	free(ctx->extent_pages);
+	ctx->extent_pages = NULL;
+
+	_spdk_bs_load_replay_md_chain_cpl(ctx);
+}
+
+static void
+_spdk_bs_load_replay_extent_page(spdk_bs_sequence_t *seq, uint32_t page, void *cb_arg)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	uint64_t lba;
+
+	assert(page < ctx->super->md_len);
+	lba = _spdk_bs_md_page_to_lba(ctx->bs, page);
+	spdk_bs_sequence_read_dev(seq, ctx->page, lba,
+				  _spdk_bs_byte_to_lba(ctx->bs, SPDK_BS_PAGE_SIZE),
+				  _spdk_bs_load_replay_extent_page_cpl, ctx);
+}
+
 static void
 _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
@@ -3796,6 +3922,12 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 				ctx->in_page_chain = true;
 				ctx->cur_page = ctx->page->next;
 				_spdk_bs_load_replay_cur_md_page(ctx);
+				return;
+			}
+			if (ctx->num_extent_pages != 0) {
+				/* Extent pages are read from last to first,
+				 * decreasing the num_extent_pages as they are read. */
+				_spdk_bs_load_replay_extent_page(seq, ctx->extent_pages[ctx->num_extent_pages - 1], ctx);
 				return;
 			}
 		}
