@@ -22,6 +22,75 @@
       "revId": "bc524e4aa1a5d5f6da3b45e6fd88aff6a4fe92d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55ddf761_d88b7ce9",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:35:04Z",
+      "side": 1,
+      "message": "SPDK CLI is a tool to be used by users, if we keep python in minimal install (due to rpc.py) then lets keep this there too.",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 61
+      },
+      "revId": "bc524e4aa1a5d5f6da3b45e6fd88aff6a4fe92d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5fd6d1bf_5347238f",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:35:04Z",
+      "side": 1,
+      "message": "I\u0027m split which bucket this falls into. Developer tools probably ?",
+      "range": {
+        "startLine": 109,
+        "startChar": 0,
+        "endLine": 110,
+        "endChar": 43
+      },
+      "revId": "bc524e4aa1a5d5f6da3b45e6fd88aff6a4fe92d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0778d3da_77d16c5a",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T12:35:04Z",
+      "side": 1,
+      "message": "Same as above",
+      "range": {
+        "startLine": 162,
+        "startChar": 0,
+        "endLine": 164,
+        "endChar": 28
+      },
+      "revId": "bc524e4aa1a5d5f6da3b45e6fd88aff6a4fe92d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
