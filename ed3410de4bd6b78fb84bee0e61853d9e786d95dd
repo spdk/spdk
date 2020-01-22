@@ -101,6 +101,23 @@
       "revId": "ed3410de4bd6b78fb84bee0e61853d9e786d95dd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "779bc18f_b41dd77d",
+        "filename": "test/app/nvme_fused/nvme_fused.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2020-01-22T19:24:09Z",
+      "side": 1,
+      "message": "This seems to assume that the compare-and-write on qpair2 will get executed before the compare-and-write on qpair1.  Just because they were submitted here in that order does not mean they will be processed in that order on the target side.  Especially since the target is running with 4 cores, and each qpair will be processed on its own core.\n\nIn fact, on my system, the compare-and-write on qpair 1 wins the race, meaning that its compare fails, instead of succeeding.",
+      "revId": "ed3410de4bd6b78fb84bee0e61853d9e786d95dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
