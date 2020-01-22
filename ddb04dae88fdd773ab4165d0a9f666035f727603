@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4979f6f5_7a4fcd19",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 36
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T16:53:43Z",
+      "side": 1,
+      "message": "both of these function names should be wrapped in `` (I assume you did the earlier one too.). Not a big deal just for future reference, consistency is important :)",
+      "revId": "ddb04dae88fdd773ab4165d0a9f666035f727603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
