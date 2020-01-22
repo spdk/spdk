@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5df91c6_05f6f878",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3616,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T02:14:57Z",
+      "side": 1,
+      "message": "Do we need any comment about returning success even unlock failed?",
+      "revId": "36b34ea6c9d339e6dd5203dbc09f3274115b5af3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
