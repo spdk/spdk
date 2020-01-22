@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1838462a_e2dcf0d9",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2020-01-22T10:00:10Z",
+      "side": 1,
+      "message": "I still have questions here, since we always allocate maximal size.\nSuppose the maximal is 1024, and the negotiated qd is 64. \nSo if the initiators sends more I/O req \u003e 64, we can still allocate req in TCP layer \n(see the spdk_nvmf_tcp_req_get) function. So will this not cause any problems?",
+      "range": {
+        "startLine": 856,
+        "startChar": 26,
+        "endLine": 856,
+        "endChar": 48
+      },
+      "revId": "374fb2bc47bad0e4c70a9ae9a75680c9c876d03c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
