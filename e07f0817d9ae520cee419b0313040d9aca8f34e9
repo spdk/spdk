@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe0045b1_f6026488",
+        "filename": "doc/nvme.md",
+        "patchSetId": 36
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T19:49:08Z",
+      "side": 1,
+      "message": "not --\u003e no",
+      "revId": "e07f0817d9ae520cee419b0313040d9aca8f34e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4654c016_387e7981",
+        "filename": "doc/nvme.md",
+        "patchSetId": 36
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T19:49:08Z",
+      "side": 1,
+      "message": "inbetween -\u003e \"in between\"",
+      "revId": "e07f0817d9ae520cee419b0313040d9aca8f34e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
