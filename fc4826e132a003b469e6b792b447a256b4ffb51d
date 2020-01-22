@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5766fb9f_eff3cb66",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 16
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T02:44:29Z",
+      "side": 1,
+      "message": "Jim suggested that we should say about why login response, logout response, and text response are exceptions in this patch.\n\nOne idea is \"We support async write for PDUs other than login response, logout response, and text response in this patch. We will support async write also for them later in this patch series.\"",
+      "revId": "fc4826e132a003b469e6b792b447a256b4ffb51d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ffc7b65_9567bb0a",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2020-01-22T02:44:29Z",
+      "side": 1,
+      "message": "This should be 5. Please check Jim\u0027s comment.",
+      "range": {
+        "startLine": 168,
+        "startChar": 40,
+        "endLine": 168,
+        "endChar": 42
+      },
+      "revId": "fc4826e132a003b469e6b792b447a256b4ffb51d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
