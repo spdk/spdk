@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ceff3b64_e71d2610",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 839,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2020-01-22T15:13:34Z",
+      "side": 1,
+      "message": "if you init rc to 0 you could just break here and return rc at 846. Probably not worth doing this close to release but I\u0027ve never been a huge fan of having multiple return paths within a function",
+      "revId": "44e5992efaa78cc03bf95577d89e7a6fdff891de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
