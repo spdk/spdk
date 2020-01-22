@@ -915,15 +915,16 @@ void
 bdev_ocssd_handle_chunk_notification(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	struct bdev_ocssd_ns *ocssd_ns;
+	struct nvme_bdev_ns *nvme_ns;
 	uint32_t nsid;
 
 	for (nsid = 0; nsid < nvme_bdev_ctrlr->num_ns; ++nsid) {
-		if (nvme_bdev_ctrlr->namespaces[nsid] == NULL ||
-		    !nvme_bdev_ctrlr->namespaces[nsid]->populated) {
+		nvme_ns = nvme_bdev_ctrlr->namespaces[nsid];
+		if (nvme_ns == NULL || !nvme_ns->populated) {
 			continue;
 		}
 
-		ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_bdev_ctrlr->namespaces[nsid]);
+		ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 		ocssd_ns->chunk_notify_pending = true;
 	}
 }
