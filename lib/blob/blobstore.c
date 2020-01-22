@@ -3568,8 +3568,10 @@ _spdk_bs_load_read_used_pages(struct spdk_bs_load_ctx *ctx)
 }
 
 static int
-_spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob_store *bs)
+_spdk_bs_load_replay_md_parse_page(struct spdk_bs_load_ctx *ctx)
 {
+	struct spdk_blob_store *bs = ctx->bs;
+	struct spdk_blob_md_page *page = ctx->page;
 	struct spdk_blob_md_descriptor *desc;
 	size_t	cur_desc = 0;
 
@@ -3786,7 +3788,7 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 			if (ctx->page->sequence_num == 0) {
 				spdk_bit_array_set(ctx->bs->used_blobids, page_num);
 			}
-			if (_spdk_bs_load_replay_md_parse_page(ctx->page, ctx->bs)) {
+			if (_spdk_bs_load_replay_md_parse_page(ctx)) {
 				_spdk_bs_load_ctx_fail(ctx, -EILSEQ);
 				return;
 			}
