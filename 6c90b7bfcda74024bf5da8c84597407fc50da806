@@ -16,6 +16,24 @@
       "revId": "6c90b7bfcda74024bf5da8c84597407fc50da806",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8cb6cb1f_29e33a1b",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2020-01-22T08:28:48Z",
+      "side": 1,
+      "message": "No, Jim suggested to include something to range of cluster id contained in extent_page from perspective of a blob.\nSo for example to say that this extent_page contains clusters 512-1023 or 2048-2055. This is to be able to read extent pages in parallel. Right now they need to be read sequentially to fill out the cluster array in order.",
+      "parentUuid": "c63f9448_df25e48e",
+      "revId": "6c90b7bfcda74024bf5da8c84597407fc50da806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
